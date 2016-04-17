@@ -1,67 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0163.hostedemail.com ([216.40.44.163]:33865 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751824AbcDVWS0 (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:35995 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750778AbcDQOhP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Apr 2016 18:18:26 -0400
-Message-ID: <1461363503.2726.17.camel@perches.com> (sfid-20160423_001837_447142_F0A06D9A)
-Subject: Re: Debug prints mac80211 drivers
-From: Joe Perches <joe@perches.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 22 Apr 2016 15:18:23 -0700
-In-Reply-To: <CABPxzYJOAFq4hrSpZkx_bmvsUGhR0PmsUvjbnw=ykUeHAVXYqw@mail.gmail.com>
-References: <CABPxzYLZ2thNWCQ6bQ0-Peic-X-FTpTv4wJxyXVdmBDQDRS8JA@mail.gmail.com>
-	 <1461353341.2726.14.camel@perches.com>
-	 <CABPxzYJOAFq4hrSpZkx_bmvsUGhR0PmsUvjbnw=ykUeHAVXYqw@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Sun, 17 Apr 2016 10:37:15 -0400
+Received: by mail-wm0-f52.google.com with SMTP id v188so87525796wme.1
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Apr 2016 07:37:14 -0700 (PDT)
+Subject: Re: [PATCH V11 2/2] brcmfmac: add support for nl80211 BSS_SELECT
+ feature
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Arend van Spriel <arend@broadcom.com>
+References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
+ <1456947439-28968-2-git-send-email-arend@broadcom.com>
+ <877ffypvre.fsf@kamboji.qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <57139F97.5010106@broadcom.com> (sfid-20160417_163722_639749_1DD7B328)
+Date: Sun, 17 Apr 2016 16:37:11 +0200
+MIME-Version: 1.0
+In-Reply-To: <877ffypvre.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-04-23 at 02:32 +0530, Krishna Chaitanya wrote:
-> On Sat, Apr 23, 2016 at 12:59 AM, Joe Perches <joe@perches.com> wrote:
-> > 
-> > 
-> > On Fri, 2016-04-22 at 17:51 +0530, Krishna Chaitanya wrote:
-> > > 
-> > > What is the recommended method for adding
-> > > debug prints in mac80211 based drivers.
-> > > 
-> > > 1) -DDEBUG + pr_debug ==> used by mac80211, brcm80211
-> > > 2) -DDEBUG + dev_dbg ==> zd1201
-> > > 3) dev_printk(KERN_DEBUG) ==> used by iwlwifi
-> > > 4) printk(KERN_DEBUG) ==> Just to complete the list.
-> > wiphy_dbg -> netif_dbg -> netdev_dbg -> dev_dbg -> pr_debug
-> Ok, thats what checpatch --strict throws. but still different vendors
-> follow
-> different standards, so wanted to check if we should go strictly with
-> checkpatch (or) is there any rationale behind choose each of the
-> variant.
 
-Generally the variants are used to produce sufficient
-logging information to identify the appropriate device.
 
-Most all debugging printks shouldn't be emitted unless
-actually debugging.
-
-> > and CONFIG_DYNAMIC_DEBUG, no -DDEBUG required
-> Yes, i understand. Till now we had this enabled, so pr_debug
-> works just fine, but now it is disabled hence the question.
+On 15-04-16 20:33, Kalle Valo wrote:
+> Arend van Spriel <arend@broadcom.com> writes:
 > 
-> Also there are pros and cons to having control using dyndbg,
-> user can disable dyndbg, there be missing imp
+>> Announce support for nl80211 feature BSS_SELECT and process
+>> BSS selection behaviour provided in .connect() callback.
+>>
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Reviewed-by: Lei Zhang <leizh@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> 
+> Sorry, didn't apply anymore and I don't dare to try to fix the
+> conflicts:
+> 
+> Applying: brcmfmac: add support for nl80211 BSS_SELECT feature
+> Using index info to reconstruct a base tree...
+> Falling back to patching base and 3-way merge...
+> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> 
+> So please rebase.
 
-imp?
+It probably never applied as I created the patch together with nl80211
+patch on mac80211-next/master branch. Not sure how to handle it
+otherwise. Anyway, I will send out a rebased version soon.
 
->  debugs, in this case
-> having module level (-DDEBUG) helps but if we want entire system
-> to run in non-debug mode, disabling dyndbg helps.
-
-Confused:
-
-dynamic debug printks aren't emitted by default
-unless DEBUG is also defined or specifically
-enabled by the user.
-
+Regards,
+Arend
