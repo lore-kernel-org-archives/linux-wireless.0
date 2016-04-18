@@ -1,114 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:33730 "EHLO
-	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751876AbcDSFBD (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.74]:64793 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751669AbcDRO5P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 01:01:03 -0400
-Received: by mail-pf0-f181.google.com with SMTP id 184so2749069pff.0
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 22:01:02 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jason Mobarak <jam@cozybit.com>
-Subject: [PATCH v3 02/18] wcn36xx: Pad TIM PVM if needed
-Date: Mon, 18 Apr 2016 22:00:40 -0700
-Message-Id: <1461042056-10607-3-git-send-email-bjorn.andersson@linaro.org> (sfid-20160419_070124_076860_433E1085)
-In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+	Mon, 18 Apr 2016 10:57:15 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
+Subject: Re: [PATCHv2] wlcore: spi: add wl18xx support
+Date: Mon, 18 Apr 2016 16:57:03 +0200
+Message-ID: <1463330011.BhWEcYYuGD@wuerfel> (sfid-20160418_165746_534449_1DF04FF6)
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B360BF614@DFRE01.ent.ti.com>
+References: <1460273570-12298-1-git-send-email-eyalr@ti.com> <14313437.cDJIgY3kzo@wuerfel> <8665E2433BC68541A24DFFCA87B70F5B360BF614@DFRE01.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+On Monday 18 April 2016 05:55:51 Reizer, Eyal wrote:
+> > >
+> > > - all wilink family needs special init command for entering wspi mode.
+> > >   extra clock cycles should be sent after the spi init command while the
+> > >   cs pin is high.
+> > > - switch to controling the cs pin from the spi driver for achieveing the
+> > >   above.
+> > > - the selected cs gpio is read from the spi device-tree node using the
+> > >   cs-gpios field and setup as a gpio.
+> > > - See the example below for specifying the cs gpio using the cs-gpios entry
+> > > &spi0   {
+> > >         ...
+> > >         cs-gpios = <&gpio0 5 0>;
+> > >         ...
+> > >         wlcore: wlcore@0 {
+> > >                 compatible = "ti,wl1835";
+> > >         ...
+> > >         ...
+> > >         };
+> > > };
+> > >
+> > > Signed-off-by: Eyal Reizer <eyalr@ti.com>
+> > 
+> > I don't think this can work in general: not all SPI hosts uses GPIOs for
+> > controlling CS, so the logic can't work, and it's also a layering violation for the
+> > driver to look at the parent.
+> > 
+> > I would suggest fixing this using a new API function from the SPI core, if we
+> > don't already have a generic way to do it.
+> >
+> Originally this is what I have done until I was pointed to the generic cs-gpio mechanism 
+> in the SPI core. 
+> It is a generic mechanism already in the SPI core driver.
+> See: Documentation/devicetree/bindings/spi/spi-bus.txt
 
-The wcn36xx FW expects a fixed size TIM PVM in the beacon template. If
-supplied with a shorter than expected PVM it will overwrite the IE
-following the TIM.
+The cs-gpios property is documented as optional, it defines how you should
+list the gpios if CS is implemented using gpio, but not all hardware does
+it like this.
 
-Squashed with fix from Jason Mobarak <jam@cozybit.com>:
-Patch "wcn36xx: Pad TIM PVM if needed" has caused a regression in mesh
-beaconing.  The field tim_off is always 0 for mesh mode, and thus
-pvm_len (referring to the TIM length field) and pad are both incorrectly
-calculated.  Thus, msg_body.beacon_length is incorrectly calculated for
-mesh mode. Fix this.
+> It is also part of the generic spi.h (include/Linux/spi/spi.h), already part of 
+> " struct spi_device" So it seemed redundant adding another mechanism for 
+> implementing the same.
+> Platform that interact with a wilink need to use it, and platforms that don't  
+> have this capability will probably not interact with a wilink device using SPI.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Jason Mobarak <jam@cozybit.com>
-[bjorn: squashed in Jason's fixup]
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
+The cs_gpio field in spi_device belongs to the spi host controller, no other
+slave driver uses it.
 
-Changes since v1:
-- Merged in Jason's patch for skipping the padding in mesh mode.
+I wasn't asking for a duplication of this mechanism, but an interface to
+use it properly. Internally, the spi core uses the spi_set_cs() function to
+pick a CS. Find a way to use that rather than reimplementing it incorrectly.
 
- drivers/net/wireless/ath/wcn36xx/hal.h |  3 +++
- drivers/net/wireless/ath/wcn36xx/smd.c | 27 +++++++++++++++++++++++++--
- 2 files changed, 28 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index d713204f755d..3af16cba3d12 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -54,6 +54,9 @@
- /* Default Beacon template size */
- #define BEACON_TEMPLATE_SIZE 0x180
- 
-+/* Minimum PVM size that the FW expects. See comment in smd.c for details. */
-+#define TIM_MIN_PVM_SIZE 6
-+
- /* Param Change Bitmap sent to HAL */
- #define PARAM_BCN_INTERVAL_CHANGED                      (1 << 0)
- #define PARAM_SHORT_PREAMBLE_CHANGED                 (1 << 1)
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ff3ed2461a69..089a7e445cd6 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1375,12 +1375,19 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			    u16 p2p_off)
- {
- 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
--	int ret = 0;
-+	int ret = 0, pad, pvm_len;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ);
- 
--	msg_body.beacon_length = skb_beacon->len;
-+	pvm_len = skb_beacon->data[tim_off + 1] - 3;
-+	pad = TIM_MIN_PVM_SIZE - pvm_len;
-+
-+	/* Padding is irrelevant to mesh mode since tim_off is always 0. */
-+	if (vif->type == NL80211_IFTYPE_MESH_POINT)
-+		pad = 0;
-+
-+	msg_body.beacon_length = skb_beacon->len + pad;
- 	/* TODO need to find out why + 6 is needed */
- 	msg_body.beacon_length6 = msg_body.beacon_length + 6;
- 
-@@ -1393,6 +1400,22 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	memcpy(msg_body.beacon, skb_beacon->data, skb_beacon->len);
- 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
- 
-+	if (pad > 0) {
-+		/*
-+		 * The wcn36xx FW has a fixed size for the PVM in the TIM. If
-+		 * given the beacon template from mac80211 with a PVM shorter
-+		 * than the FW expectes it will overwrite the data after the
-+		 * TIM.
-+		 */
-+		wcn36xx_dbg(WCN36XX_DBG_HAL, "Pad TIM PVM. %d bytes at %d\n",
-+			    pad, pvm_len);
-+		memmove(&msg_body.beacon[tim_off + 5 + pvm_len + pad],
-+			&msg_body.beacon[tim_off + 5 + pvm_len],
-+			skb_beacon->len - (tim_off + 5 + pvm_len));
-+		memset(&msg_body.beacon[tim_off + 5 + pvm_len], 0, pad);
-+		msg_body.beacon[tim_off + 1] += pad;
-+	}
-+
- 	/* TODO need to find out why this is needed? */
- 	if (vif->type == NL80211_IFTYPE_MESH_POINT)
- 		/* mesh beacon don't need this, so push further down */
--- 
-2.5.0
-
+	Arnd
