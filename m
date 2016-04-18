@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51307 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbcDPEbk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Apr 2016 00:31:40 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Byeoungwook Kim <quddnr145@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/2] rtlwifi: Fix reusable codes in core.c
-References: <20160203020139.GA13619@gmail.com>
-	<87bn5apw5a.fsf@kamboji.qca.qualcomm.com>
-	<CAGRGNgX0uy=R1dd7UMO5aZu69QDUXrtZDCjdJnB1Yj3XzjemHA@mail.gmail.com>
-Date: Sat, 16 Apr 2016 07:31:32 +0300
-In-Reply-To: <CAGRGNgX0uy=R1dd7UMO5aZu69QDUXrtZDCjdJnB1Yj3XzjemHA@mail.gmail.com>
-	(Julian Calaby's message of "Sat, 16 Apr 2016 12:39:04 +1000")
-Message-ID: <8737qmp42j.fsf@kamboji.qca.qualcomm.com> (sfid-20160416_063154_509910_AF0C9399)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:45188 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751682AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 11:49:38 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 01/16] rtl8xxxu: Rename rtl8723bu_update_rate_mask() to rtl8xxxu_gen2_update_rate_mask()
+Date: Mon, 18 Apr 2016 11:49:21 -0400
+Message-Id: <1460994576-24091-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_174945_670905_239B1EAD)
+In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian Calaby <julian.calaby@gmail.com> writes:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> Hi Kalle,
->
-> On Sat, Apr 16, 2016 at 4:25 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Byeoungwook Kim <quddnr145@gmail.com> writes:
->>
->>> rtl_*_delay() functions were reused same codes about addr variable.
->>> So i have converted to rtl_addr_delay() from code about addr variable.
->>>
->>> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
->>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->>
->> Doesn't apply:
->>
->> Applying: rtlwifi: Fix reusable codes in core.c
->> fatal: sha1 information is lacking or useless (drivers/net/wireless/realtek/rtlwifi/core.c).
->> Repository lacks necessary blobs to fall back on 3-way merge.
->> Cannot fall back to three-way merge.
->> Patch failed at 0001 rtlwifi: Fix reusable codes in core.c
->>
->> Please rebase and resend.
->
-> This one is already applied in some form. I thought I'd listed it in
-> my big list of superseded patches, however I must have missed it.
+Update the name of rtl8723bu_update_rate_mask() to make it reflect
+it's applicable for all/most gen2 N parts.
 
-Or I missed it :) But good to know, so no actions needed anymore.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 928ca56..4ec18a4 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -8219,8 +8219,8 @@ static void rtl8723au_update_rate_mask(struct rtl8xxxu_priv *priv,
+ 	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ramask));
+ }
+ 
+-static void rtl8723bu_update_rate_mask(struct rtl8xxxu_priv *priv,
+-				       u32 ramask, int sgi)
++static void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
++					   u32 ramask, int sgi)
+ {
+ 	struct h2c_cmd h2c;
+ 	u8 bw = 0;
+@@ -9921,7 +9921,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.disable_rf = rtl8723b_disable_rf,
+ 	.usb_quirks = rtl8xxxu_gen2_usb_quirks,
+ 	.set_tx_power = rtl8723b_set_tx_power,
+-	.update_rate_mask = rtl8723bu_update_rate_mask,
++	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
+ 	.report_connect = rtl8723bu_report_connect,
+ 	.writeN_block_size = 1024,
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+@@ -9992,7 +9992,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.disable_rf = rtl8723b_disable_rf,
+ 	.usb_quirks = rtl8xxxu_gen2_usb_quirks,
+ 	.set_tx_power = rtl8192e_set_tx_power,
+-	.update_rate_mask = rtl8723bu_update_rate_mask,
++	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
+ 	.report_connect = rtl8723bu_report_connect,
+ 	.writeN_block_size = 128,
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
 -- 
-Kalle Valo
+2.5.5
+
