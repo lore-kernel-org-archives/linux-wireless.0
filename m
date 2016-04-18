@@ -1,49 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36216 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933756AbcDFJYM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 05:24:12 -0400
-Message-ID: <1459934648.17504.65.camel@sipsolutions.net> (sfid-20160406_112416_050221_F23692EF)
-Subject: Re: [PATCHv3 RESEND 10/11] mac80211: Add API to report nan function
- match
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Wed, 06 Apr 2016 11:24:08 +0200
-In-Reply-To: <1459244109-16038-10-git-send-email-emmanuel.grumbach@intel.com>
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1459244109-16038-10-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:35859 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905AbcDRAIG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Apr 2016 20:08:06 -0400
+Received: by mail-oi0-f43.google.com with SMTP id x201so10969441oif.3
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Apr 2016 17:08:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1460765986-12698-1-git-send-email-steve.derosier@lairdtech.com>
+References: <1460765986-12698-1-git-send-email-steve.derosier@lairdtech.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 18 Apr 2016 10:07:46 +1000
+Message-ID: <CAGRGNgV_W6uJF5DR43XdqvHPgBha1AfALYXcX4Lj=4jkO8TftQ@mail.gmail.com> (sfid-20160418_021351_511904_72990C7C)
+Subject: Re: [PATCH] ath6kl: Add ability to set debug uart baud rate
+To: Steve deRosier <derosier@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-03-29 at 12:35 +0300, Emmanuel Grumbach wrote:
-> 
-> +void ieee80211_nan_func_match(struct ieee80211_vif *vif,
-> +			      struct cfg80211_nan_match_params
-> *match,
-> +			      gfp_t gfp)
-> +{
-> +	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
-> +	struct ieee80211_nan_func *func;
-> +	struct wireless_dev *wdev;
-> +
-> +	if (WARN_ON(vif->type != NL80211_IFTYPE_NAN))
-> +		return;
-> +
-> +	spin_lock_bh(&sdata->u.nan.func_lock);
-> +
-> +	func = ieee80211_find_nan_func(sdata, match->inst_id);
-> +	if (WARN_ON(!func)) {
-> +		spin_unlock_bh(&sdata->u.nan.func_lock);
-> +		return;
-> +	}
-> +	match->cookie = func->func.cookie;
-> 
-Ok maybe this requires a spinlock - due to how drivers want to call it
-- but could also use RCU? Particularly with IDR that shouldn't be
-difficult.
+Hi Steve,
 
-johannes
+On Sat, Apr 16, 2016 at 10:19 AM, Steve deRosier <derosier@gmail.com> wrote:
+> It's useful to permit the customization of the debug uart baud rate. Enable
+> this and send down the value to the chip if we're enabling debug.
+>
+> Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
+
+This looks like it's using standard serial rates. Does it accept
+non-standard rates? If not, should this be checked before being passed
+to the hardware?
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
