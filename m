@@ -1,42 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40766 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751526AbcDUMqk (ORCPT
+Received: from mail-yw0-f174.google.com ([209.85.161.174]:36090 "EHLO
+	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047AbcDRSMm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2016 08:46:40 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 18 Apr 2016 14:12:42 -0400
+Received: by mail-yw0-f174.google.com with SMTP id o66so212029471ywc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 11:12:41 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: rtl8xxxu: hide unused tables
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1461016782-2640046-1-git-send-email-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Jakub Sitnicki <jsitnicki@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <20160421124639.5CD9560F77@smtp.codeaurora.org> (sfid-20160421_144716_248777_F878A54E)
-Date: Thu, 21 Apr 2016 12:46:39 +0000 (UTC)
+In-Reply-To: <CAGRGNgV_W6uJF5DR43XdqvHPgBha1AfALYXcX4Lj=4jkO8TftQ@mail.gmail.com>
+References: <1460765986-12698-1-git-send-email-steve.derosier@lairdtech.com>
+	<CAGRGNgV_W6uJF5DR43XdqvHPgBha1AfALYXcX4Lj=4jkO8TftQ@mail.gmail.com>
+Date: Mon, 18 Apr 2016 11:12:41 -0700
+Message-ID: <CALupW3CsuSGy=xBw-Wj5FfD+ALKBGi9xvi=Z8+YTdL9mGku5HQ@mail.gmail.com> (sfid-20160418_201245_613885_7D153DFE)
+Subject: Re: [PATCH] ath6kl: Add ability to set debug uart baud rate
+From: Steve deRosier <derosier@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Steve deRosier <steve.derosier@lairdtech.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Julian,
 
-> The references to some arrays in the rtl8xxxu driver were moved inside
-> of an #ifdef, but the symbols remain outside, resulting in build warnings:
-> 
-> rtl8xxxu/rtl8xxxu.c:1506:33: error: 'rtl8188ru_radioa_1t_highpa_table' defined but not used
-> rtl8xxxu/rtl8xxxu.c:1431:33: error: 'rtl8192cu_radioa_1t_init_table' defined but not used
-> rtl8xxxu/rtl8xxxu.c:1407:33: error: 'rtl8192cu_radiob_2t_init_table' defined but not used
-> rtl8xxxu/rtl8xxxu.c:1332:33: error: 'rtl8192cu_radioa_2t_init_table' defined but not used
-> rtl8xxxu/rtl8xxxu.c:239:35: error: 'rtl8192c_power_base' defined but not used
-> rtl8xxxu/rtl8xxxu.c:217:35: error: 'rtl8188r_power_base' defined but not used
-> 
-> This adds an extra #ifdef around them to shut up the warnings.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 2fc0b8e5a17d ("rtl8xxxu: Add TX power base values for gen1 parts")
-> Fixes: 4062b8ffec36 ("rtl8xxxu: Move PHY RF init into device specific functions")
+Thanks for looking at the patch.
 
-Thanks, applied to wireless-drivers-next.git.
+On Sun, Apr 17, 2016 at 5:07 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Steve,
+>
+> This looks like it's using standard serial rates. Does it accept
+> non-standard rates? If not, should this be checked before being passed
+> to the hardware?
+>
 
-Kalle Valo
+It should use standard serial rates, and obviously I defaulted it to a
+sensible one. However, there's nothing that prevents you from using
+odd and arbitrary rates in the firmware and it should just suck it in
+and use it. In other words, the firmware will happily try to set 9507
+baud if you tell it to.
+
+This is specifically for debugging and working with the firmware and
+IMHO, if you are using this feature and feel a need to set it to
+something weird, I think the user should be allowed to. If you know
+enough to be able to shoot yourself in the foot with this, then you
+should know enough of what you should or shouldn't do and should be
+allowed to. It's a debugging tool only and I don't see any reason to
+waste lines in the driver to validate this input.
+
+That's my perspective on the issue, but I recognize other opinions may
+differ. Or you may know of a specific chip where it does matter (the
+6003s and 6004s I'm using don't seem to care). If you or Kalle insist
+on it, I'll be happy to add in some value checking for this parameter.
+It just doesn't seem worth-while to me.
+
+- Steve
