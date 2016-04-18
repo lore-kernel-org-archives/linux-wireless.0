@@ -1,53 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:37637 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753830AbcDSKWL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 06:22:11 -0400
-Received: by mail-wm0-f52.google.com with SMTP id n3so21434547wmn.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2016 03:22:09 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1461057103.2766.15.camel@sipsolutions.net>
-References: <1455710131-9967-1-git-send-email-grzegorz.bajorski@tieto.com>
-	<56C4A5ED.4060802@openwrt.org>
-	<CA+BoTQnf953+s++Wiug=BgEw2Ahu7cN1fbatmgyWi_6iAg_v2Q@mail.gmail.com>
-	<1461057103.2766.15.camel@sipsolutions.net>
-Date: Tue, 19 Apr 2016 12:22:08 +0200
-Message-ID: <CA+BoTQ=Nw_pW3xk_zkRGw=kTXcfin8Py_xo+WMGsdLcgUiNV4Q@mail.gmail.com> (sfid-20160419_122215_790650_E32D5EBF)
-Subject: Re: [RFC] mac80211: add extap functionality
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Grzegorz Bajorski <grzegorz.bajorski@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:41547 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752171AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 11:49:38 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 15/16] rtl8xxxu: Rename rtl8723bu_simularity_compare()
+Date: Mon, 18 Apr 2016 11:49:35 -0400
+Message-Id: <1460994576-24091-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_180721_985158_8B9FD265)
+In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 April 2016 at 11:11, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2016-04-18 at 13:23 +0200, Michal Kazior wrote:
->
->> You can't really implement complete IPv6 support in relayd though.
->> Link-local routing is forbidden by the spec explicitly and a patch
->> I've cooked up was rejected[1].
->>
->> I guess this leaves either the kernel's wireless stack to take up the
->> task or a special link device (for which I'm soliciting feedback now
->> [2]).
->
-> I think you'll probably have to cook up a simple patch to get that
-> question in [2] taken seriously :)
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Heh.
+This renames rtl8723bu_simularity_compare() to
+rtl8xxxu_gen2_simularity_compare() to reflect it is used for all gen2
+parts.
 
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-> How much of that could be done with nftables btw?
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index bec2c4d..240b361 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -4591,8 +4591,8 @@ static bool rtl8xxxu_simularity_compare(struct rtl8xxxu_priv *priv,
+ 	return false;
+ }
+ 
+-static bool rtl8723bu_simularity_compare(struct rtl8xxxu_priv *priv,
+-					 int result[][8], int c1, int c2)
++static bool rtl8xxxu_gen2_simularity_compare(struct rtl8xxxu_priv *priv,
++					     int result[][8], int c1, int c2)
+ {
+ 	u32 i, j, diff, simubitmap, bound = 0;
+ 	int candidate[2] = {-1, -1};	/* for path A and path B */
+@@ -6233,7 +6233,8 @@ static void rtl8723bu_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
+ 		rtl8723bu_phy_iqcalibrate(priv, result, i);
+ 
+ 		if (i == 1) {
+-			simu = rtl8723bu_simularity_compare(priv, result, 0, 1);
++			simu = rtl8xxxu_gen2_simularity_compare(priv,
++								result, 0, 1);
+ 			if (simu) {
+ 				candidate = 0;
+ 				break;
+@@ -6241,13 +6242,15 @@ static void rtl8723bu_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
+ 		}
+ 
+ 		if (i == 2) {
+-			simu = rtl8723bu_simularity_compare(priv, result, 0, 2);
++			simu = rtl8xxxu_gen2_simularity_compare(priv,
++								result, 0, 2);
+ 			if (simu) {
+ 				candidate = 0;
+ 				break;
+ 			}
+ 
+-			simu = rtl8723bu_simularity_compare(priv, result, 1, 2);
++			simu = rtl8xxxu_gen2_simularity_compare(priv,
++								result, 1, 2);
+ 			if (simu) {
+ 				candidate = 1;
+ 			} else {
+@@ -6348,7 +6351,8 @@ static void rtl8192eu_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
+ 		rtl8192eu_phy_iqcalibrate(priv, result, i);
+ 
+ 		if (i == 1) {
+-			simu = rtl8723bu_simularity_compare(priv, result, 0, 1);
++			simu = rtl8xxxu_gen2_simularity_compare(priv,
++								result, 0, 1);
+ 			if (simu) {
+ 				candidate = 0;
+ 				break;
+@@ -6356,13 +6360,15 @@ static void rtl8192eu_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
+ 		}
+ 
+ 		if (i == 2) {
+-			simu = rtl8723bu_simularity_compare(priv, result, 0, 2);
++			simu = rtl8xxxu_gen2_simularity_compare(priv,
++								result, 0, 2);
+ 			if (simu) {
+ 				candidate = 0;
+ 				break;
+ 			}
+ 
+-			simu = rtl8723bu_simularity_compare(priv, result, 1, 2);
++			simu = rtl8xxxu_gen2_simularity_compare(priv,
++								result, 1, 2);
+ 			if (simu)
+ 				candidate = 1;
+ 			else
+-- 
+2.5.5
 
-I'm not sure if I follow. Do you mean what I've been able to do with
-relayd until now? Without link-local ipv6 routing DHCPv6 is broken
-(could probably addressed with DHCPv6 Relay to a certain degree) and
-RS/RA may not work (if it propagates fe80:: routes). Also apps that
-rely on fe80:: socket binding/addressing will fail.
-
-
-Michał
