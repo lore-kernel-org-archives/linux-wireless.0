@@ -1,53 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:53380 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753077AbcDSOVq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39465 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752093AbcDRQNq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 10:21:46 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Eyal Reizer <eyalreizer@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
-Subject: Re: [PATCHv2] wlcore: spi: add wl18xx support
-Date: Tue, 19 Apr 2016 16:21:35 +0200
-Message-ID: <4133521.UUI3B1RTyv@wuerfel> (sfid-20160419_162215_349351_AADAA07D)
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
-References: <1460273570-12298-1-git-send-email-eyalr@ti.com> <1463330011.BhWEcYYuGD@wuerfel> <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
+	Mon, 18 Apr 2016 12:13:46 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V11 2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
+References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
+	<1456947439-28968-2-git-send-email-arend@broadcom.com>
+	<877ffypvre.fsf@kamboji.qca.qualcomm.com>
+	<57139F97.5010106@broadcom.com>
+Date: Mon, 18 Apr 2016 19:13:37 +0300
+In-Reply-To: <57139F97.5010106@broadcom.com> (Arend van Spriel's message of
+	"Sun, 17 Apr 2016 16:37:11 +0200")
+Message-ID: <87vb3eki8e.fsf@kamboji.qca.qualcomm.com> (sfid-20160418_181349_182074_AC9BF096)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 19 April 2016 09:05:45 Reizer, Eyal wrote:
-> > > It is also part of the generic spi.h (include/Linux/spi/spi.h),
-> > > already part of " struct spi_device" So it seemed redundant adding
-> > > another mechanism for implementing the same.
-> > > Platform that interact with a wilink need to use it, and platforms
-> > > that don't have this capability will probably not interact with a wilink device
-> > using SPI.
-> > 
-> > The cs_gpio field in spi_device belongs to the spi host controller, no other
-> > slave driver uses it.
-> > 
-> > I wasn't asking for a duplication of this mechanism, but an interface to use it
-> > properly. Internally, the spi core uses the spi_set_cs() function to pick a CS.
-> > Find a way to use that rather than reimplementing it incorrectly.
-> > 
-> 
-> Understood. As this special CS manipulation is unique to wspi (wilink spi)  I think the 
-> best option is to move this gpio allocation into wlcore_spi as a new device tree entry
-> used only by this driver.
-> If you agree I will submit a v3.
+Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-I don't think that can work either: aside of not solving the problem
-of wilink devices on spi controllers that don't use gpio, it also doesn't
-solve the problem of what happens when the driver manually triggers the
-gpio to hold the CS signal while another driver talks to a different
-device using another CS on the same controller.
+> On 15-04-16 20:33, Kalle Valo wrote:
+>> Arend van Spriel <arend@broadcom.com> writes:
+>> 
+>>> Announce support for nl80211 feature BSS_SELECT and process
+>>> BSS selection behaviour provided in .connect() callback.
+>>>
+>>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>>> Reviewed-by: Lei Zhang <leizh@broadcom.com>
+>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> 
+>> Sorry, didn't apply anymore and I don't dare to try to fix the
+>> conflicts:
+>> 
+>> Applying: brcmfmac: add support for nl80211 BSS_SELECT feature
+>> Using index info to reconstruct a base tree...
+>> Falling back to patching base and 3-way merge...
+>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+>> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
+>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> 
+>> So please rebase.
+>
+> It probably never applied as I created the patch together with nl80211
+> patch on mac80211-next/master branch. Not sure how to handle it
+> otherwise.
 
-	Arnd
+Yeah, I don't see any better way to do this either and I think the way
+you did is best.
+
+> Anyway, I will send out a rebased version soon.
+
+Got it, thanks.
+
+-- 
+Kalle Valo
