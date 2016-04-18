@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33411 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000AbcDJB7C (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:35121 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751780AbcDRMiX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Apr 2016 21:59:02 -0400
-Received: by mail-oi0-f65.google.com with SMTP id v67so20379344oie.0
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Apr 2016 18:59:01 -0700 (PDT)
+	Mon, 18 Apr 2016 08:38:23 -0400
+Received: by mail-wm0-f45.google.com with SMTP id a140so117999966wma.0
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 05:38:22 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAJ-Vmon7Qyms95U4AuidkqMcGFPqXi3pWuEQastUdHe7B6hfFA@mail.gmail.com>
-References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
-	<1455658091-28262-1-git-send-email-apenwarr@gmail.com>
-	<1455658091-28262-2-git-send-email-apenwarr@gmail.com>
-	<1456222441.2041.10.camel@sipsolutions.net>
-	<CAHqTa-1CkJ-Pm6o7-pxcek4h+hmq6EtA0u12zGGraOUjDjeXSQ@mail.gmail.com>
-	<1456257946.9910.23.camel@sipsolutions.net>
-	<CAHqTa-2bd2Z3LotVUpexWo2B95h3m5pjbjkWy-N=P=LYzCA4Mw@mail.gmail.com>
-	<1459928436.17504.11.camel@sipsolutions.net>
-	<CAHqTa-3VtwYWLUHQuFyqtmMwPE2XQYJD4-U+-1PqXKtmTFrEgA@mail.gmail.com>
-	<1460098614.30678.1.camel@sipsolutions.net>
-	<1460098909.30678.2.camel@sipsolutions.net>
-	<1460099746.30678.3.camel@sipsolutions.net>
-	<CAHqTa-1SO+asqf7Fn2d+J_w8vvJ1CnnMG8AGB2O1CBjeaaL8hA@mail.gmail.com>
-	<CAHqTa-0oji0=-CMYbQ6PQw-R5_jsuUjAAtERwDvLieBD=ObCKw@mail.gmail.com>
-	<1460177816.7409.4.camel@sipsolutions.net>
-	<CAJ-Vmon7Qyms95U4AuidkqMcGFPqXi3pWuEQastUdHe7B6hfFA@mail.gmail.com>
-Date: Sat, 9 Apr 2016 18:59:00 -0700
-Message-ID: <CAArymCnGTj4qv8KWwDfwSN0DQvTTpTwC+-sHSkMfjNVs2Rr_sg@mail.gmail.com> (sfid-20160410_035910_723709_12AD7059)
-Subject: Re: [PATCH] mac80211: debugfs var for the default aggregation timeout.
-From: bruce m beach <brucembeach@gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Avery Pennarun <apenwarr@gmail.com>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
+In-Reply-To: <CA+BoTQkHAOhwFh5grveGCH5tfsxOT=BXAx2qgF1c=GcT7SrSQw@mail.gmail.com>
+References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+	<1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+	<1460636302-31161-5-git-send-email-michal.kazior@tieto.com>
+	<1460845772.2075.31.camel@sipsolutions.net>
+	<CA+BoTQkHAOhwFh5grveGCH5tfsxOT=BXAx2qgF1c=GcT7SrSQw@mail.gmail.com>
+Date: Mon, 18 Apr 2016 14:38:21 +0200
+Message-ID: <CA+BoTQkQrUyihsk9MMMGY3XXGD+RqwziLwe+jKsKTG5q=StuAg@mail.gmail.com> (sfid-20160418_143826_546926_033F5853)
+Subject: Re: [PATCHv3 4/5] mac80211: implement codel on fair queuing flows
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dave Taht <dave.taht@gmail.com>,
+	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
+	Avery Pennarun <apenwarr@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> If any people more familiar with ARM are reading this - does the value
-> 0x5b35da40 ring a bell?
+On 18 April 2016 at 07:31, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 17 April 2016 at 00:29, Johannes Berg <johannes@sipsolutions.net> wrote:
+>> On Thu, 2016-04-14 at 14:18 +0200, Michal Kazior wrote:
+>>>
+>>> +                             struct ieee80211_vif *vif;
+>>> +
+>>> +                             /* When packets are enqueued on txq
+>>> it's easy
+>>> +                              * to re-construct the vif pointer.
+>>> There's no
+>>> +                              * more space in tx_info so it can
+>>> be used to
+>>> +                              * store the necessary enqueue time
+>>> for packet
+>>> +                              * sojourn time computation.
+>>> +                              */
+>>> +                             u64 enqueue_time;
+>>> +                     };
+>>
+>> I wonder if we could move something like the hw_key into tx_control
+>> instead?
+>
+> Hmm.. It's probably doable. From a quick look it'll require quite some
+> change here and there (e.g. tdls_channel_switch op will need to be
+> extended to pass tx_control). I'll play with the idea..
 
-It could be anything. It depends on the chip implementation. For instance on an
-exynos that is an undefined region. What device are we talking about?
-Bruce
+This is actually far more than I thought initially. A lot of drivers
+(b43, b43legacy, rtlwifi, wlxxxx, cw1200) access hw_key outside of tx
+op context (tx workers, tx completions). I'm not even sure this is
+safe (keys can be freed in the meantime by mac80211 hence invaliding
+the pointer inside skb, no?).
+
+
+Michał
