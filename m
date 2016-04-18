@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.184]:64264 "EHLO
-	smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759736AbcDESYt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 14:24:49 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Amitkumar Karwar' <akarwar@marvell.com>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Wei-Ning Huang <wnhuang@google.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Sameer Nanda <snanda@google.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Sonny Rao <sonnyrao@chromium.org>,
-	Douglas Anderson <dianders@chromium.org>
-Subject: RE: [PATCH] mwifiex: add __GFP_REPEAT to skb allocation call
-Date: Tue, 5 Apr 2016 16:05:16 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D54DC5395@AcuExch.aculab.com> (sfid-20160405_202452_240079_FA53CAC0)
-References: <1459226840-36287-1-git-send-email-wnhuang@chromium.org>
-	 <87vb45brxc.fsf@kamboji.qca.qualcomm.com>
-	 <CABicQ-UJ1kniq6m86QcyVZBPznvNexfrUrTk3A_=GmZy69hvCA@mail.gmail.com>
- <1459256320.6473.160.camel@edumazet-glaptop3.roam.corp.google.com>
- <4fa3762986eb4b848dbe7daf6871d7a8@SC-EXCH04.marvell.com>
-In-Reply-To: <4fa3762986eb4b848dbe7daf6871d7a8@SC-EXCH04.marvell.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:49975 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752097AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 11:49:38 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 09/16] rtl8xxxu: Rename rtl8723au_phy_iq_calibrate() to rtl8xxxu_gen1_phy_iq_calibrate()
+Date: Mon, 18 Apr 2016 11:49:29 -0400
+Message-Id: <1460994576-24091-10-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_174952_487617_BA3C3A23)
+In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RnJvbTogQW1pdGt1bWFyIEthcndhcg0KPiBTZW50OiAwNSBBcHJpbCAyMDE2IDA2OjQ4DQouLi4N
-Cj4gT3VyIG9uZSB0aW1lIGFsbG9jYXRlZCA2NGsgYnVmZmVyIHJlYWQgZnJvbSBmaXJtd2FyZSBj
-b250YWlucyBtdWx0aXBsZSBkYXRhIGNodW5rcy4gV2UgaGF2ZSBhIGZlYXR1cmUNCj4gY2FsbGVk
-IHNpbmdsZSBwb3J0IGFnZ3JlZ2F0aW9uIGluIHdoaWNoIGZpcm13YXJlIGF0dGFjaGVzIGFuIGFn
-Z3JlZ2F0ZWQgYnVmZmVyIHRvIHNpbmdsZSBwb3J0LiBTbw0KPiBzb21ldGltZXMgYSBzaW5nbGUg
-ZGF0YSBjaHVuayBjYW4gZXhjZWVkIDMyay4gZGV2X2tmcmVlX3NrYl9hbnkoKSBpcyBjYWxsZWQg
-dG8gZnJlZSB0aG9zZSBkYXRhIGNodW5rcy4NCg0KQWggeWVzLCB3aGljaCBwYXJ0aWN1bGFyIHBy
-b2JsZW0gZG9lcyBhZ2dyZWdhdGluZyBkYXRhIGludG8gYSBzaW5nbGUgYnVmZmVyIHNvbHZlPw0K
-DQoJRGF2aWQNCg0K
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+
+All supported gen1 parts use the same phy_iq_calibrate() function
+(unlike their gen2 counterparts). Rename the function to reflect this.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 469bc9a..d5c2117 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -6103,7 +6103,7 @@ static void rtl8xxxu_prepare_calibrate(struct rtl8xxxu_priv *priv, u8 start)
+ 	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_wlan_calibration));
+ }
+ 
+-static void rtl8723au_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
++static void rtl8xxxu_gen1_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
+ {
+ 	struct device *dev = &priv->udev->dev;
+ 	int result[4][8];	/* last is final result */
+@@ -9878,7 +9878,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.llt_init = rtl8xxxu_init_llt_table,
+ 	.init_phy_bb = rtl8723au_init_phy_bb,
+ 	.init_phy_rf = rtl8723au_init_phy_rf,
+-	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
++	.phy_iq_calibrate = rtl8xxxu_gen1_phy_iq_calibrate,
+ 	.config_channel = rtl8xxxu_gen1_config_channel,
+ 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
+ 	.enable_rf = rtl8723a_enable_rf,
+@@ -9950,7 +9950,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.llt_init = rtl8xxxu_init_llt_table,
+ 	.init_phy_bb = rtl8723au_init_phy_bb,
+ 	.init_phy_rf = rtl8192cu_init_phy_rf,
+-	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
++	.phy_iq_calibrate = rtl8xxxu_gen1_phy_iq_calibrate,
+ 	.config_channel = rtl8xxxu_gen1_config_channel,
+ 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
+ 	.enable_rf = rtl8723a_enable_rf,
+-- 
+2.5.5
+
