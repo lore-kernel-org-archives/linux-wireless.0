@@ -1,89 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f173.google.com ([209.85.161.173]:36285 "EHLO
-	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751363AbcDWHlr (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:32899 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751519AbcDRQYI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Apr 2016 03:41:47 -0400
-Received: by mail-yw0-f173.google.com with SMTP id o66so144644188ywc.3
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Apr 2016 00:41:47 -0700 (PDT)
+	Mon, 18 Apr 2016 12:24:08 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Lauri Kasanen <cand@gmx.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3] carl9170: Clarify kconfig text
+Date: Mon, 18 Apr 2016 18:24:03 +0200
+Message-ID: <1601274.2AA5eFGnzj@debian64> (sfid-20160418_182432_578884_3E130C21)
+In-Reply-To: <20160418190739.bea7c781e2bd35beb7a748f7@gmx.com>
+References: <20160416113312.8de2266358165182bb4b4a15@gmx.com> <87shyiyl8a.fsf@purkki.adurom.net> <20160418190739.bea7c781e2bd35beb7a748f7@gmx.com>
 MIME-Version: 1.0
-In-Reply-To: <1461363503.2726.17.camel@perches.com>
-References: <CABPxzYLZ2thNWCQ6bQ0-Peic-X-FTpTv4wJxyXVdmBDQDRS8JA@mail.gmail.com>
- <1461353341.2726.14.camel@perches.com> <CABPxzYJOAFq4hrSpZkx_bmvsUGhR0PmsUvjbnw=ykUeHAVXYqw@mail.gmail.com>
- <1461363503.2726.17.camel@perches.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sat, 23 Apr 2016 13:11:27 +0530
-Message-ID: <CABPxzYJmKpw+Z0xm0+-mVUx5-bLrbKKi3V3UGhKoAT4Uf68r2g@mail.gmail.com> (sfid-20160423_094831_884886_FAB44977)
-Subject: Re: Debug prints mac80211 drivers
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 23, 2016 at 3:48 AM, Joe Perches <joe@perches.com> wrote:
-> On Sat, 2016-04-23 at 02:32 +0530, Krishna Chaitanya wrote:
->> On Sat, Apr 23, 2016 at 12:59 AM, Joe Perches <joe@perches.com> wrote:
->> >
->> >
->> > On Fri, 2016-04-22 at 17:51 +0530, Krishna Chaitanya wrote:
->> > >
->> > > What is the recommended method for adding
->> > > debug prints in mac80211 based drivers.
->> > >
->> > > 1) -DDEBUG + pr_debug ==> used by mac80211, brcm80211
->> > > 2) -DDEBUG + dev_dbg ==> zd1201
->> > > 3) dev_printk(KERN_DEBUG) ==> used by iwlwifi
->> > > 4) printk(KERN_DEBUG) ==> Just to complete the list.
->> > wiphy_dbg -> netif_dbg -> netdev_dbg -> dev_dbg -> pr_debug
->> Ok, thats what checpatch --strict throws. but still different vendors
->> follow
->> different standards, so wanted to check if we should go strictly with
->> checkpatch (or) is there any rationale behind choose each of the
->> variant.
->
-> Generally the variants are used to produce sufficient
-> logging information to identify the appropriate device.
->
-> Most all debugging printks shouldn't be emitted unless
-> actually debugging.
->
->> > and CONFIG_DYNAMIC_DEBUG, no -DDEBUG required
->> Yes, i understand. Till now we had this enabled, so pr_debug
->> works just fine, but now it is disabled hence the question.
->>
->> Also there are pros and cons to having control using dyndbg,
->> user can disable dyndbg, there be missing imp
->
-> imp?
-Sorry, important.
->>  debugs, in this case
->> having module level (-DDEBUG) helps but if we want entire system
->> to run in non-debug mode, disabling dyndbg helps.
->
-> Confused:
->
-> dynamic debug printks aren't emitted by default
-> unless DEBUG is also defined or specifically
-> enabled by the user.
-I don't think so, enabling dynamic debug should suffice.
-
-280 #if defined(CONFIG_DYNAMIC_DEBUG)
-281 /* dynamic_pr_debug() uses pr_fmt() internally so we don't need it here */
-282 #define pr_debug(fmt, ...) \
-283         dynamic_pr_debug(fmt, ##__VA_ARGS__)
-284 #elif defined(DEBUG)
-285 #define pr_debug(fmt, ...) \
-286         printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
-287 #else
-288 #define pr_debug(fmt, ...) \
-289         no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
-290 #endif
-
-
-
--- 
-Thanks,
-Regards,
-Chaitanya T K.
+On Monday, April 18, 2016 07:07:39 PM Lauri Kasanen wrote:
+> The previous text was confusing, leading readers to think this
+> driver was a duplicate, and so didn't need to be enabled.
+> 
+> After the removal of the older staging driver, this is the only
+> driver in mainline for these devices.
+> 
+> Signed-off-by: Lauri Kasanen <cand@gmx.com>
+> ---
+> v3: Remove all firmware mentions.
+> 
+>  drivers/net/wireless/ath/carl9170/Kconfig | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
+> index 1a796e5..ca1ae09 100644
+> --- a/drivers/net/wireless/ath/carl9170/Kconfig
+> +++ b/drivers/net/wireless/ath/carl9170/Kconfig
+> @@ -5,13 +5,7 @@ config CARL9170
+>  	select FW_LOADER
+>  	select CRC32
+>  	help
+> -	  This is another driver for the Atheros "otus" 802.11n USB devices.
+> -
+> -	  This driver provides more features than the original,
+> -	  but it needs a special firmware (carl9170-1.fw) to do that.
+> -
+> -	  The firmware can be downloaded from our wiki here:
+> -	  <http://wireless.kernel.org/en/users/Drivers/carl9170>
+Please do keep the wiki link.
