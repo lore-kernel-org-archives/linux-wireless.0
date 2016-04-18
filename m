@@ -1,55 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.161.172]:34333 "EHLO
-	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750992AbcDMUIS (ORCPT
+Received: from smtprelay0006.hostedemail.com ([216.40.44.6]:34952 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751394AbcDRP4p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2016 16:08:18 -0400
-Received: by mail-yw0-f172.google.com with SMTP id d68so82458383ywe.1
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2016 13:08:18 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAA93jw5d9Er+ZcSszg-gd0X7ZWeQJtqmPFXkf1mwXnTDKxg0xA@mail.gmail.com>
-References: <570D8956.8090806@candelatech.com> <1460534484.3057.2.camel@sipsolutions.net>
- <570E472A.2040901@candelatech.com> <CAA93jw5d9Er+ZcSszg-gd0X7ZWeQJtqmPFXkf1mwXnTDKxg0xA@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 14 Apr 2016 01:37:57 +0530
-Message-ID: <CABPxzYJFjvMAn8fCcsuqbyq-6Yrim+eXFM2=6pVu=ppmP35x9Q@mail.gmail.com> (sfid-20160413_220822_200411_BAA273AE)
-Subject: Re: General VHT rate-ctrl question
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 18 Apr 2016 11:56:45 -0400
+Message-ID: <1460995000.1917.5.camel@perches.com> (sfid-20160418_175650_856004_06E0B8B8)
+Subject: Re: [PATCH 00/16] rtl8xxxu prepare for splitting into multiple files
+From: Joe Perches <joe@perches.com>
+To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Date: Mon, 18 Apr 2016 08:56:40 -0700
+In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Apr 13, 2016 at 10:31 PM, Dave Taht <dave.taht@gmail.com> wrote:
->
-> On Wed, Apr 13, 2016 at 6:18 AM, Ben Greear <greearb@candelatech.com> wrote:
-> >
-> >
-> > On 04/13/2016 01:01 AM, Johannes Berg wrote:
-> >>
-> >> On Tue, 2016-04-12 at 16:48 -0700, Ben Greear wrote:
-> >>>
-> >>> If a station and it's peer can both do VHT, is there ever a good
-> >>> reason to even try HT rates?
-> >>>
-> >>
-> >> Not really; perhaps if you could do HT greenfield preamble (which VHT
-> >> doesn't have) you could get something out of it, beyond that I don't
-> >> see a reason to try.
-> >>
-> >> Unless, for some strange reason, it supports only single stream VHT and
-> >> dual-stream HT or something really weird?
-> >
-> >
-> > I was wondering if there was ever a reason that, say 450Mbps HT
-> > would work better than MCS-1 for VHT.  Or, maybe a mid-rate HT MCS would
-> > have more range than VHT, or something like that.
-I dont think so. basically if you remove 256 QAM out of picture,
-it just boils down to choosing a modulation scheme which would
-be same for VHT and HT. (assuming same BW)
+On Mon, 2016-04-18 at 11:49 -0400, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> Hi,
+> 
+> This is the last set of patches I have in my queue for the rtl8xxxu
+> driver, as of today :)
+> 
+> Since the driver has grown to support quite a number of different
+> chips, I want to split it into multiple files. This will make it
+> easier to maintain and also eaiser to add support for more chips
+> without having to constantly touch the core files.
+> 
+> This set renames a bunch of functions to indicate that they are
+> generic rather than chip specific. I will look at doing the actual
+> moving around in a set right after the current merge window closes.
 
-Only advantage is as Johannes pointed, VHT doesn't have greenfield,
-so using HT greenfield preamble might be marginally good. Similarly we can
-use RIFS for HT(not recommended), But again who uses RIFS/greenfield?
+It's a bit of a pity that the identifiers are all
+quite long.  Using these long identifiers makes
+80 column content a bit right shifted and single
+line statements unlikely.
+
