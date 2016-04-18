@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35923 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbcDFTHs (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:38089 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787AbcDRFbj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 15:07:48 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Machani\, Yaniv" <yanivma@ti.com>
-Cc: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>,
-	Luciano Coelho <coelho@ti.com>,
-	"Balbi\, Felipe" <balbi@ti.com>, "Chalmers\, Kevin" <kev@ti.com>,
-	Shahar Levi <shahar_levi@ti.com>,
-	"Davis\, Andrew" <afd@ti.com>, "Mishol\, Guy" <guym@ti.com>,
-	Arik Nemtsov <arik@wizery.com>, Gery Kahn <geryk@ti.com>,
-	Felipe Balbi <balbi@kernel.org>,
-	Luciano Coelho <luca@coelho.fi>,
-	"David Woodhouse" <dwmw2@infradead.org>,
-	Pavel Machek <pavel@ucw.cz>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	David Gnedt <david.gnedt@platinumzone24.at>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	"Tony Lindgren" <tony@atomide.com>, "Menon\, Nishanth" <nm@ti.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
-References: <201603200040.26045@pali> <20160404123944.GA8413@pali>
-	<AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com>
-	<201604061412.43684@pali>
-	<AE1C82FB3D0EC64DB1F752C81CBD1101390F685E@DFRE01.ent.ti.com>
-Date: Wed, 06 Apr 2016 22:07:39 +0300
-In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101390F685E@DFRE01.ent.ti.com>
-	(Yaniv Machani's message of "Wed, 6 Apr 2016 12:30:25 +0000")
-Message-ID: <87lh4q4kuc.fsf@purkki.adurom.net> (sfid-20160406_210807_441092_F2FE46C5)
+	Mon, 18 Apr 2016 01:31:39 -0400
+Received: by mail-wm0-f44.google.com with SMTP id u206so106528422wme.1
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Apr 2016 22:31:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460845772.2075.31.camel@sipsolutions.net>
+References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+	<1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+	<1460636302-31161-5-git-send-email-michal.kazior@tieto.com>
+	<1460845772.2075.31.camel@sipsolutions.net>
+Date: Mon, 18 Apr 2016 07:31:37 +0200
+Message-ID: <CA+BoTQkHAOhwFh5grveGCH5tfsxOT=BXAx2qgF1c=GcT7SrSQw@mail.gmail.com> (sfid-20160418_073143_116705_BEF09178)
+Subject: Re: [PATCHv3 4/5] mac80211: implement codel on fair queuing flows
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dave Taht <dave.taht@gmail.com>,
+	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
+	Avery Pennarun <apenwarr@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Machani, Yaniv" <yanivma@ti.com> writes:
+On 17 April 2016 at 00:29, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2016-04-14 at 14:18 +0200, Michal Kazior wrote:
+>>
+>> +                             struct ieee80211_vif *vif;
+>> +
+>> +                             /* When packets are enqueued on txq
+>> it's easy
+>> +                              * to re-construct the vif pointer.
+>> There's no
+>> +                              * more space in tx_info so it can
+>> be used to
+>> +                              * store the necessary enqueue time
+>> for packet
+>> +                              * sojourn time computation.
+>> +                              */
+>> +                             u64 enqueue_time;
+>> +                     };
+>
+> I wonder if we could move something like the hw_key into tx_control
+> instead?
 
-> More than that, wl1251 family is not officially supported via the
-> mainline Linux.
+Hmm.. It's probably doable. From a quick look it'll require quite some
+change here and there (e.g. tdls_channel_switch op will need to be
+extended to pass tx_control). I'll play with the idea..
 
-I guess you mean not officially supported by TI? Because wl1251 driver
-has been in mainline for ages and reportedly working.
 
--- 
-Kalle Valo
+Michał
