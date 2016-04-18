@@ -1,28 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:40612 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752135AbcD1SYC (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:34885 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751167AbcDRFQx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2016 14:24:02 -0400
-Date: Thu, 28 Apr 2016 14:23:59 -0400 (EDT)
-Message-Id: <20160428.142359.1876751258360268598.davem@davemloft.net> (sfid-20160428_202427_461647_1D987BD8)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers 2016-04-25
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87a8kh3bvj.fsf@kamboji.qca.qualcomm.com>
-References: <87a8kh3bvj.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 18 Apr 2016 01:16:53 -0400
+Received: by mail-wm0-f52.google.com with SMTP id a140so102769625wma.0
+        for <linux-wireless@vger.kernel.org>; Sun, 17 Apr 2016 22:16:53 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1460845552.2075.28.camel@sipsolutions.net>
+References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+	<1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+	<1460636302-31161-3-git-send-email-michal.kazior@tieto.com>
+	<1460845384.2075.27.camel@sipsolutions.net>
+	<1460845552.2075.28.camel@sipsolutions.net>
+Date: Mon, 18 Apr 2016 07:16:52 +0200
+Message-ID: <CA+BoTQmuTAjR-cSuJmsAm5Ms3sTrtPT8HxE_tYf1EGOMGeHVcw@mail.gmail.com> (sfid-20160418_071658_963225_AB8106CE)
+Subject: Re: [PATCHv3 2/5] mac80211: implement fair queueing per txq
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Dave Taht <dave.taht@gmail.com>,
+	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
+	Avery Pennarun <apenwarr@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Mon, 25 Apr 2016 19:13:20 +0300
+On 17 April 2016 at 00:25, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Sun, 2016-04-17 at 00:23 +0200, Johannes Berg wrote:
+>> On Thu, 2016-04-14 at 14:18 +0200, Michal Kazior wrote:
+>> >
+>> >
+>> > +++ b/net/mac80211/fq.h
+>> >
+>> Now that you've mostly rewritten it, why keep it in a .h file?
+>>
+>
+> I think I just confused this with codel.h, but still - why a .h file
+> with all this "real" code, meaning the file can really only be included
+> once?
 
-> few fixes for 4.6, more info in the signed tag below. I'm hoping this to
-> be the final pull request for 4.6 but let's see how it goes. Please let
-> me know if there are any problems.
+I guess .h file can give the compiler an opportunity for more
+optimizations. With .c you would need LTO which I'm not sure if it's
+available everywhere.
 
-Pulled, thanks.
+
+Michał
