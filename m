@@ -1,85 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:54540 "EHLO
-	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754062AbcDYIcF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 04:32:05 -0400
-From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, jhs@mojatatu.com, stephen@networkplumber.org,
-	pshelar@nicira.com, aar@pengutronix.de, linux-wpan@vger.kernel.org,
-	wensong@linux-vs.org, horms@verge.net.au, ja@ssi.bg,
-	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
-	lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Nicolas Dichtel <nicolas.dichtel@6wind.com>
-Subject: [PATCH net-next 3/9] ipv6: use nla_put_u64_64bit()
-Date: Mon, 25 Apr 2016 10:25:16 +0200
-Message-Id: <1461572722-6029-4-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160425_103234_028348_3E44D85B)
-In-Reply-To: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
-References: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
+Received: from mx1.redhat.com ([209.132.183.28]:48935 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751920AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 11:49:38 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 07/16] rtl8xxxu: Rename rtl8723au_config_channel() to rtl8xxxu_gen1_config_channel()
+Date: Mon, 18 Apr 2016 11:49:27 -0400
+Message-Id: <1460994576-24091-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_174956_685584_4ACCAC0E)
+In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
----
- include/uapi/linux/ila.h |  1 +
- net/ipv6/ila/ila_lwt.c   |  3 ++-
- net/ipv6/ila/ila_xlat.c  | 15 +++++++++------
- 3 files changed, 12 insertions(+), 7 deletions(-)
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-diff --git a/include/uapi/linux/ila.h b/include/uapi/linux/ila.h
-index abde7bbd6f3b..cd97951680bf 100644
---- a/include/uapi/linux/ila.h
-+++ b/include/uapi/linux/ila.h
-@@ -14,6 +14,7 @@ enum {
- 	ILA_ATTR_LOCATOR_MATCH,			/* u64 */
- 	ILA_ATTR_IFINDEX,			/* s32 */
- 	ILA_ATTR_DIR,				/* u32 */
-+	ILA_ATTR_PAD,
+All supported gen1 parts use the same config_channel() function, so
+rename it to reflect this.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 4aab4f5..d0557ad 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2219,7 +2219,7 @@ static int rtl8723b_channel_to_group(int channel)
+ 	return group;
+ }
  
- 	__ILA_ATTR_MAX,
- };
-diff --git a/net/ipv6/ila/ila_lwt.c b/net/ipv6/ila/ila_lwt.c
-index 2ae3c4fd8aab..9db3621b2126 100644
---- a/net/ipv6/ila/ila_lwt.c
-+++ b/net/ipv6/ila/ila_lwt.c
-@@ -109,7 +109,8 @@ static int ila_fill_encap_info(struct sk_buff *skb,
+-static void rtl8723au_config_channel(struct ieee80211_hw *hw)
++static void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
  {
- 	struct ila_params *p = ila_params_lwtunnel(lwtstate);
- 
--	if (nla_put_u64(skb, ILA_ATTR_LOCATOR, (__force u64)p->locator))
-+	if (nla_put_u64_64bit(skb, ILA_ATTR_LOCATOR, (__force u64)p->locator,
-+			      ILA_ATTR_PAD))
- 		goto nla_put_failure;
- 
- 	return 0;
-diff --git a/net/ipv6/ila/ila_xlat.c b/net/ipv6/ila/ila_xlat.c
-index 0b03533453e4..0e9e579410da 100644
---- a/net/ipv6/ila/ila_xlat.c
-+++ b/net/ipv6/ila/ila_xlat.c
-@@ -418,12 +418,15 @@ static int ila_nl_cmd_del_mapping(struct sk_buff *skb, struct genl_info *info)
- 
- static int ila_fill_info(struct ila_map *ila, struct sk_buff *msg)
- {
--	if (nla_put_u64(msg, ILA_ATTR_IDENTIFIER,
--			(__force u64)ila->p.identifier) ||
--	    nla_put_u64(msg, ILA_ATTR_LOCATOR,
--			(__force u64)ila->p.ip.locator) ||
--	    nla_put_u64(msg, ILA_ATTR_LOCATOR_MATCH,
--			(__force u64)ila->p.ip.locator_match) ||
-+	if (nla_put_u64_64bit(msg, ILA_ATTR_IDENTIFIER,
-+			      (__force u64)ila->p.identifier,
-+			      ILA_ATTR_PAD) ||
-+	    nla_put_u64_64bit(msg, ILA_ATTR_LOCATOR,
-+			      (__force u64)ila->p.ip.locator,
-+			      ILA_ATTR_PAD) ||
-+	    nla_put_u64_64bit(msg, ILA_ATTR_LOCATOR_MATCH,
-+			      (__force u64)ila->p.ip.locator_match,
-+			      ILA_ATTR_PAD) ||
- 	    nla_put_s32(msg, ILA_ATTR_IFINDEX, ila->p.ifindex) ||
- 	    nla_put_u32(msg, ILA_ATTR_DIR, ila->p.dir))
- 		return -1;
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	u32 val32, rsr;
+@@ -9879,7 +9879,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.init_phy_bb = rtl8723au_init_phy_bb,
+ 	.init_phy_rf = rtl8723au_init_phy_rf,
+ 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
+-	.config_channel = rtl8723au_config_channel,
++	.config_channel = rtl8xxxu_gen1_config_channel,
+ 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
+ 	.enable_rf = rtl8723a_enable_rf,
+ 	.disable_rf = rtl8xxxu_gen1_disable_rf,
+@@ -9951,7 +9951,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.init_phy_bb = rtl8723au_init_phy_bb,
+ 	.init_phy_rf = rtl8192cu_init_phy_rf,
+ 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
+-	.config_channel = rtl8723au_config_channel,
++	.config_channel = rtl8xxxu_gen1_config_channel,
+ 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
+ 	.enable_rf = rtl8723a_enable_rf,
+ 	.disable_rf = rtl8xxxu_gen1_disable_rf,
 -- 
-2.8.1
+2.5.5
 
