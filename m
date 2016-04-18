@@ -1,61 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34384 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751691AbcDKUEX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 16:04:23 -0400
-Received: by mail-wm0-f66.google.com with SMTP id n3so111338wmn.1
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 13:04:22 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EACFDF2@hasmsx107.ger.corp.intel.com>
-References: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EAA379D@hasmsx107.ger.corp.intel.com>
-	<CANfLQrad-1C3Wzy9M+=J7nzjQOcgam9CdJVDR2KC=KipZRpbkA@mail.gmail.com>
-	<1459863253.21527.2.camel@intel.com>
-	<CANfLQrbjCYaVa7-pq3xxPhmjM+MY5ky-isV7+yYLLFVkDCMr2Q@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EACFDF2@hasmsx107.ger.corp.intel.com>
-Date: Mon, 11 Apr 2016 23:04:16 +0300
-Message-ID: <CANfLQrYgSUpbxc2_SgJ1PSB84mMjriUAg4cafiMTzEz+gaEJcQ@mail.gmail.com> (sfid-20160411_220442_925920_E9B95B8C)
-Subject: Re: iwlwifi monitor mode: No data frame captured on 5 Ghz
-From: Gucea Doru <gucea.doru@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Gucea, Doru" <doru.gucea@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:34967 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751053AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 11:49:38 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 00/16] rtl8xxxu prepare for splitting into multiple files
+Date: Mon, 18 Apr 2016 11:49:20 -0400
+Message-Id: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_174949_868745_22820F5A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Apr 10, 2016 at 1:28 PM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
->> > On Tue, 2016-04-05 at 16:25 +0300, Gucea Doru wrote:
->> Is the iwlwifi driver capable of capturing data frames when the channel
->> bonding is set to 80Mhz?
->
-> dev <devname> set freq <control freq> [20|40|80|80+80|160] [<center freq 1>] [<center freq 2>]
->
-> You can take center_freq1 from the output of iw dev on a device that is associated to the same AP.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Thanks a lot, Emmanuel. My iw binary that came default with my Ubuntu
-distribution was very old (3.4) and it didn't have support for channel
-bonding larger than 40Mhz.
-I compiled the latest iw version from sources then I took the
-center_freq1 from the beacon advertised by the AP. That's because the
-iw dev on a device associated to the same AP gave me the control
-frequency. After that, I was able to capture the data frames.
+Hi,
 
-One more question that I promise to be the last one:
-- I am trying to capture the Wi-Fi Direct traffic between two
-smartphones: iw shows me that the p2p interface from one of the
-smartphones uses 2.4Ghz, channel 1 so I set the monitor interface on
-2.4, channel 1. The problem is that, again, I can't see the data
-frames. Instead, I can see the Association/Authentication Request,
-RTS/CTS, Block ACK (I attached the Wireshark capture at [1]).
+This is the last set of patches I have in my queue for the rtl8xxxu
+driver, as of today :)
 
-Analyzing the capture, I noticed that the HT capabilities advertised
-in the beacon frames indicates 802.11n D1.10. Does this trigger any
-indication for you on how to setup the monitor interface?
+Since the driver has grown to support quite a number of different
+chips, I want to split it into multiple files. This will make it
+easier to maintain and also eaiser to add support for more chips
+without having to constantly touch the core files.
 
-[1] https://drive.google.com/file/d/0B5SBH08PU_ChNllaVHRienBSVlE/view?usp=sharing
+This set renames a bunch of functions to indicate that they are
+generic rather than chip specific. I will look at doing the actual
+moving around in a set right after the current merge window closes.
 
-Regards,
-Doru
+Please keep the test reports coming!
+
+Cheers,
+Jes
+
+
+Jes Sorensen (16):
+  rtl8xxxu: Rename rtl8723bu_update_rate_mask() to
+    rtl8xxxu_gen2_update_rate_mask()
+  rtl8xxxu: Rename rtl8723bu_report_connect() to
+    rtl8xxxu_gen2_report_connect()
+  rtl8xxxu: Rename rtl8723au_report_connect() to
+    rtl8xxxu_gen1_report_connect()
+  rtl8xxxu: Rename rtl8723bu_config_channel() to
+    rtl8xxxu_gen2_config_channel()
+  rtl8xxxu: Rename rtl8723b_disable_rf() to rtl8xxxu_gen2_disable_rf()
+  rtl8xxxu: Rename rtl8723a_disable_rf() to rtl8xxxu_gen1_disable_rf()
+  rtl8xxxu: Rename rtl8723au_config_channel() to
+    rtl8xxxu_gen1_config_channel()
+  rtl8xxxu: Rename rtl8723au_update_rate_mask() to
+    rtl8xxxu_update_rate_mask()
+  rtl8xxxu: Rename rtl8723au_phy_iq_calibrate() to
+    rtl8xxxu_gen1_phy_iq_calibrate()
+  rtl8xxxu: Rename rtl8723au_init_phy_bb() to
+    rtl8xxxu_gen1_init_phy_bb()
+  rtl8xxxu: Rename rtl8723a_set_tx_power() to
+    rtl8xxxu_gen1_set_tx_power()
+  rtl8xxxu: Rename rtl8723a_enable_rf() to rtl8xxxu_gen1_enable_rf()
+  rtl8xxxu: Rename rtl8723a_mac_init_table to
+    rtl8xxxu_gen1_mac_init_table
+  rtl8xxxu: Rename rtl8723b_channel_to_group()
+  rtl8xxxu: Rename rtl8723bu_simularity_compare()
+  rtl8xxxu: Rename rtl8723au_iqk_phy_iq_bb_reg
+
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 122 ++++++++++++-----------
+ 1 file changed, 64 insertions(+), 58 deletions(-)
+
+-- 
+2.5.5
+
