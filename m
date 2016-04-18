@@ -1,191 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50718 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755497AbcDEH2w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 03:28:52 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u357SLHV028609
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 00:28:51 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0a-0016f401.pphosted.com with ESMTP id 222bekhtp4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 00:28:51 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Ganapathi Bhat <gbhat@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/7] mwifiex: add support for GTK rekey offload
-Date: Tue, 5 Apr 2016 00:22:26 -0700
-Message-ID: <1459840952-25338-1-git-send-email-akarwar@marvell.com> (sfid-20160405_092857_727408_1762F525)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:48939 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752120AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 11:49:38 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 16/16] rtl8xxxu: Rename rtl8723au_iqk_phy_iq_bb_reg
+Date: Mon, 18 Apr 2016 11:49:36 -0400
+Message-Id: <1460994576-24091-17-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_180721_868477_16B44977)
+In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ganapathi Bhat <gbhat@marvell.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Added driver functionality to offload GTK rekey to firmware. When
-AP sends new GTK, firmware will update it.
+There is nothing 8723au specific about rtl8723au_iqk_phy_iq_bb_reg so
+rename the array to rtl8xxxu_iqk_phy_iq_bb_reg.
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 13 +++++++++-
- drivers/net/wireless/marvell/mwifiex/fw.h          | 10 ++++++++
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 28 ++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  2 ++
- drivers/net/wireless/marvell/mwifiex/sta_event.c   |  3 +++
- 5 files changed, 55 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 108e641..ca8cdd2 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3416,6 +3416,16 @@ static void mwifiex_cfg80211_set_wakeup(struct wiphy *wiphy,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 240b361..c48ca20 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1743,7 +1743,7 @@ static struct rtl8xxxu_rfregs rtl8xxxu_rfregs[] = {
+ 	},
+ };
  
- 	device_set_wakeup_enable(adapter->dev, enabled);
- }
-+
-+static int mwifiex_set_rekey_data(struct wiphy *wiphy, struct net_device *dev,
-+				  struct cfg80211_gtk_rekey_data *data)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+
-+	return mwifiex_send_cmd(priv, HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG,
-+				HostCmd_ACT_GEN_SET, 0, data, true);
-+}
-+
- #endif
+-static const u32 rtl8723au_iqk_phy_iq_bb_reg[RTL8XXXU_BB_REGS] = {
++static const u32 rtl8xxxu_iqk_phy_iq_bb_reg[RTL8XXXU_BB_REGS] = {
+ 	REG_OFDM0_XA_RX_IQ_IMBALANCE,
+ 	REG_OFDM0_XB_RX_IQ_IMBALANCE,
+ 	REG_OFDM0_ENERGY_CCA_THRES,
+@@ -6201,7 +6201,7 @@ static void rtl8xxxu_gen1_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_fill_iqk_matrix_b(priv, path_b_ok, result,
+ 					   candidate, (reg_ec4 == 0));
  
- static int mwifiex_get_coalesce_pkt_type(u8 *byte_seq)
-@@ -3938,6 +3948,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.suspend = mwifiex_cfg80211_suspend,
- 	.resume = mwifiex_cfg80211_resume,
- 	.set_wakeup = mwifiex_cfg80211_set_wakeup,
-+	.set_rekey_data = mwifiex_set_rekey_data,
- #endif
- 	.set_coalesce = mwifiex_cfg80211_set_coalesce,
- 	.tdls_mgmt = mwifiex_cfg80211_tdls_mgmt,
-@@ -3954,7 +3965,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- #ifdef CONFIG_PM
- static const struct wiphy_wowlan_support mwifiex_wowlan_support = {
- 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
--		WIPHY_WOWLAN_NET_DETECT,
-+		WIPHY_WOWLAN_NET_DETECT | WIPHY_WOWLAN_SUPPORTS_GTK_REKEY,
- 	.n_patterns = MWIFIEX_MEF_MAX_FILTERS,
- 	.pattern_min_len = 1,
- 	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index c134cf8..8703d24 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -372,6 +372,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_COALESCE_CFG                      0x010a
- #define HostCmd_CMD_MGMT_FRAME_REG                    0x010c
- #define HostCmd_CMD_REMAIN_ON_CHAN                    0x010d
-+#define HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG             0x010f
- #define HostCmd_CMD_11AC_CFG			      0x0112
- #define HostCmd_CMD_HS_WAKEUP_REASON                  0x0116
- #define HostCmd_CMD_TDLS_CONFIG                       0x0100
-@@ -2183,6 +2184,14 @@ struct host_cmd_ds_wakeup_reason {
- 	u16  wakeup_reason;
- } __packed;
+-	rtl8xxxu_save_regs(priv, rtl8723au_iqk_phy_iq_bb_reg,
++	rtl8xxxu_save_regs(priv, rtl8xxxu_iqk_phy_iq_bb_reg,
+ 			   priv->bb_recovery_backup, RTL8XXXU_BB_REGS);
  
-+struct host_cmd_ds_gtk_rekey_params {
-+	__le16 action;
-+	u8 kck[NL80211_KCK_LEN];
-+	u8 kek[NL80211_KEK_LEN];
-+	__le32 replay_ctr_low;
-+	__le32 replay_ctr_high;
-+} __packed;
-+
- struct host_cmd_ds_command {
- 	__le16 command;
- 	__le16 size;
-@@ -2256,6 +2265,7 @@ struct host_cmd_ds_command {
- 		struct host_cmd_ds_multi_chan_policy mc_policy;
- 		struct host_cmd_ds_robust_coex coex;
- 		struct host_cmd_ds_wakeup_reason hs_wakeup_reason;
-+		struct host_cmd_ds_gtk_rekey_params rekey;
- 	} params;
- } __packed;
+ 	rtl8xxxu_prepare_calibrate(priv, 0);
+@@ -6309,7 +6309,7 @@ static void rtl8723bu_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_fill_iqk_matrix_b(priv, path_b_ok, result,
+ 					   candidate, (reg_ec4 == 0));
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 30f1526..8cb895b 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1558,6 +1558,30 @@ static int mwifiex_cmd_robust_coex(struct mwifiex_private *priv,
- 	return 0;
+-	rtl8xxxu_save_regs(priv, rtl8723au_iqk_phy_iq_bb_reg,
++	rtl8xxxu_save_regs(priv, rtl8xxxu_iqk_phy_iq_bb_reg,
+ 			   priv->bb_recovery_backup, RTL8XXXU_BB_REGS);
+ 
+ 	rtl8xxxu_write32(priv, REG_BT_CONTROL_8723BU, bt_control);
+@@ -6420,7 +6420,7 @@ static void rtl8192eu_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_fill_iqk_matrix_b(priv, path_b_ok, result,
+ 					   candidate, (reg_ec4 == 0));
+ 
+-	rtl8xxxu_save_regs(priv, rtl8723au_iqk_phy_iq_bb_reg,
++	rtl8xxxu_save_regs(priv, rtl8xxxu_iqk_phy_iq_bb_reg,
+ 			   priv->bb_recovery_backup, RTL8XXXU_BB_REGS);
  }
  
-+static int mwifiex_cmd_gtk_rekey_offload(struct mwifiex_private *priv,
-+					 struct host_cmd_ds_command *cmd,
-+					 u16 cmd_action,
-+					 struct cfg80211_gtk_rekey_data *data)
-+{
-+	struct host_cmd_ds_gtk_rekey_params *rekey = &cmd->params.rekey;
-+	u64 rekey_ctr;
-+
-+	cmd->command = cpu_to_le16(HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG);
-+	cmd->size = cpu_to_le16(sizeof(*rekey) + S_DS_GEN);
-+
-+	rekey->action = cpu_to_le16(cmd_action);
-+	if (cmd_action == HostCmd_ACT_GEN_SET) {
-+		memcpy(rekey->kek, data->kek, NL80211_KEK_LEN);
-+		memcpy(rekey->kck, data->kck, NL80211_KCK_LEN);
-+		rekey_ctr = be64_to_cpup((__be64 *)data->replay_ctr);
-+		rekey->replay_ctr_low = cpu_to_le32((u32)rekey_ctr);
-+		rekey->replay_ctr_high =
-+			cpu_to_le32((u32)((u64)rekey_ctr >> 32));
-+	}
-+
-+	return 0;
-+}
-+
- static int
- mwifiex_cmd_coalesce_cfg(struct mwifiex_private *priv,
- 			 struct host_cmd_ds_command *cmd,
-@@ -2094,6 +2118,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 		ret = mwifiex_cmd_robust_coex(priv, cmd_ptr, cmd_action,
- 					      data_buf);
- 		break;
-+	case HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG:
-+		ret = mwifiex_cmd_gtk_rekey_offload(priv, cmd_ptr, cmd_action,
-+						    data_buf);
-+		break;
- 	default:
- 		mwifiex_dbg(priv->adapter, ERROR,
- 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index 96732cb..d18c797 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -1233,6 +1233,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 	case HostCmd_CMD_ROBUST_COEX:
- 		ret = mwifiex_ret_robust_coex(priv, resp, data_buf);
- 		break;
-+	case HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG:
-+		break;
- 	default:
- 		mwifiex_dbg(adapter, ERROR,
- 			    "CMD_RESP: unknown cmd response %#x\n",
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index 070bce4..0104108 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -147,6 +147,9 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
- 	mwifiex_stop_net_dev_queue(priv->netdev, adapter);
- 	if (netif_carrier_ok(priv->netdev))
- 		netif_carrier_off(priv->netdev);
-+
-+	mwifiex_send_cmd(priv, HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG,
-+			 HostCmd_ACT_GEN_REMOVE, 0, NULL, false);
- }
- 
- static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
 -- 
-1.8.1.4
+2.5.5
 
