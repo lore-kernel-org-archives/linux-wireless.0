@@ -1,86 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:55769 "EHLO
-	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751331AbcDZIGj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 04:06:39 -0400
-From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, sd@queasysnail.net, johannes@sipsolutions.net,
-	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	jack@suse.com, linux-kernel@vger.kernel.org, pshelar@nicira.com,
-	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
-	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com
-Subject: [PATCH net-next 0/8] netlink: align attributes when needed (patchset #3)
-Date: Tue, 26 Apr 2016 10:06:10 +0200
-Message-Id: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160426_100906_632980_A1DE873E)
+Received: from mx1.redhat.com ([209.132.183.28]:48246 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752123AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 11:49:38 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 05/16] rtl8xxxu: Rename rtl8723b_disable_rf() to rtl8xxxu_gen2_disable_rf()
+Date: Mon, 18 Apr 2016 11:49:25 -0400
+Message-Id: <1460994576-24091-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_180721_745414_65F1CCB0)
+In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This is the continuation (series #3) of the work done to align netlink
-attributes when these attributes contain some 64-bit fields.
+At least for now, all gen2 parts use the same disable_rf() function
 
-It's the last patchset from what I've seen.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-The last user of nla_put_u64() is block/drbd. This module does not use
-standard netlink API (see all the stuff in include/linux/genl_magic_struct.h
-and include/linux/genl_magic_func.h). I didn't modify it because it's seems
-hard to do it whithout testing and fully understanding the context (for
-example, why include/linux/drbd_genl.h is not part of uapi?).
-Any thoughts?
-
- Documentation/networking/gen_stats.txt  |   6 +-
- drivers/net/macsec.c                    | 121 +++++++++++++++++++++++---------
- drivers/net/wireless/mac80211_hwsim.c   |   2 +-
- drivers/net/wireless/mac80211_hwsim.h   |   1 +
- fs/quota/netlink.c                      |  12 ++--
- include/net/gen_stats.h                 |   6 +-
- include/uapi/linux/gen_stats.h          |   1 +
- include/uapi/linux/if_link.h            |   1 +
- include/uapi/linux/if_macsec.h          |   6 ++
- include/uapi/linux/inet_diag.h          |   4 +-
- include/uapi/linux/openvswitch.h        |   2 +
- include/uapi/linux/pkt_cls.h            |   2 +
- include/uapi/linux/quota.h              |   1 +
- include/uapi/linux/rtnetlink.h          |   1 +
- include/uapi/linux/tc_act/tc_bpf.h      |   1 +
- include/uapi/linux/tc_act/tc_connmark.h |   1 +
- include/uapi/linux/tc_act/tc_csum.h     |   1 +
- include/uapi/linux/tc_act/tc_defact.h   |   1 +
- include/uapi/linux/tc_act/tc_gact.h     |   1 +
- include/uapi/linux/tc_act/tc_ife.h      |   1 +
- include/uapi/linux/tc_act/tc_ipt.h      |   1 +
- include/uapi/linux/tc_act/tc_mirred.h   |   1 +
- include/uapi/linux/tc_act/tc_nat.h      |   1 +
- include/uapi/linux/tc_act/tc_pedit.h    |   1 +
- include/uapi/linux/tc_act/tc_skbedit.h  |   1 +
- include/uapi/linux/tc_act/tc_vlan.h     |   1 +
- net/core/gen_stats.c                    |  35 +++++----
- net/core/neighbour.c                    |   3 +-
- net/core/rtnetlink.c                    |   4 +-
- net/core/sock_diag.c                    |   2 +-
- net/ipv4/inet_diag.c                    |   9 ++-
- net/openvswitch/datapath.c              |  27 +++----
- net/sched/act_api.c                     |   7 +-
- net/sched/act_bpf.c                     |   3 +-
- net/sched/act_connmark.c                |   3 +-
- net/sched/act_csum.c                    |   2 +-
- net/sched/act_gact.c                    |   2 +-
- net/sched/act_ife.c                     |   2 +-
- net/sched/act_ipt.c                     |   2 +-
- net/sched/act_mirred.c                  |   2 +-
- net/sched/act_nat.c                     |   2 +-
- net/sched/act_pedit.c                   |   2 +-
- net/sched/act_simple.c                  |   2 +-
- net/sched/act_skbedit.c                 |   2 +-
- net/sched/act_vlan.c                    |   2 +-
- net/sched/cls_u32.c                     |   7 +-
- net/sched/sch_api.c                     |   6 +-
- net/sctp/sctp_diag.c                    |   5 +-
- 48 files changed, 211 insertions(+), 98 deletions(-)
-
-Comments are welcomed,
-Regards,
-Nicolas
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 0928352..7a28b78 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7659,7 +7659,7 @@ static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
+ 	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ignore_wlan));
+ }
+ 
+-static void rtl8723b_disable_rf(struct rtl8xxxu_priv *priv)
++static void rtl8xxxu_gen2_disable_rf(struct rtl8xxxu_priv *priv)
+ {
+ 	u32 val32;
+ 
+@@ -9918,7 +9918,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.init_aggregation = rtl8723bu_init_aggregation,
+ 	.init_statistics = rtl8723bu_init_statistics,
+ 	.enable_rf = rtl8723b_enable_rf,
+-	.disable_rf = rtl8723b_disable_rf,
++	.disable_rf = rtl8xxxu_gen2_disable_rf,
+ 	.usb_quirks = rtl8xxxu_gen2_usb_quirks,
+ 	.set_tx_power = rtl8723b_set_tx_power,
+ 	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
+@@ -9989,7 +9989,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.config_channel = rtl8xxxu_gen2_config_channel,
+ 	.parse_rx_desc = rtl8xxxu_parse_rxdesc24,
+ 	.enable_rf = rtl8192e_enable_rf,
+-	.disable_rf = rtl8723b_disable_rf,
++	.disable_rf = rtl8xxxu_gen2_disable_rf,
+ 	.usb_quirks = rtl8xxxu_gen2_usb_quirks,
+ 	.set_tx_power = rtl8192e_set_tx_power,
+ 	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
+-- 
+2.5.5
 
