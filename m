@@ -1,63 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45194 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752041AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 11:49:38 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 08/16] rtl8xxxu: Rename rtl8723au_update_rate_mask() to rtl8xxxu_update_rate_mask()
-Date: Mon, 18 Apr 2016 11:49:28 -0400
-Message-Id: <1460994576-24091-9-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_180721_500243_68219E39)
-In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mout.kundenserver.de ([212.227.126.187]:56498 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751451AbcDRWAA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 18:00:00 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Jakub Sitnicki <jsitnicki@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] rtl8xxxu: hide unused tables
+Date: Mon, 18 Apr 2016 23:59:31 +0200
+Message-Id: <1461016782-2640046-1-git-send-email-arnd@arndb.de> (sfid-20160419_000026_109456_3F8177B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+The references to some arrays in the rtl8xxxu driver were moved inside
+of an #ifdef, but the symbols remain outside, resulting in build warnings:
 
-All currently supported gen1 parts use the same function for updating
-the rate mask, so rename it to reflect this.
+rtl8xxxu/rtl8xxxu.c:1506:33: error: 'rtl8188ru_radioa_1t_highpa_table' defined but not used
+rtl8xxxu/rtl8xxxu.c:1431:33: error: 'rtl8192cu_radioa_1t_init_table' defined but not used
+rtl8xxxu/rtl8xxxu.c:1407:33: error: 'rtl8192cu_radiob_2t_init_table' defined but not used
+rtl8xxxu/rtl8xxxu.c:1332:33: error: 'rtl8192cu_radioa_2t_init_table' defined but not used
+rtl8xxxu/rtl8xxxu.c:239:35: error: 'rtl8192c_power_base' defined but not used
+rtl8xxxu/rtl8xxxu.c:217:35: error: 'rtl8188r_power_base' defined but not used
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+This adds an extra #ifdef around them to shut up the warnings.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 2fc0b8e5a17d ("rtl8xxxu: Add TX power base values for gen1 parts")
+Fixes: 4062b8ffec36 ("rtl8xxxu: Move PHY RF init into device specific functions")
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index d0557ad..469bc9a 100644
+index 928ca56f751c..0ba84b5fe0d6 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -8199,8 +8199,8 @@ static void rtl8xxxu_sw_scan_complete(struct ieee80211_hw *hw,
- 	rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
- }
+@@ -214,6 +214,7 @@ static struct rtl8xxxu_reg8val rtl8192e_mac_init_table[] = {
+ 	{0xffff, 0xff},
+ };
  
--static void rtl8723au_update_rate_mask(struct rtl8xxxu_priv *priv,
--				       u32 ramask, int sgi)
-+static void rtl8xxxu_update_rate_mask(struct rtl8xxxu_priv *priv,
-+				      u32 ramask, int sgi)
- {
- 	struct h2c_cmd h2c;
++#ifdef CONFIG_RTL8XXXU_UNTESTED
+ static struct rtl8xxxu_power_base rtl8188r_power_base = {
+ 	.reg_0e00 = 0x06080808,
+ 	.reg_0e04 = 0x00040406,
+@@ -257,6 +258,7 @@ static struct rtl8xxxu_power_base rtl8192c_power_base = {
+ 	.reg_084c = 0x0b0c0d0e,
+ 	.reg_0868 = 0x01030509,
+ };
++#endif
  
-@@ -9885,7 +9885,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.disable_rf = rtl8xxxu_gen1_disable_rf,
- 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
- 	.set_tx_power = rtl8723a_set_tx_power,
--	.update_rate_mask = rtl8723au_update_rate_mask,
-+	.update_rate_mask = rtl8xxxu_update_rate_mask,
- 	.report_connect = rtl8xxxu_gen1_report_connect,
- 	.writeN_block_size = 1024,
- 	.mbox_ext_reg = REG_HMBOX_EXT_0,
-@@ -9957,7 +9957,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.disable_rf = rtl8xxxu_gen1_disable_rf,
- 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
- 	.set_tx_power = rtl8723a_set_tx_power,
--	.update_rate_mask = rtl8723au_update_rate_mask,
-+	.update_rate_mask = rtl8xxxu_update_rate_mask,
- 	.report_connect = rtl8xxxu_gen1_report_connect,
- 	.writeN_block_size = 128,
- 	.mbox_ext_reg = REG_HMBOX_EXT_0,
+ static struct rtl8xxxu_power_base rtl8723a_power_base = {
+ 	.reg_0e00 = 0x0a0c0c0c,
+@@ -1329,6 +1331,7 @@ static struct rtl8xxxu_rfregval rtl8723bu_radioa_1t_init_table[] = {
+ 	{0xff, 0xffffffff}
+ };
+ 
++#ifdef CONFIG_RTL8XXXU_UNTESTED
+ static struct rtl8xxxu_rfregval rtl8192cu_radioa_2t_init_table[] = {
+ 	{0x00, 0x00030159}, {0x01, 0x00031284},
+ 	{0x02, 0x00098000}, {0x03, 0x00018c63},
+@@ -1577,6 +1580,7 @@ static struct rtl8xxxu_rfregval rtl8188ru_radioa_1t_highpa_table[] = {
+ 	{0x00, 0x00030159},
+ 	{0xff, 0xffffffff}
+ };
++#endif
+ 
+ static struct rtl8xxxu_rfregval rtl8192eu_radioa_init_table[] = {
+ 	{0x7f, 0x00000082}, {0x81, 0x0003fc00},
 -- 
-2.5.5
+2.7.0
 
