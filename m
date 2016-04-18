@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33996 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754405AbcDFXLM (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35267 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751420AbcDRRLB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 19:11:12 -0400
-Received: by mail-pf0-f196.google.com with SMTP id d184so5489669pfc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 16:11:12 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 3/7] staging: wilc1000: change data type of result in handle_set_wfi_drv_handler
-Date: Thu,  7 Apr 2016 08:10:39 +0900
-Message-Id: <1459984243-4689-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160407_011116_240730_04E0EA77)
-In-Reply-To: <1459984243-4689-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459984243-4689-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 18 Apr 2016 13:11:01 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Lauri Kasanen <cand@gmx.com>, Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	Linux Firmware Maintainers <linux-firmware@kernel.org>,
+	sgruszka@redhat.com
+Subject: Re: [PATCH v2] carl9170: Clarify kconfig text
+Date: Mon, 18 Apr 2016 19:10:57 +0200
+Message-ID: <5517762.PotoMG0SZb@debian64> (sfid-20160418_191128_011722_CA8688D2)
+In-Reply-To: <c17f2f12-1c94-6b19-c918-0a6a9ee401ca@gmail.com>
+References: <c17f2f12-1c94-6b19-c918-0a6a9ee401ca@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes data type of result variable from s32 to int.
-result is used to get return value from wilc_send_config_pkt that has
-return type of int.
+On Monday, April 18, 2016 06:47:44 PM Xose Vazquez Perez wrote:
+> Christian Lamparter wrote:
+> 
+> > Sure, but this could be a different patch then. I think Intel devices 
+> > (iwlwifi, iwlegacy and ipw2x00) have a similar text about "download
+> > firmware from this device from our homepage here" too. So if we want,
+> > we can remove them altogether?
+> 
+> linux-firmware.git does not contain firmware for all drivers. _At least_
+> zd1211rw [1], atmel [2] and ipw2x00 [3] are out of the tree.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yeah, don't forget p54. It needs out-of-tree firmwares as well.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ba472d5..33735fd 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -310,7 +310,7 @@ static void handle_set_channel(struct wilc_vif *vif,
- static void handle_set_wfi_drv_handler(struct wilc_vif *vif,
- 				       struct drv_handler *hif_drv_handler)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct wid wid;
- 
- 	wid.id = (u16)WID_SET_DRV_HANDLER;
--- 
-2.8.0
+But what about iwlegacy? Isn't that another candidate that would fit both
+requirements (no recent firmware update, firmware in linux-firmware.git) ?
 
+> [1] http://sf.net/projects/zd1211/files/
+> [2] http://web.archive.org/web/20121016132320/http://at76c503a.berlios.de/fw_dl.html
+> [3] http://ipw2100.sf.net/firmware.php http://ipw2200.sf.net/firmware.php
