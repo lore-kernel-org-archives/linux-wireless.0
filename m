@@ -1,159 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0020.hostedemail.com ([216.40.44.20]:47507 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750879AbcDKCav (ORCPT
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:35235 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751886AbcDRTtO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2016 22:30:51 -0400
-Message-ID: <1460341847.1800.68.camel@perches.com> (sfid-20160411_043057_692448_F3719C48)
-Subject: Re: [PATCH 4/7] wil6210: print debug message when transmitting
- while disconnected
-From: Joe Perches <joe@perches.com>
-To: qca_merez <qca_merez@qca.qualcomm.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	wil6210 <wil6210@qca.qualcomm.com>
-Date: Sun, 10 Apr 2016 19:30:47 -0700
-In-Reply-To: <22bd7713a48b46e2bb2f1ec67ad6c409@euamsexm01a.eu.qualcomm.com>
-References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
-	 <1459855447-17413-5-git-send-email-qca_merez@qca.qualcomm.com>
-	 <1459927376.6715.37.camel@perches.com>
-	 <22bd7713a48b46e2bb2f1ec67ad6c409@euamsexm01a.eu.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Mon, 18 Apr 2016 15:49:14 -0400
+Received: by mail-qg0-f47.google.com with SMTP id f74so2575365qge.2
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 12:49:14 -0700 (PDT)
+From: Geoff Lansberry <geoff@kuvee.com>
+To: linux-wireless@vger.kernel.org
+Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, mgreer@animalcreek.com, justin@kuvee.com,
+	Geoff Lansberry <geoff@kuvee.com>
+Subject: [PATCH 3/4] NFC: trf7970a: add device tree option for 27MHz clock
+Date: Mon, 18 Apr 2016 15:48:40 -0400
+Message-Id: <1461008921-15100-4-git-send-email-geoff@kuvee.com> (sfid-20160418_214917_829113_288E2DA1)
+In-Reply-To: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
+References: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2016-04-10 at 19:17 +0000, qca_merez wrote:
-> On 4/6/2016 10:22 AM, Joe Perches wrote:
-> > 
-> > On Tue, 2016-04-05 at 14:24 +0300, Maya Erez w
-> > > 
-> > > +void __wil_dbg_ratelimited(struct wil6210_priv *wil, const char *fmt, 
-> > > +...) {
-> > > +	if (net_ratelimit()) {
-> > 
-> > Inverting the test would reduce indentation.
-> I preferred to have the same implementation as in wil_err_ratelimited.
-
-That's easy enough.
-
-Maybe:
+Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
 ---
- drivers/net/wireless/ath/wil6210/debug.c   | 55 ++++++++++++++----------------
- drivers/net/wireless/ath/wil6210/wil6210.h |  8 ++---
- 2 files changed, 30 insertions(+), 33 deletions(-)
+ .../devicetree/bindings/net/nfc/trf7970a.txt       |  2 ++
+ drivers/nfc/trf7970a.c                             | 28 +++++++++++++---------
+ 2 files changed, 19 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/debug.c b/drivers/net/wireless/ath/wil6210/debug.c
-index 3249562..de1e932 100644
---- a/drivers/net/wireless/ath/wil6210/debug.c
-+++ b/drivers/net/wireless/ath/wil6210/debug.c
-@@ -17,61 +17,58 @@
- #include "wil6210.h"
- #include "trace.h"
- 
--void wil_err(struct wil6210_priv *wil, const char *fmt, ...)
-+void wil_err(const struct wil6210_priv *wil, const char *fmt, ...)
- {
--	struct net_device *ndev = wil_to_ndev(wil);
--	struct va_format vaf = {
--		.fmt = fmt,
--	};
-+	struct va_format vaf;
- 	va_list args;
- 
- 	va_start(args, fmt);
-+	vaf.fmt = fmt;
- 	vaf.va = &args;
--	netdev_err(ndev, "%pV", &vaf);
-+	netdev_err(wil_to_ndev(wil), "%pV", &vaf);
- 	trace_wil6210_log_err(&vaf);
- 	va_end(args);
- }
- 
--void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...)
-+void wil_err_ratelimited(const struct wil6210_priv *wil, const char *fmt, ...)
- {
--	if (net_ratelimit()) {
--		struct net_device *ndev = wil_to_ndev(wil);
--		struct va_format vaf = {
--			.fmt = fmt,
--		};
--		va_list args;
-+	struct va_format vaf;
-+	va_list args;
+diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+index 09c5056..bf25f39 100644
+--- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
++++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+@@ -22,6 +22,7 @@ Optional SoC Specific Properties:
+ - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+   where an extra byte is returned by Read Multiple Block commands issued
+   to Type 5 tags.
++- crystal_27mhz: Set to specify that the input frequency to the trf7970a is 27.12MHz
+ 
+ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 
+@@ -45,6 +46,7 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+ 		irq-status-read-quirk;
+ 		en2-rf-quirk;
+ 		t5t-rmb-extra-byte-quirk;
++		crystal_27mhz;
+ 		status = "okay";
+ 	};
+ };
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index 447b6c9..74210f9 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -1072,12 +1072,11 @@ static int trf7970a_init(struct trf7970a *trf)
+ 
+ 	trf->chip_status_ctrl &= ~TRF7970A_CHIP_STATUS_RF_ON;
+ 
+-	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL, 0);
++	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL,
++			trf->modulator_sys_clk_ctrl);
+ 	if (ret)
+ 		goto err_out;
+ 
+-	trf->modulator_sys_clk_ctrl = 0;
+-
+ 	ret = trf7970a_write(trf, TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS,
+ 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLH_96 |
+ 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLL_32);
+@@ -1194,30 +1193,32 @@ static int trf7970a_in_config_rf_tech(struct trf7970a *trf, int tech)
+ 
+ 	dev_dbg(trf->dev, "rf technology: %d\n", tech);
+ 
++	trf->modulator_sys_clk_ctrl = (trf->modulator_sys_clk_ctrl&0xF8);
 +
-+	if (!net_ratelimit())
-+		return;
- 
--		va_start(args, fmt);
--		vaf.va = &args;
--		netdev_err(ndev, "%pV", &vaf);
--		trace_wil6210_log_err(&vaf);
--		va_end(args);
--	}
-+	va_start(args, fmt);
-+	vaf.fmt = fmt;
-+	vaf.va = &args;
-+	netdev_err(wil_to_ndev(wil), "%pV", &vaf);
-+	trace_wil6210_log_err(&vaf);
-+	va_end(args);
- }
- 
--void wil_info(struct wil6210_priv *wil, const char *fmt, ...)
-+void wil_info(const struct wil6210_priv *wil, const char *fmt, ...)
- {
--	struct net_device *ndev = wil_to_ndev(wil);
--	struct va_format vaf = {
--		.fmt = fmt,
--	};
-+	struct va_format vaf;
- 	va_list args;
- 
-+	if (!net_ratelimit())
-+		return;
+ 	switch (tech) {
+ 	case NFC_DIGITAL_RF_TECH_106A:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443A_106;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_OOK;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCA;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_106B:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443B_106;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCB;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_212F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_212;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_424F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_424;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_ISO15693:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_15693_SGL_1OF4_2648;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_OOK;
+ 		trf->guard_time = TRF7970A_GUARD_TIME_15693;
+ 		break;
+ 	default:
+@@ -1582,22 +1583,24 @@ static int trf7970a_tg_config_rf_tech(struct trf7970a *trf, int tech)
+ 
+ 	dev_dbg(trf->dev, "rf technology: %d\n", tech);
+ 
++	trf->modulator_sys_clk_ctrl = (trf->modulator_sys_clk_ctrl&0xF8);
 +
- 	va_start(args, fmt);
-+	vaf.fmt = fmt;
- 	vaf.va = &args;
--	netdev_info(ndev, "%pV", &vaf);
-+	netdev_info(wil_to_ndev(wil), "%pV", &vaf);
- 	trace_wil6210_log_info(&vaf);
- 	va_end(args);
- }
- 
--void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...)
-+void wil_dbg_trace(const struct wil6210_priv *wil, const char *fmt, ...)
- {
--	struct va_format vaf = {
--		.fmt = fmt,
--	};
-+	struct va_format vaf;
- 	va_list args;
- 
- 	va_start(args, fmt);
-+	vaf.fmt = fmt;
- 	vaf.va = &args;
- 	trace_wil6210_log_dbg(&vaf);
- 	va_end(args);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 4d699ea4..e2b62b1 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -633,13 +633,13 @@ struct wil6210_priv {
- #define ndev_to_wil(n) (wdev_to_wil(n->ieee80211_ptr))
- 
- __printf(2, 3)
--void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
-+void wil_dbg_trace(const struct wil6210_priv *wil, const char *fmt, ...);
- __printf(2, 3)
--void wil_err(struct wil6210_priv *wil, const char *fmt, ...);
-+void wil_err(const struct wil6210_priv *wil, const char *fmt, ...);
- __printf(2, 3)
--void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...);
-+void wil_err_ratelimited(const struct wil6210_priv *wil, const char *fmt, ...);
- __printf(2, 3)
--void wil_info(struct wil6210_priv *wil, const char *fmt, ...);
-+void wil_info(const struct wil6210_priv *wil, const char *fmt, ...);
- #define wil_dbg(wil, fmt, arg...) do { \
- 	netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
- 	wil_dbg_trace(wil, fmt, ##arg); \
+ 	switch (tech) {
+ 	case NFC_DIGITAL_RF_TECH_106A:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_CE |
+ 			TRF7970A_ISO_CTRL_NFC_CE_14443A;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
++		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_OOK;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_212F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_NFCF_212;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		break;
+ 	case NFC_DIGITAL_RF_TECH_424F:
+ 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+ 			TRF7970A_ISO_CTRL_NFC_NFCF_424;
+-		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
++		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+ 		break;
+ 	default:
+ 		dev_dbg(trf->dev, "Unsupported rf technology: %d\n", tech);
+@@ -2072,6 +2075,9 @@ static int trf7970a_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
+ 
++	if (of_property_read_bool(np, "crystal_27MHz"))
++		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
++
+ 	if (of_property_read_bool(np, "en2-rf-quirk"))
+ 		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
+ 
+-- 
+1.9.1
+
