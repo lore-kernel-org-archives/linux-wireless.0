@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:36738 "EHLO
-	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750804AbcDTQlt (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33054 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751709AbcDRQUJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 12:41:49 -0400
-Received: by mail-pf0-f176.google.com with SMTP id e128so19849113pfe.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2016 09:41:49 -0700 (PDT)
-From: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-	kvalo@qca.qualcomm.com, Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-Subject: [PATCH v2] rt2800lib: enable MFP if hw crypt is disabled
-Date: Thu, 21 Apr 2016 00:41:34 +0800
-Message-Id: <1461170494-576-1-git-send-email-yeohchunyeow@gmail.com> (sfid-20160420_184155_903565_AF5C2DE6)
+	Mon, 18 Apr 2016 12:20:09 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lauri Kasanen <cand@gmx.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	sgruszka@redhat.com, emmanuel.grumbach@intel.com,
+	linuxwifi@intel.com, johannes.berg@intel.com
+Subject: Re: [PATCH v2] carl9170: Clarify kconfig text
+Date: Mon, 18 Apr 2016 18:20:06 +0200
+Message-ID: <3244016.0TmHG3E4A9@debian64> (sfid-20160418_182032_023033_8AAE0BB9)
+In-Reply-To: <87shyiyl8a.fsf@purkki.adurom.net>
+References: <20160416113312.8de2266358165182bb4b4a15@gmx.com> <20160416171856.1769c0e16bcc75372407e06f@gmx.com> <87shyiyl8a.fsf@purkki.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If rt2800usb is loaded with nohwcrypt=1, mac80211 takes
-care of the crypto with software encryption/decryption
-and thus, MFP can be used.
+On Monday, April 18, 2016 06:45:09 PM Kalle Valo wrote:
+> Lauri Kasanen <cand@gmx.com> writes:
+> 
+> > The previous text was confusing, leading readers to think this
+> > driver was a duplicate, and so didn't need to be enabled.
+> >
+> > After the removal of the older staging driver, this is the only
+> > driver in mainline for these devices.
+> >
+> > Signed-off-by: Lauri Kasanen <cand@gmx.com>
+> > ---
+> > v2: Remove the mention of the previous driver, suggested by Christian.
+> >
+> >  drivers/net/wireless/ath/carl9170/Kconfig | 8 +++-----
+> >  1 file changed, 3 insertions(+), 5 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
+> > index 1a796e5..2e34bae 100644
+> > --- a/drivers/net/wireless/ath/carl9170/Kconfig
+> > +++ b/drivers/net/wireless/ath/carl9170/Kconfig
+> > @@ -5,12 +5,10 @@ config CARL9170
+> >  	select FW_LOADER
+> >  	select CRC32
+> >  	help
+> > -	  This is another driver for the Atheros "otus" 802.11n USB devices.
+> > +	  This is the mainline driver for the Atheros "otus" 802.11n USB devices.
+> >  
+> > -	  This driver provides more features than the original,
+> > -	  but it needs a special firmware (carl9170-1.fw) to do that.
+> > -
+> > -	  The firmware can be downloaded from our wiki here:
+> > +	  It needs a special firmware (carl9170-1.fw), which can be downloaded
+> > +	  from our wiki here:
+> >  	  <http://wireless.kernel.org/en/users/Drivers/carl9170>
+> 
+> Why even mention anything about a "special firmware" as the firmware is
+> already available from linux-firmware.git? 
+Yes and no. 1.9.6 is in linux-firmware.git. I've tried to add 1.9.9 too
+but that failed.
+<http://comments.gmane.org/gmane.linux.kernel.wireless.general/114639>
 
-Tested for secured mesh using ath9k_htc and ath9k.
+> That's default location for all firmware images and I think most, if not all,
+> distros should have it available. So wouldn't it be better not to mention 
+> anything about firmware at all?
+Sure, but this could be a different patch then. I think Intel devices 
+(iwlwifi, iwlegacy and ipw2x00) have a similar text about "download
+firmware from this device from our homepage here" too. So if we want,
+we can remove them altogether?
 
-Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
-
-v2: set MFP correctly (Stanislaw Gruszka)
----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index 7fa0128..716468a 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -7492,6 +7492,10 @@ static int rt2800_probe_hw_mode(struct rt2x00_dev *rt2x00dev)
- 	if (!rt2x00_is_usb(rt2x00dev))
- 		ieee80211_hw_set(rt2x00dev->hw, HOST_BROADCAST_PS_BUFFERING);
- 
-+	/* Set MFP if HW crypto is disabled. */
-+	if (rt2800_hwcrypt_disabled(rt2x00dev))
-+		ieee80211_hw_set(rt2x00dev->hw, MFP_CAPABLE);
-+
- 	SET_IEEE80211_DEV(rt2x00dev->hw, rt2x00dev->dev);
- 	SET_IEEE80211_PERM_ADDR(rt2x00dev->hw,
- 				rt2800_eeprom_addr(rt2x00dev,
--- 
-2.3.0
-
+Regards,
+Christian
