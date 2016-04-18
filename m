@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55241 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753107AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 14:59:09 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 07/26] rtl8xxxu: Do not try to set REG_LEDCFG2 on 8192eu
-Date: Thu, 14 Apr 2016 14:58:48 -0400
-Message-Id: <1460660347-26299-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212530_257320_1ACD0CAA)
-In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:37624 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751053AbcDRQrt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 12:47:49 -0400
+To: Christian Lamparter <chunkeey@googlemail.com>,
+	Lauri Kasanen <cand@gmx.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	Linux Firmware Maintainers <linux-firmware@kernel.org>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: Re: [PATCH v2] carl9170: Clarify kconfig text
+Message-ID: <c17f2f12-1c94-6b19-c918-0a6a9ee401ca@gmail.com> (sfid-20160418_184808_105249_2B330A76)
+Date: Mon, 18 Apr 2016 18:47:44 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Christian Lamparter wrote:
 
-Presumably 8192eu devices do not have leds, so do not enable them.
+> Sure, but this could be a different patch then. I think Intel devices 
+> (iwlwifi, iwlegacy and ipw2x00) have a similar text about "download
+> firmware from this device from our homepage here" too. So if we want,
+> we can remove them altogether?
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+linux-firmware.git does not contain firmware for all drivers. _At least_
+zd1211rw [1], atmel [2] and ipw2x00 [3] are out of the tree.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index ed8c594..99cf4aa 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7880,9 +7880,11 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	priv->fops->set_tx_power(priv, 1, false);
- 
- 	/* Let the 8051 take control of antenna setting */
--	val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
--	val8 |= LEDCFG2_DPDT_SELECT;
--	rtl8xxxu_write8(priv, REG_LEDCFG2, val8);
-+	if (priv->rtl_chip != RTL8192E) {
-+		val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
-+		val8 |= LEDCFG2_DPDT_SELECT;
-+		rtl8xxxu_write8(priv, REG_LEDCFG2, val8);
-+	}
- 
- 	rtl8xxxu_write8(priv, REG_HWSEQ_CTRL, 0xff);
- 
--- 
-2.5.5
-
+[1] http://sf.net/projects/zd1211/files/
+[2] http://web.archive.org/web/20121016132320/http://at76c503a.berlios.de/fw_dl.html
+[3] http://ipw2100.sf.net/firmware.php http://ipw2200.sf.net/firmware.php
