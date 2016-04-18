@@ -1,147 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:53826 "EHLO bues.ch"
+Received: from mx1.redhat.com ([209.132.183.28]:26801 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932723AbcDYPxz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 11:53:55 -0400
-Date: Mon, 25 Apr 2016 17:53:26 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Lucas Stach <dev@lynxeye.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH RFC] b43: stop hardcoding LED behavior
-Message-ID: <20160425175326.407eba27@wiggum> (sfid-20160425_175400_519878_1D3A399E)
-In-Reply-To: <1461570051-3950-1-git-send-email-dev@lynxeye.de>
-References: <1461570051-3950-1-git-send-email-dev@lynxeye.de>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/UVwYT3RFCi7sm2Ue3m9ZY58"; protocol="application/pgp-signature"
+	id S1752028AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 11:49:38 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 12/16] rtl8xxxu: Rename rtl8723a_enable_rf() to rtl8xxxu_gen1_enable_rf()
+Date: Mon, 18 Apr 2016 11:49:32 -0400
+Message-Id: <1460994576-24091-13-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_180721_326868_9A645138)
+In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/UVwYT3RFCi7sm2Ue3m9ZY58
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-On Mon, 25 Apr 2016 09:40:51 +0200
-Lucas Stach <dev@lynxeye.de> wrote:
+All gen1 parts use the same enable_rf() function, so rename it to
+reflect this.
 
-> On my system the SPROM correctly defines the only wired LED (radio) but
-> skips all others, leading to the hardcode to register LEDs with RX and TX
-> triggers.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Hm ok. It probably is a good idea to change the condition from
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 1499aa0..a2f5609 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2076,7 +2076,7 @@ static void rtl8723bu_write_btreg(struct rtl8xxxu_priv *priv, u8 reg, u8 data)
+ 	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
+ }
+ 
+-static void rtl8723a_enable_rf(struct rtl8xxxu_priv *priv)
++static void rtl8xxxu_gen1_enable_rf(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8;
+ 	u32 val32;
+@@ -9881,7 +9881,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.phy_iq_calibrate = rtl8xxxu_gen1_phy_iq_calibrate,
+ 	.config_channel = rtl8xxxu_gen1_config_channel,
+ 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
+-	.enable_rf = rtl8723a_enable_rf,
++	.enable_rf = rtl8xxxu_gen1_enable_rf,
+ 	.disable_rf = rtl8xxxu_gen1_disable_rf,
+ 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
+ 	.set_tx_power = rtl8xxxu_gen1_set_tx_power,
+@@ -9953,7 +9953,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.phy_iq_calibrate = rtl8xxxu_gen1_phy_iq_calibrate,
+ 	.config_channel = rtl8xxxu_gen1_config_channel,
+ 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
+-	.enable_rf = rtl8723a_enable_rf,
++	.enable_rf = rtl8xxxu_gen1_enable_rf,
+ 	.disable_rf = rtl8xxxu_gen1_disable_rf,
+ 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
+ 	.set_tx_power = rtl8xxxu_gen1_set_tx_power,
+-- 
+2.5.5
 
-if (sprom[led_index] =3D=3D 0xFF)
-
-to
-
-if ((sprom[0] & sprom[1] & sprom[2] & sprom[3]) =3D=3D 0xFF)
-
-So the hardcoding only happens if there is no LED configured in the
-SPROM. (I think my card does this (see below), but I can check that
-later)
-
-
-> These triggers cause many uneccesary CPU wakeups to drive LEDs
-> that aren't even present in the system, reducing battery runtime.
-
-
-Numbers please. Did you measure that is actually causes more _wakeups_?
-How many?
-The led work is placed in the mac80211 workqueue and LED updates only
-happen on behalf of mac80211 activities (by default). It only causes
-additional wakeups, if there's nothing else scheduled on the workqueue
-anyways (which might well be the case. So we need numbers. :)
-
-
-> Remove the hardcode to stop it from doing any harm. If this code is useful
-> for others it should probably be reworked as a quirk table triggering only
-> for individual systems that need it.
-
-
-There are cards that need it. I don't know how many that are, but I own
-an older 4306 PC-Card card that needs this.
-
-So this effectively is a regression for this card.
-
-So I don't think this is acceptable.
-You should at least make this configurable via module parameter or such.
-Or maybe the change from above already is enough. It should work for
-your case.
-
-
-> Signed-off-by: Lucas Stach <dev@lynxeye.de>
-> ---
->  drivers/net/wireless/broadcom/b43/leds.c | 26 ++------------------------
->  1 file changed, 2 insertions(+), 24 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/broadcom/b43/leds.c b/drivers/net/wirel=
-ess/broadcom/b43/leds.c
-> index d79ab2a..77d2dad 100644
-> --- a/drivers/net/wireless/broadcom/b43/leds.c
-> +++ b/drivers/net/wireless/broadcom/b43/leds.c
-> @@ -224,31 +224,9 @@ static void b43_led_get_sprominfo(struct b43_wldev *=
-dev,
-> =20
->  	if (sprom[led_index] =3D=3D 0xFF) {
->  		/* There is no LED information in the SPROM
-> -		 * for this LED. Hardcode it here. */
-> +		 * for this LED. Keep it disabled. */
->  		*activelow =3D false;
-> -		switch (led_index) {
-> -		case 0:
-> -			*behaviour =3D B43_LED_ACTIVITY;
-> -			*activelow =3D true;
-> -			if (dev->dev->board_vendor =3D=3D PCI_VENDOR_ID_COMPAQ)
-> -				*behaviour =3D B43_LED_RADIO_ALL;
-> -			break;
-> -		case 1:
-> -			*behaviour =3D B43_LED_RADIO_B;
-> -			if (dev->dev->board_vendor =3D=3D PCI_VENDOR_ID_ASUSTEK)
-> -				*behaviour =3D B43_LED_ASSOC;
-> -			break;
-> -		case 2:
-> -			*behaviour =3D B43_LED_RADIO_A;
-> -			break;
-> -		case 3:
-> -			*behaviour =3D B43_LED_OFF;
-> -			break;
-> -		default:
-> -			*behaviour =3D B43_LED_OFF;
-> -			B43_WARN_ON(1);
-> -			return;
-> -		}
-> +		*behaviour =3D B43_LED_OFF;
->  	} else {
->  		*behaviour =3D sprom[led_index] & B43_LED_BEHAVIOUR;
->  		*activelow =3D !!(sprom[led_index] & B43_LED_ACTIVELOW);
-
-
-
-
---=20
-Michael
-
---Sig_/UVwYT3RFCi7sm2Ue3m9ZY58
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXHj12AAoJEPUyvh2QjYsOR9kP/3E/xSeP+7F/bAHho7t+iHRY
-4JoixlrluJboHbDsnkzfLNOyz+MsE2TbmimbRgMoC4Q447N2nFTbcLHWXRV0uZJ1
-WEhepDva95w/BaaDCuXPucvJrma9l8TasEY8J2Av2eIcVSge8EhXPopXLBjsCbi+
-49cYT/dDtb4J4+YPLFEx3/7FQOTp0A8JoST4A7Dk2ZZ6q6XgcHaXgwv3v5MDOWvB
-7fWVJJ0Faz/y2Q8WwyTmuBu9tknDBVztKqiM5c+pDnyBjVAsqD6tjpRKd2J4zh45
-AZXXRBNlVkYdgCEPo6LJ9Trr9zwtKVfUmdG2OGm1MOiiYmAGt/Oq7+4/0daNWIY8
-hom3lSj5NavzuPM6yLw5whDMyr/OP0+f24JeW2ERfIGMwDP2q8E9vjm9WTNOye1E
-dPkV/IMfyeRaZPrgy0SSUroDT5Cdrz9N/5tFpnIrsBMvBCqq2rdsqbm8iPildU5y
-v/0dAaSlP3qDIJ11N+yJwMTxGuh2vpOPTgQgT2FS5wEHrUMMhWUETdPX3v8DlfgH
-MexanHDKRJGWyBS6tsRK/jOr5saRLrRzwOwFwc7yz/vENk1Uk+fFVQMIrApLCUTJ
-YrNNYNJ/3UMgdJvb51WG8V5+IYdoicGMgZ/6rOesEMp2KeIUIHvpdTbPe+78OdMu
-5XIhffCtpLDNJdL+JmAZ
-=MNk/
------END PGP SIGNATURE-----
-
---Sig_/UVwYT3RFCi7sm2Ue3m9ZY58--
