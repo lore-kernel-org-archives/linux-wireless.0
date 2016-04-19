@@ -1,68 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:36135 "EHLO
-	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754409AbcDCWRG (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:53008 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754235AbcDSSD6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:17:06 -0400
-Received: by mail-pf0-f170.google.com with SMTP id e128so108557102pfe.3
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:17:06 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 13/15] wcn36xx: Track association state
-Date: Sun,  3 Apr 2016 15:16:44 -0700
-Message-Id: <1459721806-11817-13-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_001839_270870_076D142E)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+	Tue, 19 Apr 2016 14:03:58 -0400
+From: Maximilian Engelhardt <engelhardt@perisens.de>
+To: seth.forshee@canonical.com
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	maxi@daemonizer.de
+Subject: wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
+Date: Tue, 19 Apr 2016 20:03:16 +0200
+Message-ID: <1958820.LBuzOElZFT@perisens15> (sfid-20160419_200402_055254_92BB523B)
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart1540866.hqEZiY0n9z"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Knowing the association state is needed for mc filtering.
+--nextPart1540866.hqEZiY0n9z
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c    | 2 ++
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 1 +
- 2 files changed, 3 insertions(+)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index f9c77de94583..253cece1b660 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -655,6 +655,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
- 				     vif->addr,
- 				     bss_conf->aid);
- 
-+			vif_priv->sta_assoc = true;
- 			rcu_read_lock();
- 			sta = ieee80211_find_sta(vif, bss_conf->bssid);
- 			if (!sta) {
-@@ -686,6 +687,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
- 				    bss_conf->bssid,
- 				    vif->addr,
- 				    bss_conf->aid);
-+			vif_priv->sta_assoc = false;
- 			wcn36xx_smd_set_link_st(wcn,
- 						bss_conf->bssid,
- 						vif->addr,
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index 54000db0af1a..7433d67a5929 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -128,6 +128,7 @@ struct wcn36xx_vif {
- 	u8 dtim_period;
- 	enum ani_ed_type encrypt_type;
- 	bool is_joining;
-+	bool sta_assoc;
- 	struct wcn36xx_hal_mac_ssid ssid;
- 
- 	/* Power management */
--- 
-2.5.0
+In Europe ETSI standardized the used for short range devices (SRD) [1] =
+in ETSI=20
+EN 300 440-1 [2].
+According to this standard generic use equipment is allowed to transmit=
+ in the=20
+frequency range form 5725 MHz to 5875 MHz with a maximum output power o=
+f=20
+25 mW e.i.r.p. This generic allocation also allows transmission of 802.=
+11=20
+devices.
+
+[3] has a list of countries and their status about the implementation o=
+f the=20
+SRD frequency bands. For the 5 GHz band this can be seen on page 38 in =
+the=20
+paragraph ANNEX 1 and the entry Annex j.
+
+Attached is a patch that adds the 5 GHz SRD band to db.txt for Germany.=
+
+
+If it is acceptable I can provide a patch adding the 5 GHz SRD band for=
+ the=20
+other countries listed in [3].
+
+Thanks,
+Maxi
+
+
+[1] http://www.etsi.org/technologies-clusters/technologies/radio/short-=
+range-devices
+[2] http://www.etsi.org/deliver/etsi_en/300400_300499/30044001/01.06.01=
+_60/en_30044001v010601p.pdf
+[3] http://www.erodocdb.dk/Docs/doc98/official/pdf/REC7003e.pdf
+
+
+diff --git a/db.txt b/db.txt
+index e9ba21a..38a9340 100644
+=2D-- a/db.txt
++++ b/db.txt
+@@ -319,6 +319,9 @@ country CZ: DFS-ETSI
+ # limit is used here as the non-interference with radar and satellite
+ # apps relies on the attenuation by the building walls only in the
+ # absence of DFS; the neighbour countries have 100mW limit here as wel=
+l.
++# The ETSI EN 300 440-1 standard for short range devices in the 5 GHz =
+band has
++# been implemented in Germany:
++# https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete=
+/Telekommunikation/Unternehmen_Institutionen/Frequenzen/Allgemeinzuteil=
+ungen/2014_69_SRD_pdf.pdf
+=20
+ country DE: DFS-ETSI
+        # entries 279004 and 280006
+@@ -329,6 +332,8 @@ country DE: DFS-ETSI
+        (5250 - 5350 @ 80), (100 mW), NO-OUTDOOR, DFS, AUTO-BW
+        # entries 308002, 309001 and 310003
+        (5470 - 5725 @ 160), (500 mW), DFS
++       # short range devices (ETSI EN 300 440-1)
++       (5725 - 5875 @ 80), (25 mW)
+        # 60 GHz band channels 1-4, ref: Etsi En 302 567
+        (57000 - 66000 @ 2160), (40)
+
+
+
+=2D-=20
+Maximilian Engelhardt
+Dipl.-Ing. (Univ.)
+=20
+perisens GmbH
+Lichtenbergstra=DFe 8
+85748 Garching bei M=FCnchen
+
+tel:    +49 89 2155203-10
+fax:    +49 89 2155203-19
+web:    http://www.perisens.de/
+_____________
+
+perisens GmbH
+Gesch=E4ftsf=FChrer: Dr. Florian Pfeiffer=20
+Sitz und Registergericht: M=FCnchen HRB 181857
+USt-ID: DE-267481419
+
+--nextPart1540866.hqEZiY0n9z
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJXFnLoAAoJECiijTBlkGWF4PoP/3cGHg6wr4vnEvvF5C2cOJIn
+yzbekDRWD2moHg4JnhdNgds6Su8vmtwzafgXN3PneK+BqgDHRSf6mH3Z2hWTUY3l
+NZ0ZH6RB2Z7vIhWoY/JqZ7A7hScOgpAUJYBiTt6s8+KIUkWMjJCLFQIhYeOL4lFp
+wJP1KblZHJfywTPIELXPKs0NCP6WOOMUdmEGxxDhlEdArulvCn6qoRHQQORztCf1
+e90IRu7csduRgRxw8gQj6czXAuM2fmjN90Az+1YKQ1LthrKrDfdxl9idJl77DA91
+G6ssdLYo+8qbap81bd1H0i1gyfJVCuyTQBTOHw65vs7gaQBeA+oHIFHRTi9OKiw6
+xXkAnvIMAAGw8EDm0IJP6VDD75dNvRSZgP81UDkoxmOLbCYf0pjXwI3TqPfPG3yY
+DP9QegKeEJD8iFVEIwv33p7lmIp2lYckZhfw2W5P4/sdeXsRXIrUq/eHHVRzgqwn
+Jm7lby2YDVXcnvWDdZ3bWO0VRHSwUk7hDguDQOGqEBQGEep7MfH1tMwtkpHOTS67
+dgwhrfG/o/Z6GfQESwm1aV+L1Ftmjt+xHloOFvKwCXmfEh2J6opOMTCXrs3+um/x
+Tm/rvC9fTH8Kuawi/rU3v9AxGL7wfzZoVVTkQUKY3mYHuauChwpJ63R3FonUi5nI
+icDYVCQlTNQ5jxL46y1E
+=kKJ4
+-----END PGP SIGNATURE-----
+
+--nextPart1540866.hqEZiY0n9z--
 
