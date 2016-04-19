@@ -1,67 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54989 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751745AbcDNUh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 16:37:28 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 00/16] rtl8xxxu - additional fixes
-Date: Thu, 14 Apr 2016 16:37:05 -0400
-Message-Id: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_223732_080377_9517E45C)
+Received: from mout.kundenserver.de ([217.72.192.74]:53380 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753077AbcDSOVq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2016 10:21:46 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
+Subject: Re: [PATCHv2] wlcore: spi: add wl18xx support
+Date: Tue, 19 Apr 2016 16:21:35 +0200
+Message-ID: <4133521.UUI3B1RTyv@wuerfel> (sfid-20160419_162215_349351_AADAA07D)
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
+References: <1460273570-12298-1-git-send-email-eyalr@ti.com> <1463330011.BhWEcYYuGD@wuerfel> <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Tuesday 19 April 2016 09:05:45 Reizer, Eyal wrote:
+> > > It is also part of the generic spi.h (include/Linux/spi/spi.h),
+> > > already part of " struct spi_device" So it seemed redundant adding
+> > > another mechanism for implementing the same.
+> > > Platform that interact with a wilink need to use it, and platforms
+> > > that don't have this capability will probably not interact with a wilink device
+> > using SPI.
+> > 
+> > The cs_gpio field in spi_device belongs to the spi host controller, no other
+> > slave driver uses it.
+> > 
+> > I wasn't asking for a duplication of this mechanism, but an interface to use it
+> > properly. Internally, the spi core uses the spi_set_cs() function to pick a CS.
+> > Find a way to use that rather than reimplementing it incorrectly.
+> > 
+> 
+> Understood. As this special CS manipulation is unique to wspi (wilink spi)  I think the 
+> best option is to move this gpio allocation into wlcore_spi as a new device tree entry
+> used only by this driver.
+> If you agree I will submit a v3.
 
-Hi,
+I don't think that can work either: aside of not solving the problem
+of wilink devices on spi controllers that don't use gpio, it also doesn't
+solve the problem of what happens when the driver manually triggers the
+gpio to hold the CS signal while another driver talks to a different
+device using another CS on the same controller.
 
-This is a second set of rtl8xxxu related patches, which goes on top of
-the set I sent out earlier today. If you only have time to go through
-one set, please look at the other set.
-
-This set primarily contains fixes to make rtl8188ru v2 devices work
-again. I have reports that v1 devices still don't work, but I don't
-have one of those, so I am not able to test this.
-
-This also includes a fix for a crash reported by Xose Vazquez Peres
-when trying to hot add a USB ID. It marks 0x050d:0x1004 as tested,
-reported by Andrea Merello, and handles an old bug where the
-driver didn't unregister from mac80211 before shutting down the
-device. Last it includes a uninitialized return value fix from Colin
-Ian King.
-
-Cheers,
-Jes
-
-
-Colin Ian King (1):
-  rtl8xxxu: fix uninitialized return value in ret
-
-Jes Sorensen (15):
-  rtl8xxxu: Mark 0x050d:0x1004 as tested
-  rtl8xxxu: Move PHY RF init into device specific functions
-  rtl8xxxu: For devices with external PA (8188RU), limit CCK TX power
-  rtl8xxxu: Apply 8188RU workaround for UMC B cut parts correctly
-  rtl8xxxu: Use rtl_chip == RTL8188R to identify high PA parts
-  rtl8xxxu: Match 8723bu power down sequence to vendor driver
-  rtl8xxxu: Unregister from mac80211 before shutting down the device
-  rtl8xxxu: Update copyright statement to include 2016
-  rtl8xxxu: Set register 0xfe10 on rtl8192cu based parts
-  rtl8xxxu: Add TX power base values for gen1 parts
-  rtl8xxxu: Fix 8188RU support
-  rtl8xxxu: Fix OOPS if user tries to add device via /sys
-  rtl8xxxu: Implement rtl8192e_enable_rf()
-  rtl8xxxu: Pause TX before calling disable_rf()
-  rtl8xxxu: MAINTAINERS: Update to point to the active devel branch
-
- MAINTAINERS                                        |   2 +-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   | 378 +++++++++++++++------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  30 +-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |   2 +-
- 4 files changed, 306 insertions(+), 106 deletions(-)
-
--- 
-2.5.5
-
+	Arnd
