@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36254 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48941 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932159AbcDFJer (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 05:34:47 -0400
-Message-ID: <1459935281.17504.69.camel@sipsolutions.net> (sfid-20160406_113459_044840_451F6B0C)
-Subject: Re: NETLINK_URELEASE non-bound socket problem (was: [PATCH] Fix
- local DoS in cfg80211 subsystem)
+	id S1752537AbcDSJLs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2016 05:11:48 -0400
+Message-ID: <1461057103.2766.15.camel@sipsolutions.net> (sfid-20160419_111153_068546_EE3B67AF)
+Subject: Re: [RFC] mac80211: add extap functionality
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitrijs Ivanovs <dmitrijs.ivanovs@ubnt.com>
-Cc: linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	samuel <samuel@sortiz.org>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Thomas Graf <tgraf@suug.ch>
-Date: Wed, 06 Apr 2016 11:34:41 +0200
-In-Reply-To: <CAFSVvRcMQx1Vjv=Qwyb525Qq5DzBBD6c=n=-i+pWFFVqHRyAxQ@mail.gmail.com> (sfid-20160406_102025_380946_ED0DACD9)
-References: <CAFSVvRfjZszSfovXZ0piPqOgVKH=10sG7pvnvkoWJChL38ifqQ@mail.gmail.com>
-	 <1459850188.18188.38.camel@sipsolutions.net>
-	 <CAFSVvRcMQx1Vjv=Qwyb525Qq5DzBBD6c=n=-i+pWFFVqHRyAxQ@mail.gmail.com>
-	 (sfid-20160406_102025_380946_ED0DACD9)
+To: Michal Kazior <michal.kazior@tieto.com>,
+	Felix Fietkau <nbd@openwrt.org>
+Cc: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 19 Apr 2016 11:11:43 +0200
+In-Reply-To: <CA+BoTQnf953+s++Wiug=BgEw2Ahu7cN1fbatmgyWi_6iAg_v2Q@mail.gmail.com> (sfid-20160418_132353_986196_638EA8F9)
+References: <1455710131-9967-1-git-send-email-grzegorz.bajorski@tieto.com>
+	 <56C4A5ED.4060802@openwrt.org>
+	 <CA+BoTQnf953+s++Wiug=BgEw2Ahu7cN1fbatmgyWi_6iAg_v2Q@mail.gmail.com>
+	 (sfid-20160418_132353_986196_638EA8F9)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-04-06 at 11:20 +0300, Dmitrijs Ivanovs wrote:
-> Hi Johannes!
+On Mon, 2016-04-18 at 13:23 +0200, Michal Kazior wrote:
+
+> You can't really implement complete IPv6 support in relayd though.
+> Link-local routing is forbidden by the spec explicitly and a patch
+> I've cooked up was rejected[1].
 > 
-> I will prepare patch which does not send NETLINK_URELEASE for unbound
-> sockets as you suggest. But I think protocol check in nl80211 is
-> still needed because port_id is unique per-protocol.
+> I guess this leaves either the kernel's wireless stack to take up the
+> task or a special link device (for which I'm soliciting feedback now
+> [2]).
 > 
 
-Yes, good point. Can you please send that as a separate patch? That one
-should have a
+I think you'll probably have to cook up a simple patch to get that
+question in [2] taken seriously :)
 
-Fixes: 026331c4d9b5 ("cfg80211/mac80211: allow registering for and sending action frames")
+How much of that could be done with nftables btw?
 
-tag. I'll apply this one right away, but the other one should probably
-go through Dave's tree.
-
-Thanks,
 johannes
