@@ -1,63 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:50504 "EHLO
-	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751618AbcDVABV (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:35918 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752227AbcDSFBK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2016 20:01:21 -0400
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
-	by mailout.nyi.internal (Postfix) with ESMTP id 14AE121F1C
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2016 20:01:20 -0400 (EDT)
-Date: Thu, 21 Apr 2016 17:01:19 -0700
-From: Mark Greer <mgreer@animalcreek.com>
-To: Geoff Lansberry <geoff@kuvee.com>
-Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	justin@kuvee.com
-Subject: Re: [Patch] NFC: trf7970a:
-Message-ID: <20160422000119.GA21754@animalcreek.com> (sfid-20160422_020125_510077_69EB8DD8)
-References: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
+	Tue, 19 Apr 2016 01:01:10 -0400
+Received: by mail-pa0-f47.google.com with SMTP id er2so2647296pad.3
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 22:01:10 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 09/18] wcn36xx: Parse trigger_ba response properly
+Date: Mon, 18 Apr 2016 22:00:47 -0700
+Message-Id: <1461042056-10607-10-git-send-email-bjorn.andersson@linaro.org> (sfid-20160419_070455_658181_60F31B58)
+In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Apr 18, 2016 at 03:48:37PM -0400, Geoff Lansberry wrote:
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Hi Geoff.
+This message does not follow the canonical format and needs it's own
+parser.
 
-> The current version of the trf7970a driver is missing support for several features that we needed to operate a custom board. 
-> We feel that these features will be useful to others as well, and we want to share them.
-> 
-> 1: Support for using a gpio as Slave-Select. Our processor has several devices on the spi bus, and we ran out of ss lines.  This patch gives TRF7970A the ability to
->  drive the ss line of the chip from a gpio that is defined in the device tree.
-> 
-> 2. When reviewing problems we were having in our implementation with TI support staff, they recommended that during initialization, address 0x18 should be written to zero.  This patch adds that change
-> 
-> 3. This existing version of the driver assumes that the crystal driving the trf7970a is 13.56 MHz, because there are several places in the driver code where the rel
-> ated register is re-written, there is clean way to change to 27.12 MHz.  This patch adds a device tree option for 27 MHz and properly or's in changes in locations w
-> here the register is changed.
-> 
-> 4. the existing version of the driver assumes that 3.3 volt io is used. The trf7970a has a special register where you can configure it for 1.8 volt io.  This patch
-> adds a device tree option to select that this setting should be made.
-> 
->  [PATCH 1/4] NFC: trf7970a: Add support for gpio as SS
->  [PATCH 2/4] NFC: trf7970a: add TI recommended write of zero to
->  [PATCH 3/4] NFC: trf7970a: add device tree option for 27MHz clock
->  [PATCH 4/4] NFC: trf7970a: Add device tree option of 1.8 Volt IO
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-I'm on vacation this week but will be back next week.  I'll take a
-look once I'm back.
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 76c6856ed932..7f315d098f52 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1968,6 +1968,17 @@ out:
+ 	return ret;
+ }
+ 
++static int wcn36xx_smd_trigger_ba_rsp(void *buf, int len)
++{
++	struct wcn36xx_hal_trigger_ba_rsp_msg *rsp;
++
++	if (len < sizeof(*rsp))
++		return -EINVAL;
++
++	rsp = (struct wcn36xx_hal_trigger_ba_rsp_msg *) buf;
++	return rsp->status;
++}
++
+ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
+ {
+ 	struct wcn36xx_hal_trigger_ba_req_msg msg_body;
+@@ -1992,8 +2003,7 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
+ 		wcn36xx_err("Sending hal_trigger_ba failed\n");
+ 		goto out;
+ 	}
+-	ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
+-						wcn->hal_rsp_len);
++	ret = wcn36xx_smd_trigger_ba_rsp(wcn->hal_buf, wcn->hal_rsp_len);
+ 	if (ret) {
+ 		wcn36xx_err("hal_trigger_ba response failed err=%d\n", ret);
+ 		goto out;
+-- 
+2.5.0
 
-In the meantime, for emails sent to public (techie) list always keep
-the lines less than 80 characters and always bottom-post (i.e., put
-your text *underneath* the text that you are responding to).  Also,
-when you change one or more patches in a series, re-submit the entire
-series with the version number incremented (.e.g., v2, v3, ...) even
-when you change only one of them.  It is a easier for others to know
-what the latest versions are that way.
-
-Thanks,
-
-Mark
---
