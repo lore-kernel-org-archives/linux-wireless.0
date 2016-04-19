@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33344 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752994AbcDKIQE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38937 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932919AbcDSQBT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 04:16:04 -0400
-Date: Mon, 11 Apr 2016 11:15:20 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch v2] ath10k: add some sanity checks
-Message-ID: <20160411081520.GA17911@mwanda> (sfid-20160411_101641_111223_46FD29F8)
+	Tue, 19 Apr 2016 12:01:19 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Jakub Sitnicki <jsitnicki@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: hide unused tables
+References: <1461016782-2640046-1-git-send-email-arnd@arndb.de>
+	<wrfjzisp64d7.fsf@redhat.com>
+Date: Tue, 19 Apr 2016 19:01:13 +0300
+In-Reply-To: <wrfjzisp64d7.fsf@redhat.com> (Jes Sorensen's message of "Tue, 19
+	Apr 2016 10:49:08 -0400")
+Message-ID: <87mvopy4dy.fsf@purkki.adurom.net> (sfid-20160419_180214_758624_0CB0E49F)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+BoTQmpYtGoYk4M-NaFduO8iX0KYgoLz6Mj_40i0um8MqDdww@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch complains that since "ev->peer_id" comes from skb->data that
-means we can't trust it and have to do a bounds check on it to prevent
-an array overflow.
+Jes Sorensen <Jes.Sorensen@redhat.com> writes:
 
-Fixes: 6942726f7f7b ('ath10k: add fast peer_map lookup')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
----
-v2: Add a warning message.  There is a checkpatch.pl warning that
-the alignment should match the open parenthesis but I ignored it because
-we're going off the end of the 80 character limit and this way is fine.
+> Arnd Bergmann <arnd@arndb.de> writes:
+>> The references to some arrays in the rtl8xxxu driver were moved inside
+>> of an #ifdef, but the symbols remain outside, resulting in build warnings:
+>>
+>> rtl8xxxu/rtl8xxxu.c:1506:33: error: 'rtl8188ru_radioa_1t_highpa_table' defined but not used
+>> rtl8xxxu/rtl8xxxu.c:1431:33: error: 'rtl8192cu_radioa_1t_init_table' defined but not used
+>> rtl8xxxu/rtl8xxxu.c:1407:33: error: 'rtl8192cu_radiob_2t_init_table' defined but not used
+>> rtl8xxxu/rtl8xxxu.c:1332:33: error: 'rtl8192cu_radioa_2t_init_table' defined but not used
+>> rtl8xxxu/rtl8xxxu.c:239:35: error: 'rtl8192c_power_base' defined but not used
+>> rtl8xxxu/rtl8xxxu.c:217:35: error: 'rtl8188r_power_base' defined but not used
+>>
+>> This adds an extra #ifdef around them to shut up the warnings.
+>>
+>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> Fixes: 2fc0b8e5a17d ("rtl8xxxu: Add TX power base values for gen1 parts")
+>> Fixes: 4062b8ffec36 ("rtl8xxxu: Move PHY RF init into device specific functions")
+>> ---
+>>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++++
+>>  1 file changed, 4 insertions(+)
+>
+> I'll apply it to my tree!
 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 9369411..0885fce 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -190,6 +190,13 @@ void ath10k_peer_map_event(struct ath10k_htt *htt,
- 	struct ath10k *ar = htt->ar;
- 	struct ath10k_peer *peer;
- 
-+	if (ev->peer_id >= ATH10K_MAX_NUM_PEER_IDS) {
-+		ath10k_warn(ar,
-+			"received htt peer map event with idx out of bounds: %hu\n",
-+			ev->peer_id);
-+		return;
-+	}
-+
- 	spin_lock_bh(&ar->data_lock);
- 	peer = ath10k_peer_find(ar, ev->vdev_id, ev->addr);
- 	if (!peer) {
-@@ -218,6 +225,13 @@ void ath10k_peer_unmap_event(struct ath10k_htt *htt,
- 	struct ath10k *ar = htt->ar;
- 	struct ath10k_peer *peer;
- 
-+	if (ev->peer_id >= ATH10K_MAX_NUM_PEER_IDS) {
-+		ath10k_warn(ar,
-+			"received htt peer unmap event with idx out of bounds: %hu\n",
-+			ev->peer_id);
-+		return;
-+	}
-+
- 	spin_lock_bh(&ar->data_lock);
- 	peer = ath10k_peer_find_by_id(ar, ev->peer_id);
- 	if (!peer) {
+Actually I would prefer to apply this directly to wireless-drivers-next
+so that the warnings are quickly fixed.
+
+-- 
+Kalle Valo
