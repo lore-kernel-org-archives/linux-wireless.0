@@ -1,52 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56626 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868AbcDKJpX (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:34325 "EHLO
+	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752571AbcDSFBZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 05:45:23 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 4/8] brcmfmac: fix p2p scan abort null pointer exception
-Date: Mon, 11 Apr 2016 11:35:24 +0200
-Message-Id: <1460367328-12082-5-git-send-email-arend@broadcom.com> (sfid-20160411_114533_672264_1FC5359B)
-In-Reply-To: <1460367328-12082-1-git-send-email-arend@broadcom.com>
-References: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+	Tue, 19 Apr 2016 01:01:25 -0400
+Received: by mail-pf0-f177.google.com with SMTP id c20so2739117pfc.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 22:01:20 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 18/18] wcn36xx: Fill in capability list
+Date: Mon, 18 Apr 2016 22:00:56 -0700
+Message-Id: <1461042056-10607-19-git-send-email-bjorn.andersson@linaro.org> (sfid-20160419_070149_791877_B32B0933)
+In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <hante.meuleman@broadcom.com>
+Fill in the capability list with more values from the downstream driver.
 
-When p2p connection setup is performed without having ever done an
-escan a null pointer exception can occur. This is because the ifp
-to abort scanning is taken from escan struct while it was never
-initialized. Fix this by using the primary ifp for scan abort. The
-abort should still be performed and all scan related commands are
-performed on primary ifp.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index b5a49e5..9408717 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -1266,7 +1266,7 @@ static void
- brcmf_p2p_stop_wait_next_action_frame(struct brcmf_cfg80211_info *cfg)
- {
- 	struct brcmf_p2p_info *p2p = &cfg->p2p;
--	struct brcmf_if *ifp = cfg->escan_info.ifp;
-+	struct brcmf_if *ifp = p2p->bss_idx[P2PAPI_BSSCFG_PRIMARY].vif->ifp;
+Changes since v2:
+- Added this patch to the series
+
+ drivers/net/wireless/ath/wcn36xx/hal.h  | 39 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/main.c | 40 ++++++++++++++++++++++++++++++++-
+ 2 files changed, 78 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index ec64c47f918b..658bfb8baabe 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -4389,6 +4389,45 @@ enum place_holder_in_cap_bitmap {
+ 	RTT = 20,
+ 	RATECTRL = 21,
+ 	WOW = 22,
++	WLAN_ROAM_SCAN_OFFLOAD = 23,
++	SPECULATIVE_PS_POLL = 24,
++	SCAN_SCH = 25,
++	IBSS_HEARTBEAT_OFFLOAD = 26,
++	WLAN_SCAN_OFFLOAD = 27,
++	WLAN_PERIODIC_TX_PTRN = 28,
++	ADVANCE_TDLS = 29,
++	BATCH_SCAN = 30,
++	FW_IN_TX_PATH = 31,
++	EXTENDED_NSOFFLOAD_SLOT = 32,
++	CH_SWITCH_V1 = 33,
++	HT40_OBSS_SCAN = 34,
++	UPDATE_CHANNEL_LIST = 35,
++	WLAN_MCADDR_FLT = 36,
++	WLAN_CH144 = 37,
++	NAN = 38,
++	TDLS_SCAN_COEXISTENCE = 39,
++	LINK_LAYER_STATS_MEAS = 40,
++	MU_MIMO = 41,
++	EXTENDED_SCAN = 42,
++	DYNAMIC_WMM_PS = 43,
++	MAC_SPOOFED_SCAN = 44,
++	BMU_ERROR_GENERIC_RECOVERY = 45,
++	DISA = 46,
++	FW_STATS = 47,
++	WPS_PRBRSP_TMPL = 48,
++	BCN_IE_FLT_DELTA = 49,
++	TDLS_OFF_CHANNEL = 51,
++	RTT3 = 52,
++	MGMT_FRAME_LOGGING = 53,
++	ENHANCED_TXBD_COMPLETION = 54,
++	LOGGING_ENHANCEMENT = 55,
++	EXT_SCAN_ENHANCED = 56,
++	MEMORY_DUMP_SUPPORTED = 57,
++	PER_PKT_STATS_SUPPORTED = 58,
++	EXT_LL_STAT = 60,
++	WIFI_CONFIG = 61,
++	ANTENNA_DIVERSITY_SELECTION = 62,
++
+ 	MAX_FEATURE_SUPPORTED = 128,
+ };
  
- 	if (test_bit(BRCMF_P2P_STATUS_SENDING_ACT_FRAME, &p2p->status) &&
- 	    (test_bit(BRCMF_P2P_STATUS_ACTION_TX_COMPLETED, &p2p->status) ||
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 680217506b3d..fe81b2a7c8d9 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -201,7 +201,45 @@ static const char * const wcn36xx_caps_names[] = {
+ 	"BCN_FILTER",			/* 19 */
+ 	"RTT",				/* 20 */
+ 	"RATECTRL",			/* 21 */
+-	"WOW"				/* 22 */
++	"WOW",				/* 22 */
++	"WLAN_ROAM_SCAN_OFFLOAD",	/* 23 */
++	"SPECULATIVE_PS_POLL",		/* 24 */
++	"SCAN_SCH",			/* 25 */
++	"IBSS_HEARTBEAT_OFFLOAD",	/* 26 */
++	"WLAN_SCAN_OFFLOAD",		/* 27 */
++	"WLAN_PERIODIC_TX_PTRN",	/* 28 */
++	"ADVANCE_TDLS",			/* 29 */
++	"BATCH_SCAN",			/* 30 */
++	"FW_IN_TX_PATH",		/* 31 */
++	"EXTENDED_NSOFFLOAD_SLOT",	/* 32 */
++	"CH_SWITCH_V1",			/* 33 */
++	"HT40_OBSS_SCAN",		/* 34 */
++	"UPDATE_CHANNEL_LIST",		/* 35 */
++	"WLAN_MCADDR_FLT",		/* 36 */
++	"WLAN_CH144",			/* 37 */
++	"NAN",				/* 38 */
++	"TDLS_SCAN_COEXISTENCE",	/* 39 */
++	"LINK_LAYER_STATS_MEAS",	/* 40 */
++	"MU_MIMO",			/* 41 */
++	"EXTENDED_SCAN",		/* 42 */
++	"DYNAMIC_WMM_PS",		/* 43 */
++	"MAC_SPOOFED_SCAN",		/* 44 */
++	"BMU_ERROR_GENERIC_RECOVERY",	/* 45 */
++	"DISA",				/* 46 */
++	"FW_STATS",			/* 47 */
++	"WPS_PRBRSP_TMPL",		/* 48 */
++	"BCN_IE_FLT_DELTA",		/* 49 */
++	"TDLS_OFF_CHANNEL",		/* 51 */
++	"RTT3",				/* 52 */
++	"MGMT_FRAME_LOGGING",		/* 53 */
++	"ENHANCED_TXBD_COMPLETION",	/* 54 */
++	"LOGGING_ENHANCEMENT",		/* 55 */
++	"EXT_SCAN_ENHANCED",		/* 56 */
++	"MEMORY_DUMP_SUPPORTED",	/* 57 */
++	"PER_PKT_STATS_SUPPORTED",	/* 58 */
++	"EXT_LL_STAT",			/* 60 */
++	"WIFI_CONFIG",			/* 61 */
++	"ANTENNA_DIVERSITY_SELECTION",	/* 62 */
+ };
+ 
+ static const char *wcn36xx_get_cap_name(enum place_holder_in_cap_bitmap x)
 -- 
-1.9.1
+2.5.0
 
