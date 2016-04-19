@@ -1,62 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f43.google.com ([209.85.192.43]:34446 "EHLO
-	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754752AbcDFIUZ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:55056 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932598AbcDSPs2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 04:20:25 -0400
-Received: by mail-qg0-f43.google.com with SMTP id c6so30322141qga.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 01:20:24 -0700 (PDT)
+	Tue, 19 Apr 2016 11:48:28 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: Re: [PATCH] ath10k: add dynamic tx mode switch config support for
+ qca4019
+Date: Tue, 19 Apr 2016 15:48:24 +0000
+Message-ID: <87r3e1ioqg.fsf@kamboji.qca.qualcomm.com> (sfid-20160419_174845_351119_414C166E)
+References: <1460472353-4317-1-git-send-email-c_traja@qti.qualcomm.com>
+In-Reply-To: <1460472353-4317-1-git-send-email-c_traja@qti.qualcomm.com> (c.
+	traja's message of "Tue, 12 Apr 2016 20:15:53 +0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1459850188.18188.38.camel@sipsolutions.net>
-References: <CAFSVvRfjZszSfovXZ0piPqOgVKH=10sG7pvnvkoWJChL38ifqQ@mail.gmail.com>
-	<1459850188.18188.38.camel@sipsolutions.net>
-Date: Wed, 6 Apr 2016 11:20:24 +0300
-Message-ID: <CAFSVvRcMQx1Vjv=Qwyb525Qq5DzBBD6c=n=-i+pWFFVqHRyAxQ@mail.gmail.com> (sfid-20160406_102032_138187_9B4788B0)
-Subject: Re: NETLINK_URELEASE non-bound socket problem (was: [PATCH] Fix local
- DoS in cfg80211 subsystem)
-From: Dmitrijs Ivanovs <dmitrijs.ivanovs@ubnt.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	samuel <samuel@sortiz.org>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Thomas Graf <tgraf@suug.ch>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes!
+<c_traja@qti.qualcomm.com> writes:
 
-I will prepare patch which does not send NETLINK_URELEASE for unbound
-sockets as you suggest. But I think protocol check in nl80211 is still
-needed because port_id is unique per-protocol.
+> From: Raja Mani <rmani@qti.qualcomm.com>
+>
+> push-pull mode needs certain amount the host driver involvement for
+> managing queues in the host memory and packet delivery to firmware.
+> qca4019 wifi firmware has an option to stay in push mode for less
+> number of active traffic flow and then switch to push-pull mode when
+> the active traffic flow goes beyond the certain limit.
+>
+> The advantage of staying in push mode for less active traffic is, the
+> host cpu consumption is reduced. qca4019 firmware supports this
+> flexibility of the mode switch. It takes the host driver interest
+> (LOW_PERF/HIGH_PERF) via WMI_EXT_RESOURCE_CFG_CMDID,
+>
+>  LOW_PERF  - fw would stay in push mode and switch to push-pull
+>                based on demand.
+>  HIGH_PERF - fw would stay in push-pull mode from the boot.
+>
+> To make this configuration generic, new WMI services
+> WMI_SERVICE_TX_MODE_PUSH_ONLY, WMI_SERVICE_TX_MODE_PUSH_PULL,
+> WMI_SERVICE_TX_MODE_DYNAMIC are introduced to take dynamic tx mode
+> switch support availability in firmware.
+> Based on WMI_SERVICE_TX_MODE_DYNAMIC, LOW_PERF or HIGHT_PERF is
+> configured to the firmware.
+>
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-On Tue, Apr 5, 2016 at 12:56 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> Hi Dmitrijs,
->
-> Thanks for reporting this problem.
->
->> The patch below corrects this problem in kernel space.
->
-> I don't think that this is correct, there are four more users of
-> NETLINK_URELEASE (nfnetlink, NFC), and afaict all of them have the same
-> bug as nl80211.
->
-> Rather than fix all of them, I think we should simply not report
-> NETLINK_URELEASE for netlink sockets that weren't bound; if any user
-> comes up that requires them later we could add a new event instead.
->
-> I can't find what commit introduced this code, it goes back before git
-> history, so I don't have the commit log. Maybe it was done for
-> nfnetlink log/queue? Certainly both nl80211 and NFC are much newer.
->
->> Also, it is
->> recommended to ensure that user-space applications are not using
->> user-supplied port_id for netlink sockets (which is default in
->> libnl-tiny for example).
->
-> This I think we should remove from the commit log - it's misleading and
-> there's no point.
->
-> johannes
->
+Applied, thanks.
+
+-- 
+Kalle Valo
