@@ -1,124 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58646 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756353AbcDLRnH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 13:43:07 -0400
-From: "Rustad, Mark D" <mark.d.rustad@intel.com>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-CC: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"Sudip Mukherjee" <sudip.mukherjee@codethink.co.uk>
-Subject: Re: [PATCH] mwifiex: fix possible NULL dereference
-Date: Tue, 12 Apr 2016 17:43:03 +0000
-Message-ID: <867653EE-136B-488D-8F85-716B1ED9BD1A@intel.com> (sfid-20160412_194329_808060_30D4D9F1)
-References: <1460388459-21090-1-git-send-email-sudipm.mukherjee@gmail.com>
- <CAHp75VfO3A+HBjkjc9WC9jzB9gtYrVM6izLmpiqLntChGOzjMA@mail.gmail.com>
-In-Reply-To: <CAHp75VfO3A+HBjkjc9WC9jzB9gtYrVM6izLmpiqLntChGOzjMA@mail.gmail.com>
-Content-Type: multipart/signed;
-	boundary="Apple-Mail=_82A28291-85F1-4A42-AE7E-955067EA63CA";
-	protocol="application/pgp-signature"; micalg=pgp-sha256
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34173 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbcDSAMG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 20:12:06 -0400
+Received: by mail-oi0-f66.google.com with SMTP id b10so84624oig.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 17:12:06 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1461008921-15100-4-git-send-email-geoff@kuvee.com>
+References: <1461008921-15100-1-git-send-email-geoff@kuvee.com> <1461008921-15100-4-git-send-email-geoff@kuvee.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 19 Apr 2016 10:11:46 +1000
+Message-ID: <CAGRGNgUQ995jj_hGY=wR4LmND=h1kCU1tpQ+p8YRN2kqmjDgOg@mail.gmail.com> (sfid-20160419_021213_438584_81DBAB86)
+Subject: Re: [PATCH 3/4] NFC: trf7970a: add device tree option for 27MHz clock
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>, mgreer@animalcreek.com,
+	justin@kuvee.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Apple-Mail=_82A28291-85F1-4A42-AE7E-955067EA63CA
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii;
-	delsp=yes;
-	format=flowed
+Hi Geoff,
 
-Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
+On Tue, Apr 19, 2016 at 5:48 AM, Geoff Lansberry <geoff@kuvee.com> wrote:
+> Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
 
-> On Mon, Apr 11, 2016 at 6:27 PM, Sudip Mukherjee
-> <sudipm.mukherjee@gmail.com> wrote:
->> From: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
->>
->> We have a check for card just after dereferencing it. So if it is NULL
->> we have already dereferenced it before its check. Lets dereference it
->> after checking card for NULL.
->
-> IIUC the code does nothing with dereference.
->
-> I would have told NAK if I would have been maintainer.
->
->> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
->> ---
->>  drivers/net/wireless/marvell/mwifiex/pcie.c | 3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c  
->> b/drivers/net/wireless/marvell/mwifiex/pcie.c
->> index edf8b07..84562d0 100644
->> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
->> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
->> @@ -2884,10 +2884,11 @@ static void mwifiex_unregister_dev(struct  
->> mwifiex_adapter *adapter)
->>  {
->>         struct pcie_service_card *card = adapter->card;
->
-> Let's say it's 0.
->
->>        const struct mwifiex_pcie_card_reg *reg;
->> -       struct pci_dev *pdev = card->dev;
->
-> This would be equal to offset of dev member in pcie_service_card struct.
->
-> Nothing wrong here.
+You should add the description you had in your cover letter to the patches also.
 
-Actually, that is not true. The dereference of card tells the compiler that  
-card can't be NULL, so it is free to eliminate the check below.  
-Unbelievably, this can even happen for a reference such as &ptr->thing  
-where the pointer isn't even actually dereferenced at all!
+> ---
+>  .../devicetree/bindings/net/nfc/trf7970a.txt       |  2 ++
+>  drivers/nfc/trf7970a.c                             | 28 +++++++++++++---------
+>  2 files changed, 19 insertions(+), 11 deletions(-)
+>
+> diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+> index 09c5056..bf25f39 100644
+> --- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+> +++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
+> @@ -22,6 +22,7 @@ Optional SoC Specific Properties:
+>  - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
+>    where an extra byte is returned by Read Multiple Block commands issued
+>    to Type 5 tags.
+> +- crystal_27mhz: Set to specify that the input frequency to the trf7970a is 27.12MHz
 
->> +       struct pci_dev *pdev;
->>         int i;
->>
->>         if (card) {
->> +               pdev = card->dev;
->>                 if (card->msix_enable) {
->>                         for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
->>                                 synchronize_irq(card->msix_entries[i].vector);
->> --
->> 1.9.1
+Does the trf7970a only operate at the default or 27.12MHz, or can it
+operate at any frequency? If it's the latter, would it make sense to
+specify this using the clock framework and some fixed-factor clock?
+
+Thanks,
+
+Julian Calaby
+
+
+>  Example (for ARM-based BeagleBone with TRF7970A on SPI1):
 >
+> @@ -45,6 +46,7 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
+>                 irq-status-read-quirk;
+>                 en2-rf-quirk;
+>                 t5t-rmb-extra-byte-quirk;
+> +               crystal_27mhz;
+>                 status = "okay";
+>         };
+>  };
+> diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+> index 447b6c9..74210f9 100644
+> --- a/drivers/nfc/trf7970a.c
+> +++ b/drivers/nfc/trf7970a.c
+> @@ -1072,12 +1072,11 @@ static int trf7970a_init(struct trf7970a *trf)
 >
+>         trf->chip_status_ctrl &= ~TRF7970A_CHIP_STATUS_RF_ON;
+>
+> -       ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL, 0);
+> +       ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL,
+> +                       trf->modulator_sys_clk_ctrl);
+>         if (ret)
+>                 goto err_out;
+>
+> -       trf->modulator_sys_clk_ctrl = 0;
+> -
+>         ret = trf7970a_write(trf, TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS,
+>                         TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLH_96 |
+>                         TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLL_32);
+> @@ -1194,30 +1193,32 @@ static int trf7970a_in_config_rf_tech(struct trf7970a *trf, int tech)
+>
+>         dev_dbg(trf->dev, "rf technology: %d\n", tech);
+>
+> +       trf->modulator_sys_clk_ctrl = (trf->modulator_sys_clk_ctrl&0xF8);
+> +
+>         switch (tech) {
+>         case NFC_DIGITAL_RF_TECH_106A:
+>                 trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443A_106;
+> -               trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
+> +               trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_OOK;
+>                 trf->guard_time = TRF7970A_GUARD_TIME_NFCA;
+>                 break;
+>         case NFC_DIGITAL_RF_TECH_106B:
+>                 trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443B_106;
+> -               trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +               trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+>                 trf->guard_time = TRF7970A_GUARD_TIME_NFCB;
+>                 break;
+>         case NFC_DIGITAL_RF_TECH_212F:
+>                 trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_212;
+> -               trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +               trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+>                 trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+>                 break;
+>         case NFC_DIGITAL_RF_TECH_424F:
+>                 trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_424;
+> -               trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +               trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+>                 trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
+>                 break;
+>         case NFC_DIGITAL_RF_TECH_ISO15693:
+>                 trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_15693_SGL_1OF4_2648;
+> -               trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
+> +               trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_OOK;
+>                 trf->guard_time = TRF7970A_GUARD_TIME_15693;
+>                 break;
+>         default:
+> @@ -1582,22 +1583,24 @@ static int trf7970a_tg_config_rf_tech(struct trf7970a *trf, int tech)
+>
+>         dev_dbg(trf->dev, "rf technology: %d\n", tech);
+>
+> +       trf->modulator_sys_clk_ctrl = (trf->modulator_sys_clk_ctrl&0xF8);
+> +
+>         switch (tech) {
+>         case NFC_DIGITAL_RF_TECH_106A:
+>                 trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+>                         TRF7970A_ISO_CTRL_NFC_CE |
+>                         TRF7970A_ISO_CTRL_NFC_CE_14443A;
+> -               trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
+> +               trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_OOK;
+>                 break;
+>         case NFC_DIGITAL_RF_TECH_212F:
+>                 trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+>                         TRF7970A_ISO_CTRL_NFC_NFCF_212;
+> -               trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +               trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+>                 break;
+>         case NFC_DIGITAL_RF_TECH_424F:
+>                 trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
+>                         TRF7970A_ISO_CTRL_NFC_NFCF_424;
+> -               trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
+> +               trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
+>                 break;
+>         default:
+>                 dev_dbg(trf->dev, "Unsupported rf technology: %d\n", tech);
+> @@ -2072,6 +2075,9 @@ static int trf7970a_probe(struct spi_device *spi)
+>                 return ret;
+>         }
+>
+> +       if (of_property_read_bool(np, "crystal_27MHz"))
+> +               trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
+> +
+>         if (of_property_read_bool(np, "en2-rf-quirk"))
+>                 trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
 >
 > --
-> With Best Regards,
-> Andy Shevchenko
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
---
-Mark Rustad, Networking Division, Intel Corporation
 
---Apple-Mail=_82A28291-85F1-4A42-AE7E-955067EA63CA
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment; filename="signature.asc"
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Message signed with OpenPGP using GPGMail
+-- 
+Julian Calaby
 
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBCAAGBQJXDTOnAAoJEDwO/+eO4+5u4TAP/Rh0B1w5txmGygx9AW3657Bu
-Htn6SZcpNjNZ6wwQ0Mtnznz8g79KOgy9MwTkumi+x6TEr+8P6mWKfCaOLiKwp5iR
-s80y1PotUefHl+VZHm9/taoDntQDZDzlff64f/6fzT20zBNsscANfSfxiEO25wfC
-znX5HgM4qnW+Dso5wAGQlBQmAgEVoMwtItAeGNVhJ5lOaFuX9kIjc2g3tP+4kZyH
-JophiUOw6McT1AuNWkREFHANWzGQ4miENeWMFMYXwJAAhSXb/2lb596H93vmfuHR
-AewDHt+xPT+PEmO9vXlIGNWpCeK95Po6Se0mHIc33WeJ6/DRWe3tAt0zEUr8auqT
-Lr4vmvIFs/LW9cOb0pBptvyxCmbw87fp4w7NsM7LNC8CbwAbE7EUGouRm24IGHbp
-wcbdm7hh3J0WiciUxSsluYnWfa9STL/3r1ysRDduPwCstZ2prHt58kV9V3uxptHB
-VwaT/ZF0G9j457oI7KJpH8PRGnvM0e2+s3yTjEix6DLZv07cF9Y7ngzQ3t26dV82
-TFXozdBSqQQzcHjp4HTjlG0T3XgBcEumxP4XbdvN91g2rXAp5drCrkpcSpUIzEKK
-tE9xM7ml7qD8TmQq0Hc+Hd0HTmA8OdLQ1NNI7hIt0K2LUh23N6/yS2I/i3LpSeF/
-KdriujWI8IeLmcSvVafw
-=CCkz
------END PGP SIGNATURE-----
-
---Apple-Mail=_82A28291-85F1-4A42-AE7E-955067EA63CA--
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
