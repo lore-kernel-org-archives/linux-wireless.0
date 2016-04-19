@@ -1,45 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56221 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbcDAFNl (ORCPT
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:54818 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932404AbcDSRMs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 01:13:41 -0400
+	Tue, 19 Apr 2016 13:12:48 -0400
+Date: Tue, 19 Apr 2016 18:12:39 +0100
+From: Mark Brown <broonie@kernel.org>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
+Message-ID: <20160419171239.GC3217@sirena.org.uk> (sfid-20160419_191311_266969_F60B6993)
+References: <1460273570-12298-1-git-send-email-eyalr@ti.com>
+ <14313437.cDJIgY3kzo@wuerfel>
+ <8665E2433BC68541A24DFFCA87B70F5B360BF614@DFRE01.ent.ti.com>
+ <1463330011.BhWEcYYuGD@wuerfel>
+ <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 01 Apr 2016 10:43:38 +0530
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/3] ath10k: remove unnecessary warning for probe response
- drops
-In-Reply-To: <56FD5716.6030406@candelatech.com>
-References: <1459352551-11773-1-git-send-email-rmanohar@qti.qualcomm.com>
- <1459352551-11773-2-git-send-email-rmanohar@qti.qualcomm.com>
- <56FD5716.6030406@candelatech.com>
-Message-ID: <43fd44912f230a28f0f49e303c0078f5@codeaurora.org> (sfid-20160401_071344_474729_9306AA3A)
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="4cv0JMvpEKiCIDl2"
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
+Subject: Re: [PATCHv2] wlcore: spi: add wl18xx support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-03-31 22:27, Ben Greear wrote:
-> On 03/30/2016 08:42 AM, Rajkumar Manoharan wrote:
->> qca99x0 and qca4019 solutions limit probe responses transmissions.
->> Logging warning message for each probe response drop is flooding
->> kernel log unnecessary with " failed to increase tx mgmt pending
->> count: -16, dropping". Hence reducing log level to debug.
-> 
-> Is there any realistic way to see this message if we are not running
-> many vAP on one radio?
-> 
-As of now this message can be seen only with qca99x0 which has 24 as 
-max_probe_resp_desc_thres. Only possible way in single vAP is that in 
-congested environment when DUT is receiving probe requests more 
-frequently.
 
-> I guess many probe requests or other management frames could also
-> cause this problem?
-> 
-Exactly.
+--4cv0JMvpEKiCIDl2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--Rajkumar
+On Tue, Apr 19, 2016 at 09:05:45AM +0000, Reizer, Eyal wrote:
+
+> Understood. As this special CS manipulation is unique to wspi (wilink spi=
+)  I think the=20
+> best option is to move this gpio allocation into wlcore_spi as a new devi=
+ce tree entry
+> used only by this driver.
+
+That sounds like it is going to break normal chip select operation which
+doesn't seem like a good idea either.  What exactly are you trying to do
+here?  If you need to send some extra bytes at the end of a transfer why
+not just do that, or add an empty transfer with a delay.  It's hard to
+see what more you could do with only control of the chip select...
+
+--4cv0JMvpEKiCIDl2
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJXFmcGAAoJECTWi3JdVIfQV3cH/13tX6IFbyU7cJBFsp94l8u0
+RZ8ygWZrra/QQMyPguVMdheFO50a6wPZL1nZ0iPa2Zp8b0RUCjCuuDxtjoJf5QD6
+39GH1LuyIK122A2S1DG5aRP8HjUtrOT5s1oE8IwGSTxSow9E60bJPOHoDt23uoFi
+EDa6F+MnQ0QhPSQhKdUEwVCrNCep+qEmQxOT83fei+xd3MFAFtb9vTACNaPexOO4
+iRU94K2wUO1np7ug8M9Q4Sx5inkXh+Fy3Ug34x2fWG8prhqa/TDXXfu/IyfDwlpM
+0UIWRQheG7zxMdGqGsXL84gI4k6mNZKn0f37vwmGV3ioan07BzSY+LkBREXpv7I=
+=FdXk
+-----END PGP SIGNATURE-----
+
+--4cv0JMvpEKiCIDl2--
