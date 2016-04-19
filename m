@@ -1,50 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40766 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932231AbcDYM6Q (ORCPT
+Received: from smtprelay0198.hostedemail.com ([216.40.44.198]:33385 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750969AbcDSIoq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 08:58:16 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 3/7] wil6210: change RX_HTRSH interrupt print level to debug
-Date: Mon, 25 Apr 2016 15:57:54 +0300
-Message-Id: <1461589078-29854-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160425_145824_527945_8BB54FE9)
-In-Reply-To: <1461589078-29854-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1461589078-29854-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Tue, 19 Apr 2016 04:44:46 -0400
+Message-ID: <1461055475.1917.17.camel@perches.com> (sfid-20160419_104511_887333_DA429D9B)
+Subject: Re: [PATCH v3 06/18] wcn36xx: Add helper macros to cast sta to priv
+From: Joe Perches <joe@perches.com>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 19 Apr 2016 01:44:35 -0700
+In-Reply-To: <1461042056-10607-7-git-send-email-bjorn.andersson@linaro.org>
+References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+	 <1461042056-10607-7-git-send-email-bjorn.andersson@linaro.org>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using interrupt moderation RX_HTRSH interrupt can occur
-frequently during high throughput and should not be considered
-as error.
-Such print-outs can degrade the performance hence should be printed
-in debug print level.
+On Mon, 2016-04-18 at 22:00 -0700, Bjorn Andersson wrote:
+> From: Pontus Fuchs <pontus.fuchs@gmail.com>
+> 
+> While poking at this I also change two related things. I rename one
+> variable to make the names consistent. I also move one assignment of
+> priv_sta to the declaration to save a few lines.
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/interrupt.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+trivia:
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index fe66b2b..6897754 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -228,11 +228,8 @@ static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
- 	 */
- 	if (likely(isr & (BIT_DMA_EP_RX_ICR_RX_DONE |
- 			  BIT_DMA_EP_RX_ICR_RX_HTRSH))) {
--		wil_dbg_irq(wil, "RX done\n");
--
--		if (unlikely(isr & BIT_DMA_EP_RX_ICR_RX_HTRSH))
--			wil_err_ratelimited(wil,
--					    "Received \"Rx buffer is in risk of overflow\" interrupt\n");
-+		wil_dbg_irq(wil, "RX done / RX_HTRSH received, ISR (0x%x)\n",
-+			    isr);
- 
- 		isr &= ~(BIT_DMA_EP_RX_ICR_RX_DONE |
- 			 BIT_DMA_EP_RX_ICR_RX_HTRSH);
--- 
-1.8.5.2
+The commit subject is a bit misleading as this adds
+the preferred static
+inline not a macro.
 
+> diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+[]
+> @@ -275,4 +275,10 @@ struct ieee80211_vif *wcn36xx_priv_to_vif(struct wcn36xx_vif *vif_priv)
+>  	return container_of((void *) vif_priv, struct ieee80211_vif, drv_priv);
+>  }
+>  
+> +static inline
+> +struct wcn36xx_sta *wcn36xx_sta_to_priv(struct ieee80211_sta *sta)
+> +{
+> +	return (struct wcn36xx_sta *)sta->drv_priv;
+> +}
+> +
+>  #endif	/* _WCN36XX_H_ */
+
+And this could be const struct ieee8021_sta *sta
