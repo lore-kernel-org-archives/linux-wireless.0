@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:60801 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751236AbcDPOSo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Apr 2016 10:18:44 -0400
-Date: Sat, 16 Apr 2016 17:18:56 +0300
-From: Lauri Kasanen <cand@gmx.com>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] carl9170: Clarify kconfig text
-Message-Id: <20160416171856.1769c0e16bcc75372407e06f@gmx.com> (sfid-20160416_161902_938129_33B3FC81)
-In-Reply-To: <1466768.7dLuLFSDol@debian64>
-References: <20160416113312.8de2266358165182bb4b4a15@gmx.com>
-	<1466768.7dLuLFSDol@debian64>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36387 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751071AbcDSAfk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 20:35:40 -0400
+Received: by mail-pf0-f195.google.com with SMTP id p185so95510pfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 17:35:40 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 1/3] staging: wilc1000: change handle_set_ip_address's return type to void
+Date: Tue, 19 Apr 2016 09:35:29 +0900
+Message-Id: <1461026131-5841-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160419_023545_254687_1DA87DFC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous text was confusing, leading readers to think this
-driver was a duplicate, and so didn't need to be enabled.
+When handle_set_ip_address is called in hostIFthread that is a kernel
+thread, it is not checked return type of this function. This patch
+changes return type to void and removes braces if statement due to have
+a single statement.
 
-After the removal of the older staging driver, this is the only
-driver in mainline for these devices.
-
-Signed-off-by: Lauri Kasanen <cand@gmx.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
-v2: Remove the mention of the previous driver, suggested by Christian.
+ drivers/staging/wilc1000/host_interface.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
- drivers/net/wireless/ath/carl9170/Kconfig | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
-index 1a796e5..2e34bae 100644
---- a/drivers/net/wireless/ath/carl9170/Kconfig
-+++ b/drivers/net/wireless/ath/carl9170/Kconfig
-@@ -5,12 +5,10 @@ config CARL9170
- 	select FW_LOADER
- 	select CRC32
- 	help
--	  This is another driver for the Atheros "otus" 802.11n USB devices.
-+	  This is the mainline driver for the Atheros "otus" 802.11n USB devices.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ac620fb..87c8789 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -349,7 +349,7 @@ static void handle_set_operation_mode(struct wilc_vif *vif,
+ 		netdev_err(vif->ndev, "Failed to set driver handler\n");
+ }
  
--	  This driver provides more features than the original,
--	  but it needs a special firmware (carl9170-1.fw) to do that.
+-static s32 handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
++static void handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -370,12 +370,8 @@ static s32 handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ 
+ 	host_int_get_ipaddress(vif, firmware_ip_addr, idx);
+ 
+-	if (result) {
++	if (result)
+ 		netdev_err(vif->ndev, "Failed to set IP address\n");
+-		return -EINVAL;
+-	}
 -
--	  The firmware can be downloaded from our wiki here:
-+	  It needs a special firmware (carl9170-1.fw), which can be downloaded
-+	  from our wiki here:
- 	  <http://wireless.kernel.org/en/users/Drivers/carl9170>
+-	return result;
+ }
  
- 	  If you choose to build a module, it'll be called carl9170.
+ static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
 -- 
-2.6.2
+2.8.0
 
