@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55237 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752992AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 14:59:09 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 09/26] rtl8xxxu: Use has_s0s1 for REG_S0S1 issues only
-Date: Thu, 14 Apr 2016 14:58:50 -0400
-Message-Id: <1460660347-26299-10-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212530_520184_DCED3032)
-In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mezzanine.sirena.org.uk ([106.187.55.193]:54868 "EHLO
+	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933402AbcDSR1S (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2016 13:27:18 -0400
+Date: Tue, 19 Apr 2016 18:27:06 +0100
+From: Mark Brown <broonie@kernel.org>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	=?utf-8?B?77+977+977+977+9IO+/ve+/ve+/ve+/ve+/vQ==?=
+	<eyalreizer@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
+Message-ID: <20160419172706.GD3217@sirena.org.uk> (sfid-20160419_192742_512008_314ECA3A)
+References: <1460273570-12298-1-git-send-email-eyalr@ti.com>
+ <14313437.cDJIgY3kzo@wuerfel>
+ <8665E2433BC68541A24DFFCA87B70F5B360BF614@DFRE01.ent.ti.com>
+ <1463330011.BhWEcYYuGD@wuerfel>
+ <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
+ <20160419171239.GC3217@sirena.org.uk>
+ <sjdvun1fuj4nyi0bgf268g53.1461086401627@email.android.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="EP2pG3U7hXy67fX3"
+In-Reply-To: <sjdvun1fuj4nyi0bgf268g53.1461086401627@email.android.com>
+Subject: Re: [PATCHv2] wlcore: spi: add wl18xx support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Instead use tx_desc_size() to distinguish between gen1
-(8723a/8192c/8188c) and gen2 (8723b/8192e) parts.
+--EP2pG3U7hXy67fX3
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+On Tue, Apr 19, 2016 at 05:21:01PM +0000, Reizer, Eyal wrote:
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 7ab009f..8b0b6c9 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2758,7 +2758,8 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 	} else if (val32 & SYS_CFG_TYPE_ID) {
- 		bonding = rtl8xxxu_read32(priv, REG_HPON_FSM);
- 		bonding &= HPON_FSM_BONDING_MASK;
--		if (priv->fops->has_s0s1) {
-+		if (priv->fops->tx_desc_size ==
-+		    sizeof(struct rtl8xxxu_txdesc40)) {
- 			if (bonding == HPON_FSM_BONDING_1T2R) {
- 				sprintf(priv->chip_name, "8191EU");
- 				priv->rf_paths = 2;
-@@ -7993,7 +7994,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	/*
- 	 * This should enable thermal meter
- 	 */
--	if (priv->fops->has_s0s1)
-+	if (priv->fops->tx_desc_size == sizeof(struct rtl8xxxu_txdesc40))
- 		rtl8xxxu_write_rfreg(priv,
- 				     RF_A, RF6052_REG_T_METER_8723B, 0x37cf8);
- 	else
-@@ -9867,7 +9868,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
- 	.mbox_ext_width = 4,
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
--	.has_s0s1 = 1,
-+	.has_s0s1 = 0,
- 	.adda_1t_init = 0x0fc01616,
- 	.adda_1t_path_on = 0x0fc01616,
- 	.adda_2t_path_on_a = 0x0fc01616,
--- 
-2.5.5
+> The main quirk here is that i need to send extra clocks after the spi init command while the CS pin is "high" in order to put the wilink chip into SPI mode.
+> So just sending an empty transfer wouldnt do the trick here.
 
+A single byte transfer would result in extra clocks being sent so there
+must be more to it than that...
+
+> Do you have a recomendation on how to do it without changing the core logic. If it is possible it would be really great.
+
+Please be explicit about what you're trying to do here.  I imagine you
+may need to change the core logic but we need to know what it is that
+the device needs.
+
+--EP2pG3U7hXy67fX3
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJXFmppAAoJECTWi3JdVIfQ/oQH/j0MMWsgYKYzsuK4POtzTpyJ
+lGSE/l5CDNo99oXISIKHARL8soJXUOOwUHXsVHlo5Hb8eFDrLe7c8hVfr7j7+iVx
+8cH+PZZ6qxsTn7X5Lm3IjpqbiZV3aHGFMgxuCAh31++ZYYi1eS86mNqQLHxIH7Wi
+iiImKWSJtBplg/9s1YHYcJtatgELI0jCsMsYjhKuMaYQrBMlKBd24dJx8UblzrSd
+bLii2gUB96kitwJa7gVdEt4V3tCPg1KhcTRObkEemLZcKmI0pw4epoNt6xk/FDi7
+LC2F55hrnaE9b2XUxB9PGejmD2bwasdumNB1Jy0aqEI+F/nhWgVhASSyxv7YNSc=
+=ggS0
+-----END PGP SIGNATURE-----
+
+--EP2pG3U7hXy67fX3--
