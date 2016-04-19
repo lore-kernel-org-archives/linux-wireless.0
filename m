@@ -1,56 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:34116 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568AbcDDLFL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 07:05:11 -0400
-Received: by mail-pa0-f68.google.com with SMTP id hb4so4685892pac.1
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 04:05:11 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 3/8] staging: wilc1000: remove block scope braces and fix indentation
-Date: Mon,  4 Apr 2016 20:04:45 +0900
-Message-Id: <1459767890-9709-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160404_130518_196620_1D29B556)
-In-Reply-To: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56169 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754481AbcDSOtL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2016 10:49:11 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Jakub Sitnicki <jsitnicki@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: hide unused tables
+References: <1461016782-2640046-1-git-send-email-arnd@arndb.de>
+Date: Tue, 19 Apr 2016 10:49:08 -0400
+In-Reply-To: <1461016782-2640046-1-git-send-email-arnd@arndb.de> (Arnd
+	Bergmann's message of "Mon, 18 Apr 2016 23:59:31 +0200")
+Message-ID: <wrfjzisp64d7.fsf@redhat.com> (sfid-20160419_164935_250964_8F612606)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unnecessary block scope braces and fix indentation of
-the codes.
+Arnd Bergmann <arnd@arndb.de> writes:
+> The references to some arrays in the rtl8xxxu driver were moved inside
+> of an #ifdef, but the symbols remain outside, resulting in build warnings:
+>
+> rtl8xxxu/rtl8xxxu.c:1506:33: error: 'rtl8188ru_radioa_1t_highpa_table' defined but not used
+> rtl8xxxu/rtl8xxxu.c:1431:33: error: 'rtl8192cu_radioa_1t_init_table' defined but not used
+> rtl8xxxu/rtl8xxxu.c:1407:33: error: 'rtl8192cu_radiob_2t_init_table' defined but not used
+> rtl8xxxu/rtl8xxxu.c:1332:33: error: 'rtl8192cu_radioa_2t_init_table' defined but not used
+> rtl8xxxu/rtl8xxxu.c:239:35: error: 'rtl8192c_power_base' defined but not used
+> rtl8xxxu/rtl8xxxu.c:217:35: error: 'rtl8188r_power_base' defined but not used
+>
+> This adds an extra #ifdef around them to shut up the warnings.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 2fc0b8e5a17d ("rtl8xxxu: Add TX power base values for gen1 parts")
+> Fixes: 4062b8ffec36 ("rtl8xxxu: Move PHY RF init into device specific functions")
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+I'll apply it to my tree!
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index aa95eda..e978208 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -783,13 +783,11 @@ static s32 Handle_Scan(struct wilc_vif *vif,
- 		u32WidsCount++;
- 	}
- 
--	{
--		strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_PROBE;
--		strWIDList[u32WidsCount].type = WID_BIN_DATA;
--		strWIDList[u32WidsCount].val = pstrHostIFscanAttr->ies;
--		strWIDList[u32WidsCount].size = pstrHostIFscanAttr->ies_len;
--		u32WidsCount++;
--	}
-+	strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_PROBE;
-+	strWIDList[u32WidsCount].type = WID_BIN_DATA;
-+	strWIDList[u32WidsCount].val = pstrHostIFscanAttr->ies;
-+	strWIDList[u32WidsCount].size = pstrHostIFscanAttr->ies_len;
-+	u32WidsCount++;
- 
- 	strWIDList[u32WidsCount].id = WID_SCAN_TYPE;
- 	strWIDList[u32WidsCount].type = WID_CHAR;
--- 
-2.8.0
-
+Thanks,
+Jes
