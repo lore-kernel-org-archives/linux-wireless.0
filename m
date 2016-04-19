@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59379 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbcDFSRf (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:34875 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751650AbcDSBaD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 14:17:35 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2016-03-30
-References: <1459346667.4731.9.camel@intel.com>
-Date: Wed, 06 Apr 2016 21:17:27 +0300
-In-Reply-To: <1459346667.4731.9.camel@intel.com> (Emmanuel Grumbach's message
-	of "Wed, 30 Mar 2016 14:04:25 +0000")
-Message-ID: <87r3ei8uvc.fsf@kamboji.qca.qualcomm.com> (sfid-20160406_201737_929829_D70661F6)
+	Mon, 18 Apr 2016 21:30:03 -0400
+Received: by mail-ob0-f182.google.com with SMTP id n10so827792obb.2
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 18:30:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAArymCnGTj4qv8KWwDfwSN0DQvTTpTwC+-sHSkMfjNVs2Rr_sg@mail.gmail.com>
+References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
+ <1455658091-28262-1-git-send-email-apenwarr@gmail.com> <1455658091-28262-2-git-send-email-apenwarr@gmail.com>
+ <1456222441.2041.10.camel@sipsolutions.net> <CAHqTa-1CkJ-Pm6o7-pxcek4h+hmq6EtA0u12zGGraOUjDjeXSQ@mail.gmail.com>
+ <1456257946.9910.23.camel@sipsolutions.net> <CAHqTa-2bd2Z3LotVUpexWo2B95h3m5pjbjkWy-N=P=LYzCA4Mw@mail.gmail.com>
+ <1459928436.17504.11.camel@sipsolutions.net> <CAHqTa-3VtwYWLUHQuFyqtmMwPE2XQYJD4-U+-1PqXKtmTFrEgA@mail.gmail.com>
+ <1460098614.30678.1.camel@sipsolutions.net> <1460098909.30678.2.camel@sipsolutions.net>
+ <1460099746.30678.3.camel@sipsolutions.net> <CAHqTa-1SO+asqf7Fn2d+J_w8vvJ1CnnMG8AGB2O1CBjeaaL8hA@mail.gmail.com>
+ <CAHqTa-0oji0=-CMYbQ6PQw-R5_jsuUjAAtERwDvLieBD=ObCKw@mail.gmail.com>
+ <1460177816.7409.4.camel@sipsolutions.net> <CAJ-Vmon7Qyms95U4AuidkqMcGFPqXi3pWuEQastUdHe7B6hfFA@mail.gmail.com>
+ <CAArymCnGTj4qv8KWwDfwSN0DQvTTpTwC+-sHSkMfjNVs2Rr_sg@mail.gmail.com>
+From: Avery Pennarun <apenwarr@gmail.com>
+Date: Mon, 18 Apr 2016 21:29:42 -0400
+Message-ID: <CAHqTa-1k+QVj2dC3F44fMYMfvh5PpW4QXyVn0NkCcPFrkd5OVg@mail.gmail.com> (sfid-20160419_033016_861398_F8990481)
+Subject: Re: [PATCH] mac80211: debugfs var for the default aggregation timeout.
+To: bruce m beach <brucembeach@gmail.com>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@nbd.name>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+On Sat, Apr 9, 2016 at 9:59 PM, bruce m beach <brucembeach@gmail.com> wrote:
+>> If any people more familiar with ARM are reading this - does the value
+>> 0x5b35da40 ring a bell?
+>
+> It could be anything. It depends on the chip implementation. For instance on an
+> exynos that is an undefined region. What device are we talking about?
 
-> This is a pull request for 4.7. Lots of work here and more to come when
-> dependencies on mac80211 will be resolved.
-> Let me know if you have issues!
->
-> Thanks.
->
-> The following changes since commit 1200b6809dfd9d73bc4c7db76d288c35fa4b2ebe:
->
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2016-03-19 10:05:34 -0700)
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-03-30
-
-Pulled, thanks.
-
--- 
-Kalle Valo
+This is a mindspeed c2k CPU, in case that helps at all.  But I'm
+guessing it really is just some pointer garbage.  The only way to
+trigger the crash is to do (something) with an attached station at the
+same moment as reading the agg_status file.  Some station types
+trigger it more than others, but I'm not sure which.
