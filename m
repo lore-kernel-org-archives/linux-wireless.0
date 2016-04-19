@@ -1,125 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39199 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753390AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 14:59:09 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 08/26] rtl8xxxu: Implment rtl8192e_set_tx_power()
-Date: Thu, 14 Apr 2016 14:58:49 -0400
-Message-Id: <1460660347-26299-9-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212529_876875_3FD61776)
-In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:35906 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751358AbcDSFBG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Apr 2016 01:01:06 -0400
+Received: by mail-pa0-f45.google.com with SMTP id er2so2646635pad.3
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 22:01:05 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v3 05/18] wcn36xx: Use define for invalid index and fix typo
+Date: Mon, 18 Apr 2016 22:00:43 -0700
+Message-Id: <1461042056-10607-6-git-send-email-bjorn.andersson@linaro.org> (sfid-20160419_070506_140836_6AC84775)
+In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-8192eu is a 2T part, so setting TX power for path A only, as done by
-rtl8723bu_set_tx_power() is not sufficient.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 78 +++++++++++++++++++++++-
- 1 file changed, 77 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/wcn36xx/hal.h  | 2 +-
+ drivers/net/wireless/ath/wcn36xx/main.c | 4 ++--
+ drivers/net/wireless/ath/wcn36xx/smd.c  | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 99cf4aa..7ab009f 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2555,6 +2555,82 @@ rtl8723b_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- 	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS07_MCS04, mcs);
- }
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index 3af16cba3d12..433d9801a0ae 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -48,7 +48,7 @@
  
-+static void
-+rtl8192e_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
-+{
-+	u32 val32, ofdm, mcs;
-+	u8 cck, ofdmbase, mcsbase;
-+	int group, tx_idx;
-+
-+	tx_idx = 0;
-+	group = rtl8723b_channel_to_group(channel);
-+
-+	cck = priv->cck_tx_power_index_A[group];
-+
-+	val32 = rtl8xxxu_read32(priv, REG_TX_AGC_A_CCK1_MCS32);
-+	val32 &= 0xffff00ff;
-+	val32 |= (cck << 8);
-+	rtl8xxxu_write32(priv, REG_TX_AGC_A_CCK1_MCS32, val32);
-+
-+	val32 = rtl8xxxu_read32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11);
-+	val32 &= 0xff;
-+	val32 |= ((cck << 8) | (cck << 16) | (cck << 24));
-+	rtl8xxxu_write32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11, val32);
-+
-+	ofdmbase = priv->ht40_1s_tx_power_index_A[group];
-+	ofdmbase += priv->ofdm_tx_power_diff[tx_idx].a;
-+	ofdm = ofdmbase | ofdmbase << 8 | ofdmbase << 16 | ofdmbase << 24;
-+
-+	rtl8xxxu_write32(priv, REG_TX_AGC_A_RATE18_06, ofdm);
-+	rtl8xxxu_write32(priv, REG_TX_AGC_A_RATE54_24, ofdm);
-+
-+	mcsbase = priv->ht40_1s_tx_power_index_A[group];
-+	if (ht40)
-+		mcsbase += priv->ht40_tx_power_diff[tx_idx++].a;
-+	else
-+		mcsbase += priv->ht20_tx_power_diff[tx_idx++].a;
-+	mcs = mcsbase | mcsbase << 8 | mcsbase << 16 | mcsbase << 24;
-+
-+	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS03_MCS00, mcs);
-+	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS07_MCS04, mcs);
-+	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS11_MCS08, mcs);
-+	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS15_MCS12, mcs);
-+
-+	if (priv->tx_paths > 1) {
-+		cck = priv->cck_tx_power_index_B[group];
-+
-+		val32 = rtl8xxxu_read32(priv, REG_TX_AGC_B_CCK1_55_MCS32);
-+		val32 &= 0xff;
-+		val32 |= ((cck << 8) | (cck << 16) | (cck << 24));
-+		rtl8xxxu_write32(priv, REG_TX_AGC_B_CCK1_55_MCS32, val32);
-+
-+		val32 = rtl8xxxu_read32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11);
-+		val32 &= 0xffffff00;
-+		val32 |= cck;
-+		rtl8xxxu_write32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11, val32);
-+
-+		ofdmbase = priv->ht40_1s_tx_power_index_B[group];
-+		ofdmbase += priv->ofdm_tx_power_diff[tx_idx].b;
-+		ofdm = ofdmbase | ofdmbase << 8 |
-+			ofdmbase << 16 | ofdmbase << 24;
-+
-+		rtl8xxxu_write32(priv, REG_TX_AGC_B_RATE18_06, ofdm);
-+		rtl8xxxu_write32(priv, REG_TX_AGC_B_RATE54_24, ofdm);
-+
-+		mcsbase = priv->ht40_1s_tx_power_index_B[group];
-+		if (ht40)
-+			mcsbase += priv->ht40_tx_power_diff[tx_idx++].b;
-+		else
-+			mcsbase += priv->ht20_tx_power_diff[tx_idx++].b;
-+		mcs = mcsbase | mcsbase << 8 | mcsbase << 16 | mcsbase << 24;
-+
-+		rtl8xxxu_write32(priv, REG_TX_AGC_B_MCS03_MCS00, mcs);
-+		rtl8xxxu_write32(priv, REG_TX_AGC_B_MCS07_MCS04, mcs);
-+		rtl8xxxu_write32(priv, REG_TX_AGC_B_MCS11_MCS08, mcs);
-+		rtl8xxxu_write32(priv, REG_TX_AGC_B_MCS15_MCS12, mcs);
-+	}
-+}
-+
- static void rtl8xxxu_set_linktype(struct rtl8xxxu_priv *priv,
- 				  enum nl80211_iftype linktype)
- {
-@@ -9784,7 +9860,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.parse_rx_desc = rtl8723bu_parse_rx_desc,
- 	.enable_rf = rtl8723b_enable_rf,
- 	.disable_rf = rtl8723b_disable_rf,
--	.set_tx_power = rtl8723b_set_tx_power,
-+	.set_tx_power = rtl8192e_set_tx_power,
- 	.update_rate_mask = rtl8723bu_update_rate_mask,
- 	.report_connect = rtl8723bu_report_connect,
- 	.writeN_block_size = 128,
+ #define WCN36XX_HAL_IPV4_ADDR_LEN       4
+ 
+-#define WALN_HAL_STA_INVALID_IDX 0xFF
++#define WCN36XX_HAL_STA_INVALID_IDX 0xFF
+ #define WCN36XX_HAL_BSS_INVALID_IDX 0xFF
+ 
+ /* Default Beacon template size */
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 62cb9ffd854c..4781b5e8deb3 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -618,7 +618,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 		if (!is_zero_ether_addr(bss_conf->bssid)) {
+ 			vif_priv->is_joining = true;
+-			vif_priv->bss_index = 0xff;
++			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
+ 			wcn36xx_smd_join(wcn, bss_conf->bssid,
+ 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
+ 			wcn36xx_smd_config_bss(wcn, vif, NULL,
+@@ -711,7 +711,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 		if (bss_conf->enable_beacon) {
+ 			vif_priv->dtim_period = bss_conf->dtim_period;
+-			vif_priv->bss_index = 0xff;
++			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
+ 			wcn36xx_smd_config_bss(wcn, vif, NULL,
+ 					       vif->addr, false);
+ 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 170440ed5d85..6d4aa9250ca8 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -197,7 +197,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 	    vif->type == NL80211_IFTYPE_AP ||
+ 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
+ 		sta_params->type = 1;
+-		sta_params->sta_index = 0xFF;
++		sta_params->sta_index = WCN36XX_HAL_STA_INVALID_IDX;
+ 	} else {
+ 		sta_params->type = 0;
+ 		sta_params->sta_index = 1;
 -- 
-2.5.5
+2.5.0
 
