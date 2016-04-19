@@ -1,87 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37455 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754338AbcDFNUF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 09:20:05 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-04-06
-Date: Wed,  6 Apr 2016 15:19:58 +0200
-Message-Id: <1459948799-22032-1-git-send-email-johannes@sipsolutions.net> (sfid-20160406_152028_433537_EAD57A9D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36401 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751091AbcDSAfn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Apr 2016 20:35:43 -0400
+Received: by mail-pf0-f195.google.com with SMTP id p185so95608pfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 17:35:43 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/3] staging: wilc1000: change data type of result in handle_set_ip_address
+Date: Tue, 19 Apr 2016 09:35:30 +0900
+Message-Id: <1461026131-5841-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160419_023548_576660_19D800B6)
+In-Reply-To: <1461026131-5841-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1461026131-5841-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+This patch changes data type of result variable from s32 to int. result
+is used to get return value from wilc_send_config_pkt that has return
+type of int.
 
-First set of fixes for 4.6. Nothing really stands out.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Let me know if there's any problem.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 87c8789..9ddb238 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -351,7 +351,7 @@ static void handle_set_operation_mode(struct wilc_vif *vif,
+ 
+ static void handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct wid wid;
+ 	char firmware_ip_addr[4] = {0};
+ 
+-- 
+2.8.0
 
-Thanks,
-johannes
-
-
-
-The following changes since commit 05cf8077e54b20dddb756eaa26f3aeb5c38dd3cf:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2016-04-01 20:03:33 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-04-06
-
-for you to fetch changes up to b4201cc4fc6e1c57d6d306b1f787865043d60129:
-
-  mac80211: fix "warning: ‘target_metric’ may be used uninitialized" (2016-04-06 15:10:25 +0200)
-
-----------------------------------------------------------------
-For the current RC series, we have the following fixes:
- * TDLS fixes from Arik and Ilan
- * rhashtable fixes from Ben and myself
- * documentation fixes from Luis
- * U-APSD fixes from Emmanuel
- * a TXQ fix from Felix
- * and a compiler warning suppression from Jeff
-
-----------------------------------------------------------------
-Arik Nemtsov (3):
-      mac80211: TDLS: always downgrade invalid chandefs
-      mac80211: TDLS: change BW calculation for WIDER_BW peers
-      mac80211: recalc min_def chanctx even when chandef is identical
-
-Ben Greear (1):
-      mac80211: ensure no limits on station rhashtable
-
-Emmanuel Grumbach (2):
-      mac80211: don't send deferred frames outside the SP
-      mac80211: close the SP when we enqueue frames during the SP
-
-Felix Fietkau (1):
-      mac80211: fix AP buffered multicast frames with queue control and txq
-
-Ilan Peer (1):
-      mac80211: Fix BW upgrade for TDLS peers
-
-Jeff Mahoney (1):
-      mac80211: fix "warning: ‘target_metric’ may be used uninitialized"
-
-Johannes Berg (1):
-      mac80211: properly deal with station hashtable insert errors
-
-Luis de Bethencourt (2):
-      mac80211: add doc for RX_FLAG_DUP_VALIDATED flag
-      mac80211: remove description of dropped member
-
- include/net/mac80211.h     |  2 ++
- net/mac80211/chan.c        |  4 +++-
- net/mac80211/ieee80211_i.h |  4 ++++
- net/mac80211/mesh_hwmp.c   |  2 +-
- net/mac80211/sta_info.c    | 14 +++++++++-----
- net/mac80211/sta_info.h    |  1 -
- net/mac80211/tdls.c        | 43 +++++++++++++++++++++++++++++++++++--------
- net/mac80211/tx.c          | 13 +++++++++----
- net/mac80211/vht.c         | 30 +++++++++++++++++++++++++-----
- 9 files changed, 88 insertions(+), 25 deletions(-)
