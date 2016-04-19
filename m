@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58442 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751553AbcD0Nx2 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:45421 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932201AbcDSO2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2016 09:53:28 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 19 Apr 2016 10:28:32 -0400
 MIME-Version: 1.0
-Subject: Re: [1/2] mwifiex: disable channel filtering feature in firmware
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1461566992-3539-1-git-send-email-akarwar@marvell.com>
+Message-ID: <20160419142344.GB4876@mwanda> (sfid-20160419_162837_020308_8B041DD5)
+Date: Tue, 19 Apr 2016 07:23:44 -0700 (PDT)
+From: Dan Carpenter <dan.carpenter@oracle.com>
 To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160427135322.3A4DC612F0@smtp.codeaurora.org> (sfid-20160427_155338_274354_C5698C89)
-Date: Wed, 27 Apr 2016 13:53:22 +0000 (UTC)
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch 2/2] mwifiex: fix loop timeout in mwifiex_prog_fw_w_helper()
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+USB8XXX_FW_MAX_RETRY is 3.  We were using a post-op loop
+"while (retries--) {" but then the lines after that assume the loop
+exits with retries set to zero.
 
-> As 2.4Ghz channels are overlapping, sometimes AP responds to
-> probe request even if it's operating on neighbouring channel.
-> Currently firmware drops those scan entries, as current channel
-> doesn't match with APs channel.
-> 
-> This patch enables MWIFIEX_DISABLE_CHAN_FILT flag in scan
-> command to disable the feature so that better scan results
-> will be received in 2.4Ghz band.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+I've fixed this by changing to a pre-op loop.  I started with retries
+set to 4 instead of 3 so that we still go through the loop the same
+number of times.
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-1b499cb72f26 mwifiex: disable channel filtering feature in firmware
-9d3f65b0c2dd mwifiex: increase dwell time for active scan
-
-Kalle Valo
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index cdd8f9a..0857575 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -995,7 +995,8 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ {
+ 	int ret = 0;
+ 	u8 *firmware = fw->fw_buf, *recv_buff;
+-	u32 retries = USB8XXX_FW_MAX_RETRY, dlen;
++	u32 retries = USB8XXX_FW_MAX_RETRY + 1;
++	u32 dlen;
+ 	u32 fw_seqnum = 0, tlen = 0, dnld_cmd = 0;
+ 	struct fw_data *fwdata;
+ 	struct fw_sync_header sync_fw;
+@@ -1043,7 +1044,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 		}
+ 
+ 		/* If the send/receive fails or CRC occurs then retry */
+-		while (retries--) {
++		while (--retries) {
+ 			u8 *buf = (u8 *)fwdata;
+ 			u32 len = FW_DATA_XMIT_SIZE;
+ 
+@@ -1103,7 +1104,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+ 				continue;
+ 			}
+ 
+-			retries = USB8XXX_FW_MAX_RETRY;
++			retries = USB8XXX_FW_MAX_RETRY + 1;
+ 			break;
+ 		}
+ 		fw_seqnum++;
