@@ -1,41 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55327 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbcDZJjH convert rfc822-to-8bit (ORCPT
+Received: from comal.ext.ti.com ([198.47.26.152]:46021 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752308AbcDSJFy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 05:39:07 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?David_M=C3=BCller_=28ELSOFT_AG=29?= <d.mueller@elsoft.ch>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [v2] rtlwifi: rtl8821ae: Make sure loop counter is signed on allarchitectures
-References: <20160426091116.17FCA6120F@smtp.codeaurora.org>
-Date: Tue, 26 Apr 2016 12:39:03 +0300
-In-Reply-To: <20160426091116.17FCA6120F@smtp.codeaurora.org> (Kalle Valo's
-	message of "Tue, 26 Apr 2016 09:11:16 +0000 (UTC)")
-Message-ID: <87mvogwvyg.fsf@purkki.adurom.net> (sfid-20160426_113912_542084_9634B4F5)
+	Tue, 19 Apr 2016 05:05:54 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
+Subject: RE: [PATCHv2] wlcore: spi: add wl18xx support
+Date: Tue, 19 Apr 2016 09:05:45 +0000
+Message-ID: <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com> (sfid-20160419_110625_813362_0238C3C2)
+References: <1460273570-12298-1-git-send-email-eyalr@ti.com>
+ <14313437.cDJIgY3kzo@wuerfel>
+ <8665E2433BC68541A24DFFCA87B70F5B360BF614@DFRE01.ent.ti.com>
+ <1463330011.BhWEcYYuGD@wuerfel>
+In-Reply-To: <1463330011.BhWEcYYuGD@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Arnd,
 
->> The for-loop condition does not work correctly on architectures where
->> "char" is unsigned. Fix it by using an "int", which may also result in
->> more efficient code.
->> 
->> v2: Remove unneeded initialization.
->> 
->> Signed-off-by: David Müller <d.mueller@elsoft.ch>
->> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
->
-> Thanks, applied to wireless-drivers-next.git.
+> > > >
+> > > > - all wilink family needs special init command for entering wspi mode.
+> > > >   extra clock cycles should be sent after the spi init command while the
+> > > >   cs pin is high.
+> > > > - switch to controling the cs pin from the spi driver for achieveing the
+> > > >   above.
+> > > > - the selected cs gpio is read from the spi device-tree node using the
+> > > >   cs-gpios field and setup as a gpio.
+> > > > - See the example below for specifying the cs gpio using the cs-gpios
+> entry
+> > > > &spi0   {
+> > > >         ...
+> > > >         cs-gpios = <&gpio0 5 0>;
+> > > >         ...
+> > > >         wlcore: wlcore@0 {
+> > > >                 compatible = "ti,wl1835";
+> > > >         ...
+> > > >         ...
+> > > >         };
+> > > > };
+> > > >
+> > > > Signed-off-by: Eyal Reizer <eyalr@ti.com>
+> > >
+> > > I don't think this can work in general: not all SPI hosts uses GPIOs
+> > > for controlling CS, so the logic can't work, and it's also a
+> > > layering violation for the driver to look at the parent.
+> > >
+> > > I would suggest fixing this using a new API function from the SPI
+> > > core, if we don't already have a generic way to do it.
+> > >
+> > Originally this is what I have done until I was pointed to the generic
+> > cs-gpio mechanism in the SPI core.
+> > It is a generic mechanism already in the SPI core driver.
+> > See: Documentation/devicetree/bindings/spi/spi-bus.txt
+> 
+> The cs-gpios property is documented as optional, it defines how you should
+> list the gpios if CS is implemented using gpio, but not all hardware does it like
+> this.
+> 
+> > It is also part of the generic spi.h (include/Linux/spi/spi.h),
+> > already part of " struct spi_device" So it seemed redundant adding
+> > another mechanism for implementing the same.
+> > Platform that interact with a wilink need to use it, and platforms
+> > that don't have this capability will probably not interact with a wilink device
+> using SPI.
+> 
+> The cs_gpio field in spi_device belongs to the spi host controller, no other
+> slave driver uses it.
+> 
+> I wasn't asking for a duplication of this mechanism, but an interface to use it
+> properly. Internally, the spi core uses the spi_set_cs() function to pick a CS.
+> Find a way to use that rather than reimplementing it incorrectly.
+> 
 
-But afterwards I removed the change log. That doesn't belong to the
-commit log, please add that after "---" line separator.
+Understood. As this special CS manipulation is unique to wspi (wilink spi)  I think the 
+best option is to move this gpio allocation into wlcore_spi as a new device tree entry
+used only by this driver.
+If you agree I will submit a v3.
 
-Also in patchwork your name has (ELSOFT AG), I edited that out.
-
--- 
-Kalle Valo
+Best Regards,
+Eyal
