@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:36342 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755450AbcDEGiq (ORCPT
+Received: from bear.ext.ti.com ([192.94.94.41]:52108 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752775AbcDSOfd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 02:38:46 -0400
-Received: by mail-pa0-f67.google.com with SMTP id 1so470987pal.3
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:38:45 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 03/14] staging: wilc1000: remove unused hif_drv in wilc_setup_multicast_filter
-Date: Tue,  5 Apr 2016 15:38:21 +0900
-Message-Id: <1459838312-16506-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_083848_873559_EF972BF7)
-In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 19 Apr 2016 10:35:33 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
+Subject: RE: [PATCHv2] wlcore: spi: add wl18xx support
+Date: Tue, 19 Apr 2016 14:35:24 +0000
+Message-ID: <8665E2433BC68541A24DFFCA87B70F5B360C0C5D@DFRE01.ent.ti.com> (sfid-20160419_163558_806862_5DD055C2)
+References: <1460273570-12298-1-git-send-email-eyalr@ti.com>
+ <1463330011.BhWEcYYuGD@wuerfel>
+ <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
+ <4133521.UUI3B1RTyv@wuerfel>
+In-Reply-To: <4133521.UUI3B1RTyv@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused hif_drv in wilc_setup_multicast_filter.
-There is no need to check null and print debug log.
+> > > > It is also part of the generic spi.h (include/Linux/spi/spi.h),
+> > > > already part of " struct spi_device" So it seemed redundant adding
+> > > > another mechanism for implementing the same.
+> > > > Platform that interact with a wilink need to use it, and platforms
+> > > > that don't have this capability will probably not interact with a
+> > > > wilink device
+> > > using SPI.
+> > >
+> > > The cs_gpio field in spi_device belongs to the spi host controller,
+> > > no other slave driver uses it.
+> > >
+> > > I wasn't asking for a duplication of this mechanism, but an
+> > > interface to use it properly. Internally, the spi core uses the spi_set_cs()
+> function to pick a CS.
+> > > Find a way to use that rather than reimplementing it incorrectly.
+> > >
+> >
+> > Understood. As this special CS manipulation is unique to wspi (wilink
+> > spi)  I think the best option is to move this gpio allocation into
+> > wlcore_spi as a new device tree entry used only by this driver.
+> > If you agree I will submit a v3.
+> 
+> I don't think that can work either: aside of not solving the problem of wilink
+> devices on spi controllers that don't use gpio, it also doesn't solve the
+> problem of what happens when the driver manually triggers the gpio to hold
+> the CS signal while another driver talks to a different device using another CS
+> on the same controller.
+> 
+Ok, understood. Will look into it.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5cda382..a47666c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3952,12 +3952,6 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
- 	int result = 0;
- 	struct host_if_msg msg;
- 	struct set_multicast *multicast_filter_param = &msg.body.multicast_info;
--	struct host_if_drv *hif_drv = vif->hif_drv;
--
--	if (!hif_drv) {
--		netdev_err(vif->ndev, "driver is null\n");
--		return -EFAULT;
--	}
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
--- 
-2.8.0
-
+Best Regards,
+Eyal
