@@ -1,170 +1,229 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42872 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752678AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 14:59:09 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 03/26] rtl8xxxu: Implement generic init_queue_reserved_page() function
-Date: Thu, 14 Apr 2016 14:58:44 -0400
-Message-Id: <1460660347-26299-4-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_205914_094259_703A1E22)
-In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17087 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751694AbcDTQpo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2016 12:45:44 -0400
+Subject: [PATCH v2 5/8] ath10k: move wmi_op_version to struct ath10k_fw_file
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 20 Apr 2016 19:45:33 +0300
+Message-ID: <20160420164533.8801.99856.stgit@potku.adurom.net> (sfid-20160420_184547_457700_260A5D16)
+In-Reply-To: <20160420164301.8801.12099.stgit@potku.adurom.net>
+References: <20160420164301.8801.12099.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Preparation for testmode.c to use ath10k_core_fetch_board_data_api_n().
 
-Longer term we should switch all the chips over to use this function
-instead of the random chip specific ifdef hacks.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   | 75 ++++++++++++++++++----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  9 +++
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |  2 +-
- 3 files changed, 71 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c     |   20 ++++++++++----------
+ drivers/net/wireless/ath/ath10k/core.h     |    5 ++---
+ drivers/net/wireless/ath/ath10k/debug.c    |    2 +-
+ drivers/net/wireless/ath/ath10k/mac.c      |    2 +-
+ drivers/net/wireless/ath/ath10k/testmode.c |   17 ++++++-----------
+ drivers/net/wireless/ath/ath10k/wmi.c      |    4 ++--
+ 6 files changed, 22 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index c6c41ba..a9290d4 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7439,6 +7439,60 @@ static void rtl8723bu_init_statistics(struct rtl8xxxu_priv *priv)
- 	rtl8xxxu_write32(priv, REG_OFDM0_FA_RSTC, val32);
- }
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 71b8ca71d1da..a7c99355a7c2 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1106,10 +1106,10 @@ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
  
-+static void rtl8xxxu_old_init_queue_reserved_page(struct rtl8xxxu_priv *priv)
-+{
-+	u8 val8;
-+	u32 val32;
+ 			version = (__le32 *)data;
+ 
+-			ar->wmi.op_version = le32_to_cpup(version);
++			fw_file->wmi_op_version = le32_to_cpup(version);
+ 
+ 			ath10k_dbg(ar, ATH10K_DBG_BOOT, "found fw ie wmi op version %d\n",
+-				   ar->wmi.op_version);
++				   fw_file->wmi_op_version);
+ 			break;
+ 		case ATH10K_FW_IE_HTT_OP_VERSION:
+ 			if (ie_len != sizeof(u32))
+@@ -1438,9 +1438,9 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (ar->wmi.op_version >= ATH10K_FW_WMI_OP_VERSION_MAX) {
++	if (fw_file->wmi_op_version >= ATH10K_FW_WMI_OP_VERSION_MAX) {
+ 		ath10k_err(ar, "unsupported WMI OP version (max %d): %d\n",
+-			   ATH10K_FW_WMI_OP_VERSION_MAX, ar->wmi.op_version);
++			   ATH10K_FW_WMI_OP_VERSION_MAX, fw_file->wmi_op_version);
+ 		return -EINVAL;
+ 	}
+ 
+@@ -1496,19 +1496,19 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	/* Backwards compatibility for firmwares without
+ 	 * ATH10K_FW_IE_WMI_OP_VERSION.
+ 	 */
+-	if (ar->wmi.op_version == ATH10K_FW_WMI_OP_VERSION_UNSET) {
++	if (fw_file->wmi_op_version == ATH10K_FW_WMI_OP_VERSION_UNSET) {
+ 		if (test_bit(ATH10K_FW_FEATURE_WMI_10X, fw_file->fw_features)) {
+ 			if (test_bit(ATH10K_FW_FEATURE_WMI_10_2,
+ 				     fw_file->fw_features))
+-				ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_2;
++				fw_file->wmi_op_version = ATH10K_FW_WMI_OP_VERSION_10_2;
+ 			else
+-				ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
++				fw_file->wmi_op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
+ 		} else {
+-			ar->wmi.op_version = ATH10K_FW_WMI_OP_VERSION_MAIN;
++			fw_file->wmi_op_version = ATH10K_FW_WMI_OP_VERSION_MAIN;
+ 		}
+ 	}
+ 
+-	switch (ar->wmi.op_version) {
++	switch (fw_file->wmi_op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+ 		ar->max_num_peers = TARGET_NUM_PEERS;
+ 		ar->max_num_stations = TARGET_NUM_STATIONS;
+@@ -1570,7 +1570,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	 * ATH10K_FW_IE_HTT_OP_VERSION.
+ 	 */
+ 	if (ar->htt.op_version == ATH10K_FW_HTT_OP_VERSION_UNSET) {
+-		switch (ar->wmi.op_version) {
++		switch (fw_file->wmi_op_version) {
+ 		case ATH10K_FW_WMI_OP_VERSION_MAIN:
+ 			ar->htt.op_version = ATH10K_FW_HTT_OP_VERSION_MAIN;
+ 			break;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 0ee6ae4fbae0..412e01f77658 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -139,7 +139,6 @@ struct ath10k_mem_chunk {
+ };
+ 
+ struct ath10k_wmi {
+-	enum ath10k_fw_wmi_op_version op_version;
+ 	enum ath10k_htc_ep_id eid;
+ 	struct completion service_ready;
+ 	struct completion unified_ready;
+@@ -634,6 +633,8 @@ struct ath10k_fw_file {
+ 
+ 	DECLARE_BITMAP(fw_features, ATH10K_FW_FEATURE_COUNT);
+ 
++	enum ath10k_fw_wmi_op_version wmi_op_version;
 +
-+	if (priv->ep_tx_normal_queue)
-+		val8 = TX_PAGE_NUM_NORM_PQ;
-+	else
-+		val8 = 0;
-+
-+	rtl8xxxu_write8(priv, REG_RQPN_NPQ, val8);
-+
-+	val32 = (TX_PAGE_NUM_PUBQ << RQPN_PUB_PQ_SHIFT) | RQPN_LOAD;
-+
-+	if (priv->ep_tx_high_queue)
-+		val32 |= (TX_PAGE_NUM_HI_PQ << RQPN_HI_PQ_SHIFT);
-+	if (priv->ep_tx_low_queue)
-+		val32 |= (TX_PAGE_NUM_LO_PQ << RQPN_LO_PQ_SHIFT);
-+
-+	rtl8xxxu_write32(priv, REG_RQPN, val32);
-+}
-+
-+static void rtl8xxxu_init_queue_reserved_page(struct rtl8xxxu_priv *priv)
-+{
-+	struct rtl8xxxu_fileops *fops = priv->fops;
-+	u32 hq, lq, nq, eq, pubq;
-+	u32 val32;
-+
-+	hq = 0;
-+	lq = 0;
-+	nq = 0;
-+	eq = 0;
-+	pubq = 0;
-+
-+	if (priv->ep_tx_high_queue)
-+		hq = fops->page_num_hi;
-+	if (priv->ep_tx_low_queue)
-+		lq = fops->page_num_lo;
-+	if (priv->ep_tx_normal_queue)
-+		nq = fops->page_num_norm;
-+
-+	val32 = (nq << RQPN_NPQ_SHIFT) | (eq << RQPN_EPQ_SHIFT);
-+	rtl8xxxu_write32(priv, REG_RQPN_NPQ, val32);
-+
-+	pubq = fops->total_page_num - hq - lq - nq;
-+
-+	val32 = RQPN_LOAD;
-+	val32 |= (hq << RQPN_HI_PQ_SHIFT);
-+	val32 |= (lq << RQPN_LO_PQ_SHIFT);
-+	val32 |= (pubq << RQPN_PUB_PQ_SHIFT);
-+
-+	rtl8xxxu_write32(priv, REG_RQPN, val32);
-+}
-+
- static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	const void *firmware_data;
+ 	size_t firmware_len;
+ 
+@@ -895,8 +896,6 @@ struct ath10k {
+ 	struct {
+ 		/* protected by conf_mutex */
+ 		struct ath10k_fw_components utf_mode_fw;
+-		enum ath10k_fw_wmi_op_version orig_wmi_op_version;
+-		enum ath10k_fw_wmi_op_version op_version;
+ 
+ 		/* protected by data_lock */
+ 		bool utf_monitor;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 27787d23b2bd..8a63ce5c6e09 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -178,7 +178,7 @@ void ath10k_debug_print_boot_info(struct ath10k *ar)
+ 	ath10k_info(ar, "htt-ver %d.%d wmi-op %d htt-op %d cal %s max-sta %d raw %d hwcrypto %d\n",
+ 		    ar->htt.target_version_major,
+ 		    ar->htt.target_version_minor,
+-		    ar->wmi.op_version,
++		    ar->normal_mode_fw.fw_file.wmi_op_version,
+ 		    ar->htt.op_version,
+ 		    ath10k_cal_mode_str(ar->cal_mode),
+ 		    ar->max_num_stations,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index a0464bc0a8b0..f6348de493b4 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7786,7 +7786,7 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	 */
+ 	ar->hw->offchannel_tx_hw_queue = IEEE80211_MAX_QUEUES - 1;
+ 
+-	switch (ar->wmi.op_version) {
++	switch (ar->running_fw->fw_file.wmi_op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_MAIN:
+ 		ar->hw->wiphy->iface_combinations = ath10k_if_comb;
+ 		ar->hw->wiphy->n_iface_combinations =
+diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
+index 102539409f54..3d4418969697 100644
+--- a/drivers/net/wireless/ath/ath10k/testmode.c
++++ b/drivers/net/wireless/ath/ath10k/testmode.c
+@@ -230,9 +230,9 @@ static int ath10k_tm_fetch_utf_firmware_api_2(struct ath10k *ar,
+ 			if (ie_len != sizeof(u32))
+ 				break;
+ 			version = (__le32 *)data;
+-			ar->testmode.op_version = le32_to_cpup(version);
++			fw_file->wmi_op_version = le32_to_cpup(version);
+ 			ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode found fw ie wmi op version %d\n",
+-				   ar->testmode.op_version);
++				   fw_file->wmi_op_version);
+ 			break;
+ 		default:
+ 			ath10k_warn(ar, "Unknown testmode FW IE: %u\n",
+@@ -283,7 +283,7 @@ static int ath10k_tm_fetch_utf_firmware_api_1(struct ath10k *ar,
+ 	 * correct WMI interface.
+ 	 */
+ 
+-	ar->testmode.op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
++	fw_file->wmi_op_version = ATH10K_FW_WMI_OP_VERSION_10_1;
+ 	fw_file->firmware_data = fw_file->firmware->data;
+ 	fw_file->firmware_len = fw_file->firmware->size;
+ 
+@@ -363,17 +363,14 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
+ 	ar->testmode.utf_monitor = true;
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+-	ar->testmode.orig_wmi_op_version = ar->wmi.op_version;
+-	ar->wmi.op_version = ar->testmode.op_version;
+-
+ 	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode wmi version %d\n",
+-		   ar->wmi.op_version);
++		   ar->testmode.utf_mode_fw.fw_file.wmi_op_version);
+ 
+ 	ret = ath10k_hif_power_up(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to power up hif (testmode): %d\n", ret);
+ 		ar->state = ATH10K_STATE_OFF;
+-		goto err_fw_features;
++		goto err_release_utf_mode_fw;
+ 	}
+ 
+ 	ret = ath10k_core_start(ar, ATH10K_FIRMWARE_MODE_UTF,
+@@ -400,9 +397,7 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
+ err_power_down:
+ 	ath10k_hif_power_down(ar);
+ 
+-err_fw_features:
+-	ar->wmi.op_version = ar->testmode.orig_wmi_op_version;
+-
++err_release_utf_mode_fw:
+ 	release_firmware(ar->testmode.utf_mode_fw.fw_file.firmware);
+ 	ar->testmode.utf_mode_fw.fw_file.firmware = NULL;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 130d4efa59f4..621019f43531 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -7865,7 +7865,7 @@ static const struct wmi_ops wmi_10_4_ops = {
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
  {
- 	struct rtl8xxxu_priv *priv = hw->priv;
-@@ -7469,21 +7523,10 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+-	switch (ar->wmi.op_version) {
++	switch (ar->running_fw->fw_file.wmi_op_version) {
+ 	case ATH10K_FW_WMI_OP_VERSION_10_4:
+ 		ar->wmi.ops = &wmi_10_4_ops;
+ 		ar->wmi.cmd = &wmi_10_4_cmd_map;
+@@ -7907,7 +7907,7 @@ int ath10k_wmi_attach(struct ath10k *ar)
+ 	case ATH10K_FW_WMI_OP_VERSION_UNSET:
+ 	case ATH10K_FW_WMI_OP_VERSION_MAX:
+ 		ath10k_err(ar, "unsupported WMI op version: %d\n",
+-			   ar->wmi.op_version);
++			   ar->running_fw->fw_file.wmi_op_version);
+ 		return -EINVAL;
  	}
  
- 	if (!macpower) {
--		if (priv->ep_tx_normal_queue)
--			val8 = TX_PAGE_NUM_NORM_PQ;
-+		if (priv->fops->total_page_num)
-+			rtl8xxxu_init_queue_reserved_page(priv);
- 		else
--			val8 = 0;
--
--		rtl8xxxu_write8(priv, REG_RQPN_NPQ, val8);
--
--		val32 = (TX_PAGE_NUM_PUBQ << RQPN_NORM_PQ_SHIFT) | RQPN_LOAD;
--
--		if (priv->ep_tx_high_queue)
--			val32 |= (TX_PAGE_NUM_HI_PQ << RQPN_HI_PQ_SHIFT);
--		if (priv->ep_tx_low_queue)
--			val32 |= (TX_PAGE_NUM_LO_PQ << RQPN_LO_PQ_SHIFT);
--
--		rtl8xxxu_write32(priv, REG_RQPN, val32);
-+			rtl8xxxu_old_init_queue_reserved_page(priv);
- 	}
- 
- 	ret = rtl8xxxu_init_queue_priority(priv);
-@@ -9751,6 +9794,10 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.adda_2t_path_on_a = 0x0fc01616,
- 	.adda_2t_path_on_b = 0x0fc01616,
- 	.mactable = rtl8192e_mac_init_table,
-+	.total_page_num = TX_TOTAL_PAGE_NUM_8192E,
-+	.page_num_hi = TX_PAGE_NUM_HI_PQ_8192E,
-+	.page_num_lo = TX_PAGE_NUM_LO_PQ_8192E,
-+	.page_num_norm = TX_PAGE_NUM_NORM_PQ_8192E,
- };
- 
- static struct usb_device_id dev_table[] = {
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 48a80fa..4545e10 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -49,6 +49,11 @@
- #define TX_PAGE_NUM_LO_PQ		0x02
- #define TX_PAGE_NUM_NORM_PQ		0x02
- 
-+#define TX_PAGE_NUM_PUBQ_8192E		0xe7
-+#define TX_PAGE_NUM_HI_PQ_8192E		0x08
-+#define TX_PAGE_NUM_LO_PQ_8192E		0x0c
-+#define TX_PAGE_NUM_NORM_PQ_8192E	0x00
-+
- #define RTL_FW_PAGE_SIZE		4096
- #define RTL8XXXU_FIRMWARE_POLL_MAX	1000
- 
-@@ -1304,4 +1309,8 @@ struct rtl8xxxu_fileops {
- 	u32 adda_2t_path_on_a;
- 	u32 adda_2t_path_on_b;
- 	struct rtl8xxxu_reg8val *mactable;
-+	u8 total_page_num;
-+	u8 page_num_hi;
-+	u8 page_num_lo;
-+	u8 page_num_norm;
- };
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index bb08a39..a2cff22 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -387,7 +387,7 @@
- #define REG_RQPN			0x0200
- #define  RQPN_HI_PQ_SHIFT		0
- #define  RQPN_LO_PQ_SHIFT		8
--#define  RQPN_NORM_PQ_SHIFT		16
-+#define  RQPN_PUB_PQ_SHIFT		16
- #define  RQPN_LOAD			BIT(31)
- 
- #define REG_FIFOPAGE			0x0204
--- 
-2.5.5
 
