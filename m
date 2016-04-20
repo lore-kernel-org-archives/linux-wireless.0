@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43719 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:12796 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751387AbcDGIxv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 04:53:51 -0400
-Message-ID: <1460019225.27154.5.camel@sipsolutions.net> (sfid-20160407_105355_253016_DBCAB106)
-Subject: Re: [PATCHv2 1/2] mac80211: implement fair queuing per txq
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>
-Date: Thu, 07 Apr 2016 10:53:45 +0200
-In-Reply-To: <CAA93jw5mTMndywTH7GRqKMPr24UhxN8m0i0ri4dXa4ZdCULEoQ@mail.gmail.com> (sfid-20160406_193938_584462_320BAA37)
-References: <1458898052-20601-1-git-send-email-michal.kazior@tieto.com>
-	 <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
-	 <1459420104-31554-2-git-send-email-michal.kazior@tieto.com>
-	 <1459864656.18188.60.camel@sipsolutions.net>
-	 <CAA93jw4Swv9aOr=ZKoKeQyp9f1HnYJtiY7a1Lw2Ri89XjGiORQ@mail.gmail.com>
-	 <1459927276.17504.6.camel@sipsolutions.net>
-	 <CAA93jw5mTMndywTH7GRqKMPr24UhxN8m0i0ri4dXa4ZdCULEoQ@mail.gmail.com>
-	 (sfid-20160406_193938_584462_320BAA37)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1750887AbcDTQXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2016 12:23:04 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "ben@decadent.org.uk" <ben@decadent.org.uk>,
+	"Sharon, Sara" <sara.sharon@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RSS configuration in iwlwifi
+Date: Wed, 20 Apr 2016 16:22:59 +0000
+Message-ID: <1461169379.19157.7.camel@intel.com> (sfid-20160420_182309_332631_1A7CEF62)
+References: <1461164882.28559.61.camel@decadent.org.uk>
+	 <1461166207.19157.1.camel@intel.com>
+	 <1461167278.28559.63.camel@decadent.org.uk>
+In-Reply-To: <1461167278.28559.63.camel@decadent.org.uk>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-04-06 at 10:39 -0700, Dave Taht wrote:
-
-> > > The hope had been the original codel.h would have been reusable,
-> > > which is not the case at present.
-> > So what's the strategy for making it happen?
-> Strategy? to meander towards a result that gives low latency to all
-> stations, no matter their bandwidth, on several chipsets.
-
-I meant "strategy for making the code reusable". Or something like that
-anyway. I don't see the point in trying and then failing. Here we're
-adding a completely different version of codel to the kernel - why?
-What makes this version unusable for the original usage in
-include/net/codel.h? Can't we replace that one with the newer version
-and actually use the same file here?
-
-Or - why bother with the header file to make it shareable, if we're not
-even attempting to do that?
-
-johannes
+T24gV2VkLCAyMDE2LTA0LTIwIGF0IDE2OjQ3ICswMTAwLCBCZW4gSHV0Y2hpbmdzIHdyb3RlOg0K
+PiBPbiBXZWQsIDIwMTYtMDQtMjAgYXQgMTU6MzAgKzAwMDAsIEdydW1iYWNoLCBFbW1hbnVlbCB3
+cm90ZToNCj4gPiBIaSBCZW4sDQo+ID4gDQo+ID4gDQo+ID4gVGhhbmtzIGZvciBsb29raW5nIGF0
+IG91ciBjb2RlLg0KPiA+IA0KPiA+IA0KPiA+IE9uIFdlZCwgMjAxNi0wNC0yMCBhdCAxNjowOCAr
+MDEwMCwgQmVuIEh1dGNoaW5ncyB3cm90ZToNCj4gPiA+IA0KPiA+ID4gSSdtIG5vdCBzdXJlIGlm
+IHlvdSB3ZXJlIGF3YXJlLCBidXQgdGhlcmUgaXMgYSBzdGFuZGFyZCBBUEkgZm9yDQo+ID4gPiBj
+b25maWd1cmluZyBSU1MgaW4gbmV0d29yayBkcml2ZXJzLCBwYXJ0IG9mIGV0aHRvb2xfb3BzLiAg
+SSB0aGluaw0KPiA+ID4gaXdsd2lmaSBzaG91bGQgaW1wbGVtZW50IHRoYXQgcmF0aGVyIHRoYW4g
+YSBkcml2ZXItc3BlY2lmaWMNCj4gPiA+IGRlYnVnZnMNCj4gPiA+IGludGVyZmFjZS4NCj4gPiA+
+IA0KPiA+IFlvdSBhcmUgcmlnaHQsIHRoaXMgaXMgd2h5IFNhcmEgbWFkZSB0aGlzIGNvbW1pdDoN
+Cj4gPiANCj4gPiBjb21taXQgODU0ZDc3M2U0YWI1ODY5MjAwMDA0YWY0Y2E1ZDg1MTczMDg0OTkw
+Mw0KPiA+IEF1dGhvcjogU2FyYSBTaGFyb24gPHNhcmEuc2hhcm9uQGludGVsLmNvbT4NCj4gPiBE
+YXRlOiAgIFR1ZSBNYXIgMjIgMTU6NTU6NTggMjAxNiArMDIwMA0KPiA+IA0KPiA+ICAgICBpd2x3
+aWZpOiBtdm06IGltcHJvdmUgUlNTIGNvbmZpZ3VyYXRpb24NCj4gPiAgICAgDQo+ID4gICAgIElt
+cHJvdmUgY3VycmVudCBSU1MgY29uZmlndXJhdGlvbjoNCj4gPiAgICAgICogVXNlIG5ldGRldl9y
+c3Nfa2V5IGluc3RlYWQgb2Yga2VlcGluZyBhIGxvY2FsIGNvcHkuDQo+ID4gICAgICAqIENvbmZp
+Z3VyZSBhbHNvIFVEUCBoYXNoaW5nIHRvIGhhdmUgVURQIHRyYWZmaWMgc3ByZWFkIGFjcm9zcw0K
+PiA+IHF1ZXVlcy4NCj4gPiAgICAgIERvIG5vdCBkaXJlY3QgUlNTIHRyYWZmaWMgdG8gb3VyIGZh
+bGxiYWNrIHF1ZXVlLg0KPiA+DQo+ID4gICAgIFNpZ25lZC1vZmYtYnk6IFNhcmEgU2hhcm9uIDxz
+YXJhLnNoYXJvbkBpbnRlbC5jb20+DQo+ID4gICAgIFNpZ25lZC1vZmYtYnk6IEVtbWFudWVsIEdy
+dW1iYWNoIDxlbW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5jb20+DQo+IA0KPiBUaGF0IGRvZXNuJ3Qg
+cmVhbGx5IGFkZHJlc3Mgd2hhdCBJIHNhaWQuICBZZXMsIGl0J3MgdXNpbmcgdGhlIGNvbW1vbg0K
+PiBSU1Mga2V5LCBidXQgaXQncyBub3QgaW1wbGVtZW50aW5nIHRoZSBldGh0b29sIG9wZXJhdGlv
+bnMgdG8gZ2V0IGFuZA0KPiBzZXQgdGhlIGluZGlyZWN0aW9uIHRhYmxlIGFuZCB0aGUgdHlwZXMg
+b2YgZmxvdyBoYXNoaW5nIHRoYXQgYXJlDQo+IGVuYWJsZWQuDQo+IA0KDQpIbS4uIEkgdGhpbmsg
+dGhhdCBzZXR0aW5nIHRoZSBpbmRpcmVjdGlvbiB0YWJsZSBpcyBhIHByb2JsZW0gaW4gb3VyDQpj
+YXNlIGJlY2F1c2UgdGhlIFBOIGNoZWNrIGlzIGRvbmUgaW4gdGhlIGRyaXZlci4gVGhlIFBOIGNo
+ZWNrIGlzIHRoZQ0Kd2F5IFdpRmkgYWRkcmVzc2VzIHRoZSByZXBsYXkgYXR0YWNrLCBhbmQgc2lu
+Y2UgdGhlIFBOIGNoZWNrIHJlbGllcyBvbg0KcGVyLWNwdSB2YXJpYWJsZXMsIHdlIGNhbm5vdCAq
+c2FmZWx5KiBhbGxvdyB1c2VycyB0byBtb2RpZnkgdGhlDQppbmRpcmVjdGlvbiB0YWJsZSB3aGls
+ZSB0cmFmZmljIGlzIGZsb3dpbmcuDQoNCj4gQmVuLg0KPiA=
