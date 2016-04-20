@@ -1,75 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49756 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751292AbcDEFsg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26057 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750907AbcDTPAe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 01:48:36 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>,
-	Wei-Ning Huang <wnhuang@google.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Sameer Nanda <snanda@google.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Sonny Rao <sonnyrao@chromium.org>,
-	Douglas Anderson <dianders@chromium.org>
-Subject: RE: [PATCH] mwifiex: add __GFP_REPEAT to skb allocation call
-Date: Tue, 5 Apr 2016 05:48:25 +0000
-Message-ID: <4fa3762986eb4b848dbe7daf6871d7a8@SC-EXCH04.marvell.com> (sfid-20160405_074905_425772_14D15B22)
-References: <1459226840-36287-1-git-send-email-wnhuang@chromium.org>
-	 <87vb45brxc.fsf@kamboji.qca.qualcomm.com>
-	 <CABicQ-UJ1kniq6m86QcyVZBPznvNexfrUrTk3A_=GmZy69hvCA@mail.gmail.com>
- <1459256320.6473.160.camel@edumazet-glaptop3.roam.corp.google.com>
-In-Reply-To: <1459256320.6473.160.camel@edumazet-glaptop3.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 20 Apr 2016 11:00:34 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 3/4] ath10k: Define rx_ppdu_end for QCA9984
+Date: Wed, 20 Apr 2016 20:29:15 +0530
+Message-ID: <1461164356-9158-4-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160420_170037_135128_3C927E77)
+In-Reply-To: <1461164356-9158-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1461164356-9158-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgRXJpYywNCg0KVGhhbmtzIGZvciB0aGUgY29tbWVudHMuDQoNCj4gRnJvbTogRXJpYyBEdW1h
-emV0IFttYWlsdG86ZXJpYy5kdW1hemV0QGdtYWlsLmNvbV0NCj4gU2VudDogVHVlc2RheSwgTWFy
-Y2ggMjksIDIwMTYgNjoyOSBQTQ0KPiBUbzogV2VpLU5pbmcgSHVhbmcNCj4gQ2M6IEthbGxlIFZh
-bG87IExpbnV4IFdpcmVsZXNzOyBMS01MOyBBbWl0a3VtYXIgS2Fyd2FyOyBOaXNoYW50DQo+IFNh
-cm11a2FkYW07IFNhbWVlciBOYW5kYTsgbmV0ZGV2QHZnZXIua2VybmVsLm9yZzsgU29ubnkgUmFv
-OyBEb3VnbGFzDQo+IEFuZGVyc29uDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIG13aWZpZXg6IGFk
-ZCBfX0dGUF9SRVBFQVQgdG8gc2tiIGFsbG9jYXRpb24gY2FsbA0KPiANCj4gT24gVHVlLCAyMDE2
-LTAzLTI5IGF0IDE3OjI3ICswODAwLCBXZWktTmluZyBIdWFuZyB3cm90ZToNCj4gPiBBZGRpbmcg
-c29tZSBjaHJvbWl1bSBkZXZzIHRvIHRoZSB0aHJlYWQuDQo+ID4NCj4gPiBJbiwgaHR0cDovL2x4
-ci5mcmVlLWVsZWN0cm9ucy5jb20vc291cmNlL21tL3BhZ2VfYWxsb2MuYyNMMzE1Mg0KPiA+DQo+
-ID4gVGhlIGRlZmF1bHQgbW0gcmV0cnkgYWxsb2NhdGlvbiB3aGVuICdvcmRlciA8PQ0KPiA+IFBB
-R0VfQUxMT0NfQ09TVExZX09SREVSJyBvZiBnZnBfbWFzayBjb250YWlucyBfX0dGUF9SRVBFQVQu
-DQo+ID4gUEFHRV9BTExPQ19DT1NUTFlfT1JERVIgaXMgZGVmaW5lZCB0byBiZSAzLiBPbiBzeXN0
-ZW1zIHdpdGggcGFnZSBzaXplDQo+ID4gPSA0SywgdGhpcyBtZWFucyBtZW1vcnkgY29tcGFjdGlv
-biBhbmQgcmV0cnkgaXMgb25seSBkb25lIHdoZW4gdGhlDQo+ID4gc2l6ZSBvZiBhbGxvY2F0aW9u
-IGlzIDw9IDMySyBJbiBtd2lmaWV4LCB0aGUgYWxsb2NhdGlvbiBzaXplIGlzIDY0Sy4NCj4gDQo+
-IA0KPiANCj4gPiAgV2hlbiB3ZSBoYXZlIHN5c3RlbSB3aXRoDQo+ID4gbWVtb3J5IGZyYWdtZW50
-YXRpb24gYW5kIGFsbG9jYXRpb24gZmFpbGVkLCB0aGVyZSB3aWxsIGJlIG5vIHJldHJ5Lg0KPiA+
-IFRoaXMgaXMgd2h5IHdlIG5lZWQgdG8gYWRkIF9fR0ZQX1JFUEVBVCBoZXJlIHRvIGFsbG93IHRo
-ZSBzeXN0ZW0gdG8NCj4gPiBwZXJmb3JtIG1lbW9yeSBjb21wYWN0aW9uIGFuZCByZXRyeSBhbGxv
-Y2F0aW9uLg0KPiA+DQo+ID4gTWF5YmUgQW1pdEBtYXJ2ZWxsIGNhbiBjb21tZW50IG9uIGlmIHRo
-aXMgaXMgYSBnb29kIGZpeCBvbiB0aGlzIGlzc3VlLg0KPiA+IEknbSBhbHNvIGF3YXJlIHRoYXQg
-bWFydmVsbCBpcyB0aGUgcHJvZ3Jlc3Mgb2YgaW1wbGVtZW50aW5nDQo+ID4gc2NhdHRlci9nYXR0
-ZXIgZm9yIG13aWZpZXgsIHdoaWNoIGNhbiBhbHNvIGZpeCB0aGUgaXNzdWUuDQo+IA0KPiBCZWZv
-cmUgU0cgaXMgaW1wbGVtZW50ZWQsIHlvdSByZWFsbHkgbmVlZCB0byBjb3B5IGluY29taW5nIGZy
-YW1lcyBpbnRvDQo+IHNtYWxsZXN0IGNodW5rcyAodG8gZ2V0IGxvd2VzdCBza2ItPnRydWVzaXpl
-KSBhbmQgbGVhdmUgdGhlIDY0S0INCj4gYWxsb2NhdGVkIHN0dWZmIGZvcmV2ZXIgaW4gdGhlIGRy
-aXZlci4NCg0KV2UgZG8gaGF2ZSBhIDY0S0IgcHJlLWFsbG9jYXRlZCBidWZmZXIgZm9yIHJlY2Vp
-dmluZyBSeCBkYXRhIGluIG91ciBkcml2ZXIuDQoNCj4gDQo+IF9fR0ZQX1JFUEVBVCB3b250IHJl
-YWxseSBzb2x2ZSB0aGUgaXNzdWUuDQo+IA0KPiBJdCBzZWVtcyB0aGUgcHJvYmxlbSBjb21lcyBm
-cm9tIHRoZSBmYWN0IHRoYXQgdGhlIGRyaXZlcnMgY2FsbHMNCj4gZGV2X2tmcmVlX3NrYl9hbnko
-KSBhZnRlciBjYWxsaW5nIG13aWZpZXhfZGVhZ2dyX3NkaW9fcGt0KCksIGluc3RlYWQgb2YNCj4g
-cmVjeWNsaW5nIHRoaXMgdmVyeSBwcmVjaW91cyA2NEtCIHNrYiBvbmNlIG1lbW9yeSBnZXRzIGZy
-YWdtZW50ZWQuDQoNCk91ciBvbmUgdGltZSBhbGxvY2F0ZWQgNjRrIGJ1ZmZlciByZWFkIGZyb20g
-ZmlybXdhcmUgY29udGFpbnMgbXVsdGlwbGUgZGF0YSBjaHVua3MuIFdlIGhhdmUgYSBmZWF0dXJl
-IGNhbGxlZCBzaW5nbGUgcG9ydCBhZ2dyZWdhdGlvbiBpbiB3aGljaCBmaXJtd2FyZSBhdHRhY2hl
-cyBhbiBhZ2dyZWdhdGVkIGJ1ZmZlciB0byBzaW5nbGUgcG9ydC4gU28gc29tZXRpbWVzIGEgc2lu
-Z2xlIGRhdGEgY2h1bmsgY2FuIGV4Y2VlZCAzMmsuIGRldl9rZnJlZV9za2JfYW55KCkgaXMgY2Fs
-bGVkIHRvIGZyZWUgdGhvc2UgZGF0YSBjaHVua3MuDQoNCj4gDQo+IEFub3RoZXIgcHJvYmxlbSBp
-cyB0aGF0IG13aWZpZXhfZGVhZ2dyX3NkaW9fcGt0KCkgdXNlcw0KPiBtd2lmaWV4X2FsbG9jX2Rt
-YV9hbGlnbl9idWYoKSB3aXRoIEdGUF9LRVJORUwgfCBHRlBfRE1BDQo+IA0KPiBSZWFsbHkgR0ZQ
-X0RNQSBtYWtlcyBubyBzZW5zZSBoZXJlLCBzaW5jZSB0aGUgc2tiIGlzIGdvaW5nIHRvIGJlDQo+
-IHByb2Nlc3NlZCBieSB0aGUgc3RhY2ssIHdoaWNoIGhhcyBubyBzdWNoIHJlcXVpcmVtZW50Lg0K
-PiANCj4gUGxlYXNlIHVzZSBub3JtYWwgc2tiIGFsbG9jYXRpb25zIHRoZXJlLg0KDQpTdXJlLiBJ
-IHdpbGwgc3VibWl0IGEgcGF0Y2ggZm9yIHRoaXMuDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
+QCA9984 Rx descriptor has two 32-bit words of location information
+when compared to one 32-bit word in QCA99X0. To handle this difference in
+rx descriptor ppdu_end, define a new ppdu_end for QCA9984 descriptor
+which has the new structure to represent rx_location_info.
+
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/rx_desc.h | 46 +++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
+index 3e7dfaa..9ceebea 100644
+--- a/drivers/net/wireless/ath/ath10k/rx_desc.h
++++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
+@@ -996,6 +996,41 @@ struct rx_pkt_end {
+ 	__le32 phy_timestamp_2;
+ } __packed;
+ 
++#define RX_LOCATION_INFO0_RTT_FAC_LEGACY_MASK		0x00003fff
++#define RX_LOCATION_INFO0_RTT_FAC_LEGACY_LSB		0
++#define RX_LOCATION_INFO0_RTT_FAC_VHT_MASK		0x1fff8000
++#define RX_LOCATION_INFO0_RTT_FAC_VHT_LSB		15
++#define RX_LOCATION_INFO0_RTT_STRONGEST_CHAIN_MASK	0xc0000000
++#define RX_LOCATION_INFO0_RTT_STRONGEST_CHAIN_LSB	30
++#define RX_LOCATION_INFO0_RTT_FAC_LEGACY_STATUS		BIT(14)
++#define RX_LOCATION_INFO0_RTT_FAC_VHT_STATUS		BIT(29)
++
++#define RX_LOCATION_INFO1_RTT_PREAMBLE_TYPE_MASK	0x0000000c
++#define RX_LOCATION_INFO1_RTT_PREAMBLE_TYPE_LSB		2
++#define RX_LOCATION_INFO1_PKT_BW_MASK			0x00000030
++#define RX_LOCATION_INFO1_PKT_BW_LSB			4
++#define RX_LOCATION_INFO1_SKIP_P_SKIP_BTCF_MASK		0x0000ff00
++#define RX_LOCATION_INFO1_SKIP_P_SKIP_BTCF_LSB		8
++#define RX_LOCATION_INFO1_RTT_MSC_RATE_MASK		0x000f0000
++#define RX_LOCATION_INFO1_RTT_MSC_RATE_LSB		16
++#define RX_LOCATION_INFO1_RTT_PBD_LEG_BW_MASK		0x00300000
++#define RX_LOCATION_INFO1_RTT_PBD_LEG_BW_LSB		20
++#define RX_LOCATION_INFO1_TIMING_BACKOFF_MASK		0x07c00000
++#define RX_LOCATION_INFO1_TIMING_BACKOFF_LSB		22
++#define RX_LOCATION_INFO1_RTT_TX_FRAME_PHASE_MASK	0x18000000
++#define RX_LOCATION_INFO1_RTT_TX_FRAME_PHASE_LSB	27
++#define RX_LOCATION_INFO1_RTT_CFR_STATUS		BIT(0)
++#define RX_LOCATION_INFO1_RTT_CIR_STATUS		BIT(1)
++#define RX_LOCATION_INFO1_RTT_GI_TYPE			BIT(7)
++#define RX_LOCATION_INFO1_RTT_MAC_PHY_PHASE		BIT(29)
++#define RX_LOCATION_INFO1_RTT_TX_DATA_START_X_PHASE	BIT(30)
++#define RX_LOCATION_INFO1_RX_LOCATION_VALID		BIT(31)
++
++struct rx_location_info {
++	__le32 rx_location_info0; /* %RX_LOCATION_INFO0_ */
++	__le32 rx_location_info1; /* %RX_LOCATION_INFO1_ */
++} __packed;
++
+ enum rx_phy_ppdu_end_info0 {
+ 	RX_PHY_PPDU_END_INFO0_ERR_RADAR           = BIT(2),
+ 	RX_PHY_PPDU_END_INFO0_ERR_RX_ABORT        = BIT(3),
+@@ -1074,12 +1109,23 @@ struct rx_ppdu_end_qca99x0 {
+ 	__le16 info1; /* %RX_PPDU_END_INFO1_ */
+ } __packed;
+ 
++struct rx_ppdu_end_qca9984 {
++	struct rx_pkt_end rx_pkt_end;
++	struct rx_location_info rx_location_info;
++	struct rx_phy_ppdu_end rx_phy_ppdu_end;
++	__le32 rx_timing_offset; /* %RX_PPDU_END_RX_TIMING_OFFSET_ */
++	__le32 rx_info; /* %RX_PPDU_END_RX_INFO_ */
++	__le16 bb_length;
++	__le16 info1; /* %RX_PPDU_END_INFO1_ */
++} __packed;
++
+ struct rx_ppdu_end {
+ 	struct rx_ppdu_end_common common;
+ 	union {
+ 		struct rx_ppdu_end_qca988x qca988x;
+ 		struct rx_ppdu_end_qca6174 qca6174;
+ 		struct rx_ppdu_end_qca99x0 qca99x0;
++		struct rx_ppdu_end_qca9984 qca9984;
+ 	} __packed;
+ } __packed;
+ 
+-- 
+1.9.1
+
