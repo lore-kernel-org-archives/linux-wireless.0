@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42057 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751044AbcDNH10 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 03:27:26 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-04-14
-Date: Thu, 14 Apr 2016 09:27:17 +0200
-Message-Id: <1460618838-5819-1-git-send-email-johannes@sipsolutions.net> (sfid-20160414_092732_710969_1F8F2350)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46195 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753130AbcDTM64 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2016 08:58:56 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Luana Borgia <luanaborgia1969@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: ap + adhoc not working with Mwifiex driver for sd8887
+Date: Wed, 20 Apr 2016 12:58:51 +0000
+Message-ID: <d5015eed796149588c329bd4a500dc96@SC-EXCH04.marvell.com> (sfid-20160420_145901_673900_E424056F)
+References: <CAD3r-iRQD5nVBuC1_zYmu_FtmP4CdP2BbHxz1Q579mBPKg5zmQ@mail.gmail.com>
+ <CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
+In-Reply-To: <CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
-
-Since I didn't get anything else, and this has been pending for a week,
-here's the other part of the nl80211 socket problem fix (the netlink
-family URELEASE was the first part.)
-
-Let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 30d237a6c2e9be1bb816fe8e787b88fd7aad833b:
-
-  Merge tag 'mac80211-for-davem-2016-04-06' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2016-04-08 16:41:28 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-04-14
-
-for you to fetch changes up to 8f815cdde3e550e10c2736990d791f60c2ce43eb:
-
-  nl80211: check netlink protocol in socket release notification (2016-04-12 15:39:06 +0200)
-
-----------------------------------------------------------------
-This has just the single fix from Dmitry Ivanov, adding the missing
-netlink notifier family check to avoid the socket close DoS problem.
-
-----------------------------------------------------------------
-Dmitry Ivanov (1):
-      nl80211: check netlink protocol in socket release notification
-
- net/wireless/nl80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+SGkgTHVhbmEsDQoNCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
+IFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
+YWxmIE9mIEx1YW5hIEJvcmdpYQ0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmlsIDIwLCAyMDE2IDEx
+OjE0IEFNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEF2aW5hc2ggUGF0
+aWwNCj4gU3ViamVjdDogRndkOiBhcCArIGFkaG9jIG5vdCB3b3JraW5nIHdpdGggTXdpZmlleCBk
+cml2ZXIgZm9yIHNkODg4Nw0KPiANCj4gSGksDQo+IEkndmUgc3VjY2Vzc2Z1bGx5IG1hbmFnZWQg
+dG8gZ2V0IHRoaXMgZHJpdmVyIHdvcmtpbmcgaW4gYWRob2Mgd2l0aCBvbHNyZA0KPiBvbiBtbGFu
+MCBpbnRlcmZhY2UsIG5vdyBJJ20gdHJ5aW5nIHRvIGFkZCBhIHVhcDAgd29ya2luZyBhdCB0aGUg
+c2FtZQ0KPiB0aW1lLCB3aXRoIGFsbCB0aGlzIGNvbW1hbmQ6DQo+IA0KPiByZmtpbGwgdW5ibG9j
+ayB3bGFuDQo+IGlwIGxpbmsgc2V0IHVhcDAgZG93bg0KPiBpcCBsaW5rIHNldCBtbGFuMCBkb3du
+DQo+IGl3IGRldiBtbGFuMCBzZXQgdHlwZSBpYnNzDQo+IGlwIGxpbmsgc2V0IG1sYW4wIHVwDQo+
+IGl3IGRldiBtbGFuMCBpYnNzIGpvaW4gbWVzaCAyNDM3IGZlOmRlOmZlOmRlOmZlOmRlIG9sc3Jk
+LXN0YXJ0LnNoIGNhdA0KPiA8PEVPRiA+IC9ldGMvaG9zdGFwZC5jb25mIHNzaWQ9UENNX0FQX2Zl
+ZGUNCj4gaW50ZXJmYWNlPXVhcDANCj4gZHJpdmVyPW5sODAyMTENCj4gaHdfbW9kZT1nDQo+IGNo
+YW5uZWw9Ng0KPiBFT0YNCj4gaXcgcGh5IHBoeTAgaW50ZXJmYWNlIGFkZCB1YXAwIHR5cGUgX19h
+cCBob3N0YXBkIC9ldGMvaG9zdGFwZC5jb25mICYNCj4gZG5zbWFzcSAtLWludGVyZmFjZT11YXAw
+IC0tZXhjZXB0LWludGVyZmFjZT1sbyAtLWJpbmQtaW50ZXJmYWNlcyAtLWRoY3AtDQo+IHJhbmdl
+PTE5Mi4xNjguMy4yLDE5Mi4xNjguMy4xMCwxMmggLS1jb25mLWZpbGU9L2Rldi9udWxsIGlwIGFk
+ZHIgYWRkDQo+IDE5Mi4xNjguMy4xLzI0IGJyb2FkY2FzdCAxOTIuMTY4LjMuMjU1IGRldiB1YXAw
+DQo+IA0KPiBidXQgSSBnZXQgdGhpcyBlcnJvciBhZnRlciBydW4gdGhlIGhvc3RhcGQgY29tbWFu
+ZDoNCj4gDQo+IFsgNDk4MC4yMDEwOTZdIElQdjY6IEFERFJDT05GKE5FVERFVl9DSEFOR0UpOiBt
+bGFuMDogbGluayBiZWNvbWVzIHJlYWR5DQo+IFsgNDk4My4zMzU0NjddIElQdjY6IEFERFJDT05G
+KE5FVERFVl9VUCk6IHVhcDA6IGxpbmsgaXMgbm90IHJlYWR5IFsNCj4gNDk4My4zNTg4NzldIG13
+aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogQ01EX1JFU1A6IGNtZCAweGIxIGVycm9yLA0KPiByZXN1
+bHQ9MHgxDQo+IA0KPiBhZGhvYyBpcyBmaW5lLCB3aXRoIHRoZSBhYm92ZSBvcmRlciBvZiBjb21t
+YW5kIGJ1dCBpZiBJIHJ1biBiZWZvcmUNCj4gaG9zdGFwZCBhbmQgdGhhbiBhZGhvYyBwYXJ0IHRo
+YW4gdGhlIGlzc3VlIG9jY3VyIGluIHRoZSBhZGhvYyBwYXJ0Lg0KPiANCj4gSSdtIHVzaW5nIHRo
+ZSBmaXJtd2FyZQ0KPiBodHRwOi8vZ2l0Lm1hcnZlbGwuY29tLz9wPW13aWZpZXgtDQo+IGZpcm13
+YXJlLmdpdDthPWJsb2I7Zj1tcnZsL3NkODg4N191YXBzdGEuYmluO2g9MTY1ZTZjM2QzNGIwYzJh
+NjMwMjUyOTA3YQ0KPiA3YWM0ZGFmNmUxM2M5ZDU7aGI9SEVBRA0KPiANCj4gYW5kIHRoZSBtd2lm
+aWV4IGZyb20ga2VybmVsIGxpbnV4IDQuMS4xDQo+IA0KDQpUaGFua3MgZm9yIHJlcG9ydGluZyB0
+aGUgcHJvYmxlbS4NCldlIGhhdmUgc3RhcnRlZCBsb29raW5nIGludG8gaXQuDQoNClJlZ2FyZHMs
+DQpBbWl0a3VtYXINCg==
