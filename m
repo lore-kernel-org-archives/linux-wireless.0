@@ -1,26 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f53.google.com ([209.85.213.53]:33338 "EHLO
-	mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753026AbcDJNqg convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45945 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750928AbcDTO7p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2016 09:46:36 -0400
-Received: by mail-vk0-f53.google.com with SMTP id k1so184527225vkb.0
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2016 06:46:36 -0700 (PDT)
+	Wed, 20 Apr 2016 10:59:45 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 0/4] Add support for QCA9984
+Date: Wed, 20 Apr 2016 20:29:12 +0530
+Message-ID: <1461164356-9158-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160420_165949_120489_44CDD33A)
 MIME-Version: 1.0
-Date: Sun, 10 Apr 2016 16:46:35 +0300
-Message-ID: <CAM5n6ZWLLEw-p5TPMAkVRBJEjyro45QQ-YHTZ4RPepAjiz7iTg@mail.gmail.com> (sfid-20160410_154640_343978_F583B5A2)
-Subject: Support for dual polarity antennas
-From: Ryan Dean <adm.mail.list@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-Does iwlwifi driver with Intel® Wireless 8265 (4.6) Intel® Wireless
-3168 (4.6) Intel® Wireless 8260 (4.1) support commercial grade dual
-polarity antennas such as Ubiquiti Networks airFiber X Antenna
-AF-5G34-S45 with (2) SMA female port? What will happen if I connect
-them with a dual polarity antennas? Will I get very strong signals?
-Sincerely
-Ryan
+This patch set adds QCA9984/QCA9994 1.0 support. Boot sequence is same as
+QCA99X0.
+
+Vasanthakumar Thiagarajan (4):
+  ath10k: Move rx_location_info out of struct rx_pkt_end
+  ath10k: Clean up growing hw checks during safe and full reset
+  ath10k: Define rx_ppdu_end for QCA9984
+  ath10k: Enable support for QCA9984
+
+ drivers/net/wireless/ath/ath10k/core.c    | 23 ++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h      | 11 ++++++
+ drivers/net/wireless/ath/ath10k/pci.c     | 58 ++++++++++++++++++++++---------
+ drivers/net/wireless/ath/ath10k/pci.h     |  6 ++++
+ drivers/net/wireless/ath/ath10k/rx_desc.h | 48 ++++++++++++++++++++++++-
+ 5 files changed, 129 insertions(+), 17 deletions(-)
+
+-- 
+1.9.1
+
