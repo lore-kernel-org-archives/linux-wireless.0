@@ -1,44 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:10041 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751718AbcDEKBC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 06:01:02 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Gucea Doru <gucea.doru@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "Gucea, Doru" <doru.gucea@intel.com>
-Subject: RE: iwlwifi monitor mode: No data frame captured on 5 Ghz
-Date: Tue, 5 Apr 2016 10:00:56 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EAA379D@hasmsx107.ger.corp.intel.com> (sfid-20160405_120106_265961_9160E8E9)
-References: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com>
-In-Reply-To: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22802 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902AbcDTQoe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2016 12:44:34 -0400
+Subject: [PATCH v2 0/8] ath10k: refactor firmware components
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 20 Apr 2016 19:44:22 +0300
+Message-ID: <20160420164301.8801.12099.stgit@potku.adurom.net> (sfid-20160420_184437_616132_A9B965C5)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gSGVsbG8sDQo+IA0KPiBJIGFtIHRyeWluZyB0byBjYXB0dXJlIHBhY2tldHMgdGhhdCBh
-cmUgZXhjaGFuZ2VkIGJldHdlZW4gYW4gQVAgYW5kIGENCj4gc21hcnRwaG9uZSBvbiB0aGUgNUdo
-eiBmcmVxdWVuY3kuIEZvciBnZW5lcmF0aW5nIHRyYWZmaWMsIEkgdXBsb2FkIFVEUA0KPiB0cmFm
-ZmljIGZyb20gYSBsYXB0b3AgUEMgdG93YXJkcyB0aGUgc21hcnRwaG9uZSB1c2luZyBpcGVyZi4N
-Cj4gDQo+IFRoZSBwcm9ibGVtIGlzIHRoYXQgSSBjYW4gc2VlIF9vbmx5XyB0aGUgY29udHJvbCBm
-cmFtZXMgbGlrZSBSVFMvQ1RTLCBCbG9jaw0KPiBBQ0ssIHdoaWxlIHRoZSBkYXRhIHBhY2tldHMg
-YXJlIG5vdCBjYXB0dXJlZC4gSSB1cGxvYWRlZCB0aGUgV2lyZXNoYXJrDQo+IGNhcHR1cmUgZmls
-ZXMgYXQgWzFdIChsb2NhdGVkIGluc2lkZSB0aGUgZm9sZGVycyB3aG9zZSBuYW1lIHN0YXJ0cyB3
-aXRoIDVHaHopLg0KDQpNb3N0IGxpa2VseSB0aGUgcGFja2V0cyBvbiBBIGJhbmQgaGF2ZSBhIFZI
-VCBwcmVhbWJsZSBhbmQgeW91ciBTS1UgaXMgMTFOIG9ubHkuDQpBbm90aGVyIG9wdGlvbiBpcyB0
-aGF0IHRoZSB0cmFmZmljIHVzZXMgTERQQyBlbmNvZGluZyBhbmQgdGhpcyBkZXZpY2UgZG9lc24n
-dCBzdXBwb3J0IGl0Lg0KDQoNCj4gDQo+IElmIEkgdXNlIHRoZSAyLjQgZnJlcXVlbmN5LCBhbGwg
-dGhlIGZyYW1lcyBhcmUgY2FwdHVyZWQuIEkgYWxzbyB1cGxvYWRlZCB0aGUNCj4gV2lyZXNoYXJr
-IHBhY2tldCB0cmFjZXMgZm9yIDIuNEdoeiBhdCBbMV0gKGxvY2F0ZWQgaW5zaWRlIHRoZSBmb2xk
-ZXJzIHdob3NlDQo+IG5hbWUgc3RhcnRzIHdpdGggMi40IEdoeikuDQo+IA0KPiBJcyB0aGlzIGEg
-a25vd24gYnVnIG9yIGFtIEkgZG9pbmcgc29tZXRoaW5nIHdyb25nPw0KPiANCj4gQWRkaXRpb25h
-bCBkZXRhaWxzOg0KPiBXaS1GaSBjYXJkOiAgaXdsd2lmaSAwMDAwOjA0OjAwLjA6IERldGVjdGVk
-IEludGVsKFIpIER1YWwgQmFuZCBXaXJlbGVzcyBOIDcyNjAsDQo+IFJFVj0weDE0NCBGaXJtd2Fy
-ZSB2ZXJzaW9uOiBpd2x3aWZpIDAwMDA6MDQ6MDAuMDogbG9hZGVkIGZpcm13YXJlIHZlcnNpb24N
-Cj4gMjUuMjI4LjkuMCBvcF9tb2RlIGl3bG12bQ0KPiBUcmFmZmljIGVuY3J5cHRpb246IFdQQSAm
-IFdQQTIgUGVyc29uYWwNCj4gU2V0dGluZyB1cCB0aGUgY2FyZCBpbiB3aXJlbGVzcyBtb2RlOg0K
-PiBpcCBsaW5rIHNldCBkZXYgd2xhbjAgZG93bg0KPiBpdyB3bGFuMCBzZXQgdHlwZSBtb25pdG9y
-DQo+IGlwIGxpbmsgc2V0IGRldiB3bGFuMCB1cA0KPiBpdyB3bGFuMCBzZXQgZnJlcSA1MjQwDQo+
-IA0KPiBbMV0gaHR0cHM6Ly9kcml2ZS5nb29nbGUuY29tL29wZW4/aWQ9MEI1U0JIMDhQVV9DaGVr
-OXJPSFkwVmt4RlJVRQ0KPiANCj4gVGhhbmsgeW91LCBEb3J1DQo=
+This series refactors various ath10k firmware components into struct
+ath10k_fw_components which contains everything firmware related (board
+files, meta data and so on). This makes it possible to kill
+ath10k_tm_fetch_utf_firmware_api_2() from testmode.c.
+
+Also REALLY old FW API 1 (firmware.bin and otp.bin) support is
+removed.
+
+v2:
+
+o patch 1: remove all unused "firmware.bin" and "otp.bin" defines
+
+o patch 2: remove a lefover FIXME comment, create local variable for
+  ar->normal_mode_fw.fw_file.firmware
+
+o patch 2: fix block comment styles
+
+o patch 2: fix long lines
+
+drivers/net/wireless/ath/ath10k/testmode.c:200: line over 90 characters
+drivers/net/wireless/ath/ath10k/testmode.c:201: line over 90 characters
+
+---
+
+Kalle Valo (8):
+      ath10k: remove deprecated firmware API 1 support
+      ath10k: refactor firmware images to struct ath10k_fw_components
+      ath10k: move fw_version inside struct ath10k_fw_file
+      ath10k: move fw_features to struct ath10k_fw_file
+      ath10k: move wmi_op_version to struct ath10k_fw_file
+      ath10k: move htt_op_version to struct ath10k_fw_file
+      ath10k: switch testmode to use ath10k_core_fetch_firmware_api_n()
+      ath10k: remove enum ath10k_swap_code_seg_bin_type
+
+
+ drivers/net/wireless/ath/ath10k/core.c     |  321 ++++++++++++----------------
+ drivers/net/wireless/ath/ath10k/core.h     |   65 +++---
+ drivers/net/wireless/ath/ath10k/debug.c    |   32 ++-
+ drivers/net/wireless/ath/ath10k/htt.c      |    2 
+ drivers/net/wireless/ath/ath10k/htt.h      |    1 
+ drivers/net/wireless/ath/ath10k/htt_rx.c   |    2 
+ drivers/net/wireless/ath/ath10k/htt_tx.c   |    9 +
+ drivers/net/wireless/ath/ath10k/hw.h       |   12 -
+ drivers/net/wireless/ath/ath10k/mac.c      |   21 +-
+ drivers/net/wireless/ath/ath10k/pci.c      |    1 
+ drivers/net/wireless/ath/ath10k/swap.c     |   44 ++--
+ drivers/net/wireless/ath/ath10k/swap.h     |    9 -
+ drivers/net/wireless/ath/ath10k/testmode.c |  197 +++--------------
+ drivers/net/wireless/ath/ath10k/wmi.c      |   13 -
+ drivers/net/wireless/ath/ath10k/wow.c      |    7 -
+ 15 files changed, 282 insertions(+), 454 deletions(-)
+
