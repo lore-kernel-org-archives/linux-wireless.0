@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:35002 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753659AbcDAAqj (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:35995 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751918AbcDTQmE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 20:46:39 -0400
-Date: Fri, 1 Apr 2016 08:46:27 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	David Miller <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, tgraf@suug.ch
-Subject: Re: Question on rhashtable in worst-case scenario.
-Message-ID: <20160401004627.GA9367@gondor.apana.org.au> (sfid-20160401_024703_126393_E3D744E7)
-References: <56F9941A.3080501@candelatech.com>
- <56FAAA6D.3070806@candelatech.com>
- <1459329252.2055.1.camel@sipsolutions.net>
- <20160330.123821.328761526754742195.davem@davemloft.net>
- <56FC0445.6010200@candelatech.com>
- <1459410405.4576.8.camel@sipsolutions.net>
- <20160331075015.GA27716@gondor.apana.org.au>
- <1459438199.4576.26.camel@sipsolutions.net>
+	Wed, 20 Apr 2016 12:42:04 -0400
+Received: by mail-ob0-f169.google.com with SMTP id j9so34926853obd.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2016 09:42:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1459438199.4576.26.camel@sipsolutions.net>
+In-Reply-To: <20160420160442.GA6803@redhat.com>
+References: <1461135572-7468-1-git-send-email-yeohchunyeow@gmail.com>
+	<20160420160442.GA6803@redhat.com>
+Date: Thu, 21 Apr 2016 00:42:03 +0800
+Message-ID: <CAEFj985x_YRNL2SLttrxNboq39dD0oHGVcB3CLr3xGNDut=36w@mail.gmail.com> (sfid-20160420_184209_227561_FB1F79BA)
+Subject: Re: [PATCH] rt2800usb: enable MFP if hw crypt is disabled
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Helmut Schaa <helmut.schaa@googlemail.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 31, 2016 at 05:29:59PM +0200, Johannes Berg wrote:
-> 
-> Does removing this completely disable the "-EEXIST" error? I can't say
-> I fully understand the elasticity stuff in __rhashtable_insert_fast().
+Noted. Patch v2 sent.
 
-What EEXIST error are you talking about? The only one that can be
-returned on insertion is if you're explicitly checking for dups
-which clearly can't be the case for you.
+----
+Chun-Yeow
 
-If you're talking about the EEXIST error due to a rehash then it is
-completely hidden from you by rhashtable_insert_rehash.
-
-If you actually meant EBUSY then yes this should prevent it from
-occurring, unless your chain-length exceeds 2^32.
-
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+On Thu, Apr 21, 2016 at 12:04 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Wed, Apr 20, 2016 at 02:59:32PM +0800, Chun-Yeow Yeoh wrote:
+>> If rt2800usb is loaded with nohwcrypt=1, mac80211 takes
+>> care of the crypto with software encryption/decryption
+>> and thus, MFP can be used.
+>>
+>> Tested for secured mesh using ath9k_htc and ath9k.
+>>
+>> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+>> ---
+>>  drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+>> index 4b0bb6b..84ea329 100644
+>> --- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+>> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+>> @@ -48,6 +48,7 @@ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+>>
+>>  static bool rt2800usb_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
+>>  {
+>> +     ieee80211_hw_set(rt2x00dev->hw, MFP_CAPABLE);
+>>       return modparam_nohwcrypt;
+>
+> You set MFP feature regardless if actually hwcrypt is disabled or not.
+> Beside this should not be done in function which is intended to test
+> if hw crypto is disabled. Please set the future in place where other
+> hw->flags are set.
+>
+> Thanks
+> Stanislaw
