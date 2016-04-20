@@ -1,60 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48246 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752123AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 11:49:38 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 05/16] rtl8xxxu: Rename rtl8723b_disable_rf() to rtl8xxxu_gen2_disable_rf()
-Date: Mon, 18 Apr 2016 11:49:25 -0400
-Message-Id: <1460994576-24091-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_180721_745414_65F1CCB0)
-In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:32897 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754662AbcDTIbL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2016 04:31:11 -0400
+Received: by mail-pa0-f45.google.com with SMTP id zm5so15729529pac.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2016 01:31:10 -0700 (PDT)
+Subject: Re: [patch] brcmfmac: testing the wrong variable in
+ brcmf_rx_hdrpull()
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+References: <20160419142543.GC4876@mwanda>
+Cc: "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	kernel-janitors@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <57173E44.6050306@broadcom.com> (sfid-20160420_103131_429980_02EF2D50)
+Date: Wed, 20 Apr 2016 10:31:00 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160419142543.GC4876@mwanda>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 19-4-2016 16:25, Dan Carpenter wrote:
+> Smatch complains about this code:
+> 
+>     drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:335 brcmf_rx_hdrpull()
+>     error: we previously assumed '*ifp' could be null (see line 333)
+> 
+> The problem is that we recently changed these from "ifp" to "*ifp" but
+> there was one that we didn't update.
+> 
+> -       if (ret || !ifp || !ifp->ndev) {
+> +       if (ret || !(*ifp) || !(*ifp)->ndev) {
+>                 if (ret != -ENODATA && ifp)
+>                                        ^^^
+> -                       ifp->stats.rx_errors++;
+> +                       (*ifp)->stats.rx_errors++;
+> 
+> I have updated it to *ifp as well.  We always call this function is a
+> non-NULL "ifp" pointer, btw.
 
-At least for now, all gen2 parts use the same disable_rf() function
+Great. Maybe we (Broadcom) should consider running smatch on our patch
+series or simply rely on your excellent work :-p. Thanks for catching this.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 0928352..7a28b78 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7659,7 +7659,7 @@ static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
- 	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ignore_wlan));
- }
- 
--static void rtl8723b_disable_rf(struct rtl8xxxu_priv *priv)
-+static void rtl8xxxu_gen2_disable_rf(struct rtl8xxxu_priv *priv)
- {
- 	u32 val32;
- 
-@@ -9918,7 +9918,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.init_aggregation = rtl8723bu_init_aggregation,
- 	.init_statistics = rtl8723bu_init_statistics,
- 	.enable_rf = rtl8723b_enable_rf,
--	.disable_rf = rtl8723b_disable_rf,
-+	.disable_rf = rtl8xxxu_gen2_disable_rf,
- 	.usb_quirks = rtl8xxxu_gen2_usb_quirks,
- 	.set_tx_power = rtl8723b_set_tx_power,
- 	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
-@@ -9989,7 +9989,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.config_channel = rtl8xxxu_gen2_config_channel,
- 	.parse_rx_desc = rtl8xxxu_parse_rxdesc24,
- 	.enable_rf = rtl8192e_enable_rf,
--	.disable_rf = rtl8723b_disable_rf,
-+	.disable_rf = rtl8xxxu_gen2_disable_rf,
- 	.usb_quirks = rtl8xxxu_gen2_usb_quirks,
- 	.set_tx_power = rtl8192e_set_tx_power,
- 	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
--- 
-2.5.5
-
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Fixes: c462ebcdfe42 ('brcmfmac: create common function for handling brcmf_proto_hdrpull()')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index 1b476d1..b590499 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -331,7 +331,7 @@ static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
+>  	ret = brcmf_proto_hdrpull(drvr, true, skb, ifp);
+>  
+>  	if (ret || !(*ifp) || !(*ifp)->ndev) {
+> -		if (ret != -ENODATA && ifp)
+> +		if (ret != -ENODATA && *ifp)
+>  			(*ifp)->stats.rx_errors++;
+>  		brcmu_pkt_buf_free_skb(skb);
+>  		return -ENODATA;
+> 
