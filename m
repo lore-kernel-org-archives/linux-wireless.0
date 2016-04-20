@@ -1,73 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55354 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751756AbcDYGus (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35526 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751029AbcDTQ5d convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 02:50:48 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3P6khZ6031149
-	for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2016 23:50:46 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0b-0016f401.pphosted.com with ESMTP id 22g8jfm2f6-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2016 23:50:46 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/2] mwifiex: disable channel filtering feature in firmware
-Date: Sun, 24 Apr 2016 23:49:51 -0700
-Message-ID: <1461566992-3539-1-git-send-email-akarwar@marvell.com> (sfid-20160425_085054_661156_1258E868)
+	Wed, 20 Apr 2016 12:57:33 -0400
+Received: by mail-io0-f196.google.com with SMTP id u185so7777058iod.2
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2016 09:57:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <74cc66c9d174442a9ca71bcfca2c2231@SC-EXCH04.marvell.com>
+References: <CAD3r-iRQD5nVBuC1_zYmu_FtmP4CdP2BbHxz1Q579mBPKg5zmQ@mail.gmail.com>
+	<CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
+	<74cc66c9d174442a9ca71bcfca2c2231@SC-EXCH04.marvell.com>
+Date: Wed, 20 Apr 2016 11:57:32 -0500
+Message-ID: <CAD3r-iT9PPSJLRHJRX70a9vYWXYscvSkkM482ce3u8Wb43D+DA@mail.gmail.com> (sfid-20160420_185738_990336_0EF0038B)
+Subject: Re: ap + adhoc not working with Mwifiex driver for sd8887
+From: Luana Borgia <luanaborgia1969@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As 2.4Ghz channels are overlapping, sometimes AP responds to
-probe request even if it's operating on neighbouring channel.
-Currently firmware drops those scan entries, as current channel
-doesn't match with APs channel.
+Hi Amitkumar,
 
-This patch enables MWIFIEX_DISABLE_CHAN_FILT flag in scan
-command to disable the feature so that better scan results
-will be received in 2.4Ghz band.
+thanks for the quick reply..
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/scan.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+That's really sad, I hoped that you came with a way to setup the adhoc
+in ahdemo, like atheros is doing. :(
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index 36cc9cc..bc5e52c 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -498,11 +498,13 @@ mwifiex_scan_create_channel_list(struct mwifiex_private *priv,
- 					&= ~MWIFIEX_PASSIVE_SCAN;
- 			scan_chan_list[chan_idx].chan_number =
- 							(u32) ch->hw_value;
-+
-+			scan_chan_list[chan_idx].chan_scan_mode_bitmap
-+					|= MWIFIEX_DISABLE_CHAN_FILT;
-+
- 			if (filtered_scan) {
- 				scan_chan_list[chan_idx].max_scan_time =
- 				cpu_to_le16(adapter->specific_scan_time);
--				scan_chan_list[chan_idx].chan_scan_mode_bitmap
--					|= MWIFIEX_DISABLE_CHAN_FILT;
- 			}
- 			chan_idx++;
- 		}
-@@ -1060,9 +1062,8 @@ mwifiex_config_scan(struct mwifiex_private *priv,
- 				scan_chan_list[chan_idx].chan_scan_mode_bitmap
- 					&= ~MWIFIEX_PASSIVE_SCAN;
- 
--			if (*filtered_scan)
--				scan_chan_list[chan_idx].chan_scan_mode_bitmap
--					|= MWIFIEX_DISABLE_CHAN_FILT;
-+			scan_chan_list[chan_idx].chan_scan_mode_bitmap
-+				|= MWIFIEX_DISABLE_CHAN_FILT;
- 
- 			if (user_scan_in->chan_list[chan_idx].scan_time) {
- 				scan_dur = (u16) user_scan_in->
--- 
-1.8.1.4
+Do you know if there is any plan to manage this in future?
 
+Thanks for all support
+best regards
+Luana
+
+
+2016-04-20 9:18 GMT-05:00 Amitkumar Karwar <akarwar@marvell.com>:
+> Hi Luana,
+>
+>> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+>> owner@vger.kernel.org] On Behalf Of Luana Borgia
+>> Sent: Wednesday, April 20, 2016 11:14 AM
+>> To: linux-wireless@vger.kernel.org; Avinash Patil
+>> Subject: Fwd: ap + adhoc not working with Mwifiex driver for sd8887
+>>
+>> Hi,
+>> I've successfully managed to get this driver working in adhoc with olsrd
+>> on mlan0 interface, now I'm trying to add a uap0 working at the same
+>> time, with all this command:
+>>
+>> rfkill unblock wlan
+>> ip link set uap0 down
+>> ip link set mlan0 down
+>> iw dev mlan0 set type ibss
+>> ip link set mlan0 up
+>> iw dev mlan0 ibss join mesh 2437 fe:de:fe:de:fe:de olsrd-start.sh cat
+>> <<EOF > /etc/hostapd.conf ssid=PCM_AP_fede
+>> interface=uap0
+>> driver=nl80211
+>> hw_mode=g
+>> channel=6
+>> EOF
+>> iw phy phy0 interface add uap0 type __ap hostapd /etc/hostapd.conf &
+>> dnsmasq --interface=uap0 --except-interface=lo --bind-interfaces --dhcp-
+>> range=192.168.3.2,192.168.3.10,12h --conf-file=/dev/null ip addr add
+>> 192.168.3.1/24 broadcast 192.168.3.255 dev uap0
+>>
+>> but I get this error after run the hostapd command:
+>>
+>> [ 4980.201096] IPv6: ADDRCONF(NETDEV_CHANGE): mlan0: link becomes ready
+>> [ 4983.335467] IPv6: ADDRCONF(NETDEV_UP): uap0: link is not ready [
+>> 4983.358879] mwifiex_sdio mmc0:0001:1: CMD_RESP: cmd 0xb1 error,
+>> result=0x1
+>>
+>> adhoc is fine, with the above order of command but if I run before
+>> hostapd and than adhoc part than the issue occur in the adhoc part.
+>>
+>> I'm using the firmware
+>> http://git.marvell.com/?p=mwifiex-
+>> firmware.git;a=blob;f=mrvl/sd8887_uapsta.bin;h=165e6c3d34b0c2a630252907a
+>> 7ac4daf6e13c9d5;hb=HEAD
+>>
+>> and the mwifiex from kernel linux 4.1.1
+>>
+>
+> I checked with our team. We don’t support simultaneous operations of Adhoc and AP network.
+> Only one at a time can be used.
+>
+> Regards,
+> Amitkumar
