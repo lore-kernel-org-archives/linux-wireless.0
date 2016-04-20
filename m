@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33824 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751021AbcDMIB2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2016 04:01:28 -0400
-Message-ID: <1460534484.3057.2.camel@sipsolutions.net> (sfid-20160413_100131_740803_CFBF6450)
-Subject: Re: General VHT rate-ctrl question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 13 Apr 2016 10:01:24 +0200
-In-Reply-To: <570D8956.8090806@candelatech.com> (sfid-20160413_014843_049708_B2F53AD9)
-References: <570D8956.8090806@candelatech.com>
-	 (sfid-20160413_014843_049708_B2F53AD9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18969 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752616AbcDTPAU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2016 11:00:20 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 1/4] ath10k: Move rx_location_info out of struct rx_pkt_end
+Date: Wed, 20 Apr 2016 20:29:13 +0530
+Message-ID: <1461164356-9158-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160420_170023_228244_6498036C)
+In-Reply-To: <1461164356-9158-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1461164356-9158-1-git-send-email-vthiagar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-04-12 at 16:48 -0700, Ben Greear wrote:
-> If a station and it's peer can both do VHT, is there ever a good
-> reason to even try HT rates?
-> 
+Define rx_location_info in struct rx_ppdu_end_qca99x0 after
+rx_pkt_end. This is to prepare rx_ppdu_end for QCA9984 chip.
 
-Not really; perhaps if you could do HT greenfield preamble (which VHT
-doesn't have) you could get something out of it, beyond that I don't
-see a reason to try.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/rx_desc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Unless, for some strange reason, it supports only single stream VHT and
-dual-stream HT or something really weird?
+diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
+index ca8d168..3e7dfaa 100644
+--- a/drivers/net/wireless/ath/ath10k/rx_desc.h
++++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
+@@ -994,7 +994,6 @@ struct rx_pkt_end {
+ 	__le32 info0; /* %RX_PKT_END_INFO0_ */
+ 	__le32 phy_timestamp_1;
+ 	__le32 phy_timestamp_2;
+-	__le32 rx_location_info; /* %RX_LOCATION_INFO_ */
+ } __packed;
+ 
+ enum rx_phy_ppdu_end_info0 {
+@@ -1067,6 +1066,7 @@ struct rx_phy_ppdu_end {
+ 
+ struct rx_ppdu_end_qca99x0 {
+ 	struct rx_pkt_end rx_pkt_end;
++	__le32 rx_location_info; /* %RX_LOCATION_INFO_ */
+ 	struct rx_phy_ppdu_end rx_phy_ppdu_end;
+ 	__le32 rx_timing_offset; /* %RX_PPDU_END_RX_TIMING_OFFSET_ */
+ 	__le32 rx_info; /* %RX_PPDU_END_RX_INFO_ */
+-- 
+1.9.1
 
-johannes
