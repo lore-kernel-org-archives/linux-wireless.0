@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:45141 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751750AbcDZO0e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 10:26:34 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3QEMhZU010027
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 07:26:33 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 22g8jfr01c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 07:26:33 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Shengzhen Li <szli@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: change sleep cookie poll count
-Date: Tue, 26 Apr 2016 07:25:45 -0700
-Message-ID: <1461680745-22994-1-git-send-email-akarwar@marvell.com> (sfid-20160426_162637_901675_668A5D33)
+Received: from mx1.redhat.com ([209.132.183.28]:41537 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750804AbcDTQG0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2016 12:06:26 -0400
+Date: Wed, 20 Apr 2016 18:04:42 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Cc: linux-wireless@vger.kernel.org, helmut.schaa@googlemail.com,
+	kvalo@qca.qualcomm.com
+Subject: Re: [PATCH] rt2800usb: enable MFP if hw crypt is disabled
+Message-ID: <20160420160442.GA6803@redhat.com> (sfid-20160420_180630_504072_A067FEC5)
+References: <1461135572-7468-1-git-send-email-yeohchunyeow@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461135572-7468-1-git-send-email-yeohchunyeow@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+On Wed, Apr 20, 2016 at 02:59:32PM +0800, Chun-Yeow Yeoh wrote:
+> If rt2800usb is loaded with nohwcrypt=1, mac80211 takes
+> care of the crypto with software encryption/decryption
+> and thus, MFP can be used.
+> 
+> Tested for secured mesh using ath9k_htc and ath9k.
+> 
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2800usb.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+> index 4b0bb6b..84ea329 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800usb.c
+> @@ -48,6 +48,7 @@ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
+> 
+>  static bool rt2800usb_hwcrypt_disabled(struct rt2x00_dev *rt2x00dev)
+>  {
+> +	ieee80211_hw_set(rt2x00dev->hw, MFP_CAPABLE);
+>  	return modparam_nohwcrypt;
 
-Sometimes current polling count is not sufficient.
-This patch increases it to 100.
+You set MFP feature regardless if actually hwcrypt is disabled or not.
+Beside this should not be done in function which is intended to test
+if hw crypto is disabled. Please set the future in place where other
+hw->flags are set.
 
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 5770b43..9a1d09d 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -117,7 +117,7 @@
- /* FW awake cookie after FW ready */
- #define FW_AWAKE_COOKIE						(0xAA55AA55)
- #define MWIFIEX_DEF_SLEEP_COOKIE			0xBEEFBEEF
--#define MWIFIEX_MAX_DELAY_COUNT				5
-+#define MWIFIEX_MAX_DELAY_COUNT				100
- 
- struct mwifiex_pcie_card_reg {
- 	u16 cmd_addr_lo;
--- 
-1.8.1.4
-
+Thanks
+Stanislaw
