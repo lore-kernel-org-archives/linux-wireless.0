@@ -1,115 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52452 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751029AbcDTRFT (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37192 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750991AbcDTVLN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 13:05:19 -0400
-Message-ID: <1461171915.17112.7.camel@decadent.org.uk> (sfid-20160420_190523_576134_E6CFB6DA)
-Subject: Re: RSS configuration in iwlwifi
-From: Ben Hutchings <ben@decadent.org.uk>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 20 Apr 2016 18:05:15 +0100
-In-Reply-To: <1461169379.19157.7.camel@intel.com>
-References: <1461164882.28559.61.camel@decadent.org.uk>
-	 <1461166207.19157.1.camel@intel.com>
-	 <1461167278.28559.63.camel@decadent.org.uk>
-	 <1461169379.19157.7.camel@intel.com>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-WIKsRtBD16oHnmtNsN3N"
-Mime-Version: 1.0
+	Wed, 20 Apr 2016 17:11:13 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lauri Kasanen <cand@gmx.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Linux Firmware Maintainers <linux-firmware@kernel.org>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [RESEND] Re: updating carl9170-1.fw in linux-firmware.git
+Date: Wed, 20 Apr 2016 23:11:09 +0200
+Message-ID: <2185358.G319l0XIJC@debian64> (sfid-20160420_231137_998399_B3347285)
+In-Reply-To: <87a8koiubz.fsf@kamboji.qca.qualcomm.com>
+References: <20160416113312.8de2266358165182bb4b4a15@gmx.com> <11418613.XH7h8m2RjK@debian64> <87a8koiubz.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wednesday, April 20, 2016 10:59:44 AM Kalle Valo wrote:
+> Christian Lamparter <chunkeey@googlemail.com> writes:
+> 
+> > On Monday, April 18, 2016 07:42:05 PM Kalle Valo wrote:
+> >> Christian Lamparter <chunkeey@googlemail.com> writes:
+> >> 
+> >> > On Monday, April 18, 2016 06:45:09 PM Kalle Valo wrote:
+> >> >
+> >> >> Why even mention anything about a "special firmware" as the firmware is
+> >> >> already available from linux-firmware.git? 
+> >> >
+> >> > Yes and no. 1.9.6 is in linux-firmware.git. I've tried to add 1.9.9 too
+> >> > but that failed.
+> >> > <http://comments.gmane.org/gmane.linux.kernel.wireless.general/114639>
+> >> 
+> >> Rick's comment makes sense to me, better just to provide the latest
+> >> version. No need to unnecessary confuse the users. And if someone really
+> >> wants to use an older version that she can retrieve it from the git
+> >> history.
+> >
+> > Part of the fun here is that firmware is GPLv2. The linux-firmware.git has
+> > to point to or add the firmware source to their tree. They have added every
+> > single source file to it.... instead of "packaging" it in a tar.bz2/gz/xz
+> > like you normally do for release sources.
+> >
+> > If you want to read more about it:
+> > <http://www.spinics.net/lists/linux-wireless/msg101868.html>
+> 
+> Yeah, that's more work. I get that. But I'm still not understanding
+> what's the actual problem which prevents us from updating carl9170
+> firmware in linux-firmware.
+I'm not sure, but why not ask? I've added the cc'ed Linux Firmware
+Maintainers. So for those people reading the fw list:
 
---=-WIKsRtBD16oHnmtNsN3N
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+What would it take to update the carl9170-1.fw firmware file in your
+repository to the latest version?
 
-On Wed, 2016-04-20 at 16:22 +0000, Grumbach, Emmanuel wrote:
-> On Wed, 2016-04-20 at 16:47 +0100, Ben Hutchings wrote:
-> >=20
-> > On Wed, 2016-04-20 at 15:30 +0000, Grumbach, Emmanuel wrote:
-> > >=20
-> > > Hi Ben,
-> > >=20
-> > >=20
-> > > Thanks for looking at our code.
-> > >=20
-> > >=20
-> > > On Wed, 2016-04-20 at 16:08 +0100, Ben Hutchings wrote:
-> > > >=20
-> > > >=20
-> > > > I'm not sure if you were aware, but there is a standard API for
-> > > > configuring RSS in network drivers, part of ethtool_ops.=C2=A0=C2=
-=A0I think
-> > > > iwlwifi should implement that rather than a driver-specific
-> > > > debugfs
-> > > > interface.
-> > > >=20
-> > > You are right, this is why Sara made this commit:
-> > >=20
-> > > commit 854d773e4ab5869200004af4ca5d851730849903
-> > > Author: Sara Sharon <sara.sharon@intel.com>
-> > > Date:=C2=A0=C2=A0=C2=A0Tue Mar 22 15:55:58 2016 +0200
-> > >=20
-> > > =C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: improve RSS configuration
-> > > =C2=A0=C2=A0=C2=A0=C2=A0
-> > > =C2=A0=C2=A0=C2=A0=C2=A0Improve current RSS configuration:
-> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0* Use netdev_rss_key instead of keeping=
- a local copy.
-> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0* Configure also UDP hashing to have UD=
-P traffic spread across
-> > > queues.
-> > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0Do not direct RSS traffic to our fallba=
-ck queue.
-> > >=20
-> > > =C2=A0=C2=A0=C2=A0=C2=A0Signed-off-by: Sara Sharon <sara.sharon@intel=
-.com>
-> > > =C2=A0=C2=A0=C2=A0=C2=A0Signed-off-by: Emmanuel Grumbach <emmanuel.gr=
-umbach@intel.com>
-> > That doesn't really address what I said.=C2=A0=C2=A0Yes, it's using the=
- common
-> > RSS key, but it's not implementing the ethtool operations to get and
-> > set the indirection table and the types of flow hashing that are
-> > enabled.
-> >=20
-> Hm.. I think that setting the indirection table is a problem in our
-> case because the PN check is done in the driver. The PN check is the
-> way WiFi addresses the replay attack, and since the PN check relies on
-> per-cpu variables, we cannot *safely* allow users to modify the
-> indirection table while traffic is flowing.
+Who has to sent the firmware update. Does it have to be the person who
+sent the first request? (Xose)? The maintainer of the firmware (me)?
+someone from Qualcomm Atheros? Or someone else (specific)? (the 
+firmware is licensed as GPLv2 - in theory anyone should be able to
+do that)
 
-I see. =C2=A0You could make this work when the interface is down and return
--EBUSY if the interface is up.
+How should the firmware source update be handled? Currently the latest
+.tar.xz of the firmware has ~130kb. The formated patches from 1.9.6 to
+latest are about ~100kb (182 individual patches).
 
-Ben.
+How does linux-firmware handle new binary firmware images and new 
+sources? What if carl9170fw-2.bin is added. Do we need another
+source directory for this in the current tree then? Because 
+carl9170fw-1.bin will still be needed for backwards compatibility
+so we basically need to duplicate parts of the source?
 
---=20
-Ben Hutchings
-Never attribute to conspiracy what can adequately be explained by stupidity=
-.
---=-WIKsRtBD16oHnmtNsN3N
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
+Also, how's the situation with ath9k_htc? The 1.4.0 image contains
+some GPLv2 code as well? So, why is there no source in the tree, but 
+just the link to it? Because, I would like to do basically the same
+for carl9170fw and just add a link to the carl9170fw repository and
+save everyone this source update "song and dance".
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJXF7bLAAoJEOe/yOyVhhEJf1AQAM+BQ8L9Jy6/UnPdXXf/vTx0
-S86wI5sI3XUpdaYa9kZxKqGsZ9qQpA2SnMXTPEXPR06chYMxUPf8rqHocHpcrfme
-YpLIBgqd11Csi5kFAHc2GXxoB7lWgsdbkGhbyGn7nh5pC2xKzJkOoXhZH3izqL0n
-/sYS/pBX1TtO98IMhpogB3U8D111ylp3n7ATYpENMd17gV4khVwuiSQNz34YACef
-te50sQFllcLsOJ3d0OEyByXi9KzPpvExQVN9VfS3YM2dV3Pbr4Dtmki8dr7P5ESW
-QTjmp879Gnwk4LKlzoj7byiT2p4umf3MbbTOxxx4tqVF9m286BRmLRmQ37AkLeLA
-bP80OW3Vp6WXLvLGTVUWlEsHk3MGcBglJ+RugWanOCf2LfM0lHhUYj8q2S7CAvKG
-wYPSAd/++sX19B7VokVLUQL6nos/gT2Cx9oPnMp4+TEUm7CmnyLVnEyS5FMdd3NJ
-RBBdpBx8GaV/tg2cKN3DDodW6knLJSJB55CtoZ/4UsOnUpcojAWmJw0cHCB7HT5+
-SfFDZEW0LLkX8AZfgvCgs8qInws3HmuSbK0NXLpsZvUjHjSDRbPbAm2KuX4GlwDR
-71FGeNAiQ+Q9XYh+U7HIkrd4nqhaIONbNQ7cVvTASm9JNLFuwWDoKtjbE9GAtoH4
-Nww6UUpd6ShwaarJy5Y6
-=ZMpN
------END PGP SIGNATURE-----
-
---=-WIKsRtBD16oHnmtNsN3N--
+Regards,
+Christian
