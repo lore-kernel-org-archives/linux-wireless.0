@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:35079 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933541AbcDLL46 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 07:56:58 -0400
-Message-ID: <570CE279.5070706@gmail.com> (sfid-20160412_135724_270912_4494DCB8)
-Date: Tue, 12 Apr 2016 17:26:41 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Received: from mga01.intel.com ([192.55.52.88]:60467 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750804AbcDTQZp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2016 12:25:45 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "ben@decadent.org.uk" <ben@decadent.org.uk>,
+	"Sharon, Sara" <sara.sharon@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: RSS configuration in iwlwifi
+Date: Wed, 20 Apr 2016 16:25:24 +0000
+Message-ID: <1461169525.19157.10.camel@intel.com> (sfid-20160420_182548_591562_FB98EE64)
+References: <1461164882.28559.61.camel@decadent.org.uk>
+	 <1461166207.19157.1.camel@intel.com>
+	 <1461167278.28559.63.camel@decadent.org.uk>
+	 <1461169379.19157.7.camel@intel.com>
+In-Reply-To: <1461169379.19157.7.camel@intel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>,
-	Christian Daudt <csd@broadcom.com>
-Subject: Re: [PATCH v2] mwifiex: fix possible NULL dereference
-References: <1460461597-7309-1-git-send-email-sudipm.mukherjee@gmail.com> <570CE113.20200@broadcom.com>
-In-Reply-To: <570CE113.20200@broadcom.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 12 April 2016 05:20 PM, Arend van Spriel wrote:
->
->
-> On 12-04-16 13:46, Sudip Mukherjee wrote:
->> From: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
->>
->> We have a check for card just after dereferencing it. So if it is NULL
->> we have already dereferenced it before its check. Lets dereference it
->> after checking card for NULL.
->
-> And you are changing the scope of the pdev variable.
-
-yes, and since all usage of pdev is inside the "if" block so it should 
-not matter.
-
-regards
-sudip
-
->
-> Regards,
-> Arend
->
->> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
->> ---
->>   drivers/net/wireless/marvell/mwifiex/pcie.c | 3 ++-
->>   1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
->> index edf8b07..d4db9db 100644
->> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
->> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
->> @@ -2884,10 +2884,11 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
->>   {
->>   	struct pcie_service_card *card = adapter->card;
->>   	const struct mwifiex_pcie_card_reg *reg;
->> -	struct pci_dev *pdev = card->dev;
->>   	int i;
->>
->>   	if (card) {
->> +		struct pci_dev *pdev = card->dev;
->> +
->>   		if (card->msix_enable) {
->>   			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
->>   				synchronize_irq(card->msix_entries[i].vector);
->>
-
+T24gV2VkLCAyMDE2LTA0LTIwIGF0IDE5OjIyICswMzAwLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90
+ZToNCj4gT24gV2VkLCAyMDE2LTA0LTIwIGF0IDE2OjQ3ICswMTAwLCBCZW4gSHV0Y2hpbmdzIHdy
+b3RlOg0KPiA+IE9uIFdlZCwgMjAxNi0wNC0yMCBhdCAxNTozMCArMDAwMCwgR3J1bWJhY2gsIEVt
+bWFudWVsIHdyb3RlOg0KPiA+ID4gSGkgQmVuLA0KPiA+ID4gDQo+ID4gPiANCj4gPiA+IFRoYW5r
+cyBmb3IgbG9va2luZyBhdCBvdXIgY29kZS4NCj4gPiA+IA0KPiA+ID4gDQo+ID4gPiBPbiBXZWQs
+IDIwMTYtMDQtMjAgYXQgMTY6MDggKzAxMDAsIEJlbiBIdXRjaGluZ3Mgd3JvdGU6DQo+ID4gPiA+
+IA0KPiA+ID4gPiBJJ20gbm90IHN1cmUgaWYgeW91IHdlcmUgYXdhcmUsIGJ1dCB0aGVyZSBpcyBh
+IHN0YW5kYXJkIEFQSSBmb3INCj4gPiA+ID4gY29uZmlndXJpbmcgUlNTIGluIG5ldHdvcmsgZHJp
+dmVycywgcGFydCBvZiBldGh0b29sX29wcy4gIEkNCj4gPiA+ID4gdGhpbmsNCj4gPiA+ID4gaXds
+d2lmaSBzaG91bGQgaW1wbGVtZW50IHRoYXQgcmF0aGVyIHRoYW4gYSBkcml2ZXItc3BlY2lmaWMN
+Cj4gPiA+ID4gZGVidWdmcw0KPiA+ID4gPiBpbnRlcmZhY2UuDQo+ID4gPiA+IA0KPiA+ID4gWW91
+IGFyZSByaWdodCwgdGhpcyBpcyB3aHkgU2FyYSBtYWRlIHRoaXMgY29tbWl0Og0KPiA+ID4gDQo+
+ID4gPiBjb21taXQgODU0ZDc3M2U0YWI1ODY5MjAwMDA0YWY0Y2E1ZDg1MTczMDg0OTkwMw0KPiA+
+ID4gQXV0aG9yOiBTYXJhIFNoYXJvbiA8c2FyYS5zaGFyb25AaW50ZWwuY29tPg0KPiA+ID4gRGF0
+ZTogICBUdWUgTWFyIDIyIDE1OjU1OjU4IDIwMTYgKzAyMDANCj4gPiA+IA0KPiA+ID4gICAgIGl3
+bHdpZmk6IG12bTogaW1wcm92ZSBSU1MgY29uZmlndXJhdGlvbg0KPiA+ID4gICAgIA0KPiA+ID4g
+ICAgIEltcHJvdmUgY3VycmVudCBSU1MgY29uZmlndXJhdGlvbjoNCj4gPiA+ICAgICAgKiBVc2Ug
+bmV0ZGV2X3Jzc19rZXkgaW5zdGVhZCBvZiBrZWVwaW5nIGEgbG9jYWwgY29weS4NCj4gPiA+ICAg
+ICAgKiBDb25maWd1cmUgYWxzbyBVRFAgaGFzaGluZyB0byBoYXZlIFVEUCB0cmFmZmljIHNwcmVh
+ZA0KPiA+ID4gYWNyb3NzDQo+ID4gPiBxdWV1ZXMuDQo+ID4gPiAgICAgIERvIG5vdCBkaXJlY3Qg
+UlNTIHRyYWZmaWMgdG8gb3VyIGZhbGxiYWNrIHF1ZXVlLg0KPiA+ID4gDQo+ID4gPiAgICAgU2ln
+bmVkLW9mZi1ieTogU2FyYSBTaGFyb24gPHNhcmEuc2hhcm9uQGludGVsLmNvbT4NCj4gPiA+ICAg
+ICBTaWduZWQtb2ZmLWJ5OiBFbW1hbnVlbCBHcnVtYmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50
+ZWwuY29tDQo+ID4gPiA+DQo+ID4gDQo+ID4gVGhhdCBkb2Vzbid0IHJlYWxseSBhZGRyZXNzIHdo
+YXQgSSBzYWlkLiAgWWVzLCBpdCdzIHVzaW5nIHRoZQ0KPiA+IGNvbW1vbg0KPiA+IFJTUyBrZXks
+IGJ1dCBpdCdzIG5vdCBpbXBsZW1lbnRpbmcgdGhlIGV0aHRvb2wgb3BlcmF0aW9ucyB0byBnZXQN
+Cj4gPiBhbmQNCj4gPiBzZXQgdGhlIGluZGlyZWN0aW9uIHRhYmxlIGFuZCB0aGUgdHlwZXMgb2Yg
+ZmxvdyBoYXNoaW5nIHRoYXQgYXJlDQo+ID4gZW5hYmxlZC4NCj4gPiANCj4gDQo+IEhtLi4gSSB0
+aGluayB0aGF0IHNldHRpbmcgdGhlIGluZGlyZWN0aW9uIHRhYmxlIGlzIGEgcHJvYmxlbSBpbiBv
+dXINCj4gY2FzZSBiZWNhdXNlIHRoZSBQTiBjaGVjayBpcyBkb25lIGluIHRoZSBkcml2ZXIuIFRo
+ZSBQTiBjaGVjayBpcyB0aGUNCj4gd2F5IFdpRmkgYWRkcmVzc2VzIHRoZSByZXBsYXkgYXR0YWNr
+LCBhbmQgc2luY2UgdGhlIFBOIGNoZWNrIHJlbGllcw0KPiBvbg0KPiBwZXItY3B1IHZhcmlhYmxl
+cywgd2UgY2Fubm90ICpzYWZlbHkqIGFsbG93IHVzZXJzIHRvIG1vZGlmeSB0aGUNCj4gaW5kaXJl
+Y3Rpb24gdGFibGUgd2hpbGUgdHJhZmZpYyBpcyBmbG93aW5nLg0KPiANCg0KT2ggLSBhbmQgeWVz
+LCB3ZSBkbyBoYXZlIGEgZGVidWdmcyBob29rIGZvciB0aGF0LiBJdCB3YXMgbWVhbnQgZm9yIHRo
+ZQ0KdmVyeSBlYXJseSB0ZXN0aW5nIHBoYXNlcy4gSSBndWVzcyB0aGF0IHdlIHNob3VsZCByZW1v
+dmUgaXQgYXQgc29tZQ0KcG9pbnQsIHVubGVzcyB3ZSBkZWNpZGUgdGhhdCB3aG9ldmVyIHdhbnRz
+IHRvIHBsYXkgd2l0aCB0aGUgaW5kaXJlY3Rpb24NCnRhYmxlIHdoaWxlIGluYm91bmQgdHJhZmZp
+YyBpcyBmbG93aW5nIHB1dHMgaGltc2VsZiBhdCByaXNrLg0KDQo+ID4gQmVuLg0KPiA+IA==
