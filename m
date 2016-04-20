@@ -1,30 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35239 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754500AbcDFIYJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 04:24:09 -0400
-Message-ID: <1459931045.17504.15.camel@sipsolutions.net> (sfid-20160406_102413_741722_3B885FC6)
-Subject: Re: [PATCHv3 RESEND 01/11] cfg80211: add start / stop NAN commands
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Wed, 06 Apr 2016 10:24:05 +0200
-In-Reply-To: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14510 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932486AbcDTOSF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Apr 2016 10:18:05 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Luana Borgia <luanaborgia1969@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Avinash Patil <patila@marvell.com>
+Subject: RE: ap + adhoc not working with Mwifiex driver for sd8887
+Date: Wed, 20 Apr 2016 14:18:02 +0000
+Message-ID: <74cc66c9d174442a9ca71bcfca2c2231@SC-EXCH04.marvell.com> (sfid-20160420_161812_122196_6DAF4208)
+References: <CAD3r-iRQD5nVBuC1_zYmu_FtmP4CdP2BbHxz1Q579mBPKg5zmQ@mail.gmail.com>
+ <CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
+In-Reply-To: <CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->  /**
-> + * struct cfg80211_nan_conf - nan configuration
-> + *
-> + * This struct defines nan configuration parameters
-
-I think you should consistently capitalize "NAN" in comments.
-
-> + * @start_nan: Start the NAN interface.
-> + * @stop_nan: Stop the NAN interface.
-
-johannes
+SGkgTHVhbmEsDQoNCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
+IFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
+YWxmIE9mIEx1YW5hIEJvcmdpYQ0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmlsIDIwLCAyMDE2IDEx
+OjE0IEFNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEF2aW5hc2ggUGF0
+aWwNCj4gU3ViamVjdDogRndkOiBhcCArIGFkaG9jIG5vdCB3b3JraW5nIHdpdGggTXdpZmlleCBk
+cml2ZXIgZm9yIHNkODg4Nw0KPiANCj4gSGksDQo+IEkndmUgc3VjY2Vzc2Z1bGx5IG1hbmFnZWQg
+dG8gZ2V0IHRoaXMgZHJpdmVyIHdvcmtpbmcgaW4gYWRob2Mgd2l0aCBvbHNyZA0KPiBvbiBtbGFu
+MCBpbnRlcmZhY2UsIG5vdyBJJ20gdHJ5aW5nIHRvIGFkZCBhIHVhcDAgd29ya2luZyBhdCB0aGUg
+c2FtZQ0KPiB0aW1lLCB3aXRoIGFsbCB0aGlzIGNvbW1hbmQ6DQo+IA0KPiByZmtpbGwgdW5ibG9j
+ayB3bGFuDQo+IGlwIGxpbmsgc2V0IHVhcDAgZG93bg0KPiBpcCBsaW5rIHNldCBtbGFuMCBkb3du
+DQo+IGl3IGRldiBtbGFuMCBzZXQgdHlwZSBpYnNzDQo+IGlwIGxpbmsgc2V0IG1sYW4wIHVwDQo+
+IGl3IGRldiBtbGFuMCBpYnNzIGpvaW4gbWVzaCAyNDM3IGZlOmRlOmZlOmRlOmZlOmRlIG9sc3Jk
+LXN0YXJ0LnNoIGNhdA0KPiA8PEVPRiA+IC9ldGMvaG9zdGFwZC5jb25mIHNzaWQ9UENNX0FQX2Zl
+ZGUNCj4gaW50ZXJmYWNlPXVhcDANCj4gZHJpdmVyPW5sODAyMTENCj4gaHdfbW9kZT1nDQo+IGNo
+YW5uZWw9Ng0KPiBFT0YNCj4gaXcgcGh5IHBoeTAgaW50ZXJmYWNlIGFkZCB1YXAwIHR5cGUgX19h
+cCBob3N0YXBkIC9ldGMvaG9zdGFwZC5jb25mICYNCj4gZG5zbWFzcSAtLWludGVyZmFjZT11YXAw
+IC0tZXhjZXB0LWludGVyZmFjZT1sbyAtLWJpbmQtaW50ZXJmYWNlcyAtLWRoY3AtDQo+IHJhbmdl
+PTE5Mi4xNjguMy4yLDE5Mi4xNjguMy4xMCwxMmggLS1jb25mLWZpbGU9L2Rldi9udWxsIGlwIGFk
+ZHIgYWRkDQo+IDE5Mi4xNjguMy4xLzI0IGJyb2FkY2FzdCAxOTIuMTY4LjMuMjU1IGRldiB1YXAw
+DQo+IA0KPiBidXQgSSBnZXQgdGhpcyBlcnJvciBhZnRlciBydW4gdGhlIGhvc3RhcGQgY29tbWFu
+ZDoNCj4gDQo+IFsgNDk4MC4yMDEwOTZdIElQdjY6IEFERFJDT05GKE5FVERFVl9DSEFOR0UpOiBt
+bGFuMDogbGluayBiZWNvbWVzIHJlYWR5DQo+IFsgNDk4My4zMzU0NjddIElQdjY6IEFERFJDT05G
+KE5FVERFVl9VUCk6IHVhcDA6IGxpbmsgaXMgbm90IHJlYWR5IFsNCj4gNDk4My4zNTg4NzldIG13
+aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogQ01EX1JFU1A6IGNtZCAweGIxIGVycm9yLA0KPiByZXN1
+bHQ9MHgxDQo+IA0KPiBhZGhvYyBpcyBmaW5lLCB3aXRoIHRoZSBhYm92ZSBvcmRlciBvZiBjb21t
+YW5kIGJ1dCBpZiBJIHJ1biBiZWZvcmUNCj4gaG9zdGFwZCBhbmQgdGhhbiBhZGhvYyBwYXJ0IHRo
+YW4gdGhlIGlzc3VlIG9jY3VyIGluIHRoZSBhZGhvYyBwYXJ0Lg0KPiANCj4gSSdtIHVzaW5nIHRo
+ZSBmaXJtd2FyZQ0KPiBodHRwOi8vZ2l0Lm1hcnZlbGwuY29tLz9wPW13aWZpZXgtDQo+IGZpcm13
+YXJlLmdpdDthPWJsb2I7Zj1tcnZsL3NkODg4N191YXBzdGEuYmluO2g9MTY1ZTZjM2QzNGIwYzJh
+NjMwMjUyOTA3YQ0KPiA3YWM0ZGFmNmUxM2M5ZDU7aGI9SEVBRA0KPiANCj4gYW5kIHRoZSBtd2lm
+aWV4IGZyb20ga2VybmVsIGxpbnV4IDQuMS4xDQo+ICANCg0KSSBjaGVja2VkIHdpdGggb3VyIHRl
+YW0uIFdlIGRvbuKAmXQgc3VwcG9ydCBzaW11bHRhbmVvdXMgb3BlcmF0aW9ucyBvZiBBZGhvYyBh
+bmQgQVAgbmV0d29yay4NCk9ubHkgb25lIGF0IGEgdGltZSBjYW4gYmUgdXNlZC4NCg0KUmVnYXJk
+cywNCkFtaXRrdW1hcg0K
