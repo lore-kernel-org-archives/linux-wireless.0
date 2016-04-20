@@ -1,37 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:32815 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756057AbcDGOtj (ORCPT
+Received: from mail-qg0-f48.google.com ([209.85.192.48]:33930 "EHLO
+	mail-qg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752319AbcDTEWN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 10:49:39 -0400
-Date: Thu, 7 Apr 2016 07:49:33 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Shyam Saini <mayhs11saini@gmail.com>
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 525/525] Staging: Wilc1000: Fixed coding style
- ether_addr_copy
-Message-ID: <20160407144933.GA11500@kroah.com> (sfid-20160407_164955_275409_89098927)
-References: <1460021835-8370-1-git-send-email-mayhs11saini@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460021835-8370-1-git-send-email-mayhs11saini@gmail.com>
+	Wed, 20 Apr 2016 00:22:13 -0400
+Received: by mail-qg0-f48.google.com with SMTP id c6so22102324qga.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2016 21:22:13 -0700 (PDT)
+From: Marty Faltesek <mfaltesek@google.com>
+To: linux-wireless@vger.kernel.org
+Cc: akarwar@marvell.com
+Subject: [PATCH v2] mwifiex: transmit packet stats incorrect.
+Date: Wed, 20 Apr 2016 00:22:01 -0400
+Message-Id: <1461126121-12266-1-git-send-email-mfaltesek@google.com> (sfid-20160420_062216_998930_F77DAAF8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 07, 2016 at 03:07:15PM +0530, Shyam Saini wrote:
-> Fixed following warning detected by checkpatch.pl:
-> warning: Prefer ether_addr_copy() over memcpy() if the Ethernet addressesare __aligned(2)
-> 
-> Signed-off-by: Shyam Saini <mayhs11saini@gmail.com>
-> ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 25 +++++++++++------------
->  1 file changed, 12 insertions(+), 13 deletions(-)
+tx_packets counter is incremented for aggregated packets, when it had
+already been incremented for the aggregated packet's constituent
+parts. Removing the extra count.
 
-Where are the 524 other patches in this series?  I don't seem to see
-them in my inbox anywhere, so I can't apply this last one either :(
+Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+---
+ drivers/net/wireless/marvell/mwifiex/txrx.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-thanks,
+diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
+index bf6182b..abdd0cf 100644
+--- a/drivers/net/wireless/marvell/mwifiex/txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
+@@ -297,6 +297,13 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
+ 		goto done;
+ 
+ 	mwifiex_set_trans_start(priv->netdev);
++
++	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT)
++		atomic_dec_return(&adapter->pending_bridged_pkts);
++
++	if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
++		goto done;
++
+ 	if (!status) {
+ 		priv->stats.tx_packets++;
+ 		priv->stats.tx_bytes += tx_info->pkt_len;
+@@ -306,12 +313,6 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
+ 		priv->stats.tx_errors++;
+ 	}
+ 
+-	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT)
+-		atomic_dec_return(&adapter->pending_bridged_pkts);
+-
+-	if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
+-		goto done;
+-
+ 	if (aggr)
+ 		/* For skb_aggr, do not wake up tx queue */
+ 		goto done;
+-- 
+2.8.0.rc3.226.g39d4020
 
-greg k-h
