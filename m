@@ -1,42 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45147 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750950AbcDUNCa (ORCPT
+Received: from slowthinkers.net ([82.95.118.26]:42975 "EHLO
+	density.slowthinkers.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751871AbcDUUV3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2016 09:02:30 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: remove VHT capabilities from 2.4GHz
-References: <1459850926-32264-1-git-send-email-johannes@sipsolutions.net>
-Date: Thu, 21 Apr 2016 16:02:22 +0300
-In-Reply-To: <1459850926-32264-1-git-send-email-johannes@sipsolutions.net>
-	(Johannes Berg's message of "Tue, 5 Apr 2016 12:08:46 +0200")
-Message-ID: <87eg9zcdy9.fsf@kamboji.qca.qualcomm.com> (sfid-20160421_150234_310566_1D4953E8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 21 Apr 2016 16:21:29 -0400
+From: Anne Marcel Roorda <marcel@density.slowthinkers.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
+In-reply-to: <20160421185134.GD95003@ubuntu-hedt>
+References: <1958820.LBuzOElZFT@perisens15> <20160421131938.GA95003@ubuntu-hedt> <2919568.ssjlN6KUVX@perisens15> <20160421185134.GD95003@ubuntu-hedt>
+Date: Thu, 21 Apr 2016 22:13:14 +0200
+Message-Id: <20160421201315.9C536206F0@density.slowthinkers.net> (sfid-20160421_222132_761738_9BD10C93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
 
-> From: Johannes Berg <johannes.berg@intel.com>
+On 21 Apr 2016, Seth Forshee wrote:
+> On Thu, Apr 21, 2016 at 08:08:46PM +0200, Maximilian Engelhardt wrote:
 >
-> According to the spec, VHT doesn't exist in 2.4GHz.
+>> The comments to my initial mail indicated that the statement in the ERC 
+>> recommendation I linked are alone not enough to add this frequency ranges for 
+>> other countries. Unfortunately I don't have the possibility to do these checks 
+>> for countries other than Germany.
 >
-> There are vendor extensions to allow a subset of VHT to work
-> (notably 256-QAM), but since mac80211 doesn't support those
-> advertising VHT capability on 2.4GHz leads to the behaviour
-> of reporting VHT capabilities but not being able to use any
-> of them due to mac80211's code requiring 80 MHz support.
->
-> Remove the VHT capabilities from 2.4GHz for now. If mac80211
-> gets extended to use the (likely Broadcom) vendor IEs for it
-> and handles the lack of 80 MHz support, it can be added back.
->
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+>Yep, I understand and am in agreement. I know how challenging it can be
+>to try to track down this information.
 
-I'll resend this and CC ath10k list.
+  I could do the same for NL.
 
--- 
-Kalle Valo
+  At the moment entries for NL are listed as center frequencies
+(almost, 5490 - 5710 @ 160 should be 5550 - 5645 @ 160), while for DE
+the whole band is listed (5470 - 5725 @ 160).
+
+  Power budget is listed in db while the law specifies mW.
+
+  What is the prefered format, and would a rewrite for NL listing the band
+and power in mW be acceptable ?
+
+Thanks,
+
+- marcel
