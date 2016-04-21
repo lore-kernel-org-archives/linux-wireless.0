@@ -1,47 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:22543 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752968AbcDDXUW (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:35843 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751959AbcDUUkR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 19:20:22 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] ath10k: update 10.4 WMI vdev parameters
-Date: Mon, 4 Apr 2016 16:19:15 -0700
-Message-ID: <1459811956-26186-3-git-send-email-poh@qca.qualcomm.com> (sfid-20160405_012029_345233_D8220FE0)
-In-Reply-To: <1459811956-26186-1-git-send-email-poh@qca.qualcomm.com>
-References: <1459811956-26186-1-git-send-email-poh@qca.qualcomm.com>
+	Thu, 21 Apr 2016 16:40:17 -0400
+Received: by mail-ob0-f178.google.com with SMTP id j9so38717734obd.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2016 13:40:16 -0700 (PDT)
+Date: Thu, 21 Apr 2016 15:40:08 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Anne Marcel Roorda <marcel@density.slowthinkers.net>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for
+ Germany (DE) on 5GHz
+Message-ID: <20160421204008.GF95003@ubuntu-hedt> (sfid-20160421_224026_492653_E39EF129)
+References: <1958820.LBuzOElZFT@perisens15>
+ <20160421131938.GA95003@ubuntu-hedt>
+ <2919568.ssjlN6KUVX@perisens15>
+ <20160421185134.GD95003@ubuntu-hedt>
+ <20160421201315.9C536206F0@density.slowthinkers.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160421201315.9C536206F0@density.slowthinkers.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update 10.4 WMI vdev param to sync to current 10.4 firmware
-as of 2/23/2016.
+On Thu, Apr 21, 2016 at 10:13:14PM +0200, Anne Marcel Roorda wrote:
+> 
+> On 21 Apr 2016, Seth Forshee wrote:
+> > On Thu, Apr 21, 2016 at 08:08:46PM +0200, Maximilian Engelhardt wrote:
+> >
+> >> The comments to my initial mail indicated that the statement in the ERC 
+> >> recommendation I linked are alone not enough to add this frequency ranges for 
+> >> other countries. Unfortunately I don't have the possibility to do these checks 
+> >> for countries other than Germany.
+> >
+> >Yep, I understand and am in agreement. I know how challenging it can be
+> >to try to track down this information.
+> 
+>   I could do the same for NL.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+That would be great, if anything about the current rules is incorrect or
+out of date.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 8225d90..e10df2e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4957,6 +4957,12 @@ enum wmi_10_4_vdev_param {
- 	WMI_10_4_VDEV_PARAM_MERU_VC,
- 	WMI_10_4_VDEV_PARAM_RX_DECAP_TYPE,
- 	WMI_10_4_VDEV_PARAM_BW_NSS_RATEMASK,
-+	WMI_10_4_VDEV_PARAM_SENSOR_AP,
-+	WMI_10_4_VDEV_PARAM_BEACON_RATE,
-+	WMI_10_4_VDEV_PARAM_DTIM_ENABLE_CTS,
-+	WMI_10_4_VDEV_PARAM_STA_KICKOUT,
-+	WMI_10_4_VDEV_PARAM_CAPABILITIES,
-+	WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
- };
- 
- #define WMI_VDEV_PARAM_TXBF_SU_TX_BFEE BIT(0)
--- 
-1.9.1
+>   At the moment entries for NL are listed as center frequencies
+> (almost, 5490 - 5710 @ 160 should be 5550 - 5645 @ 160), while for DE
+> the whole band is listed (5470 - 5725 @ 160).
 
+There's no reason per se to limit it to only the range for currently
+defined wifi channels if the regulatory body allows unlicensed use of a
+wider range. But the rule should include the entire channel bandwith and
+not stop at the center frequencies.
+
+>   Power budget is listed in db while the law specifies mW.
+> 
+>   What is the prefered format, and would a rewrite for NL listing the band
+> and power in mW be acceptable ?
+
+It's a direct conversion between the dBm and mW values (in fact mW
+values in the text database are converted to dBm values for the binary
+database), so the units in the text file don't matter all that much. But
+I don't really like changing the units just for the sake of changing
+them when the values are already correct; there's always the chance that
+some mistake will slip in.
+
+Thanks,
+Seth
