@@ -1,136 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56626 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751111AbcDKJpY (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:36124 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751828AbcDUNTq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 05:45:24 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/8] brcmfmac: insert default boardrev in nvram data if missing
-Date: Mon, 11 Apr 2016 11:35:23 +0200
-Message-Id: <1460367328-12082-4-git-send-email-arend@broadcom.com> (sfid-20160411_114528_329543_B3E23677)
-In-Reply-To: <1460367328-12082-1-git-send-email-arend@broadcom.com>
-References: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+	Thu, 21 Apr 2016 09:19:46 -0400
+Received: by mail-oi0-f45.google.com with SMTP id x201so82739254oif.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2016 06:19:46 -0700 (PDT)
+Date: Thu, 21 Apr 2016 08:19:38 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Maximilian Engelhardt <engelhardt@perisens.de>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	maxi@daemonizer.de
+Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
+Message-ID: <20160421131938.GA95003@ubuntu-hedt> (sfid-20160421_151957_936411_AD7B3C1D)
+References: <1958820.LBuzOElZFT@perisens15>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1958820.LBuzOElZFT@perisens15>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <hante.meuleman@broadcom.com>
+On Tue, Apr 19, 2016 at 08:03:16PM +0200, Maximilian Engelhardt wrote:
+> Hi,
+> 
+> In Europe ETSI standardized the used for short range devices (SRD) [1] in ETSI 
+> EN 300 440-1 [2].
+> According to this standard generic use equipment is allowed to transmit in the 
+> frequency range form 5725 MHz to 5875 MHz with a maximum output power of 
+> 25 mW e.i.r.p. This generic allocation also allows transmission of 802.11 
+> devices.
+> 
+> [3] has a list of countries and their status about the implementation of the 
+> SRD frequency bands. For the 5 GHz band this can be seen on page 38 in the 
+> paragraph ANNEX 1 and the entry Annex j.
+> 
+> Attached is a patch that adds the 5 GHz SRD band to db.txt for Germany.
+> 
+> If it is acceptable I can provide a patch adding the 5 GHz SRD band for the 
+> other countries listed in [3].
 
-Some nvram files/stores come without the boardrev information,
-but firmware requires this to be set. When not found in nvram then
-add a default boardrev string to the nvram data.
+The changes seem okay as far as I can tell. You do need to include your
+signed-off-by tag on the patch however, see
+https://git.kernel.org/cgit/linux/kernel/git/sforshee/wireless-regdb.git/tree/CONTRIBUTING.
 
-Reported-by: Rafal Milecki <zajec5@gmail.com>
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <franky.lin@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/firmware.c         | 30 ++++++++++++++++++++--
- 1 file changed, 28 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-index 7269056..c7c1e99 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
-@@ -29,6 +29,7 @@
- #define BRCMF_FW_MAX_NVRAM_SIZE			64000
- #define BRCMF_FW_NVRAM_DEVPATH_LEN		19	/* devpath0=pcie/1/4/ */
- #define BRCMF_FW_NVRAM_PCIEDEV_LEN		10	/* pcie/1/4/ + \0 */
-+#define BRCMF_FW_DEFAULT_BOARDREV		"boardrev=0xff"
- 
- enum nvram_parser_state {
- 	IDLE,
-@@ -51,6 +52,7 @@ enum nvram_parser_state {
-  * @entry: start position of key,value entry.
-  * @multi_dev_v1: detect pcie multi device v1 (compressed).
-  * @multi_dev_v2: detect pcie multi device v2.
-+ * @boardrev_found: nvram contains boardrev information.
-  */
- struct nvram_parser {
- 	enum nvram_parser_state state;
-@@ -63,6 +65,7 @@ struct nvram_parser {
- 	u32 entry;
- 	bool multi_dev_v1;
- 	bool multi_dev_v2;
-+	bool boardrev_found;
- };
- 
- /**
-@@ -125,6 +128,8 @@ static enum nvram_parser_state brcmf_nvram_handle_key(struct nvram_parser *nvp)
- 			nvp->multi_dev_v1 = true;
- 		if (strncmp(&nvp->data[nvp->entry], "pcie/", 5) == 0)
- 			nvp->multi_dev_v2 = true;
-+		if (strncmp(&nvp->data[nvp->entry], "boardrev", 8) == 0)
-+			nvp->boardrev_found = true;
- 	} else if (!is_nvram_char(c) || c == ' ') {
- 		brcmf_dbg(INFO, "warning: ln=%d:col=%d: '=' expected, skip invalid key entry\n",
- 			  nvp->line, nvp->column);
-@@ -284,6 +289,8 @@ static void brcmf_fw_strip_multi_v1(struct nvram_parser *nvp, u16 domain_nr,
- 	while (i < nvp->nvram_len) {
- 		if ((nvp->nvram[i] - '0' == id) && (nvp->nvram[i + 1] == ':')) {
- 			i += 2;
-+			if (strncmp(&nvp->nvram[i], "boardrev", 8) == 0)
-+				nvp->boardrev_found = true;
- 			while (nvp->nvram[i] != 0) {
- 				nvram[j] = nvp->nvram[i];
- 				i++;
-@@ -335,6 +342,8 @@ static void brcmf_fw_strip_multi_v2(struct nvram_parser *nvp, u16 domain_nr,
- 	while (i < nvp->nvram_len - len) {
- 		if (strncmp(&nvp->nvram[i], prefix, len) == 0) {
- 			i += len;
-+			if (strncmp(&nvp->nvram[i], "boardrev", 8) == 0)
-+				nvp->boardrev_found = true;
- 			while (nvp->nvram[i] != 0) {
- 				nvram[j] = nvp->nvram[i];
- 				i++;
-@@ -356,6 +365,18 @@ fail:
- 	nvp->nvram_len = 0;
- }
- 
-+static void brcmf_fw_add_defaults(struct nvram_parser *nvp)
-+{
-+	if (nvp->boardrev_found)
-+		return;
-+
-+	memcpy(&nvp->nvram[nvp->nvram_len], &BRCMF_FW_DEFAULT_BOARDREV,
-+	       strlen(BRCMF_FW_DEFAULT_BOARDREV));
-+	nvp->nvram_len += strlen(BRCMF_FW_DEFAULT_BOARDREV);
-+	nvp->nvram[nvp->nvram_len] = '\0';
-+	nvp->nvram_len++;
-+}
-+
- /* brcmf_nvram_strip :Takes a buffer of "<var>=<value>\n" lines read from a fil
-  * and ending in a NUL. Removes carriage returns, empty lines, comment lines,
-  * and converts newlines to NULs. Shortens buffer as needed and pads with NULs.
-@@ -377,16 +398,21 @@ static void *brcmf_fw_nvram_strip(const u8 *data, size_t data_len,
- 		if (nvp.state == END)
- 			break;
- 	}
--	if (nvp.multi_dev_v1)
-+	if (nvp.multi_dev_v1) {
-+		nvp.boardrev_found = false;
- 		brcmf_fw_strip_multi_v1(&nvp, domain_nr, bus_nr);
--	else if (nvp.multi_dev_v2)
-+	} else if (nvp.multi_dev_v2) {
-+		nvp.boardrev_found = false;
- 		brcmf_fw_strip_multi_v2(&nvp, domain_nr, bus_nr);
-+	}
- 
- 	if (nvp.nvram_len == 0) {
- 		kfree(nvp.nvram);
- 		return NULL;
- 	}
- 
-+	brcmf_fw_add_defaults(&nvp);
-+
- 	pad = nvp.nvram_len;
- 	*new_length = roundup(nvp.nvram_len + 1, 4);
- 	while (pad != *new_length) {
--- 
-1.9.1
-
+Thanks,
+Seth
