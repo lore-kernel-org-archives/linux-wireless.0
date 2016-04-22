@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caladan.dune.hu ([78.24.191.180]:58944 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751725AbcD3Dwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2016 23:52:47 -0400
-Subject: Re: [PATCH] ath9k: Fix symbol overlap window for half/quarter
- channels
-To: Helmut Schaa <helmut.schaa@googlemail.com>,
-	linux-wireless@vger.kernel.org
-References: <1461935194-19632-1-git-send-email-helmut.schaa@googlemail.com>
-Cc: ath9k-devel@lists.ath9k.org, kvalo@qca.qualcomm.com,
-	ath9k-devel@qca.qualcomm.com
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <57242BFD.4060605@openwrt.org> (sfid-20160430_055251_174736_EF408FCB)
-Date: Sat, 30 Apr 2016 10:52:29 +0700
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61001 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751769AbcDVFqs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Apr 2016 01:46:48 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 1/4] ath10k: add pdev bss channel info wmi definitions
+Date: Fri, 22 Apr 2016 11:16:29 +0530
+Message-ID: <1461303992-9913-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160422_074651_987325_CB73ED13)
 MIME-Version: 1.0
-In-Reply-To: <1461935194-19632-1-git-send-email-helmut.schaa@googlemail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-04-29 20:06, Helmut Schaa wrote:
-> Since commit cd6cfd7311a385144a2f9c74f692ae2df3ae033f
-> "ath9k: do not set half/quarter channel flags in AR_PHY_MODE" the
-> condition "rfMode & (AR_PHY_MODE_QUARTER | AR_PHY_MODE_HALF)" would
-> never evaluate to true.
-> 
-> Fix this by using the available IS_CHAN_HALF_RATE and IS_CHAN_QUARTER_RATE
-> marcros instead.
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> Cc: Felix Fietkau <nbd@openwrt.org>
-> ---
-> Just stumbled over that piece of code while looking into TX99, so
-> this is only compile-tested.
-> 
-> Felix, can you please confirm if this is correct or if removing
-> the whole block would be better?
-This patch looks good to me.
-Acked-by: Felix Fietkau <nbd@openwrt.org>
+Add WMI definitions for pdev bss channel information request and
+event.
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.h | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index db2553522d8b..40bd08d246af 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -1444,6 +1444,7 @@ enum wmi_10_2_cmd_id {
+ 	WMI_10_2_MU_CAL_START_CMDID,
+ 	WMI_10_2_SET_LTEU_CONFIG_CMDID,
+ 	WMI_10_2_SET_CCA_PARAMS,
++	WMI_10_2_PDEV_BSS_CHAN_INFO_REQUEST_CMDID,
+ 	WMI_10_2_PDEV_UTF_CMDID = WMI_10_2_END_CMDID - 1,
+ };
+ 
+@@ -1487,6 +1488,8 @@ enum wmi_10_2_event_id {
+ 	WMI_10_2_WDS_PEER_EVENTID,
+ 	WMI_10_2_PEER_STA_PS_STATECHG_EVENTID,
+ 	WMI_10_2_PDEV_TEMPERATURE_EVENTID,
++	WMI_10_2_MU_REPORT_EVENTID,
++	WMI_10_2_PDEV_BSS_CHAN_INFO_EVENTID,
+ 	WMI_10_2_PDEV_UTF_EVENTID = WMI_10_2_END_EVENTID - 1,
+ };
+ 
+@@ -2450,6 +2453,7 @@ enum wmi_10_2_feature_mask {
+ 	WMI_10_2_RX_BATCH_MODE = BIT(0),
+ 	WMI_10_2_ATF_CONFIG    = BIT(1),
+ 	WMI_10_2_COEX_GPIO     = BIT(3),
++	WMI_10_2_BSS_CHAN_INFO = BIT(6),
+ 	WMI_10_2_PEER_STATS    = BIT(7),
+ };
+ 
+-- 
+2.8.0
+
