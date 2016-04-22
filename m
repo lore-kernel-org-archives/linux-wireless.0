@@ -1,80 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:10879 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751785AbcDEH2u (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60543 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753859AbcDVSJT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 03:28:50 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u357QUfp021311
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 00:28:49 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 222dkfh5d4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 00:28:49 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Ganapathi Bhat <gbhat@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/7] mwifiex: add support for wakeup on GTK rekey failure
-Date: Tue, 5 Apr 2016 00:22:27 -0700
-Message-ID: <1459840952-25338-2-git-send-email-akarwar@marvell.com> (sfid-20160405_092854_999921_C41DE2A7)
-In-Reply-To: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
-References: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
+	Fri, 22 Apr 2016 14:09:19 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Tina Ruchandani <ruchandani.tina@gmail.com>,
+	y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>
+Subject: Re: [PATCH v3] prism54: isl_38xx: Replace 'struct timeval'
+References: <20160413060916.GA21184@localhost> <5521267.mr5HLCdTY6@wuerfel>
+	<1460896953.15362.2.camel@sipsolutions.net>
+	<4679823.7bDEQhE9qO@wuerfel>
+	<1461056272.2766.8.camel@sipsolutions.net>
+Date: Fri, 22 Apr 2016 21:09:11 +0300
+In-Reply-To: <1461056272.2766.8.camel@sipsolutions.net> (Johannes Berg's
+	message of "Tue, 19 Apr 2016 10:57:52 +0200")
+Message-ID: <87inz9y0qg.fsf@purkki.adurom.net> (sfid-20160422_200941_796893_CCE88B8D)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ganapathi Bhat <gbhat@marvell.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-User can configure wakeup on GTK rekey fail with wowlan.
-Added corresponding wakeup reason.
+> On Mon, 2016-04-18 at 00:10 +0200, Arnd Bergmann wrote:
+>> On Sunday 17 April 2016 14:42:33 Johannes Berg wrote:
+>> > 
+>> > I was thinking more restrictively of just the stuff that can't even
+>> > be built without modifying the sources - like the "#if VERBOSE"
+>> > thing.
+>>
+>> All the DEBUG() statements are inside of this kind of check, so if we
+>> remove the #ifdefs, it would be logical to remove the rest of the
+>> debugging infrastructure (DEBUG() macros, SHOW_*, pc_debug, maybe
+>> more) as well.
+>
+> Seems reasonable.
+>
+> Maybe we should Cc the maintainer, but I suspect that since the driver
+> is marked Obsolete anyway Luis won't care either :)
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 7 ++++++-
- drivers/net/wireless/marvell/mwifiex/fw.h       | 1 +
- 2 files changed, 7 insertions(+), 1 deletion(-)
+I'm planning to apply this patch anyway, the debugging infrastructure
+removal can be a followup patch. But please let me know if I should drop
+this instead.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index ca8cdd2..49661e0 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3390,6 +3390,10 @@ static int mwifiex_cfg80211_resume(struct wiphy *wiphy)
- 		break;
- 	case	MANAGEMENT_FRAME_MATCHED:
- 		break;
-+	case GTK_REKEY_FAILURE:
-+		if (wiphy->wowlan_config->gtk_rekey_failure)
-+			wakeup_report.gtk_rekey_failure = true;
-+		break;
- 	default:
- 		break;
- 	}
-@@ -3965,7 +3969,8 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- #ifdef CONFIG_PM
- static const struct wiphy_wowlan_support mwifiex_wowlan_support = {
- 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
--		WIPHY_WOWLAN_NET_DETECT | WIPHY_WOWLAN_SUPPORTS_GTK_REKEY,
-+		WIPHY_WOWLAN_NET_DETECT | WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
-+		WIPHY_WOWLAN_GTK_REKEY_FAILURE,
- 	.n_patterns = MWIFIEX_MEF_MAX_FILTERS,
- 	.pattern_min_len = 1,
- 	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 8703d24..8e4145a 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -620,6 +620,7 @@ enum HS_WAKEUP_REASON {
- 	MAGIC_PATTERN_MATCHED,
- 	CONTROL_FRAME_MATCHED,
- 	MANAGEMENT_FRAME_MATCHED,
-+	GTK_REKEY_FAILURE,
- 	RESERVED
- };
- 
 -- 
-1.8.1.4
-
+Kalle Valo
