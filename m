@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52159 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045AbcDZJTI (ORCPT
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:50504 "EHLO
+	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751618AbcDVABV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 05:19:08 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 21 Apr 2016 20:01:21 -0400
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
+	by mailout.nyi.internal (Postfix) with ESMTP id 14AE121F1C
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2016 20:01:20 -0400 (EDT)
+Date: Thu, 21 Apr 2016 17:01:19 -0700
+From: Mark Greer <mgreer@animalcreek.com>
+To: Geoff Lansberry <geoff@kuvee.com>
+Cc: linux-wireless@vger.kernel.org, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	justin@kuvee.com
+Subject: Re: [Patch] NFC: trf7970a:
+Message-ID: <20160422000119.GA21754@animalcreek.com> (sfid-20160422_020125_510077_69EB8DD8)
+References: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
 MIME-Version: 1.0
-Subject: Re: brcmf: Fix null pointer exception in bcdc_hdrpull
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1460899503-5245-1-git-send-email-per.forlin@gmail.com>
-To: per.forlin@gmail.com
-Cc: linux-wireless@vger.kernel.org, arend@broadcom.com,
-	brudley@broadcom.com, Per Forlin <per.forlin@gmail.com>
-Message-Id: <20160426091907.778F16120A@smtp.codeaurora.org> (sfid-20160426_111919_938677_A2161210)
-Date: Tue, 26 Apr 2016 09:19:07 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Apr 18, 2016 at 03:48:37PM -0400, Geoff Lansberry wrote:
 
-> From: Per Forlin <per.forlin@gmail.com>
-> 
-> In fwsignal.c: brcmf_fws_commit_skb()
-> ...
-> if (rc < 0) {
->   entry->transit_count--;
->     if (entry->suppressed)
->       entry->suppr_transit_count--;
->       (void)brcmf_proto_hdrpull(fws->drvr, false, skb, NULL);
->                                                      ^^^^^^^
->     goto rollback;
-> }
-> ...
-> 
-> The call to hdrpull will trigger a null pointer exception
-> unless a null check is made in the method implementation.
-> 
-> Signed-off-by: Per Forlin <per.forlin@gmail.com>
+Hi Geoff.
 
-Thanks, applied to wireless-drivers-next.git.
+> The current version of the trf7970a driver is missing support for several features that we needed to operate a custom board. 
+> We feel that these features will be useful to others as well, and we want to share them.
+> 
+> 1: Support for using a gpio as Slave-Select. Our processor has several devices on the spi bus, and we ran out of ss lines.  This patch gives TRF7970A the ability to
+>  drive the ss line of the chip from a gpio that is defined in the device tree.
+> 
+> 2. When reviewing problems we were having in our implementation with TI support staff, they recommended that during initialization, address 0x18 should be written to zero.  This patch adds that change
+> 
+> 3. This existing version of the driver assumes that the crystal driving the trf7970a is 13.56 MHz, because there are several places in the driver code where the rel
+> ated register is re-written, there is clean way to change to 27.12 MHz.  This patch adds a device tree option for 27 MHz and properly or's in changes in locations w
+> here the register is changed.
+> 
+> 4. the existing version of the driver assumes that 3.3 volt io is used. The trf7970a has a special register where you can configure it for 1.8 volt io.  This patch
+> adds a device tree option to select that this setting should be made.
+> 
+>  [PATCH 1/4] NFC: trf7970a: Add support for gpio as SS
+>  [PATCH 2/4] NFC: trf7970a: add TI recommended write of zero to
+>  [PATCH 3/4] NFC: trf7970a: add device tree option for 27MHz clock
+>  [PATCH 4/4] NFC: trf7970a: Add device tree option of 1.8 Volt IO
 
-Kalle Valo
+I'm on vacation this week but will be back next week.  I'll take a
+look once I'm back.
+
+In the meantime, for emails sent to public (techie) list always keep
+the lines less than 80 characters and always bottom-post (i.e., put
+your text *underneath* the text that you are responding to).  Also,
+when you change one or more patches in a series, re-submit the entire
+series with the version number incremented (.e.g., v2, v3, ...) even
+when you change only one of them.  It is a easier for others to know
+what the latest versions are that way.
+
+Thanks,
+
+Mark
+--
