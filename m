@@ -1,170 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:37736 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751026AbcDKHZq convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10180 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbcDVOw5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 03:25:46 -0400
-Received: by mail-wm0-f48.google.com with SMTP id n3so91769251wmn.0
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 00:25:45 -0700 (PDT)
+	Fri, 22 Apr 2016 10:52:57 -0400
+From: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
+	"Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+Subject: RE: [PATCH] cfg80211: Advertise extended capabilities per interface
+ type to userspace
+Date: Fri, 22 Apr 2016 14:52:48 +0000
+Message-ID: <19a916fb8aeb4226927a7a0c6541a361@APHYDEXM01E.ap.qualcomm.com> (sfid-20160422_165301_407611_30C23ACF)
+References: <1460719669-3421-1-git-send-email-vkanchan@qti.qualcomm.com>
+ <1460844715.2075.21.camel@sipsolutions.net>
+In-Reply-To: <1460844715.2075.21.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAHqTa-0yEFYAFpSKyko1ET33GsN==_D8TpBeq6AtwLj4XMTW0A@mail.gmail.com>
-References: <1458123478-1795-1-git-send-email-michal.kazior@tieto.com>
-	<1458898052-20601-1-git-send-email-michal.kazior@tieto.com>
-	<1458898052-20601-2-git-send-email-michal.kazior@tieto.com>
-	<CAHqTa-0yEFYAFpSKyko1ET33GsN==_D8TpBeq6AtwLj4XMTW0A@mail.gmail.com>
-Date: Mon, 11 Apr 2016 09:25:44 +0200
-Message-ID: <CA+BoTQ=H+jh_wiSyo4sSWvdx0cpTiqxT5=HXqBEsRJP8R6NSfQ@mail.gmail.com> (sfid-20160411_092555_964720_A2FCDBB1)
-Subject: Re: [PATCH 1/2] mac80211: implement fair queuing per txq
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Avery Pennarun <apenwarr@gmail.com>
-Cc: Tim Shepard <shep@alum.mit.edu>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Dave Taht <dave.taht@gmail.com>,
-	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 April 2016 at 06:37, Avery Pennarun <apenwarr@gmail.com> wrote:
-> On Fri, Mar 25, 2016 at 5:27 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> mac80211's software queues were designed to work
->> very closely with device tx queues. They are
->> required to make use of 802.11 packet aggregation
->> easily and efficiently.
->>
->> However the logic imposed a per-AC queue limit.
->> With the limit too small mac80211 wasn't be able
->> to guarantee fairness across TIDs nor stations
->> because single burst to a slow station could
->> monopolize queues and reach per-AC limit
->> preventing traffic from other stations being
->> queued into mac80211's software queues. Having the
->> limit too large would make smart qdiscs, e.g.
->> fq_codel, a lot less efficient as they are
->> designed on the premise that they are very close
->> to the actualy device tx queues.
->
-> As usual, I'm way behind on everything, but I have been testing this
-> patch series in the background (no clear results to report yet) and
-> wanted to comment at a very high level.  I think you are actually
-> doing several stages of improvements all at once here:
->
-> [0. Baseline: one big queue going into the driver]
-> 1. Switch ath10k to mac80211 per-station queues.
-> 2. Change per-station queues to use NO_QUEUE qdisc and *not* ever stop
-> the kernel netdev queue (since there no longer is one).
-> 3. Actively manage per-station queues with fq_codel.
-> 4. DQL-like control system for managing hardware queues.
-
-The #4 is not really part of this patch series (unless you add the
-older RFCv2 with txop scheduling or ath10k RFC which tests global DQL
-to the mix).
-
-Otherwise you're correct. I would argue #1 doesn't really matter
-because without it all other changes are no-op though.
-
-
-> Just to clarify what I mean by #2, if I understand correctly, before
-> this patch, the driver+mac80211 keeps track of the total number of
-> packets in all the mac80211 queues.
-
-It keeps track of number of packets per AC..
-
-
->  When the total exceeds a fixed
-> amount (or when one of the per-station queues gets full?) mac80211
-> tells the kernel to stop sending in new packets, so they sit around in
-> the qdisc instead.
-
-..and stops netdev subqueues (0..3) when this per-AC limit is reached.
-
-That is all assuming you have a wake_tx_queue() based driver.
-Otherwise mac80211 doesn't really do anything special. It stops
-subqueues when driver asks it to (when internal driver/device queues
-become full).
-
-
-> The problem with this behaviour is we probably
-> have a lot of packets for one station, and not many packets for other
-> stations, even if the netdev qdisc has plenty of packets still waiting
-> for those other stations.  When you then go to drain the mac80211
-> queues in a round-robin fashion, only the fullest queue (corresponding
-> to the busiest stream to the fastest station) can get optimal results.
-> The driver can then either send out from the fullest queue (unfair but
-> fast) or round robin using the non-full queues (fair but non-optimal
-> speed).
-
-Roughly, yes.
-
-
-> Upon implementing #2, we would essentially never tell the kernel to
-> stop sending packets; instead, it just always forwards them to
-> mac80211, which needs to learn how to drop them instead of providing
-> backpressure.  This moves the entire qdisc functionality into
-> mac80211, hence the use of NO_QUEUE.
-
-Correct.
-
-
-> It's then obvious that if you just did the obvious thing (tail drop),
-> you'll end up with high latency, so you added fq_codel to the mix.
-
-Yes. Also the mere taildrop doesn't split flows so you end up bulky
-TCP traffic delaying/starving, e.g. your ICMP (and other short/bursty
-traffic) which might be considered a regression if someone used
-fq_codel before.
-
-
-> However, as people on this thread have noticed, fq_codel is
-> complicated.  I'd like to be able to evaluate the performance impact
-> of each of the above steps separately.  In particular, my theory is
-> that if we implement #2 with just a simple FIFO queue per station,
-> then if we have two stations competing (one slow, one fast), and
-> dequeue aggregates using round robin, then we should get all of:
->
-> a) Full airtime utilization and max-length aggregates
-> and
-> b) High latency only on busy stations, but near-zero latency on idle
-> stations (because of round-robin servicing of the per-station queues).
-
-Roughly, yes.
-
-
-> Using just a tail drop implementation, it should be very easy for me
-> to test that (a) and (b) are true.  It should also be strictly equal
-> (one station) or better (multiple stations) than using mac80211 soft
-> queues with the pfifo_fast qdisc.  If that isn't what happens, then
-> we'll know something went wrong with that part of the code, and we can
-> debug that before moving on to a wifi-aware fq_codel.
->
-> So my request: do you mind splitting your patch into two patches, one
-> that implements just NO_QUEUE and per-station fifo tail drop, with a
-> second patch that converts the tail drop to fq_codel?
-
-Hmm.. Actually it might be worth splitting it up into 3 patches:
- 1. noqueue (taildrop)
- 2. fq (headdrop)
- 3. codel
-
-In which case (2) should introduce additional intra-station flow
-fairness (compared to (1)) and (3) should make tcp behave better,
-right?
-
-Moreover I'm thinking of making "fq" part reusable the same way
-"codel" is (or attempts to be today at least), i.e. header trickery
-for easy gluing. This should make it easier to fix non-mac80211
-drivers as well with possibly little effort in the future. Thoughts?
-
-
-> Another advantage of the split is that we could then test NO_QUEUE +
-> tail_drop + DQL.  Again, that should be strictly better than the
-> NO_QUEUE + tail_drop + fixed_driver_queue.  Then it might be easier to
-> debug the (much more fiddly) fq_codel on top.
->
-> Thoughts?
-
-It does make sense to split it up.
-
-
-Michał
+SGkgSm9oYW5uZXMsDQoNCj5BbHNvLCBpZiBpdCdzIHBvc3NpYmxlLCBwZXJoYXBzIHdlIHNob3Vs
+ZCBjb25zaWRlciBjaGVja2luZyB0aGF0IG5vYm9keSBnbG9iYWxseSBhZHZlcnRpc2VzIGFueSBj
+YXBhYmlsaXRpZXMgdGhleSBkb24ndCBhZHZlcnRpc2Ugb24gYWxsIHBvc3NpYmxlIGludGVyZmFj
+ZSB0eXBlcz8NCg0KPkknbSBhc3N1bWluZyB0aGF0IG5vdCBsaXN0aW5nIGFuIGludGVyZmFjZSB0
+eXBlIHdvdWxkIG1lYW4gdGhhdCB0aGUgZ2xvYmFsIGRlZmF1bHRzIGFwcGx5LCBidXQgb2xkIHVz
+ZXJzcGFjZSB3aWxsIGFsc28gbm90IGtub3cgYWJvdXQgdGhlIHBlci1pbnRlcmZhY2UsIHNvIHlv
+dSBzaG91bGRuJ3QgbGlzdCBhbnl0aGluZyB0aGVyZS4NCg0KPlNvIEknbSB0aGlua2luZyBzb21l
+dGhpbmcgbGlrZQ0KDQo+c3VwcG9ydGVkX29uX2FsbCA9IGlmdHlwZV9leHRfY2FwYWJbMF0NCj5m
+b3IgaSBpbiAxLi5udW1faWZ0eXBlX2V4dF9jYXBhYi0xOg0KPiAgICBzdXBwb3J0ZWRfb25fYWxs
+ICY9IGlmdHlwZV9leHRfY2FwYWJbaV0gV0FSTl9PTih3aXBoeS0+ZXh0X2NhcGFfbWFzayAmIH5z
+dXBwb3J0ZWRfb25fYWxsKQ0KDQpXZSB3ZXJlIHRoaW5raW5nIHdoZXRoZXIgdGhpcyBpcyBhbiBh
+cHByb3ByaWF0ZSB2YWxpZGF0aW9uIG9yIG5vdCBzaW5jZSB3ZSBjYW5ub3QgYmUgc3VyZSBob3cg
+dGhlIEV4dGVuZGVkIENhcGFiaWxpdGllcyBhcmUgZGVmaW5lZC4NClRoZXkgbmVlZCBub3QgbmVj
+ZXNzYXJpbHkgYmUgYWxsIHBvc2l0aXZlIGNhcGFiaWxpdGllcywgdGhleSBjb3VsZCBjb3VwbGUg
+Ym90aCB0aGUgcG9zaXRpdmUgYW5kIG5lZ2F0aXZlIGNhcGFiaWxpdGllcyBhcyB3ZWxsLg0KUGxl
+YXNlIGxldCB1cyBrbm93IGlmIHRoaXMgY2hhbmdlIGlzIHJlYWxseSBuZWVkZWQuDQoNClRoYW5r
+cw0KVmlkeXVsbGF0aGENCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFu
+bmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFN1bmRh
+eSwgQXByaWwgMTcsIDIwMTYgMzo0MiBBTQ0KVG86IEthbmNoYW5hcGFsbHksIFZpZHl1bGxhdGhh
+IDx2a2FuY2hhbkBxdGkucXVhbGNvbW0uY29tPg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2Vy
+bmVsLm9yZzsgTWFsaW5lbiwgSm91bmkgPGpvdW5pQHFjYS5xdWFsY29tbS5jb20+OyBIdWxsdXIg
+U3VicmFtYW55YW0sIEFtYXJuYXRoIDxhbWFybmF0aEBxY2EucXVhbGNvbW0uY29tPjsgVW5kZWth
+cmksIFN1bmlsIER1dHQgPHVzZHV0dEBxdGkucXVhbGNvbW0uY29tPg0KU3ViamVjdDogUmU6IFtQ
+QVRDSF0gY2ZnODAyMTE6IEFkdmVydGlzZSBleHRlbmRlZCBjYXBhYmlsaXRpZXMgcGVyIGludGVy
+ZmFjZSB0eXBlIHRvIHVzZXJzcGFjZQ0KDQpPbiBGcmksIDIwMTYtMDQtMTUgYXQgMTY6NTcgKzA1
+MzAsIEthbmNoYW5hcGFsbHksIFZpZHl1bGxhdGhhIHdyb3RlOg0KPsKgDQo+ICtzdHJ1Y3Qgd2lw
+aHlfaWZ0eXBlX2V4dF9jYXBhYiB7DQo+ICsJZW51bSBubDgwMjExX2lmdHlwZSBpZnR5cGU7DQo+
+ICsJY29uc3QgdTggKmV4dF9jYXBhYjsNCj4gKwljb25zdCB1OCAqZXh0X2NhcGFiX21hc2s7DQo+
+ICsJdTggZXh0X2NhcGFiX2xlbjsNCg0KSSB0aGluayB5b3Ugc2hvdWxkIHJldXNlIHRoZSBzdHJ1
+Y3QgbWVtYmVyIG5hbWVzIHRoYXQgd2UgdXNlZCBiZWZvcmUgLSB0aGF0IHdpbGwgbWFrZSBncmVw
+cGluZyBmb3IgdGhlbSBlYXNpZXIuDQoNCj4gKwlzdHJ1Y3Qgd2lwaHlfaWZ0eXBlX2V4dF9jYXBh
+YiAqaWZ0eXBlX2V4dF9jYXBhYjsNCg0KY29uc3QNCg0KPiArICogQE5MODAyMTFfQVRUUl9JRlRZ
+UEVfRVhUX0NBUEE6IE5lc3RlZCBhdHRyaWJ1dGUgb2YgdGhlIGZvbGxvd2luZw0KPiBhdHRyaWJ1
+dGVzOg0KPiArICoJJU5MODAyMTFfQVRUUl9JRlRZUEUsICVOTDgwMjExX0FUVFJfRVhUX0NBUEEs
+DQo+ICsgKgklTkw4MDIxMV9BVFRSX0VYVF9DQVBBX01BU0ssIHRvIHNwZWNpZnkgdGhlIGV4dGVu
+ZGVkDQo+IGNhcGFiaWxpdGllcyBwZXINCj4gKyAqCWludGVyZmFjZSB0eXBlLg0KDQpUaGF0J3Mg
+YSBiaXQgYXdrd2FyZCB0byBwYXJzZSwgc2luY2UgeW91IGhhdmUgdG8gcGFyc2UgdGhlIGJpZyBh
+dHRyaWJ1dGUgbGlzdCBhZ2FpbiwgYnV0IEkgZ3Vlc3MgaXQgc3RpbGwgbWFrZXMgbW9yZSBzZW5z
+ZSB0aGFuIGhhdmluZyBlbnRpcmVseSBkaWZmZXJlbnQgYXR0cmlidXRlcy4NCsKgDQo+ICsJCXN0
+YXRlLT5zcGxpdF9zdGFydCsrOw0KPiArCQlicmVhazsNCj4gKwljYXNlIDEzOg0KPiArCQlpZiAo
+cmRldi0+d2lwaHkubnVtX2lmdHlwZV9leHRfY2FwYWIgJiYNCj4gKwkJwqDCoMKgwqByZGV2LT53
+aXBoeS5pZnR5cGVfZXh0X2NhcGFiKSB7DQo+ICsJCQlzdHJ1Y3QgbmxhdHRyICpuZXN0ZWRfZXh0
+X2NhcGFiLCAqbmVzdGVkOw0KPiArDQo+ICsJCQluZXN0ZWQgPSBubGFfbmVzdF9zdGFydChtc2cs
+DQo+ICsJCQkJCQlOTDgwMjExX0FUVFJfSUZUWVBFXw0KPiBFWFRfQ0FQQSk7DQo+ICsJCQlpZiAo
+IW5lc3RlZCkNCj4gKwkJCQlnb3RvIG5sYV9wdXRfZmFpbHVyZTsNCj4gKw0KPiArCQkJZm9yIChp
+ID0gMDsgaSA8IHJkZXYtDQo+ID53aXBoeS5udW1faWZ0eXBlX2V4dF9jYXBhYjsgaSsrKSB7DQo+
+ICsJCQkJc3RydWN0IHdpcGh5X2lmdHlwZV9leHRfY2FwYWINCj4gKmNhcGFiOw0KPiArDQo+ICsJ
+CQkJY2FwYWIgPSAmcmRldi0NCj4gPndpcGh5LmlmdHlwZV9leHRfY2FwYWJbaV07DQo+ICsJCQkJ
+bmVzdGVkX2V4dF9jYXBhYiA9DQo+IG5sYV9uZXN0X3N0YXJ0KG1zZywgaSk7DQo+ICsJCQkJaWYg
+KCFuZXN0ZWRfZXh0X2NhcGFiIHx8DQo+ICsJCQkJwqDCoMKgwqBubGFfcHV0X3UzMihtc2csDQo+
+IE5MODAyMTFfQVRUUl9JRlRZUEUsDQo+ICsJCQkJCQljYXBhYi0+aWZ0eXBlKSB8fA0KPiArCQkJ
+CcKgwqDCoMKgbmxhX3B1dChtc2csDQo+IE5MODAyMTFfQVRUUl9FWFRfQ0FQQSwNCj4gKwkJCQkJ
+wqDCoMKgwqBjYXBhYi0+ZXh0X2NhcGFiX2xlbiwNCj4gKwkJCQkJwqDCoMKgwqBjYXBhYi0+ZXh0
+X2NhcGFiKSB8fA0KPiArCQkJCcKgwqDCoMKgbmxhX3B1dChtc2csDQo+IE5MODAyMTFfQVRUUl9F
+WFRfQ0FQQV9NQVNLLA0KPiArCQkJCQnCoMKgwqDCoGNhcGFiLT5leHRfY2FwYWJfbGVuLA0KPiAr
+CQkJCQnCoMKgwqDCoGNhcGFiLT5leHRfY2FwYWJfbWFzaykpDQo+ICsJCQkJCWdvdG8gbmxhX3B1
+dF9mYWlsdXJlOw0KPiArDQo+ICsJCQkJbmxhX25lc3RfZW5kKG1zZywgbmVzdGVkX2V4dF9jYXBh
+Yik7DQo+ICsJCQl9DQo+ICsJCQlubGFfbmVzdF9lbmQobXNnLCBuZXN0ZWQpOw0KPiArCQl9DQoN
+CkkgdGhpbmsgd2Ugc2hvdWxkIGNvbnNpZGVyIGFsbG93aW5nIHRoaXMgdG8gYmUgc3BsaXQgbXVs
+dGlwbGUgbWVzc2FnZXMgKGZvciBkaWZmZXJlbnQgaW50ZXJmYWNlIHR5cGVzKSwgc2luY2UgdGhp
+cyBjYW4gcG90ZW50aWFsbHkgZ2V0IHJhdGhlciBsb25nIChpbnRlcmZhY2UgdHlwZXMgeCAyIHgg
+Y2FwYSBsZW4pLiBPVE9ILCB3ZSdkIGhhdmUgdG8gZ2V0IGEgTE9UIG9mIGludGVyZmFjZSB0eXBl
+cyB4IGNhcGFiaWxpdGllcyB0byBoaXQgdGhlIGxpbWl0IG9mIDRrLCBub3Qgc3VyZS4gQnV0IGl0
+IHNob3VsZCBqdXN0IHJlcXVpcmUgYSBmZXcgbGluZXMgb2YgY29kZSB0byBkbyB0aGlzLg0KDQoN
+CkFsc28sIGlmIGl0J3MgcG9zc2libGUsIHBlcmhhcHMgd2Ugc2hvdWxkIGNvbnNpZGVyIGNoZWNr
+aW5nIHRoYXQgbm9ib2R5IGdsb2JhbGx5IGFkdmVydGlzZXMgYW55IGNhcGFiaWxpdGllcyB0aGV5
+IGRvbid0IGFkdmVydGlzZSBvbiBhbGwgcG9zc2libGUgaW50ZXJmYWNlIHR5cGVzPw0KDQpJJ20g
+YXNzdW1pbmcgdGhhdCBub3QgbGlzdGluZyBhbiBpbnRlcmZhY2UgdHlwZSB3b3VsZCBtZWFuIHRo
+YXQgdGhlIGdsb2JhbCBkZWZhdWx0cyBhcHBseSwgYnV0IG9sZCB1c2Vyc3BhY2Ugd2lsbCBhbHNv
+IG5vdCBrbm93IGFib3V0IHRoZSBwZXItaW50ZXJmYWNlLCBzbyB5b3Ugc2hvdWxkbid0IGxpc3Qg
+YW55dGhpbmcgdGhlcmUuDQoNClNvIEknbSB0aGlua2luZyBzb21ldGhpbmcgbGlrZQ0KDQpzdXBw
+b3J0ZWRfb25fYWxsID0gaWZ0eXBlX2V4dF9jYXBhYlswXQ0KZm9yIGkgaW4gMS4ubnVtX2lmdHlw
+ZV9leHRfY2FwYWItMToNCsKgIMKgIHN1cHBvcnRlZF9vbl9hbGwgJj0gaWZ0eXBlX2V4dF9jYXBh
+YltpXSBXQVJOX09OKHdpcGh5LT5leHRfY2FwYV9tYXNrICYgfnN1cHBvcnRlZF9vbl9hbGwpDQoN
+Cih3aGljaCBpcyBvYnZpb3VzbHkgc29tZSBraW5kIG9mIHBzZXVkby1jb2RlLikNCg0Kam9oYW5u
+ZXMNCg==
