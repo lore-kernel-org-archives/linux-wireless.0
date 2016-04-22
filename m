@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33870 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbcDFSni (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:37994 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779AbcDVNGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 14:43:38 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 22 Apr 2016 09:06:42 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
+	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: fix a typo in ath10k_start()
+Date: Fri, 22 Apr 2016 18:36:13 +0530
+Message-ID: <1461330373-14847-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160422_150645_852841_1F26626E)
 MIME-Version: 1.0
-Subject: Re: [v2] mwifiex: advertise low priority scan feature
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1458619796-7694-1-git-send-email-wnhuang@chromium.org>
-To: Wei-Ning Huang <wnhuang@chromium.org>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>, akarwar@marvell.com,
-	djkurtz@chromium.org, Wei-Ning Huang <wnhuang@chromium.org>,
-	nishants@marvell.com, netdev@vger.kernel.org
-Message-Id: <20160406184337.61C95615D6@smtp.codeaurora.org> (sfid-20160406_204351_512165_16B6D581)
-Date: Wed,  6 Apr 2016 18:43:37 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> Low priority scan handling code which delays or aborts scan
-> operation based on Tx traffic is removed recently. The reason
-> is firmware already takes care of it in our new feature scan
-> channel gap. Hence we should advertise low priority scan
-> support to cfg80211.
-> 
-> This patch fixes a problem in which OBSS scan request from
-> wpa_supplicant was being rejected by cfg80211.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
-> Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+fix a typo (spelling mistake) in 'ath10k_start'
 
-Thanks, applied to wireless-drivers-next.git.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Kalle Valo
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 02edeff..20bd317 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4324,7 +4324,7 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 
+ 	/*
+ 	 * This makes sense only when restarting hw. It is harmless to call
+-	 * uncoditionally. This is necessary to make sure no HTT/WMI tx
++	 * unconditionally. This is necessary to make sure no HTT/WMI tx
+ 	 * commands will be submitted while restarting.
+ 	 */
+ 	ath10k_drain_tx(ar);
+-- 
+1.7.9.5
+
