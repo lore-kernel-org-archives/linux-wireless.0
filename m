@@ -1,49 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58038 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952AbcDOSdb (ORCPT
+Received: from smtprelay0094.hostedemail.com ([216.40.44.94]:37688 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752604AbcDVT3F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2016 14:33:31 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V11 2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
-References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
-	<1456947439-28968-2-git-send-email-arend@broadcom.com>
-Date: Fri, 15 Apr 2016 21:33:25 +0300
-In-Reply-To: <1456947439-28968-2-git-send-email-arend@broadcom.com> (Arend van
-	Spriel's message of "Wed, 2 Mar 2016 20:37:19 +0100")
-Message-ID: <877ffypvre.fsf@kamboji.qca.qualcomm.com> (sfid-20160415_203334_850674_0AD41D47)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 22 Apr 2016 15:29:05 -0400
+Message-ID: <1461353341.2726.14.camel@perches.com> (sfid-20160422_212910_015181_2FE4E426)
+Subject: Re: Debug prints mac80211 drivers
+From: Joe Perches <joe@perches.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 22 Apr 2016 12:29:01 -0700
+In-Reply-To: <CABPxzYLZ2thNWCQ6bQ0-Peic-X-FTpTv4wJxyXVdmBDQDRS8JA@mail.gmail.com>
+References: <CABPxzYLZ2thNWCQ6bQ0-Peic-X-FTpTv4wJxyXVdmBDQDRS8JA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+On Fri, 2016-04-22 at 17:51 +0530, Krishna Chaitanya wrote:
+> What is the recommended method for adding
+> debug prints in mac80211 based drivers.
+> 
+> 1) -DDEBUG + pr_debug ==> used by mac80211, brcm80211
+> 2) -DDEBUG + dev_dbg ==> zd1201
+> 3) dev_printk(KERN_DEBUG) ==> used by iwlwifi
+> 4) printk(KERN_DEBUG) ==> Just to complete the list.
 
-> Announce support for nl80211 feature BSS_SELECT and process
-> BSS selection behaviour provided in .connect() callback.
->
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Lei Zhang <leizh@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+wiphy_dbg -> netif_dbg -> netdev_dbg -> dev_dbg -> pr_debug
 
-Sorry, didn't apply anymore and I don't dare to try to fix the
-conflicts:
+and CONFIG_DYNAMIC_DEBUG, no -DDEBUG required
 
-Applying: brcmfmac: add support for nl80211 BSS_SELECT feature
-Using index info to reconstruct a base tree...
-Falling back to patching base and 3-way merge...
-Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-
-So please rebase.
-
--- 
-Kalle Valo
