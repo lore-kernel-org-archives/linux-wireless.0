@@ -1,83 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35906 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358AbcDSFBG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61042 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753314AbcDVFq5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 01:01:06 -0400
-Received: by mail-pa0-f45.google.com with SMTP id er2so2646635pad.3
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 22:01:05 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 05/18] wcn36xx: Use define for invalid index and fix typo
-Date: Mon, 18 Apr 2016 22:00:43 -0700
-Message-Id: <1461042056-10607-6-git-send-email-bjorn.andersson@linaro.org> (sfid-20160419_070506_140836_6AC84775)
-In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+	Fri, 22 Apr 2016 01:46:57 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/4] ath10k: implement wmi_pdev_bss_chan_info_request
+Date: Fri, 22 Apr 2016 11:16:30 +0530
+Message-ID: <1461303992-9913-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160422_074700_675447_57CF85F0)
+In-Reply-To: <1461303992-9913-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1461303992-9913-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+Add WMI ops to send pdev_bss_chan_info_request command to target.
+This command will be used to retrieve updated cycle counters and noise
+floor value of current operating channel (bss channel).
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/wcn36xx/hal.h  | 2 +-
- drivers/net/wireless/ath/wcn36xx/main.c | 4 ++--
- drivers/net/wireless/ath/wcn36xx/smd.c  | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 21 +++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c     | 25 ++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h     | 10 ++++++++++
+ 3 files changed, 55 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 3af16cba3d12..433d9801a0ae 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -48,7 +48,7 @@
+diff --git a/drivers/net/wireless/ath/ath10k/wmi-ops.h b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+index 7fb00dcc03b8..64ebd304f907 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi-ops.h
++++ b/drivers/net/wireless/ath/ath10k/wmi-ops.h
+@@ -191,6 +191,9 @@ struct wmi_ops {
+ 					       u32 fw_feature_bitmap);
+ 	int (*get_vdev_subtype)(struct ath10k *ar,
+ 				enum wmi_vdev_subtype subtype);
++	struct sk_buff *(*gen_pdev_bss_chan_info_req)
++					(struct ath10k *ar,
++					 enum wmi_bss_survey_req_type type);
+ };
  
- #define WCN36XX_HAL_IPV4_ADDR_LEN       4
+ int ath10k_wmi_cmd_send(struct ath10k *ar, struct sk_buff *skb, u32 cmd_id);
+@@ -1361,4 +1364,22 @@ ath10k_wmi_get_vdev_subtype(struct ath10k *ar, enum wmi_vdev_subtype subtype)
+ 	return ar->wmi.ops->get_vdev_subtype(ar, subtype);
+ }
  
--#define WALN_HAL_STA_INVALID_IDX 0xFF
-+#define WCN36XX_HAL_STA_INVALID_IDX 0xFF
- #define WCN36XX_HAL_BSS_INVALID_IDX 0xFF
++static inline int
++ath10k_wmi_pdev_bss_chan_info_request(struct ath10k *ar,
++				      enum wmi_bss_survey_req_type type)
++{
++	struct ath10k_wmi *wmi = &ar->wmi;
++	struct sk_buff *skb;
++
++	if (!wmi->ops->gen_pdev_bss_chan_info_req)
++		return -EOPNOTSUPP;
++
++	skb = wmi->ops->gen_pdev_bss_chan_info_req(ar, type);
++	if (IS_ERR(skb))
++		return PTR_ERR(skb);
++
++	return ath10k_wmi_cmd_send(ar, skb,
++				   wmi->cmd->pdev_bss_chan_info_request_cmdid);
++}
++
+ #endif
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index adb31e188ebd..d6157d3587c5 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -521,7 +521,8 @@ static struct wmi_cmd_map wmi_10_2_4_cmd_map = {
+ 	.vdev_filter_neighbor_rx_packets_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.mu_cal_start_cmdid = WMI_CMD_UNSUPPORTED,
+ 	.set_cca_params_cmdid = WMI_CMD_UNSUPPORTED,
+-	.pdev_bss_chan_info_request_cmdid = WMI_CMD_UNSUPPORTED,
++	.pdev_bss_chan_info_request_cmdid =
++		WMI_10_2_PDEV_BSS_CHAN_INFO_REQUEST_CMDID,
+ };
  
- /* Default Beacon template size */
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 62cb9ffd854c..4781b5e8deb3 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -618,7 +618,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ /* 10.4 WMI cmd track */
+@@ -6639,6 +6640,26 @@ ath10k_wmi_10_2_op_gen_pdev_get_temperature(struct ath10k *ar)
+ 	return skb;
+ }
  
- 		if (!is_zero_ether_addr(bss_conf->bssid)) {
- 			vif_priv->is_joining = true;
--			vif_priv->bss_index = 0xff;
-+			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
- 			wcn36xx_smd_join(wcn, bss_conf->bssid,
- 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
- 			wcn36xx_smd_config_bss(wcn, vif, NULL,
-@@ -711,7 +711,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
++static struct sk_buff *
++ath10k_wmi_10_2_op_gen_pdev_bss_chan_info(struct ath10k *ar,
++					  enum wmi_bss_survey_req_type type)
++{
++	struct wmi_pdev_chan_info_req_cmd *cmd;
++	struct sk_buff *skb;
++
++	skb = ath10k_wmi_alloc_skb(ar, sizeof(*cmd));
++	if (!skb)
++		return ERR_PTR(-ENOMEM);
++
++	cmd = (struct wmi_pdev_chan_info_req_cmd *)skb->data;
++	cmd->type = __cpu_to_le32(type);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi pdev bss info request type %d\n", type);
++
++	return skb;
++}
++
+ /* This function assumes the beacon is already DMA mapped */
+ static struct sk_buff *
+ ath10k_wmi_op_gen_beacon_dma(struct ath10k *ar, u32 vdev_id, const void *bcn,
+@@ -7738,6 +7759,7 @@ static const struct wmi_ops wmi_10_2_4_ops = {
+ 	.gen_init = ath10k_wmi_10_2_op_gen_init,
+ 	.gen_peer_assoc = ath10k_wmi_10_2_op_gen_peer_assoc,
+ 	.gen_pdev_get_temperature = ath10k_wmi_10_2_op_gen_pdev_get_temperature,
++	.gen_pdev_bss_chan_info_req = ath10k_wmi_10_2_op_gen_pdev_bss_chan_info,
  
- 		if (bss_conf->enable_beacon) {
- 			vif_priv->dtim_period = bss_conf->dtim_period;
--			vif_priv->bss_index = 0xff;
-+			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
- 			wcn36xx_smd_config_bss(wcn, vif, NULL,
- 					       vif->addr, false);
- 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 170440ed5d85..6d4aa9250ca8 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -197,7 +197,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 	    vif->type == NL80211_IFTYPE_AP ||
- 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
- 		sta_params->type = 1;
--		sta_params->sta_index = 0xFF;
-+		sta_params->sta_index = WCN36XX_HAL_STA_INVALID_IDX;
- 	} else {
- 		sta_params->type = 0;
- 		sta_params->sta_index = 1;
+ 	/* shared with 10.1 */
+ 	.map_svc = wmi_10x_svc_map,
+@@ -7864,6 +7886,7 @@ static const struct wmi_ops wmi_10_4_ops = {
+ 	.gen_request_stats = ath10k_wmi_op_gen_request_stats,
+ 	.gen_pdev_get_temperature = ath10k_wmi_10_2_op_gen_pdev_get_temperature,
+ 	.get_vdev_subtype = ath10k_wmi_10_4_op_get_vdev_subtype,
++	.gen_pdev_bss_chan_info_req = ath10k_wmi_10_2_op_gen_pdev_bss_chan_info,
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 40bd08d246af..4cdf216ae999 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6487,6 +6487,16 @@ enum wmi_host_platform_type {
+ 	WMI_HOST_PLATFORM_LOW_PERF,
+ };
+ 
++enum wmi_bss_survey_req_type {
++	WMI_BSS_SURVEY_REQ_TYPE_READ = 1,
++	WMI_BSS_SURVEY_REQ_TYPE_READ_CLEAR,
++};
++
++struct wmi_pdev_chan_info_req_cmd {
++	__le32 type;
++	__le32 reserved;
++} __packed;
++
+ struct ath10k;
+ struct ath10k_vif;
+ struct ath10k_fw_stats_pdev;
 -- 
-2.5.0
+2.8.0
 
