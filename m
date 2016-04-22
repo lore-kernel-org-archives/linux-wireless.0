@@ -1,46 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39245 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751513AbcDDSPW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 14:15:22 -0400
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-From: Jeff Mahoney <jeffm@suse.com>
-Subject: =?UTF-8?Q?[PATCH]_mac80211:_fix_=22warning:_=e2=80=98target=5fmetri?=
- =?UTF-8?Q?c=e2=80=99_may_be_used_uninitialized=22?=
-Message-ID: <5702AF3B.1070507@suse.com> (sfid-20160404_201525_372943_AA6833DD)
-Date: Mon, 4 Apr 2016 14:15:23 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from slowthinkers.net ([82.95.118.26]:43880 "EHLO
+	density.slowthinkers.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753937AbcDVRMn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Apr 2016 13:12:43 -0400
+From: Anne Marcel Roorda <marcel@density.slowthinkers.net>
+To: Seth Forshee <seth.forshee@canonical.com>
+cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: Update regulatory rules for NL as per ETSI EN 300 440-1
+In-reply-to: <20160422135529.GA109717@ubuntu-hedt>
+References: <20160422123614.2B4EC2063D@density.slowthinkers.net> <20160422135529.GA109717@ubuntu-hedt>
+Date: Fri, 22 Apr 2016 19:12:35 +0200
+Message-Id: <20160422171236.600332063D@density.slowthinkers.net> (sfid-20160422_191250_102054_C2B52E42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This fixes:
 
-net/mac80211/mesh_hwmp.c:603:26: warning: ‘target_metric’ may be used
-uninitialized in this function
+In message <20160422135529.GA109717@ubuntu-hedt>, Seth Forshee writes:
 
-target_metric is only consumed when reply = true so no bug exists here,
-but gcc doesn't notice that.  Initializing to 0 clears the warning.
+<Snip>
 
-Signed-off-by: Jeff Mahoney <jeffm@suse.com>
----
+> I'm looking at the document you reference as translated by Google, and
+> I'm not seeing anything there to support these changes. I can't find any
+> reference to ETSI 300 440-1. The section which would appear to apply
+> here (article 2 paragraph o) references Annex 11 for permitted frequency
+> bands, and this does not include the range that you're adding.
+> 
+> I didn't read the document in its entirety though, so I may have missed
+> something. If so, could you please point me to the specific section
+> which would permit operation in that range?
 
- net/mac80211/mesh_hwmp.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+  Please see "Bijlage 11" (Non specific SRD) Nr. J.
 
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -530,7 +530,7 @@ static void hwmp_preq_frame_process(stru
- 	const u8 *target_addr, *orig_addr;
- 	const u8 *da;
- 	u8 target_flags, ttl, flags;
--	u32 orig_sn, target_sn, lifetime, target_metric;
-+	u32 orig_sn, target_sn, lifetime, target_metric = 0;
- 	bool reply = false;
- 	bool forward = true;
- 	bool root_is_gate;
+Thanks,
 
--- 
-Jeff Mahoney
-SUSE Labs
+- marcel
