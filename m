@@ -1,174 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vpn.innerrange.com.au ([203.122.143.146]:16855 "EHLO
-	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751038AbcD0XXv (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:61079 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752315AbcDVFrO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2016 19:23:51 -0400
-From: Craig McQueen <craig.mcqueen@innerrange.com>
-To: Vishal Thanki <vishalthanki@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 28 Apr 2016 09:23:41 +1000
-Subject: RE: rt2800 and BeagleBone Black kernel panic when connecting to
- access point
-Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D20C814C9@IR-CENTRAL.corp.innerrange.com> (sfid-20160428_012358_963967_76C6B1D6)
-References: <5500469A22567C4BAF673A6E86AFA3A4022D20C813C8@IR-CENTRAL.corp.innerrange.com>
- <20160427052758.GA3583@localhost.localdomain>
- <5500469A22567C4BAF673A6E86AFA3A4022D20C8140D@IR-CENTRAL.corp.innerrange.com>
- <CAC3a_SAt-ssa0Wx1mtC45_09ysa0PY47vsTXxSpdvWqn1ckMbg@mail.gmail.com>
-In-Reply-To: <CAC3a_SAt-ssa0Wx1mtC45_09ysa0PY47vsTXxSpdvWqn1ckMbg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Fri, 22 Apr 2016 01:47:14 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 3/4] ath10k: handle pdev_chan_info wmi event
+Date: Fri, 22 Apr 2016 11:16:31 +0530
+Message-ID: <1461303992-9913-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160422_074717_394161_281ABB48)
+In-Reply-To: <1461303992-9913-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1461303992-9913-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-VmlzaGFsIFRoYW5raSB3cm90ZToNCj4gT24gV2VkLCBBcHIgMjcsIDIwMTYgYXQgNzo1NiBBTSwg
-Q3JhaWcgTWNRdWVlbg0KPiA8Y3JhaWcubWNxdWVlbkBpbm5lcnJhbmdlLmNvbT4gd3JvdGU6DQo+
-ID4gVmlzaGFsIFRoYW5raSB3cm90ZToNCj4gPj4gSGksDQo+ID4+DQo+ID4+IE9uIFdlZCwgQXBy
-IDI3LCAyMDE2IGF0IDAyOjIxOjM2UE0gKzEwMDAsIENyYWlnIE1jUXVlZW4gd3JvdGU6DQo+ID4+
-ID4gSSBoYXZlIGEgRC1MaW5rIERXQS0xNDAgVVNCIFdpLUZpIGRldmljZSB3aGljaCBpcyBydDI4
-MDAgYmFzZWQNCj4gPj4gPiAoNTM5Mg0KPiA+PiBjaGlwc2V0KS4gSSd2ZSBiZWVuIHRlc3Rpbmcg
-aXQgb24gYSBCZWFnbGVCb25lIEJsYWNrIHJ1bm5pbmcgYW4NCj4gPj4gVWJ1bnR1IDE2LjA0IGlt
-YWdlICg0LjQuNiBrZXJuZWwpLg0KPiA+PiA+DQo+ID4+ID4gMSkgSW5zdGFsbCBVYnVudHUgMTYu
-MDQgb24gYSBCZWFnbGVCb25lIEJsYWNrLg0KPiA+PiA+IDIpIEFkZCBsaW5lcyB0byAvZXRjL25l
-dHdvcmsvaW50ZXJmYWNlcyBmb3IgdGhlIGRldmljZSB0byBjb25uZWN0DQo+ID4+ID4gdG8gYQ0K
-PiA+PiBXUEEyIGFjY2VzcyBwb2ludC4NCj4gPj4gPiAzKSBQbHVnIHRoZSBydDI4MDAgVVNCIFdp
-LUZpIGRldmljZSBpbnRvIHRoZSBCZWFnbGVCb25lIEJsYWNrLg0KPiA+PiA+DQo+ID4+ID4gQXBw
-YXJlbnRseSB3aGVuIGl0IHRyaWVzIHRvIGNvbm5lY3QgdG8gdGhlIGFjY2VzcyBwb2ludCwgSSBn
-ZXQgYSBrZXJuZWwNCj4gcGFuaWMuDQo+ID4+IElmIEkgZG9uJ3QgY29uZmlndXJlIGl0IChzdGVw
-IDIgYWJvdmUpIHRoZW4gdGhlIGtlcm5lbCBwYW5pYyBkb2Vzbid0IGhhcHBlbi4NCj4gPj4gPg0K
-PiA+PiA+IEkndmUgdGVzdGVkIHRoaXMgd2l0aCB0d28gYWNjZXNzIHBvaW50czogbXkgQW5kcm9p
-ZCBwaG9uZSBhY3RpbmcgYXMNCj4gPj4gPiBhDQo+ID4+IGhvdHNwb3QsIGFuZCBhIGNoZWFwIFRQ
-LUxpbmsgVEQtVzg5NjguDQo+ID4+ID4NCj4gPj4gPiBTZXJpYWwgZGVidWcgY29uc29sZSBzaG93
-czoNCj4gPj4gPiAuLi4NCj4gPj4NCj4gPj4gSSBoYXZlIHNlZW4gYSBzaW1pbGFyIGNyYXNoIGFu
-ZCBmaXhlZCBpdCBhcyBhIHBhcnQgb2YgZm9sbG93aW5nIGNvbW1pdDoNCj4gPj4NCj4gPj4gOGI0
-YzAwMDkzMTNmM2Q0MmUyNTQwZTNlMWY3NzYwOTdkZDBkYjczZA0KPiA+Pg0KPiA+PiBCdXQgaXQg
-d291bGQgYmUgaGVscGZ1bCBpZiB5b3UgY2FuIGdldCBwYXN0ZSB0aGUgZW50aXJlIGtlcm5lbCBs
-b2cuDQo+ID4+IEJlY2F1c2UgaW4gbXkgY2FzZSwgSSB1c2VkIHRvIHNlZSBhIFVTQiBEaXNjb25u
-ZWN0IGV2ZW50IGZvciB0aGUNCj4gPj4gcnQyODAwIGRyaXZlciBhbmQgdGhlIGNyYXNoIHdhcyBj
-YXVzZWQgZHVlIHRvIHRoYXQuDQo+ID4NCj4gPiBPa2F5LCBzZWUgdGhlIGF0dGFjaGVkIGZpbGUu
-IEkgY2FuJ3Qgc2VlIGEgVVNCIERpc2Nvbm5lY3QgZXZlbnQgZm9yIHRoZQ0KPiBydDI4MDAsIHVu
-dGlsIHRoZSBlbmQgKGxpbmUgNTYxLCB0aW1lc3RhbXAgMjIyLjg2MTYzMCkgd2hpY2ggaXMgd2hl
-biBJDQo+IHVucGx1Z2dlZCB0aGUgVVNCIGh1Yi4NCj4gPg0KPiANCj4gVGhlIGF0dGFjaGVkIGZp
-bGUgc2VlbSB0byByZXBvcnQgYSBkaWZmZXJlbnQga2luZCBvZiBjcmFzaCAoc29mdA0KPiBsb2Nr
-dXApIHdoaWxlIHRoZSBjcmFzaCByZXBvcnRlZCBpbiB0aGUgMXN0IGVtYWlsIG9mIHlvdXJzIGlz
-IGRpZmZlcmVudCAoTlVMTA0KPiBwb2ludGVyIGRlcmVmZXJlbmNlKS4NCj4gSSBhbSBub3Qgc3Vy
-ZSBhYm91dCB0aGlzIHNvZnQgbG9ja3VwIHByb2JsZW0gdGhvdWdoLg0KDQpTb3JyeSwgbXkgbWlz
-dGFrZSwgc2luY2UgSSB3YXMgcmVwb3J0aW5nIDMgZGlmZmVyZW50IGlzc3VlcyB3aXRoIHRoZSBy
-dDI4MDAgZHJpdmVyLg0KDQpIb3cgaXMgdGhlIGZvbGxvd2luZz8gSSBkbyBzZWUgYSBsaW5lIHNh
-eWluZyBVU0IgZGlzY29ubmVjdCBhdCB0aW1lc3RhbXAgNjYxLjY1MjQ5OS4NCg0KY3JhaWdtQGJl
-YWdsZWJvbmUtY3JhaWc6fiQgZWNobyA4IHwgc3VkbyB0ZWUgL3Byb2Mvc3lzL2tlcm5lbC9wcmlu
-dGsNCjgNCg0KW25vdyBJIHBsdWcgaW4gdGhlIHJ0MjgwMCBkZXZpY2VdDQoNClsgIDY1Ny4wMjk3
-ODVdIG11c2ItaGRyYyBtdXNiLWhkcmMuMS5hdXRvOiBWQlVTX0VSUk9SIGluIGFfd2FpdF9iY29u
-ICg5OSwgVkFMSUQpLCByZXRyeSAjMSwgcG9ydDEgMDAwMDAxMDQNClsgIDY1Ny41MzY0MDVdIHVz
-YiAxLTE6IG5ldyBoaWdoLXNwZWVkIFVTQiBkZXZpY2UgbnVtYmVyIDIgdXNpbmcgbXVzYi1oZHJj
-DQpbICA2NTcuNjg4NzU5XSB1c2IgMS0xOiBOZXcgVVNCIGRldmljZSBmb3VuZCwgaWRWZW5kb3I9
-MjAwMSwgaWRQcm9kdWN0PTNjMjANClsgIDY1Ny42OTU5MjldIHVzYiAxLTE6IE5ldyBVU0IgZGV2
-aWNlIHN0cmluZ3M6IE1mcj0xLCBQcm9kdWN0PTIsIFNlcmlhbE51bWJlcj0zDQpbICA2NTcuNzAz
-NTQ2XSB1c2IgMS0xOiBQcm9kdWN0OiA4MDIuMTEgbiBXTEFODQpbICA2NTcuNzA4MDI3XSB1c2Ig
-MS0xOiBNYW51ZmFjdHVyZXI6IFJhbGluaw0KWyAgNjU3LjcxMjMzMF0gdXNiIDEtMTogU2VyaWFs
-TnVtYmVyOiAxLjANClsgIDY1OS4xMTYzOTBdIHVzYiAxLTE6IHJlc2V0IGhpZ2gtc3BlZWQgVVNC
-IGRldmljZSBudW1iZXIgMiB1c2luZyBtdXNiLWhkcmMNClsgIDY1OS4yNjE3MzZdIGllZWU4MDIx
-MSBwaHkwOiBydDJ4MDBfc2V0X3J0OiBJbmZvIC0gUlQgY2hpcHNldCA1MzkyLCByZXYgMDIyMyBk
-ZXRlY3RlZA0KWyAgNjU5LjI4NTgwNV0gaWVlZTgwMjExIHBoeTA6IHJ0MngwMF9zZXRfcmY6IElu
-Zm8gLSBSRiBjaGlwc2V0IDUzNzIgZGV0ZWN0ZWQNClsgIDY1OS4zOTIyNzBdIGllZWU4MDIxMSBw
-aHkwOiBTZWxlY3RlZCByYXRlIGNvbnRyb2wgYWxnb3JpdGhtICdtaW5zdHJlbF9odCcNClsgIDY1
-OS40MjcwMTBdIHVzYmNvcmU6IHJlZ2lzdGVyZWQgbmV3IGludGVyZmFjZSBkcml2ZXIgcnQyODAw
-dXNiDQpbICA2NTkuNTI3NzU1XSBydDI4MDB1c2IgMS0xOjEuMCB3bHg5Y2Q2NDM4NDYxMWQ6IHJl
-bmFtZWQgZnJvbSB3bGFuMA0KWyAgNjU5Ljg4NTUyOV0gaWVlZTgwMjExIHBoeTA6IHJ0MngwMGxp
-Yl9yZXF1ZXN0X2Zpcm13YXJlOiBJbmZvIC0gTG9hZGluZyBmaXJtd2FyZSBmaWxlICdydDI4NzAu
-YmluJw0KWyAgNjU5Ljg5ODM4NV0gaWVlZTgwMjExIHBoeTA6IHJ0MngwMGxpYl9yZXF1ZXN0X2Zp
-cm13YXJlOiBJbmZvIC0gRmlybXdhcmUgZGV0ZWN0ZWQgLSB2ZXJzaW9uOiAwLjI5DQpbICA2NjAu
-MDYwNDkxXSBJUHY2OiBBRERSQ09ORihORVRERVZfVVApOiB3bHg5Y2Q2NDM4NDYxMWQ6IGxpbmsg
-aXMgbm90IHJlYWR5DQpbICA2NjEuMzYxNzQwXSBtdXNiLWhkcmMgbXVzYi1oZHJjLjEuYXV0bzog
-VkJVU19FUlJPUiBpbiBhX2hvc3QgKDkxLCA8VkJ1c1ZhbGlkKSwgcmV0cnkgIzEsIHBvcnQxIDAw
-MDAwNTA3DQpbICA2NjEuNDkyNTE4XSBpZWVlODAyMTEgcGh5MDogcnQyeDAwdXNiX3ZlbmRvcl9y
-ZXF1ZXN0OiBFcnJvciAtIFZlbmRvciBSZXF1ZXN0IDB4MDcgZmFpbGVkIGZvciBvZmZzZXQgMHgx
-MDA0IHdpdGggZXJyb3IgLTExMA0KWyAgNjYxLjYwNDQ2M10gaWVlZTgwMjExIHBoeTA6IHJ0Mngw
-MHVzYl92ZW5kb3JfcmVxdWVzdDogRXJyb3IgLSBWZW5kb3IgUmVxdWVzdCAweDA2IGZhaWxlZCBm
-b3Igb2Zmc2V0IDB4MTAwNCB3aXRoIGVycm9yIC0xMTANClsgIDY2MS42NTI0OTldIHVzYiAxLTE6
-IFVTQiBkaXNjb25uZWN0LCBkZXZpY2UgbnVtYmVyIDINClsgIDY2MS42NjQ2MTBdIGllZWU4MDIx
-MSBwaHkwOiBydDJ4MDB1c2JfdmVuZG9yX3JlcXVlc3Q6IEVycm9yIC0gVmVuZG9yIFJlcXVlc3Qg
-MHgwNyBmYWlsZWQgZm9yIG9mZnNldCAweDA1MDAgd2l0aCBlcnJvciAtMTkNClsgIDY2MS43MDU0
-MTVdIGllZWU4MDIxMSDDgMOhw506IHJ0MjgwMHVzYl90eF9zdGFfZmlmb19yZWFkX2NvbXBsZXRl
-ZDogV2FybmluZyAtIFRYIHN0YXR1cyByZWFkIGZhaWxlZCAtMTA4DQpbICA2NjEuNzE1MDA0XSBV
-bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgYXQgdmlydHVh
-bCBhZGRyZXNzIDAwMDAwMDJjDQpbICA2NjEuNzIzMjY1XSBwZ2QgPSBjMDAwNDAwMA0KWyAgNjYx
-LjcyNjAyOF0gWzAwMDAwMDJjXSAqcGdkPTAwMDAwMDAwDQpbICA2NjEuNzI5Njk1XSBJbnRlcm5h
-bCBlcnJvcjogT29wczogNSBbIzFdIFNNUCBUSFVNQjINClsgIDY2MS43MzQ2NzZdIE1vZHVsZXMg
-bGlua2VkIGluOiBhcmM0IHJ0MjgwMHVzYiBydDI4MDBsaWIgcnQyeDAwdXNiIHJ0MngwMGxpYiBt
-YWM4MDIxMSBjcmNfY2NpdHQgYmluZm10X21pc2MgY2ZnODAyMTEgcmZraWxsIHNuZF9zb2Nfc2lt
-cGxlX2NhcmQgb21hcF9zaGFtIG9tYXBfYWVzIHVzYl9mX2VjbSBnX2V0aGVyIHVzYl9mX3JuZGlz
-IHVfZXRoZXIgbGliY29tcG9zaXRlIG9tYXBfcm5nIHJuZ19jb3JlIHNuZF9zb2NfZGF2aW5jaV9t
-Y2FzcCBzbmRfc29jX2VkbWEgc25kX3NvY19vbWFwIHNwaV9vbWFwMl9tY3NwaSBzbmRfc29jX2hk
-bWlfY29kZWMgc25kX3NvY19jb3JlIHNuZF9wY21fZG1hZW5naW5lIHNuZF9wY20gc25kX3RpbWVy
-IHNuZCBzb3VuZGNvcmUgZXZkZXYgdWlvX3BkcnZfZ2VuaXJxIHVpbyB0aWxjZGMgdGRhOTk4eA0K
-WyAgNjYxLjc3MjUyOF0gQ1BVOiAwIFBJRDogMyBDb21tOiBrc29mdGlycWQvMCBOb3QgdGFpbnRl
-ZCA0LjQuNi10aS1yMTUgIzENClsgIDY2MS43NzkyNzBdIEhhcmR3YXJlIG5hbWU6IEdlbmVyaWMg
-QU0zM1hYIChGbGF0dGVuZWQgRGV2aWNlIFRyZWUpDQpbICA2NjEuNzg1NDgyXSB0YXNrOiBkZDhk
-MGQwMCB0aTogZGQ4ZTQwMDAgdGFzay50aTogZGQ4ZTQwMDANClsgIDY2MS43OTA5OTZdIFBDIGlz
-IGF0IF9yYXdfc3Bpbl9sb2NrX2lycXNhdmUrMHgxNC8weDQwDQpbICA2NjEuNzk2MjM1XSBMUiBp
-cyBhdCBydDJ4MDBxdWV1ZV9nZXRfZW50cnkrMHgxZS8weDU0IFtydDJ4MDBsaWJdDQpbICA2NjEu
-ODAyMzYyXSBwYyA6IFs8YzA2ZTI1NjA+XSAgICBsciA6IFs8YmZhOGM5OWI+XSAgICBwc3I6IDgw
-MGIwMWIzDQpbICA2NjEuODAyMzYyXSBzcCA6IGRkOGU1ZTIwICBpcCA6IDAwMDAwMDAwICBmcCA6
-IGRjMWRiZDgwDQpbICA2NjEuODIyMDQyXSByMTA6IGMwYjViYTg4ICByOSA6IGRjZGE2OTI4ICBy
-OCA6IGRjZGE2OTJjDQpbICA2NjEuODMxMjUxXSByNyA6IDAwMDAwMDU0ICByNiA6IDAwMDAwMDJj
-ICByNSA6IDAwMDAwMDAwICByNCA6IDAwMDAwMDAyDQpbICA2NjEuODQxODQ2XSByMyA6IDAwMDAw
-MTUwICByMiA6IDAwMDAwMDJjICByMSA6IDAwMDAwMDAxICByMCA6IDgwMGIwMTkzDQpbICA2NjEu
-ODUyNDI5XSBGbGFnczogTnpjdiAgSVJRcyBvZmYgIEZJUXMgb24gIE1vZGUgU1ZDXzMyICBJU0Eg
-VGh1bWIgIFNlZ21lbnQgbm9uZQ0KWyAgNjYxLjg2MzkxMF0gQ29udHJvbDogNTBjNTM4N2QgIFRh
-YmxlOiA5Y2YyNDAxOSAgREFDOiAwMDAwMDA1MQ0KWyAgNjYxLjg3MzcxNV0gUHJvY2VzcyBrc29m
-dGlycWQvMCAocGlkOiAzLCBzdGFjayBsaW1pdCA9IDB4ZGQ4ZTQyMTgpDQpbICA2NjEuODgzOTg2
-XSBTdGFjazogKDB4ZGQ4ZTVlMjAgdG8gMHhkZDhlNjAwMCkNClsgIDY2MS44OTI0NDNdIDVlMjA6
-IDAwMDAwMTUwIDAwMDAwMDAyIDAwMDAwMDAwIDAwMDAwMDU0IGRkYmE2ZGUwIGJmYWI5ODAzIGRk
-YmE2ZGUwIGRkYmE3MTQ0DQpbICA2NjEuOTA0ODExXSA1ZTQwOiBkY2RhNjgwMCAwMDAwMDAwMCBk
-Y2RhNjkyYyBiZmFiOTk3MSAwMDAwMDAwMCBjMDRmYzA4NyAwMDAwMDAwMCBkZGJlY2U4MA0KWyAg
-NjYxLjkxNzI1MF0gNWU2MDogZGMxZGJkODAgYmZhOWMyZmYgYmZhOWMyZTkgZGMxZGJkODAgMDAw
-YjAxMTMgYzA0ZmMxZDMgZGRmMDJjMzggZGMxZGJkOTQNClsgIDY2MS45Mjk2MjJdIDVlODA6IGRj
-ZGE2OTI0IGRkOGU1ZTk0IDAwMDAwMDAwIGMwNGZjMmRkIDAwMDAwMDBhIGRkOGU1ZTk0IGRkOGU1
-ZTk0IGRjOGJhNjA2DQpbICA2NjEuOTQxOTQ5XSA1ZWEwOiBkZDhlNWViOCBkY2RhNjkzOCAwMDAw
-MDAwMCAwMDAwMDAwMCAwMDBmNDI0MCBjMDk1ZGY2MCBjMDk1ZGZhOCBkY2RhNjkzNA0KWyAgNjYx
-Ljk1NDI1N10gNWVjMDogMDAwMDAwMTggYzAwMzRhY2YgYzBiNWIwOTggMDAwMDAwMDYgYzBjMjlk
-OGMgMDAwMDAwNDAgZGQ4ZTQwMDAgYzBiNWJhODgNClsgIDY2MS45NjY1NjhdIDVlZTA6IDAwMDAw
-MDA3IGMwMDM0Yzg1IDAwMDAwMDAwIGMwNmRmOGRiIDAwMDAwMTAwIGRkOGU1ZWU4IGMwYjViMDgw
-IGMwYzQwMzgwDQpbICA2NjEuOTc4OTEzXSA1ZjAwOiAwMDAwMDAwYSAwMDAxNjEyOSBjMGI1YjE0
-MCAwNDIwODA0MCBkZDhlNDAwMCBkZDhlNDAwMCAwMDAwMDAwMCBkZDg5YTljMA0KWyAgNjYxLjk5
-MTI1OV0gNWYyMDogMDAwMDAwMDAgYzBiNzg5NzAgYzBiNWJhODggZmZmZmUwMDAgMDAwMDAwMDAg
-YzAwMzRlNjEgYzAwMzRlMzUgYzAwNGE4NGQNClsgIDY2Mi4wMDM2NTBdIDVmNDA6IDAwMDAwMDAw
-IGRjOGJhNjA2IDAwMDAwMDAwIGRkODlhYTAwIGRkODlhOWMwIGMwMDRhNzkxIDAwMDAwMDAwIDAw
-MDAwMDAwDQpbICA2NjIuMDE2MDQxXSA1ZjYwOiAwMDAwMDAwMCBjMDA0N2ZhYiAwMDAwMDAwMSAw
-MDAwMDAwMCBkZDg5YTljMCAwMDAwMDAwMCAwMDAzMDAwMyBkZDhlNWY3Yw0KWyAgNjYyLjAyODQ1
-NF0gNWY4MDogZGQ4ZTVmN2MgMDAwMDAwMDAgMDAwMDAwMDAgZGQ4ZTVmOGMgZGQ4ZTVmOGMgZGM4
-YmE2MDYgZmZmZmZmZmYgZGQ4OWFhMDANClsgIDY2Mi4wNDA4NDhdIDVmYTA6IGMwMDQ3ZjAxIDAw
-MDAwMDAwIDAwMDAwMDAwIGMwMDBlY2I1IDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAwMDAwIDAwMDAw
-MDAwDQpbICA2NjIuMDUzMjcxXSA1ZmMwOiAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAw
-MDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMCAwMDAwMDAwMA0KWyAgNjYyLjA2NTY0MV0g
-NWZlMDogMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMDAgMDAwMDAwMTMgMDAwMDAw
-MDAgOWZmZmZlZmQgZmZmZmYyZGUNClsgIDY2Mi4wNzgwMjJdIFs8YzA2ZTI1NjA+XSAoX3Jhd19z
-cGluX2xvY2tfaXJxc2F2ZSkgZnJvbSBbPGJmYThjOTliPl0gKHJ0MngwMHF1ZXVlX2dldF9lbnRy
-eSsweDFlLzB4NTQgW3J0MngwMGxpYl0pDQpbICA2NjIuMDkyNjM2XSBbPGJmYThjOTliPl0gKHJ0
-MngwMHF1ZXVlX2dldF9lbnRyeSBbcnQyeDAwbGliXSkgZnJvbSBbPGJmYWI5ODAzPl0gKHJ0Mjgw
-MHVzYl90eHN0YXR1c19wZW5kaW5nKzB4MWEvMHg1NCBbcnQyODAwdXNiXSkNClsgIDY2Mi4xMTI4
-MDBdIFs8YmZhYjk4MDM+XSAocnQyODAwdXNiX3R4c3RhdHVzX3BlbmRpbmcgW3J0MjgwMHVzYl0p
-IGZyb20gWzxiZmFiOTk3MT5dIChydDI4MDB1c2JfdHhfc3RhX2ZpZm9fcmVhZF9jb21wbGV0ZWQr
-MHg3OC8weGU4IFtydDI4MDB1c2JdKQ0KWyAgNjYyLjEzNDUzNl0gWzxiZmFiOTk3MT5dIChydDI4
-MDB1c2JfdHhfc3RhX2ZpZm9fcmVhZF9jb21wbGV0ZWQgW3J0MjgwMHVzYl0pIGZyb20gWzxiZmE5
-YzJmZj5dIChydDJ4MDB1c2JfcmVnaXN0ZXJfcmVhZF9hc3luY19jYisweDE2LzB4MzQgW3J0Mngw
-MHVzYl0pDQpbICA2NjIuMTU2OTc1XSBbPGJmYTljMmZmPl0gKHJ0MngwMHVzYl9yZWdpc3Rlcl9y
-ZWFkX2FzeW5jX2NiIFtydDJ4MDB1c2JdKSBmcm9tIFs8YzA0ZmMxZDM+XSAoX191c2JfaGNkX2dp
-dmViYWNrX3VyYisweDRiLzB4ZGMpDQpbICA2NjIuMTcyODQ2XSBbPGMwNGZjMWQzPl0gKF9fdXNi
-X2hjZF9naXZlYmFja191cmIpIGZyb20gWzxjMDRmYzJkZD5dICh1c2JfZ2l2ZWJhY2tfdXJiX2Jo
-KzB4NzkvMHhiOCkNClsgIDY2Mi4xODY1MDddIFs8YzA0ZmMyZGQ+XSAodXNiX2dpdmViYWNrX3Vy
-Yl9iaCkgZnJvbSBbPGMwMDM0YWNmPl0gKF9fdGFza2xldF9hY3Rpb24rMHg1Yi8weGU4KQ0KWyAg
-NjYyLjE5OTYyMl0gWzxjMDAzNGFjZj5dIChfX3Rhc2tsZXRfYWN0aW9uKSBmcm9tIFs8YzAwMzRj
-ODU+XSAoX19kb19zb2Z0aXJxKzB4ODUvMHgyMzQpDQpbICA2NjIuMjEyMTc4XSBbPGMwMDM0Yzg1
-Pl0gKF9fZG9fc29mdGlycSkgZnJvbSBbPGMwMDM0ZTYxPl0gKHJ1bl9rc29mdGlycWQrMHgyZC8w
-eDQwKQ0KWyAgNjYyLjIyNDM2OV0gWzxjMDAzNGU2MT5dIChydW5fa3NvZnRpcnFkKSBmcm9tIFs8
-YzAwNGE4NGQ+XSAoc21wYm9vdF90aHJlYWRfZm4rMHhiZC8weDEyNCkNClsgIDY2Mi4yMzcxMjVd
-IFs8YzAwNGE4NGQ+XSAoc21wYm9vdF90aHJlYWRfZm4pIGZyb20gWzxjMDA0N2ZhYj5dIChrdGhy
-ZWFkKzB4YWIvMHhjMCkNClsgIDY2Mi4yNDkyOTldIFs8YzAwNDdmYWI+XSAoa3RocmVhZCkgZnJv
-bSBbPGMwMDBlY2I1Pl0gKHJldF9mcm9tX2ZvcmsrMHgxMS8weDFjKQ0KWyAgNjYyLjI2MTA1NF0g
-Q29kZTogODAwMCBiNjcyIGY4OTIgZjAwMCAoZTg1MikgM2YwMA0KWyAgNjYyLjI3NzQ5OF0gLS0t
-WyBlbmQgdHJhY2UgNjExYzIxMWFlZDJlNDU3MSBdLS0tDQpbICA2NjIuMjg2NDQzXSBLZXJuZWwg
-cGFuaWMgLSBub3Qgc3luY2luZzogRmF0YWwgZXhjZXB0aW9uIGluIGludGVycnVwdA0KWyAgNjYy
-LjI5NzA3Ml0gLS0tWyBlbmQgS2VybmVsIHBhbmljIC0gbm90IHN5bmNpbmc6IEZhdGFsIGV4Y2Vw
-dGlvbiBpbiBpbnRlcnJ1cHQNCg0KLS0gDQpDcmFpZyBNY1F1ZWVuDQoNCg==
+Add handler to process bss channel information wmi event that
+will be received upon sending pdev_chan_info_request wmi command.
+
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 32 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h | 11 +++++++++++
+ 2 files changed, 43 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index d6157d3587c5..0f6b8c73a562 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4796,6 +4796,32 @@ static int ath10k_wmi_event_temperature(struct ath10k *ar, struct sk_buff *skb)
+ 	return 0;
+ }
+ 
++static int ath10k_wmi_event_pdev_bss_chan_info(struct ath10k *ar,
++					       struct sk_buff *skb)
++{
++	struct wmi_pdev_bss_chan_info_event *ev;
++	u64 busy, total, tx, rx, rx_bss;
++	u32 freq, noise_floor;
++
++	ev = (struct wmi_pdev_bss_chan_info_event *)skb->data;
++	if (WARN_ON(skb->len < sizeof(*ev)))
++		return -EPROTO;
++
++	freq        = __le32_to_cpu(ev->freq);
++	noise_floor = __le32_to_cpu(ev->noise_floor);
++	busy        = __le64_to_cpu(ev->cycle_busy);
++	total       = __le64_to_cpu(ev->cycle_total);
++	tx          = __le64_to_cpu(ev->cycle_tx);
++	rx          = __le64_to_cpu(ev->cycle_rx);
++	rx_bss      = __le64_to_cpu(ev->cycle_rx_bss);
++
++	ath10k_dbg(ar, ATH10K_DBG_WMI,
++		   "wmi event pdev bss chan info:\n freq: %d noise: %d cycle: busy %llu total %llu tx %llu rx %llu rx_bss %llu\n",
++		   freq, noise_floor, busy, total, tx, rx, rx_bss);
++
++	return 0;
++}
++
+ static void ath10k_wmi_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_cmd_hdr *cmd_hdr;
+@@ -5139,6 +5165,9 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_10_2_PDEV_TEMPERATURE_EVENTID:
+ 		ath10k_wmi_event_temperature(ar, skb);
+ 		break;
++	case WMI_10_2_PDEV_BSS_CHAN_INFO_EVENTID:
++		ath10k_wmi_event_pdev_bss_chan_info(ar, skb);
++		break;
+ 	case WMI_10_2_RTT_KEEPALIVE_EVENTID:
+ 	case WMI_10_2_GPIO_INPUT_EVENTID:
+ 	case WMI_10_2_PEER_RATECODE_LIST_EVENTID:
+@@ -5225,6 +5254,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_10_4_PDEV_TEMPERATURE_EVENTID:
+ 		ath10k_wmi_event_temperature(ar, skb);
+ 		break;
++	case WMI_10_4_PDEV_BSS_CHAN_INFO_EVENTID:
++		ath10k_wmi_event_pdev_bss_chan_info(ar, skb);
++		break;
+ 	default:
+ 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
+ 		break;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 4cdf216ae999..e1043b81a6e6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6284,6 +6284,17 @@ struct wmi_pdev_temperature_event {
+ 	__le32 temperature;
+ } __packed;
+ 
++struct wmi_pdev_bss_chan_info_event {
++	__le32 freq;
++	__le32 noise_floor;
++	__le64 cycle_busy;
++	__le64 cycle_total;
++	__le64 cycle_tx;
++	__le64 cycle_rx;
++	__le64 cycle_rx_bss;
++	__le32 reserved;
++} __packed;
++
+ /* WOW structures */
+ enum wmi_wow_wakeup_event {
+ 	WOW_BMISS_EVENT = 0,
+-- 
+2.8.0
+
