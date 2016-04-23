@@ -1,41 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33052 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391AbcDFShG (ORCPT
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:36285 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbcDWHlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 14:37:06 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 23 Apr 2016 03:41:47 -0400
+Received: by mail-yw0-f173.google.com with SMTP id o66so144644188ywc.3
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Apr 2016 00:41:47 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [1/9] rtlwifi: Fix Smatch warnings
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1458240064-31422-2-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Message-Id: <20160406183704.4FF01611CD@smtp.codeaurora.org> (sfid-20160406_203712_011330_28A37805)
-Date: Wed,  6 Apr 2016 18:37:04 +0000 (UTC)
+In-Reply-To: <1461363503.2726.17.camel@perches.com>
+References: <CABPxzYLZ2thNWCQ6bQ0-Peic-X-FTpTv4wJxyXVdmBDQDRS8JA@mail.gmail.com>
+ <1461353341.2726.14.camel@perches.com> <CABPxzYJOAFq4hrSpZkx_bmvsUGhR0PmsUvjbnw=ykUeHAVXYqw@mail.gmail.com>
+ <1461363503.2726.17.camel@perches.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Sat, 23 Apr 2016 13:11:27 +0530
+Message-ID: <CABPxzYJmKpw+Z0xm0+-mVUx5-bLrbKKi3V3UGhKoAT4Uf68r2g@mail.gmail.com> (sfid-20160423_094831_884886_FAB44977)
+Subject: Re: Debug prints mac80211 drivers
+To: Joe Perches <joe@perches.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Sat, Apr 23, 2016 at 3:48 AM, Joe Perches <joe@perches.com> wrote:
+> On Sat, 2016-04-23 at 02:32 +0530, Krishna Chaitanya wrote:
+>> On Sat, Apr 23, 2016 at 12:59 AM, Joe Perches <joe@perches.com> wrote:
+>> >
+>> >
+>> > On Fri, 2016-04-22 at 17:51 +0530, Krishna Chaitanya wrote:
+>> > >
+>> > > What is the recommended method for adding
+>> > > debug prints in mac80211 based drivers.
+>> > >
+>> > > 1) -DDEBUG + pr_debug ==> used by mac80211, brcm80211
+>> > > 2) -DDEBUG + dev_dbg ==> zd1201
+>> > > 3) dev_printk(KERN_DEBUG) ==> used by iwlwifi
+>> > > 4) printk(KERN_DEBUG) ==> Just to complete the list.
+>> > wiphy_dbg -> netif_dbg -> netdev_dbg -> dev_dbg -> pr_debug
+>> Ok, thats what checpatch --strict throws. but still different vendors
+>> follow
+>> different standards, so wanted to check if we should go strictly with
+>> checkpatch (or) is there any rationale behind choose each of the
+>> variant.
+>
+> Generally the variants are used to produce sufficient
+> logging information to identify the appropriate device.
+>
+> Most all debugging printks shouldn't be emitted unless
+> actually debugging.
+>
+>> > and CONFIG_DYNAMIC_DEBUG, no -DDEBUG required
+>> Yes, i understand. Till now we had this enabled, so pr_debug
+>> works just fine, but now it is disabled hence the question.
+>>
+>> Also there are pros and cons to having control using dyndbg,
+>> user can disable dyndbg, there be missing imp
+>
+> imp?
+Sorry, important.
+>>  debugs, in this case
+>> having module level (-DDEBUG) helps but if we want entire system
+>> to run in non-debug mode, disabling dyndbg helps.
+>
+> Confused:
+>
+> dynamic debug printks aren't emitted by default
+> unless DEBUG is also defined or specifically
+> enabled by the user.
+I don't think so, enabling dynamic debug should suffice.
 
-> Smatch reports the following:
-> 
->   CHECK   drivers/net/wireless/realtek/rtlwifi/pci.c
-> drivers/net/wireless/realtek/rtlwifi/pci.c:366 rtl_pci_check_buddy_priv() error: we previously assumed 'tpriv' could be null (see line 368)
-> drivers/net/wireless/realtek/rtlwifi/pci.c:1216 _rtl_pci_init_struct() warn: inconsistent indenting
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+280 #if defined(CONFIG_DYNAMIC_DEBUG)
+281 /* dynamic_pr_debug() uses pr_fmt() internally so we don't need it here */
+282 #define pr_debug(fmt, ...) \
+283         dynamic_pr_debug(fmt, ##__VA_ARGS__)
+284 #elif defined(DEBUG)
+285 #define pr_debug(fmt, ...) \
+286         printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+287 #else
+288 #define pr_debug(fmt, ...) \
+289         no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+290 #endif
 
-Thanks, 9 patches applied to wireless-drivers-next.git:
 
-37c52934c668 rtlwifi: Fix Smatch warnings
-2e074fab347e rtlwifi: btcoexist: Fix Smatch warning
-844026f609fc rtlwifi: rtl8188ee: Fix Smatch warnings
-de8a9a6eeb57 rtlwifi: rtl8192c-common: Fix Smatch warning
-05d9e1bba43b rtlwifi: rtl8192ee: Fix Smatch warning
-c42ceccec170 rtlwifi: rtl8192se: Fix Smatch warning
-154fb486df3d rtlwifi: rtl8723ae: Fix Smatch warning
-b3c4201bce5e rtlwifi: rtl8723be: Fix Smatch warnings
-1e812458206e rtlwifi: rtl8821ae: Fix Smatch warnings
 
-Kalle Valo
+-- 
+Thanks,
+Regards,
+Chaitanya T K.
