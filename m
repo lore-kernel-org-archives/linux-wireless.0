@@ -1,65 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49071 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751558AbcDRQTP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 12:19:15 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
-Subject: Re: [PATCH 00/16] rtl8xxxu prepare for splitting into multiple files
-References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
-	<57150569.5090009@lwfinger.net>
-Date: Mon, 18 Apr 2016 12:19:14 -0400
-In-Reply-To: <57150569.5090009@lwfinger.net> (Larry Finger's message of "Mon,
-	18 Apr 2016 11:03:53 -0500")
-Message-ID: <wrfjk2juhou5.fsf@redhat.com> (sfid-20160418_181919_017930_47299911)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtprelay0013.hostedemail.com ([216.40.44.13]:58856 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751363AbcDWIFX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Apr 2016 04:05:23 -0400
+Message-ID: <1461398719.2726.22.camel@perches.com> (sfid-20160423_100540_212319_77EC9DA2)
+Subject: Re: Debug prints mac80211 drivers
+From: Joe Perches <joe@perches.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Date: Sat, 23 Apr 2016 01:05:19 -0700
+In-Reply-To: <CABPxzYJmKpw+Z0xm0+-mVUx5-bLrbKKi3V3UGhKoAT4Uf68r2g@mail.gmail.com>
+References: <CABPxzYLZ2thNWCQ6bQ0-Peic-X-FTpTv4wJxyXVdmBDQDRS8JA@mail.gmail.com>
+	 <1461353341.2726.14.camel@perches.com>
+	 <CABPxzYJOAFq4hrSpZkx_bmvsUGhR0PmsUvjbnw=ykUeHAVXYqw@mail.gmail.com>
+	 <1461363503.2726.17.camel@perches.com>
+	 <CABPxzYJmKpw+Z0xm0+-mVUx5-bLrbKKi3V3UGhKoAT4Uf68r2g@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 04/18/2016 10:49 AM, Jes.Sorensen@redhat.com wrote:
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>
->> Hi,
->>
->> This is the last set of patches I have in my queue for the rtl8xxxu
->> driver, as of today :)
->>
->> Since the driver has grown to support quite a number of different
->> chips, I want to split it into multiple files. This will make it
->> easier to maintain and also eaiser to add support for more chips
->> without having to constantly touch the core files.
->>
->> This set renames a bunch of functions to indicate that they are
->> generic rather than chip specific. I will look at doing the actual
->> moving around in a set right after the current merge window closes.
->>
->> Please keep the test reports coming!
->
-> I like the renaming of the routines to match the chip generation, but
-> there should be some comments stating the gen to which each
-> device/version belongs. Such comments are not needed now, but could be
-> included when the files are split.
+On Sat, 2016-04-23 at 13:11 +0530, Krishna Chaitanya wrote:
+> On Sat, Apr 23, 2016 at 3:48 AM, Joe Perches <joe@perches.com> wrote:
+> > 
+> > On Sat, 2016-04-23 at 02:32 +0530, Krishna Chaitanya wrote:
+> > > 
+> > > On Sat, Apr 23, 2016 at 12:59 AM, Joe Perches <joe@perches.com>
+> > > wrote:
+> > > > 
+> > > > 
+> > > > 
+> > > > On Fri, 2016-04-22 at 17:51 +0530, Krishna Chaitanya wrote:
+> > > > > 
+> > > > > 
+> > > > > What is the recommended method for adding
+> > > > > debug prints in mac80211 based drivers.
+> > > > > 
+> > > > > 1) -DDEBUG + pr_debug ==> used by mac80211, brcm80211
+> > > > > 2) -DDEBUG + dev_dbg ==> zd1201
+> > > > > 3) dev_printk(KERN_DEBUG) ==> used by iwlwifi
+> > > > > 4) printk(KERN_DEBUG) ==> Just to complete the list.
+> > > > wiphy_dbg -> netif_dbg -> netdev_dbg -> dev_dbg -> pr_debug
+> > > Ok, thats what checpatch --strict throws. but still different
+> > > vendors
+> > > follow
+> > > different standards, so wanted to check if we should go strictly
+> > > with
+> > > checkpatch (or) is there any rationale behind choose each of the
+> > > variant.
+> > Generally the variants are used to produce sufficient
+> > logging information to identify the appropriate device.
+> > 
+> > Most all debugging printks shouldn't be emitted unless
+> > actually debugging.
+> > 
+> > > 
+> > > > 
+> > > > and CONFIG_DYNAMIC_DEBUG, no -DDEBUG required
+> > > Yes, i understand. Till now we had this enabled, so pr_debug
+> > > works just fine, but now it is disabled hence the question.
+> > > 
+> > > Also there are pros and cons to having control using dyndbg,
+> > > user can disable dyndbg, there be missing imp
+> > imp?
+> Sorry, important.
+> > 
+> > > 
+> > >  debugs, in this case
+> > > having module level (-DDEBUG) helps but if we want entire system
+> > > to run in non-debug mode, disabling dyndbg helps.
+> > Confused:
+> > 
+> > dynamic debug printks aren't emitted by default
+> > unless DEBUG is also defined or specifically
+> > enabled by the user.
+> I don't think so, enabling dynamic debug should suffice.
+> 
+> 280 #if defined(CONFIG_DYNAMIC_DEBUG)
+> 281 /* dynamic_pr_debug() uses pr_fmt() internally so we don't need it
+> here */
+> 282 #define pr_debug(fmt, ...) \
+> 283         dynamic_pr_debug(fmt, ##__VA_ARGS__)
+> 284 #elif defined(DEBUG)
+> 285 #define pr_debug(fmt, ...) \
+> 286         printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+> 287 #else
+> 288 #define pr_debug(fmt, ...) \
+> 289         no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
+> 290 #endif
+> 
 
-Larry,
+Nope.
 
-I like that idea - I thought I did that when I pushed the enum for chip
-versions in ba17d824783805235f317f79f2871b17bd679956 but somehow it
-didn't get further than my head.
+Look at dynamic_debug.h
 
-I have been thinking of putting some of it down in writing - probably in
-rtl8xxxu.h or a README
+#if defined DEBUG
+#define _DPRINTK_FLAGS_DEFAULT _DPRINTK_FLAGS_PRINT
+#else
+#define _DPRINTK_FLAGS_DEFAULT 0
+#endif
 
-Note the gen1/gen2 categorization is completely made up by me, it may be
-that this is really gen6/gen7 within Realtek. Roughly I consider
-8191su/8192su to be gen0, 8188cu/8188ru/8192cu/8723au as gen1, and
-8192eu/8723bu/8812/8821 as gen2. I haven't looked closely enough at
-8188eu and 8192du yet to determine where they really fit in.
+and
 
-Top priority on my list post splitting the driver into multiple files is
-adding 8188eu and beacon support. If only there was 30 hours in a day...
+          .flags =  _DPRINTK_FLAGS_DEFAULT,
 
-Cheers,
-Jes
+and
+
+#define DEFINE_DYNAMIC_DEBUG_METADATA(name, fmt)		\
+	static struct _ddebug  __aligned(8)			\
+	__attribute__((section("__verbose"))) name = {		\
+		.modname = KBUILD_MODNAME,			\
+		.function = __func__,				\
+		.filename = __FILE__,				\
+		.format = (fmt),				\
+		.lineno = __LINE__,				\
+		.flags =  _DPRINTK_FLAGS_DEFAULT,		\
+	}
+
+and
+
+#define dynamic_pr_debug(fmt, ...)				\
+do {								\
+	DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, fmt);		\
+	if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))	\
+		__dynamic_pr_debug(&descriptor, pr_fmt(fmt),	\
+				   ##__VA_ARGS__);		\
+} while (0)
+
+So by default, it's not enabled to be output
+
