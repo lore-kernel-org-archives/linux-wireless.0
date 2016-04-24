@@ -1,48 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f175.google.com ([209.85.161.175]:35974 "EHLO
-	mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317AbcDZQJw (ORCPT
+Received: from mailout2.hostsharing.net ([83.223.90.233]:35638 "EHLO
+	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752754AbcDXQ42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 12:09:52 -0400
-Received: by mail-yw0-f175.google.com with SMTP id o66so19974850ywc.3
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 09:09:51 -0700 (PDT)
+	Sun, 24 Apr 2016 12:56:28 -0400
+Date: Sun, 24 Apr 2016 18:58:58 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Matt Fleming <matt@codeblueprint.co.uk>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-efi@vger.kernel.org, Andrew Worsley <amworsley@gmail.com>,
+	Chris Bainbridge <chris.bainbridge@gmail.com>
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160424165858.GA17019@wunner.de> (sfid-20160424_185647_154675_EEB3FA66)
+References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+ <20160405194015.GC15353@localhost>
+ <20160406213029.GA12421@wunner.de>
+ <20160409120055.GR2701@codeblueprint.co.uk>
 MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Tue, 26 Apr 2016 21:39:31 +0530
-Message-ID: <CABPxzYLy=zCjjCb1BuMayxx47FDS7yEFOr7bpwbce7dZKrWsPA@mail.gmail.com> (sfid-20160426_180955_607320_452F1F56)
-Subject: [RFC] Sampling Holes in Minstrel when VHT is enabled
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Karl Beldan <karl.beldan@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160409120055.GR2701@codeblueprint.co.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi,
 
-With the current design, occasionally we are seeing issues
-where minstrel sends 3x3 rates for our 2x2 chip.
+On Sat, Apr 09, 2016 at 01:00:55PM +0100, Matt Fleming wrote:
+> On Wed, 06 Apr, at 11:30:29PM, Lukas Wunner wrote:
+> > (2) Find out exactly which EFI boot services area is used for DMA and
+> >     amend arch/x86/platform/efi/quirks.c:efi_apply_memmap_quirks() to
+> >     assign that area a different type if dmi_match(DMI_SYS_VENDOR,
+> >     "Apple Inc."). That way it's not freed by efi_free_boot_services().
+> >     Add a late_initcall which calls free_bootmem() for that area.
+>  
+> If it is possible to find out which boot services region is the
+> problematic one, this would be the best solution. If there's any way
+> to tie it into the PCI quirk, that would be even better so we don't
+> need to maintain the blacklist in two places.
 
-IMHO, couple of things can cause this
+I've since cooked up an experimental patch which resets the Broadcom 4331
+wireless card from arch/x86/kernel/early-quirks.c, and another which does
+the same from arch/x86/boot/compressed/eboot.c. Both approaches stopped
+the spurious interrupts for me and should also stop the DMA'ing.
 
-1) update_caps doesn't take local HW capabilities in to account
+In the latter case, the machine locked up immediately after resetting the
+card. Suspecting that the EFI driver doesn't digest the reset well,
+I tried kicking it off the card with DisconnectController() first.
+This worked, although it returns EFI_NOT_FOUND, which is strange as that
+error isn't defined for DisconnectController() per the spec.
 
-2) While calculating sample_idx, we use MCS_GROUP_RATES
-which can cause a sampling hole.
+I then tested if DisconnectController() alone is already sufficient
+(i.e. without resetting the card by writing to its mmio).
+Guess what, it is. So the EFI driver seems to leave the card in a
+sane state if it's unloaded.
 
-For eg: if sample_idx: 78, group will be 7 it is HT
-so rate_idx will be : 8  +  (2-1) * 8 = 16 = 3x3 MCS0 20 MHz.
+I then realized that the Simple Network protocol is supported for both
+the wireless card as well as the Ethernet card built into my MacBook Pro.
+What I'll try next is to iterate over all handles that support that
+protocol and just Stop() the interface if it's been brought up by EFI.
 
-ideally we should add
+Perhaps OS X supports some kind of connection handover from EFI.
+That would explain why they leave the card enabled.
 
-a) local hw_checks and update groups.supported accordingly.
+Best regards,
 
-b) use the formula index % get_max_group_rates (or) replace all
-instances of MCS_GROUP_RATES for HT with 8.
-(in set_rate, get_sampling_rate etc..)
-
-
--- 
-Thanks,
-Regards,
-Chaitanya T K.
+Lukas
