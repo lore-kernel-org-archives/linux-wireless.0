@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34967 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751053AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 11:49:38 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 00/16] rtl8xxxu prepare for splitting into multiple files
-Date: Mon, 18 Apr 2016 11:49:20 -0400
-Message-Id: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_174949_868745_22820F5A)
+Received: from smtp.codeaurora.org ([198.145.29.96]:35546 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793AbcDYJIk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2016 05:08:40 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 25 Apr 2016 12:08:38 +0300
+From: merez@codeaurora.org
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: "Haim, Maya" <merez@qti.qualcomm.com>,
+	Joe Perches <joe@perches.com>,
+	qca_merez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210 <wil6210@qca.qualcomm.com>,
+	linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH 1/7] wil6210: add function name to wil log macros
+In-Reply-To: <8760vjqco7.fsf@kamboji.qca.qualcomm.com>
+References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
+ <1459855447-17413-2-git-send-email-qca_merez@qca.qualcomm.com>
+ <1459927177.6715.34.camel@perches.com>
+ <bc848beb5cd947f9905b55983a76b6f5@euamsexm01a.eu.qualcomm.com>
+ <87shyx77et.fsf@kamboji.qca.qualcomm.com>
+ <7f40e26bcec5477db74d3105972c20bc@euamsexm01a.eu.qualcomm.com>
+ <8760vjqco7.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <f30cd2af1235f2ec95bbefe22c7639f8@codeaurora.org> (sfid-20160425_110844_087679_F016EF2E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+:כתב Kalle Valo, 2016-04-15 15:28 בתאריך
+> "Haim, Maya" <merez@qti.qualcomm.com> writes:
+> 
+>> On 4/7/2016 6:41 PM, Kalle Valo wrote:
+>>> "Haim, Maya" <merez@qti.qualcomm.com> writes:
+>>> 
+>>>> On 4/6/2016 10:19 AM, Joe Perches wrote:
+>>>>> On Tue, 2016-04-05 at 14:24 +0300, Maya Erez wrote:
+>>>>>> Add __func__ to all wil log macros for easier debugging.
+>>>>> I think this is unnecessary and merely bloats code size.
+>>>>> For all the _dbg calls, dynamic debug can add function names if
+>>>>> desired.
+>>>>> 
+>>>>> If really desired, I suggest changing the logging functions to use
+>>>>> "%ps and __builtin_return_address(0)
+>>>> I implemented it with __builtin_return_address(0) at first but found
+>>>> its format less readable (e.g. wil_start_xmit+0x58/0x7e8).
+>>> Will that work with inline functions and with functions which the
+>>> compiler has optimised out?
+>> 
+>> That's a good point. I did a quick check and it doesn't work for
+>> inline or static functions - for such functions, the name of the
+>> calling function is printed.
+> 
+> Thanks for checking.
+> 
+>> We can either (1) use my initial implementation (2) add __func__ only
+>> to the wil_dbg_... macros or (3) revert this patch completely. I find
+>> the addition of the function names very useful and since most of the
+>> code doesn't include it, it makes the analysis of issues less
+>> efficient. Kalle - what is your say on that?
+> 
+> I don't have any preference, it's up to you what you like most.
+> 
+> One more possibility: in ath10k we have a kconfig option
+> CONFIG_ATH10K_DEBUG to make it possible to disable all overhead from
+> debug functionality, that would at least solve Joe's concern of extra
+> memory usage.
 
-Hi,
-
-This is the last set of patches I have in my queue for the rtl8xxxu
-driver, as of today :)
-
-Since the driver has grown to support quite a number of different
-chips, I want to split it into multiple files. This will make it
-easier to maintain and also eaiser to add support for more chips
-without having to constantly touch the core files.
-
-This set renames a bunch of functions to indicate that they are
-generic rather than chip specific. I will look at doing the actual
-moving around in a set right after the current merge window closes.
-
-Please keep the test reports coming!
-
-Cheers,
-Jes
-
-
-Jes Sorensen (16):
-  rtl8xxxu: Rename rtl8723bu_update_rate_mask() to
-    rtl8xxxu_gen2_update_rate_mask()
-  rtl8xxxu: Rename rtl8723bu_report_connect() to
-    rtl8xxxu_gen2_report_connect()
-  rtl8xxxu: Rename rtl8723au_report_connect() to
-    rtl8xxxu_gen1_report_connect()
-  rtl8xxxu: Rename rtl8723bu_config_channel() to
-    rtl8xxxu_gen2_config_channel()
-  rtl8xxxu: Rename rtl8723b_disable_rf() to rtl8xxxu_gen2_disable_rf()
-  rtl8xxxu: Rename rtl8723a_disable_rf() to rtl8xxxu_gen1_disable_rf()
-  rtl8xxxu: Rename rtl8723au_config_channel() to
-    rtl8xxxu_gen1_config_channel()
-  rtl8xxxu: Rename rtl8723au_update_rate_mask() to
-    rtl8xxxu_update_rate_mask()
-  rtl8xxxu: Rename rtl8723au_phy_iq_calibrate() to
-    rtl8xxxu_gen1_phy_iq_calibrate()
-  rtl8xxxu: Rename rtl8723au_init_phy_bb() to
-    rtl8xxxu_gen1_init_phy_bb()
-  rtl8xxxu: Rename rtl8723a_set_tx_power() to
-    rtl8xxxu_gen1_set_tx_power()
-  rtl8xxxu: Rename rtl8723a_enable_rf() to rtl8xxxu_gen1_enable_rf()
-  rtl8xxxu: Rename rtl8723a_mac_init_table to
-    rtl8xxxu_gen1_mac_init_table
-  rtl8xxxu: Rename rtl8723b_channel_to_group()
-  rtl8xxxu: Rename rtl8723bu_simularity_compare()
-  rtl8xxxu: Rename rtl8723au_iqk_phy_iq_bb_reg
-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 122 ++++++++++++-----------
- 1 file changed, 64 insertions(+), 58 deletions(-)
-
--- 
-2.5.5
-
+I looked a bit more on the different options.
+For the dbg functions, the function name can be added as part of the
+dynamic debug options (as mentioned by Joe). Therefore I will remove
+the addition of __func__ from those macros.
+The dynamic debug also guarantees zero overhead so I don't see the need
+for an additional debug config flag (such as CONFIG_ATH10K_DEBUG).
+As for wil_err and wil_info, I believe we can add the __func__ to them,
+as wil_info is not commonly used in our code.
