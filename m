@@ -1,42 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56611 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046AbcDOSZN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2016 14:25:13 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Byeoungwook Kim <quddnr145@gmail.com>
-Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] rtlwifi: Fix reusable codes in core.c
-References: <20160203020139.GA13619@gmail.com>
-Date: Fri, 15 Apr 2016 21:25:05 +0300
-In-Reply-To: <20160203020139.GA13619@gmail.com> (Byeoungwook Kim's message of
-	"Wed, 3 Feb 2016 11:01:39 +0900")
-Message-ID: <87bn5apw5a.fsf@kamboji.qca.qualcomm.com> (sfid-20160415_202538_161806_D09ED732)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from ns.lynxeye.de ([87.118.118.114]:58386 "EHLO lynxeye.de"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752632AbcDYHvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2016 03:51:14 -0400
+From: Lucas Stach <dev@lynxeye.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org
+Subject: [PATCH RFC] b43: stop hardcoding LED behavior
+Date: Mon, 25 Apr 2016 09:40:51 +0200
+Message-Id: <1461570051-3950-1-git-send-email-dev@lynxeye.de> (sfid-20160425_095136_224587_68C15A96)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Byeoungwook Kim <quddnr145@gmail.com> writes:
+The code to hardcode the LED behavior is basically unchanged from when it
+was first merged in 2007. It is likely wrong for many modern systems using
+the b43 driver.
 
-> rtl_*_delay() functions were reused same codes about addr variable.
-> So i have converted to rtl_addr_delay() from code about addr variable.
->
-> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+On my system the SPROM correctly defines the only wired LED (radio) but
+skips all others, leading to the hardcode to register LEDs with RX and TX
+triggers. These triggers cause many uneccesary CPU wakeups to drive LEDs
+that aren't even present in the system, reducing battery runtime.
 
-Doesn't apply:
+Remove the hardcode to stop it from doing any harm. If this code is useful
+for others it should probably be reworked as a quirk table triggering only
+for individual systems that need it.
 
-Applying: rtlwifi: Fix reusable codes in core.c
-fatal: sha1 information is lacking or useless (drivers/net/wireless/realtek/rtlwifi/core.c).
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0001 rtlwifi: Fix reusable codes in core.c
+Signed-off-by: Lucas Stach <dev@lynxeye.de>
+---
+ drivers/net/wireless/broadcom/b43/leds.c | 26 ++------------------------
+ 1 file changed, 2 insertions(+), 24 deletions(-)
 
-Please rebase and resend.
-
+diff --git a/drivers/net/wireless/broadcom/b43/leds.c b/drivers/net/wireless/broadcom/b43/leds.c
+index d79ab2a..77d2dad 100644
+--- a/drivers/net/wireless/broadcom/b43/leds.c
++++ b/drivers/net/wireless/broadcom/b43/leds.c
+@@ -224,31 +224,9 @@ static void b43_led_get_sprominfo(struct b43_wldev *dev,
+ 
+ 	if (sprom[led_index] == 0xFF) {
+ 		/* There is no LED information in the SPROM
+-		 * for this LED. Hardcode it here. */
++		 * for this LED. Keep it disabled. */
+ 		*activelow = false;
+-		switch (led_index) {
+-		case 0:
+-			*behaviour = B43_LED_ACTIVITY;
+-			*activelow = true;
+-			if (dev->dev->board_vendor == PCI_VENDOR_ID_COMPAQ)
+-				*behaviour = B43_LED_RADIO_ALL;
+-			break;
+-		case 1:
+-			*behaviour = B43_LED_RADIO_B;
+-			if (dev->dev->board_vendor == PCI_VENDOR_ID_ASUSTEK)
+-				*behaviour = B43_LED_ASSOC;
+-			break;
+-		case 2:
+-			*behaviour = B43_LED_RADIO_A;
+-			break;
+-		case 3:
+-			*behaviour = B43_LED_OFF;
+-			break;
+-		default:
+-			*behaviour = B43_LED_OFF;
+-			B43_WARN_ON(1);
+-			return;
+-		}
++		*behaviour = B43_LED_OFF;
+ 	} else {
+ 		*behaviour = sprom[led_index] & B43_LED_BEHAVIOUR;
+ 		*activelow = !!(sprom[led_index] & B43_LED_ACTIVELOW);
 -- 
-Kalle Valo
+2.5.5
+
