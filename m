@@ -1,65 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:34774 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754474AbcDFXLY (ORCPT
+Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:54533 "EHLO
+	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753860AbcDYIcF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 19:11:24 -0400
-Received: by mail-pa0-f67.google.com with SMTP id hb4so5263944pac.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 16:11:24 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 7/7] staging: wilc1000: rename result in handle_set_operation_mode
-Date: Thu,  7 Apr 2016 08:10:43 +0900
-Message-Id: <1459984243-4689-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160407_011127_564804_D81E28EB)
-In-Reply-To: <1459984243-4689-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459984243-4689-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 25 Apr 2016 04:32:05 -0400
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, jhs@mojatatu.com, stephen@networkplumber.org,
+	pshelar@nicira.com, aar@pengutronix.de, linux-wpan@vger.kernel.org,
+	wensong@linux-vs.org, horms@verge.net.au, ja@ssi.bg,
+	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
+	lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Subject: [PATCH net-next 2/9] sched: use nla_put_u64_64bit()
+Date: Mon, 25 Apr 2016 10:25:15 +0200
+Message-Id: <1461572722-6029-3-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160425_103219_032708_862B1429)
+In-Reply-To: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
+References: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames result to ret that is used to get return value from
-wilc_send_config_pkt. Some handle_*() functions are used as result,
-others are used as ret. It will be changed as ret in all handle_*()
-functions to match variable name.
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ include/uapi/linux/pkt_sched.h | 3 +++
+ net/sched/sch_htb.c            | 6 ++++--
+ net/sched/sch_netem.c          | 3 ++-
+ net/sched/sch_tbf.c            | 6 ++++--
+ 4 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 52eddc4..ac620fb 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -331,7 +331,7 @@ static void handle_set_wfi_drv_handler(struct wilc_vif *vif,
- static void handle_set_operation_mode(struct wilc_vif *vif,
- 				      struct op_mode *hif_op_mode)
- {
--	int result = 0;
-+	int ret = 0;
- 	struct wid wid;
+diff --git a/include/uapi/linux/pkt_sched.h b/include/uapi/linux/pkt_sched.h
+index 8cb18b44968e..1c78c7454c7c 100644
+--- a/include/uapi/linux/pkt_sched.h
++++ b/include/uapi/linux/pkt_sched.h
+@@ -179,6 +179,7 @@ enum {
+ 	TCA_TBF_PRATE64,
+ 	TCA_TBF_BURST,
+ 	TCA_TBF_PBURST,
++	TCA_TBF_PAD,
+ 	__TCA_TBF_MAX,
+ };
  
- 	wid.id = (u16)WID_SET_OPERATION_MODE;
-@@ -339,13 +339,13 @@ static void handle_set_operation_mode(struct wilc_vif *vif,
- 	wid.val = (s8 *)&hif_op_mode->mode;
- 	wid.size = sizeof(u32);
+@@ -368,6 +369,7 @@ enum {
+ 	TCA_HTB_DIRECT_QLEN,
+ 	TCA_HTB_RATE64,
+ 	TCA_HTB_CEIL64,
++	TCA_HTB_PAD,
+ 	__TCA_HTB_MAX,
+ };
  
--	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
--				      wilc_get_vif_idx(vif));
-+	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
-+				   wilc_get_vif_idx(vif));
+@@ -531,6 +533,7 @@ enum {
+ 	TCA_NETEM_RATE,
+ 	TCA_NETEM_ECN,
+ 	TCA_NETEM_RATE64,
++	TCA_NETEM_PAD,
+ 	__TCA_NETEM_MAX,
+ };
  
- 	if ((hif_op_mode->mode) == IDLE_MODE)
- 		complete(&hif_driver_comp);
+diff --git a/net/sched/sch_htb.c b/net/sched/sch_htb.c
+index 87b02ed3d5f2..f6bf5818ed4d 100644
+--- a/net/sched/sch_htb.c
++++ b/net/sched/sch_htb.c
+@@ -1122,10 +1122,12 @@ static int htb_dump_class(struct Qdisc *sch, unsigned long arg,
+ 	if (nla_put(skb, TCA_HTB_PARMS, sizeof(opt), &opt))
+ 		goto nla_put_failure;
+ 	if ((cl->rate.rate_bytes_ps >= (1ULL << 32)) &&
+-	    nla_put_u64(skb, TCA_HTB_RATE64, cl->rate.rate_bytes_ps))
++	    nla_put_u64_64bit(skb, TCA_HTB_RATE64, cl->rate.rate_bytes_ps,
++			      TCA_HTB_PAD))
+ 		goto nla_put_failure;
+ 	if ((cl->ceil.rate_bytes_ps >= (1ULL << 32)) &&
+-	    nla_put_u64(skb, TCA_HTB_CEIL64, cl->ceil.rate_bytes_ps))
++	    nla_put_u64_64bit(skb, TCA_HTB_CEIL64, cl->ceil.rate_bytes_ps,
++			      TCA_HTB_PAD))
+ 		goto nla_put_failure;
  
--	if (result)
-+	if (ret)
- 		netdev_err(vif->ndev, "Failed to set driver handler\n");
- }
+ 	return nla_nest_end(skb, nest);
+diff --git a/net/sched/sch_netem.c b/net/sched/sch_netem.c
+index 9640bb39a5d2..491d6fd6430c 100644
+--- a/net/sched/sch_netem.c
++++ b/net/sched/sch_netem.c
+@@ -994,7 +994,8 @@ static int netem_dump(struct Qdisc *sch, struct sk_buff *skb)
+ 		goto nla_put_failure;
  
+ 	if (q->rate >= (1ULL << 32)) {
+-		if (nla_put_u64(skb, TCA_NETEM_RATE64, q->rate))
++		if (nla_put_u64_64bit(skb, TCA_NETEM_RATE64, q->rate,
++				      TCA_NETEM_PAD))
+ 			goto nla_put_failure;
+ 		rate.rate = ~0U;
+ 	} else {
+diff --git a/net/sched/sch_tbf.c b/net/sched/sch_tbf.c
+index c2fbde742f37..83b90b584fae 100644
+--- a/net/sched/sch_tbf.c
++++ b/net/sched/sch_tbf.c
+@@ -472,11 +472,13 @@ static int tbf_dump(struct Qdisc *sch, struct sk_buff *skb)
+ 	if (nla_put(skb, TCA_TBF_PARMS, sizeof(opt), &opt))
+ 		goto nla_put_failure;
+ 	if (q->rate.rate_bytes_ps >= (1ULL << 32) &&
+-	    nla_put_u64(skb, TCA_TBF_RATE64, q->rate.rate_bytes_ps))
++	    nla_put_u64_64bit(skb, TCA_TBF_RATE64, q->rate.rate_bytes_ps,
++			      TCA_TBF_PAD))
+ 		goto nla_put_failure;
+ 	if (tbf_peak_present(q) &&
+ 	    q->peak.rate_bytes_ps >= (1ULL << 32) &&
+-	    nla_put_u64(skb, TCA_TBF_PRATE64, q->peak.rate_bytes_ps))
++	    nla_put_u64_64bit(skb, TCA_TBF_PRATE64, q->peak.rate_bytes_ps,
++			      TCA_TBF_PAD))
+ 		goto nla_put_failure;
+ 
+ 	return nla_nest_end(skb, nest);
 -- 
-2.8.0
+2.8.1
 
