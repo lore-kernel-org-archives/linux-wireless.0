@@ -1,27 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54538 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758113AbcDEMgE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 08:36:04 -0400
-Message-ID: <1459859759.18188.49.camel@sipsolutions.net> (sfid-20160405_143626_506691_CD95351D)
-Subject: Re: [PATCH v3 2/2] mac80211: minstrel_ht: set A-MSDU tx limits
- based on selected max_prob_rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Cc: egrumbach@gmail.com
-Date: Tue, 05 Apr 2016 14:35:59 +0200
-In-Reply-To: <1457042341-72716-2-git-send-email-nbd@openwrt.org>
-References: <1457042341-72716-1-git-send-email-nbd@openwrt.org>
-	 <1457042341-72716-2-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40766 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932231AbcDYM6Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2016 08:58:16 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 3/7] wil6210: change RX_HTRSH interrupt print level to debug
+Date: Mon, 25 Apr 2016 15:57:54 +0300
+Message-Id: <1461589078-29854-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160425_145824_527945_8BB54FE9)
+In-Reply-To: <1461589078-29854-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1461589078-29854-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Applied both now, I've had to fix a locking issue in the first patch.
+When using interrupt moderation RX_HTRSH interrupt can occur
+frequently during high throughput and should not be considered
+as error.
+Such print-outs can degrade the performance hence should be printed
+in debug print level.
 
-I also worded the requirement for drivers more strongly - drivers
-really *must* update the max length if they set the flag and don't use
-minstrel.
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/interrupt.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index fe66b2b..6897754 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -228,11 +228,8 @@ static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
+ 	 */
+ 	if (likely(isr & (BIT_DMA_EP_RX_ICR_RX_DONE |
+ 			  BIT_DMA_EP_RX_ICR_RX_HTRSH))) {
+-		wil_dbg_irq(wil, "RX done\n");
+-
+-		if (unlikely(isr & BIT_DMA_EP_RX_ICR_RX_HTRSH))
+-			wil_err_ratelimited(wil,
+-					    "Received \"Rx buffer is in risk of overflow\" interrupt\n");
++		wil_dbg_irq(wil, "RX done / RX_HTRSH received, ISR (0x%x)\n",
++			    isr);
+ 
+ 		isr &= ~(BIT_DMA_EP_RX_ICR_RX_DONE |
+ 			 BIT_DMA_EP_RX_ICR_RX_HTRSH);
+-- 
+1.8.5.2
+
