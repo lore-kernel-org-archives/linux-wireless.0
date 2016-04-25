@@ -1,185 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59991 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757227AbcDEH25 (ORCPT
+Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:54543 "EHLO
+	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754064AbcDYIcF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 03:28:57 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u357SI2K028604
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 00:28:56 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0a-0016f401.pphosted.com with ESMTP id 222bekhtp8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 00:28:56 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 6/7] mwifiex: AMSDU Rx frame handling in AP mode
-Date: Tue, 5 Apr 2016 00:22:31 -0700
-Message-ID: <1459840952-25338-6-git-send-email-akarwar@marvell.com> (sfid-20160405_092905_661397_6040C8F6)
-In-Reply-To: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
-References: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 25 Apr 2016 04:32:05 -0400
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, jhs@mojatatu.com, stephen@networkplumber.org,
+	pshelar@nicira.com, aar@pengutronix.de, linux-wpan@vger.kernel.org,
+	wensong@linux-vs.org, horms@verge.net.au, ja@ssi.bg,
+	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
+	lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: [PATCH net-next 0/9] netlink: align attributes when needed (patchset #2)
+Date: Mon, 25 Apr 2016 10:25:13 +0200
+Message-Id: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160425_103218_481636_5384898D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
 
-This patch processes sub AMSDU frame received in AP mode.
+This is the continuation (series #2) of the work done to align netlink
+attributes when these attributes contain some 64-bit fields.
 
-If a packet is multicast/broadcast, it is sent to kernel/upper
-layer as well as queued back to AP TX queue so that it can be
-sent to other associated stations.
+In patch #3, I didn't modify the function ila_encap_nlsize(). I was waiting
+feedback for this patch: http://patchwork.ozlabs.org/patch/613766/
+If it's approved, there will be an update to switch nla_total_size() to
+nla_total_size_64bit() after the merge of net in net-next.
 
-If a packet is unicast and RA is present in associated station list,
-it is again requeued into AP TX queue.
+ include/linux/nl802154.h         |  2 +
+ include/uapi/linux/if_link.h     |  3 ++
+ include/uapi/linux/ila.h         |  1 +
+ include/uapi/linux/ip_vs.h       |  1 +
+ include/uapi/linux/l2tp.h        |  1 +
+ include/uapi/linux/nl80211.h     |  4 ++
+ include/uapi/linux/openvswitch.h |  1 +
+ include/uapi/linux/pkt_sched.h   |  3 ++
+ net/bridge/br_netlink.c          | 62 +++++++++++++++------------
+ net/core/rtnetlink.c             | 36 ++++++++--------
+ net/ieee802154/nl-mac.c          | 17 +++++---
+ net/ieee802154/nl802154.c        |  3 +-
+ net/ipv6/ila/ila_lwt.c           |  3 +-
+ net/ipv6/ila/ila_xlat.c          | 15 ++++---
+ net/l2tp/l2tp_netlink.c          | 80 +++++++++++++++++++++--------------
+ net/netfilter/ipvs/ip_vs_ctl.c   | 36 ++++++++++------
+ net/openvswitch/datapath.c       |  3 +-
+ net/sched/sch_htb.c              |  6 ++-
+ net/sched/sch_netem.c            |  3 +-
+ net/sched/sch_tbf.c              |  6 ++-
+ net/wireless/nl80211.c           | 91 ++++++++++++++++++++++++----------------
+ 21 files changed, 233 insertions(+), 144 deletions(-)
 
-If a packet is unicast and RA is not in associated station list,
-packet is forwarded to kernel to handle routing logic.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |  5 +-
- drivers/net/wireless/marvell/mwifiex/main.h        |  2 +
- drivers/net/wireless/marvell/mwifiex/uap_txrx.c    | 90 ++++++++++++++++++++++
- 3 files changed, 96 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-index 09578c6..a74cc43 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-@@ -59,7 +59,10 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
- 								  skb->len);
- 			}
- 
--			ret = mwifiex_recv_packet(priv, rx_skb);
-+			if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
-+				ret = mwifiex_uap_recv_packet(priv, rx_skb);
-+			else
-+				ret = mwifiex_recv_packet(priv, rx_skb);
- 			if (ret == -1)
- 				mwifiex_dbg(priv->adapter, ERROR,
- 					    "Rx of A-MSDU failed");
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index eb2c90c..63069dd 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1019,6 +1019,8 @@ int mwifiex_shutdown_fw_complete(struct mwifiex_adapter *adapter);
- int mwifiex_dnld_fw(struct mwifiex_adapter *, struct mwifiex_fw_image *);
- 
- int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb);
-+int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
-+			    struct sk_buff *skb);
- 
- int mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 				struct sk_buff *skb);
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-index 305589e..666e91a 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-@@ -269,6 +269,96 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
- 	return mwifiex_process_rx_packet(priv, skb);
- }
- 
-+int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
-+			    struct sk_buff *skb)
-+{
-+	struct mwifiex_adapter *adapter = adapter;
-+	struct mwifiex_sta_node *src_node;
-+	struct ethhdr *p_ethhdr;
-+	struct sk_buff *skb_uap;
-+	struct mwifiex_txinfo *tx_info;
-+
-+	if (!skb)
-+		return -1;
-+
-+	p_ethhdr = (void *)skb->data;
-+	src_node = mwifiex_get_sta_entry(priv, p_ethhdr->h_source);
-+	if (src_node) {
-+		src_node->stats.last_rx = jiffies;
-+		src_node->stats.rx_bytes += skb->len;
-+		src_node->stats.rx_packets++;
-+	}
-+
-+	skb->dev = priv->netdev;
-+	skb->protocol = eth_type_trans(skb, priv->netdev);
-+	skb->ip_summed = CHECKSUM_NONE;
-+
-+	/* This is required only in case of 11n and USB/PCIE as we alloc
-+	 * a buffer of 4K only if its 11N (to be able to receive 4K
-+	 * AMSDU packets). In case of SD we allocate buffers based
-+	 * on the size of packet and hence this is not needed.
-+	 *
-+	 * Modifying the truesize here as our allocation for each
-+	 * skb is 4K but we only receive 2K packets and this cause
-+	 * the kernel to start dropping packets in case where
-+	 * application has allocated buffer based on 2K size i.e.
-+	 * if there a 64K packet received (in IP fragments and
-+	 * application allocates 64K to receive this packet but
-+	 * this packet would almost double up because we allocate
-+	 * each 1.5K fragment in 4K and pass it up. As soon as the
-+	 * 64K limit hits kernel will start to drop rest of the
-+	 * fragments. Currently we fail the Filesndl-ht.scr script
-+	 * for UDP, hence this fix
-+	 */
-+	if ((adapter->iface_type == MWIFIEX_USB ||
-+	     adapter->iface_type == MWIFIEX_PCIE) &&
-+	    (skb->truesize > MWIFIEX_RX_DATA_BUF_SIZE))
-+		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
-+
-+	if (is_multicast_ether_addr(p_ethhdr->h_dest) ||
-+	    mwifiex_get_sta_entry(priv, p_ethhdr->h_dest)) {
-+		if (skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN)
-+			skb_uap =
-+			skb_realloc_headroom(skb, MWIFIEX_MIN_DATA_HEADER_LEN);
-+		else
-+			skb_uap = skb_copy(skb, GFP_ATOMIC);
-+
-+		if (likely(skb_uap)) {
-+			tx_info = MWIFIEX_SKB_TXCB(skb_uap);
-+			memset(tx_info, 0, sizeof(*tx_info));
-+			tx_info->bss_num = priv->bss_num;
-+			tx_info->bss_type = priv->bss_type;
-+			tx_info->flags |= MWIFIEX_BUF_FLAG_BRIDGED_PKT;
-+			__net_timestamp(skb_uap);
-+			mwifiex_wmm_add_buf_txqueue(priv, skb_uap);
-+			atomic_inc(&adapter->tx_pending);
-+			atomic_inc(&adapter->pending_bridged_pkts);
-+			if ((atomic_read(&adapter->pending_bridged_pkts) >=
-+					MWIFIEX_BRIDGED_PKTS_THR_HIGH)) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "Tx: Bridge packet limit reached. Drop packet!\n");
-+				mwifiex_uap_cleanup_tx_queues(priv);
-+			}
-+
-+		} else {
-+			mwifiex_dbg(adapter, ERROR, "failed to allocate skb_uap");
-+		}
-+
-+		mwifiex_queue_main_work(adapter);
-+		/* Don't forward Intra-BSS unicast packet to upper layer*/
-+		if (mwifiex_get_sta_entry(priv, p_ethhdr->h_dest))
-+			return 0;
-+	}
-+
-+	/* Forward multicast/broadcast packet to upper layer*/
-+	if (in_interrupt())
-+		netif_rx(skb);
-+	else
-+		netif_rx_ni(skb);
-+
-+	return 0;
-+}
-+
- /*
-  * This function processes the packet received on AP interface.
-  *
--- 
-1.8.1.4
-
+Comments are welcomed,
+Regards,
+Nicolas
