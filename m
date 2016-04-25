@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47798 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60713 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755332AbcDNNDo (ORCPT
+	with ESMTP id S932794AbcDYRzH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 09:03:44 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [1/5] mwifiex: missing break statement
+	Mon, 25 Apr 2016 13:55:07 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1460386361-29918-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160414130338.3103060CF4@smtp.codeaurora.org> (sfid-20160414_150348_051357_50DB9299)
-Date: Thu, 14 Apr 2016 13:03:38 +0000 (UTC)
+To: "Vittorio Gambaletta \(VittGam\)" <linux-wireless@vittgam.net>
+Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+	<ath9k-devel@venema.h4ckr.net>
+Subject: Re: [PATCH 1/2] ath9k: Add a module parameter to invert LED polarity.
+References: <ath9k-patch-20160411-1@vittgam.net>
+Date: Mon, 25 Apr 2016 20:55:00 +0300
+In-Reply-To: <ath9k-patch-20160411-1@vittgam.net> (Vittorio Gambaletta's
+	message of "Mon, 11 Apr 2016 04:48:54 +0200")
+Message-ID: <87shy91sln.fsf@kamboji.qca.qualcomm.com> (sfid-20160425_195512_159135_EB1AAEE2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+"Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net> writes:
 
-> This patch adds missing break statement at the end of
-> PCIE_DEVICE_ID_MARVELL_88W8897 switch section.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> The LED can be active high instead of active low on some hardware.
+>
+> Add the led_active_high module parameter. It defaults to -1 to obey
+> platform data as before.
+>
+> Setting the parameter to 1 or 0 will force the LED respectively
+> active high or active low.
+>
+> Cc: <linux-wireless@vger.kernel.org>
+> Cc: <ath9k-devel@qca.qualcomm.com>
+> Cc: <ath9k-devel@lists.ath9k.org>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
 
-Thanks, 5 patches applied to wireless-drivers-next.git:
+Both patches applied, thanks.
 
-c865a70098d9 mwifiex: missing break statement
-e87650bce9a5 mwifiex: add pcie usb/uart firmware download support
-b9db39787933 mwifiex: add default setting for pcie firmware download
-c3ec0ff6425b mwifiex: do not wait on semaphore during card removal
-bcc920e8f083 mwifiex: fix incorrect ht capability problem
-
+-- 
 Kalle Valo
