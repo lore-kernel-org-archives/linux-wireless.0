@@ -1,50 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:34018 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756773AbcDEGi6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 02:38:58 -0400
-Received: by mail-pa0-f68.google.com with SMTP id hb4so477816pac.1
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:38:58 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/14] staging: wilc1000: remove unused hif_drv in wilc_del_station
-Date: Tue,  5 Apr 2016 15:38:25 +0900
-Message-Id: <1459838312-16506-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_083901_117820_B666B3B2)
-In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from bues.ch ([80.190.117.144]:53826 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932723AbcDYPxz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2016 11:53:55 -0400
+Date: Mon, 25 Apr 2016 17:53:26 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Lucas Stach <dev@lynxeye.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: [PATCH RFC] b43: stop hardcoding LED behavior
+Message-ID: <20160425175326.407eba27@wiggum> (sfid-20160425_175400_519878_1D3A399E)
+In-Reply-To: <1461570051-3950-1-git-send-email-dev@lynxeye.de>
+References: <1461570051-3950-1-git-send-email-dev@lynxeye.de>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/UVwYT3RFCi7sm2Ue3m9ZY58"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused hif_drv in wilc_del_station.
-There is no need to check null and print debug log.
+--Sig_/UVwYT3RFCi7sm2Ue3m9ZY58
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ------
- 1 file changed, 6 deletions(-)
+On Mon, 25 Apr 2016 09:40:51 +0200
+Lucas Stach <dev@lynxeye.de> wrote:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4433f99..0c4a74e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3820,12 +3820,6 @@ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr)
- 	int result = 0;
- 	struct host_if_msg msg;
- 	struct del_sta *del_sta_info = &msg.body.del_sta_info;
--	struct host_if_drv *hif_drv = vif->hif_drv;
--
--	if (!hif_drv) {
--		netdev_err(vif->ndev, "driver is null\n");
--		return -EFAULT;
--	}
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
--- 
-2.8.0
+> On my system the SPROM correctly defines the only wired LED (radio) but
+> skips all others, leading to the hardcode to register LEDs with RX and TX
+> triggers.
 
+Hm ok. It probably is a good idea to change the condition from
+
+if (sprom[led_index] =3D=3D 0xFF)
+
+to
+
+if ((sprom[0] & sprom[1] & sprom[2] & sprom[3]) =3D=3D 0xFF)
+
+So the hardcoding only happens if there is no LED configured in the
+SPROM. (I think my card does this (see below), but I can check that
+later)
+
+
+> These triggers cause many uneccesary CPU wakeups to drive LEDs
+> that aren't even present in the system, reducing battery runtime.
+
+
+Numbers please. Did you measure that is actually causes more _wakeups_?
+How many?
+The led work is placed in the mac80211 workqueue and LED updates only
+happen on behalf of mac80211 activities (by default). It only causes
+additional wakeups, if there's nothing else scheduled on the workqueue
+anyways (which might well be the case. So we need numbers. :)
+
+
+> Remove the hardcode to stop it from doing any harm. If this code is useful
+> for others it should probably be reworked as a quirk table triggering only
+> for individual systems that need it.
+
+
+There are cards that need it. I don't know how many that are, but I own
+an older 4306 PC-Card card that needs this.
+
+So this effectively is a regression for this card.
+
+So I don't think this is acceptable.
+You should at least make this configurable via module parameter or such.
+Or maybe the change from above already is enough. It should work for
+your case.
+
+
+> Signed-off-by: Lucas Stach <dev@lynxeye.de>
+> ---
+>  drivers/net/wireless/broadcom/b43/leds.c | 26 ++------------------------
+>  1 file changed, 2 insertions(+), 24 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/broadcom/b43/leds.c b/drivers/net/wirel=
+ess/broadcom/b43/leds.c
+> index d79ab2a..77d2dad 100644
+> --- a/drivers/net/wireless/broadcom/b43/leds.c
+> +++ b/drivers/net/wireless/broadcom/b43/leds.c
+> @@ -224,31 +224,9 @@ static void b43_led_get_sprominfo(struct b43_wldev *=
+dev,
+> =20
+>  	if (sprom[led_index] =3D=3D 0xFF) {
+>  		/* There is no LED information in the SPROM
+> -		 * for this LED. Hardcode it here. */
+> +		 * for this LED. Keep it disabled. */
+>  		*activelow =3D false;
+> -		switch (led_index) {
+> -		case 0:
+> -			*behaviour =3D B43_LED_ACTIVITY;
+> -			*activelow =3D true;
+> -			if (dev->dev->board_vendor =3D=3D PCI_VENDOR_ID_COMPAQ)
+> -				*behaviour =3D B43_LED_RADIO_ALL;
+> -			break;
+> -		case 1:
+> -			*behaviour =3D B43_LED_RADIO_B;
+> -			if (dev->dev->board_vendor =3D=3D PCI_VENDOR_ID_ASUSTEK)
+> -				*behaviour =3D B43_LED_ASSOC;
+> -			break;
+> -		case 2:
+> -			*behaviour =3D B43_LED_RADIO_A;
+> -			break;
+> -		case 3:
+> -			*behaviour =3D B43_LED_OFF;
+> -			break;
+> -		default:
+> -			*behaviour =3D B43_LED_OFF;
+> -			B43_WARN_ON(1);
+> -			return;
+> -		}
+> +		*behaviour =3D B43_LED_OFF;
+>  	} else {
+>  		*behaviour =3D sprom[led_index] & B43_LED_BEHAVIOUR;
+>  		*activelow =3D !!(sprom[led_index] & B43_LED_ACTIVELOW);
+
+
+
+
+--=20
+Michael
+
+--Sig_/UVwYT3RFCi7sm2Ue3m9ZY58
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXHj12AAoJEPUyvh2QjYsOR9kP/3E/xSeP+7F/bAHho7t+iHRY
+4JoixlrluJboHbDsnkzfLNOyz+MsE2TbmimbRgMoC4Q447N2nFTbcLHWXRV0uZJ1
+WEhepDva95w/BaaDCuXPucvJrma9l8TasEY8J2Av2eIcVSge8EhXPopXLBjsCbi+
+49cYT/dDtb4J4+YPLFEx3/7FQOTp0A8JoST4A7Dk2ZZ6q6XgcHaXgwv3v5MDOWvB
+7fWVJJ0Faz/y2Q8WwyTmuBu9tknDBVztKqiM5c+pDnyBjVAsqD6tjpRKd2J4zh45
+AZXXRBNlVkYdgCEPo6LJ9Trr9zwtKVfUmdG2OGm1MOiiYmAGt/Oq7+4/0daNWIY8
+hom3lSj5NavzuPM6yLw5whDMyr/OP0+f24JeW2ERfIGMwDP2q8E9vjm9WTNOye1E
+dPkV/IMfyeRaZPrgy0SSUroDT5Cdrz9N/5tFpnIrsBMvBCqq2rdsqbm8iPildU5y
+v/0dAaSlP3qDIJ11N+yJwMTxGuh2vpOPTgQgT2FS5wEHrUMMhWUETdPX3v8DlfgH
+MexanHDKRJGWyBS6tsRK/jOr5saRLrRzwOwFwc7yz/vENk1Uk+fFVQMIrApLCUTJ
+YrNNYNJ/3UMgdJvb51WG8V5+IYdoicGMgZ/6rOesEMp2KeIUIHvpdTbPe+78OdMu
+5XIhffCtpLDNJdL+JmAZ
+=MNk/
+-----END PGP SIGNATURE-----
+
+--Sig_/UVwYT3RFCi7sm2Ue3m9ZY58--
