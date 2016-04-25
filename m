@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52233 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753921AbcDTPIQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60987 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932791AbcDYR4p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 11:08:16 -0400
-Message-ID: <1461164882.28559.61.camel@decadent.org.uk> (sfid-20160420_170829_819770_130B4353)
-Subject: RSS configuration in iwlwifi
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Wed, 20 Apr 2016 16:08:02 +0100
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-BMUiQ4m+WPAUVhhEv/kd"
-Mime-Version: 1.0
+	Mon, 25 Apr 2016 13:56:45 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Pontus Fuchs <pontus.fuchs@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 00/18] wcn36xx fixes
+References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+Date: Mon, 25 Apr 2016 20:56:40 +0300
+In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+	(Bjorn Andersson's message of "Mon, 18 Apr 2016 22:00:38 -0700")
+Message-ID: <87oa8x1siv.fsf@kamboji.qca.qualcomm.com> (sfid-20160425_195706_209166_B1A867B2)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Bjorn Andersson <bjorn.andersson@linaro.org> writes:
 
---=-BMUiQ4m+WPAUVhhEv/kd
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> The bulk of the following patches have been sitting in Eugene's Github tree for
+> quite some time. They fix various issues existing in the mainline drivers, so
+> they should be merged there too.
+>
+> Also included are two new fixes, of my own; the important one being the
+> reordering of deletion of the bss, as this crashes the firmware on the
+> Dragonbaord 410c (apq8016 with pronto & wcn3620).
+>
+> Lastly is a patch that adds a bunch of new capabilities found in the downstream
+> driver.
+>
+> Changes since v2:
+> - Restore BEACON_TEMPLATE_SIZE to not break UPDATE_PROBE_RSP_TEMPLATE_REQ
+> - Added patch to correct WCN36XX_HAL_RMV_BSSKEY_RSP decoder
+> - Added patch with missing capabilities from downstream
+>
+> Changes since v1:
+> - Reorder patch 6 and 7 to not break the build temporarily
+> - Inline fix from Jason Mobarak in the TIM PVM padding
+>
+> Bjorn Andersson (3):
+>   wcn36xx: Delete BSS before idling link
+>   wcn36xx: Correct remove bss key response encoding
+>   wcn36xx: Fill in capability list
+>
+> Pontus Fuchs (15):
+>   wcn36xx: Clean up wcn36xx_smd_send_beacon
+>   wcn36xx: Pad TIM PVM if needed
+>   wcn36xx: Add helper macros to cast vif to private vif and vice versa
+>   wcn36xx: Use consistent name for private vif
+>   wcn36xx: Use define for invalid index and fix typo
+>   wcn36xx: Add helper macros to cast sta to priv
+>   wcn36xx: Fetch private sta data from sta entry instead of from vif
+>   wcn36xx: Remove sta pointer in private vif struct
+>   wcn36xx: Parse trigger_ba response properly
+>   wcn36xx: Copy all members in config_sta v1 conversion
+>   wcn36xx: Use allocated self sta index instead of hard coded
+>   wcn36xx: Clear encrypt_type when deleting bss key
+>   wcn36xx: Track association state
+>   wcn36xx: Implement multicast filtering
+>   wcn36xx: Use correct command struct for EXIT_BMPS_REQ
 
-I'm not sure if you were aware, but there is a standard API for
-configuring RSS in network drivers, part of ethtool_ops. =C2=A0I think
-iwlwifi should implement that rather than a driver-specific debugfs
-interface.
+All applied, thanks.
 
-Ben.
-
---=20
-Ben Hutchings
-Never attribute to conspiracy what can adequately be explained by stupidity=
-.
-
---=-BMUiQ4m+WPAUVhhEv/kd
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJXF5tSAAoJEOe/yOyVhhEJfssP/2AA5j2Lvg+sJwVpOCmpq7zb
-kA1VHXdTGqicEneQzNrCEXqh8o+AC7FDZfshNrEaVud32FbU8xh5lbsslBZMK1XV
-JdpatH58FzodKW+zlrSHNLZPballDunoF+r6mAGYFnHhluXsEanU3QlU+wWeYUsq
-Cy+vpG8AjzJz/G+ex86oyl+kattsaudBN6VnKpM/DZ9rIiVbI53nnAXldITjrNKt
-Fb1BlaV74N1WWq3h6RySDAGwvbrm57ljKPMia7RKLFE+sJFSZLTxzaHsTFwjK9Fn
-D7RmUFm16vPb/diqf5Rob9BwiK60jcW0ErphuZ5JDiRMEMRPFjL/KQzKTPWvw9g/
-+VE1XQ60hd1lQRBspw5Tqd2lidct4KFHsnO2vguDCuGNmvTDW/8Ah2N98LLCASX4
-I7eCBcu4o8S/T0kyZc3qV9ZZtt2zhvgpCJVfJ+WlE+j1WhIQ13F07ibMXKDWmBPm
-gguY1vSaoRnhDNiUknDMfaMway1bdh+NITVeXuU7AQWzmIDbpzzHtJKCEDq+K2Of
-rrrJ9+z5DbPBeSeoET1JkaiVfGr9CB8UkEr/JOZO4geEffwxS3070aij0YgyMKpV
-HiKtnbsGjGeWbqI7YmO5EmItV4YRs6XKeNuFYSifi4o4wVNaZ/oitpZltyezi3a2
-GrAkufcsnZOAePg8NUGK
-=Oq8j
------END PGP SIGNATURE-----
-
---=-BMUiQ4m+WPAUVhhEv/kd--
+-- 
+Kalle Valo
