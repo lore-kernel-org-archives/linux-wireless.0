@@ -1,91 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:34969 "EHLO
-	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007AbcDSFBH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58034 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932428AbcDYNbA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 01:01:07 -0400
-Received: by mail-pf0-f179.google.com with SMTP id n1so2716412pfn.2
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 22:01:06 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 01/18] wcn36xx: Clean up wcn36xx_smd_send_beacon
-Date: Mon, 18 Apr 2016 22:00:39 -0700
-Message-Id: <1461042056-10607-2-git-send-email-bjorn.andersson@linaro.org> (sfid-20160419_070706_033356_CD1596EA)
-In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+	Mon, 25 Apr 2016 09:31:00 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Mon, 25 Apr 2016 16:30:58 +0300
+From: merez@codeaurora.org
+To: Joe Perches <joe@perches.com>
+Cc: qca_merez <qca_merez@qca.qualcomm.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, wil6210 <wil6210@qca.qualcomm.com>,
+	linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH 4/7] wil6210: print debug message when transmitting while
+ disconnected
+In-Reply-To: <1460341847.1800.68.camel@perches.com>
+References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
+ <1459855447-17413-5-git-send-email-qca_merez@qca.qualcomm.com>
+ <1459927376.6715.37.camel@perches.com>
+ <22bd7713a48b46e2bb2f1ec67ad6c409@euamsexm01a.eu.qualcomm.com>
+ <1460341847.1800.68.camel@perches.com>
+Message-ID: <ae4d9c13a189b5939bdb40de800f6110@codeaurora.org> (sfid-20160425_153105_765715_9915247C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+On 2016-04-11 05:30, Joe Perches wrote:
+> On Sun, 2016-04-10 at 19:17 +0000, qca_merez wrote:
+>> On 4/6/2016 10:22 AM, Joe Perches wrote:
+>> >
+>> > On Tue, 2016-04-05 at 14:24 +0300, Maya Erez w
+>> > >
+>> > > +void __wil_dbg_ratelimited(struct wil6210_priv *wil, const char
+> *fmt, 
+>> > > +...) {
+>> > > +	if (net_ratelimit()) {
+>> >
+>> > Inverting the test would reduce indentation.
+>> I preferred to have the same implementation as in wil_err_ratelimited.
+> 
+> That's easy enough.
+> 
+> Maybe:
+> ---
+>  drivers/net/wireless/ath/wil6210/debug.c   | 55
+> ++++++++++++++----------------
+>  drivers/net/wireless/ath/wil6210/wil6210.h |  8 ++---
+>  2 files changed, 30 insertions(+), 33 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/wil6210/debug.c
+> b/drivers/net/wireless/ath/wil6210/debug.c
+> index 3249562..de1e932 100644
+> --- a/drivers/net/wireless/ath/wil6210/debug.c
+> +++ b/drivers/net/wireless/ath/wil6210/debug.c
+> @@ -17,61 +17,58 @@
+>  #include "wil6210.h"
+>  #include "trace.h"
+>  
+> -void wil_err(struct wil6210_priv *wil, const char *fmt, ...)
+> +void wil_err(const struct wil6210_priv *wil, const char *fmt, ...)
+>  {
+> -	struct net_device *ndev = wil_to_ndev(wil);
+> -	struct va_format vaf = {
+> -		.fmt = fmt,
+> -	};
+> +	struct va_format vaf;
+>  	va_list args;
+>  
+>  	va_start(args, fmt);
+> +	vaf.fmt = fmt;
+>  	vaf.va = &args;
+> -	netdev_err(ndev, "%pV", &vaf);
+> +	netdev_err(wil_to_ndev(wil), "%pV", &vaf);
+>  	trace_wil6210_log_err(&vaf);
+>  	va_end(args);
+>  }
+>  
+> -void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, 
+> ...)
+> +void wil_err_ratelimited(const struct wil6210_priv *wil, const char 
+> *fmt,
+> ...)
+>  {
+> -	if (net_ratelimit()) {
+> -		struct net_device *ndev = wil_to_ndev(wil);
+> -		struct va_format vaf = {
+> -			.fmt = fmt,
+> -		};
+> -		va_list args;
+> +	struct va_format vaf;
+> +	va_list args;
+> +
+> +	if (!net_ratelimit())
+> +		return;
+>  
+> -		va_start(args, fmt);
+> -		vaf.va = &args;
+> -		netdev_err(ndev, "%pV", &vaf);
+> -		trace_wil6210_log_err(&vaf);
+> -		va_end(args);
+> -	}
+> +	va_start(args, fmt);
+> +	vaf.fmt = fmt;
+> +	vaf.va = &args;
+> +	netdev_err(wil_to_ndev(wil), "%pV", &vaf);
+> +	trace_wil6210_log_err(&vaf);
+> +	va_end(args);
+>  }
+>  
+> -void wil_info(struct wil6210_priv *wil, const char *fmt, ...)
+> +void wil_info(const struct wil6210_priv *wil, const char *fmt, ...)
+>  {
+> -	struct net_device *ndev = wil_to_ndev(wil);
+> -	struct va_format vaf = {
+> -		.fmt = fmt,
+> -	};
+> +	struct va_format vaf;
+>  	va_list args;
+>  
+> +	if (!net_ratelimit())
+> +		return;
+> +
+>  	va_start(args, fmt);
+> +	vaf.fmt = fmt;
+>  	vaf.va = &args;
+> -	netdev_info(ndev, "%pV", &vaf);
+> +	netdev_info(wil_to_ndev(wil), "%pV", &vaf);
+>  	trace_wil6210_log_info(&vaf);
+>  	va_end(args);
+>  }
+>  
+> -void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...)
+> +void wil_dbg_trace(const struct wil6210_priv *wil, const char *fmt, 
+> ...)
+>  {
+> -	struct va_format vaf = {
+> -		.fmt = fmt,
+> -	};
+> +	struct va_format vaf;
+>  	va_list args;
+>  
+>  	va_start(args, fmt);
+> +	vaf.fmt = fmt;
+>  	vaf.va = &args;
+>  	trace_wil6210_log_dbg(&vaf);
+>  	va_end(args);
+> diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h
+> b/drivers/net/wireless/ath/wil6210/wil6210.h
+> index 4d699ea4..e2b62b1 100644
+> --- a/drivers/net/wireless/ath/wil6210/wil6210.h
+> +++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+> @@ -633,13 +633,13 @@ struct wil6210_priv {
+>  #define ndev_to_wil(n) (wdev_to_wil(n->ieee80211_ptr))
+>  
+>  __printf(2, 3)
+> -void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
+> +void wil_dbg_trace(const struct wil6210_priv *wil, const char *fmt, 
+> ...);
+>  __printf(2, 3)
+> -void wil_err(struct wil6210_priv *wil, const char *fmt, ...);
+> +void wil_err(const struct wil6210_priv *wil, const char *fmt, ...);
+>  __printf(2, 3)
+> -void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, 
+> ...);
+> +void wil_err_ratelimited(const struct wil6210_priv *wil, const char 
+> *fmt,
+> ...);
+>  __printf(2, 3)
+> -void wil_info(struct wil6210_priv *wil, const char *fmt, ...);
+> +void wil_info(const struct wil6210_priv *wil, const char *fmt, ...);
+>  #define wil_dbg(wil, fmt, arg...) do { \
+>  	netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
+>  	wil_dbg_trace(wil, fmt, ##arg); \
+> --
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Needed for coming improvements. No functional changes.
-
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-[bjorn: restored BEACON_TEMPLATE_SIZE define to 0x180]
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
-
-Changes since v2:
-- Subtract sizeof(beacon_length) instead of modifying BEACON_TEMPLATE_SIZE,
-  which is used in other places as well.
-
- drivers/net/wireless/ath/wcn36xx/hal.h |  5 ++++-
- drivers/net/wireless/ath/wcn36xx/smd.c | 12 +++++-------
- 2 files changed, 9 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index b947de0fb2e5..d713204f755d 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -2884,11 +2884,14 @@ struct update_beacon_rsp_msg {
- struct wcn36xx_hal_send_beacon_req_msg {
- 	struct wcn36xx_hal_msg_header header;
- 
-+	/* length of the template + 6. Only qcom knows why */
-+	u32 beacon_length6;
-+
- 	/* length of the template. */
- 	u32 beacon_length;
- 
- 	/* Beacon data. */
--	u8 beacon[BEACON_TEMPLATE_SIZE];
-+	u8 beacon[BEACON_TEMPLATE_SIZE - sizeof(u32)];
- 
- 	u8 bssid[ETH_ALEN];
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 74f56a81ad9a..ff3ed2461a69 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1380,19 +1380,17 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ);
- 
--	/* TODO need to find out why this is needed? */
--	msg_body.beacon_length = skb_beacon->len + 6;
-+	msg_body.beacon_length = skb_beacon->len;
-+	/* TODO need to find out why + 6 is needed */
-+	msg_body.beacon_length6 = msg_body.beacon_length + 6;
- 
--	if (BEACON_TEMPLATE_SIZE > msg_body.beacon_length) {
--		memcpy(&msg_body.beacon, &skb_beacon->len, sizeof(u32));
--		memcpy(&(msg_body.beacon[4]), skb_beacon->data,
--		       skb_beacon->len);
--	} else {
-+	if (msg_body.beacon_length > BEACON_TEMPLATE_SIZE) {
- 		wcn36xx_err("Beacon is to big: beacon size=%d\n",
- 			      msg_body.beacon_length);
- 		ret = -ENOMEM;
- 		goto out;
- 	}
-+	memcpy(msg_body.beacon, skb_beacon->data, skb_beacon->len);
- 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
- 
- 	/* TODO need to find out why this is needed? */
+Thanks for your suggestion, I currently changed wil_dbg_ratelimited only 
+and will
+change the other functions in a separate patch.
 -- 
-2.5.0
-
+Maya Erez
+Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
