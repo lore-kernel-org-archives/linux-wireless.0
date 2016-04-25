@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35497 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808AbcDRRHE (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:38852 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932541AbcDYRei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 13:07:04 -0400
-Date: Mon, 18 Apr 2016 10:07:02 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lauri Kasanen <cand@gmx.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] carl9170: Clarify kconfig text
-Message-ID: <11418613.XH7h8m2RjK@debian64> (sfid-20160418_190727_596594_CFF0EEAB)
-In-Reply-To: <87r3e2kgwy.fsf@kamboji.qca.qualcomm.com>
-References: <20160416113312.8de2266358165182bb4b4a15@gmx.com> <3244016.0TmHG3E4A9@debian64> <87r3e2kgwy.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 25 Apr 2016 13:34:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, emmanuel.grumbach@intel.com,
+	sara.sharon@intel.com, pat-lkml@erley.org, luciano.coelho@intel.com
+Date: Mon, 25 Apr 2016 20:02:09 +0300
+Message-Id: <1461603729-20973-1-git-send-email-luca@coelho.fi> (sfid-20160425_193442_343674_4B5BD685)
+Subject: [PATCH] iwlwifi: fix fw version reading for DVM devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, April 18, 2016 07:42:05 PM Kalle Valo wrote:
-> Christian Lamparter <chunkeey@googlemail.com> writes:
-> 
-> > On Monday, April 18, 2016 06:45:09 PM Kalle Valo wrote:
-> >> Lauri Kasanen <cand@gmx.com> writes:
-> >> 
-> >> > --- a/drivers/net/wireless/ath/carl9170/Kconfig
-> >> > +++ b/drivers/net/wireless/ath/carl9170/Kconfig
-> >> > @@ -5,12 +5,10 @@ config CARL9170
-> >> >  	select FW_LOADER
-> >> >  	select CRC32
-> >> >  	help
-> >> > -	  This is another driver for the Atheros "otus" 802.11n USB devices.
-> >> > +	  This is the mainline driver for the Atheros "otus" 802.11n USB devices.
-> >> >  
-> >> > -	  This driver provides more features than the original,
-> >> > -	  but it needs a special firmware (carl9170-1.fw) to do that.
-> >> > -
-> >> > -	  The firmware can be downloaded from our wiki here:
-> >> > +	  It needs a special firmware (carl9170-1.fw), which can be downloaded
-> >> > +	  from our wiki here:
-> >> >  	  <http://wireless.kernel.org/en/users/Drivers/carl9170>
-> >> 
-> >> Why even mention anything about a "special firmware" as the firmware is
-> >> already available from linux-firmware.git? 
-> >
-> > Yes and no. 1.9.6 is in linux-firmware.git. I've tried to add 1.9.9 too
-> > but that failed.
-> > <http://comments.gmane.org/gmane.linux.kernel.wireless.general/114639>
-> 
-> Rick's comment makes sense to me, better just to provide the latest
-> version. No need to unnecessary confuse the users. And if someone really
-> wants to use an older version that she can retrieve it from the git
-> history.
-Part of the fun here is that firmware is GPLv2. The linux-firmware.git has
-to point to or add the firmware source to their tree. They have added every
-single source file to it.... instead of "packaging" it in a tar.bz2/gz/xz
-like you normally do for release sources.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-If you want to read more about it:
-<http://www.spinics.net/lists/linux-wireless/msg101868.html>
+In commit 97f95c93c8ed ("iwlwifi: remove support for fw older than
+-16.ucode") we accidentally changed the fw version reading code for
+DVM devices.  The code intended to remove the old fw version API,
+because all MVM firmwares version 16 and above that we support don't
+use it anymore.  But DVM devices still use the old FW API.
+
+Fix that by bringing the code back in.
+
+Reported-by: Pat Erley <pat-lkml@erley.org>
+Fixes: 97f95c93c8ed ("iwlwifi: remove support for fw older than-16.ucode")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c     | 5 ++++-
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 2 ++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 48e8737..4f495d9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1280,7 +1280,10 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	if (err)
+ 		goto try_again;
+ 
+-	api_ver = drv->fw.ucode_ver;
++	if (fw_has_api(&drv->fw.ucode_capa, IWL_UCODE_TLV_API_NEW_VERSION))
++		api_ver = drv->fw.ucode_ver;
++	else
++		api_ver = IWL_UCODE_API(drv->fw.ucode_ver);
+ 
+ 	/*
+ 	 * api_ver should match the api version forming part of the
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index 843232b..37dc09e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -251,6 +251,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_api_t;
+  * @IWL_UCODE_TLV_API_WIFI_MCC_UPDATE: ucode supports MCC updates with source.
+  * @IWL_UCODE_TLV_API_WIDE_CMD_HDR: ucode supports wide command header
+  * @IWL_UCODE_TLV_API_LQ_SS_PARAMS: Configure STBC/BFER via LQ CMD ss_params
++ * @IWL_UCODE_TLV_API_NEW_VERSION: new versioning format
+  * @IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY: scan APIs use 8-level priority
+  *	instead of 3.
+  * @IWL_UCODE_TLV_API_TX_POWER_CHAIN: TX power API has larger command size
+@@ -263,6 +264,7 @@ enum iwl_ucode_tlv_api {
+ 	IWL_UCODE_TLV_API_WIFI_MCC_UPDATE	= (__force iwl_ucode_tlv_api_t)9,
+ 	IWL_UCODE_TLV_API_WIDE_CMD_HDR		= (__force iwl_ucode_tlv_api_t)14,
+ 	IWL_UCODE_TLV_API_LQ_SS_PARAMS		= (__force iwl_ucode_tlv_api_t)18,
++	IWL_UCODE_TLV_API_NEW_VERSION           = (__force iwl_ucode_tlv_api_t)20,
+ 	IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY	= (__force iwl_ucode_tlv_api_t)24,
+ 	IWL_UCODE_TLV_API_TX_POWER_CHAIN	= (__force iwl_ucode_tlv_api_t)27,
+ 
+-- 
+2.8.0.rc3
 
