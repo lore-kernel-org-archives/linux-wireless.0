@@ -1,31 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:33628 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531AbcDAU3A (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:63051 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932948AbcDYRsc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 16:29:00 -0400
-Received: by mail-ig0-f181.google.com with SMTP id ma7so5205541igc.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2016 13:29:00 -0700 (PDT)
+	Mon, 25 Apr 2016 13:48:32 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 0/8] ath10k: refactor firmware components
+Date: Mon, 25 Apr 2016 17:48:26 +0000
+Message-ID: <87wpnl1swm.fsf@kamboji.qca.qualcomm.com> (sfid-20160425_194837_307586_E12D8F01)
+References: <20160420164301.8801.12099.stgit@potku.adurom.net>
+In-Reply-To: <20160420164301.8801.12099.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Wed, 20 Apr 2016 19:44:22 +0300")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1226946591.551679.1459474349098.JavaMail.yahoo@mail.yahoo.com>
-References: <CAJ-VmonT5AWXzstdxbR+R6p4ia-ui6WFaQ9Tq28TzLd-uh4dUw@mail.gmail.com>
-	<1226946591.551679.1459474349098.JavaMail.yahoo@mail.yahoo.com>
-Date: Fri, 1 Apr 2016 13:28:59 -0700
-Message-ID: <CAJ-VmokAypMZGWJ5BEnFpnBcYFZ=i7j-sgjpYjZB1KT+zHd5mA@mail.gmail.com> (sfid-20160401_222904_071647_12503C0A)
-Subject: Re: Bonjour mDNS broacast can be lost during BT-WLAN coexistence schemes?
-From: Adrian Chadd <adrian@freebsd.org>
-To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Cc: Ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-ath9k has support for station powersave, and it's driven by mac80211.
-You should be able to implement that policy in mac80211 and then add
-hooks so your bluetooth code can get notifications about it.
+> This series refactors various ath10k firmware components into struct
+> ath10k_fw_components which contains everything firmware related (board
+> files, meta data and so on). This makes it possible to kill
+> ath10k_tm_fetch_utf_firmware_api_2() from testmode.c.
+>
+> Also REALLY old FW API 1 (firmware.bin and otp.bin) support is
+> removed.
+>
+> v2:
+>
+> o patch 1: remove all unused "firmware.bin" and "otp.bin" defines
+>
+> o patch 2: remove a lefover FIXME comment, create local variable for
+>   ar->normal_mode_fw.fw_file.firmware
+>
+> o patch 2: fix block comment styles
+>
+> o patch 2: fix long lines
+>
+> drivers/net/wireless/ath/ath10k/testmode.c:200: line over 90 characters
+> drivers/net/wireless/ath/ath10k/testmode.c:201: line over 90 characters
+>
+> ---
+>
+> Kalle Valo (8):
+>       ath10k: remove deprecated firmware API 1 support
+>       ath10k: refactor firmware images to struct ath10k_fw_components
+>       ath10k: move fw_version inside struct ath10k_fw_file
+>       ath10k: move fw_features to struct ath10k_fw_file
+>       ath10k: move wmi_op_version to struct ath10k_fw_file
+>       ath10k: move htt_op_version to struct ath10k_fw_file
+>       ath10k: switch testmode to use ath10k_core_fetch_firmware_api_n()
+>       ath10k: remove enum ath10k_swap_code_seg_bin_type
 
+Applied.
 
--a
+-- 
+Kalle Valo
