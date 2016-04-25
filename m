@@ -1,50 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59135 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756817AbcDMLNd (ORCPT
+Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:54556 "EHLO
+	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754062AbcDYIcH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2016 07:13:33 -0400
-Subject: [PATCH v2 0/5] ath10k: fix recent checkpatch warnings
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 13 Apr 2016 14:13:08 +0300
-Message-ID: <20160413111247.18823.15952.stgit@potku.adurom.net> (sfid-20160413_131337_169892_76214888)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 25 Apr 2016 04:32:07 -0400
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, jhs@mojatatu.com, stephen@networkplumber.org,
+	pshelar@nicira.com, aar@pengutronix.de, linux-wpan@vger.kernel.org,
+	wensong@linux-vs.org, horms@verge.net.au, ja@ssi.bg,
+	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
+	lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Subject: [PATCH net-next 4/9] ovs: use nla_put_u64_64bit()
+Date: Mon, 25 Apr 2016 10:25:17 +0200
+Message-Id: <1461572722-6029-5-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160425_103227_968959_FDD98062)
+In-Reply-To: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
+References: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I updated checkpatch and noticed that there are few new warnings.
-
-v2:
-
-* fix tests in patch 3
-* add patch 5 to fix a new warning in mac.c
-
+Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
 ---
+ include/uapi/linux/openvswitch.h | 1 +
+ net/openvswitch/datapath.c       | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-Kalle Valo (5):
-      ath10k: fix checkpatch warnings related to spaces
-      ath10k: prefer kernel type 'u64' over 'u_int64_t'
-      ath10k: prefer ether_addr_equal() or ether_addr_equal_unaligned() over memcmp()
-      ath10k: prefer ether_addr_copy() over memcpy()
-      ath10k: fix parenthesis alignment
-
-
- drivers/net/wireless/ath/ath10k/ce.c        |    6 +++---
- drivers/net/wireless/ath/ath10k/ce.h        |    2 +-
- drivers/net/wireless/ath/ath10k/core.h      |    6 +++---
- drivers/net/wireless/ath/ath10k/debug.h     |    2 +-
- drivers/net/wireless/ath/ath10k/htc.h       |    4 ++--
- drivers/net/wireless/ath/ath10k/htt.c       |    2 +-
- drivers/net/wireless/ath/ath10k/htt.h       |    4 ++--
- drivers/net/wireless/ath/ath10k/mac.c       |   14 +++++++-------
- drivers/net/wireless/ath/ath10k/targaddrs.h |    2 +-
- drivers/net/wireless/ath/ath10k/thermal.h   |    2 +-
- drivers/net/wireless/ath/ath10k/txrx.c      |    4 ++--
- drivers/net/wireless/ath/ath10k/wmi-tlv.h   |    4 ++--
- drivers/net/wireless/ath/ath10k/wmi.c       |    7 +++----
- drivers/net/wireless/ath/ath10k/wmi.h       |   18 +++++++++---------
- 14 files changed, 38 insertions(+), 39 deletions(-)
+diff --git a/include/uapi/linux/openvswitch.h b/include/uapi/linux/openvswitch.h
+index 0358f94af86e..d6be1fb778a5 100644
+--- a/include/uapi/linux/openvswitch.h
++++ b/include/uapi/linux/openvswitch.h
+@@ -519,6 +519,7 @@ enum ovs_flow_attr {
+ 				  * logging should be suppressed. */
+ 	OVS_FLOW_ATTR_UFID,      /* Variable length unique flow identifier. */
+ 	OVS_FLOW_ATTR_UFID_FLAGS,/* u32 of OVS_UFID_F_*. */
++	OVS_FLOW_ATTR_PAD,
+ 	__OVS_FLOW_ATTR_MAX
+ };
+ 
+diff --git a/net/openvswitch/datapath.c b/net/openvswitch/datapath.c
+index 0cc66a4e492d..22d9a5316304 100644
+--- a/net/openvswitch/datapath.c
++++ b/net/openvswitch/datapath.c
+@@ -754,7 +754,8 @@ static int ovs_flow_cmd_fill_stats(const struct sw_flow *flow,
+ 	ovs_flow_stats_get(flow, &stats, &used, &tcp_flags);
+ 
+ 	if (used &&
+-	    nla_put_u64(skb, OVS_FLOW_ATTR_USED, ovs_flow_used_time(used)))
++	    nla_put_u64_64bit(skb, OVS_FLOW_ATTR_USED, ovs_flow_used_time(used),
++			      OVS_FLOW_ATTR_PAD))
+ 		return -EMSGSIZE;
+ 
+ 	if (stats.n_packets &&
+-- 
+2.8.1
 
