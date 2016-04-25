@@ -1,45 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:22562 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757317AbcDGSTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 14:19:35 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 16/18] rtl8xxxu: Use proper register name for REG_PAD_CTRL1
-Date: Thu,  7 Apr 2016 14:19:31 -0400
-Message-Id: <1460053173-8494-17-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_201952_105325_E68442C3)
-In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40393 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933240AbcDYS4p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2016 14:56:45 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH v2 7/7] wil6210: add support for device led configuration
+References: <1461589078-29854-1-git-send-email-qca_merez@qca.qualcomm.com>
+	<1461589078-29854-8-git-send-email-qca_merez@qca.qualcomm.com>
+Date: Mon, 25 Apr 2016 21:56:39 +0300
+In-Reply-To: <1461589078-29854-8-git-send-email-qca_merez@qca.qualcomm.com>
+	(Maya Erez's message of "Mon, 25 Apr 2016 15:57:58 +0300")
+Message-ID: <87a8kh1pqw.fsf@kamboji.qca.qualcomm.com> (sfid-20160425_205701_427125_1C0494F9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Maya Erez <qca_merez@qca.qualcomm.com> writes:
 
-Fixup another case where the hard coded register value was used
-instead of the name.
+> Add the ability to configure the device led to be used for notifying
+> the AP activity (60G device supports leds 0-2).
+> The host can also configure the blinking frequency of the led in
+> three states.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+[...]
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 5a2eb0a..604deb4 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -3550,9 +3550,9 @@ static void rtl8723bu_phy_init_antenna_selection(struct rtl8xxxu_priv *priv)
- {
- 	u32 val32;
- 
--	val32 = rtl8xxxu_read32(priv, 0x64);
-+	val32 = rtl8xxxu_read32(priv, REG_PAD_CTRL1);
- 	val32 &= ~(BIT(20) | BIT(24));
--	rtl8xxxu_write32(priv, 0x64, val32);
-+	rtl8xxxu_write32(priv, REG_PAD_CTRL1, val32);
- 
- 	val32 = rtl8xxxu_read32(priv, REG_GPIO_MUXCFG);
- 	val32 &= ~BIT(4);
+> +/* led_blink_time, write:
+> + * "<blink_on_slow> <blink_off_slow> <blink_on_med> <blink_off_med> <blink_on_fast> <blink_off_fast>
+> + */
+> +static ssize_t wil_write_led_blink_time(struct file *file,
+> +					const char __user *buf,
+> +					size_t len, loff_t *ppos)
+> +{
+> +	int rc;
+> +	char *kbuf = kmalloc(len + 1, GFP_KERNEL);
+> +
+> +	if (!kbuf)
+> +		return -ENOMEM;
+> +
+> +	rc = simple_write_to_buffer(kbuf, len, ppos, buf, len);
+> +	if (rc != len) {
+> +		kfree(kbuf);
+> +		return rc >= 0 ? -EIO : rc;
+> +	}
+> +
+> +	kbuf[len] = '\0';
+> +	rc = sscanf(kbuf, "%d %d %d %d %d %d",
+> +		    &led_blink_time[WIL_LED_TIME_SLOW].on_ms,
+> +		    &led_blink_time[WIL_LED_TIME_SLOW].off_ms,
+> +		    &led_blink_time[WIL_LED_TIME_MED].on_ms,
+> +		    &led_blink_time[WIL_LED_TIME_MED].off_ms,
+> +		    &led_blink_time[WIL_LED_TIME_FAST].on_ms,
+> +		    &led_blink_time[WIL_LED_TIME_FAST].off_ms);
+> +	kfree(kbuf);
+> +
+> +	if (rc < 0)
+> +		return rc;
+> +	if (rc < 6)
+> +		return -EINVAL;
+> +
+> +	return len;
+> +}
+
+Don't we already have a proper framework for leds? At least
+include/linux/led.h and drivers/led/ makes me suspect that. I'm not
+really fond of the idea reinventing the wheel, unless there's a really
+good reason.
+
 -- 
-2.5.5
-
+Kalle Valo
