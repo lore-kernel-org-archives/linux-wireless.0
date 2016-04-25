@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49752 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754668AbcDALsb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 07:48:31 -0400
-Message-ID: <1459511308.3342.0.camel@sipsolutions.net> (sfid-20160401_134834_556640_F209A8B1)
-Subject: Re: [PATCH] Prevent unnecessary iteration in __handle_cmd
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sunil Shahu <shshahu@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 01 Apr 2016 13:48:28 +0200
-In-Reply-To: <1459499461-4422-1-git-send-email-shshahu@gmail.com> (sfid-20160401_103119_737984_577FA87E)
-References: <1459499461-4422-1-git-send-email-shshahu@gmail.com>
-	 (sfid-20160401_103119_737984_577FA87E)
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:60791 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932699AbcDYTJk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2016 15:09:40 -0400
+Date: Mon, 25 Apr 2016 15:09:33 -0400 (EDT)
+Message-Id: <20160425.150933.1465492349349273571.davem@davemloft.net> (sfid-20160425_210949_644521_027CE6DF)
+To: nicolas.dichtel@6wind.com
+Cc: netdev@vger.kernel.org, jhs@mojatatu.com,
+	stephen@networkplumber.org, pshelar@nicira.com, aar@pengutronix.de,
+	linux-wpan@vger.kernel.org, wensong@linux-vs.org,
+	horms@verge.net.au, ja@ssi.bg, pablo@netfilter.org,
+	kaber@trash.net, kadlec@blackhole.kfki.hu,
+	lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH net-next 0/9] netlink: align attributes when needed
+ (patchset #2)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
+References: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-04-01 at 14:01 +0530, Sunil Shahu wrote:
-> Break the loop after matching sectcmd is found. Remove redundant
-> variable copying.
-> 
-> Signed-off-by: Sunil Shahu <shshahu@gmail.com>
-> ---
->  iw.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/iw.c b/iw.c
-> index 0f511d9..73ae347 100644
-> --- a/iw.c
-> +++ b/iw.c
-> @@ -376,11 +376,9 @@ static int __handle_cmd(struct nl80211_state
-> *state, enum id_input idby,
->  		if (match && sectcmd->idby != command_idby)
->  			continue;
->  		if (strcmp(sectcmd->name, section) == 0)
-> -			match = sectcmd;
-> +			break;
->  	}
->  
-> -	sectcmd = match;
-> -	match = NULL;
-> 
-I don't think this works - what if you reach the end of the loop?
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Date: Mon, 25 Apr 2016 10:25:13 +0200
 
-johannes
+> This is the continuation (series #2) of the work done to align netlink
+> attributes when these attributes contain some 64-bit fields.
+> 
+> In patch #3, I didn't modify the function ila_encap_nlsize(). I was waiting
+> feedback for this patch: http://patchwork.ozlabs.org/patch/613766/
+> If it's approved, there will be an update to switch nla_total_size() to
+> nla_total_size_64bit() after the merge of net in net-next.
+
+Looks good, series applied, thanks!
