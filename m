@@ -1,125 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:28581 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751342AbcDRMXK (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50336 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932174AbcDYNFh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 08:23:10 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <devicetree@vger.kernel.org>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v7 1/2] dt: bindings: add MARVELL's sd8xxx wireless device
-Date: Mon, 18 Apr 2016 05:22:22 -0700
-Message-ID: <1460982143-1419-1-git-send-email-akarwar@marvell.com> (sfid-20160418_142314_085134_3C2AF75D)
+	Mon, 25 Apr 2016 09:05:37 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pat Erley <pat-lkml@erley.org>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
+Subject: Re: [PATCH 23/43] iwlwifi: remove support for fw older than -16.ucode
+References: <1459346667.4731.9.camel@intel.com>
+	<1459346715-7954-23-git-send-email-emmanuel.grumbach@intel.com>
+	<571C681B.2090604@erley.org>
+Date: Mon, 25 Apr 2016 16:05:32 +0300
+In-Reply-To: <571C681B.2090604@erley.org> (Pat Erley's message of "Sat, 23 Apr
+	2016 23:30:51 -0700")
+Message-ID: <87y481x2hv.fsf@purkki.adurom.net> (sfid-20160425_150542_587705_93739746)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Pat Erley <pat-lkml@erley.org> writes:
 
-Add device tree binding documentation for MARVELL's sd8xxx
-(sd8897 and sd8997) wlan chip.
+> This patch broke ucode loading on iwl6050 hardware.
+>
+> [   12.666080] iwlwifi 0000:03:00.0: Direct firmware load for
+> iwlwifi-6050-exp.ucode failed with error -2
+> [   12.672318] iwlwifi 0000:03:00.0: Driver unable to support your
+> firmware API. Driver supports v5, firmware is v689702145.
+> [   12.676429] iwlwifi 0000:03:00.0: Driver unable to support your
+> firmware API. Driver supports v5, firmware is v164168705.
+> [   12.676631] iwlwifi 0000:03:00.0: no suitable firmware found!
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-Listing changelist for both 1/2 and 2/2 patches
-v3: Don't update adapter->dt_node if mwifiex_plt_dev is NULL
+I'm seeing the same:
 
-v4: a)Corrected the 'name' and 'compatible' property names.(Arnd Bergmann and Rob
-    Herring)
-    b)Patch description wraped in 72 columns(Rob Herring)
-    c)Moved DT binding file to bindings/net/wireless/(Rob Herring)
-    d)Renamed "mwifiex,chip-gpio" to "marvell,wakeup-gpios"(Rob Herring/
-    Arnd Bergmann)
-    e)Replaced #ifdef with __maybe_unused(Arnd Bergmann)
+[    7.459114] Intel(R) Wireless WiFi driver for Linux
+[    7.459117] Copyright(c) 2003- 2015 Intel Corporation
+[    7.459317] iwlwifi 0000:03:00.0: can't disable ASPM; OS doesn't have ASPM control
+[    7.468245] iwlwifi 0000:03:00.0: Driver unable to support your firmware API. Driver supports v6, firmware is v313001473.
+[    7.470916] iwlwifi 0000:03:00.0: Driver unable to support your firmware API. Driver supports v6, firmware is v296224003.
+[    7.470931] iwlwifi 0000:03:00.0: no suitable firmware found!
 
-v5: a)Removed wildcards from compatible string(Arnd Bergmann)
-    b)Prepared single patch for all binding changes(Rob Herring)
-    c)Specified our node as a subnode of SDIO controller. With this approach, we
-    don't need to register new platform driver. (Rob herring)
+My device:
 
-v6: a)List out the specific property names for marvell,caldata* and size of the data(Rob Herring)
-    b)Use sdio function number for both the unit address and reg(Rob Herring)
+03:00.0 Network controller [0280]: Intel Corporation Centrino Advanced-N 6205 [Taylor Peak] [8086:0085] (rev 34)
 
-v7: a)Use suggested specific marvell,caldata property name and generic node name(Rob Herring)
----
- .../bindings/net/wireless/marvell-sd8xxx.txt       | 63 ++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-new file mode 100644
-index 0000000..c421aba
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-@@ -0,0 +1,63 @@
-+Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-+------
-+
-+This node provides properties for controlling the marvell sdio wireless device.
-+The node is expected to be specified as a child node to the SDIO controller that
-+connects the device to the system.
-+
-+Required properties:
-+
-+  - compatible : should be one of the following:
-+	* "marvell,sd8897"
-+	* "marvell,sd8997"
-+
-+Optional properties:
-+
-+  - marvell,caldata* : A series of properties with marvell,caldata prefix,
-+		      represent calibration data downloaded to the device during
-+		      initialization. This is an array of unsigned 8-bit values.
-+		      the properties should follow below property name and
-+		      corresponding array length:
-+	"marvell,caldata-txpwrlimit-2g" (length = 566).
-+	"marvell,caldata-txpwrlimit-5g-sub0" (length = 502).
-+	"marvell,caldata-txpwrlimit-5g-sub1" (length = 688).
-+	"marvell,caldata-txpwrlimit-5g-sub2" (length = 750).
-+	"marvell,caldata-txpwrlimit-5g-sub3" (length = 502).
-+  - marvell,wakeup-pin : a wakeup pin number of wifi chip which will be configured
-+		      to firmware. Firmware will wakeup the host using this pin
-+		      during suspend/resume.
-+  - interrupt-parent: phandle of the parent interrupt controller
-+  - interrupts : interrupt pin number to the cpu. driver will request an irq based on
-+		 this interrupt number. during system suspend, the irq will be enabled
-+		 so that the wifi chip can wakeup host platform under certain condition.
-+		 during system resume, the irq will be disabled to make sure
-+		 unnecessary interrupt is not received.
-+
-+Example:
-+
-+Tx power limit calibration data is configured in below example.
-+The calibration data is an array of unsigned values, the length
-+can vary between hw versions.
-+IRQ pin 38 is used as system wakeup source interrupt. wakeup pin 3 is configured
-+so that firmware can wakeup host using this device side pin.
-+
-+&mmc3 {
-+	status = "okay";
-+	vmmc-supply = <&wlan_en_reg>;
-+	bus-width = <4>;
-+	cap-power-off-card;
-+	keep-power-in-suspend;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	mwifiex: wifi@1 {
-+		compatible = "marvell,sd8897";
-+		reg = <1>;
-+		interrupt-parent = <&pio>;
-+		interrupts = <38 IRQ_TYPE_LEVEL_LOW>;
-+
-+		marvell,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
-+	0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01>;
-+		marvell,wakeup-pin = <3>;
-+	};
-+};
 -- 
-1.8.1.4
-
+Kalle Valo
