@@ -1,55 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([192.94.94.40]:52855 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753125AbcDFLbc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 07:31:32 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: =?utf-8?B?UGFsaSBSb2jDoXI=?= <pali.rohar@gmail.com>,
-	Luciano Coelho <coelho@ti.com>, "Balbi, Felipe" <balbi@ti.com>,
-	"Chalmers, Kevin" <kev@ti.com>, Shahar Levi <shahar_levi@ti.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"Davis, Andrew" <afd@ti.com>, "Mishol, Guy" <guym@ti.com>,
-	Arik Nemtsov <arik@wizery.com>, Gery Kahn <geryk@ti.com>,
-	Felipe Balbi <balbi@kernel.org>,
-	Luciano Coelho <luca@coelho.fi>
-CC: David Woodhouse <dwmw2@infradead.org>, Pavel Machek <pavel@ucw.cz>,
-	"Aaro Koskinen" <aaro.koskinen@iki.fi>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	"David Gnedt" <david.gnedt@platinumzone24.at>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	"Tony Lindgren" <tony@atomide.com>, "Menon, Nishanth" <nm@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
-Date: Wed, 6 Apr 2016 11:30:22 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com> (sfid-20160406_133212_758169_93A43477)
-References: <201603200040.26045@pali> <20160404123944.GA8413@pali>
-In-Reply-To: <20160404123944.GA8413@pali>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55354 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751756AbcDYGus (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Apr 2016 02:50:48 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3P6khZ6031149
+	for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2016 23:50:46 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0b-0016f401.pphosted.com with ESMTP id 22g8jfm2f6-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Sun, 24 Apr 2016 23:50:46 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/2] mwifiex: disable channel filtering feature in firmware
+Date: Sun, 24 Apr 2016 23:49:51 -0700
+Message-ID: <1461566992-3539-1-git-send-email-akarwar@marvell.com> (sfid-20160425_085054_661156_1258E868)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBBcHIgMDQsIDIwMTYgYXQgMTU6Mzk6NDQsIFBhbGkgUm9ow6FyIHdyb3RlOg0KDQo+
-ID4gSW4gbGludXgtZmlybXdhcmUgcmVwb3NpdG9yeSBbMV0gaXMgbWlzc2luZyBBUCBmaXJtd2Fy
-ZSBmb3IgVEkgDQo+ID4gd2wxMjUxIGNoaXAuIFRoZXJlIGlzIG9ubHkgU1RBIGZpcm13YXJlIHds
-MTI1MS1mdy5iaW4gd2hpY2ggc3VwcG9ydHMgDQo+ID4gbWFuYWdlZCBhbmQgYWQtaG9jIG1vZGVz
-Lg0KPiA+DQo+ID4gRm9yIG90aGVyIFRJIHdpbGluayBjaGlwcyB0aGVyZSBhcmUgPENISVA+LWFw
-LmJpbiBmaXJtd2FyZSBmaWxlcyANCj4gPiAod2wxMjcxLWZ3LWFwLmJpbiBhbmQgd2wxMjh4LWZ3
-LWFwLmJpbikgd2hpY2ggc3VwcG9ydCBBUCBtb2RlLiBCdXQgDQo+ID4gZm9yDQo+ID4gd2wxMjUx
-IGZpcm13YXJlIGZpbGUgd2l0aCBndWVzc2VkIG5hbWUgIndsMTI1MS1mdy1hcC5iaW4iIGlzIG1p
-c3NpbmcuDQo+ID4NCj4gPiBEbyB5b3UgaGF2ZSBhbnkgaWRlYSB3aGF0IGhhcHBlbmVkIHdpdGgg
-QVAgZmlybXdhcmUgZm9yIHRpIHdpbGluazQNCj4gPiB3bDEyNTEgd2lmaSBjaGlwPyBPciB3aGVy
-ZSBjYW4gYmUgZm91bmQ/IEd1eXMgZnJvbSBUSSwgY2FuIHlvdSBoZWxwPw0KPiA+DQo+ID4gSSBz
-ZWUgdGhhdCBTVEEgZmlybXdhcmUgd2FzIGFkZGVkIGludG8gbGludXgtZmlybXdhcmUgdHJlZSBp
-biB5ZWFyDQo+ID4gMjAxMyBieSB0aGlzIHB1bGwgcmVxdWVzdCBbMl0uDQo+ID4NCj4gPiBbMV0g
-LQ0KPiA+IGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvY2dpdC9saW51eC9rZXJuZWwvZ2l0L2Zpcm13
-YXJlL2xpbnV4LWZpcm13YXJlDQo+ID4gLmcNCj4gPiBpdC90cmVlL3RpLWNvbm5lY3Rpdml0eQ0K
-PiA+DQo+ID4gWzJdIC0gDQo+ID4gaHR0cDovL3RocmVhZC5nbWFuZS5vcmcvZ21hbmUubGludXgu
-a2VybmVsLzE1NjY1MDAvZm9jdXM9MTU3MTM4Mg0KPiA+DQo+IA0KPiBIaSEgQW55Ym9keSBoYXMg
-c29tZSBpZGVhIGFib3V0IHRoYXQgQVAgZmlybXdhcmU/DQo+IA0KDQpIaSwNCndsMTI1MSBkb2Vz
-IG5vdCBzdXBwb3J0IEFQIG1vZGUsIHNvIHRoZXJlIGlzIG5vIGZpcm13YXJlIGZvciBpdCBpbiB0
-aGUgdHJlZS4NCg0KUmVnYXJkcywNCllhbml2DQoNCj4gLS0NCj4gUGFsaSBSb2jDoXINCj4gcGFs
-aS5yb2hhckBnbWFpbC5jb20NCg0KDQo=
+As 2.4Ghz channels are overlapping, sometimes AP responds to
+probe request even if it's operating on neighbouring channel.
+Currently firmware drops those scan entries, as current channel
+doesn't match with APs channel.
+
+This patch enables MWIFIEX_DISABLE_CHAN_FILT flag in scan
+command to disable the feature so that better scan results
+will be received in 2.4Ghz band.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 36cc9cc..bc5e52c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -498,11 +498,13 @@ mwifiex_scan_create_channel_list(struct mwifiex_private *priv,
+ 					&= ~MWIFIEX_PASSIVE_SCAN;
+ 			scan_chan_list[chan_idx].chan_number =
+ 							(u32) ch->hw_value;
++
++			scan_chan_list[chan_idx].chan_scan_mode_bitmap
++					|= MWIFIEX_DISABLE_CHAN_FILT;
++
+ 			if (filtered_scan) {
+ 				scan_chan_list[chan_idx].max_scan_time =
+ 				cpu_to_le16(adapter->specific_scan_time);
+-				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+-					|= MWIFIEX_DISABLE_CHAN_FILT;
+ 			}
+ 			chan_idx++;
+ 		}
+@@ -1060,9 +1062,8 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+ 					&= ~MWIFIEX_PASSIVE_SCAN;
+ 
+-			if (*filtered_scan)
+-				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+-					|= MWIFIEX_DISABLE_CHAN_FILT;
++			scan_chan_list[chan_idx].chan_scan_mode_bitmap
++				|= MWIFIEX_DISABLE_CHAN_FILT;
+ 
+ 			if (user_scan_in->chan_list[chan_idx].scan_time) {
+ 				scan_dur = (u16) user_scan_in->
+-- 
+1.8.1.4
+
