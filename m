@@ -1,134 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:15537 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752135AbcDAIrR (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40759 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932528AbcDYM6Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 04:47:17 -0400
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 1/7] staging: wilc1000: changes logic when happened mq_send fail
-Date: Fri, 1 Apr 2016 17:44:13 +0900
-Message-ID: <1459500259-27873-1-git-send-email-leo.kim@atmel.com> (sfid-20160401_104722_241249_BD1E91B5)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 25 Apr 2016 08:58:16 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 4/7] wil6210: print debug message when transmitting while disconnected
+Date: Mon, 25 Apr 2016 15:57:55 +0300
+Message-Id: <1461589078-29854-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160425_145827_862311_150D5952)
+In-Reply-To: <1461589078-29854-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1461589078-29854-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes logic when happened mq_send fail.
-The check as a result value that mq_send fail.
-But, regardless of the result value then perform a semaphore up.
-That is an occur that semaphore locking.
-Add to 'else' routine and move to 'else' position a semaphore up.
+Network stack can try to transmit data while AP / STA is
+disconnected.
+Change this print-out to debug level as this should not be
+handled as error.
+This patch also adds wil_dbg_ratelimited, used to limit the
+above print-out.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 33 +++++++++++++++++--------------
- 1 file changed, 18 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/wil6210/debug.c   | 16 ++++++++++++++++
+ drivers/net/wireless/ath/wil6210/txrx.c    |  2 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h |  2 ++
+ 3 files changed, 19 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 04cbff5..12f1630 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2731,7 +2731,8 @@ int wilc_remove_wep_key(struct wilc_vif *vif, u8 index)
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		netdev_err(vif->ndev, "Request to remove WEP key\n");
--	wait_for_completion(&hif_drv->comp_test_key_block);
-+	else
-+		wait_for_completion(&hif_drv->comp_test_key_block);
- 
- 	return result;
- }
-@@ -2759,7 +2760,8 @@ int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index)
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		netdev_err(vif->ndev, "Default key index\n");
--	wait_for_completion(&hif_drv->comp_test_key_block);
-+	else
-+		wait_for_completion(&hif_drv->comp_test_key_block);
- 
- 	return result;
- }
-@@ -2828,7 +2830,8 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
- 
- 	if (result)
- 		netdev_err(vif->ndev, "AP - WEP Key\n");
--	wait_for_completion(&hif_drv->comp_test_key_block);
-+	else
-+		wait_for_completion(&hif_drv->comp_test_key_block);
- 
- 	return result;
- }
-@@ -2883,8 +2886,8 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
- 
- 	if (result)
- 		netdev_err(vif->ndev, "PTK Key\n");
--
--	wait_for_completion(&hif_drv->comp_test_key_block);
-+	else
-+		wait_for_completion(&hif_drv->comp_test_key_block);
- 
- 	return result;
- }
-@@ -2951,8 +2954,8 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		netdev_err(vif->ndev, "RX GTK\n");
--
--	wait_for_completion(&hif_drv->comp_test_key_block);
-+	else
-+		wait_for_completion(&hif_drv->comp_test_key_block);
- 
- 	return result;
- }
-@@ -3098,8 +3101,8 @@ int wilc_disconnect(struct wilc_vif *vif, u16 reason_code)
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		netdev_err(vif->ndev, "Failed to send message: disconnect\n");
--
--	wait_for_completion(&hif_drv->comp_test_disconn_block);
-+	else
-+		wait_for_completion(&hif_drv->comp_test_disconn_block);
- 
- 	return result;
- }
-@@ -3220,8 +3223,8 @@ s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result)
- 		netdev_err(vif->ndev, "Failed to send get host ch param\n");
--
--	wait_for_completion(&hif_drv->comp_inactive_time);
-+	else
-+		wait_for_completion(&hif_drv->comp_inactive_time);
- 
- 	*pu32InactiveTime = inactive_time;
- 
-@@ -3502,8 +3505,8 @@ int wilc_deinit(struct wilc_vif *vif)
- 		result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 		if (result != 0)
- 			netdev_err(vif->ndev, "deinit : Error(%d)\n", result);
--
--		wait_for_completion(&hif_thread_comp);
-+		else
-+			wait_for_completion(&hif_thread_comp);
- 
- 		wilc_mq_destroy(&hif_msg_q);
+diff --git a/drivers/net/wireless/ath/wil6210/debug.c b/drivers/net/wireless/ath/wil6210/debug.c
+index 0a30127..c312a66 100644
+--- a/drivers/net/wireless/ath/wil6210/debug.c
++++ b/drivers/net/wireless/ath/wil6210/debug.c
+@@ -49,6 +49,22 @@ void __wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...)
  	}
-@@ -3882,8 +3885,8 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
- 
- 	if (result)
- 		netdev_err(vif->ndev, "wilc_mq_send fail\n");
--
--	wait_for_completion(&hif_wait_response);
-+	else
-+		wait_for_completion(&hif_wait_response);
- 
- 	return result;
  }
+ 
++void wil_dbg_ratelimited(const struct wil6210_priv *wil, const char *fmt, ...)
++{
++	struct va_format vaf;
++	va_list args;
++
++	if (!net_ratelimit())
++		return;
++
++	va_start(args, fmt);
++	vaf.fmt = fmt;
++	vaf.va = &args;
++	netdev_dbg(wil_to_ndev(wil), "%pV", &vaf);
++	trace_wil6210_log_dbg(&vaf);
++	va_end(args);
++}
++
+ void __wil_info(struct wil6210_priv *wil, const char *fmt, ...)
+ {
+ 	struct net_device *ndev = wil_to_ndev(wil);
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index f260b232..a4e4379 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -1759,7 +1759,7 @@ netdev_tx_t wil_start_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 		goto drop;
+ 	}
+ 	if (unlikely(!test_bit(wil_status_fwconnected, wil->status))) {
+-		wil_err_ratelimited(wil, "FW not connected\n");
++		wil_dbg_ratelimited(wil, "FW not connected, packet dropped\n");
+ 		goto drop;
+ 	}
+ 	if (unlikely(wil->wdev->iftype == NL80211_IFTYPE_MONITOR)) {
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index b6fc256..50acd13 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -640,6 +640,8 @@ __printf(2, 3)
+ void __wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...);
+ __printf(2, 3)
+ void __wil_info(struct wil6210_priv *wil, const char *fmt, ...);
++__printf(2, 3)
++void wil_dbg_ratelimited(const struct wil6210_priv *wil, const char *fmt, ...);
+ #define wil_dbg(wil, fmt, arg...) do { \
+ 	netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
+ 	wil_dbg_trace(wil, fmt, ##arg); \
 -- 
-1.9.1
+1.8.5.2
 
