@@ -1,76 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34299 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752270AbcDSFBL (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33408 "EHLO
+	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704AbcDZROO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 01:01:11 -0400
-Received: by mail-pa0-f45.google.com with SMTP id r5so2446028pag.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 22:01:11 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 10/18] wcn36xx: Copy all members in config_sta v1 conversion
-Date: Mon, 18 Apr 2016 22:00:48 -0700
-Message-Id: <1461042056-10607-11-git-send-email-bjorn.andersson@linaro.org> (sfid-20160419_070414_472917_3FC606F8)
-In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+	Tue, 26 Apr 2016 13:14:14 -0400
+Received: by mail-pf0-f172.google.com with SMTP id 206so9266135pfu.0
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 10:14:14 -0700 (PDT)
+From: Mitchel Humpherys <mitch.special@gmail.com>
+To: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org
+Subject: Intel WiFi regression on linux-next
+Date: Tue, 26 Apr 2016 10:14:11 -0700
+Message-ID: <87d1pcthr0.fsf@gmail.com> (sfid-20160426_191419_153186_8ED9971D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+Hello,
 
-When converting to version 1 of the config_sta struct not all
-members where copied. This fixes the problem of multicast frames
-not being delivered on an encrypted network.
+WiFi on my Acer Aspire 5739G is currently broken on linux-next.  I
+bisected it to the following commit:
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+    commit 97f95c93c8ed5177371e75275f236513152fa308
+    Author: Sara Sharon <sara.sharon@intel.com>
+    Date:   Mon Mar 7 16:55:20 2016 +0200
+    
+        iwlwifi: remove support for fw older than -16.ucode
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 7f315d098f52..ebb446272d21 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -949,17 +949,32 @@ static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
- 	memcpy(&v1->mac, orig->mac, ETH_ALEN);
- 	v1->aid = orig->aid;
- 	v1->type = orig->type;
-+	v1->short_preamble_supported = orig->short_preamble_supported;
- 	v1->listen_interval = orig->listen_interval;
-+	v1->wmm_enabled = orig->wmm_enabled;
- 	v1->ht_capable = orig->ht_capable;
--
-+	v1->tx_channel_width_set = orig->tx_channel_width_set;
-+	v1->rifs_mode = orig->rifs_mode;
-+	v1->lsig_txop_protection = orig->lsig_txop_protection;
- 	v1->max_ampdu_size = orig->max_ampdu_size;
- 	v1->max_ampdu_density = orig->max_ampdu_density;
- 	v1->sgi_40mhz = orig->sgi_40mhz;
- 	v1->sgi_20Mhz = orig->sgi_20Mhz;
--
-+	v1->rmf = orig->rmf;
-+	v1->encrypt_type = orig->encrypt_type;
-+	v1->action = orig->action;
-+	v1->uapsd = orig->uapsd;
-+	v1->max_sp_len = orig->max_sp_len;
-+	v1->green_field_capable = orig->green_field_capable;
-+	v1->mimo_ps = orig->mimo_ps;
-+	v1->delayed_ba_support = orig->delayed_ba_support;
-+	v1->max_ampdu_duration = orig->max_ampdu_duration;
-+	v1->dsss_cck_mode_40mhz = orig->dsss_cck_mode_40mhz;
- 	memcpy(&v1->supported_rates, &orig->supported_rates,
- 	       sizeof(orig->supported_rates));
- 	v1->sta_index = orig->sta_index;
-+	v1->bssid_index = orig->bssid_index;
-+	v1->p2p = orig->p2p;
- }
- 
- static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
+This issue was already reported here [1].  I'm just adding some more
+hardware details (and am not subscribed to linux-wireless so I can't
+reply over there).
+
+It's failing with:
+
+    iwlwifi 0000:05:00.0: enabling device (0000 -> 0002)
+    iwlwifi 0000:05:00.0: can't disable ASPM; OS doesn't have ASPM control
+    iwlwifi 0000:05:00.0: Driver unable to support your firmware API. Driver supports v5, firmware is v139658497.
+    iwlwifi 0000:05:00.0: Direct firmware load for iwlwifi-5000-4.ucode failed with error -2
+    iwlwifi 0000:05:00.0: request for firmware file 'iwlwifi-5000-4.ucode' failed.
+    iwlwifi 0000:05:00.0: Direct firmware load for iwlwifi-5000-3.ucode failed with error -2
+    iwlwifi 0000:05:00.0: request for firmware file 'iwlwifi-5000-3.ucode' failed.
+    iwlwifi 0000:05:00.0: Driver unable to support your firmware API. Driver supports v5, firmware is v135791116.
+    iwlwifi 0000:05:00.0: Driver unable to support your firmware API. Driver supports v5, firmware is v84148496.
+    iwlwifi 0000:05:00.0: no suitable firmware found!
+
+Here's some more info on my wireless chipset:
+
+    05:00.0 Network controller: Intel Corporation WiFi Link 5100
+            Subsystem: Intel Corporation WiFi Link 5100 AGN
+            Flags: bus master, fast devsel, latency 0, IRQ 31
+            Memory at c0400000 (64-bit, non-prefetchable) [size=8K]
+            Capabilities: [c8] Power Management version 3
+            Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+            Capabilities: [e0] Express Endpoint, MSI 00
+            Capabilities: [100] Advanced Error Reporting
+            Capabilities: [140] Device Serial Number 00-1e-65-ff-ff-80-25-f6
+            Kernel driver in use: iwlwifi
+            Kernel modules: iwlwifi
+
+The laptop isn't _that_ old so I'm surprised the driver is ripping out
+support for it...  Is there some other driver I should be using?
+
+
+[1] https://www.mail-archive.com/linux-wireless@vger.kernel.org/msg22688.html
+
+
 -- 
-2.5.0
-
+Mitch
