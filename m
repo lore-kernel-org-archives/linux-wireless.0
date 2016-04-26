@@ -1,49 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:33092 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753552AbcDCWRJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:17:09 -0400
-Received: by mail-pa0-f42.google.com with SMTP id zm5so130358959pac.0
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:17:08 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 15/15] wcn36xx: Use correct command struct for EXIT_BMPS_REQ
-Date: Sun,  3 Apr 2016 15:16:46 -0700
-Message-Id: <1459721806-11817-15-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_001732_435216_782F2215)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:42709 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750995AbcDZHEl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 03:04:41 -0400
+Message-ID: <1461654272.16188.4.camel@sipsolutions.net> (sfid-20160426_090444_956799_23A91988)
+Subject: Re: [PATCH v2] ath10k: remove VHT capabilities from 2.4GHz
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 26 Apr 2016 09:04:32 +0200
+In-Reply-To: <5718EE7A.4030503@candelatech.com> (sfid-20160421_171514_734039_B1F3CF8F)
+References: <1461244669-19871-1-git-send-email-kvalo@qca.qualcomm.com>
+	 <5718EE7A.4030503@candelatech.com> (sfid-20160421_171514_734039_B1F3CF8F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+On Thu, 2016-04-21 at 08:15 -0700, Ben Greear wrote:
 
-EXIT_BMPS_REQ was using the command struct for ENTER_BMPS_REQ. I
-spotted this when looking at command dumps.
+> The thing is, it actually works just fine with the patch I posted
+> to fix mac80211, and at any rate, even if the mac80211 patch isn't
+> applied, the ath10k driver works just fine in HT mode.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch has no implications on HT, and I wasn't planning on applying
+the mac80211 patch.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index b1bdc229e560..c15501c06eb2 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1690,7 +1690,7 @@ out:
- 
- int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- {
--	struct wcn36xx_hal_enter_bmps_req_msg msg_body;
-+	struct wcn36xx_hal_exit_bmps_req_msg msg_body;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	int ret = 0;
- 
--- 
-2.5.0
+As I said, I have no objections to doing the (Broadcom) vendor specific
+IEs for "VHT" in 2.4 GHz band, but I don't think we should advertise
+the spec IEs when they're explicitly specified to be used only in the
+5.2 GHz band.
 
+johannes
