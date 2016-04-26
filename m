@@ -1,145 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:34259 "EHLO
-	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753694AbcDCWQ6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:16:58 -0400
-Received: by mail-pf0-f171.google.com with SMTP id c20so21524226pfc.1
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:16:58 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 08/15] wcn36xx: Remove sta pointer in private vif struct
-Date: Sun,  3 Apr 2016 15:16:39 -0700
-Message-Id: <1459721806-11817-8-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_001850_527947_9F7CD837)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:44056 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751794AbcDZMDt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 08:03:49 -0400
+Message-ID: <1461672224.16188.9.camel@sipsolutions.net> (sfid-20160426_140352_738288_D029AF3C)
+Subject: Re: Intel 7260 AC only using 802.11n not AC
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Radu P <rrrpan@gmail.com>, Kalle Valo <kvalo@codeaurora.org>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	Reinoud Koornstra <reinoudkoornstra@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 26 Apr 2016 14:03:44 +0200
+In-Reply-To: <CAL3+40GiJPvMJMOq3aJnpExh0NncSu+9RTSbWtMoAUb=cnFbjg@mail.gmail.com> (sfid-20160426_135420_045597_AEF1ED44)
+References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
+	 <CAAA5faGpa9ePaZagPpNaXdXz8FZrsDr=M4pMGEVO6F3xUc+aZA@mail.gmail.com>
+	 <1461664802.16188.8.camel@sipsolutions.net>
+	 <CAL3+40ExBLbSqJekDndBZkAsNf0pp5rTCga+SSujnsP9To4U=A@mail.gmail.com>
+	 <874maozlrs.fsf@kamboji.qca.qualcomm.com>
+	 <CABPxzYKFgOPMTs_i7OXCrA40FrNzrRvAVmLk63P-mPmrQiYRkQ@mail.gmail.com>
+	 <CAL3+40GYcS5Aou75mipFfikFYkUbsxmigpde7SdGPT=Mf1AjCA@mail.gmail.com>
+	 <87vb34y4we.fsf@kamboji.qca.qualcomm.com>
+	 <CAL3+40GiJPvMJMOq3aJnpExh0NncSu+9RTSbWtMoAUb=cnFbjg@mail.gmail.com>
+	 (sfid-20160426_135420_045597_AEF1ED44)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+On Tue, 2016-04-26 at 12:54 +0100, Radu P wrote:
+> Is there a way running
+> 
+> ./iw dev wlanX link
+> 
+> but to get the output for the 5 Ghz frequency?
+> now I am getting only this:
+> 
+> freq: 2432
+> tx bitrate: 130.0 MBit/s MCS 14 short GI
 
-This does not work with multiple sta's in a vif.
+Sure: connect to a 5 GHz AP first :)
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c    |  3 ---
- drivers/net/wireless/ath/wcn36xx/smd.c     | 28 +++++++++++++++-------------
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  1 -
- 3 files changed, 15 insertions(+), 17 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index a23738deb5b3..7c06ca9fdd2c 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -796,7 +796,6 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		    vif, sta->addr);
- 
- 	spin_lock_init(&sta_priv->ampdu_lock);
--	vif_priv->sta = sta_priv;
- 	sta_priv->vif = vif_priv;
- 	/*
- 	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
-@@ -815,14 +814,12 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
- 			      struct ieee80211_sta *sta)
- {
- 	struct wcn36xx *wcn = hw->priv;
--	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM index %d\n",
- 		    vif, sta->addr, sta_priv->sta_index);
- 
- 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
--	vif_priv->sta = NULL;
- 	sta_priv->vif = NULL;
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ff56138528b6..76c6856ed932 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1170,6 +1170,7 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
- 
- static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 				      struct ieee80211_vif *vif,
-+				      struct ieee80211_sta *sta,
- 				      void *buf,
- 				      size_t len)
- {
-@@ -1200,9 +1201,10 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 
- 	vif_priv->bss_index = params->bss_index;
- 
--	if (vif_priv->sta) {
--		vif_priv->sta->bss_sta_index =  params->bss_sta_index;
--		vif_priv->sta->bss_dpu_desc_index = params->dpu_desc_index;
-+	if (sta) {
-+		struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
-+		sta_priv->bss_sta_index = params->bss_sta_index;
-+		sta_priv->bss_dpu_desc_index = params->dpu_desc_index;
- 	}
- 
- 	vif_priv->self_ucast_dpu_sign = params->ucast_dpu_signature;
-@@ -1329,6 +1331,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	}
- 	ret = wcn36xx_smd_config_bss_rsp(wcn,
- 					 vif,
-+					 sta,
- 					 wcn->hal_buf,
- 					 wcn->hal_rsp_len);
- 	if (ret) {
-@@ -2058,25 +2061,24 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
- {
- 	struct wcn36xx_hal_delete_sta_context_ind_msg *rsp = buf;
- 	struct wcn36xx_vif *tmp;
--	struct ieee80211_sta *sta = NULL;
-+	struct ieee80211_sta *sta;
- 
- 	if (len != sizeof(*rsp)) {
- 		wcn36xx_warn("Corrupted delete sta indication\n");
- 		return -EIO;
- 	}
- 
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "delete station indication %pM index %d\n",
-+		    rsp->addr2, rsp->sta_id);
-+
- 	list_for_each_entry(tmp, &wcn->vif_list, list) {
--		if (sta && (tmp->sta->sta_index == rsp->sta_id)) {
--			sta = container_of((void *)tmp->sta,
--						 struct ieee80211_sta,
--						 drv_priv);
--			wcn36xx_dbg(WCN36XX_DBG_HAL,
--				    "delete station indication %pM index %d\n",
--				    rsp->addr2,
--				    rsp->sta_id);
-+		rcu_read_lock();
-+		sta = ieee80211_find_sta(wcn36xx_priv_to_vif(tmp), rsp->addr2);
-+		if (sta)
- 			ieee80211_report_low_ack(sta, 0);
-+		rcu_read_unlock();
-+		if (sta)
- 			return 0;
--		}
- 	}
- 
- 	wcn36xx_warn("STA with addr %pM and index %d not found\n",
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index c368a34c8de7..54000db0af1a 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -125,7 +125,6 @@ struct wcn36xx_platform_ctrl_ops {
-  */
- struct wcn36xx_vif {
- 	struct list_head list;
--	struct wcn36xx_sta *sta;
- 	u8 dtim_period;
- 	enum ani_ed_type encrypt_type;
- 	bool is_joining;
--- 
-2.5.0
-
+johannes
