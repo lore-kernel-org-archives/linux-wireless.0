@@ -1,58 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f173.google.com ([209.85.161.173]:35315 "EHLO
-	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756184AbcDGNBz (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:34835 "EHLO
+	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195AbcDZHUJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 09:01:55 -0400
-Received: by mail-yw0-f173.google.com with SMTP id i84so89071127ywc.2
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2016 06:01:54 -0700 (PDT)
+	Tue, 26 Apr 2016 03:20:09 -0400
+Received: by mail-io0-f195.google.com with SMTP id u185so1157342iod.2
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 00:20:09 -0700 (PDT)
 MIME-Version: 1.0
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 7 Apr 2016 18:31:34 +0530
-Message-ID: <CABPxzYLaWKgYrwjyjDpiZzWCbCpCzr7mKLorm9mzxspE5n0rHQ@mail.gmail.com> (sfid-20160407_150158_555155_304403A7)
-Subject: RFC: Handling DL only traffic when already in Powersave
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 26 Apr 2016 08:20:08 +0100
+Message-ID: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com> (sfid-20160426_092018_199983_6868858D)
+Subject: Intel 7260 AC only using 802.11n not AC
+From: Radu P <rrrpan@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hello,
 
-When using HW_PS and running Downlink only traffic like UDP-RX, mac80211
-has the mechanism to not to enter power-save (postpone the dynamic ps
-timer).
+These is the relevant data:
 
-But if we are already in power-save it continues to stay in PS
-and retrieves the frames, for large traffic this is not acceptable.
+firmware-version: 17.265642.0
 
-The standard doesn't say anything, its left to vendor to implement their
-own mechanism.
+[  292.689871] iwlwifi 0000:04:00.0: loaded firmware version
+17.265642.0 op_mode iwlmvm
+[  292.702902] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+Wireless AC 7260, REV=0x144
 
-I have the below questions
+wlan1     IEEE 802.11abgn <- not AC
 
-1) Are any other vendors seeing this issue?
+Kernel version: 4.4.0-21-generic #37~14.04.1-Ubuntu
 
-2) Are they using proprietary algorithms to solve this,
-implemented in their HW/FW?
+AC mode is working with Windows 10.
 
-3) If yes, how are they keeping the mac80211 and FW FSM in sync,
-as the driver cannot request/indicate the power save state to mac80211.
-(no feedback path).
-
-IMHO,
-
-a) we should implemented a feedback path, where the vendor
-can implement proprietary mechanism to handle this and inform/request
-mac80211 for a specific power save state.
-
-b) mac80211 just conveys the user/system preferences to the driver
-and driver handles the FSM on when to enter/exit PS? (true HW_PS).
-
-
-Any suggestions/comments?
-
--- 
-Thanks,
-Regards,
-Chaitanya T K.
+Any help is appreciated!
