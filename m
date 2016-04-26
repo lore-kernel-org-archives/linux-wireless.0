@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14510 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932486AbcDTOSF (ORCPT
+Received: from mail-yw0-f175.google.com ([209.85.161.175]:34670 "EHLO
+	mail-yw0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752339AbcDZLEv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 10:18:05 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Luana Borgia <luanaborgia1969@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
-Subject: RE: ap + adhoc not working with Mwifiex driver for sd8887
-Date: Wed, 20 Apr 2016 14:18:02 +0000
-Message-ID: <74cc66c9d174442a9ca71bcfca2c2231@SC-EXCH04.marvell.com> (sfid-20160420_161812_122196_6DAF4208)
-References: <CAD3r-iRQD5nVBuC1_zYmu_FtmP4CdP2BbHxz1Q579mBPKg5zmQ@mail.gmail.com>
- <CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
-In-Reply-To: <CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 26 Apr 2016 07:04:51 -0400
+Received: by mail-yw0-f175.google.com with SMTP id j74so9470983ywg.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 04:04:50 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <874maozlrs.fsf@kamboji.qca.qualcomm.com>
+References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
+ <CAAA5faGpa9ePaZagPpNaXdXz8FZrsDr=M4pMGEVO6F3xUc+aZA@mail.gmail.com>
+ <1461664802.16188.8.camel@sipsolutions.net> <CAL3+40ExBLbSqJekDndBZkAsNf0pp5rTCga+SSujnsP9To4U=A@mail.gmail.com>
+ <874maozlrs.fsf@kamboji.qca.qualcomm.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Tue, 26 Apr 2016 16:34:30 +0530
+Message-ID: <CABPxzYKFgOPMTs_i7OXCrA40FrNzrRvAVmLk63P-mPmrQiYRkQ@mail.gmail.com> (sfid-20160426_130454_581142_BA0E25E9)
+Subject: Re: Intel 7260 AC only using 802.11n not AC
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Radu P <rrrpan@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinoud Koornstra <reinoudkoornstra@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVhbmEsDQoNCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
-IFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
-YWxmIE9mIEx1YW5hIEJvcmdpYQ0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmlsIDIwLCAyMDE2IDEx
-OjE0IEFNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEF2aW5hc2ggUGF0
-aWwNCj4gU3ViamVjdDogRndkOiBhcCArIGFkaG9jIG5vdCB3b3JraW5nIHdpdGggTXdpZmlleCBk
-cml2ZXIgZm9yIHNkODg4Nw0KPiANCj4gSGksDQo+IEkndmUgc3VjY2Vzc2Z1bGx5IG1hbmFnZWQg
-dG8gZ2V0IHRoaXMgZHJpdmVyIHdvcmtpbmcgaW4gYWRob2Mgd2l0aCBvbHNyZA0KPiBvbiBtbGFu
-MCBpbnRlcmZhY2UsIG5vdyBJJ20gdHJ5aW5nIHRvIGFkZCBhIHVhcDAgd29ya2luZyBhdCB0aGUg
-c2FtZQ0KPiB0aW1lLCB3aXRoIGFsbCB0aGlzIGNvbW1hbmQ6DQo+IA0KPiByZmtpbGwgdW5ibG9j
-ayB3bGFuDQo+IGlwIGxpbmsgc2V0IHVhcDAgZG93bg0KPiBpcCBsaW5rIHNldCBtbGFuMCBkb3du
-DQo+IGl3IGRldiBtbGFuMCBzZXQgdHlwZSBpYnNzDQo+IGlwIGxpbmsgc2V0IG1sYW4wIHVwDQo+
-IGl3IGRldiBtbGFuMCBpYnNzIGpvaW4gbWVzaCAyNDM3IGZlOmRlOmZlOmRlOmZlOmRlIG9sc3Jk
-LXN0YXJ0LnNoIGNhdA0KPiA8PEVPRiA+IC9ldGMvaG9zdGFwZC5jb25mIHNzaWQ9UENNX0FQX2Zl
-ZGUNCj4gaW50ZXJmYWNlPXVhcDANCj4gZHJpdmVyPW5sODAyMTENCj4gaHdfbW9kZT1nDQo+IGNo
-YW5uZWw9Ng0KPiBFT0YNCj4gaXcgcGh5IHBoeTAgaW50ZXJmYWNlIGFkZCB1YXAwIHR5cGUgX19h
-cCBob3N0YXBkIC9ldGMvaG9zdGFwZC5jb25mICYNCj4gZG5zbWFzcSAtLWludGVyZmFjZT11YXAw
-IC0tZXhjZXB0LWludGVyZmFjZT1sbyAtLWJpbmQtaW50ZXJmYWNlcyAtLWRoY3AtDQo+IHJhbmdl
-PTE5Mi4xNjguMy4yLDE5Mi4xNjguMy4xMCwxMmggLS1jb25mLWZpbGU9L2Rldi9udWxsIGlwIGFk
-ZHIgYWRkDQo+IDE5Mi4xNjguMy4xLzI0IGJyb2FkY2FzdCAxOTIuMTY4LjMuMjU1IGRldiB1YXAw
-DQo+IA0KPiBidXQgSSBnZXQgdGhpcyBlcnJvciBhZnRlciBydW4gdGhlIGhvc3RhcGQgY29tbWFu
-ZDoNCj4gDQo+IFsgNDk4MC4yMDEwOTZdIElQdjY6IEFERFJDT05GKE5FVERFVl9DSEFOR0UpOiBt
-bGFuMDogbGluayBiZWNvbWVzIHJlYWR5DQo+IFsgNDk4My4zMzU0NjddIElQdjY6IEFERFJDT05G
-KE5FVERFVl9VUCk6IHVhcDA6IGxpbmsgaXMgbm90IHJlYWR5IFsNCj4gNDk4My4zNTg4NzldIG13
-aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogQ01EX1JFU1A6IGNtZCAweGIxIGVycm9yLA0KPiByZXN1
-bHQ9MHgxDQo+IA0KPiBhZGhvYyBpcyBmaW5lLCB3aXRoIHRoZSBhYm92ZSBvcmRlciBvZiBjb21t
-YW5kIGJ1dCBpZiBJIHJ1biBiZWZvcmUNCj4gaG9zdGFwZCBhbmQgdGhhbiBhZGhvYyBwYXJ0IHRo
-YW4gdGhlIGlzc3VlIG9jY3VyIGluIHRoZSBhZGhvYyBwYXJ0Lg0KPiANCj4gSSdtIHVzaW5nIHRo
-ZSBmaXJtd2FyZQ0KPiBodHRwOi8vZ2l0Lm1hcnZlbGwuY29tLz9wPW13aWZpZXgtDQo+IGZpcm13
-YXJlLmdpdDthPWJsb2I7Zj1tcnZsL3NkODg4N191YXBzdGEuYmluO2g9MTY1ZTZjM2QzNGIwYzJh
-NjMwMjUyOTA3YQ0KPiA3YWM0ZGFmNmUxM2M5ZDU7aGI9SEVBRA0KPiANCj4gYW5kIHRoZSBtd2lm
-aWV4IGZyb20ga2VybmVsIGxpbnV4IDQuMS4xDQo+ICANCg0KSSBjaGVja2VkIHdpdGggb3VyIHRl
-YW0uIFdlIGRvbuKAmXQgc3VwcG9ydCBzaW11bHRhbmVvdXMgb3BlcmF0aW9ucyBvZiBBZGhvYyBh
-bmQgQVAgbmV0d29yay4NCk9ubHkgb25lIGF0IGEgdGltZSBjYW4gYmUgdXNlZC4NCg0KUmVnYXJk
-cywNCkFtaXRrdW1hcg0K
+On Tue, Apr 26, 2016 at 4:20 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>
+> Radu P <rrrpan@gmail.com> writes:
+>
+> > iw list|grep -i VHT  <- still nothing
+>
+> Maybe your iw is too old? I didn't see anything either (using stock iw
+> from Ubuntu 14.04) but then I upgraded to the latest one from git and
+> now I see:
+>
+>                VHT Capabilities (0x338001b2):
+>                         Max MPDU length: 11454
+>                         Supported Channel Width: neither 160 nor 80+80
+>                         RX LDPC
+>                         short GI (80 MHz)
+>                         TX STBC
+>                         RX antenna pattern consistency
+>                         TX antenna pattern consistency
+>                 VHT RX MCS set:
+>                         1 streams: MCS 0-9
+>                         2 streams: MCS 0-9
+>                         3 streams: MCS 0-9
+>                         4 streams: not supported
+>                         5 streams: not supported
+>                         6 streams: not supported
+>                         7 streams: not supported
+>                         8 streams: not supported
+>                 VHT RX highest supported: 0 Mbps
+>                 VHT TX MCS set:
+>                         1 streams: MCS 0-9
+>                         2 streams: MCS 0-9
+>                         3 streams: MCS 0-9
+>                         4 streams: not supported
+>                         5 streams: not supported
+>                         6 streams: not supported
+>                         7 streams: not supported
+>                         8 streams: not supported
+>                 VHT TX highest supported: 0 Mbps
+>
+> And please don't top post.
+>
+> --
+"iw phy " should give necessary info.
