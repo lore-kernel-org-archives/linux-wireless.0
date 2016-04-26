@@ -1,71 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33408 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704AbcDZROO (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:40054 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751317AbcDZQYF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 13:14:14 -0400
-Received: by mail-pf0-f172.google.com with SMTP id 206so9266135pfu.0
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 10:14:14 -0700 (PDT)
-From: Mitchel Humpherys <mitch.special@gmail.com>
-To: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Intel WiFi regression on linux-next
-Date: Tue, 26 Apr 2016 10:14:11 -0700
-Message-ID: <87d1pcthr0.fsf@gmail.com> (sfid-20160426_191419_153186_8ED9971D)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 26 Apr 2016 12:24:05 -0400
+Date: Tue, 26 Apr 2016 12:24:01 -0400 (EDT)
+Message-Id: <20160426.122401.405766250705456167.davem@davemloft.net> (sfid-20160426_182424_638295_03A55F51)
+To: jack@suse.cz
+Cc: nicolas.dichtel@6wind.com, netdev@vger.kernel.org,
+	sd@queasysnail.net, johannes@sipsolutions.net,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	jack@suse.com, linux-kernel@vger.kernel.org, pshelar@nicira.com,
+	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
+	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com
+Subject: Re: [PATCH net-next 3/8] fs/quota: use nla_put_u64_64bit()
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <20160426110848.GD27612@quack2.suse.cz>
+References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+	<1461657978-13360-4-git-send-email-nicolas.dichtel@6wind.com>
+	<20160426110848.GD27612@quack2.suse.cz>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Jan Kara <jack@suse.cz>
+Date: Tue, 26 Apr 2016 13:08:48 +0200
 
-WiFi on my Acer Aspire 5739G is currently broken on linux-next.  I
-bisected it to the following commit:
+> On Tue 26-04-16 10:06:13, Nicolas Dichtel wrote:
+>> Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+> 
+> OK, so I somewhat miss a description of what will this do to the netlink
+> message so that I can judge whether the change is fine for the userspace
+> counterpart parsing these messages. AFAIU this changes the message format
+> by adding a QUOTA_NL_A_PAD field before each 64-bit field which needs an
+> alignment, am I guessing right? Thus when the userspace counterpart uses
+> genlmsg_parse() it should just silently ignore these attributes if I read
+> the documentation right. Did I understand this correctly?
 
-    commit 97f95c93c8ed5177371e75275f236513152fa308
-    Author: Sara Sharon <sara.sharon@intel.com>
-    Date:   Mon Mar 7 16:55:20 2016 +0200
-    
-        iwlwifi: remove support for fw older than -16.ucode
+All userspace components using netlink should always ignore attributes
+they do not recognize in dumps.
 
-This issue was already reported here [1].  I'm just adding some more
-hardware details (and am not subscribed to linux-wireless so I can't
-reply over there).
-
-It's failing with:
-
-    iwlwifi 0000:05:00.0: enabling device (0000 -> 0002)
-    iwlwifi 0000:05:00.0: can't disable ASPM; OS doesn't have ASPM control
-    iwlwifi 0000:05:00.0: Driver unable to support your firmware API. Driver supports v5, firmware is v139658497.
-    iwlwifi 0000:05:00.0: Direct firmware load for iwlwifi-5000-4.ucode failed with error -2
-    iwlwifi 0000:05:00.0: request for firmware file 'iwlwifi-5000-4.ucode' failed.
-    iwlwifi 0000:05:00.0: Direct firmware load for iwlwifi-5000-3.ucode failed with error -2
-    iwlwifi 0000:05:00.0: request for firmware file 'iwlwifi-5000-3.ucode' failed.
-    iwlwifi 0000:05:00.0: Driver unable to support your firmware API. Driver supports v5, firmware is v135791116.
-    iwlwifi 0000:05:00.0: Driver unable to support your firmware API. Driver supports v5, firmware is v84148496.
-    iwlwifi 0000:05:00.0: no suitable firmware found!
-
-Here's some more info on my wireless chipset:
-
-    05:00.0 Network controller: Intel Corporation WiFi Link 5100
-            Subsystem: Intel Corporation WiFi Link 5100 AGN
-            Flags: bus master, fast devsel, latency 0, IRQ 31
-            Memory at c0400000 (64-bit, non-prefetchable) [size=8K]
-            Capabilities: [c8] Power Management version 3
-            Capabilities: [d0] MSI: Enable+ Count=1/1 Maskable- 64bit+
-            Capabilities: [e0] Express Endpoint, MSI 00
-            Capabilities: [100] Advanced Error Reporting
-            Capabilities: [140] Device Serial Number 00-1e-65-ff-ff-80-25-f6
-            Kernel driver in use: iwlwifi
-            Kernel modules: iwlwifi
-
-The laptop isn't _that_ old so I'm surprised the driver is ripping out
-support for it...  Is there some other driver I should be using?
-
-
-[1] https://www.mail-archive.com/linux-wireless@vger.kernel.org/msg22688.html
-
-
--- 
-Mitch
+This is one of the most basic principles of netlink.
