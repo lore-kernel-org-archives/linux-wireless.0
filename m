@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45759 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932416AbcDSPoY convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37753 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751195AbcDZIMw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 11:44:24 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/5] ath10k: fix recent checkpatch warnings
-Date: Tue, 19 Apr 2016 15:44:21 +0000
-Message-ID: <87bn55k3ho.fsf@kamboji.qca.qualcomm.com> (sfid-20160419_174428_526614_791EE1FC)
-References: <20160413111247.18823.15952.stgit@potku.adurom.net>
-In-Reply-To: <20160413111247.18823.15952.stgit@potku.adurom.net> (Kalle Valo's
-	message of "Wed, 13 Apr 2016 14:13:08 +0300")
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 26 Apr 2016 04:12:52 -0400
+Received: by mail-wm0-f44.google.com with SMTP id n3so22665776wmn.0
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 01:12:51 -0700 (PDT)
+Reply-To: nicolas.dichtel@6wind.com
+Subject: Re: [PATCH] nl80211: use nla_put_u64_64bit() for the remaining u64
+ attributes
+References: <1461657251-12528-1-git-send-email-johannes@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Message-ID: <571F22F6.9070601@6wind.com> (sfid-20160426_101258_282541_1CB2F705)
+Date: Tue, 26 Apr 2016 10:12:38 +0200
 MIME-Version: 1.0
+In-Reply-To: <1461657251-12528-1-git-send-email-johannes@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
-
-> I updated checkpatch and noticed that there are few new warnings.
->
-> v2:
->
-> * fix tests in patch 3
-> * add patch 5 to fix a new warning in mac.c
->
-> ---
->
-> Kalle Valo (5):
->       ath10k: fix checkpatch warnings related to spaces
->       ath10k: prefer kernel type 'u64' over 'u_int64_t'
->       ath10k: prefer ether_addr_equal() or ether_addr_equal_unaligned() over memcmp()
->       ath10k: prefer ether_addr_copy() over memcpy()
->       ath10k: fix parenthesis alignment
-
-Applied.
-
--- 
-Kalle Valo
+Le 26/04/2016 09:54, Johannes Berg a écrit :
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> Nicolas converted most users, but didn't realize some were generated
+> by macros. Convert those over as well.
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Acked-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
