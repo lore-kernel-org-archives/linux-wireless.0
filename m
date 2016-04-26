@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37338 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750709AbcDOM2O (ORCPT
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:35101 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753036AbcDZUHj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2016 08:28:14 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Haim\, Maya" <merez@qti.qualcomm.com>
-Cc: Joe Perches <joe@perches.com>,
-	qca_merez <qca_merez@qca.qualcomm.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	wil6210 <wil6210@qca.qualcomm.com>
-Subject: Re: [PATCH 1/7] wil6210: add function name to wil log macros
-References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
-	<1459855447-17413-2-git-send-email-qca_merez@qca.qualcomm.com>
-	<1459927177.6715.34.camel@perches.com>
-	<bc848beb5cd947f9905b55983a76b6f5@euamsexm01a.eu.qualcomm.com>
-	<87shyx77et.fsf@kamboji.qca.qualcomm.com>
-	<7f40e26bcec5477db74d3105972c20bc@euamsexm01a.eu.qualcomm.com>
-Date: Fri, 15 Apr 2016 15:28:08 +0300
-In-Reply-To: <7f40e26bcec5477db74d3105972c20bc@euamsexm01a.eu.qualcomm.com>
-	(Maya Haim's message of "Tue, 12 Apr 2016 07:45:07 +0000")
-Message-ID: <8760vjqco7.fsf@kamboji.qca.qualcomm.com> (sfid-20160415_142818_715304_4E5B883E)
+	Tue, 26 Apr 2016 16:07:39 -0400
+Received: by mail-yw0-f195.google.com with SMTP id v81so4280271ywa.2
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 13:07:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87mvogy3ux.fsf@kamboji.qca.qualcomm.com>
+References: <1461244669-19871-1-git-send-email-kvalo@qca.qualcomm.com>
+ <5718EE7A.4030503@candelatech.com> <1461654272.16188.4.camel@sipsolutions.net>
+ <87mvogy3ux.fsf@kamboji.qca.qualcomm.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 27 Apr 2016 01:37:19 +0530
+Message-ID: <CABPxzYL=sQg=HczxM3gdERHRD-3-KaOG455wsqjpZ6YZDkybmw@mail.gmail.com> (sfid-20160426_220743_584572_FD553040)
+Subject: Re: [PATCH v2] ath10k: remove VHT capabilities from 2.4GHz
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Ben Greear <greearb@candelatech.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Haim, Maya" <merez@qti.qualcomm.com> writes:
-
-> On 4/7/2016 6:41 PM, Kalle Valo wrote:
->> "Haim, Maya" <merez@qti.qualcomm.com> writes:
->>
->>> On 4/6/2016 10:19 AM, Joe Perches wrote:
->>>> On Tue, 2016-04-05 at 14:24 +0300, Maya Erez wrote:
->>>>> Add __func__ to all wil log macros for easier debugging.
->>>> I think this is unnecessary and merely bloats code size.
->>>> For all the _dbg calls, dynamic debug can add function names if 
->>>> desired.
->>>>
->>>> If really desired, I suggest changing the logging functions to use 
->>>> "%ps and __builtin_return_address(0)
->>> I implemented it with __builtin_return_address(0) at first but found 
->>> its format less readable (e.g. wil_start_xmit+0x58/0x7e8).
->> Will that work with inline functions and with functions which the 
->> compiler has optimised out?
+On Tue, Apr 26, 2016 at 5:33 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
 >
-> That's a good point. I did a quick check and it doesn't work for
-> inline or static functions - for such functions, the name of the
-> calling function is printed.
-
-Thanks for checking.
-
-> We can either (1) use my initial implementation (2) add __func__ only
-> to the wil_dbg_... macros or (3) revert this patch completely. I find
-> the addition of the function names very useful and since most of the
-> code doesn't include it, it makes the analysis of issues less
-> efficient. Kalle - what is your say on that?
-
-I don't have any preference, it's up to you what you like most.
-
-One more possibility: in ath10k we have a kconfig option
-CONFIG_ATH10K_DEBUG to make it possible to disable all overhead from
-debug functionality, that would at least solve Joe's concern of extra
-memory usage.
-
--- 
-Kalle Valo
+>> On Thu, 2016-04-21 at 08:15 -0700, Ben Greear wrote:
+>>
+>>> The thing is, it actually works just fine with the patch I posted
+>>> to fix mac80211, and at any rate, even if the mac80211 patch isn't
+>>> applied, the ath10k driver works just fine in HT mode.
+>>
+>> This patch has no implications on HT, and I wasn't planning on applying
+>> the mac80211 patch.
+>
+> Yeah, makes sense. I'm planning to apply this soon.
+>
+>> As I said, I have no objections to doing the (Broadcom) vendor specific
+>> IEs for "VHT" in 2.4 GHz band, but I don't think we should advertise
+>> the spec IEs when they're explicitly specified to be used only in the
+>> 5.2 GHz band.
+>
+> But we really should have this, any volunteers? :) I think it shouldn't
+> be too hard to do so this would be a good project for someone looking
+> for a simple, but useful, task on wireless stack.
+Are these Broadcom IEs documented somewhere? If yes,
+then its a matter of parsing them and adding support to
+minstrel_ht, isn't it? major work would be in minstrel.
