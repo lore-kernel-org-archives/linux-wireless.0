@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50074 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752616AbcD0I5o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2016 04:57:44 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-04-27
-Date: Wed, 27 Apr 2016 10:57:26 +0200
-Message-Id: <1461747447-11287-1-git-send-email-johannes@sipsolutions.net> (sfid-20160427_105802_205193_890FD9D2)
+Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:55821 "EHLO
+	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752506AbcDZIGs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 04:06:48 -0400
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, sd@queasysnail.net, johannes@sipsolutions.net,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	jack@suse.com, linux-kernel@vger.kernel.org, pshelar@nicira.com,
+	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
+	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com,
+	Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Subject: [PATCH net-next 6/8] rtnl: align nlattr properly when needed
+Date: Tue, 26 Apr 2016 10:06:16 +0200
+Message-Id: <1461657978-13360-7-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160426_100742_381647_4CB6B130)
+In-Reply-To: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
-
-While writing some new code yesterday, I found and fixed a per-CPU memory
-leak, this pull request has just a single patch addressing that.
-
-Let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 8f815cdde3e550e10c2736990d791f60c2ce43eb:
-
-  nl80211: check netlink protocol in socket release notification (2016-04-12 15:39:06 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-04-27
-
-for you to fetch changes up to e6436be21e77e3659b4ff7e357ab5a8342d132d2:
-
-  mac80211: fix statistics leak if dev_alloc_name() fails (2016-04-27 10:06:58 +0200)
-
-----------------------------------------------------------------
-Just a single fix, for a per-CPU memory leak in a
-(root user triggerable) error case.
-
-----------------------------------------------------------------
-Johannes Berg (1):
-      mac80211: fix statistics leak if dev_alloc_name() fails
-
- net/mac80211/iface.c | 4 ++--
+Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+---
+ net/core/rtnetlink.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
+index 9efc1f34ef3b..5503dfe6a050 100644
+--- a/net/core/rtnetlink.c
++++ b/net/core/rtnetlink.c
+@@ -876,7 +876,7 @@ static noinline size_t if_nlmsg_size(const struct net_device *dev,
+ 	       + nla_total_size(IFNAMSIZ) /* IFLA_IFNAME */
+ 	       + nla_total_size(IFALIASZ) /* IFLA_IFALIAS */
+ 	       + nla_total_size(IFNAMSIZ) /* IFLA_QDISC */
+-	       + nla_total_size(sizeof(struct rtnl_link_ifmap))
++	       + nla_total_size_64bit(sizeof(struct rtnl_link_ifmap))
+ 	       + nla_total_size(sizeof(struct rtnl_link_stats))
+ 	       + nla_total_size_64bit(sizeof(struct rtnl_link_stats64))
+ 	       + nla_total_size(MAX_ADDR_LEN) /* IFLA_ADDRESS */
+@@ -1181,7 +1181,7 @@ static int rtnl_fill_link_ifmap(struct sk_buff *skb, struct net_device *dev)
+ 		.dma         = dev->dma,
+ 		.port        = dev->if_port,
+ 	};
+-	if (nla_put(skb, IFLA_MAP, sizeof(map), &map))
++	if (nla_put_64bit(skb, IFLA_MAP, sizeof(map), &map, IFLA_PAD))
+ 		return -EMSGSIZE;
+ 
+ 	return 0;
+-- 
+2.8.1
+
