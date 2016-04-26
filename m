@@ -1,49 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:13247 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752817AbcDKOxO (ORCPT
+Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:55819 "EHLO
+	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752468AbcDZIGo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 10:53:14 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3BEpS1x016296
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 07:53:12 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0a-0016f401.pphosted.com with ESMTP id 226y3kdqvd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 07:53:12 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/5] mwifiex: missing break statement
-Date: Mon, 11 Apr 2016 07:52:37 -0700
-Message-ID: <1460386361-29918-1-git-send-email-akarwar@marvell.com> (sfid-20160411_165400_886100_614C1C9E)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 26 Apr 2016 04:06:44 -0400
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, sd@queasysnail.net, johannes@sipsolutions.net,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	jack@suse.com, linux-kernel@vger.kernel.org, pshelar@nicira.com,
+	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
+	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com,
+	Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Subject: [PATCH net-next 7/8] neigh: align nlattr properly when needed
+Date: Tue, 26 Apr 2016 10:06:17 +0200
+Message-Id: <1461657978-13360-8-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160426_100819_033388_45A8DBE5)
+In-Reply-To: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds missing break statement at the end of
-PCIE_DEVICE_ID_MARVELL_88W8897 switch section.
-
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/core/neighbour.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index edf8b07..c28edbb 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2831,6 +2831,7 @@ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
- 		default:
- 			break;
+diff --git a/net/core/neighbour.c b/net/core/neighbour.c
+index 6a395d440228..29dd8cc22bbf 100644
+--- a/net/core/neighbour.c
++++ b/net/core/neighbour.c
+@@ -1857,7 +1857,8 @@ static int neightbl_fill_info(struct sk_buff *skb, struct neigh_table *tbl,
+ 			ndst.ndts_table_fulls		+= st->table_fulls;
  		}
-+		break;
- 	case PCIE_DEVICE_ID_MARVELL_88W8997:
- 		mwifiex_read_reg(adapter, 0x0c48, &revision_id);
- 		switch (revision_id) {
+ 
+-		if (nla_put(skb, NDTA_STATS, sizeof(ndst), &ndst))
++		if (nla_put_64bit(skb, NDTA_STATS, sizeof(ndst), &ndst,
++				  NDTA_PAD))
+ 			goto nla_put_failure;
+ 	}
+ 
 -- 
-1.8.1.4
+2.8.1
 
