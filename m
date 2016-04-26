@@ -1,37 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:36583 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751548AbcDRTsz (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:36624 "EHLO
+	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037AbcDZK0U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 15:48:55 -0400
-Received: by mail-qg0-f51.google.com with SMTP id f52so124599243qga.3
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 12:48:54 -0700 (PDT)
-From: Geoff Lansberry <geoff@kuvee.com>
-To: linux-wireless@vger.kernel.org
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, mgreer@animalcreek.com, justin@kuvee.com
-Subject: [Patch] NFC: trf7970a: 
-Date: Mon, 18 Apr 2016 15:48:37 -0400
-Message-Id: <1461008921-15100-1-git-send-email-geoff@kuvee.com> (sfid-20160418_214859_396429_71163968)
+	Tue, 26 Apr 2016 06:26:20 -0400
+Received: by mail-io0-f194.google.com with SMTP id k129so1493650iof.3
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 03:26:20 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1461664802.16188.8.camel@sipsolutions.net>
+References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
+	<CAAA5faGpa9ePaZagPpNaXdXz8FZrsDr=M4pMGEVO6F3xUc+aZA@mail.gmail.com>
+	<1461664802.16188.8.camel@sipsolutions.net>
+Date: Tue, 26 Apr 2016 11:26:19 +0100
+Message-ID: <CAL3+40ExBLbSqJekDndBZkAsNf0pp5rTCga+SSujnsP9To4U=A@mail.gmail.com> (sfid-20160426_122624_781227_93A48C4F)
+Subject: Re: Intel 7260 AC only using 802.11n not AC
+From: Radu P <rrrpan@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Reinoud Koornstra <reinoudkoornstra@gmail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current version of the trf7970a driver is missing support for several features that we needed to operate a custom board. 
-We feel that these features will be useful to others as well, and we want to share them.
+iw list|grep -i VHT  <- still nothing
 
-1: Support for using a gpio as Slave-Select. Our processor has several devices on the spi bus, and we ran out of ss lines.  This patch gives TRF7970A the ability to
- drive the ss line of the chip from a gpio that is defined in the device tree.
+iw dev wlanX link
+Connected to *.* (on wlan1)
+SSID: *****
+freq: 2432
+RX: 45056569 bytes (38259 packets)
+TX: 5239816 bytes (27324 packets)
+signal: -54 dBm
+tx bitrate: 144.4 MBit/s MCS 15 short GIc0:3e:0f:d6:54:b9
 
-2. When reviewing problems we were having in our implementation with TI support staff, they recommended that during initialization, address 0x18 should be written to zero.  This patch adds that change
+bss flags: short-preamble short-slot-time
+dtim period: 1
+beacon int: 100
 
-3. This existing version of the driver assumes that the crystal driving the trf7970a is 13.56 MHz, because there are several places in the driver code where the rel
-ated register is re-written, there is clean way to change to 27.12 MHz.  This patch adds a device tree option for 27 MHz and properly or's in changes in locations w
-here the register is changed.
-
-4. the existing version of the driver assumes that 3.3 volt io is used. The trf7970a has a special register where you can configure it for 1.8 volt io.  This patch
-adds a device tree option to select that this setting should be made.
-
- [PATCH 1/4] NFC: trf7970a: Add support for gpio as SS
- [PATCH 2/4] NFC: trf7970a: add TI recommended write of zero to
- [PATCH 3/4] NFC: trf7970a: add device tree option for 27MHz clock
- [PATCH 4/4] NFC: trf7970a: Add device tree option of 1.8 Volt IO
+On Tue, Apr 26, 2016 at 11:00 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Tue, 2016-04-26 at 02:56 -0600, Reinoud Koornstra wrote:
+>> I'm also using the 7620 AC.
+>> When I type:
+>>
+>> sudo iw dev wlp0s4 scan I see:
+>>
+>
+> "scan" is completely irrelevant for what actually ends up getting used.
+> "link" is relevant, but if you want to see the hardware capabilities
+> (like what iwconfig is displaying - that field has no relation to the
+> connection at all) then you need "iw list" or so.
+>
+> johannes
