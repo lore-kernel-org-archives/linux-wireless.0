@@ -1,46 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:56503 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751156AbcDDXUW (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:33225 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904AbcDZMcM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 19:20:22 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] ath10k: enable set_tsf vdev command to WMI 10.4
-Date: Mon, 4 Apr 2016 16:19:16 -0700
-Message-ID: <1459811956-26186-4-git-send-email-poh@qca.qualcomm.com> (sfid-20160405_012028_801475_4A74991C)
-In-Reply-To: <1459811956-26186-1-git-send-email-poh@qca.qualcomm.com>
-References: <1459811956-26186-1-git-send-email-poh@qca.qualcomm.com>
+	Tue, 26 Apr 2016 08:32:12 -0400
+Received: by mail-wm0-f53.google.com with SMTP id g17so1573282wme.0
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 05:32:12 -0700 (PDT)
+Reply-To: nicolas.dichtel@6wind.com
+Subject: Re: [PATCH net-next 3/8] fs/quota: use nla_put_u64_64bit()
+References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+ <1461657978-13360-4-git-send-email-nicolas.dichtel@6wind.com>
+ <20160426110848.GD27612@quack2.suse.cz>
+To: Jan Kara <jack@suse.cz>
+Cc: netdev@vger.kernel.org, davem@davemloft.net, sd@queasysnail.net,
+	johannes@sipsolutions.net, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, jack@suse.com,
+	linux-kernel@vger.kernel.org, pshelar@nicira.com,
+	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
+	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Message-ID: <571F5FBE.8050900@6wind.com> (sfid-20160426_143243_818846_7E558881)
+Date: Tue, 26 Apr 2016 14:31:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20160426110848.GD27612@quack2.suse.cz>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-10.4 firmware has addeded set_tsf vdev parameter,
-hence enable it.
-set_tsf function can be used to shift TBTT that will
-help avoid its clockdrift which happens when beacons
-are collided.
+Le 26/04/2016 13:08, Jan Kara a écrit :
+> On Tue 26-04-16 10:06:13, Nicolas Dichtel wrote:
+>> Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+> 
+> OK, so I somewhat miss a description of what will this do to the netlink
+> message so that I can judge whether the change is fine for the userspace
+> counterpart parsing these messages. AFAIU this changes the message format
+> by adding a QUOTA_NL_A_PAD field before each 64-bit field which needs an
+> alignment, am I guessing right? Thus when the userspace counterpart uses
+> genlmsg_parse() it should just silently ignore these attributes if I read
+> the documentation right. Did I understand this correctly?
+Yes, that's it.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index db3e9a4..e8d9a3e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1008,7 +1008,7 @@ static struct wmi_vdev_param_map wmi_10_4_vdev_param_map = {
- 	.meru_vc = WMI_10_4_VDEV_PARAM_MERU_VC,
- 	.rx_decap_type = WMI_10_4_VDEV_PARAM_RX_DECAP_TYPE,
- 	.bw_nss_ratemask = WMI_10_4_VDEV_PARAM_BW_NSS_RATEMASK,
--	.set_tsf = WMI_VDEV_PARAM_UNSUPPORTED,
-+	.set_tsf = WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
- };
- 
- static struct wmi_pdev_param_map wmi_pdev_param_map = {
--- 
-1.9.1
-
+Regards,
+Nicolas
