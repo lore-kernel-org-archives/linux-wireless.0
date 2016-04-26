@@ -1,140 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.161.172]:36781 "EHLO
-	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751AbcDWIlZ (ORCPT
+Received: from mail-ig0-f193.google.com ([209.85.213.193]:36467 "EHLO
+	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751979AbcDZLR7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Apr 2016 04:41:25 -0400
-Received: by mail-yw0-f172.google.com with SMTP id o66so145346855ywc.3
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Apr 2016 01:41:24 -0700 (PDT)
+	Tue, 26 Apr 2016 07:17:59 -0400
+Received: by mail-ig0-f193.google.com with SMTP id c3so1566926igl.3
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 04:17:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYJGS-GQ++-QK+em2sL46HRSQ2aXubfAdAgigZfWm6YgFQ@mail.gmail.com>
-References: <CABPxzYLZ2thNWCQ6bQ0-Peic-X-FTpTv4wJxyXVdmBDQDRS8JA@mail.gmail.com>
- <1461353341.2726.14.camel@perches.com> <CABPxzYJOAFq4hrSpZkx_bmvsUGhR0PmsUvjbnw=ykUeHAVXYqw@mail.gmail.com>
- <1461363503.2726.17.camel@perches.com> <CABPxzYJmKpw+Z0xm0+-mVUx5-bLrbKKi3V3UGhKoAT4Uf68r2g@mail.gmail.com>
- <1461398719.2726.22.camel@perches.com> <CABPxzYJGS-GQ++-QK+em2sL46HRSQ2aXubfAdAgigZfWm6YgFQ@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Sat, 23 Apr 2016 14:11:04 +0530
-Message-ID: <CABPxzYKwYVUCYmE16TeKzfmicyQSwcxtmbrNrJVRBS1AkDdB-A@mail.gmail.com> (sfid-20160423_104134_322168_F97867E0)
-Subject: Re: Debug prints mac80211 drivers
-To: Joe Perches <joe@perches.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <CABPxzYKFgOPMTs_i7OXCrA40FrNzrRvAVmLk63P-mPmrQiYRkQ@mail.gmail.com>
+References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
+	<CAAA5faGpa9ePaZagPpNaXdXz8FZrsDr=M4pMGEVO6F3xUc+aZA@mail.gmail.com>
+	<1461664802.16188.8.camel@sipsolutions.net>
+	<CAL3+40ExBLbSqJekDndBZkAsNf0pp5rTCga+SSujnsP9To4U=A@mail.gmail.com>
+	<874maozlrs.fsf@kamboji.qca.qualcomm.com>
+	<CABPxzYKFgOPMTs_i7OXCrA40FrNzrRvAVmLk63P-mPmrQiYRkQ@mail.gmail.com>
+Date: Tue, 26 Apr 2016 12:17:58 +0100
+Message-ID: <CAL3+40GYcS5Aou75mipFfikFYkUbsxmigpde7SdGPT=Mf1AjCA@mail.gmail.com> (sfid-20160426_131804_243499_9CA40A12)
+Subject: Re: Intel 7260 AC only using 802.11n not AC
+From: Radu P <rrrpan@gmail.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinoud Koornstra <reinoudkoornstra@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Apr 23, 2016 at 1:53 PM, Krishna Chaitanya
+On Tue, Apr 26, 2016 at 12:04 PM, Krishna Chaitanya
 <chaitanya.mgit@gmail.com> wrote:
-> On Sat, Apr 23, 2016 at 1:35 PM, Joe Perches <joe@perches.com> wrote:
->> On Sat, 2016-04-23 at 13:11 +0530, Krishna Chaitanya wrote:
->>> On Sat, Apr 23, 2016 at 3:48 AM, Joe Perches <joe@perches.com> wrote:
->>> >
->>> > On Sat, 2016-04-23 at 02:32 +0530, Krishna Chaitanya wrote:
->>> > >
->>> > > On Sat, Apr 23, 2016 at 12:59 AM, Joe Perches <joe@perches.com>
->>> > > wrote:
->>> > > >
->>> > > >
->>> > > >
->>> > > > On Fri, 2016-04-22 at 17:51 +0530, Krishna Chaitanya wrote:
->>> > > > >
->>> > > > >
->>> > > > > What is the recommended method for adding
->>> > > > > debug prints in mac80211 based drivers.
->>> > > > >
->>> > > > > 1) -DDEBUG + pr_debug ==> used by mac80211, brcm80211
->>> > > > > 2) -DDEBUG + dev_dbg ==> zd1201
->>> > > > > 3) dev_printk(KERN_DEBUG) ==> used by iwlwifi
->>> > > > > 4) printk(KERN_DEBUG) ==> Just to complete the list.
->>> > > > wiphy_dbg -> netif_dbg -> netdev_dbg -> dev_dbg -> pr_debug
->>> > > Ok, thats what checpatch --strict throws. but still different
->>> > > vendors
->>> > > follow
->>> > > different standards, so wanted to check if we should go strictly
->>> > > with
->>> > > checkpatch (or) is there any rationale behind choose each of the
->>> > > variant.
->>> > Generally the variants are used to produce sufficient
->>> > logging information to identify the appropriate device.
->>> >
->>> > Most all debugging printks shouldn't be emitted unless
->>> > actually debugging.
->>> >
->>> > >
->>> > > >
->>> > > > and CONFIG_DYNAMIC_DEBUG, no -DDEBUG required
->>> > > Yes, i understand. Till now we had this enabled, so pr_debug
->>> > > works just fine, but now it is disabled hence the question.
->>> > >
->>> > > Also there are pros and cons to having control using dyndbg,
->>> > > user can disable dyndbg, there be missing imp
->>> > imp?
->>> Sorry, important.
->>> >
->>> > >
->>> > >  debugs, in this case
->>> > > having module level (-DDEBUG) helps but if we want entire system
->>> > > to run in non-debug mode, disabling dyndbg helps.
->>> > Confused:
->>> >
->>> > dynamic debug printks aren't emitted by default
->>> > unless DEBUG is also defined or specifically
->>> > enabled by the user.
->>> I don't think so, enabling dynamic debug should suffice.
->>>
->>> 280 #if defined(CONFIG_DYNAMIC_DEBUG)
->>> 281 /* dynamic_pr_debug() uses pr_fmt() internally so we don't need it
->>> here */
->>> 282 #define pr_debug(fmt, ...) \
->>> 283         dynamic_pr_debug(fmt, ##__VA_ARGS__)
->>> 284 #elif defined(DEBUG)
->>> 285 #define pr_debug(fmt, ...) \
->>> 286         printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
->>> 287 #else
->>> 288 #define pr_debug(fmt, ...) \
->>> 289         no_printk(KERN_DEBUG pr_fmt(fmt), ##__VA_ARGS__)
->>> 290 #endif
->>>
+> On Tue, Apr 26, 2016 at 4:20 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
 >>
->> Nope.
+>> Radu P <rrrpan@gmail.com> writes:
 >>
->> Look at dynamic_debug.h
+>> > iw list|grep -i VHT  <- still nothing
 >>
->> #if defined DEBUG
->> #define _DPRINTK_FLAGS_DEFAULT _DPRINTK_FLAGS_PRINT
->> #else
->> #define _DPRINTK_FLAGS_DEFAULT 0
->> #endif
+>> Maybe your iw is too old? I didn't see anything either (using stock iw
+>> from Ubuntu 14.04) but then I upgraded to the latest one from git and
+>> now I see:
 >>
->> and
+>>                VHT Capabilities (0x338001b2):
+>>                         Max MPDU length: 11454
+>>                         Supported Channel Width: neither 160 nor 80+80
+>>                         RX LDPC
+>>                         short GI (80 MHz)
+>>                         TX STBC
+>>                         RX antenna pattern consistency
+>>                         TX antenna pattern consistency
+>>                 VHT RX MCS set:
+>>                         1 streams: MCS 0-9
+>>                         2 streams: MCS 0-9
+>>                         3 streams: MCS 0-9
+>>                         4 streams: not supported
+>>                         5 streams: not supported
+>>                         6 streams: not supported
+>>                         7 streams: not supported
+>>                         8 streams: not supported
+>>                 VHT RX highest supported: 0 Mbps
+>>                 VHT TX MCS set:
+>>                         1 streams: MCS 0-9
+>>                         2 streams: MCS 0-9
+>>                         3 streams: MCS 0-9
+>>                         4 streams: not supported
+>>                         5 streams: not supported
+>>                         6 streams: not supported
+>>                         7 streams: not supported
+>>                         8 streams: not supported
+>>                 VHT TX highest supported: 0 Mbps
 >>
->>           .flags =  _DPRINTK_FLAGS_DEFAULT,
+>> And please don't top post.
 >>
->> and
->>
->> #define DEFINE_DYNAMIC_DEBUG_METADATA(name, fmt)                \
->>         static struct _ddebug  __aligned(8)                     \
->>         __attribute__((section("__verbose"))) name = {          \
->>                 .modname = KBUILD_MODNAME,                      \
->>                 .function = __func__,                           \
->>                 .filename = __FILE__,                           \
->>                 .format = (fmt),                                \
->>                 .lineno = __LINE__,                             \
->>                 .flags =  _DPRINTK_FLAGS_DEFAULT,               \
->>         }
->>
->> and
->>
->> #define dynamic_pr_debug(fmt, ...)                              \
->> do {                                                            \
->>         DEFINE_DYNAMIC_DEBUG_METADATA(descriptor, fmt);         \
->>         if (unlikely(descriptor.flags & _DPRINTK_FLAGS_PRINT))  \
->>                 __dynamic_pr_debug(&descriptor, pr_fmt(fmt),    \
->>                                    ##__VA_ARGS__);              \
->> } while (0)
->>
->> So by default, it's not enabled to be output
-> Ok, i understand. We did not advertise -DDEBUG but pr_debug still
-> works, need to check if we are enabling it through some other option.
-To conclude, for a device driver using option#2: -DDEBUG + dev_dbg should
-suffice?
+>> --
+> "iw phy " should give necessary info.
+
+
+
+With the latest iw from the git repo I get:
+
+                VHT Capabilities (0x038071a0):
+                        Max MPDU length: 3895
+                        Supported Channel Width: neither 160 nor 80+80
+                        short GI (80 MHz)
+                        TX STBC
+                        SU Beamformee
+                VHT RX MCS set:
+                        1 streams: MCS 0-9
+                        2 streams: MCS 0-9
+                        3 streams: not supported
+                        4 streams: not supported
+                        5 streams: not supported
+                        6 streams: not supported
+                        7 streams: not supported
+                        8 streams: not supported
+                VHT RX highest supported: 0 Mbps
+                VHT TX MCS set:
+                        1 streams: MCS 0-9
+                        2 streams: MCS 0-9
+                        3 streams: not supported
+                        4 streams: not supported
+                        5 streams: not supported
+                        6 streams: not supported
+                        7 streams: not supported
+                        8 streams: not supported
+                VHT TX highest supported: 0 Mbps
+
+Is it OK that it is reporting  "VHT TX highest supported: 0 Mbps" ?
