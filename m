@@ -1,50 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50336 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932174AbcDYNFh (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:33870 "EHLO
+	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751328AbcDZI4L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 09:05:37 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pat Erley <pat-lkml@erley.org>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
-Subject: Re: [PATCH 23/43] iwlwifi: remove support for fw older than -16.ucode
-References: <1459346667.4731.9.camel@intel.com>
-	<1459346715-7954-23-git-send-email-emmanuel.grumbach@intel.com>
-	<571C681B.2090604@erley.org>
-Date: Mon, 25 Apr 2016 16:05:32 +0300
-In-Reply-To: <571C681B.2090604@erley.org> (Pat Erley's message of "Sat, 23 Apr
-	2016 23:30:51 -0700")
-Message-ID: <87y481x2hv.fsf@purkki.adurom.net> (sfid-20160425_150542_587705_93739746)
+	Tue, 26 Apr 2016 04:56:11 -0400
+Received: by mail-qk0-f176.google.com with SMTP id r184so2862138qkc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 01:56:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
+References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
+Date: Tue, 26 Apr 2016 02:56:10 -0600
+Message-ID: <CAAA5faGpa9ePaZagPpNaXdXz8FZrsDr=M4pMGEVO6F3xUc+aZA@mail.gmail.com> (sfid-20160426_105622_788471_B17C5A90)
+Subject: Re: Intel 7260 AC only using 802.11n not AC
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+To: Radu P <rrrpan@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pat Erley <pat-lkml@erley.org> writes:
+I'm also using the 7620 AC.
+When I type:
 
-> This patch broke ucode loading on iwl6050 hardware.
+sudo iw dev wlp0s4 scan I see:
+
+reinoud@router-dev:~/openwrt$ sudo iw dev wlp4s0 scan
+BSS 00:30:44:1d:cf:2b(on wlp4s0) -- associated
+[SNIP]
+        VHT capabilities:
+               VHT Capabilities (0x31c12820):
+                       Max MPDU length: 3895
+                       Supported Channel Width: neither 160 nor 80+80
+                       short GI (80 MHz)
+                       SU Beamformer
+                       +HTC-VHT
+                       RX antenna pattern consistency
+                       TX antenna pattern consistency
+               VHT RX MCS set:
+                       1 streams: MCS 0-9
+                       2 streams: MCS 0-9
+                       3 streams: not supported
+                       4 streams: not supported
+                       5 streams: not supported
+                       6 streams: not supported
+                       7 streams: not supported
+                       8 streams: not supported
+               VHT RX highest supported: 780 Mbps
+               VHT TX MCS set:
+                       1 streams: MCS 0-9
+                       2 streams: MCS 0-9
+                       3 streams: not supported
+                       4 streams: not supported
+                       5 streams: not supported
+                       6 streams: not supported
+                       7 streams: not supported
+                       8 streams: not supported
+               VHT TX highest supported: 780 Mbps
+       VHT operation:
+                * channel width: 0 (20 or 40 MHz)
+                * center freq segment 1: 0
+                * center freq segment 2: 0
+                * VHT basic MCS set: 0xfffa
+       WPS:     * Version: 1.0
+                * Wi-Fi Protected Setup State: 2 (Configured)
+                * Response Type: 3 (AP)
+                * UUID: bc329e00-1dd8-11b2-8601-0030441dcf2b
+                * Manufacturer: Cradlepoint Technology
+                * Model: Cradlepoint Access Point
+                * Model Number: CPDEV
+                * Serial Number: 12345678
+                * Primary Device Type: 6-0050f204-1
+                * Device name: CradlepointAP
+                * Config methods: Label, PBC
+                * RF Bands: 0x2
+
+Hence, my 7620 does support 11c.
+ [    9.704827] iwlwifi 0000:04:00.0: loaded firmware version
+16.242414.0 op_mode iwlmvm
+ [    9.840382] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+Wireless AC 7260, REV=0x144
+ [    9.840428] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+ [    9.840657] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+
+On Tue, Apr 26, 2016 at 1:20 AM, Radu P <rrrpan@gmail.com> wrote:
+> Hello,
 >
-> [   12.666080] iwlwifi 0000:03:00.0: Direct firmware load for
-> iwlwifi-6050-exp.ucode failed with error -2
-> [   12.672318] iwlwifi 0000:03:00.0: Driver unable to support your
-> firmware API. Driver supports v5, firmware is v689702145.
-> [   12.676429] iwlwifi 0000:03:00.0: Driver unable to support your
-> firmware API. Driver supports v5, firmware is v164168705.
-> [   12.676631] iwlwifi 0000:03:00.0: no suitable firmware found!
-
-I'm seeing the same:
-
-[    7.459114] Intel(R) Wireless WiFi driver for Linux
-[    7.459117] Copyright(c) 2003- 2015 Intel Corporation
-[    7.459317] iwlwifi 0000:03:00.0: can't disable ASPM; OS doesn't have ASPM control
-[    7.468245] iwlwifi 0000:03:00.0: Driver unable to support your firmware API. Driver supports v6, firmware is v313001473.
-[    7.470916] iwlwifi 0000:03:00.0: Driver unable to support your firmware API. Driver supports v6, firmware is v296224003.
-[    7.470931] iwlwifi 0000:03:00.0: no suitable firmware found!
-
-My device:
-
-03:00.0 Network controller [0280]: Intel Corporation Centrino Advanced-N 6205 [Taylor Peak] [8086:0085] (rev 34)
-
--- 
-Kalle Valo
+> These is the relevant data:
+>
+> firmware-version: 17.265642.0
+>
+> [  292.689871] iwlwifi 0000:04:00.0: loaded firmware version
+> 17.265642.0 op_mode iwlmvm
+> [  292.702902] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+> Wireless AC 7260, REV=0x144
+>
+> wlan1     IEEE 802.11abgn <- not AC
+>
+> Kernel version: 4.4.0-21-generic #37~14.04.1-Ubuntu
+>
+> AC mode is working with Windows 10.
+>
+> Any help is appreciated!
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
