@@ -1,56 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58609 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754788AbcDFJjG convert rfc822-to-8bit (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39058 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752872AbcDZSbO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 05:39:06 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Andrei Otcheretianski" <andrei.otcheretianski@intel.com>
-Subject: Re: [PATCHv3 RESEND 05/11] cfg80211: provide a function to report a
- match for NAN
-Date: Wed, 6 Apr 2016 09:38:54 +0000
-Message-ID: <20160406093851.GB10595@jouni.qca.qualcomm.com> (sfid-20160406_113910_702332_AF7C8B8A)
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
- <1459244109-16038-5-git-send-email-emmanuel.grumbach@intel.com>
-In-Reply-To: <1459244109-16038-5-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 26 Apr 2016 14:31:14 -0400
+Message-ID: <1461695468.13240.58.camel@coelho.fi> (sfid-20160426_203132_746352_0B1195A6)
+From: Luca Coelho <luca@coelho.fi>
+To: Mitchel Humpherys <mitch.special@gmail.com>,
+	Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 26 Apr 2016 21:31:08 +0300
+In-Reply-To: <87d1pcthr0.fsf@gmail.com>
+References: <87d1pcthr0.fsf@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Intel WiFi regression on linux-next
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 29, 2016 at 12:35:03PM +0300, Emmanuel Grumbach wrote:
-> Provide a function the driver can call to report a match.
-> This will send the event to the user space.
+On Tue, 2016-04-26 at 10:14 -0700, Mitchel Humpherys wrote:
+> Hello,
 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+Hello Mitchel,
 
-> +/**
-> + * struct cfg80211_nan_match_params - NAN match parameters
-> + * @type: the type of the function that triggered a match. If it is
-> + *	 %NL80211_NAN_FUNC_SUBSCRIBE it means that we replied to a subscriber.
-> + *	 If it is %NL80211_NAN_FUNC_PUBLISH, it means that we got a discovery
-> + *	 result.
-> + *	 If it is %NL80211_NAN_FUNC_FOLLOW_UP, we received a follow up.
 
-> +/**
-> + * cfg80211_nan_match - report a match for a NAN function.
-> + * @wdev: the wireless device reporting the match
-> + * @match: match notification parameters
-> + * @gfp: allocation flags
-> + *
-> + * This function reports that the a NAN function had a match. This
-> + * can be a subscribe that had a match or a solicited publish that
-> + * was sent. It can also be a follow up that was received.
-> + */
-> +void cfg80211_nan_match(struct wireless_dev *wdev,
-> +			struct cfg80211_nan_match_params *match, gfp_t gfp);
+> WiFi on my Acer Aspire 5739G is currently broken on linux-next.  I
+> bisected it to the following commit:
+> 
+>     commit 97f95c93c8ed5177371e75275f236513152fa308
+>     Author: Sara Sharon <sara.sharon@intel.com>
+>     Date:   Mon Mar 7 16:55:20 2016 +0200
+>     
+>         iwlwifi: remove support for fw older than -16.ucode
+> 
+> This issue was already reported here [1].  I'm just adding some more
+> hardware details (and am not subscribed to linux-wireless so I can't
+> reply over there).
+> 
+> It's failing with:
+> 
+>     iwlwifi 0000:05:00.0: enabling device (0000 -> 0002)
+>     iwlwifi 0000:05:00.0: can't disable ASPM; OS doesn't have ASPM
+> control
+>     iwlwifi 0000:05:00.0: Driver unable to support your firmware API.
+> Driver supports v5, firmware is v139658497.
+>     iwlwifi 0000:05:00.0: Direct firmware load for iwlwifi-5000-
+> 4.ucode failed with error -2
+>     iwlwifi 0000:05:00.0: request for firmware file 'iwlwifi-5000-
+> 4.ucode' failed.
+>     iwlwifi 0000:05:00.0: Direct firmware load for iwlwifi-5000-
+> 3.ucode failed with error -2
+>     iwlwifi 0000:05:00.0: request for firmware file 'iwlwifi-5000-
+> 3.ucode' failed.
+>     iwlwifi 0000:05:00.0: Driver unable to support your firmware API.
+> Driver supports v5, firmware is v135791116.
+>     iwlwifi 0000:05:00.0: Driver unable to support your firmware API.
+> Driver supports v5, firmware is v84148496.
+>     iwlwifi 0000:05:00.0: no suitable firmware found!
 
-Looks like this function is common for publish, subscribe and follow up.
-If so, can we please have separate functions for publish, subscribe and
-followup to match the spec primitives?
+This was fixed in a patch I sent to Kalle yesterday and he merged
+today:
 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+http://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next
+.git/commit/?id=f0d8f38cd909e072833a06b79939256c4aebe3a0
+
+HTH.
+
+--
+Cheers,
+Luca.
