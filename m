@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:32858 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756602AbcDEGiw (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:36143 "EHLO
+	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751027AbcDZJ5m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 02:38:52 -0400
-Received: by mail-pf0-f195.google.com with SMTP id e190so505279pfe.0
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:38:52 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/14] staging: wilc1000: remove unused hif_drv in wilc_edit_station
-Date: Tue,  5 Apr 2016 15:38:23 +0900
-Message-Id: <1459838312-16506-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_083855_009675_520A3F50)
-In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 26 Apr 2016 05:57:42 -0400
+Received: by mail-io0-f195.google.com with SMTP id k129so1413355iof.3
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 02:57:41 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87r3dswxom.fsf@purkki.adurom.net>
+References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
+	<87r3dswxom.fsf@purkki.adurom.net>
+Date: Tue, 26 Apr 2016 10:57:41 +0100
+Message-ID: <CAL3+40HdyydJ=HrKSqTT2jOv7t9K8vfo4s_b8oJwWFAT9wQHEw@mail.gmail.com> (sfid-20160426_115745_803054_4EE6D6AF)
+Subject: Re: Intel 7260 AC only using 802.11n not AC
+From: Radu P <rrrpan@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused hif_drv in wilc_edit_station.
-There is no need to checku null and print debug log.
+I get no output when running:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ------
- 1 file changed, 6 deletions(-)
+iw dev wlan1 scan|grep VHT
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index bfb738a..3222a5d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3889,12 +3889,6 @@ int wilc_edit_station(struct wilc_vif *vif,
- 	int result = 0;
- 	struct host_if_msg msg;
- 	struct add_sta_param *add_sta_info = &msg.body.add_sta_info;
--	struct host_if_drv *hif_drv = vif->hif_drv;
--
--	if (!hif_drv) {
--		netdev_err(vif->ndev, "driver is null\n");
--		return -EFAULT;
--	}
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
--- 
-2.8.0
+Switched to firmware 16 and same result.
 
+On Tue, Apr 26, 2016 at 10:01 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Radu P <rrrpan@gmail.com> writes:
+>
+>> These is the relevant data:
+>>
+>> firmware-version: 17.265642.0
+>>
+>> [  292.689871] iwlwifi 0000:04:00.0: loaded firmware version
+>> 17.265642.0 op_mode iwlmvm
+>> [  292.702902] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+>> Wireless AC 7260, REV=0x144
+>>
+>> wlan1     IEEE 802.11abgn <- not AC
+>>
+>> Kernel version: 4.4.0-21-generic #37~14.04.1-Ubuntu
+>>
+>> AC mode is working with Windows 10.
+>
+> Don't use iwconfig, it's ancient and deprecated. Use iw instead.
+>
+> --
+> Kalle Valo
