@@ -1,41 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48895 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751115AbcDZJBv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 05:01:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Radu P <rrrpan@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Intel 7260 AC only using 802.11n not AC
-References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
-Date: Tue, 26 Apr 2016 12:01:45 +0300
-In-Reply-To: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
-	(Radu P.'s message of "Tue, 26 Apr 2016 08:20:08 +0100")
-Message-ID: <87r3dswxom.fsf@purkki.adurom.net> (sfid-20160426_110157_860904_BD646E54)
+Received: from mga03.intel.com ([134.134.136.65]:7011 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752205AbcDZH2W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 03:28:22 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"pat-lkml@erley.org" <pat-lkml@erley.org>
+Subject: Re: [PATCH] iwlwifi: fix fw version reading for DVM devices
+Date: Tue, 26 Apr 2016 07:28:18 +0000
+Message-ID: <1461655699.13240.21.camel@intel.com> (sfid-20160426_092826_667127_E977D5D1)
+References: <1461603729-20973-1-git-send-email-luca@coelho.fi>
+In-Reply-To: <1461603729-20973-1-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Radu P <rrrpan@gmail.com> writes:
-
-> These is the relevant data:
->
-> firmware-version: 17.265642.0
->
-> [  292.689871] iwlwifi 0000:04:00.0: loaded firmware version
-> 17.265642.0 op_mode iwlmvm
-> [  292.702902] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
-> Wireless AC 7260, REV=0x144
->
-> wlan1     IEEE 802.11abgn <- not AC
->
-> Kernel version: 4.4.0-21-generic #37~14.04.1-Ubuntu
->
-> AC mode is working with Windows 10.
-
-Don't use iwconfig, it's ancient and deprecated. Use iw instead.
-
--- 
-Kalle Valo
+T24gTW9uLCAyMDE2LTA0LTI1IGF0IDIwOjAyICswMzAwLCBMdWNhIENvZWxobyB3cm90ZToNCj4g
+RnJvbTogTHVjYSBDb2VsaG8gPGx1Y2lhbm8uY29lbGhvQGludGVsLmNvbT4NCj4gDQo+IEluIGNv
+bW1pdCA5N2Y5NWM5M2M4ZWQgKCJpd2x3aWZpOiByZW1vdmUgc3VwcG9ydCBmb3IgZncgb2xkZXIg
+dGhhbg0KPiAtMTYudWNvZGUiKSB3ZSBhY2NpZGVudGFsbHkgY2hhbmdlZCB0aGUgZncgdmVyc2lv
+biByZWFkaW5nIGNvZGUgZm9yDQo+IERWTSBkZXZpY2VzLsKgwqBUaGUgY29kZSBpbnRlbmRlZCB0
+byByZW1vdmUgdGhlIG9sZCBmdyB2ZXJzaW9uIEFQSSwNCj4gYmVjYXVzZSBhbGwgTVZNIGZpcm13
+YXJlcyB2ZXJzaW9uIDE2IGFuZCBhYm92ZSB0aGF0IHdlIHN1cHBvcnQgZG9uJ3QNCj4gdXNlIGl0
+IGFueW1vcmUuwqDCoEJ1dCBEVk0gZGV2aWNlcyBzdGlsbCB1c2UgdGhlIG9sZCBGVyBBUEkuDQo+
+IA0KPiBGaXggdGhhdCBieSBicmluZ2luZyB0aGUgY29kZSBiYWNrIGluLg0KPiANCj4gUmVwb3J0
+ZWQtYnk6IFBhdCBFcmxleSA8cGF0LWxrbWxAZXJsZXkub3JnPg0KPiBGaXhlczogOTdmOTVjOTNj
+OGVkICgiaXdsd2lmaTogcmVtb3ZlIHN1cHBvcnQgZm9yIGZ3IG9sZGVyIHRoYW4tDQo+IDE2LnVj
+b2RlIikNCj4gU2lnbmVkLW9mZi1ieTogTHVjYSBDb2VsaG8gPGx1Y2lhbm8uY29lbGhvQGludGVs
+LmNvbT4NCj4gLS0twqANCg0KS2FsbGUsIEkgZm9yZ290IHRvIGFkZCB5b3VyIFRlc3RlZC1ieS4g
+wqBGZWVsIGZyZWUgdG8gYWRkIGl0IGlmIHlvdSB3YW50DQooYXMgaWYgSSBoYXZlIHRoZSBhdXRo
+b3JpdHkgb2Ygc2F5aW5nIHRoaXMgdG8gdGhlIG1haW50YWluZXIgOlApLg0KDQotLQ0KQ2hlZXJz
+LA0KTHVjYS4=
