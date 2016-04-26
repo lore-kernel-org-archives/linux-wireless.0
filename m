@@ -1,43 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44056 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751794AbcDZMDt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 08:03:49 -0400
-Message-ID: <1461672224.16188.9.camel@sipsolutions.net> (sfid-20160426_140352_738288_D029AF3C)
-Subject: Re: Intel 7260 AC only using 802.11n not AC
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Radu P <rrrpan@gmail.com>, Kalle Valo <kvalo@codeaurora.org>
-Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	Reinoud Koornstra <reinoudkoornstra@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 26 Apr 2016 14:03:44 +0200
-In-Reply-To: <CAL3+40GiJPvMJMOq3aJnpExh0NncSu+9RTSbWtMoAUb=cnFbjg@mail.gmail.com> (sfid-20160426_135420_045597_AEF1ED44)
-References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
-	 <CAAA5faGpa9ePaZagPpNaXdXz8FZrsDr=M4pMGEVO6F3xUc+aZA@mail.gmail.com>
-	 <1461664802.16188.8.camel@sipsolutions.net>
-	 <CAL3+40ExBLbSqJekDndBZkAsNf0pp5rTCga+SSujnsP9To4U=A@mail.gmail.com>
-	 <874maozlrs.fsf@kamboji.qca.qualcomm.com>
-	 <CABPxzYKFgOPMTs_i7OXCrA40FrNzrRvAVmLk63P-mPmrQiYRkQ@mail.gmail.com>
-	 <CAL3+40GYcS5Aou75mipFfikFYkUbsxmigpde7SdGPT=Mf1AjCA@mail.gmail.com>
-	 <87vb34y4we.fsf@kamboji.qca.qualcomm.com>
-	 <CAL3+40GiJPvMJMOq3aJnpExh0NncSu+9RTSbWtMoAUb=cnFbjg@mail.gmail.com>
-	 (sfid-20160426_135420_045597_AEF1ED44)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from zimbra13.linbit.com ([212.69.166.240]:40376 "EHLO
+	zimbra13.linbit.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751612AbcDZMB2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 08:01:28 -0400
+Date: Tue, 26 Apr 2016 13:54:27 +0200
+From: Lars Ellenberg <lars.ellenberg@linbit.com>
+To: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Cc: netdev@vger.kernel.org, davem@davemloft.net, sd@queasysnail.net,
+	johannes@sipsolutions.net, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, jack@suse.com,
+	linux-kernel@vger.kernel.org, pshelar@nicira.com,
+	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
+	drbd-dev@lists.linbit.com
+Subject: Re: [PATCH net-next 0/8] netlink: align attributes when needed
+ (patchset #3)
+Message-ID: <20160426115427.GB20950@soda.linbit> (sfid-20160426_140152_248382_4C4BA997)
+References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-04-26 at 12:54 +0100, Radu P wrote:
-> Is there a way running
+On Tue, Apr 26, 2016 at 10:06:10AM +0200, Nicolas Dichtel wrote:
 > 
-> ./iw dev wlanX link
+> This is the continuation (series #3) of the work done to align netlink
+> attributes when these attributes contain some 64-bit fields.
 > 
-> but to get the output for the 5 Ghz frequency?
-> now I am getting only this:
+> It's the last patchset from what I've seen.
 > 
-> freq: 2432
-> tx bitrate: 130.0 MBit/s MCS 14 short GI
+> The last user of nla_put_u64() is block/drbd. This module does not use
+> standard netlink API (see all the stuff in include/linux/genl_magic_struct.h
+> and include/linux/genl_magic_func.h). I didn't modify it because it's seems
+> hard to do it whithout testing and fully understanding the context
 
-Sure: connect to a 5 GHz AP first :)
+Something like this should just work.
 
-johannes
+diff --git a/include/linux/genl_magic_struct.h b/include/linux/genl_magic_struct.h
+index eecd19b..5715dac 100644
+--- a/include/linux/genl_magic_struct.h
++++ b/include/linux/genl_magic_struct.h
+@@ -80,7 +80,7 @@ extern void CONCAT_(GENL_MAGIC_FAMILY, _genl_unregister)(void);
+ 			nla_get_u32, nla_put_u32, true)
+ #define __u64_field(attr_nr, attr_flag, name)	\
+ 	__field(attr_nr, attr_flag, name, NLA_U64, __u64, \
+-			nla_get_u64, nla_put_u64, false)
++			nla_get_u64, nla_put_u64_64bit_unspec, false)
+ #define __str_field(attr_nr, attr_flag, name, maxlen) \
+ 	__array(attr_nr, attr_flag, name, NLA_NUL_STRING, char, maxlen, \
+ 			nla_strlcpy, nla_put, false)
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index e589cb3..38ba770 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -871,6 +871,18 @@ static inline int nla_put_u64_64bit(struct sk_buff *skb, int attrtype,
+ }
+ 
+ /**
++ * nla_put_u64_64bit_unspec - nla_put_u64_64bit() with padattr = 0
++ * @skb: socket buffer to add attribute to
++ * @attrtype: attribute type
++ * @value: numeric value
++ */
++static inline int nla_put_u64_64bit_unspec(struct sk_buff *skb, int attrtype,
++				    u64 value)
++{
++	return nla_put_64bit(skb, attrtype, sizeof(u64), &value, NLA_UNSPEC);
++}
++
++/**
+  * nla_put_be64 - Add a __be64 netlink attribute to a socket buffer and align it
+  * @skb: socket buffer to add attribute to
+  * @attrtype: attribute type
+
+> (for
+> example, why include/linux/drbd_genl.h is not part of uapi?).
+> Any thoughts?
+
+probably should be.
+
+Thanks,
+
+    Lars
+
