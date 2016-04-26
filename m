@@ -1,66 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58244 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757315AbcDGSTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 14:19:35 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 15/18] rtl8xxxu: Implement 8192eu device specific quirks
-Date: Thu,  7 Apr 2016 14:19:30 -0400
-Message-Id: <1460053173-8494-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_201952_681413_FC36F6B1)
-In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50640 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751704AbcDZJLR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 05:11:17 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [v2] rtlwifi: rtl8821ae: Make sure loop counter is signed on
+ allarchitectures
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1460703025-2177-1-git-send-email-d.mueller@elsoft.ch>
+To: =?utf-8?q?David_M=C3=BCller_=28ELSOFT_AG=29?= <d.mueller@elsoft.ch>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Message-Id: <20160426091116.17FCA6120F@smtp.codeaurora.org> (sfid-20160426_111121_830284_87CE6D04)
+Date: Tue, 26 Apr 2016 09:11:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Set REG_QUEUE_CTRL and REG_ACLK_MON for 8192eu.
+> The for-loop condition does not work correctly on architectures where
+> "char" is unsigned. Fix it by using an "int", which may also result in
+> more efficient code.
+> 
+> v2: Remove unneeded initialization.
+> 
+> Signed-off-by: David Müller <d.mueller@elsoft.ch>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c      | 14 ++++++++++++++
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h |  1 +
- 2 files changed, 15 insertions(+)
+Thanks, applied to wireless-drivers-next.git.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index c800882..5a2eb0a 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7197,6 +7197,20 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	if (priv->fops->init_statistics)
- 		priv->fops->init_statistics(priv);
- 
-+	if (priv->rtl_chip == RTL8192E) {
-+		/*
-+		 * 0x4c6[3] 1: RTS BW = Data BW
-+		 * 0: RTS BW depends on CCA / secondary CCA result.
-+		 */
-+		val8 = rtl8xxxu_read8(priv, REG_QUEUE_CTRL);
-+		val8 &= ~BIT(3);
-+		rtl8xxxu_write8(priv, REG_QUEUE_CTRL, val8);
-+		/*
-+		 * Reset USB mode switch setting
-+		 */
-+		rtl8xxxu_write8(priv, REG_ACLK_MON, 0x00);
-+	}
-+
- 	rtl8723a_phy_lc_calibrate(priv);
- 
- 	priv->fops->phy_iq_calibrate(priv);
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index 82cbe85..c19f234 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -512,6 +512,7 @@
- #define REG_PKT_VO_VI_LIFE_TIME		0x04c0
- #define REG_PKT_BE_BK_LIFE_TIME		0x04c2
- #define REG_STBC_SETTING		0x04c4
-+#define REG_QUEUE_CTRL			0x04c6
- #define REG_HT_SINGLE_AMPDU_8723B	0x04c7
- #define REG_PROT_MODE_CTRL		0x04c8
- #define REG_MAX_AGGR_NUM		0x04ca
--- 
-2.5.5
-
+Kalle Valo
