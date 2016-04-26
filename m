@@ -1,140 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50937 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757227AbcDEH3A (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50131 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752962AbcDZJGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 03:29:00 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u357QnBO021328
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 00:28:59 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 222dkfh5de-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 00:28:58 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 7/7] mwifiex: dump pcie scratch registers
-Date: Tue, 5 Apr 2016 00:22:32 -0700
-Message-ID: <1459840952-25338-7-git-send-email-akarwar@marvell.com> (sfid-20160405_092909_164281_15CF29B8)
-In-Reply-To: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
-References: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
+	Tue, 26 Apr 2016 05:06:15 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 1/5] ti: Convert wl1271_<level> logging macros to dev_<level> or pr_<level>
+References: <cover.1457395071.git.joe@perches.com>
+	<760b583e96a9a88f06e97150617f791c3726a302.1457395071.git.joe@perches.com>
+Date: Tue, 26 Apr 2016 12:06:09 +0300
+In-Reply-To: <760b583e96a9a88f06e97150617f791c3726a302.1457395071.git.joe@perches.com>
+	(Joe Perches's message of "Mon, 7 Mar 2016 16:19:33 -0800")
+Message-ID: <87d1pczqm6.fsf@kamboji.qca.qualcomm.com> (sfid-20160426_110718_337895_CB0B9AE0)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Joe Perches <joe@perches.com> writes:
 
-This patch prints pcie scratch registers during firmware dump. They
-will be useful for analysing firmware status.
+> Use the more common logging mechanism passing wl->dev where
+> appropriate.  Remove the macros.  Add argument struct wl1271 *wl to
+> some functions to make these logging mechanisms work.
+>
+> Miscellanea:
+>
+> o Coalesce formats, add required trailing \n to formats
+>   Some formats already had previously incorrect \n uses
+> o Realign arguments
+> o Correct a couple typos and grammar defects
+> o Split a multiple line error message to multiple calls of dev_err
+> o Add #define pr_fmt when pr_<level> is used
+> o Remove unnecessary/duplicate pr_fmt use from wl1271_debug macro
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/main.c |  8 +++---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 42 +++++++++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
- 3 files changed, 49 insertions(+), 3 deletions(-)
+Doesn't apply anymore:
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 3cfa946..04b975c 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1074,12 +1074,14 @@ void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter)
- 			     priv->netdev->name, priv->num_tx_timeout);
- 	}
- 
--	if (adapter->iface_type == MWIFIEX_SDIO) {
--		p += sprintf(p, "\n=== SDIO register dump===\n");
-+	if (adapter->iface_type == MWIFIEX_SDIO ||
-+	    adapter->iface_type == MWIFIEX_PCIE) {
-+		p += sprintf(p, "\n=== %s register dump===\n",
-+			     adapter->iface_type == MWIFIEX_SDIO ?
-+							"SDIO" : "PCIE");
- 		if (adapter->if_ops.reg_dump)
- 			p += adapter->if_ops.reg_dump(adapter, p);
- 	}
--
- 	p += sprintf(p, "\n=== more debug information\n");
- 	debug_info = kzalloc(sizeof(*debug_info), GFP_KERNEL);
- 	if (debug_info) {
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 6a06ca5..edf8b07 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2355,6 +2355,47 @@ static int mwifiex_pcie_host_to_card(struct mwifiex_adapter *adapter, u8 type,
- 	return 0;
- }
- 
-+/* Function to dump PCIE scratch registers in case of FW crash
-+ */
-+static int
-+mwifiex_pcie_reg_dump(struct mwifiex_adapter *adapter, char *drv_buf)
-+{
-+	char *p = drv_buf;
-+	char buf[256], *ptr;
-+	int i;
-+	u32 value;
-+	struct pcie_service_card *card = adapter->card;
-+	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
-+	int pcie_scratch_reg[] = {PCIE_SCRATCH_12_REG,
-+				  PCIE_SCRATCH_13_REG,
-+				  PCIE_SCRATCH_14_REG};
-+
-+	if (!p)
-+		return 0;
-+
-+	mwifiex_dbg(adapter, MSG, "PCIE register dump start\n");
-+
-+	if (mwifiex_read_reg(adapter, reg->fw_status, &value)) {
-+		mwifiex_dbg(adapter, ERROR, "failed to read firmware status");
-+		return 0;
-+	}
-+
-+	ptr = buf;
-+	mwifiex_dbg(adapter, MSG, "pcie scratch register:");
-+	for (i = 0; i < ARRAY_SIZE(pcie_scratch_reg); i++) {
-+		mwifiex_read_reg(adapter, pcie_scratch_reg[i], &value);
-+		ptr += sprintf(ptr, "reg:0x%x, value=0x%x\n",
-+			       pcie_scratch_reg[i], value);
-+	}
-+
-+	mwifiex_dbg(adapter, MSG, "%s\n", buf);
-+	p += sprintf(p, "%s\n", buf);
-+
-+	mwifiex_dbg(adapter, MSG, "PCIE register dump end\n");
-+
-+	return p - drv_buf;
-+}
-+
- /* This function read/write firmware */
- static enum rdwr_status
- mwifiex_pcie_rdwr_firmware(struct mwifiex_adapter *adapter, u8 doneflag)
-@@ -2899,6 +2940,7 @@ static struct mwifiex_if_ops pcie_ops = {
- 	.cleanup_mpa_buf =		NULL,
- 	.init_fw_port =			mwifiex_pcie_init_fw_port,
- 	.clean_pcie_ring =		mwifiex_clean_pcie_ring_buf,
-+	.reg_dump =			mwifiex_pcie_reg_dump,
- 	.device_dump =			mwifiex_pcie_device_dump,
- };
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 4455d19..cc7a5df 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -73,6 +73,8 @@
- #define PCIE_SCRATCH_10_REG				0xCE8
- #define PCIE_SCRATCH_11_REG				0xCEC
- #define PCIE_SCRATCH_12_REG				0xCF0
-+#define PCIE_SCRATCH_13_REG				0xCF8
-+#define PCIE_SCRATCH_14_REG				0xCFC
- #define PCIE_RD_DATA_PTR_Q0_Q1                          0xC08C
- #define PCIE_WR_DATA_PTR_Q0_Q1                          0xC05C
- 
+Applying: ti: Convert wl1271_<level> logging macros to dev_<level> or pr_<level>
+Using index info to reconstruct a base tree...
+Falling back to patching base and 3-way merge...
+Auto-merging drivers/net/wireless/ti/wlcore/wlcore_i.h
+Auto-merging drivers/net/wireless/ti/wlcore/tx.c
+Auto-merging drivers/net/wireless/ti/wlcore/scan.c
+Auto-merging drivers/net/wireless/ti/wlcore/rx.c
+Auto-merging drivers/net/wireless/ti/wlcore/ps.c
+Auto-merging drivers/net/wireless/ti/wlcore/main.c
+Auto-merging drivers/net/wireless/ti/wlcore/cmd.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/ti/wlcore/cmd.c
+Auto-merging drivers/net/wireless/ti/wl18xx/tx.c
+Auto-merging drivers/net/wireless/ti/wl18xx/scan.c
+Auto-merging drivers/net/wireless/ti/wl18xx/main.c
+Auto-merging drivers/net/wireless/ti/wl18xx/event.c
+Auto-merging drivers/net/wireless/ti/wl18xx/debugfs.c
+Auto-merging drivers/net/wireless/ti/wl18xx/cmd.c
+Auto-merging drivers/net/wireless/ti/wl12xx/scan.c
+Auto-merging drivers/net/wireless/ti/wl12xx/main.c
+Failed to merge in the changes.
+
 -- 
-1.8.1.4
-
+Kalle Valo
