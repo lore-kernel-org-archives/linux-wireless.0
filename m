@@ -1,74 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40393 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:49201 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933240AbcDYS4p (ORCPT
+	with ESMTP id S1751516AbcDZLkk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 14:56:45 -0400
+	Tue, 26 Apr 2016 07:40:40 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH v2 7/7] wil6210: add support for device led configuration
-References: <1461589078-29854-1-git-send-email-qca_merez@qca.qualcomm.com>
-	<1461589078-29854-8-git-send-email-qca_merez@qca.qualcomm.com>
-Date: Mon, 25 Apr 2016 21:56:39 +0300
-In-Reply-To: <1461589078-29854-8-git-send-email-qca_merez@qca.qualcomm.com>
-	(Maya Erez's message of "Mon, 25 Apr 2016 15:57:58 +0300")
-Message-ID: <87a8kh1pqw.fsf@kamboji.qca.qualcomm.com> (sfid-20160425_205701_427125_1C0494F9)
+To: Radu P <rrrpan@gmail.com>
+Cc: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Reinoud Koornstra <reinoudkoornstra@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Intel 7260 AC only using 802.11n not AC
+References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
+	<CAAA5faGpa9ePaZagPpNaXdXz8FZrsDr=M4pMGEVO6F3xUc+aZA@mail.gmail.com>
+	<1461664802.16188.8.camel@sipsolutions.net>
+	<CAL3+40ExBLbSqJekDndBZkAsNf0pp5rTCga+SSujnsP9To4U=A@mail.gmail.com>
+	<874maozlrs.fsf@kamboji.qca.qualcomm.com>
+	<CABPxzYKFgOPMTs_i7OXCrA40FrNzrRvAVmLk63P-mPmrQiYRkQ@mail.gmail.com>
+	<CAL3+40GYcS5Aou75mipFfikFYkUbsxmigpde7SdGPT=Mf1AjCA@mail.gmail.com>
+Date: Tue, 26 Apr 2016 14:40:33 +0300
+In-Reply-To: <CAL3+40GYcS5Aou75mipFfikFYkUbsxmigpde7SdGPT=Mf1AjCA@mail.gmail.com>
+	(Radu P.'s message of "Tue, 26 Apr 2016 12:17:58 +0100")
+Message-ID: <87vb34y4we.fsf@kamboji.qca.qualcomm.com> (sfid-20160426_134043_888048_055F6EB7)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> writes:
+Radu P <rrrpan@gmail.com> writes:
 
-> Add the ability to configure the device led to be used for notifying
-> the AP activity (60G device supports leds 0-2).
-> The host can also configure the blinking frequency of the led in
-> three states.
+> With the latest iw from the git repo I get:
+>
+>                 VHT Capabilities (0x038071a0):
+>                         Max MPDU length: 3895
+>                         Supported Channel Width: neither 160 nor 80+80
+>                         short GI (80 MHz)
+>                         TX STBC
+>                         SU Beamformee
+>                 VHT RX MCS set:
+>                         1 streams: MCS 0-9
+>                         2 streams: MCS 0-9
+>                         3 streams: not supported
+>                         4 streams: not supported
+>                         5 streams: not supported
+>                         6 streams: not supported
+>                         7 streams: not supported
+>                         8 streams: not supported
+>                 VHT RX highest supported: 0 Mbps
+>                 VHT TX MCS set:
+>                         1 streams: MCS 0-9
+>                         2 streams: MCS 0-9
+>                         3 streams: not supported
+>                         4 streams: not supported
+>                         5 streams: not supported
+>                         6 streams: not supported
+>                         7 streams: not supported
+>                         8 streams: not supported
+>                 VHT TX highest supported: 0 Mbps
+>
+> Is it OK that it is reporting  "VHT TX highest supported: 0 Mbps" ?
 
-[...]
-
-> +/* led_blink_time, write:
-> + * "<blink_on_slow> <blink_off_slow> <blink_on_med> <blink_off_med> <blink_on_fast> <blink_off_fast>
-> + */
-> +static ssize_t wil_write_led_blink_time(struct file *file,
-> +					const char __user *buf,
-> +					size_t len, loff_t *ppos)
-> +{
-> +	int rc;
-> +	char *kbuf = kmalloc(len + 1, GFP_KERNEL);
-> +
-> +	if (!kbuf)
-> +		return -ENOMEM;
-> +
-> +	rc = simple_write_to_buffer(kbuf, len, ppos, buf, len);
-> +	if (rc != len) {
-> +		kfree(kbuf);
-> +		return rc >= 0 ? -EIO : rc;
-> +	}
-> +
-> +	kbuf[len] = '\0';
-> +	rc = sscanf(kbuf, "%d %d %d %d %d %d",
-> +		    &led_blink_time[WIL_LED_TIME_SLOW].on_ms,
-> +		    &led_blink_time[WIL_LED_TIME_SLOW].off_ms,
-> +		    &led_blink_time[WIL_LED_TIME_MED].on_ms,
-> +		    &led_blink_time[WIL_LED_TIME_MED].off_ms,
-> +		    &led_blink_time[WIL_LED_TIME_FAST].on_ms,
-> +		    &led_blink_time[WIL_LED_TIME_FAST].off_ms);
-> +	kfree(kbuf);
-> +
-> +	if (rc < 0)
-> +		return rc;
-> +	if (rc < 6)
-> +		return -EINVAL;
-> +
-> +	return len;
-> +}
-
-Don't we already have a proper framework for leds? At least
-include/linux/led.h and drivers/led/ makes me suspect that. I'm not
-really fond of the idea reinventing the wheel, unless there's a really
-good reason.
+Yeah, zero just means that the highest support rate is not defined. I
+guess it's nicer if iw would print "Not defined" instead of "0 Mbps" but
+nobody hasn't implemented that yet.
 
 -- 
 Kalle Valo
