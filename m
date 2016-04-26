@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11129 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932167AbcDLIQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 04:16:55 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/4] iwlwifi: add device IDs for the 8265 device
-Date: Tue, 12 Apr 2016 11:16:48 +0300
-Message-Id: <1460449011-8417-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160412_101659_889134_791D28CA)
-In-Reply-To: <1460448889.2630.12.camel@intel.com>
-References: <1460448889.2630.12.camel@intel.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:39934 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751798AbcDZQC1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 12:02:27 -0400
+Date: Tue, 26 Apr 2016 12:02:24 -0400 (EDT)
+Message-Id: <20160426.120224.155123476886174129.davem@davemloft.net> (sfid-20160426_180246_788348_8066ADBA)
+To: nicolas.dichtel@6wind.com
+Cc: netdev@vger.kernel.org, sd@queasysnail.net,
+	johannes@sipsolutions.net, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, jack@suse.com,
+	linux-kernel@vger.kernel.org, pshelar@nicira.com,
+	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
+	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com
+Subject: Re: [PATCH net-next 0/8] netlink: align attributes when needed
+ (patchset #3)
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Date: Tue, 26 Apr 2016 10:06:10 +0200
 
-Add new 8265 series PCI IDs.
+> The last user of nla_put_u64() is block/drbd. This module does not use
+> standard netlink API (see all the stuff in include/linux/genl_magic_struct.h
+> and include/linux/genl_magic_func.h).
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Yet another example where doing things in a special unique way creates
+headaches and pain for everyone... sigh.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 05b9685..79d7cd7 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -479,8 +479,18 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24F3, 0x0930, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0000, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x0010, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0110, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x1110, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x1010, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0050, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0150, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x9010, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x8110, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x8050, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x8010, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x0810, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x9110, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x8130, iwl8265_2ac_cfg)},
- 
- /* 9000 Series */
- 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl5165_2ac_cfg)},
--- 
-2.5.0
+> I didn't modify it because it's seems hard to do it whithout testing
+> and fully understanding the context (for example, why
+> include/linux/drbd_genl.h is not part of uapi?).  Any thoughts?
 
+I think you'll need to work with the drbd maintainer(s) to resolve
+this and test the result.
+
+Series applied, thanks.
