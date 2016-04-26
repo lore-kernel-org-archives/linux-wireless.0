@@ -1,40 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35907 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932604AbcDFIrz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 04:47:55 -0400
-Message-ID: <1459932471.17504.35.camel@sipsolutions.net> (sfid-20160406_104804_701966_9CEC3D50)
-Subject: Re: [PATCHv3 RESEND 03/11] cfg80211: add add_nan_func / rm_nan_func
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Wed, 06 Apr 2016 10:47:51 +0200
-In-Reply-To: <1459244109-16038-3-git-send-email-emmanuel.grumbach@intel.com>
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1459244109-16038-3-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:53267 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197AbcDZJZV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 05:25:21 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [v7,1/2] dt: bindings: add MARVELL's sd8xxx wireless device
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1460982143-1419-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	Wei-Ning Huang <wnhuang@chromium.org>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160426092520.5889D612F4@smtp.codeaurora.org> (sfid-20160426_112529_178792_F0D07AA6)
+Date: Tue, 26 Apr 2016 09:25:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> +	NL80211_ATTR_NAN_FUNC_INST_ID,
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> Add device tree binding documentation for MARVELL's sd8xxx
+> (sd8897 and sd8997) wlan chip.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Acked-by: Rob Herring <robh@kernel.org>
 
-I don't see why this has to be a top-level attribute.
+Thanks, 2 patches applied to wireless-drivers-next.git:
 
-> +enum nl80211_nan_func_attributes {
-> +	__NL80211_NAN_FUNC_INVALID,
-> +	NL80211_NAN_FUNC_TYPE,
+84039920bdff dt: bindings: add MARVELL's sd8xxx wireless device
+ce4f6f0c353b mwifiex: add platform specific wakeup interrupt support
 
-You can easily move it into here, and 
-
-> +	/* propagate the instance id and cookie to userspace  */
-> +	if (WARN_ON(nla_put_u8(msg, NL80211_ATTR_NAN_FUNC_INST_ID,
-> +			       func.instance_id) ||
-> +		    nla_put_u64(msg, NL80211_ATTR_COOKIE,
-> func.cookie))) {
-
-use the appropriate nesting here.
-
-johannes
+Kalle Valo
