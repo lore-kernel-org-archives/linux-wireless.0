@@ -1,54 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:34130 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753829AbcDDLFO (ORCPT
+Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:55819 "EHLO
+	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752226AbcDZIGs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 07:05:14 -0400
-Received: by mail-pa0-f67.google.com with SMTP id hb4so4686013pac.1
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 04:05:14 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/8] staging: wilc1000: rename Handle_Scan
-Date: Mon,  4 Apr 2016 20:04:46 +0900
-Message-Id: <1459767890-9709-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160404_130521_870616_4F901FFA)
-In-Reply-To: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 26 Apr 2016 04:06:48 -0400
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, sd@queasysnail.net, johannes@sipsolutions.net,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	jack@suse.com, linux-kernel@vger.kernel.org, pshelar@nicira.com,
+	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
+	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com,
+	Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Subject: [PATCH net-next 5/8] ovs: align nlattr properly when needed
+Date: Tue, 26 Apr 2016 10:06:15 +0200
+Message-Id: <1461657978-13360-6-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160426_100749_058259_DB0D3EAB)
+In-Reply-To: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames Handle_Scan to handle_scan to avoid camelcase.
+I also fix commit 8b32ab9e6ef1: use nla_total_size_64bit() for
+OVS_FLOW_ATTR_USED in ovs_flow_cmd_msg_size().
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Fixes: 8b32ab9e6ef1 ("ovs: use nla_put_u64_64bit()")
+Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ include/uapi/linux/openvswitch.h |  2 ++
+ net/openvswitch/datapath.c       | 27 +++++++++++++++------------
+ 2 files changed, 17 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e978208..053e6f1 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -731,7 +731,7 @@ unlock:
- 	return result;
+diff --git a/include/uapi/linux/openvswitch.h b/include/uapi/linux/openvswitch.h
+index d6be1fb778a5..bb0d515b7654 100644
+--- a/include/uapi/linux/openvswitch.h
++++ b/include/uapi/linux/openvswitch.h
+@@ -84,6 +84,7 @@ enum ovs_datapath_attr {
+ 	OVS_DP_ATTR_STATS,		/* struct ovs_dp_stats */
+ 	OVS_DP_ATTR_MEGAFLOW_STATS,	/* struct ovs_dp_megaflow_stats */
+ 	OVS_DP_ATTR_USER_FEATURES,	/* OVS_DP_F_*  */
++	OVS_DP_ATTR_PAD,
+ 	__OVS_DP_ATTR_MAX
+ };
+ 
+@@ -253,6 +254,7 @@ enum ovs_vport_attr {
+ 	OVS_VPORT_ATTR_UPCALL_PID, /* array of u32 Netlink socket PIDs for */
+ 				/* receiving upcalls */
+ 	OVS_VPORT_ATTR_STATS,	/* struct ovs_vport_stats */
++	OVS_VPORT_ATTR_PAD,
+ 	__OVS_VPORT_ATTR_MAX
+ };
+ 
+diff --git a/net/openvswitch/datapath.c b/net/openvswitch/datapath.c
+index 22d9a5316304..856bd8dba676 100644
+--- a/net/openvswitch/datapath.c
++++ b/net/openvswitch/datapath.c
+@@ -738,9 +738,9 @@ static size_t ovs_flow_cmd_msg_size(const struct sw_flow_actions *acts,
+ 		len += nla_total_size(acts->orig_len);
+ 
+ 	return len
+-		+ nla_total_size(sizeof(struct ovs_flow_stats)) /* OVS_FLOW_ATTR_STATS */
++		+ nla_total_size_64bit(sizeof(struct ovs_flow_stats)) /* OVS_FLOW_ATTR_STATS */
+ 		+ nla_total_size(1) /* OVS_FLOW_ATTR_TCP_FLAGS */
+-		+ nla_total_size(8); /* OVS_FLOW_ATTR_USED */
++		+ nla_total_size_64bit(8); /* OVS_FLOW_ATTR_USED */
  }
  
--static s32 Handle_Scan(struct wilc_vif *vif,
-+static s32 handle_scan(struct wilc_vif *vif,
- 		       struct scan_attr *pstrHostIFscanAttr)
- {
- 	s32 result = 0;
-@@ -2515,7 +2515,7 @@ static int hostIFthread(void *pvArg)
+ /* Called with ovs_mutex or RCU read lock. */
+@@ -759,7 +759,9 @@ static int ovs_flow_cmd_fill_stats(const struct sw_flow *flow,
+ 		return -EMSGSIZE;
  
- 		switch (msg.id) {
- 		case HOST_IF_MSG_SCAN:
--			Handle_Scan(msg.vif, &msg.body.scan_info);
-+			handle_scan(msg.vif, &msg.body.scan_info);
- 			break;
+ 	if (stats.n_packets &&
+-	    nla_put(skb, OVS_FLOW_ATTR_STATS, sizeof(struct ovs_flow_stats), &stats))
++	    nla_put_64bit(skb, OVS_FLOW_ATTR_STATS,
++			  sizeof(struct ovs_flow_stats), &stats,
++			  OVS_FLOW_ATTR_PAD))
+ 		return -EMSGSIZE;
  
- 		case HOST_IF_MSG_CONNECT:
+ 	if ((u8)ntohs(tcp_flags) &&
+@@ -1435,8 +1437,8 @@ static size_t ovs_dp_cmd_msg_size(void)
+ 	size_t msgsize = NLMSG_ALIGN(sizeof(struct ovs_header));
+ 
+ 	msgsize += nla_total_size(IFNAMSIZ);
+-	msgsize += nla_total_size(sizeof(struct ovs_dp_stats));
+-	msgsize += nla_total_size(sizeof(struct ovs_dp_megaflow_stats));
++	msgsize += nla_total_size_64bit(sizeof(struct ovs_dp_stats));
++	msgsize += nla_total_size_64bit(sizeof(struct ovs_dp_megaflow_stats));
+ 	msgsize += nla_total_size(sizeof(u32)); /* OVS_DP_ATTR_USER_FEATURES */
+ 
+ 	return msgsize;
+@@ -1463,13 +1465,13 @@ static int ovs_dp_cmd_fill_info(struct datapath *dp, struct sk_buff *skb,
+ 		goto nla_put_failure;
+ 
+ 	get_dp_stats(dp, &dp_stats, &dp_megaflow_stats);
+-	if (nla_put(skb, OVS_DP_ATTR_STATS, sizeof(struct ovs_dp_stats),
+-			&dp_stats))
++	if (nla_put_64bit(skb, OVS_DP_ATTR_STATS, sizeof(struct ovs_dp_stats),
++			  &dp_stats, OVS_DP_ATTR_PAD))
+ 		goto nla_put_failure;
+ 
+-	if (nla_put(skb, OVS_DP_ATTR_MEGAFLOW_STATS,
+-			sizeof(struct ovs_dp_megaflow_stats),
+-			&dp_megaflow_stats))
++	if (nla_put_64bit(skb, OVS_DP_ATTR_MEGAFLOW_STATS,
++			  sizeof(struct ovs_dp_megaflow_stats),
++			  &dp_megaflow_stats, OVS_DP_ATTR_PAD))
+ 		goto nla_put_failure;
+ 
+ 	if (nla_put_u32(skb, OVS_DP_ATTR_USER_FEATURES, dp->user_features))
+@@ -1838,8 +1840,9 @@ static int ovs_vport_cmd_fill_info(struct vport *vport, struct sk_buff *skb,
+ 		goto nla_put_failure;
+ 
+ 	ovs_vport_get_stats(vport, &vport_stats);
+-	if (nla_put(skb, OVS_VPORT_ATTR_STATS, sizeof(struct ovs_vport_stats),
+-		    &vport_stats))
++	if (nla_put_64bit(skb, OVS_VPORT_ATTR_STATS,
++			  sizeof(struct ovs_vport_stats), &vport_stats,
++			  OVS_VPORT_ATTR_PAD))
+ 		goto nla_put_failure;
+ 
+ 	if (ovs_vport_get_upcall_portids(vport, skb))
 -- 
-2.8.0
+2.8.1
 
