@@ -1,79 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:23938 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752409AbcDZQCx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39433 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751507AbcDZKux (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 12:02:53 -0400
-From: <akolli@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <akolli@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	Anilkumar Kolli <akolli@qti.qualcomm.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] ath10k: fix kernel panic, move arvifs list head init before htt init
-Date: Tue, 26 Apr 2016 21:35:48 +0530
-Message-ID: <1461686748-862-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20160426_180307_753397_25DA0EE2)
+	Tue, 26 Apr 2016 06:50:53 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Radu P <rrrpan@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Reinoud Koornstra <reinoudkoornstra@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: Intel 7260 AC only using 802.11n not AC
+References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
+	<CAAA5faGpa9ePaZagPpNaXdXz8FZrsDr=M4pMGEVO6F3xUc+aZA@mail.gmail.com>
+	<1461664802.16188.8.camel@sipsolutions.net>
+	<CAL3+40ExBLbSqJekDndBZkAsNf0pp5rTCga+SSujnsP9To4U=A@mail.gmail.com>
+Date: Tue, 26 Apr 2016 13:50:47 +0300
+In-Reply-To: <CAL3+40ExBLbSqJekDndBZkAsNf0pp5rTCga+SSujnsP9To4U=A@mail.gmail.com>
+	(Radu P.'s message of "Tue, 26 Apr 2016 11:26:19 +0100")
+Message-ID: <874maozlrs.fsf@kamboji.qca.qualcomm.com> (sfid-20160426_125057_769424_5001A2F3)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+Radu P <rrrpan@gmail.com> writes:
 
-It is observed that while loading and unloading ath10k modules
-in an infinite loop, before ath10k_core_start() completion HTT
-rx frames are received, while processing these frames,
-dereferencing the arvifs list code is getting hit before
-initilizing the arvifs list, causing a kernel panic.
+> iw list|grep -i VHT  <- still nothing
 
-This patch initilizes the arvifs list before initilizing htt.
+Maybe your iw is too old? I didn't see anything either (using stock iw
+from Ubuntu 14.04) but then I upgraded to the latest one from git and
+now I see:
 
-Fixes the below issue:
- [<bf88b058>] (ath10k_htt_rx_pktlog_completion_handler+0x278/0xd08 [ath10k_core])
- [<bf88b058>] (ath10k_htt_rx_pktlog_completion_handler [ath10k_core])
- [<bf88c0dc>] (ath10k_htt_txrx_compl_task+0x5f4/0xeb0 [ath10k_core])
- [<bf88c0dc>] (ath10k_htt_txrx_compl_task [ath10k_core])
- [<c0234100>] (tasklet_action+0x8c/0xec)
- [<c0234100>] (tasklet_action)
- [<c02337c0>] (__do_softirq+0xf8/0x228)
- [<c02337c0>] (__do_softirq)  [<c0233920>] (run_ksoftirqd+0x30/0x90)
- Code: e5954ad8 e2899008 e1540009 0a00000d (e5943008)
- ---[ end trace 71de5c2e011dbf56 ]---
- Kernel panic - not syncing: Fatal exception in interrupt
+               VHT Capabilities (0x338001b2):
+                        Max MPDU length: 11454
+                        Supported Channel Width: neither 160 nor 80+80
+                        RX LDPC
+                        short GI (80 MHz)
+                        TX STBC
+                        RX antenna pattern consistency
+                        TX antenna pattern consistency
+                VHT RX MCS set:
+                        1 streams: MCS 0-9
+                        2 streams: MCS 0-9
+                        3 streams: MCS 0-9
+                        4 streams: not supported
+                        5 streams: not supported
+                        6 streams: not supported
+                        7 streams: not supported
+                        8 streams: not supported
+                VHT RX highest supported: 0 Mbps
+                VHT TX MCS set:
+                        1 streams: MCS 0-9
+                        2 streams: MCS 0-9
+                        3 streams: MCS 0-9
+                        4 streams: not supported
+                        5 streams: not supported
+                        6 streams: not supported
+                        7 streams: not supported
+                        8 streams: not supported
+                VHT TX highest supported: 0 Mbps
 
-Fixes: 500ff9f9389d ("ath10k: implement chanctx API")
-Cc: stable@vger.kernel.org
+And please don't top post.
 
-Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index b2c7fe3d30a4..83e02f292828 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1822,6 +1822,10 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 		goto err_hif_stop;
- 	}
- 
-+	ar->free_vdev_map = (1LL << ar->max_num_vdevs) - 1;
-+
-+	INIT_LIST_HEAD(&ar->arvifs);
-+
- 	/* we don't care about HTT in UTF mode */
- 	if (mode == ATH10K_FIRMWARE_MODE_NORMAL) {
- 		status = ath10k_htt_setup(&ar->htt);
-@@ -1835,10 +1839,6 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
- 	if (status)
- 		goto err_hif_stop;
- 
--	ar->free_vdev_map = (1LL << ar->max_num_vdevs) - 1;
--
--	INIT_LIST_HEAD(&ar->arvifs);
--
- 	return 0;
- 
- err_hif_stop:
 -- 
-1.7.9.5
-
+Kalle Valo
