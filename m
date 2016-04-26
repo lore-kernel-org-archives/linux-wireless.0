@@ -1,50 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:33913 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754475AbcDEGin (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53832 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751221AbcDZJ1e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 02:38:43 -0400
-Received: by mail-pa0-f68.google.com with SMTP id hb4so477425pac.1
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:38:42 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 02/14] staging: wilc1000: remove unused hif_drv in wilc_setup_ipaddress
-Date: Tue,  5 Apr 2016 15:38:20 +0900
-Message-Id: <1459838312-16506-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_083845_637303_50F3CF2E)
-In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 26 Apr 2016 05:27:34 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [01/16] rtl8xxxu: Rename rtl8723bu_update_rate_mask()
+ tortl8xxxu_gen2_update_rate_mask()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1460994576-24091-2-git-send-email-Jes.Sorensen@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Message-Id: <20160426092733.29C10601A1@smtp.codeaurora.org> (sfid-20160426_112738_263884_BC32DAEE)
+Date: Tue, 26 Apr 2016 09:27:33 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused hif_drv in wilc_setup_ipaddress.
-There is no need to check null and print debug log.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ------
- 1 file changed, 6 deletions(-)
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> Update the name of rtl8723bu_update_rate_mask() to make it reflect
+> it's applicable for all/most gen2 N parts.
+> 
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 168c823..5cda382 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4131,12 +4131,6 @@ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
--	struct host_if_drv *hif_drv = vif->hif_drv;
--
--	if (!hif_drv) {
--		netdev_err(vif->ndev, "driver is null\n");
--		return -EFAULT;
--	}
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
--- 
-2.8.0
+Thanks, 16 patches applied to wireless-drivers-next.git:
 
+a8c8dfa59319 rtl8xxxu: Rename rtl8723bu_update_rate_mask() to rtl8xxxu_gen2_update_rate_mask()
+32353a784f43 rtl8xxxu: Rename rtl8723bu_report_connect() to rtl8xxxu_gen2_report_connect()
+beb5531619c6 rtl8xxxu: Rename rtl8723au_report_connect() to rtl8xxxu_gen1_report_connect()
+3a56bf6aa13c rtl8xxxu: Rename rtl8723bu_config_channel() to rtl8xxxu_gen2_config_channel()
+6a07b7915afe rtl8xxxu: Rename rtl8723b_disable_rf() to rtl8xxxu_gen2_disable_rf()
+7eb1400c2479 rtl8xxxu: Rename rtl8723a_disable_rf() to rtl8xxxu_gen1_disable_rf()
+e09718c2fddf rtl8xxxu: Rename rtl8723au_config_channel() to rtl8xxxu_gen1_config_channel()
+c6e39da02e17 rtl8xxxu: Rename rtl8723au_update_rate_mask() to rtl8xxxu_update_rate_mask()
+28466e921402 rtl8xxxu: Rename rtl8723au_phy_iq_calibrate() to rtl8xxxu_gen1_phy_iq_calibrate()
+de7c189c342d rtl8xxxu: Rename rtl8723au_init_phy_bb() to rtl8xxxu_gen1_init_phy_bb()
+42a3bc7a2a85 rtl8xxxu: Rename rtl8723a_set_tx_power() to rtl8xxxu_gen1_set_tx_power()
+8396a41cf747 rtl8xxxu: Rename rtl8723a_enable_rf() to rtl8xxxu_gen1_enable_rf()
+8db71451e5c4 rtl8xxxu: Rename rtl8723a_mac_init_table to rtl8xxxu_gen1_mac_init_table
+5ac74145487d rtl8xxxu: Rename rtl8723b_channel_to_group()
+85f466350abf rtl8xxxu: Rename rtl8723bu_simularity_compare()
+04a74a9f8af0 rtl8xxxu: Rename rtl8723au_iqk_phy_iq_bb_reg
+
+Kalle Valo
