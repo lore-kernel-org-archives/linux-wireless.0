@@ -1,140 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:32780 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751837AbcD1NhT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2016 09:37:19 -0400
-Received: by mail-pa0-f49.google.com with SMTP id zm5so35885287pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2016 06:37:18 -0700 (PDT)
-From: Yongqin Liu <yongqin.liu@linaro.org>
-To: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>,
-	Filipe Brandenburger <filbranden@google.com>
-Cc: Yongqin Liu <yongqin.liu@linaro.org>
-Subject: [PATCH 1/1] iw: Android.mk & version.sh: update for Android based compilation
-Date: Thu, 28 Apr 2016 21:36:59 +0800
-Message-Id: <1461850619-15298-1-git-send-email-yongqin.liu@linaro.org> (sfid-20160428_153725_499910_13CE9B8C)
+Received: from mx2.suse.de ([195.135.220.15]:59068 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752074AbcDZLIy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 07:08:54 -0400
+Date: Tue, 26 Apr 2016 13:08:48 +0200
+From: Jan Kara <jack@suse.cz>
+To: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Cc: netdev@vger.kernel.org, davem@davemloft.net, sd@queasysnail.net,
+	johannes@sipsolutions.net, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, jack@suse.com,
+	linux-kernel@vger.kernel.org, pshelar@nicira.com,
+	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
+	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com
+Subject: Re: [PATCH net-next 3/8] fs/quota: use nla_put_u64_64bit()
+Message-ID: <20160426110848.GD27612@quack2.suse.cz> (sfid-20160426_130915_721592_BB643BC6)
+References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+ <1461657978-13360-4-git-send-email-nicolas.dichtel@6wind.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1461657978-13360-4-git-send-email-nicolas.dichtel@6wind.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-update the Android.mk file and version.sh script for
-Android based compilation
+On Tue 26-04-16 10:06:13, Nicolas Dichtel wrote:
+> Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
 
-Android.mk:  the same file as the one in AOSP master tip
-version.sh:  update to get the version information from the
-   git repository where this file is located instead of the
-   the current directory where it is executed, otherwise if
-   there is .git directory in the current directory, it will
-   get the wrong version information.
-   And improved the version check since the tag information
-   may not be mirrored like what AOSP does now.
+OK, so I somewhat miss a description of what will this do to the netlink
+message so that I can judge whether the change is fine for the userspace
+counterpart parsing these messages. AFAIU this changes the message format
+by adding a QUOTA_NL_A_PAD field before each 64-bit field which needs an
+alignment, am I guessing right? Thus when the userspace counterpart uses
+genlmsg_parse() it should just silently ignore these attributes if I read
+the documentation right. Did I understand this correctly?
 
-Change-Id: I8fa59f0e5c7ebd61b364c77fdccf8e74da2e565c
-Signed-off-by: Yongqin Liu <yongqin.liu@linaro.org>
----
- Android.mk | 30 ++++++++++++++++++++----------
- version.sh | 39 +++++++++++++++++++++++++++------------
- 2 files changed, 47 insertions(+), 22 deletions(-)
+								Honza
 
-diff --git a/Android.mk b/Android.mk
-index 4a50f89..20b0432 100644
---- a/Android.mk
-+++ b/Android.mk
-@@ -1,22 +1,32 @@
- LOCAL_PATH := $(call my-dir)
--IW_SOURCE_DIR := $(LOCAL_PATH)
- 
- include $(CLEAR_VARS)
- 
--IW_ANDROID_BUILD=y
--NO_PKG_CONFIG=y
--include $(LOCAL_PATH)/Makefile
--
--LOCAL_SRC_FILES := $(patsubst %.o,%.c,$(OBJS))
-+LOCAL_SRC_FILES := \
-+  iw.c genl.c event.c info.c phy.c \
-+  interface.c ibss.c station.c survey.c util.c ocb.c \
-+  mesh.c mpath.c mpp.c scan.c reg.c \
-+  reason.c status.c connect.c link.c offch.c ps.c cqm.c \
-+  bitrate.c wowlan.c coalesce.c roc.c p2p.c vendor.c \
-+  sections.c
- 
- LOCAL_CFLAGS += -DCONFIG_LIBNL20
-+
-+# Silence some warnings for now. Needs to be fixed upstream. b/26105799
-+LOCAL_CFLAGS += -Wno-unused-parameter \
-+                -Wno-sign-compare \
-+                -Wno-format
-+LOCAL_CLANG_CFLAGS += -Wno-enum-conversion
-+
- LOCAL_LDFLAGS := -Wl,--no-gc-sections
--#LOCAL_MODULE_TAGS := optional
--LOCAL_MODULE_TAGS := eng
-+LOCAL_MODULE_TAGS := debug
- LOCAL_STATIC_LIBRARIES := libnl
- LOCAL_MODULE := iw
- 
--$(IW_SOURCE_DIR)/version.c:
--	$(IW_SOURCE_DIR)/version.sh $(IW_SOURCE_DIR)/version.c
-+LOCAL_MODULE_CLASS := EXECUTABLES
-+LOCAL_GENERATED_SOURCES := $(local-generated-sources-dir)/version.c
-+$(LOCAL_GENERATED_SOURCES) : $(LOCAL_PATH)/version.sh
-+	@mkdir -p $(dir $@)
-+	$(hide) $< $@
- 
- include $(BUILD_EXECUTABLE)
-diff --git a/version.sh b/version.sh
-index 7ccd419..7f292f3 100755
---- a/version.sh
-+++ b/version.sh
-@@ -3,20 +3,35 @@
- VERSION="4.3"
- OUT="$1"
- 
--if [ -d .git ] && head=`git rev-parse --verify HEAD 2>/dev/null`; then
--	git update-index --refresh --unmerged > /dev/null
--	descr=$(git describe --match=v*)
-+# get the absolute path for the OUT file
-+OUT_NAME=$(basename ${OUT})
-+OUT_DIR=$(cd $(dirname ${OUT}); pwd)
-+OUT="${OUT_DIR}/${OUT_NAME}"
- 
--	# on git builds check that the version number above
--	# is correct...
--	[ "${descr%%-*}" = "v$VERSION" ] || exit 2
-+# the version check should be under the source directory
-+# where this script is located, instead of the currect directory
-+# where this script is excuted.
-+SRC_DIR=$(dirname $0)
-+SRC_DIR=$(cd ${SRC_DIR}; pwd)
-+cd "${SRC_DIR}"
- 
--	v="${descr#v}"
--	if git diff-index --name-only HEAD | read dummy ; then
--		v="$v"-dirty
--	fi
--else
--	v="$VERSION"
-+v=""
-+if [ -d .git ] && head=`git rev-parse --verify HEAD 2>/dev/null`; then
-+    git update-index --refresh --unmerged > /dev/null
-+    descr=$(git describe --match=v* 2>/dev/null)
-+    if [ $? -eq 0 ]; then
-+        # on git builds check that the version number above
-+        # is correct...
-+        if [ "${descr%%-*}" = "v$VERSION" ]; then
-+            v="${descr#v}"
-+            if git diff-index --name-only HEAD | read dummy ; then
-+                v="$v"-dirty
-+            fi
-+        fi
-+    fi
-+fi
-+if [ -z "${v}" ]; then
-+    v="$VERSION"
- fi
- 
- echo '#include "iw.h"' > "$OUT"
+> ---
+>  fs/quota/netlink.c         | 12 +++++++-----
+>  include/uapi/linux/quota.h |  1 +
+>  2 files changed, 8 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/quota/netlink.c b/fs/quota/netlink.c
+> index d07a2f91d858..8b252673d454 100644
+> --- a/fs/quota/netlink.c
+> +++ b/fs/quota/netlink.c
+> @@ -47,7 +47,7 @@ void quota_send_warning(struct kqid qid, dev_t dev,
+>  	void *msg_head;
+>  	int ret;
+>  	int msg_size = 4 * nla_total_size(sizeof(u32)) +
+> -		       2 * nla_total_size(sizeof(u64));
+> +		       2 * nla_total_size_64bit(sizeof(u64));
+>  
+>  	/* We have to allocate using GFP_NOFS as we are called from a
+>  	 * filesystem performing write and thus further recursion into
+> @@ -68,8 +68,9 @@ void quota_send_warning(struct kqid qid, dev_t dev,
+>  	ret = nla_put_u32(skb, QUOTA_NL_A_QTYPE, qid.type);
+>  	if (ret)
+>  		goto attr_err_out;
+> -	ret = nla_put_u64(skb, QUOTA_NL_A_EXCESS_ID,
+> -			  from_kqid_munged(&init_user_ns, qid));
+> +	ret = nla_put_u64_64bit(skb, QUOTA_NL_A_EXCESS_ID,
+> +				from_kqid_munged(&init_user_ns, qid),
+> +				QUOTA_NL_A_PAD);
+>  	if (ret)
+>  		goto attr_err_out;
+>  	ret = nla_put_u32(skb, QUOTA_NL_A_WARNING, warntype);
+> @@ -81,8 +82,9 @@ void quota_send_warning(struct kqid qid, dev_t dev,
+>  	ret = nla_put_u32(skb, QUOTA_NL_A_DEV_MINOR, MINOR(dev));
+>  	if (ret)
+>  		goto attr_err_out;
+> -	ret = nla_put_u64(skb, QUOTA_NL_A_CAUSED_ID,
+> -			  from_kuid_munged(&init_user_ns, current_uid()));
+> +	ret = nla_put_u64_64bit(skb, QUOTA_NL_A_CAUSED_ID,
+> +				from_kuid_munged(&init_user_ns, current_uid()),
+> +				QUOTA_NL_A_PAD);
+>  	if (ret)
+>  		goto attr_err_out;
+>  	genlmsg_end(skb, msg_head);
+> diff --git a/include/uapi/linux/quota.h b/include/uapi/linux/quota.h
+> index 38baddb807f5..4d2489ef6f10 100644
+> --- a/include/uapi/linux/quota.h
+> +++ b/include/uapi/linux/quota.h
+> @@ -191,6 +191,7 @@ enum {
+>  	QUOTA_NL_A_DEV_MAJOR,
+>  	QUOTA_NL_A_DEV_MINOR,
+>  	QUOTA_NL_A_CAUSED_ID,
+> +	QUOTA_NL_A_PAD,
+>  	__QUOTA_NL_A_MAX,
+>  };
+>  #define QUOTA_NL_A_MAX (__QUOTA_NL_A_MAX - 1)
+> -- 
+> 2.8.1
+> 
+> 
 -- 
-2.1.4
-
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
