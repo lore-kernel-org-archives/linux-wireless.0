@@ -1,75 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36094 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760961AbcDFJCa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 05:02:30 -0400
-Message-ID: <1459933346.17504.50.camel@sipsolutions.net> (sfid-20160406_110235_473133_999C70C5)
-Subject: Re: [PATCHv3 RESEND 07/11] cfg80211: add utility functions to clone
- and free nan_func
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Wed, 06 Apr 2016 11:02:26 +0200
-In-Reply-To: <1459244109-16038-7-git-send-email-emmanuel.grumbach@intel.com>
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1459244109-16038-7-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:55798 "EHLO
+	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752112AbcDZIGl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Apr 2016 04:06:41 -0400
+From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+To: netdev@vger.kernel.org
+Cc: davem@davemloft.net, sd@queasysnail.net, johannes@sipsolutions.net,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	jack@suse.com, linux-kernel@vger.kernel.org, pshelar@nicira.com,
+	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
+	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com,
+	Nicolas Dichtel <nicolas.dichtel@6wind.com>
+Subject: [PATCH net-next 3/8] fs/quota: use nla_put_u64_64bit()
+Date: Tue, 26 Apr 2016 10:06:13 +0200
+Message-Id: <1461657978-13360-4-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160426_100935_669141_CB4A6ADF)
+In-Reply-To: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
+References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+---
+ fs/quota/netlink.c         | 12 +++++++-----
+ include/uapi/linux/quota.h |  1 +
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
-> +int cfg80211_clone_nan_func_members(struct cfg80211_nan_func *f1,
-> +				    const struct cfg80211_nan_func *f2)
-> +{
-> +	memcpy(f1, f2, sizeof(*f1));
+diff --git a/fs/quota/netlink.c b/fs/quota/netlink.c
+index d07a2f91d858..8b252673d454 100644
+--- a/fs/quota/netlink.c
++++ b/fs/quota/netlink.c
+@@ -47,7 +47,7 @@ void quota_send_warning(struct kqid qid, dev_t dev,
+ 	void *msg_head;
+ 	int ret;
+ 	int msg_size = 4 * nla_total_size(sizeof(u32)) +
+-		       2 * nla_total_size(sizeof(u64));
++		       2 * nla_total_size_64bit(sizeof(u64));
+ 
+ 	/* We have to allocate using GFP_NOFS as we are called from a
+ 	 * filesystem performing write and thus further recursion into
+@@ -68,8 +68,9 @@ void quota_send_warning(struct kqid qid, dev_t dev,
+ 	ret = nla_put_u32(skb, QUOTA_NL_A_QTYPE, qid.type);
+ 	if (ret)
+ 		goto attr_err_out;
+-	ret = nla_put_u64(skb, QUOTA_NL_A_EXCESS_ID,
+-			  from_kqid_munged(&init_user_ns, qid));
++	ret = nla_put_u64_64bit(skb, QUOTA_NL_A_EXCESS_ID,
++				from_kqid_munged(&init_user_ns, qid),
++				QUOTA_NL_A_PAD);
+ 	if (ret)
+ 		goto attr_err_out;
+ 	ret = nla_put_u32(skb, QUOTA_NL_A_WARNING, warntype);
+@@ -81,8 +82,9 @@ void quota_send_warning(struct kqid qid, dev_t dev,
+ 	ret = nla_put_u32(skb, QUOTA_NL_A_DEV_MINOR, MINOR(dev));
+ 	if (ret)
+ 		goto attr_err_out;
+-	ret = nla_put_u64(skb, QUOTA_NL_A_CAUSED_ID,
+-			  from_kuid_munged(&init_user_ns, current_uid()));
++	ret = nla_put_u64_64bit(skb, QUOTA_NL_A_CAUSED_ID,
++				from_kuid_munged(&init_user_ns, current_uid()),
++				QUOTA_NL_A_PAD);
+ 	if (ret)
+ 		goto attr_err_out;
+ 	genlmsg_end(skb, msg_head);
+diff --git a/include/uapi/linux/quota.h b/include/uapi/linux/quota.h
+index 38baddb807f5..4d2489ef6f10 100644
+--- a/include/uapi/linux/quota.h
++++ b/include/uapi/linux/quota.h
+@@ -191,6 +191,7 @@ enum {
+ 	QUOTA_NL_A_DEV_MAJOR,
+ 	QUOTA_NL_A_DEV_MINOR,
+ 	QUOTA_NL_A_CAUSED_ID,
++	QUOTA_NL_A_PAD,
+ 	__QUOTA_NL_A_MAX,
+ };
+ #define QUOTA_NL_A_MAX (__QUOTA_NL_A_MAX - 1)
+-- 
+2.8.1
 
-That's pretty weird. And the only user of this (in a later patch) is
-first allocating the f1. I think this function should be changed to
-also allocate the entire struct cfg80211_nan_func, with all the
-contents.
-
-Yes, mac80211 is actually allocating a bit more - but only a list_head.
-I think I'd prefer just putting a "struct list_head list" into the
-cfg80211 struct "for driver use" and getting rid of all of these
-contortions.
-
-
-With some care, I'm pretty sure you could even get away with a single
-allocation that's big enough to cover everything, so that you don't
-need to have cfg80211_free_nan_func_members() exported but can simply
-kfree() the pointer returned from this function.
-
-That's basically doing 
-
-size = sizeof(*dst);
-size += src->serv_spec_info_len;
-size += src->srf_bf_len;
-size += src->srf_num_macs * size(...);
-size += <rx filters calculation>
-size += <tx filters calculation>
-
-and then using pointers to the single block.
-
-The only problem might be if that can get really large, but I think it
-would make memory management simpler.
-
-In fact, it'd be *really* nice if that could also be done when parsing
-this from nl80211.
-
-
-Additionally, and alternatively to exporting this function from
-cfg80211, why don't you change the rules around the memory?
-If nl80211_nan_add_func() doesn't put the func on the stack, but
-allocates it, then rdev_add_nan_func() can be forced to take ownership
-of the pointer. That way, there's no need to even copy the data at all.
-Yes, that'd have to be documented (particularly whether or not it also
-takes ownership in error cases, it probably should), but overall I'm
-pretty sure it'd simplify things.
-
-Even if we *don't* get away with putting everything into a single
-allocation in nl80211 - that might be too complicated - we'd only have
-to export the free function and would never copy around things.
-
-johannes
