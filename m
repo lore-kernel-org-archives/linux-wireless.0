@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45421 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932201AbcDSO2c (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 10:28:32 -0400
-MIME-Version: 1.0
-Message-ID: <20160419142344.GB4876@mwanda> (sfid-20160419_162837_020308_8B041DD5)
-Date: Tue, 19 Apr 2016 07:23:44 -0700 (PDT)
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch 2/2] mwifiex: fix loop timeout in mwifiex_prog_fw_w_helper()
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:49848 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752385AbcD0IRW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Apr 2016 04:17:22 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix statistics leak if dev_alloc_name() fails
+Date: Wed, 27 Apr 2016 10:17:16 +0200
+Message-Id: <1461745036-30993-1-git-send-email-johannes@sipsolutions.net> (sfid-20160427_101727_138712_E3E42B7B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-USB8XXX_FW_MAX_RETRY is 3.  We were using a post-op loop
-"while (retries--) {" but then the lines after that assume the loop
-exits with retries set to zero.
+From: Johannes Berg <johannes.berg@intel.com>
 
-I've fixed this by changing to a pre-op loop.  I started with retries
-set to 4 instead of 3 so that we still go through the loop the same
-number of times.
+In the case that dev_alloc_name() fails, e.g. because the name was
+given by the user and already exists, we need to clean up properly
+and free the per-CPU statistics. Fix that.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: stable@vger.kernel.org
+Fixes: 5a490510ba5f ("mac80211: use per-CPU TX/RX statistics")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/iface.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index cdd8f9a..0857575 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -995,7 +995,8 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- {
- 	int ret = 0;
- 	u8 *firmware = fw->fw_buf, *recv_buff;
--	u32 retries = USB8XXX_FW_MAX_RETRY, dlen;
-+	u32 retries = USB8XXX_FW_MAX_RETRY + 1;
-+	u32 dlen;
- 	u32 fw_seqnum = 0, tlen = 0, dnld_cmd = 0;
- 	struct fw_data *fwdata;
- 	struct fw_sync_header sync_fw;
-@@ -1043,7 +1044,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 453b4e741780..e1cb22c16530 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1761,7 +1761,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 
+ 		ret = dev_alloc_name(ndev, ndev->name);
+ 		if (ret < 0) {
+-			free_netdev(ndev);
++			ieee80211_if_free(ndev);
+ 			return ret;
  		}
  
- 		/* If the send/receive fails or CRC occurs then retry */
--		while (retries--) {
-+		while (--retries) {
- 			u8 *buf = (u8 *)fwdata;
- 			u32 len = FW_DATA_XMIT_SIZE;
+@@ -1847,7 +1847,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
  
-@@ -1103,7 +1104,7 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 				continue;
- 			}
- 
--			retries = USB8XXX_FW_MAX_RETRY;
-+			retries = USB8XXX_FW_MAX_RETRY + 1;
- 			break;
+ 		ret = register_netdevice(ndev);
+ 		if (ret) {
+-			free_netdev(ndev);
++			ieee80211_if_free(ndev);
+ 			return ret;
  		}
- 		fw_seqnum++;
+ 	}
+-- 
+2.8.0.rc3
+
