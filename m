@@ -1,37 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61445 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751746AbcDDO5p convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57906 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752523AbcD0NuH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 10:57:45 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Oh, Peter" <poh@qca.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: parse Rx MAC timestamp in mgmt frame for FW
- 10.4
-Date: Mon, 4 Apr 2016 14:57:40 +0000
-Message-ID: <87zit9ctgb.fsf@kamboji.qca.qualcomm.com> (sfid-20160404_165747_794770_E147D8D6)
-References: <20caae0068a19c546f87ef4a25e3651af92c02ab.1458686620.git.poh@qca.qualcomm.com>
-In-Reply-To: <20caae0068a19c546f87ef4a25e3651af92c02ab.1458686620.git.poh@qca.qualcomm.com>
-	(Peter Oh's message of "Tue, 22 Mar 2016 15:44:53 -0700")
+	Wed, 27 Apr 2016 09:50:07 -0400
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
+Subject: Re: [v2] mwifiex: bridged packets cause wmm_tx_pending counter to
+ gonegative
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1461125975-12002-1-git-send-email-mfaltesek@google.com>
+To: Marty Faltesek <mfaltesek@google.com>
+Cc: linux-wireless@vger.kernel.org, akarwar@marvell.com
+Message-Id: <20160427135005.EA38F612F0@smtp.codeaurora.org> (sfid-20160427_155014_815460_3189B1E3)
+Date: Wed, 27 Apr 2016 13:50:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
 
-> Check and parse Rx MAC timestamp when firmware sets its flag
-> to status variable.
-> 10.4 firmware adds it in Rx beacon frame only at this moment.
-> Drivers and mac80211 may utilize it to detect such clockdrift
-> or beacon collision and use the result for beacon collision
-> avoidance.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+> When a packet is queued from the bridge, wmm_tx_pending is not
+> incremented, but when the packet is dequeued the counter is decremented.
+> 
+> Signed-off-by: Marty Faltesek <mfaltesek@google.com>
 
-Applied, thanks.
+Thanks, applied to wireless-drivers-next.git.
 
--- 
 Kalle Valo
