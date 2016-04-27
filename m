@@ -1,107 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:33870 "EHLO
-	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328AbcDZI4L (ORCPT
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:36354 "EHLO
+	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752641AbcD0GoH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 04:56:11 -0400
-Received: by mail-qk0-f176.google.com with SMTP id r184so2862138qkc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 01:56:10 -0700 (PDT)
+	Wed, 27 Apr 2016 02:44:07 -0400
+Received: by mail-yw0-f196.google.com with SMTP id u62so7611965ywe.3
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 23:44:06 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
-References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
-Date: Tue, 26 Apr 2016 02:56:10 -0600
-Message-ID: <CAAA5faGpa9ePaZagPpNaXdXz8FZrsDr=M4pMGEVO6F3xUc+aZA@mail.gmail.com> (sfid-20160426_105622_788471_B17C5A90)
-Subject: Re: Intel 7260 AC only using 802.11n not AC
-From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-To: Radu P <rrrpan@gmail.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <571FCB22.5000305@candelatech.com>
+References: <1461244669-19871-1-git-send-email-kvalo@qca.qualcomm.com>
+ <5718EE7A.4030503@candelatech.com> <1461654272.16188.4.camel@sipsolutions.net>
+ <87mvogy3ux.fsf@kamboji.qca.qualcomm.com> <CABPxzYL=sQg=HczxM3gdERHRD-3-KaOG455wsqjpZ6YZDkybmw@mail.gmail.com>
+ <571FCB22.5000305@candelatech.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 27 Apr 2016 12:13:46 +0530
+Message-ID: <CABPxzY+UuCABUcFbV0EpdoRaSzpgGvMani_j7xvg2a=xh-Bw0g@mail.gmail.com> (sfid-20160427_084412_109315_C634883F)
+Subject: Re: [PATCH v2] ath10k: remove VHT capabilities from 2.4GHz
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm also using the 7620 AC.
-When I type:
+On Wed, Apr 27, 2016 at 1:40 AM, Ben Greear <greearb@candelatech.com> wrote:
+> On 04/26/2016 01:07 PM, Krishna Chaitanya wrote:
+>>
+>> On Tue, Apr 26, 2016 at 5:33 PM, Valo, Kalle <kvalo@qca.qualcomm.com>
+>> wrote:
+>>>
+>>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>>
+>>>> On Thu, 2016-04-21 at 08:15 -0700, Ben Greear wrote:
+>>>>
+>>>>> The thing is, it actually works just fine with the patch I posted
+>>>>> to fix mac80211, and at any rate, even if the mac80211 patch isn't
+>>>>> applied, the ath10k driver works just fine in HT mode.
+>>>>
+>>>>
+>>>> This patch has no implications on HT, and I wasn't planning on applying
+>>>> the mac80211 patch.
+>>>
+>>>
+>>> Yeah, makes sense. I'm planning to apply this soon.
+>>>
+>>>> As I said, I have no objections to doing the (Broadcom) vendor specific
+>>>> IEs for "VHT" in 2.4 GHz band, but I don't think we should advertise
+>>>> the spec IEs when they're explicitly specified to be used only in the
+>>>> 5.2 GHz band.
+>>>
+>>>
+>>> But we really should have this, any volunteers? :) I think it shouldn't
+>>> be too hard to do so this would be a good project for someone looking
+>>> for a simple, but useful, task on wireless stack.
+>>
+>> Are these Broadcom IEs documented somewhere? If yes,
+>> then its a matter of parsing them and adding support to
+>> minstrel_ht, isn't it? major work would be in minstrel.
+>>
+>
+> For ath10k, rate-ctrl is done in the firmware, so
+> no work at all in minstrel-ht.
 
-sudo iw dev wlp0s4 scan I see:
+Right, i think this might become more common.
+So may we need to change minstrel_ht as well?
 
-reinoud@router-dev:~/openwrt$ sudo iw dev wlp4s0 scan
-BSS 00:30:44:1d:cf:2b(on wlp4s0) -- associated
-[SNIP]
-        VHT capabilities:
-               VHT Capabilities (0x31c12820):
-                       Max MPDU length: 3895
-                       Supported Channel Width: neither 160 nor 80+80
-                       short GI (80 MHz)
-                       SU Beamformer
-                       +HTC-VHT
-                       RX antenna pattern consistency
-                       TX antenna pattern consistency
-               VHT RX MCS set:
-                       1 streams: MCS 0-9
-                       2 streams: MCS 0-9
-                       3 streams: not supported
-                       4 streams: not supported
-                       5 streams: not supported
-                       6 streams: not supported
-                       7 streams: not supported
-                       8 streams: not supported
-               VHT RX highest supported: 780 Mbps
-               VHT TX MCS set:
-                       1 streams: MCS 0-9
-                       2 streams: MCS 0-9
-                       3 streams: not supported
-                       4 streams: not supported
-                       5 streams: not supported
-                       6 streams: not supported
-                       7 streams: not supported
-                       8 streams: not supported
-               VHT TX highest supported: 780 Mbps
-       VHT operation:
-                * channel width: 0 (20 or 40 MHz)
-                * center freq segment 1: 0
-                * center freq segment 2: 0
-                * VHT basic MCS set: 0xfffa
-       WPS:     * Version: 1.0
-                * Wi-Fi Protected Setup State: 2 (Configured)
-                * Response Type: 3 (AP)
-                * UUID: bc329e00-1dd8-11b2-8601-0030441dcf2b
-                * Manufacturer: Cradlepoint Technology
-                * Model: Cradlepoint Access Point
-                * Model Number: CPDEV
-                * Serial Number: 12345678
-                * Primary Device Type: 6-0050f204-1
-                * Device name: CradlepointAP
-                * Config methods: Label, PBC
-                * RF Bands: 0x2
+> The end result, as far as I can tell,
+> is you would just have to tell mac80211 to allow
+> VHT on 2.4Ghz, and revert this patch that Kalle is proposing.
 
-Hence, my 7620 does support 11c.
- [    9.704827] iwlwifi 0000:04:00.0: loaded firmware version
-16.242414.0 op_mode iwlmvm
- [    9.840382] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
-Wireless AC 7260, REV=0x144
- [    9.840428] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
- [    9.840657] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+Ideally as this is vendor specific it makes sense to implement this
+at Driver/FW level rather than implementing it at a common stack
+like mac80211.
 
-On Tue, Apr 26, 2016 at 1:20 AM, Radu P <rrrpan@gmail.com> wrote:
-> Hello,
->
-> These is the relevant data:
->
-> firmware-version: 17.265642.0
->
-> [  292.689871] iwlwifi 0000:04:00.0: loaded firmware version
-> 17.265642.0 op_mode iwlmvm
-> [  292.702902] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
-> Wireless AC 7260, REV=0x144
->
-> wlan1     IEEE 802.11abgn <- not AC
->
-> Kernel version: 4.4.0-21-generic #37~14.04.1-Ubuntu
->
-> AC mode is working with Windows 10.
->
-> Any help is appreciated!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Maybe someone that actually knows about these IEs can explain why
+> they are worth using?
+
+These IE's can be parsed in the driver without any mac80211 involvement.
