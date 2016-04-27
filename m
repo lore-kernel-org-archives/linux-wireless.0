@@ -1,93 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51716 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683AbcDGQhg (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:43563 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752424AbcD0JYb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 12:37:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Alexander Tsoy <alexander@tsoy.me>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Andrea Merello <andrea.merello@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Arnd Bergmann <arnd@arndb.de>, ath9k-devel@lists.ath9k.org,
-	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
-	Brett Rudley <brudley@broadcom.com>,
-	Byeoungwook Kim <quddnr145@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Colin Ian King <colin.king@canonical.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Eyal Reizer <eyalreizer@gmail.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Geliang Tang <geliangtang@163.com>,
-	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Ivan Safonov <insafonov@gmail.com>,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Lars-Peter Clausen <lars@metafoo.de>,
-	linux-wireless@vger.kernel.org, Luciano Coelho <luca@coelho.fi>,
-	Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>,
-	Markus Elfring <elfring@users.sourceforge.net>,
-	Miaoqing Pan <miaoqing@codeaurora.org>,
-	Nicholas Mc Guire <hofrat@osadl.org>,
-	Nicolas Pitre <nico@linaro.org>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Sara Sharon <sarasharon1@gmail.com>,
-	Shahar Patury <shaharp@ti.com>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Tony Lindgren <tony@atomide.com>
-Subject: Re: [PATCH 00/19] Pending Cleanup patches for 4.7
-References: <cover.1458262312.git.julian.calaby@gmail.com>
-	<871t6h4o6q.fsf@purkki.adurom.net>
-Date: Thu, 07 Apr 2016 19:37:19 +0300
-In-Reply-To: <871t6h4o6q.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu,
-	07 Apr 2016 15:07:41 +0300")
-Message-ID: <87pou11ikg.fsf@purkki.adurom.net> (sfid-20160407_183739_861700_1A12B236)
+	Wed, 27 Apr 2016 05:24:31 -0400
+Date: Wed, 27 Apr 2016 12:16:53 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: remove VHT capabilities from 2.4GHz
+Message-ID: <20160427091653.GB4345@w1.fi> (sfid-20160427_112436_771061_E5117B4C)
+References: <1461244669-19871-1-git-send-email-kvalo@qca.qualcomm.com>
+ <5718EE7A.4030503@candelatech.com>
+ <1461654272.16188.4.camel@sipsolutions.net>
+ <87mvogy3ux.fsf@kamboji.qca.qualcomm.com>
+ <CABPxzYL=sQg=HczxM3gdERHRD-3-KaOG455wsqjpZ6YZDkybmw@mail.gmail.com>
+ <571FCB22.5000305@candelatech.com>
+ <CABPxzY+UuCABUcFbV0EpdoRaSzpgGvMani_j7xvg2a=xh-Bw0g@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CABPxzY+UuCABUcFbV0EpdoRaSzpgGvMani_j7xvg2a=xh-Bw0g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+On Wed, Apr 27, 2016 at 12:13:46PM +0530, Krishna Chaitanya wrote:
+> On Wed, Apr 27, 2016 at 1:40 AM, Ben Greear <greearb@candelatech.com> wrote:
+> > On 04/26/2016 01:07 PM, Krishna Chaitanya wrote:
+> >> Are these Broadcom IEs documented somewhere? If yes,
+> >> then its a matter of parsing them and adding support to
+> >> minstrel_ht, isn't it? major work would be in minstrel.
 
-> Julian Calaby <julian.calaby@gmail.com> writes:
->
->> This is a set of all patches in patchwork which were pending when the 4.6
->> merge window opened that meet the following criteria:
->>
->> 1. They're sane
->> 2. They're either obviously correct, I can review them, or they've been
->>    reviewed or ACK'd by someone else.
->> 3. They don't require any code changes to make them applyable.
->>
->> That said, if anyone doesn't like any of these patches for any reason,
->> just give me a reason and I'll drop it.
->>
->> I've split the pending patches into 4 sets as detailed below. All patches
->> have been rebased to apply in order on wireless-drivers-next at
->> wireless-drivers-next-for-davem-2016-03-14.
->
-> Thank you for working on this, this is very helpful.
->
-> I have deferred patch 14 and dropped patch 19[1], the rest I'm planning
-> to apply soon. I also tried to remove the original patches from deferred
-> queue by moving them to state "superseded", but I might missed
-> something.
->
-> [1] Oddly I cannot find patch 19 from patchwork, I don't know what
->     happened to it. I do see it on the mailing list, though.
+> > The end result, as far as I can tell,
+> > is you would just have to tell mac80211 to allow
+> > VHT on 2.4Ghz, and revert this patch that Kalle is proposing.
+> 
+> Ideally as this is vendor specific it makes sense to implement this
+> at Driver/FW level rather than implementing it at a common stack
+> like mac80211.
+> 
+> > Maybe someone that actually knows about these IEs can explain why
+> > they are worth using?
+> 
+> These IE's can be parsed in the driver without any mac80211 involvement.
 
-Actually another nacked patch 16 also has disappeared from patchwork, so
-I'm not going to apply that either. I'm starting to wonder that maybe
-you removed these yourself from patchwork?
+Sure, these are vendor specific elements, but they are simply
+encapsulating the standard VHT elements that we already handle within
+mac80211 for STA functionality and hostapd for AP functionality. I don't
+see why we would make this any more complex for 2.4 GHz 256-QAM support
+than extending the existing locations that support the VHT elements.
 
+The main reason for me in using these particular vendor specific
+elements is in them being already supported by number of deployed
+devices. There is also support for these in hostapd (vendor_vht=1 in
+hostapd.conf) and as far as I know, this used to work with ath10k for AP
+mode (and this patch we discuss here may break that). The main missing
+functionality is for the matching STA side support with mac80211 and
+that's where the changes, IMHO, would fit in nicely in mac80211 next to
+the places where we handle the matching standard VHT elements in the 5
+GHz band.
+ 
 -- 
-Kalle Valo
+Jouni Malinen                                            PGP id EFC895FA
