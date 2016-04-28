@@ -1,99 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40860 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753717AbcDAP4B (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 11:56:01 -0400
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id A855D40EC8D
-	for <linux-wireless@vger.kernel.org>; Fri,  1 Apr 2016 08:56:00 -0700 (PDT)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: mac80211 kasan splat, hacked 4.4.6+, ath10k with modified 10.4.3 fw
-Message-ID: <56FE9A10.1060908@candelatech.com> (sfid-20160401_175610_551042_58304FA5)
-Date: Fri, 1 Apr 2016 08:56:00 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:54442 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752631AbcD1TTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2016 15:19:17 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 09/11] rtl8xxxu: Split rtl8723a_h2c_cmd() into a gen1 and a gen2 version
+Date: Thu, 28 Apr 2016 15:19:13 -0400
+Message-Id: <1461871155-11826-10-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160428_213721_946935_5931746B)
+In-Reply-To: <1461871155-11826-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1461871155-11826-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I saw this splat yesterday evening...  Any ideas on what this could be?
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-I'll add some bounds checking on the rate->idx in case that is the issue...
+The H2C API is completely different between gen1 and gen2 parts, so
+there is little point trying to treat this as a generic function. All
+calls to *_h2c_cmd() will always come from a gen1 or a gen2 specific
+function.
 
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  3 +-
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 12 +--
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 86 ++++++++++++++++------
+ 3 files changed, 72 insertions(+), 29 deletions(-)
 
-(gdb) l *(sta_set_rate_info_tx+0x1b3)
-0x38dcc is in sta_set_rate_info_tx (/home/greearb/git/linux-4.4.dev.y/net/mac80211/cfg.c:457).
-452			u16 brate;
-453	
-454			sband = sta->local->hw.wiphy->bands[
-455					ieee80211_get_sdata_band(sta->sdata)];
-456			brate = sband->bitrates[rate->idx].bitrate;
-457			rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
-458		}
-459		if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
-460			rinfo->bw = RATE_INFO_BW_40;
-461		else if (rate->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
-(gdb)
-
-
-==================================================================
-BUG: KASAN: global-out-of-bounds in sta_set_rate_info_tx+0x1b3/0x262 [mac80211] at addr ffffffffa18a3c0c
-Read of size 2 by task cat/19440
-Address belongs to variable ath10k_rates+0xac/0xfffffffffffd04c7 [ath10k_core]
-CPU: 3 PID: 19440 Comm: cat Tainted: G        W  O    4.4.6+ #22
-Hardware name: To be filled by O.E.M. To be filled by O.E.M./HURONRIVER, BIOS 4.6.5 05/02/2012
-  0000000000000000 ffff8800a392f878 ffffffff8154ce6c 1ffffffff4314781
-  fffffbfff4314781 ffff8800a392f8f0 ffffffff812db48c ffffffffa1158da8
-  0000000000000246 0000000000000246 ffff8801d50287c8 0000000400000003
-Call Trace:
-  [<ffffffff8154ce6c>] dump_stack+0x81/0xb6
-  [<ffffffff812db48c>] kasan_report+0x347/0x48b
-  [<ffffffffa1158da8>] ? sta_set_rate_info_tx+0x1b3/0x262 [mac80211]
-  [<ffffffff812da625>] __asan_load2+0x23/0x68
-  [<ffffffffa1158da8>] sta_set_rate_info_tx+0x1b3/0x262 [mac80211]
-  [<ffffffffa112de90>] sta_set_sinfo+0x633/0x11e5 [mac80211]
-  [<ffffffffa114f92c>] ieee80211_get_station+0x63/0x77 [mac80211]
-  [<ffffffffa09f8c64>] rdev_get_station+0x131/0x31f [cfg80211]
-  [<ffffffff81b3424f>] ? __mutex_unlock_slowpath+0x17b/0x196
-  [<ffffffffa09fcc2c>] cfg80211_wireless_stats+0x13d/0x235 [cfg80211]
-  [<ffffffffa09fcaef>] ? cfg80211_wext_giwrate+0x1b2/0x1b2 [cfg80211]
-  [<ffffffff811625b7>] ? ___might_sleep+0xfa/0x223
-  [<ffffffff81b12736>] get_wireless_stats+0x96/0x9b
-  [<ffffffff81b12f2d>] wireless_dev_seq_show+0x53/0x1f1
-  [<ffffffff81321392>] seq_read+0x5c6/0x791
-  [<ffffffff81320dcc>] ? seq_hlist_start_percpu+0xcb/0xcb
-  [<ffffffff8118fb86>] ? __lock_is_held+0x29/0x64
-  [<ffffffff81381db4>] proc_reg_read+0x81/0x9b
-  [<ffffffff812f1589>] __vfs_read+0xca/0x1da
-  [<ffffffff812f14bf>] ? fdget_pos+0x19/0x19
-  [<ffffffff81194d96>] ? lock_release+0x249/0x4ec
-  [<ffffffff81194a81>] ? lock_acquire+0x167/0x233
-  [<ffffffff81192a73>] ? mark_held_locks+0x2d/0x90
-  [<ffffffff811cc983>] ? read_seqcount_begin.constprop.23+0x6b/0x87
-  [<ffffffff813447bd>] ? __fsnotify_parent+0x31/0x100
-  [<ffffffff814659e9>] ? fsnotify_perm+0x88/0x95
-  [<ffffffff81466fcf>] ? security_file_permission+0x4d/0x54
-  [<ffffffff812f2349>] ? rw_verify_area+0xd7/0x12e
-  [<ffffffff812f2443>] vfs_read+0xa3/0x100
-  [<ffffffff812f3176>] SyS_read+0xb5/0x10f
-  [<ffffffff812f30c1>] ? do_sendfile+0x3d5/0x3d5
-  [<ffffffff81192cdf>] ? trace_hardirqs_on_caller+0x209/0x250
-  [<ffffffff81004017>] ? trace_hardirqs_on_thunk+0x17/0x19
-  [<ffffffff81b36d76>] entry_SYSCALL_64_fastpath+0x16/0x7a
-Memory state around the buggy address:
-  ffffffffa18a3b00: fa fa fa fa 04 fa fa fa fa fa fa fa 00 00 00 00
-  ffffffffa18a3b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 fa fa
- >ffffffffa18a3c00: fa fa fa fa 00 00 00 00 00 00 00 00 00 00 00 00
-                       ^
-  ffffffffa18a3c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  ffffffffa18a3d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-==================================================================
-Disabling lock debugging due to kernel taint
-==================================================================
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index f773c0e..17f62ba 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1390,7 +1390,8 @@ void rtl8xxxu_reset_8051(struct rtl8xxxu_priv *priv);
+ int rtl8xxxu_auto_llt_table(struct rtl8xxxu_priv *priv, u8 last_tx_page);
+ void rtl8xxxu_prepare_calibrate(struct rtl8xxxu_priv *priv, u8 start);
+ int rtl8xxxu_flush_fifo(struct rtl8xxxu_priv *priv);
+-int rtl8723a_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len);
++int rtl8xxxu_gen2_h2c_cmd(struct rtl8xxxu_priv *priv,
++			  struct h2c_cmd *h2c, int len);
+ int rtl8xxxu_active_to_lps(struct rtl8xxxu_priv *priv);
+ void rtl8xxxu_disabled_to_emu(struct rtl8xxxu_priv *priv);
+ int rtl8xxxu_init_llt_table(struct rtl8xxxu_priv *priv, u8 last_tx_page);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+index a711cb8..9d4bcd9 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+@@ -322,7 +322,7 @@ static void rtl8723bu_write_btreg(struct rtl8xxxu_priv *priv, u8 reg, u8 data)
+ 	h2c.bt_mp_oper.operreq = 0 | (reqnum << 4);
+ 	h2c.bt_mp_oper.opcode = BT_MP_OP_WRITE_REG_VALUE;
+ 	h2c.bt_mp_oper.data = data;
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
+ 
+ 	reqnum++;
+ 	memset(&h2c, 0, sizeof(struct h2c_cmd));
+@@ -330,7 +330,7 @@ static void rtl8723bu_write_btreg(struct rtl8xxxu_priv *priv, u8 reg, u8 data)
+ 	h2c.bt_mp_oper.operreq = 0 | (reqnum << 4);
+ 	h2c.bt_mp_oper.opcode = BT_MP_OP_WRITE_REG_VALUE;
+ 	h2c.bt_mp_oper.addr = reg;
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
+ }
+ 
+ static void rtl8723bu_reset_8051(struct rtl8xxxu_priv *priv)
+@@ -1529,7 +1529,7 @@ static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
+ 	memset(&h2c, 0, sizeof(struct h2c_cmd));
+ 	h2c.bt_grant.cmd = H2C_8723B_BT_GRANT;
+ 	h2c.bt_grant.data = 0;
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_grant));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_grant));
+ 
+ 	/*
+ 	 * WLAN action by PTA
+@@ -1574,7 +1574,7 @@ static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
+ 	h2c.ant_sel_rsv.cmd = H2C_8723B_ANT_SEL_RSV;
+ 	h2c.ant_sel_rsv.ant_inverse = 1;
+ 	h2c.ant_sel_rsv.int_switch_type = 0;
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ant_sel_rsv));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.ant_sel_rsv));
+ 
+ 	/*
+ 	 * 0x280, 0x00, 0x200, 0x80 - not clear
+@@ -1596,12 +1596,12 @@ static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
+ 	memset(&h2c, 0, sizeof(struct h2c_cmd));
+ 	h2c.bt_info.cmd = H2C_8723B_BT_INFO;
+ 	h2c.bt_info.data = BIT(0);
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_info));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_info));
+ 
+ 	memset(&h2c, 0, sizeof(struct h2c_cmd));
+ 	h2c.ignore_wlan.cmd = H2C_8723B_BT_IGNORE_WLANACT;
+ 	h2c.ignore_wlan.data = 0;
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ignore_wlan));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.ignore_wlan));
+ }
+ 
+ static void rtl8723bu_init_aggregation(struct rtl8xxxu_priv *priv)
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index d71a0c6..7aecbe7 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -887,7 +887,8 @@ int rtl8xxxu_write_rfreg(struct rtl8xxxu_priv *priv,
+ 	return retval;
+ }
+ 
+-int rtl8723a_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
++int
++rtl8xxxu_gen1_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
+ {
+ 	struct device *dev = &priv->udev->dev;
+ 	int mbox_nr, retry, retval = 0;
+@@ -898,8 +899,7 @@ int rtl8723a_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
+ 
+ 	mbox_nr = priv->next_mbox;
+ 	mbox_reg = REG_HMBOX_0 + (mbox_nr * 4);
+-	mbox_ext_reg = priv->fops->mbox_ext_reg +
+-		(mbox_nr * priv->fops->mbox_ext_width);
++	mbox_ext_reg = REG_HMBOX_EXT_0 + (mbox_nr * 2);
+ 
+ 	/*
+ 	 * MBOX ready?
+@@ -921,19 +921,61 @@ int rtl8723a_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
+ 	 * Need to swap as it's being swapped again by rtl8xxxu_write16/32()
+ 	 */
+ 	if (len > sizeof(u32)) {
+-		if (priv->fops->mbox_ext_width == 4) {
+-			rtl8xxxu_write32(priv, mbox_ext_reg,
+-					 le32_to_cpu(h2c->raw_wide.ext));
+-			if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
+-				dev_info(dev, "H2C_EXT %08x\n",
+-					 le32_to_cpu(h2c->raw_wide.ext));
+-		} else {
+-			rtl8xxxu_write16(priv, mbox_ext_reg,
+-					 le16_to_cpu(h2c->raw.ext));
+-			if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
+-				dev_info(dev, "H2C_EXT %04x\n",
+-					 le16_to_cpu(h2c->raw.ext));
+-		}
++		rtl8xxxu_write16(priv, mbox_ext_reg, le16_to_cpu(h2c->raw.ext));
++		if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
++			dev_info(dev, "H2C_EXT %04x\n",
++				 le16_to_cpu(h2c->raw.ext));
++	}
++	rtl8xxxu_write32(priv, mbox_reg, le32_to_cpu(h2c->raw.data));
++	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
++		dev_info(dev, "H2C %08x\n", le32_to_cpu(h2c->raw.data));
++
++	priv->next_mbox = (mbox_nr + 1) % H2C_MAX_MBOX;
++
++error:
++	mutex_unlock(&priv->h2c_mutex);
++	return retval;
++}
++
++int
++rtl8xxxu_gen2_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
++{
++	struct device *dev = &priv->udev->dev;
++	int mbox_nr, retry, retval = 0;
++	int mbox_reg, mbox_ext_reg;
++	u8 val8;
++
++	mutex_lock(&priv->h2c_mutex);
++
++	mbox_nr = priv->next_mbox;
++	mbox_reg = REG_HMBOX_0 + (mbox_nr * 4);
++	mbox_ext_reg = REG_HMBOX_EXT0_8723B + (mbox_nr * 4);
++
++	/*
++	 * MBOX ready?
++	 */
++	retry = 100;
++	do {
++		val8 = rtl8xxxu_read8(priv, REG_HMTFR);
++		if (!(val8 & BIT(mbox_nr)))
++			break;
++	} while (retry--);
++
++	if (!retry) {
++		dev_info(dev, "%s: Mailbox busy\n", __func__);
++		retval = -EBUSY;
++		goto error;
++	}
++
++	/*
++	 * Need to swap as it's being swapped again by rtl8xxxu_write16/32()
++	 */
++	if (len > sizeof(u32)) {
++		rtl8xxxu_write32(priv, mbox_ext_reg,
++				 le32_to_cpu(h2c->raw_wide.ext));
++		if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
++			dev_info(dev, "H2C_EXT %08x\n",
++				 le32_to_cpu(h2c->raw_wide.ext));
+ 	}
+ 	rtl8xxxu_write32(priv, mbox_reg, le32_to_cpu(h2c->raw.data));
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
+@@ -3276,7 +3318,7 @@ void rtl8xxxu_prepare_calibrate(struct rtl8xxxu_priv *priv, u8 start)
+ 	h2c.bt_wlan_calibration.cmd = H2C_8723B_BT_WLAN_CALIBRATION;
+ 	h2c.bt_wlan_calibration.data = start;
+ 
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_wlan_calibration));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_wlan_calibration));
+ }
+ 
+ void rtl8xxxu_gen1_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
+@@ -3792,7 +3834,7 @@ static void rtl8723bu_set_ps_tdma(struct rtl8xxxu_priv *priv,
+ 	h2c.b_type_dma.data3 = arg3;
+ 	h2c.b_type_dma.data4 = arg4;
+ 	h2c.b_type_dma.data5 = arg5;
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.b_type_dma));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.b_type_dma));
+ }
+ #endif
+ 
+@@ -4310,7 +4352,7 @@ void rtl8xxxu_update_rate_mask(struct rtl8xxxu_priv *priv, u32 ramask, int sgi)
+ 
+ 	dev_dbg(&priv->udev->dev, "%s: rate mask %08x, arg %02x, size %zi\n",
+ 		__func__, ramask, h2c.ramask.arg, sizeof(h2c.ramask));
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ramask));
++	rtl8xxxu_gen1_h2c_cmd(priv, &h2c, sizeof(h2c.ramask));
+ }
+ 
+ void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
+@@ -4336,7 +4378,7 @@ void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
+ 
+ 	dev_dbg(&priv->udev->dev, "%s: rate mask %08x, arg %02x, size %zi\n",
+ 		__func__, ramask, h2c.ramask.arg, sizeof(h2c.b_macid_cfg));
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.b_macid_cfg));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.b_macid_cfg));
+ }
+ 
+ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
+@@ -4353,7 +4395,7 @@ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
+ 	else
+ 		h2c.joinbss.data = H2C_JOIN_BSS_DISCONNECT;
+ 
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.joinbss));
++	rtl8xxxu_gen1_h2c_cmd(priv, &h2c, sizeof(h2c.joinbss));
+ }
+ 
+ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
+@@ -4369,7 +4411,7 @@ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
+ 	else
+ 		h2c.media_status_rpt.parm &= ~BIT(0);
+ 
+-	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
++	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
+ }
+ 
+ static void rtl8xxxu_set_basic_rates(struct rtl8xxxu_priv *priv, u32 rate_cfg)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.5.5
 
