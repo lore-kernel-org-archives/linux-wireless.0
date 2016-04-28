@@ -1,29 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:38802 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932394AbcDNQBa (ORCPT
+Received: from vpn.innerrange.com.au ([203.122.143.146]:58597 "EHLO
+	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750761AbcD1FCR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 12:01:30 -0400
-Date: Thu, 14 Apr 2016 12:01:25 -0400 (EDT)
-Message-Id: <20160414.120125.2089720486714681116.davem@davemloft.net> (sfid-20160414_180134_242852_58AFE1DC)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2016-04-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1460618838-5819-1-git-send-email-johannes@sipsolutions.net>
-References: <1460618838-5819-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 28 Apr 2016 01:02:17 -0400
+From: Craig McQueen <craig.mcqueen@innerrange.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 28 Apr 2016 15:02:08 +1000
+Subject: RE: rt2800 and BeagleBone Black soft lockup when unplugging from
+ USB hub
+Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D20C815A9@IR-CENTRAL.corp.innerrange.com> (sfid-20160428_070220_770564_2F7436A3)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu, 14 Apr 2016 09:27:17 +0200
-
-> Since I didn't get anything else, and this has been pending for a week,
-> here's the other part of the nl80211 socket problem fix (the netlink
-> family URELEASE was the first part.)
+I previously wrote:
 > 
-> Let me know if there's any problem.
+> I have a D-Link DWA-140 USB Wi-Fi device which is rt2800 based (5392
+> chipset). I've been testing it on a BeagleBone Black running an Ubuntu 16.04
+> image (4.4.6 kernel), with a USB hub.
+> 
+> When I unplug the Wi-Fi device from the USB hub, and it's connected to an
+> access point, and then I unplug it, the OS appears to lock up. I get messages
+> about a soft lockup on the serial console:
+> 
+> [ 9736.136702] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s!
+> [kworker/u2:0:1129] [ 9764.136701] NMI watchdog: BUG: soft lockup - CPU#0
+> stuck for 22s! [kworker/u2:0:1129] [ 9792.136701] NMI watchdog: BUG: soft
+> lockup - CPU#0 stuck for 22s! [kworker/u2:0:1129] [ 9820.136699] NMI
+> watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [kworker/u2:0:1129] [
+> 9848.136696] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s!
+> [kworker/u2:0:1129]
+> 
+> This will repeat indefinitely, until I unplug the hub, which resolves the soft
+> lockup and then the system seems to function normally.
+> 
+> I've attached a dmesg log of the soft lockup stack traces. They seem to
+> indicate a lockup in workqueue rt2x00usb_work_rxdone() (specifically in
+> usb_hcd_submit_urb() called from rt2x00usb_kick_rx_entry() called from
+> rt2x00usb_clear_entry()).
+> 
+> I originally found this bug on a 3.14.x kernel built with Yocto for a BeagleBone
+> Black-based product. So it seems this is a bug that has been around for some
+> time.
 
-Pulles, thank you.
+I should also note that on the 3.14.x Yocto-built kernel on BeagleBone Black, this bug does not occur if the rt2800 device is unplugged directly from the BBB's USB port. It only occurs if unplugged from a hub.
+
+I have tested this on an i586 based eBox-3310A mini-PC running Debian 8.4, which has a 3.16.0 kernel, with the same hub and same rt2800 device. But I was not able to reproduce this issue.
+
+-- 
+Craig McQueen
+
