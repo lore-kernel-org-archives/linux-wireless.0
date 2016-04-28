@@ -1,51 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53660 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757103AbcDEJ4c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 05:56:32 -0400
-Message-ID: <1459850188.18188.38.camel@sipsolutions.net> (sfid-20160405_115658_999812_A7F8F083)
-Subject: NETLINK_URELEASE non-bound socket problem (was: [PATCH] Fix local
- DoS in cfg80211 subsystem)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitrijs Ivanovs <dmitrijs.ivanovs@ubnt.com>,
-	linux-wireless@vger.kernel.org
-Cc: netdev <netdev@vger.kernel.org>, samuel <samuel@sortiz.org>,
-	Pablo Neira Ayuso <pablo@netfilter.org>,
-	Thomas Graf <tgraf@suug.ch>
-Date: Tue, 05 Apr 2016 11:56:28 +0200
-In-Reply-To: <CAFSVvRfjZszSfovXZ0piPqOgVKH=10sG7pvnvkoWJChL38ifqQ@mail.gmail.com> (sfid-20160404_171731_309095_517B9817)
-References: <CAFSVvRfjZszSfovXZ0piPqOgVKH=10sG7pvnvkoWJChL38ifqQ@mail.gmail.com>
-	 (sfid-20160404_171731_309095_517B9817)
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:42211 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753274AbcD1Uzy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2016 16:55:54 -0400
+Date: Thu, 28 Apr 2016 16:55:52 -0400 (EDT)
+Message-Id: <20160428.165552.1313548299399709913.davem@davemloft.net> (sfid-20160428_225557_471549_AA872F35)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2016-04-27
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1461747447-11287-1-git-send-email-johannes@sipsolutions.net>
+References: <1461747447-11287-1-git-send-email-johannes@sipsolutions.net>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dmitrijs,
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed, 27 Apr 2016 10:57:26 +0200
 
-Thanks for reporting this problem.
+> While writing some new code yesterday, I found and fixed a per-CPU memory
+> leak, this pull request has just a single patch addressing that.
+> 
+> Let me know if there's any problem.
 
-> The patch below corrects this problem in kernel space. 
-
-I don't think that this is correct, there are four more users of
-NETLINK_URELEASE (nfnetlink, NFC), and afaict all of them have the same
-bug as nl80211.
-
-Rather than fix all of them, I think we should simply not report
-NETLINK_URELEASE for netlink sockets that weren't bound; if any user
-comes up that requires them later we could add a new event instead.
-
-I can't find what commit introduced this code, it goes back before git
-history, so I don't have the commit log. Maybe it was done for
-nfnetlink log/queue? Certainly both nl80211 and NFC are much newer.
-
-> Also, it is
-> recommended to ensure that user-space applications are not using
-> user-supplied port_id for netlink sockets (which is default in
-> libnl-tiny for example).
-
-This I think we should remove from the commit log - it's misleading and
-there's no point.
-
-johannes
-
+Pulled, thanks a lot.
