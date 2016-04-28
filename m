@@ -1,81 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48907 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:37111 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752571AbcDSJGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 05:06:34 -0400
-Message-ID: <1461056788.2766.13.camel@sipsolutions.net> (sfid-20160419_110638_666607_C24F4CC7)
-Subject: Re: [PATCHv3 4/5] mac80211: implement codel on fair queuing flows
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dave Taht <dave.taht@gmail.com>,
-	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
-	Avery Pennarun <apenwarr@gmail.com>
-Date: Tue, 19 Apr 2016 11:06:28 +0200
-In-Reply-To: <CA+BoTQkQrUyihsk9MMMGY3XXGD+RqwziLwe+jKsKTG5q=StuAg@mail.gmail.com> (sfid-20160418_143823_205581_D0138FB9)
-References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
-	 <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
-	 <1460636302-31161-5-git-send-email-michal.kazior@tieto.com>
-	 <1460845772.2075.31.camel@sipsolutions.net>
-	 <CA+BoTQkHAOhwFh5grveGCH5tfsxOT=BXAx2qgF1c=GcT7SrSQw@mail.gmail.com>
-	 <CA+BoTQkQrUyihsk9MMMGY3XXGD+RqwziLwe+jKsKTG5q=StuAg@mail.gmail.com>
-	 (sfid-20160418_143823_205581_D0138FB9)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752603AbcD1TTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Apr 2016 15:19:17 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 11/11] rtl8xxxu: Remove the now obsolete mbox_ext_reg info from rtl8xxxu_fileops
+Date: Thu, 28 Apr 2016 15:19:15 -0400
+Message-Id: <1461871155-11826-12-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160428_213721_552202_27DC0E1C)
+In-Reply-To: <1461871155-11826-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1461871155-11826-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-04-18 at 14:38 +0200, Michal Kazior wrote:
-> On 18 April 2016 at 07:31, Michal Kazior <michal.kazior@tieto.com>
-> wrote:
-> > 
-> > On 17 April 2016 at 00:29, Johannes Berg <johannes@sipsolutions.net
-> > > wrote:
-> > > 
-> > > On Thu, 2016-04-14 at 14:18 +0200, Michal Kazior wrote:
-> > > > 
-> > > > 
-> > > > +                             struct ieee80211_vif *vif;
-> > > > +
-> > > > +                             /* When packets are enqueued on
-> > > > txq
-> > > > it's easy
-> > > > +                              * to re-construct the vif
-> > > > pointer.
-> > > > There's no
-> > > > +                              * more space in tx_info so it
-> > > > can
-> > > > be used to
-> > > > +                              * store the necessary enqueue
-> > > > time
-> > > > for packet
-> > > > +                              * sojourn time computation.
-> > > > +                              */
-> > > > +                             u64 enqueue_time;
-> > > > +                     };
-> > > I wonder if we could move something like the hw_key into
-> > > tx_control
-> > > instead?
-> > Hmm.. It's probably doable. From a quick look it'll require quite
-> > some
-> > change here and there (e.g. tdls_channel_switch op will need to be
-> > extended to pass tx_control). I'll play with the idea..
-> This is actually far more than I thought initially. 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Fair enough. Perhaps it could be done for the vif? But ISTR there were
-issues with that when I looked.
+With two different h2c_cmd() functions, mbox_ext_reg and
+mbox_ext_width are no longer needed.
 
-We should just get rid of all the rate stuff and convert everything to
-use rate tables, but ... :)
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       | 2 --
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c | 2 --
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 --
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c | 2 --
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 2 --
+ 5 files changed, 10 deletions(-)
 
-> A lot of drivers
-> (b43, b43legacy, rtlwifi, wlxxxx, cw1200) access hw_key outside of tx
-> op context (tx workers, tx completions). I'm not even sure this is
-> safe (keys can be freed in the meantime by mac80211 hence invaliding
-> the pointer inside skb, no?).
-> 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 1edb3ad..870c9cd 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1329,8 +1329,6 @@ struct rtl8xxxu_fileops {
+ 	void (*report_connect) (struct rtl8xxxu_priv *priv,
+ 				u8 macid, bool connect);
+ 	int writeN_block_size;
+-	u16 mbox_ext_reg;
+-	char mbox_ext_width;
+ 	char tx_desc_size;
+ 	char rx_desc_size;
+ 	char has_s0s1;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+index 242bf0e..2c86b55 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+@@ -572,8 +572,6 @@ struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.update_rate_mask = rtl8xxxu_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen1_report_connect,
+ 	.writeN_block_size = 128,
+-	.mbox_ext_reg = REG_HMBOX_EXT_0,
+-	.mbox_ext_width = 2,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
+ 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16),
+ 	.adda_1t_init = 0x0b1b25a0,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index 98f4ba3..fe19ace 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1509,8 +1509,6 @@ struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen2_report_connect,
+ 	.writeN_block_size = 128,
+-	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+-	.mbox_ext_width = 4,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
+ 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
+ 	.has_s0s1 = 0,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+index 7c347ba..a8e172c 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+@@ -384,8 +384,6 @@ struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.update_rate_mask = rtl8xxxu_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen1_report_connect,
+ 	.writeN_block_size = 1024,
+-	.mbox_ext_reg = REG_HMBOX_EXT_0,
+-	.mbox_ext_width = 2,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
+ 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16),
+ 	.adda_1t_init = 0x0b1b25a0,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+index 3472f6c..4186e7c 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+@@ -1668,8 +1668,6 @@ struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen2_report_connect,
+ 	.writeN_block_size = 1024,
+-	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+-	.mbox_ext_width = 4,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
+ 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
+ 	.has_s0s1 = 1,
+-- 
+2.5.5
 
-Hm, yeah, that does seem problematic unless they synchronize against
-key removal somehow?
-
-johannes
