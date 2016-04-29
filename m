@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-bn1bon0077.outbound.protection.outlook.com ([157.56.111.77]:7001
-	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750971AbcDKPEk convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31862 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751950AbcD2RnF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 11:04:40 -0400
-From: Joakim Tjernlund <Joakim.Tjernlund@infinera.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: rfkill LED not working on HP ProBook 640 G2 (Intel Corporation
- Wireless 8260 (rev 3a))
-Date: Mon, 11 Apr 2016 14:48:55 +0000
-Message-ID: <1460386153.8697.18.camel@infinera.com> (sfid-20160411_170447_797069_8F122442)
-Content-Type: text/plain; charset="iso-8859-15"
+	Fri, 29 Apr 2016 13:43:05 -0400
+Subject: [PATCH 0/4] linux-firmware: ath10k: add QCA9377 and update QCA6174
+ images
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Date: Fri, 29 Apr 2016 20:42:53 +0300
+Message-ID: <20160429173841.9072.66852.stgit@potku.adurom.net> (sfid-20160429_194309_792789_B4A43387)
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Got this fairly new laptop(skylake based) where the rfkill switch works. I can see the kernel(4.4.6)
-bringing wifi up and down whenever I toggle rfkill, also:
-~ # rfkill list
-0: phy0: Wireless LAN
-	Soft blocked: no
-	Hard blocked: no
-1: hci0: Bluetooth
-	Soft blocked: no
-	Hard blocked: no
-<Press rfkill and ...>
-~ # rfkill list
-0: phy0: Wireless LAN
-	Soft blocked: yes
-	Hard blocked: no
-1: hci0: Bluetooth
-	Soft blocked: yes
-	Hard blocked: no
+Hi,
 
-However, the rfkill LED stays white ALL the time.
+here are firmware images for the new QCA9377 chip and updates for QCA6174.
 
-Used wifi firmware:
-  iwlwifi 0000:02:00.0: loaded firmware version 16.242414.0 op_mode iwlmvm
+Kalle
 
- Jocke
+---
+
+Kalle Valo (4):
+      ath10k: QCA6174 hw2.1: update firmware-5.bin to SW_RM.1.1.1-00157-QCARMSWPZ-1
+      ath10k: QCA6174 hw2.1: add board-2.bin
+      ath10k: QCA6174 hw3.0: add board-2.bin
+      ath10k: QCA9377 hw1.0: add firmware and board files
+
+
+ WHENCE                                            |    9 
+ ath10k/QCA6174/hw2.1/board-2.bin                  |  Bin
+ ath10k/QCA6174/hw2.1/firmware-5.bin               |  Bin
+ ath10k/QCA6174/hw3.0/board-2.bin                  |  Bin
+ ath10k/QCA9377/hw1.0/board-2.bin                  |  Bin
+ ath10k/QCA9377/hw1.0/board.bin                    |  Bin
+ ath10k/QCA9377/hw1.0/firmware-5.bin               |  Bin
+ ath10k/QCA9377/hw1.0/notice_ath10k_firmware-5.txt | 1128 +++++++++++++++++++++
+ 8 files changed, 1136 insertions(+), 1 deletion(-)
+ create mode 100644 ath10k/QCA6174/hw2.1/board-2.bin
+ create mode 100644 ath10k/QCA6174/hw3.0/board-2.bin
+ create mode 100644 ath10k/QCA9377/hw1.0/board-2.bin
+ create mode 100644 ath10k/QCA9377/hw1.0/board.bin
+ create mode 100644 ath10k/QCA9377/hw1.0/firmware-5.bin
+ create mode 100644 ath10k/QCA9377/hw1.0/notice_ath10k_firmware-5.txt
+
