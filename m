@@ -1,134 +1,232 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:35134 "EHLO
-	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753200AbcDFIWs (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:7443 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752964AbcD2P7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 04:22:48 -0400
-Received: by mail-pf0-f177.google.com with SMTP id n1so28900037pfn.2
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 01:22:48 -0700 (PDT)
-Subject: Re: [PATCH v2] brcmfmac: Don't increase 8021x_cnt for dropped packets
-To: per.forlin@gmail.com, linux-wireless@vger.kernel.org
-References: <1459886507-26249-1-git-send-email-per.forlin@gmail.com>
-Cc: arend@broadcom.com, brudley@broadcom.com, frankyl@broadcom.com,
-	meuleman@broadcom.com,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5704C751.3060201@broadcom.com> (sfid-20160406_102317_171576_8A23DFBE)
-Date: Wed, 6 Apr 2016 10:22:41 +0200
+	Fri, 29 Apr 2016 11:59:00 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3TFuYlS001608
+	for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2016 08:58:59 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 22kj4xxuh3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2016 08:58:59 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: chunfan chen <jeffc@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: handle edmac vendor command
+Date: Fri, 29 Apr 2016 08:58:03 -0700
+Message-ID: <1461945483-3239-1-git-send-email-akarwar@marvell.com> (sfid-20160429_175906_796060_FCBF082F)
 MIME-Version: 1.0
-In-Reply-To: <1459886507-26249-1-git-send-email-per.forlin@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5-4-2016 22:01, per.forlin@gmail.com wrote:
-> From: Per Forlin <per.forlin@gmail.com>
-> 
-> The pend_8021x_cnt gets into a state where it's not being decreased.
-> When the brcmf_netdev_wait_pend8021x is called it will timeout
-> because there are no pending packets to be consumed. There is no
-> easy way of getting out of this state once it has happened.
-> Preventing the counter from being increased in case of dropped
-> packets seem like a reasonable solution.
-> 
-> Log showing overflow txq and increased cnt:
-> 
-> // Extra debug prints
-> brcmfmac: [brcmf_netdev_wait_pend8021x] pend_8021x_cnt == 0
-> brcmfmac: [brcmf_netdev_start_xmit] pend_8021x_cnt == 1
-> brcmfmac: [brcmf_netdev_start_xmit] pend_8021x_cnt == 2
-> 
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-> 
-> // Extra debug prints
-> brcmfmac: [brcmf_netdev_start_xmit] pend_8021x_cnt == 3
-> brcmfmac: [brcmf_netdev_start_xmit] pend_8021x_cnt == 4
-> brcmfmac: [brcmf_netdev_wait_pend8021x] pend_8021x_cnt == 4
-> 
-> WARNING: at .../brcmfmac/core.c:1289 brcmf_netdev_wait_pend8021x
->   (warn_slowpath_common)
->   (warn_slowpath_null)
->   (brcmf_netdev_wait_pend8021x [brcmfmac])
->   (send_key_to_dongle [brcmfmac])
->   (brcmf_cfg80211_del_key [brcmfmac])
->   (nl80211_del_key [cfg80211])
->   (genl_rcv_msg)
->   (netlink_rcv_skb)
->   (genl_rcv)
->   (netlink_unicast)
->   (netlink_sendmsg)
->   (sock_sendmsg)
->   (___sys_sendmsg)
->   (__sys_sendmsg)
->   (SyS_sendmsg)
-> 
-> Signed-off-by: Per Forlin <per.forlin@gmail.com>
-> ---
-> I came across this bug in an older kernel but it seems relevant
-> for the latest kernel as well. I'm not familiar with the code
-> but I can reproduce the issue and verify a fix for it.
-> With this patch I no longer get stuck with a pend8021_cnt > 0.
-> 
-> Change log:
->  v2 - Add variable to know whether the counter is increased or not
+From: chunfan chen <jeffc@marvell.com>
 
-Sorry for the late response. Can you elaborate where you are seeing this.
+Userspace can configure edmac values through a custom vendor
+command. They will be used by hardware for adaptivity.
 
-What kind of chipset are you using?
-What kernel version are you running?
+Signed-off-by: chunfan chen <jeffc@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/Makefile   |  1 +
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c |  2 +
+ drivers/net/wireless/marvell/mwifiex/main.h     |  4 ++
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c  | 20 ++++++---
+ drivers/net/wireless/marvell/mwifiex/vendor.c   | 59 +++++++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/vendor.h   | 27 +++++++++++
+ 6 files changed, 108 insertions(+), 5 deletions(-)
+ create mode 100644 drivers/net/wireless/marvell/mwifiex/vendor.c
+ create mode 100644 drivers/net/wireless/marvell/mwifiex/vendor.h
 
-The function brcmf_fws_process_skb() should call brcmf_txfinalize() in
-case of an error and it does in latest kernel. There the count is
-decreased. We had an issue mapping to the right ifp as reported by
-Rafał, but that has also been fixed recently. So main question here:
+diff --git a/drivers/net/wireless/marvell/mwifiex/Makefile b/drivers/net/wireless/marvell/mwifiex/Makefile
+index fdfd9bf..8b34ce9 100644
+--- a/drivers/net/wireless/marvell/mwifiex/Makefile
++++ b/drivers/net/wireless/marvell/mwifiex/Makefile
+@@ -42,6 +42,7 @@ mwifiex-y += cfg80211.o
+ mwifiex-y += ethtool.o
+ mwifiex-y += 11h.o
+ mwifiex-y += tdls.o
++mwifiex-y += vendor.o
+ mwifiex-$(CONFIG_DEBUG_FS) += debugfs.o
+ obj-$(CONFIG_MWIFIEX) += mwifiex.o
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index ff948a9..00aca7e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -4118,6 +4118,8 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 	if (adapter->fw_api_ver == MWIFIEX_FW_V15)
+ 		wiphy->features |= NL80211_FEATURE_SK_TX_STATUS;
+ 
++	marvell_set_vendor_commands(wiphy);
++
+ 	/* Reserve space for mwifiex specific private data for BSS */
+ 	wiphy->bss_priv_size = sizeof(struct mwifiex_bss_priv);
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 0207af0..66ba5c0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1002,6 +1002,8 @@ struct mwifiex_adapter {
+ 	bool usb_mc_status;
+ 	bool usb_mc_setup;
+ 	struct cfg80211_wowlan_nd_info *nd_info;
++	u8 *cfg_data;
++	int cfg_len;
+ };
+ 
+ void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
+@@ -1614,6 +1616,8 @@ void mwifiex_process_multi_chan_event(struct mwifiex_private *priv,
+ 				      struct sk_buff *event_skb);
+ void mwifiex_multi_chan_resync(struct mwifiex_adapter *adapter);
+ 
++void marvell_set_vendor_commands(struct wiphy *wiphy);
++
+ #ifdef CONFIG_DEBUG_FS
+ void mwifiex_debugfs_init(void);
+ void mwifiex_debugfs_remove(void);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index e436574..6b8cc39 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1487,9 +1487,10 @@ static int mwifiex_cmd_cfg_data(struct mwifiex_private *priv,
+ {
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct property *prop = data_buf;
+-	u32 len;
++	u32 len = 0;
+ 	u8 *data = (u8 *)cmd + S_DS_GEN;
+ 	int ret;
++	const struct firmware *cal_data = adapter->cal_data;
+ 
+ 	if (prop) {
+ 		len = prop->length;
+@@ -1500,11 +1501,20 @@ static int mwifiex_cmd_cfg_data(struct mwifiex_private *priv,
+ 		mwifiex_dbg(adapter, INFO,
+ 			    "download cfg_data from device tree: %s\n",
+ 			    prop->name);
+-	} else if (adapter->cal_data->data && adapter->cal_data->size > 0) {
+-		len = mwifiex_parse_cal_cfg((u8 *)adapter->cal_data->data,
+-					    adapter->cal_data->size, data);
++	} else if (cal_data) {
++		if (cal_data->data && cal_data->size > 0) {
++			len = mwifiex_parse_cal_cfg((u8 *)cal_data->data,
++						    cal_data->size, data);
++			mwifiex_dbg(adapter, INFO,
++				    "download cfg_data from config file\n");
++		} else {
++			return -1;
++		}
++	} else if (adapter->cfg_data && adapter->cfg_len > 0) {
++		len = mwifiex_parse_cal_cfg(adapter->cfg_data,
++					    adapter->cfg_len, data);
+ 		mwifiex_dbg(adapter, INFO,
+-			    "download cfg_data from config file\n");
++			    "download cfg_data from iw vendor command\n");
+ 	} else {
+ 		return -1;
+ 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/vendor.c b/drivers/net/wireless/marvell/mwifiex/vendor.c
+new file mode 100644
+index 0000000..ecdc10c
+--- /dev/null
++++ b/drivers/net/wireless/marvell/mwifiex/vendor.c
+@@ -0,0 +1,59 @@
++/* Marvell Wireless LAN device driver: TDLS handling
++ *
++ * Copyright (C) 2014, Marvell International Ltd.
++ *
++ * This software file (the "File") is distributed by Marvell International
++ * Ltd. under the terms of the GNU General Public License Version 2, June 1991
++ * (the "License").  You may use, redistribute and/or modify this File in
++ * accordance with the terms and conditions of the License, a copy of which
++ * is available on the worldwide web at
++ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
++ *
++ * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
++ * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
++ * this warranty disclaimer.
++ */
++
++#include <net/mac80211.h>
++#include <net/netlink.h>
++#include "vendor.h"
++#include "main.h"
++
++static int
++mwifiex_vendor_cmd_set_edmac_data(struct wiphy *wiphy,
++				  struct wireless_dev *wdev,
++				  const void *data, int data_len)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
++	int ret;
++
++	priv->adapter->cfg_data = (u8 *)data;
++	priv->adapter->cfg_len = data_len;
++
++	ret = mwifiex_send_cmd(priv, HostCmd_CMD_CFG_DATA,
++			       HostCmd_ACT_GEN_SET, 0, NULL, true);
++
++	priv->adapter->cfg_data = NULL;
++	priv->adapter->cfg_len = 0;
++
++	return 0;
++}
++
++static const struct wiphy_vendor_command marvell_vendor_commands[] = {
++	{
++		.info = {
++			.vendor_id = MARVELL_OUI,
++			.subcmd = MARVELL_VENDOR_CMD_SET_EDMAC_DATA,
++		},
++		.flags = WIPHY_VENDOR_CMD_NEED_NETDEV |
++			 WIPHY_VENDOR_CMD_NEED_RUNNING,
++		.doit = mwifiex_vendor_cmd_set_edmac_data,
++	},
++};
++
++void marvell_set_vendor_commands(struct wiphy *wiphy)
++{
++	wiphy->vendor_commands = marvell_vendor_commands;
++	wiphy->n_vendor_commands = ARRAY_SIZE(marvell_vendor_commands);
++}
+diff --git a/drivers/net/wireless/marvell/mwifiex/vendor.h b/drivers/net/wireless/marvell/mwifiex/vendor.h
+new file mode 100644
+index 0000000..e5d6fe8
+--- /dev/null
++++ b/drivers/net/wireless/marvell/mwifiex/vendor.h
+@@ -0,0 +1,27 @@
++/* Marvell Wireless LAN device driver: TDLS handling
++ *
++ * Copyright (C) 2014, Marvell International Ltd.
++ *
++ * This software file (the "File") is distributed by Marvell International
++ * Ltd. under the terms of the GNU General Public License Version 2, June 1991
++ * (the "License").  You may use, redistribute and/or modify this File in
++ * accordance with the terms and conditions of the License, a copy of which
++ * is available on the worldwide web at
++ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
++ *
++ * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
++ * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
++ * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
++ * this warranty disclaimer.
++ */
++
++#ifndef __MARVELL_VENDOR_H__
++#define __MARVELL_VENDOR_H__
++
++#define MARVELL_OUI	0x005043
++
++enum marvell_vendor_commands {
++	MARVELL_VENDOR_CMD_SET_EDMAC_DATA,
++};
++
++#endif /* __MARVELL_VENDOR_H__ */
+-- 
+1.8.1.4
 
-Do you see the issue in the latest kernel?
-
-Regards,
-Arend
-
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> index ed9998b..de80ad8 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> @@ -196,6 +196,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
->  	struct brcmf_if *ifp = netdev_priv(ndev);
->  	struct brcmf_pub *drvr = ifp->drvr;
->  	struct ethhdr *eh = (struct ethhdr *)(skb->data);
-> +	bool pend_8021x_cnt_increased = false;
->  
->  	brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
->  
-> @@ -233,14 +234,18 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
->  		goto done;
->  	}
->  
-> -	if (eh->h_proto == htons(ETH_P_PAE))
-> +	if (eh->h_proto == htons(ETH_P_PAE)) {
->  		atomic_inc(&ifp->pend_8021x_cnt);
-> +		pend_8021x_cnt_increased = true;
-> +	}
->  
->  	ret = brcmf_fws_process_skb(ifp, skb);
->  
->  done:
->  	if (ret) {
->  		ifp->stats.tx_dropped++;
-> +		if (pend_8021x_cnt_increased)
-> +			atomic_dec(&ifp->pend_8021x_cnt);
->  	} else {
->  		ifp->stats.tx_packets++;
->  		ifp->stats.tx_bytes += skb->len;
-> 
