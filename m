@@ -1,83 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37192 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750991AbcDTVLN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 17:11:13 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lauri Kasanen <cand@gmx.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Linux Firmware Maintainers <linux-firmware@kernel.org>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [RESEND] Re: updating carl9170-1.fw in linux-firmware.git
-Date: Wed, 20 Apr 2016 23:11:09 +0200
-Message-ID: <2185358.G319l0XIJC@debian64> (sfid-20160420_231137_998399_B3347285)
-In-Reply-To: <87a8koiubz.fsf@kamboji.qca.qualcomm.com>
-References: <20160416113312.8de2266358165182bb4b4a15@gmx.com> <11418613.XH7h8m2RjK@debian64> <87a8koiubz.fsf@kamboji.qca.qualcomm.com>
+Received: from caladan.dune.hu ([78.24.191.180]:58944 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751725AbcD3Dwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Apr 2016 23:52:47 -0400
+Subject: Re: [PATCH] ath9k: Fix symbol overlap window for half/quarter
+ channels
+To: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+References: <1461935194-19632-1-git-send-email-helmut.schaa@googlemail.com>
+Cc: ath9k-devel@lists.ath9k.org, kvalo@qca.qualcomm.com,
+	ath9k-devel@qca.qualcomm.com
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <57242BFD.4060605@openwrt.org> (sfid-20160430_055251_174736_EF408FCB)
+Date: Sat, 30 Apr 2016 10:52:29 +0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1461935194-19632-1-git-send-email-helmut.schaa@googlemail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, April 20, 2016 10:59:44 AM Kalle Valo wrote:
-> Christian Lamparter <chunkeey@googlemail.com> writes:
+On 2016-04-29 20:06, Helmut Schaa wrote:
+> Since commit cd6cfd7311a385144a2f9c74f692ae2df3ae033f
+> "ath9k: do not set half/quarter channel flags in AR_PHY_MODE" the
+> condition "rfMode & (AR_PHY_MODE_QUARTER | AR_PHY_MODE_HALF)" would
+> never evaluate to true.
 > 
-> > On Monday, April 18, 2016 07:42:05 PM Kalle Valo wrote:
-> >> Christian Lamparter <chunkeey@googlemail.com> writes:
-> >> 
-> >> > On Monday, April 18, 2016 06:45:09 PM Kalle Valo wrote:
-> >> >
-> >> >> Why even mention anything about a "special firmware" as the firmware is
-> >> >> already available from linux-firmware.git? 
-> >> >
-> >> > Yes and no. 1.9.6 is in linux-firmware.git. I've tried to add 1.9.9 too
-> >> > but that failed.
-> >> > <http://comments.gmane.org/gmane.linux.kernel.wireless.general/114639>
-> >> 
-> >> Rick's comment makes sense to me, better just to provide the latest
-> >> version. No need to unnecessary confuse the users. And if someone really
-> >> wants to use an older version that she can retrieve it from the git
-> >> history.
-> >
-> > Part of the fun here is that firmware is GPLv2. The linux-firmware.git has
-> > to point to or add the firmware source to their tree. They have added every
-> > single source file to it.... instead of "packaging" it in a tar.bz2/gz/xz
-> > like you normally do for release sources.
-> >
-> > If you want to read more about it:
-> > <http://www.spinics.net/lists/linux-wireless/msg101868.html>
+> Fix this by using the available IS_CHAN_HALF_RATE and IS_CHAN_QUARTER_RATE
+> marcros instead.
 > 
-> Yeah, that's more work. I get that. But I'm still not understanding
-> what's the actual problem which prevents us from updating carl9170
-> firmware in linux-firmware.
-I'm not sure, but why not ask? I've added the cc'ed Linux Firmware
-Maintainers. So for those people reading the fw list:
-
-What would it take to update the carl9170-1.fw firmware file in your
-repository to the latest version?
-
-Who has to sent the firmware update. Does it have to be the person who
-sent the first request? (Xose)? The maintainer of the firmware (me)?
-someone from Qualcomm Atheros? Or someone else (specific)? (the 
-firmware is licensed as GPLv2 - in theory anyone should be able to
-do that)
-
-How should the firmware source update be handled? Currently the latest
-.tar.xz of the firmware has ~130kb. The formated patches from 1.9.6 to
-latest are about ~100kb (182 individual patches).
-
-How does linux-firmware handle new binary firmware images and new 
-sources? What if carl9170fw-2.bin is added. Do we need another
-source directory for this in the current tree then? Because 
-carl9170fw-1.bin will still be needed for backwards compatibility
-so we basically need to duplicate parts of the source?
-
-Also, how's the situation with ath9k_htc? The 1.4.0 image contains
-some GPLv2 code as well? So, why is there no source in the tree, but 
-just the link to it? Because, I would like to do basically the same
-for carl9170fw and just add a link to the carl9170fw repository and
-save everyone this source update "song and dance".
-
-Regards,
-Christian
+> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> Cc: Felix Fietkau <nbd@openwrt.org>
+> ---
+> Just stumbled over that piece of code while looking into TX99, so
+> this is only compile-tested.
+> 
+> Felix, can you please confirm if this is correct or if removing
+> the whole block would be better?
+This patch looks good to me.
+Acked-by: Felix Fietkau <nbd@openwrt.org>
