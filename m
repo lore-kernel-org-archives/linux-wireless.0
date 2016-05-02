@@ -1,91 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33461 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932344AbcECFua (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:36105 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753770AbcEBNm2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 01:50:30 -0400
-Received: by mail-pa0-f52.google.com with SMTP id xk12so5237447pac.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2016 22:50:30 -0700 (PDT)
-From: Yongqin Liu <yongqin.liu@linaro.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes.berg@intel.com, filbranden@google.com,
-	Yongqin Liu <yongqin.liu@linaro.org>
-Subject: [PATCH 1/1] version.sh: update to get version with git correctly
-Date: Tue,  3 May 2016 13:48:48 +0800
-Message-Id: <1462254528-15911-1-git-send-email-yongqin.liu@linaro.org> (sfid-20160503_075053_321143_A72BBFC5)
+	Mon, 2 May 2016 09:42:28 -0400
+Received: by mail-oi0-f53.google.com with SMTP id x201so189637687oif.3
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2016 06:42:28 -0700 (PDT)
+Date: Mon, 2 May 2016 08:42:26 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Maximilian Engelhardt <engelhardt@perisens.de>
+Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
+	maxi@daemonizer.de
+Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
+Message-ID: <20160502134226.GA2714@ubuntu-hedt> (sfid-20160502_154246_102268_8CD9BA09)
+References: <1958820.LBuzOElZFT@perisens15>
+ <20160421131938.GA95003@ubuntu-hedt>
+ <2919568.ssjlN6KUVX@perisens15>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2919568.ssjlN6KUVX@perisens15>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-update to get the version information from the
-git repository where this file is located instead of the
-the current directory where it is executed, otherwise if
-there is .git directory in the current directory, it will
-get the wrong version information.
+On Thu, Apr 21, 2016 at 08:08:46PM +0200, Maximilian Engelhardt wrote:
+> On Thursday 21 April 2016 08:19:38 Seth Forshee wrote:
+> > On Tue, Apr 19, 2016 at 08:03:16PM +0200, Maximilian Engelhardt wrote:
+> > > Hi,
+> > > 
+> > > In Europe ETSI standardized the used for short range devices (SRD) [1] in
+> > > ETSI EN 300 440-1 [2].
+> > > According to this standard generic use equipment is allowed to transmit in
+> > > the frequency range form 5725 MHz to 5875 MHz with a maximum output power
+> > > of 25 mW e.i.r.p. This generic allocation also allows transmission of
+> > > 802.11 devices.
+> > > 
+> > > [3] has a list of countries and their status about the implementation of
+> > > the SRD frequency bands. For the 5 GHz band this can be seen on page 38
+> > > in the paragraph ANNEX 1 and the entry Annex j.
+> > > 
+> > > Attached is a patch that adds the 5 GHz SRD band to db.txt for Germany.
+> > > 
+> > > If it is acceptable I can provide a patch adding the 5 GHz SRD band for
+> > > the
+> > > other countries listed in [3].
+> > 
+> > The changes seem okay as far as I can tell. You do need to include your
+> > signed-off-by tag on the patch however, see
+> > https://git.kernel.org/cgit/linux/kernel/git/sforshee/wireless-regdb.git/tre
+> > e/CONTRIBUTING.
+> > 
+> > Thanks,
+> > Seth
+> 
+> Hi Seth,
+> 
+> Thanks for your reply. You can find my signed-off-by tag below together with 
+> the unchanged patch.
+> 
+> I can affirm I did check this carefully with the official documents of the 
+> German administration for radio equipment (Bundesnetzagentur für Elektrizität, 
+> Gas, Telekommunikation, Post und Eisenbahnen).
+> 
+> I noticed that the links to the other entries for Germany are broken, as the 
+> website design was changed and thus all old link became non functional. I can 
+> provide a patch fixing this if it is something that's considered useful.
+> 
+> 
+> The comments to my initial mail indicated that the statement in the ERC 
+> recommendation I linked are alone not enough to add this frequency ranges for 
+> other countries. Unfortunately I don't have the possibility to do these checks 
+> for countries other than Germany.
+> 
+> If there is anything I can do to help adding the SRD entries for more 
+> countries please let me know.
+> 
+> Thanks,
+> Maxi
+> 
+> 
+> Signed-off-by: Maximilian Engelhardt <engelhardt@perisens.de>
 
-And improved the version check since the tag information
-may not be mirrored like what AOSP does now.
-
-Change-Id: I321113b74bf2a955c202f47dca68c1183ca55318
-Signed-off-by: Yongqin Liu <yongqin.liu@linaro.org>
----
- version.sh | 42 ++++++++++++++++++++++++++++++------------
- 1 file changed, 30 insertions(+), 12 deletions(-)
-
-diff --git a/version.sh b/version.sh
-index 7ccd419..c8111a6 100755
---- a/version.sh
-+++ b/version.sh
-@@ -3,20 +3,38 @@
- VERSION="4.3"
- OUT="$1"
- 
--if [ -d .git ] && head=`git rev-parse --verify HEAD 2>/dev/null`; then
--	git update-index --refresh --unmerged > /dev/null
--	descr=$(git describe --match=v*)
-+# get the absolute path for the OUT file
-+OUT_NAME=$(basename ${OUT})
-+OUT_DIR=$(cd $(dirname ${OUT}); pwd)
-+OUT="${OUT_DIR}/${OUT_NAME}"
-+
-+# the version check should be under the source directory
-+# where this script is located, instead of the currect directory
-+# where this script is excuted.
-+SRC_DIR=$(dirname $0)
-+SRC_DIR=$(cd ${SRC_DIR}; pwd)
-+cd "${SRC_DIR}"
- 
--	# on git builds check that the version number above
--	# is correct...
--	[ "${descr%%-*}" = "v$VERSION" ] || exit 2
-+v=""
-+if [ -d .git ] && head=`git rev-parse --verify HEAD 2>/dev/null`; then
-+    git update-index --refresh --unmerged > /dev/null
-+    descr=$(git describe --match=v* 2>/dev/null)
-+    if [ $? -eq 0 ]; then
-+        # on git builds check that the version number above
-+        # is correct...
-+        if [ "${descr%%-*}" = "v$VERSION" ]; then
-+            v="${descr#v}"
-+            if git diff-index --name-only HEAD | read dummy ; then
-+                v="$v"-dirty
-+            fi
-+        fi
-+    fi
-+fi
- 
--	v="${descr#v}"
--	if git diff-index --name-only HEAD | read dummy ; then
--		v="$v"-dirty
--	fi
--else
--	v="$VERSION"
-+# set to the default version when failed to get the version
-+# information with git
-+if [ -z "${v}" ]; then
-+    v="$VERSION"
- fi
- 
- echo '#include "iw.h"' > "$OUT"
--- 
-2.1.4
-
+Applied, thanks.
