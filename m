@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33931 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbcEQWMe (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:36197 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753456AbcEBKsI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 18:12:34 -0400
-Received: by mail-wm0-f67.google.com with SMTP id n129so8239778wmn.1
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 15:12:33 -0700 (PDT)
-MIME-Version: 1.0
-From: Daniel Lenski <dlenski@gmail.com>
-Date: Tue, 17 May 2016 15:11:53 -0700
-Message-ID: <CAOw_LSHt8u00A9FbLAjbiATQgtr_LC5idbrhFGC6B9_BmOxo1A@mail.gmail.com> (sfid-20160518_001238_202950_3192D1D2)
-Subject: rtl8xxxu: "Firmware failed to start" caused by too-short polling timeout
-To: linux-wireless@vger.kernel.org
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 2 May 2016 06:48:08 -0400
+Received: by mail-pa0-f66.google.com with SMTP id i5so17651426pag.3
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2016 03:48:08 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 1/7] staging: wilc1000: change handle_get_ip_address's return type to void
+Date: Mon,  2 May 2016 19:47:49 +0900
+Message-Id: <1462186075-8549-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160502_124812_655623_2BB2F623)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I submitted a small patch for the r8723au driver a few months, and
-quickly abandoned that driver once Jes Sorensen pointed out his
-rtl8xxxu wireless driver which supports the same RTL8723AU chipset and
-is part of the mainline
-(http://thread.gmane.org/gmane.linux.kernel.wireless.general/146615).
+When handle_get_ip_address is called in hostIFthread that is a kernel
+thread, it is not checked return type of this function. This patch
+changes return type to void and removes braces if statement due to have
+a single statement.
 
-I frequently encounter "Firmware failed to start" errors after a cold
-boot, although rtl8xxxu is totally stable and reliable otherwise.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-It appears that other chipsets supported by the driver have the same
-problem. Here are a couple of relevant bug reports:
-- http://ubuntuforums.org/showthread.php?t=2321756
-- https://www.mail-archive.com/ubuntu-bugs@lists.ubuntu.com/msg4942468.html
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 605cf8f..ce1cd68 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -374,7 +374,7 @@ static void handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ 		netdev_err(vif->ndev, "Failed to set IP address\n");
+ }
+ 
+-static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
++static void handle_get_ip_address(struct wilc_vif *vif, u8 idx)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+@@ -394,12 +394,8 @@ static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
+ 	if (memcmp(get_ip[idx], set_ip[idx], IP_ALEN) != 0)
+ 		wilc_setup_ipaddress(vif, set_ip[idx], idx);
+ 
+-	if (result != 0) {
++	if (result != 0)
+ 		netdev_err(vif->ndev, "Failed to get IP address\n");
+-		return -EINVAL;
+-	}
+-
+-	return result;
+ }
+ 
+ static s32 handle_get_mac_address(struct wilc_vif *vif,
+-- 
+2.8.2
 
-This issue seems to occur because RTL8XXXU_FIRMWARE_POLL_MAX (1000) is
-too short, and the MCU fails to start up as quickly as expected:
-
-        /* Wait for firmware to become ready */
-        for (i = 0; i < RTL8XXXU_FIRMWARE_POLL_MAX; i++) {
-                val32 = rtl8xxxu_read32(priv, REG_MCU_FW_DL);
-                if (val32 & MCU_WINT_INIT_READY)
-                        break;
-
-                udelay(100);
-        }
-
-        if (i == RTL8XXXU_FIRMWARE_POLL_MAX) {
-                dev_warn(dev, "Firmware failed to start\n");
-                ret = -EAGAIN;
-                goto exit;
-        }
-
-I've made a small patch to make a configurable module parameter
-(firmware_poll_max). With a longer value (5000), the driver now starts
-up consistently and successfully after cold-boot.
-
-I would like to propose both increasing the default value, and making
-it a configurable parameter. If this patch will be useful as-is, I
-will submit it, or I can help collect more debugging information if
-it's desired.
-
-Thanks,
-Dan Lenski
