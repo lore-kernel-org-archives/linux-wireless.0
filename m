@@ -1,44 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49970 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753081AbcEIXLZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 19:11:25 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 01/21] ath10k:  Fix crash related to printing features.
-Date: Mon,  9 May 2016 16:10:55 -0700
-Message-Id: <1462835475-11079-2-git-send-email-greearb@candelatech.com> (sfid-20160510_012230_762333_9E7312A7)
-In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
-References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:58524 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754953AbcEBVX5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 May 2016 17:23:57 -0400
+Message-ID: <1462224233.5898.22.camel@sipsolutions.net> (sfid-20160502_232400_322696_1E959051)
+Subject: Re: [PATCH] mac80211:  add vht cap decode to debugfs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date: Mon, 02 May 2016 23:23:53 +0200
+In-Reply-To: <1462223956-23384-1-git-send-email-greearb@candelatech.com>
+References: <1462223956-23384-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
 
-This looks like a regression from
-c4cdf753 (move fw_features to struct ath10k_fw_file)
+> +			if (vhtc->cap & IEEE80211_VHT_CAP_ ## a)+		
+> 		p += scnprintf(p, sizeof(buf) + buf
+> - p, \
+> +					       "\t\t%s\n", b);	
 
-Signed-off-by:  Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Why not use #a instead of b?
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index e94cb87..b7318b8 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1078,7 +1078,7 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
- 			}
- 
- 			ath10k_dbg_dump(ar, ATH10K_DBG_BOOT, "features", "",
--					ar->running_fw->fw_file.fw_features,
-+					fw_file->fw_features,
- 					sizeof(fw_file->fw_features));
- 			break;
- 		case ATH10K_FW_IE_FW_IMAGE:
--- 
-2.4.3
+> +		PFLAG(MAX_MPDU_LENGTH_3895, "MAX-MPDU-3895");
 
+
+Makes that a bit longer in the printout, but makes the code shorter.
+
+johannes
