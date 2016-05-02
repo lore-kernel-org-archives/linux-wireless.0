@@ -1,48 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:2150 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932232AbcETKqe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2016 06:46:34 -0400
-Subject: Re: Who is the maintainer of net/wireless/wext* ?
-To: sedat.dilek@gmail.com, Ujjal Roy <royujjal@gmail.com>
-References: <CAE2MWkk=mw0XiuimAQafTv=XtnBm2bCxH4Mf52veXgce6W8MrA@mail.gmail.com>
- <CA+icZUUkx74CgNbNJt5pqoqWHWQNTNCfP2faDSW7H9VmSuj1KQ@mail.gmail.com>
-Cc: Kernel <linux-wireless@vger.kernel.org>
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Message-ID: <573EEB06.70109@neratec.com> (sfid-20160520_124638_225462_60BE0A70)
-Date: Fri, 20 May 2016 12:46:30 +0200
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:33916 "EHLO
+	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754029AbcEBOj3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 May 2016 10:39:29 -0400
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@gmail.com>
+Subject: [RESEND PATCH 3/3] rfkill: Notify userspace of airplane-mode state changes
+Date: Mon,  2 May 2016 10:39:08 -0400
+Message-Id: <1462199948-6424-4-git-send-email-jprvita@endlessm.com> (sfid-20160502_164200_639806_1E354AD6)
+In-Reply-To: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
+References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+icZUUkx74CgNbNJt5pqoqWHWQNTNCfP2faDSW7H9VmSuj1KQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/20/2016 12:34 PM, Sedat Dilek wrote:
-> On 5/20/16, Ujjal Roy <royujjal@gmail.com> wrote:
->> I want to know the maintainer of
->>
->> net/wireless/wext*. Please any reply.
->>
-> 
-> For example, you can look in the MAINTAINERS file.
-> 
-> CFG80211 and NL80211
-> M:	Johannes Berg <johannes@sipsolutions.net>
-> L:	linux-wireless@vger.kernel.org
-> W:	http://wireless.kernel.org/
-> T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
-> T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
-> S:	Maintained
-> F:	include/uapi/linux/nl80211.h
-> F:	include/net/cfg80211.h
-> F:	net/wireless/*
-> X:	net/wireless/wext*
-> 
-> - Sedat -
-> 
-> [1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/MAINTAINERS#n2890
+From: João Paulo Rechi Vita <jprvita@gmail.com>
 
-Maybe also helpful: ./scripts/get_maintainer.pl -f net/wireless/wext*
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ Documentation/rfkill.txt    |  3 +++
+ include/uapi/linux/rfkill.h |  4 ++--
+ net/rfkill/core.c           | 13 +++++++++++++
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
-Cheers,
-Zefir
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 9dbe3fc..588b4bf 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -133,5 +133,8 @@ applications to take control. Changes to the airplane-mode indicator state can
+ be made using RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE, passing the new value
+ in the 'soft' field of 'struct rfkill_event'.
+ 
++This same API is also used to provide userspace with notifications of changes
++to airplane-mode indicator state.
++
+ 
+ For further details consult Documentation/ABI/stable/sysfs-class-rfkill.
+diff --git a/include/uapi/linux/rfkill.h b/include/uapi/linux/rfkill.h
+index 36e0770..2ccb02f 100644
+--- a/include/uapi/linux/rfkill.h
++++ b/include/uapi/linux/rfkill.h
+@@ -63,8 +63,8 @@ enum rfkill_type {
+  *	are hot-plugged later.
+  * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_ACQUIRE: userspace acquires control of
+  * 	the airplane-mode indicator.
+- * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE: userspace changes the
+- * 	airplane-mode indicator state.
++ * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE: the airplane-mode indicator state
++ * 	changed -- userspace changes the airplane-mode indicator state.
+  */
+ enum rfkill_operation {
+ 	RFKILL_OP_ADD = 0,
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 95824b3..c4bbd19 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -131,7 +131,20 @@ static struct led_trigger rfkill_apm_led_trigger;
+ 
+ static void rfkill_apm_led_trigger_event(bool state)
+ {
++	struct rfkill_data *data;
++	struct rfkill_int_event *ev;
++
+ 	led_trigger_event(&rfkill_apm_led_trigger, state ? LED_FULL : LED_OFF);
++
++	list_for_each_entry(data, &rfkill_fds, list) {
++		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
++		if (!ev)
++			continue;
++		ev->ev.op = RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE;
++		ev->ev.soft = state;
++		list_add_tail(&ev->list, &data->events);
++		wake_up_interruptible(&data->read_wait);
++	}
+ }
+ 
+ static void rfkill_apm_led_trigger_activate(struct led_classdev *led)
+-- 
+2.5.0
+
