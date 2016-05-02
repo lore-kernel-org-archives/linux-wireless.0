@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35982 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752181AbcEKTCM (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:34404 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbcEBN5g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 15:02:12 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 2 May 2016 09:57:36 -0400
+Received: by mail-oi0-f45.google.com with SMTP id k142so190195563oib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2016 06:57:36 -0700 (PDT)
+Date: Mon, 2 May 2016 08:57:34 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: wireless-regdb@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Subject: [ANN] wireless-regdb: master-2016-05-02
+Message-ID: <20160502135734.GE2714@ubuntu-hedt> (sfid-20160502_155740_269254_A44295BE)
 MIME-Version: 1.0
-Subject: Re: airo: prevent potential underflow in airo_set_freq()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160510192037.GB30712@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Ondrej Zary <linux@rainbow-software.org>,
-	Florian Westphal <fw@strlen.de>,
-	"David S. Miller" <davem@davemloft.net>,
-	Felipe Balbi <felipe.balbi@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Message-Id: <20160511190211.9054D6133D@smtp.codeaurora.org> (sfid-20160511_210217_161764_B56CA537)
-Date: Wed, 11 May 2016 19:02:11 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> I'm not sure if this can underflow but Smatch complains.  It seems
-> harmless to add a check for negatives.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+A new release of wireless-regdb (master-2016-05-02) is available at:
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+https://www.kernel.org/pub/software/network/wireless-regdb/wireless-regdb-2016.05.02.tar.gz
 
-03ba4a1b718e airo: prevent potential underflow in airo_set_freq()
+The short log of changes since the 2015-02-08 release is below.
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9061381/
+Thanks,
+Seth
+
+---
+
+Anne Marcel Roorda (1):
+      Update regulatory rules for NL as per ETSI EN 300 440-1
+
+Maximilian Engelhardt (2):
+      wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
+      wireless-regdb: Update regulatory references for Germany (DE)
+
+Petko Bordjukov (1):
+      Update the regulatory rules for Bulgaria (BG)
+
+Seth Forshee (1):
+      wireless-regdb: update regulatory.bin based on preceding changes
 
