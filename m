@@ -1,93 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:35340 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752783AbcEEAz2 (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:34554 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753582AbcEBKsR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2016 20:55:28 -0400
-Received: by mail-pa0-f51.google.com with SMTP id iv1so29724213pac.2
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2016 17:55:28 -0700 (PDT)
-From: Christian Daudt <csd@broadcom.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Daudt <csd@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: [PATCH] brcmfmac: Add 4356 sdio support
-Date: Wed,  4 May 2016 17:55:20 -0700
-Message-Id: <1462409720-5641-1-git-send-email-csd@broadcom.com> (sfid-20160505_025532_482700_C704DA1C)
+	Mon, 2 May 2016 06:48:17 -0400
+Received: by mail-pa0-f66.google.com with SMTP id yl2so17627142pac.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2016 03:48:17 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 4/7] staging: wilc1000: fix comparison style of if statement in handle_get_ip_address
+Date: Mon,  2 May 2016 19:47:52 +0900
+Message-Id: <1462186075-8549-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160502_124820_421498_58F5E98B)
+In-Reply-To: <1462186075-8549-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1462186075-8549-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds support for the 4356-sdio wireless chip.
+This patch changes conditional comparison of if statement as if (ret)
+instead of using if (ret != 0)
 
-Signed-off-by: Christian Daudt <csd@broadcom.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c   | 1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c   | 4 +++-
- include/linux/mmc/sdio_ids.h                              | 1 +
- 4 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index da0cdd3..a01039a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -1098,6 +1098,7 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_43430),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4345),
- 	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4354),
-+	BRCMF_SDIO_DEVICE(SDIO_DEVICE_ID_BROADCOM_4356),
- 	{ /* end: all zeroes */ }
- };
- MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 0e8f2a0..d3fd6b1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -1333,6 +1333,7 @@ bool brcmf_chip_sr_capable(struct brcmf_chip *pub)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 1d48214..8a269fd 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -394,7 +394,7 @@ static void handle_get_ip_address(struct wilc_vif *vif, u8 idx)
+ 	if (memcmp(get_ip[idx], set_ip[idx], IP_ALEN) != 0)
+ 		wilc_setup_ipaddress(vif, set_ip[idx], idx);
  
- 	switch (pub->chip) {
- 	case BRCM_CC_4354_CHIP_ID:
-+	case BRCM_CC_4356_CHIP_ID:
- 		/* explicitly check SR engine enable bit */
- 		pmu_cc3_mask = BIT(2);
- 		/* fall-through */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 43fd3f4..da8abff 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -612,6 +612,7 @@ BRCMF_FW_NVRAM_DEF(4339, "brcmfmac4339-sdio.bin", "brcmfmac4339-sdio.txt");
- BRCMF_FW_NVRAM_DEF(43430, "brcmfmac43430-sdio.bin", "brcmfmac43430-sdio.txt");
- BRCMF_FW_NVRAM_DEF(43455, "brcmfmac43455-sdio.bin", "brcmfmac43455-sdio.txt");
- BRCMF_FW_NVRAM_DEF(4354, "brcmfmac4354-sdio.bin", "brcmfmac4354-sdio.txt");
-+BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-sdio.bin", "brcmfmac4356-sdio.txt");
+-	if (ret != 0)
++	if (ret)
+ 		netdev_err(vif->ndev, "Failed to get IP address\n");
+ }
  
- static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43143_CHIP_ID, 0xFFFFFFFF, 43143),
-@@ -627,7 +628,8 @@ static struct brcmf_firmware_mapping brcmf_sdio_fwnames[] = {
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4339_CHIP_ID, 0xFFFFFFFF, 4339),
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43430_CHIP_ID, 0xFFFFFFFF, 43430),
- 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4345_CHIP_ID, 0xFFFFFFC0, 43455),
--	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354)
-+	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4354_CHIP_ID, 0xFFFFFFFF, 4354),
-+	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356)
- };
- 
- static void pkt_align(struct sk_buff *p, int len, int align)
-diff --git a/include/linux/mmc/sdio_ids.h b/include/linux/mmc/sdio_ids.h
-index 83430f2..0d126ae 100644
---- a/include/linux/mmc/sdio_ids.h
-+++ b/include/linux/mmc/sdio_ids.h
-@@ -36,6 +36,7 @@
- #define SDIO_DEVICE_ID_BROADCOM_43430		0xa9a6
- #define SDIO_DEVICE_ID_BROADCOM_4345		0x4345
- #define SDIO_DEVICE_ID_BROADCOM_4354		0x4354
-+#define SDIO_DEVICE_ID_BROADCOM_4356		0x4356
- 
- #define SDIO_VENDOR_ID_INTEL			0x0089
- #define SDIO_DEVICE_ID_INTEL_IWMC3200WIMAX	0x1402
 -- 
-1.9.1
+2.8.2
 
