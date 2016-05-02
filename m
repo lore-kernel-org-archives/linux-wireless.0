@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:57779 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751475AbcEQXQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 19:16:55 -0400
-From: Heinrich Schuchardt <xypron.glpk@gmx.de>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Heinrich Schuchardt <xypron.glpk@gmx.de>
-Subject: [PATCH 1/1] mwiflex: avoid possible null pointer dereference
-Date: Wed, 18 May 2016 01:16:01 +0200
-Message-Id: <1463526961-12019-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160518_011717_523970_B4557D01)
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33414 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754474AbcEBRAs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 2 May 2016 13:00:48 -0400
+Subject: Re: [PATCH v2] rtlwifi: Fix logic error in enter/exit power-save mode
+To: Wang YanQing <udknight@gmail.com>, kvalo@codeaurora.org,
+	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20160502163835.GA10925@udknight>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <572787BE.3040101@lwfinger.net> (sfid-20160502_190114_737303_7A889D8B)
+Date: Mon, 2 May 2016 12:00:46 -0500
+MIME-Version: 1.0
+In-Reply-To: <20160502163835.GA10925@udknight>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Do not dereference card before checking against NULL value.
+On 05/02/2016 11:38 AM, Wang YanQing wrote:
+> In commit a269913c52ad ("rtlwifi: Rework rtl_lps_leave() and
+> rtl_lps_enter() to use work queue"), the tests for enter/exit
+> power-save mode were inverted. With this change applied, the
+> wifi connection becomes much more stable.
+>
+> Fixes: a269913c52ad ("rtlwifi: Rework rtl_lps_leave() and rtl_lps_enter() to use work queue")
+> Signed-off-by: Wang YanQing <udknight@gmail.com>
+> CC: Stable <stable@vger.kernel.org> [3.10+]
+> ---
+>   Hi, Larry!
+>
+>   Because commit a269913c52ad is the first commit bring this problem,
+>   so maybe use above commit message is ok, right? And stable kernels
+>   3.10-3.18 don't have commit fd09ff958777, but have a269913c52ad.
+>
+>   Thanks for suggestion concerning to good subject and commit message
+>   writing, it is harder than coding sometimes:)
+>
+>   Changes:
+>   v1-v2:
+>   1: Fix subject and commit message.
 
-Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Yes, I agree that the commit message is hard.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 0c7937e..ae1f79e 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2901,10 +2901,11 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg;
--	struct pci_dev *pdev = card->dev;
-+	struct pci_dev *pdev;
- 	int i;
- 
- 	if (card) {
-+		pdev = card->dev;
- 		if (card->msix_enable) {
- 			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
- 				synchronize_irq(card->msix_entries[i].vector);
--- 
-2.1.4
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Thanks,
+
+Larry
+
+>
+>   drivers/net/wireless/realtek/rtlwifi/base.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+> index c74eb13..264466f 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+> @@ -1660,9 +1660,9 @@ void rtl_watchdog_wq_callback(void *data)
+>   		if (((rtlpriv->link_info.num_rx_inperiod +
+>   		      rtlpriv->link_info.num_tx_inperiod) > 8) ||
+>   		    (rtlpriv->link_info.num_rx_inperiod > 2))
+> -			rtl_lps_enter(hw);
+> -		else
+>   			rtl_lps_leave(hw);
+> +		else
+> +			rtl_lps_enter(hw);
+>   	}
+>
+>   	rtlpriv->link_info.num_rx_inperiod = 0;
+>
 
