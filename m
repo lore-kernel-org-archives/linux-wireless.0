@@ -1,67 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:35684 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960AbcEYVFV (ORCPT
+Received: from vpn.innerrange.com.au ([203.122.143.146]:58489 "EHLO
+	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751771AbcEBCXi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2016 17:05:21 -0400
-Received: by mail-wm0-f42.google.com with SMTP id a136so10600wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2016 14:05:20 -0700 (PDT)
-Subject: Re: [PATCH V2] brcmfmac: print error if p2p_ifadd firmware command
- fails
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1464123728-7555-1-git-send-email-zajec5@gmail.com>
- <1464123910-8281-1-git-send-email-zajec5@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<linux-wireless@vger.kernel.org>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<brcm80211-dev-list@broadcom.com>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5746138D.2090700@broadcom.com> (sfid-20160525_230544_493706_76132BD2)
-Date: Wed, 25 May 2016 23:05:17 +0200
+	Sun, 1 May 2016 22:23:38 -0400
+From: Craig McQueen <craig.mcqueen@innerrange.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 2 May 2016 12:23:28 +1000
+Subject: RE: rt2800 and BeagleBone Black soft lockup when unplugging from
+ USB hub
+Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D20C81874@IR-CENTRAL.corp.innerrange.com> (sfid-20160502_042430_587832_D9DD3A6B)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1464123910-8281-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 24-05-16 23:05, Rafał Miłecki wrote:
-> This is helpful for debugging, without this all I was getting from "iw"
-> command on device with BCM43602 was:
->> command failed: Too many open files in system (-23)
+I previously wrote:
+> I previously wrote:
+> >
+> > I have a D-Link DWA-140 USB Wi-Fi device which is rt2800 based (5392
+> > chipset). I've been testing it on a BeagleBone Black running an Ubuntu
+> > 16.04 image (4.4.6 kernel), with a USB hub.
+> >
+> > When I unplug the Wi-Fi device from the USB hub, and it's connected to
+> > an access point, and then I unplug it, the OS appears to lock up. I
+> > get messages about a soft lockup on the serial console:
+> >
+> > [ 9736.136702] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s!
+> > [kworker/u2:0:1129] [ 9764.136701] NMI watchdog: BUG: soft lockup -
+> > CPU#0 stuck for 22s! [kworker/u2:0:1129] [ 9792.136701] NMI watchdog:
+> > BUG: soft lockup - CPU#0 stuck for 22s! [kworker/u2:0:1129] [
+> > 9820.136699] NMI
+> > watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [kworker/u2:0:1129]
+> > [ 9848.136696] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s!
+> > [kworker/u2:0:1129]
+> >
+> > This will repeat indefinitely, until I unplug the hub, which resolves
+> > the soft lockup and then the system seems to function normally.
+> >
+> > I've attached a dmesg log of the soft lockup stack traces. They seem
+> > to indicate a lockup in workqueue rt2x00usb_work_rxdone()
+> > (specifically in
+> > usb_hcd_submit_urb() called from rt2x00usb_kick_rx_entry() called from
+> > rt2x00usb_clear_entry()).
+> >
+> > I originally found this bug on a 3.14.x kernel built with Yocto for a
+> > BeagleBone Black-based product. So it seems this is a bug that has
+> > been around for some time.
 > 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> V2: s/in/if/ in commit message
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> I should also note that on the 3.14.x Yocto-built kernel on BeagleBone Black,
+> this bug does not occur if the rt2800 device is unplugged directly from the
+> BBB's USB port. It only occurs if unplugged from a hub.
 > 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> index 1652a48..f7b7e29 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> @@ -2031,7 +2031,7 @@ static int brcmf_p2p_request_p2p_if(struct brcmf_p2p_info *p2p,
->  	err = brcmf_fil_iovar_data_set(ifp, "p2p_ifadd", &if_request,
->  				       sizeof(if_request));
->  	if (err)
-> -		return err;
-> +		brcmf_err("p2p_ifadd failed %d\n", err);
+> I have tested this on an i586 based eBox-3310A mini-PC running Debian 8.4,
+> which has a 3.16.0 kernel, with the same hub and same rt2800 device. But I
+> was not able to reproduce this issue.
 
-I would prefer adding a more generic failure message including ifname
-and type in brcmf_cfg80211_add_iface() in cfg80211.c.
+There is a patch for the AM335x musb driver that seems to fix this:
 
-Regards,
-Arend
+http://marc.info/?l=linux-usb&m=146173995117456&w=2
 
->  
->  	return err;
->  }
-> 
+So it seems that this issue's root cause is in the AM335x USB interrupt handling, and not the Wi-Fi rt2800 driver.
+
+-- 
+Craig McQueen
+
