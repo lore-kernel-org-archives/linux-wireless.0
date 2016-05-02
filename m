@@ -1,38 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11287 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751139AbcEMOHk convert rfc822-to-8bit (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:33907 "EHLO
+	mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754024AbcEBOj1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2016 10:07:40 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 5/5] ath10k: Fix deadlock when peer cannot be created.
-Date: Fri, 13 May 2016 14:07:29 +0000
-Message-ID: <87k2iyaw67.fsf@kamboji.qca.qualcomm.com> (sfid-20160513_160744_500290_98062BBD)
-References: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
-	<1459545132-11295-5-git-send-email-greearb@candelatech.com>
-	<5730C697.206@candelatech.com>
-In-Reply-To: <5730C697.206@candelatech.com> (Ben Greear's message of "Mon, 9
-	May 2016 10:19:19 -0700")
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 2 May 2016 10:39:27 -0400
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [RESEND PATCH 0/3] RFKill airplane-mode indicator
+Date: Mon,  2 May 2016 10:39:05 -0400
+Message-Id: <1462199948-6424-1-git-send-email-jprvita@endlessm.com> (sfid-20160502_163953_921468_B9D638CA)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+This series implements an airplane-mode indicator LED trigger, which can be
+used by platform drivers. By default the trigger fires on RFKILL_OP_CHANGE_ALL,
+but this policy can be overwritten by userspace using the new operations
+_AIRPLANE_MODE_INDICATOR_ACQUIRE and _AIRPLANE_MODE_INDICATOR_CHANGE. When the
+airplane-mode indicator state changes, userspace gets notifications through the
+RFKill control misc device (/dev/rfkill). I also have patches to the rfkill
+userspace tool that makes use of this interface, so it can serve as API usage
+example and to do quick checks on a running system, which I'll send in a
+separate series.
 
-> Kalle:  I notice these 5 patches are not in the latest wireless-testing.
->
-> Are they not acceptable, or???
+After some hiatus I found the time to get back to this, and this time I've used
+Jouni's hwsim suite to test the patches on top of mac80211-next/master. Lines
+containing rfkill are pasted bellow:
 
-These five are in deferred state:
+START wext_rfkill 14/1880
+PASS wext_rfkill 4.100002 2016-04-29 12:30:23.792682
+START rfkill_wpas 571/1880
+PASS rfkill_wpas 1.245307 2016-04-29 12:48:51.804344
+START rfkill_autogo 572/1880
+PASS rfkill_autogo 1.154174 2016-04-29 12:48:52.959605
+START rfkill_p2p_discovery 573/1880
+PASS rfkill_p2p_discovery 0.534903 2016-04-29 12:48:53.495547
+START rfkill_open 574/1880
+PASS rfkill_open 0.34073 2016-04-29 12:48:53.836963
+START rfkill_p2p_discovery_p2p_dev 575/1880
+PASS rfkill_p2p_discovery_p2p_dev 1.159446 2016-04-29 12:48:54.997555
+START rfkill_hostapd 576/1880
+PASS rfkill_hostapd 3.686868 2016-04-29 12:48:58.685162
+START rfkill_wpa2_psk 577/1880
+PASS rfkill_wpa2_psk 0.330014 2016-04-29 12:48:59.016711
 
-https://patchwork.kernel.org/patch/8727841/
+João Paulo Rechi Vita (3):
+  rfkill: Create "rfkill-airplane-mode" LED trigger
+  rfkill: Userspace control for airplane mode
+  rfkill: Notify userspace of airplane-mode state changes
 
-The deferred state means that I postponed them for some reason (for thse
-I just can't remember right now why) and will take a look at them later.
+ Documentation/rfkill.txt    |  15 +++++++
+ include/uapi/linux/rfkill.h |   6 +++
+ net/rfkill/core.c           | 100 +++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 119 insertions(+), 2 deletions(-)
 
 -- 
-Kalle Valo
+2.5.0
+
