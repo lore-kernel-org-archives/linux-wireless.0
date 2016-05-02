@@ -1,40 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41504 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750787AbcEPLl4 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51682 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754953AbcEBV1X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2016 07:41:56 -0400
-Message-ID: <1463398895.25219.82.camel@coelho.fi> (sfid-20160516_134159_037647_4F79B8FD)
-From: Luca Coelho <luca@coelho.fi>
-To: Dan Carpenter <dan.carpenter@oracle.com>, sara.sharon@intel.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 16 May 2016 14:41:35 +0300
-In-Reply-To: <20160513085428.GA13194@mwanda>
-References: <20160513085428.GA13194@mwanda>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: iwlwifi: mvm: add reorder buffer per queue
+	Mon, 2 May 2016 17:27:23 -0400
+Subject: Re: [PATCH] mac80211: add vht cap decode to debugfs.
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1462223956-23384-1-git-send-email-greearb@candelatech.com>
+ <1462224233.5898.22.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <5727C63A.7020705@candelatech.com> (sfid-20160502_232727_112551_402689E4)
+Date: Mon, 2 May 2016 14:27:22 -0700
+MIME-Version: 1.0
+In-Reply-To: <1462224233.5898.22.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-05-13 at 11:54 +0300, Dan Carpenter wrote:
-> Hello Sara Sharon,
-> 
-> The patch b915c10174fb: "iwlwifi: mvm: add reorder buffer per queue"
-> from Mar 23, 2016, leads to the following static checker warnings:
-> 
-> 	drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:912
-> iwl_mvm_rx_mpdu_mq()
-> 	error: potential NULL dereference 'sta'.
-> 
-> 	drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:912
-> iwl_mvm_rx_mpdu_mq()
-> 	error: we previously assumed 'sta' could be null (see line 796)
+On 05/02/2016 02:23 PM, Johannes Berg wrote:
+>
+>> +			if (vhtc->cap & IEEE80211_VHT_CAP_ ## a)+		
+>> 		p += scnprintf(p, sizeof(buf) + buf
+>> - p, \
+>> +					       "\t\t%s\n", b);	
+>
+> Why not use #a instead of b?
+>
+>> +		PFLAG(MAX_MPDU_LENGTH_3895, "MAX-MPDU-3895");
+>
+>
+> Makes that a bit longer in the printout, but makes the code shorter.
 
-Thanks for the analysis and report, Dan!
+I don't care that much either way, but it seemed nicer to customize the output.
 
-I have queued a fix for this through our internal tree.
+It at least won't change the actual compiled code much...
 
---
-Cheers,
-Luca.
+I'll change it to be as you suggest if you want.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
