@@ -1,48 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49755 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758208AbcEFLyA (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51567 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755025AbcEBVTT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2016 07:54:00 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Christian Daudt <csd@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH] Fix kernel oops in failed chip_attach
-References: <1462390228-27863-1-git-send-email-csd@broadcom.com>
-Date: Fri, 06 May 2016 14:53:54 +0300
-In-Reply-To: <1462390228-27863-1-git-send-email-csd@broadcom.com> (Christian
-	Daudt's message of "Wed, 4 May 2016 12:30:28 -0700")
-Message-ID: <87lh3ns8q5.fsf@kamboji.qca.qualcomm.com> (sfid-20160506_135405_408840_B7350FAC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 2 May 2016 17:19:19 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  add vht cap decode to debugfs.
+Date: Mon,  2 May 2016 14:19:16 -0700
+Message-Id: <1462223956-23384-1-git-send-email-greearb@candelatech.com> (sfid-20160502_231923_106355_E5D1F0B9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Daudt <csd@broadcom.com> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> When chip attach fails, brcmf_sdiod_intr_unregister is being called
-> but that is too early as sdiodev->settings has not been set yet
-> nor has brcmf_sdiod_intr_register been called.
-> Change to use oob_irq_requested + newly created sd_irq_requested
-> to decide on what to unregister at intr_unregister time.
->
-> Steps to reproduce problem:
-> - modprobe brcmfmac using buggy FW
-> - rmmod brcmfmac
-> - modprobe brcmfmac again.
->
-> If done with a buggy firmware, brcm_chip_attach will fail on the
-> 2nd modprobe triggering the call to intr_unregister and the
-> kernel oops when attempting to de-reference sdiodev->settings->bus.sdio
-> which has not yet been set.
->
-> Signed-off-by: Christian Daudt <csd@broadcom.com>
+This makes it a lot easier to understand the capabilities used
+by the station:
 
-Please use prefix "brcmfmac: " in the title.
+VHT supported
+cap: 0x300819b2
+		MAX-MPDU-11454
+		RXLDPC
+		SHORT-GI-80
+		TXSTBC
+		RXSTBC_1
+		RXSTBC_3
+		SU-BEAMFORMER-CAPABLE
+		SU-BEAMFORMEE-CAPABLE
+		BEAMFORMEE-STS: 0x0
+		SOUNDING-DIMENSIONS: 0x0
+		MU-BEAMFORMER-CAPABLE
+		MPDU-LENGTH-EXPONENT: 0x0
+		LINK-ADAPTATION-VHT-MRQ-MFB: 0x0
+		RX-ANTENNA-PATTERN
+		RX-ANTENNA-PATTERN
+RX MCS: fffe
+TX MCS: fffe
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/debugfs_sta.c | 50 ++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 48 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index 5d3d2ab..ff9d4dd 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -292,14 +292,60 @@ STA_OPS(ht_capa);
+ static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
+ 				 size_t count, loff_t *ppos)
+ {
+-	char buf[128], *p = buf;
++	char buf[512], *p = buf;
+ 	struct sta_info *sta = file->private_data;
+ 	struct ieee80211_sta_vht_cap *vhtc = &sta->sta.vht_cap;
+ 
+ 	p += scnprintf(p, sizeof(buf) + buf - p, "VHT %ssupported\n",
+ 			vhtc->vht_supported ? "" : "not ");
+ 	if (vhtc->vht_supported) {
+-		p += scnprintf(p, sizeof(buf)+buf-p, "cap: %#.8x\n", vhtc->cap);
++		p += scnprintf(p, sizeof(buf) + buf - p, "cap: %#.8x\n",
++			       vhtc->cap);
++#define PFLAG(a, b)							\
++		do {							\
++			if (vhtc->cap & IEEE80211_VHT_CAP_ ## a)	\
++				p += scnprintf(p, sizeof(buf) + buf - p, \
++					       "\t\t%s\n", b);		\
++		} while (0)
++
++		PFLAG(MAX_MPDU_LENGTH_3895, "MAX-MPDU-3895");
++		PFLAG(MAX_MPDU_LENGTH_7991, "MAX-MPDU-7991");
++		PFLAG(MAX_MPDU_LENGTH_11454, "MAX-MPDU-11454");
++		PFLAG(SUPP_CHAN_WIDTH_160MHZ, "160Mhz");
++		PFLAG(SUPP_CHAN_WIDTH_160_80PLUS80MHZ, "160-80+80Mhz");
++		PFLAG(RXLDPC, "RXLDPC");
++		PFLAG(SHORT_GI_80, "SHORT-GI-80");
++		PFLAG(SHORT_GI_160, "SHORT-GI-160");
++		PFLAG(TXSTBC, "TXSTBC");
++		PFLAG(RXSTBC_1, "RXSTBC_1");
++		PFLAG(RXSTBC_2, "RXSTBC_2");
++		PFLAG(RXSTBC_3, "RXSTBC_3");
++		PFLAG(RXSTBC_4, "RXSTBC_4");
++		PFLAG(SU_BEAMFORMER_CAPABLE, "SU-BEAMFORMER-CAPABLE");
++		PFLAG(SU_BEAMFORMEE_CAPABLE, "SU-BEAMFORMEE-CAPABLE");
++		p += scnprintf(p, sizeof(buf) + buf - p,
++			"\t\tBEAMFORMEE-STS: 0x%x\n",
++			(vhtc->cap & IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK) >>
++			IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT);
++		p += scnprintf(p, sizeof(buf) + buf - p,
++			"\t\tSOUNDING-DIMENSIONS: 0x%x\n",
++			(vhtc->cap & IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK)
++			>> IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT);
++		PFLAG(MU_BEAMFORMER_CAPABLE, "MU-BEAMFORMER-CAPABLE");
++		PFLAG(MU_BEAMFORMEE_CAPABLE, "MU-BEAMFORMEE-CAPABLE");
++		PFLAG(VHT_TXOP_PS, "TXOP-PS");
++		PFLAG(HTC_VHT, "HTC-VHT");
++		p += scnprintf(p, sizeof(buf) + buf - p,
++			"\t\tMPDU-LENGTH-EXPONENT: 0x%x\n",
++			(vhtc->cap & IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK) >>
++			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT);
++		PFLAG(VHT_LINK_ADAPTATION_VHT_UNSOL_MFB,
++		      "LINK-ADAPTATION-VHT-UNSOL-MFB");
++		p += scnprintf(p, sizeof(buf) + buf - p,
++			"\t\tLINK-ADAPTATION-VHT-MRQ-MFB: 0x%x\n",
++			(vhtc->cap & IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_MRQ_MFB) >> 26);
++		PFLAG(RX_ANTENNA_PATTERN, "RX-ANTENNA-PATTERN");
++		PFLAG(TX_ANTENNA_PATTERN, "RX-ANTENNA-PATTERN");
+ 
+ 		p += scnprintf(p, sizeof(buf)+buf-p, "RX MCS: %.4x\n",
+ 			       le16_to_cpu(vhtc->vht_mcs.rx_mcs_map));
 -- 
-Kalle Valo
+2.4.3
+
