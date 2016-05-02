@@ -1,69 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:34580 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756039AbcECRVS (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:36758 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752472AbcEBFoE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 13:21:18 -0400
-Received: by mail-oi0-f53.google.com with SMTP id k142so34978250oib.1
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2016 10:21:17 -0700 (PDT)
+	Mon, 2 May 2016 01:44:04 -0400
+Date: Mon, 2 May 2016 13:37:54 +0800
+From: Wang YanQing <udknight@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi:rtl_watchdog_wq_callback: fix calling
+ rtl_lps_enter|rtl_lps_leave in opposite condition
+Message-ID: <20160502053754.GA30313@udknight> (sfid-20160502_074439_341689_DA03A532)
 MIME-Version: 1.0
-In-Reply-To: <CABPxzY+JXre1SzGyqmwYhTw9BB_-PfR02basW0WS34wZKpxK7g@mail.gmail.com>
-References: <CABPxzYLtu53V79O--eDJEdRfn-zw3Wq9Po04F=uFp_FrfJjuiA@mail.gmail.com>
-	<1462281243.2251.2.camel@sipsolutions.net>
-	<CABPxzYJjRMMaUn+zzpzm8Zv8XAn8nfA8FgMTr7bkZve3XWs8ow@mail.gmail.com>
-	<CABPxzYKj-0kaBP6BYQvcTYZtaTTbtc0nR-=69qC9eCDDJoXxaA@mail.gmail.com>
-	<1462291262.2251.4.camel@sipsolutions.net>
-	<CABPxzY+JXre1SzGyqmwYhTw9BB_-PfR02basW0WS34wZKpxK7g@mail.gmail.com>
-Date: Tue, 3 May 2016 19:21:16 +0200
-Message-ID: <CALhHN=pxE2+dHxKLvsdWDt7fZ-FwYSUzps6hWB9m7dmZbFytgg@mail.gmail.com> (sfid-20160503_192121_362934_59ACB842)
-Subject: Re: dynamic ps + offchannel mgmt_tx + HW RoC
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 May 2016 at 18:58, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
-> On Tue, May 3, 2016 at 9:31 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
->> On Tue, 2016-05-03 at 20:02 +0530, Krishna Chaitanya wrote:
->>
->>> > i don't see any issues in the powersave w.r.t driver. Isn't it a
->>> > valid case? you meant implementing dynamic_ps?
->>
->> No, I really did mean implementing the entire PS logic in the driver,
->> instead of having mac80211 do it.
->>
->>> If it advertise HW_SUPPORTS_DYNAMIC_PS it works fine.
->>> so may be we should queue those frames and send it to
->>> HW once it is out of powersave?
->>
->> We could, but I *really* don't want to patch over the messy and broken
->> powersave code in mac80211 now.
->>
->> I really do think that the only way out of this mess is to implement
->> powersave entirely outside of mac80211; perhaps mac80211 could provide
->> helpers for it, but tying it into the MLME implementation and having
->> all the PS-Poll stuff be global etc. is simply wrong today.
-> Okay, i understand. This again points to our discussion about mac80211
-> ps a while ago. May be we should document this somewhere so that
-> device driver developers are aware of this?
->
+Commit a269913c52ad37952a4d9953bb6d748f7299c304
+("rtlwifi: Rework rtl_lps_leave() and rtl_lps_enter() to use work queue")
+make a mistake, change the meaning of num_tx|rx_inperiod comparison test.
 
-Why not remove PS code from the mac80211 then, while is broken and
-should not be used?
+Commit fd09ff958777cf583d7541f180991c0fc50bd2f7
+("rtlwifi: Remove extra workqueue for enter/leave power state")
+follow previous mistake, bring us to current code.
 
-BR
-Janusz
+This patch fix it.
 
->
->
-> --
-> Thanks,
-> Regards,
-> Chaitanya T K.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Wang YanQing <udknight@gmail.com>
+---
+ I think this patch should be ported back to stable kernels, 3.10+.
+ In my machine, I will lost wifi connection after minutes if I enable
+ fwlps.
+ 
+ drivers/net/wireless/realtek/rtlwifi/base.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
+index c74eb13..264466f 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/base.c
++++ b/drivers/net/wireless/realtek/rtlwifi/base.c
+@@ -1660,9 +1660,9 @@ void rtl_watchdog_wq_callback(void *data)
+ 		if (((rtlpriv->link_info.num_rx_inperiod +
+ 		      rtlpriv->link_info.num_tx_inperiod) > 8) ||
+ 		    (rtlpriv->link_info.num_rx_inperiod > 2))
+-			rtl_lps_enter(hw);
+-		else
+ 			rtl_lps_leave(hw);
++		else
++			rtl_lps_enter(hw);
+ 	}
+ 
+ 	rtlpriv->link_info.num_rx_inperiod = 0;
+-- 
+1.8.5.6.2.g3d8a54e.dirty
