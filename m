@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:37653 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751107AbcEYVIK (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:36611 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbcEBPoW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2016 17:08:10 -0400
-Received: by mail-wm0-f41.google.com with SMTP id z87so76663333wmh.0
-        for <linux-wireless@vger.kernel.org>; Wed, 25 May 2016 14:08:08 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: fix setting AP channel with new firmwares
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1464080979-12150-1-git-send-email-zajec5@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<linux-wireless@vger.kernel.org>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<brcm80211-dev-list@broadcom.com>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <57461435.9080708@broadcom.com> (sfid-20160525_230833_569079_4BCEA12A)
-Date: Wed, 25 May 2016 23:08:05 +0200
-MIME-Version: 1.0
-In-Reply-To: <1464080979-12150-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Mon, 2 May 2016 11:44:22 -0400
+Received: by mail-wm0-f54.google.com with SMTP id n129so112597085wmn.1
+        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2016 08:44:21 -0700 (PDT)
+From: Eduardo Abinader <eabinader@ocedo.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eduardo Abinader <eduardo.abinader@riverbed.com>,
+	ath9k-devel@lists.ath9k.org, kvalo@qca.qualcomm.com,
+	ath9k-devel@qca.qualcomm.com
+Subject: [PATCH] ath9k: Remove empty test condition
+Date: Mon,  2 May 2016 17:44:11 +0200
+Message-Id: <1462203851-20431-1-git-send-email-eduardo.abinader@riverbed.com> (sfid-20160502_174426_408257_185BD4CC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Just some code cleanup to remove an empty if clause.
 
+Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-On 24-05-16 11:09, Rafał Miłecki wrote:
-> Firmware for new chipsets is based on a new major version of code
-> internally maintained at Broadcom. E.g. brcmfmac4366b-pcie.bin (used for
-> BCM4366B1) is based on 10.10.69.3309 while brcmfmac43602-pcie.ap.bin was
-> based on 7.35.177.56.
-> 
-> Currently setting AP 5 GHz channel doesn't work reliably with BCM4366B1.
-> When setting e.g. 36 control channel with VHT80 (center channel 42)
-> firmware may randomly pick one of:
-> 1) 52 control channel with 58 as center one
-> 2) 100 control channel with 106 as center one
-> 3) 116 control channel with 122 as center one
-> 4) 149 control channel with 155 as center one
-> 
-> It seems new firmwares require setting AP mode (BRCMF_C_SET_AP) before
-> specifying a channel. Changing an order of firmware calls fixes the
-> problem.
-> 
-> This fix was verified with BCM4366B1 and tested for regressions on
-> BCM43602. It's unclear if it's needed (or correct at all) for P2P
-> interfaces so it leaves this code unaffected.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index f680982..eb206c1 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3202,8 +3202,7 @@ static int ar9300_compress_decision(struct ath_hw *ah,
+ 			it, length);
+ 		break;
+ 	case _CompressBlock:
+-		if (reference == 0) {
+-		} else {
++		if (reference != 0) {
+ 			eep = ar9003_eeprom_struct_find_by_id(reference);
+ 			if (eep == NULL) {
+ 				ath_dbg(common, EEPROM,
+-- 
+2.5.0
 
-In doing so the code reads a bit awkward so if P2P-GO works with the
-changed order that would be preferable.
-
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 16 ++++++++++++----
->  1 file changed, 12 insertions(+), 4 deletions(-)
