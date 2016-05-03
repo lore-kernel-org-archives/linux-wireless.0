@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36312 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbcEPNQp (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39640 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750728AbcECN0r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2016 09:16:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2016-05-13
-References: <87oa8ab3eo.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 16 May 2016 16:16:39 +0300
-In-Reply-To: <87oa8ab3eo.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Fri, 13 May 2016 14:31:11 +0300")
-Message-ID: <87wpmu87ns.fsf@kamboji.qca.qualcomm.com> (sfid-20160516_151649_533934_7EC93A2F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 3 May 2016 09:26:47 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Date: Tue,  3 May 2016 16:26:40 +0300
+Message-Id: <1462282000-25676-1-git-send-email-luca@coelho.fi> (sfid-20160503_152651_255179_366819E0)
+Subject: [PATCH] cfg80211: remove erroneous comment
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+The devlist_mtx mutex was removed about two years ago, in favour of just
+using RTNL/RCU protection. Remove the comment still referencing it.
 
-> this is the last pull request to net-next for 4.7. Nothing really out of
-> ordinary, the signed tag below contains more info. Please let me know if
-> there are any issues.
->
-> Kalle
->
->
-> The following changes since commit ede00a5ceb4d903a8c137a52bb77d574baaef8bd:
->
->   Merge tag 'wireless-drivers-next-for-davem-2016-05-02' of git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next (2016-05-03 00:35:16 -0400)
->
-> are available in the git repository at:
->
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2016-05-13
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/core.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Please don't pull this yet, there might be something wrong now with
-merges and need to check that first.
-
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index ac44e77..f75d760 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -53,7 +53,7 @@ struct cfg80211_registered_device {
+ 	/* associated wireless interfaces, protected by rtnl or RCU */
+ 	struct list_head wdev_list;
+ 	int devlist_generation, wdev_id;
+-	int opencount; /* also protected by devlist_mtx */
++	int opencount;
+ 	wait_queue_head_t dev_wait;
+ 
+ 	struct list_head beacon_registrations;
 -- 
-Kalle Valo
+2.8.0.rc3
+
