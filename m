@@ -1,84 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:35756 "EHLO
-	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756681AbcEEK6t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2016 06:58:49 -0400
-Received: by mail-lf0-f45.google.com with SMTP id j8so91359726lfd.2
-        for <linux-wireless@vger.kernel.org>; Thu, 05 May 2016 03:58:49 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
-	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
-	apenwarr@gmail.com, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv4 0/5] mac80211: implement fq_codel
-Date: Thu,  5 May 2016 13:00:34 +0200
-Message-Id: <1462446039-1070-1-git-send-email-michal.kazior@tieto.com> (sfid-20160505_125853_662061_4F117AD7)
-In-Reply-To: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
-References: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:36538 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933754AbcECTA0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2016 15:00:26 -0400
+Message-ID: <1462302024.10444.5.camel@sipsolutions.net> (sfid-20160503_210029_993325_11BE5333)
+Subject: Re: [PATCH] cfg80211: Advertise extended capabilities per interface
+ type to userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
+	"Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+Date: Tue, 03 May 2016 21:00:24 +0200
+In-Reply-To: <19a916fb8aeb4226927a7a0c6541a361@APHYDEXM01E.ap.qualcomm.com>
+References: <1460719669-3421-1-git-send-email-vkanchan@qti.qualcomm.com>
+	 <1460844715.2075.21.camel@sipsolutions.net>
+	 <19a916fb8aeb4226927a7a0c6541a361@APHYDEXM01E.ap.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Fri, 2016-04-22 at 14:52 +0000, Kanchanapally, Vidyullatha wrote:
+> 
+> > So I'm thinking something like
+> > 
+> > supported_on_all = iftype_ext_capab[0]
+> > for i in 1..num_iftype_ext_capab-1:
+> >    supported_on_all &= iftype_ext_capab[i]
 
-This patchset disables qdiscs for drivers
-using software queuing and performs fq_codel-like
-dequeuing on txqs.
+> >  WARN_ON(wiphy->ext_capa_mask & ~supported_on_all)
 
-This is based on net-next/master
-(035cd6ba53eff060760c4f4d11339fcc916a967c).
+> We were thinking whether this is an appropriate validation or not
+> since we cannot be sure how the Extended Capabilities are defined.
+> They need not necessarily be all positive capabilities, they could
+> couple both the positive and negative capabilities as well.
+> Please let us know if this change is really needed.
 
-For anyone interested I've pushed tree with my
-(now oldish) ath10k DQL RFC and a small fix I've
-been testing:
+I'm ambivalent about this. I don't think it makes sense to see drivers
+that register both, i.e. would result in the warning I suggested. I
+don't think *negative* capabilities can really be added, since the spec
+always assumes that capabilities that you don't list are zero.
 
-  https://github.com/kazikcz/linux/tree/fqmac-v4%2Bdqlrfc%2Bcpuregrfix
+In considering multi-bit values, you might have a point, if - for
+example - you had a MAX-MSDU-IN-AMSDU value of 0b11 for some
+interfaces, and 0b01 for all the others.
 
-Background:
+Realistically though, does that make sense?
 
-  https://www.spinics.net/lists/linux-wireless/msg149776.html
-  https://www.spinics.net/lists/linux-wireless/msg148714.html
-  https://www.spinics.net/lists/linux-wireless/msg149039.html
-  http://blog.cerowrt.org/post/dql_on_wifi_2/
-  http://blog.cerowrt.org/post/dql_on_wifi/
-  http://blog.cerowrt.org/post/fq_codel_on_ath10k/
+I would expect this to be the only multi-bit field that might ever be
+supported this way, since in the future drivers would likely only
+specify the current subset of capabilities in the wiphy ext_capab, and
+put all newer extensions into the per-iftype ext_capa, assuming that
+they're running on a newer supplicant.
 
+So on the whole, I don't really see a good reason to not do pretty much
+exactly the (pseudo)code I wrote above; perhaps you can come up with a
+better example than I tried?
 
-v4:
- * the taildrop stop-gap patch moved to
-   per-interface limit (instead of per-radio) [Johannes]
- * pushed fq.h and codel.h changes to include/net/ [Johannes]
-
-v3:
- * split taildrop, fq and codel functionalities
-   into separate patches [Avery]
-
-v2:
- * fix invalid ptr deref
- * fix compilation for backports
-
-
-Michal Kazior (5):
-  mac80211: skip netdev queue control with software queuing
-  mac80211: implement fair queueing per txq
-  mac80211: add debug knobs for fair queuing
-  mac80211: implement codel on fair queuing flows
-  mac80211: add debug knobs for codel
-
- include/net/mac80211.h        |  18 ++-
- net/mac80211/agg-tx.c         |   8 +-
- net/mac80211/debugfs.c        | 117 ++++++++++++++++
- net/mac80211/debugfs_netdev.c |  28 +++-
- net/mac80211/debugfs_sta.c    |  45 +++++++
- net/mac80211/ieee80211_i.h    |  31 ++++-
- net/mac80211/iface.c          |  26 ++--
- net/mac80211/main.c           |  10 +-
- net/mac80211/rx.c             |   2 +-
- net/mac80211/sta_info.c       |  14 +-
- net/mac80211/tx.c             | 302 ++++++++++++++++++++++++++++++++++++------
- net/mac80211/util.c           |  34 ++---
- 12 files changed, 532 insertions(+), 103 deletions(-)
-
--- 
-2.1.4
-
+johannes
