@@ -1,128 +1,179 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:42644 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:39662 "EHLO
 	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753920AbcEXFxH (ORCPT
+	with ESMTP id S1755986AbcECN6J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2016 01:53:07 -0400
-Message-ID: <1464069167.30665.23.camel@coelho.fi> (sfid-20160524_075313_001511_A30A6D87)
+	Tue, 3 May 2016 09:58:09 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: Ruben De Smet <ruben.de.smet@rubdos.be>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: linuxwifi@intel.com
-Date: Tue, 24 May 2016 08:52:47 +0300
-In-Reply-To: <59296a1e-7083-a131-ec7c-e1833d4b3c38@rubdos.be>
-References: <59296a1e-7083-a131-ec7c-e1833d4b3c38@rubdos.be>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Intel wifi card + TP-LINK AC1200 rev 1.2 = ???
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Date: Tue,  3 May 2016 16:58:00 +0300
+Message-Id: <1462283880-4666-1-git-send-email-luca@coelho.fi> (sfid-20160503_155815_875401_2A24B001)
+Subject: [PATCH] mac80211: allow software PS-Poll/U-APSD with AP_LINK_PS
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ruben,
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks for the detailed report!
+When using RSS, frames might not be processed in the correct order,
+and thus AP_LINK_PS must be used; most likely with firmware keeping
+track of the powersave state, this is the case in iwlwifi now.
 
-On Mon, 2016-05-23 at 21:08 +0200, Ruben De Smet wrote:
-> Hello,
-> 
-> My specs:
-> =========
-> 
-> Wireless Access Point:
-> ----------------------
-> TP-LINK AC1200 rev1.2
-> 
-> PC1 (my laptop)
-> ---
-> 
-> - Lenovo Thinkpad X250
-> - 03:00.0 Network controller: Intel Corporation Wireless 7265 (rev
-> 59)
-> - Arch Linux (4.6.0-rc6-mainline, I need to update)
-> - Confirm the bug under 4.5
-> 
-> PC2 (brother's laptop)
-> ---
-> Acer subnotebook
-> Intel 7250 (iirc)
-> Ubuntu 14.04 stock kernel
-> 
-> PC3 (htpc)
-> ---
-> Zotac HTPC (BI323)
-> 01:00.0 Network controller: Intel Corporation Wireless 3160 (rev 83)
-> Fedora 23 64 bit with boot-to-Kodi
-> 
-> 
-> Newly Ordered PC (cannot confirm yet, could possibly test windows):
-> ----------------
-> Lenovo Thinkpad T450
-> Intel 7/8250? Don't know yet, but I know it's Intel again.
-> Will run Ubuntu 16.04 or 14.04. Not sure yet
-> 
-> 
-> They all have in common:
-> ========================
-> - Linux, Intel wifi card and TP-LINK Archer AC router AC1200 rev 1.2.
-> 
-> 
-> The problem(s?):
-> ================
-> 
-> When near the TP-LINK access point, NetworkManager needs
-> reconfirmation
-> of password. On the htpc, this means loggin in on the console,
-> `nmtui`,
-> activate connection.
-> 
-> On the computers with DE, this means a dialog box opens asking for a
-> password, which is already filed. Pressing enter connects to the
-> network.
-> 
-> My laptop, as my brother's, tend to lose the connection now and then.
-> When I checked `dmesg`, it said to be "lowering the transmission
-> power
-> as requested by the accesspoint by -xdB" (not those exact words, I
-> can
-> retrigger the exact error though), before losing the connection some
-> seconds later.
-> 
-> Other tested (working) configurations:
-> - TP-LINK Archer C2 (which is without AC iirc)
-> - Good ol' Linksys WRT
-> - eduroam at my uni
-> - any other wifi point I've ever had access to.
-> - Tested another PC with a lot older (Intel) WiFi card (with AC):
-> same
-> issue.
-> 
-> Not tested:
-> - Windows (don't have any Windows pc with those cards near me atm)
-> 
-> I see two options here:
-> - TP-LINK bug
-> - Intel iwlwifi bug
-> 
-> Please advice on what I should test, which logs to send, ...
+In this case, the driver can use ieee80211_sta_ps_transition() to
+still have mac80211 manage powersave buffering. However, for U-APSD
+and PS-Poll this isn't sufficient. If the device can't manage that
+entirely on its own, mac80211's code should be used.
 
-This sounds like an interoperability issue between your AP (AC1200) and
-Intel's NICs.  Did you try any non-Intel NICs with the same AP?
+To allow this, export two functions: ieee80211_sta_uapsd_trigger()
+and ieee80211_sta_pspoll().
 
-The other AP you mentioned (Archer C2) also supports 802.11ac.  I have
-one and haven't had problems with it (I use OpenWRT in it, though).
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/mac80211.h | 27 +++++++++++++++++++
+ net/mac80211/rx.c      | 70 +++++++++++++++++++++++++++++++-------------------
+ 2 files changed, 71 insertions(+), 26 deletions(-)
 
-To go forward on this investigation, could you please create a bugzilla
-entry at bugzilla.kernel.org as described in our debugging wikipage[1]?
-Please provide at least dmesg and trace-cmd logs of the failing case to
-start with.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index ce2f6e3..be30b05 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3996,6 +3996,33 @@ static inline int ieee80211_sta_ps_transition_ni(struct ieee80211_sta *sta,
+ 	return ret;
+ }
+ 
++/**
++ * ieee80211_sta_pspoll - PS-Poll frame received
++ * @sta: currently connected station
++ *
++ * When operating in AP mode with the %IEEE80211_HW_AP_LINK_PS flag set,
++ * use this function to inform mac80211 that a PS-Poll frame from a
++ * connected station was received.
++ * This must be used in conjunction with ieee80211_sta_ps_transition()
++ * and possibly ieee80211_sta_uapsd_trigger(); calls to all three must
++ * be serialized.
++ */
++void ieee80211_sta_pspoll(struct ieee80211_sta *sta);
++
++/**
++ * ieee80211_sta_uapsd_trigger - (potential) U-APSD trigger frame received
++ * @sta: currently connected station
++ * @tid: TID of the received (potential) trigger frame
++ *
++ * When operating in AP mode with the %IEEE80211_HW_AP_LINK_PS flag set,
++ * use this function to inform mac80211 that a (potential) trigger frame
++ * from a connected station was received.
++ * This must be used in conjunction with ieee80211_sta_ps_transition()
++ * and possibly ieee80211_sta_pspoll(); calls to all three must be
++ * serialized.
++ */
++void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *sta, u8 tid);
++
+ /*
+  * The TX headroom reserved by mac80211 for its own tx_status functions.
+  * This is enough for the radiotap header.
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c567870..5e65e83 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1319,13 +1319,52 @@ int ieee80211_sta_ps_transition(struct ieee80211_sta *pubsta, bool start)
+ }
+ EXPORT_SYMBOL(ieee80211_sta_ps_transition);
+ 
++void ieee80211_sta_pspoll(struct ieee80211_sta *pubsta)
++{
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
++
++	if (test_sta_flag(sta, WLAN_STA_SP))
++		return;
++
++	if (!test_sta_flag(sta, WLAN_STA_PS_DRIVER))
++		ieee80211_sta_ps_deliver_poll_response(sta);
++	else
++		set_sta_flag(sta, WLAN_STA_PSPOLL);
++}
++EXPORT_SYMBOL(ieee80211_sta_pspoll);
++
++void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
++{
++	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
++	u8 ac = ieee802_1d_to_ac[tid & 7];
++
++	/*
++	 * If this AC is not trigger-enabled do nothing.
++	 *
++	 * NB: This could/should check a separate bitmap of trigger-
++	 * enabled queues, but for now we only implement uAPSD w/o
++	 * TSPEC changes to the ACs, so they're always the same.
++	 */
++	if (!(sta->sta.uapsd_queues & BIT(ac)))
++		return;
++
++	/* if we are in a service period, do nothing */
++	if (test_sta_flag(sta, WLAN_STA_SP))
++		return;
++
++	if (!test_sta_flag(sta, WLAN_STA_PS_DRIVER))
++		ieee80211_sta_ps_deliver_uapsd(sta);
++	else
++		set_sta_flag(sta, WLAN_STA_UAPSD);
++}
++EXPORT_SYMBOL(ieee80211_sta_uapsd_trigger);
++
+ static ieee80211_rx_result debug_noinline
+ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
+ {
+ 	struct ieee80211_sub_if_data *sdata = rx->sdata;
+ 	struct ieee80211_hdr *hdr = (void *)rx->skb->data;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
+-	int tid, ac;
+ 
+ 	if (!rx->sta)
+ 		return RX_CONTINUE;
+@@ -1351,12 +1390,7 @@ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
+ 		return RX_CONTINUE;
+ 
+ 	if (unlikely(ieee80211_is_pspoll(hdr->frame_control))) {
+-		if (!test_sta_flag(rx->sta, WLAN_STA_SP)) {
+-			if (!test_sta_flag(rx->sta, WLAN_STA_PS_DRIVER))
+-				ieee80211_sta_ps_deliver_poll_response(rx->sta);
+-			else
+-				set_sta_flag(rx->sta, WLAN_STA_PSPOLL);
+-		}
++		ieee80211_sta_pspoll(&rx->sta->sta);
+ 
+ 		/* Free PS Poll skb here instead of returning RX_DROP that would
+ 		 * count as an dropped frame. */
+@@ -1368,27 +1402,11 @@ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
+ 		   ieee80211_has_pm(hdr->frame_control) &&
+ 		   (ieee80211_is_data_qos(hdr->frame_control) ||
+ 		    ieee80211_is_qos_nullfunc(hdr->frame_control))) {
+-		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+-		ac = ieee802_1d_to_ac[tid & 7];
++		u8 tid;
+ 
+-		/*
+-		 * If this AC is not trigger-enabled do nothing.
+-		 *
+-		 * NB: This could/should check a separate bitmap of trigger-
+-		 * enabled queues, but for now we only implement uAPSD w/o
+-		 * TSPEC changes to the ACs, so they're always the same.
+-		 */
+-		if (!(rx->sta->sta.uapsd_queues & BIT(ac)))
+-			return RX_CONTINUE;
+-
+-		/* if we are in a service period, do nothing */
+-		if (test_sta_flag(rx->sta, WLAN_STA_SP))
+-			return RX_CONTINUE;
++		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+ 
+-		if (!test_sta_flag(rx->sta, WLAN_STA_PS_DRIVER))
+-			ieee80211_sta_ps_deliver_uapsd(rx->sta);
+-		else
+-			set_sta_flag(rx->sta, WLAN_STA_UAPSD);
++		ieee80211_sta_uapsd_trigger(&rx->sta->sta, tid);
+ 	}
+ 
+ 	return RX_CONTINUE;
+-- 
+2.8.0.rc3
 
-Additionally, you could capture sniffer logs with one of your devices
-while the other is having trouble so we can see what is going on.  Let
-us know if you need help with that.
-
-[1] https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
-
---
-Cheers,
-Luca.
-> 
