@@ -1,80 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36844 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752270AbcEZHkp (ORCPT
+Received: from mail-yw0-f182.google.com ([209.85.161.182]:36280 "EHLO
+	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756396AbcECUhO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2016 03:40:45 -0400
-Received: by mail-pf0-f194.google.com with SMTP id g132so1368592pfb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2016 00:40:45 -0700 (PDT)
-From: Prasun Maiti <prasunmaiti87@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel
-Date: Thu, 26 May 2016 13:10:32 +0530
-Message-Id: <1464248432-12595-1-git-send-email-prasunmaiti87@gmail.com> (sfid-20160526_094100_383531_600FB398)
+	Tue, 3 May 2016 16:37:14 -0400
+From: Kangjie Lu <kangjielu@gmail.com>
+To: johannes@sipsolutions.net
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Kangjie Lu <kjlu@gatech.edu>
+Subject: [PATCH] fix infoleak in wireless
+Date: Tue,  3 May 2016 16:40:13 -0400
+Message-Id: <1462308013-6032-1-git-send-email-kjlu@gatech.edu> (sfid-20160503_223744_418372_19D84B29)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwpriv app uses iw_point structure to send data to Kernel. The iw_point
-structure holds a pointer. For compatibility Kernel converts the pointer
-as required for WEXT IOCTLs (SIOCIWFIRST to SIOCIWLAST). Some drivers
-may use iw_handler_def.private_args to populate iwpriv commands instead
-of iw_handler_def.private. For those case, the IOCTLs from
-SIOCIWFIRSTPRIV to SIOCIWLASTPRIV will follow the path ndo_do_ioctl().
-Accordingly when the filled up iw_point structure comes from 32 bit
-iwpriv to 64 bit Kernel, Kernel will not convert the pointer and sends
-it to driver. So, the driver may get the invalid data.
+The 6-bytes array “mac_addr” is not initialized in the dump_station
+implementations of “drivers/staging/wilc1000/wilc_wfi_cfgoperations.c”
+and “drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c”, so all 6
+bytes may be leaked.
 
-The pointer conversion for the IOCTLs (SIOCIWFIRSTPRIV to
-SIOCIWLASTPRIV), which follow the path ndo_do_ioctl(), is mandatory.
-This patch adds pointer conversion from 32 bit to 64 bit and vice versa,
-if the ioctl comes from 32 bit iwpriv to 64 bit Kernel.
-
-Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
-Tested-by: Dibyajyoti Ghosh <dibyajyotig@gmail.com>
+Signed-off-by: Kangjie Lu <kjlu@gatech.edu>
 ---
- net/wireless/wext-core.c | 26 ++++++++++++++++++++++++--
- 1 file changed, 24 insertions(+), 2 deletions(-)
+ net/wireless/nl80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -955,8 +955,30 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 			return private(dev, iwr, cmd, info, handler);
- 	}
- 	/* Old driver API : call driver ioctl handler */
--	if (dev->netdev_ops->ndo_do_ioctl)
--		return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
-+	if (dev->netdev_ops->ndo_do_ioctl) {
-+		if ((info->flags & IW_REQUEST_FLAG_COMPAT) &&
-+				(cmd >= SIOCIWFIRSTPRIV && cmd <= SIOCIWLASTPRIV)) {
-+			int ret = 0;
-+			struct compat_iw_point *iwp_compat = (struct compat_iw_point *) &iwr->u.data;
-+			struct iw_point *iwp = &iwr->u.data;
-+			__u16 length = iwp_compat->length, flags = iwp_compat->flags;
-+
-+			iwp->pointer = compat_ptr(iwp_compat->pointer);
-+			iwp->length = length;
-+			iwp->flags = flags;
-+
-+			ret = dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
-+
-+			length = iwp->length;
-+			flags = iwp->flags;
-+			iwp_compat->pointer = ptr_to_compat(iwp->pointer);
-+			iwp_compat->length = length;
-+			iwp_compat->flags = flags;
-+			return ret;
-+		} else {
-+			return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
-+		}
-+	}
- 	return -EOPNOTSUPP;
- }
-
---
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 056a730..2e92d14 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3905,6 +3905,7 @@ static int nl80211_dump_station(struct sk_buff *skb,
+ 
+ 	while (1) {
+ 		memset(&sinfo, 0, sizeof(sinfo));
++		eth_zero_addr(mac_addr);
+ 		err = rdev_dump_station(rdev, wdev->netdev, sta_idx,
+ 					mac_addr, &sinfo);
+ 		if (err == -ENOENT)
+-- 
 1.9.1
 
