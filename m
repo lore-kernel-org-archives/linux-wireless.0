@@ -1,32 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48653 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754400AbcESMk6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2016 08:40:58 -0400
-Date: Thu, 19 May 2016 14:38:57 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] iwlegacy: avoid warning about missing braces
-Message-ID: <20160519123856.GA23657@redhat.com> (sfid-20160519_144123_599046_2230896A)
-References: <1463644741-529379-1-git-send-email-arnd@arndb.de>
+Received: from mail-yw0-f176.google.com ([209.85.161.176]:33412 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756255AbcECTu2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2016 15:50:28 -0400
+Received: by mail-yw0-f176.google.com with SMTP id t10so41187003ywa.0
+        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2016 12:50:27 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1463644741-529379-1-git-send-email-arnd@arndb.de>
+In-Reply-To: <1462304144.10444.13.camel@sipsolutions.net>
+References: <CABPxzYLtu53V79O--eDJEdRfn-zw3Wq9Po04F=uFp_FrfJjuiA@mail.gmail.com>
+ <1462281243.2251.2.camel@sipsolutions.net> <CABPxzYJjRMMaUn+zzpzm8Zv8XAn8nfA8FgMTr7bkZve3XWs8ow@mail.gmail.com>
+ <CABPxzYKj-0kaBP6BYQvcTYZtaTTbtc0nR-=69qC9eCDDJoXxaA@mail.gmail.com>
+ <1462291262.2251.4.camel@sipsolutions.net> <CABPxzY+JXre1SzGyqmwYhTw9BB_-PfR02basW0WS34wZKpxK7g@mail.gmail.com>
+ <CALhHN=pxE2+dHxKLvsdWDt7fZ-FwYSUzps6hWB9m7dmZbFytgg@mail.gmail.com> <1462304144.10444.13.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 4 May 2016 01:20:07 +0530
+Message-ID: <CABPxzYL9ezhovark83mnSVkh7H3XQJjNU+XjvEHdMses6N3FBA@mail.gmail.com> (sfid-20160503_215030_852751_2A7630F3)
+Subject: Re: dynamic ps + offchannel mgmt_tx + HW RoC
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 19, 2016 at 09:58:49AM +0200, Arnd Bergmann wrote:
-> gcc-6 warns about code in il3945_hw_txq_ctx_free() being
-> somewhat ambiguous:
-> 
-> drivers/net/wireless/intel/iwlegacy/3945.c:1022:5: warning: suggest explicit braces to avoid ambiguous 'else' [-Wparentheses]
-> 
-> This adds a set of curly braces to avoid the warning.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On Wed, May 4, 2016 at 1:05 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> There is, btw, perhaps a different way - just fix the damn stuff.
+>
+> Requires moving everything into ifmgd rather than local, and then
+> perhaps if only a single managed interface exists mirroring its state
+> into the existing driver calls etc.
+>
+> It'd still be a big task, and I don't see much advantage over just
+> reimplementing it.
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Yes, requires quite an effort and also need to handle lot of cases.
+Instead, why don't we make the default as complete PS offload
+and force the drivers who need to use mac80211 PS negate these
+in the register_hw? That way we are clear about the intentions.
+
+-- 
+Thanks,
+Regards,
+Chaitanya T K.
