@@ -1,34 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:2048 "EHLO mail.neratec.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:34795 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751581AbcEXTFK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2016 15:05:10 -0400
-Subject: Re: AP statistics
-To: "Pukitis, Martins" <martins.pukitis@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <22AF109346512440A803B8D2E69399ECA7AA7E@IRSMSX103.ger.corp.intel.com>
-From: Matthias May <matthias.may@neratec.com>
-Message-ID: <5744A3B6.6000602@neratec.com> (sfid-20160524_210514_832801_EA7617A2)
-Date: Tue, 24 May 2016 20:55:50 +0200
-MIME-Version: 1.0
-In-Reply-To: <22AF109346512440A803B8D2E69399ECA7AA7E@IRSMSX103.ger.corp.intel.com>
-Content-Type: text/plain; charset=windows-1252
+	id S932903AbcECNOH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2016 09:14:07 -0400
+Message-ID: <1462281243.2251.2.camel@sipsolutions.net> (sfid-20160503_151411_912191_4AA8C343)
+Subject: Re: dynamic ps + offchannel mgmt_tx + HW RoC
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 03 May 2016 15:14:03 +0200
+In-Reply-To: <CABPxzYLtu53V79O--eDJEdRfn-zw3Wq9Po04F=uFp_FrfJjuiA@mail.gmail.com> (sfid-20160503_145337_966449_6F26A629)
+References: <CABPxzYLtu53V79O--eDJEdRfn-zw3Wq9Po04F=uFp_FrfJjuiA@mail.gmail.com>
+	 (sfid-20160503_145337_966449_6F26A629)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 05/24/2016 05:29 PM, Pukitis, Martins wrote:
-> Hi.
-> Is there cfg80211 API for getting AP statistics (bytes sent/received, packets sent/received/dropped)? I know there is "get_station", but it reads per station statistics. Stations may disconnect, hence you can't just sum together all station statistics to get per AP statistics.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On Tue, 2016-05-03 at 18:23 +0530, Krishna Chaitanya wrote:
+> Hi,
 > 
+> When the HW is in PS and Dynamic PS is enabled we are dropping
+> all the offchannel frames. Sequence is as below
+> 
+> if hw is in PS: stop_queues reason=PS, queue dynamic_ps_disable_work
+> send Offchannel mgmt_tx
+> drop the packet because offchanel + stop_reasons[q] !=0
+> 
+> How should we handle this? SW RoC is handling this
+> by checking for offchannel and bringing the HW out of PS before
+> handing the packet to TX path, so it works fine.
 
-ethtool -S wlan0
-should do the trick
+You should handle this by not doing such a non-sensical thing and
+finally implementing powersave properly in the driver :)
 
-BR
-Matthias
+johannes
