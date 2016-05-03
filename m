@@ -1,253 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sitav-80046.hsr.ch ([152.96.80.46]:44049 "EHLO
-	mail.strongswan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751363AbcENIex (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:33463 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756537AbcECXFP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2016 04:34:53 -0400
-From: Martin Willi <martin@strongswan.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] mac80211_hwsim: Allow wmediumd to attach to radios created in its netns
-Date: Sat, 14 May 2016 10:34:44 +0200
-Message-Id: <1463214884-5983-1-git-send-email-martin@strongswan.org> (sfid-20160514_103523_233423_FEBCCBB8)
+	Tue, 3 May 2016 19:05:15 -0400
+Date: Tue, 3 May 2016 16:05:13 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Kangjie Lu <kangjielu@gmail.com>
+Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	linux-wireless@vger.kernel.org, evel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, taesoo@gatech.edu, insu@gatech.edu,
+	csong84@gatech.edu, Kangjie Lu <kjlu@gatech.edu>
+Subject: Re: [PATCH] fix infoleak in ioctl_cfg80211
+Message-ID: <20160503230513.GA15078@kroah.com> (sfid-20160504_010534_069950_E9090FED)
+References: <1462313506-7742-1-git-send-email-kjlu@gatech.edu>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1462313506-7742-1-git-send-email-kjlu@gatech.edu>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Registering wmediumd is currently limited to the initial network
-namespace. This patch enables wmediumd to attach from non-initial
-network namespaces using a user namespace having CAP_NET_ADMIN. A
-registered wmediumd can forward frames on radios that have been created
-in the same network namespace, even if they have been moved to other
-network namespaces.
+On Tue, May 03, 2016 at 06:11:46PM -0400, Kangjie Lu wrote:
+> "mac" is an array allocated in stack without being initialized,
+> and will be sent out via "nla_put". The dump_station() is supposed
+> to initialize the mac address; otherwise, sensitive data in kernel
+> stack will be leaked. To fix this, either initialize it (e.g.,
+> memset) or completely remove this dump_station().
+> 
+> Signed-off-by: Kangjie Lu <kjlu@gatech.edu>
+> ---
+>  drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+> index 12d1844..44a1582 100644
+> --- a/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+> +++ b/drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c
+> @@ -2926,6 +2926,7 @@ static int cfg80211_rtw_dump_station(struct wiphy *wiphy,
+>  
+>  	/* TODO: dump scanned queue */
+>  
+> +	memset(mac, 0, ETH_ALEN);
+>  	return -ENOENT;
+>  }
 
-The wmediumd Netlink portid is tracked per net namespace. Additionally,
-the portid is stored on all radios created in that net namespace to
-simplify the portid lookup in the data path.
+This isn't needed, as it returns -ENOENT and so mac never gets used.
 
-Signed-off-by: Martin Willi <martin@strongswan.org>
----
- drivers/net/wireless/mac80211_hwsim.c | 92 +++++++++++++++++++++++++++++------
- 1 file changed, 76 insertions(+), 16 deletions(-)
+thanks,
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index a16cd0c..5bb9f0a 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -41,8 +41,6 @@ MODULE_AUTHOR("Jouni Malinen");
- MODULE_DESCRIPTION("Software simulator of 802.11 radio(s) for mac80211");
- MODULE_LICENSE("GPL");
- 
--static u32 wmediumd_portid;
--
- static int radios = 2;
- module_param(radios, int, 0444);
- MODULE_PARM_DESC(radios, "Number of simulated radios");
-@@ -258,6 +256,7 @@ static int hwsim_netgroup;
- 
- struct hwsim_net {
- 	int netgroup;
-+	u32 wmediumd;
- };
- 
- static inline int hwsim_net_get_netgroup(struct net *net)
-@@ -274,6 +273,20 @@ static inline void hwsim_net_set_netgroup(struct net *net)
- 	hwsim_net->netgroup = hwsim_netgroup++;
- }
- 
-+static inline u32 hwsim_net_get_wmediumd(struct net *net)
-+{
-+	struct hwsim_net *hwsim_net = net_generic(net, hwsim_net_id);
-+
-+	return hwsim_net->wmediumd;
-+}
-+
-+static inline void hwsim_net_set_wmediumd(struct net *net, u32 portid)
-+{
-+	struct hwsim_net *hwsim_net = net_generic(net, hwsim_net_id);
-+
-+	hwsim_net->wmediumd = portid;
-+}
-+
- static struct class *hwsim_class;
- 
- static struct net_device *hwsim_mon; /* global monitor netdev */
-@@ -552,6 +565,8 @@ struct mac80211_hwsim_data {
- 
- 	/* group shared by radios created in the same netns */
- 	int netgroup;
-+	/* wmediumd portid responsile for netgroup of this radio */
-+	u32 wmediumd;
- 
- 	int power_level;
- 
-@@ -983,6 +998,29 @@ static bool hwsim_ps_rx_ok(struct mac80211_hwsim_data *data,
- 	return true;
- }
- 
-+static int hwsim_unicast_netgroup(struct mac80211_hwsim_data *data,
-+				  struct sk_buff *skb, int portid)
-+{
-+	struct net *net;
-+	bool found = false;
-+	int res = -ENOENT;
-+
-+	rcu_read_lock();
-+	for_each_net_rcu(net) {
-+		if (data->netgroup == hwsim_net_get_netgroup(net)) {
-+			res = genlmsg_unicast(net, skb, portid);
-+			found = true;
-+			break;
-+		}
-+	}
-+	rcu_read_unlock();
-+
-+	if (!found)
-+		nlmsg_free(skb);
-+
-+	return res;
-+}
-+
- static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 				       struct sk_buff *my_skb,
- 				       int dst_portid)
-@@ -1062,7 +1100,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
- 		goto nla_put_failure;
- 
- 	genlmsg_end(skb, msg_head);
--	if (genlmsg_unicast(&init_net, skb, dst_portid))
-+	if (hwsim_unicast_netgroup(data, skb, dst_portid))
- 		goto err_free_txskb;
- 
- 	/* Enqueue the packet */
-@@ -1355,7 +1393,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
- 	mac80211_hwsim_monitor_rx(hw, skb, channel);
- 
- 	/* wmediumd mode check */
--	_portid = ACCESS_ONCE(wmediumd_portid);
-+	_portid = ACCESS_ONCE(data->wmediumd);
- 
- 	if (_portid)
- 		return mac80211_hwsim_tx_frame_nl(hw, skb, _portid);
-@@ -1451,7 +1489,8 @@ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
- 				    struct sk_buff *skb,
- 				    struct ieee80211_channel *chan)
- {
--	u32 _pid = ACCESS_ONCE(wmediumd_portid);
-+	struct mac80211_hwsim_data *data = hw->priv;
-+	u32 _pid = ACCESS_ONCE(data->wmediumd);
- 
- 	if (ieee80211_hw_check(hw, SUPPORTS_RC_TABLE)) {
- 		struct ieee80211_tx_info *txi = IEEE80211_SKB_CB(skb);
-@@ -2796,6 +2835,20 @@ static struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(const u8 *addr)
- 	return data;
- }
- 
-+static void hwsim_register_wmediumd(struct net *net, u32 portid)
-+{
-+	struct mac80211_hwsim_data *data;
-+
-+	hwsim_net_set_wmediumd(net, portid);
-+
-+	spin_lock_bh(&hwsim_radio_lock);
-+	list_for_each_entry(data, &hwsim_radios, list) {
-+		if (data->netgroup == hwsim_net_get_netgroup(net))
-+			data->wmediumd = portid;
-+	}
-+	spin_unlock_bh(&hwsim_radio_lock);
-+}
-+
- static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 					   struct genl_info *info)
- {
-@@ -2811,9 +2864,6 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	int i;
- 	bool found = false;
- 
--	if (info->snd_portid != wmediumd_portid)
--		return -EINVAL;
--
- 	if (!info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER] ||
- 	    !info->attrs[HWSIM_ATTR_FLAGS] ||
- 	    !info->attrs[HWSIM_ATTR_COOKIE] ||
-@@ -2829,6 +2879,12 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	if (!data2)
- 		goto out;
- 
-+	if (hwsim_net_get_netgroup(genl_info_net(info)) != data2->netgroup)
-+		goto out;
-+
-+	if (info->snd_portid != data2->wmediumd)
-+		goto out;
-+
- 	/* look for the skb matching the cookie passed back from user */
- 	skb_queue_walk_safe(&data2->pending, skb, tmp) {
- 		u64 skb_cookie;
-@@ -2892,9 +2948,6 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	void *frame_data;
- 	struct sk_buff *skb = NULL;
- 
--	if (info->snd_portid != wmediumd_portid)
--		return -EINVAL;
--
- 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
- 	    !info->attrs[HWSIM_ATTR_FRAME] ||
- 	    !info->attrs[HWSIM_ATTR_RX_RATE] ||
-@@ -2920,6 +2973,12 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
- 	if (!data2)
- 		goto out;
- 
-+	if (hwsim_net_get_netgroup(genl_info_net(info)) != data2->netgroup)
-+		goto out;
-+
-+	if (info->snd_portid != data2->wmediumd)
-+		goto out;
-+
- 	/* check if radio is configured properly */
- 
- 	if (data2->idle || !data2->started)
-@@ -2966,6 +3025,7 @@ out:
- static int hwsim_register_received_nl(struct sk_buff *skb_2,
- 				      struct genl_info *info)
- {
-+	struct net *net = genl_info_net(info);
- 	struct mac80211_hwsim_data *data;
- 	int chans = 1;
- 
-@@ -2982,10 +3042,10 @@ static int hwsim_register_received_nl(struct sk_buff *skb_2,
- 	if (chans > 1)
- 		return -EOPNOTSUPP;
- 
--	if (wmediumd_portid)
-+	if (hwsim_net_get_wmediumd(net))
- 		return -EBUSY;
- 
--	wmediumd_portid = info->snd_portid;
-+	hwsim_register_wmediumd(net, info->snd_portid);
- 
- 	printk(KERN_DEBUG "mac80211_hwsim: received a REGISTER, "
- 	       "switching to wmediumd mode with pid %d\n", info->snd_portid);
-@@ -3152,7 +3212,7 @@ static const struct genl_ops hwsim_ops[] = {
- 		.cmd = HWSIM_CMD_REGISTER,
- 		.policy = hwsim_genl_policy,
- 		.doit = hwsim_register_received_nl,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 	},
- 	{
- 		.cmd = HWSIM_CMD_FRAME,
-@@ -3218,10 +3278,10 @@ static int mac80211_hwsim_netlink_notify(struct notifier_block *nb,
- 
- 	remove_user_radios(notify->portid);
- 
--	if (notify->portid == wmediumd_portid) {
-+	if (notify->portid == hwsim_net_get_wmediumd(notify->net)) {
- 		printk(KERN_INFO "mac80211_hwsim: wmediumd released netlink"
- 		       " socket, switching to perfect channel medium\n");
--		wmediumd_portid = 0;
-+		hwsim_register_wmediumd(notify->net, 0);
- 	}
- 	return NOTIFY_DONE;
- 
--- 
-2.7.4
-
+greg k-h
