@@ -1,89 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38744 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44353 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753160AbcEPOJI (ORCPT
+	with ESMTP id S1755924AbcECKH4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2016 10:09:08 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	luciano.coelho@intel.com, emmanuel.grumbach@intel.com
-Subject: Re: pull-request: wireless-drivers-next 2016-05-13
-In-Reply-To: <87wpmu87ns.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Mon, 16 May 2016 16:16:39 +0300")
-References: <87oa8ab3eo.fsf@kamboji.qca.qualcomm.com>
-	<87wpmu87ns.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 16 May 2016 17:08:53 +0300
-Message-ID: <87futi858q.fsf@kamboji.qca.qualcomm.com> (sfid-20160516_160912_541733_9E4033BD)
+	Tue, 3 May 2016 06:07:56 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [01/11] rtl8xxxu: Rename rtl8xxxu.c to rtl8xxxu_core.c
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1461871155-11826-2-git-send-email-Jes.Sorensen@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Message-Id: <20160503100755.404106130F@smtp.codeaurora.org> (sfid-20160503_120814_384009_E6593576)
+Date: Tue,  3 May 2016 10:07:55 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
 
-> Kalle Valo <kvalo@codeaurora.org> writes:
->
->> The following changes since commit ede00a5ceb4d903a8c137a52bb77d574baaef8bd:
->>
->>   Merge tag 'wireless-drivers-next-for-davem-2016-05-02' of git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next (2016-05-03 00:35:16 -0400)
->>
->> are available in the git repository at:
->>
->>
->>   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2016-05-13
->
-> Please don't pull this yet, there might be something wrong now with
-> merges and need to check that first.
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> This renames the core file to rtl8xxxu_core.c in order to allow us to
+> keep the module nake rtl8xxxu.ko when refactoring the code into
+> multiple files.
+> 
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Ok, like discussed in thread "linux-next: manual merge of the
-wireless-drivers-next tree with the net-next tree" there seems to be a
-problem on net-next in function iwl_mvm_set_tx_cmd(). Here is how I
-propose to fix this.
+Thanks, 11 patches applied to wireless-drivers-next.git:
 
-When pulling the tag above you should get a conflict like this:
+6c60e65cd092 rtl8xxxu: Rename rtl8xxxu.c to rtl8xxxu_core.c
+599119f683e6 rtl8xxxu: move rtl8192e related code into rtl8xxxu_8192e.c
+6c46ca3b5f3b rtl8xxxu: move rtl8723b related code into rtl8xxxu_8723b.c
+20e3b2e97edd rtl8xxxu: move rtl8723a related code into rtl8xxxu_8723a.c
+181725dd4f33 rtl8xxxu: move rtl8188[cr] and rtl8192c related code into rtl8xxxu_8192c.c
+97db5a87b0f0 rtl8xxxu: Rename rtl8723a_stop_tx_beacon() to rtl8xxxu_stop_tx_beacon()
+a46b099ca730 rtl8xxxu: rename rtl8723a_channel_group() to rtl8xxxu_gen1_channel_to_group()
+993dd9b425f5 rtl8xxxu: Rename rtl8723a_disabled_to_emu() to rtl8xxxu_disabled_to_emu()
+9c0343d4f48b rtl8xxxu: Split rtl8723a_h2c_cmd() into a gen1 and a gen2 version
+27c7e89ea77b rtl8xxxu: rtl8xxxu_prepare_calibrate() is never used on gen1
+e1ca790c8a32 rtl8xxxu: Remove the now obsolete mbox_ext_reg info from rtl8xxxu_fileops
 
-diff --cc drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 880210917a6f,779bafcbc9a1..000000000000
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@@ -294,7 -295,7 +294,11 @@@ void iwl_mvm_set_tx_cmd(struct iwl_mvm 
-        tx_cmd->tx_flags = cpu_to_le32(tx_flags);
-        /* Total # bytes to be transmitted */
-        tx_cmd->len = cpu_to_le16((u16)skb->len +
-++<<<<<<< HEAD
- +              (uintptr_t)info->driver_data[0]);
-++=======
-+               (uintptr_t)skb_info->driver_data[0]);
-++>>>>>>> master
-        tx_cmd->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
-        tx_cmd->sta_id = sta_id;
-
-Pick the latter with skb_info and then add skb_info to the beginning of
-the same function. So the function should be:
-
-void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
-			struct iwl_tx_cmd *tx_cmd,
-			struct ieee80211_tx_info *info, u8 sta_id)
-{
-	struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
-	struct ieee80211_hdr *hdr = (void *)skb->data;
-	__le16 fc = hdr->frame_control;
-	u32 tx_flags = le32_to_cpu(tx_cmd->tx_flags);
-	u32 len = skb->len + FCS_LEN;
-	u8 ac;
-
-[...]
-
-	tx_cmd->tx_flags = cpu_to_le32(tx_flags);
-	/* Total # bytes to be transmitted */
-	tx_cmd->len = cpu_to_le16((u16)skb->len +
-		(uintptr_t)skb_info->driver_data[0]);
-	tx_cmd->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
-	tx_cmd->sta_id = sta_id;
-
-Sorry about the hassle and please let me know if you have any problems.
-Adding Luca and Emmanuel just in case I missed something.
-
--- 
 Kalle Valo
