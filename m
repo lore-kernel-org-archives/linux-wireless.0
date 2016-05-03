@@ -1,57 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sitav-80046.hsr.ch ([152.96.80.46]:33178 "EHLO
-	mail.strongswan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751705AbcEIQdI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 12:33:08 -0400
-Message-ID: <1462811585.18382.22.camel@strongswan.org> (sfid-20160509_183314_028009_469D278A)
-Subject: Re: [PATCH 2/2] mac80211_hwsim: Allow managing radios from
- non-initial namespaces
-From: Martin Willi <martin@strongswan.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 09 May 2016 18:33:05 +0200
-In-Reply-To: <1462779045.30690.2.camel@sipsolutions.net>
-References: <1462258398-6749-1-git-send-email-martin@strongswan.org>
-	 <1462258398-6749-3-git-send-email-martin@strongswan.org>
-	 <1462302992.10444.11.camel@sipsolutions.net>
-	 <1462350799.2546.31.camel@strongswan.org>
-	 <1462779045.30690.2.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:37227 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756181AbcECUks (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 3 May 2016 16:40:48 -0400
+Message-ID: <1462308044.10444.19.camel@sipsolutions.net> (sfid-20160503_224110_363527_1FAE6E86)
+Subject: Re: [PATCH] fix infoleak in wireless
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kangjie Lu <kangjielu@gmail.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Kangjie Lu <kjlu@gatech.edu>
+Date: Tue, 03 May 2016 22:40:44 +0200
+In-Reply-To: <1462308013-6032-1-git-send-email-kjlu@gatech.edu> (sfid-20160503_223714_829563_B6EE96BB)
+References: <1462308013-6032-1-git-send-email-kjlu@gatech.edu>
+	 (sfid-20160503_223714_829563_B6EE96BB)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, 2016-05-03 at 16:40 -0400, Kangjie Lu wrote:
+> The 6-bytes array “mac_addr” is not initialized in the dump_station
+> implementations of
+> “drivers/staging/wilc1000/wilc_wfi_cfgoperations.c”
+> and “drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c”, so all 6
+> bytes may be leaked.
 
-> > Moving the radio back to the creators namespace would be the most
-> > consistent behavior, so I'll check how difficult such a reverse
-> > lookup is. We then would delete the radio only if it is in the
-> > creators namespace, or if the creators namespace is gone. Does that
-> > make sense?
+Like I said to you before, this makes those implementations completely
+broken. I'm not going to apply this patch. If you want, feel free to
+send patches to Greg to remove those dump_station implementations that
+are completely broken and that can never do anything useful.
 
-> It does make sense, but it does also feel a bit complicated. 
-
-Yes, and proper locking gets difficult when using cfg80211_set_netns(),
-which can sleep. This would probably need larger changes in the locking
-code, but that's IMO not worth the effort.
-
-> Perhaps just special-case the init_net case for consistency with the
-> existing behaviour, and reserve netgroup 0 for that so we can easily
-> check for it?
-
-I'll do that in a v2, following immediately.
-
-> > I suspect you should be defining a structure that currently 
-> > contains one integer member. Something (maybe a compile time 
-> > assert) needs to check that buffer space you are accessing (where 
-> > ever it is) is large enough.
-> 
-> It does look a bit awkward, but there's no value in having a struct -
-> you still have an opaque pointer here and cast it to something whose
-> size you assume to be present... it really makes no difference.
-
-I agree there is no added safety when using a struct; Nonetheless have
-I added one in v2, and is it just for any future member additions.
-
-Best regards
-Martin
+johannes
