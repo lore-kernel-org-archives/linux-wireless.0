@@ -1,42 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:57077 "EHLO
-	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753231AbcECTlz (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:39616 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932762AbcECNFO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 15:41:55 -0400
-Message-Id: <a99f9851b2b0e26d0b8af41a16815d5e28beb217.1462285455.git.lukas@wunner.de> (sfid-20160503_214158_359711_D424D054)
-From: Lukas Wunner <lukas@wunner.de>
-Date: Tue, 3 May 2016 21:44:40 +0200
-Subject: [PATCH] mwifiex: Drop unnecessary include pcieport_if.h
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
+	Tue, 3 May 2016 09:05:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  3 May 2016 16:05:02 +0300
+Message-Id: <1462280702-20438-1-git-send-email-luca@coelho.fi> (sfid-20160503_150519_283240_1E2D82C5)
+Subject: [PATCH] mac80211: remove disconnected APs from BSS table
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This header file is only needed for drivers binding to a PCI bridge
-device allocated by drivers/pci/pcie/portdrv_core.c. The mwifiex driver
-doesn't do that nor use any symbols defined in pcieport_if.h.
+From: David Spinadel <david.spinadel@intel.com>
 
-Cc: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+In some cases, after a sudden AP disappearing and reconnection to
+another AP in the same ESS, user space gets the old AP in scan
+results (cached). User space may decide to roam to that old AP
+which will cause a disconnection and longer recovery.
+Remove APs that are probably out of range from BSS table.
+
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.h | 1 -
- 1 file changed, 1 deletion(-)
+ net/mac80211/mlme.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 6fc2873..1ccd5ad 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -23,7 +23,6 @@
- #define	_MWIFIEX_PCIE_H
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 885f4ca..8d426f6 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -2399,6 +2399,11 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
+ 		return;
+ 	}
  
- #include    <linux/pci.h>
--#include    <linux/pcieport_if.h>
- #include    <linux/interrupt.h>
- 
- #include    "main.h"
++	/* AP is probably out of range (or not reachable for another reason) so
++	 * remove the bss struct for that AP.
++	 */
++	cfg80211_unlink_bss(local->hw.wiphy, ifmgd->associated);
++
+ 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
+ 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
+ 			       true, frame_buf);
 -- 
 2.8.0.rc3
 
