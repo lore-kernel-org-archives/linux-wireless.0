@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2494 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449AbcEBPxA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2016 11:53:00 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH v3 RESEND 2/2] ath10k: Remove debugfs support for Per STA total rx duration
-Date: Mon, 2 May 2016 21:23:30 +0530
-Message-ID: <1462204410-31125-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160502_175305_339756_D6813FAF)
+Received: from mga14.intel.com ([192.55.52.115]:13371 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755010AbcEDSOk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2016 14:14:40 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>
+Subject: pull request: iwlwifi 2016-05-04
+Date: Wed, 4 May 2016 18:13:18 +0000
+Message-ID: <1462385598.16756.9.camel@intel.com> (sfid-20160504_201443_224692_2B3840BB)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-
-cfg80211/nl80211 interface changes for per STA total rx-duration and
-very basic 'ath10k_sta_statistics'  mac80211 callback is implemented
-to extend support for per station statistics from the driver.
-
-Also provision in 'iw dev wlan#N station dump' to parse rx-duration
-is supported. So its safer to remove the debugfs entry for per STA
-rx-duration
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/debugfs_sta.c |   24 ------------------------
- 1 file changed, 24 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index c5396bf..d1186b6 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -263,28 +263,6 @@ static const struct file_operations fops_delba = {
- 	.llseek = default_llseek,
- };
- 
--static ssize_t ath10k_dbg_sta_read_rx_duration(struct file *file,
--					       char __user *user_buf,
--					       size_t count, loff_t *ppos)
--{
--	struct ieee80211_sta *sta = file->private_data;
--	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
--	char buf[100];
--	int len = 0;
--
--	len = scnprintf(buf, sizeof(buf),
--			"%llu usecs\n", arsta->rx_duration);
--
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--}
--
--static const struct file_operations fops_rx_duration = {
--	.read = ath10k_dbg_sta_read_rx_duration,
--	.open = simple_open,
--	.owner = THIS_MODULE,
--	.llseek = default_llseek,
--};
--
- void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
-@@ -293,6 +271,4 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
- 	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
- 	debugfs_create_file("delba", S_IWUSR, dir, sta, &fops_delba);
--	debugfs_create_file("rx_duration", S_IRUGO, dir, sta,
--			    &fops_rx_duration);
- }
--- 
-1.7.9.5
-
+SGkgS2FsbGUsDQoNCkkga25vdyBpdCBpcyBleHRyZW1lbHkgbGF0ZSBpbiB0aGUgY3ljbGUsIGJ1
+dCB0aGlzIHBhdGNoIGlzIGludGVuZGVkDQpmb3IgNC42Li4uIEl0IGZpeGVzIGEgcmVncmVzc2lv
+biBJIGludHJvZHVjZWQ6IGEgUDJQIHNwZWNpZmljYXRpb24NCnZpb2xhdGlvbiBhcyBtZW50aW9u
+ZWQgaW4gdGhlIGNvbW1pdCBtZXNzYWdlLg0KVGhlIHBhdGNoIGlzIHJhdGhlciBiaWcgaW4gdGVy
+bXMgb2YgbnVtYmVyIG9mIGxpbmVzIGNoYW5nZWQsIGJ1dCB0aGUNCnNlbWFudGljcyBpcyB2ZXJ5
+IHNpbXBsZS4gSSBoYXZlIHRvIGNvcHkgdGhlIGNvbnRyb2wgYmxvY2sgb2YgdGhlIHNrYg0KdG8g
+dGhlIHN0YWNrIHdoZXJlYXMgd2UgYWNjZXNzZWQgd2UgdXNlZCB0byBhY2Nlc3MgaXQgZGlyZWN0
+bHkgdGhyb3VnaA0KYSBwb2ludGVyLg0KVGhpcyBvYnZpb3VzbHkgaW50cm9kdWNlcyBhIGxvdCBv
+ZiBsaW5lIGNoYW5nZXMsIGJ1dCBkb24ndCByZWFsbHkNCmNoYW5nZSB0aGUgYmVoYXZpb3Igb2Yg
+dGhlIGNvZGUgKHNpbmNlIG1vc3Qgb2YgdGhlIGFjY2Vzc2VzIGFyZSByZWFkDQpvbmx5KS4NCg0K
+TGV0IG1lIGtub3cgaG93IGl0IGdvZXMuDQoNCkkgdGFrZSB0aGlzIG9wcG9ydHVuaXR5IHRvIGlu
+Zm9ybSB5b3UgdGhhdCBJIHdpbGwgYmUgcmVwbGFjZWQgYnkgTHVjYQ0KZm9yIGEgZmV3IG1vbnRo
+cyBhdCBsZWFzdC4gSSB3aWxsIGJlIHdvcmtpbmcgZnVsbCBzdGVhbSBvbiBhIHNpZGUNCnByb2pl
+Y3QgdGhhdCB3aWxsIG5vdCBhbGxvdyBtZSB0byBkbyB0aGUgbWFpbnRhaW5lciBqb2IgaW4gcGFy
+YWxsZWwuDQoNClRoYW5rIHlvdSENCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1p
+dCBmNzQyYWFmMzZlZGYwMzkwYzU0ZDA2MTRiYzRkMjBmZDRjZDM3NjJhOg0KDQogIGl3bHdpZmk6
+IG12bTogZml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgZHVyaW5nIGZ3IGR1bXAgY29sbGVjdGlv
+biAoMjAxNi0wNC0xMiAxMTo1MjozOSArMDMwMCkNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0
+IHJlcG9zaXRvcnkgYXQ6DQoNCiAgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4
+L2tlcm5lbC9naXQvaXdsd2lmaS9pd2x3aWZpLWZpeGVzLmdpdCB0YWdzL2l3bHdpZmktZm9yLWth
+bGxlLTIwMTYtMDUtMDQNCg0KZm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRvIDVjMDhiMGY1
+MDI2ZmNjMTNlZmI5NDdjNGQxZjJjYTM1NTgxNDVmNjg6DQoNCiAgaXdsd2lmaTogbXZtOiBkb24n
+dCBvdmVycmlkZSB0aGUgcmF0ZSB3aXRoIHRoZSBBTVNEVSBsZW4gKDIwMTYtMDUtMDQgMjA6NTk6
+NTUgKzAzMDApDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0NCiogZml4IFAyUCByYXRlcyAoYW5kIHBvc3NpYmx5IG90aGVy
+IGlzc3VlcykNCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLQ0KRW1tYW51ZWwgR3J1bWJhY2ggKDEpOg0KICAgICAgaXdsd2lm
+aTogbXZtOiBkb24ndCBvdmVycmlkZSB0aGUgcmF0ZSB3aXRoIHRoZSBBTVNEVSBsZW4NCg0KIGRy
+aXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL3R4LmMgfCA4MyArKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCA0OCBpbnNlcnRpb25zKCspLCAzNSBk
+ZWxldGlvbnMoLSk=
