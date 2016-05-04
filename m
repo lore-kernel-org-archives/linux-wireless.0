@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37314 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751284AbcETOIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2016 10:08:32 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Daniel Lenski <dlenski@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: increase polling timeout for firmware startup
-References: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
-	<wrfjinyayf2i.fsf@redhat.com>
-	<CAOw_LSHnV+244fT7YvEoV+7VSH_+OoGFmZSdGK4a3NqB407VGQ@mail.gmail.com>
-Date: Fri, 20 May 2016 10:08:30 -0400
-In-Reply-To: <CAOw_LSHnV+244fT7YvEoV+7VSH_+OoGFmZSdGK4a3NqB407VGQ@mail.gmail.com>
-	(Daniel Lenski's message of "Thu, 19 May 2016 21:51:43 -0700")
-Message-ID: <wrfj4m9svn35.fsf@redhat.com> (sfid-20160520_160835_577886_5344E848)
+Received: from userp1040.oracle.com ([156.151.31.81]:38674 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853AbcEDGRC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2016 02:17:02 -0400
+Date: Wed, 4 May 2016 09:16:39 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] rtlwifi: rtl818x: silence uninitialized variable warning
+Message-ID: <20160504061639.GB22064@mwanda> (sfid-20160504_081723_329774_CC214270)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Lenski <dlenski@gmail.com> writes:
-> You're welcome, and thanks for writing this great driver. It really
-> makes a huge difference for stability of the Yoga 13 wifi!
+What about if "rtlphy->pwrgroup_cnt" is 2?  In that case we would use an
+uninitialized "chnlgroup" variable and probably crash.  Maybe that can't
+happen for some reason which is not obvious but in that case this patch
+is harmless.
 
-You're welcome! It made a big difference for my own Yoga 13 and it's
-been an exciting project. I learned a lot in the process.
+Setting it to zero seems like a standard default in the surrounding code
+so it's probably fine here as well.
 
-> Unfortunately, I ran into a case today where even 5000 loops was not
-> enough after a cold boot. 5000 loops meant about 1.5 second delay
-> between finishing the firmware checksum poll, while waiting for the
-> firmware to start. It now appears to me that the number of required
-> polling loops must be strongly bimodal.
->
-> I added some logging, so that the driver reports to me the number of
-> loops required for the firmware to start.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-This is bizarre, I wonder if the hardware is having issues in your
-laptop? Another thing to try would be to do an additional reset of the
-chip and wait a bit before trying to load the firmware?
-
-Cheers,
-Jes
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c
+index 78a81c1..9475aa2 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/rf.c
+@@ -208,8 +208,7 @@ static void _rtl92s_get_txpower_writeval_byregulatory(struct ieee80211_hw *hw,
+ 				 "Realtek regulatory, 40MHz, writeval = 0x%x\n",
+ 				 writeval);
+ 		} else {
+-			if (rtlphy->pwrgroup_cnt == 1)
+-				chnlgroup = 0;
++			chnlgroup = 0;
+ 
+ 			if (rtlphy->pwrgroup_cnt >= 3) {
+ 				if (chnl <= 3)
