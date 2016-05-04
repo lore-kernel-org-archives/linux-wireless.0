@@ -1,30 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:36184 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754471AbcEPTVx (ORCPT
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:35961 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934027AbcEDBdL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2016 15:21:53 -0400
-Date: Mon, 16 May 2016 15:21:35 -0400
-From: Kyle McMartin <kyle@infradead.org>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Shiang Tu <shiang_tu@ralinktech.com>,
-	Hua Shao =?utf-8?B?KOmCteWNjik=?= <hua.shao@mediatek.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, linux-firmware@kernel.org
-Subject: Re: [PATCH 1/2] linux-firmware: update rt2860.bin, rt2800pci driver
-Message-ID: <20160516192135.GE9173@merlin.infradead.org> (sfid-20160516_212157_222722_1A281900)
-References: <1462374000-17149-1-git-send-email-xose.vazquez@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462374000-17149-1-git-send-email-xose.vazquez@gmail.com>
+	Tue, 3 May 2016 21:33:11 -0400
+From: Kangjie Lu <kangjielu@gmail.com>
+To: johnny.kim@atmel.com
+Cc: austin.shin@atmel.com, chris.park@atmel.com,
+	gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	taesoo@gatech.edu, insu@gatech.edu, csong84@gatech.edu,
+	Kangjie Lu <kjlu@gatech.edu>
+Subject: [PATCH] fix infoleak in wilc_wfi_cfgoperations
+Date: Tue,  3 May 2016 21:36:11 -0400
+Message-Id: <1462325771-8981-1-git-send-email-kjlu@gatech.edu> (sfid-20160504_033330_867477_0633F011)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 04, 2016 at 04:59:59PM +0200, Xose Vazquez Perez wrote:
-> rt2860.bin: from 34 to 0.40
-> 
+"mac" is an array allocated in stack without being initialized,
+and will be sent out via "nla_put". The dump_station() is supposed
+to initialize the mac address; otherwise, sensitive data in kernel
+stack will be leaked. To fix this, copy the mac address to it.
 
-applied 1 & 2.
+Signed-off-by: Kangjie Lu <kjlu@gatech.edu>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-thanks, --Kyle
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 448a5c8..c6e71d9 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1797,6 +1797,7 @@ static int dump_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	wilc_get_rssi(vif, &sinfo->signal);
+ 
++	memcpy(mac, priv->au8AssociatedBss, ETH_ALEN);
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
+
