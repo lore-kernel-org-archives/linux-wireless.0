@@ -1,86 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45258 "EHLO mx1.redhat.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:46445 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932413AbcERO5C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2016 10:57:02 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Daniel Lenski <dlenski@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] Make firmware startup polling timeout configurable, and increase default
-References: <1463525295-10818-1-git-send-email-dlenski@gmail.com>
-	<1463525295-10818-2-git-send-email-dlenski@gmail.com>
-	<wrfjeg903urr.fsf@redhat.com>
-	<CAOw_LSEvU3OKm3MDe4FfHicd709548=S5Qm+wV=5mBOFV4TrKg@mail.gmail.com>
-Date: Wed, 18 May 2016 10:57:00 -0400
-In-Reply-To: <CAOw_LSEvU3OKm3MDe4FfHicd709548=S5Qm+wV=5mBOFV4TrKg@mail.gmail.com>
-	(Daniel Lenski's message of "Tue, 17 May 2016 21:01:22 -0700")
-Message-ID: <wrfj37pf1kjn.fsf@redhat.com> (sfid-20160518_165708_878493_C2595B08)
+	id S1751749AbcEDLdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2016 07:33:35 -0400
+Subject: Re: [PATCH net-next 4/5] treewide: replace dev->trans_start update
+ with helper
+To: Florian Westphal <fw@strlen.de>, <netdev@vger.kernel.org>
+References: <1462285862-30946-1-git-send-email-fw@strlen.de>
+ <1462285994-31983-1-git-send-email-fw@strlen.de>
+CC: <user-mode-linux-devel@lists.sourceforge.net>,
+	<linux-xtensa@linux-xtensa.org>,
+	<linux1394-devel@lists.sourceforge.net>,
+	<linux-rdma@vger.kernel.org>, <MPT-FusionLinux.pdl@broadcom.com>,
+	<linux-scsi@vger.kernel.org>, <linux-can@vger.kernel.org>,
+	<linux-parisc@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+	<linux-hams@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <linux-s390@vger.kernel.org>,
+	<devel@driverdev.osuosl.org>, <b.a.t.m.a.n@lists.open-mesh.org>,
+	<linux-bluetooth@vger.kernel.org>
+From: Mugunthan V N <mugunthanvnm@ti.com>
+Message-ID: <5729DDED.6030106@ti.com> (sfid-20160504_133346_723305_75F1160F)
+Date: Wed, 4 May 2016 17:03:01 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1462285994-31983-1-git-send-email-fw@strlen.de>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Lenski <dlenski@gmail.com> writes:
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->>
->> Dan Lenski <dlenski@gmail.com> writes:
->> >
->> > This issue seems to occur because RTL8XXXU_FIRMWARE_POLL_MAX (1000) is
->> > too short, and the MCU fails to start up as quickly as expected.
->> >
->> > With a longer value (5000), the driver starts up consistently and
->> > successfully after cold-boot.
->>
->> I am not against increasing the maximum value here, however I would like
->> more details about the system where you see these problems. I have used
->> this driver extensively for a long time with my Lenovo Yoga 13 laptop
->> and not seen this issue.
->
-> Mine is also a Yoga 13.
+On Tuesday 03 May 2016 08:03 PM, Florian Westphal wrote:
+> Replace all trans_start updates with netif_trans_update helper.
+> change was done via spatch:
+> 
+> struct net_device *d;
+> @@
+> - d->trans_start = jiffies
+> + netif_trans_update(d)
+> 
+> Compile tested only.
+> 
+> Cc: user-mode-linux-devel@lists.sourceforge.net
+> Cc: linux-xtensa@linux-xtensa.org
+> Cc: linux1394-devel@lists.sourceforge.net
+> Cc: linux-rdma@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Cc: MPT-FusionLinux.pdl@broadcom.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-can@vger.kernel.org
+> Cc: linux-parisc@vger.kernel.org
+> Cc: linux-omap@vger.kernel.org
+> Cc: linux-hams@vger.kernel.org
+> Cc: linux-usb@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: linux-s390@vger.kernel.org
+> Cc: devel@driverdev.osuosl.org
+> Cc: b.a.t.m.a.n@lists.open-mesh.org
+> Cc: linux-bluetooth@vger.kernel.org
+> Signed-off-by: Florian Westphal <fw@strlen.de>
+> ---
 
-Interesting, I thought it might have been an ARM board and it could be
-something else that wasn't happening correctly. So far I only know of
-the Yogas and certain ARM boards that have the 8723au.
+snip...
 
->> Second, I really don't think this warrants a module parameter. Bumping
->> the value should suffice.
->
-> Okay. Adding a module parameter was useful for me in debugging, and I
-> thought it might be a useful backup option for other end-users who may
-> find that the default value doesn't suffice.
->
-> It seems plausible to me that the delay is due to waiting for some
-> kind of analog circuit to stabilize (PLL, maybe?) and that there could
-> be a large variation among devices.
 
-I am surprised your system is that different from mine, but I am fine
-with bumping it. I don't really like to clutter the module parameters
-unnecessarily, and if we bump this to 5000, I think it is unlikely
-anyone else will hit this problem. If they do, I think there are other
-issues at play.
+> diff --git a/drivers/net/ethernet/ti/cpsw.c b/drivers/net/ethernet/ti/cpsw.c
+> index 0fa75a8..3d4662d 100644
+> --- a/drivers/net/ethernet/ti/cpsw.c
+> +++ b/drivers/net/ethernet/ti/cpsw.c
+> @@ -1381,7 +1381,7 @@ static netdev_tx_t cpsw_ndo_start_xmit(struct sk_buff *skb,
+>  	struct cpsw_priv *priv = netdev_priv(ndev);
+>  	int ret;
+>  
+> -	ndev->trans_start = jiffies;
+> +	netif_trans_update(ndev);
+>  
+>  	if (skb_padto(skb, CPSW_MIN_PACKET_SIZE)) {
+>  		cpsw_err(priv, tx_err, "packet pad failed\n");
 
->> Note that the patch should at least be relative to
->> wireless-drivers-next, or preferably my rtl8xxxu-devel tree. In both of
->> these trees, the rtl8xxxu driver has been split into multiple files and
->> your patch will not apply.
->>
->> Last, neither of the links you included for external bug reports work.
->
-> Are you still unable to follow them in the second version of the patches that
-> I submitted? (It appears that they were mangled by Gmane the first
-> time I posted them.)
->
-> Here they are again:
->
-> http://ubuntuforums.org/showthread.php?t=2321756
->
-> That is, thread #2321756 at ubuntuforums.org
->
-> https://www.mail-archive.com/ubuntu-bugs@lists.ubuntu.com/msg4942468.html
->
-> That is, Ubuntu bug #1574622
+for cpsw
 
-I found them from your second post.
+Acked-by: Mugunthan V N <mugunthanvnm@ti.com>
 
-Cheers,
-Jes
+Regards
+Mugunthan V N
