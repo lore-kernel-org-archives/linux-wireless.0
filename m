@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:58766 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751895AbcEQWa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 18:30:58 -0400
-From: Heinrich Schuchardt <xypron.glpk@gmx.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Nicholas Mc Guire <hofrat@osadl.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Heinrich Schuchardt <xypron.glpk@gmx.de>
-Subject: [PATCH 1/1] net: rsi: eliminate superfluous NULL check
-Date: Wed, 18 May 2016 00:30:41 +0200
-Message-Id: <1463524241-11351-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160518_003124_144845_E19D33F8)
+Received: from userp1040.oracle.com ([156.151.31.81]:39890 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853AbcEDGUJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2016 02:20:09 -0400
+Date: Wed, 4 May 2016 09:19:54 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Sara Sharon <sara.sharon@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	Golan Ben-Ami <golan.ben.ami@intel.com>,
+	Moshe Harel <moshe.harel@intel.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] iwlwifi: mvm: silence unintialized variable warning
+Message-ID: <20160504061954.GD22064@mwanda> (sfid-20160504_082018_402266_72B57710)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-msg is dereferenced before checking against NULL, e.g.
-when assigning pad_bytes.
-Remove the superfluous check in function rsi_mgmt_pkt_to_core.
+"max_amsdu_len" isn't set if kstrtouint() fails.
 
-Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
----
- drivers/net/wireless/rsi/rsi_91x_mgmt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 40658b6..35c14cc 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -398,7 +398,7 @@ static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
- 			return -ENOLINK;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 362a546..cb8db23 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1020,6 +1020,8 @@ static ssize_t iwl_dbgfs_max_amsdu_len_write(struct iwl_mvm *mvm,
+ 	int ret;
  
- 		msg_len -= pad_bytes;
--		if ((msg_len <= 0) || (!msg)) {
-+		if (msg_len <= 0) {
- 			rsi_dbg(MGMT_RX_ZONE,
- 				"%s: Invalid rx msg of len = %d\n",
- 				__func__, msg_len);
--- 
-2.1.4
-
+ 	ret = kstrtouint(buf, 0, &max_amsdu_len);
++	if (ret)
++		return ret;
+ 
+ 	if (max_amsdu_len > IEEE80211_MAX_MPDU_LEN_VHT_11454)
+ 		return -EINVAL;
