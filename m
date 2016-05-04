@@ -1,101 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36824 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758171AbcEFQMy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2016 12:12:54 -0400
-Subject: Re: [PATCH] rtlwifi: pci: use dev_kfree_skb_irq instead of kfree_skb
- in rtl_pci_reset_trx_ring
-To: Wang YanQing <udknight@gmail.com>, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20160505171904.GA16619@udknight>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <572CC282.7050306@lwfinger.net> (sfid-20160506_181321_085414_8682675A)
-Date: Fri, 6 May 2016 11:12:50 -0500
+Received: from mga11.intel.com ([192.55.52.93]:4730 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750993AbcEDIQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2016 04:16:55 -0400
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+To: Florian Westphal <fw@strlen.de>, netdev@vger.kernel.org
+Cc: Florian Westphal <fw@strlen.de>,
+	user-mode-linux-devel@lists.sourceforge.net,
+	linux-xtensa@linux-xtensa.org,
+	linux1394-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org,
+	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+	linux-can@vger.kernel.org, linux-parisc@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-hams@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-s390@vger.kernel.org, devel@driverdev.osuosl.org,
+	b.a.t.m.a.n@lists.open-mesh.org, linux-bluetooth@vger.kernel.org
+Subject: Re: [PATCH net-next 4/5] treewide: replace dev->trans_start update with helper
+In-Reply-To: <1462285994-31983-1-git-send-email-fw@strlen.de>
+References: <1462285862-30946-1-git-send-email-fw@strlen.de> <1462285994-31983-1-git-send-email-fw@strlen.de>
+Date: Wed, 04 May 2016 11:14:45 +0300
+Message-ID: <87vb2udytm.fsf@intel.com> (sfid-20160504_101703_087604_555751EB)
 MIME-Version: 1.0
-In-Reply-To: <20160505171904.GA16619@udknight>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: multipart/signed; boundary="=-=-=";
+	micalg=pgp-sha1; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/05/2016 12:19 PM, Wang YanQing wrote:
-> We can't use kfree_skb in irq disable context, because spin_lock_irqsave
-> make sure we are always in irq disable context, use dev_kfree_skb_irq
-> instead of kfree_skb is better than dev_kfree_skb_any.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
+
+
+Hi,
+
+Florian Westphal <fw@strlen.de> writes:
+> Replace all trans_start updates with netif_trans_update helper.
+> change was done via spatch:
 >
-> This patch fix below kernel warning:
-> [ 7612.095528] ------------[ cut here ]------------
-> [ 7612.095546] WARNING: CPU: 3 PID: 4460 at kernel/softirq.c:150 __local_bh_enable_ip+0x58/0x80()
-> [ 7612.095550] Modules linked in: rtl8723be x86_pkg_temp_thermal btcoexist rtl_pci rtlwifi rtl8723_common
-> [ 7612.095567] CPU: 3 PID: 4460 Comm: ifconfig Tainted: G        W       4.4.0+ #4
-> [ 7612.095570] Hardware name: LENOVO 20DFA04FCD/20DFA04FCD, BIOS J5ET48WW (1.19 ) 08/27/2015
-> [ 7612.095574]  00000000 00000000 da37fc70 c12ce7c5 00000000 da37fca0 c104cc59 c19d4454
-> [ 7612.095584]  00000003 0000116c c19d4784 00000096 c10508a8 c10508a8 00000200 c1b42400
-> [ 7612.095594]  f29be780 da37fcb0 c104ccad 00000009 00000000 da37fcbc c10508a8 f21f08b8
-> [ 7612.095604] Call Trace:
-> [ 7612.095614]  [<c12ce7c5>] dump_stack+0x41/0x5c
-> [ 7612.095620]  [<c104cc59>] warn_slowpath_common+0x89/0xc0
-> [ 7612.095628]  [<c10508a8>] ? __local_bh_enable_ip+0x58/0x80
-> [ 7612.095634]  [<c10508a8>] ? __local_bh_enable_ip+0x58/0x80
-> [ 7612.095640]  [<c104ccad>] warn_slowpath_null+0x1d/0x20
-> [ 7612.095646]  [<c10508a8>] __local_bh_enable_ip+0x58/0x80
-> [ 7612.095653]  [<c16b7d34>] destroy_conntrack+0x64/0xa0
-> [ 7612.095660]  [<c16b300f>] nf_conntrack_destroy+0xf/0x20
-> [ 7612.095665]  [<c1677565>] skb_release_head_state+0x55/0xa0
-> [ 7612.095670]  [<c16775bb>] skb_release_all+0xb/0x20
-> [ 7612.095674]  [<c167760b>] __kfree_skb+0xb/0x60
-> [ 7612.095679]  [<c16776f0>] kfree_skb+0x30/0x70
-> [ 7612.095686]  [<f81b869d>] ? rtl_pci_reset_trx_ring+0x22d/0x370 [rtl_pci]
-> [ 7612.095692]  [<f81b869d>] rtl_pci_reset_trx_ring+0x22d/0x370 [rtl_pci]
-> [ 7612.095698]  [<f81b87f9>] rtl_pci_start+0x19/0x190 [rtl_pci]
-> [ 7612.095705]  [<f81970e6>] rtl_op_start+0x56/0x90 [rtlwifi]
-> [ 7612.095712]  [<c17e3f16>] drv_start+0x36/0xc0
-> [ 7612.095717]  [<c17f5ab3>] ieee80211_do_open+0x2d3/0x890
-> [ 7612.095725]  [<c16820fe>] ? call_netdevice_notifiers_info+0x2e/0x60
-> [ 7612.095730]  [<c17f60bd>] ieee80211_open+0x4d/0x50
-> [ 7612.095736]  [<c16891b3>] __dev_open+0xa3/0x130
-> [ 7612.095742]  [<c183fa53>] ? _raw_spin_unlock_bh+0x13/0x20
-> [ 7612.095748]  [<c1689499>] __dev_change_flags+0x89/0x140
-> [ 7612.095753]  [<c127c70d>] ? selinux_capable+0xd/0x10
-> [ 7612.095759]  [<c1689589>] dev_change_flags+0x29/0x60
-> [ 7612.095765]  [<c1700b93>] devinet_ioctl+0x553/0x670
-> [ 7612.095772]  [<c12db758>] ? _copy_to_user+0x28/0x40
-> [ 7612.095777]  [<c17018b5>] inet_ioctl+0x85/0xb0
-> [ 7612.095783]  [<c166e647>] sock_ioctl+0x67/0x260
-> [ 7612.095788]  [<c166e5e0>] ? sock_fasync+0x80/0x80
-> [ 7612.095795]  [<c115c99b>] do_vfs_ioctl+0x6b/0x550
-> [ 7612.095800]  [<c127c812>] ? selinux_file_ioctl+0x102/0x1e0
-> [ 7612.095807]  [<c10a8914>] ? timekeeping_suspend+0x294/0x320
-> [ 7612.095813]  [<c10a256a>] ? __hrtimer_run_queues+0x14a/0x210
-> [ 7612.095820]  [<c1276e24>] ? security_file_ioctl+0x34/0x50
-> [ 7612.095827]  [<c115cef0>] SyS_ioctl+0x70/0x80
-> [ 7612.095832]  [<c1001804>] do_fast_syscall_32+0x84/0x120
-> [ 7612.095839]  [<c183ff91>] sysenter_past_esp+0x36/0x55
-> [ 7612.095844] ---[ end trace 97e9c637a20e8348 ]---
+> struct net_device *d;
+> @@
+> - d->trans_start =3D jiffies
+> + netif_trans_update(d)
 >
-> Signed-off-by: Wang YanQing <udknight@gmail.com>
+> Compile tested only.
+>
+> Cc: user-mode-linux-devel@lists.sourceforge.net
+> Cc: linux-xtensa@linux-xtensa.org
+> Cc: linux1394-devel@lists.sourceforge.net
+> Cc: linux-rdma@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Cc: MPT-FusionLinux.pdl@broadcom.com
+> Cc: linux-scsi@vger.kernel.org
+> Cc: linux-can@vger.kernel.org
+> Cc: linux-parisc@vger.kernel.org
+> Cc: linux-omap@vger.kernel.org
+> Cc: linux-hams@vger.kernel.org
+> Cc: linux-usb@vger.kernel.org
+> Cc: linux-wireless@vger.kernel.org
+> Cc: linux-s390@vger.kernel.org
+> Cc: devel@driverdev.osuosl.org
+> Cc: b.a.t.m.a.n@lists.open-mesh.org
+> Cc: linux-bluetooth@vger.kernel.org
+> Signed-off-by: Florian Westphal <fw@strlen.de>
 > ---
->   drivers/net/wireless/realtek/rtlwifi/pci.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-> index 1ac41b8..99a3a03 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-> @@ -1572,7 +1572,7 @@ int rtl_pci_reset_trx_ring(struct ieee80211_hw *hw)
->   							 true,
->   							 HW_DESC_TXBUFF_ADDR),
->   						 skb->len, PCI_DMA_TODEVICE);
-> -				kfree_skb(skb);
-> +				dev_kfree_skb_irq(skb);
->   				ring->idx = (ring->idx + 1) % ring->entries;
->   			}
->   			ring->idx = 0;
 
-After testing, this patch is OK other than needing a Cc to stable. Please fix 
-that and resubmit V2.
+for u_ether.c:
 
-Larry
+Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
 
+> diff --git a/drivers/usb/gadget/function/u_ether.c b/drivers/usb/gadget/f=
+unction/u_ether.c
+> index 637809e..a3f7e7c 100644
+> --- a/drivers/usb/gadget/function/u_ether.c
+> +++ b/drivers/usb/gadget/function/u_ether.c
+> @@ -597,7 +597,7 @@ static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
+>  		DBG(dev, "tx queue err %d\n", retval);
+>  		break;
+>  	case 0:
+> -		net->trans_start =3D jiffies;
+> +		netif_trans_update(net);
+>  		atomic_inc(&dev->tx_qlen);
+>  	}
 
+=2D-=20
+balbi
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBAgAGBQJXKa91AAoJEIaOsuA1yqREa0UP/35SFn4ZofIoB65PTj1xg8X/
+n7p9jjvrvEml10E4POQ/ZKeKzNBobiZfTvPVQ5fJ3DeaxYRMFNldcoNvv3XLHgb1
+J/A6NNdCBYPMo7cc/67RCJKC+NEMbplqQSrLyCL4N8KDaR0ToDvFOhDW5ENtYAFR
++hHewPpprXHex8FPax3PMuuNCRkV/hz3PxCXnF+1h5nKD3hsXZwzQQAVC4OkWkzo
+f9pAczgygfMWpsdOK4lBqAf82sK9P/bOJoE7ag/6zJ3E8EvmiB2oqtBzWzpdpWgL
+JAZ4O8g2q2eV+vXK8ZqMt/yUwdS+V0ouR+iReYAATahEXzu0XPRZSHwmL0qKbl/D
+RN4cVtSHl9cYltkxEMUSNUWZhGDaAyOiYbWWXwDQvus915p5Nq41v2VJailJBQD0
+w+K4gJAw+0igWKgvq1M/JwoJftk9cA75Dw18f+6T6j/e78k0ZCnj1F4WHjWAIAAm
+b54FVVjKATCK8/vIl73vtUpgdAzYeue3mwfd+PP5UfMXRpcEZU2icEyvHgyvbU5U
+ChlCb1NRYIJ01e+J5Ov/Xd6+Pln8EwV4W4imFjzcsLNjiVU0OumWVqFqPtlDd4tq
+5rKSXFa4XdaMA0CAM48AjdQmE3ta+xFFe+Q0GqVTMgyc4QOvSmZuWmsdfTmgyqC+
+DjWMdryqMVHstUt2mUPA
+=NJVp
+-----END PGP SIGNATURE-----
+--=-=-=--
