@@ -1,86 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:51840 "EHLO mail.neratec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750918AbcEQLAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 07:00:08 -0400
-Subject: Re: [PATCH v2] ath9k: interpret requested txpower in EIRP domain
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-References: <201604011711.RmqSBtrr%fengguang.wu@intel.com>
- <1459503428-12492-1-git-send-email-zefir.kurtisi@neratec.com>
- <c884e319-e777-607e-492c-268b3f801d27@nbd.name>
-Cc: kvalo@qca.qualcomm.com, ath9k-devel@lists.ath9k.org
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Message-ID: <573AF860.4040900@neratec.com> (sfid-20160517_130015_924763_0673CA9A)
-Date: Tue, 17 May 2016 12:54:24 +0200
-MIME-Version: 1.0
-In-Reply-To: <c884e319-e777-607e-492c-268b3f801d27@nbd.name>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:35191 "EHLO
+	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752664AbcEDTaz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2016 15:30:55 -0400
+Received: by mail-pf0-f176.google.com with SMTP id 77so28458302pfv.2
+        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2016 12:30:54 -0700 (PDT)
+From: Christian Daudt <csd@broadcom.com>
+To: linux-wireless@vger.kernel.org
+Cc: Christian Daudt <csd@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: [PATCH] Fix kernel oops in failed chip_attach
+Date: Wed,  4 May 2016 12:30:28 -0700
+Message-Id: <1462390228-27863-1-git-send-email-csd@broadcom.com> (sfid-20160504_213101_026971_5A6023D7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/14/2016 02:50 PM, Felix Fietkau wrote:
-> On 2016-04-01 11:37, Zefir Kurtisi wrote:
->> Tx power limitations at upper layers are interpreted in
->> the EIRP domain. When the user requests a given maximum
->> txpower, e.g. with: 'iw phy0 set txpower fixed 1500',
->> he expects the EIRP to be at or below 15dBm.
->>
->> In ath9k_hw_apply_txpower(), the interpretation is
->> different: the antenna-gain is capped against the
->> current txpower limit in the regulatory, but not
->> against the user set value. It ensures that the
->> resulting EIRP is below the limit defined by the
->> active countrycode, but not below the value the
->> user requested.
->>
->> In a scenario like e.g.
->>  a) antenna_gain=6
->>  b) countrycode limits to eirp=18
->>  c) user set txpower=15
->> this will cause a setting for AR_PHY_POWER_TX_RATE
->> regs resulting in an EIRP > 15.
->>
->> This patch ensures that antenna-gain is considered
->> whenever the txpower limit is adjusted and with that
->> the user set limits are kept.
->>
->> Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-> I just noticed this change and I believe it should be reverted. In many
-> cases the EEPROM antenna gain value does not accurately reflect the real
-> antenna gain and is used more as a worst case value to prevent exceeding
-> regulatory limits.
-> 
-> I believe using this to limit the user specified tx power values will
-> not only make this inconsistent with other drivers, but it will also
-> confuse users by using significantly lower tx power than they wanted.
-> 
-> The EEPROM antenna gain value is already causing more tx power reduction
-> than necessary, because AFAIK at least the FCC regulatory rules allow an
-> antenna gain of 3 dB while at the power limit, yet this is not
-> subtracted from the EEPROM antenna gain value when considering the limit.
-> 
-> - Felix
-> 
-Two things to be considered before reverting that commit:
-1) the change affects only setups where a valid antenna gain value is set
-I checked some consumer ath9k cards I collected over time from (rather old) WiFi
-routers - none of them have an antenna gain set in EEPROM. Therefore, none of them
-would be affected by the change (alas I have no current ath9k NICs at hand to
-check if this is still valid). I'd argue that valid antenna gain values are set by
-manufacturers or professional integrators who took time to calibrate and measure
-the antennas' characteristics accurately.
+When chip attach fails, brcmf_sdiod_intr_unregister is being called
+but that is too early as sdiodev->settings has not been set yet
+nor has brcmf_sdiod_intr_register been called.
+Change to use oob_irq_requested + newly created sd_irq_requested
+to decide on what to unregister at intr_unregister time.
 
-2) EIRP is what matters
-As explained in the commit, every layer above the driver is interpreting txpower
-in the EIRP domain. When you visit a certification lab and the engineer sets a max
-txpower of 15dBm but measures an EIRP of 18 (as in the example above), the device
-won't pass the test.
+Steps to reproduce problem:
+- modprobe brcmfmac using buggy FW
+- rmmod brcmfmac
+- modprobe brcmfmac again.
 
+If done with a buggy firmware, brcm_chip_attach will fail on the
+2nd modprobe triggering the call to intr_unregister and the
+kernel oops when attempting to de-reference sdiodev->settings->bus.sdio
+which has not yet been set.
 
-I think the latter point is a strong argument to leave the change intact.
+Signed-off-by: Christian Daudt <csd@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 30 ++++++++++++----------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  1 +
+ 2 files changed, 18 insertions(+), 13 deletions(-)
 
-
-
-Cheers,
-Zefir
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index da0cdd3..09635a9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -166,6 +166,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 		sdio_claim_irq(sdiodev->func[1], brcmf_sdiod_ib_irqhandler);
+ 		sdio_claim_irq(sdiodev->func[2], brcmf_sdiod_dummy_irqhandler);
+ 		sdio_release_host(sdiodev->func[1]);
++		sdiodev->sd_irq_requested = true;
+ 	}
+ 
+ 	return 0;
+@@ -173,27 +174,30 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
+ 
+ int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
+ {
+-	struct brcmfmac_sdio_pd *pdata;
+ 
+-	brcmf_dbg(SDIO, "Entering\n");
++	brcmf_dbg(SDIO, "Entering oob=%d sd=%d\n",
++		  sdiodev->oob_irq_requested,
++		  sdiodev->sd_irq_requested);
+ 
+-	pdata = &sdiodev->settings->bus.sdio;
+-	if (pdata->oob_irq_supported) {
++	if (sdiodev->oob_irq_requested) {
++		struct brcmfmac_sdio_pd *pdata;
++
++		pdata = &sdiodev->settings->bus.sdio;
+ 		sdio_claim_host(sdiodev->func[1]);
+ 		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_BRCM_SEPINT, 0, NULL);
+ 		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_IENx, 0, NULL);
+ 		sdio_release_host(sdiodev->func[1]);
+ 
+-		if (sdiodev->oob_irq_requested) {
+-			sdiodev->oob_irq_requested = false;
+-			if (sdiodev->irq_wake) {
+-				disable_irq_wake(pdata->oob_irq_nr);
+-				sdiodev->irq_wake = false;
+-			}
+-			free_irq(pdata->oob_irq_nr, &sdiodev->func[1]->dev);
+-			sdiodev->irq_en = false;
++		sdiodev->oob_irq_requested = false;
++		if (sdiodev->irq_wake) {
++			disable_irq_wake(pdata->oob_irq_nr);
++			sdiodev->irq_wake = false;
+ 		}
+-	} else {
++		free_irq(pdata->oob_irq_nr, &sdiodev->func[1]->dev);
++		sdiodev->irq_en = false;
++	}
++
++	if (sdiodev->sd_irq_requested) {
+ 		sdio_claim_host(sdiodev->func[1]);
+ 		sdio_release_irq(sdiodev->func[2]);
+ 		sdio_release_irq(sdiodev->func[1]);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index dcf0ce8c..c07ad25 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -186,6 +186,7 @@ struct brcmf_sdio_dev {
+ 	struct brcmf_bus *bus_if;
+ 	struct brcmf_mp_device *settings;
+ 	bool oob_irq_requested;
++	bool sd_irq_requested;
+ 	bool irq_en;			/* irq enable flags */
+ 	spinlock_t irq_en_lock;
+ 	bool irq_wake;			/* irq wake enable flags */
+-- 
+1.9.1
 
