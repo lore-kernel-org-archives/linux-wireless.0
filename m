@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59399 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753284AbcEWTYe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2016 15:24:34 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Daniel Lenski <dlenski@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: increase polling timeout for firmware startup
-References: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
-	<wrfjinyayf2i.fsf@redhat.com>
-	<CAOw_LSHnV+244fT7YvEoV+7VSH_+OoGFmZSdGK4a3NqB407VGQ@mail.gmail.com>
-	<wrfj4m9svn35.fsf@redhat.com>
-	<CAOw_LSH8yGT+OoJU=a23B32mZ+qLkNuronB+vqZ5SaBRAG-fQw@mail.gmail.com>
-Date: Mon, 23 May 2016 15:24:33 -0400
-In-Reply-To: <CAOw_LSH8yGT+OoJU=a23B32mZ+qLkNuronB+vqZ5SaBRAG-fQw@mail.gmail.com>
-	(Daniel Lenski's message of "Fri, 20 May 2016 19:40:01 -0700")
-Message-ID: <wrfjlh30mvbi.fsf@redhat.com> (sfid-20160523_212450_660954_EEA2BC78)
+Received: from aserp1040.oracle.com ([141.146.126.69]:31923 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751574AbcEDGT2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 4 May 2016 02:19:28 -0400
+Date: Wed, 4 May 2016 09:19:13 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	Sara Sharon <sara.sharon@intel.com>,
+	Golan Ben-Ami <golan.ben.ami@intel.com>,
+	Avri Altman <avri.altman@intel.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] iwlwifi: mvm: remove an unused variable
+Message-ID: <20160504061913.GC22064@mwanda> (sfid-20160504_081931_932318_370DB5A1)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Lenski <dlenski@gmail.com> writes:
-> I tried various versions of running rtl8xxxu_init_device in a loop, with
-> delays in between retries, and did not have any success.
->
-> If the device doesn't want to start on the first load after boot, running
-> various parts of init over and over just doesn't fix it. But unloading the
-> driver and reloading does seem to fix it.
->
-> So then I wondered...
->
-> - Why does the firmware always (?) start on the *second try* of
->   loading rtl8xxxu, even if it failed to load after thousands of loops on
->   the first load attempt.
-> - What would be the difference between the two cases?
-> - As far as I understand it, the main effect on the hardware of unloading
->   the driver and then reloading it is that the device is power-cycled
->   (rtl8xxxu_power_off in rtl8xxxu_disable_device).
-> - Is it possible that the device sometimes starts up in an unknown state
->   after a cold boot?
-> - Hypothesis: since the rtl8xxxu driver does not explicitly power off the
->   device before attempting to power it on, if it boots up in an unknown
->   state, it will remain in this state until explicitly power-cycled.
->
-> So then I tried powering off the device for 500ms after a failure in
-> rtl8xxxu_init_device, before a retry:
->
->        for (retry=5; retry>=0; retry--) {
->                ret = rtl8xxxu_init_device(hw);
->                if (ret==0) {
->                        break;
->                } else {
->                        dev_err(&udev->dev, "Failed to init device,
-> will retry %d more times.\n", retry);
->                        if (retry==0)
->                                goto exit;
->                        else {
->                                /* power off for 500 ms before retry */
->                                rtl8xxxu_power_off(priv);
->                                msleep(500);
->                        }
->                }
->        }
->
-> So far, this always seems to work on the second try, even with a very
-> short firmware_poll_max (50).
->
-> I even tried forcing 50 power-cycles and inits in a row, and the firmware
-> still starts up on the 51st cycle, and everything works fine.
->
-> I don't understand *why* this works, but it seems like it might be a
-> more reliable solution, since it addresses the experience common to
-> the multiple bug reports, wherein the failure is only on the first attempt
-> after cold boot.
+We never initalize ampdu_status so it causes a static checker warning
+when we pass it to iwl_mvm_pass_packet_to_mac80211().  Fortunately, it's
+never used so we can just remove it.
 
-Interesting, so if I understand you correctly, if you run
-rtl8xxxu_power_off() once, the driver comes up correctly?
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-It is possible that rtl8xxxu_power_off() resets something that isn't being
-initialized normally in the init sequence. It would be interesting to
-try to break it down to find out which piece of the _power_off() code
-we're missing.
-
-Nice work!
-
-Cheers,
-Jes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index 263e8a8..c9d419f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -100,7 +100,7 @@ static void iwl_mvm_pass_packet_to_mac80211(struct iwl_mvm *mvm,
+ 					    struct napi_struct *napi,
+ 					    struct sk_buff *skb,
+ 					    struct ieee80211_hdr *hdr, u16 len,
+-					    u32 ampdu_status, u8 crypt_len,
++					    u8 crypt_len,
+ 					    struct iwl_rx_cmd_buffer *rxb)
+ {
+ 	unsigned int hdrlen, fraglen;
+@@ -267,7 +267,6 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct ieee80211_sta *sta = NULL;
+ 	struct sk_buff *skb;
+ 	u32 len;
+-	u32 ampdu_status;
+ 	u32 rate_n_flags;
+ 	u32 rx_pkt_status;
+ 	u8 crypt_len = 0;
+@@ -453,8 +452,8 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 		     mvm->sched_scan_pass_all == SCHED_SCAN_PASS_ALL_ENABLED))
+ 		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_FOUND;
+ 
+-	iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, hdr, len, ampdu_status,
+-					crypt_len, rxb);
++	iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, hdr, len, crypt_len,
++					rxb);
+ }
+ 
+ static void iwl_mvm_update_rx_statistics(struct iwl_mvm *mvm,
