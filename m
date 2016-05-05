@@ -1,378 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:45520 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201AbcEWOjI (ORCPT
+Received: from mail-ob0-f193.google.com ([209.85.214.193]:33413 "EHLO
+	mail-ob0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754992AbcEETZn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2016 10:39:08 -0400
-Date: Mon, 23 May 2016 16:42:16 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Andrew Worsley <amworsley@gmail.com>
-Cc: b43-dev@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160523144216.GA4894@wunner.de> (sfid-20160523_163915_325539_74BC7943)
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
- <CA+Y=x3=cLDHc7PK5h9n=ixdgVKWdVSu_v+-7jHJ-vBnDrv4sgg@mail.gmail.com>
- <20160403114912.GA11540@wunner.de>
- <CA+Y=x3nfe7CniNhruOhGmdxY3g4B1n3YRVWChoVYJns7D8pNEg@mail.gmail.com>
- <CA+Y=x3mVrSKMgzy74xtO5ZOc5kYLYU=iKZgqyjn0j94bXoebjg@mail.gmail.com>
- <20160412183202.GC13637@wunner.de>
- <CA+Y=x3mBm6==ffohf+aH2tHm9m+RSa7mZBJkDSvSmdCmEDdkNQ@mail.gmail.com>
- <20160424170423.GB17019@wunner.de>
+	Thu, 5 May 2016 15:25:43 -0400
+Subject: Re: [PATCH] rtlwifi: pci: use dev_kfree_skb_irq instead of kfree_skb
+ in rtl_pci_reset_trx_ring
+To: Wang YanQing <udknight@gmail.com>, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20160505171904.GA16619@udknight>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <572B9E33.2040702@lwfinger.net> (sfid-20160505_212609_305142_D66487D5)
+Date: Thu, 5 May 2016 14:25:39 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-In-Reply-To: <20160424170423.GB17019@wunner.de>
+In-Reply-To: <20160505171904.GA16619@udknight>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrew,
+On 05/05/2016 12:19 PM, Wang YanQing wrote:
+> We can't use kfree_skb in irq disable context, because spin_lock_irqsave
+> make sure we are always in irq disable context, use dev_kfree_skb_irq
+> instead of kfree_skb is better than dev_kfree_skb_any.
+>
+> This patch fix below kernel warning:
+> [ 7612.095528] ------------[ cut here ]------------
+> [ 7612.095546] WARNING: CPU: 3 PID: 4460 at kernel/softirq.c:150 __local_bh_enable_ip+0x58/0x80()
+> [ 7612.095550] Modules linked in: rtl8723be x86_pkg_temp_thermal btcoexist rtl_pci rtlwifi rtl8723_common
+> [ 7612.095567] CPU: 3 PID: 4460 Comm: ifconfig Tainted: G        W       4.4.0+ #4
+> [ 7612.095570] Hardware name: LENOVO 20DFA04FCD/20DFA04FCD, BIOS J5ET48WW (1.19 ) 08/27/2015
+> [ 7612.095574]  00000000 00000000 da37fc70 c12ce7c5 00000000 da37fca0 c104cc59 c19d4454
+> [ 7612.095584]  00000003 0000116c c19d4784 00000096 c10508a8 c10508a8 00000200 c1b42400
+> [ 7612.095594]  f29be780 da37fcb0 c104ccad 00000009 00000000 da37fcbc c10508a8 f21f08b8
+> [ 7612.095604] Call Trace:
+> [ 7612.095614]  [<c12ce7c5>] dump_stack+0x41/0x5c
+> [ 7612.095620]  [<c104cc59>] warn_slowpath_common+0x89/0xc0
+> [ 7612.095628]  [<c10508a8>] ? __local_bh_enable_ip+0x58/0x80
+> [ 7612.095634]  [<c10508a8>] ? __local_bh_enable_ip+0x58/0x80
+> [ 7612.095640]  [<c104ccad>] warn_slowpath_null+0x1d/0x20
+> [ 7612.095646]  [<c10508a8>] __local_bh_enable_ip+0x58/0x80
+> [ 7612.095653]  [<c16b7d34>] destroy_conntrack+0x64/0xa0
+> [ 7612.095660]  [<c16b300f>] nf_conntrack_destroy+0xf/0x20
+> [ 7612.095665]  [<c1677565>] skb_release_head_state+0x55/0xa0
+> [ 7612.095670]  [<c16775bb>] skb_release_all+0xb/0x20
+> [ 7612.095674]  [<c167760b>] __kfree_skb+0xb/0x60
+> [ 7612.095679]  [<c16776f0>] kfree_skb+0x30/0x70
+> [ 7612.095686]  [<f81b869d>] ? rtl_pci_reset_trx_ring+0x22d/0x370 [rtl_pci]
+> [ 7612.095692]  [<f81b869d>] rtl_pci_reset_trx_ring+0x22d/0x370 [rtl_pci]
+> [ 7612.095698]  [<f81b87f9>] rtl_pci_start+0x19/0x190 [rtl_pci]
+> [ 7612.095705]  [<f81970e6>] rtl_op_start+0x56/0x90 [rtlwifi]
+> [ 7612.095712]  [<c17e3f16>] drv_start+0x36/0xc0
+> [ 7612.095717]  [<c17f5ab3>] ieee80211_do_open+0x2d3/0x890
+> [ 7612.095725]  [<c16820fe>] ? call_netdevice_notifiers_info+0x2e/0x60
+> [ 7612.095730]  [<c17f60bd>] ieee80211_open+0x4d/0x50
+> [ 7612.095736]  [<c16891b3>] __dev_open+0xa3/0x130
+> [ 7612.095742]  [<c183fa53>] ? _raw_spin_unlock_bh+0x13/0x20
+> [ 7612.095748]  [<c1689499>] __dev_change_flags+0x89/0x140
+> [ 7612.095753]  [<c127c70d>] ? selinux_capable+0xd/0x10
+> [ 7612.095759]  [<c1689589>] dev_change_flags+0x29/0x60
+> [ 7612.095765]  [<c1700b93>] devinet_ioctl+0x553/0x670
+> [ 7612.095772]  [<c12db758>] ? _copy_to_user+0x28/0x40
+> [ 7612.095777]  [<c17018b5>] inet_ioctl+0x85/0xb0
+> [ 7612.095783]  [<c166e647>] sock_ioctl+0x67/0x260
+> [ 7612.095788]  [<c166e5e0>] ? sock_fasync+0x80/0x80
+> [ 7612.095795]  [<c115c99b>] do_vfs_ioctl+0x6b/0x550
+> [ 7612.095800]  [<c127c812>] ? selinux_file_ioctl+0x102/0x1e0
+> [ 7612.095807]  [<c10a8914>] ? timekeeping_suspend+0x294/0x320
+> [ 7612.095813]  [<c10a256a>] ? __hrtimer_run_queues+0x14a/0x210
+> [ 7612.095820]  [<c1276e24>] ? security_file_ioctl+0x34/0x50
+> [ 7612.095827]  [<c115cef0>] SyS_ioctl+0x70/0x80
+> [ 7612.095832]  [<c1001804>] do_fast_syscall_32+0x84/0x120
+> [ 7612.095839]  [<c183ff91>] sysenter_past_esp+0x36/0x55
+> [ 7612.095844] ---[ end trace 97e9c637a20e8348 ]---
+>
+> Signed-off-by: Wang YanQing <udknight@gmail.com>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/pci.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+> index 1ac41b8..99a3a03 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+> @@ -1572,7 +1572,7 @@ int rtl_pci_reset_trx_ring(struct ieee80211_hw *hw)
+>   							 true,
+>   							 HW_DESC_TXBUFF_ADDR),
+>   						 skb->len, PCI_DMA_TODEVICE);
+> -				kfree_skb(skb);
+> +				dev_kfree_skb_irq(skb);
+>   				ring->idx = (ring->idx + 1) % ring->entries;
+>   			}
+>   			ring->idx = 0;
+>
 
-On Sun, Apr 24, 2016 at 07:04:23PM +0200, Lukas Wunner wrote:
-> On Thu, Apr 14, 2016 at 06:42:50AM +1000, Andrew Worsley wrote:
-> > The only time I am getting the IRQ 17 nobody cared message is on
-> > suspend / resume. A fresh boot always had below the 100k interrupt
-> > threshold level.
-> > 
-> > I tried your new patch and the number is even lower < 30,000 over two boots.
-> 
-> Hm, that's still way too much. You should have < 100 interrupts on IRQ 17
-> on *every* boot, anything else isn't satisfactory.
+I am currently testing this patch. It looks OK, but during my first test, I got 
+a system crash that was not captured. As I was testing some other things, your 
+patch may not have been at fault and I am now testing with only that one change.
 
-The reason why my previous patches didn't work on your machine is
-because you're using grub, and grub contains a patch by Matthew
-Garrett which puts the wireless card into power state D3hot. The
-card's mmio space isn't accessible in D3hot. Included below is a
-new patch which transitions the card to D0 before resetting it.
-Please let me know if this fixes the issue for you.
+By the way, I have never seen the warning that you posted. I always use 64-bit 
+Linux, and that may be the difference.
 
-@Chris Bainbridge: Please test this as well, this is no longer a
-plain vanilla PCI quirk but an early quirk, it should prevent any
-kind of memory corruption by DMAed packets.
+Once I finish my testing, I will ack or nack.
 
-Best regards,
-
-Lukas
-
--- >8 --
-Subject: [PATCH] x86: Add early quirk to reset Apple AirPort card
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-The EFI firmware on Macs contains a full-fledged network stack for
-downloading OS X images from osrecovery.apple.com. Unfortunately
-on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
-wireless card on every boot and leaves it enabled even after
-ExitBootServices has been called. The card continues to assert its
-IRQ, causing spurious interrupts if the IRQ is shared. It also
-corrupts memory by DMAing received packets.
-
-The issue seems to be constrained to the Broadcom 4331. Chris Milsted
-has verified that the newer Broadcom 4360 built into the MacBookPro11,3
-(2013/2014) does not exhibit this behaviour. The chances that Apple will
-ever supply a firmware fix for the older machines appear to be zero.
-
-The solution is to reset the card on boot by writing to a reset bit in
-its mmio space. This must be done as an early quirk and not as a plain
-vanilla PCI quirk to prevent memory corruption by DMAed packets:
-Matthew Garrett found out in 2012 that the packets are written to
-EfiBootServicesData memory (http://mjg59.dreamwidth.org/11235.html).
-This type of memory is made available to the page allocator by
-efi_free_boot_services(). Plain vanilla PCI quirks run much later, in
-subsys initcall level. In-between a time window would be open for memory
-corruption. Random crashes occuring in this time window and attributed
-to DMAed packets have indeed been observed in the wild by Chris
-Bainbridge.
-
-When Matthew Garrett analyzed the memory corruption issue in 2012, he
-sought to fix it with a grub quirk which transitions the card to D3hot:
-http://git.savannah.gnu.org/cgit/grub.git/commit/?id=9d34bb85da56
-
-While this may prevent DMAed packets, it does not cure the spurious
-interrupts emanating from the card. Unfortunately the card's mmio space
-is inaccessible during D3hot, so to reset it, we have to undo the effect
-of Matthew's patch and transition the card back to D0 if the system was
-booted with grub.
-
-Since commit 8659c406ade3 ("x86: only scan the root bus in early PCI
-quirks"), early quirks can only be applied to devices on the root bus.
-However the Broadcom 4331 card is located on a secondary bus behind a
-PCIe root port. This commit therefore reintroduces scanning of secondary
-buses. The primary motivation of 8659c406ade3 was to prevent application
-of the nvidia_bugs() quirk on secondary buses. Amend the quirk to open
-code this requirement.
-
-A secondary motivation was to speed up PCI scanning. The algorithm used
-prior to 8659c406ade3 was particularly time consuming because it scanned
-buses 0 to 31 brute force. The recursive algorithm used by this commit
-only scans buses that are actually reachable from the root bus and
-should thus be a bit faster. If this algorithm is found to significantly
-impact boot time, it would be possible to limit its recursion depth:
-The Apple AirPort quirk applies at depth 1, all others at depth 0,
-so the bus need not be scanned deeper than that for now. An alternative
-approach would be to continue scanning only the root bus, and apply the
-AirPort quirk to the root ports 8086:1c12, 8086:1e12 and 8086:1e16.
-Apple always positioned the Broadcom 4331 behind one of these three
-ports (see model list below). The quirk would then check presence of the
-Broadcom 4331 in slot 0 below the root port and do its deed.
-
-Note that the quirk takes a few shortcuts to reduce the amount of code:
-The size of BAR 0 and the location of the PM capability is identical
-on all affected machines and therefore hardcoded. Only the address of
-BAR 0 differs between models. Also, it is assumed that the BCMA core
-currently mapped is the 802.11 core. The EFI driver seems to always take
-care of this.
-
-Michael Büsch and Bjorn Helgaas contributed feedback towards finding
-the best solution to this problem.
-
-The following should be a comprehensive list of affected models:
-    iMac13,1        2012  21.5"       [Root Port 00:1c.3 = 8086:1e16]
-    iMac13,2        2012  27"         [Root Port 00:1c.3 = 8086:1e16]
-    Macmini5,1      2011  i5 2.3 GHz  [Root Port 00:1c.1 = 8086:1c12]
-    Macmini5,2      2011  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1c12]
-    Macmini5,3      2011  i7 2.0 GHz  [Root Port 00:1c.1 = 8086:1c12]
-    Macmini6,1      2012  i5 2.5 GHz  [Root Port 00:1c.1 = 8086:1e12]
-    Macmini6,2      2012  i7 2.3 GHz  [Root Port 00:1c.1 = 8086:1e12]
-    MacBookPro8,1   2011  13"         [Root Port 00:1c.1 = 8086:1c12]
-    MacBookPro8,2   2011  15"         [Root Port 00:1c.1 = 8086:1c12]
-    MacBookPro8,3   2011  17"         [Root Port 00:1c.1 = 8086:1c12]
-    MacBookPro9,1   2012  15"         [Root Port 00:1c.1 = 8086:1e12]
-    MacBookPro9,2   2012  13"         [Root Port 00:1c.1 = 8086:1e12]
-    MacBookPro10,1  2012  15"         [Root Port 00:1c.1 = 8086:1e12]
-    MacBookPro10,2  2012  13"         [Root Port 00:1c.1 = 8086:1e12]
-
-For posterity, spurious interrupts caused by the Broadcom 4331 wireless
-card resulted in splats like this (stacktrace omitted):
-    irq 17: nobody cared (try booting with the "irqpoll" option)
-    handlers:
-    [<ffffffff81374370>] pcie_isr
-    [<ffffffffc0704550>] sdhci_irq [sdhci] threaded [<ffffffffc07013c0>] sdhci_thread_irq [sdhci]
-    [<ffffffffc0a0b960>] azx_interrupt [snd_hda_codec]
-    Disabling IRQ #17
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111781
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=728916
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951#c16
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1098621
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632#c5
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1279130
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1332732
-Cc: Chris Milsted <cmilsted@redhat.com>
-Cc: Matthew Garrett <mjg59@srcf.ucam.org>
-Cc: Chris Bainbridge <chris.bainbridge@gmail.com>
-Cc: Andi Kleen <ak@linux.intel.com>
-Cc: Michael Buesch <m@bues.ch>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: stable@vger.kernel.org
-Tested-by: Lukas Wunner <lukas@wunner.de> [MacBookPro9,1]
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
-Acked-by: RafaÅ‚ MiÅ‚ecki <zajec5@gmail.com>
----
- arch/x86/kernel/early-quirks.c | 88 +++++++++++++++++++++++++++++++++++-------
- drivers/bcma/bcma_private.h    |  2 -
- include/linux/bcma/bcma.h      |  1 +
- 3 files changed, 76 insertions(+), 15 deletions(-)
-
-diff --git a/arch/x86/kernel/early-quirks.c b/arch/x86/kernel/early-quirks.c
-index db9a675..8aaab75 100644
---- a/arch/x86/kernel/early-quirks.c
-+++ b/arch/x86/kernel/early-quirks.c
-@@ -11,7 +11,11 @@
- 
- #include <linux/pci.h>
- #include <linux/acpi.h>
-+#include <linux/delay.h>
-+#include <linux/dmi.h>
- #include <linux/pci_ids.h>
-+#include <linux/bcma/bcma.h>
-+#include <linux/bcma/bcma_regs.h>
- #include <drm/i915_drm.h>
- #include <asm/pci-direct.h>
- #include <asm/dma.h>
-@@ -21,6 +25,7 @@
- #include <asm/iommu.h>
- #include <asm/gart.h>
- #include <asm/irq_remapping.h>
-+#include <asm/early_ioremap.h>
- 
- static void __init fix_hypertransport_config(int num, int slot, int func)
- {
-@@ -76,6 +81,13 @@ static void __init nvidia_bugs(int num, int slot, int func)
- #ifdef CONFIG_ACPI
- #ifdef CONFIG_X86_IO_APIC
- 	/*
-+	 * Only applies to Nvidia root ports (bus 0) and not to
-+	 * Nvidia graphics cards on secondary buses with PCI ports.
-+	 */
-+	if (num)
-+		return;
-+
-+	/*
- 	 * All timer overrides on Nvidia are
- 	 * wrong unless HPET is enabled.
- 	 * Unfortunately that's not true on many Asus boards.
-@@ -589,6 +601,47 @@ static void __init force_disable_hpet(int num, int slot, int func)
- #endif
- }
- 
-+#define BCM4331_MMIO_SIZE	16384
-+#define BCM4331_PM_CAP		0x40
-+
-+static void __init apple_airport_reset(int bus, int slot, int func)
-+{
-+	void __iomem *mmio;
-+	u16 pmcsr;
-+	u64 addr;
-+
-+	if (!dmi_match(DMI_SYS_VENDOR, "Apple Inc."))
-+		return;
-+
-+	/* Card may have been put into PCI_D3hot by grub quirk */
-+	pmcsr = read_pci_config_16(bus, slot, func,
-+				   BCM4331_PM_CAP + PCI_PM_CTRL);
-+	if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
-+		pmcsr &= ~PCI_PM_CTRL_STATE_MASK;
-+		write_pci_config_16(bus, slot, func,
-+				    BCM4331_PM_CAP + PCI_PM_CTRL, pmcsr);
-+		mdelay(10);
-+		pmcsr = read_pci_config_16(bus, slot, func,
-+					   BCM4331_PM_CAP + PCI_PM_CTRL);
-+		if ((pmcsr & PCI_PM_CTRL_STATE_MASK) != PCI_D0) {
-+			printk(KERN_ERR "Cannot power up Apple AirPort card\n");
-+			return;
-+		}
-+	}
-+
-+	addr  =      read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_0);
-+	addr |= (u64)read_pci_config(bus, slot, func, PCI_BASE_ADDRESS_1) << 32;
-+	addr &= PCI_BASE_ADDRESS_MEM_MASK;
-+	mmio = early_ioremap(addr, BCM4331_MMIO_SIZE);
-+	if (!mmio) {
-+		printk(KERN_ERR "Cannot iomap Apple AirPort card\n");
-+		return;
-+	}
-+	printk(KERN_INFO "Resetting Apple AirPort card\n");
-+	iowrite32(BCMA_RESET_CTL_RESET,
-+		  mmio + (1 * BCMA_CORE_SIZE) + BCMA_RESET_CTL);
-+	early_iounmap(mmio, BCM4331_MMIO_SIZE);
-+}
- 
- #define QFLAG_APPLY_ONCE 	0x1
- #define QFLAG_APPLIED		0x2
-@@ -602,12 +655,6 @@ struct chipset {
- 	void (*f)(int num, int slot, int func);
- };
- 
--/*
-- * Only works for devices on the root bus. If you add any devices
-- * not on bus 0 readd another loop level in early_quirks(). But
-- * be careful because at least the Nvidia quirk here relies on
-- * only matching on bus 0.
-- */
- static struct chipset early_qrk[] __initdata = {
- 	{ PCI_VENDOR_ID_NVIDIA, PCI_ANY_ID,
- 	  PCI_CLASS_BRIDGE_PCI, PCI_ANY_ID, QFLAG_APPLY_ONCE, nvidia_bugs },
-@@ -637,9 +684,13 @@ static struct chipset early_qrk[] __initdata = {
- 	 */
- 	{ PCI_VENDOR_ID_INTEL, 0x0f00,
- 		PCI_CLASS_BRIDGE_HOST, PCI_ANY_ID, 0, force_disable_hpet},
-+	{ PCI_VENDOR_ID_BROADCOM, 0x4331,
-+	  PCI_CLASS_NETWORK_OTHER, PCI_ANY_ID, 0, apple_airport_reset},
- 	{}
- };
- 
-+static void __init early_pci_scan_bus(int bus);
-+
- /**
-  * check_dev_quirk - apply early quirks to a given PCI device
-  * @num: bus number
-@@ -648,7 +699,7 @@ static struct chipset early_qrk[] __initdata = {
-  *
-  * Check the vendor & device ID against the early quirks table.
-  *
-- * If the device is single function, let early_quirks() know so we don't
-+ * If the device is single function, let early_pci_scan_bus() know so we don't
-  * poke at this device again.
-  */
- static int __init check_dev_quirk(int num, int slot, int func)
-@@ -657,6 +708,7 @@ static int __init check_dev_quirk(int num, int slot, int func)
- 	u16 vendor;
- 	u16 device;
- 	u8 type;
-+	u8 sec;
- 	int i;
- 
- 	class = read_pci_config_16(num, slot, func, PCI_CLASS_DEVICE);
-@@ -684,25 +736,35 @@ static int __init check_dev_quirk(int num, int slot, int func)
- 
- 	type = read_pci_config_byte(num, slot, func,
- 				    PCI_HEADER_TYPE);
-+
-+	if ((type & 0x7f) == PCI_HEADER_TYPE_BRIDGE) {
-+		sec = read_pci_config_byte(num, slot, func, PCI_SECONDARY_BUS);
-+		early_pci_scan_bus(sec);
-+	}
-+
- 	if (!(type & 0x80))
- 		return -1;
- 
- 	return 0;
- }
- 
--void __init early_quirks(void)
-+static void __init early_pci_scan_bus(int bus)
- {
- 	int slot, func;
- 
--	if (!early_pci_allowed())
--		return;
--
- 	/* Poor man's PCI discovery */
--	/* Only scan the root bus */
- 	for (slot = 0; slot < 32; slot++)
- 		for (func = 0; func < 8; func++) {
- 			/* Only probe function 0 on single fn devices */
--			if (check_dev_quirk(0, slot, func))
-+			if (check_dev_quirk(bus, slot, func))
- 				break;
- 		}
- }
-+
-+void __init early_quirks(void)
-+{
-+	if (!early_pci_allowed())
-+		return;
-+
-+	early_pci_scan_bus(0);
-+}
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 38f1567..71df8f2 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -8,8 +8,6 @@
- #include <linux/bcma/bcma.h>
- #include <linux/delay.h>
- 
--#define BCMA_CORE_SIZE		0x1000
--
- #define bcma_err(bus, fmt, ...) \
- 	pr_err("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
- #define bcma_warn(bus, fmt, ...) \
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 3feb1b2..14cd6f7 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -156,6 +156,7 @@ struct bcma_host_ops {
- #define BCMA_CORE_DEFAULT		0xFFF
- 
- #define BCMA_MAX_NR_CORES		16
-+#define BCMA_CORE_SIZE			0x1000
- 
- /* Chip IDs of PCIe devices */
- #define BCMA_CHIP_ID_BCM4313	0x4313
--- 
-2.8.1
+Larry
 
