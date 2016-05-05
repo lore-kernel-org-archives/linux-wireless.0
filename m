@@ -1,61 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:38103 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751395AbcEKKY2 convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34671 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937AbcEEPJM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 06:24:28 -0400
-Received: by mail-wm0-f41.google.com with SMTP id g17so73977331wme.1
-        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2016 03:24:28 -0700 (PDT)
+	Thu, 5 May 2016 11:09:12 -0400
+Date: Thu, 5 May 2016 23:08:22 +0800
+From: Wang YanQing <udknight@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: chaoming_li@realsil.com.cn, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2] rtlwifi: Remove double check for cnt_after_linked
+Message-ID: <20160505150822.GA4151@udknight> (sfid-20160505_170943_758042_40EF41F3)
 MIME-Version: 1.0
-In-Reply-To: <1462835475-11079-14-git-send-email-greearb@candelatech.com>
-References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
-	<1462835475-11079-14-git-send-email-greearb@candelatech.com>
-Date: Wed, 11 May 2016 12:24:27 +0200
-Message-ID: <CA+BoTQmg8p6AtcZ9Q79kBVUoXw7Ge3NHpYuE9XptU+eNhP-XOA@mail.gmail.com> (sfid-20160511_122432_836775_977B2E58)
-Subject: Re: [PATCH 13/21] ath10k: Document cycle count related counters.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 May 2016 at 01:11,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> They are not necessarily named in an intuitive manner,
-> so at least add some comments to help the next person.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.h | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> index e7c228a..c4f649f 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -189,10 +189,10 @@ struct ath10k_fw_stats_pdev {
->
->         /* PDEV stats */
->         s32 ch_noise_floor;
-> -       u32 tx_frame_count;
-> -       u32 rx_frame_count;
-> -       u32 rx_clear_count;
-> -       u32 cycle_count;
-> +       u32 tx_frame_count; /* cycles spent transmitting frames */
-> +       u32 rx_frame_count; /* cycles spent receiving frames */
-> +       u32 rx_clear_count; /* Total channel busy time, evidently */
-> +       u32 cycle_count; /* Total on-channel time */
+rtl_lps_enter does two successive check for cnt_after_linked
+to make sure some time has elapsed after linked. The second
+check isn't necessary, because if cnt_after_linked is bigger
+than 5, it is bigger than 2 of course!
 
-Hmm, there are also other instances of these vars in wmi.h. Although
-redundant maybe it's worth to comment them as well (or first and
-foremost they should be the ones that need a comment as they are the
-"source"). Just an idea.
+This patch remove the second check code.
 
-(oh, and my silly OCD is irritated at the big/small first letters in
-the comments not being consistent)
+Signed-off-by: Wang YanQing <udknight@gmail.com>
+---
+ Changes
+ v1-v2:
+ 1: rewrite subject and commit message.
+ 2: fix issues report by checkpatch.pl.
 
+ drivers/net/wireless/realtek/rtlwifi/ps.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-Michał
+diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
+index b69321d..93579ca 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/ps.c
++++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
+@@ -443,14 +443,10 @@ void rtl_lps_enter(struct ieee80211_hw *hw)
+ 
+ 	spin_lock_irqsave(&rtlpriv->locks.lps_lock, flag);
+ 
+-	/* Idle for a while if we connect to AP a while ago. */
+-	if (mac->cnt_after_linked >= 2) {
+-		if (ppsc->dot11_psmode == EACTIVE) {
+-			RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
+-				 "Enter 802.11 power save mode...\n");
+-
+-			rtl_lps_set_psmode(hw, EAUTOPS);
+-		}
++	if (ppsc->dot11_psmode == EACTIVE) {
++		RT_TRACE(rtlpriv, COMP_POWER, DBG_LOUD,
++			 "Enter 802.11 power save mode...\n");
++		rtl_lps_set_psmode(hw, EAUTOPS);
+ 	}
+ 
+ 	spin_unlock_irqrestore(&rtlpriv->locks.lps_lock, flag);
+-- 
+1.8.5.6.2.g3d8a54e.dirty
