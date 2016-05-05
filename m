@@ -1,132 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53963 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752597AbcEKRCq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:46 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 20/21] ath10k: read firmware crash over ioread32 if CE fails.
-Date: Wed, 11 May 2016 10:02:32 -0700
-Message-Id: <1462986153-16318-21-git-send-email-greearb@candelatech.com> (sfid-20160511_190251_827696_422A6837)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46786 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752937AbcEEQIC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 5 May 2016 12:08:02 -0400
+Message-ID: <1462464478.23962.12.camel@redhat.com> (sfid-20160505_180827_364469_612D8411)
+Subject: Re: [PATCH] cfg80211/nl80211: add wifi tx power mode switching
+ support
+From: Dan Williams <dcbw@redhat.com>
+To: Wei-Ning Huang <wnhuang@chromium.org>,
+	Linux-Wireless <linux-wireless@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Sameer Nanda <snanda@chromium.org>,
+	Todd Broch <tbroch@chromium.org>, davem@davemloft.net,
+	netdev@vger.kernel.org
+Date: Thu, 05 May 2016 11:07:58 -0500
+In-Reply-To: <1462430663-9448-1-git-send-email-wnhuang@chromium.org>
+References: <1462430663-9448-1-git-send-email-wnhuang@chromium.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Thu, 2016-05-05 at 14:44 +0800, Wei-Ning Huang wrote:
+> Recent new hardware has the ability to switch between tablet mode and
+> clamshell mode. To optimize WiFi performance, we want to be able to
+> use
+> different power table between modes. This patch adds a new netlink
+> message type and cfg80211_ops function to allow userspace to trigger
+> a
+> power mode switch for a given wireless interface.
+> 
+> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+> ---
+>  include/net/cfg80211.h       | 11 +++++++++++
+>  include/uapi/linux/nl80211.h | 21 +++++++++++++++++++++
+>  net/wireless/nl80211.c       | 16 ++++++++++++++++
+>  net/wireless/rdev-ops.h      | 22 ++++++++++++++++++++++
+>  net/wireless/trace.h         | 20 ++++++++++++++++++++
+>  5 files changed, 90 insertions(+)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 9e1b24c..aa77fa0 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -2370,6 +2370,12 @@ struct cfg80211_qos_map {
+>   * @get_tx_power: store the current TX power into the dbm variable;
+>   *	return 0 if successful
+>   *
+> + * @set_tx_power_mode: set the transmit power mode. Some device have
+> the ability
+> + *	to transform between different mode such as clamshell and
+> tablet mode.
+> + *	set_tx_power_mode allows setting of different TX power
+> mode at runtime.
+> + * @get_tx_power_mode: store the current TX power mode into the mode
+> variable;
+> + *	return 0 if successful
+> + *
+>   * @set_wds_peer: set the WDS peer for a WDS interface
+>   *
+>   * @rfkill_poll: polls the hw rfkill line, use cfg80211 reporting
+> @@ -2631,6 +2637,11 @@ struct cfg80211_ops {
+>  	int	(*get_tx_power)(struct wiphy *wiphy, struct
+> wireless_dev *wdev,
+>  				int *dbm);
+>  
+> +	int	(*set_tx_power_mode)(struct wiphy *wiphy,
+> +				     enum nl80211_tx_power_mode
+> mode);
+> +	int	(*get_tx_power_mode)(struct wiphy *wiphy,
+> +				     enum nl80211_tx_power_mode
+> *mode);
+> +
+>  	int	(*set_wds_peer)(struct wiphy *wiphy, struct
+> net_device *dev,
+>  				const u8 *addr);
+>  
+> diff --git a/include/uapi/linux/nl80211.h
+> b/include/uapi/linux/nl80211.h
+> index 5a30a75..9b1888a 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -1796,6 +1796,9 @@ enum nl80211_commands {
+>   *	connecting to a PCP, and in %NL80211_CMD_START_AP to start
+>   *	a PCP instead of AP. Relevant for DMG networks only.
+>   *
+> + * @NL80211_ATTR_WIPHY_TX_POWER_MODE: Transmit power mode. See
+> + *      &enum nl80211_tx_power_mode for possible values.
+> + *
+>   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+>   * @NL80211_ATTR_MAX: highest attribute number currently defined
+>   * @__NL80211_ATTR_AFTER_LAST: internal use
+> @@ -2172,6 +2175,8 @@ enum nl80211_attrs {
+>  
+>  	NL80211_ATTR_PBSS,
+>  
+> +	NL80211_ATTR_WIPHY_TX_POWER_MODE,
+> +
+>  	/* add attributes here, update the policy in nl80211.c */
+>  
+>  	__NL80211_ATTR_AFTER_LAST,
+> @@ -3703,6 +3708,22 @@ enum nl80211_tx_power_setting {
+>  };
+>  
+>  /**
+> + * enum nl80211_tx_power_mode - TX power mode setting
+> + * @NL80211_TX_POWER_LOW: general low TX power mode
+> + * @NL80211_TX_POWER_MEDIUM: general medium TX power mode
+> + * @NL80211_TX_POWER_HIGH: general high TX power mode
+> + * @NL80211_TX_POWER_CLAMSHELL: clamshell mode TX power mode
+> + * @NL80211_TX_POWER_TABLET: tablet mode TX power mode
+> + */
+> +enum nl80211_tx_power_mode {
+> +	NL80211_TX_POWER_LOW,
+> +	NL80211_TX_POWER_MEDIUM,
+> +	NL80211_TX_POWER_HIGH,
+> +	NL80211_TX_POWER_CLAMSHELL,
+> +	NL80211_TX_POWER_TABLET,
 
-This might work around problem where sometimes host cannot
-access firmware crash over normal CE transport.
+"clamshell" and "tablet" probably mean many different things to many
+different people with respect to whether or not they should do anything
+with power saving or wifi.  I feel like a more generic interface is
+needed here.
 
-Requires CT firmware with matching logic in it's assert
-handler (-13 and higher releases).
+Could this be already done by:
+@NL80211_ATTR_WIPHY_TX_POWER_SETTING = NL80211_TX_POWER_LIMITED
+@NL80211_ATTR_WIPHY_TX_POWER_LEVEL = <limit for clamshell/tablet mode>
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/hw.h  |  5 ++++
- drivers/net/wireless/ath/ath10k/pci.c | 56 ++++++++++++++++++++++++++++++++++-
- 2 files changed, 60 insertions(+), 1 deletion(-)
+and then the device would be able to change its TX power as it saw fit
+up to that limit set by your application which figures out whether it's
+in clamshell or tablet mode?
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index d3f37d5..5ff1fac 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -603,6 +603,7 @@ enum ath10k_hw_4addr_pad {
- #define PCIE_INTR_ENABLE_ADDRESS		0x0008
- #define PCIE_INTR_CAUSE_ADDRESS			0x000c
- #define PCIE_INTR_CLR_ADDRESS			ar->regs->pcie_intr_clr_address
-+#define SCRATCH_2_ADDRESS                       0x002c
- #define SCRATCH_3_ADDRESS			ar->regs->scratch_3_address
- #define CPU_INTR_ADDRESS			0x0010
- 
-@@ -614,6 +615,10 @@ enum ath10k_hw_4addr_pad {
- #define FW_IND_INITIALIZED			2
- #define FW_IND_HOST_READY			0x80000000
- 
-+/* CT firmware only */
-+#define FW_IND_SCRATCH2_WR      (1<<14) /* scratch2 has data written to it */
-+#define FW_IND_SCRATCH2_RD      (1<<15) /* scratch2 has been read (by host) */
-+
- /* HOST_REG interrupt from firmware */
- #define PCIE_INTR_FIRMWARE_MASK			ar->regs->pcie_intr_fw_mask
- #define PCIE_INTR_CE_MASK_ALL			ar->regs->pcie_intr_ce_mask_all
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 2adc459..330c150 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1507,6 +1507,54 @@ static void ath10k_pci_dump_exc_stack(struct ath10k *ar,
- 				     hi_err_stack);
- }
- 
-+/* Only CT firmware can do this.  Attempt to read crash dump over pci
-+ * registers since normal CE transport is not working.
-+ */
-+static int ath10k_ct_fw_crash_regs_harder(struct ath10k *ar,
-+					  __le32 *reg_dump_values,
-+					  int len)
-+{
-+	u32 val;
-+	int i;
-+	int q;
-+#define MAX_SPIN_TRIES 1000000
-+
-+	if (!test_bit(ATH10K_FW_FEATURE_WMI_10X_CT,
-+		      ar->running_fw->fw_file.fw_features)) {
-+		return -EINVAL;
-+	}
-+
-+	for (i = 0; i<MAX_SPIN_TRIES; i++) {
-+		val = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
-+		if (val & FW_IND_SCRATCH2_WR)
-+			goto pingpong;
-+	}
-+	return -EBUSY;
-+
-+pingpong:
-+	ath10k_warn(ar, "Trying to read crash dump over pingpong registers.\n");
-+	/* Firmware is trying to send us info it seems. */
-+	for (q = 0; q<len; q++) {
-+		reg_dump_values[q] = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS + SCRATCH_2_ADDRESS);
-+		val = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
-+		val |= FW_IND_SCRATCH2_RD; /* tell firmware we read it */
-+		val &= ~FW_IND_SCRATCH2_WR; /* clear firmware's write flag */
-+		ath10k_pci_write32(ar, FW_INDICATOR_ADDRESS, val);
-+
-+		for (i = 0; i<MAX_SPIN_TRIES; i++) {
-+			val = ath10k_pci_read32(ar, FW_INDICATOR_ADDRESS);
-+			if (val & FW_IND_SCRATCH2_WR)
-+				break;
-+		}
-+		if (!(val & FW_IND_SCRATCH2_WR)) {
-+			ath10k_err(ar, "failed to read reg %i via pingpong method.\n",
-+				   q);
-+			return 0; // partial read is better than nothing I guess
-+		}
-+	}
-+	return 0;
-+}
-+
- static void ath10k_pci_dump_registers(struct ath10k *ar,
- 				      struct ath10k_fw_crash_data *crash_data)
- {
-@@ -1520,7 +1568,13 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
- 				      REG_DUMP_COUNT_QCA988X * sizeof(__le32));
- 	if (ret) {
- 		ath10k_err(ar, "failed to read firmware dump area: %d\n", ret);
--		return;
-+
-+		/* Try to read this directly over registers...only works on new
-+		 * CT firmware.
-+		 */
-+		ret = ath10k_ct_fw_crash_regs_harder(ar, reg_dump_values, REG_DUMP_COUNT_QCA988X);
-+		if (ret)
-+			return;
- 	}
- 
- 	BUILD_BUG_ON(REG_DUMP_COUNT_QCA988X % 4);
--- 
-2.4.3
+Dan
 
+> +};
+> +
+> +/**
+>   * enum nl80211_packet_pattern_attr - packet pattern attribute
+>   * @__NL80211_PKTPAT_INVALID: invalid number for nested attribute
+>   * @NL80211_PKTPAT_PATTERN: the pattern, values where the mask has
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 056a730..61b474d 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -402,6 +402,7 @@ static const struct nla_policy
+> nl80211_policy[NUM_NL80211_ATTR] = {
+>  	[NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
+>  	[NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
+>  	[NL80211_ATTR_PBSS] = { .type = NLA_FLAG },
+> +	[NL80211_ATTR_WIPHY_TX_POWER_MODE] = { .type = NLA_U32 },
+>  };
+>  
+>  /* policy for the key attributes */
+> @@ -2218,6 +2219,21 @@ static int nl80211_set_wiphy(struct sk_buff
+> *skb, struct genl_info *info)
+>  			return result;
+>  	}
+>  
+> +	if (info->attrs[NL80211_ATTR_WIPHY_TX_POWER_MODE]) {
+> +		enum nl80211_tx_power_mode mode;
+> +		int idx = 0;
+> +
+> +		if (!rdev->ops->set_tx_power_mode)
+> +			return -EOPNOTSUPP;
+> +
+> +		idx = NL80211_ATTR_WIPHY_TX_POWER_MODE;
+> +		mode = nla_get_u32(info->attrs[idx]);
+> +
+> +		result = rdev_set_tx_power_mode(rdev, mode);
+> +		if (result)
+> +			return result;
+> +	}
+> +
+>  	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
+>  	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
+>  		u32 tx_ant, rx_ant;
+> diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+> index 8ae0c04..c3a1035 100644
+> --- a/net/wireless/rdev-ops.h
+> +++ b/net/wireless/rdev-ops.h
+> @@ -552,6 +552,28 @@ static inline int rdev_get_tx_power(struct
+> cfg80211_registered_device *rdev,
+>  	return ret;
+>  }
+>  
+> +static inline int
+> +rdev_set_tx_power_mode(struct cfg80211_registered_device *rdev,
+> +		       enum nl80211_tx_power_mode mode)
+> +{
+> +	int ret;
+> +	trace_rdev_set_tx_power_mode(&rdev->wiphy, mode);
+> +	ret = rdev->ops->set_tx_power_mode(&rdev->wiphy, mode);
+> +	trace_rdev_return_int(&rdev->wiphy, ret);
+> +	return ret;
+> +}
+> +
+> +static inline int
+> +rdev_get_tx_power_mode(struct cfg80211_registered_device *rdev,
+> +		       enum nl80211_tx_power_mode *mode)
+> +{
+> +	int ret;
+> +	trace_rdev_get_tx_power_mode(&rdev->wiphy);
+> +	ret = rdev->ops->get_tx_power_mode(&rdev->wiphy, mode);
+> +	trace_rdev_return_int_int(&rdev->wiphy, ret, *mode);
+> +	return ret;
+> +}
+> +
+>  static inline int rdev_set_wds_peer(struct
+> cfg80211_registered_device *rdev,
+>  				    struct net_device *dev, const u8
+> *addr)
+>  {
+> diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+> index 09b242b..132c8c2 100644
+> --- a/net/wireless/trace.h
+> +++ b/net/wireless/trace.h
+> @@ -1420,6 +1420,26 @@ TRACE_EVENT(rdev_set_tx_power,
+>  		  WIPHY_PR_ARG, WDEV_PR_ARG,__entry->type, __entry-
+> >mbm)
+>  );
+>  
+> +DEFINE_EVENT(wiphy_only_evt, rdev_get_tx_power_mode,
+> +	TP_PROTO(struct wiphy *wiphy),
+> +	TP_ARGS(wiphy)
+> +);
+> +
+> +TRACE_EVENT(rdev_set_tx_power_mode,
+> +	TP_PROTO(struct wiphy *wiphy, enum nl80211_tx_power_mode
+> mode),
+> +	TP_ARGS(wiphy, mode),
+> +	TP_STRUCT__entry(
+> +		WIPHY_ENTRY
+> +		__field(enum nl80211_tx_power_mode, mode)
+> +	),
+> +	TP_fast_assign(
+> +		WIPHY_ASSIGN;
+> +		__entry->mode = mode;
+> +	),
+> +	TP_printk(WIPHY_PR_FMT ", mode: %d",
+> +		  WIPHY_PR_ARG, __entry->mode)
+> +);
+> +
+>  TRACE_EVENT(rdev_return_int_int,
+>  	TP_PROTO(struct wiphy *wiphy, int func_ret, int func_fill),
+>  	TP_ARGS(wiphy, func_ret, func_fill),
