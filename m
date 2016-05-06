@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:52838 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756246AbcECUVm (ORCPT
+Received: from mxs2.seznam.cz ([77.75.76.125]:55298 "EHLO mxs2.seznam.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758519AbcEFLcc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 16:21:42 -0400
-Date: Tue, 3 May 2016 16:21:40 -0400
-From: Kyle McMartin <kyle@infradead.org>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	linux-firmware@kernel.org
-Subject: Re: [PATCH 0/4] linux-firmware: ath10k: add QCA9377 and update
- QCA6174 images
-Message-ID: <20160503202140.GD9173@merlin.infradead.org> (sfid-20160503_222145_470143_3B5DF6DA)
-References: <20160429173841.9072.66852.stgit@potku.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160429173841.9072.66852.stgit@potku.adurom.net>
+	Fri, 6 May 2016 07:32:32 -0400
+From: "Jan Sobotka" <xSobotkaJ@seznam.cz>
+To: =?utf-8?q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "b43-dev" <b43-dev@lists.infradead.org>,
+	=?utf-8?q?linux-wireless=40vger=2Ekernel=2Eorg?=
+	<linux-wireless@vger.kernel.org>,
+	"brcm80211 development" <brcm80211-dev-list@broadcom.com>
+Subject: Re: Planned Support for BCM 43162 [14e4:43ae] rev 02 ?
+Date: Fri, 06 May 2016 13:19:40 +0200 (CEST)
+Message-Id: <4fb.2TJ3.6U7giWWbPYr.1NB7tC@seznam.cz> (sfid-20160506_133239_669676_1D8DBE76)
+References: <3L}.2TJP.BPtk86KPbh.1NAtDW@seznam.cz>
+	<3Fn.2TId.FHuvjLBV4z.1NAsIY@seznam.cz>
+	<75r.2THk.1aVrEGdo1ry.1N96yR@seznam.cz>
+	<CACna6rypnsgK4DeMxL6F8jwuFpzYhvG8O_TA1M4A6j8X6Eh5_A@mail.gmail.com>
+	<CACna6rx90=u7ZSY6ZXjWw4CicEQR6Ty-iEc_G9ACLL0j9EfJLg@mail.gmail.com>
+	<CACna6rwe9mbcHW+AvtcXvpdvnwZMxkLKzvOLeNp0-XTLB5k6_A@mail.gmail.com>
+Mime-Version: 1.0 (szn-mime-2.0.10)
+Content-Type: text/plain;
+	charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 29, 2016 at 08:42:53PM +0300, Kalle Valo wrote:
-> Hi,
-> 
-> here are firmware images for the new QCA9377 chip and updates for QCA6174.
-> 
+>>You may try:
+>>sudo su
+>>rmmod bcma
+>>echo "14e4 43ae" > /sys/bus/pci/drivers/brcmfmac/new_id
+>>dmesg | grep brcmfmac
 
-Applied, thanks Kalle.
+Output:
+[14054.947644] usbcore: registered new interface driver brcmfmac
 
-cheers, --Kyle
+Full command history:
+root@chobot-lenovo-laptop:~# lsmod | grep bcma
+root@chobot-lenovo-laptop:~# rmmod bcma
+rmmod: ERROR: Module bcma is not currently loaded
+root@chobot-lenovo-laptop:~# echo "14e4 43ae" > /sys/bus/pci/drivers/brcmfmac/new_id
+-bash: /sys/bus/pci/drivers/brcmfmac/new_id: No such file or directory
+root@chobot-lenovo-laptop:~# modprobe brcmfmac
+root@chobot-lenovo-laptop:~# lsmod | grep brcmfmac
+brcmfmac              290816  0
+brcmutil               16384  1 brcmfmac
+cfg80211              565248  2 brcmfmac,mac80211
+root@chobot-lenovo-laptop:~# echo "14e4 43ae" > /sys/bus/pci/drivers/brcmfmac/new_id
+root@chobot-lenovo-laptop:~# dmesg | grep brcmfmac
+[14054.947644] usbcore: registered new interface driver brcmfmac
 
-> Kalle
-> 
-> ---
-> 
-> Kalle Valo (4):
->       ath10k: QCA6174 hw2.1: update firmware-5.bin to SW_RM.1.1.1-00157-QCARMSWPZ-1
->       ath10k: QCA6174 hw2.1: add board-2.bin
->       ath10k: QCA6174 hw3.0: add board-2.bin
->       ath10k: QCA9377 hw1.0: add firmware and board files
-> 
-> 
->  WHENCE                                            |    9 
->  ath10k/QCA6174/hw2.1/board-2.bin                  |  Bin
->  ath10k/QCA6174/hw2.1/firmware-5.bin               |  Bin
->  ath10k/QCA6174/hw3.0/board-2.bin                  |  Bin
->  ath10k/QCA9377/hw1.0/board-2.bin                  |  Bin
->  ath10k/QCA9377/hw1.0/board.bin                    |  Bin
->  ath10k/QCA9377/hw1.0/firmware-5.bin               |  Bin
->  ath10k/QCA9377/hw1.0/notice_ath10k_firmware-5.txt | 1128 +++++++++++++++++++++
->  8 files changed, 1136 insertions(+), 1 deletion(-)
->  create mode 100644 ath10k/QCA6174/hw2.1/board-2.bin
->  create mode 100644 ath10k/QCA6174/hw3.0/board-2.bin
->  create mode 100644 ath10k/QCA9377/hw1.0/board-2.bin
->  create mode 100644 ath10k/QCA9377/hw1.0/board.bin
->  create mode 100644 ath10k/QCA9377/hw1.0/firmware-5.bin
->  create mode 100644 ath10k/QCA9377/hw1.0/notice_ath10k_firmware-5.txt
-> 
-> 
+
+---------- Původní zpráva ----------
+Od: Rafał Miłecki 
+Komu: Jan Sobotka , brcm80211 development 
+Datum: 6. 5. 2016 2:03:08
+Předmět: Re: Planned Support for BCM 43162 [14e4:43ae] rev 02 ?
+
+On 5 May 2016 at 18:22, Jan Sobotka  wrote:
+> Great, now it works. Output:
+>
+> root@chobot-lenovo-laptop:/home/chobot# echo "14e4 43ae" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
+> root@chobot-lenovo-laptop:/home/chobot# dmesg | egrep "bcma|b43"
+> [ 5295.114902] bcma: bus0: Found chip with id 0x4335, rev 0x02 and package 0x01
+> [ 5295.114950] bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2E, class 0x0)
+> [ 5295.114974] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2E, class 0x0)
+> [ 5295.115026] bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x04, class 0x0)
+> [ 5295.115073] bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x04, class 0x0)
+> [ 5295.115096] bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev 0x14, class 0x0)
+> [ 5295.115119] bcma: bus0: Core 5 found: SDIO Device (manuf 0x4BF, id 0x829, rev 0x15, class 0x0)
+> [ 5295.115170] bcma: bus0: Bridge found
+> [ 5295.115221] bcma-pci-bridge: probe of 0000:02:00.0 failed with error -84
+
+So this is device with BCM4335 chipset which is a FullMAC one AFAIK.
+It may be supported by brcmfmac. There is already support for BCM4335
+in brcmfmac but it was developed for SDIO devices only. I don't think
+we ever met BCM4335 on PCIe device.
+
+However I think brcmfmac may need some extra changes to support
+BCM4335 on PCIe. Lets also see if Broadcom team can help us with this.
