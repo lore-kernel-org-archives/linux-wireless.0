@@ -1,222 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49980 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753516AbcEIXL3 (ORCPT
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:36262 "EHLO
+	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751511AbcEFFvR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 19:11:29 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 06/21] ath10k: save firmware stacks upon firmware crash
-Date: Mon,  9 May 2016 16:11:00 -0700
-Message-Id: <1462835475-11079-7-git-send-email-greearb@candelatech.com> (sfid-20160510_011134_927614_1F2659DC)
-In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
-References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+	Fri, 6 May 2016 01:51:17 -0400
+Received: by mail-oi0-f54.google.com with SMTP id x201so128176985oif.3
+        for <linux-wireless@vger.kernel.org>; Thu, 05 May 2016 22:51:16 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQnED8EiLFNWq=8CPVAtufi0R5WjzAf6Pkf6cxUON_xY4g@mail.gmail.com>
+References: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+	<1462446039-1070-1-git-send-email-michal.kazior@tieto.com>
+	<1462446039-1070-6-git-send-email-michal.kazior@tieto.com>
+	<CAA93jw6+WvTttjgBsU08epcXwSCHxv3Eh=m32xi72AiKYnGOCQ@mail.gmail.com>
+	<CA+BoTQnED8EiLFNWq=8CPVAtufi0R5WjzAf6Pkf6cxUON_xY4g@mail.gmail.com>
+Date: Thu, 5 May 2016 22:51:16 -0700
+Message-ID: <CAA93jw6dJ=fUK_Sr1Pcrm8wES9o_aC+oHqXcQksc_yKbqv8ikA@mail.gmail.com> (sfid-20160506_075121_256444_0C90ACA1)
+Subject: Re: [PATCHv4 5/5] mac80211: add debug knobs for codel
+From: Dave Taht <dave.taht@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	make-wifi-fast@lists.bufferbloat.net,
+	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>,
+	Avery Pennarun <apenwarr@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Thu, May 5, 2016 at 10:27 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 5 May 2016 at 17:21, Dave Taht <dave.taht@gmail.com> wrote:
+>> On Thu, May 5, 2016 at 4:00 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>> This adds a few debugfs entries to make it easier
+>>> to test, debug and experiment.
+>>
+>> I might argue in favor of moving all these (inc the fq ones) into
+>> their own dir, maybe "aqm" or "sqm".
+>>
+>> The mixture of read only stats and configuration vars is a bit confusing.
+>>
+>> Also in my testing of the previous patch, actually seeing the stats
+>> get updated seemed to be highly async or inaccurate. For example, it
+>> was obvious from the captures themselves that codel_ce_mark-ing was
+>> happening, but the actual numbers out of wack with the mark seen or
+>> fq_backlog seen.  (I can go back to revisit this)
+>
+> That's kind of expected since all of these bits are exposed as
+> separate debugfs entries/files. To avoid that it'd be necessary to
+> provide a single debugfs entry/file whose contents are generated on
+> open() while holding local->fq.lock. But then you could argue it
+> should contain all per-sta-tid info as well (backlog, flows, drops) as
+> well instead of having them in netdev*/stations/*/txqs.
+> Hmm..
 
-Should help debug firmware crashes, and give users a way
-to provide some useful debug reports to firmware developers.
+I have not had time to write up todays results to any full extent, but
+they were pretty spectacular.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.h  |  4 +++
- drivers/net/wireless/ath/ath10k/debug.c | 29 +++++++++++++++++-
- drivers/net/wireless/ath/ath10k/hw.h    |  2 ++
- drivers/net/wireless/ath/ath10k/pci.c   | 52 +++++++++++++++++++++++++++++++++
- 4 files changed, 86 insertions(+), 1 deletion(-)
+I have a comparison of the baseline ath10k driver vs your 3.5 patchset
+here on the second plot:
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7f9f460..644d077 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -427,6 +427,10 @@ struct ath10k_fw_crash_data {
- 	uuid_le uuid;
- 	struct timespec timestamp;
- 	__le32 registers[REG_DUMP_COUNT_QCA988X];
-+	__le32 stack_buf[ATH10K_FW_STACK_SIZE / sizeof(__le32)];
-+	__le32 exc_stack_buf[ATH10K_FW_STACK_SIZE / sizeof(__le32)];
-+	__le32 stack_addr;
-+	__le32 exc_stack_addr;
- };
- 
- struct ath10k_debug {
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 38b3541..7bc3053 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -36,10 +36,15 @@
-  * enum ath10k_fw_crash_dump_type - types of data in the dump file
-  * @ATH10K_FW_CRASH_DUMP_REGDUMP: Register crash dump in binary format
-  * @ATH10K_FW_ERROR_DUMP_DBGLOG:  Recent firmware debug log entries
-+ * @ATH10K_FW_CRASH_DUMP_STACK:   Stack memory contents.
-+ * @ATH10K_FW_CRASH_DUMP_EXC_STACK:   Exception stack memory contents.
-  */
- enum ath10k_fw_crash_dump_type {
- 	ATH10K_FW_CRASH_DUMP_REGISTERS = 0,
- 	ATH10K_FW_CRASH_DUMP_DBGLOG = 1,
-+	ATH10K_FW_CRASH_DUMP_STACK = 2,
-+	ATH10K_FW_CRASH_DUMP_EXC_STACK = 3,
-+
- 	ATH10K_FW_CRASH_DUMP_MAX,
- };
- 
-@@ -103,8 +108,11 @@ struct ath10k_dump_file_data {
- 	/* VERMAGIC_STRING */
- 	char kernel_ver[64];
- 
-+	__le32 stack_addr;
-+	__le32 exc_stack_addr;
-+
- 	/* room for growth w/out changing binary format */
--	u8 unused[128];
-+	u8 unused[120];
- 
- 	/* struct ath10k_tlv_dump_data + more */
- 	u8 data[0];
-@@ -797,6 +805,8 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	len = hdr_len;
- 	len += sizeof(*dump_tlv) + sizeof(crash_data->registers);
- 	len += sizeof(*dump_tlv) + sizeof(ar->debug.dbglog_entry_data);
-+	len += sizeof(*dump_tlv) + sizeof(crash_data->stack_buf);
-+	len += sizeof(*dump_tlv) + sizeof(crash_data->exc_stack_buf);
- 
- 	sofar += hdr_len;
- 
-@@ -836,6 +846,8 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 	dump_data->ht_cap_info = cpu_to_le32(ar->ht_cap_info);
- 	dump_data->vht_cap_info = cpu_to_le32(ar->vht_cap_info);
- 	dump_data->num_rf_chains = cpu_to_le32(ar->num_rf_chains);
-+	dump_data->stack_addr = cpu_to_le32(crash_data->stack_addr);
-+	dump_data->exc_stack_addr = cpu_to_le32(crash_data->exc_stack_addr);
- 
- 	strlcpy(dump_data->fw_ver, ar->hw->wiphy->fw_version,
- 		sizeof(dump_data->fw_ver));
-@@ -868,7 +880,22 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
- 		cpu_to_le32(ar->debug.dbglog_entry_data.head_idx);
- 	dbglog_storage->tail_idx =
- 		cpu_to_le32(ar->debug.dbglog_entry_data.tail_idx);
-+	sofar += sizeof(*dump_tlv) + tmp;
- 
-+	/* Gather firmware stack dump */
-+	tmp = sizeof(crash_data->stack_buf);
-+	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+	dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_STACK);
-+	dump_tlv->tlv_len = cpu_to_le32(tmp);
-+	memcpy(dump_tlv->tlv_data, crash_data->stack_buf, tmp);
-+	sofar += sizeof(*dump_tlv) + tmp;
-+
-+	/* Gather firmware exception stack dump */
-+	tmp = sizeof(crash_data->exc_stack_buf);
-+	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
-+	dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_EXC_STACK);
-+	dump_tlv->tlv_len = cpu_to_le32(tmp);
-+	memcpy(dump_tlv->tlv_data, crash_data->exc_stack_buf, tmp);
- 	sofar += sizeof(*dump_tlv) + tmp;
- 
- 	ar->debug.fw_crash_data->crashed_since_read = false;
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 5bbef4b..e86ebf0 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -122,6 +122,8 @@ enum qca9377_chip_id_rev {
- 
- #define REG_DUMP_COUNT_QCA988X 60
- 
-+#define ATH10K_FW_STACK_SIZE 4096
-+
- struct ath10k_fw_ie {
- 	__le32 id;
- 	__le32 len;
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 16e32d0..62dd167 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -985,6 +985,22 @@ static int ath10k_pci_diag_read32(struct ath10k *ar, u32 address, u32 *value)
- 	return ret;
- }
- 
-+static int __ath10k_pci_diag_read_hi_addr(struct ath10k *ar, __le32 *dest,
-+					  u32 src)
-+{
-+	u32 host_addr;
-+	int ret;
-+
-+	host_addr = host_interest_item_address(src);
-+
-+	ret = ath10k_pci_diag_read32(ar, host_addr, dest);
-+	if (ret != 0) {
-+		ath10k_warn(ar, "failed to get memcpy hi address for firmware address %d: %d\n",
-+			    src, ret);
-+	}
-+	return ret;
-+}
-+
- static int __ath10k_pci_diag_read_hi(struct ath10k *ar, void *dest,
- 				     u32 src, u32 len)
- {
-@@ -1013,6 +1029,9 @@ static int __ath10k_pci_diag_read_hi(struct ath10k *ar, void *dest,
- #define ath10k_pci_diag_read_hi(ar, dest, src, len)		\
- 	__ath10k_pci_diag_read_hi(ar, dest, HI_ITEM(src), len)
- 
-+#define ath10k_pci_diag_read_hi_addr(ar, dest, src)		\
-+	__ath10k_pci_diag_read_hi_addr(ar, dest, HI_ITEM(src))
-+
- int ath10k_pci_diag_write_mem(struct ath10k *ar, u32 address,
- 			      const void *data, int nbytes)
- {
-@@ -1405,6 +1424,37 @@ u16 ath10k_pci_hif_get_free_queue_number(struct ath10k *ar, u8 pipe)
- 	return ath10k_ce_num_free_src_entries(ar_pci->pipe_info[pipe].ce_hdl);
- }
- 
-+/* Save the main firmware stack */
-+static void ath10k_pci_dump_stack(struct ath10k *ar,
-+				  struct ath10k_fw_crash_data *crash_data)
-+{
-+	if (!crash_data)
-+		return;
-+
-+	lockdep_assert_held(&ar->data_lock);
-+	BUILD_BUG_ON(ATH10K_FW_STACK_SIZE % 4);
-+
-+	ath10k_pci_diag_read_hi(ar, crash_data->stack_buf,
-+				hi_stack, ATH10K_FW_STACK_SIZE);
-+	ath10k_pci_diag_read_hi_addr(ar, &crash_data->stack_addr, hi_stack);
-+}
-+
-+/* Save the exception firmware stack */
-+static void ath10k_pci_dump_exc_stack(struct ath10k *ar,
-+				      struct ath10k_fw_crash_data *crash_data)
-+{
-+	if (!crash_data)
-+		return;
-+
-+	lockdep_assert_held(&ar->data_lock);
-+
-+	ath10k_pci_diag_read_hi(ar, crash_data->exc_stack_buf,
-+				hi_err_stack, ATH10K_FW_STACK_SIZE);
-+
-+	ath10k_pci_diag_read_hi_addr(ar, &crash_data->exc_stack_addr,
-+				     hi_err_stack);
-+}
-+
- static void ath10k_pci_dump_registers(struct ath10k *ar,
- 				      struct ath10k_fw_crash_data *crash_data)
- {
-@@ -1555,6 +1605,8 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
- 	ath10k_print_driver_info(ar);
- 	ath10k_pci_dump_registers(ar, crash_data);
- 	ath10k_pci_dump_dbglog(ar);
-+	ath10k_pci_dump_stack(ar, crash_data);
-+	ath10k_pci_dump_exc_stack(ar, crash_data);
- 	if (crash_data)
- 		crash_data->crashed_since_read = true;
- 
+http://blog.cerowrt.org/post/predictive_codeling/
+
+The raw data is here:
+https://github.com/dtaht/blog-cerowrt/tree/master/content/flent/qca-10.2-fqmac35-codel-5
+
+...
+
+a note: quantum of the mtu (typically 1514) is a saner default than 300,
+
+(the older patch I had, set it to 300, dunno what your default is now).
+
+and quantum 1514, codel target 5ms rather than 20ms for this test
+series was *just fine* (but more testing of the lower target is
+needed)
+
+However:
+
+quantum "300" only makes sense for very, very low bandwidths (say <
+6mbits), in other scenarios it just eats extra cpu (5 passes through
+the loop to send a big packet) and disables
+the "new/old" queue feature which helps "push" new flows to flow
+balance. I'd default it to the larger value.
+
+
+
+
+...
+
+In other news, spacex just landed on the barge a few minutes ago.
+
+The webcast is still going on
+https://www.youtube.com/watch?v=L0bMeDj76ig and you can reverse it to
+the landing.
+:awesome:
+
+>
+>
+> Michał
+
+
+
 -- 
-2.4.3
-
+Dave Täht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
