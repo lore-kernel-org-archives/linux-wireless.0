@@ -1,112 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:35658 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753092AbcEIMXz (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:33708 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733AbcEFHXe convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 08:23:55 -0400
-Received: by mail-pf0-f174.google.com with SMTP id 77so75465210pfv.2
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2016 05:23:55 -0700 (PDT)
-Subject: Re: Limit rate of BCM34348 on Raspberry PI-3 via brcmfmac
-To: Barry Reinhold <BarryReinhold@lnihealth.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <CY1PR19MB0614FCBF91B407C6CB0B08CFA77E0@CY1PR19MB0614.namprd19.prod.outlook.com>
-Cc: Tom Harada <TomHarada@lnihealth.com>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <57308150.5060308@broadcom.com> (sfid-20160509_142359_546835_7EF15A87)
-Date: Mon, 9 May 2016 14:23:44 +0200
+	Fri, 6 May 2016 03:23:34 -0400
+Received: by mail-oi0-f49.google.com with SMTP id v145so129638663oie.0
+        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2016 00:23:34 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CY1PR19MB0614FCBF91B407C6CB0B08CFA77E0@CY1PR19MB0614.namprd19.prod.outlook.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CA+BoTQnrPqitDkXpqhEV3cxwdnr9J3NT-q6xDQN-nphNOgVfFQ@mail.gmail.com>
+References: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+	<1462446039-1070-1-git-send-email-michal.kazior@tieto.com>
+	<1462446039-1070-6-git-send-email-michal.kazior@tieto.com>
+	<CAA93jw6+WvTttjgBsU08epcXwSCHxv3Eh=m32xi72AiKYnGOCQ@mail.gmail.com>
+	<CA+BoTQnED8EiLFNWq=8CPVAtufi0R5WjzAf6Pkf6cxUON_xY4g@mail.gmail.com>
+	<CAA93jw6dJ=fUK_Sr1Pcrm8wES9o_aC+oHqXcQksc_yKbqv8ikA@mail.gmail.com>
+	<CA+BoTQnrPqitDkXpqhEV3cxwdnr9J3NT-q6xDQN-nphNOgVfFQ@mail.gmail.com>
+Date: Fri, 6 May 2016 00:23:33 -0700
+Message-ID: <CAA93jw4+OuFFhwdC1-vm66Gi6ZZSoAbyOfw67VO9jJbOV6EM6Q@mail.gmail.com> (sfid-20160506_092338_796086_E4B6C3B3)
+Subject: Re: [PATCHv4 5/5] mac80211: add debug knobs for codel
+From: Dave Taht <dave.taht@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	make-wifi-fast@lists.bufferbloat.net,
+	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>,
+	Avery Pennarun <apenwarr@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, May 5, 2016 at 11:33 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 6 May 2016 at 07:51, Dave Taht <dave.taht@gmail.com> wrote:
+>> On Thu, May 5, 2016 at 10:27 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>> On 5 May 2016 at 17:21, Dave Taht <dave.taht@gmail.com> wrote:
+>>>> On Thu, May 5, 2016 at 4:00 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>>>> This adds a few debugfs entries to make it easier
+>>>>> to test, debug and experiment.
+>>>>
+>>>> I might argue in favor of moving all these (inc the fq ones) into
+>>>> their own dir, maybe "aqm" or "sqm".
+>>>>
+>>>> The mixture of read only stats and configuration vars is a bit confusing.
+>>>>
+>>>> Also in my testing of the previous patch, actually seeing the stats
+>>>> get updated seemed to be highly async or inaccurate. For example, it
+>>>> was obvious from the captures themselves that codel_ce_mark-ing was
+>>>> happening, but the actual numbers out of wack with the mark seen or
+>>>> fq_backlog seen.  (I can go back to revisit this)
+>>>
+>>> That's kind of expected since all of these bits are exposed as
+>>> separate debugfs entries/files. To avoid that it'd be necessary to
+>>> provide a single debugfs entry/file whose contents are generated on
+>>> open() while holding local->fq.lock. But then you could argue it
+>>> should contain all per-sta-tid info as well (backlog, flows, drops) as
+>>> well instead of having them in netdev*/stations/*/txqs.
+>>> Hmm..
+>>
+>> I have not had time to write up todays results to any full extent, but
+>> they were pretty spectacular.
+>>
+>> I have a comparison of the baseline ath10k driver vs your 3.5 patchset
+>> here on the second plot:
+>>
+>> http://blog.cerowrt.org/post/predictive_codeling/
+>>
+>> The raw data is here:
+>> https://github.com/dtaht/blog-cerowrt/tree/master/content/flent/qca-10.2-fqmac35-codel-5
+>
+> It's probably good to explicitly mention that you test(ed) ath10k with
+> my RFC DQL patch applied. Without it the fqcodel benefits are a lot
+> less significant.
+
+Yes. I am trying to establish a baseline before and after, starting at
+the max rate my ath9k (2x2) can take the ath10k (2x2) at a distance of
+about 12 feet. Without moving anything.
+
+https://github.com/dtaht/blog-cerowrt/tree/master/content/flent/stock-4.4.1-22
+has the baseline stats from that ubuntu 16.04 kernel...
+ but the comparison plots I'd generated there were against the ct-10.1
+firmware and before I'd realized you'd used the smaller quantum. Life
+is *even* better with using the bigger quantum in the
+qca-10.2-fqmac35-codel-5 patchset.
+
+>
+> (oh, and the "3.5" is pre-PATCHv4 before fq/codel split work:
+> https://github.com/kazikcz/linux/tree/fqmac-v3.5 )
+
+I have insufficient time in life to track any but the most advanced
+patchset, and I am catching up as fast as I can. First up was finding
+the max ath9k performance, (5x reduction in latency, no reduction in
+throughput at about 110mbit).
+
+Then I'll try locking the bitrate at say 24mbit for another run. You
+already showed the latency reduction at 6mbit at about 100x to 1, so I
+don't plan to repeat that.
+
+then I'll get another ath10k 3x3 up and wash, rinse, repeat.
+
+I would not mind if your patch 4.1 had good stats generation (maybe
+put all the relevant stats in a single file?) and defaulted to quantum
+1514, since it seems likely I'll not get done this first test run
+before monday.
+
+Additional test suggestions wanted? I plan to add the tcp_square_wave
+tests to the next run to show how much better the congestion control
+is, and I'll add iperf3 floods too.
+
+I am not sure how avery is planning to test each individual piece.
+
+>
+>>
+>> ...
+>>
+>> a note: quantum of the mtu (typically 1514) is a saner default than 300,
+>>
+>> (the older patch I had, set it to 300, dunno what your default is now).
+>
+> I still use 300.
+>
+>
+>> and quantum 1514, codel target 5ms rather than 20ms for this test
+>> series was *just fine* (but more testing of the lower target is
+>> needed)
+>
+> I would keep 20ms for now until we get more test data. I'm mostly
+> concerned about MU performance on ath10k which requires significant
+> amount of buffering.
+
+ok.
+
+>
+>> However:
+>>
+>> quantum "300" only makes sense for very, very low bandwidths (say <
+>> 6mbits), in other scenarios it just eats extra cpu (5 passes through
+>> the loop to send a big packet) and disables
+>> the "new/old" queue feature which helps "push" new flows to flow
+>> balance. I'd default it to the larger value.
+>
+> Perhaps this could be dynamically adjusted to match the slowest
+> station known to rate control in the future?
+
+Meh. We've done a lot of fiddling with the quantum to not much avail.
+300 was a good number at really low rates. The rest of the time, the
+larger number is vastly easier on cpu AND on flow balance.
+
+https://dev.openwrt.org/ticket/21326
+
+> Oh, and there's
+> multicast..
+
+Multicast is it's own queue in the per-station queueing model.
+
+>
+>
+> Michał
 
 
-On 7-5-2016 21:24, Barry Reinhold wrote:
-> I have observed erratic behavior with http connectivity over the WiFi interface of the Raspberry PI 3. This appears to be consistent with issues that a number of other people have reported. I fear, but can not provide definitive evidence, that these failures could be an RF design/layout issue with the RP-3 itself.
-> 
-> The purpose of this post is to see if this possible issue can be confirmed by others, and to seek a possible work around by re configuring the BCM43438 chip via the brcmfmac driver; or the other associated wifi modules.
->  
-> How the issue is being seen:
-> 
-> Note: The testing I have done is limited and has the potential to be misleading, so any input on improving the test process would be appreciated.
-> 
-> There are two metrics we are using to define/see failure: (1) Loss/delay in ICMP Echo requests/replys (pings),  and (2) The output of messages in journalctl from the wpa_supplicant or hostapd (sudo journalctl -u wpa_supplicant -u hostapd -f) indicating a disconnect event with associated reason - typically 0 - (wlan0: CTRL-EVENT-DISCONNECTED bssid=60:02:92:cd:c9:30 reason=0).
-> Ping times vary from 1 to several hundred ms, to outright loss.
-> There are also failures to reassociate (wlan0: CTRL-EVENT-ASSOC-REJECT status_code=16).
-> 
-> The test Environment is composed of:
-> An official  Raspberry PI-3 model B with an official Raspberry PI-3 power supply.
-> Raspbian release: Jesse (March 18)
-> Kernel 4.4.6
-> wpa_supplicant 2.3
-> brcmfmac 7.45.41.23 (as reported by ethool)
-> BCM43438 firmware: 01-cc44eda9c
-> BlueZ 5.23
-> 
-> We are running both wpa_supplicant and hostapd, (disabling hostapd does not impact the results of the tests).
-> We have an application that is monitoring for BTLE/Bluetooth connections so it is scanning on a regular basis, as well as sending out Bluetooth INQUIRE messages.
-> 
-> WiFi Access Points:
-> 1. Cisco DPC3939B (supports n)
-> 2. Cisco Linksys E1200 (supports n)
-> 3. Netgear WNDR3400 (supports n)
-> 4. Linksys WAP54G v3 (does not support n)
-> 
->  
-> 
-> Test Process
-> 
->  
-> While the application is running (thus generating Bluetooth activity)
-> 1. Connect a PC to the RPi3's software access point and ping the RPi3 continuously.
-> 2. Connect the RPi3 to an AP from the set above.
-> 3. Let the system run for 10 minutes while counting wpa_supplicant disconnects and lost pings.
-> 
-> Observations:
-> In our testing we noticed that either we essentially got no errors, or we got 12+ errors. Some error rates high enough that we couldn't count them as they just scrolled off our screen. Hence we considered thing to work (less then 2 errors) or failed (greater than 10 errors).
-> 
-> The results table for the different APs is as follows:
-> DPC3939B - Failed
-> E1200 - Failed
-> WNDR3400 - Failed
-> WAP54G - Passed
-> 
-> Since only the WAP54G passed (no n support), we modified the data rate on the Netgear WND3400 and limited its data rate to 54 mbs, at this point the WNDR3400 passed.
-> 
-> We then tried changing channels. this did not impact the metrics we were monitoring.
-> 
-> Now being suspicious of RF issues on the board, we modified our application which performs the Bluetooth communications so that Bluetooth was disabled. This did not eliminate errors but dramatically reduced them. We then modified our application to generate a lot of Bluetooth inquiry messages and discovered that the generation and resulting response from INQUIRY messages correlated with journalctl disconnection messages. 
-> 
-> We repeated this on the AP WAP54G and the rate limited WNDR3400 and did not see problems.
-> 
-> Our initial conjecture is that there is some coexistence/RF issue with the RPI-3 board when using Bluetooth and WiFi that is impacting when operating with a IEEE 802.11 N AP.
-> 
-> Notes and steps taken:
-> Background reading led us to try the following fixes that have worked for others:
-> 1. Disable power management
-> 2. Set the Country Code to US
-> These fixes did not help.
->  
-> I have two questions:
-> 1. Are there some obvious things I can do to identify/validate the initial conjecture as to the cause of the error?
-> 2. Is there a way to force the RPI-3 when operating as a client of another AP to rate limit or function as a "G" device?  If the RPI-3 or the BCM43438 do indeed have RF issues it would seem like some work around will be needed. I could not identify a way to limit the data rate in brcmfmac.
 
-Hi Barry,
-
-What you are trying to do is simply not possible. Indeed the RF is such
-that Wifi and BT share the same antenna, which is the root-cause of the
-problems you see. When the antenna is used by BT the Wifi is
-unavailable. This is handled by bt-coex, but that is designed
-specifically for station mode. This is simply not possible when the Wifi
-is operating in AP mode, because of
-
-The reason why things get better/working when using g-rates is probably
-because INQUIRE scan takes 14 x 1.25ms = 17.5 ms (thanks for the
-calculation, Hante) and wifi frame retries at g-rate get past that.
-cfg80211_ops have .set_bitrate_mask() callback, but brcmfmac does not
-implement that.
-
-Regards,
-Arend
+-- 
+Dave Täht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
