@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19715 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932179AbcE0OqS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37391 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755528AbcEFQ3Q (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 10:46:18 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 1/5] ath10k: fix operating irq mode for ahb device
-Date: Fri, 27 May 2016 20:15:55 +0530
-Message-ID: <20160527144559.4053-1-rmanohar@qti.qualcomm.com> (sfid-20160527_164636_948325_C3EB36AC)
+	Fri, 6 May 2016 12:29:16 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Christian Daudt <csd@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH] Fix kernel oops in failed chip_attach
+References: <1462390228-27863-1-git-send-email-csd@broadcom.com>
+	<87lh3ns8q5.fsf@kamboji.qca.qualcomm.com>
+	<CAHCK0=OFL-kJqk-h++LSgr6rKz7W=bMNCgJOqQbCgnoJ9XqSFw@mail.gmail.com>
+Date: Fri, 06 May 2016 19:29:10 +0300
+In-Reply-To: <CAHCK0=OFL-kJqk-h++LSgr6rKz7W=bMNCgJOqQbCgnoJ9XqSFw@mail.gmail.com>
+	(Christian Daudt's message of "Fri, 6 May 2016 09:17:43 -0700")
+Message-ID: <87r3dfnoa1.fsf@kamboji.qca.qualcomm.com> (sfid-20160506_182918_907801_BD434231)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Earlier when operating irq mode is legacy, interrupts are disabled
-and re-enabled based on num_msi_intrs. commit cfe9011a05a8 ("ath10k:
-remove MSI range support") replaced num_msi_intrs by oper_irq_mode.
-Since oper_irq_mode is not initialized for ahb devices (i.e qca4019),
-device boot up is failed during probe.
+Christian Daudt <csd@broadcom.com> writes:
 
-Fixes: cfe9011a05a8 ("ath10k: remove MSI range support")
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/ahb.c | 2 ++
- 1 file changed, 2 insertions(+)
+> On Fri, May 6, 2016 at 4:53 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Christian Daudt <csd@broadcom.com> writes:
+>>
+>>> When chip attach fails, brcmf_sdiod_intr_unregister is being called
+>>> but that is too early as sdiodev->settings has not been set yet
+>>> nor has brcmf_sdiod_intr_register been called.
+>>> Change to use oob_irq_requested + newly created sd_irq_requested
+>>> to decide on what to unregister at intr_unregister time.
+>>>
+>>> Steps to reproduce problem:
+>>> - modprobe brcmfmac using buggy FW
+>>> - rmmod brcmfmac
+>>> - modprobe brcmfmac again.
+>>>
+>>> If done with a buggy firmware, brcm_chip_attach will fail on the
+>>> 2nd modprobe triggering the call to intr_unregister and the
+>>> kernel oops when attempting to de-reference sdiodev->settings->bus.sdio
+>>> which has not yet been set.
+>>>
+>>> Signed-off-by: Christian Daudt <csd@broadcom.com>
+>>
+>> Please use prefix "brcmfmac: " in the title.
+>>
+> I'll resubmit with that mod after getting round 1 feedback. I was a
+> bit rusty on patch submissions and forgot about that part on the first
+> one.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index bd62bc19e758..37ff36fca7bc 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -476,6 +476,7 @@ static irqreturn_t ath10k_ahb_interrupt_handler(int irq, void *arg)
- 
- static int ath10k_ahb_request_irq_legacy(struct ath10k *ar)
- {
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
- 	int ret;
- 
-@@ -487,6 +488,7 @@ static int ath10k_ahb_request_irq_legacy(struct ath10k *ar)
- 			    ar_ahb->irq, ret);
- 		return ret;
- 	}
-+	ar_pci->oper_irq_mode = ATH10K_PCI_IRQ_LEGACY;
- 
- 	return 0;
- }
+No worries, that's why we do review :)
+
 -- 
-2.8.3
-
+Kalle Valo
