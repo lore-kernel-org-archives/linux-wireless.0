@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58267 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750897AbcEPLqL (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42757 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932131AbcEFSJm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2016 07:46:11 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: andy <lgkbiti@163.com>, linux-wireless@vger.kernel.org
-Subject: Re: wifi driver crashes openwrt device
-References: <loom.20160510T171307-937@post.gmane.org>
-	<20160515174705.GA11620@localhost>
-Date: Mon, 16 May 2016 14:46:07 +0300
-In-Reply-To: <20160515174705.GA11620@localhost> (Bob Copeland's message of
-	"Sun, 15 May 2016 13:47:05 -0400")
-Message-ID: <87d1omp6o0.fsf@purkki.adurom.net> (sfid-20160516_134616_361804_ABFBAA07)
+	Fri, 6 May 2016 14:09:42 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Move spectral related structures under ath10k
+ debugfs
+Date: Fri, 6 May 2016 18:09:35 +0000
+Message-ID: <87eg9fnjmp.fsf@kamboji.qca.qualcomm.com> (sfid-20160506_200956_058060_3EAC4EF7)
+References: <1461684276-4042-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1461684276-4042-1-git-send-email-mohammed@qca.qualcomm.com>
+	(Mohammed Shafi Shajakhan's message of "Tue, 26 Apr 2016 20:54:36	+0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bob Copeland <me@bobcopeland.com> writes:
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 
-> On Tue, May 10, 2016 at 03:17:25PM +0000, andy wrote:
->> hello, every body.
->>   I developed an openwrt device based on git clone 
->> git://git.openwrt.org/15.05/openwrt.git.
->>   I found that my device rebooted during wifi initializing sometimes, maybe 
->> one in twenty. 
->>   The wifi driver is compat-wireless-2016-01-10.tar.bz2.
->>   Could somebody give some hint or help me to resolve this wired issue?
->>   Thank you very much.
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 >
-> Hi Andy,
+> Spectral related structures are accessed / modified only if ath10k
+> debugfs is enabled, so it makes more sense to move them under
+> ATH10K_DEBUGFS
 >
-> You will probably need to capture a stack trace from the device in order
-> for someone to be able to help, otherwise we can only guess.  A serial
-> console can help with that.
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Didn't openwrt have a some sort ramoops facility to collect the last
-kernel logs before a crash? I don't recall the name right now but I'm
-pretty sure I used it with one of our APs few years back. That might
-help (or not).
+Applied, thanks.
 
 -- 
 Kalle Valo
