@@ -1,91 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58025 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44598 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075AbcETMON (ORCPT
+	with ESMTP id S1758126AbcEFMIU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2016 08:14:13 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+	Fri, 6 May 2016 08:08:20 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH 1/2] ath10k: Remove duplicate and unused rx rate flags
-Date: Fri, 20 May 2016 17:43:18 +0530
-Message-ID: <1463746399-22839-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160520_141416_806543_0C691DFD)
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: Fix survey reporting with QCA4019
+Date: Fri, 6 May 2016 17:37:03 +0530
+Message-ID: <1462536423-9903-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160506_140823_594864_9ADD98A9)
+In-Reply-To: <1462536423-9903-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1462536423-9903-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+In QCA4019, cycle counter wraparound in same fashion
+as QCA988X. When the cycle counter wraparound it
+resets to 0x7fffffff. Set has_shifted_cc_wraparound to
+true for QCA4019 to enable the code path to handle cycle
+counter wraparound for consistent survey report.
 
-All these flags are not used and their use is completely
-covered by 'ath10k_hw_rate_ofdm', 'ath10k_hw_rate_cck',
-and RX_PPDU_START_RATE_FLAG
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 ---
-[thanks Michal/Kalle/Vasanth for the first level review]
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ 1 file changed, 1 insertion(+)
 
- drivers/net/wireless/ath/ath10k/rx_desc.h |   39 -----------------------------
- 1 file changed, 39 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
-index ca8d168..aa660a4 100644
---- a/drivers/net/wireless/ath/ath10k/rx_desc.h
-+++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
-@@ -656,26 +656,6 @@ struct rx_msdu_end {
-  *		Reserved: HW should fill with zero.  FW should ignore.
-  */
- 
--#define RX_PPDU_START_SIG_RATE_SELECT_OFDM 0
--#define RX_PPDU_START_SIG_RATE_SELECT_CCK  1
--
--#define RX_PPDU_START_SIG_RATE_OFDM_48 0
--#define RX_PPDU_START_SIG_RATE_OFDM_24 1
--#define RX_PPDU_START_SIG_RATE_OFDM_12 2
--#define RX_PPDU_START_SIG_RATE_OFDM_6  3
--#define RX_PPDU_START_SIG_RATE_OFDM_54 4
--#define RX_PPDU_START_SIG_RATE_OFDM_36 5
--#define RX_PPDU_START_SIG_RATE_OFDM_18 6
--#define RX_PPDU_START_SIG_RATE_OFDM_9  7
--
--#define RX_PPDU_START_SIG_RATE_CCK_LP_11  0
--#define RX_PPDU_START_SIG_RATE_CCK_LP_5_5 1
--#define RX_PPDU_START_SIG_RATE_CCK_LP_2   2
--#define RX_PPDU_START_SIG_RATE_CCK_LP_1   3
--#define RX_PPDU_START_SIG_RATE_CCK_SP_11  4
--#define RX_PPDU_START_SIG_RATE_CCK_SP_5_5 5
--#define RX_PPDU_START_SIG_RATE_CCK_SP_2   6
--
- #define HTT_RX_PPDU_START_PREAMBLE_LEGACY        0x04
- #define HTT_RX_PPDU_START_PREAMBLE_HT            0x08
- #define HTT_RX_PPDU_START_PREAMBLE_HT_WITH_TXBF  0x09
-@@ -711,25 +691,6 @@ struct rx_msdu_end {
- /* No idea what this flag means. It seems to be always set in rate. */
- #define RX_PPDU_START_RATE_FLAG BIT(3)
- 
--enum rx_ppdu_start_rate {
--	RX_PPDU_START_RATE_OFDM_48M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_48M,
--	RX_PPDU_START_RATE_OFDM_24M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_24M,
--	RX_PPDU_START_RATE_OFDM_12M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_12M,
--	RX_PPDU_START_RATE_OFDM_6M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_6M,
--	RX_PPDU_START_RATE_OFDM_54M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_54M,
--	RX_PPDU_START_RATE_OFDM_36M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_36M,
--	RX_PPDU_START_RATE_OFDM_18M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_18M,
--	RX_PPDU_START_RATE_OFDM_9M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_9M,
--
--	RX_PPDU_START_RATE_CCK_LP_11M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_11M,
--	RX_PPDU_START_RATE_CCK_LP_5_5M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_5_5M,
--	RX_PPDU_START_RATE_CCK_LP_2M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_2M,
--	RX_PPDU_START_RATE_CCK_LP_1M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_1M,
--	RX_PPDU_START_RATE_CCK_SP_11M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_11M,
--	RX_PPDU_START_RATE_CCK_SP_5_5M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_5_5M,
--	RX_PPDU_START_RATE_CCK_SP_2M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_2M,
--};
--
- struct rx_ppdu_start {
- 	struct {
- 		u8 pri20_mhz;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e94cb87..f6018be 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -202,6 +202,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.name = "qca4019 hw1.0",
+ 		.patch_load_addr = QCA4019_HW_1_0_PATCH_LOAD_ADDR,
+ 		.uart_pin = 7,
++		.has_shifted_cc_wraparound = true,
+ 		.otp_exe_param = 0x0010000,
+ 		.continuous_frag_desc = true,
+ 		.channel_counters_freq_hz = 125000,
 -- 
-1.7.9.5
+1.9.1
 
