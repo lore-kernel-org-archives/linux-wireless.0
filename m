@@ -1,43 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36608 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753971AbcESPPk (ORCPT
+Received: from mail-ob0-f193.google.com ([209.85.214.193]:35392 "EHLO
+	mail-ob0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755815AbcEFREZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2016 11:15:40 -0400
-Received: by mail-wm0-f48.google.com with SMTP id n129so235591667wmn.1
-        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2016 08:15:39 -0700 (PDT)
-From: Eduardo Abinader <eabinader@ocedo.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eduardo Abinader <eduardo.abinader@riverbed.com>,
-	ath9k-devel@lists.ath9k.org, kvalo@qca.qualcomm.com,
-	ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: Proper TX99 interrupt ref count
-Date: Thu, 19 May 2016 17:15:29 +0200
-Message-Id: <1463670929-12639-1-git-send-email-eduardo.abinader@riverbed.com> (sfid-20160519_171545_031732_2E9804D6)
+	Fri, 6 May 2016 13:04:25 -0400
+Subject: Re: [PATCH v2] rtlwifi: pci: use dev_kfree_skb_irq instead of
+ kfree_skb in rtl_pci_reset_trx_ring
+To: Wang YanQing <udknight@gmail.com>, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20160506163351.GA4589@udknight>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <572CCE96.9060808@lwfinger.net> (sfid-20160506_190445_672248_89DA05A6)
+Date: Fri, 6 May 2016 12:04:22 -0500
+MIME-Version: 1.0
+In-Reply-To: <20160506163351.GA4589@udknight>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On TX99 mode, instead of assuming interrupt mask non ATH9K_INT_GLOBAL,
-let ath9k_hw_disable_interrupts proper set interrupt ref count.
-This prevents some PCI PERR occurring specialy when setting 11b and n rates.
+On 05/06/2016 11:33 AM, Wang YanQing wrote:
+> We can't use kfree_skb in irq disable context, because spin_lock_irqsave
+> make sure we are always in irq disable context, use dev_kfree_skb_irq
+> instead of kfree_skb is better than dev_kfree_skb_any.
+>
+> This patch fix below kernel warning:
+> [ 7612.095528] ------------[ cut here ]------------
+> [ 7612.095546] WARNING: CPU: 3 PID: 4460 at kernel/softirq.c:150 __local_bh_enable_ip+0x58/0x80()
+> [ 7612.095550] Modules linked in: rtl8723be x86_pkg_temp_thermal btcoexist rtl_pci rtlwifi rtl8723_common
+> [ 7612.095567] CPU: 3 PID: 4460 Comm: ifconfig Tainted: G        W       4.4.0+ #4
+> [ 7612.095570] Hardware name: LENOVO 20DFA04FCD/20DFA04FCD, BIOS J5ET48WW (1.19 ) 08/27/2015
+> [ 7612.095574]  00000000 00000000 da37fc70 c12ce7c5 00000000 da37fca0 c104cc59 c19d4454
+> [ 7612.095584]  00000003 0000116c c19d4784 00000096 c10508a8 c10508a8 00000200 c1b42400
+> [ 7612.095594]  f29be780 da37fcb0 c104ccad 00000009 00000000 da37fcbc c10508a8 f21f08b8
+> [ 7612.095604] Call Trace:
+> [ 7612.095614]  [<c12ce7c5>] dump_stack+0x41/0x5c
+> [ 7612.095620]  [<c104cc59>] warn_slowpath_common+0x89/0xc0
+> [ 7612.095628]  [<c10508a8>] ? __local_bh_enable_ip+0x58/0x80
+> [ 7612.095634]  [<c10508a8>] ? __local_bh_enable_ip+0x58/0x80
+> [ 7612.095640]  [<c104ccad>] warn_slowpath_null+0x1d/0x20
+> [ 7612.095646]  [<c10508a8>] __local_bh_enable_ip+0x58/0x80
+> [ 7612.095653]  [<c16b7d34>] destroy_conntrack+0x64/0xa0
+> [ 7612.095660]  [<c16b300f>] nf_conntrack_destroy+0xf/0x20
+> [ 7612.095665]  [<c1677565>] skb_release_head_state+0x55/0xa0
+> [ 7612.095670]  [<c16775bb>] skb_release_all+0xb/0x20
+> [ 7612.095674]  [<c167760b>] __kfree_skb+0xb/0x60
+> [ 7612.095679]  [<c16776f0>] kfree_skb+0x30/0x70
+> [ 7612.095686]  [<f81b869d>] ? rtl_pci_reset_trx_ring+0x22d/0x370 [rtl_pci]
+> [ 7612.095692]  [<f81b869d>] rtl_pci_reset_trx_ring+0x22d/0x370 [rtl_pci]
+> [ 7612.095698]  [<f81b87f9>] rtl_pci_start+0x19/0x190 [rtl_pci]
+> [ 7612.095705]  [<f81970e6>] rtl_op_start+0x56/0x90 [rtlwifi]
+> [ 7612.095712]  [<c17e3f16>] drv_start+0x36/0xc0
+> [ 7612.095717]  [<c17f5ab3>] ieee80211_do_open+0x2d3/0x890
+> [ 7612.095725]  [<c16820fe>] ? call_netdevice_notifiers_info+0x2e/0x60
+> [ 7612.095730]  [<c17f60bd>] ieee80211_open+0x4d/0x50
+> [ 7612.095736]  [<c16891b3>] __dev_open+0xa3/0x130
+> [ 7612.095742]  [<c183fa53>] ? _raw_spin_unlock_bh+0x13/0x20
+> [ 7612.095748]  [<c1689499>] __dev_change_flags+0x89/0x140
+> [ 7612.095753]  [<c127c70d>] ? selinux_capable+0xd/0x10
+> [ 7612.095759]  [<c1689589>] dev_change_flags+0x29/0x60
+> [ 7612.095765]  [<c1700b93>] devinet_ioctl+0x553/0x670
+> [ 7612.095772]  [<c12db758>] ? _copy_to_user+0x28/0x40
+> [ 7612.095777]  [<c17018b5>] inet_ioctl+0x85/0xb0
+> [ 7612.095783]  [<c166e647>] sock_ioctl+0x67/0x260
+> [ 7612.095788]  [<c166e5e0>] ? sock_fasync+0x80/0x80
+> [ 7612.095795]  [<c115c99b>] do_vfs_ioctl+0x6b/0x550
+> [ 7612.095800]  [<c127c812>] ? selinux_file_ioctl+0x102/0x1e0
+> [ 7612.095807]  [<c10a8914>] ? timekeeping_suspend+0x294/0x320
+> [ 7612.095813]  [<c10a256a>] ? __hrtimer_run_queues+0x14a/0x210
+> [ 7612.095820]  [<c1276e24>] ? security_file_ioctl+0x34/0x50
+> [ 7612.095827]  [<c115cef0>] SyS_ioctl+0x70/0x80
+> [ 7612.095832]  [<c1001804>] do_fast_syscall_32+0x84/0x120
+> [ 7612.095839]  [<c183ff91>] sysenter_past_esp+0x36/0x55
+> [ 7612.095844] ---[ end trace 97e9c637a20e8348 ]---
+>
+> Signed-off-by: Wang YanQing <udknight@gmail.com>
+> Cc: Stable <stable@vger.kernel.org>
+> ---
+>   Changes:
+>   v1-v2:
+>   1: add a Cc to stable.
+>
+>   drivers/net/wireless/realtek/rtlwifi/pci.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+> index 1ac41b8..99a3a03 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+> @@ -1572,7 +1572,7 @@ int rtl_pci_reset_trx_ring(struct ieee80211_hw *hw)
+>   							 true,
+>   							 HW_DESC_TXBUFF_ADDR),
+>   						 skb->len, PCI_DMA_TODEVICE);
+> -				kfree_skb(skb);
+> +				dev_kfree_skb_irq(skb);
+>   				ring->idx = (ring->idx + 1) % ring->entries;
+>   			}
+>   			ring->idx = 0;
+>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
----
- drivers/net/wireless/ath/ath9k/tx99.c | 1 -
- 1 file changed, 1 deletion(-)
+Thanks,
 
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index ac4781f..7f3643e 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -132,7 +132,6 @@ static int ath9k_tx99_init(struct ath_softc *sc)
- 	ath9k_ps_wakeup(sc);
- 
- 	ath9k_hw_disable_interrupts(ah);
--	atomic_set(&ah->intr_ref_cnt, -1);
- 	ath_drain_all_txq(sc);
- 	ath_stoprecv(sc);
- 
--- 
-2.5.0
+Larry
 
