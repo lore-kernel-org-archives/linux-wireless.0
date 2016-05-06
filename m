@@ -1,100 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39604 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932903AbcECM76 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49755 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758208AbcEFLyA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 08:59:58 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: emmanuel.grumbach@intel.com, Sara Sharon <sara.sharon@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  3 May 2016 15:59:44 +0300
-Message-Id: <1462280384-19764-1-git-send-email-luca@coelho.fi> (sfid-20160503_150001_588665_0B18B363)
-Subject: [PATCH v2] mac80211: allow same PN for AMSDU sub-frames
+	Fri, 6 May 2016 07:54:00 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Christian Daudt <csd@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH] Fix kernel oops in failed chip_attach
+References: <1462390228-27863-1-git-send-email-csd@broadcom.com>
+Date: Fri, 06 May 2016 14:53:54 +0300
+In-Reply-To: <1462390228-27863-1-git-send-email-csd@broadcom.com> (Christian
+	Daudt's message of "Wed, 4 May 2016 12:30:28 -0700")
+Message-ID: <87lh3ns8q5.fsf@kamboji.qca.qualcomm.com> (sfid-20160506_135405_408840_B7350FAC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Christian Daudt <csd@broadcom.com> writes:
 
-Some hardware (iwlwifi an example) de-aggregate AMSDUs and copy the IV
-as is to the generated MPDUs, so the same PN appears in multiple
-packets without being a replay attack.  Allow driver to explicitly
-indicate that a frame is allowed to have the same PN as the previous
-frame.
+> When chip attach fails, brcmf_sdiod_intr_unregister is being called
+> but that is too early as sdiodev->settings has not been set yet
+> nor has brcmf_sdiod_intr_register been called.
+> Change to use oob_irq_requested + newly created sd_irq_requested
+> to decide on what to unregister at intr_unregister time.
+>
+> Steps to reproduce problem:
+> - modprobe brcmfmac using buggy FW
+> - rmmod brcmfmac
+> - modprobe brcmfmac again.
+>
+> If done with a buggy firmware, brcm_chip_attach will fail on the
+> 2nd modprobe triggering the call to intr_unregister and the
+> kernel oops when attempting to de-reference sdiodev->settings->bus.sdio
+> which has not yet been set.
+>
+> Signed-off-by: Christian Daudt <csd@broadcom.com>
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/mac80211.h |  6 +++++-
- net/mac80211/wpa.c     | 16 ++++++++++++----
- 2 files changed, 17 insertions(+), 5 deletions(-)
+Please use prefix "brcmfmac: " in the title.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 07ef937..ce2f6e3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1068,6 +1068,9 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  * @RX_FLAG_RADIOTAP_VENDOR_DATA: This frame contains vendor-specific
-  *	radiotap data in the skb->data (before the frame) as described by
-  *	the &struct ieee80211_vendor_radiotap.
-+ * @RX_FLAG_ALLOW_SAME_PN: Allow the same PN as same packet before.
-+ *	This is used for AMSDU subframes which can have the same PN as
-+ *	the first subframe.
-  */
- enum mac80211_rx_flags {
- 	RX_FLAG_MMIC_ERROR		= BIT(0),
-@@ -1101,7 +1104,8 @@ enum mac80211_rx_flags {
- 	RX_FLAG_5MHZ			= BIT(29),
- 	RX_FLAG_AMSDU_MORE		= BIT(30),
- 	RX_FLAG_RADIOTAP_VENDOR_DATA	= BIT(31),
--	RX_FLAG_MIC_STRIPPED            = BIT_ULL(32),
-+	RX_FLAG_MIC_STRIPPED		= BIT_ULL(32),
-+	RX_FLAG_ALLOW_SAME_PN		= BIT_ULL(33),
- };
- 
- #define RX_FLAG_STBC_SHIFT		26
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 7e4f265..b48c1e1 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -519,12 +519,16 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
- 		return RX_DROP_UNUSABLE;
- 
- 	if (!(status->flag & RX_FLAG_PN_VALIDATED)) {
-+		int res;
-+
- 		ccmp_hdr2pn(pn, skb->data + hdrlen);
- 
- 		queue = rx->security_idx;
- 
--		if (memcmp(pn, key->u.ccmp.rx_pn[queue],
--			   IEEE80211_CCMP_PN_LEN) <= 0) {
-+		res = memcmp(pn, key->u.ccmp.rx_pn[queue],
-+			     IEEE80211_CCMP_PN_LEN);
-+		if (res < 0 ||
-+		    (!res && !(status->flag & RX_FLAG_ALLOW_SAME_PN))) {
- 			key->u.ccmp.replays++;
- 			return RX_DROP_UNUSABLE;
- 		}
-@@ -745,12 +749,16 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
- 		return RX_DROP_UNUSABLE;
- 
- 	if (!(status->flag & RX_FLAG_PN_VALIDATED)) {
-+		int res;
-+
- 		gcmp_hdr2pn(pn, skb->data + hdrlen);
- 
- 		queue = rx->security_idx;
- 
--		if (memcmp(pn, key->u.gcmp.rx_pn[queue],
--			   IEEE80211_GCMP_PN_LEN) <= 0) {
-+		res = memcmp(pn, key->u.gcmp.rx_pn[queue],
-+			     IEEE80211_GCMP_PN_LEN);
-+		if (res < 0 ||
-+		    (!res && !(status->flag & RX_FLAG_ALLOW_SAME_PN))) {
- 			key->u.gcmp.replays++;
- 			return RX_DROP_UNUSABLE;
- 		}
 -- 
-2.8.0.rc3
-
+Kalle Valo
