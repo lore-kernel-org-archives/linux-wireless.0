@@ -1,63 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35621 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932223AbcEaNKJ convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28788 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758208AbcEFMHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2016 09:10:09 -0400
-Received: by mail-oi0-f65.google.com with SMTP id h125so30389010oib.2
-        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2016 06:10:09 -0700 (PDT)
+	Fri, 6 May 2016 08:07:43 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: suppress warnings when getting wmi peer_rate_code_list event
+Date: Fri, 6 May 2016 17:37:02 +0530
+Message-ID: <1462536423-9903-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160506_140746_744539_8EEB856F)
 MIME-Version: 1.0
-In-Reply-To: <1464689804.3076.13.camel@sipsolutions.net>
-References: <1463739223-19205-1-git-send-email-zajec5@gmail.com>
-	<1464689804.3076.13.camel@sipsolutions.net>
-Date: Tue, 31 May 2016 15:10:08 +0200
-Message-ID: <CACna6rw--bPNdWcp1Bx1GOKv9cnOgfr5D_YU1RF7A8CS_Bt7Vg@mail.gmail.com> (sfid-20160531_151028_128699_C77D7723)
-Subject: Re: [PATCH iw] add "channels" PHY command listing frequencies with
- more details
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 May 2016 at 12:16, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2016-05-20 at 12:13 +0200, Rafał Miłecki wrote:
->> Channels (frequencies) are getting more details that users may want
->> to
->> know about. E.g. it's important to know which frequencies allow using
->> 40/80/160 MHz channels to setup AP properly.
->>
->> We list channels in "info" command output but it's already quite big
->> and
->> it was agreed to introduce new command rather than expand the old
->> one.
->>
->> This patch adds "channels" command printing what was already
->> available
->> in the "info" plus details about supported channel widths. It also
->> removes DFS info from the "info" output.
->
-> Very nice.
->
-> Unfortunately, I get compiler warnings about width_* being possibly
-> used uninitialized. Can you address that please?
+In 10.4, fw sends WMI PEER_RATECODE_LIST_EVENTID after successful
+peer_assoc cmd. As of now this event is not of much use and not
+implemented. Change the debug level and messsage as appropriate
+to suppress "Unknown eventid: 36898".
 
-It's nice your compiled got this mistake, my didn't. There were
-actually meant to be static. I'll fix that.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-
->> +TOPLEVEL(channels, NULL, NL80211_CMD_GET_WIPHY, 0, CIB_PHY,
->> handle_channels, "Show available channels.");
->
-> Maybe that should be allowed for a CIB_DEV too?
-
-Since this is PHY specific, I was thinking it should be CIB_PHY. I
-didn't see reason to allow querying devices. Similarly we don't
-support "iw dev wlan0 reg get".
-
-Anyway, I can change that if you think it's better for some reason.
-Any hint how to make command usable with both: phy and dev?
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 39a54a5..2a14b16 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5213,6 +5213,7 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 		ath10k_wmi_event_vdev_stopped(ar, skb);
+ 		break;
+ 	case WMI_10_4_WOW_WAKEUP_HOST_EVENTID:
++	case WMI_10_4_PEER_RATECODE_LIST_EVENTID:
+ 		ath10k_dbg(ar, ATH10K_DBG_WMI,
+ 			   "received event id %d not implemented\n", id);
+ 		break;
 -- 
-Rafał
+1.9.1
+
