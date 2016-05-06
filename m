@@ -1,39 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31902 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42664 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961AbcEISHa convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1758788AbcEFSJL convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 14:07:30 -0400
+	Fri, 6 May 2016 14:09:11 -0400
 From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH 1/3] ath9k: reuse ar9003_hw_tx_power_regwrite for tx99
- setup
-Date: Mon, 9 May 2016 18:07:17 +0000
-Message-ID: <87eg9bhzqi.fsf@kamboji.qca.qualcomm.com> (sfid-20160509_200737_904845_743FBB35)
-References: <1461854706-10494-1-git-send-email-helmut.schaa@googlemail.com>
-In-Reply-To: <1461854706-10494-1-git-send-email-helmut.schaa@googlemail.com>
-	(Helmut Schaa's message of "Thu, 28 Apr 2016 16:45:04 +0200")
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: remove VHT capabilities from 2.4GHz
+Date: Fri, 6 May 2016 18:08:51 +0000
+Message-ID: <87inyrnjnx.fsf@kamboji.qca.qualcomm.com> (sfid-20160506_200919_351056_D7719906)
+References: <1461244669-19871-1-git-send-email-kvalo@qca.qualcomm.com>
+In-Reply-To: <1461244669-19871-1-git-send-email-kvalo@qca.qualcomm.com> (Kalle
+	Valo's message of "Thu, 21 Apr 2016 16:17:49 +0300")
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa <helmut.schaa@googlemail.com> writes:
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-> The same functionality as ar9003_hw_tx_power_regwrite is hardcoded in
-> ar9003_hw_tx99_set_txpower. Just reuse the existing ar9003_hw_tx_power_regwrite
-> for TX99 setup too.
+> From: Johannes Berg <johannes.berg@intel.com>
 >
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> According to the spec, VHT doesn't exist in 2.4GHz.
+>
+> There are vendor extensions to allow a subset of VHT to work
+> (notably 256-QAM), but since mac80211 doesn't support those
+> advertising VHT capability on 2.4GHz leads to the behaviour
+> of reporting VHT capabilities but not being able to use any
+> of them due to mac80211's code requiring 80 MHz support.
+>
+> Remove the VHT capabilities from 2.4GHz for now. If mac80211
+> gets extended to use the (likely Broadcom) vendor IEs for it
+> and handles the lack of 80 MHz support, it can be added back.
+>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 
-Thanks, 3 patches applied to ath.git:
-
-8569f5915456 ath9k: reuse ar9003_hw_tx_power_regwrite for tx99 setup
-e7ae328961ff ath9k: Move TX99 config option under ath9k debugging
-b0291715d31c ath9k: Simplify ar9003_hw_tx99_set_txpower
+Applied, thanks.
 
 -- 
 Kalle Valo
