@@ -1,57 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f196.google.com ([209.85.217.196]:36028 "EHLO
-	mail-lb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753369AbcEXVFT (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39797 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755867AbcEFSKH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2016 17:05:19 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2] brcmfmac: print error if p2p_ifadd firmware command fails
-Date: Tue, 24 May 2016 23:05:07 +0200
-Message-Id: <1464123910-8281-1-git-send-email-zajec5@gmail.com> (sfid-20160524_230543_110837_56DE88CD)
-In-Reply-To: <1464123728-7555-1-git-send-email-zajec5@gmail.com>
-References: <1464123728-7555-1-git-send-email-zajec5@gmail.com>
+	Fri, 6 May 2016 14:10:07 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Kolli, Anilkumar" <akolli@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"akolli@codeaurora.org" <akolli@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix kernel panic, move arvifs list head init
+ before htt init
+Date: Fri, 6 May 2016 18:09:58 +0000
+Message-ID: <87a8k3njm2.fsf@kamboji.qca.qualcomm.com> (sfid-20160506_201016_726410_551D8812)
+References: <1461686748-862-1-git-send-email-akolli@qti.qualcomm.com>
+In-Reply-To: <1461686748-862-1-git-send-email-akolli@qti.qualcomm.com>
+	(akolli@qti.qualcomm.com's message of "Tue, 26 Apr 2016 21:35:48	+0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is helpful for debugging, without this all I was getting from "iw"
-command on device with BCM43602 was:
-> command failed: Too many open files in system (-23)
+<akolli@qti.qualcomm.com> writes:
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: s/in/if/ in commit message
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+>
+> It is observed that while loading and unloading ath10k modules
+> in an infinite loop, before ath10k_core_start() completion HTT
+> rx frames are received, while processing these frames,
+> dereferencing the arvifs list code is getting hit before
+> initilizing the arvifs list, causing a kernel panic.
+>
+> This patch initilizes the arvifs list before initilizing htt.
+>
+> Fixes the below issue:
+>  [<bf88b058>] (ath10k_htt_rx_pktlog_completion_handler+0x278/0xd08 [ath10k_core])
+>  [<bf88b058>] (ath10k_htt_rx_pktlog_completion_handler [ath10k_core])
+>  [<bf88c0dc>] (ath10k_htt_txrx_compl_task+0x5f4/0xeb0 [ath10k_core])
+>  [<bf88c0dc>] (ath10k_htt_txrx_compl_task [ath10k_core])
+>  [<c0234100>] (tasklet_action+0x8c/0xec)
+>  [<c0234100>] (tasklet_action)
+>  [<c02337c0>] (__do_softirq+0xf8/0x228)
+>  [<c02337c0>] (__do_softirq)  [<c0233920>] (run_ksoftirqd+0x30/0x90)
+>  Code: e5954ad8 e2899008 e1540009 0a00000d (e5943008)
+>  ---[ end trace 71de5c2e011dbf56 ]---
+>  Kernel panic - not syncing: Fatal exception in interrupt
+>
+> Fixes: 500ff9f9389d ("ath10k: implement chanctx API")
+> Cc: stable@vger.kernel.org
+>
+> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 1652a48..f7b7e29 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -2031,7 +2031,7 @@ static int brcmf_p2p_request_p2p_if(struct brcmf_p2p_info *p2p,
- 	err = brcmf_fil_iovar_data_set(ifp, "p2p_ifadd", &if_request,
- 				       sizeof(if_request));
- 	if (err)
--		return err;
-+		brcmf_err("p2p_ifadd failed %d\n", err);
- 
- 	return err;
- }
+Applied, thanks.
+
 -- 
-1.8.4.5
-
+Kalle Valo
