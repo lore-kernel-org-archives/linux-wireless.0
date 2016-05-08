@@ -1,98 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f67.google.com ([209.85.192.67]:36268 "EHLO
-	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751442AbcERMv4 (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:36152 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791AbcEHLUY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2016 08:51:56 -0400
+	Sun, 8 May 2016 07:20:24 -0400
+Received: by mail-wm0-f48.google.com with SMTP id n129so105274381wmn.1
+        for <linux-wireless@vger.kernel.org>; Sun, 08 May 2016 04:20:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1463575273.13625.23.camel@intel.com>
-References: <20160517.151113.367799295750703003.davem@davemloft.net>
-	<CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com>
-	<CANUX_P3n0ZkTw0fY8wD3biu2mLzrwyX7n=bo1otw9m0bpfS07Q@mail.gmail.com>
-	<1463568714.13625.18.camel@intel.com>
-	<CAAA5faF=SxqCt0yDTbPyUoc3gFD--_co+fRj2Jfuy=whEQvcBQ@mail.gmail.com>
-	<1463575273.13625.23.camel@intel.com>
-Date: Wed, 18 May 2016 06:51:55 -0600
-Message-ID: <CAAA5faHtbt8oyKEQOJ+NMBKR24b7Nvm6uJ2qZid1sWY58e7f+A@mail.gmail.com> (sfid-20160518_145223_344709_52F5FE0C)
-Subject: Re: [GIT] Networking
-From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-To: "Coelho, Luciano" <luciano.coelho@intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"egrumbach@gmail.com" <egrumbach@gmail.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+In-Reply-To: <87futvp432.fsf@kamboji.qca.qualcomm.com>
+References: <1462280620-13000-1-git-send-email-jjmeijer88@gmail.com>
+ <87poszs8tc.fsf@kamboji.qca.qualcomm.com> <CAA+NYvTxA_u1kjwmY+VTnhK0G1b5cEcx2QA90fTTEkci4gWvcQ@mail.gmail.com>
+ <87wpn7p6dv.fsf@kamboji.qca.qualcomm.com> <CAA+NYvS3ksstny_Lzw8mLu6=0uKO0VhjuwCyxS9YC-Pb+FaYJA@mail.gmail.com>
+ <87futvp432.fsf@kamboji.qca.qualcomm.com>
+From: Jaap Jan Meijer <jjmeijer88@gmail.com>
+Date: Sun, 8 May 2016 12:20:03 +0100
+Message-ID: <CAA+NYvT5gzvdyeYx_CKaEKvpdzEJ_09U1-xSaCE7pQH+Qx9uYA@mail.gmail.com> (sfid-20160508_132152_771691_EB3999A4)
+Subject: Re: [PATCH] Fix regression in Android due to rework .get_station() callback
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 18, 2016 at 6:41 AM, Coelho, Luciano
-<luciano.coelho@intel.com> wrote:
-> On Wed, 2016-05-18 at 06:20 -0600, Reinoud Koornstra wrote:
->> On Wed, May 18, 2016 at 4:51 AM, Coelho, Luciano
->> <luciano.coelho@intel.com> wrote:
->> >
->> > Hi Emmanuel, Linus,
->> >
->> >
->> > On Wed, 2016-05-18 at 06:37 +0300, Emmanuel Grumbach wrote:
->> > >
->> > > On Wed, May 18, 2016 at 4:00 AM, Linus Torvalds
->> > > <torvalds@linux-foundation.org> wrote:
->> > > >
->> > > >
->> > > > On Tue, May 17, 2016 at 12:11 PM, David Miller <davem@davemloft
->> > > > .net
->> > > > >
->> > > > > wrote:
->> > > > >
->> > > > >
->> > > > > Highlights:
->> > > > Lowlights:
->> > > >
->> > > >  1) the iwlwifi driver seems to be broken
->> > > >
->> > > > My laptop that uses the intel 7680 iwlwifi module no longer
->> > > > connects
->> > > > to the network. It fails with a "Microcode SW error detected."
->> > > > and
->> > > > spews out register state over and over again.
->> > > Can we have the register state and the ASSERT / NMI / whatever
->> > > that
->> > > goes along with it?
->> > > This clearly means that the firmware is crashing, but I don't
->> > > know
->> > > why,
->> > > I copied here the lines that I need from another bug with another
->> > > device with another firmware,
->> > > but the log that we will still explain what I need:
->> > I managed to reproduce this bug locally with Linus' master.  I'm
->> > investigating the cause and I'll let you how it goes.
->> I did run the latest git code as well 4.6+
->> iwlwifi went pearshape in my case as well.
->> I just updated the microcode as well, it didn't matter.
->> 4.6-rc7 works fine and no errors are reported with iwlwifi.
->>
->> Here's output that might come in handy
+2016-05-06 17:02 GMT+01:00 Kalle Valo <kvalo@codeaurora.org>:
+> Jaap Jan Meijer <jjmeijer88@gmail.com> writes:
 >
-> Thanks! That is helpful.
+>> 2016-05-06 16:12 GMT+01:00 Kalle Valo <kvalo@codeaurora.org>:
+>>> Jaap Jan Meijer <jjmeijer88@gmail.com> writes:
+>>>
+>>>> Hi Kalle,
+>>>>
+>>>> Op vr 6 mei 2016 12:52 schreef Kalle Valo <kvalo@codeaurora.org>:
+>>>>
+>>>>
+>>>>     This has multiple issues:
+>>>>
+>>>>     o Use your full name.
+>>>>     o Use prefix "brcmfmac: " in the title.
+>>>>
+>>>>     o I can't find commit f654d13, is the commit id really correct?
+>>>>     o Also check from SubmittingPatches how you should reference commit ids.
+>>>>
+>>>>
+>>>>
+>>>> Thank you for the feedback, I will send a reworked patch as soon as I get home
+>>>> next week. Also I did this against v4.4.8 so I'll have to rebase it as well.
+>>>>
+>>>> I'm not sure what went wrong with the commit hash, its actually this commit:
+>>>> 1f0dc59a6de93586fcfc04696a61946408ffc56a.
+>>>
+>>> That commit id looks to be valid.
+>>>
+>>>> I see you did this commit, maybe you can check if this actually is the root
+>>>> cause? I'm sure you have a lot more insight into this issue than I do.
 >
-> Since you say that 4.6-rc7 works but 4.6 doesn't, the prime suspect is
-> commit 5c08b0f5026f ("iwlwifi: mvm: don't override the rate with the
-> AMSDU len"), which is the only iwlwifi patch between those two
-> releases.
->
-> Could you try to revert that and see if the error is gone?
-
-Will do, since git revert failed I'll revert manually and report back.
-
+> I just commited the patch. Broadcom folks (CCed) should be able to
+> answer better, most likely they missed this patch as the title didn't
+> have "brcmfmac".
 >
 > --
-> Cheers,
-> Luca.
+> Kalle Valo
+
+Thanks, so no need to send a revised patch? Also, could you please
+point me to the right repository so I can follow the progress?
