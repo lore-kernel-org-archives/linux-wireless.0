@@ -1,176 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59648 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752075AbcETMOV (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:35395 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751217AbcEIMiy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2016 08:14:21 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH 2/2] ath10k: Fix CCK h/w rates for QCA99X0 and newer chipsets
-Date: Fri, 20 May 2016 17:43:19 +0530
-Message-ID: <1463746399-22839-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160520_141425_116009_E4E7A267)
-In-Reply-To: <1463746399-22839-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1463746399-22839-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 9 May 2016 08:38:54 -0400
+Received: by mail-wm0-f53.google.com with SMTP id e201so135476049wme.0
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2016 05:38:53 -0700 (PDT)
+From: Eduardo Abinader <eabinader@ocedo.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eduardo Abinader <eduardo.abinader@riverbed.com>,
+	ath9k-devel@lists.ath9k.org, kvalo@qca.qualcomm.com,
+	ath9k-devel@qca.qualcomm.com
+Subject: [PATCH] ath9k: allow tx99 for ar9002 based cards
+Date: Mon,  9 May 2016 14:38:40 +0200
+Message-Id: <1462797520-7239-1-git-send-email-eduardo.abinader@riverbed.com> (sfid-20160509_143857_050367_0016ECE8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+As there is current support for ar9002 tx99 mode, just allow
+to init debugfs and enable tx99.
 
-CCK hardware table mapping from QCA99X0 onwards got revised.
-The CCK hardware rate values are in a proper order wrt. to
-rate and preamble as below
-
-ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
-ATH10K_HW_RATE_REV2_CCK_LP_2M = 2,
-ATH10K_HW_RATE_REV2_CCK_LP_5_5M = 3,
-ATH10K_HW_RATE_REV2_CCK_LP_11M = 4,
-ATH10K_HW_RATE_REV2_CCK_SP_2M = 5,
-ATH10K_HW_RATE_REV2_CCK_SP_5_5M = 6,
-ATH10K_HW_RATE_REV2_CCK_SP_11M = 7,
-
-This results in reporting of rx frames (with CCK rates)
-totally wrong for QCA99X0, QCA4019. Fix this by having
-separate CCK rate table for these chipsets with rev2 suffix
-and registering the correct rate mapping to mac80211 based on
-the new hw_param (introduced) 'cck_rate_map_rev2' which shall
-be true for any newchipsets from QCA99X0 onwards
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
 ---
-[thanks Michal/Kalle/Vasanth for the first level review]
+ drivers/net/wireless/ath/ath9k/tx99.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/net/wireless/ath/ath10k/core.c |    2 ++
- drivers/net/wireless/ath/ath10k/core.h |    6 +++++
- drivers/net/wireless/ath/ath10k/hw.h   |   10 ++++++++
- drivers/net/wireless/ath/ath10k/mac.c  |   39 ++++++++++++++++++++++++++++++--
- 4 files changed, 55 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 49af624..86ed64d 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -148,6 +148,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.uart_pin = 7,
- 		.otp_exe_param = 0x00000700,
- 		.continuous_frag_desc = true,
-+		.cck_rate_map_rev2 = true,
- 		.channel_counters_freq_hz = 150000,
- 		.max_probe_resp_desc_thres = 24,
- 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
-@@ -205,6 +206,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.has_shifted_cc_wraparound = true,
- 		.otp_exe_param = 0x0010000,
- 		.continuous_frag_desc = true,
-+		.cck_rate_map_rev2 = true,
- 		.channel_counters_freq_hz = 125000,
- 		.max_probe_resp_desc_thres = 24,
- 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 1852e0e..04cea23 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -716,6 +716,12 @@ struct ath10k {
- 		 */
- 		bool continuous_frag_desc;
+diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
+index ac4781f..6161536 100644
+--- a/drivers/net/wireless/ath/ath9k/tx99.c
++++ b/drivers/net/wireless/ath/ath9k/tx99.c
+@@ -266,7 +266,7 @@ static const struct file_operations fops_tx99_power = {
  
-+		/* CCK hardware rate table mapping for the newer chipsets
-+		 * like QCA99X0, QCA4019 got revised. The CCK h/w rate values
-+		 * are in a proper order with respect to the rate/preamble
-+		 */
-+		bool cck_rate_map_rev2;
-+
- 		u32 channel_counters_freq_hz;
- 
- 		/* Mgmt tx descriptors threshold for limiting probe response
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index aedd898..3d5648d 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -315,6 +315,16 @@ enum ath10k_hw_rate_cck {
- 	ATH10K_HW_RATE_CCK_SP_2M,
- };
- 
-+enum ath10k_hw_rate_rev2_cck {
-+	ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
-+	ATH10K_HW_RATE_REV2_CCK_LP_2M,
-+	ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
-+	ATH10K_HW_RATE_REV2_CCK_LP_11M,
-+	ATH10K_HW_RATE_REV2_CCK_SP_2M,
-+	ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
-+	ATH10K_HW_RATE_REV2_CCK_SP_11M,
-+};
-+
- enum ath10k_hw_4addr_pad {
- 	ATH10K_HW_4ADDR_PAD_AFTER,
- 	ATH10K_HW_4ADDR_PAD_BEFORE,
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6dd1d26..a55e3ae 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -62,6 +62,32 @@ static struct ieee80211_rate ath10k_rates[] = {
- 	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
- };
- 
-+static struct ieee80211_rate ath10k_rates_rev2[] = {
-+	{ .bitrate = 10,
-+	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_1M },
-+	{ .bitrate = 20,
-+	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_2M,
-+	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_2M,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 55,
-+	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
-+	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+	{ .bitrate = 110,
-+	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_11M,
-+	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_11M,
-+	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
-+
-+	{ .bitrate = 60, .hw_value = ATH10K_HW_RATE_OFDM_6M },
-+	{ .bitrate = 90, .hw_value = ATH10K_HW_RATE_OFDM_9M },
-+	{ .bitrate = 120, .hw_value = ATH10K_HW_RATE_OFDM_12M },
-+	{ .bitrate = 180, .hw_value = ATH10K_HW_RATE_OFDM_18M },
-+	{ .bitrate = 240, .hw_value = ATH10K_HW_RATE_OFDM_24M },
-+	{ .bitrate = 360, .hw_value = ATH10K_HW_RATE_OFDM_36M },
-+	{ .bitrate = 480, .hw_value = ATH10K_HW_RATE_OFDM_48M },
-+	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
-+};
-+
- #define ATH10K_MAC_FIRST_OFDM_RATE_IDX 4
- 
- #define ath10k_a_rates (ath10k_rates + ATH10K_MAC_FIRST_OFDM_RATE_IDX)
-@@ -70,6 +96,9 @@ static struct ieee80211_rate ath10k_rates[] = {
- #define ath10k_g_rates (ath10k_rates + 0)
- #define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
- 
-+#define ath10k_g_rates_rev2 (ath10k_rates_rev2 + 0)
-+#define ath10k_g_rates_rev2_size (ARRAY_SIZE(ath10k_rates_rev2))
-+
- static bool ath10k_mac_bitrate_is_cck(int bitrate)
+ void ath9k_tx99_init_debug(struct ath_softc *sc)
  {
- 	switch (bitrate) {
-@@ -7695,8 +7724,14 @@ int ath10k_mac_register(struct ath10k *ar)
- 		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
- 		band->n_channels = ARRAY_SIZE(ath10k_2ghz_channels);
- 		band->channels = channels;
--		band->n_bitrates = ath10k_g_rates_size;
--		band->bitrates = ath10k_g_rates;
-+
-+		if (ar->hw_params.cck_rate_map_rev2) {
-+			band->n_bitrates = ath10k_g_rates_rev2_size;
-+			band->bitrates = ath10k_g_rates_rev2;
-+		} else {
-+			band->n_bitrates = ath10k_g_rates_size;
-+			band->bitrates = ath10k_g_rates;
-+		}
+-	if (!AR_SREV_9300_20_OR_LATER(sc->sc_ah))
++	if (!AR_SREV_9280_20_OR_LATER(sc->sc_ah))
+ 		return;
  
- 		ar->hw->wiphy->bands[NL80211_BAND_2GHZ] = band;
- 	}
+ 	debugfs_create_file("tx99", S_IRUSR | S_IWUSR,
 -- 
-1.7.9.5
+2.5.0
 
