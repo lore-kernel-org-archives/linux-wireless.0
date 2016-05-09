@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58528 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754953AbcEBVYp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2016 17:24:45 -0400
-Message-ID: <1462224282.5898.23.camel@sipsolutions.net> (sfid-20160502_232447_535010_7AEA79B0)
-Subject: Re: [PATCH v2] mac80211:  add vht cap decode to debugfs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Mon, 02 May 2016 23:24:42 +0200
-In-Reply-To: <1462224198-24154-1-git-send-email-greearb@candelatech.com>
-References: <1462224198-24154-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:49985 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753081AbcEIXL1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2016 19:11:27 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 08/21] ath10k: make firmware text debug messages more verbose.
+Date: Mon,  9 May 2016 16:11:02 -0700
+Message-Id: <1462835475-11079-9-git-send-email-greearb@candelatech.com> (sfid-20160510_012231_278932_BA0EF499)
+In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-05-02 at 14:23 -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> This makes it a lot easier to understand the capabilities used
-> by the station:
-> 
-> VHT supported
-> cap: 0x300819b2
-> 		MAX-MPDU-11454
-> 		RXLDPC
-> 		SHORT-GI-80
-> 		TXSTBC
-> 		RXSTBC_1
-> 		RXSTBC_3
-> 		SU-BEAMFORMER-CAPABLE
-> 		SU-BEAMFORMEE-CAPABLE
-> 		BEAMFORMEE-STS: 0x0
-> 		SOUNDING-DIMENSIONS: 0x0
-> 		MU-BEAMFORMER-CAPABLE
-> 		MPDU-LENGTH-EXPONENT: 0x0
-> 		LINK-ADAPTATION-VHT-MRQ-MFB: 0x0
-> 		RX-ANTENNA-PATTERN
-> 		TX-ANTENNA-PATTERN
-> RX MCS: fffe
-> TX MCS: fffe
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> v2:  Fix 'RX' typo in the second antenna pattern.
-> 
-and my suggestion avoids that kind of problem too ;-)
+From: Ben Greear <greearb@candelatech.com>
 
-johannes
+There are not many of these messages producted by the
+firmware, but they are generally fairly useful, so print
+them at info level.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 1758b4a..d9e4b77 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4050,7 +4050,7 @@ void ath10k_wmi_event_debug_print(struct ath10k *ar, struct sk_buff *skb)
+ 	/* the last byte is always reserved for the null character */
+ 	buf[i] = '\0';
+ 
+-	ath10k_dbg(ar, ATH10K_DBG_WMI_PRINT, "wmi print '%s'\n", buf);
++	ath10k_info(ar, "wmi print '%s'\n", buf);
+ }
+ 
+ void ath10k_wmi_event_pdev_qvit(struct ath10k *ar, struct sk_buff *skb)
+-- 
+2.4.3
+
