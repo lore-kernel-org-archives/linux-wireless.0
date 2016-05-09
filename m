@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40780 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752268AbcEJUaG (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:50100 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752465AbcEIXMW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 16:30:06 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Tue, 10 May 2016 23:06:28 +0300
-Message-Id: <1462910797-20303-32-git-send-email-luca@coelho.fi> (sfid-20160510_223110_037421_E8FA2088)
-In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
-References: <1462910585.25219.7.camel@coelho.fi>
- <1462910797-20303-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 32/41] iwlwifi: don't access a nonexistent register upon assert
+	Mon, 9 May 2016 19:12:22 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211: Get ethtool-stats frequency more often.
+Date: Mon,  9 May 2016 16:12:17 -0700
+Message-Id: <1462835537-11268-1-git-send-email-greearb@candelatech.com> (sfid-20160510_012230_890700_A6E8AB88)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-The commit below added code to dump the content of FIFOs
-that are present only on dual CPU products (8000 and up).
-This broke 7265D whose firmware does advertise
-IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG but doesn't have 2
-CPUs. The current code does check the length of the FIFO
-before dumping them (and the nonexistent FIFO has a 0
-length), but we still accessed a register to set the FIFO
-number and that made the DMA unhappy.
+Some NICs (ath9k_htc) don't use chanctx_conf, it
+seems, so look at local->hw.conf.channel->center_freq
+in that case.
 
-The impact was a much longer recovery upon firmware assert.
-
-Fixes: 5b086414293f ("iwlwifi: mvm: support dumping UMAC internal txfifos")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ net/mac80211/ethtool.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 442e13e..1ece19d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -271,9 +271,6 @@ static void iwl_mvm_dump_fifos(struct iwl_mvm *mvm,
- 		for (i = 0;
- 		     i < ARRAY_SIZE(mvm->shared_mem_cfg.internal_txfifo_size);
- 		     i++) {
--			/* Mark the number of TXF we're pulling now */
--			iwl_trans_write_prph(mvm->trans, TXF_CPU2_NUM, i);
--
- 			fifo_hdr = (void *)(*dump_data)->data;
- 			fifo_data = (void *)fifo_hdr->data;
- 			fifo_len = mvm->shared_mem_cfg.internal_txfifo_size[i];
-@@ -289,6 +286,10 @@ static void iwl_mvm_dump_fifos(struct iwl_mvm *mvm,
- 				cpu_to_le32(fifo_len + sizeof(*fifo_hdr));
+diff --git a/net/mac80211/ethtool.c b/net/mac80211/ethtool.c
+index 9cc986d..4e937c1 100644
+--- a/net/mac80211/ethtool.c
++++ b/net/mac80211/ethtool.c
+@@ -165,10 +165,14 @@ do_survey:
+ 		} while (channel != survey.channel);
+ 	}
  
- 			fifo_hdr->fifo_num = cpu_to_le32(i);
-+
-+			/* Mark the number of TXF we're pulling now */
-+			iwl_trans_write_prph(mvm->trans, TXF_CPU2_NUM, i);
-+
- 			fifo_hdr->available_bytes =
- 				cpu_to_le32(iwl_trans_read_prph(mvm->trans,
- 								TXF_CPU2_FIFO_ITEM_CNT));
+-	if (survey.filled)
+-		data[i++] = survey.channel->center_freq;
+-	else
+-		data[i++] = 0;
++	if (channel) {
++		data[i++] = channel->center_freq;
++	} else {
++		if (local->_oper_chandef.chan)
++			data[i++] = local->_oper_chandef.chan->center_freq;
++		else
++			data[i++] = 0;
++	}
+ 	if (survey.filled & SURVEY_INFO_NOISE_DBM)
+ 		data[i++] = (u8)survey.noise;
+ 	else
 -- 
-2.8.1
+2.4.3
 
