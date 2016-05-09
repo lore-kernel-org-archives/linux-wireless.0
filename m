@@ -1,59 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42972 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751402AbcEaSQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2016 14:16:30 -0400
-Message-ID: <1464718586.3076.34.camel@sipsolutions.net> (sfid-20160531_201635_203480_F956DEE8)
-Subject: Re: [PATCH V2 iw] add "channels" PHY command listing frequencies
- with more details
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 31 May 2016 20:16:26 +0200
-In-Reply-To: <1464712100-4489-1-git-send-email-zajec5@gmail.com> (sfid-20160531_182829_340312_AD90B111)
-References: <1463739223-19205-1-git-send-email-zajec5@gmail.com>
-	 <1464712100-4489-1-git-send-email-zajec5@gmail.com>
-	 (sfid-20160531_182829_340312_AD90B111)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:49973 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753209AbcEIXL0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2016 19:11:26 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 03/21] ath10k: Support setting debug mask from driver code.
+Date: Mon,  9 May 2016 16:10:57 -0700
+Message-Id: <1462835475-11079-4-git-send-email-greearb@candelatech.com> (sfid-20160510_011133_824248_67635F7E)
+In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-05-31 at 18:28 +0200, Rafał Miłecki wrote:
-> 
-> +static int print_channels_handler(struct nl_msg *msg, void *arg)
-> +{
-> +	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-> +
+From: Ben Greear <greearb@candelatech.com>
 
-extra blank line
+Might want to turn off verbose debug as soon as you
+see a firmware crash, for instance.  Helps keep dmesg
+output from over-running the stuff you care about.
 
-> +	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
-> +	struct nlattr *tb_band[NL80211_BAND_ATTR_MAX + 1];
-> +	struct nlattr *tb_freq[NL80211_FREQUENCY_ATTR_MAX + 1];
-> +	struct nlattr *nl_band;
-> +	struct nlattr *nl_freq;
-> +	int rem_band, rem_freq;
-> +	static int last_band = -1;
-> +	static bool width_40, width_80, width_160;
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 5 +++++
+ drivers/net/wireless/ath/ath10k/debug.h | 1 +
+ 2 files changed, 6 insertions(+)
 
-You shouldn't make them static - make a little struct containing them,
-and pass it as "arg"
-
-
-> +static int handle_channels(struct nl80211_state *state, struct
-> nl_msg *msg,
-> +			   int argc, char **argv, enum id_input id)
-> +{
-
-struct ... xyz = {};
-
-> +	nla_put_flag(msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
-> +	nlmsg_hdr(msg)->nlmsg_flags |= NLM_F_DUMP;
-> +
-> +	register_handler(print_channels_handler, NULL);
-
-register_handler(..., &xyz);
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index e251155..a689bf1 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -194,6 +194,11 @@ void ath10k_print_driver_info(struct ath10k *ar)
+ }
+ EXPORT_SYMBOL(ath10k_print_driver_info);
+ 
++void ath10k_set_debug_mask(unsigned int v) {
++	ath10k_debug_mask = v;
++}
++EXPORT_SYMBOL(ath10k_set_debug_mask);
++
+ void ath10k_err(struct ath10k *ar, const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 75c89e3..a5c9aae 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -69,6 +69,7 @@ void ath10k_debug_print_hwfw_info(struct ath10k *ar);
+ void ath10k_debug_print_board_info(struct ath10k *ar);
+ void ath10k_debug_print_boot_info(struct ath10k *ar);
+ void ath10k_print_driver_info(struct ath10k *ar);
++void ath10k_set_debug_mask(unsigned int v);
+ 
+ #ifdef CONFIG_ATH10K_DEBUGFS
+ int ath10k_debug_start(struct ath10k *ar);
+-- 
+2.4.3
 
