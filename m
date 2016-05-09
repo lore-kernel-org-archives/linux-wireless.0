@@ -1,115 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:35191 "EHLO
-	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752664AbcEDTaz (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:35654 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751270AbcEIM2z convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2016 15:30:55 -0400
-Received: by mail-pf0-f176.google.com with SMTP id 77so28458302pfv.2
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2016 12:30:54 -0700 (PDT)
-From: Christian Daudt <csd@broadcom.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Daudt <csd@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: [PATCH] Fix kernel oops in failed chip_attach
-Date: Wed,  4 May 2016 12:30:28 -0700
-Message-Id: <1462390228-27863-1-git-send-email-csd@broadcom.com> (sfid-20160504_213101_026971_5A6023D7)
+	Mon, 9 May 2016 08:28:55 -0400
+Received: by mail-wm0-f43.google.com with SMTP id e201so135104906wme.0
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2016 05:28:54 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1462446039-1070-2-git-send-email-michal.kazior@tieto.com>
+References: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+	<1462446039-1070-1-git-send-email-michal.kazior@tieto.com>
+	<1462446039-1070-2-git-send-email-michal.kazior@tieto.com>
+Date: Mon, 9 May 2016 14:28:53 +0200
+Message-ID: <CA+BoTQmdk2Et5Ca02HFj76L21Yn4NOKPFD0V_BJ4ZyhxBVPewA@mail.gmail.com> (sfid-20160509_142858_752409_6B23F9C0)
+Subject: Re: [PATCHv4 1/5] mac80211: skip netdev queue control with software queuing
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Dave Taht <dave.taht@gmail.com>,
+	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
+	Avery Pennarun <apenwarr@gmail.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When chip attach fails, brcmf_sdiod_intr_unregister is being called
-but that is too early as sdiodev->settings has not been set yet
-nor has brcmf_sdiod_intr_register been called.
-Change to use oob_irq_requested + newly created sd_irq_requested
-to decide on what to unregister at intr_unregister time.
+On 5 May 2016 at 13:00, Michal Kazior <michal.kazior@tieto.com> wrote:
+[...]
+> -static void ieee80211_drv_tx(struct ieee80211_local *local,
+> -                            struct ieee80211_vif *vif,
+> -                            struct ieee80211_sta *pubsta,
+> -                            struct sk_buff *skb)
+> +static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
+> +                                         struct ieee80211_vif *vif,
+> +                                         struct ieee80211_sta *pubsta,
+> +                                         struct sk_buff *skb)
+>  {
+>         struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+> -       struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+>         struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+> -       struct ieee80211_tx_control control = {
+> -               .sta = pubsta,
+> -       };
+> -       struct ieee80211_txq *txq = NULL;
+> -       struct txq_info *txqi;
+> -       u8 ac;
+>
+>         if ((info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ||
+>             (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
+> -               goto tx_normal;
+> +               return NULL;
+>
+>         if (!ieee80211_is_data(hdr->frame_control))
+> -               goto tx_normal;
+> +               return NULL;
+>
+>         if (pubsta) {
+>                 u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+>
+> -               txq = pubsta->txq[tid];
+> +               return to_txq_info(pubsta->txq[tid]);
+>         } else if (vif) {
+> -               txq = vif->txq;
+> +               return to_txq_info(vif->txq);
+>         }
 
-Steps to reproduce problem:
-- modprobe brcmfmac using buggy FW
-- rmmod brcmfmac
-- modprobe brcmfmac again.
+I just noticed this crashes on non-wake_tx_queue drivers. I'll re-spin
+a v5 with this fixed later.
 
-If done with a buggy firmware, brcm_chip_attach will fail on the
-2nd modprobe triggering the call to intr_unregister and the
-kernel oops when attempting to de-reference sdiodev->settings->bus.sdio
-which has not yet been set.
 
-Signed-off-by: Christian Daudt <csd@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 30 ++++++++++++----------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  1 +
- 2 files changed, 18 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index da0cdd3..09635a9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -166,6 +166,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
- 		sdio_claim_irq(sdiodev->func[1], brcmf_sdiod_ib_irqhandler);
- 		sdio_claim_irq(sdiodev->func[2], brcmf_sdiod_dummy_irqhandler);
- 		sdio_release_host(sdiodev->func[1]);
-+		sdiodev->sd_irq_requested = true;
- 	}
- 
- 	return 0;
-@@ -173,27 +174,30 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
- 
- int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
- {
--	struct brcmfmac_sdio_pd *pdata;
- 
--	brcmf_dbg(SDIO, "Entering\n");
-+	brcmf_dbg(SDIO, "Entering oob=%d sd=%d\n",
-+		  sdiodev->oob_irq_requested,
-+		  sdiodev->sd_irq_requested);
- 
--	pdata = &sdiodev->settings->bus.sdio;
--	if (pdata->oob_irq_supported) {
-+	if (sdiodev->oob_irq_requested) {
-+		struct brcmfmac_sdio_pd *pdata;
-+
-+		pdata = &sdiodev->settings->bus.sdio;
- 		sdio_claim_host(sdiodev->func[1]);
- 		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_BRCM_SEPINT, 0, NULL);
- 		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_IENx, 0, NULL);
- 		sdio_release_host(sdiodev->func[1]);
- 
--		if (sdiodev->oob_irq_requested) {
--			sdiodev->oob_irq_requested = false;
--			if (sdiodev->irq_wake) {
--				disable_irq_wake(pdata->oob_irq_nr);
--				sdiodev->irq_wake = false;
--			}
--			free_irq(pdata->oob_irq_nr, &sdiodev->func[1]->dev);
--			sdiodev->irq_en = false;
-+		sdiodev->oob_irq_requested = false;
-+		if (sdiodev->irq_wake) {
-+			disable_irq_wake(pdata->oob_irq_nr);
-+			sdiodev->irq_wake = false;
- 		}
--	} else {
-+		free_irq(pdata->oob_irq_nr, &sdiodev->func[1]->dev);
-+		sdiodev->irq_en = false;
-+	}
-+
-+	if (sdiodev->sd_irq_requested) {
- 		sdio_claim_host(sdiodev->func[1]);
- 		sdio_release_irq(sdiodev->func[2]);
- 		sdio_release_irq(sdiodev->func[1]);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index dcf0ce8c..c07ad25 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -186,6 +186,7 @@ struct brcmf_sdio_dev {
- 	struct brcmf_bus *bus_if;
- 	struct brcmf_mp_device *settings;
- 	bool oob_irq_requested;
-+	bool sd_irq_requested;
- 	bool irq_en;			/* irq enable flags */
- 	spinlock_t irq_en_lock;
- 	bool irq_wake;			/* irq wake enable flags */
--- 
-1.9.1
-
+Michał
