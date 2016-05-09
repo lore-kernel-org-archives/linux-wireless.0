@@ -1,140 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:60763 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752758AbcEYPiK (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33576 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436AbcEIJlG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2016 11:38:10 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u4PFaUVe021074
-	for <linux-wireless@vger.kernel.org>; Wed, 25 May 2016 08:38:09 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 232q6eht6s-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 25 May 2016 08:38:09 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: inform disconnection initiator correctly.
-Date: Wed, 25 May 2016 08:37:35 -0700
-Message-ID: <1464190655-21667-1-git-send-email-akarwar@marvell.com> (sfid-20160525_173814_343832_FEF8B00E)
+	Mon, 9 May 2016 05:41:06 -0400
+Received: by mail-pa0-f46.google.com with SMTP id xk12so71387824pac.0
+        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2016 02:41:06 -0700 (PDT)
+Subject: Re: Planned Support for BCM 43162 [14e4:43ae] rev 02 ?
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Jan Sobotka <xSobotkaJ@seznam.cz>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+References: <3Fn.2TId.FHuvjLBV4z.1NAsIY@seznam.cz>
+ <75r.2THk.1aVrEGdo1ry.1N96yR@seznam.cz>
+ <CACna6rypnsgK4DeMxL6F8jwuFpzYhvG8O_TA1M4A6j8X6Eh5_A@mail.gmail.com>
+ <CACna6rx90=u7ZSY6ZXjWw4CicEQR6Ty-iEc_G9ACLL0j9EfJLg@mail.gmail.com>
+ <3L}.2TJP.BPtk86KPbh.1NAtDW@seznam.cz>
+ <CACna6rwe9mbcHW+AvtcXvpdvnwZMxkLKzvOLeNp0-XTLB5k6_A@mail.gmail.com>
+Cc: b43-dev <b43-dev@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <57305B23.4030101@broadcom.com> (sfid-20160509_114111_400707_59EA51E4)
+Date: Mon, 9 May 2016 11:40:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6rwe9mbcHW+AvtcXvpdvnwZMxkLKzvOLeNp0-XTLB5k6_A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch ensures that 'locally_generated' parameter is correctly
-passed to cfg80211_disconnected() API.
+On 6-5-2016 2:03, Rafał Miłecki wrote:
+> On 5 May 2016 at 18:22, Jan Sobotka <xSobotkaJ@seznam.cz> wrote:
+>> Great, now it works. Output:
+>>
+>> root@chobot-lenovo-laptop:/home/chobot# echo "14e4 43ae" > /sys/bus/pci/drivers/bcma-pci-bridge/new_id
+>> root@chobot-lenovo-laptop:/home/chobot# dmesg | egrep "bcma|b43"
+>> [ 5295.114902] bcma: bus0: Found chip with id 0x4335, rev 0x02 and package 0x01
+>> [ 5295.114950] bcma: bus0: Core 0 found: ChipCommon (manuf 0x4BF, id 0x800, rev 0x2E, class 0x0)
+>> [ 5295.114974] bcma: bus0: Core 1 found: IEEE 802.11 (manuf 0x4BF, id 0x812, rev 0x2E, class 0x0)
+>> [ 5295.115026] bcma: bus0: Core 2 found: ARM CR4 (manuf 0x4BF, id 0x83E, rev 0x04, class 0x0)
+>> [ 5295.115073] bcma: bus0: Core 3 found: PCIe Gen2 (manuf 0x4BF, id 0x83C, rev 0x04, class 0x0)
+>> [ 5295.115096] bcma: bus0: Core 4 found: USB 2.0 Device (manuf 0x4BF, id 0x81A, rev 0x14, class 0x0)
+>> [ 5295.115119] bcma: bus0: Core 5 found: SDIO Device (manuf 0x4BF, id 0x829, rev 0x15, class 0x0)
+>> [ 5295.115170] bcma: bus0: Bridge found
+>> [ 5295.115221] bcma-pci-bridge: probe of 0000:02:00.0 failed with error -84
+> 
+> So this is device with BCM4335 chipset which is a FullMAC one AFAIK.
+> It may be supported by brcmfmac. There is already support for BCM4335
+> in brcmfmac but it was developed for SDIO devices only. I don't think
+> we ever met BCM4335 on PCIe device.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/join.c        |  2 +-
- drivers/net/wireless/marvell/mwifiex/main.h        |  3 ++-
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  5 +++--
- drivers/net/wireless/marvell/mwifiex/sta_event.c   | 12 ++++++------
- 4 files changed, 12 insertions(+), 10 deletions(-)
+It does have an ARM core, but for fullmac we need RAM as well and I
+don't see that listed. So I guess it is a 43162 and needs softmac
+driver. Also could not find any fullmac firmware for it. The only thing
+I found was a hybrid wl driver release for it.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/join.c b/drivers/net/wireless/marvell/mwifiex/join.c
-index 62211fc..a4b773d 100644
---- a/drivers/net/wireless/marvell/mwifiex/join.c
-+++ b/drivers/net/wireless/marvell/mwifiex/join.c
-@@ -1281,7 +1281,7 @@ int mwifiex_ret_802_11_ad_hoc(struct mwifiex_private *priv,
- 	if (result) {
- 		mwifiex_dbg(priv->adapter, ERROR, "ADHOC_RESP: failed\n");
- 		if (priv->media_connected)
--			mwifiex_reset_connect_state(priv, result);
-+			mwifiex_reset_connect_state(priv, result, true);
- 
- 		memset(&priv->curr_bss_params.bss_descriptor,
- 		       0x00, sizeof(struct mwifiex_bssdescriptor));
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 0207af0..f0cd055 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1128,7 +1128,8 @@ int mwifiex_cmd_802_11_associate(struct mwifiex_private *priv,
- 				 struct mwifiex_bssdescriptor *bss_desc);
- int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
- 				 struct host_cmd_ds_command *resp);
--void mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason);
-+void mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason,
-+				 bool from_ap);
- u8 mwifiex_band_to_radio_type(u8 band);
- int mwifiex_deauthenticate(struct mwifiex_private *priv, u8 *mac);
- void mwifiex_deauthenticate_all(struct mwifiex_adapter *adapter);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index d18c797..bcfd4b7 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -553,7 +553,8 @@ static int mwifiex_ret_802_11_deauthenticate(struct mwifiex_private *priv,
- 	if (!memcmp(resp->params.deauth.mac_addr,
- 		    &priv->curr_bss_params.bss_descriptor.mac_address,
- 		    sizeof(resp->params.deauth.mac_addr)))
--		mwifiex_reset_connect_state(priv, WLAN_REASON_DEAUTH_LEAVING);
-+		mwifiex_reset_connect_state(priv, WLAN_REASON_DEAUTH_LEAVING,
-+					    false);
- 
- 	return 0;
- }
-@@ -566,7 +567,7 @@ static int mwifiex_ret_802_11_deauthenticate(struct mwifiex_private *priv,
- static int mwifiex_ret_802_11_ad_hoc_stop(struct mwifiex_private *priv,
- 					  struct host_cmd_ds_command *resp)
- {
--	mwifiex_reset_connect_state(priv, WLAN_REASON_DEAUTH_LEAVING);
-+	mwifiex_reset_connect_state(priv, WLAN_REASON_DEAUTH_LEAVING, false);
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index 0104108..0cefd40 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -40,8 +40,8 @@
-  *      - Erases current SSID and BSSID information
-  *      - Sends a disconnect event to upper layers/applications.
-  */
--void
--mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
-+void mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code,
-+				 bool from_ap)
- {
- 	struct mwifiex_adapter *adapter = priv->adapter;
- 
-@@ -140,7 +140,7 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
- 	if (priv->bss_mode == NL80211_IFTYPE_STATION ||
- 	    priv->bss_mode == NL80211_IFTYPE_P2P_CLIENT) {
- 		cfg80211_disconnected(priv->netdev, reason_code, NULL, 0,
--				      false, GFP_KERNEL);
-+				      !from_ap, GFP_KERNEL);
- 	}
- 	eth_zero_addr(priv->cfg_bssid);
- 
-@@ -574,7 +574,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		if (priv->media_connected) {
- 			reason_code =
- 				le16_to_cpu(*(__le16 *)adapter->event_body);
--			mwifiex_reset_connect_state(priv, reason_code);
-+			mwifiex_reset_connect_state(priv, reason_code, true);
- 		}
- 		break;
- 
-@@ -589,7 +589,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		if (priv->media_connected) {
- 			reason_code =
- 				le16_to_cpu(*(__le16 *)adapter->event_body);
--			mwifiex_reset_connect_state(priv, reason_code);
-+			mwifiex_reset_connect_state(priv, reason_code, true);
- 		}
- 		break;
- 
-@@ -599,7 +599,7 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 		if (priv->media_connected) {
- 			reason_code =
- 				le16_to_cpu(*(__le16 *)adapter->event_body);
--			mwifiex_reset_connect_state(priv, reason_code);
-+			mwifiex_reset_connect_state(priv, reason_code, true);
- 		}
- 		break;
- 
--- 
-1.9.1
+Regards,
+Arend
 
+> You may try:
+> sudo su
+> rmmod bcma
+> echo "14e4 43ae" > /sys/bus/pci/drivers/brcmfmac/new_id
+> dmesg | grep brcmfmac
+> 
+> However I think brcmfmac may need some extra changes to support
+> BCM4335 on PCIe. Lets also see if Broadcom team can help us with this.
+> 
