@@ -1,58 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40796 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751325AbcEJUa2 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:49996 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753504AbcEIXL3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 16:30:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Tue, 10 May 2016 23:06:07 +0300
-Message-Id: <1462910797-20303-11-git-send-email-luca@coelho.fi> (sfid-20160510_223034_687226_5DE1A235)
-In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
-References: <1462910585.25219.7.camel@coelho.fi>
- <1462910797-20303-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 11/41] iwlwifi: mvm: support queue removal in ADD_STA hcmd
+	Mon, 9 May 2016 19:11:29 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 21/21] ath10k: Read dbglog buffers over register ping-pong.
+Date: Mon,  9 May 2016 16:11:15 -0700
+Message-Id: <1462835475-11079-22-git-send-email-greearb@candelatech.com> (sfid-20160510_011136_743596_B4F3CB6A)
+In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-To indicate to the FW that a queue has been removed, an
-existing flag in the ADD_STA HCMD (that hasn't been in use)
-has been changed to indicate that a queue is being removed
-from a STA.
+This gives much better debugging capability when debugging
+crashes in the firmware that cause CE transport loss.
 
-Update this in the driver code.
+(Such as AXI errors).
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/pci.c | 47 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 46 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-index e896648..38b1d04 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-@@ -173,7 +173,7 @@ enum iwl_sta_key_flag {
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 330c150..4069e72 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1532,7 +1532,7 @@ static int ath10k_ct_fw_crash_regs_harder(struct ath10k *ar,
+ 	return -EBUSY;
  
- /**
-  * enum iwl_sta_modify_flag - indicate to the fw what flag are being changed
-- * @STA_MODIFY_KEY: this command modifies %key
-+ * @STA_MODIFY_QUEUE_REMOVAL: this command removes a queue
-  * @STA_MODIFY_TID_DISABLE_TX: this command modifies %tid_disable_tx
-  * @STA_MODIFY_TX_RATE: unused
-  * @STA_MODIFY_ADD_BA_TID: this command modifies %add_immediate_ba_tid
-@@ -183,7 +183,7 @@ enum iwl_sta_key_flag {
-  * @STA_MODIFY_QUEUES: modify the queues used by this station
-  */
- enum iwl_sta_modify_flag {
--	STA_MODIFY_KEY				= BIT(0),
-+	STA_MODIFY_QUEUE_REMOVAL		= BIT(0),
- 	STA_MODIFY_TID_DISABLE_TX		= BIT(1),
- 	STA_MODIFY_TX_RATE			= BIT(2),
- 	STA_MODIFY_ADD_BA_TID			= BIT(3),
+ pingpong:
+-	ath10k_warn(ar, "Trying to read crash dump over pingpong registers.\n");
++	ath10k_warn(ar, "Trying to read crash dump over pingpong registers, len %d\n", len);
+ 	/* Firmware is trying to send us info it seems. */
+ 	for (q = 0; q<len; q++) {
+ 		reg_dump_values[q] = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS + SCRATCH_2_ADDRESS);
+@@ -1567,6 +1567,10 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
+ 				      hi_failure_state,
+ 				      REG_DUMP_COUNT_QCA988X * sizeof(__le32));
+ 	if (ret) {
++		__le32 *buffer;
++		int len = 1500; /* length in bytes for firmware dbglog buffer */
++		struct ath10k_fw_dbglog_buf dbuf;
++
+ 		ath10k_err(ar, "failed to read firmware dump area: %d\n", ret);
+ 
+ 		/* Try to read this directly over registers...only works on new
+@@ -1575,6 +1579,46 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
+ 		ret = ath10k_ct_fw_crash_regs_harder(ar, reg_dump_values, REG_DUMP_COUNT_QCA988X);
+ 		if (ret)
+ 			return;
++
++		/* Try to read the debug-log buffers as well. */
++		buffer = kzalloc(len, GFP_ATOMIC);
++
++		if (!buffer)
++			goto free_and_cont;
++
++		if (ath10k_ct_fw_crash_regs_harder(ar, (__le32 *)(&dbuf), sizeof(dbuf)/4))
++			goto free_and_cont;
++
++		/* wow, it worked! */
++		len = le32_to_cpu(dbuf.length);
++		if (len > 1500) {
++			ath10k_err(ar, "dbuf length is greater than 1500: %d\n", len);
++			len = 1500;
++		}
++		if (ath10k_ct_fw_crash_regs_harder(ar, buffer, len/4))
++			goto free_and_cont;
++
++		ath10k_dbg_save_fw_dbg_buffer(ar, buffer, len/4);
++		ath10k_dbg_print_fw_dbg_buffer(ar, buffer, len/4, KERN_ERR);
++
++		/* See if the second one is available */
++		if (ath10k_ct_fw_crash_regs_harder(ar, (__le32 *)(&dbuf), sizeof(dbuf)/4))
++			goto free_and_cont;
++
++		len = le32_to_cpu(dbuf.length);
++		if (len > 1500) {
++			ath10k_err(ar, "dbuf[2] length is greater than 1500: %d\n", len);
++			len = 1500;
++		}
++
++		if (ath10k_ct_fw_crash_regs_harder(ar, buffer, len/4))
++			goto free_and_cont;
++
++		ath10k_dbg_save_fw_dbg_buffer(ar, buffer, len/4);
++		ath10k_dbg_print_fw_dbg_buffer(ar, buffer, len/4, KERN_ERR);
++
++	free_and_cont:
++		kfree(buffer);
+ 	}
+ 
+ 	BUILD_BUG_ON(REG_DUMP_COUNT_QCA988X % 4);
+@@ -1723,6 +1767,7 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+ 
++	/* ath10k_set_debug_mask(0);  // stop more log spam */
+ 	queue_work(ar->workqueue, &ar->restart_work);
+ }
+ 
 -- 
-2.8.1
+2.4.3
 
