@@ -1,48 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f51.google.com ([209.85.215.51]:36426 "EHLO
-	mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753988AbcE3GuU (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:49986 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753410AbcEIXL1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2016 02:50:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgVRJm3zSokQ2wxb8Kwd4UEzx7ZjRCHAmnA02cB89Usy-A@mail.gmail.com>
-References: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
-	<49c03996365360077fe7317d108072c30354b555.1464576022.git.kirtika.ruchandani@gmail.com>
-	<CAGRGNgVRJm3zSokQ2wxb8Kwd4UEzx7ZjRCHAmnA02cB89Usy-A@mail.gmail.com>
-Date: Sun, 29 May 2016 23:50:18 -0700
-Message-ID: <CAA-b7a8v8q5VnPxWw+o6Vj96KxeVhgfmZbre8+9rLRcB7-emyg@mail.gmail.com> (sfid-20160530_085028_455224_A73CB46E)
-Subject: Re: [PATCH v2 03/10] nl80211: Prefer ether_addr_copy
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tina Ruchandani <ruchandani.tina@gmail.com>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 9 May 2016 19:11:27 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 09/21] ath10k: print fw debug messages in hex.
+Date: Mon,  9 May 2016 16:11:03 -0700
+Message-Id: <1462835475-11079-10-git-send-email-greearb@candelatech.com> (sfid-20160510_011144_961829_3F1AEAC5)
+In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> This looks right to me, but doesn't ether_addr_copy() have alignment
-> requirements? Could someone more familiar with that review these
-> changes to ensure they're met?
+From: Ben Greear <greearb@candelatech.com>
 
-Thanks for catching this.
-The requirement is to be __aligned(2). I've added 4 instances of
-ether_addr_copy with 8 addresses as arguments.  Of these, the 4
-src arguments are really the same type (i.e. nla_data acting on a
-const nlattr*), so I'll try to reason about the 5 total cases below -
-1. cfg->dst_mac should be 16-bit aligned due to the layout of
-struct cfg80211_wowlan_tcp. Its offset is 10 or 12 bytes in the
-structure depending on the system.
-2 and 3. For mac_addr and mac_addr_mask, nl80211_parse_random_mac
-takes these in as u8* (and hence does not guarantee alignment?)
-Both the callers of this function today pass in arguments that are
-explicitly __aligned(2). But this cannot be said of future potential callers
-- so perhaps my patch introduces a bug?
-4. Based on struct cfg80211_acl_data, acl->mac_addrs[i] should be not
-guaranteed to be __aligned(2).
-5. For all the nla_data src arguments, the nla_data function returns
-((char*) foo + 5) for pointer foo. So likely not __aligned(2).
+This allows user-space tools to decode debug-log
+messages by parsing dmesg or /var/log/messages.
 
-Based on 3, 4 and 5, this patch should be revoked, but it would be nice
-to have a confirmation from someone else.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 72 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/debug.h |  5 +++
+ drivers/net/wireless/ath/ath10k/pci.c   |  3 ++
+ drivers/net/wireless/ath/ath10k/wmi.c   | 12 ++++++
+ 4 files changed, 92 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 28e0c05..c38862b 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -2660,3 +2660,75 @@ void ath10k_dbg_dump(struct ath10k *ar,
+ EXPORT_SYMBOL(ath10k_dbg_dump);
+ 
+ #endif /* CONFIG_ATH10K_DEBUG */
++
++void ath10k_dbg_print_fw_dbg_buffer(struct ath10k *ar, __le32 *ibuf, int len,
++				    const char* lvl)
++{
++	/* Print out raw hex, external tools can decode if
++	 * they care.
++	 * TODO:  Add ar identifier to messages.
++	 */
++	int q = 0;
++
++	dev_printk(lvl, ar->dev, "ath10k_pci ATH10K_DBG_BUFFER:\n");
++	while (q < len) {
++		if (q + 8 <= len) {
++			printk("%sath10k: [%04d]: %08X %08X %08X %08X %08X %08X %08X %08X\n",
++			       lvl, q,
++			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3],
++			       ibuf[q+4], ibuf[q+5], ibuf[q+6], ibuf[q+7]);
++			q += 8;
++		}
++		else if (q + 7 <= len) {
++			printk("%sath10k: [%04d]: %08X %08X %08X %08X %08X %08X %08X\n",
++			       lvl, q,
++			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3],
++			       ibuf[q+4], ibuf[q+5], ibuf[q+6]);
++			q += 7;
++		}
++		else if (q + 6 <= len) {
++			printk("%sath10k: [%04d]: %08X %08X %08X %08X %08X %08X\n",
++			       lvl, q,
++			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3],
++			       ibuf[q+4], ibuf[q+5]);
++			q += 6;
++		}
++		else if (q + 5 <= len) {
++			printk("%sath10k: [%04d]: %08X %08X %08X %08X %08X\n",
++			       lvl, q,
++			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3],
++			       ibuf[q+4]);
++			q += 5;
++		}
++		else if (q + 4 <= len) {
++			printk("%sath10k: [%04d]: %08X %08X %08X %08X\n",
++			       lvl, q,
++			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3]);
++			q += 4;
++		}
++		else if (q + 3 <= len) {
++			printk("%sath10k: [%04d]: %08X %08X %08X\n",
++			       lvl, q,
++			       ibuf[q], ibuf[q+1], ibuf[q+2]);
++			q += 3;
++		}
++		else if (q + 2 <= len) {
++			printk("%sath10k: [%04d]: %08X %08X\n",
++			       lvl, q,
++			       ibuf[q], ibuf[q+1]);
++			q += 2;
++		}
++		else if (q + 1 <= len) {
++			printk("%sath10k: [%04d]: %08X\n",
++			       lvl, q,
++			       ibuf[q]);
++			q += 1;
++		}
++		else {
++			break;
++		}
++	}/* while */
++
++	dev_printk(lvl, ar->dev, "ATH10K_END\n");
++}
++EXPORT_SYMBOL(ath10k_dbg_print_fw_dbg_buffer);
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 613ad7e..6356dce 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -38,6 +38,7 @@ enum ath10k_debug_mask {
+ 	ATH10K_DBG_WMI_PRINT	= 0x00002000,
+ 	ATH10K_DBG_PCI_PS	= 0x00004000,
+ 	ATH10K_DBG_AHB		= 0x00008000,
++	ATH10K_DBG_FW		= 0x80000000,
+ 	ATH10K_DBG_ANY		= 0xffffffff,
+ };
+ 
+@@ -193,4 +194,8 @@ static inline void ath10k_dbg_dump(struct ath10k *ar,
+ {
+ }
+ #endif /* CONFIG_ATH10K_DEBUG */
++
++void ath10k_dbg_print_fw_dbg_buffer(struct ath10k *ar, __le32 *buffer,
++				    int len, const char* lvl);
++
+ #endif /* _DEBUG_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index e6315ec..dbf0db8 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1623,6 +1623,9 @@ static void ath10k_pci_dump_dbglog(struct ath10k *ar)
+ 		WARN_ON(len & 0x3);
+ 
+ 		ath10k_dbg_save_fw_dbg_buffer(ar, (__le32 *)(buffer), len >> 2);
++		ath10k_dbg_print_fw_dbg_buffer(ar, (__le32 *)(buffer),
++					       dbuf.length/sizeof(__le32),
++					       KERN_ERR);
+ 		kfree(buffer);
+ 
+ next:
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index d9e4b77..6cfba41 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2510,6 +2510,18 @@ int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
+ 				      (skb->len - 4)/sizeof(__le32));
+ 	spin_unlock_bh(&ar->data_lock);
+ 
++	if (ev->dropped_count)
++		ath10k_warn(ar, "WARNING: Dropped dbglog buffers: %d\n", __le32_to_cpu(ev->dropped_count));
++
++	if (ath10k_debug_mask & ATH10K_DBG_FW)
++		ath10k_dbg_print_fw_dbg_buffer(ar, ev->messages,
++					       (skb->len - 4)/sizeof(__le32),
++					       KERN_INFO);
++	else
++		ath10k_dbg_print_fw_dbg_buffer(ar, ev->messages,
++					       (skb->len - 4)/sizeof(__le32),
++					       KERN_DEBUG);
++
+ 	return 0;
+ }
+ 
+-- 
+2.4.3
+
