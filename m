@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56567 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751582AbcEUDNM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2016 23:13:12 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Daniel Lenski <dlenski@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: increase polling timeout for firmware startup
-References: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
-	<wrfjinyayf2i.fsf@redhat.com>
-	<CAOw_LSHnV+244fT7YvEoV+7VSH_+OoGFmZSdGK4a3NqB407VGQ@mail.gmail.com>
-	<wrfj4m9svn35.fsf@redhat.com>
-	<CAOw_LSGsLVhXVvqwQD7J4ZJSL4jq8+KE-0ZMMXa5YP12Nb3dCA@mail.gmail.com>
-	<CAOw_LSGnjhOO4hfPk9KttkFtLyT6XLxa92Cj=eKq6zgQ1at-RQ@mail.gmail.com>
-Date: Fri, 20 May 2016 23:13:10 -0400
-In-Reply-To: <CAOw_LSGnjhOO4hfPk9KttkFtLyT6XLxa92Cj=eKq6zgQ1at-RQ@mail.gmail.com>
-	(Daniel Lenski's message of "Fri, 20 May 2016 13:54:10 -0700")
-Message-ID: <wrfj1t4wt86x.fsf@redhat.com> (sfid-20160521_051345_281547_9FE0B585)
+Received: from smtp.codeaurora.org ([198.145.29.96]:43242 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751279AbcEITGs (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2016 15:06:48 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2016-05-09
+Date: Mon, 09 May 2016 22:06:42 +0300
+Message-ID: <8760unhwzh.fsf@kamboji.qca.qualcomm.com> (sfid-20160509_210706_933346_BA1DD573)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Lenski <dlenski@gmail.com> writes:
-> On Fri, May 20, 2016 at 1:50 PM, Daniel Lenski <dlenski@gmail.com> wrote:
->> Am I understanding your idea correctly? To put a loop around the 8051
->> reset and the firmware polling loop, with a delay between failure and retry?
->
-> That was some sloppy pseudo-code by me... here's what I think you're
-> suggesting:
+Hi Dave,
 
-Actually I was more thinking along resetting it properly before tryinhg
-to launch the firmware. Ie. before enabling execution.
+one more iwlwifi fix we would like to get to 4.6 if possible. Please let
+me know if there are any problems.
 
-Cheers,
-Jes
+Kalle
+
+The following changes since commit e2841ea91611622370f66b4dfaa62599e8850d48:
+
+  Merge tag 'iwlwifi-for-kalle-2016-04-12_2' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2016-04-21 15:40:13 +0300)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-05-09
+
+for you to fetch changes up to cbbba30f1ac95a04aae9c61a55aebe5e6fdf29f0:
+
+  Merge tag 'iwlwifi-for-kalle-2016-05-04' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2016-05-06 14:27:48 +0300)
+
+----------------------------------------------------------------
+
+wireless-drivers fixes for 4.6
+
+iwlwifi
+
+* fix P2P rates (and possibly other issues)
+
+----------------------------------------------------------------
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: don't override the rate with the AMSDU len
+
+Kalle Valo (1):
+      Merge tag 'iwlwifi-for-kalle-2016-05-04' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c |   83 ++++++++++++++++-----------
+ 1 file changed, 48 insertions(+), 35 deletions(-)
