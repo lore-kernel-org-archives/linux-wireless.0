@@ -1,57 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40043 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750774AbcELJdG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2016 05:33:06 -0400
-Message-ID: <1463045572.13313.21.camel@sipsolutions.net> (sfid-20160512_113332_211218_243417E5)
-Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED
- trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Machek <pavel@ucw.cz>,
-	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
-	<jprvita@endlessm.com>
-Date: Thu, 12 May 2016 11:32:52 +0200
-In-Reply-To: <20160504072936.GB17045@amd>
-References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
-	 <1462199948-6424-2-git-send-email-jprvita@endlessm.com>
-	 <20160504072936.GB17045@amd>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:49965 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752443AbcEIXLX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2016 19:11:23 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 00/21] ath10k patches, generic and CT firmware related.
+Date: Mon,  9 May 2016 16:10:54 -0700
+Message-Id: <1462835475-11079-1-git-send-email-greearb@candelatech.com> (sfid-20160510_011133_252907_B0052132)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-05-04 at 09:29 +0200, Pavel Machek wrote:
-> 
-> If userspace wants to control the manually, it can do just that --
-> control it manually. There should not be a need to "override the
-> default policy".
+From: Ben Greear <greearb@candelatech.com>
 
-I'm still not buying this.
+These are against wireless-testing from a few days ago.
 
-In the original situation, without these patches, userspace has to have
-a list of all LEDs that are supposed to indicate airplane mode.
+Here are a bunch of ath10k patches.  First one is a crash
+fix.  Next few are at least somewhat useful for generic
+firmware, and more useful for CT firmware.  Much of it is related
+to better debugging of firmware crashes.  If this can go in, then
+I can much better handle random bug reports from prople using
+stock kernels and CT firmware.  With some small tweaks to how they
+package firmware, QCA could benefit as well.
 
-With this patch only (without patch 2/3), userspace can look up the
-default trigger, but then has to change it, causing the necessary
-information to be lost immediately when you actually use it - that also
-seems like a bad idea.
+The last bit is some initial support for CT firmware.  I figure it
+is a long-shot, but it would surely be nice to get this (and more!)
+upstream.  If nothing else, these can be a basis for potential
+inclusion in openwrt or similar.
 
-With the patches, the userspace that cares can also concentrate on
-something it already *does* - i.e. dealing with the rfkill API - and
-let the rest of the situation be sorted out in itself.
+These patches are not overly dependent on each other for the most
+part, so even if a few are not acceptable, maybe others can be
+applied upstream.
 
+Ben Greear (21):
+  ath10k:  Fix crash related to printing features.
+  ath10k: fix typo in logging message
+  ath10k: Support setting debug mask from driver code.
+  ath10k: rate-limit packet tx errors
+  ath10k: save firmware debug log messages.
+  ath10k: save firmware stacks upon firmware crash
+  ath10k: save firmware RAM and ROM BSS sections on crash
+  ath10k: make firmware text debug messages more verbose.
+  ath10k: print fw debug messages in hex.
+  ath10k: support logging ath10k_info as KERN_DEBUG
+  ath10k: add fw-powerup-fail to ethtool stats.
+  ath10k: Support up to 64 vdevs.
+  ath10k: Document cycle count related counters.
+  ath10k: Add tx/rx bytes, cycle counters to ethtool stats.
+  ath10k: support CT firmware flag.
+  ath10k: Support 32+ stations.
+  ath10k: Enable detecting failure to install key in firmware (CT).
+  ath10k: Note limitation on beaconing vdevs.
+  ath10k: Enable adhoc mode for CT firmware.
+  ath10k: read firmware crash over ioread32 if CE fails.
+  ath10k: Read dbglog buffers over register ping-pong.
 
-Now, if the LED subsystem had a really good way of specifying LED
-intent, and it was widely used, and rfkill didn't already concern
-itself with the rfkill status of all devices ... yeah maybe this
-wouldn't be needed. As it stands, I still think this is the best way
-forward.
+ drivers/net/wireless/ath/ath10k/core.c   |  70 ++++++-
+ drivers/net/wireless/ath/ath10k/core.h   |  52 +++++-
+ drivers/net/wireless/ath/ath10k/debug.c  | 268 +++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/debug.h  |  18 ++
+ drivers/net/wireless/ath/ath10k/htt.h    |   7 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  23 ++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  22 ++-
+ drivers/net/wireless/ath/ath10k/hw.h     |  36 ++++
+ drivers/net/wireless/ath/ath10k/mac.c    |  74 +++++++-
+ drivers/net/wireless/ath/ath10k/pci.c    | 311 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.c    |  43 ++++-
+ drivers/net/wireless/ath/ath10k/wmi.h    |   6 +
+ 12 files changed, 897 insertions(+), 33 deletions(-)
 
-johannes
+-- 
+2.4.3
+
