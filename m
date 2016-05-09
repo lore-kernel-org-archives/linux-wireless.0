@@ -1,110 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40574 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755600AbcEaHbQ (ORCPT
+Received: from mail-by2on0068.outbound.protection.outlook.com ([207.46.100.68]:19765
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751479AbcEITPJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2016 03:31:16 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: ath9k gpio request
-References: <20160530132225.4d297678@canb.auug.org.au>
-	<574C4851.9090201@gmail.com>
-Date: Tue, 31 May 2016 10:31:02 +0300
-In-Reply-To: <574C4851.9090201@gmail.com> (Sudip Mukherjee's message of "Mon,
-	30 May 2016 19:34:01 +0530")
-Message-ID: <87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com> (sfid-20160531_093123_203614_D4052D83)
+	Mon, 9 May 2016 15:15:09 -0400
+From: Barry Reinhold <BarryReinhold@lnihealth.com>
+To: Dave Taht <dave.taht@gmail.com>
+CC: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Tom Harada <TomHarada@lnihealth.com>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Subject: Re: Limit rate of BCM34348 on Raspberry PI-3 via brcmfmac
+Date: Mon, 9 May 2016 18:59:57 +0000
+Message-ID: <CY1PR19MB0614F234EBDEC13633BD49FEA7700@CY1PR19MB0614.namprd19.prod.outlook.com> (sfid-20160509_211516_531629_708D6188)
+References: <CY1PR19MB0614FCBF91B407C6CB0B08CFA77E0@CY1PR19MB0614.namprd19.prod.outlook.com>
+	<57308150.5060308@broadcom.com>
+	<CY1PR19MB0614DA6ED0946583EF186645A7700@CY1PR19MB0614.namprd19.prod.outlook.com>,<CAA93jw79hrxL+Mj+J3U0WHy566Sj_CP5NJwbHOOJtmfS-WhJAg@mail.gmail.com>
+In-Reply-To: <CAA93jw79hrxL+Mj+J3U0WHy566Sj_CP5NJwbHOOJtmfS-WhJAg@mail.gmail.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Changing subject to a more descriptive one, was "Re: linux-next: Tree
-for May 30")
+hciconfig hci0 down 
 
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
 
-> Hi All,
-> I have just built and booted with next-20160530 and my dmesg is full
-> of warnings from ath9k. Last kernel tested was v4.6 and there was no
-> problem with that.
+________________________________________
+From: Dave Taht <dave.taht@gmail.com>
+Sent: Monday, May 9, 2016 13:15
+To: Barry Reinhold
+Cc: Arend Van Spriel; linux-wireless@vger.kernel.org; Tom Harada; brcm80211-dev-list
+Subject: Re: Limit rate of BCM34348 on Raspberry PI-3 via brcmfmac
+
+Ugh.
+
+A somewhat dumb question is how would I disable bluetooth entirely on the rpi3?
+
+I had done some initial tests on the rpi3 for the fq_codel on wifi
+work and gave up due to dismal results on the flent tests. I hadn't
+got around to writing them up here,
+
+http://blog.cerowrt.org/tags/wifi/
+
+but perhaps disabling bluetooth would help.
+
+
+
+On Mon, May 9, 2016 at 9:59 AM, Barry Reinhold
+<BarryReinhold@lnihealth.com> wrote:
+> Arend (and Hante),
 >
-> The traces are like:
-> Call Trace:
->  [<ffffffff813b8ddc>] dump_stack+0x63/0x87
->  [<ffffffff8107a331>] __warn+0xd1/0xf0
->  [<ffffffff8107a41d>] warn_slowpath_null+0x1d/0x20
->  [<ffffffffc095801f>] ath9k_hw_gpio_request+0x6f/0x320 [ath9k_hw]
->  [<ffffffffc095ac24>] ath9k_hw_reset+0xfe4/0x12e0 [ath9k_hw]
->  [<ffffffffc03d45d4>] ath_reset_internal+0x104/0x1f0 [ath9k]
->  [<ffffffffc03d46fd>] ath_reset+0x3d/0x60 [ath9k]
->  [<ffffffffc03dd1c6>] ath_chanctx_set_channel+0x1b6/0x300 [ath9k]
->  [<ffffffffc03d36b6>] ath9k_config+0xc6/0x1f0 [ath9k]
->  [<ffffffff817d6e92>] ? mutex_lock+0x12/0x2f
->  [<ffffffffc05a7923>] ieee80211_hw_config+0x63/0x350 [mac80211]
->  [<ffffffffc05b3041>] ieee80211_scan_work+0x161/0x480 [mac80211]
->  [<ffffffff81093183>] process_one_work+0x153/0x3f0
->  [<ffffffff8109393b>] worker_thread+0x12b/0x4b0
->  [<ffffffff81093810>] ? rescuer_thread+0x340/0x340
->  [<ffffffff81099129>] kthread+0xc9/0xe0
->  [<ffffffff817d8f1f>] ret_from_fork+0x1f/0x40
->  [<ffffffff81099060>] ? kthread_park+0x60/0x60
-> ---[ end trace 27eb5094a52869ea ]---
+> I appreciate the feedback on the core problem - that brings the issue into a lot sharper focus. Based on your response I assume we should be able to see successful coexistence with Bluetooth and 802.11 STA mode, as well as STA and AP (with Bluetooth turned off). However, BT with AP mode should fail, and BT with AP and STA will fail.
 >
-> Call Trace:
->  [<ffffffff813b8ddc>] dump_stack+0x63/0x87
->  [<ffffffff8107a331>] __warn+0xd1/0xf0
->  [<ffffffff8107a41d>] warn_slowpath_null+0x1d/0x20
->  [<ffffffffc0956b19>] ath9k_hw_gpio_get+0x1a9/0x1b0 [ath9k_hw]
->  [<ffffffffc03d03e4>] ath9k_rfkill_poll_state+0x34/0x60 [ath9k]
->  [<ffffffffc05c4b53>] ieee80211_rfkill_poll+0x33/0x40 [mac80211]
->  [<ffffffffc049d65a>] cfg80211_rfkill_poll+0x2a/0xc0 [cfg80211]
->  [<ffffffff817c5514>] rfkill_poll+0x24/0x50
->  [<ffffffff81093183>] process_one_work+0x153/0x3f0
->  [<ffffffff8109393b>] worker_thread+0x12b/0x4b0
->  [<ffffffff81093810>] ? rescuer_thread+0x340/0x340
->  [<ffffffff81099129>] kthread+0xc9/0xe0
->  [<ffffffff817d8f1f>] ret_from_fork+0x1f/0x40
->  [<ffffffff81099060>] ? kthread_park+0x60/0x60
-> ---[ end trace 27eb5094a5286a3d ]---
+> I will rerun some of our crude tests to see if I can corroborate your understanding by testing the different "should coexist" and "should not coexist" cases.
+>
+> You have a very interesting lead in  statement in your response (bottom of message) but the sentence just ends with "because of...". Would you be willing to complete that thought, I would like to further understand the nature of the problem.
+>
+> Is there a known reason why the brcmfmac does not support the set_bitrate_mask() callback (such as the associated family of chips do not support rate limiting) or is this something that nobody has cared about to do date, ie, is it something that could be done if there was interest and resources?
+>
+> ________________________________________
+> From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+> Sent: Monday, May 9, 2016 8:23
+> To: Barry Reinhold; linux-wireless@vger.kernel.org
+> Cc: Tom Harada; brcm80211-dev-list
+> Subject: Re: Limit rate of BCM34348 on Raspberry PI-3 via brcmfmac
+>
+> On 7-5-2016 21:24, Barry Reinhold wrote:
+>> I have observed erratic behavior with http connectivity over the WiFi interface of the Raspberry PI 3. This appears to be consistent with issues that a number of other people have reported. I fear, but can not provide definitive evidence, that these failures could be an RF design/layout issue with the RP-3 itself.
+>>
+>> The purpose of this post is to see if this possible issue can be confirmed by others, and to seek a possible work around by re configuring the BCM43438 chip via the brcmfmac driver; or the other associated wifi modules.
+>>
+>> How the issue is being seen:
+>>
+>> Note: The testing I have done is limited and has the potential to be misleading, so any input on improving the test process would be appreciated.
+>>
+>> There are two metrics we are using to define/see failure: (1) Loss/delay in ICMP Echo requests/replys (pings),  and (2) The output of messages in journalctl from the wpa_supplicant or hostapd (sudo journalctl -u wpa_supplicant -u hostapd -f) indicating a disconnect event with associated reason - typically 0 - (wlan0: CTRL-EVENT-DISCONNECTED bssid=60:02:92:cd:c9:30 reason=0).
+>> Ping times vary from 1 to several hundred ms, to outright loss.
+>> There are also failures to reassociate (wlan0: CTRL-EVENT-ASSOC-REJECT status_code=16).
+>>
+>> The test Environment is composed of:
+>> An official  Raspberry PI-3 model B with an official Raspberry PI-3 power supply.
+>> Raspbian release: Jesse (March 18)
+>> Kernel 4.4.6
+>> wpa_supplicant 2.3
+>> brcmfmac 7.45.41.23 (as reported by ethool)
+>> BCM43438 firmware: 01-cc44eda9c
+>> BlueZ 5.23
+>>
+>> We are running both wpa_supplicant and hostapd, (disabling hostapd does not impact the results of the tests).
+>> We have an application that is monitoring for BTLE/Bluetooth connections so it is scanning on a regular basis, as well as sending out Bluetooth INQUIRE messages.
+>>
+>> WiFi Access Points:
+>> 1. Cisco DPC3939B (supports n)
+>> 2. Cisco Linksys E1200 (supports n)
+>> 3. Netgear WNDR3400 (supports n)
+>> 4. Linksys WAP54G v3 (does not support n)
+>>
+>>
+>>
+>> Test Process
+>>
+>>
+>> While the application is running (thus generating Bluetooth activity)
+>> 1. Connect a PC to the RPi3's software access point and ping the RPi3 continuously.
+>> 2. Connect the RPi3 to an AP from the set above.
+>> 3. Let the system run for 10 minutes while counting wpa_supplicant disconnects and lost pings.
+>>
+>> Observations:
+>> In our testing we noticed that either we essentially got no errors, or we got 12+ errors. Some error rates high enough that we couldn't count them as they just scrolled off our screen. Hence we considered thing to work (less then 2 errors) or failed (greater than 10 errors).
+>>
+>> The results table for the different APs is as follows:
+>> DPC3939B - Failed
+>> E1200 - Failed
+>> WNDR3400 - Failed
+>> WAP54G - Passed
+>>
+>> Since only the WAP54G passed (no n support), we modified the data rate on the Netgear WND3400 and limited its data rate to 54 mbs, at this point the WNDR3400 passed.
+>>
+>> We then tried changing channels. this did not impact the metrics we were monitoring.
+>>
+>> Now being suspicious of RF issues on the board, we modified our application which performs the Bluetooth communications so that Bluetooth was disabled. This did not eliminate errors but dramatically reduced them. We then modified our application to generate a lot of Bluetooth inquiry messages and discovered that the generation and resulting response from INQUIRY messages correlated with journalctl disconnection messages.
+>>
+>> We repeated this on the AP WAP54G and the rate limited WNDR3400 and did not see problems.
+>>
+>> Our initial conjecture is that there is some coexistence/RF issue with the RPI-3 board when using Bluetooth and WiFi that is impacting when operating with a IEEE 802.11 N AP.
+>>
+>> Notes and steps taken:
+>> Background reading led us to try the following fixes that have worked for others:
+>> 1. Disable power management
+>> 2. Set the Country Code to US
+>> These fixes did not help.
+>>
+>> I have two questions:
+>> 1. Are there some obvious things I can do to identify/validate the initial conjecture as to the cause of the error?
+>> 2. Is there a way to force the RPI-3 when operating as a client of another AP to rate limit or function as a "G" device?  If the RPI-3 or the BCM43438 do indeed have RF issues it would seem like some work around will be needed. I could not identify a way to limit the data rate in brcmfmac.
+>
+> Hi Barry,
+>
+> What you are trying to do is simply not possible. Indeed the RF is such
+> that Wifi and BT share the same antenna, which is the root-cause of the
+> problems you see. When the antenna is used by BT the Wifi is
+> unavailable. This is handled by bt-coex, but that is designed
+> specifically for station mode. This is simply not possible when the Wifi
+> is operating in AP mode, because of
+>
+> The reason why things get better/working when using g-rates is probably
+> because INQUIRE scan takes 14 x 1.25ms = 17.5 ms (thanks for the
+> calculation, Hante) and wifi frame retries at g-rate get past that.
+> cfg80211_ops have .set_bitrate_mask() callback, but brcmfmac does not
+> implement that.
+>
+> Regards,
+> Arend--
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The traces look incomplete to me, is there anything more before the
-"Call Trace:" line? Full unedited logs are usually the best.
 
-> If it is a known problem then great.. else i can debug and see what
-> the problem is. There are only few patches added for GPIO, so should
-> not be a problem to find out what is causing the error.
 
-I haven't seen this kind of report before. My first suspect is the
-commit below so adding Miaoqing.
-
-commit b2d70d4944c1789bc64376ad97a811f37e230c87
-Author: Miaoqing Pan <miaoqing@codeaurora.org>
-Date:   Mon Mar 7 10:38:15 2016 +0800
-
-    ath9k: make GPIO API to support both of WMAC and SOC
-    
-    commit 61b559dea40e ("ath9k: add extra GPIO led support")
-    added ath9k to support access SOC's GPIOs, but implemented
-    in a separated API: ath9k_hw_request_gpio().
-    
-    So this patch make the APIs more common, to support both
-    of WMAC and SOC GPIOs. The new APIs as below,
-    
-    void ath9k_hw_gpio_request_in();
-    void ath9k_hw_gpio_request_out();
-    void ath9k_hw_gpio_free();
-    
-    NOTE, the BSP of the SOC chips(AR9340, AR9531, AR9550, AR9561)
-    should set the corresponding MUX registers correctly.
-    
-    Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
-    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-
--- 
-Kalle Valo
+--
+Dave Täht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
