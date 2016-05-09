@@ -1,63 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:53659 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751738AbcEOOjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 May 2016 10:39:31 -0400
-Date: Sun, 15 May 2016 16:39:06 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: b43-dev@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [b43] don't unconditionally fall back to CCK if the rate is 6MB
- OFDM.
-Message-ID: <20160515163906.3d64d8fe@wiggum> (sfid-20160515_163935_213974_B8431AE7)
-In-Reply-To: <CAJ-Vmom45Pb9X_1Zw6VdszZAiizZUUd=HbEFw0hFMmPFFSNbpQ@mail.gmail.com>
-References: <CAJ-Vmom45Pb9X_1Zw6VdszZAiizZUUd=HbEFw0hFMmPFFSNbpQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/ZbbUvluymjab9Vif1=y33RK"; protocol="application/pgp-signature"
+Received: from mail2.candelatech.com ([208.74.158.173]:49970 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753081AbcEIXLZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2016 19:11:25 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 01/21] ath10k:  Fix crash related to printing features.
+Date: Mon,  9 May 2016 16:10:55 -0700
+Message-Id: <1462835475-11079-2-git-send-email-greearb@candelatech.com> (sfid-20160510_012230_762333_9E7312A7)
+In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/ZbbUvluymjab9Vif1=y33RK
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Ben Greear <greearb@candelatech.com>
 
-On Sun, 15 May 2016 07:23:25 -0700
-Adrian Chadd <adrian@freebsd.org> wrote:
+This looks like a regression from
+c4cdf753 (move fw_features to struct ath10k_fw_file)
 
-> @@ -438,7 +446,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
->=20
->                 rts_rate =3D rts_cts_rate ? rts_cts_rate->hw_value :
-> B43_CCK_RATE_1MB;
+Signed-off-by:  Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I just noticed that this is incorrect for 5GHz, too.
-Maybe there are more such bugs.
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e94cb87..b7318b8 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1078,7 +1078,7 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+ 			}
+ 
+ 			ath10k_dbg_dump(ar, ATH10K_DBG_BOOT, "features", "",
+-					ar->running_fw->fw_file.fw_features,
++					fw_file->fw_features,
+ 					sizeof(fw_file->fw_features));
+ 			break;
+ 		case ATH10K_FW_IE_FW_IMAGE:
+-- 
+2.4.3
 
---=20
-Michael
-
---Sig_/ZbbUvluymjab9Vif1=y33RK
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXOIoKAAoJEPUyvh2QjYsOG4QP/RZBEihC+1Fdrb6whVZfWvtX
-5rpEUtKi6FwlCwz8UnCDn3eOTGoZJdcXNKXFjvLz0q5CoM33/abFh47JM81I3lLb
-DK5NZupnanedVMEaQuECi+RFxaAYQ0QOHAglD+wdksIEru7sPVpXYzZAMMZ7OYAn
-Yr23dgZnYjKgUw+y914OGaB5YRmbA63yIUexjI6Y6iGIdjQ6Uoev1qAJhrzwzvUy
-rUEAhpCBpMys5fU+v7oF7gEUD8XOtsDnj0iRWPtZh6qCBmUOISv8SG1xSHalguFs
-r4kxBgXRmPFpvT2vSp94UjZsBlI/snzQaoumEL8aTEWKDqGsi7oxAlcT1kLAWJBX
-nkvNNy5y8fa9+q8QP0xXuChviu5V6f6+M0g//UZT5FsJt7vzSdx3ugstezumhTcz
-tWUQSDzfbBt+nI4EsV6rmDXxLFnqwdtwSSRN9SF0Ar2Lo5EHxh1x9uaf7faqoeL3
-hdUAf+Heu9bkHO7uKH0A1Thyb1ZsSFHAJkSt9lEB802x/lWaRGVDsui3IeRoTHt5
-nOuItF9SldAwDTH8Dgwml2gpJtM5gaMqinUkBRKQLlYO04ieuYN5lG0ZivDdoBnb
-D7kpEsclFDdKjXXLh6MaP46v2ymkSLJ8j38faU5p1Hjey3NbCMoC5z0fyB2YFnnU
-YuK6ePPx5fiEmSq4FJEi
-=nWIf
------END PGP SIGNATURE-----
-
---Sig_/ZbbUvluymjab9Vif1=y33RK--
