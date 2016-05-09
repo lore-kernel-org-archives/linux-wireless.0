@@ -1,60 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46349 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750961AbcEIHat (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 03:30:49 -0400
-Message-ID: <1462779045.30690.2.camel@sipsolutions.net> (sfid-20160509_093057_204871_25CEB250)
-Subject: Re: [PATCH 2/2] mac80211_hwsim: Allow managing radios from
- non-initial namespaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Martin Willi <martin@strongswan.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 09 May 2016 09:30:45 +0200
-In-Reply-To: <1462350799.2546.31.camel@strongswan.org>
-References: <1462258398-6749-1-git-send-email-martin@strongswan.org>
-	 <1462258398-6749-3-git-send-email-martin@strongswan.org>
-	 <1462302992.10444.11.camel@sipsolutions.net>
-	 <1462350799.2546.31.camel@strongswan.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:49987 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753411AbcEIXL1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 9 May 2016 19:11:27 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 10/21] ath10k: support logging ath10k_info as KERN_DEBUG
+Date: Mon,  9 May 2016 16:11:04 -0700
+Message-Id: <1462835475-11079-11-git-send-email-greearb@candelatech.com> (sfid-20160510_012231_168699_7613B589)
+In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-05-04 at 10:33 +0200, Martin Willi wrote:
+From: Ben Greear <greearb@candelatech.com>
 
-> > This changes today's default behaviour of moving the wiphys to the
-> > default namespace. Did you intend to destroy them based on the
-> > netgroup, i.e. based on the namespace that created them? Actually,
-> > maybe they should move back to the namespace that created them, if
-> > the namespace they are in is destroyed? But that's difficult, I
-> > don't
-> > mind this behaviour, but I'm not sure it's what we want by default
-> > for radios created in the init_net.
-> With the proposed approach I destroy all radios if the owning
-> namespace gets deleted, because we probably don't want them landing
-> in init_net if they are created from a (unprivileged) userns process.
+Helps keep messages off of (serial) console when
+that is desired.
 
-I agree they shouldn't land in init_net.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c | 5 ++++-
+ drivers/net/wireless/ath/ath10k/debug.h | 6 ++++++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-> I think this is what other "virtual" interfaces do (gre tunnels, veth
-> etc.). If we think of hwsim radios as such a "virtual" device, that
-> makes IMO sense to delete them.
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index c38862b..7d9ad99 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -139,7 +139,10 @@ void ath10k_info(struct ath10k *ar, const char *fmt, ...)
+ 
+ 	va_start(args, fmt);
+ 	vaf.va = &args;
+-	dev_info(ar->dev, "%pV", &vaf);
++	if (ath10k_debug_mask & ATH10K_DBG_INFO_AS_DBG)
++		dev_printk(KERN_DEBUG, ar->dev, "%pV", &vaf);
++	else
++		dev_info(ar->dev, "%pV", &vaf);
+ 	trace_ath10k_log_info(ar, &vaf);
+ 	va_end(args);
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 6356dce..4f10685 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -21,6 +21,10 @@
+ #include <linux/types.h>
+ #include "trace.h"
+ 
++/**
++ * ATH10K_DBG_INFO_AS_DBG: use dev_dbg instead of dev_info
++ *       for ath10k_info messages
++ */
+ enum ath10k_debug_mask {
+ 	ATH10K_DBG_PCI		= 0x00000001,
+ 	ATH10K_DBG_WMI		= 0x00000002,
+@@ -38,6 +42,8 @@ enum ath10k_debug_mask {
+ 	ATH10K_DBG_WMI_PRINT	= 0x00002000,
+ 	ATH10K_DBG_PCI_PS	= 0x00004000,
+ 	ATH10K_DBG_AHB		= 0x00008000,
++
++	ATH10K_DBG_INFO_AS_DBG	= 0x40000000,
+ 	ATH10K_DBG_FW		= 0x80000000,
+ 	ATH10K_DBG_ANY		= 0xffffffff,
+ };
+-- 
+2.4.3
 
-Ok, I have no idea what happens there.
-
-> If we want to keep the existing behavior, we could move radios
-> belonging to the init_net-associated netgroup back to init_net, that
-> shouldn't be too difficult.
-> 
-> Moving the radio back to the creators namespace would be the most
-> consistent behavior, so I'll check how difficult such a reverse
-> lookup is. We then would delete the radio only if it is in the
-> creators namespace, or if the creators namespace is gone. Does that
-> make sense?
-
-It does make sense, but it does also feel a bit complicated. Perhaps
-just special-case the init_net case for consistency with the existing
-behaviour, and reserve netgroup 0 for that so we can easily check for
-it?
-
-johannes
