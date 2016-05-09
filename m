@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:36192 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753188AbcE3CwS (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:44012 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751285AbcEIR6d (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2016 22:52:18 -0400
-Date: Sun, 29 May 2016 19:52:11 -0700
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, ruchandani.tina@gmail.com,
-	netdev@vger.kernel.org, Julian.Calaby@gmail.com
-Subject: [PATCH v2 03/10] nl80211: Prefer ether_addr_copy
-Message-ID: <49c03996365360077fe7317d108072c30354b555.1464576022.git.kirtika.ruchandani@gmail.com> (sfid-20160530_045222_062337_150E0865)
-References: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
+	Mon, 9 May 2016 13:58:33 -0400
+Subject: Re: [PATCH v2 5/5] ath10k: Fix deadlock when peer cannot be created.
+To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+References: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
+ <1459545132-11295-5-git-send-email-greearb@candelatech.com>
+ <5730C697.206@candelatech.com> <1462816487256.22920@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <5730CFC7.5010901@candelatech.com> (sfid-20160509_195853_741418_498BC28F)
+Date: Mon, 9 May 2016 10:58:31 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
+In-Reply-To: <1462816487256.22920@qti.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the checkpatch,pl to prefer ether_addr_copy
-over memcpy.
+On 05/09/2016 10:54 AM, Manoharan, Rajkumar wrote:
+>> On Monday, May 9, 2016 10:49 PM, greearb@candelatech.com wrote:
+>>> On 04/01/2016 02:12 PM, greearb@candelatech.com wrote:
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> We must not attempt to send WMI packets while holding the data-lock,
+>>> as it may deadlock:
+>>>
+>>> BUG: sleeping function called from invalid context at drivers/net/wireless/ath/ath10k/wmi.c:1824
+>>> in_atomic(): 1, irqs_disabled(): 0, pid: 2878, name: wpa_supplicant
+>>>
+>> Kalle:  I notice these 5 patches are not in the latest wireless-testing.
+>>
+>> Are they not acceptable, or???
+>>
+> Aah!.. I recently cooked up similar patch for BUG_ON issue. I think this one is stable candidate. no?
 
-Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
----
- net/wireless/nl80211.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+All 5 have a possibility of being worth stable I think, but at least they should probably
+go into upstream!
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index cd422bd..34b8fbe 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3194,7 +3194,7 @@ static struct cfg80211_acl_data *parse_acl_data(struct wiphy *wiphy,
- 		return ERR_PTR(-ENOMEM);
+They were not a lot of fun to find or fix, so it would be nice if no one else had to waste
+time on it.
 
- 	nla_for_each_nested(attr, info->attrs[NL80211_ATTR_MAC_ADDRS], tmp) {
--		memcpy(acl->mac_addrs[i].addr, nla_data(attr), ETH_ALEN);
-+		ether_addr_copy(acl->mac_addrs[i].addr, nla_data(attr));
- 		i++;
- 	}
+Thanks,
+Ben
 
-@@ -5892,8 +5892,8 @@ static int nl80211_parse_random_mac(struct nlattr **attrs,
- 	if (!attrs[NL80211_ATTR_MAC] || !attrs[NL80211_ATTR_MAC_MASK])
- 		return -EINVAL;
-
--	memcpy(mac_addr, nla_data(attrs[NL80211_ATTR_MAC]), ETH_ALEN);
--	memcpy(mac_addr_mask, nla_data(attrs[NL80211_ATTR_MAC_MASK]), ETH_ALEN);
-+	ether_addr_copy(mac_addr, nla_data(attrs[NL80211_ATTR_MAC]));
-+	ether_addr_copy(mac_addr_mask, nla_data(attrs[NL80211_ATTR_MAC_MASK]));
-
- 	/* don't allow or configure an mcast address */
- 	if (!is_multicast_ether_addr(mac_addr_mask) ||
-@@ -9405,8 +9405,7 @@ static int nl80211_parse_wowlan_tcp(struct cfg80211_registered_device *rdev,
- 		return -ENOMEM;
- 	cfg->src = nla_get_in_addr(tb[NL80211_WOWLAN_TCP_SRC_IPV4]);
- 	cfg->dst = nla_get_in_addr(tb[NL80211_WOWLAN_TCP_DST_IPV4]);
--	memcpy(cfg->dst_mac, nla_data(tb[NL80211_WOWLAN_TCP_DST_MAC]),
--	       ETH_ALEN);
-+	ether_addr_copy(cfg->dst_mac, nla_data(tb[NL80211_WOWLAN_TCP_DST_MAC]));
- 	if (tb[NL80211_WOWLAN_TCP_SRC_PORT])
- 		port = nla_get_u16(tb[NL80211_WOWLAN_TCP_SRC_PORT]);
- 	else
---
-2.8.0.rc3.226.g39d4020
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
