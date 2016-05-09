@@ -1,76 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45667 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304AbcEIORz (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:49986 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbcEIXL2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 10:17:55 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jaap Jan Meijer <jjmeijer88@gmail.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH] Fix regression in Android due to rework .get_station() callback
-References: <1462280620-13000-1-git-send-email-jjmeijer88@gmail.com>
-	<87poszs8tc.fsf@kamboji.qca.qualcomm.com>
-	<CAA+NYvTxA_u1kjwmY+VTnhK0G1b5cEcx2QA90fTTEkci4gWvcQ@mail.gmail.com>
-	<87wpn7p6dv.fsf@kamboji.qca.qualcomm.com>
-	<CAA+NYvS3ksstny_Lzw8mLu6=0uKO0VhjuwCyxS9YC-Pb+FaYJA@mail.gmail.com>
-	<87futvp432.fsf@kamboji.qca.qualcomm.com>
-	<CAA+NYvT5gzvdyeYx_CKaEKvpdzEJ_09U1-xSaCE7pQH+Qx9uYA@mail.gmail.com>
-Date: Mon, 09 May 2016 17:17:48 +0300
-In-Reply-To: <CAA+NYvT5gzvdyeYx_CKaEKvpdzEJ_09U1-xSaCE7pQH+Qx9uYA@mail.gmail.com>
-	(Jaap Jan Meijer's message of "Sun, 8 May 2016 12:20:03 +0100")
-Message-ID: <87futrl3hv.fsf@kamboji.qca.qualcomm.com> (sfid-20160509_161759_597588_6BE08C4B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 9 May 2016 19:11:28 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 18/21] ath10k: Note limitation on beaconing vdevs.
+Date: Mon,  9 May 2016 16:11:12 -0700
+Message-Id: <1462835475-11079-19-git-send-email-greearb@candelatech.com> (sfid-20160510_011150_939047_3B3C0BF0)
+In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jaap Jan Meijer <jjmeijer88@gmail.com> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> 2016-05-06 17:02 GMT+01:00 Kalle Valo <kvalo@codeaurora.org>:
->> Jaap Jan Meijer <jjmeijer88@gmail.com> writes:
->>
->>> 2016-05-06 16:12 GMT+01:00 Kalle Valo <kvalo@codeaurora.org>:
->>>> Jaap Jan Meijer <jjmeijer88@gmail.com> writes:
->>>>
->>>>> I'm not sure what went wrong with the commit hash, its actually this commit:
->>>>> 1f0dc59a6de93586fcfc04696a61946408ffc56a.
->>>>
->>>> That commit id looks to be valid.
->>>>
->>>>> I see you did this commit, maybe you can check if this actually is the root
->>>>> cause? I'm sure you have a lot more insight into this issue than I do.
->>
->> I just commited the patch. Broadcom folks (CCed) should be able to
->> answer better, most likely they missed this patch as the title didn't
->> have "brcmfmac".
->
-> Thanks, so no need to send a revised patch? Also, could you please
-> point me to the right repository so I can follow the progress?
+This only pertains to CT firmware, as standard firmware
+can't do anywhere near this many vdevs anyway.
 
-Sorry, I had very bad choise of words. I meant that I only commit
-patches (like the commit 1f0dc59a6d we are discussing here), I'm not
-familiar with brcmfmac internals. So I have NOT applied this patch and
-you need to send v2. I see that Arend also found some issues, please
-follow his advice.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-> Also, could you please point me to the right repository so I can
-> follow the progress?
-
-You can check that from MAINTAINERS file:
-
-NETWORKING DRIVERS (WIRELESS)
-M:      Kalle Valo <kvalo@codeaurora.org>
-L:      linux-wireless@vger.kernel.org
-Q:      http://patchwork.kernel.org/project/linux-wireless/list/
-T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git
-T:      git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git
-S:      Maintained
-F:      drivers/net/wireless/
-
-But wireless-testing tree, maintained by Bob Copeland, is handy to
-follow the status because it contains all the wireless trees:
-
-https://git.kernel.org/cgit/linux/kernel/git/wireless/wireless-testing.git/
-
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 373f2ee..f1bfb3a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1343,6 +1343,22 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
+ 	arg.channel.max_reg_power = chandef->chan->max_reg_power * 2;
+ 	arg.channel.max_antenna_gain = chandef->chan->max_antenna_gain * 2;
+ 
++	/* CT Firmware can support 32+ VDEVS, but can only support
++	 * beacon-ing devs with dev ids 0 - 31 due to firmware limitations.
++	 * Create VAPs first and all should be well...likely most people
++	 * won't ever hit this anyway, but some day the vdev ID allocation
++	 * could be made smarter to make it more likely to work no matter the
++	 * order the vdevs are created. --Ben
++	 */
++	if ((arvif->vdev_type == WMI_VDEV_TYPE_AP) ||
++	    (arvif->vdev_type == WMI_VDEV_TYPE_IBSS)) {
++		if (arg.vdev_id > 31) {
++			ath10k_warn(ar, "failed to start vdev %i  Beaconing VIFS must have IDs <= 31 to work-around firmware limitations.\n",
++				    arg.vdev_id);
++			return -EINVAL;
++		}
++	}
++
+ 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
+ 		arg.ssid = arvif->u.ap.ssid;
+ 		arg.ssid_len = arvif->u.ap.ssid_len;
 -- 
-Kalle Valo
+2.4.3
+
