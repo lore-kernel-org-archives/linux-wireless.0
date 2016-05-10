@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:35395 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751217AbcEIMiy (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40770 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752268AbcEJUaB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 08:38:54 -0400
-Received: by mail-wm0-f53.google.com with SMTP id e201so135476049wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2016 05:38:53 -0700 (PDT)
-From: Eduardo Abinader <eabinader@ocedo.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eduardo Abinader <eduardo.abinader@riverbed.com>,
-	ath9k-devel@lists.ath9k.org, kvalo@qca.qualcomm.com,
-	ath9k-devel@qca.qualcomm.com
-Subject: [PATCH] ath9k: allow tx99 for ar9002 based cards
-Date: Mon,  9 May 2016 14:38:40 +0200
-Message-Id: <1462797520-7239-1-git-send-email-eduardo.abinader@riverbed.com> (sfid-20160509_143857_050367_0016ECE8)
+	Tue, 10 May 2016 16:30:01 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Tue, 10 May 2016 23:06:09 +0300
+Message-Id: <1462910797-20303-13-git-send-email-luca@coelho.fi> (sfid-20160510_223041_226010_32ABDBDB)
+In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
+References: <1462910585.25219.7.camel@coelho.fi>
+ <1462910797-20303-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 13/41] iwlwifi: mvm: advertise RSS queue usage
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As there is current support for ar9002 tx99 mode, just allow
-to init debugfs and enable tx99.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
+In order for mac80211 to use per-CPU statistics for RSS RX, the
+driver needs to advertise that it uses RSS. Do this when using
+more than a single queue.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/tx99.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index ac4781f..6161536 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -266,7 +266,7 @@ static const struct file_operations fops_tx99_power = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 6286063..5648e37 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -442,6 +442,9 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	if (iwl_mvm_has_new_rx_api(mvm))
+ 		ieee80211_hw_set(hw, SUPPORTS_REORDERING_BUFFER);
  
- void ath9k_tx99_init_debug(struct ath_softc *sc)
- {
--	if (!AR_SREV_9300_20_OR_LATER(sc->sc_ah))
-+	if (!AR_SREV_9280_20_OR_LATER(sc->sc_ah))
- 		return;
++	if (mvm->trans->num_rx_queues > 1)
++		ieee80211_hw_set(hw, USES_RSS);
++
+ 	if (mvm->trans->max_skb_frags)
+ 		hw->netdev_features = NETIF_F_HIGHDMA | NETIF_F_SG;
  
- 	debugfs_create_file("tx99", S_IRUSR | S_IWUSR,
 -- 
-2.5.0
+2.8.1
 
