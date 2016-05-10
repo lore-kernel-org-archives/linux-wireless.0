@@ -1,87 +1,166 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59182 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932358AbcEaNhJ (ORCPT
+Received: from mail-vk0-f49.google.com ([209.85.213.49]:35454 "EHLO
+	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751405AbcEJMl3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2016 09:37:09 -0400
-Date: Tue, 31 May 2016 19:07:00 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: Fix 10.4 extended peer stats update
-Message-ID: <20160531133700.GB3146@atheros-ThinkPad-T61> (sfid-20160531_153721_803725_E4868E35)
-References: <1464339926-12136-1-git-send-email-mohammed@qca.qualcomm.com>
- <87vb1ucten.fsf@qca.qualcomm.com>
+	Tue, 10 May 2016 08:41:29 -0400
+Received: by mail-vk0-f49.google.com with SMTP id f66so13821885vkh.2
+        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2016 05:41:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87vb1ucten.fsf@qca.qualcomm.com>
+Date: Tue, 10 May 2016 22:41:28 +1000
+Message-ID: <CAD4Xxq89fe4kkqb68mKTL4BpDKgFYWuseQqGzfWNc9zzUWHECg@mail.gmail.com> (sfid-20160510_144133_178473_512A3F9B)
+Subject: Realtek USB WiFi rtl8192eu
+From: Fisher Grubb <fisher.grubb@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Hi all,
 
-thanks for the review
+I don't know if this stick's driver is in the process of being
+incorporated into the Kernel drivers, I havn't seen so yet.
+
+I've put the full lsusb -v at end of email as its a lot of stuff.
+
+Please let me know if any other info is needed about it, I'm not a
+programmer but I have reasonable intermediate Linux knowledge.
+
+I have been commonly using this stick with my ARM based BeagleBone
+Black board, others commonly use it with their ARM based Raspberry
+PIs.
+
+lsusb gives:
+
+Bus 002 Device 003: ID 0bda:818b Realtek Semiconductor Corp.
+
+I'm not sure when Realtek released this version of their WiFi chip,
+Linux source code comes on the driver CD, but usually doesn't compile
+as it seems to be for older systems.
+
+I've found 2 DKMS deb files that work, as well as somone's modified
+source code on Github.
+
+Its still buggy and I don't think gives signal strength etc.
+
+Here's a link to modified source code on Github that compiled for me
+and worked when the DKMS debs didn't:
+
+https://github.com/bhuvanchandra/rtl8192eu
+
+Here's a link to the 2 deb DKMS packages, usually one compiles and
+works (the one with -2 at end of file name), it didn't compile on
+Debian 7.9 on my BeagleBone Black board the other night,   the other
+one did, though I couldn't get it to work with the wex driver using
+wpa_supplicant, complained of ioctl "operation not permitted" etc.
+
+http://laptopke.be/files/Debian/
+http://users.telenet.be/x86_64/Debian/
+
+Hopefully this can be properly incorporated and standardised with most
+commonly used driver/extensions etc as I understand that Realtek
+drivers don't conform properly with the Kernel wireless extensions.
 
 
-On Tue, May 31, 2016 at 12:18:49PM +0000, Valo, Kalle wrote:
-> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
-> 
-> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> >
-> > 10.4 'extended peer stats' will be not be appended with normal peer stats
-> > data and they shall be coming in separate chunks. Fix this by maintaining
-> > a separate linked list 'extender peer stats' for 10.4 and update
-> > rx_duration for per station statistics. Also parse through beacon filter
-> > (if enabled), to make sure we parse the extended peer stats properly.
-> > This issue was exposed when more than one client is connected and
-> > extended peer stats for 10.4 is enabled
-> >
-> > The order for the stats is as below
-> > S - standard peer stats, E- extended peer stats, B - beacon filter stats
-> >
-> > {S1, S2, S3..} -> {B1, B2, B3..}(if available) -> {E1, E2, E3..}
-> >
-> > Fixes: f9575793d44c ("ath10k: enable parsing per station rx duration for 10.4")
-> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> [...]
-> 
-> > +void ath10k_sta_update_rx_duration(struct ath10k *ar,
-> > +				   struct ath10k_fw_stats *stats)
-> > +{
-> > +	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
-> > +
-> > +	if (fw_file->wmi_op_version < ATH10K_FW_WMI_OP_VERSION_10_4)
-> > +		ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
-> > +	else
-> > +		ath10k_sta_update_extd_stats_rx_duration(ar,
-> > +							 &stats->peers_extd);
-> > +}
-> 
-> _Ideally_ wmi_op_version should be used only in ath10k_wmi_attach() and
-> nowhere else. Isn't there any other way to detect this scenario? For
-> example, what if you store stats_id to struct ath10k_fw_stats and do
-> something like this:
-> 
-> if (stats->stats_id & WMI_10_4_STAT_PEER_EXTD)
-> 	ath10k_sta_update_extd_stats_rx_duration(ar,
-> 						 &stats->peers_extd);
-> else
-> 	ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
-> 
-> Would that work?
+sudo lsusb -v:
 
-[shafi] I am also thinking to re-use (ar->fw_stats_req_mask & WMI_10_4_STAT_PEER_EXTD)
-it might work, but will it conflict vdev stats WMI_STAT_VDEV (though its not currently
-supported for 10.2 ) let me know your thoughts about this, seems extended stats
-was implemented for 10.4 wmi version so i made it explicit
-
-> 
-> -- 
-> Kalle Valo--
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bus 002 Device 003: ID 0bda:818b Realtek Semiconductor Corp.
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.10
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0
+  bDeviceProtocol         0
+  bMaxPacketSize0        64
+  idVendor           0x0bda Realtek Semiconductor Corp.
+  idProduct          0x818b
+  bcdDevice            2.00
+  iManufacturer           1 Realtek
+  iProduct                2 802.11n NIC
+  iSerial                 3 00e04c000001
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength           53
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0
+    bmAttributes         0xe0
+      Self Powered
+      Remote Wakeup
+    MaxPower              500mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           5
+      bInterfaceClass       255 Vendor Specific Class
+      bInterfaceSubClass    255 Vendor Specific Subclass
+      bInterfaceProtocol    255 Vendor Specific Protocol
+      iInterface              2 802.11n NIC
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x84  EP 4 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x05  EP 5 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x06  EP 6 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x87  EP 7 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0040  1x 64 bytes
+        bInterval               3
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x08  EP 8 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+Binary Object Store Descriptor:
+  bLength                 5
+  bDescriptorType        15
+  wTotalLength           12
+  bNumDeviceCaps          1
+  USB 2.0 Extension Device Capability:
+    bLength                 7
+    bDescriptorType        16
+    bDevCapabilityType      2
+    bmAttributes   0x00000002
+      Link Power Management (LPM) Supported
+Device Status:     0x0001
+  Self Powered
