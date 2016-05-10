@@ -1,64 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51686 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755851AbcE0SYb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41943 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbcEJQig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 14:24:31 -0400
-Subject: Re: [PATCH] staging/wilc1000: fixes kzalloc call
-To: Joe Perches <joe@perches.com>, johnny.kim@atmel.com,
-	austin.shin@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
-	glen.lee@atmel.com, leo.kim@atmel.com, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-References: <1464371477-16965-1-git-send-email-lidza.louina@oracle.com>
- <1464372460.3938.13.camel@perches.com>
-From: Lidza Louina <lidza.louina@oracle.com>
-Message-ID: <574890E6.4000600@oracle.com> (sfid-20160527_202434_652468_BD93B5F1)
-Date: Fri, 27 May 2016 14:24:38 -0400
+	Tue, 10 May 2016 12:38:36 -0400
+Date: Tue, 10 May 2016 22:08:26 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH v2 3/5] ath10k: Add WARN_ON if we over-write peer-map
+ pointer.
+Message-ID: <20160510163826.GB21638@atheros-ThinkPad-T61> (sfid-20160510_183840_202948_4852E5B2)
+References: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
+ <1459545132-11295-3-git-send-email-greearb@candelatech.com>
+ <20160510071214.GD25626@atheros-ThinkPad-T61>
+ <5731F328.30803@candelatech.com>
 MIME-Version: 1.0
-In-Reply-To: <1464372460.3938.13.camel@perches.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5731F328.30803@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, May 10, 2016 at 07:41:44AM -0700, Ben Greear wrote:
+> 
+> 
+> On 05/10/2016 12:12 AM, Mohammed Shafi Shajakhan wrote:
+> >Hi Ben,
+> >
+> >On Fri, Apr 01, 2016 at 02:12:10PM -0700, greearb@candelatech.com wrote:
+> >>From: Ben Greear <greearb@candelatech.com>
+> >>
+> >>Not sure this can happen, but seems like a reasonable sanity
+> >>check.
+> >
+> >[shafi] possibly if the peer is removed and the bit is not cleared in the driver
+> >? when the new peer occupies the slot
+> 
+> A firmware bug could cause this, but I never saw this WARN hit.  Still seems like
+> a good sanity check to me, though...it would be quite hard to debug this sort of bug
+> if it actually did happen.
 
+[shafi] yeah its good to have, in one of the case i saw a duplicate event
+(though its harmless )
 
-On 05/27/2016 02:07 PM, Joe Perches wrote:
-> On Fri, 2016-05-27 at 13:51 -0400, Lidza Louina wrote:
->> The wl pointer was initialized as a pointer to a struct wilc and
->> assigned to a piece of memory the size of the pointer. It should be the
->> size of struct wilc.
-> This isn't necessary.
->
-> The code in question is:
->
-> 	struct wilc *wl;
->
-> 	sema_init(&close_exit_sync, 0);
->
-> 	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
-> 	if (!wl)
-> 		return -ENOMEM;
->
-> 	*wilc = wl;
->
-> so this isn't any real change and the generally desired form for
-> allocations from CodingStyle (Chapter 14: Allocating Memory) is:
->
-> The preferred form for passing a size of a struct is the following:	p = kmalloc(sizeof(*p), ...);
-
-Ahh, okay. I see that in the documentation. Thanks.
-
-Lidza
-
->
->> diff --git a/drivers/staging/wilc1000/linux_wlan.c
-> []
->> @@ -1260,7 +1260,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
->>   
->>   	sema_init(&close_exit_sync, 0);
->>   
->> -	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
->> +	wl = kzalloc(sizeof(struct wilc), GFP_KERNEL);
->>   	if (!wl)
->>   		return -ENOMEM;
-
+> 
+> >
+> >>
+> >>Signed-off-by: Ben Greear <greearb@candelatech.com>
+> >>---
+> >>  drivers/net/wireless/ath/ath10k/txrx.c | 1 +
+> >>  1 file changed, 1 insertion(+)
+> >>
+> >>diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+> >>index a779a4e..2edef8a 100644
+> >>--- a/drivers/net/wireless/ath/ath10k/txrx.c
+> >>+++ b/drivers/net/wireless/ath/ath10k/txrx.c
+> >>@@ -309,6 +309,7 @@ void ath10k_peer_map_event(struct ath10k_htt *htt,
+> >>  	ath10k_warn(ar, /*ATH10K_DBG_HTT,*/ "htt peer map vdev %d peer %pM id %d\n",
+> >>  		   ev->vdev_id, ev->addr, ev->peer_id);
+> >>
+> >>+	WARN_ON(ar->peer_map[ev->peer_id] && (ar->peer_map[ev->peer_id] != peer));
+> >>  	ar->peer_map[ev->peer_id] = peer;
+> >>  	set_bit(ev->peer_id, peer->peer_ids);
+> >>  exit:
+> >>--
+> >>2.4.3
+> >
+> >regards,
+> >shafi
+> >
+> >>
+> >>
+> >>_______________________________________________
+> >>ath10k mailing list
+> >>ath10k@lists.infradead.org
+> >>http://lists.infradead.org/mailman/listinfo/ath10k
+> >
+> >_______________________________________________
+> >ath10k mailing list
+> >ath10k@lists.infradead.org
+> >http://lists.infradead.org/mailman/listinfo/ath10k
+> >
+> 
+> -- 
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+> 
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
