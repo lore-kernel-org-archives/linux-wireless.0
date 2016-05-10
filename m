@@ -1,223 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38437 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1162597AbcE3VRP (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64138 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751076AbcEJRqW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2016 17:17:15 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: Allow cfg80211_connect_result() errors to be distinguished
-Date: Tue, 31 May 2016 00:16:50 +0300
-Message-ID: <1464643010-29225-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20160530_231735_692552_8278C1A9)
+	Tue, 10 May 2016 13:46:22 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Archisman Maitra <archisman001@gmail.com>
+CC: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 4/4] ath10k: Enable support for QCA9984
+Date: Tue, 10 May 2016 17:46:12 +0000
+Message-ID: <878tzhg61o.fsf@kamboji.qca.qualcomm.com> (sfid-20160510_194626_014925_4CB690DC)
+References: <1461164356-9158-1-git-send-email-vthiagar@qti.qualcomm.com>
+	<1461164356-9158-5-git-send-email-vthiagar@qti.qualcomm.com>
+	<loom.20160509T113952-8@post.gmane.org>	<57306645.2060600@qti.qualcomm.com>
+	<CAHyQSvKPo2-Pc9PPVY-mHUK0TX93CzxnwMob125Aruqiem7J7Q@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, the status parameter to cfg80211_connect_result() was
-documented as using WLAN_STATUS_UNSPECIFIED_FAILURE (1) when the real
-status code for the failure is not known. This value can be used by an
-AP (and often is) and as such, user space cannot distinguish between
-explicitly rejected authentication/association and not being able to
-even try to associate or not receiving a response from the AP.
+Archisman Maitra <archisman001@gmail.com> writes:
 
-Add a new inline function, cfg80211_connect_timeout(), to be used when
-the driver knows that the connection attempt failed due to a reason
-where connection could not be attempt or no response was received from
-the AP. The internal functions now allow a negative status value (-1) to
-be used as an indication of this special case. This results in the
-NL80211_ATTR_TIMED_OUT to be added to the NL80211_CMD_CONNECT event to
-allow user space to determine this case was hit. For backwards
-compatibility, NL80211_STATUS_CODE with the value
-WLAN_STATUS_UNSPECIFIED_FAILURE is still indicated in the event in such
-a case.
+> Can you provide me the binaries of QCA9984?
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- include/net/cfg80211.h       | 54 ++++++++++++++++++++++++++++++++++----------
- include/uapi/linux/nl80211.h |  7 +++++-
- net/wireless/core.h          |  4 ++--
- net/wireless/nl80211.c       |  7 ++++--
- net/wireless/nl80211.h       |  2 +-
- net/wireless/sme.c           |  6 ++---
- 6 files changed, 58 insertions(+), 22 deletions(-)
+I pushed them to ath10k-firmware.git:
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 58cdd42..b60c244 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2367,19 +2367,26 @@ struct cfg80211_qos_map {
-  *	(invoked with the wireless_dev mutex held)
-  *
-  * @connect: Connect to the ESS with the specified parameters. When connected,
-- *	call cfg80211_connect_result() with status code %WLAN_STATUS_SUCCESS.
-- *	If the connection fails for some reason, call cfg80211_connect_result()
-- *	with the status from the AP. The driver is allowed to roam to other
-- *	BSSes within the ESS when the other BSS matches the connect parameters.
-- *	When such roaming is initiated by the driver, the driver is expected to
-- *	verify that the target matches the configured security parameters and
-- *	to use Reassociation Request frame instead of Association Request frame.
-- *	The connect function can also be used to request the driver to perform
-- *	a specific roam when connected to an ESS. In that case, the prev_bssid
-+ *	call cfg80211_connect_result()/cfg80211_connect_bss() with status code
-+ *	%WLAN_STATUS_SUCCESS. If the connection fails for some reason, call
-+ *	cfg80211_connect_result()/cfg80211_connect_bss() with the status code
-+ *	from the AP or cfg80211_connect_timeout() if no frame with status code
-+ *	was received.
-+ *
-+ *	The driver is allowed to roam to other BSSes within the ESS when the
-+ *	other BSS matches the connect parameters. When such roaming is initiated
-+ *	by the driver, the driver is expected to verify that the target matches
-+ *	the configured security parameters and to use Reassociation Request
-+ *	frame instead of Association Request frame.
-+ *
-+ *	The connect function can also be used to request the driver to perform a
-+ *	specific roam when connected to an ESS. In that case, the prev_bssid
-  *	parameter is set to the BSSID of the currently associated BSS as an
-- *	indication of requesting reassociation. In both the driver-initiated and
-- *	new connect() call initiated roaming cases, the result of roaming is
-- *	indicated with a call to cfg80211_roamed() or cfg80211_roamed_bss().
-+ *	indication of requesting reassociation.
-+ *
-+ *	In both the driver-initiated and new connect() call initiated roaming
-+ *	cases, the result of roaming is indicated with a call to
-+ *	cfg80211_roamed() or cfg80211_roamed_bss().
-  *	(invoked with the wireless_dev mutex held)
-  * @disconnect: Disconnect from the BSS/ESS.
-  *	(invoked with the wireless_dev mutex held)
-@@ -4736,6 +4743,29 @@ cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- }
- 
- /**
-+ * cfg80211_connect_timeout - notify cfg80211 of connection timeout
-+ *
-+ * @dev: network device
-+ * @bssid: the BSSID of the AP
-+ * @req_ie: association request IEs (maybe be %NULL)
-+ * @req_ie_len: association request IEs length
-+ * @gfp: allocation flags
-+ *
-+ * It should be called by the underlying driver whenever connect() has failed
-+ * in a sequence where no explicit authentication/association rejection was
-+ * received from the AP. This could happen, e.g., due to not being able to send
-+ * out the Authentication or Association Request frame or timing out while
-+ * waiting for the response.
-+ */
-+static inline void
-+cfg80211_connect_timeout(struct net_device *dev, const u8 *bssid,
-+			 const u8 *req_ie, size_t req_ie_len, gfp_t gfp)
-+{
-+	cfg80211_connect_bss(dev, bssid, NULL, req_ie, req_ie_len, NULL, 0, -1,
-+			     gfp);
-+}
-+
-+/**
-  * cfg80211_roamed - notify cfg80211 of roaming
-  *
-  * @dev: network device
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 4f9515c..1c99dbe 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -493,7 +493,12 @@
-  *	This attribute is ignored if driver does not support roam scan.
-  *	It is also sent as an event, with the BSSID and response IEs when the
-  *	connection is established or failed to be established. This can be
-- *	determined by the STATUS_CODE attribute.
-+ *	determined by the %NL80211_ATTR_STATUS_CODE attribute (0 = success,
-+ *	non-zero = failure). If %NL80211_ATTR_TIMED_OUT is included in the
-+ *	event, the connection attempt failed due to not being able to initiate
-+ *	authentication/association or not receiving a response from the AP.
-+ *	Non-zero %NL80211_ATTR_STATUS_CODE value is indicated in that case as
-+ *	well to remain backwards compatible.
-  * @NL80211_CMD_ROAM: request that the card roam (currently not implemented),
-  *	sent as an event when the card/driver roamed by itself.
-  * @NL80211_CMD_DISCONNECT: drop a given connection; also used to notify
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index 6a3a691..6f7816f 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -214,7 +214,7 @@ struct cfg80211_event {
- 			size_t req_ie_len;
- 			size_t resp_ie_len;
- 			struct cfg80211_bss *bss;
--			u16 status;
-+			int status; /* -1 = failed; 0..65535 = status code */
- 		} cr;
- 		struct {
- 			const u8 *req_ie;
-@@ -374,7 +374,7 @@ int cfg80211_connect(struct cfg80211_registered_device *rdev,
- void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       const u8 *req_ie, size_t req_ie_len,
- 			       const u8 *resp_ie, size_t resp_ie_len,
--			       u16 status, bool wextev,
-+			       int status, bool wextev,
- 			       struct cfg80211_bss *bss);
- void __cfg80211_disconnected(struct net_device *dev, const u8 *ie,
- 			     size_t ie_len, u16 reason, bool from_ap);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index b33c6d7..fcf4a43 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -12137,7 +12137,7 @@ void nl80211_send_connect_result(struct cfg80211_registered_device *rdev,
- 				 struct net_device *netdev, const u8 *bssid,
- 				 const u8 *req_ie, size_t req_ie_len,
- 				 const u8 *resp_ie, size_t resp_ie_len,
--				 u16 status, gfp_t gfp)
-+				 int status, gfp_t gfp)
- {
- 	struct sk_buff *msg;
- 	void *hdr;
-@@ -12155,7 +12155,10 @@ void nl80211_send_connect_result(struct cfg80211_registered_device *rdev,
- 	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
- 	    nla_put_u32(msg, NL80211_ATTR_IFINDEX, netdev->ifindex) ||
- 	    (bssid && nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, bssid)) ||
--	    nla_put_u16(msg, NL80211_ATTR_STATUS_CODE, status) ||
-+	    nla_put_u16(msg, NL80211_ATTR_STATUS_CODE,
-+			status < 0 ? WLAN_STATUS_UNSPECIFIED_FAILURE :
-+			status) ||
-+	    (status < 0 && nla_put_flag(msg, NL80211_ATTR_TIMED_OUT)) ||
- 	    (req_ie &&
- 	     nla_put(msg, NL80211_ATTR_REQ_IE, req_ie_len, req_ie)) ||
- 	    (resp_ie &&
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index 84d4edf..a63f402 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -55,7 +55,7 @@ void nl80211_send_connect_result(struct cfg80211_registered_device *rdev,
- 				 struct net_device *netdev, const u8 *bssid,
- 				 const u8 *req_ie, size_t req_ie_len,
- 				 const u8 *resp_ie, size_t resp_ie_len,
--				 u16 status, gfp_t gfp);
-+				 int status, gfp_t gfp);
- void nl80211_send_roamed(struct cfg80211_registered_device *rdev,
- 			 struct net_device *netdev, const u8 *bssid,
- 			 const u8 *req_ie, size_t req_ie_len,
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 0d8005c..ccc16d0 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -244,9 +244,7 @@ void cfg80211_conn_work(struct work_struct *work)
- 		if (cfg80211_conn_do_work(wdev)) {
- 			__cfg80211_connect_result(
- 					wdev->netdev, bssid,
--					NULL, 0, NULL, 0,
--					WLAN_STATUS_UNSPECIFIED_FAILURE,
--					false, NULL);
-+					NULL, 0, NULL, 0, -1, false, NULL);
- 		}
- 		wdev_unlock(wdev);
- 	}
-@@ -648,7 +646,7 @@ static DECLARE_WORK(cfg80211_disconnect_work, disconnect_work);
- void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
- 			       const u8 *req_ie, size_t req_ie_len,
- 			       const u8 *resp_ie, size_t resp_ie_len,
--			       u16 status, bool wextev,
-+			       int status, bool wextev,
- 			       struct cfg80211_bss *bss)
- {
- 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+https://github.com/kvalo/ath10k-firmware/tree/master/QCA9984/hw1.0
+
 -- 
-1.9.1
-
+Kalle Valo
