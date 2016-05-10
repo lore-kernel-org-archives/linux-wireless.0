@@ -1,113 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:38291 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932456AbcE0Iq4 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40542 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751410AbcEJUHP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 04:46:56 -0400
-Received: by mail-wm0-f46.google.com with SMTP id n129so128608994wmn.1
-        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2016 01:46:55 -0700 (PDT)
-From: Sven Eckelmann <sven.eckelmann@open-mesh.com>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] ath10k: Add support for QCA9887
-Date: Fri, 27 May 2016 10:46:49 +0200
-Message-ID: <1505571.v1gM3hzMhG@bentobox> (sfid-20160527_104705_567396_23AE8ED3)
-In-Reply-To: <87mvnc67yq.fsf@kamboji.qca.qualcomm.com>
-References: <1568876.Six5hABE57@bentobox> <87mvnc67yq.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2241194.DfG80128bO"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+	Tue, 10 May 2016 16:07:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Tue, 10 May 2016 23:05:58 +0300
+Message-Id: <1462910797-20303-2-git-send-email-luca@coelho.fi> (sfid-20160510_220719_831278_CD11037F)
+In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
+References: <1462910585.25219.7.camel@coelho.fi>
+ <1462910797-20303-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 02/41] iwlwifi: mvm: support p2p device frames tx on dqa queue #2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2241194.DfG80128bO
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-On Thursday 26 May 2016 17:32:30 Valo, Kalle wrote:
-> Sven Eckelmann <sven.eckelmann@open-mesh.com> writes:
-> 
-> > the QCA9887 chip is similar to the QCA988x chips. But it requires a special
-> > firmware and uses a different calibration data source. Unfortunately, no
-> > working firmware currently exists. But it is possible to create a semi working
-> > one by binary patching the current version.
-> 
-> So what works and what doesn't?
+Support sending P2P device frames should be sent from
+queue #2, as required in DQA mode.
 
-We currently stopped everything related to QCA9887 and so I cannot give you an
-exhaustive list. But right now basic AP functionality seems to work. The
-signal level, coverage and performance was rather bad. I cannot give you
-numbers anymore because the two actual tests with QCA9887 were done 1 year ago
-and 1/2 year ago (you know why ;) ).
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h   |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 16 ++++++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c      |  7 +++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c       | 12 ++++++++----
+ 4 files changed, 27 insertions(+), 10 deletions(-)
 
-But maybe I should add that the results with the original AP147 firmware also
-wasn't better.
-
-The hardware also doesn't seem to be able to produce spectral frame results.
-It is unknown whether it uses an incompatible format or whether the
-firmware/hardware is just not capable to produce spectral results.
-
-[...]
-> I can upload a new version. So I need to add these flags:
-> 
-> ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX
-> ATH10K_FW_FEATURE_NO_P2P
-> ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT
-> 
-> Anything else?
-
-At least I didn't find more. Possible that more are needed - I would guess
-that the question to the QCA firmware team is still pending.
-
-[...]
-> Should we add a warning message to ath10k that the QCA9887 support is
-> experimental? That way users don't need to wonder why there are so many
-> problems.
-
-Yes, this would be a good idea. I personally wouldn't know where you want
-to have this warning added. So maybe you just add it? Thanks
-
-> There were some conflicts in patch 1. I fixed those now and pushed the
-> patches to the pending branch for further testing:
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/log/?h=master-pending
-> 
-> Unfortunately I don't have QCA9887 myself so I can't test these myself.
-> I hope I didn't break anything.
-
-Ah, yes. The new patches "clean up growing hw checks during safe and full reset"
-and some QCA9884 stuff seems to have created some conflicts. I have redone my
-patches on top of them and compared with your solution. We came up with the
-exact same conflict resolution. So you can at least say that I would also
-have broken it ;)
-
-I have just created a compat-wireless based on your branch which I've tested
-it with my QCA9887 test card. No new problems were detected.
-
-Kind regards,
-	Sven
---nextPart2241194.DfG80128bO
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJXSAl5AAoJEF2HCgfBJntGmBQQAIbX6XHB2V6XKwF5b8tJzktH
-SyVBLjcB+2qfV6IkKISpF7eMFKCL5X9yBJUxjJhVNo6HB+LUNfck307JnQIWOmVD
-rQNBrM7yr6WsTUI/nkganps1PrPqyYOxK8xZ8p9yA1CtKXnPcFu7X+1NwmCaB1Lz
-uBMx/KHM5pbBGcFXnr5GtBQibuoy2xhto+Zp5wvggKsA3hVt8xfV3Nt7E9jRDjVM
-/qqoIwyVQ702GLx8/HKUaTYLWqb+Di2PDShiKtAPxLwwoa6vJVK30xHpb73eAJYX
-pzLYcI4pnrAfMnBB68yk1pmdKwiJh828mX5p9wD+/ES40Zs+7/AfMeKiwwUoD/8u
-UAIujDwXQp00HEDvbJg3C76E1OWzWHv//c/Okk+1Jqc5D0yurPVyFRIE+cHg82UR
-DH8Cn4UlK6s0HOObhKOMV3tsIZBY2cwPEGamn+cScx0gFpgMromx+eFTbAYPqTHb
-JZDL+1RvrPjllenlQt+0l7riBGtRG9DMrQ57tMtjuAUevOyKAyDFUo17jPuwSFgO
-0QafvKTh5TIOnjr5WavwDMTSi51u9s3q2aiZZoyB358E6hDNC+q7UWrxtzKJKAqO
-gP9Gmt+Fsbq3OOxZgLC1mpELRU895sxrX6aDxLI6xDwG/74PLd7ZfaV23d7ts4WV
-R3UScxqNcXUrc83dSXn2
-=3gHY
------END PGP SIGNATURE-----
-
---nextPart2241194.DfG80128bO--
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 206fd89..41b80ae 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -90,6 +90,7 @@ enum {
+  * DQA queue numbers
+  *
+  * @IWL_MVM_DQA_CMD_QUEUE: a queue reserved for sending HCMDs to the FW
++ * @IWL_MVM_DQA_P2P_DEVICE_QUEUE: a queue reserved for P2P device frames
+  * @IWL_MVM_DQA_GCAST_QUEUE: a queue reserved for P2P GO/SoftAP GCAST frames
+  * @IWL_MVM_DQA_BSS_CLIENT_QUEUE: a queue reserved for BSS activity, to ensure
+  *	that we are never left without the possibility to connect to an AP.
+@@ -107,6 +108,7 @@ enum {
+  */
+ enum iwl_mvm_dqa_txq {
+ 	IWL_MVM_DQA_CMD_QUEUE = 0,
++	IWL_MVM_DQA_P2P_DEVICE_QUEUE = 2,
+ 	IWL_MVM_DQA_GCAST_QUEUE = 3,
+ 	IWL_MVM_DQA_BSS_CLIENT_QUEUE = 4,
+ 	IWL_MVM_DQA_MIN_MGMT_QUEUE = 5,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 0bcd8c7..7aae068 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -501,9 +501,11 @@ int iwl_mvm_mac_ctxt_init(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+-		iwl_mvm_enable_ac_txq(mvm, IWL_MVM_OFFCHANNEL_QUEUE,
+-				      IWL_MVM_OFFCHANNEL_QUEUE,
+-				      IWL_MVM_TX_FIFO_VO, 0, wdg_timeout);
++		if (!iwl_mvm_is_dqa_supported(mvm))
++			iwl_mvm_enable_ac_txq(mvm, IWL_MVM_OFFCHANNEL_QUEUE,
++					      IWL_MVM_OFFCHANNEL_QUEUE,
++					      IWL_MVM_TX_FIFO_VO, 0,
++					      wdg_timeout);
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 		iwl_mvm_enable_ac_txq(mvm, vif->cab_queue, vif->cab_queue,
+@@ -533,9 +535,11 @@ void iwl_mvm_mac_ctxt_release(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 	switch (vif->type) {
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+-		iwl_mvm_disable_txq(mvm, IWL_MVM_OFFCHANNEL_QUEUE,
+-				    IWL_MVM_OFFCHANNEL_QUEUE, IWL_MAX_TID_COUNT,
+-				    0);
++		if (!iwl_mvm_is_dqa_supported(mvm))
++			iwl_mvm_disable_txq(mvm, IWL_MVM_OFFCHANNEL_QUEUE,
++					    IWL_MVM_OFFCHANNEL_QUEUE,
++					    IWL_MAX_TID_COUNT, 0);
++
+ 		break;
+ 	case NL80211_IFTYPE_AP:
+ 		iwl_mvm_disable_txq(mvm, vif->cab_queue, vif->cab_queue,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 5350ca6..701511d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1016,6 +1016,10 @@ int iwl_mvm_send_add_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 		    (mvmvif->bcast_sta.tfd_queue_msk &
+ 		     BIT(IWL_MVM_DQA_AP_PROBE_RESP_QUEUE)))
+ 			queue = IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++		else if ((vif->type == NL80211_IFTYPE_P2P_DEVICE) &&
++			 (mvmvif->bcast_sta.tfd_queue_msk &
++			  BIT(IWL_MVM_DQA_P2P_DEVICE_QUEUE)))
++			queue = IWL_MVM_DQA_P2P_DEVICE_QUEUE;
+ 		else if (WARN(1, "Missed required TXQ for adding bcast STA\n"))
+ 			return -EINVAL;
+ 
+@@ -1068,6 +1072,9 @@ int iwl_mvm_alloc_bcast_sta(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 
+ 		if (iwl_mvm_is_dqa_supported(mvm))
+ 			qmask |= BIT(IWL_MVM_DQA_AP_PROBE_RESP_QUEUE);
++	} else if (iwl_mvm_is_dqa_supported(mvm) &&
++		   vif->type == NL80211_IFTYPE_P2P_DEVICE) {
++		qmask |= BIT(IWL_MVM_DQA_P2P_DEVICE_QUEUE);
+ 	}
+ 
+ 	return iwl_mvm_allocate_int_sta(mvm, &mvmvif->bcast_sta, qmask,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index b4ac530f4..a8e5a67 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -478,10 +478,14 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
+ 				      struct ieee80211_tx_info *info, __le16 fc)
+ {
+-	if (iwl_mvm_is_dqa_supported(mvm) &&
+-	    info->control.vif->type == NL80211_IFTYPE_AP &&
+-	    ieee80211_is_probe_resp(fc))
+-		return IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++	if (iwl_mvm_is_dqa_supported(mvm)) {
++		if (info->control.vif->type == NL80211_IFTYPE_AP &&
++		    ieee80211_is_probe_resp(fc))
++			return IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++		else if (ieee80211_is_mgmt(fc) &&
++			 info->control.vif->type == NL80211_IFTYPE_P2P_DEVICE)
++			return IWL_MVM_DQA_P2P_DEVICE_QUEUE;
++	}
+ 
+ 	return info->hw_queue;
+ }
+-- 
+2.8.1
 
