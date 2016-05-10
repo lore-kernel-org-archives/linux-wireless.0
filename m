@@ -1,716 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sitav-80046.hsr.ch ([152.96.80.46]:33194 "EHLO
-	mail.strongswan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752286AbcEIQeL (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40612 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751410AbcEJUJI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 12:34:11 -0400
-From: Martin Willi <martin@strongswan.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v2 1/2] nl80211: Allow privileged operations from user namespaces
-Date: Mon,  9 May 2016 18:33:58 +0200
-Message-Id: <1462811639-29906-2-git-send-email-martin@strongswan.org> (sfid-20160509_183422_295984_EAEC8B8F)
-In-Reply-To: <1462811639-29906-1-git-send-email-martin@strongswan.org>
-References: <1462811639-29906-1-git-send-email-martin@strongswan.org>
+	Tue, 10 May 2016 16:09:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Tue, 10 May 2016 23:06:05 +0300
+Message-Id: <1462910797-20303-9-git-send-email-luca@coelho.fi> (sfid-20160510_220911_889013_B908B832)
+In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
+References: <1462910585.25219.7.camel@coelho.fi>
+ <1462910797-20303-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 09/41] iwlwifi: mvm: add reorder timeout per frame
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While a wiphy can be transferred to network namespaces, a process having
-CAP_NET_ADMIN in a non-initial user namespace can not administrate such
-devices due to the genetlink GENL_ADMIN_PERM restrictions.
+From: Sara Sharon <sara.sharon@intel.com>
 
-For openvswitch having the same issue, a new GENL_UNS_ADMIN_PERM flag has
-been introduced, commit 4a92602aa1cd ("openvswitch: allow management from
-inside user namespaces"). This patch changes all privileged operations
-operating on a wiphy, dev or wdev to allow their administration using the
-same mechanism. All operations use either NEED_WIPHY, NEED_WDEV or
-NEED_NETDEV, which implies a namespace aware lookup of the device. The only
-exception is NL80211_CMD_SET_WIPHY, which explicitly uses a namespace aware
-phy lookup.
+Add a timer in order to release expired frames from the
+reorder buffer.
+This is needed since some APs do not retransmit frames
+to fill in the reorder holes and in TCP it results with
+a complete stall of traffic.
 
-Signed-off-by: Martin Willi <martin@strongswan.org>
+This has a few side effects on the general design:
+
+The nssn may not reflect the the head of the reorder buffer.
+This situation is valid, and packets with SN lower than the
+reorder buffer head will be dropped.
+
+Another side effect is that since the reorder timer might expire
+we need to lock the reorder buffer.
+This however is fine since the locking is only inside a
+single reorder buffer between RX path and reorder timeout and
+there is no outside contention.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/nl80211.c | 150 ++++++++++++++++++++++++-------------------------
- 1 file changed, 75 insertions(+), 75 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  | 12 ++++
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 81 ++++++++++++++++++++++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 23 +++++++-
+ 3 files changed, 114 insertions(+), 2 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 9bc84a2..df4c897 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10945,7 +10945,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_WIPHY,
- 		.doit = nl80211_set_wiphy,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_RTNL,
- 	},
- 	{
-@@ -10961,7 +10961,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_INTERFACE,
- 		.doit = nl80211_set_interface,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -10969,7 +10969,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_NEW_INTERFACE,
- 		.doit = nl80211_new_interface,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -10977,7 +10977,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_DEL_INTERFACE,
- 		.doit = nl80211_del_interface,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -10985,7 +10985,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_GET_KEY,
- 		.doit = nl80211_get_key,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -10993,7 +10993,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_KEY,
- 		.doit = nl80211_set_key,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL |
- 				  NL80211_FLAG_CLEAR_SKB,
-@@ -11002,7 +11002,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_NEW_KEY,
- 		.doit = nl80211_new_key,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL |
- 				  NL80211_FLAG_CLEAR_SKB,
-@@ -11011,14 +11011,14 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_DEL_KEY,
- 		.doit = nl80211_del_key,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
- 	{
- 		.cmd = NL80211_CMD_SET_BEACON,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.doit = nl80211_set_beacon,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
-@@ -11026,7 +11026,7 @@ static const struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_START_AP,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.doit = nl80211_start_ap,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
-@@ -11034,7 +11034,7 @@ static const struct genl_ops nl80211_ops[] = {
- 	{
- 		.cmd = NL80211_CMD_STOP_AP,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.doit = nl80211_stop_ap,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
-@@ -11051,7 +11051,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_STATION,
- 		.doit = nl80211_set_station,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11059,7 +11059,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_NEW_STATION,
- 		.doit = nl80211_new_station,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11067,7 +11067,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_DEL_STATION,
- 		.doit = nl80211_del_station,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11076,7 +11076,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.doit = nl80211_get_mpath,
- 		.dumpit = nl80211_dump_mpath,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11085,7 +11085,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.doit = nl80211_get_mpp,
- 		.dumpit = nl80211_dump_mpp,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11093,7 +11093,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_MPATH,
- 		.doit = nl80211_set_mpath,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11101,7 +11101,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_NEW_MPATH,
- 		.doit = nl80211_new_mpath,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11109,7 +11109,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_DEL_MPATH,
- 		.doit = nl80211_del_mpath,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11117,7 +11117,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_BSS,
- 		.doit = nl80211_set_bss,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11156,7 +11156,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_MESH_CONFIG,
- 		.doit = nl80211_update_mesh_config,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11164,7 +11164,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_TRIGGER_SCAN,
- 		.doit = nl80211_trigger_scan,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11185,7 +11185,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_START_SCHED_SCAN,
- 		.doit = nl80211_start_sched_scan,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11193,7 +11193,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_STOP_SCHED_SCAN,
- 		.doit = nl80211_stop_sched_scan,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11201,7 +11201,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_AUTHENTICATE,
- 		.doit = nl80211_authenticate,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL |
- 				  NL80211_FLAG_CLEAR_SKB,
-@@ -11210,7 +11210,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_ASSOCIATE,
- 		.doit = nl80211_associate,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11218,7 +11218,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_DEAUTHENTICATE,
- 		.doit = nl80211_deauthenticate,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11226,7 +11226,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_DISASSOCIATE,
- 		.doit = nl80211_disassociate,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11234,7 +11234,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_JOIN_IBSS,
- 		.doit = nl80211_join_ibss,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11242,7 +11242,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_LEAVE_IBSS,
- 		.doit = nl80211_leave_ibss,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11252,7 +11252,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.doit = nl80211_testmode_do,
- 		.dumpit = nl80211_testmode_dump,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11261,7 +11261,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_CONNECT,
- 		.doit = nl80211_connect,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11269,7 +11269,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_DISCONNECT,
- 		.doit = nl80211_disconnect,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11277,7 +11277,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_WIPHY_NETNS,
- 		.doit = nl80211_wiphy_netns,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11290,7 +11290,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_PMKSA,
- 		.doit = nl80211_setdel_pmksa,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11298,7 +11298,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_DEL_PMKSA,
- 		.doit = nl80211_setdel_pmksa,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11306,7 +11306,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_FLUSH_PMKSA,
- 		.doit = nl80211_flush_pmksa,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11314,7 +11314,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_REMAIN_ON_CHANNEL,
- 		.doit = nl80211_remain_on_channel,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11322,7 +11322,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_CANCEL_REMAIN_ON_CHANNEL,
- 		.doit = nl80211_cancel_remain_on_channel,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11330,7 +11330,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_TX_BITRATE_MASK,
- 		.doit = nl80211_set_tx_bitrate_mask,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11338,7 +11338,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_REGISTER_FRAME,
- 		.doit = nl80211_register_mgmt,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11346,7 +11346,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_FRAME,
- 		.doit = nl80211_tx_mgmt,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11354,7 +11354,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_FRAME_WAIT_CANCEL,
- 		.doit = nl80211_tx_mgmt_cancel_wait,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11362,7 +11362,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_POWER_SAVE,
- 		.doit = nl80211_set_power_save,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11378,7 +11378,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_CQM,
- 		.doit = nl80211_set_cqm,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11386,7 +11386,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_CHANNEL,
- 		.doit = nl80211_set_channel,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11394,7 +11394,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_WDS_PEER,
- 		.doit = nl80211_set_wds_peer,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11402,7 +11402,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_JOIN_MESH,
- 		.doit = nl80211_join_mesh,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11410,7 +11410,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_LEAVE_MESH,
- 		.doit = nl80211_leave_mesh,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11418,7 +11418,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_JOIN_OCB,
- 		.doit = nl80211_join_ocb,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11426,7 +11426,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_LEAVE_OCB,
- 		.doit = nl80211_leave_ocb,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11443,7 +11443,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_WOWLAN,
- 		.doit = nl80211_set_wowlan,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11452,7 +11452,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_REKEY_OFFLOAD,
- 		.doit = nl80211_set_rekey_data,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL |
- 				  NL80211_FLAG_CLEAR_SKB,
-@@ -11461,7 +11461,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_TDLS_MGMT,
- 		.doit = nl80211_tdls_mgmt,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11469,7 +11469,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_TDLS_OPER,
- 		.doit = nl80211_tdls_oper,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11477,7 +11477,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_UNEXPECTED_FRAME,
- 		.doit = nl80211_register_unexpected_frame,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11485,7 +11485,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_PROBE_CLIENT,
- 		.doit = nl80211_probe_client,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11493,7 +11493,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_REGISTER_BEACONS,
- 		.doit = nl80211_register_beacons,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11501,7 +11501,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_NOACK_MAP,
- 		.doit = nl80211_set_noack_map,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11509,7 +11509,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_START_P2P_DEVICE,
- 		.doit = nl80211_start_p2p_device,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11517,7 +11517,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_STOP_P2P_DEVICE,
- 		.doit = nl80211_stop_p2p_device,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11525,7 +11525,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_MCAST_RATE,
- 		.doit = nl80211_set_mcast_rate,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11533,7 +11533,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_MAC_ACL,
- 		.doit = nl80211_set_mac_acl,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11541,7 +11541,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_RADAR_DETECT,
- 		.doit = nl80211_start_radar_detection,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11554,7 +11554,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_UPDATE_FT_IES,
- 		.doit = nl80211_update_ft_ies,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11562,7 +11562,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_CRIT_PROTOCOL_START,
- 		.doit = nl80211_crit_protocol_start,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11570,7 +11570,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_CRIT_PROTOCOL_STOP,
- 		.doit = nl80211_crit_protocol_stop,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11585,7 +11585,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_COALESCE,
- 		.doit = nl80211_set_coalesce,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11593,7 +11593,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_CHANNEL_SWITCH,
- 		.doit = nl80211_channel_switch,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11602,7 +11602,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.doit = nl80211_vendor_cmd,
- 		.dumpit = nl80211_vendor_cmd_dump,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_WIPHY |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11610,7 +11610,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_SET_QOS_MAP,
- 		.doit = nl80211_set_qos_map,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11618,7 +11618,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_ADD_TX_TS,
- 		.doit = nl80211_add_tx_ts,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11626,7 +11626,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_DEL_TX_TS,
- 		.doit = nl80211_del_tx_ts,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11634,7 +11634,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_TDLS_CHANNEL_SWITCH,
- 		.doit = nl80211_tdls_channel_switch,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
-@@ -11642,7 +11642,7 @@ static const struct genl_ops nl80211_ops[] = {
- 		.cmd = NL80211_CMD_TDLS_CANCEL_CHANNEL_SWITCH,
- 		.doit = nl80211_tdls_cancel_channel_switch,
- 		.policy = nl80211_policy,
--		.flags = GENL_ADMIN_PERM,
-+		.flags = GENL_UNS_ADMIN_PERM,
- 		.internal_flags = NL80211_FLAG_NEED_NETDEV_UP |
- 				  NL80211_FLAG_NEED_RTNL,
- 	},
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 8272e54..3c331bd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -623,6 +623,12 @@ struct iwl_mvm_shared_mem_cfg {
+  * @last_amsdu: track last ASMDU SN for duplication detection
+  * @last_sub_index: track ASMDU sub frame index for duplication detection
+  * @entries: list of skbs stored
++ * @reorder_time: time the packet was stored in the reorder buffer
++ * @reorder_timer: timer for frames are in the reorder buffer. For AMSDU
++ *	it is the time of last received sub-frame
++ * @removed: prevent timer re-arming
++ * @lock: protect reorder buffer internal state
++ * @mvm: mvm pointer, needed for frame timer context
+  */
+ struct iwl_mvm_reorder_buffer {
+ 	u16 head_sn;
+@@ -633,6 +639,11 @@ struct iwl_mvm_reorder_buffer {
+ 	u16 last_amsdu;
+ 	u8 last_sub_index;
+ 	struct sk_buff_head entries[IEEE80211_MAX_AMPDU_BUF];
++	unsigned long reorder_time[IEEE80211_MAX_AMPDU_BUF];
++	struct timer_list reorder_timer;
++	bool removed;
++	spinlock_t lock;
++	struct iwl_mvm *mvm;
+ } ____cacheline_aligned_in_smp;
+ 
+ /**
+@@ -1682,6 +1693,7 @@ void iwl_mvm_tdls_ch_switch_work(struct work_struct *work);
+ void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
+ 				     struct iwl_mvm_internal_rxq_notif *notif,
+ 				     u32 size);
++void iwl_mvm_reorder_timer_expired(unsigned long data);
+ struct ieee80211_vif *iwl_mvm_get_bss_vif(struct iwl_mvm *mvm);
+ 
+ void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 4f320dc..ed187af 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -395,6 +395,8 @@ int iwl_mvm_notify_rx_queue(struct iwl_mvm *mvm, u32 rxq_mask,
+ 	return ret;
+ }
+ 
++#define RX_REORDER_BUF_TIMEOUT_MQ (HZ / 10)
++
+ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ 				   struct ieee80211_sta *sta,
+ 				   struct napi_struct *napi,
+@@ -403,6 +405,12 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ {
+ 	u16 ssn = reorder_buf->head_sn;
+ 
++	lockdep_assert_held(&reorder_buf->lock);
++
++	/* ignore nssn smaller than head sn - this can happen due to timeout */
++	if (ieee80211_sn_less(nssn, ssn))
++		return;
++
+ 	while (ieee80211_sn_less(ssn, nssn)) {
+ 		int index = ssn % reorder_buf->buf_size;
+ 		struct sk_buff_head *skb_list = &reorder_buf->entries[index];
+@@ -422,6 +430,66 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ 		}
+ 	}
+ 	reorder_buf->head_sn = nssn;
++
++	if (reorder_buf->num_stored && !reorder_buf->removed) {
++		u16 index = reorder_buf->head_sn % reorder_buf->buf_size;
++
++		while (!skb_peek_tail(&reorder_buf->entries[index]))
++			index = (index + 1) % reorder_buf->buf_size;
++		/* modify timer to match next frame's expiration time */
++		mod_timer(&reorder_buf->reorder_timer,
++			  reorder_buf->reorder_time[index] + 1 +
++			  RX_REORDER_BUF_TIMEOUT_MQ);
++	} else {
++		del_timer(&reorder_buf->reorder_timer);
++	}
++}
++
++void iwl_mvm_reorder_timer_expired(unsigned long data)
++{
++	struct iwl_mvm_reorder_buffer *buf = (void *)data;
++	int i;
++	u16 sn = 0, index = 0;
++	bool expired = false;
++
++	spin_lock_bh(&buf->lock);
++
++	if (!buf->num_stored || buf->removed) {
++		spin_unlock_bh(&buf->lock);
++		return;
++	}
++
++	for (i = 0; i < buf->buf_size ; i++) {
++		index = (buf->head_sn + i) % buf->buf_size;
++
++		if (!skb_peek_tail(&buf->entries[index]))
++			continue;
++		if (!time_after(jiffies, buf->reorder_time[index] +
++				RX_REORDER_BUF_TIMEOUT_MQ))
++			break;
++		expired = true;
++		sn = ieee80211_sn_add(buf->head_sn, i + 1);
++	}
++
++	if (expired) {
++		struct ieee80211_sta *sta;
++
++		rcu_read_lock();
++		sta = rcu_dereference(buf->mvm->fw_id_to_mac_id[buf->sta_id]);
++		/* SN is set to the last expired frame + 1 */
++		iwl_mvm_release_frames(buf->mvm, sta, NULL, buf, sn);
++		rcu_read_unlock();
++	} else if (buf->num_stored) {
++		/*
++		 * If no frame expired and there are stored frames, index is now
++		 * pointing to the first unexpired frame - modify timer
++		 * accordingly to this frame.
++		 */
++		mod_timer(&buf->reorder_timer,
++			  buf->reorder_time[index] +
++			  1 + RX_REORDER_BUF_TIMEOUT_MQ);
++	}
++	spin_unlock_bh(&buf->lock);
+ }
+ 
+ static void iwl_mvm_del_ba(struct iwl_mvm *mvm, int queue,
+@@ -448,9 +516,12 @@ static void iwl_mvm_del_ba(struct iwl_mvm *mvm, int queue,
+ 	reorder_buf = &ba_data->reorder_buf[queue];
+ 
+ 	/* release all frames that are in the reorder buffer to the stack */
++	spin_lock_bh(&reorder_buf->lock);
+ 	iwl_mvm_release_frames(mvm, sta, NULL, reorder_buf,
+ 			       ieee80211_sn_add(reorder_buf->head_sn,
+ 						reorder_buf->buf_size));
++	spin_unlock_bh(&reorder_buf->lock);
++	del_timer_sync(&reorder_buf->reorder_timer);
+ 
+ out:
+ 	rcu_read_unlock();
+@@ -545,6 +616,8 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 
+ 	buffer = &baid_data->reorder_buf[queue];
+ 
++	spin_lock_bh(&buffer->lock);
++
+ 	/*
+ 	 * If there was a significant jump in the nssn - adjust.
+ 	 * If the SN is smaller than the NSSN it might need to first go into
+@@ -564,8 +637,10 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 
+ 	/* release immediately if allowed by nssn and no stored frames */
+ 	if (!buffer->num_stored && ieee80211_sn_less(sn, nssn)) {
+-		buffer->head_sn = nssn;
++		if (ieee80211_sn_less(buffer->head_sn, nssn))
++			buffer->head_sn = nssn;
+ 		/* No need to update AMSDU last SN - we are moving the head */
++		spin_unlock_bh(&buffer->lock);
+ 		return false;
+ 	}
+ 
+@@ -589,16 +664,20 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 	/* put in reorder buffer */
+ 	__skb_queue_tail(&buffer->entries[index], skb);
+ 	buffer->num_stored++;
++	buffer->reorder_time[index] = jiffies;
++
+ 	if (amsdu) {
+ 		buffer->last_amsdu = sn;
+ 		buffer->last_sub_index = sub_frame_idx;
+ 	}
+ 
+ 	iwl_mvm_release_frames(mvm, sta, napi, buffer, nssn);
++	spin_unlock_bh(&buffer->lock);
+ 	return true;
+ 
+ drop:
+ 	kfree_skb(skb);
++	spin_unlock_bh(&buffer->lock);
+ 	return true;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 2b83911..e7f1da5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1189,8 +1189,11 @@ static void iwl_mvm_free_reorder(struct iwl_mvm *mvm,
+ 		struct iwl_mvm_reorder_buffer *reorder_buf =
+ 			&data->reorder_buf[i];
+ 
+-		if (likely(!reorder_buf->num_stored))
++		spin_lock_bh(&reorder_buf->lock);
++		if (likely(!reorder_buf->num_stored)) {
++			spin_unlock_bh(&reorder_buf->lock);
+ 			continue;
++		}
+ 
+ 		/*
+ 		 * This shouldn't happen in regular DELBA since the internal
+@@ -1201,6 +1204,17 @@ static void iwl_mvm_free_reorder(struct iwl_mvm *mvm,
+ 
+ 		for (j = 0; j < reorder_buf->buf_size; j++)
+ 			__skb_queue_purge(&reorder_buf->entries[j]);
++		/*
++		 * Prevent timer re-arm. This prevents a very far fetched case
++		 * where we timed out on the notification. There may be prior
++		 * RX frames pending in the RX queue before the notification
++		 * that might get processed between now and the actual deletion
++		 * and we would re-arm the timer although we are deleting the
++		 * reorder buffer.
++		 */
++		reorder_buf->removed = true;
++		spin_unlock_bh(&reorder_buf->lock);
++		del_timer_sync(&reorder_buf->reorder_timer);
+ 	}
+ }
+ 
+@@ -1219,6 +1233,13 @@ static void iwl_mvm_init_reorder_buffer(struct iwl_mvm *mvm,
+ 		reorder_buf->num_stored = 0;
+ 		reorder_buf->head_sn = ssn;
+ 		reorder_buf->buf_size = buf_size;
++		/* rx reorder timer */
++		reorder_buf->reorder_timer.function =
++			iwl_mvm_reorder_timer_expired;
++		reorder_buf->reorder_timer.data = (unsigned long)reorder_buf;
++		init_timer(&reorder_buf->reorder_timer);
++		spin_lock_init(&reorder_buf->lock);
++		reorder_buf->mvm = mvm;
+ 		reorder_buf->queue = i;
+ 		reorder_buf->sta_id = sta_id;
+ 		for (j = 0; j < reorder_buf->buf_size; j++)
 -- 
-2.7.4
+2.8.1
 
