@@ -1,85 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35290 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362AbcERBP3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40706 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751484AbcEJU3H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 21:15:29 -0400
-Received: by mail-pf0-f196.google.com with SMTP id b66so3395763pfb.2
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 18:15:29 -0700 (PDT)
-From: Dan Lenski <dlenski@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Dan Lenski <dlenski@gmail.com>, jes.sorensen@redhat.com
-Subject: [PATCH 2/2] rtl8xxxu: Make polling timeout for firmware configurable
-Date: Tue, 17 May 2016 18:14:46 -0700
-Message-Id: <1463534086-22353-3-git-send-email-dlenski@gmail.com> (sfid-20160518_031532_918884_487F3303)
-In-Reply-To: <1463534086-22353-1-git-send-email-dlenski@gmail.com>
-References: <1463534086-22353-1-git-send-email-dlenski@gmail.com>
+	Tue, 10 May 2016 16:29:07 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Tue, 10 May 2016 23:06:23 +0300
+Message-Id: <1462910797-20303-27-git-send-email-luca@coelho.fi> (sfid-20160510_222910_134770_02873791)
+In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
+References: <1462910585.25219.7.camel@coelho.fi>
+ <1462910797-20303-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 27/41] iwlwifi: mvm: set correct vht capability
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch makes RTL8XXXU_FIRMWARE_POLL_MAX into a configurable module
-parameter, firmware_poll_max.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Dan Lenski <dlenski@gmail.com>
+Our device supports only 160 GHz and not 80+80. Fix
+VHT flag accordingly.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 6aed923..a1efb2c 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -44,6 +44,7 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index b13f409..e99624d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -378,7 +378,7 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
  
- static int rtl8xxxu_debug;
- static bool rtl8xxxu_ht40_2g;
-+static int rtl8xxxu_firmware_poll_max = RTL8XXXU_FIRMWARE_POLL_MAX;
+ 	if (data->vht160_supported)
+ 		vht_cap->cap |=
+-			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160_80PLUS80MHZ;
++			IEEE80211_VHT_CAP_SUPP_CHAN_WIDTH_160MHZ;
  
- MODULE_AUTHOR("Jes Sorensen <Jes.Sorensen@redhat.com>");
- MODULE_DESCRIPTION("RTL8XXXu USB mac80211 Wireless LAN Driver");
-@@ -59,6 +60,8 @@ module_param_named(debug, rtl8xxxu_debug, int, 0600);
- MODULE_PARM_DESC(debug, "Set debug mask");
- module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, 0600);
- MODULE_PARM_DESC(ht40_2g, "Enable HT40 support on the 2.4GHz band");
-+module_param_named(firmware_poll_max, rtl8xxxu_firmware_poll_max, int, 0600);
-+MODULE_PARM_DESC(firmware_poll_max, "Maximum polling count for firmware startup (increase if firmware fails to start)");
- 
- #define USB_VENDOR_ID_REALTEK		0x0bda
- /* Minimum IEEE80211_MAX_FRAME_LEN */
-@@ -2050,13 +2053,13 @@ static int rtl8xxxu_start_firmware(struct rtl8xxxu_priv *priv)
- 	u32 val32;
- 
- 	/* Poll checksum report */
--	for (i = 0; i < RTL8XXXU_FIRMWARE_POLL_MAX; i++) {
-+	for (i = 0; i < rtl8xxxu_firmware_poll_max; i++) {
- 		val32 = rtl8xxxu_read32(priv, REG_MCU_FW_DL);
- 		if (val32 & MCU_FW_DL_CSUM_REPORT)
- 			break;
- 	}
- 
--	if (i == RTL8XXXU_FIRMWARE_POLL_MAX) {
-+	if (i == rtl8xxxu_firmware_poll_max) {
- 		dev_warn(dev, "Firmware checksum poll timed out\n");
- 		ret = -EAGAIN;
- 		goto exit;
-@@ -2068,7 +2071,7 @@ static int rtl8xxxu_start_firmware(struct rtl8xxxu_priv *priv)
- 	rtl8xxxu_write32(priv, REG_MCU_FW_DL, val32);
- 
- 	/* Wait for firmware to become ready */
--	for (i = 0; i < RTL8XXXU_FIRMWARE_POLL_MAX; i++) {
-+	for (i = 0; i < rtl8xxxu_firmware_poll_max; i++) {
- 		val32 = rtl8xxxu_read32(priv, REG_MCU_FW_DL);
- 		if (val32 & MCU_WINT_INIT_READY)
- 			break;
-@@ -2076,7 +2079,7 @@ static int rtl8xxxu_start_firmware(struct rtl8xxxu_priv *priv)
- 		udelay(100);
- 	}
- 
--	if (i == RTL8XXXU_FIRMWARE_POLL_MAX) {
-+	if (i == rtl8xxxu_firmware_poll_max) {
- 		dev_warn(dev, "Firmware failed to start\n");
- 		ret = -EAGAIN;
- 		goto exit;
+ 	if (cfg->vht_mu_mimo_supported)
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE;
 -- 
-2.8.2
+2.8.1
 
