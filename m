@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:35746 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753318AbcE3Ari (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40810 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751325AbcEJUae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2016 20:47:38 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAA-b7a8XwUqRLdvL2EFJWmNnD11+bdV856xYXFKSGNAwSbYwKg@mail.gmail.com>
-References: <cover.1464492195.git.kirtika.ruchandani@gmail.com>
- <5c2861995f05d456b3ce16e29ceae7e578b1456f.1464492195.git.kirtika.ruchandani@gmail.com>
- <CAGRGNgWMxU3qBsr0eu5cdAstu+s-0b9p1r-z5ZvkYejv2GtQLA@mail.gmail.com>
- <CAA-b7a9QS+GqxrYhDFDbYmLGKPt=z_fP02KbsUfMPWLrqih76w@mail.gmail.com> <CAA-b7a8XwUqRLdvL2EFJWmNnD11+bdV856xYXFKSGNAwSbYwKg@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 30 May 2016 10:47:18 +1000
-Message-ID: <CAGRGNgU9sxYbMp0SaHwoZnDuLJs9yy_wsPKxPCED=E27zU5Hfw@mail.gmail.com> (sfid-20160530_024745_625996_54665546)
-Subject: Re: [PATCH 3/3] nl80211: Various checkpatch.pl fixes
-To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tina Ruchandani <ruchandani.tina@gmail.com>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 10 May 2016 16:30:34 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Tue, 10 May 2016 23:06:36 +0300
+Message-Id: <1462910797-20303-40-git-send-email-luca@coelho.fi> (sfid-20160510_223037_812142_086D2ACE)
+In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
+References: <1462910585.25219.7.camel@coelho.fi>
+ <1462910797-20303-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 40/41] iwlwifi: add default value to disable_11ac mod param description
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kirtika,
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On Mon, May 30, 2016 at 10:44 AM, Kirtika Ruchandani
-<kirtika.ruchandani@gmail.com> wrote:
->>> There's too much stuff here to quickly review, it'd be nice if you
->>> could split this up into patches that do the following:
->
-> Is it preferable to resend the whole patch-set or just patch 3/3 in
-> this one as a separate set?
+Small change to make it clear that the default value is false.
 
-Re-send the entire set, make sure you mark it as v2, include a
-changelog in the cover letter or below the "---" in the patches
-themselves, and don't forget to include the reviewed-bys for any
-unchanged patches.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index b338230..60a6c36 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1724,4 +1724,4 @@ MODULE_PARM_DESC(d0i3_timeout, "Timeout to D0i3 entry when idle (ms)");
+ 
+ module_param_named(disable_11ac, iwlwifi_mod_params.disable_11ac, bool,
+ 		   S_IRUGO);
+-MODULE_PARM_DESC(disable_11ac, "Disable VHT capabilities");
++MODULE_PARM_DESC(disable_11ac, "Disable VHT capabilities (default: false)");
 -- 
-Julian Calaby
+2.8.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
