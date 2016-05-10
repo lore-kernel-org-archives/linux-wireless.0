@@ -1,146 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35650 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753296AbcE0THm (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40796 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751325AbcEJUa2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 15:07:42 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2] brcmfmac: fix setting AP channel with new firmwares
-Date: Fri, 27 May 2016 21:07:19 +0200
-Message-Id: <1464376045-8220-1-git-send-email-zajec5@gmail.com> (sfid-20160527_210807_196588_2E238E03)
-In-Reply-To: <1464080979-12150-1-git-send-email-zajec5@gmail.com>
-References: <1464080979-12150-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Tue, 10 May 2016 16:30:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Tue, 10 May 2016 23:06:07 +0300
+Message-Id: <1462910797-20303-11-git-send-email-luca@coelho.fi> (sfid-20160510_223034_687226_5DE1A235)
+In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
+References: <1462910585.25219.7.camel@coelho.fi>
+ <1462910797-20303-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 11/41] iwlwifi: mvm: support queue removal in ADD_STA hcmd
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware for new chipsets is based on a new major version of code
-internally maintained at Broadcom. E.g. brcmfmac4366b-pcie.bin (used for
-BCM4366B1) is based on 10.10.69.3309 while brcmfmac43602-pcie.ap.bin was
-based on 7.35.177.56.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Currently setting AP 5 GHz channel doesn't work reliably with BCM4366B1.
-When setting e.g. 36 control channel with VHT80 (center channel 42)
-firmware may randomly pick one of:
-1) 52 control channel with 58 as center one
-2) 100 control channel with 106 as center one
-3) 116 control channel with 122 as center one
-4) 149 control channel with 155 as center one
+To indicate to the FW that a queue has been removed, an
+existing flag in the ADD_STA HCMD (that hasn't been in use)
+has been changed to indicate that a queue is being removed
+from a STA.
 
-It seems new firmwares require setting AP mode (BRCMF_C_SET_AP) before
-specifying a channel. Changing an order of firmware calls fixes the
-problem. This requirement resulted in two separated "chanspec" calls,
-one in AP code path and one in P2P path.
+Update this in the driver code.
 
-This fix was verified with BCM4366B1 and tested for regressions on
-BCM43602.
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-V2: Avoid checking AP vs. P2P at two different places, just add code setting
-    "chanspec" to existing paths.
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 36 +++++++++++++++-------
- 1 file changed, 25 insertions(+), 11 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 1e2527f..38df1be 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -4438,7 +4438,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 	struct brcmf_join_params join_params;
- 	enum nl80211_iftype dev_role;
- 	struct brcmf_fil_bss_enable_le bss_enable;
--	u16 chanspec;
-+	u16 chanspec = chandef_to_chanspec(&cfg->d11inf, &settings->chandef);
- 	bool mbss;
- 	int is_11d;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+index e896648..38b1d04 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
+@@ -173,7 +173,7 @@ enum iwl_sta_key_flag {
  
-@@ -4514,16 +4514,8 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 
- 	brcmf_config_ap_mgmt_ie(ifp->vif, &settings->beacon);
- 
-+	/* Parameters shared by all radio interfaces */
- 	if (!mbss) {
--		chanspec = chandef_to_chanspec(&cfg->d11inf,
--					       &settings->chandef);
--		err = brcmf_fil_iovar_int_set(ifp, "chanspec", chanspec);
--		if (err < 0) {
--			brcmf_err("Set Channel failed: chspec=%d, %d\n",
--				  chanspec, err);
--			goto exit;
--		}
--
- 		if (is_11d != ifp->vif->is_11d) {
- 			err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_REGULATORY,
- 						    is_11d);
-@@ -4571,6 +4563,8 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 		err = -EINVAL;
- 		goto exit;
- 	}
-+
-+	/* Interface specific setup */
- 	if (dev_role == NL80211_IFTYPE_AP) {
- 		if ((brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS)) && (!mbss))
- 			brcmf_fil_iovar_int_set(ifp, "mbss", 1);
-@@ -4580,6 +4574,17 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 			brcmf_err("setting AP mode failed %d\n", err);
- 			goto exit;
- 		}
-+		if (!mbss) {
-+			/* Firmware 10.x requires setting channel after enabling
-+			 * AP and before bringing interface up.
-+			 */
-+			err = brcmf_fil_iovar_int_set(ifp, "chanspec", chanspec);
-+			if (err < 0) {
-+				brcmf_err("Set Channel failed: chspec=%d, %d\n",
-+					  chanspec, err);
-+				goto exit;
-+			}
-+		}
- 		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 1);
- 		if (err < 0) {
- 			brcmf_err("BRCMF_C_UP error (%d)\n", err);
-@@ -4601,7 +4606,13 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 			goto exit;
- 		}
- 		brcmf_dbg(TRACE, "AP mode configuration complete\n");
--	} else {
-+	} else if (dev_role == NL80211_IFTYPE_P2P_GO) {
-+		err = brcmf_fil_iovar_int_set(ifp, "chanspec", chanspec);
-+		if (err < 0) {
-+			brcmf_err("Set Channel failed: chspec=%d, %d\n",
-+				  chanspec, err);
-+			goto exit;
-+		}
- 		err = brcmf_fil_bsscfg_data_set(ifp, "ssid", &ssid_le,
- 						sizeof(ssid_le));
- 		if (err < 0) {
-@@ -4618,7 +4629,10 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 		}
- 
- 		brcmf_dbg(TRACE, "GO mode configuration complete\n");
-+	} else {
-+		WARN_ON(1);
- 	}
-+
- 	set_bit(BRCMF_VIF_STATUS_AP_CREATED, &ifp->vif->sme_state);
- 	brcmf_net_setcarrier(ifp, true);
- 
+ /**
+  * enum iwl_sta_modify_flag - indicate to the fw what flag are being changed
+- * @STA_MODIFY_KEY: this command modifies %key
++ * @STA_MODIFY_QUEUE_REMOVAL: this command removes a queue
+  * @STA_MODIFY_TID_DISABLE_TX: this command modifies %tid_disable_tx
+  * @STA_MODIFY_TX_RATE: unused
+  * @STA_MODIFY_ADD_BA_TID: this command modifies %add_immediate_ba_tid
+@@ -183,7 +183,7 @@ enum iwl_sta_key_flag {
+  * @STA_MODIFY_QUEUES: modify the queues used by this station
+  */
+ enum iwl_sta_modify_flag {
+-	STA_MODIFY_KEY				= BIT(0),
++	STA_MODIFY_QUEUE_REMOVAL		= BIT(0),
+ 	STA_MODIFY_TID_DISABLE_TX		= BIT(1),
+ 	STA_MODIFY_TX_RATE			= BIT(2),
+ 	STA_MODIFY_ADD_BA_TID			= BIT(3),
 -- 
-1.8.4.5
+2.8.1
 
