@@ -1,46 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:35935 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750961AbcETUyv (ORCPT
+Received: from vpn.innerrange.com.au ([203.122.143.146]:57063 "EHLO
+	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751049AbcEJHRv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 20 May 2016 16:54:51 -0400
-Received: by mail-wm0-f46.google.com with SMTP id n129so18431wmn.1
-        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2016 13:54:51 -0700 (PDT)
+	Tue, 10 May 2016 03:17:51 -0400
+From: Craig McQueen <craig.mcqueen@innerrange.com>
+To: Yegor Yefremov <yegorslists@googlemail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Bin Liu <b-liu@ti.com>
+Date: Tue, 10 May 2016 17:17:43 +1000
+Subject: RE: rt2800 and BeagleBone Black soft lockup when unplugging from
+ USB hub
+Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D20D2524E@IR-CENTRAL.corp.innerrange.com> (sfid-20160510_091755_134796_A80042AC)
+References: <5500469A22567C4BAF673A6E86AFA3A4022D20C81874@IR-CENTRAL.corp.innerrange.com>
+ <5500469A22567C4BAF673A6E86AFA3A4022D20D2522C@IR-CENTRAL.corp.innerrange.com>
+ <CAGm1_kubZOc_ddjg6i-PkZ_TuhFjt6foFOs4kZqJ5KjEu1iw6w@mail.gmail.com>
+In-Reply-To: <CAGm1_kubZOc_ddjg6i-PkZ_TuhFjt6foFOs4kZqJ5KjEu1iw6w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAOw_LSGsLVhXVvqwQD7J4ZJSL4jq8+KE-0ZMMXa5YP12Nb3dCA@mail.gmail.com>
-References: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
- <wrfjinyayf2i.fsf@redhat.com> <CAOw_LSHnV+244fT7YvEoV+7VSH_+OoGFmZSdGK4a3NqB407VGQ@mail.gmail.com>
- <wrfj4m9svn35.fsf@redhat.com> <CAOw_LSGsLVhXVvqwQD7J4ZJSL4jq8+KE-0ZMMXa5YP12Nb3dCA@mail.gmail.com>
-From: Daniel Lenski <dlenski@gmail.com>
-Date: Fri, 20 May 2016 13:54:10 -0700
-Message-ID: <CAOw_LSGnjhOO4hfPk9KttkFtLyT6XLxa92Cj=eKq6zgQ1at-RQ@mail.gmail.com> (sfid-20160520_225455_634337_45A1287C)
-Subject: Re: [PATCH] rtl8xxxu: increase polling timeout for firmware startup
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 20, 2016 at 1:50 PM, Daniel Lenski <dlenski@gmail.com> wrote:
-> Am I understanding your idea correctly? To put a loop around the 8051
-> reset and the firmware polling loop, with a delay between failure and retry?
-
-That was some sloppy pseudo-code by me... here's what I think you're
-suggesting:
-
-    for (retry=1; retry<=5; retry++) {
-        /* Reset the 8051 */
-        priv->fops->reset_8051(priv);
-
-        /* Wait for firmware to become ready */
-        for (i=0; i<RTL8XXXXU_FIRMWARE_POLL_MAX; i++) {
-            ...
-        }
-
-        /* On failure, insert a delay before trying again */
-        if (i==RTL8XXXU_FIRMWARE_POLL_MAX)
-            msleep(500);
-     }
-
-Thanks,
-Dan
+WWVnb3IgWWVmcmVtb3Ygd3JvdGU6DQo+IEhpIENyYWlnLA0KPiANCj4gT24gVHVlLCBNYXkgMTAs
+IDIwMTYgYXQgODowOCBBTSwgQ3JhaWcgTWNRdWVlbg0KPiA8Y3JhaWcubWNxdWVlbkBpbm5lcnJh
+bmdlLmNvbT4gd3JvdGU6DQo+ID4gSSBwcmV2aW91c2x5IHdyb3RlOg0KPiA+PiBJIHByZXZpb3Vz
+bHkgd3JvdGU6DQo+ID4+ID4gSSBwcmV2aW91c2x5IHdyb3RlOg0KPiA+PiA+ID4NCj4gPj4gPiA+
+IEkgaGF2ZSBhIEQtTGluayBEV0EtMTQwIFVTQiBXaS1GaSBkZXZpY2Ugd2hpY2ggaXMgcnQyODAw
+IGJhc2VkDQo+ID4+ID4gPiAoNTM5MiBjaGlwc2V0KS4gSSd2ZSBiZWVuIHRlc3RpbmcgaXQgb24g
+YSBCZWFnbGVCb25lIEJsYWNrDQo+ID4+ID4gPiBydW5uaW5nIGFuIFVidW50dQ0KPiA+PiA+ID4g
+MTYuMDQgaW1hZ2UgKDQuNC42IGtlcm5lbCksIHdpdGggYSBVU0IgaHViLg0KPiA+PiA+ID4NCj4g
+Pj4gPiA+IFdoZW4gSSB1bnBsdWcgdGhlIFdpLUZpIGRldmljZSBmcm9tIHRoZSBVU0IgaHViLCBh
+bmQgaXQncw0KPiA+PiA+ID4gY29ubmVjdGVkIHRvIGFuIGFjY2VzcyBwb2ludCwgYW5kIHRoZW4g
+SSB1bnBsdWcgaXQsIHRoZSBPUyBhcHBlYXJzIHRvDQo+IGxvY2sgdXAuDQo+ID4+ID4gPiBJIGdl
+dCBtZXNzYWdlcyBhYm91dCBhIHNvZnQgbG9ja3VwIG9uIHRoZSBzZXJpYWwgY29uc29sZToNCj4g
+Pj4gPiA+DQo+ID4+ID4gPiBbIDk3MzYuMTM2NzAyXSBOTUkgd2F0Y2hkb2c6IEJVRzogc29mdCBs
+b2NrdXAgLSBDUFUjMCBzdHVjayBmb3IgMjJzIQ0KPiA+PiA+ID4gW2t3b3JrZXIvdTI6MDoxMTI5
+XSBbIDk3NjQuMTM2NzAxXSBOTUkgd2F0Y2hkb2c6IEJVRzogc29mdCBsb2NrdXANCj4gPj4gPiA+
+IC0NCj4gPj4gPiA+IENQVSMwIHN0dWNrIGZvciAyMnMhIFtrd29ya2VyL3UyOjA6MTEyOV0gWyA5
+NzkyLjEzNjcwMV0gTk1JDQo+IHdhdGNoZG9nOg0KPiA+PiA+ID4gQlVHOiBzb2Z0IGxvY2t1cCAt
+IENQVSMwIHN0dWNrIGZvciAyMnMhIFtrd29ya2VyL3UyOjA6MTEyOV0gWw0KPiA+PiA+ID4gOTgy
+MC4xMzY2OTldIE5NSQ0KPiA+PiA+ID4gd2F0Y2hkb2c6IEJVRzogc29mdCBsb2NrdXAgLSBDUFUj
+MCBzdHVjayBmb3IgMjJzIQ0KPiA+PiA+ID4gW2t3b3JrZXIvdTI6MDoxMTI5XSBbIDk4NDguMTM2
+Njk2XSBOTUkgd2F0Y2hkb2c6IEJVRzogc29mdCBsb2NrdXANCj4gPj4gPiA+IC0NCj4gPj4gQ1BV
+IzAgc3R1Y2sgZm9yIDIycyENCj4gPj4gPiA+IFtrd29ya2VyL3UyOjA6MTEyOV0NCj4gPj4gPiA+
+DQo+ID4+ID4gPiBUaGlzIHdpbGwgcmVwZWF0IGluZGVmaW5pdGVseSwgdW50aWwgSSB1bnBsdWcg
+dGhlIGh1Yiwgd2hpY2gNCj4gPj4gPiA+IHJlc29sdmVzIHRoZSBzb2Z0IGxvY2t1cCBhbmQgdGhl
+biB0aGUgc3lzdGVtIHNlZW1zIHRvIGZ1bmN0aW9uDQo+IG5vcm1hbGx5Lg0KPiA+PiA+ID4NCj4g
+Pj4gPiA+IEkndmUgYXR0YWNoZWQgYSBkbWVzZyBsb2cgb2YgdGhlIHNvZnQgbG9ja3VwIHN0YWNr
+IHRyYWNlcy4gVGhleQ0KPiA+PiA+ID4gc2VlbSB0byBpbmRpY2F0ZSBhIGxvY2t1cCBpbiB3b3Jr
+cXVldWUgcnQyeDAwdXNiX3dvcmtfcnhkb25lKCkNCj4gPj4gPiA+IChzcGVjaWZpY2FsbHkgaW4N
+Cj4gPj4gPiA+IHVzYl9oY2Rfc3VibWl0X3VyYigpIGNhbGxlZCBmcm9tIHJ0MngwMHVzYl9raWNr
+X3J4X2VudHJ5KCkgY2FsbGVkDQo+ID4+ID4gPiBmcm9tIHJ0MngwMHVzYl9jbGVhcl9lbnRyeSgp
+KS4NCj4gPj4gPiA+DQo+ID4+ID4gPiBJIG9yaWdpbmFsbHkgZm91bmQgdGhpcyBidWcgb24gYSAz
+LjE0Lngga2VybmVsIGJ1aWx0IHdpdGggWW9jdG8NCj4gPj4gPiA+IGZvciBhIEJlYWdsZUJvbmUg
+QmxhY2stYmFzZWQgcHJvZHVjdC4gU28gaXQgc2VlbXMgdGhpcyBpcyBhIGJ1Zw0KPiA+PiA+ID4g
+dGhhdCBoYXMgYmVlbiBhcm91bmQgZm9yIHNvbWUgdGltZS4NCj4gPj4gPg0KPiA+PiA+IEkgc2hv
+dWxkIGFsc28gbm90ZSB0aGF0IG9uIHRoZSAzLjE0LnggWW9jdG8tYnVpbHQga2VybmVsIG9uDQo+
+ID4+ID4gQmVhZ2xlQm9uZSBCbGFjaywgdGhpcyBidWcgZG9lcyBub3Qgb2NjdXIgaWYgdGhlIHJ0
+MjgwMCBkZXZpY2UgaXMNCj4gPj4gPiB1bnBsdWdnZWQgZGlyZWN0bHkgZnJvbSB0aGUgQkJCJ3Mg
+VVNCIHBvcnQuIEl0IG9ubHkgb2NjdXJzIGlmIHVucGx1Z2dlZA0KPiBmcm9tIGEgaHViLg0KPiA+
+PiA+DQo+ID4+ID4gSSBoYXZlIHRlc3RlZCB0aGlzIG9uIGFuIGk1ODYgYmFzZWQgZUJveC0zMzEw
+QSBtaW5pLVBDIHJ1bm5pbmcNCj4gPj4gPiBEZWJpYW4gOC40LCB3aGljaCBoYXMgYSAzLjE2LjAg
+a2VybmVsLCB3aXRoIHRoZSBzYW1lIGh1YiBhbmQgc2FtZQ0KPiA+PiA+IHJ0MjgwMCBkZXZpY2Uu
+IEJ1dCBJIHdhcyBub3QgYWJsZSB0byByZXByb2R1Y2UgdGhpcyBpc3N1ZS4NCj4gPj4NCj4gPj4g
+VGhlcmUgaXMgYSBwYXRjaCBmb3IgdGhlIEFNMzM1eCBtdXNiIGRyaXZlciB0aGF0IHNlZW1zIHRv
+IGZpeCB0aGlzOg0KPiA+Pg0KPiA+PiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXVzYiZtPTE0
+NjE3Mzk5NTExNzQ1NiZ3PTINCj4gPj4NCj4gPj4gU28gaXQgc2VlbXMgdGhhdCB0aGlzIGlzc3Vl
+J3Mgcm9vdCBjYXVzZSBpcyBpbiB0aGUgQU0zMzV4IFVTQg0KPiA+PiBpbnRlcnJ1cHQgaGFuZGxp
+bmcsIGFuZCBub3QgdGhlIFdpLUZpIHJ0MjgwMCBkcml2ZXIuDQo+ID4NCj4gPiBIYXZpbmcgYXBw
+bGllZCB0d28gQU0zMzV4IFVTQiBwYXRjaGVzIGluIHRoZSAzLjE0LjQ5IGtlcm5lbCwgdGhhdCBk
+b2VzDQo+IHNlZW0gdG8gcmVzb2x2ZSB0aGUgc29mdCBsb2NrLXVwIG9uIHRoZSBSWCBzaWRlLiBU
+aGUgdHdvIHBhdGNoZXMgYXJlOg0KPiA+DQo+ID4gaHR0cDovL21hcmMuaW5mby8/bD1saW51eC11
+c2ImbT0xNDYxNzM5OTUxMTc0NTYmdz0yDQo+ID4gaHR0cDovL21hcmMuaW5mby8/bD1saW51eC11
+c2ImbT0xNDYyMjIzNTUyMTM5MzUmdz0yDQo+ID4NCj4gPiBCdXQgSSBhbSBmaW5kaW5nIHRoZXJl
+IGlzIHN0aWxsIGEgbG9jay11cCBpc3N1ZSB3aGVuIHVucGx1Z2dpbmcgZnJvbSBhIGh1YiwNCj4g
+dGhpcyB0aW1lIG9uIHRoZSBUWCBzaWRlLiBJdCBpcyBtb3JlIGxpa2VseSBpZiB0aGVyZSBpcyBX
+aS1GaSB0cmFmZmljIGluIHByb2dyZXNzDQo+IHdoZW4gdGhlIHVucGx1ZyBvY2N1cnMuIEknbSBh
+dHRhY2hpbmcgYSBsb2cuIEVzc2VudGlhbGx5IHRoZXJlIGFyZSBhIGhlYXAgb2YNCj4gbGluZXMg
+KDEwMCBvciBzbyBwZXIgc2Vjb25kKToNCj4gPg0KPiA+IFsgMTg2Ni42OTM1MTFdIGllZWU4MDIx
+MSBwaHk3OiBydDI4MDB1c2JfdHhfc3RhX2ZpZm9fcmVhZF9jb21wbGV0ZWQ6DQo+ID4gV2Fybmlu
+ZyAtIFRYIHN0YXR1cyByZWFkIGZhaWxlZCAtNzENCj4gPg0KPiA+IFdoaWNoIGZpbmFsbHkgc3Rv
+cCBzaG9ydGx5IGFmdGVyIFVTQiBkaXNjb25uZWN0IGlzIGRldGVjdGVkOg0KPiA+DQo+ID4gWyAx
+ODY2Ljk4NTg1NF0gdXNiIDEtMS4zOiBVU0IgZGlzY29ubmVjdCwgZGV2aWNlIG51bWJlciAxMA0K
+PiA+DQo+ID4gSG93ZXZlciB0aGF0IGRpc2Nvbm5lY3QgbWVzc2FnZSBpcyB0eXBpY2FsbHkgMzAt
+OTAgc2Vjb25kcyBhZnRlciB0aGUNCj4gdW5wbHVnIGhhcHBlbmVkLiBJdCBzZWVtcyB0aGF0IHRo
+ZSBVU0IgZGlzY29ubmVjdCBkZXRlY3Rpb24gaXMgZGVsYXllZCBkdWUNCj4gdG8gdGhlIENQVSBs
+b2FkIG9mIHRoZSBUWC4NCj4gPg0KPiA+IEkgYWxzbyBzb21ldGltZXMgc2VlIGEga2VybmVsIHBh
+bmljLiBUaGF0IGNhbiBvY2N1ciB3aGV0aGVyIGNvbm5lY3RlZCB0byBhDQo+IFVTQiBodWIgb3Ig
+ZGlyZWN0bHkgdG8gdGhlIG9uLWJvYXJkIFVTQiBwb3J0LiBTZWUgdGhlIGF0dGFjaGVkIGxvZy4N
+Cj4gPg0KPiA+IEknbSBub3Qgc28gZmFtaWxpYXIgd2l0aCBlaXRoZXIgdGhlIFdpLUZpIG9yIFVT
+QiBzdGFja3MgaW4gdGhlIExpbnV4DQo+ID4ga2VybmVsLCBzbyBJIHdvdWxkIGFwcHJlY2lhdGUg
+YW55IGFkdmljZSB3aXRoIGRlYnVnZ2luZyBhbmQgZml4aW5nDQo+ID4gdGhpcy4gKE15IHByZXZp
+b3VzIGludmVzdGlnYXRpb25zIGluZGljYXRlIHRoZXNlIGlzc3VlcyBhcmUgcHJlc2VudCBpbg0K
+PiA+IGJvdGggMy4xNC54IGtlcm5lbCBhbmQgNC40LjYga2VybmVsLiBJJ20gbW9yZSBmYW1pbGlh
+ciB3aXRoIHdvcmtpbmcNCj4gPiB3aXRoIHRoZSAzLjE0Lngga2VybmVsIHVuZGVyIFlvY3RvLCBi
+dXQgSSBjb3VsZCB0cnkgbW92aW5nIHRvIDQuNC42DQo+ID4ga2VybmVsIGZvciBVYnVudHUuIEkn
+bSBvcGVuIHRvIGFkdmljZSBvbiB3aGljaCB0byBpbnZlc3RpZ2F0ZSBvbi4pDQo+IA0KPiBUYWtl
+IGEgbG9vayBhdCB0aGlzIHBhdGNoOiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LQ0KPiB1c2Im
+bT0xNDYyMjIzNTUyMTM5MzUmdz0yDQo+IA0KPiBJZiBpdCBmaXhlcyB5b3VyIGlzc3VlIHBsZWFz
+ZSBwcm92aWRlIHlvdXIgInRlc3RlZC1ieSIgdGFnIGhlcmUuDQoNCkhpIFllZ29yLA0KDQpJIGFt
+IHVzaW5nIHRoYXQgcGF0Y2gsIGFuZCBJIHJlZmVycmVkIHRvIGl0IGluIG15IGxhc3QgbWVzc2Fn
+ZS4gQnV0IGl0IGRvZXNuJ3QgZml4IHRoaXMgaXNzdWUuDQoNClRoYW5rcywNCkNyYWlnIE1jUXVl
+ZW4NCg0K
