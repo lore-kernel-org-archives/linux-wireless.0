@@ -1,46 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43524 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751062AbcERNoB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2016 09:44:01 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: next wireless workshop - poll
-References: <1461850005.2352.9.camel@sipsolutions.net>
-	<1463566881.2224.2.camel@sipsolutions.net>
-Date: Wed, 18 May 2016 09:43:58 -0400
-In-Reply-To: <1463566881.2224.2.camel@sipsolutions.net> (Johannes Berg's
-	message of "Wed, 18 May 2016 12:21:21 +0200")
-Message-ID: <wrfjk2ir1nxd.fsf@redhat.com> (sfid-20160518_154406_415014_5C085F0B)
+Received: from aserp1040.oracle.com ([141.146.126.69]:26326 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751899AbcEJTV1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2016 15:21:27 -0400
+Date: Tue, 10 May 2016 22:20:37 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Ondrej Zary <linux@rainbow-software.org>,
+	Florian Westphal <fw@strlen.de>,
+	"David S. Miller" <davem@davemloft.net>,
+	Felipe Balbi <felipe.balbi@linux.intel.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [patch] airo: prevent potential underflow in airo_set_freq()
+Message-ID: <20160510192037.GB30712@mwanda> (sfid-20160510_212235_800106_89C82B92)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-> On Thu, 2016-04-28 at 15:26 +0200, Johannes Berg wrote:
->> Hi,
->> 
->> Since I've been getting questions about the next possible workshop
->> and
->> its organisation, I decided to make a poll about it:
->> 
->> http://goo.gl/forms/iMcE8b4TYU
->> 
->> Please reply by
->> 
->> 	May 16th
->> 
->> so I can aggregate/evaluate the responses and we can make a decision.
->> 
->
-> I didn't get many responses, but only a single one preferring *only*
-> Tokyo, with a few others preferring Santa Fe.
->
-> So I'll look into the latter.
+I'm not sure if this can underflow but Smatch complains.  It seems
+harmless to add a check for negatives.
 
-OK - let me know if you need any help with it.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Cheers,
-Jes
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index 55456f7..ca3cd21 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -5794,7 +5794,7 @@ static int airo_set_freq(struct net_device *dev,
+ 		fwrq->m = ieee80211_frequency_to_channel(f);
+ 	}
+ 	/* Setting by channel number */
+-	if((fwrq->m > 1000) || (fwrq->e > 0))
++	if (fwrq->m < 0 || fwrq->m > 1000 || fwrq->e > 0)
+ 		rc = -EOPNOTSUPP;
+ 	else {
+ 		int channel = fwrq->m;
