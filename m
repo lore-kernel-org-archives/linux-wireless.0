@@ -1,46 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0250.hostedemail.com ([216.40.44.250]:48064 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754008AbcEZQCH (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40898 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752843AbcEJUbP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2016 12:02:07 -0400
-Message-ID: <1464278521.16344.35.camel@perches.com> (sfid-20160526_180215_721754_27547A33)
-Subject: Re: [PATCH v1 1/1] rtl8xxxu: tuse %*ph to dump buffers
-From: Joe Perches <joe@perches.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org
-Cc: Greg KH <gregkh@linuxfoundation.org>
-Date: Thu, 26 May 2016 09:02:01 -0700
-In-Reply-To: <1464274339-103386-1-git-send-email-andriy.shevchenko@linux.intel.com>
-References: <1464274339-103386-1-git-send-email-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Tue, 10 May 2016 16:31:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Tue, 10 May 2016 23:06:25 +0300
+Message-Id: <1462910797-20303-29-git-send-email-luca@coelho.fi> (sfid-20160510_223119_087571_9FE9CFE7)
+In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
+References: <1462910585.25219.7.camel@coelho.fi>
+ <1462910797-20303-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 29/41] iwlwifi: mvm: remove redundant alloc_ctx parameter
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-05-26 at 17:52 +0300, Andy Shevchenko wrote:
-> Use %*ph specifier to dump small buffers in hex format instead of doing this
-> byte-by-byte.
-[]
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-[]
-> @@ -413,13 +413,8 @@ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
->  		dev_info(&priv->udev->dev,
->  			 "%s: dumping efuse (0x%02zx bytes):\n",
->  			 __func__, sizeof(struct rtl8192cu_efuse));
-> -		for (i = 0; i < sizeof(struct rtl8192cu_efuse); i += 8) {
-> -			dev_info(&priv->udev->dev, "%02x: "
-> -				 "%02x %02x %02x %02x %02x %02x %02x %02x\n", i,
-> -				 raw[i], raw[i + 1], raw[i + 2],
-> -				 raw[i + 3], raw[i + 4], raw[i + 5],
-> -				 raw[i + 6], raw[i + 7]);
-> -		}
-> +		for (i = 0; i < sizeof(struct rtl8192cu_efuse); i += 8)
-> +			dev_info(&priv->udev->dev, "%02x: %8ph\n", i, &raw[i]);
+From: Sara Sharon <sara.sharon@intel.com>
 
-print_hex_dump_bytes?
+iwl_phy_db_set_section() is get called only from atomic
+context, the alloc_ctx parameter is not needed. Remove it.
 
-or maybe add a dev_print_hex_dump variant?
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/iwl-phy-db.h | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+index ecfa491..7beba9a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c
+@@ -221,8 +221,8 @@ void iwl_phy_db_free(struct iwl_phy_db *phy_db)
+ }
+ IWL_EXPORT_SYMBOL(iwl_phy_db_free);
+ 
+-int iwl_phy_db_set_section(struct iwl_phy_db *phy_db, struct iwl_rx_packet *pkt,
+-			   gfp_t alloc_ctx)
++int iwl_phy_db_set_section(struct iwl_phy_db *phy_db,
++			   struct iwl_rx_packet *pkt)
+ {
+ 	struct iwl_calib_res_notif_phy_db *phy_db_notif =
+ 			(struct iwl_calib_res_notif_phy_db *)pkt->data;
+@@ -269,7 +269,7 @@ int iwl_phy_db_set_section(struct iwl_phy_db *phy_db, struct iwl_rx_packet *pkt,
+ 		return -EINVAL;
+ 
+ 	kfree(entry->data);
+-	entry->data = kmemdup(phy_db_notif->data, size, alloc_ctx);
++	entry->data = kmemdup(phy_db_notif->data, size, GFP_ATOMIC);
+ 	if (!entry->data) {
+ 		entry->size = 0;
+ 		return -ENOMEM;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.h b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.h
+index 2410387..d34de3f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.h
+@@ -73,8 +73,8 @@ struct iwl_phy_db *iwl_phy_db_init(struct iwl_trans *trans);
+ 
+ void iwl_phy_db_free(struct iwl_phy_db *phy_db);
+ 
+-int iwl_phy_db_set_section(struct iwl_phy_db *phy_db, struct iwl_rx_packet *pkt,
+-			   gfp_t alloc_ctx);
++int iwl_phy_db_set_section(struct iwl_phy_db *phy_db,
++			   struct iwl_rx_packet *pkt);
+ 
+ 
+ int iwl_send_phy_db_data(struct iwl_phy_db *phy_db);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index b70f453..7057f35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -535,7 +535,7 @@ static bool iwl_wait_phy_db_entry(struct iwl_notif_wait_data *notif_wait,
+ 		return true;
+ 	}
+ 
+-	WARN_ON(iwl_phy_db_set_section(phy_db, pkt, GFP_ATOMIC));
++	WARN_ON(iwl_phy_db_set_section(phy_db, pkt));
+ 
+ 	return false;
+ }
+-- 
+2.8.1
 
