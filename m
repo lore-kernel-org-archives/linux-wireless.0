@@ -1,113 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:33539 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755224AbcEDXlg (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40562 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752465AbcEJUHr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2016 19:41:36 -0400
-Received: by mail-pa0-f44.google.com with SMTP id xk12so29408899pac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2016 16:41:35 -0700 (PDT)
-From: Christian Daudt <csd@broadcom.com>
-To: linux-wireless@vger.kernel.org
-Cc: Christian Daudt <csd@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: [PATCH] brcmfmac: Fix 'did not remove int handler' warning
-Date: Wed,  4 May 2016 16:41:20 -0700
-Message-Id: <1462405280-5947-1-git-send-email-csd@broadcom.com> (sfid-20160505_014147_438573_8E312409)
+	Tue, 10 May 2016 16:07:47 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Date: Tue, 10 May 2016 23:06:00 +0300
+Message-Id: <1462910797-20303-4-git-send-email-luca@coelho.fi> (sfid-20160510_220749_446556_2FBBF1B5)
+In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
+References: <1462910585.25219.7.camel@coelho.fi>
+ <1462910797-20303-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 04/41] iwlwifi: mvm: implement driver RX queues sync command
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-brcmf_sdiod_intr_unregister call that removes both func1 and
-func2 interrupt handlers only called when brcmf_ops_sdio_remove
-is called for func 1 (which is the 2nd call) but sdio is expecting
-it to be removed at the end of each sdio_remove call.
-This is causing 'rmmod bcmrfmac' on a 4356-sdio chip to complain
-with:
-WARNING: driver brcmfmac did not remove its interrupt handler!
+From: Sara Sharon <sara.sharon@intel.com>
 
-The modification makes calling brcmf_sdiod_intr_unregister multiple
-times harmless by clearing the variables that track if interrupt
-handlers have been installed, and then calls it on every
-brcmf_ops_sdio_remove call instead of just remove for func 1.
+mac80211 will call the driver whenever there is a race between
+RSS queues and control path that requires a processing of all
+pending frames in RSS queues.
+Implement that by utilizing the internal notification mechanism:
+queue a message to all queues. When the message is received on
+a queue it decrements the atomic counter. This guarantees that
+all pending frames in the RX queue were processed since the message
+is in order inside the queue.
 
-Note: this needs to be applied on top of
-"[PATCH] Fix kernel oops in failed chip_attach"
-
-Signed-off-by: Christian Daudt <csd@broadcom.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c   | 17 +++++++++++------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h |  2 +-
- 2 files changed, 12 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h |  4 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 43 ++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  7 ++++
+ 5 files changed, 58 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 09635a9..590cd41 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -172,7 +172,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
- 	return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+index 4c086d0..ade170b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+@@ -437,9 +437,11 @@ struct iwl_rxq_sync_notification {
+ /**
+ * Internal message identifier
+ *
++* @IWL_MVM_RXQ_SYNC: sync RSS queues
+ * @IWL_MVM_RXQ_NOTIF_DEL_BA: notify RSS queues of delBA
+ */
+ enum iwl_mvm_rxq_notif_type {
++	IWL_MVM_RXQ_SYNC,
+ 	IWL_MVM_RXQ_NOTIF_DEL_BA,
+ };
+ 
+@@ -448,10 +450,12 @@ enum iwl_mvm_rxq_notif_type {
+ * in &iwl_rxq_sync_cmd. Should be DWORD aligned.
+ *
+ * @type: value from &iwl_mvm_rxq_notif_type
++* @cookie: internal cookie to identify old notifications
+ * @data: payload
+ */
+ struct iwl_mvm_internal_rxq_notif {
+ 	u32 type;
++	u32 cookie;
+ 	u8 data[];
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5ace468..d6ad77a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -4037,6 +4037,47 @@ static void iwl_mvm_mac_event_callback(struct ieee80211_hw *hw,
+ 	}
  }
  
--int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
-+void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
- {
- 
- 	brcmf_dbg(SDIO, "Entering oob=%d sd=%d\n",
-@@ -195,6 +195,7 @@ int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
- 		}
- 		free_irq(pdata->oob_irq_nr, &sdiodev->func[1]->dev);
- 		sdiodev->irq_en = false;
-+		sdiodev->oob_irq_requested = false;
- 	}
- 
- 	if (sdiodev->sd_irq_requested) {
-@@ -202,9 +203,8 @@ int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
- 		sdio_release_irq(sdiodev->func[2]);
- 		sdio_release_irq(sdiodev->func[1]);
- 		sdio_release_host(sdiodev->func[1]);
-+		sdiodev->sd_irq_requested = false;
- 	}
--
--	return 0;
- }
- 
- void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
-@@ -1200,12 +1200,17 @@ static void brcmf_ops_sdio_remove(struct sdio_func *func)
- 	brcmf_dbg(SDIO, "sdio device ID: 0x%04x\n", func->device);
- 	brcmf_dbg(SDIO, "Function: %d\n", func->num);
- 
--	if (func->num != 1)
--		return;
--
- 	bus_if = dev_get_drvdata(&func->dev);
- 	if (bus_if) {
- 		sdiodev = bus_if->bus_priv.sdio;
++static void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm)
++{
++	struct iwl_mvm_internal_rxq_notif data = {
++		.type = IWL_MVM_RXQ_SYNC,
++		.cookie = mvm->queue_sync_cookie,
++	};
++	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(notif_waitq);
++	u32 qmask = BIT(mvm->trans->num_rx_queues) - 1;
++	int ret;
 +
-+		/* start by unregistering irqs */
-+		brcmf_sdiod_intr_unregister(sdiodev);
++	lockdep_assert_held(&mvm->mutex);
 +
-+		if (func->num != 1)
-+			return;
++	if (!iwl_mvm_has_new_rx_api(mvm))
++		return;
 +
-+		/* only proceed with rest of cleanup if func 1 */
- 		brcmf_sdiod_remove(sdiodev);
++	atomic_set(&mvm->queue_sync_counter, mvm->trans->num_rx_queues);
++
++	ret = iwl_mvm_notify_rx_queue(mvm, qmask, (u8 *)&data, sizeof(data));
++	if (ret) {
++		IWL_ERR(mvm, "Failed to trigger RX queues sync (%d)\n", ret);
++		goto out;
++	}
++	ret = wait_event_timeout(notif_waitq,
++				 atomic_read(&mvm->queue_sync_counter) == 0,
++				 HZ);
++	WARN_ON_ONCE(!ret);
++
++out:
++	atomic_set(&mvm->queue_sync_counter, 0);
++	mvm->queue_sync_cookie++;
++}
++
++static void iwl_mvm_sync_rx_queues(struct ieee80211_hw *hw)
++{
++	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
++
++	mutex_lock(&mvm->mutex);
++	iwl_mvm_sync_rx_queues_internal(mvm);
++	mutex_unlock(&mvm->mutex);
++}
++
+ const struct ieee80211_ops iwl_mvm_hw_ops = {
+ 	.tx = iwl_mvm_mac_tx,
+ 	.ampdu_action = iwl_mvm_mac_ampdu_action,
+@@ -4093,6 +4134,8 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
  
- 		dev_set_drvdata(&sdiodev->func[1]->dev, NULL);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index c07ad25..f3da32f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -294,7 +294,7 @@ struct sdpcmd_regs {
+ 	.event_callback = iwl_mvm_mac_event_callback,
  
- /* Register/deregister interrupt handler. */
- int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev);
--int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev);
-+void brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev);
++	.sync_rx_queues = iwl_mvm_sync_rx_queues,
++
+ 	CFG80211_TESTMODE_CMD(iwl_mvm_mac_testmode_cmd)
  
- /* sdio device register access interface */
- u8 brcmf_sdiod_regrb(struct brcmf_sdio_dev *sdiodev, u32 addr, int *ret);
+ #ifdef CONFIG_PM_SLEEP
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 85800ba..c7c8a62 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -633,6 +633,8 @@ struct iwl_mvm {
+ 
+ 	unsigned long status;
+ 
++	u32 queue_sync_cookie;
++	atomic_t queue_sync_counter;
+ 	/*
+ 	 * for beacon filtering -
+ 	 * currently only one interface can be supported
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 8bfb8e0..7c6a598 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -586,6 +586,8 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	skb_queue_head_init(&mvm->d0i3_tx);
+ 	init_waitqueue_head(&mvm->d0i3_exit_waitq);
+ 
++	atomic_set(&mvm->queue_sync_counter, 0);
++
+ 	SET_IEEE80211_DEV(mvm->hw, mvm->trans->dev);
+ 
+ 	/*
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 651604d..b4d9c42 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -406,6 +406,13 @@ void iwl_mvm_rx_queue_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb,
+ 	internal_notif = (void *)notif->payload;
+ 
+ 	switch (internal_notif->type) {
++	case IWL_MVM_RXQ_SYNC:
++		if (mvm->queue_sync_cookie == internal_notif->cookie)
++			atomic_dec(&mvm->queue_sync_counter);
++		else
++			WARN_ONCE(1,
++				  "Received expired RX queue sync message\n");
++		break;
+ 	case IWL_MVM_RXQ_NOTIF_DEL_BA:
+ 		/* TODO */
+ 		break;
 -- 
-1.9.1
+2.8.1
 
