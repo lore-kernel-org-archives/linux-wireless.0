@@ -1,58 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:38369 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758143AbcEFP5c (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35501 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751707AbcEKSzk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2016 11:57:32 -0400
-Received: by mail-wm0-f53.google.com with SMTP id g17so84945403wme.1
-        for <linux-wireless@vger.kernel.org>; Fri, 06 May 2016 08:57:32 -0700 (PDT)
+	Wed, 11 May 2016 14:55:40 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <87wpn7p6dv.fsf@kamboji.qca.qualcomm.com>
-References: <1462280620-13000-1-git-send-email-jjmeijer88@gmail.com>
- <87poszs8tc.fsf@kamboji.qca.qualcomm.com> <CAA+NYvTxA_u1kjwmY+VTnhK0G1b5cEcx2QA90fTTEkci4gWvcQ@mail.gmail.com>
- <87wpn7p6dv.fsf@kamboji.qca.qualcomm.com>
-From: Jaap Jan Meijer <jjmeijer88@gmail.com>
-Date: Fri, 6 May 2016 16:57:11 +0100
-Message-ID: <CAA+NYvS3ksstny_Lzw8mLu6=0uKO0VhjuwCyxS9YC-Pb+FaYJA@mail.gmail.com> (sfid-20160506_175735_572312_982B14B3)
-Subject: Re: [PATCH] Fix regression in Android due to rework .get_station() callback
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [v2] rtlwifi: Remove double check for cnt_after_linked
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160505150822.GA4151@udknight>
+To: wang yanqing <udknight@gmail.com>
+Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20160511185539.51E2E6133D@smtp.codeaurora.org> (sfid-20160511_205602_035820_CBB34444)
+Date: Wed, 11 May 2016 18:55:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2016-05-06 16:12 GMT+01:00 Kalle Valo <kvalo@codeaurora.org>:
-> Jaap Jan Meijer <jjmeijer88@gmail.com> writes:
->
->> Hi Kalle,
->>
->> Op vr 6 mei 2016 12:52 schreef Kalle Valo <kvalo@codeaurora.org>:
->>
->>
->>     This has multiple issues:
->>
->>     o Use your full name.
->>     o Use prefix "brcmfmac: " in the title.
->>
->>     o I can't find commit f654d13, is the commit id really correct?
->>     o Also check from SubmittingPatches how you should reference commit ids.
->>
->>
->>
->> Thank you for the feedback, I will send a reworked patch as soon as I get home
->> next week. Also I did this against v4.4.8 so I'll have to rebase it as well.
->>
->> I'm not sure what went wrong with the commit hash, its actually this commit:
->> 1f0dc59a6de93586fcfc04696a61946408ffc56a.
->
-> That commit id looks to be valid.
->
->> I see you did this commit, maybe you can check if this actually is the root
->> cause? I'm sure you have a lot more insight into this issue than I do.
->
-> Please CC the list so that everyone can join the discussion.
->
-> --
-> Kalle Valo
+wang yanqing <udknight@gmail.com> wrote:
+> rtl_lps_enter does two successive check for cnt_after_linked
+> to make sure some time has elapsed after linked. The second
+> check isn't necessary, because if cnt_after_linked is bigger
+> than 5, it is bigger than 2 of course!
+> 
+> This patch remove the second check code.
+> 
+> Signed-off-by: Wang YanQing <udknight@gmail.com>
 
-Sorry, I shouldn't do this on a mobile device.
+Thanks, 1 patch applied to wireless-drivers-next.git:
+
+976aff5fc94b rtlwifi: Remove double check for cnt_after_linked
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9025161/
+
