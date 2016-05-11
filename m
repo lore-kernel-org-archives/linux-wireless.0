@@ -1,44 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40650 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751801AbcEaKfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2016 06:35:32 -0400
-Message-ID: <1464690929.3076.25.camel@sipsolutions.net> (sfid-20160531_123536_960977_5BF5ACB8)
-Subject: Re: [PATCH] iw: support setting frame subtype and reason code when
- deleting station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Tue, 31 May 2016 12:35:29 +0200
-In-Reply-To: <CACna6rwWBxCBSmJ1yhb8-Ai-74XtiYh9VCQFGDS2En4n67kmwQ@mail.gmail.com> (sfid-20160531_120349_582115_395912FD)
-References: <1462376337-26902-1-git-send-email-zajec5@gmail.com>
-	 <1464687856.3076.3.camel@sipsolutions.net>
-	 <CACna6rwWBxCBSmJ1yhb8-Ai-74XtiYh9VCQFGDS2En4n67kmwQ@mail.gmail.com>
-	 (sfid-20160531_120349_582115_395912FD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:53947 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752447AbcEKRCn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2016 13:02:43 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 04/21] ath10k: rate-limit packet tx errors
+Date: Wed, 11 May 2016 10:02:16 -0700
+Message-Id: <1462986153-16318-5-git-send-email-greearb@candelatech.com> (sfid-20160511_190248_923610_3BBDA4ED)
+In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-05-31 at 12:03 +0200, Rafał Miłecki wrote:
-> On 31 May 2016 at 11:44, Johannes Berg <johannes@sipsolutions.net>
-> wrote:
-> > 
-> > Applied.
-> > 
-> > On Wed, 2016-05-04 at 17:38 +0200, Rafał Miłecki wrote:
-> > > 
-> > > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> > Oddly enough, patchwork corrupted *this*, but not the From: line
-> > ...
-> This patch was sent before patchwork update, I guess crazy things
-> could happen with old version and update could make things even more
-> weird.
-> 
-> Hopefully all further patches will be OK :)
-> 
+From: Ben Greear <greearb@candelatech.com>
 
-Yeah, indeed, I realized that when I reviewed your other patch (the
-channels one) which is perfectly correct in both places.
+When firmware crashes, stack can continue to send packets
+for a bit, and existing code was spamming logs.
 
-johannes
+So, rate-limit the error message for tx failures.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index cd3016d..42cac32 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3432,8 +3432,9 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
+ 	}
+ 
+ 	if (ret) {
+-		ath10k_warn(ar, "failed to transmit packet, dropping: %d\n",
+-			    ret);
++		if (net_ratelimit())
++			ath10k_warn(ar, "failed to transmit packet, dropping: %d\n",
++				    ret);
+ 		ieee80211_free_txskb(ar->hw, skb);
+ 	}
+ 
+-- 
+2.4.3
+
