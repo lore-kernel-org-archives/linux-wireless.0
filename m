@@ -1,95 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:29898 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752704AbcEPNh6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2016 09:37:58 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with
- the net-next tree
-Date: Mon, 16 May 2016 13:37:55 +0000
-Message-ID: <1463405875.25219.98.camel@intel.com> (sfid-20160516_153852_654071_BCC01173)
-References: <20160516101606.751f9613@canb.auug.org.au>
-	 <871t529mik.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <871t529mik.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:53950 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751930AbcEKRCq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2016 13:02:46 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 21/21] ath10k: Read dbglog buffers over register ping-pong.
+Date: Wed, 11 May 2016 10:02:33 -0700
+Message-Id: <1462986153-16318-22-git-send-email-greearb@candelatech.com> (sfid-20160511_190250_491910_6960236F)
+In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCk9uIE1vbiwgMjAxNi0wNS0xNiBhdCAxNjoxMCArMDMwMCwgS2FsbGUgVmFs
-byB3cm90ZToNCj4gKEFkZGluZyBMdWNhIGFuZCBsaW51eC13aXJlbGVzcykNCj4gDQo+IFN0ZXBo
-ZW4gUm90aHdlbGwgPHNmckBjYW5iLmF1dWcub3JnLmF1PiB3cml0ZXM6DQo+IA0KPiA+IA0KPiA+
-IFRvZGF5J3MgbGludXgtbmV4dCBtZXJnZSBvZiB0aGUgd2lyZWxlc3MtZHJpdmVycy1uZXh0IHRy
-ZWUgZ290IGENCj4gPiBjb25mbGljdCBpbjoNCj4gPiANCj4gPiDCoCBkcml2ZXJzL25ldC93aXJl
-bGVzcy9pbnRlbC9pd2x3aWZpL212bS90eC5jDQo+ID4gDQo+ID4gYmV0d2VlbiBjb21taXQ6DQo+
-ID4gDQo+ID4gwqAgOTA5YjI3ZjcwNjQzICgiTWVyZ2UNCj4gPiBnaXQ6Ly9naXQua2VybmVsLm9y
-Zy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvZGF2ZW0vbmV0IikNCj4gPiANCj4gPiBmcm9tIHRo
-ZSBuZXQtbmV4dCB0cmVlIGFuZCBjb21taXQ6DQo+ID4gDQo+ID4gwqAgYTUyNWQwZWFiMTdkICgi
-TWVyZ2UgdGFnICdpd2x3aWZpLWZvci1rYWxsZS0yMDE2LTA1LTA0JyBvZg0KPiA+IGdpdDovL2dp
-dC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2l3bHdpZmktDQo+
-ID4gZml4ZXMiKQ0KPiA+IA0KPiA+IGZyb20gdGhlIHdpcmVsZXNzLWRyaXZlcnMtbmV4dCB0cmVl
-Lg0KPiA+IA0KPiA+IEkgZml4ZWQgaXQgdXAgKEkgdGhpbmsgdGhhdCB0aGUgbmV0LW5leHQgdHJl
-ZSBtZXJnZSBsb3N0IHRoZQ0KPiA+IGNoYW5nZXMNCj4gPiB0byBpd2xfbXZtX3NldF90eF9jbWQo
-KSBhc3NvY2lhdGVkIHdpdGggY29tbWl0IDVjMDhiMGY1MDI2Zg0KPiA+ICgiaXdsd2lmaToNCj4g
-PiBtdm06IGRvbid0IG92ZXJyaWRlIHRoZSByYXRlIHdpdGggdGhlIEFNU0RVIGxlbiIpKSBhbmQg
-Y2FuIGNhcnJ5DQo+ID4gdGhlDQo+ID4gZml4IGFzIG5lY2Vzc2FyeS4NCj4gSG1tLCBJJ20gc3Rh
-cnRpbmcgdG8gc3VzcGVjdCBzb21ldGhpbmcgaXMgd3JvbmcuIEkgZGlkIGEgdGVzdCBtZXJnZQ0K
-PiBvZg0KPiBuZXQtbmV4dCBhbmQgd2lyZWxlc3MtZHJpdmVycy1uZXh0IGFuZCBnb3QgdGhpcyBh
-cyBhIGRpZmYgYWZ0ZXIgdGhlDQo+IG1lcmdlOg0KPiANCj4gLS0tIGEvZHJpdmVycy9uZXQvd2ly
-ZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0vdHguYw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVz
-cy9pbnRlbC9pd2x3aWZpL212bS90eC5jDQo+IEBAIC0yMTEsNyArMjExLDYgQEAgdm9pZCBpd2xf
-bXZtX3NldF90eF9jbWQoc3RydWN0IGl3bF9tdm0gKm12bSwNCj4gc3RydWN0IHNrX2J1ZmYgKnNr
-YiwNCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgc3Ry
-dWN0IGl3bF90eF9jbWQgKnR4X2NtZCwNCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgc3RydWN0IGllZWU4MDIxMV90eF9pbmZvICppbmZvLCB1OCBzdGFf
-aWQpDQo+IMKgew0KPiAtwqDCoMKgwqDCoMKgwqBzdHJ1Y3QgaWVlZTgwMjExX3R4X2luZm8gKnNr
-Yl9pbmZvID0gSUVFRTgwMjExX1NLQl9DQihza2IpOw0KPiDCoMKgwqDCoMKgwqDCoMKgc3RydWN0
-IGllZWU4MDIxMV9oZHIgKmhkciA9ICh2b2lkICopc2tiLT5kYXRhOw0KPiDCoMKgwqDCoMKgwqDC
-oMKgX19sZTE2IGZjID0gaGRyLT5mcmFtZV9jb250cm9sOw0KPiDCoMKgwqDCoMKgwqDCoMKgdTMy
-IHR4X2ZsYWdzID0gbGUzMl90b19jcHUodHhfY21kLT50eF9mbGFncyk7DQo+IEBAIC0yOTUsNyAr
-Mjk0LDcgQEAgdm9pZCBpd2xfbXZtX3NldF90eF9jbWQoc3RydWN0IGl3bF9tdm0gKm12bSwNCj4g
-c3RydWN0IHNrX2J1ZmYgKnNrYiwNCj4gwqDCoMKgwqDCoMKgwqDCoHR4X2NtZC0+dHhfZmxhZ3Mg
-PSBjcHVfdG9fbGUzMih0eF9mbGFncyk7DQo+IMKgwqDCoMKgwqDCoMKgwqAvKiBUb3RhbCAjIGJ5
-dGVzIHRvIGJlIHRyYW5zbWl0dGVkICovDQo+IMKgwqDCoMKgwqDCoMKgwqB0eF9jbWQtPmxlbiA9
-IGNwdV90b19sZTE2KCh1MTYpc2tiLT5sZW4gKw0KPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgKHVpbnRwdHJfdClza2JfaW5mby0+ZHJpdmVyX2RhdGFbMF0pOw0KPiArwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgKHVpbnRwdHJfdClpbmZvLT5kcml2ZXJfZGF0YVswXSk7DQo+
-IMKgwqDCoMKgwqDCoMKgwqB0eF9jbWQtPmxpZmVfdGltZSA9IGNwdV90b19sZTMyKFRYX0NNRF9M
-SUZFX1RJTUVfSU5GSU5JVEUpOw0KPiDCoMKgwqDCoMKgwqDCoMKgdHhfY21kLT5zdGFfaWQgPSBz
-dGFfaWQ7DQo+IA0KPiBCdXQgY29tbWl0IDVjMDhiMGY1MDI2ZiAoIml3bHdpZmk6IG12bTogZG9u
-J3Qgb3ZlcnJpZGUgdGhlIHJhdGUgd2l0aA0KPiB0aGUNCj4gQU1TRFUgbGVuIikgc3BlY2lmaWNh
-bGx5IGFkZGVkIHNrYl9pbmZvIHZhcmlhYmxlIHRvIHRoYXQgZnVuY3Rpb246DQo+IA0KPiBAQCAt
-MTA1LDYgKzEwNSw3IEBAIHZvaWQgaXdsX212bV9zZXRfdHhfY21kKHN0cnVjdCBpd2xfbXZtICpt
-dm0sDQo+IHN0cnVjdCBza19idWZmICpza2IsDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCBpd2xfdHhfY21kICp0eF9jbWQsDQo+IMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCBpZWVlODAy
-MTFfdHhfaW5mbyAqaW5mbywgdTggc3RhX2lkKQ0KPiDCoHsNCj4gK8KgwqDCoMKgwqDCoMKgc3Ry
-dWN0IGllZWU4MDIxMV90eF9pbmZvICpza2JfaW5mbyA9IElFRUU4MDIxMV9TS0JfQ0Ioc2tiKTsN
-Cj4gwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCBpZWVlODAyMTFfaGRyICpoZHIgPSAodm9pZCAqKXNr
-Yi0+ZGF0YTsNCj4gwqDCoMKgwqDCoMKgwqDCoF9fbGUxNiBmYyA9IGhkci0+ZnJhbWVfY29udHJv
-bDsNCj4gwqDCoMKgwqDCoMKgwqDCoHUzMiB0eF9mbGFncyA9IGxlMzJfdG9fY3B1KHR4X2NtZC0+
-dHhfZmxhZ3MpOw0KPiBAQCAtMTg1LDcgKzE4Niw3IEBAIHZvaWQgaXdsX212bV9zZXRfdHhfY21k
-KHN0cnVjdCBpd2xfbXZtICptdm0sDQo+IHN0cnVjdCBza19idWZmICpza2IsDQo+IMKgwqDCoMKg
-wqDCoMKgwqB0eF9jbWQtPnR4X2ZsYWdzID0gY3B1X3RvX2xlMzIodHhfZmxhZ3MpOw0KPiDCoMKg
-wqDCoMKgwqDCoMKgLyogVG90YWwgIyBieXRlcyB0byBiZSB0cmFuc21pdHRlZCAqLw0KPiDCoMKg
-wqDCoMKgwqDCoMKgdHhfY21kLT5sZW4gPSBjcHVfdG9fbGUxNigodTE2KXNrYi0+bGVuICsNCj4g
-LcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCh1aW50cHRyX3QpaW5mby0+ZHJpdmVyX2Rh
-dGFbMF0pOw0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgKHVpbnRwdHJfdClza2Jf
-aW5mby0+ZHJpdmVyX2RhdGFbMF0pOw0KPiDCoMKgwqDCoMKgwqDCoMKgdHhfY21kLT5uZXh0X2Zy
-YW1lX2xlbiA9IDA7DQo+IMKgwqDCoMKgwqDCoMKgwqB0eF9jbWQtPmxpZmVfdGltZSA9IGNwdV90
-b19sZTMyKFRYX0NNRF9MSUZFX1RJTUVfSU5GSU5JVEUpOw0KPiDCoMKgwqDCoMKgwqDCoMKgdHhf
-Y21kLT5zdGFfaWQgPSBzdGFfaWQ7DQo+IA0KPiBJIHdhc24ndCBleHBlY3RpbmcgdGhhdCBza2Jf
-aW5mbyB2YXJpYWJsZSBpcyByZW1vdmVkLiBEbyB3ZSBub3cgaGF2ZQ0KPiBtZXJnZSBkYW1hZ2Ug
-c29tZXdoZXJlPyBMdWNhLCB3aGF0IGRvIHlvdSB0aGluaz8NCg0KQXMgd2UgZGlzY3Vzc2VkIG9u
-IElSQywgaXQgc2VlbXMgdG8gbWUgdGhhdCB0aGVyZSB3YXMgYSBtZXJnZSBkYW1hZ2UNCndoZW4g
-RGF2ZSBtZXJnZWQgbmV0LmdpdCBpbnRvIG5ldC1uZXh0LmdpdCAoYXMgeW91IG1vc3RseSBmb3Vu
-ZCBvdXQgOykuDQoNCkknbSBub3Qgc3VyZSBob3cgdG8gc29sdmUgdGhhdCwgYnV0IEknbSBzdXJl
-IHlvdSBhbmQgRGF2ZSBjYW4gZmlndXJlDQpzb21ldGhpbmcgb3V0LiA6KSBQbGVhc2UgbGV0IG1l
-IGtub3cgaWYgeW91IG5lZWQgYW55IGhlbHAgd2l0aCBpdC4NCg0KLS0NCkNoZWVycywNCkx1Y2Eu
+From: Ben Greear <greearb@candelatech.com>
+
+This gives much better debugging capability when debugging
+crashes in the firmware that cause CE transport loss.
+
+(Such as AXI errors).
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/pci.c | 46 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 45 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 330c150..286b12d 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1532,7 +1532,7 @@ static int ath10k_ct_fw_crash_regs_harder(struct ath10k *ar,
+ 	return -EBUSY;
+ 
+ pingpong:
+-	ath10k_warn(ar, "Trying to read crash dump over pingpong registers.\n");
++	ath10k_warn(ar, "Trying to read crash dump over pingpong registers, len %d\n", len);
+ 	/* Firmware is trying to send us info it seems. */
+ 	for (q = 0; q<len; q++) {
+ 		reg_dump_values[q] = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS + SCRATCH_2_ADDRESS);
+@@ -1567,6 +1567,10 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
+ 				      hi_failure_state,
+ 				      REG_DUMP_COUNT_QCA988X * sizeof(__le32));
+ 	if (ret) {
++		__le32 *buffer;
++		int len = 1500; /* length in bytes for firmware dbglog buffer */
++		struct ath10k_fw_dbglog_buf dbuf;
++
+ 		ath10k_err(ar, "failed to read firmware dump area: %d\n", ret);
+ 
+ 		/* Try to read this directly over registers...only works on new
+@@ -1575,6 +1579,46 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
+ 		ret = ath10k_ct_fw_crash_regs_harder(ar, reg_dump_values, REG_DUMP_COUNT_QCA988X);
+ 		if (ret)
+ 			return;
++
++		/* Try to read the debug-log buffers as well. */
++		buffer = kzalloc(len, GFP_ATOMIC);
++
++		if (!buffer)
++			goto free_and_cont;
++
++		if (ath10k_ct_fw_crash_regs_harder(ar, (__le32 *)(&dbuf), sizeof(dbuf)/4))
++			goto free_and_cont;
++
++		/* wow, it worked! */
++		len = le32_to_cpu(dbuf.length);
++		if (len > 1500) {
++			ath10k_err(ar, "dbuf length is greater than 1500: %d\n", len);
++			len = 1500;
++		}
++		if (ath10k_ct_fw_crash_regs_harder(ar, buffer, len/4))
++			goto free_and_cont;
++
++		ath10k_dbg_save_fw_dbg_buffer(ar, buffer, len/4);
++		ath10k_dbg_print_fw_dbg_buffer(ar, buffer, len/4, KERN_ERR);
++
++		/* See if the second one is available */
++		if (ath10k_ct_fw_crash_regs_harder(ar, (__le32 *)(&dbuf), sizeof(dbuf)/4))
++			goto free_and_cont;
++
++		len = le32_to_cpu(dbuf.length);
++		if (len > 1500) {
++			ath10k_err(ar, "dbuf[2] length is greater than 1500: %d\n", len);
++			len = 1500;
++		}
++
++		if (ath10k_ct_fw_crash_regs_harder(ar, buffer, len/4))
++			goto free_and_cont;
++
++		ath10k_dbg_save_fw_dbg_buffer(ar, buffer, len/4);
++		ath10k_dbg_print_fw_dbg_buffer(ar, buffer, len/4, KERN_ERR);
++
++	free_and_cont:
++		kfree(buffer);
+ 	}
+ 
+ 	BUILD_BUG_ON(REG_DUMP_COUNT_QCA988X % 4);
+-- 
+2.4.3
+
