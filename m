@@ -1,153 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f194.google.com ([209.85.217.194]:33083 "EHLO
-	mail-lb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752543AbcEZCDX (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53950 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752569AbcEKRCo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2016 22:03:23 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] brcmfmac: rework function picking free BSS index
-Date: Thu, 26 May 2016 01:44:27 +0200
-Message-Id: <1464219876-13776-1-git-send-email-zajec5@gmail.com> (sfid-20160526_040348_891342_C6FDFC32)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 May 2016 13:02:44 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 13/21] ath10k: Document cycle count related counters.
+Date: Wed, 11 May 2016 10:02:25 -0700
+Message-Id: <1462986153-16318-14-git-send-email-greearb@candelatech.com> (sfid-20160511_192231_294360_EB75FBAE)
+In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The old implementation was overcomplicated and slightly bugged in some
-corner cases.
+From: Ben Greear <greearb@candelatech.com>
 
-Consider following state of BSS-es (limited to 6 for simplification):
-drvr->iflist[0]: { bsscfgidx:0, ndev->name:wlan1, }
-drvr->iflist[1]:  (null)
-drvr->iflist[2]: { bsscfgidx:2, ndev->name:wlan1-1, }
-drvr->iflist[3]: { bsscfgidx:3, ndev->name:wlan1-2, }
-drvr->iflist[4]:  (null)
-drvr->iflist[5]:  (null)
-In such case the next AP interface should bsscfgidx 4 (we don't use 1 as
-it's reserved for P2P).
+They are not necessarily named in an intuitive manner,
+so at least add some comments to help the next person.
 
-With old code the loop iterations were following:
-[ifidx = 0] [bsscfgidx = 2] [highest = 2]
-[ifidx = 1] [bsscfgidx = 2] [highest = 2] available = true
-[ifidx = 2] [bsscfgidx = 2] [highest = 2] bsscfgidx = highest + 1
-[ifidx = 3] [bsscfgidx = 3] [highest = 2] bsscfgidx = highest + 1
-[ifidx = 4] [bsscfgidx = 3] [highest = 2] available = true
-[ifidx = 5] [bsscfgidx = 3] [highest = 2] available = true
-There were 2 obvious problems:
-1) Having empty BSS at index 1 was resulting in available being always
-   set to true, even if we would run out of BSS-es.
-2) Calculated bsscfgidx was invalid (3 instead of 4) resulting in driver
-   not being able to create the 4th AP interface.
-
-New code is simpler, placed in file where it's really used, handles
-running out of free BSS-es and allows using 4 interfaces at the same
-time. It also looks for the first free BSS instead of one after the last
-in use. It works well with current driver (which doesn't allow deleting
-interfaces) and should be future proof (if we ever allow deleting).
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 17 ++++++++++++++-
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 ----------------------
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 -
- 3 files changed, 16 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h | 8 ++++----
+ drivers/net/wireless/ath/ath10k/wmi.h  | 8 ++++----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 3d09d23..d00eef8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -541,6 +541,21 @@ brcmf_cfg80211_update_proto_addr_mode(struct wireless_dev *wdev)
- 						ADDR_INDIRECT);
- }
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e7c228a..91b1f95 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -189,10 +189,10 @@ struct ath10k_fw_stats_pdev {
  
-+static int brcmf_get_first_free_bsscfgidx(struct brcmf_pub *drvr)
-+{
-+	int bsscfgidx;
-+
-+	for (bsscfgidx = 0; bsscfgidx < BRCMF_MAX_IFS; bsscfgidx++) {
-+		/* bsscfgidx 1 is reserved for legacy P2P */
-+		if (bsscfgidx == 1)
-+			continue;
-+		if (!drvr->iflist[bsscfgidx])
-+			return bsscfgidx;
-+	}
-+
-+	return -ENOMEM;
-+}
-+
- static int brcmf_cfg80211_request_ap_if(struct brcmf_if *ifp)
- {
- 	struct brcmf_mbss_ssid_le mbss_ssid_le;
-@@ -548,7 +563,7 @@ static int brcmf_cfg80211_request_ap_if(struct brcmf_if *ifp)
- 	int err;
- 
- 	memset(&mbss_ssid_le, 0, sizeof(mbss_ssid_le));
--	bsscfgidx = brcmf_get_next_free_bsscfgidx(ifp->drvr);
-+	bsscfgidx = brcmf_get_first_free_bsscfgidx(ifp->drvr);
- 	if (bsscfgidx < 0)
- 		return bsscfgidx;
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index b590499..6a76480 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -753,30 +753,6 @@ void brcmf_remove_interface(struct brcmf_if *ifp)
- 	brcmf_del_if(ifp->drvr, ifp->bsscfgidx);
- }
- 
--int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
--{
--	int ifidx;
--	int bsscfgidx;
--	bool available;
--	int highest;
--
--	available = false;
--	bsscfgidx = 2;
--	highest = 2;
--	for (ifidx = 0; ifidx < BRCMF_MAX_IFS; ifidx++) {
--		if (drvr->iflist[ifidx]) {
--			if (drvr->iflist[ifidx]->bsscfgidx == bsscfgidx)
--				bsscfgidx = highest + 1;
--			else if (drvr->iflist[ifidx]->bsscfgidx > highest)
--				highest = drvr->iflist[ifidx]->bsscfgidx;
--		} else {
--			available = true;
--		}
--	}
--
--	return available ? bsscfgidx : -ENOMEM;
--}
--
- #ifdef CONFIG_INET
- #define ARPOL_MAX_ENTRIES	8
- static int brcmf_inetaddr_changed(struct notifier_block *nb,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index 647d3cc..2a075c5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -217,7 +217,6 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
- struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
- 			      bool is_p2pdev, char *name, u8 *mac_addr);
- void brcmf_remove_interface(struct brcmf_if *ifp);
--int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr);
- void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 			  enum brcmf_netif_stop_reason reason, bool state);
- void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
+ 	/* PDEV stats */
+ 	s32 ch_noise_floor;
+-	u32 tx_frame_count;
+-	u32 rx_frame_count;
+-	u32 rx_clear_count;
+-	u32 cycle_count;
++	u32 tx_frame_count; /* Cycles spent transmitting frames */
++	u32 rx_frame_count; /* Cycles spent receiving frames */
++	u32 rx_clear_count; /* Total channel busy time, evidently */
++	u32 cycle_count; /* Total on-channel time */
+ 	u32 phy_err_count;
+ 	u32 chan_tx_power;
+ 	u32 ack_rx_bad;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 8d9b5b3..91c7df5 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4208,10 +4208,10 @@ struct wmi_10_2_stats_event {
+  */
+ struct wmi_pdev_stats_base {
+ 	__le32 chan_nf;
+-	__le32 tx_frame_count;
+-	__le32 rx_frame_count;
+-	__le32 rx_clear_count;
+-	__le32 cycle_count;
++	__le32 tx_frame_count; /* Cycles spent transmitting frames */
++	__le32 rx_frame_count; /* Cycles spent receiving frames */
++	__le32 rx_clear_count; /* Total channel busy time, evidently */
++	__le32 cycle_count; /* Total on-channel time */
+ 	__le32 phy_err_count;
+ 	__le32 chan_tx_pwr;
+ } __packed;
 -- 
-1.8.4.5
+2.4.3
 
