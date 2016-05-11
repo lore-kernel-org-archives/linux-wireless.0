@@ -1,75 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:55292 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932125AbcE0OTC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 10:19:02 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Xinming Hu <huxm@marvell.com>,
-	Javier Martinez Canillas <javier@osg.samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 4/8] mwifiex: consolidate mwifiex_sdio_probe() error paths
-Date: Fri, 27 May 2016 10:18:18 -0400
-Message-Id: <1464358702-19083-5-git-send-email-javier@osg.samsung.com> (sfid-20160527_162120_719886_24B497B6)
-In-Reply-To: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
-References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:53954 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098AbcEKRCn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2016 13:02:43 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 08/21] ath10k: make firmware text debug messages more verbose.
+Date: Wed, 11 May 2016 10:02:20 -0700
+Message-Id: <1462986153-16318-9-git-send-email-greearb@candelatech.com> (sfid-20160511_192232_032948_09D8C594)
+In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of duplicating part of the cleanups needed in case of an error
-in .probe callback, have a single error path and use goto labels as is
-common practice in the kernel.
+From: Ben Greear <greearb@candelatech.com>
 
-This also has the nice side effect that the cleanup operations are made
-in the inverse order of their counterparts, which was not the case for
-the mwifiex_add_card() error path.
+There are not many of these messages producted by the
+firmware, but they are generally fairly useful, so print
+them at info level.
 
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
+ drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 17 +++++++++++------
- 1 file changed, 11 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 81003fbe5025..7aeee88b858f 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -183,8 +183,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 1758b4a..d9e4b77 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4050,7 +4050,7 @@ void ath10k_wmi_event_debug_print(struct ath10k *ar, struct sk_buff *skb)
+ 	/* the last byte is always reserved for the null character */
+ 	buf[i] = '\0';
  
- 	if (ret) {
- 		pr_err("%s: failed to enable function\n", __func__);
--		kfree(card);
--		return ret;
-+		goto err_free;
- 	}
- 
- 	/* device tree node parsing and platform specific configuration*/
-@@ -195,12 +194,18 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 			       MWIFIEX_SDIO);
- 	if (ret) {
- 		pr_err("%s: add card failed\n", __func__);
--		kfree(card);
--		sdio_claim_host(func);
--		sdio_disable_func(func);
--		sdio_release_host(func);
-+		goto err_disable;
- 	}
- 
-+	return 0;
-+
-+err_disable:
-+	sdio_claim_host(func);
-+	sdio_disable_func(func);
-+	sdio_release_host(func);
-+err_free:
-+	kfree(card);
-+
- 	return ret;
+-	ath10k_dbg(ar, ATH10K_DBG_WMI_PRINT, "wmi print '%s'\n", buf);
++	ath10k_info(ar, "wmi print '%s'\n", buf);
  }
  
+ void ath10k_wmi_event_pdev_qvit(struct ath10k *ar, struct sk_buff *skb)
 -- 
-2.5.5
+2.4.3
 
