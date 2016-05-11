@@ -1,84 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39624 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932903AbcECNIP (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:38744 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276AbcEKHNx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 09:08:15 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  3 May 2016 16:08:07 +0300
-Message-Id: <1462280887-22917-1-git-send-email-luca@coelho.fi> (sfid-20160503_150819_034211_0F3A2103)
-Subject: [PATCH] cfg80211: allow to find vendor with OUI without specifying the OUI type
+	Wed, 11 May 2016 03:13:53 -0400
+From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+To: Archisman Maitra <archisman001@gmail.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 4/4] ath10k: Enable support for QCA9984
+Date: Wed, 11 May 2016 07:13:21 +0000
+Message-ID: <5732DB82.1020007@qti.qualcomm.com> (sfid-20160511_091357_298077_B775805F)
+References: <1461164356-9158-1-git-send-email-vthiagar@qti.qualcomm.com>
+	<1461164356-9158-5-git-send-email-vthiagar@qti.qualcomm.com>
+	<loom.20160509T113952-8@post.gmane.org>	<57306645.2060600@qti.qualcomm.com>
+	<CAHyQSvKPo2-Pc9PPVY-mHUK0TX93CzxnwMob125Aruqiem7J7Q@mail.gmail.com>
+	<878tzhg61o.fsf@kamboji.qca.qualcomm.com>
+ <CAHyQSvLpqRNmTL4Tvb7SDtKptzwejfbB7DeQC3NNMb=qqn06GA@mail.gmail.com>
+In-Reply-To: <CAHyQSvLpqRNmTL4Tvb7SDtKptzwejfbB7DeQC3NNMb=qqn06GA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-This allows to find vendor IE from a specific vendor.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/cfg80211.h | 4 ++--
- net/wireless/scan.c    | 8 ++++++--
- 2 files changed, 8 insertions(+), 4 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1e008cd..5f6e98ad 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3893,7 +3893,7 @@ const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len);
-  * cfg80211_find_vendor_ie - find vendor specific information element in data
-  *
-  * @oui: vendor OUI
-- * @oui_type: vendor-specific OUI type
-+ * @oui_type: vendor-specific OUI type (must be < 0xff), negative means any
-  * @ies: data consisting of IEs
-  * @len: length of data
-  *
-@@ -3905,7 +3905,7 @@ const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len);
-  * Note: There are no checks on the element length other than having to fit into
-  * the given data.
-  */
--const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
-+const u8 *cfg80211_find_vendor_ie(unsigned int oui, int oui_type,
- 				  const u8 *ies, int len);
- 
- /**
-diff --git a/net/wireless/scan.c b/net/wireless/scan.c
-index abdf651..ef2955c 100644
---- a/net/wireless/scan.c
-+++ b/net/wireless/scan.c
-@@ -364,13 +364,16 @@ const u8 *cfg80211_find_ie(u8 eid, const u8 *ies, int len)
- }
- EXPORT_SYMBOL(cfg80211_find_ie);
- 
--const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
-+const u8 *cfg80211_find_vendor_ie(unsigned int oui, int oui_type,
- 				  const u8 *ies, int len)
- {
- 	struct ieee80211_vendor_ie *ie;
- 	const u8 *pos = ies, *end = ies + len;
- 	int ie_oui;
- 
-+	if (WARN_ON(oui_type > 0xff))
-+		return NULL;
-+
- 	while (pos < end) {
- 		pos = cfg80211_find_ie(WLAN_EID_VENDOR_SPECIFIC, pos,
- 				       end - pos);
-@@ -386,7 +389,8 @@ const u8 *cfg80211_find_vendor_ie(unsigned int oui, u8 oui_type,
- 			goto cont;
- 
- 		ie_oui = ie->oui[0] << 16 | ie->oui[1] << 8 | ie->oui[2];
--		if (ie_oui == oui && ie->oui_type == oui_type)
-+		if (ie_oui == oui &&
-+		    (oui_type < 0 || ie->oui_type == oui_type))
- 			return pos;
- cont:
- 		pos += 2 + ie->len;
--- 
-2.8.0.rc3
-
+T24gV2VkbmVzZGF5IDExIE1heSAyMDE2IDEyOjIzIFBNLCBBcmNoaXNtYW4gTWFpdHJhIHdyb3Rl
+Og0KPiBIaSwNCj4NCj4gVGhhbmsgeW91IGZvciBwcm92aWRpbmcgbWUgdGhlIGJpbmFyaWVzLg0K
+Pg0KPiBJIGhhdmUgc3RhcnRlZCB3b3JraW5nIG9uIHRoZSBtYWM4MDIxMSBkcml2ZXIgYW5kIGhh
+dmUgc29tZSBxdWVzdGlvbnM6LQ0KPg0KPiBhKSBJIGFtIHdvcmtpbmcgd2l0aCBPcGVuV1JUIGZy
+YW1ld29yaywgd2hpY2ggdXNlcyBtYWM4MDIxMSBkcml2ZXIgZGF0ZWQgMS0xMC0yMDE2LiBJIGhh
+dmUgbm90aWNlZCB0aGF0IHRoZQ0KPiBwYXRjaCB0aGF0IHlvdSBoYXZlIHByb3ZpZGVkLCB1c2Vz
+IGEgZGlmZmVyZW50IG1hYzgwMjExIGRyaXZlci4gV291bGQgdGhhdCBiZSBhIHByb2JsZW0/DQo+
+DQo+IEV4Oi0NCj4gLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ICAg
+ICAgICAgIC5pZCA9IFFDQTk5ODRfSFdfMV8wX0RFVl9WRVJTSU9OLA0KPiAgICAgICAgICAuZGV2
+X2lkID0gUUNBOTk4NF8xXzBfREVWSUNFX0lELA0KPiAgICAgICAgICAubmFtZSA9ICJxY2E5OTg0
+L3FjYTk5OTQgaHcxLjAiLA0KPiAgICAgICAgICAucGF0Y2hfbG9hZF9hZGRyID0gUUNBOTk4NF9I
+V18xXzBfUEFUQ0hfTE9BRF9BRERSLA0KPiAgICAgICAgICAudWFydF9waW4gPSA3LA0KPiAgICAg
+ICAgICAub3RwX2V4ZV9wYXJhbSA9IDB4MDAwMDA3MDAsDQo+ICAgICAgICAgIC5jb250aW51b3Vz
+X2ZyYWdfZGVzYyA9IHRydWUsDQo+ICAgICAgICAgIC5jaGFubmVsX2NvdW50ZXJzX2ZyZXFfaHog
+PSAxNTAwMDAsDQo+ICAgICAgICAgIC5tYXhfcHJvYmVfcmVzcF9kZXNjX3RocmVzID0gMjQsDQo+
+ICAgICAgICAgIC5od180YWRkcl9wYWQgPSBBVEgxMEtfSFdfNEFERFJfUEFEX0JFRk9SRSwNCj4g
+ICAgICAgICAgLyoNCj4gICAgICAgICAgLnR4X2NoYWluX21hc2sgPSAweGYsDQo+ICAgICAgICAg
+IC5yeF9jaGFpbl9tYXNrID0gMHhmLA0KPiAgICAgICAgICAubWF4X3NwYXRpYWxfc3RyZWFtID0g
+NCwNCj4gICAgICAgICAgLmNhbF9kYXRhX2xlbiA9IDEyMDY0LCAqLw0KPiAgICAgICAgICAuZncg
+PSB7DQo+ICAgICAgICAgICAgICAuZGlyID0gUUNBOTk4NF9IV18xXzBfRldfRElSLA0KPiAgICAg
+ICAgICAgICAgLmZ3ID0gUUNBOTk4NF9IV18xXzBfRldfRklMRSwNCj4gLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KPiAgIEhlcmUsIHRoZSBjb21tZW50ZWQgb3V0IG1l
+bWJlcnMgYXJlIG5vdCBwcmVzZW50IGluIG15IGRyaXZlciBzb3VyY2UgY29kZS4NCj4NCj4gYikg
+ICJhdGgxMGtfcGNpIDAwMDE6MDE6MDAuMDogdW5hYmxlIHRvIHJlYWQgZnJvbSB0aGUgZGV2aWNl
+IiBUaGlzIGlzIGVuY291bnRlcmVkIGF0IHJ1bnRpbWUuIFVwb24NCj4gaW52ZXN0aWdhdGluZywg
+aXQgaXMgc2VlbiB0aGF0ICBhdGgxMGtfYm1pX2V4ZWN1dGUoYXIsIGFkZHJlc3MsIEJNSV9QQVJB
+TV9HRVRfRUVQUk9NX0JPQVJEX0lELCAmcmVzdWx0KQ0KPiByZXR1cm5zIDAgaW4gZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvYXRoL2F0aDEway9jb3JlLmMgd2hlbiBjYWxsZWQgZnJvbSBhdGgxMGtfY29y
+ZV9nZXRfYm9hcmRfaWRfZnJvbV9vdHANCj4NCj4gT24gYnJvd3NpbmcgdGhlIHNvdXJjZSBvZiB0
+aGUgZXJyb3IgSSBoYXZlIGZvdW5kIHRoZSBjb250cm9sIHRvIGdvIGZyb20gYXRoMTBrX2JtaV9l
+eGVjdXRlIC0tLS0+DQo+ICAgYXRoMTBrX3BjaV9oaWZfZXhjaGFuZ2VfYm1pX21zZyBpbiBkcml2
+ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL3BjaS5jIC0tLS0tLT4gIGF0aDEwa19wY2lfYm1p
+X3dhaXQgaW4NCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEway9wY2kuYyB3aGVyZSBp
+dCByZXR1cm5zICAtRVRJTUVET1VUDQoNCkNhbiB5b3UgcGxlYXNlIG1vdmUgdG8gdGhlIGxhdGVz
+dCBhdGgxMGsgc3JjIChhdGguZ2l0KSBhbmQgZW5hYmxlIDB4NDIwIChibWkgYW5kIGJvb3QgcmVs
+YXRlZCBkZWJ1ZykgYXRoMTBrIA0KZGVidWcgbWFzaz8uDQoNCllvdSBjYW4gZW5hYmxlIHRoZSBk
+ZWJ1ZyB0aHJvdWdoIG1vZHBhcmFtLCBpbnNtb2QgYXRoMTBrX2NvcmUgZGVidWdfbWFzaz0weDQy
+MC4NCg0KDQpWYXNhbnRoDQoNCg==
