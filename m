@@ -1,189 +1,435 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:48843 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752370AbcENSyS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 14 May 2016 14:54:18 -0400
-Subject: Re: [PATCH] mac80211: mesh: flush mesh paths early in sta destroy
-To: Bob Copeland <me@bobcopeland.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <1463248198-3926-1-git-send-email-me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org, fred.veldini@gmail.com
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <f898e5e4-e27a-ff5e-6deb-ed109f6ce168@nbd.name> (sfid-20160514_205439_808662_0D0128EF)
-Date: Sat, 14 May 2016 20:54:13 +0200
-MIME-Version: 1.0
-In-Reply-To: <1463248198-3926-1-git-send-email-me@bobcopeland.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail2.candelatech.com ([208.74.158.173]:53949 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752557AbcEKRCn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2016 13:02:43 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 05/21] ath10k: save firmware debug log messages.
+Date: Wed, 11 May 2016 10:02:17 -0700
+Message-Id: <1462986153-16318-6-git-send-email-greearb@candelatech.com> (sfid-20160511_192230_970496_8807AB7F)
+In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-05-14 19:49, Bob Copeland wrote:
-> Currently, the mesh paths associated with a nexthop station are cleaned
-> up in the following code path:
-> 
->     __sta_info_destroy_part1
->     synchronize_net()
->     __sta_info_destroy_part2
->      -> cleanup_single_sta
->        -> mesh_sta_cleanup
->          -> mesh_plink_deactivate
->            -> mesh_path_flush_by_nexthop
-> 
-> However, there are a couple of problems here:
-> 
-> 1) the paths aren't flushed at all if the MPM is running in userspace
->    (e.g. when using wpa_supplicant or authsae)
-> 
-> 2) there is no synchronize_rcu between removing the path and readers
->    accessing the nexthop, which means the following race is possible:
-> 
-> CPU0                            CPU1
-> ~~~~                            ~~~~
->                                 sta_info_destroy_part1()
->                                 synchronize_net()
-> rcu_read_lock()
-> mesh_nexthop_resolve()
->   mpath = mesh_path_lookup()
->                                 [...] -> mesh_path_flush_by_nexthop()
->   sta = rcu_dereference(
->     mpath->next_hop)
->                                 kfree(sta)
->   access sta <-- CRASH
-> 
-> Fix both of these by unconditionally flushing paths in part1 of sta
-> destroy.  The synchronize_net() will then happen after paths
-> are flushed, preventing mesh_path_lookup from finding a path with
-> the to-be-freed nexthop sta.
-> 
-> Also, add a new sta bit and a check in mesh_path_assign_nexthop() to
-> avoid adding it back between the flush and the synchronize_net().
-> 
-> Fixes this crash:
-> 
-> [  348.529295] BUG: unable to handle kernel paging request at 00020040
-> [  348.530014] IP: [<f929245d>] ieee80211_mps_set_frame_flags+0x40/0xaa [mac80211]
-> [  348.530014] *pde = 00000000
-> [  348.530014] Oops: 0000 [#1] PREEMPT
-> [  348.530014] Modules linked in: drbg ansi_cprng ctr ccm ppp_generic slhc ipt_MASQUERADE nf_nat_masquerade_ipv4 8021q ]
-> [  348.530014] CPU: 0 PID: 20597 Comm: wget Tainted: G           O 4.6.0-rc5-wt=V1 #1
-> [  348.530014] Hardware name: To Be Filled By O.E.M./To be filled by O.E.M., BIOS 080016  11/07/2014
-> [  348.530014] task: f64fa280 ti: f4f9c000 task.ti: f4f9c000
-> [  348.530014] EIP: 0060:[<f929245d>] EFLAGS: 00010246 CPU: 0
-> [  348.530014] EIP is at ieee80211_mps_set_frame_flags+0x40/0xaa [mac80211]
-> [  348.530014] EAX: f4ce63e0 EBX: 00000088 ECX: f3788416 EDX: 00020008
-> [  348.530014] ESI: 00000000 EDI: 00000088 EBP: f6409a4c ESP: f6409a40
-> [  348.530014]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-> [  348.530014] CR0: 80050033 CR2: 00020040 CR3: 33190000 CR4: 00000690
-> [  348.530014] Stack:
-> [  348.530014]  00000000 f4ce63e0 f5f9bd80 f6409a64 f9291d80 0000ce67 f5d51e00 f4ce63e0
-> [  348.530014]  f3788416 f6409a80 f9291dc1 f4ce8320 f4ce63e0 f5d51e00 f4ce63e0 f4ce8320
-> [  348.530014]  f6409a98 f9277f6f 00000000 00000000 0000007c 00000000 f6409b2c f9278dd1
-> [  348.530014] Call Trace:
-> [  348.530014]  [<f9291d80>] mesh_nexthop_lookup+0xbb/0xc8 [mac80211]
-> [  348.530014]  [<f9291dc1>] mesh_nexthop_resolve+0x34/0xd8 [mac80211]
-> [  348.530014]  [<f9277f6f>] ieee80211_xmit+0x92/0xc1 [mac80211]
-> [  348.530014]  [<f9278dd1>] __ieee80211_subif_start_xmit+0x807/0x83c [mac80211]
-> [  348.530014]  [<c04df012>] ? sch_direct_xmit+0xd7/0x1b3
-> [  348.530014]  [<c022a8c6>] ? __local_bh_enable_ip+0x5d/0x7b
-> [  348.530014]  [<f956870c>] ? nf_nat_ipv4_out+0x4c/0xd0 [nf_nat_ipv4]
-> [  348.530014]  [<f957e036>] ? iptable_nat_ipv4_fn+0xf/0xf [iptable_nat]
-> [  348.530014]  [<c04c6f45>] ? netif_skb_features+0x14d/0x30a
-> [  348.530014]  [<f9278e10>] ieee80211_subif_start_xmit+0xa/0xe [mac80211]
-> [  348.530014]  [<c04c769c>] dev_hard_start_xmit+0x1f8/0x267
-> [  348.530014]  [<c04c7261>] ?  validate_xmit_skb.isra.120.part.121+0x10/0x253
-> [  348.530014]  [<c04defc6>] sch_direct_xmit+0x8b/0x1b3
-> [  348.530014]  [<c04c7a9c>] __dev_queue_xmit+0x2c8/0x513
-> [  348.530014]  [<c04c7cfb>] dev_queue_xmit+0xa/0xc
-> [  348.530014]  [<f91bfc7a>] batadv_send_skb_packet+0xd6/0xec [batman_adv]
-> [  348.530014]  [<f91bfdc4>] batadv_send_unicast_skb+0x15/0x4a [batman_adv]
-> [  348.530014]  [<f91b5938>] batadv_dat_send_data+0x27e/0x310 [batman_adv]
-> [  348.530014]  [<f91c30b5>] ? batadv_tt_global_hash_find.isra.11+0x8/0xa [batman_adv]
-> [  348.530014]  [<f91b63f3>] batadv_dat_snoop_outgoing_arp_request+0x208/0x23d [batman_adv]
-> [  348.530014]  [<f91c0cd9>] batadv_interface_tx+0x206/0x385 [batman_adv]
-> [  348.530014]  [<c04c769c>] dev_hard_start_xmit+0x1f8/0x267
-> [  348.530014]  [<c04c7261>] ?  validate_xmit_skb.isra.120.part.121+0x10/0x253
-> [  348.530014]  [<c04defc6>] sch_direct_xmit+0x8b/0x1b3
-> [  348.530014]  [<c04c7a9c>] __dev_queue_xmit+0x2c8/0x513
-> [  348.530014]  [<f80cbd2a>] ? igb_xmit_frame+0x57/0x72 [igb]
-> [  348.530014]  [<c04c7cfb>] dev_queue_xmit+0xa/0xc
-> [  348.530014]  [<f843a326>] br_dev_queue_push_xmit+0xeb/0xfb [bridge]
-> [  348.530014]  [<f843a35f>] br_forward_finish+0x29/0x74 [bridge]
-> [  348.530014]  [<f843a23b>] ? deliver_clone+0x3b/0x3b [bridge]
-> [  348.530014]  [<f843a714>] __br_forward+0x89/0xe7 [bridge]
-> [  348.530014]  [<f843a336>] ? br_dev_queue_push_xmit+0xfb/0xfb [bridge]
-> [  348.530014]  [<f843a234>] deliver_clone+0x34/0x3b [bridge]
-> [  348.530014]  [<f843a68b>] ? br_flood+0x95/0x95 [bridge]
-> [  348.530014]  [<f843a66d>] br_flood+0x77/0x95 [bridge]
-> [  348.530014]  [<f843a809>] br_flood_forward+0x13/0x1a [bridge]
-> [  348.530014]  [<f843a68b>] ? br_flood+0x95/0x95 [bridge]
-> [  348.530014]  [<f843b877>] br_handle_frame_finish+0x392/0x3db [bridge]
-> [  348.530014]  [<c04e9b2b>] ? nf_iterate+0x2b/0x6b
-> [  348.530014]  [<f843baa6>] br_handle_frame+0x1e6/0x240 [bridge]
-> [  348.530014]  [<f843b4e5>] ? br_handle_local_finish+0x6a/0x6a [bridge]
-> [  348.530014]  [<c04c4ba0>] __netif_receive_skb_core+0x43a/0x66b
-> [  348.530014]  [<f843b8c0>] ? br_handle_frame_finish+0x3db/0x3db [bridge]
-> [  348.530014]  [<c023cea4>] ? resched_curr+0x19/0x37
-> [  348.530014]  [<c0240707>] ? check_preempt_wakeup+0xbf/0xfe
-> [  348.530014]  [<c0255dec>] ? ktime_get_with_offset+0x5c/0xfc
-> [  348.530014]  [<c04c4fc1>] __netif_receive_skb+0x47/0x55
-> [  348.530014]  [<c04c57ba>] netif_receive_skb_internal+0x40/0x5a
-> [  348.530014]  [<c04c61ef>] napi_gro_receive+0x3a/0x94
-> [  348.530014]  [<f80ce8d5>] igb_poll+0x6fd/0x9ad [igb]
-> [  348.530014]  [<c0242bd8>] ? swake_up_locked+0x14/0x26
-> [  348.530014]  [<c04c5d29>] net_rx_action+0xde/0x250
-> [  348.530014]  [<c022a743>] __do_softirq+0x8a/0x163
-> [  348.530014]  [<c022a6b9>] ? __hrtimer_tasklet_trampoline+0x19/0x19
-> [  348.530014]  [<c021100f>] do_softirq_own_stack+0x26/0x2c
-> [  348.530014]  <IRQ>
-> [  348.530014]  [<c022a957>] irq_exit+0x31/0x6f
-> [  348.530014]  [<c0210eb2>] do_IRQ+0x8d/0xa0
-> [  348.530014]  [<c058152c>] common_interrupt+0x2c/0x40
-> [  348.530014] Code: e7 8c 00 66 81 ff 88 00 75 12 85 d2 75 0e b2 c3 b8 83 e9 29 f9 e8 a7 5f f9 c6 eb 74 66 81 e3 8c 005
-> [  348.530014] EIP: [<f929245d>] ieee80211_mps_set_frame_flags+0x40/0xaa [mac80211] SS:ESP 0068:f6409a40
-> [  348.530014] CR2: 0000000000020040
-> [  348.530014] ---[ end trace 48556ac26779732e ]---
-> [  348.530014] Kernel panic - not syncing: Fatal exception in interrupt
-> [  348.530014] Kernel Offset: disabled
-> 
-> Cc: stable@vger.kernel.org
-> Reported-by: Fred Veldini <fred.veldini@gmail.com>
-> Tested-by: Fred Veldini <fred.veldini@gmail.com>
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
-> From git history, this appears to go back to earliest commits adding
-> authsae support.  I reproduced in a 4.4 kernel, which predates all of
-> the mesh pathtable rework, though it is harder to hit there than in
-> the current code.
-> 
-> This is slightly different from the version Fred tested (CCed) --
-> the version I sent him didn't have the BLOCK_MPATH part, but that
-> seems necessary to me to prevent re-adding in hwmp_route_info_get().
-> But I can reproduce the above crash and this patch fixes it for
-> me.
-> ---
->  net/mac80211/mesh_pathtbl.c |  4 ++++
->  net/mac80211/sta_info.c     | 10 ++++++++++
->  net/mac80211/sta_info.h     |  2 ++
->  3 files changed, 16 insertions(+)
-> 
-> diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-> index c8b8ccc370eb..65ecd3746c3b 100644
-> --- a/net/mac80211/sta_info.h
-> +++ b/net/mac80211/sta_info.h
-> @@ -70,6 +70,7 @@
->   * @WLAN_STA_MPSP_RECIPIENT: local STA is recipient of a MPSP.
->   * @WLAN_STA_PS_DELIVER: station woke up, but we're still blocking TX
->   *	until pending frames are delivered
-> + * @WLAN_STA_BLOCK_MPATH: block adding this station as a mesh path
->   *
->   * @NUM_WLAN_STA_FLAGS: number of defined flags
->   */
-> @@ -100,6 +101,7 @@ enum ieee80211_sta_info_flags {
->  	WLAN_STA_MPSP_OWNER,
->  	WLAN_STA_MPSP_RECIPIENT,
->  	WLAN_STA_PS_DELIVER,
-> +	WLAN_STA_BLOCK_MPATH,
-I think this flag needs to be added to sta_flag_names in debugfs_sta.c
+From: Ben Greear <greearb@candelatech.com>
 
-- Felix
+They may be dumped through the firmware dump debugfs
+file.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h  | 18 ++++++
+ drivers/net/wireless/ath/ath10k/debug.c | 97 +++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/debug.h |  6 ++
+ drivers/net/wireless/ath/ath10k/hw.h    | 21 +++++++
+ drivers/net/wireless/ath/ath10k/pci.c   | 99 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c   | 13 +++++
+ drivers/net/wireless/ath/ath10k/wmi.h   |  6 ++
+ 7 files changed, 258 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1379054..7f9f460 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -404,6 +404,22 @@ struct ath10k_vif_iter {
+ 	struct ath10k_vif *arvif;
+ };
+ 
++/* This will store at least the last 128 entries.  Each dbglog message
++ * is a max of 7 32-bit integers in length, but the length can be less
++ * than that as well.
++ */
++#define ATH10K_DBGLOG_DATA_LEN (128 * 7)
++struct ath10k_dbglog_entry_storage {
++	u32 head_idx; /* Where to write next chunk of data */
++	u32 tail_idx; /* Index of first msg */
++	__le32 data[ATH10K_DBGLOG_DATA_LEN];
++};
++
++/* Just enough info to decode firmware debug-log argument length */
++#define DBGLOG_NUM_ARGS_OFFSET           26
++#define DBGLOG_NUM_ARGS_MASK             0xFC000000 /* Bit 26-31 */
++#define DBGLOG_NUM_ARGS_MAX              5 /* firmware tool chain limit */
++
+ /* used for crash-dump storage, protected by data-lock */
+ struct ath10k_fw_crash_data {
+ 	bool crashed_since_read;
+@@ -437,6 +453,8 @@ struct ath10k_debug {
+ 	u32 reg_addr;
+ 	u32 nf_cal_period;
+ 
++	struct ath10k_dbglog_entry_storage dbglog_entry_data;
++
+ 	struct ath10k_fw_crash_data *fw_crash_data;
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index d552a4a..1739687 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -35,10 +35,11 @@
+ /**
+  * enum ath10k_fw_crash_dump_type - types of data in the dump file
+  * @ATH10K_FW_CRASH_DUMP_REGDUMP: Register crash dump in binary format
++ * @ATH10K_FW_ERROR_DUMP_DBGLOG:  Recent firmware debug log entries
+  */
+ enum ath10k_fw_crash_dump_type {
+ 	ATH10K_FW_CRASH_DUMP_REGISTERS = 0,
+-
++	ATH10K_FW_CRASH_DUMP_DBGLOG = 1,
+ 	ATH10K_FW_CRASH_DUMP_MAX,
+ };
+ 
+@@ -109,6 +110,12 @@ struct ath10k_dump_file_data {
+ 	u8 data[0];
+ } __packed;
+ 
++struct ath10k_dbglog_entry_storage_user {
++	__le32 head_idx; /* Where to write next chunk of data */
++	__le32 tail_idx; /* Index of first msg */
++	__le32 data[ATH10K_DBGLOG_DATA_LEN];
++} __packed;
++
+ void ath10k_info(struct ath10k *ar, const char *fmt, ...)
+ {
+ 	struct va_format vaf = {
+@@ -697,7 +704,6 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
+ 
+ 	lockdep_assert_held(&ar->data_lock);
+ 
+-	crash_data->crashed_since_read = true;
+ 	uuid_le_gen(&crash_data->uuid);
+ 	getnstimeofday(&crash_data->timestamp);
+ 
+@@ -705,17 +711,87 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
+ }
+ EXPORT_SYMBOL(ath10k_debug_get_new_fw_crash_data);
+ 
++static void ath10k_dbg_drop_dbg_buffer(struct ath10k *ar)
++{
++	/* Find next message boundary */
++	u32 lg_hdr;
++	int acnt;
++	int tail_idx = ar->debug.dbglog_entry_data.tail_idx;
++	int h_idx = (tail_idx + 1) % ATH10K_DBGLOG_DATA_LEN;
++
++	lockdep_assert_held(&ar->data_lock);
++
++	/* Log header is second 32-bit word */
++	lg_hdr = le32_to_cpu(ar->debug.dbglog_entry_data.data[h_idx]);
++
++	acnt = (lg_hdr & DBGLOG_NUM_ARGS_MASK) >> DBGLOG_NUM_ARGS_OFFSET;
++
++	if (acnt > DBGLOG_NUM_ARGS_MAX) {
++		/* Some sort of corruption it seems, recover as best we can. */
++		ath10k_err(ar, "invalid dbglog arg-count: %i %i %i\n",
++			   acnt, ar->debug.dbglog_entry_data.tail_idx,
++			   ar->debug.dbglog_entry_data.head_idx);
++		ar->debug.dbglog_entry_data.tail_idx =
++			ar->debug.dbglog_entry_data.head_idx;
++		return;
++	}
++
++	/* Move forward over the args and the two header fields */
++	ar->debug.dbglog_entry_data.tail_idx =
++		(tail_idx + acnt + 2) % ATH10K_DBGLOG_DATA_LEN;
++}
++
++void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar, __le32 *buffer, int len)
++{
++	int i;
++	int z;
++
++	lockdep_assert_held(&ar->data_lock);
++
++	z = ar->debug.dbglog_entry_data.head_idx;
++
++	/* Don't save any new logs until user-space reads this. */
++	if (ar->debug.fw_crash_data &&
++	    ar->debug.fw_crash_data->crashed_since_read) {
++		ath10k_warn(ar, "dropping dbg buffer due to crash since read\n");
++		return;
++	}
++
++	for (i = 0; i < len; i++) {
++		ar->debug.dbglog_entry_data.data[z] = buffer[i];
++		z++;
++		if (z >= ATH10K_DBGLOG_DATA_LEN)
++			z = 0;
++
++		/* If we are about to over-write an old message, move the
++		 * tail_idx to the next message.  If idx's are same, we
++		 * are empty.
++		 */
++		if (z == ar->debug.dbglog_entry_data.tail_idx)
++			ath10k_dbg_drop_dbg_buffer(ar);
++
++		ar->debug.dbglog_entry_data.head_idx = z;
++	}
++}
++EXPORT_SYMBOL(ath10k_dbg_save_fw_dbg_buffer);
++
+ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ {
+ 	struct ath10k_fw_crash_data *crash_data = ar->debug.fw_crash_data;
+ 	struct ath10k_dump_file_data *dump_data;
+ 	struct ath10k_tlv_dump_data *dump_tlv;
++	struct ath10k_dbglog_entry_storage_user *dbglog_storage;
+ 	int hdr_len = sizeof(*dump_data);
+ 	unsigned int len, sofar = 0;
+ 	unsigned char *buf;
++	int tmp;
++
++	BUILD_BUG_ON(sizeof(struct ath10k_dbglog_entry_storage) !=
++		     sizeof(struct ath10k_dbglog_entry_storage_user));
+ 
+ 	len = hdr_len;
+ 	len += sizeof(*dump_tlv) + sizeof(crash_data->registers);
++	len += sizeof(*dump_tlv) + sizeof(ar->debug.dbglog_entry_data);
+ 
+ 	sofar += hdr_len;
+ 
+@@ -774,8 +850,25 @@ static struct ath10k_dump_file_data *ath10k_build_dump_file(struct ath10k *ar)
+ 	       sizeof(crash_data->registers));
+ 	sofar += sizeof(*dump_tlv) + sizeof(crash_data->registers);
+ 
++	/* Gather dbg-log */
++	tmp = sizeof(ar->debug.dbglog_entry_data);
++	dump_tlv = (struct ath10k_tlv_dump_data *)(buf + sofar);
++	dump_tlv->type = cpu_to_le32(ATH10K_FW_CRASH_DUMP_DBGLOG);
++	dump_tlv->tlv_len = cpu_to_le32(tmp);
++	dbglog_storage =
++		(struct ath10k_dbglog_entry_storage_user *)(dump_tlv->tlv_data);
++	memcpy(dbglog_storage->data, ar->debug.dbglog_entry_data.data,
++	       sizeof(dbglog_storage->data));
++	dbglog_storage->head_idx =
++		cpu_to_le32(ar->debug.dbglog_entry_data.head_idx);
++	dbglog_storage->tail_idx =
++		cpu_to_le32(ar->debug.dbglog_entry_data.tail_idx);
++
++	sofar += sizeof(*dump_tlv) + tmp;
++
+ 	ar->debug.fw_crash_data->crashed_since_read = false;
+ 
++	WARN_ON(sofar != len);
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ 	return dump_data;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 75c89e3..3062948 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -94,7 +94,13 @@ int ath10k_debug_get_et_sset_count(struct ieee80211_hw *hw,
+ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 			       struct ieee80211_vif *vif,
+ 			       struct ethtool_stats *stats, u64 *data);
++
++void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar, __le32 *buffer, int len);
+ #else
++static inline void ath10k_dbg_save_fw_dbg_buffer(struct ath10k *ar,
++						 __le32 *buffer, int len)
++{
++}
+ static inline int ath10k_debug_start(struct ath10k *ar)
+ {
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index aedd898..5bbef4b 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -681,4 +681,25 @@ enum ath10k_hw_4addr_pad {
+ 
+ #define RTC_STATE_V_GET(x) (((x) & RTC_STATE_V_MASK) >> RTC_STATE_V_LSB)
+ 
++/* Target debug log related defines and structs */
++
++/* Target is 32-bit CPU, so we just use u32 for
++ * the pointers.  The memory space is relative to the
++ * target, not the host.  Values are converted to host
++ * byte order when reading from firmware.
++ */
++struct ath10k_fw_dbglog_buf {
++	__le32 next; /* pointer to ath10k_fw_dbglog_buf. */
++	__le32 buffer; /* pointer to u8 buffer */
++	__le32 bufsize;
++	__le32 length;
++	__le32 count;
++	__le32 free;
++} __packed;
++
++struct ath10k_fw_dbglog_hdr {
++	__le32 dbuf; /* pointer to ath10k_fw_dbglog_buf */
++	__le32 dropped;
++} __packed;
++
+ #endif /* _HW_H_ */
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 8133d7b..16e32d0 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1439,6 +1439,102 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
+ 		crash_data->registers[i] = reg_dump_values[i];
+ }
+ 
++/**
++ * Read any not-yet-delivered debug-log buffers on the target
++ * and save them to storage in the host driver.  Typically
++ * only done on crash, as firmware will normally deliver
++ * logs periodically on its own if it is functioning
++ * properly.
++ */
++static void ath10k_pci_dump_dbglog(struct ath10k *ar)
++{
++	struct ath10k_fw_dbglog_hdr dbg_hdr;
++	u32 dbufp; /* pointer in target memory space */
++	struct ath10k_fw_dbglog_buf dbuf;
++	u8 *buffer;
++	int ret;
++	int i;
++	int len;
++
++	ret = ath10k_pci_diag_read_hi(ar, &dbg_hdr, hi_dbglog_hdr,
++				      sizeof(dbg_hdr));
++	if (ret != 0) {
++		ath10k_err(ar, "failed to dump debug log area: %d\n", ret);
++		return;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_PCI,
++		   "debug log header, dbuf: 0x%x  dropped: %i\n",
++		   le32_to_cpu(dbg_hdr.dbuf), le32_to_cpu(dbg_hdr.dropped));
++	dbufp = le32_to_cpu(dbg_hdr.dbuf);
++
++	/* i is for logging purposes and sanity check in case firmware buffers
++	 * are corrupted and will not properly terminate the list.
++	 * In standard firmware, it appears there are no more than 2
++	 * buffers, so 10 should be safe upper limit even if firmware
++	 * changes quite a bit.
++	 */
++	i = 0;
++	while (dbufp && i < 10) {
++		ret = ath10k_pci_diag_read_mem(ar, dbufp, &dbuf, sizeof(dbuf));
++		if (ret != 0) {
++			ath10k_err(ar, "failed to read debug log area: %d (addr 0x%x)\n",
++				   ret, dbufp);
++			return;
++		}
++
++		len = le32_to_cpu(dbuf.length);
++
++		ath10k_dbg(ar, ATH10K_DBG_PCI,
++			   "[%i] next: 0x%x buf: 0x%x sz: %i len: %i count: %i free: %i\n",
++			   i, le32_to_cpu(dbuf.next), le32_to_cpu(dbuf.buffer),
++			   le32_to_cpu(dbuf.bufsize), len,
++			   le32_to_cpu(dbuf.count), le32_to_cpu(dbuf.free));
++		if (dbuf.buffer == 0 || len == 0)
++			goto next;
++
++		/* Pick arbitrary upper bound in case firmware is corrupted for
++		 * whatever reason.
++		 */
++		if (len > 4096) {
++			ath10k_err(ar,
++				   "debuglog buf length is out of bounds: %d\n",
++				   len);
++			/* Do not trust the next pointer either... */
++			return;
++		}
++
++		buffer = kmalloc(len, GFP_ATOMIC);
++
++		if (!buffer)
++			goto next;
++
++		ret = ath10k_pci_diag_read_mem(ar, le32_to_cpu(dbuf.buffer),
++					       buffer, len);
++		if (ret != 0) {
++			ath10k_err(ar, "failed to read debug log buffer: %d (addr 0x%x)\n",
++				   ret, le32_to_cpu(dbuf.buffer));
++			kfree(buffer);
++			return;
++		}
++
++		WARN_ON(len & 0x3);
++
++		ath10k_dbg_save_fw_dbg_buffer(ar, (__le32 *)(buffer), len >> 2);
++		kfree(buffer);
++
++next:
++		dbufp = le32_to_cpu(dbuf.next);
++		if (dbufp == le32_to_cpu(dbg_hdr.dbuf)) {
++			/* It is a circular buffer it seems, bail if next
++			 * is head
++			 */
++			break;
++		}
++		i++;
++	} /* While we have a debug buffer to read */
++}
++
+ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ {
+ 	struct ath10k_fw_crash_data *crash_data;
+@@ -1458,6 +1554,9 @@ static void ath10k_pci_fw_crashed_dump(struct ath10k *ar)
+ 	ath10k_err(ar, "firmware crashed! (uuid %s)\n", uuid);
+ 	ath10k_print_driver_info(ar);
+ 	ath10k_pci_dump_registers(ar, crash_data);
++	ath10k_pci_dump_dbglog(ar);
++	if (crash_data)
++		crash_data->crashed_since_read = true;
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 621019f..1758b4a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2492,10 +2492,23 @@ void ath10k_wmi_event_echo(struct ath10k *ar, struct sk_buff *skb)
+ 
+ int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
+ {
++	struct ath10k_fw_dbglog_report *ev;
++
+ 	ath10k_dbg(ar, ATH10K_DBG_WMI, "wmi event debug mesg len %d\n",
+ 		   skb->len);
+ 
+ 	trace_ath10k_wmi_dbglog(ar, skb->data, skb->len);
++	ev = (struct ath10k_fw_dbglog_report *)skb->data;
++
++	spin_lock_bh(&ar->data_lock);
++	/* First 4 bytes are a messages-dropped-due-to-overflow counter,
++	 * and should not be recorded in the dbglog buffer, so we skip
++	 * them.
++	 */
++	WARN_ON(skb->len & 0x3);
++	ath10k_dbg_save_fw_dbg_buffer(ar, ev->messages,
++				      (skb->len - 4)/sizeof(__le32));
++	spin_unlock_bh(&ar->data_lock);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index db25535..8d9b5b3 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -6262,6 +6262,12 @@ struct wmi_svc_rdy_ev_arg {
+ 	const struct wlan_host_mem_req *mem_reqs[WMI_MAX_MEM_REQS];
+ };
+ 
++struct ath10k_fw_dbglog_report {
++	__le32 dropped_count;
++	__le32 messages[];
++} __packed;
++
++
+ struct wmi_rdy_ev_arg {
+ 	__le32 sw_version;
+ 	__le32 abi_version;
+-- 
+2.4.3
 
