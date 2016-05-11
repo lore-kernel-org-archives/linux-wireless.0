@@ -1,386 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:34055 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751502AbcEMDW0 convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53954 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752279AbcEKRCp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2016 23:22:26 -0400
-Received: by mail-oi0-f50.google.com with SMTP id k142so151703330oib.1
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2016 20:22:26 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <5734FD7E.7010307@broadcom.com>
-References: <1462430663-9448-1-git-send-email-wnhuang@chromium.org>
-	<1462464478.23962.12.camel@redhat.com>
-	<CABicQ-VWrRG+0rEEF0GxUTPixSbkA18Gq4b5hbgph60SoEQ+2Q@mail.gmail.com>
-	<CABicQ-XWm=Rxdj3at4+-0OAWn=T7qOTWEaTK=JY7LDOmcN87yw@mail.gmail.com>
-	<1462991620.22404.5.camel@redhat.com>
-	<CABicQ-UeU-8PPdK9Je51j_KD-BH8G1HuOjo0yZLcNBQgtJsyTA@mail.gmail.com>
-	<5734FD7E.7010307@broadcom.com>
-Date: Fri, 13 May 2016 11:22:25 +0800
-Message-ID: <CABicQ-V0gFyOXWZDCwve_yy6VvcLyZN8tQX2H6htJa2QyUo6Ow@mail.gmail.com> (sfid-20160513_052251_668330_519E8E6D)
-Subject: Re: [PATCH] cfg80211/nl80211: add wifi tx power mode switching support
-From: Wei-Ning Huang <wnhuang@google.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Dan Williams <dcbw@redhat.com>,
-	Linux-Wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sameer Nanda <snanda@chromium.org>,
-	Todd Broch <tbroch@chromium.org>, davem@davemloft.net,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 11 May 2016 13:02:45 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 16/21] ath10k: Support 32+ stations.
+Date: Wed, 11 May 2016 10:02:28 -0700
+Message-Id: <1462986153-16318-17-git-send-email-greearb@candelatech.com> (sfid-20160511_192230_841991_01361103)
+In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 13, 2016 at 6:02 AM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 12-05-16 11:34, Wei-Ning Huang wrote:
->> On Thu, May 12, 2016 at 2:33 AM, Dan Williams <dcbw@redhat.com> wrote:
->>> On Wed, 2016-05-11 at 13:03 +0800, Wei-Ning Huang wrote:
->>>> On Fri, May 6, 2016 at 4:19 PM, Wei-Ning Huang <wnhuang@google.com>
->>>> wrote:
->>>>>
->>>>> On Fri, May 6, 2016 at 12:07 AM, Dan Williams <dcbw@redhat.com>
->>>>> wrote:
->>>>>>
->>>>>>
->>>>>> On Thu, 2016-05-05 at 14:44 +0800, Wei-Ning Huang wrote:
->>>>>>>
->>>>>>> Recent new hardware has the ability to switch between tablet
->>>>>>> mode and
->>>>>>> clamshell mode. To optimize WiFi performance, we want to be
->>>>>>> able to
->>>>>>> use
->>>>>>> different power table between modes. This patch adds a new
->>>>>>> netlink
->>>>>>> message type and cfg80211_ops function to allow userspace to
->>>>>>> trigger
->>>>>>> a
->>>>>>> power mode switch for a given wireless interface.
->>>>>>>
->>>>>>> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
->>>>>>> ---
->>>>>>>  include/net/cfg80211.h       | 11 +++++++++++
->>>>>>>  include/uapi/linux/nl80211.h | 21 +++++++++++++++++++++
->>>>>>>  net/wireless/nl80211.c       | 16 ++++++++++++++++
->>>>>>>  net/wireless/rdev-ops.h      | 22 ++++++++++++++++++++++
->>>>>>>  net/wireless/trace.h         | 20 ++++++++++++++++++++
->>>>>>>  5 files changed, 90 insertions(+)
->>>>>>>
->>>>>>> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
->>>>>>> index 9e1b24c..aa77fa0 100644
->>>>>>> --- a/include/net/cfg80211.h
->>>>>>> +++ b/include/net/cfg80211.h
->>>>>>> @@ -2370,6 +2370,12 @@ struct cfg80211_qos_map {
->>>>>>>   * @get_tx_power: store the current TX power into the dbm
->>>>>>> variable;
->>>>>>>   *   return 0 if successful
->>>>>>>   *
->>>>>>> + * @set_tx_power_mode: set the transmit power mode. Some
->>>>>>> device have
->>>>>>> the ability
->>>>>>> + *   to transform between different mode such as clamshell and
->>>>>>> tablet mode.
->>>>>>> + *   set_tx_power_mode allows setting of different TX power
->>>>>>> mode at runtime.
->>>>>>> + * @get_tx_power_mode: store the current TX power mode into
->>>>>>> the mode
->>>>>>> variable;
->>>>>>> + *   return 0 if successful
->>>>>>> + *
->>>>>>>   * @set_wds_peer: set the WDS peer for a WDS interface
->>>>>>>   *
->>>>>>>   * @rfkill_poll: polls the hw rfkill line, use cfg80211
->>>>>>> reporting
->>>>>>> @@ -2631,6 +2637,11 @@ struct cfg80211_ops {
->>>>>>>       int     (*get_tx_power)(struct wiphy *wiphy, struct
->>>>>>> wireless_dev *wdev,
->>>>>>>                               int *dbm);
->>>>>>>
->>>>>>> +     int     (*set_tx_power_mode)(struct wiphy *wiphy,
->>>>>>> +                                  enum nl80211_tx_power_mode
->>>>>>> mode);
->>>>>>> +     int     (*get_tx_power_mode)(struct wiphy *wiphy,
->>>>>>> +                                  enum nl80211_tx_power_mode
->>>>>>> *mode);
->>>>>>> +
->>>>>>>       int     (*set_wds_peer)(struct wiphy *wiphy, struct
->>>>>>> net_device *dev,
->>>>>>>                               const u8 *addr);
->>>>>>>
->>>>>>> diff --git a/include/uapi/linux/nl80211.h
->>>>>>> b/include/uapi/linux/nl80211.h
->>>>>>> index 5a30a75..9b1888a 100644
->>>>>>> --- a/include/uapi/linux/nl80211.h
->>>>>>> +++ b/include/uapi/linux/nl80211.h
->>>>>>> @@ -1796,6 +1796,9 @@ enum nl80211_commands {
->>>>>>>   *   connecting to a PCP, and in %NL80211_CMD_START_AP to
->>>>>>> start
->>>>>>>   *   a PCP instead of AP. Relevant for DMG networks only.
->>>>>>>   *
->>>>>>> + * @NL80211_ATTR_WIPHY_TX_POWER_MODE: Transmit power mode. See
->>>>>>> + *      &enum nl80211_tx_power_mode for possible values.
->>>>>>> + *
->>>>>>>   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
->>>>>>>   * @NL80211_ATTR_MAX: highest attribute number currently
->>>>>>> defined
->>>>>>>   * @__NL80211_ATTR_AFTER_LAST: internal use
->>>>>>> @@ -2172,6 +2175,8 @@ enum nl80211_attrs {
->>>>>>>
->>>>>>>       NL80211_ATTR_PBSS,
->>>>>>>
->>>>>>> +     NL80211_ATTR_WIPHY_TX_POWER_MODE,
->>>>>>> +
->>>>>>>       /* add attributes here, update the policy in nl80211.c */
->>>>>>>
->>>>>>>       __NL80211_ATTR_AFTER_LAST,
->>>>>>> @@ -3703,6 +3708,22 @@ enum nl80211_tx_power_setting {
->>>>>>>  };
->>>>>>>
->>>>>>>  /**
->>>>>>> + * enum nl80211_tx_power_mode - TX power mode setting
->>>>>>> + * @NL80211_TX_POWER_LOW: general low TX power mode
->>>>>>> + * @NL80211_TX_POWER_MEDIUM: general medium TX power mode
->>>>>>> + * @NL80211_TX_POWER_HIGH: general high TX power mode
->>>>>>> + * @NL80211_TX_POWER_CLAMSHELL: clamshell mode TX power mode
->>>>>>> + * @NL80211_TX_POWER_TABLET: tablet mode TX power mode
->>>>>>> + */
->>>>>>> +enum nl80211_tx_power_mode {
->>>>>>> +     NL80211_TX_POWER_LOW,
->>>>>>> +     NL80211_TX_POWER_MEDIUM,
->>>>>>> +     NL80211_TX_POWER_HIGH,
->>>>>>> +     NL80211_TX_POWER_CLAMSHELL,
->>>>>>> +     NL80211_TX_POWER_TABLET,
->>>>>>
->>>>>> "clamshell" and "tablet" probably mean many different things to
->>>>>> many
->>>>>> different people with respect to whether or not they should do
->>>>>> anything
->>>>>> with power saving or wifi.  I feel like a more generic interface
->>>>>> is
->>>>>> needed here.
->>>>> We could probably drop those two CLAMSHELL and TABLET constant or
->>>>> describing what they mean
->>>>> in more detail?
->>>>>
->>>>>>
->>>>>>
->>>>>> Could this be already done by:
->>>>>> @NL80211_ATTR_WIPHY_TX_POWER_SETTING = NL80211_TX_POWER_LIMITED
->>>>>> @NL80211_ATTR_WIPHY_TX_POWER_LEVEL = <limit for clamshell/tablet
->>>>>> mode>
->>>>>>
->>>>>> and then the device would be able to change its TX power as it
->>>>>> saw fit
->>>>>> up to that limit set by your application which figures out
->>>>>> whether it's
->>>>>> in clamshell or tablet mode?
->>>>> We usually want different power settings in different band/channel.
->>>>> For example, we can have three different power settings
->>>>> in 2.4Ghz, channels 36-64 & channels 100+ on 5Ghz. In this case, we
->>>>> can not simply set a fixed number to the power level.
->>>>> A power table is required to map channel/band to actual power
->>>>> limit.
->>>>> For most of the driver, changing power table requires loading
->>>>> a new set of calibration data from either devicetree or ACPI. Due
->>>>> to
->>>>> this, a new message type is required to allow the driver to
->>>>> switch between tables.
->>>>>
->>>>> Wei-Ning
->>>> Hi Dan,
->>>>
->>>> Does this make sense to you? If so I'll send another patch to clarify
->>>> the term clamshell / tablet mode.
->>>> Thanks for reviewing.
->>>
->>> Yes, you're right that NL80211_ATTR_WIPHY_TX_POWER_SETTING is probably
->>> too limiting.  But I feel that the constants that you've proposed are
->>> too "magic" and will mean many different things to different driver
->>> writers and userspace clients.  I think it would be better implemented
->>> as a request to simply load specific power calibration data or a new
->>> power table, instead of attempting to classify power tables through
->>> kernel constants that could mean something different to everyone.
->>
->> Dan, Thanks for the pointer. Passing the power table/calibration data
->> name instead of
->> constants sounds reasonable.
->>
->> Johannes, I feel like being able to set calibration data at runtime is
->> something common
->> to all wireless drivers
->
-> Not really. Only implicitly, eg. when changing to another frequency band
-> etc.
->
->> so instead of using vendor commands what do
->> you think if I pass
->> the calibration data name instead of using those magic constants? This
->> way, userspace
->> does not need to know the details of what band/range power limit the
->> driver supports.
->
-> user-space still need to have knowledge about what calibration data name
-> to pick for different scenarios. Also this means the driver will use
-> request_firmware() api to obtain the actual calibration data? I think
-> you then want that signed like the crda database.
-We usually store the calibration data in device tree, so it's only a
-matter of selecting the right name.
+From: Ben Greear <greearb@candelatech.com>
 
-Wei-Ning
->
-> Regards,
-> Arend
->
->> It allows for flexible driver side implementation and easier for
->> userspace to control.
->>
->> Wei-Ning
->>
->>>
->>> Dan
->>>
->>>> Wei-Ning
->>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> Dan
->>>>>>
->>>>>>>
->>>>>>> +};
->>>>>>> +
->>>>>>> +/**
->>>>>>>   * enum nl80211_packet_pattern_attr - packet pattern attribute
->>>>>>>   * @__NL80211_PKTPAT_INVALID: invalid number for nested
->>>>>>> attribute
->>>>>>>   * @NL80211_PKTPAT_PATTERN: the pattern, values where the mask
->>>>>>> has
->>>>>>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->>>>>>> index 056a730..61b474d 100644
->>>>>>> --- a/net/wireless/nl80211.c
->>>>>>> +++ b/net/wireless/nl80211.c
->>>>>>> @@ -402,6 +402,7 @@ static const struct nla_policy
->>>>>>> nl80211_policy[NUM_NL80211_ATTR] = {
->>>>>>>       [NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
->>>>>>>       [NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
->>>>>>>       [NL80211_ATTR_PBSS] = { .type = NLA_FLAG },
->>>>>>> +     [NL80211_ATTR_WIPHY_TX_POWER_MODE] = { .type = NLA_U32 },
->>>>>>>  };
->>>>>>>
->>>>>>>  /* policy for the key attributes */
->>>>>>> @@ -2218,6 +2219,21 @@ static int nl80211_set_wiphy(struct
->>>>>>> sk_buff
->>>>>>> *skb, struct genl_info *info)
->>>>>>>                       return result;
->>>>>>>       }
->>>>>>>
->>>>>>> +     if (info->attrs[NL80211_ATTR_WIPHY_TX_POWER_MODE]) {
->>>>>>> +             enum nl80211_tx_power_mode mode;
->>>>>>> +             int idx = 0;
->>>>>>> +
->>>>>>> +             if (!rdev->ops->set_tx_power_mode)
->>>>>>> +                     return -EOPNOTSUPP;
->>>>>>> +
->>>>>>> +             idx = NL80211_ATTR_WIPHY_TX_POWER_MODE;
->>>>>>> +             mode = nla_get_u32(info->attrs[idx]);
->>>>>>> +
->>>>>>> +             result = rdev_set_tx_power_mode(rdev, mode);
->>>>>>> +             if (result)
->>>>>>> +                     return result;
->>>>>>> +     }
->>>>>>> +
->>>>>>>       if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
->>>>>>>           info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
->>>>>>>               u32 tx_ant, rx_ant;
->>>>>>> diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
->>>>>>> index 8ae0c04..c3a1035 100644
->>>>>>> --- a/net/wireless/rdev-ops.h
->>>>>>> +++ b/net/wireless/rdev-ops.h
->>>>>>> @@ -552,6 +552,28 @@ static inline int rdev_get_tx_power(struct
->>>>>>> cfg80211_registered_device *rdev,
->>>>>>>       return ret;
->>>>>>>  }
->>>>>>>
->>>>>>> +static inline int
->>>>>>> +rdev_set_tx_power_mode(struct cfg80211_registered_device
->>>>>>> *rdev,
->>>>>>> +                    enum nl80211_tx_power_mode mode)
->>>>>>> +{
->>>>>>> +     int ret;
->>>>>>> +     trace_rdev_set_tx_power_mode(&rdev->wiphy, mode);
->>>>>>> +     ret = rdev->ops->set_tx_power_mode(&rdev->wiphy, mode);
->>>>>>> +     trace_rdev_return_int(&rdev->wiphy, ret);
->>>>>>> +     return ret;
->>>>>>> +}
->>>>>>> +
->>>>>>> +static inline int
->>>>>>> +rdev_get_tx_power_mode(struct cfg80211_registered_device
->>>>>>> *rdev,
->>>>>>> +                    enum nl80211_tx_power_mode *mode)
->>>>>>> +{
->>>>>>> +     int ret;
->>>>>>> +     trace_rdev_get_tx_power_mode(&rdev->wiphy);
->>>>>>> +     ret = rdev->ops->get_tx_power_mode(&rdev->wiphy, mode);
->>>>>>> +     trace_rdev_return_int_int(&rdev->wiphy, ret, *mode);
->>>>>>> +     return ret;
->>>>>>> +}
->>>>>>> +
->>>>>>>  static inline int rdev_set_wds_peer(struct
->>>>>>> cfg80211_registered_device *rdev,
->>>>>>>                                   struct net_device *dev, const
->>>>>>> u8
->>>>>>> *addr)
->>>>>>>  {
->>>>>>> diff --git a/net/wireless/trace.h b/net/wireless/trace.h
->>>>>>> index 09b242b..132c8c2 100644
->>>>>>> --- a/net/wireless/trace.h
->>>>>>> +++ b/net/wireless/trace.h
->>>>>>> @@ -1420,6 +1420,26 @@ TRACE_EVENT(rdev_set_tx_power,
->>>>>>>                 WIPHY_PR_ARG, WDEV_PR_ARG,__entry->type,
->>>>>>> __entry-
->>>>>>>>
->>>>>>>> mbm)
->>>>>>>  );
->>>>>>>
->>>>>>> +DEFINE_EVENT(wiphy_only_evt, rdev_get_tx_power_mode,
->>>>>>> +     TP_PROTO(struct wiphy *wiphy),
->>>>>>> +     TP_ARGS(wiphy)
->>>>>>> +);
->>>>>>> +
->>>>>>> +TRACE_EVENT(rdev_set_tx_power_mode,
->>>>>>> +     TP_PROTO(struct wiphy *wiphy, enum nl80211_tx_power_mode
->>>>>>> mode),
->>>>>>> +     TP_ARGS(wiphy, mode),
->>>>>>> +     TP_STRUCT__entry(
->>>>>>> +             WIPHY_ENTRY
->>>>>>> +             __field(enum nl80211_tx_power_mode, mode)
->>>>>>> +     ),
->>>>>>> +     TP_fast_assign(
->>>>>>> +             WIPHY_ASSIGN;
->>>>>>> +             __entry->mode = mode;
->>>>>>> +     ),
->>>>>>> +     TP_printk(WIPHY_PR_FMT ", mode: %d",
->>>>>>> +               WIPHY_PR_ARG, __entry->mode)
->>>>>>> +);
->>>>>>> +
->>>>>>>  TRACE_EVENT(rdev_return_int_int,
->>>>>>>       TP_PROTO(struct wiphy *wiphy, int func_ret, int
->>>>>>> func_fill),
->>>>>>>       TP_ARGS(wiphy, func_ret, func_fill),
->>>>>
->>>>>
->>>>>
->>>>> --
->>>>> Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
->>>>> wnhuang@google.com | Cell: +886 910-380678
->>>>
->>>>
->>
->>
->>
+Support up to 32 stations when using CT firmware.
 
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 14 +++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   |  6 +++++
+ drivers/net/wireless/ath/ath10k/mac.c  | 43 ++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c  | 16 ++++++++++---
+ 4 files changed, 76 insertions(+), 3 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 49c85c3..3869edd 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1567,6 +1567,20 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_1:
++		if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT,
++			     fw_file->fw_features)) {
++			ar->max_num_peers = TARGET_10X_NUM_PEERS_CT;
++			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
++			ar->max_num_vdevs = TARGET_10X_NUM_VDEVS_CT;
++		} else {
++			ar->max_num_peers = TARGET_10X_NUM_PEERS;
++			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
++			ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
++		}
++		ar->htt.max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
++		ar->fw_stats_req_mask = WMI_STAT_PEER;
++		ar->max_spatial_stream = WMI_MAX_SPATIAL_STREAM;
++		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+ 		if (ath10k_peer_stats_enabled(ar)) {
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 7b80e29..d3f37d5 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -370,6 +370,12 @@ enum ath10k_hw_4addr_pad {
+ 						 (TARGET_10X_NUM_VDEVS))
+ #define TARGET_10X_TX_STATS_NUM_PEERS		((TARGET_10X_TX_STATS_NUM_STATIONS) + \
+ 						 (TARGET_10X_NUM_VDEVS))
++
++/* Over-rides for Candela Technologies firmware */
++#define TARGET_10X_NUM_VDEVS_CT			32
++#define TARGET_10X_NUM_PEERS_CT			(32 + (TARGET_10X_NUM_VDEVS_CT))
++#define TARGET_10X_AST_SKID_LIMIT_CT		(TARGET_10X_NUM_PEERS_CT * TARGET_10X_NUM_PEER_AST)
++
+ #define TARGET_10X_NUM_OFFLOAD_PEERS		0
+ #define TARGET_10X_NUM_OFFLOAD_REORDER_BUFS	0
+ #define TARGET_10X_NUM_PEER_KEYS		2
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 42cac32..2169337 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7451,6 +7451,22 @@ static const struct ieee80211_iface_limit ath10k_10x_if_limits[] = {
+ 	},
+ };
+ 
++static const struct ieee80211_iface_limit ath10k_10x_ct_if_limits[] = {
++	{
++	.max	= TARGET_10X_NUM_VDEVS_CT,
++	.types	= BIT(NL80211_IFTYPE_STATION)
++		| BIT(NL80211_IFTYPE_P2P_CLIENT)
++	},
++	{
++	.max	= 3,
++	.types	= BIT(NL80211_IFTYPE_P2P_GO)
++	},
++	{
++	.max	= 7,
++	.types	= BIT(NL80211_IFTYPE_AP)
++	},
++};
++
+ static const struct ieee80211_iface_combination ath10k_if_comb[] = {
+ 	{
+ 		.limits = ath10k_if_limits,
+@@ -7531,6 +7547,22 @@ static const struct ieee80211_iface_limit ath10k_tlv_if_limit_ibss[] = {
+ 	},
+ };
+ 
++static const struct ieee80211_iface_combination ath10k_10x_ct_if_comb[] = {
++	{
++		.limits = ath10k_10x_ct_if_limits,
++		.n_limits = ARRAY_SIZE(ath10k_10x_ct_if_limits),
++		.max_interfaces = TARGET_10X_NUM_VDEVS_CT,
++		.num_different_channels = 1,
++		.beacon_int_infra_match = true,
++#ifdef CONFIG_ATH10K_DFS_CERTIFIED
++		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
++					BIT(NL80211_CHAN_WIDTH_20) |
++					BIT(NL80211_CHAN_WIDTH_40) |
++					BIT(NL80211_CHAN_WIDTH_80),
++#endif
++	},
++};
++
+ /* FIXME: This is not thouroughly tested. These combinations may over- or
+  * underestimate hw/fw capabilities.
+  */
+@@ -7808,6 +7840,17 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
+ 		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_1:
++		if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT,
++			     ar->normal_mode_fw.fw_file.fw_features)) {
++			ar->hw->wiphy->iface_combinations = ath10k_10x_ct_if_comb;
++			ar->hw->wiphy->n_iface_combinations =
++				ARRAY_SIZE(ath10k_10x_ct_if_comb);
++		} else {
++			ar->hw->wiphy->iface_combinations = ath10k_10x_if_comb;
++			ar->hw->wiphy->n_iface_combinations =
++				ARRAY_SIZE(ath10k_10x_if_comb);
++		}
++		break;
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+ 		ar->hw->wiphy->iface_combinations = ath10k_10x_if_comb;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6cfba41..9ee2648 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5497,12 +5497,22 @@ static struct sk_buff *ath10k_wmi_10_1_op_gen_init(struct ath10k *ar)
+ 	struct sk_buff *buf;
+ 	struct wmi_resource_config_10x config = {};
+ 	u32 len, val;
++	u32 skid_limit;
++
++	if (test_bit(ATH10K_FW_FEATURE_WMI_10X_CT,
++		     ar->running_fw->fw_file.fw_features)) {
++		config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS_CT);
++		config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS_CT);
++		skid_limit = TARGET_10X_AST_SKID_LIMIT_CT;
++	} else {
++		config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
++		config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
++		skid_limit = TARGET_10X_AST_SKID_LIMIT;
++	}
++	config.ast_skid_limit = __cpu_to_le32(skid_limit);
+ 
+-	config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
+-	config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
+ 	config.num_peer_keys = __cpu_to_le32(TARGET_10X_NUM_PEER_KEYS);
+ 	config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
+-	config.ast_skid_limit = __cpu_to_le32(TARGET_10X_AST_SKID_LIMIT);
+ 	config.tx_chain_mask = __cpu_to_le32(TARGET_10X_TX_CHAIN_MASK);
+ 	config.rx_chain_mask = __cpu_to_le32(TARGET_10X_RX_CHAIN_MASK);
+ 	config.rx_timeout_pri_vo = __cpu_to_le32(TARGET_10X_RX_TIMEOUT_LO_PRI);
 -- 
-Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
-wnhuang@google.com | Cell: +886 910-380678
+2.4.3
+
