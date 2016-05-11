@@ -1,104 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53950 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930AbcEKRCq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:46 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 21/21] ath10k: Read dbglog buffers over register ping-pong.
-Date: Wed, 11 May 2016 10:02:33 -0700
-Message-Id: <1462986153-16318-22-git-send-email-greearb@candelatech.com> (sfid-20160511_190250_491910_6960236F)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45374 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751069AbcEKCkX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 10 May 2016 22:40:23 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Fisher Grubb <fisher.grubb@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Realtek USB WiFi rtl8192eu
+References: <d6e308b0-5deb-e792-5991-5afc46aa7420@gmail.com>
+	<e7b07631-da96-51c0-5960-ea5ed9d1d94f@gmail.com>
+	<CAD4Xxq_WPVxU8h3+KyxdgztchYyzkW7GOQ8iCOf4uKMQ_X-CMg@mail.gmail.com>
+	<wrfj1t59k56e.fsf@redhat.com>
+	<CAD4Xxq8kEf6RJe=LD=uikSeC29RHO--ain0RhDL6976P2Vq=Xw@mail.gmail.com>
+Date: Tue, 10 May 2016 22:40:21 -0400
+In-Reply-To: <CAD4Xxq8kEf6RJe=LD=uikSeC29RHO--ain0RhDL6976P2Vq=Xw@mail.gmail.com>
+	(Fisher Grubb's message of "Wed, 11 May 2016 11:32:12 +1000")
+Message-ID: <wrfjbn4diaga.fsf@redhat.com> (sfid-20160511_044032_265537_9BA4FD27)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Fisher Grubb <fisher.grubb@gmail.com> writes:
+> Hi Jes,
+>
+> Thanks for the info.
+>
+> Ok, so I assume I just Google how to bring/compile a newer
+> "unreleased" driver into a previous kernel version.
+>
+> Do I just need my current kernel's headers and typical GCC build toolchain?
+>
+> This is for Debian 7.9 on the ARM based BeagleBone Black board (Texas
+> Instruments Sitara AM3358 CPU), which I uses kernel v3.8.13-bone79.
+>
+> I'm asking in case there's a big difference between kernel 3 to 4 for
+> this type of driver to be compiled.
+>
+> I'm pretty sure certain kernel customisations were added by Robert
+> Nelson for this board (I think he is quite involved with
+> porting/fixing stuff for this board and the raspberry pi) , so I don't
+> know how easy it would be for me to use a version 4 kernel.
 
-This gives much better debugging capability when debugging
-crashes in the firmware that cause CE transport loss.
+Bringing back the driver into an older kernel is an open question. No
+idea if that will work or not. Also note that ARM support is very
+lightly tested and I do not believe anyone tested rtl8192eu support with
+ARM.
 
-(Such as AXI errors).
+Note that the driver currently does not support MESH and AP mode.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 46 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 45 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 330c150..286b12d 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1532,7 +1532,7 @@ static int ath10k_ct_fw_crash_regs_harder(struct ath10k *ar,
- 	return -EBUSY;
- 
- pingpong:
--	ath10k_warn(ar, "Trying to read crash dump over pingpong registers.\n");
-+	ath10k_warn(ar, "Trying to read crash dump over pingpong registers, len %d\n", len);
- 	/* Firmware is trying to send us info it seems. */
- 	for (q = 0; q<len; q++) {
- 		reg_dump_values[q] = ath10k_pci_read32(ar, SOC_CORE_BASE_ADDRESS + SCRATCH_2_ADDRESS);
-@@ -1567,6 +1567,10 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
- 				      hi_failure_state,
- 				      REG_DUMP_COUNT_QCA988X * sizeof(__le32));
- 	if (ret) {
-+		__le32 *buffer;
-+		int len = 1500; /* length in bytes for firmware dbglog buffer */
-+		struct ath10k_fw_dbglog_buf dbuf;
-+
- 		ath10k_err(ar, "failed to read firmware dump area: %d\n", ret);
- 
- 		/* Try to read this directly over registers...only works on new
-@@ -1575,6 +1579,46 @@ static void ath10k_pci_dump_registers(struct ath10k *ar,
- 		ret = ath10k_ct_fw_crash_regs_harder(ar, reg_dump_values, REG_DUMP_COUNT_QCA988X);
- 		if (ret)
- 			return;
-+
-+		/* Try to read the debug-log buffers as well. */
-+		buffer = kzalloc(len, GFP_ATOMIC);
-+
-+		if (!buffer)
-+			goto free_and_cont;
-+
-+		if (ath10k_ct_fw_crash_regs_harder(ar, (__le32 *)(&dbuf), sizeof(dbuf)/4))
-+			goto free_and_cont;
-+
-+		/* wow, it worked! */
-+		len = le32_to_cpu(dbuf.length);
-+		if (len > 1500) {
-+			ath10k_err(ar, "dbuf length is greater than 1500: %d\n", len);
-+			len = 1500;
-+		}
-+		if (ath10k_ct_fw_crash_regs_harder(ar, buffer, len/4))
-+			goto free_and_cont;
-+
-+		ath10k_dbg_save_fw_dbg_buffer(ar, buffer, len/4);
-+		ath10k_dbg_print_fw_dbg_buffer(ar, buffer, len/4, KERN_ERR);
-+
-+		/* See if the second one is available */
-+		if (ath10k_ct_fw_crash_regs_harder(ar, (__le32 *)(&dbuf), sizeof(dbuf)/4))
-+			goto free_and_cont;
-+
-+		len = le32_to_cpu(dbuf.length);
-+		if (len > 1500) {
-+			ath10k_err(ar, "dbuf[2] length is greater than 1500: %d\n", len);
-+			len = 1500;
-+		}
-+
-+		if (ath10k_ct_fw_crash_regs_harder(ar, buffer, len/4))
-+			goto free_and_cont;
-+
-+		ath10k_dbg_save_fw_dbg_buffer(ar, buffer, len/4);
-+		ath10k_dbg_print_fw_dbg_buffer(ar, buffer, len/4, KERN_ERR);
-+
-+	free_and_cont:
-+		kfree(buffer);
- 	}
- 
- 	BUILD_BUG_ON(REG_DUMP_COUNT_QCA988X % 4);
--- 
-2.4.3
-
+Jes
