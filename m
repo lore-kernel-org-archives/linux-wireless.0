@@ -1,50 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38226 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754036AbcEQGnl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:59260 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932065AbcEKTqZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 02:43:41 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	luciano.coelho@intel.com, emmanuel.grumbach@intel.com
-Subject: Re: pull-request: wireless-drivers-next 2016-05-13
-References: <87oa8ab3eo.fsf@kamboji.qca.qualcomm.com>
-	<87wpmu87ns.fsf@kamboji.qca.qualcomm.com>
-	<87futi858q.fsf@kamboji.qca.qualcomm.com>
-Date: Tue, 17 May 2016 09:43:34 +0300
-In-Reply-To: <87futi858q.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Mon, 16 May 2016 17:08:53 +0300")
-Message-ID: <8737ph89rd.fsf@kamboji.qca.qualcomm.com> (sfid-20160517_084348_304027_1AC04D75)
+	Wed, 11 May 2016 15:46:25 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [v2,7/7] wil6210: add support for device led configuration
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1461589078-29854-8-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	Maya Erez <qca_merez@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
+Message-ID: <42b47b29b209461e82c50c2b2ffff5a1@euamsexm01a.eu.qualcomm.com> (sfid-20160511_214631_632201_F061EE20)
+Date: Wed, 11 May 2016 21:46:12 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+> Add the ability to configure the device led to be used for notifying
+> the AP activity (60G device supports leds 0-2).
+> The host can also configure the blinking frequency of the led in
+> three states.
+> 
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Thanks, 1 patch applied to ath.git:
 
-> Kalle Valo <kvalo@codeaurora.org> writes:
->
->> Kalle Valo <kvalo@codeaurora.org> writes:
->>
->>>   git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2016-05-13
->>
->> Please don't pull this yet, there might be something wrong now with
->> merges and need to check that first.
->
-> Ok, like discussed in thread "linux-next: manual merge of the
-> wireless-drivers-next tree with the net-next tree" there seems to be a
-> problem on net-next in function iwl_mvm_set_tx_cmd(). Here is how I
-> propose to fix this.
-
-I noticed that you had marked this as Superseded in pathwork[1]. I was
-actually hoping that you would pull this with the instructions how to
-fix the conflict. But do you actually want me to resubmit the pull
-request? Or something else?
-
-[1] https://patchwork.ozlabs.org/patch/621953/
+10d599ad84a1 wil6210: add support for device led configuration
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/8927801/
+
