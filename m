@@ -1,66 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:26100 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754660AbcEZRcg convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34616 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752437AbcEKSoc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2016 13:32:36 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Sven Eckelmann <sven.eckelmann@open-mesh.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] ath10k: Add support for QCA9887
-Date: Thu, 26 May 2016 17:32:30 +0000
-Message-ID: <87mvnc67yq.fsf@kamboji.qca.qualcomm.com> (sfid-20160526_193240_336501_4CF501D0)
-References: <1568876.Six5hABE57@bentobox>
-In-Reply-To: <1568876.Six5hABE57@bentobox> (Sven Eckelmann's message of "Fri,
-	20 May 2016 16:40:46 +0200")
+	Wed, 11 May 2016 14:44:32 -0400
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
+Subject: Re: [v2] rtlwifi: Fix logic error in enter/exit power-save mode
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160502163835.GA10925@udknight>
+To: wang yanqing <udknight@gmail.com>
+Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20160511184431.23F4D61322@smtp.codeaurora.org> (sfid-20160511_204455_122151_70F82A6B)
+Date: Wed, 11 May 2016 18:44:31 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sven Eckelmann <sven.eckelmann@open-mesh.com> writes:
+wang yanqing <udknight@gmail.com> wrote:
+> In commit a269913c52ad ("rtlwifi: Rework rtl_lps_leave() and
+> rtl_lps_enter() to use work queue"), the tests for enter/exit
+> power-save mode were inverted. With this change applied, the
+> wifi connection becomes much more stable.
+> 
+> Fixes: a269913c52ad ("rtlwifi: Rework rtl_lps_leave() and rtl_lps_enter() to use work queue")
+> Signed-off-by: Wang YanQing <udknight@gmail.com>
+> CC: Stable <stable@vger.kernel.org> [3.10+]
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-> the QCA9887 chip is similar to the QCA988x chips. But it requires a special
-> firmware and uses a different calibration data source. Unfortunately, no
-> working firmware currently exists. But it is possible to create a semi working
-> one by binary patching the current version.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-So what works and what doesn't?
-
->     # download new fw + set ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX+ATH10K_FW_FEATURE_NO_P2P
->     curl -o firmware-5.bin https://raw.githubusercontent.com/kvalo/ath10k-firmware/master/QCA9887/firmware-5.bin_10.2.3.31.7-1
->     echo -en '\x0c'|dd conv=notrunc bs=1 seek=231112 of=firmware-5.bin
->     mkdir -p /lib/firmware/ath10k/QCA9887/hw1.0/
->     mv firmware-5.bin /lib/firmware/ath10k/QCA9887/hw1.0/firmware-5.bin
->
-> I am also guessing that ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT should
-> also be set but this would require a ie_len of 2.
-
-I can upload a new version. So I need to add these flags:
-
-ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX
-ATH10K_FW_FEATURE_NO_P2P
-ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT
-
-Anything else?
-
-> The QCA9887 support should be considered really experimental because we don't
-> have any information how the interface to firmware actually looks like. The
-> workarounds mentioned above were just implemented because we saw the firmware
-> crashing and then guessed the most plausible reason for it.
-
-Should we add a warning message to ath10k that the QCA9887 support is
-experimental? That way users don't need to wonder why there are so many
-problems.
-
-There were some conflicts in patch 1. I fixed those now and pushed the
-patches to the pending branch for further testing:
-
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/log/?h=master-pending
-
-Unfortunately I don't have QCA9887 myself so I can't test these myself.
-I hope I didn't break anything.
+873ffe154ae0 rtlwifi: Fix logic error in enter/exit power-save mode
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/8993841/
+
