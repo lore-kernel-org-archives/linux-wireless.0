@@ -1,56 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49726 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752718AbcEJUvW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 16:51:22 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Fisher Grubb <fisher.grubb@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Realtek USB WiFi rtl8192eu
-References: <d6e308b0-5deb-e792-5991-5afc46aa7420@gmail.com>
-	<e7b07631-da96-51c0-5960-ea5ed9d1d94f@gmail.com>
-	<CAD4Xxq_WPVxU8h3+KyxdgztchYyzkW7GOQ8iCOf4uKMQ_X-CMg@mail.gmail.com>
-Date: Tue, 10 May 2016 16:51:21 -0400
-In-Reply-To: <CAD4Xxq_WPVxU8h3+KyxdgztchYyzkW7GOQ8iCOf4uKMQ_X-CMg@mail.gmail.com>
-	(Fisher Grubb's message of "Tue, 10 May 2016 23:16:36 +1000")
-Message-ID: <wrfj1t59k56e.fsf@redhat.com> (sfid-20160510_225127_505131_0F3B4D8E)
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:38609 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751782AbcEKUz5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 11 May 2016 16:55:57 -0400
+Received: by mail-wm0-f53.google.com with SMTP id g17so103209113wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 11 May 2016 13:55:56 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: add fallback for devices that do not report
+ per-chain values
+To: Jaap Jan Meijer <jjmeijer88@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <1462995634-24602-1-git-send-email-jjmeijer88@gmail.com>
+Cc: kvalo@codeaurora.org, brcm80211-dev-list@broadcom.com
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <57339C5B.1050307@broadcom.com> (sfid-20160511_225601_168008_C50B0DDF)
+Date: Wed, 11 May 2016 22:55:55 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1462995634-24602-1-git-send-email-jjmeijer88@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fisher Grubb <fisher.grubb@gmail.com> writes:
-> Hi Xose,
->
-> I'm not sure, I have the latest version of Ubuntu on my laptop and I
-> had to use the DKMS -2 deb file to get it working as no driver claimed
-> it.
->
-> After Googeling (especially for the 0bda:818b USB device and vendor
-> ID), it seemed the driver supported most of Realtek's WiFi devices but
-> mine wasn't listed.
->
-> From memory, I used this page mainly when I was first checking:
-> https://wiki.debian.org/rtl819x
->
-> I didn't see any people in forums mentioning how they managed to get
-> this standard driver working, they all seemed to either have no luck
-> because code didn't compile, or link to source code that did compile.
->
-> If that mainline driver does work, then I assume there could be some
-> USB vendor and device IDs that it doesn't cover.
->
-> Here's the link for where I bought it:
-> http://www.ebay.com.au/itm/181860888357
 
-Patches to add rtl8192eu support was pulled into wireless-drivers-next
-recently and scheduled for the 4.7 kernel. It is not in Linus' tree
-yet. You should be able to try it out by either building Kalle's
-wireless-drivers-next or my rtl8xxxu-devel branch.
 
-The Realtek 8192EU driver you referenced is not scheduled to get pulled
-into the upstream Linux kernel.
+On 11-05-16 21:40, Jaap Jan Meijer wrote:
+> If brcmf_cfg80211_get_station fails to determine the RSSI from the
+> per-chain values get all values individually as a fallback.
 
-Cheers,
-Jes
+That commit message looks good.
+
+> Signed-off-by: Jaap Jan Meijer <jjmeijer88@gmail.com>
+> ---
+>  .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 42 ++++++++++++++++++++++
+>  1 file changed, 42 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index d5c2a27..60229c8 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -2480,12 +2480,16 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+>  			   const u8 *mac, struct station_info *sinfo)
+>  {
+>  	struct brcmf_if *ifp = netdev_priv(ndev);
+> +	struct brcmf_scb_val_le scb_val;
+>  	s32 err = 0;
+>  	struct brcmf_sta_info_le sta_info_le;
+>  	u32 sta_flags;
+>  	u32 is_tdls_peer;
+>  	s32 total_rssi;
+>  	s32 count_rssi;
+> +	int rssi;
+> +	u32 beacon_period;
+> +	u32 dtim_period;
+>  	u32 i;
+>  
+>  	brcmf_dbg(TRACE, "Enter, MAC %pM\n", mac);
+> @@ -2569,6 +2573,44 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
+>  			sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
+>  			total_rssi /= count_rssi;
+>  			sinfo->signal = total_rssi;
+> +		} else if (test_bit(BRCMF_VIF_STATUS_CONNECTED,
+> +			&ifp->vif->sme_state)) {
+> +			memset(&scb_val, 0, sizeof(scb_val));
+> +			err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_RSSI,
+> +						     &scb_val, sizeof(scb_val));
+> +			if (err) {
+> +				brcmf_err("Could not get rssi (%d)\n", err);
+> +				goto done;
+> +			} else {
+> +				rssi = le32_to_cpu(scb_val.val);
+> +				sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
+> +				sinfo->signal = rssi;
+> +				brcmf_dbg(CONN, "RSSI %d dBm\n", rssi);
+> +			}
+
+However, this patch changes more. I did not get back on your question
+regarding beacon period and dtim. Sorry for that as it means this patch
+still need rework. Those values are obtained differently and filled in
+by the function brcmf_fill_bss_param() (called in line 2530). When you
+do that make sure the subject prefix is 'PATCH v2' iso 'PATCH' (using
+git format-patch option --subject-prefix=..) and add a changelog after
+your signed-off line as shown below:
+
+Signed-off-by: Jaap Jan Meijer <jjmeijer88@gmail.com>
+---
+change log:
+ v2:
+	- bla...
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 42
+++++++++++++++++++++++
+
+Don't get discouraged :-D Nederlander?
+
+Regards,
+Arend
+
+> +			err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_BCNPRD,
+> +						    &beacon_period);
+> +			if (err) {
+> +				brcmf_err("Could not get beacon period (%d)\n",
+> +					  err);
+> +				goto done;
+> +			} else {
+> +				sinfo->bss_param.beacon_interval =
+> +					beacon_period;
+> +				brcmf_dbg(CONN, "Beacon peroid %d\n",
+> +					  beacon_period);
+> +			}
+> +			err = brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_DTIMPRD,
+> +						    &dtim_period);
+> +			if (err) {
+> +				brcmf_err("Could not get DTIM period (%d)\n",
+> +					  err);
+> +				goto done;
+> +			} else {
+> +				sinfo->bss_param.dtim_period = dtim_period;
+> +				brcmf_dbg(CONN, "DTIM peroid %d\n",
+> +					  dtim_period);
+> +			}
+> +			sinfo->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
+>  		}
+>  	}
+>  done:
+> 
