@@ -1,49 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22715 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092AbcE1IUH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35342 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751875AbcEKSye (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 28 May 2016 04:20:07 -0400
+	Wed, 11 May 2016 14:54:34 -0400
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: [1/6] wil6210: fix race conditions between TX send and completion
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1463426615-15523-2-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Maya Erez <qca_merez@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Message-ID: <016c89d7d1be483faf9795a999b63970@euamsexm01a.eu.qualcomm.com> (sfid-20160528_102013_940488_487797AC)
-Date: Sat, 28 May 2016 10:19:58 +0200
+Subject: Re: rtlwifi: rtl818x: silence uninitialized variable warning
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160504061639.GB22064@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20160511185433.DE30C61344@smtp.codeaurora.org> (sfid-20160511_205456_306835_F4D706F1)
+Date: Wed, 11 May 2016 18:54:33 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
-> There are 2 possible race conditions, both are solved by addition of
-> memory barrier:
-> 1. wil_tx_complete reads the swhead to determine if the vring is
-> empty. In case the swhead was updated before the descriptor update
-> was performed in __wil_tx_vring/__wil_tx_vring_tso, the completion
-> loop will not end and as the DU bit may still be set from a previous
-> run, this skb can be handled as completed before it was sent, which
-> will lead to double free of the same SKB.
-> 2. __wil_tx_vring/__wil_tx_vring_tso calculate the number of available
-> descriptors according to the swtail. In case the swtail is updated
-> before memset of ctx to zero is completed, we can handle this
-> descriptor while later on ctx is zeroed.
+Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> What about if "rtlphy->pwrgroup_cnt" is 2?  In that case we would use an
+> uninitialized "chnlgroup" variable and probably crash.  Maybe that can't
+> happen for some reason which is not obvious but in that case this patch
+> is harmless.
 > 
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> Setting it to zero seems like a standard default in the surrounding code
+> so it's probably fine here as well.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Thanks, 6 patches applied to ath.git:
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-eb26cff148f5 wil6210: fix race conditions between TX send and completion
-ab6d7cc3eab4 wil6210: guarantee safe access to rx descriptors shared memory
-34b8886e502a wil6210: protect wil_vring_fini_tx in parallel to tx completions
-a1526f7eafa4 wil6210: fix dma mapping error cleanup in __wil_tx_vring_tso
-e34dc6475a7b wil6210: add pm_notify handling
-8fe2a5f9f9b5 wil6210: align wil log functions to wil_dbg_ratelimited implementation
+2f8514b8b036 rtlwifi: rtl818x: silence uninitialized variable warning
 
 -- 
 Sent by pwcli
-https://patchwork.kernel.org/patch/9105441/
+https://patchwork.kernel.org/patch/9010761/
 
