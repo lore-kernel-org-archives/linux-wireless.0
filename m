@@ -1,48 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60899 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932080AbcEKSX0 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:53958 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752564AbcEKRCo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 14:23:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Christian Daudt <csd@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH] brcmfmac: Fix 'did not remove int handler' warning
-References: <1462405280-5947-1-git-send-email-csd@broadcom.com>
-Date: Wed, 11 May 2016 21:23:19 +0300
-In-Reply-To: <1462405280-5947-1-git-send-email-csd@broadcom.com> (Christian
-	Daudt's message of "Wed, 4 May 2016 16:41:20 -0700")
-Message-ID: <87d1ose9ns.fsf@kamboji.qca.qualcomm.com> (sfid-20160511_202329_870878_2C1D7A34)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 11 May 2016 13:02:44 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 11/21] ath10k: add fw-powerup-fail to ethtool stats.
+Date: Wed, 11 May 2016 10:02:23 -0700
+Message-Id: <1462986153-16318-12-git-send-email-greearb@candelatech.com> (sfid-20160511_192231_685518_D020BEB2)
+In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Daudt <csd@broadcom.com> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> brcmf_sdiod_intr_unregister call that removes both func1 and
-> func2 interrupt handlers only called when brcmf_ops_sdio_remove
-> is called for func 1 (which is the 2nd call) but sdio is expecting
-> it to be removed at the end of each sdio_remove call.
-> This is causing 'rmmod bcmrfmac' on a 4356-sdio chip to complain
-> with:
-> WARNING: driver brcmfmac did not remove its interrupt handler!
->
-> The modification makes calling brcmf_sdiod_intr_unregister multiple
-> times harmless by clearing the variables that track if interrupt
-> handlers have been installed, and then calls it on every
-> brcmf_ops_sdio_remove call instead of just remove for func 1.
->
-> Note: this needs to be applied on top of
-> "[PATCH] Fix kernel oops in failed chip_attach"
+This gives user-space a normal-ish way to detect that
+firmware has failed to start and that a reboot is
+probably required.
 
-If you submit two patches at the same time, and where one patch depends
-on another, it's best to submit them in the same series ([PATCH 1/2] and
-[PATCH 2/2]). So please submit v2 as a series, I'm dropping this.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h  | 1 +
+ drivers/net/wireless/ath/ath10k/debug.c | 2 ++
+ drivers/net/wireless/ath/ath10k/pci.c   | 2 ++
+ 3 files changed, 5 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 6aa7a14..e7c228a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -698,6 +698,7 @@ struct ath10k {
+ 
+ 	enum ath10k_hw_rev hw_rev;
+ 	u16 dev_id;
++	bool fw_powerup_failed; /* If true, might take reboot to recover. */
+ 	u32 chip_id;
+ 	u32 target_version;
+ 	u8 fw_version_major;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 76b5163..05b5ea4 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1541,6 +1541,7 @@ static const char ath10k_gstrings_stats[][ETH_GSTRING_LEN] = {
+ 	"d_fw_crash_count",
+ 	"d_fw_warm_reset_count",
+ 	"d_fw_cold_reset_count",
++	"d_fw_powerup_failed", /* boolean */
+ };
+ 
+ #define ATH10K_SSTATS_LEN ARRAY_SIZE(ath10k_gstrings_stats)
+@@ -1640,6 +1641,7 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
+ 	data[i++] = ar->stats.fw_crash_counter;
+ 	data[i++] = ar->stats.fw_warm_reset_counter;
+ 	data[i++] = ar->stats.fw_cold_reset_counter;
++	data[i++] = ar->fw_powerup_failed;
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index dbf0db8..2adc459 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -2709,10 +2709,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
+ 		goto err_ce;
+ 	}
+ 
++	ar->fw_powerup_failed = false;
+ 	return 0;
+ 
+ err_ce:
+ 	ath10k_pci_ce_deinit(ar);
++	ar->fw_powerup_failed = true;
+ 
+ err_sleep:
+ 	return ret;
 -- 
-Kalle Valo
+2.4.3
+
