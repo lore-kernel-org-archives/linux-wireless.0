@@ -1,87 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:42111 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932456AbcE0IuR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 04:50:17 -0400
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V5] brcmfmac: print errors if creating interface fails
-Date: Fri, 27 May 2016 10:49:51 +0200
-Message-Id: <1464338991-8284-1-git-send-email-arend@broadcom.com> (sfid-20160527_105021_358526_9E57ECBF)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:40043 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750774AbcELJdG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 12 May 2016 05:33:06 -0400
+Message-ID: <1463045572.13313.21.camel@sipsolutions.net> (sfid-20160512_113332_211218_243417E5)
+Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED
+ trigger
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pavel@ucw.cz>,
+	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>
+Date: Thu, 12 May 2016 11:32:52 +0200
+In-Reply-To: <20160504072936.GB17045@amd>
+References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
+	 <1462199948-6424-2-git-send-email-jprvita@endlessm.com>
+	 <20160504072936.GB17045@amd>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <zajec5@gmail.com>
+On Wed, 2016-05-04 at 09:29 +0200, Pavel Machek wrote:
+> 
+> If userspace wants to control the manually, it can do just that --
+> control it manually. There should not be a need to "override the
+> default policy".
 
-This is helpful for debugging. Without this all I was getting from "iw"
-command on failed creating of P2P interface was:
-> command failed: Too many open files in system (-23)
+I'm still not buying this.
 
-Signed-off-by: Rafal Milecki <zajec5@gmail.com>
-[arend@broadcom.com: reduce error prints upon iface creation]
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
-V2: s/in/if/ in commit message
-V3: Add one more error message as suggested by Arend
-V4: Also update brcmf_cfg80211_add_iface & print error for AP
-V5: remove error prints from p2p.c
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 12 ++++++++++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      |  2 --
- 2 files changed, 10 insertions(+), 4 deletions(-)
+In the original situation, without these patches, userspace has to have
+a list of all LEDs that are supposed to indicate airplane mode.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index d0631b6..64ed003 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -671,18 +671,26 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
- 		wdev = brcmf_ap_add_vif(wiphy, name, flags, params);
- 		if (!IS_ERR(wdev))
- 			brcmf_cfg80211_update_proto_addr_mode(wdev);
--		return wdev;
-+		break;
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_P2P_GO:
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		wdev = brcmf_p2p_add_vif(wiphy, name, name_assign_type, type, flags, params);
- 		if (!IS_ERR(wdev))
- 			brcmf_cfg80211_update_proto_addr_mode(wdev);
--		return wdev;
-+		break;
- 	case NL80211_IFTYPE_UNSPECIFIED:
- 	default:
- 		return ERR_PTR(-EINVAL);
- 	}
-+
-+	if (IS_ERR(wdev))
-+		brcmf_err("add iface %s type %d failed: err=%d\n",
-+			  name, type, PTR_ERR(wdev));
-+	else
-+		brcmf_cfg80211_update_proto_addr_mode(wdev);
-+
-+	return wdev;
- }
- 
- static void brcmf_scan_config_mpc(struct brcmf_if *ifp, int mpc)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index a70cda6..a812381 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -2030,8 +2030,6 @@ static int brcmf_p2p_request_p2p_if(struct brcmf_p2p_info *p2p,
- 
- 	err = brcmf_fil_iovar_data_set(ifp, "p2p_ifadd", &if_request,
- 				       sizeof(if_request));
--	if (err)
--		return err;
- 
- 	return err;
- }
--- 
-1.9.1
+With this patch only (without patch 2/3), userspace can look up the
+default trigger, but then has to change it, causing the necessary
+information to be lost immediately when you actually use it - that also
+seems like a bad idea.
 
+With the patches, the userspace that cares can also concentrate on
+something it already *does* - i.e. dealing with the rfkill API - and
+let the rest of the situation be sorted out in itself.
+
+
+Now, if the LED subsystem had a really good way of specifying LED
+intent, and it was widely used, and rfkill didn't already concern
+itself with the rfkill status of all devices ... yeah maybe this
+wouldn't be needed. As it stands, I still think this is the best way
+forward.
+
+johannes
