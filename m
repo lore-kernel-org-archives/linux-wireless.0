@@ -1,41 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26326 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751899AbcEJTV1 (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:57780 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932297AbcELPvc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 15:21:27 -0400
-Date: Tue, 10 May 2016 22:20:37 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Ondrej Zary <linux@rainbow-software.org>,
-	Florian Westphal <fw@strlen.de>,
-	"David S. Miller" <davem@davemloft.net>,
-	Felipe Balbi <felipe.balbi@linux.intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] airo: prevent potential underflow in airo_set_freq()
-Message-ID: <20160510192037.GB30712@mwanda> (sfid-20160510_212235_800106_89C82B92)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 12 May 2016 11:51:32 -0400
+Date: Thu, 12 May 2016 11:51:28 -0400 (EDT)
+Message-Id: <20160512.115128.1635966023408060712.davem@davemloft.net> (sfid-20160512_175138_857353_21F1EA3B)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2016-05-12
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1463051162-30128-1-git-send-email-johannes@sipsolutions.net>
+References: <1463051162-30128-1-git-send-email-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm not sure if this can underflow but Smatch complains.  It seems
-harmless to add a check for negatives.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 12 May 2016 13:06:01 +0200
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> A few more patches for 4.7 - I listed the notable ones below in the tag
+> message.
+> 
+> Note that this isn't the tip of my tree - I merged the namespace work
+> for nl80211 and hwsim there, but at least the hwsim one needs some more
+> follow-up work which I don't want to send in after the merge window.
+> 
+> Let me know if there's any problem.
 
-diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
-index 55456f7..ca3cd21 100644
---- a/drivers/net/wireless/cisco/airo.c
-+++ b/drivers/net/wireless/cisco/airo.c
-@@ -5794,7 +5794,7 @@ static int airo_set_freq(struct net_device *dev,
- 		fwrq->m = ieee80211_frequency_to_channel(f);
- 	}
- 	/* Setting by channel number */
--	if((fwrq->m > 1000) || (fwrq->e > 0))
-+	if (fwrq->m < 0 || fwrq->m > 1000 || fwrq->e > 0)
- 		rc = -EOPNOTSUPP;
- 	else {
- 		int channel = fwrq->m;
+Pulled, thanks Johannes.
