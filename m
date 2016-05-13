@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:34960 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753289AbcEZIHK (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:18399 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751739AbcEMIyj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2016 04:07:10 -0400
-Received: by mail-wm0-f51.google.com with SMTP id a136so14082869wme.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2016 01:07:10 -0700 (PDT)
-Subject: Re: [PATCH V3] brcmfmac: print error if p2p_ifadd firmware command
- fails
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1464123910-8281-1-git-send-email-zajec5@gmail.com>
- <1464216299-25232-1-git-send-email-zajec5@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<linux-wireless@vger.kernel.org>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<brcm80211-dev-list@broadcom.com>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <434b808f-0433-2b01-29b9-24331a773e7c@broadcom.com> (sfid-20160526_100747_315360_E1F1BEEA)
-Date: Thu, 26 May 2016 10:07:06 +0200
+	Fri, 13 May 2016 04:54:39 -0400
+Date: Fri, 13 May 2016 11:54:28 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: sara.sharon@intel.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: re: iwlwifi: mvm: add reorder buffer per queue
+Message-ID: <20160513085428.GA13194@mwanda> (sfid-20160513_105444_163228_034AF989)
 MIME-Version: 1.0
-In-Reply-To: <1464216299-25232-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26-5-2016 0:44, Rafał Miłecki wrote:
-> This is helpful for debugging, without this all I was getting from "iw"
-> command on device with BCM43602 was:
->> command failed: Too many open files in system (-23)
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> V2: s/in/if/ in commit message
-> V3: Add one more error message as suggested by Arend
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> index 1652a48..bc26aec 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> @@ -2031,7 +2031,7 @@ static int brcmf_p2p_request_p2p_if(struct brcmf_p2p_info *p2p,
->  	err = brcmf_fil_iovar_data_set(ifp, "p2p_ifadd", &if_request,
->  				       sizeof(if_request));
->  	if (err)
-> -		return err;
-> +		brcmf_err("p2p_ifadd failed %d\n", err);
->  
->  	return err;
->  }
-> @@ -2185,6 +2185,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
->  	err = brcmf_p2p_request_p2p_if(&cfg->p2p, ifp, cfg->p2p.int_addr,
->  				       iftype);
->  	if (err) {
-> +		brcmf_err("Failed to request P2P virtual interface %s\n", name);
->  		brcmf_cfg80211_arm_vif_event(cfg, NULL);
->  		goto fail;
->  	}
+Hello Sara Sharon,
 
-Not exactly what I meant. I meant instead of and the function I would
-like the error message in is brcmf_cfg80211_add_iface() so you also get
-an error message when AP interface creation fails.
+The patch b915c10174fb: "iwlwifi: mvm: add reorder buffer per queue"
+from Mar 23, 2016, leads to the following static checker warnings:
 
-Regards,
-Arend
+	drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:912 iwl_mvm_rx_mpdu_mq()
+	error: potential NULL dereference 'sta'.
+
+	drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:912 iwl_mvm_rx_mpdu_mq()
+	error: we previously assumed 'sta' could be null (see line 796)
+
+
+drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+   779  
+   780          if (le16_to_cpu(desc->status) & IWL_RX_MPDU_STATUS_SRC_STA_FOUND) {
+   781                  u8 id = desc->sta_id_flags & IWL_RX_MPDU_SIF_STA_ID_MASK;
+   782  
+   783                  if (!WARN_ON_ONCE(id >= IWL_MVM_STATION_COUNT)) {
+   784                          sta = rcu_dereference(mvm->fw_id_to_mac_id[id]);
+   785                          if (IS_ERR(sta))
+   786                                  sta = NULL;
+                                        ^^^^^^^^^^^
+Assigned to NULL here.
+
+   787                  }
+   788          } else if (!is_multicast_ether_addr(hdr->addr2)) {
+   789                  /*
+   790                   * This is fine since we prevent two stations with the same
+   791                   * address from being added.
+   792                   */
+   793                  sta = ieee80211_find_sta_by_ifaddr(mvm->hw, hdr->addr2, NULL);
+   794          }
+   795  
+   796          if (sta) {
+                    ^^^
+NULL here.
+
+   797                  struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+   798                  u8 baid = (u8)((le32_to_cpu(desc->reorder_data) &
+   799                                 IWL_RX_MPDU_REORDER_BAID_MASK) >>
+   800                                 IWL_RX_MPDU_REORDER_BAID_SHIFT);
+
+[ snip ]
+
+   909          /* TODO: PHY info - gscan */
+   910  
+   911          iwl_mvm_create_skb(skb, hdr, len, crypt_len, rxb);
+   912          if (!iwl_mvm_reorder(mvm, napi, queue, sta, skb, desc))
+                                                       ^^^
+New unchecked dereference inside the function call.
+
+   913                  iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, queue, sta);
+   914          rcu_read_unlock();
+   915  }
+
+regards,
+dan carpenter
