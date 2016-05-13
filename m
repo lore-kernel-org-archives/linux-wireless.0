@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44598 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758126AbcEFMIU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:15021 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752948AbcEMPNo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2016 08:08:20 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH 2/2] ath10k: Fix survey reporting with QCA4019
-Date: Fri, 6 May 2016 17:37:03 +0530
-Message-ID: <1462536423-9903-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160506_140823_594864_9ADD98A9)
-In-Reply-To: <1462536423-9903-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1462536423-9903-1-git-send-email-vthiagar@qti.qualcomm.com>
+	Fri, 13 May 2016 11:13:44 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 RESEND 1/2] ath10k: Add support for
+ ath10k_sta_statistics support
+Date: Fri, 13 May 2016 15:13:36 +0000
+Message-ID: <87ziru9ejj.fsf@kamboji.qca.qualcomm.com> (sfid-20160513_171348_758440_C55E31DA)
+References: <1462204347-31012-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1462204347-31012-1-git-send-email-mohammed@qca.qualcomm.com>
+	(Mohammed Shafi Shajakhan's message of "Mon, 2 May 2016 21:22:27	+0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In QCA4019, cycle counter wraparound in same fashion
-as QCA988X. When the cycle counter wraparound it
-resets to 0x7fffffff. Set has_shifted_cc_wraparound to
-true for QCA4019 to enable the code path to handle cycle
-counter wraparound for consistent survey report.
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 1 +
- 1 file changed, 1 insertion(+)
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> Enable support for 'drv_sta_statistics' callback.
+> Export rx_duration support if available to cfg80211/nl80211
+>
+> This can also act as a placeholder for any new per STA stats support
+>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> ---
+> [v3] removed conditions for ath10k state checks based on Michal's suggestion
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index e94cb87..f6018be 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -202,6 +202,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.name = "qca4019 hw1.0",
- 		.patch_load_addr = QCA4019_HW_1_0_PATCH_LOAD_ADDR,
- 		.uart_pin = 7,
-+		.has_shifted_cc_wraparound = true,
- 		.otp_exe_param = 0x0010000,
- 		.continuous_frag_desc = true,
- 		.channel_counters_freq_hz = 125000,
+It's nicer to ping than resend a patch. This patchset has been in
+"Awaiting Upstream" state while waiting for the dependencies trickle
+down to ath-next.
+
+> Dependencies:
+>
+> 1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION (under review)
+
+739960f128e5 cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+
+Currently in net-next, should come to ath-next soon.
+
 -- 
-1.9.1
-
+Kalle Valo
