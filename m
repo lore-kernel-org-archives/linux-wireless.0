@@ -1,359 +1,253 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:36133 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751857AbcELJej convert rfc822-to-8bit (ORCPT
+Received: from sitav-80046.hsr.ch ([152.96.80.46]:44049 "EHLO
+	mail.strongswan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbcENIex (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2016 05:34:39 -0400
-Received: by mail-oi0-f50.google.com with SMTP id x201so110639047oif.3
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2016 02:34:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1462991620.22404.5.camel@redhat.com>
-References: <1462430663-9448-1-git-send-email-wnhuang@chromium.org>
-	<1462464478.23962.12.camel@redhat.com>
-	<CABicQ-VWrRG+0rEEF0GxUTPixSbkA18Gq4b5hbgph60SoEQ+2Q@mail.gmail.com>
-	<CABicQ-XWm=Rxdj3at4+-0OAWn=T7qOTWEaTK=JY7LDOmcN87yw@mail.gmail.com>
-	<1462991620.22404.5.camel@redhat.com>
-Date: Thu, 12 May 2016 17:34:37 +0800
-Message-ID: <CABicQ-UeU-8PPdK9Je51j_KD-BH8G1HuOjo0yZLcNBQgtJsyTA@mail.gmail.com> (sfid-20160512_113459_788632_AC3D7D85)
-Subject: Re: [PATCH] cfg80211/nl80211: add wifi tx power mode switching support
-From: Wei-Ning Huang <wnhuang@google.com>
-To: Dan Williams <dcbw@redhat.com>
-Cc: Linux-Wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sameer Nanda <snanda@chromium.org>,
-	Todd Broch <tbroch@chromium.org>, davem@davemloft.net,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sat, 14 May 2016 04:34:53 -0400
+From: Martin Willi <martin@strongswan.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] mac80211_hwsim: Allow wmediumd to attach to radios created in its netns
+Date: Sat, 14 May 2016 10:34:44 +0200
+Message-Id: <1463214884-5983-1-git-send-email-martin@strongswan.org> (sfid-20160514_103523_233423_FEBCCBB8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, May 12, 2016 at 2:33 AM, Dan Williams <dcbw@redhat.com> wrote:
-> On Wed, 2016-05-11 at 13:03 +0800, Wei-Ning Huang wrote:
->> On Fri, May 6, 2016 at 4:19 PM, Wei-Ning Huang <wnhuang@google.com>
->> wrote:
->> >
->> > On Fri, May 6, 2016 at 12:07 AM, Dan Williams <dcbw@redhat.com>
->> > wrote:
->> > >
->> > >
->> > > On Thu, 2016-05-05 at 14:44 +0800, Wei-Ning Huang wrote:
->> > > >
->> > > > Recent new hardware has the ability to switch between tablet
->> > > > mode and
->> > > > clamshell mode. To optimize WiFi performance, we want to be
->> > > > able to
->> > > > use
->> > > > different power table between modes. This patch adds a new
->> > > > netlink
->> > > > message type and cfg80211_ops function to allow userspace to
->> > > > trigger
->> > > > a
->> > > > power mode switch for a given wireless interface.
->> > > >
->> > > > Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
->> > > > ---
->> > > >  include/net/cfg80211.h       | 11 +++++++++++
->> > > >  include/uapi/linux/nl80211.h | 21 +++++++++++++++++++++
->> > > >  net/wireless/nl80211.c       | 16 ++++++++++++++++
->> > > >  net/wireless/rdev-ops.h      | 22 ++++++++++++++++++++++
->> > > >  net/wireless/trace.h         | 20 ++++++++++++++++++++
->> > > >  5 files changed, 90 insertions(+)
->> > > >
->> > > > diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
->> > > > index 9e1b24c..aa77fa0 100644
->> > > > --- a/include/net/cfg80211.h
->> > > > +++ b/include/net/cfg80211.h
->> > > > @@ -2370,6 +2370,12 @@ struct cfg80211_qos_map {
->> > > >   * @get_tx_power: store the current TX power into the dbm
->> > > > variable;
->> > > >   *   return 0 if successful
->> > > >   *
->> > > > + * @set_tx_power_mode: set the transmit power mode. Some
->> > > > device have
->> > > > the ability
->> > > > + *   to transform between different mode such as clamshell and
->> > > > tablet mode.
->> > > > + *   set_tx_power_mode allows setting of different TX power
->> > > > mode at runtime.
->> > > > + * @get_tx_power_mode: store the current TX power mode into
->> > > > the mode
->> > > > variable;
->> > > > + *   return 0 if successful
->> > > > + *
->> > > >   * @set_wds_peer: set the WDS peer for a WDS interface
->> > > >   *
->> > > >   * @rfkill_poll: polls the hw rfkill line, use cfg80211
->> > > > reporting
->> > > > @@ -2631,6 +2637,11 @@ struct cfg80211_ops {
->> > > >       int     (*get_tx_power)(struct wiphy *wiphy, struct
->> > > > wireless_dev *wdev,
->> > > >                               int *dbm);
->> > > >
->> > > > +     int     (*set_tx_power_mode)(struct wiphy *wiphy,
->> > > > +                                  enum nl80211_tx_power_mode
->> > > > mode);
->> > > > +     int     (*get_tx_power_mode)(struct wiphy *wiphy,
->> > > > +                                  enum nl80211_tx_power_mode
->> > > > *mode);
->> > > > +
->> > > >       int     (*set_wds_peer)(struct wiphy *wiphy, struct
->> > > > net_device *dev,
->> > > >                               const u8 *addr);
->> > > >
->> > > > diff --git a/include/uapi/linux/nl80211.h
->> > > > b/include/uapi/linux/nl80211.h
->> > > > index 5a30a75..9b1888a 100644
->> > > > --- a/include/uapi/linux/nl80211.h
->> > > > +++ b/include/uapi/linux/nl80211.h
->> > > > @@ -1796,6 +1796,9 @@ enum nl80211_commands {
->> > > >   *   connecting to a PCP, and in %NL80211_CMD_START_AP to
->> > > > start
->> > > >   *   a PCP instead of AP. Relevant for DMG networks only.
->> > > >   *
->> > > > + * @NL80211_ATTR_WIPHY_TX_POWER_MODE: Transmit power mode. See
->> > > > + *      &enum nl80211_tx_power_mode for possible values.
->> > > > + *
->> > > >   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
->> > > >   * @NL80211_ATTR_MAX: highest attribute number currently
->> > > > defined
->> > > >   * @__NL80211_ATTR_AFTER_LAST: internal use
->> > > > @@ -2172,6 +2175,8 @@ enum nl80211_attrs {
->> > > >
->> > > >       NL80211_ATTR_PBSS,
->> > > >
->> > > > +     NL80211_ATTR_WIPHY_TX_POWER_MODE,
->> > > > +
->> > > >       /* add attributes here, update the policy in nl80211.c */
->> > > >
->> > > >       __NL80211_ATTR_AFTER_LAST,
->> > > > @@ -3703,6 +3708,22 @@ enum nl80211_tx_power_setting {
->> > > >  };
->> > > >
->> > > >  /**
->> > > > + * enum nl80211_tx_power_mode - TX power mode setting
->> > > > + * @NL80211_TX_POWER_LOW: general low TX power mode
->> > > > + * @NL80211_TX_POWER_MEDIUM: general medium TX power mode
->> > > > + * @NL80211_TX_POWER_HIGH: general high TX power mode
->> > > > + * @NL80211_TX_POWER_CLAMSHELL: clamshell mode TX power mode
->> > > > + * @NL80211_TX_POWER_TABLET: tablet mode TX power mode
->> > > > + */
->> > > > +enum nl80211_tx_power_mode {
->> > > > +     NL80211_TX_POWER_LOW,
->> > > > +     NL80211_TX_POWER_MEDIUM,
->> > > > +     NL80211_TX_POWER_HIGH,
->> > > > +     NL80211_TX_POWER_CLAMSHELL,
->> > > > +     NL80211_TX_POWER_TABLET,
->> > >
->> > > "clamshell" and "tablet" probably mean many different things to
->> > > many
->> > > different people with respect to whether or not they should do
->> > > anything
->> > > with power saving or wifi.  I feel like a more generic interface
->> > > is
->> > > needed here.
->> > We could probably drop those two CLAMSHELL and TABLET constant or
->> > describing what they mean
->> > in more detail?
->> >
->> > >
->> > >
->> > > Could this be already done by:
->> > > @NL80211_ATTR_WIPHY_TX_POWER_SETTING = NL80211_TX_POWER_LIMITED
->> > > @NL80211_ATTR_WIPHY_TX_POWER_LEVEL = <limit for clamshell/tablet
->> > > mode>
->> > >
->> > > and then the device would be able to change its TX power as it
->> > > saw fit
->> > > up to that limit set by your application which figures out
->> > > whether it's
->> > > in clamshell or tablet mode?
->> > We usually want different power settings in different band/channel.
->> > For example, we can have three different power settings
->> > in 2.4Ghz, channels 36-64 & channels 100+ on 5Ghz. In this case, we
->> > can not simply set a fixed number to the power level.
->> > A power table is required to map channel/band to actual power
->> > limit.
->> > For most of the driver, changing power table requires loading
->> > a new set of calibration data from either devicetree or ACPI. Due
->> > to
->> > this, a new message type is required to allow the driver to
->> > switch between tables.
->> >
->> > Wei-Ning
->> Hi Dan,
->>
->> Does this make sense to you? If so I'll send another patch to clarify
->> the term clamshell / tablet mode.
->> Thanks for reviewing.
->
-> Yes, you're right that NL80211_ATTR_WIPHY_TX_POWER_SETTING is probably
-> too limiting.  But I feel that the constants that you've proposed are
-> too "magic" and will mean many different things to different driver
-> writers and userspace clients.  I think it would be better implemented
-> as a request to simply load specific power calibration data or a new
-> power table, instead of attempting to classify power tables through
-> kernel constants that could mean something different to everyone.
+Registering wmediumd is currently limited to the initial network
+namespace. This patch enables wmediumd to attach from non-initial
+network namespaces using a user namespace having CAP_NET_ADMIN. A
+registered wmediumd can forward frames on radios that have been created
+in the same network namespace, even if they have been moved to other
+network namespaces.
 
-Dan, Thanks for the pointer. Passing the power table/calibration data
-name instead of
-constants sounds reasonable.
+The wmediumd Netlink portid is tracked per net namespace. Additionally,
+the portid is stored on all radios created in that net namespace to
+simplify the portid lookup in the data path.
 
-Johannes, I feel like being able to set calibration data at runtime is
-something common
-to all wireless drivers, so instead of using vendor commands what do
-you think if I pass
-the calibration data name instead of using those magic constants? This
-way, userspace
-does not need to know the details of what band/range power limit the
-driver supports. It
-allows for flexible driver side implementation and easier for
-userspace to control.
+Signed-off-by: Martin Willi <martin@strongswan.org>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 92 +++++++++++++++++++++++++++++------
+ 1 file changed, 76 insertions(+), 16 deletions(-)
 
-Wei-Ning
-
->
-> Dan
->
->> Wei-Ning
->> >
->> > >
->> > >
->> > >
->> > > Dan
->> > >
->> > > >
->> > > > +};
->> > > > +
->> > > > +/**
->> > > >   * enum nl80211_packet_pattern_attr - packet pattern attribute
->> > > >   * @__NL80211_PKTPAT_INVALID: invalid number for nested
->> > > > attribute
->> > > >   * @NL80211_PKTPAT_PATTERN: the pattern, values where the mask
->> > > > has
->> > > > diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->> > > > index 056a730..61b474d 100644
->> > > > --- a/net/wireless/nl80211.c
->> > > > +++ b/net/wireless/nl80211.c
->> > > > @@ -402,6 +402,7 @@ static const struct nla_policy
->> > > > nl80211_policy[NUM_NL80211_ATTR] = {
->> > > >       [NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
->> > > >       [NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
->> > > >       [NL80211_ATTR_PBSS] = { .type = NLA_FLAG },
->> > > > +     [NL80211_ATTR_WIPHY_TX_POWER_MODE] = { .type = NLA_U32 },
->> > > >  };
->> > > >
->> > > >  /* policy for the key attributes */
->> > > > @@ -2218,6 +2219,21 @@ static int nl80211_set_wiphy(struct
->> > > > sk_buff
->> > > > *skb, struct genl_info *info)
->> > > >                       return result;
->> > > >       }
->> > > >
->> > > > +     if (info->attrs[NL80211_ATTR_WIPHY_TX_POWER_MODE]) {
->> > > > +             enum nl80211_tx_power_mode mode;
->> > > > +             int idx = 0;
->> > > > +
->> > > > +             if (!rdev->ops->set_tx_power_mode)
->> > > > +                     return -EOPNOTSUPP;
->> > > > +
->> > > > +             idx = NL80211_ATTR_WIPHY_TX_POWER_MODE;
->> > > > +             mode = nla_get_u32(info->attrs[idx]);
->> > > > +
->> > > > +             result = rdev_set_tx_power_mode(rdev, mode);
->> > > > +             if (result)
->> > > > +                     return result;
->> > > > +     }
->> > > > +
->> > > >       if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
->> > > >           info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
->> > > >               u32 tx_ant, rx_ant;
->> > > > diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
->> > > > index 8ae0c04..c3a1035 100644
->> > > > --- a/net/wireless/rdev-ops.h
->> > > > +++ b/net/wireless/rdev-ops.h
->> > > > @@ -552,6 +552,28 @@ static inline int rdev_get_tx_power(struct
->> > > > cfg80211_registered_device *rdev,
->> > > >       return ret;
->> > > >  }
->> > > >
->> > > > +static inline int
->> > > > +rdev_set_tx_power_mode(struct cfg80211_registered_device
->> > > > *rdev,
->> > > > +                    enum nl80211_tx_power_mode mode)
->> > > > +{
->> > > > +     int ret;
->> > > > +     trace_rdev_set_tx_power_mode(&rdev->wiphy, mode);
->> > > > +     ret = rdev->ops->set_tx_power_mode(&rdev->wiphy, mode);
->> > > > +     trace_rdev_return_int(&rdev->wiphy, ret);
->> > > > +     return ret;
->> > > > +}
->> > > > +
->> > > > +static inline int
->> > > > +rdev_get_tx_power_mode(struct cfg80211_registered_device
->> > > > *rdev,
->> > > > +                    enum nl80211_tx_power_mode *mode)
->> > > > +{
->> > > > +     int ret;
->> > > > +     trace_rdev_get_tx_power_mode(&rdev->wiphy);
->> > > > +     ret = rdev->ops->get_tx_power_mode(&rdev->wiphy, mode);
->> > > > +     trace_rdev_return_int_int(&rdev->wiphy, ret, *mode);
->> > > > +     return ret;
->> > > > +}
->> > > > +
->> > > >  static inline int rdev_set_wds_peer(struct
->> > > > cfg80211_registered_device *rdev,
->> > > >                                   struct net_device *dev, const
->> > > > u8
->> > > > *addr)
->> > > >  {
->> > > > diff --git a/net/wireless/trace.h b/net/wireless/trace.h
->> > > > index 09b242b..132c8c2 100644
->> > > > --- a/net/wireless/trace.h
->> > > > +++ b/net/wireless/trace.h
->> > > > @@ -1420,6 +1420,26 @@ TRACE_EVENT(rdev_set_tx_power,
->> > > >                 WIPHY_PR_ARG, WDEV_PR_ARG,__entry->type,
->> > > > __entry-
->> > > > >
->> > > > > mbm)
->> > > >  );
->> > > >
->> > > > +DEFINE_EVENT(wiphy_only_evt, rdev_get_tx_power_mode,
->> > > > +     TP_PROTO(struct wiphy *wiphy),
->> > > > +     TP_ARGS(wiphy)
->> > > > +);
->> > > > +
->> > > > +TRACE_EVENT(rdev_set_tx_power_mode,
->> > > > +     TP_PROTO(struct wiphy *wiphy, enum nl80211_tx_power_mode
->> > > > mode),
->> > > > +     TP_ARGS(wiphy, mode),
->> > > > +     TP_STRUCT__entry(
->> > > > +             WIPHY_ENTRY
->> > > > +             __field(enum nl80211_tx_power_mode, mode)
->> > > > +     ),
->> > > > +     TP_fast_assign(
->> > > > +             WIPHY_ASSIGN;
->> > > > +             __entry->mode = mode;
->> > > > +     ),
->> > > > +     TP_printk(WIPHY_PR_FMT ", mode: %d",
->> > > > +               WIPHY_PR_ARG, __entry->mode)
->> > > > +);
->> > > > +
->> > > >  TRACE_EVENT(rdev_return_int_int,
->> > > >       TP_PROTO(struct wiphy *wiphy, int func_ret, int
->> > > > func_fill),
->> > > >       TP_ARGS(wiphy, func_ret, func_fill),
->> >
->> >
->> >
->> > --
->> > Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
->> > wnhuang@google.com | Cell: +886 910-380678
->>
->>
-
-
-
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index a16cd0c..5bb9f0a 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -41,8 +41,6 @@ MODULE_AUTHOR("Jouni Malinen");
+ MODULE_DESCRIPTION("Software simulator of 802.11 radio(s) for mac80211");
+ MODULE_LICENSE("GPL");
+ 
+-static u32 wmediumd_portid;
+-
+ static int radios = 2;
+ module_param(radios, int, 0444);
+ MODULE_PARM_DESC(radios, "Number of simulated radios");
+@@ -258,6 +256,7 @@ static int hwsim_netgroup;
+ 
+ struct hwsim_net {
+ 	int netgroup;
++	u32 wmediumd;
+ };
+ 
+ static inline int hwsim_net_get_netgroup(struct net *net)
+@@ -274,6 +273,20 @@ static inline void hwsim_net_set_netgroup(struct net *net)
+ 	hwsim_net->netgroup = hwsim_netgroup++;
+ }
+ 
++static inline u32 hwsim_net_get_wmediumd(struct net *net)
++{
++	struct hwsim_net *hwsim_net = net_generic(net, hwsim_net_id);
++
++	return hwsim_net->wmediumd;
++}
++
++static inline void hwsim_net_set_wmediumd(struct net *net, u32 portid)
++{
++	struct hwsim_net *hwsim_net = net_generic(net, hwsim_net_id);
++
++	hwsim_net->wmediumd = portid;
++}
++
+ static struct class *hwsim_class;
+ 
+ static struct net_device *hwsim_mon; /* global monitor netdev */
+@@ -552,6 +565,8 @@ struct mac80211_hwsim_data {
+ 
+ 	/* group shared by radios created in the same netns */
+ 	int netgroup;
++	/* wmediumd portid responsile for netgroup of this radio */
++	u32 wmediumd;
+ 
+ 	int power_level;
+ 
+@@ -983,6 +998,29 @@ static bool hwsim_ps_rx_ok(struct mac80211_hwsim_data *data,
+ 	return true;
+ }
+ 
++static int hwsim_unicast_netgroup(struct mac80211_hwsim_data *data,
++				  struct sk_buff *skb, int portid)
++{
++	struct net *net;
++	bool found = false;
++	int res = -ENOENT;
++
++	rcu_read_lock();
++	for_each_net_rcu(net) {
++		if (data->netgroup == hwsim_net_get_netgroup(net)) {
++			res = genlmsg_unicast(net, skb, portid);
++			found = true;
++			break;
++		}
++	}
++	rcu_read_unlock();
++
++	if (!found)
++		nlmsg_free(skb);
++
++	return res;
++}
++
+ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+ 				       struct sk_buff *my_skb,
+ 				       int dst_portid)
+@@ -1062,7 +1100,7 @@ static void mac80211_hwsim_tx_frame_nl(struct ieee80211_hw *hw,
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(skb, msg_head);
+-	if (genlmsg_unicast(&init_net, skb, dst_portid))
++	if (hwsim_unicast_netgroup(data, skb, dst_portid))
+ 		goto err_free_txskb;
+ 
+ 	/* Enqueue the packet */
+@@ -1355,7 +1393,7 @@ static void mac80211_hwsim_tx(struct ieee80211_hw *hw,
+ 	mac80211_hwsim_monitor_rx(hw, skb, channel);
+ 
+ 	/* wmediumd mode check */
+-	_portid = ACCESS_ONCE(wmediumd_portid);
++	_portid = ACCESS_ONCE(data->wmediumd);
+ 
+ 	if (_portid)
+ 		return mac80211_hwsim_tx_frame_nl(hw, skb, _portid);
+@@ -1451,7 +1489,8 @@ static void mac80211_hwsim_tx_frame(struct ieee80211_hw *hw,
+ 				    struct sk_buff *skb,
+ 				    struct ieee80211_channel *chan)
+ {
+-	u32 _pid = ACCESS_ONCE(wmediumd_portid);
++	struct mac80211_hwsim_data *data = hw->priv;
++	u32 _pid = ACCESS_ONCE(data->wmediumd);
+ 
+ 	if (ieee80211_hw_check(hw, SUPPORTS_RC_TABLE)) {
+ 		struct ieee80211_tx_info *txi = IEEE80211_SKB_CB(skb);
+@@ -2796,6 +2835,20 @@ static struct mac80211_hwsim_data *get_hwsim_data_ref_from_addr(const u8 *addr)
+ 	return data;
+ }
+ 
++static void hwsim_register_wmediumd(struct net *net, u32 portid)
++{
++	struct mac80211_hwsim_data *data;
++
++	hwsim_net_set_wmediumd(net, portid);
++
++	spin_lock_bh(&hwsim_radio_lock);
++	list_for_each_entry(data, &hwsim_radios, list) {
++		if (data->netgroup == hwsim_net_get_netgroup(net))
++			data->wmediumd = portid;
++	}
++	spin_unlock_bh(&hwsim_radio_lock);
++}
++
+ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 					   struct genl_info *info)
+ {
+@@ -2811,9 +2864,6 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 	int i;
+ 	bool found = false;
+ 
+-	if (info->snd_portid != wmediumd_portid)
+-		return -EINVAL;
+-
+ 	if (!info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER] ||
+ 	    !info->attrs[HWSIM_ATTR_FLAGS] ||
+ 	    !info->attrs[HWSIM_ATTR_COOKIE] ||
+@@ -2829,6 +2879,12 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
+ 	if (!data2)
+ 		goto out;
+ 
++	if (hwsim_net_get_netgroup(genl_info_net(info)) != data2->netgroup)
++		goto out;
++
++	if (info->snd_portid != data2->wmediumd)
++		goto out;
++
+ 	/* look for the skb matching the cookie passed back from user */
+ 	skb_queue_walk_safe(&data2->pending, skb, tmp) {
+ 		u64 skb_cookie;
+@@ -2892,9 +2948,6 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	void *frame_data;
+ 	struct sk_buff *skb = NULL;
+ 
+-	if (info->snd_portid != wmediumd_portid)
+-		return -EINVAL;
+-
+ 	if (!info->attrs[HWSIM_ATTR_ADDR_RECEIVER] ||
+ 	    !info->attrs[HWSIM_ATTR_FRAME] ||
+ 	    !info->attrs[HWSIM_ATTR_RX_RATE] ||
+@@ -2920,6 +2973,12 @@ static int hwsim_cloned_frame_received_nl(struct sk_buff *skb_2,
+ 	if (!data2)
+ 		goto out;
+ 
++	if (hwsim_net_get_netgroup(genl_info_net(info)) != data2->netgroup)
++		goto out;
++
++	if (info->snd_portid != data2->wmediumd)
++		goto out;
++
+ 	/* check if radio is configured properly */
+ 
+ 	if (data2->idle || !data2->started)
+@@ -2966,6 +3025,7 @@ out:
+ static int hwsim_register_received_nl(struct sk_buff *skb_2,
+ 				      struct genl_info *info)
+ {
++	struct net *net = genl_info_net(info);
+ 	struct mac80211_hwsim_data *data;
+ 	int chans = 1;
+ 
+@@ -2982,10 +3042,10 @@ static int hwsim_register_received_nl(struct sk_buff *skb_2,
+ 	if (chans > 1)
+ 		return -EOPNOTSUPP;
+ 
+-	if (wmediumd_portid)
++	if (hwsim_net_get_wmediumd(net))
+ 		return -EBUSY;
+ 
+-	wmediumd_portid = info->snd_portid;
++	hwsim_register_wmediumd(net, info->snd_portid);
+ 
+ 	printk(KERN_DEBUG "mac80211_hwsim: received a REGISTER, "
+ 	       "switching to wmediumd mode with pid %d\n", info->snd_portid);
+@@ -3152,7 +3212,7 @@ static const struct genl_ops hwsim_ops[] = {
+ 		.cmd = HWSIM_CMD_REGISTER,
+ 		.policy = hwsim_genl_policy,
+ 		.doit = hwsim_register_received_nl,
+-		.flags = GENL_ADMIN_PERM,
++		.flags = GENL_UNS_ADMIN_PERM,
+ 	},
+ 	{
+ 		.cmd = HWSIM_CMD_FRAME,
+@@ -3218,10 +3278,10 @@ static int mac80211_hwsim_netlink_notify(struct notifier_block *nb,
+ 
+ 	remove_user_radios(notify->portid);
+ 
+-	if (notify->portid == wmediumd_portid) {
++	if (notify->portid == hwsim_net_get_wmediumd(notify->net)) {
+ 		printk(KERN_INFO "mac80211_hwsim: wmediumd released netlink"
+ 		       " socket, switching to perfect channel medium\n");
+-		wmediumd_portid = 0;
++		hwsim_register_wmediumd(notify->net, 0);
+ 	}
+ 	return NOTIFY_DONE;
+ 
 -- 
-Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
-wnhuang@google.com | Cell: +886 910-380678
+2.7.4
+
