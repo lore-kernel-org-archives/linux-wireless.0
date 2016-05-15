@@ -1,113 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:36278 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753188AbcE3Cwg (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:38286 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751995AbcEOOow convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2016 22:52:36 -0400
-Date: Sun, 29 May 2016 19:52:28 -0700
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, ruchandani.tina@gmail.com,
-	netdev@vger.kernel.org, Julian.Calaby@gmail.com
-Subject: [PATCH v2 04/10] nl80211: Fix checkpatch.pl warning about braces
-Message-ID: <aef84fd2cf9f2e8fc81b366c83cb38402513f5b1.1464576022.git.kirtika.ruchandani@gmail.com> (sfid-20160530_045238_920260_C8AED734)
-References: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
+	Sun, 15 May 2016 10:44:52 -0400
+Received: by mail-ig0-f172.google.com with SMTP id m9so29129635ige.1
+        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2016 07:44:52 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
+In-Reply-To: <20160515163906.3d64d8fe@wiggum>
+References: <CAJ-Vmom45Pb9X_1Zw6VdszZAiizZUUd=HbEFw0hFMmPFFSNbpQ@mail.gmail.com>
+	<20160515163906.3d64d8fe@wiggum>
+Date: Sun, 15 May 2016 07:44:51 -0700
+Message-ID: <CAJ-VmonNc_qFWJf+AOsUOUVMmRJwH4r_y8YSGrnKWuh=vUJnMQ@mail.gmail.com> (sfid-20160515_164456_329226_D8A1CA7C)
+Subject: Re: [b43] don't unconditionally fall back to CCK if the rate is 6MB OFDM.
+From: Adrian Chadd <adrian@freebsd.org>
+To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
+Cc: b43-dev@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the following checkpatch,pl warning -
-- braces {} should be used on all arms of this statement.
+On 15 May 2016 at 07:39, Michael Büsch <m@bues.ch> wrote:
+> On Sun, 15 May 2016 07:23:25 -0700
+> Adrian Chadd <adrian@freebsd.org> wrote:
+>
+>> @@ -438,7 +446,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+>>
+>>                 rts_rate = rts_cts_rate ? rts_cts_rate->hw_value :
+>> B43_CCK_RATE_1MB;
+>
+> I just noticed that this is incorrect for 5GHz, too.
+> Maybe there are more such bugs.
 
-Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
----
- net/wireless/nl80211.c | 23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+There are other bugs, yes. I'll do some more digging and submit
+follow-up patches, including for the rts_rate selection.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 34b8fbe..945405d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -870,8 +870,9 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
- 			result->def = parse.idx;
- 			if (!parse.def_uni || !parse.def_multi)
- 				goto error;
--		} else if (parse.defmgmt)
-+		} else if (parse.defmgmt) {
- 			goto error;
-+		}
- 		err = cfg80211_validate_key_settings(rdev, &parse.p,
- 						     parse.idx, false, NULL);
- 		if (err)
-@@ -1401,8 +1402,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 			break;
- 	case 2:
- 		if (nl80211_put_iftypes(msg, NL80211_ATTR_SUPPORTED_IFTYPES,
--					rdev->wiphy.interface_modes))
--				goto nla_put_failure;
-+					rdev->wiphy.interface_modes)) {
-+			goto nla_put_failure;
-+		}
- 		state->split_start++;
- 		if (state->split)
- 			break;
-@@ -2155,8 +2157,9 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 		wdev = NULL;
- 		netdev = NULL;
- 		result = 0;
--	} else
-+	} else {
- 		wdev = netdev->ieee80211_ptr;
-+	}
+I've tested this on BCM4321 on FreeBSD; it came up in a code review of
+b43 whilst I was learning about the driver/hardware. I've tested the
+change on FreeBSD and it works correctly. I'll setup a separate PC
+linux environment next week to test things on.
 
- 	/* end workaround code, by now the rdev is available
- 	 * and locked, and wdev may or may not be NULL.
-@@ -3403,8 +3406,9 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 		if (!nl80211_valid_auth_type(rdev, params.auth_type,
- 					     NL80211_CMD_START_AP))
- 			return -EINVAL;
--	} else
-+	} else {
- 		params.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
-+	}
 
- 	err = nl80211_crypto_settings(rdev, info, &params.crypto,
- 				      NL80211_MAX_NR_CIPHER_SUITES);
-@@ -3450,8 +3454,9 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 			return err;
- 	} else if (wdev->preset_chandef.chan) {
- 		params.chandef = wdev->preset_chandef;
--	} else if (!nl80211_get_ap_channel(rdev, &params))
-+	} else if (!nl80211_get_ap_channel(rdev, &params)) {
- 		return -EINVAL;
-+	}
-
- 	if (!cfg80211_reg_can_beacon_relax(&rdev->wiphy, &params.chandef,
- 					   wdev->iftype))
-@@ -7262,8 +7267,9 @@ static int nl80211_crypto_settings(struct cfg80211_registered_device *rdev,
- 			return -EINVAL;
- 		if (info->attrs[NL80211_ATTR_CONTROL_PORT_NO_ENCRYPT])
- 			settings->control_port_no_encrypt = true;
--	} else
-+	} else {
- 		settings->control_port_ethertype = cpu_to_be16(ETH_P_PAE);
-+	}
-
- 	if (info->attrs[NL80211_ATTR_CIPHER_SUITES_PAIRWISE]) {
- 		void *data;
-@@ -7997,8 +8003,9 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 		if (!nl80211_valid_auth_type(rdev, connect.auth_type,
- 					     NL80211_CMD_CONNECT))
- 			return -EINVAL;
--	} else
-+	} else {
- 		connect.auth_type = NL80211_AUTHTYPE_AUTOMATIC;
-+	}
-
- 	connect.privacy = info->attrs[NL80211_ATTR_PRIVACY];
-
---
-2.8.0.rc3.226.g39d4020
-
+-adrian
