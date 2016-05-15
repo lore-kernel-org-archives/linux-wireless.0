@@ -1,271 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33731 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753289AbcEZK7a (ORCPT
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:35238 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754182AbcEOMX2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2016 06:59:30 -0400
-Received: by mail-oi0-f65.google.com with SMTP id m198so3130917oig.0
-        for <linux-wireless@vger.kernel.org>; Thu, 26 May 2016 03:59:30 -0700 (PDT)
+	Sun, 15 May 2016 08:23:28 -0400
+Received: by mail-ig0-f172.google.com with SMTP id bi2so39650192igb.0
+        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2016 05:23:28 -0700 (PDT)
+Date: Sun, 15 May 2016 08:23:20 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, fred.veldini@gmail.com
+Subject: Re: [PATCH] mac80211: mesh: flush mesh paths early in sta destroy
+Message-ID: <20160515122320.GA3118@localhost> (sfid-20160515_142339_680110_575327AE)
+References: <1463248198-3926-1-git-send-email-me@bobcopeland.com>
+ <f898e5e4-e27a-ff5e-6deb-ed109f6ce168@nbd.name>
 MIME-Version: 1.0
-Date: Thu, 26 May 2016 12:59:29 +0200
-Message-ID: <CACZXzRCRZH8SWUBdL8FaD915pT4S1rDb9Qnu1e8X75_0inu8mg@mail.gmail.com> (sfid-20160526_125935_743371_BB320E91)
-Subject: [RFC] brcmfmac: Add tracepoints for bcmdhd-dissector tool
-From: Mikael Kanstrup <mikael.kanstrup@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f898e5e4-e27a-ff5e-6deb-ed109f6ce168@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add hexdump tracepoints to be used to dissect firmware
-protocol data with bcmdhd-dissector:
-  https://github.com/kanstrup/bcmdhd-dissector
+On Sat, May 14, 2016 at 08:54:13PM +0200, Felix Fietkau wrote:
+> > +	WLAN_STA_BLOCK_MPATH,
+> I think this flag needs to be added to sta_flag_names in debugfs_sta.c
 
-Signed-off-by: Mikael Kanstrup <mikael.kanstrup@gmail.com>
----
+On further reflection, using a flag for this is racy anyway, even if
+quite narrow.  Maybe I should just flush in part2 unconditionally and have
+a second synchronize_net().
 
-I've been using a simple Wireshark lua plugin to sniff the host to
-chip firmware communication for quite a while. I recently added a
-usage guide on the github project page and thought the tool might be
-useful for others too.
-
- .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    |  4 ++
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |  2 +
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  1 +
- .../wireless/broadcom/brcm80211/brcmfmac/debug.c   | 54 ++++++++++++++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/debug.h   | 15 ++++++
- .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    |  2 +
- .../broadcom/brcm80211/brcmfmac/tracepoint.h       | 33 +++++++++++++
- 7 files changed, 111 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-index 6af658e..197942c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-@@ -134,6 +134,8 @@ brcmf_proto_bcdc_msg(struct brcmf_pub *drvr, int
-ifidx, uint cmd, void *buf,
-     if (len > BRCMF_TX_IOCTL_MAX_MSG_SIZE)
-         len = BRCMF_TX_IOCTL_MAX_MSG_SIZE;
-
-+    brcmf_dbg_dissect_dump(BRCMF_DISSECT_IOCTL, 1, &bcdc->msg, len);
-+
-     /* Send request */
-     return brcmf_bus_txctl(drvr->bus_if, (unsigned char *)&bcdc->msg, len);
- }
-@@ -152,6 +154,8 @@ static int brcmf_proto_bcdc_cmplt(struct brcmf_pub
-*drvr, u32 id, u32 len)
-             break;
-     } while (BCDC_DCMD_ID(le32_to_cpu(bcdc->msg.flags)) != id);
-
-+    brcmf_dbg_dissect_dump(BRCMF_DISSECT_IOCTL, 0, &bcdc->msg, len);
-+
-     return ret;
- }
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index da0cdd3..1dc91ea 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -782,6 +782,8 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
-                          addr, skb);
-             if (err)
-                 break;
-+            brcmf_dbg_dissect_data_dump(skb->data + 0x1a,
-+                            skb->len - 0x1a);
-         }
-     else
-         err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, true, addr,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index ff825cd..3415170 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -548,6 +548,7 @@ void brcmf_rx_frame(struct device *dev, struct sk_buff *skb)
-
-     /* process and remove protocol-specific header */
-     ret = brcmf_proto_hdrpull(drvr, true, skb, &ifp);
-+    brcmf_dbg_dissect_data_dump(skb->data, skb->len);
-
-     if (ret || !ifp || !ifp->ndev) {
-         if (ret != -ENODATA && ifp)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-index e64557c..0ade5db 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
-@@ -24,6 +24,7 @@
- #include "bus.h"
- #include "fweh.h"
- #include "debug.h"
-+#include "tracepoint.h"
-
- static struct dentry *root_folder;
-
-@@ -109,3 +110,56 @@ int brcmf_debugfs_add_entry(struct brcmf_pub
-*drvr, const char *fn,
-                     drvr->dbgfs_dir, read_fn);
-     return PTR_ERR_OR_ZERO(e);
- }
-+
-+static u8 brcmf_dbg_dump_buf[0x0e + BRCMF_DCMD_MAXLEN];
-+
-+int brcmf_dbg_dissect_dump(int type, int tx, void *data, int len)
-+{
-+    /* These are ethernet headers with ethertype BC01, BC02, BC03 */
-+    static const u8 event_hdr[] = {
-+        0xfc, 0xff, 0xff, 0xff, 0xff, 0xff,
-+        0x00, 0x01, 0x01, 0x01, 0x01, 0x01,
-+        0xbc, 0x01 };
-+    static const u8 ioctl_out_hdr[] = {
-+        0x00, 0x01, 0x01, 0x01, 0x01, 0x01,
-+        0xfc, 0xff, 0xff, 0xff, 0xff, 0xff,
-+        0xbc, 0x02 };
-+    static const u8 ioctl_in_hdr[] = {
-+        0xfc, 0xff, 0xff, 0xff, 0xff, 0xff,
-+        0x00, 0x01, 0x01, 0x01, 0x01, 0x01,
-+        0xbc, 0x03 };
-+    const u8 *hdr;
-+
-+    if (!trace_brcmf_dissect_hexdump_enabled())
-+        return 0;
-+
-+    switch (type) {
-+    case BRCMF_DISSECT_IOCTL:
-+        hdr = tx ? ioctl_out_hdr : ioctl_in_hdr;
-+        break;
-+    case BRCMF_DISSECT_EVENT:
-+        /* If data dump is enabled all events will be
-+         * logged through data path so don't do it here
-+         */
-+        if (trace_brcmf_dissect_data_hexdump_enabled())
-+            return 0;
-+        hdr = event_hdr;
-+        break;
-+    default:
-+        return -EINVAL;
-+    }
-+
-+    memcpy(brcmf_dbg_dump_buf, hdr, 0x0e);
-+    memcpy(brcmf_dbg_dump_buf + 0x0e, data, len);
-+    trace_brcmf_dissect_hexdump(brcmf_dbg_dump_buf, len + 0x0e);
-+    return 0;
-+}
-+
-+int brcmf_dbg_dissect_data_dump(void *data, int len)
-+{
-+    if (!trace_brcmf_dissect_hexdump_enabled())
-+        return 0;
-+
-+    trace_brcmf_dissect_data_hexdump(data, len);
-+    return 0;
-+}
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-index 6687812..b889db8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
-@@ -41,6 +41,9 @@
- #define BRCMF_PCIE_VAL        0x00080000
- #define BRCMF_FWCON_VAL        0x00100000
-
-+#define BRCMF_DISSECT_IOCTL    0
-+#define BRCMF_DISSECT_EVENT    1
-+
- /* set default print format */
- #undef pr_fmt
- #define pr_fmt(fmt)        KBUILD_MODNAME ": " fmt
-@@ -116,6 +119,8 @@ void brcmf_debug_detach(struct brcmf_pub *drvr);
- struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr);
- int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
-                 int (*read_fn)(struct seq_file *seq, void *data));
-+int brcmf_dbg_dissect_dump(int type, int tx, void *data, int len);
-+int brcmf_dbg_dissect_data_dump(void *data, int len);
- #else
- static inline void brcmf_debugfs_init(void)
- {
-@@ -136,6 +141,16 @@ int brcmf_debugfs_add_entry(struct brcmf_pub
-*drvr, const char *fn,
- {
-     return 0;
- }
-+static inline
-+int brcmf_dbg_dissect_dump(int type, int tx, void *data, int len)
-+{
-+    return 0;
-+}
-+static inline
-+int brcmf_dbg_dissect_data_dump(void *data, int len)
-+{
-+    return 0;
-+}
- #endif
-
- #endif /* BRCMFMAC_DEBUG_H */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-index d414fbb..63fe061 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-@@ -246,6 +246,8 @@ static void brcmf_fweh_event_worker(struct
-work_struct *work)
-         emsg.ifidx = emsg_be->ifidx;
-         emsg.bsscfgidx = emsg_be->bsscfgidx;
-
-+        brcmf_dbg_dissect_dump(BRCMF_DISSECT_EVENT, 0, &event->emsg,
-+                       sizeof(event->emsg));
-         brcmf_dbg(EVENT, "  version %u flags %u status %u reason %u\n",
-               emsg.version, emsg.flags, emsg.status, emsg.reason);
-         brcmf_dbg_hex_dump(BRCMF_EVENT_ON(), event->data,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.h
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.h
-index 4d7d51f..04b0c34 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.h
-@@ -110,6 +110,39 @@ TRACE_EVENT(brcmf_bcdchdr,
-     TP_printk("bcdc: prio=%d siglen=%d", __entry->prio, __entry->siglen)
- );
-
-+TRACE_EVENT(brcmf_dissect_hexdump,
-+    TP_PROTO(void *data, size_t len),
-+    TP_ARGS(data, len),
-+    TP_STRUCT__entry(
-+        __field(unsigned long, len)
-+        __field(unsigned long, addr)
-+        __dynamic_array(u8, hdata, len)
-+    ),
-+    TP_fast_assign(
-+        __entry->len = len;
-+        __entry->addr = (unsigned long)data;
-+        memcpy(__get_dynamic_array(hdata), data, len);
-+    ),
-+    TP_printk("dissect [addr=%lx, length=%lu]", __entry->addr, __entry->len)
-+);
-+
-+TRACE_EVENT(brcmf_dissect_data_hexdump,
-+    TP_PROTO(void *data, size_t len),
-+    TP_ARGS(data, len),
-+    TP_STRUCT__entry(
-+        __field(unsigned long, len)
-+        __field(unsigned long, addr)
-+        __dynamic_array(u8, hdata, len)
-+    ),
-+    TP_fast_assign(
-+        __entry->len = len;
-+        __entry->addr = (unsigned long)data;
-+        memcpy(__get_dynamic_array(hdata), data, len);
-+    ),
-+    TP_printk("dissect_data [addr=%lx, length=%lu]",
-+          __entry->addr, __entry->len)
-+);
-+
- #ifndef SDPCM_RX
- #define SDPCM_RX    0
- #endif
---
-2.6.1.213.ga838ae9
+-- 
+Bob Copeland %% http://bobcopeland.com/
