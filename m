@@ -1,43 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sitav-80046.hsr.ch ([152.96.80.46]:58682 "EHLO
-	mail.strongswan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbcEMKmE (ORCPT
+Received: from mail-io0-f171.google.com ([209.85.223.171]:34090 "EHLO
+	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753913AbcEOAHP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2016 06:42:04 -0400
-From: Martin Willi <martin@strongswan.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] mac80211_hwsim: Add missing check for HWSIM_ATTR_SIGNAL
-Date: Fri, 13 May 2016 12:41:48 +0200
-Message-Id: <1463136108-4434-1-git-send-email-martin@strongswan.org> (sfid-20160513_124209_190429_B7FDC681)
+	Sat, 14 May 2016 20:07:15 -0400
+Received: by mail-io0-f171.google.com with SMTP id 190so173303129iow.1
+        for <linux-wireless@vger.kernel.org>; Sat, 14 May 2016 17:07:14 -0700 (PDT)
+Date: Sat, 14 May 2016 20:07:07 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org, fred.veldini@gmail.com
+Subject: Re: [PATCH] mac80211: mesh: flush mesh paths early in sta destroy
+Message-ID: <20160515000707.GA29555@localhost> (sfid-20160515_020726_188162_5147D43C)
+References: <1463248198-3926-1-git-send-email-me@bobcopeland.com>
+ <f898e5e4-e27a-ff5e-6deb-ed109f6ce168@nbd.name>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f898e5e4-e27a-ff5e-6deb-ed109f6ce168@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A wmediumd that does not send this attribute causes a NULL pointer
-dereference, as the attribute is accessed even if it does not exist.
+On Sat, May 14, 2016 at 08:54:13PM +0200, Felix Fietkau wrote:
+> > +	WLAN_STA_BLOCK_MPATH,
+> I think this flag needs to be added to sta_flag_names in debugfs_sta.c
+> 
+> - Felix
 
-The attribute was required but never checked ever since userspace frame
-forwarding has been introduced. The issue gets more problematic once we
-allow wmediumd registration from user namespaces.
+Good point.  I also missed the part where mesh_path_assign_nexthop
+should return an error to indicate the path shouldn't be activated.
 
-Fixes: 7882513bacb1 ("mac80211_hwsimdriver support userspace frame tx/rx")
-Signed-off-by: Martin Willi <martin@strongswan.org>
----
- drivers/net/wireless/mac80211_hwsim.c | 1 +
- 1 file changed, 1 insertion(+)
+So, I'll send a v2 tomorrow, additional comments welcome in the
+meantime.
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 303d94d..a16cd0c 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2817,6 +2817,7 @@ static int hwsim_tx_info_frame_received_nl(struct sk_buff *skb_2,
- 	if (!info->attrs[HWSIM_ATTR_ADDR_TRANSMITTER] ||
- 	    !info->attrs[HWSIM_ATTR_FLAGS] ||
- 	    !info->attrs[HWSIM_ATTR_COOKIE] ||
-+	    !info->attrs[HWSIM_ATTR_SIGNAL] ||
- 	    !info->attrs[HWSIM_ATTR_TX_INFO])
- 		goto out;
- 
 -- 
-2.7.4
-
+Bob Copeland %% http://bobcopeland.com/
