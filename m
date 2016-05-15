@@ -1,121 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53955 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752588AbcEKRCp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:45 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 17/21] ath10k: Enable detecting failure to install key in firmware (CT).
-Date: Wed, 11 May 2016 10:02:29 -0700
-Message-Id: <1462986153-16318-18-git-send-email-greearb@candelatech.com> (sfid-20160511_190255_506433_25DB0EB1)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+Received: from bues.ch ([80.190.117.144]:53659 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751738AbcEOOjb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 15 May 2016 10:39:31 -0400
+Date: Sun, 15 May 2016 16:39:06 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: b43-dev@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [b43] don't unconditionally fall back to CCK if the rate is 6MB
+ OFDM.
+Message-ID: <20160515163906.3d64d8fe@wiggum> (sfid-20160515_163935_213974_B8431AE7)
+In-Reply-To: <CAJ-Vmom45Pb9X_1Zw6VdszZAiizZUUd=HbEFw0hFMmPFFSNbpQ@mail.gmail.com>
+References: <CAJ-Vmom45Pb9X_1Zw6VdszZAiizZUUd=HbEFw0hFMmPFFSNbpQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/ZbbUvluymjab9Vif1=y33RK"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+--Sig_/ZbbUvluymjab9Vif1=y33RK
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-CT firmware has been modified so that it will always return
-a response message when user requests to add a key, even if
-the key could not actually be added.  Upstream firmware may
-assert or just not respond in a failure case.
+On Sun, 15 May 2016 07:23:25 -0700
+Adrian Chadd <adrian@freebsd.org> wrote:
 
-This change should be compatible with non CT firmware.
+> @@ -438,7 +446,7 @@ int b43_generate_txhdr(struct b43_wldev *dev,
+>=20
+>                 rts_rate =3D rts_cts_rate ? rts_cts_rate->hw_value :
+> B43_CCK_RATE_1MB;
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/core.h   |  1 +
- drivers/net/wireless/ath/ath10k/htt.h    |  7 +++++--
- drivers/net/wireless/ath/ath10k/htt_rx.c | 20 +++++++++++++++++---
- drivers/net/wireless/ath/ath10k/mac.c    |  3 ++-
- 4 files changed, 25 insertions(+), 6 deletions(-)
+I just noticed that this is incorrect for 5GHz, too.
+Maybe there are more such bugs.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index f9e3b20..fda66bf 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -848,6 +848,7 @@ struct ath10k {
- 	unsigned int filter_flags;
- 	unsigned long dev_flags;
- 	bool dfs_block_radar_events;
-+	int install_key_rv; /* Store error code from key-install */
- 
- 	/* protected by conf_mutex */
- 	bool radar_enabled;
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 911c535..c50b343 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -702,8 +702,9 @@ enum htt_security_types {
- };
- 
- enum htt_security_flags {
--#define HTT_SECURITY_TYPE_MASK 0x7F
-+#define HTT_SECURITY_TYPE_MASK 0x3F
- #define HTT_SECURITY_TYPE_LSB  0
-+	HTT_SECURITY_IS_FAILURE = 1 << 6, /* CT firmware only */
- 	HTT_SECURITY_IS_UNICAST = 1 << 7
- };
- 
-@@ -712,7 +713,9 @@ struct htt_security_indication {
- 		/* dont use bitfields; undefined behaviour */
- 		u8 flags; /* %htt_security_flags */
- 		struct {
--			u8 security_type:7, /* %htt_security_types */
-+			u8 security_type:6, /* %htt_security_types */
-+			   is_failure:1, /* does this response indicate failure
-+					    (CT Firmware) */
- 			   is_unicast:1;
- 		} __packed;
- 	} __packed;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 47da904..02b5417 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2307,9 +2307,23 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 
- 		ath10k_dbg(ar, ATH10K_DBG_HTT,
- 			   "sec ind peer_id %d unicast %d type %d\n",
--			  __le16_to_cpu(ev->peer_id),
--			  !!(ev->flags & HTT_SECURITY_IS_UNICAST),
--			  MS(ev->flags, HTT_SECURITY_TYPE));
-+			   __le16_to_cpu(ev->peer_id),
-+			   !!(ev->flags & HTT_SECURITY_IS_UNICAST),
-+			   MS(ev->flags, HTT_SECURITY_TYPE));
-+
-+		/* CT firmware adds way to determine failure of key set, without
-+		 * just timing things out.  Indication of failure is determined
-+		 * by the 6th bit of the security-type being set.
-+		 */
-+		if (ev->flags & HTT_SECURITY_IS_FAILURE) {
-+			ath10k_warn(ar, "Firmware failed to set security key, peer_id: %d unicast %d type %d\n",
-+				    __le16_to_cpu(ev->peer_id),
-+				    !!(ev->flags & HTT_SECURITY_IS_UNICAST),
-+				    MS(ev->flags, HTT_SECURITY_TYPE));
-+			ar->install_key_rv = -EINVAL;
-+		} else {
-+			ar->install_key_rv = 0;
-+		}
- 		complete(&ar->install_key_done);
- 		break;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 2169337..373f2ee 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -255,7 +255,8 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
- 	if (time_left == 0)
- 		return -ETIMEDOUT;
- 
--	return 0;
-+	ret = ar->install_key_rv;
-+	return ret;
- }
- 
- static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
--- 
-2.4.3
+--=20
+Michael
 
+--Sig_/ZbbUvluymjab9Vif1=y33RK
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXOIoKAAoJEPUyvh2QjYsOG4QP/RZBEihC+1Fdrb6whVZfWvtX
+5rpEUtKi6FwlCwz8UnCDn3eOTGoZJdcXNKXFjvLz0q5CoM33/abFh47JM81I3lLb
+DK5NZupnanedVMEaQuECi+RFxaAYQ0QOHAglD+wdksIEru7sPVpXYzZAMMZ7OYAn
+Yr23dgZnYjKgUw+y914OGaB5YRmbA63yIUexjI6Y6iGIdjQ6Uoev1qAJhrzwzvUy
+rUEAhpCBpMys5fU+v7oF7gEUD8XOtsDnj0iRWPtZh6qCBmUOISv8SG1xSHalguFs
+r4kxBgXRmPFpvT2vSp94UjZsBlI/snzQaoumEL8aTEWKDqGsi7oxAlcT1kLAWJBX
+nkvNNy5y8fa9+q8QP0xXuChviu5V6f6+M0g//UZT5FsJt7vzSdx3ugstezumhTcz
+tWUQSDzfbBt+nI4EsV6rmDXxLFnqwdtwSSRN9SF0Ar2Lo5EHxh1x9uaf7faqoeL3
+hdUAf+Heu9bkHO7uKH0A1Thyb1ZsSFHAJkSt9lEB802x/lWaRGVDsui3IeRoTHt5
+nOuItF9SldAwDTH8Dgwml2gpJtM5gaMqinUkBRKQLlYO04ieuYN5lG0ZivDdoBnb
+D7kpEsclFDdKjXXLh6MaP46v2ymkSLJ8j38faU5p1Hjey3NbCMoC5z0fyB2YFnnU
+YuK6ePPx5fiEmSq4FJEi
+=nWIf
+-----END PGP SIGNATURE-----
+
+--Sig_/ZbbUvluymjab9Vif1=y33RK--
