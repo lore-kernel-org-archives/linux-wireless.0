@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:48090 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754744AbcEQQVb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58267 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897AbcEPLqL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 12:21:31 -0400
-Date: Tue, 17 May 2016 12:21:29 -0400 (EDT)
-Message-Id: <20160517.122129.77809623717937332.davem@davemloft.net> (sfid-20160517_182136_619388_A4847DDD)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	luciano.coelho@intel.com, emmanuel.grumbach@intel.com
-Subject: Re: pull-request: wireless-drivers-next 2016-05-13
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <8737ph89rd.fsf@kamboji.qca.qualcomm.com>
-References: <87wpmu87ns.fsf@kamboji.qca.qualcomm.com>
-	<87futi858q.fsf@kamboji.qca.qualcomm.com>
-	<8737ph89rd.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 16 May 2016 07:46:11 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: andy <lgkbiti@163.com>, linux-wireless@vger.kernel.org
+Subject: Re: wifi driver crashes openwrt device
+References: <loom.20160510T171307-937@post.gmane.org>
+	<20160515174705.GA11620@localhost>
+Date: Mon, 16 May 2016 14:46:07 +0300
+In-Reply-To: <20160515174705.GA11620@localhost> (Bob Copeland's message of
+	"Sun, 15 May 2016 13:47:05 -0400")
+Message-ID: <87d1omp6o0.fsf@purkki.adurom.net> (sfid-20160516_134616_361804_ABFBAA07)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Tue, 17 May 2016 09:43:34 +0300
+Bob Copeland <me@bobcopeland.com> writes:
 
-> I noticed that you had marked this as Superseded in pathwork[1]. I was
-> actually hoping that you would pull this with the instructions how to
-> fix the conflict. But do you actually want me to resubmit the pull
-> request? Or something else?
-> 
-> [1] https://patchwork.ozlabs.org/patch/621953/
+> On Tue, May 10, 2016 at 03:17:25PM +0000, andy wrote:
+>> hello, every body.
+>>   I developed an openwrt device based on git clone 
+>> git://git.openwrt.org/15.05/openwrt.git.
+>>   I found that my device rebooted during wifi initializing sometimes, maybe 
+>> one in twenty. 
+>>   The wifi driver is compat-wireless-2016-01-10.tar.bz2.
+>>   Could somebody give some hint or help me to resolve this wired issue?
+>>   Thank you very much.
+>
+> Hi Andy,
+>
+> You will probably need to capture a stack trace from the device in order
+> for someone to be able to help, otherwise we can only guess.  A serial
+> console can help with that.
 
-My impression is that you need to make adjustments to fix the merge error
-I made the other day, and that a new pull request would show up with that
-corrected.
+Didn't openwrt have a some sort ramoops facility to collect the last
+kernel logs before a crash? I don't recall the name right now but I'm
+pretty sure I used it with one of our APs few years back. That might
+help (or not).
 
-There is no rush, whenever you submit it I'll still take it.
-
-THanks.
+-- 
+Kalle Valo
