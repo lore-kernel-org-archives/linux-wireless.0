@@ -1,38 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32879 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:35742 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751692AbcEKS04 (ORCPT
+	with ESMTP id S1751738AbcEPNKf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 14:26:56 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: wlcore/wl12xx: Fix fw logger over sdio
+	Mon, 16 May 2016 09:10:35 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1460624297-28420-1-git-send-email-guym@ti.com>
-To: Guy Mishol <guym@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, Guy Mishol <guym@ti.com>
-Message-Id: <20160511182655.C83A6601B5@smtp.codeaurora.org> (sfid-20160511_202659_684195_F93483B8)
-Date: Wed, 11 May 2016 18:26:55 +0000 (UTC)
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: David Miller <davem@davemloft.net>, <netdev@vger.kernel.org>,
+	linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, luciano.coelho@intel.com
+Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with the net-next tree
+References: <20160516101606.751f9613@canb.auug.org.au>
+Date: Mon, 16 May 2016 16:10:27 +0300
+In-Reply-To: <20160516101606.751f9613@canb.auug.org.au> (Stephen Rothwell's
+	message of "Mon, 16 May 2016 10:16:06 +1000")
+Message-ID: <871t529mik.fsf@kamboji.qca.qualcomm.com> (sfid-20160516_151108_537798_D6CD7A6F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Guy Mishol <guym@ti.com> wrote:
-> The commit fb724ed5c617 ("wlcore: Fix regression in
-> wlcore_set_partition()") fixed wl12xx functionality.
-> However, it reverted the support in fw logger
-> over sdio in wl18xx.
-> 
-> This patch reverts the changes made and also fixes
-> the original functionality issue introduced in wl12xx.
-> 
-> Fixes: fb724ed5c617 ("wlcore: Fix regression in wlcore_set_partition()")
-> Signed-off-by: Guy Mishol <guym@ti.com>
+(Adding Luca and linux-wireless)
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+Stephen Rothwell <sfr@canb.auug.org.au> writes:
 
-6fe813e3d561 wlcore/wl12xx: Fix fw logger over sdio
+> Today's linux-next merge of the wireless-drivers-next tree got a
+> conflict in:
+>
+>   drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+>
+> between commit:
+>
+>   909b27f70643 ("Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net")
+>
+> from the net-next tree and commit:
+>
+>   a525d0eab17d ("Merge tag 'iwlwifi-for-kalle-2016-05-04' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes")
+>
+> from the wireless-drivers-next tree.
+>
+> I fixed it up (I think that the net-next tree merge lost the changes
+> to iwl_mvm_set_tx_cmd() associated with commit 5c08b0f5026f ("iwlwifi:
+> mvm: don't override the rate with the AMSDU len")) and can carry the
+> fix as necessary.
+
+Hmm, I'm starting to suspect something is wrong. I did a test merge of
+net-next and wireless-drivers-next and got this as a diff after the
+merge:
+
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -211,7 +211,6 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+                        struct iwl_tx_cmd *tx_cmd,
+                        struct ieee80211_tx_info *info, u8 sta_id)
+ {
+-       struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
+        struct ieee80211_hdr *hdr = (void *)skb->data;
+        __le16 fc = hdr->frame_control;
+        u32 tx_flags = le32_to_cpu(tx_cmd->tx_flags);
+@@ -295,7 +294,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+        tx_cmd->tx_flags = cpu_to_le32(tx_flags);
+        /* Total # bytes to be transmitted */
+        tx_cmd->len = cpu_to_le16((u16)skb->len +
+-               (uintptr_t)skb_info->driver_data[0]);
++               (uintptr_t)info->driver_data[0]);
+        tx_cmd->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
+        tx_cmd->sta_id = sta_id;
+
+But commit 5c08b0f5026f ("iwlwifi: mvm: don't override the rate with the
+AMSDU len") specifically added skb_info variable to that function:
+
+@@ -105,6 +105,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+                        struct iwl_tx_cmd *tx_cmd,
+                        struct ieee80211_tx_info *info, u8 sta_id)
+ {
++       struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
+        struct ieee80211_hdr *hdr = (void *)skb->data;
+        __le16 fc = hdr->frame_control;
+        u32 tx_flags = le32_to_cpu(tx_cmd->tx_flags);
+@@ -185,7 +186,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+        tx_cmd->tx_flags = cpu_to_le32(tx_flags);
+        /* Total # bytes to be transmitted */
+        tx_cmd->len = cpu_to_le16((u16)skb->len +
+-               (uintptr_t)info->driver_data[0]);
++               (uintptr_t)skb_info->driver_data[0]);
+        tx_cmd->next_frame_len = 0;
+        tx_cmd->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
+        tx_cmd->sta_id = sta_id;
+
+I wasn't expecting that skb_info variable is removed. Do we now have
+merge damage somewhere? Luca, what do you think?
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/8833001/
-
+Kalle Valo
