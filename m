@@ -1,106 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60477 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541AbcEYOkl (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:34852 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750729AbcEPSPo convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 25 May 2016 10:40:41 -0400
-From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <arnagara@codeaurora.org>,
-	"Ashok Raj Nagarajan" <arnagara@qti.qualcomm.com>
-Subject: [PATCH] ath10k: fix diag_read to collect data for larger memory
-Date: Wed, 25 May 2016 20:09:14 +0530
-Message-ID: <1464187154-26687-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20160525_164044_886570_F63DCC8B)
+	Mon, 16 May 2016 14:15:44 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1463398895.25219.82.camel@coelho.fi>
+References: <20160513085428.GA13194@mwanda>
+	<1463398895.25219.82.camel@coelho.fi>
+Date: Mon, 16 May 2016 11:15:43 -0700
+Message-ID: <CAA93jw7hkK8+Zx+DJEWDUGxKhSkr6wTLpNmbXYiVc+8OZL-OVA@mail.gmail.com> (sfid-20160516_201547_517983_A26E00B2)
+Subject: Re: iwlwifi: mvm: add reorder buffer per queue
+From: Dave Taht <dave.taht@gmail.com>
+To: Luca Coelho <luca@coelho.fi>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	Sara Sharon <sara.sharon@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-diag_read uses dma_alloc_coherent to allocate memory requested by the
-caller. If this memory requested is larger, more than DIAG_TRANSFER_LIMIT
-(2K), then it is likely that we may not get the requested memory and we
-would fail.
+I can't even describe how much I hate the concept of the reorder
+buffer in general. Ordering is the endpoints problem.
 
-To solve this, request dma_alloc_coherent for only DIAG_TRANSFER_LIMIT, and
-reuse this buffer multiple times as needed to copy the data requested in
-smaller chunks of size not more than DIAG_TRANSFER_LIMIT. Previously we
-were reading into the caller's only after getting the complete requested
-data.
+Someday, after we get fq_codeled, short queues again, I'll be able to show why.
 
-Fixes: 68c03249f388 ('ath10k: convert pci_alloc_consistent() to dma_alloc_coherent()')
-Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 28 ++++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
+On Mon, May 16, 2016 at 4:41 AM, Luca Coelho <luca@coelho.fi> wrote:
+> On Fri, 2016-05-13 at 11:54 +0300, Dan Carpenter wrote:
+>> Hello Sara Sharon,
+>>
+>> The patch b915c10174fb: "iwlwifi: mvm: add reorder buffer per queue"
+>> from Mar 23, 2016, leads to the following static checker warnings:
+>>
+>>       drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:912
+>> iwl_mvm_rx_mpdu_mq()
+>>       error: potential NULL dereference 'sta'.
+>>
+>>       drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:912
+>> iwl_mvm_rx_mpdu_mq()
+>>       error: we previously assumed 'sta' could be null (see line 796)
+>
+> Thanks for the analysis and report, Dan!
+>
+> I have queued a fix for this through our internal tree.
+>
+> --
+> Cheers,
+> Luca.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 8133d7b..8663a3b 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -864,7 +864,7 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 	int ret = 0;
- 	u32 *buf;
--	unsigned int completed_nbytes, orig_nbytes, remaining_bytes;
-+	unsigned int completed_nbytes, alloc_nbytes, remaining_bytes;
- 	struct ath10k_ce_pipe *ce_diag;
- 	/* Host buffer address in CE space */
- 	u32 ce_data;
-@@ -882,9 +882,10 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 	 *   1) 4-byte alignment
- 	 *   2) Buffer in DMA-able space
- 	 */
--	orig_nbytes = nbytes;
-+	alloc_nbytes = min_t(unsigned int, nbytes, DIAG_TRANSFER_LIMIT);
-+
- 	data_buf = (unsigned char *)dma_alloc_coherent(ar->dev,
--						       orig_nbytes,
-+						       alloc_nbytes,
- 						       &ce_data_base,
- 						       GFP_ATOMIC);
- 
-@@ -892,9 +893,9 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 		ret = -ENOMEM;
- 		goto done;
- 	}
--	memset(data_buf, 0, orig_nbytes);
-+	memset(data_buf, 0, alloc_nbytes);
- 
--	remaining_bytes = orig_nbytes;
-+	remaining_bytes = nbytes;
- 	ce_data = ce_data_base;
- 	while (remaining_bytes) {
- 		nbytes = min_t(unsigned int, remaining_bytes,
-@@ -954,19 +955,22 @@ static int ath10k_pci_diag_read_mem(struct ath10k *ar, u32 address, void *data,
- 		}
- 
- 		remaining_bytes -= nbytes;
-+
-+		if (ret) {
-+			ath10k_warn(ar, "failed to read diag value at 0x%x: %d\n",
-+				    address, ret);
-+			break;
-+		}
-+		memcpy(data, data_buf, nbytes);
-+
- 		address += nbytes;
--		ce_data += nbytes;
-+		data += nbytes;
- 	}
- 
- done:
--	if (ret == 0)
--		memcpy(data, data_buf, orig_nbytes);
--	else
--		ath10k_warn(ar, "failed to read diag value at 0x%x: %d\n",
--			    address, ret);
- 
- 	if (data_buf)
--		dma_free_coherent(ar->dev, orig_nbytes, data_buf,
-+		dma_free_coherent(ar->dev, alloc_nbytes, data_buf,
- 				  ce_data_base);
- 
- 	spin_unlock_bh(&ar_pci->ce_lock);
+
+
 -- 
-1.9.1
-
+Dave Täht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
