@@ -1,42 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39932 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752711AbcELJMv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2016 05:12:51 -0400
-Message-ID: <1463044367.13313.9.camel@sipsolutions.net> (sfid-20160512_111319_672814_399E041E)
-Subject: Re: [PATCH v2] mac80211:  add vht cap decode to debugfs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Thu, 12 May 2016 11:12:47 +0200
-In-Reply-To: <1462224198-24154-1-git-send-email-greearb@candelatech.com> (sfid-20160502_232327_373056_D35C73E3)
-References: <1462224198-24154-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20160502_232327_373056_D35C73E3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from merlin.infradead.org ([205.233.59.134]:36184 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754471AbcEPTVx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2016 15:21:53 -0400
+Date: Mon, 16 May 2016 15:21:35 -0400
+From: Kyle McMartin <kyle@infradead.org>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Shiang Tu <shiang_tu@ralinktech.com>,
+	Hua Shao =?utf-8?B?KOmCteWNjik=?= <hua.shao@mediatek.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, linux-firmware@kernel.org
+Subject: Re: [PATCH 1/2] linux-firmware: update rt2860.bin, rt2800pci driver
+Message-ID: <20160516192135.GE9173@merlin.infradead.org> (sfid-20160516_212157_222722_1A281900)
+References: <1462374000-17149-1-git-send-email-xose.vazquez@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1462374000-17149-1-git-send-email-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-05-02 at 14:23 -0700, greearb@candelatech.com wrote:
-> 
-> +		PFLAG(MAX_MPDU_LENGTH_3895, "MAX-MPDU-3895");
-> +		PFLAG(MAX_MPDU_LENGTH_7991, "MAX-MPDU-7991");
-> +		PFLAG(MAX_MPDU_LENGTH_11454, "MAX-MPDU-11454");
+On Wed, May 04, 2016 at 04:59:59PM +0200, Xose Vazquez Perez wrote:
+> rt2860.bin: from 34 to 0.40
+> 
 
-This doesn't work as intended, please treat this two-bit field
-properly.
+applied 1 & 2.
 
-> +		PFLAG(SUPP_CHAN_WIDTH_160MHZ, "160Mhz");
-> +		PFLAG(SUPP_CHAN_WIDTH_160_80PLUS80MHZ, "160-
-> 80+80Mhz");
-
-Same here.
-
-> +		PFLAG(RXSTBC_1, "RXSTBC_1");
-> +		PFLAG(RXSTBC_2, "RXSTBC_2");
-> +		PFLAG(RXSTBC_3, "RXSTBC_3");
-> +		PFLAG(RXSTBC_4, "RXSTBC_4");
-
-This is clearly also wrong, as you could even see in the output you
-pasted into the commit log.
-
-johannes
+thanks, --Kyle
