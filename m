@@ -1,104 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vpn.innerrange.com.au ([203.122.143.146]:57063 "EHLO
-	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751049AbcEJHRv (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:63805 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754371AbcEPTYL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 03:17:51 -0400
-From: Craig McQueen <craig.mcqueen@innerrange.com>
-To: Yegor Yefremov <yegorslists@googlemail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Bin Liu <b-liu@ti.com>
-Date: Tue, 10 May 2016 17:17:43 +1000
-Subject: RE: rt2800 and BeagleBone Black soft lockup when unplugging from
- USB hub
-Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D20D2524E@IR-CENTRAL.corp.innerrange.com> (sfid-20160510_091755_134796_A80042AC)
-References: <5500469A22567C4BAF673A6E86AFA3A4022D20C81874@IR-CENTRAL.corp.innerrange.com>
- <5500469A22567C4BAF673A6E86AFA3A4022D20D2522C@IR-CENTRAL.corp.innerrange.com>
- <CAGm1_kubZOc_ddjg6i-PkZ_TuhFjt6foFOs4kZqJ5KjEu1iw6w@mail.gmail.com>
-In-Reply-To: <CAGm1_kubZOc_ddjg6i-PkZ_TuhFjt6foFOs4kZqJ5KjEu1iw6w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 16 May 2016 15:24:11 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 3/6] wil6210: protect wil_vring_fini_tx in parallel to tx completions
+Date: Mon, 16 May 2016 22:23:32 +0300
+Message-Id: <1463426615-15523-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160516_212423_128059_992A033C)
+In-Reply-To: <1463426615-15523-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1463426615-15523-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WWVnb3IgWWVmcmVtb3Ygd3JvdGU6DQo+IEhpIENyYWlnLA0KPiANCj4gT24gVHVlLCBNYXkgMTAs
-IDIwMTYgYXQgODowOCBBTSwgQ3JhaWcgTWNRdWVlbg0KPiA8Y3JhaWcubWNxdWVlbkBpbm5lcnJh
-bmdlLmNvbT4gd3JvdGU6DQo+ID4gSSBwcmV2aW91c2x5IHdyb3RlOg0KPiA+PiBJIHByZXZpb3Vz
-bHkgd3JvdGU6DQo+ID4+ID4gSSBwcmV2aW91c2x5IHdyb3RlOg0KPiA+PiA+ID4NCj4gPj4gPiA+
-IEkgaGF2ZSBhIEQtTGluayBEV0EtMTQwIFVTQiBXaS1GaSBkZXZpY2Ugd2hpY2ggaXMgcnQyODAw
-IGJhc2VkDQo+ID4+ID4gPiAoNTM5MiBjaGlwc2V0KS4gSSd2ZSBiZWVuIHRlc3RpbmcgaXQgb24g
-YSBCZWFnbGVCb25lIEJsYWNrDQo+ID4+ID4gPiBydW5uaW5nIGFuIFVidW50dQ0KPiA+PiA+ID4g
-MTYuMDQgaW1hZ2UgKDQuNC42IGtlcm5lbCksIHdpdGggYSBVU0IgaHViLg0KPiA+PiA+ID4NCj4g
-Pj4gPiA+IFdoZW4gSSB1bnBsdWcgdGhlIFdpLUZpIGRldmljZSBmcm9tIHRoZSBVU0IgaHViLCBh
-bmQgaXQncw0KPiA+PiA+ID4gY29ubmVjdGVkIHRvIGFuIGFjY2VzcyBwb2ludCwgYW5kIHRoZW4g
-SSB1bnBsdWcgaXQsIHRoZSBPUyBhcHBlYXJzIHRvDQo+IGxvY2sgdXAuDQo+ID4+ID4gPiBJIGdl
-dCBtZXNzYWdlcyBhYm91dCBhIHNvZnQgbG9ja3VwIG9uIHRoZSBzZXJpYWwgY29uc29sZToNCj4g
-Pj4gPiA+DQo+ID4+ID4gPiBbIDk3MzYuMTM2NzAyXSBOTUkgd2F0Y2hkb2c6IEJVRzogc29mdCBs
-b2NrdXAgLSBDUFUjMCBzdHVjayBmb3IgMjJzIQ0KPiA+PiA+ID4gW2t3b3JrZXIvdTI6MDoxMTI5
-XSBbIDk3NjQuMTM2NzAxXSBOTUkgd2F0Y2hkb2c6IEJVRzogc29mdCBsb2NrdXANCj4gPj4gPiA+
-IC0NCj4gPj4gPiA+IENQVSMwIHN0dWNrIGZvciAyMnMhIFtrd29ya2VyL3UyOjA6MTEyOV0gWyA5
-NzkyLjEzNjcwMV0gTk1JDQo+IHdhdGNoZG9nOg0KPiA+PiA+ID4gQlVHOiBzb2Z0IGxvY2t1cCAt
-IENQVSMwIHN0dWNrIGZvciAyMnMhIFtrd29ya2VyL3UyOjA6MTEyOV0gWw0KPiA+PiA+ID4gOTgy
-MC4xMzY2OTldIE5NSQ0KPiA+PiA+ID4gd2F0Y2hkb2c6IEJVRzogc29mdCBsb2NrdXAgLSBDUFUj
-MCBzdHVjayBmb3IgMjJzIQ0KPiA+PiA+ID4gW2t3b3JrZXIvdTI6MDoxMTI5XSBbIDk4NDguMTM2
-Njk2XSBOTUkgd2F0Y2hkb2c6IEJVRzogc29mdCBsb2NrdXANCj4gPj4gPiA+IC0NCj4gPj4gQ1BV
-IzAgc3R1Y2sgZm9yIDIycyENCj4gPj4gPiA+IFtrd29ya2VyL3UyOjA6MTEyOV0NCj4gPj4gPiA+
-DQo+ID4+ID4gPiBUaGlzIHdpbGwgcmVwZWF0IGluZGVmaW5pdGVseSwgdW50aWwgSSB1bnBsdWcg
-dGhlIGh1Yiwgd2hpY2gNCj4gPj4gPiA+IHJlc29sdmVzIHRoZSBzb2Z0IGxvY2t1cCBhbmQgdGhl
-biB0aGUgc3lzdGVtIHNlZW1zIHRvIGZ1bmN0aW9uDQo+IG5vcm1hbGx5Lg0KPiA+PiA+ID4NCj4g
-Pj4gPiA+IEkndmUgYXR0YWNoZWQgYSBkbWVzZyBsb2cgb2YgdGhlIHNvZnQgbG9ja3VwIHN0YWNr
-IHRyYWNlcy4gVGhleQ0KPiA+PiA+ID4gc2VlbSB0byBpbmRpY2F0ZSBhIGxvY2t1cCBpbiB3b3Jr
-cXVldWUgcnQyeDAwdXNiX3dvcmtfcnhkb25lKCkNCj4gPj4gPiA+IChzcGVjaWZpY2FsbHkgaW4N
-Cj4gPj4gPiA+IHVzYl9oY2Rfc3VibWl0X3VyYigpIGNhbGxlZCBmcm9tIHJ0MngwMHVzYl9raWNr
-X3J4X2VudHJ5KCkgY2FsbGVkDQo+ID4+ID4gPiBmcm9tIHJ0MngwMHVzYl9jbGVhcl9lbnRyeSgp
-KS4NCj4gPj4gPiA+DQo+ID4+ID4gPiBJIG9yaWdpbmFsbHkgZm91bmQgdGhpcyBidWcgb24gYSAz
-LjE0Lngga2VybmVsIGJ1aWx0IHdpdGggWW9jdG8NCj4gPj4gPiA+IGZvciBhIEJlYWdsZUJvbmUg
-QmxhY2stYmFzZWQgcHJvZHVjdC4gU28gaXQgc2VlbXMgdGhpcyBpcyBhIGJ1Zw0KPiA+PiA+ID4g
-dGhhdCBoYXMgYmVlbiBhcm91bmQgZm9yIHNvbWUgdGltZS4NCj4gPj4gPg0KPiA+PiA+IEkgc2hv
-dWxkIGFsc28gbm90ZSB0aGF0IG9uIHRoZSAzLjE0LnggWW9jdG8tYnVpbHQga2VybmVsIG9uDQo+
-ID4+ID4gQmVhZ2xlQm9uZSBCbGFjaywgdGhpcyBidWcgZG9lcyBub3Qgb2NjdXIgaWYgdGhlIHJ0
-MjgwMCBkZXZpY2UgaXMNCj4gPj4gPiB1bnBsdWdnZWQgZGlyZWN0bHkgZnJvbSB0aGUgQkJCJ3Mg
-VVNCIHBvcnQuIEl0IG9ubHkgb2NjdXJzIGlmIHVucGx1Z2dlZA0KPiBmcm9tIGEgaHViLg0KPiA+
-PiA+DQo+ID4+ID4gSSBoYXZlIHRlc3RlZCB0aGlzIG9uIGFuIGk1ODYgYmFzZWQgZUJveC0zMzEw
-QSBtaW5pLVBDIHJ1bm5pbmcNCj4gPj4gPiBEZWJpYW4gOC40LCB3aGljaCBoYXMgYSAzLjE2LjAg
-a2VybmVsLCB3aXRoIHRoZSBzYW1lIGh1YiBhbmQgc2FtZQ0KPiA+PiA+IHJ0MjgwMCBkZXZpY2Uu
-IEJ1dCBJIHdhcyBub3QgYWJsZSB0byByZXByb2R1Y2UgdGhpcyBpc3N1ZS4NCj4gPj4NCj4gPj4g
-VGhlcmUgaXMgYSBwYXRjaCBmb3IgdGhlIEFNMzM1eCBtdXNiIGRyaXZlciB0aGF0IHNlZW1zIHRv
-IGZpeCB0aGlzOg0KPiA+Pg0KPiA+PiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LXVzYiZtPTE0
-NjE3Mzk5NTExNzQ1NiZ3PTINCj4gPj4NCj4gPj4gU28gaXQgc2VlbXMgdGhhdCB0aGlzIGlzc3Vl
-J3Mgcm9vdCBjYXVzZSBpcyBpbiB0aGUgQU0zMzV4IFVTQg0KPiA+PiBpbnRlcnJ1cHQgaGFuZGxp
-bmcsIGFuZCBub3QgdGhlIFdpLUZpIHJ0MjgwMCBkcml2ZXIuDQo+ID4NCj4gPiBIYXZpbmcgYXBw
-bGllZCB0d28gQU0zMzV4IFVTQiBwYXRjaGVzIGluIHRoZSAzLjE0LjQ5IGtlcm5lbCwgdGhhdCBk
-b2VzDQo+IHNlZW0gdG8gcmVzb2x2ZSB0aGUgc29mdCBsb2NrLXVwIG9uIHRoZSBSWCBzaWRlLiBU
-aGUgdHdvIHBhdGNoZXMgYXJlOg0KPiA+DQo+ID4gaHR0cDovL21hcmMuaW5mby8/bD1saW51eC11
-c2ImbT0xNDYxNzM5OTUxMTc0NTYmdz0yDQo+ID4gaHR0cDovL21hcmMuaW5mby8/bD1saW51eC11
-c2ImbT0xNDYyMjIzNTUyMTM5MzUmdz0yDQo+ID4NCj4gPiBCdXQgSSBhbSBmaW5kaW5nIHRoZXJl
-IGlzIHN0aWxsIGEgbG9jay11cCBpc3N1ZSB3aGVuIHVucGx1Z2dpbmcgZnJvbSBhIGh1YiwNCj4g
-dGhpcyB0aW1lIG9uIHRoZSBUWCBzaWRlLiBJdCBpcyBtb3JlIGxpa2VseSBpZiB0aGVyZSBpcyBX
-aS1GaSB0cmFmZmljIGluIHByb2dyZXNzDQo+IHdoZW4gdGhlIHVucGx1ZyBvY2N1cnMuIEknbSBh
-dHRhY2hpbmcgYSBsb2cuIEVzc2VudGlhbGx5IHRoZXJlIGFyZSBhIGhlYXAgb2YNCj4gbGluZXMg
-KDEwMCBvciBzbyBwZXIgc2Vjb25kKToNCj4gPg0KPiA+IFsgMTg2Ni42OTM1MTFdIGllZWU4MDIx
-MSBwaHk3OiBydDI4MDB1c2JfdHhfc3RhX2ZpZm9fcmVhZF9jb21wbGV0ZWQ6DQo+ID4gV2Fybmlu
-ZyAtIFRYIHN0YXR1cyByZWFkIGZhaWxlZCAtNzENCj4gPg0KPiA+IFdoaWNoIGZpbmFsbHkgc3Rv
-cCBzaG9ydGx5IGFmdGVyIFVTQiBkaXNjb25uZWN0IGlzIGRldGVjdGVkOg0KPiA+DQo+ID4gWyAx
-ODY2Ljk4NTg1NF0gdXNiIDEtMS4zOiBVU0IgZGlzY29ubmVjdCwgZGV2aWNlIG51bWJlciAxMA0K
-PiA+DQo+ID4gSG93ZXZlciB0aGF0IGRpc2Nvbm5lY3QgbWVzc2FnZSBpcyB0eXBpY2FsbHkgMzAt
-OTAgc2Vjb25kcyBhZnRlciB0aGUNCj4gdW5wbHVnIGhhcHBlbmVkLiBJdCBzZWVtcyB0aGF0IHRo
-ZSBVU0IgZGlzY29ubmVjdCBkZXRlY3Rpb24gaXMgZGVsYXllZCBkdWUNCj4gdG8gdGhlIENQVSBs
-b2FkIG9mIHRoZSBUWC4NCj4gPg0KPiA+IEkgYWxzbyBzb21ldGltZXMgc2VlIGEga2VybmVsIHBh
-bmljLiBUaGF0IGNhbiBvY2N1ciB3aGV0aGVyIGNvbm5lY3RlZCB0byBhDQo+IFVTQiBodWIgb3Ig
-ZGlyZWN0bHkgdG8gdGhlIG9uLWJvYXJkIFVTQiBwb3J0LiBTZWUgdGhlIGF0dGFjaGVkIGxvZy4N
-Cj4gPg0KPiA+IEknbSBub3Qgc28gZmFtaWxpYXIgd2l0aCBlaXRoZXIgdGhlIFdpLUZpIG9yIFVT
-QiBzdGFja3MgaW4gdGhlIExpbnV4DQo+ID4ga2VybmVsLCBzbyBJIHdvdWxkIGFwcHJlY2lhdGUg
-YW55IGFkdmljZSB3aXRoIGRlYnVnZ2luZyBhbmQgZml4aW5nDQo+ID4gdGhpcy4gKE15IHByZXZp
-b3VzIGludmVzdGlnYXRpb25zIGluZGljYXRlIHRoZXNlIGlzc3VlcyBhcmUgcHJlc2VudCBpbg0K
-PiA+IGJvdGggMy4xNC54IGtlcm5lbCBhbmQgNC40LjYga2VybmVsLiBJJ20gbW9yZSBmYW1pbGlh
-ciB3aXRoIHdvcmtpbmcNCj4gPiB3aXRoIHRoZSAzLjE0Lngga2VybmVsIHVuZGVyIFlvY3RvLCBi
-dXQgSSBjb3VsZCB0cnkgbW92aW5nIHRvIDQuNC42DQo+ID4ga2VybmVsIGZvciBVYnVudHUuIEkn
-bSBvcGVuIHRvIGFkdmljZSBvbiB3aGljaCB0byBpbnZlc3RpZ2F0ZSBvbi4pDQo+IA0KPiBUYWtl
-IGEgbG9vayBhdCB0aGlzIHBhdGNoOiBodHRwOi8vbWFyYy5pbmZvLz9sPWxpbnV4LQ0KPiB1c2Im
-bT0xNDYyMjIzNTUyMTM5MzUmdz0yDQo+IA0KPiBJZiBpdCBmaXhlcyB5b3VyIGlzc3VlIHBsZWFz
-ZSBwcm92aWRlIHlvdXIgInRlc3RlZC1ieSIgdGFnIGhlcmUuDQoNCkhpIFllZ29yLA0KDQpJIGFt
-IHVzaW5nIHRoYXQgcGF0Y2gsIGFuZCBJIHJlZmVycmVkIHRvIGl0IGluIG15IGxhc3QgbWVzc2Fn
-ZS4gQnV0IGl0IGRvZXNuJ3QgZml4IHRoaXMgaXNzdWUuDQoNClRoYW5rcywNCkNyYWlnIE1jUXVl
-ZW4NCg0K
+napi_synchronize is called before releasing the vring, with the
+assumption that setting txdata->enabled to 0 will prevent handling
+of this vring in the next scheduled napi.
+To guarantee this assumption, a memory barrier is added after disabling
+the txdata.
+In addition, as the ctx is zeroed in wil_tx_complete after this
+descriptor is handled (protected by wmb), ctx needs to be checked
+before releasing this descriptor in wil_vring_free.
+
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/txrx.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
+index 3909af1..483e063 100644
+--- a/drivers/net/wireless/ath/wil6210/txrx.c
++++ b/drivers/net/wireless/ath/wil6210/txrx.c
+@@ -184,6 +184,13 @@ static void wil_vring_free(struct wil6210_priv *wil, struct vring *vring,
+ 					&vring->va[vring->swtail].tx;
+ 
+ 			ctx = &vring->ctx[vring->swtail];
++			if (!ctx) {
++				wil_dbg_txrx(wil,
++					     "ctx(%d) was already completed\n",
++					     vring->swtail);
++				vring->swtail = wil_vring_next_tail(vring);
++				continue;
++			}
+ 			*d = *_d;
+ 			wil_txdesc_unmap(dev, d, ctx);
+ 			if (ctx->skb)
+@@ -975,6 +982,13 @@ void wil_vring_fini_tx(struct wil6210_priv *wil, int id)
+ 	txdata->dot1x_open = false;
+ 	txdata->enabled = 0; /* no Tx can be in progress or start anew */
+ 	spin_unlock_bh(&txdata->lock);
++	/* napi_synchronize waits for completion of the current NAPI but will
++	 * not prevent the next NAPI run.
++	 * Add a memory barrier to guarantee that txdata->enabled is zeroed
++	 * before napi_synchronize so that the next scheduled NAPI will not
++	 * handle this vring
++	 */
++	wmb();
+ 	/* make sure NAPI won't touch this vring */
+ 	if (test_bit(wil_status_napi_en, wil->status))
+ 		napi_synchronize(&wil->napi_tx);
+-- 
+1.8.5.2
+
