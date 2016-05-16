@@ -1,179 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39662 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755986AbcECN6J (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 09:58:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Date: Tue,  3 May 2016 16:58:00 +0300
-Message-Id: <1462283880-4666-1-git-send-email-luca@coelho.fi> (sfid-20160503_155815_875401_2A24B001)
-Subject: [PATCH] mac80211: allow software PS-Poll/U-APSD with AP_LINK_PS
+Received: from mga09.intel.com ([134.134.136.24]:3506 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753451AbcEPSLw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2016 14:11:52 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"davem@davemloft.net" <davem@davemloft.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: pull-request: wireless-drivers-next 2016-05-13
+Date: Mon, 16 May 2016 18:11:47 +0000
+Message-ID: <1463422307.25219.107.camel@intel.com> (sfid-20160516_201157_244957_A124CE2B)
+References: <87oa8ab3eo.fsf@kamboji.qca.qualcomm.com>
+	 <87wpmu87ns.fsf@kamboji.qca.qualcomm.com>
+	 <87futi858q.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87futi858q.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-When using RSS, frames might not be processed in the correct order,
-and thus AP_LINK_PS must be used; most likely with firmware keeping
-track of the powersave state, this is the case in iwlwifi now.
-
-In this case, the driver can use ieee80211_sta_ps_transition() to
-still have mac80211 manage powersave buffering. However, for U-APSD
-and PS-Poll this isn't sufficient. If the device can't manage that
-entirely on its own, mac80211's code should be used.
-
-To allow this, export two functions: ieee80211_sta_uapsd_trigger()
-and ieee80211_sta_pspoll().
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h | 27 +++++++++++++++++++
- net/mac80211/rx.c      | 70 +++++++++++++++++++++++++++++++-------------------
- 2 files changed, 71 insertions(+), 26 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index ce2f6e3..be30b05 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3996,6 +3996,33 @@ static inline int ieee80211_sta_ps_transition_ni(struct ieee80211_sta *sta,
- 	return ret;
- }
- 
-+/**
-+ * ieee80211_sta_pspoll - PS-Poll frame received
-+ * @sta: currently connected station
-+ *
-+ * When operating in AP mode with the %IEEE80211_HW_AP_LINK_PS flag set,
-+ * use this function to inform mac80211 that a PS-Poll frame from a
-+ * connected station was received.
-+ * This must be used in conjunction with ieee80211_sta_ps_transition()
-+ * and possibly ieee80211_sta_uapsd_trigger(); calls to all three must
-+ * be serialized.
-+ */
-+void ieee80211_sta_pspoll(struct ieee80211_sta *sta);
-+
-+/**
-+ * ieee80211_sta_uapsd_trigger - (potential) U-APSD trigger frame received
-+ * @sta: currently connected station
-+ * @tid: TID of the received (potential) trigger frame
-+ *
-+ * When operating in AP mode with the %IEEE80211_HW_AP_LINK_PS flag set,
-+ * use this function to inform mac80211 that a (potential) trigger frame
-+ * from a connected station was received.
-+ * This must be used in conjunction with ieee80211_sta_ps_transition()
-+ * and possibly ieee80211_sta_pspoll(); calls to all three must be
-+ * serialized.
-+ */
-+void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *sta, u8 tid);
-+
- /*
-  * The TX headroom reserved by mac80211 for its own tx_status functions.
-  * This is enough for the radiotap header.
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index c567870..5e65e83 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1319,13 +1319,52 @@ int ieee80211_sta_ps_transition(struct ieee80211_sta *pubsta, bool start)
- }
- EXPORT_SYMBOL(ieee80211_sta_ps_transition);
- 
-+void ieee80211_sta_pspoll(struct ieee80211_sta *pubsta)
-+{
-+	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-+
-+	if (test_sta_flag(sta, WLAN_STA_SP))
-+		return;
-+
-+	if (!test_sta_flag(sta, WLAN_STA_PS_DRIVER))
-+		ieee80211_sta_ps_deliver_poll_response(sta);
-+	else
-+		set_sta_flag(sta, WLAN_STA_PSPOLL);
-+}
-+EXPORT_SYMBOL(ieee80211_sta_pspoll);
-+
-+void ieee80211_sta_uapsd_trigger(struct ieee80211_sta *pubsta, u8 tid)
-+{
-+	struct sta_info *sta = container_of(pubsta, struct sta_info, sta);
-+	u8 ac = ieee802_1d_to_ac[tid & 7];
-+
-+	/*
-+	 * If this AC is not trigger-enabled do nothing.
-+	 *
-+	 * NB: This could/should check a separate bitmap of trigger-
-+	 * enabled queues, but for now we only implement uAPSD w/o
-+	 * TSPEC changes to the ACs, so they're always the same.
-+	 */
-+	if (!(sta->sta.uapsd_queues & BIT(ac)))
-+		return;
-+
-+	/* if we are in a service period, do nothing */
-+	if (test_sta_flag(sta, WLAN_STA_SP))
-+		return;
-+
-+	if (!test_sta_flag(sta, WLAN_STA_PS_DRIVER))
-+		ieee80211_sta_ps_deliver_uapsd(sta);
-+	else
-+		set_sta_flag(sta, WLAN_STA_UAPSD);
-+}
-+EXPORT_SYMBOL(ieee80211_sta_uapsd_trigger);
-+
- static ieee80211_rx_result debug_noinline
- ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
- {
- 	struct ieee80211_sub_if_data *sdata = rx->sdata;
- 	struct ieee80211_hdr *hdr = (void *)rx->skb->data;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(rx->skb);
--	int tid, ac;
- 
- 	if (!rx->sta)
- 		return RX_CONTINUE;
-@@ -1351,12 +1390,7 @@ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
- 		return RX_CONTINUE;
- 
- 	if (unlikely(ieee80211_is_pspoll(hdr->frame_control))) {
--		if (!test_sta_flag(rx->sta, WLAN_STA_SP)) {
--			if (!test_sta_flag(rx->sta, WLAN_STA_PS_DRIVER))
--				ieee80211_sta_ps_deliver_poll_response(rx->sta);
--			else
--				set_sta_flag(rx->sta, WLAN_STA_PSPOLL);
--		}
-+		ieee80211_sta_pspoll(&rx->sta->sta);
- 
- 		/* Free PS Poll skb here instead of returning RX_DROP that would
- 		 * count as an dropped frame. */
-@@ -1368,27 +1402,11 @@ ieee80211_rx_h_uapsd_and_pspoll(struct ieee80211_rx_data *rx)
- 		   ieee80211_has_pm(hdr->frame_control) &&
- 		   (ieee80211_is_data_qos(hdr->frame_control) ||
- 		    ieee80211_is_qos_nullfunc(hdr->frame_control))) {
--		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
--		ac = ieee802_1d_to_ac[tid & 7];
-+		u8 tid;
- 
--		/*
--		 * If this AC is not trigger-enabled do nothing.
--		 *
--		 * NB: This could/should check a separate bitmap of trigger-
--		 * enabled queues, but for now we only implement uAPSD w/o
--		 * TSPEC changes to the ACs, so they're always the same.
--		 */
--		if (!(rx->sta->sta.uapsd_queues & BIT(ac)))
--			return RX_CONTINUE;
--
--		/* if we are in a service period, do nothing */
--		if (test_sta_flag(rx->sta, WLAN_STA_SP))
--			return RX_CONTINUE;
-+		tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
- 
--		if (!test_sta_flag(rx->sta, WLAN_STA_PS_DRIVER))
--			ieee80211_sta_ps_deliver_uapsd(rx->sta);
--		else
--			set_sta_flag(rx->sta, WLAN_STA_UAPSD);
-+		ieee80211_sta_uapsd_trigger(&rx->sta->sta, tid);
- 	}
- 
- 	return RX_CONTINUE;
--- 
-2.8.0.rc3
-
+T24gTW9uLCAyMDE2LTA1LTE2IGF0IDE3OjA4ICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiBL
+YWxsZSBWYWxvIDxrdmFsb0Bjb2RlYXVyb3JhLm9yZz4gd3JpdGVzOg0KPiANCj4gPiANCj4gPiBL
+YWxsZSBWYWxvIDxrdmFsb0Bjb2RlYXVyb3JhLm9yZz4gd3JpdGVzOg0KPiA+IA0KPiA+ID4gDQo+
+ID4gPiBUaGUgZm9sbG93aW5nIGNoYW5nZXMgc2luY2UgY29tbWl0DQo+ID4gPiBlZGUwMGE1Y2Vi
+NGQ5MDNhOGMxMzdhNTJiYjc3ZDU3NGJhYWVmOGJkOg0KPiA+ID4gDQo+ID4gPiDCoCBNZXJnZSB0
+YWcgJ3dpcmVsZXNzLWRyaXZlcnMtbmV4dC1mb3ItZGF2ZW0tMjAxNi0wNS0wMicgb2YNCj4gPiA+
+IGdpdDovL2dpdC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9rdmFsby93aXJl
+bGVzcy0NCj4gPiA+IGRyaXZlcnMtbmV4dCAoMjAxNi0wNS0wMyAwMDozNToxNiAtMDQwMCkNCj4g
+PiA+IA0KPiA+ID4gYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6DQo+ID4g
+PiANCj4gPiA+IA0KPiA+ID4gwqAgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9r
+ZXJuZWwvZ2l0L2t2YWxvL3dpcmVsZXNzLQ0KPiA+ID4gZHJpdmVycy1uZXh0LmdpdCB0YWdzL3dp
+cmVsZXNzLWRyaXZlcnMtbmV4dC1mb3ItZGF2ZW0tMjAxNi0wNS0xMw0KPiA+IFBsZWFzZSBkb24n
+dCBwdWxsIHRoaXMgeWV0LCB0aGVyZSBtaWdodCBiZSBzb21ldGhpbmcgd3Jvbmcgbm93IHdpdGgN
+Cj4gPiBtZXJnZXMgYW5kIG5lZWQgdG8gY2hlY2sgdGhhdCBmaXJzdC4NCj4gT2ssIGxpa2UgZGlz
+Y3Vzc2VkIGluIHRocmVhZCAibGludXgtbmV4dDogbWFudWFsIG1lcmdlIG9mIHRoZQ0KPiB3aXJl
+bGVzcy1kcml2ZXJzLW5leHQgdHJlZSB3aXRoIHRoZSBuZXQtbmV4dCB0cmVlIiB0aGVyZSBzZWVt
+cyB0byBiZQ0KPiBhDQo+IHByb2JsZW0gb24gbmV0LW5leHQgaW4gZnVuY3Rpb24gaXdsX212bV9z
+ZXRfdHhfY21kKCkuIEhlcmUgaXMgaG93IEkNCj4gcHJvcG9zZSB0byBmaXggdGhpcy4NCj4gDQo+
+IFdoZW4gcHVsbGluZyB0aGUgdGFnIGFib3ZlIHlvdSBzaG91bGQgZ2V0IGEgY29uZmxpY3QgbGlr
+ZSB0aGlzOg0KPiANCj4gZGlmZiAtLWNjIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdp
+ZmkvbXZtL3R4LmMNCj4gaW5kZXggODgwMjEwOTE3YTZmLDc3OWJhZmNiYzlhMS4uMDAwMDAwMDAw
+MDAwDQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL3R4LmMN
+Cj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0vdHguYw0KPiBA
+QEAgLTI5NCw3IC0yOTUsNyArMjk0LDExIEBAQCB2b2lkIGl3bF9tdm1fc2V0X3R4X2NtZChzdHJ1
+Y3QgaXdsX212bcKgDQo+IMKgwqDCoMKgwqDCoMKgwqB0eF9jbWQtPnR4X2ZsYWdzID0gY3B1X3Rv
+X2xlMzIodHhfZmxhZ3MpOw0KPiDCoMKgwqDCoMKgwqDCoMKgLyogVG90YWwgIyBieXRlcyB0byBi
+ZSB0cmFuc21pdHRlZCAqLw0KPiDCoMKgwqDCoMKgwqDCoMKgdHhfY21kLT5sZW4gPSBjcHVfdG9f
+bGUxNigodTE2KXNrYi0+bGVuICsNCj4gKys8PDw8PDw8IEhFQUQNCj4gwqArwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoCh1aW50cHRyX3QpaW5mby0+ZHJpdmVyX2RhdGFbMF0pOw0KPiArKz09
+PT09PT0NCj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCh1aW50cHRyX3Qpc2tiX2lu
+Zm8tPmRyaXZlcl9kYXRhWzBdKTsNCj4gKys+Pj4+Pj4+IG1hc3Rlcg0KPiDCoMKgwqDCoMKgwqDC
+oMKgdHhfY21kLT5saWZlX3RpbWUgPSBjcHVfdG9fbGUzMihUWF9DTURfTElGRV9USU1FX0lORklO
+SVRFKTsNCj4gwqDCoMKgwqDCoMKgwqDCoHR4X2NtZC0+c3RhX2lkID0gc3RhX2lkOw0KPiANCj4g
+UGljayB0aGUgbGF0dGVyIHdpdGggc2tiX2luZm8gYW5kIHRoZW4gYWRkIHNrYl9pbmZvIHRvIHRo
+ZSBiZWdpbm5pbmcNCj4gb2YNCj4gdGhlIHNhbWUgZnVuY3Rpb24uIFNvIHRoZSBmdW5jdGlvbiBz
+aG91bGQgYmU6DQo+IA0KPiB2b2lkIGl3bF9tdm1fc2V0X3R4X2NtZChzdHJ1Y3QgaXdsX212bSAq
+bXZtLCBzdHJ1Y3Qgc2tfYnVmZiAqc2tiLA0KPiAJCQlzdHJ1Y3QgaXdsX3R4X2NtZCAqdHhfY21k
+LA0KPiAJCQlzdHJ1Y3QgaWVlZTgwMjExX3R4X2luZm8gKmluZm8sIHU4IHN0YV9pZCkNCj4gew0K
+PiAJc3RydWN0IGllZWU4MDIxMV90eF9pbmZvICpza2JfaW5mbyA9IElFRUU4MDIxMV9TS0JfQ0Io
+c2tiKTsNCj4gCXN0cnVjdCBpZWVlODAyMTFfaGRyICpoZHIgPSAodm9pZCAqKXNrYi0+ZGF0YTsN
+Cj4gCV9fbGUxNiBmYyA9IGhkci0+ZnJhbWVfY29udHJvbDsNCj4gCXUzMiB0eF9mbGFncyA9IGxl
+MzJfdG9fY3B1KHR4X2NtZC0+dHhfZmxhZ3MpOw0KPiAJdTMyIGxlbiA9IHNrYi0+bGVuICsgRkNT
+X0xFTjsNCj4gCXU4IGFjOw0KPiANCj4gWy4uLl0NCj4gDQo+IAl0eF9jbWQtPnR4X2ZsYWdzID0g
+Y3B1X3RvX2xlMzIodHhfZmxhZ3MpOw0KPiAJLyogVG90YWwgIyBieXRlcyB0byBiZSB0cmFuc21p
+dHRlZCAqLw0KPiAJdHhfY21kLT5sZW4gPSBjcHVfdG9fbGUxNigodTE2KXNrYi0+bGVuICsNCj4g
+CQkodWludHB0cl90KXNrYl9pbmZvLT5kcml2ZXJfZGF0YVswXSk7DQo+IAl0eF9jbWQtPmxpZmVf
+dGltZSA9IGNwdV90b19sZTMyKFRYX0NNRF9MSUZFX1RJTUVfSU5GSU5JVEUpOw0KPiAJdHhfY21k
+LT5zdGFfaWQgPSBzdGFfaWQ7DQo+IA0KPiBTb3JyeSBhYm91dCB0aGUgaGFzc2xlIGFuZCBwbGVh
+c2UgbGV0IG1lIGtub3cgaWYgeW91IGhhdmUgYW55DQo+IHByb2JsZW1zLg0KPiBBZGRpbmcgTHVj
+YSBhbmQgRW1tYW51ZWwganVzdCBpbiBjYXNlIEkgbWlzc2VkIHNvbWV0aGluZy4NCg0KQUNLLiDC
+oFRoaXMgbG9va3MgY29ycmVjdC4gwqBJIGp1c3QgZGlmZmVkIHRoZSBpd2x3aWZpLW5leHQuZ2l0
+IHRyZWUgKGF0DQpjb21taXQgYTUyNWQwZWFiMTdkIC0tIHdoaWNoIGlzIHdoZXJlIEkgbWVyZ2Ug
+aXdsd2lmaS1maXhlcyBpbnRvDQppd2x3aWZpLW5leHQpIHdpdGggbmV0LW5leHQuZ2l0IG1hc3Rl
+ciBhbmQgdGhlIGRpZmZlcmVuY2UgWzFdwqBpcw0KZXhhY3RseSB3aGF0IHlvdSBwcm9wb3NlZCB0
+byBmaXguDQoNClsxXcKgaHR0cDovL3Bhc3RlYmluLmNvZWxoby5maS8xYjY5MDdjZGI5YTI1NDEz
+LnR4dA0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4=
