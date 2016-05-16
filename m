@@ -1,283 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40612 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751410AbcEJUJI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 16:09:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Tue, 10 May 2016 23:06:05 +0300
-Message-Id: <1462910797-20303-9-git-send-email-luca@coelho.fi> (sfid-20160510_220911_889013_B908B832)
-In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
-References: <1462910585.25219.7.camel@coelho.fi>
- <1462910797-20303-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 09/41] iwlwifi: mvm: add reorder timeout per frame
+Received: from mga04.intel.com ([192.55.52.120]:29898 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752704AbcEPNh6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 16 May 2016 09:37:58 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with
+ the net-next tree
+Date: Mon, 16 May 2016 13:37:55 +0000
+Message-ID: <1463405875.25219.98.camel@intel.com> (sfid-20160516_153852_654071_BCC01173)
+References: <20160516101606.751f9613@canb.auug.org.au>
+	 <871t529mik.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <871t529mik.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
-
-Add a timer in order to release expired frames from the
-reorder buffer.
-This is needed since some APs do not retransmit frames
-to fill in the reorder holes and in TCP it results with
-a complete stall of traffic.
-
-This has a few side effects on the general design:
-
-The nssn may not reflect the the head of the reorder buffer.
-This situation is valid, and packets with SN lower than the
-reorder buffer head will be dropped.
-
-Another side effect is that since the reorder timer might expire
-we need to lock the reorder buffer.
-This however is fine since the locking is only inside a
-single reorder buffer between RX path and reorder timeout and
-there is no outside contention.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  | 12 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 81 ++++++++++++++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 23 +++++++-
- 3 files changed, 114 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 8272e54..3c331bd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -623,6 +623,12 @@ struct iwl_mvm_shared_mem_cfg {
-  * @last_amsdu: track last ASMDU SN for duplication detection
-  * @last_sub_index: track ASMDU sub frame index for duplication detection
-  * @entries: list of skbs stored
-+ * @reorder_time: time the packet was stored in the reorder buffer
-+ * @reorder_timer: timer for frames are in the reorder buffer. For AMSDU
-+ *	it is the time of last received sub-frame
-+ * @removed: prevent timer re-arming
-+ * @lock: protect reorder buffer internal state
-+ * @mvm: mvm pointer, needed for frame timer context
-  */
- struct iwl_mvm_reorder_buffer {
- 	u16 head_sn;
-@@ -633,6 +639,11 @@ struct iwl_mvm_reorder_buffer {
- 	u16 last_amsdu;
- 	u8 last_sub_index;
- 	struct sk_buff_head entries[IEEE80211_MAX_AMPDU_BUF];
-+	unsigned long reorder_time[IEEE80211_MAX_AMPDU_BUF];
-+	struct timer_list reorder_timer;
-+	bool removed;
-+	spinlock_t lock;
-+	struct iwl_mvm *mvm;
- } ____cacheline_aligned_in_smp;
- 
- /**
-@@ -1682,6 +1693,7 @@ void iwl_mvm_tdls_ch_switch_work(struct work_struct *work);
- void iwl_mvm_sync_rx_queues_internal(struct iwl_mvm *mvm,
- 				     struct iwl_mvm_internal_rxq_notif *notif,
- 				     u32 size);
-+void iwl_mvm_reorder_timer_expired(unsigned long data);
- struct ieee80211_vif *iwl_mvm_get_bss_vif(struct iwl_mvm *mvm);
- 
- void iwl_mvm_nic_restart(struct iwl_mvm *mvm, bool fw_error);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 4f320dc..ed187af 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -395,6 +395,8 @@ int iwl_mvm_notify_rx_queue(struct iwl_mvm *mvm, u32 rxq_mask,
- 	return ret;
- }
- 
-+#define RX_REORDER_BUF_TIMEOUT_MQ (HZ / 10)
-+
- static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
- 				   struct ieee80211_sta *sta,
- 				   struct napi_struct *napi,
-@@ -403,6 +405,12 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
- {
- 	u16 ssn = reorder_buf->head_sn;
- 
-+	lockdep_assert_held(&reorder_buf->lock);
-+
-+	/* ignore nssn smaller than head sn - this can happen due to timeout */
-+	if (ieee80211_sn_less(nssn, ssn))
-+		return;
-+
- 	while (ieee80211_sn_less(ssn, nssn)) {
- 		int index = ssn % reorder_buf->buf_size;
- 		struct sk_buff_head *skb_list = &reorder_buf->entries[index];
-@@ -422,6 +430,66 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
- 		}
- 	}
- 	reorder_buf->head_sn = nssn;
-+
-+	if (reorder_buf->num_stored && !reorder_buf->removed) {
-+		u16 index = reorder_buf->head_sn % reorder_buf->buf_size;
-+
-+		while (!skb_peek_tail(&reorder_buf->entries[index]))
-+			index = (index + 1) % reorder_buf->buf_size;
-+		/* modify timer to match next frame's expiration time */
-+		mod_timer(&reorder_buf->reorder_timer,
-+			  reorder_buf->reorder_time[index] + 1 +
-+			  RX_REORDER_BUF_TIMEOUT_MQ);
-+	} else {
-+		del_timer(&reorder_buf->reorder_timer);
-+	}
-+}
-+
-+void iwl_mvm_reorder_timer_expired(unsigned long data)
-+{
-+	struct iwl_mvm_reorder_buffer *buf = (void *)data;
-+	int i;
-+	u16 sn = 0, index = 0;
-+	bool expired = false;
-+
-+	spin_lock_bh(&buf->lock);
-+
-+	if (!buf->num_stored || buf->removed) {
-+		spin_unlock_bh(&buf->lock);
-+		return;
-+	}
-+
-+	for (i = 0; i < buf->buf_size ; i++) {
-+		index = (buf->head_sn + i) % buf->buf_size;
-+
-+		if (!skb_peek_tail(&buf->entries[index]))
-+			continue;
-+		if (!time_after(jiffies, buf->reorder_time[index] +
-+				RX_REORDER_BUF_TIMEOUT_MQ))
-+			break;
-+		expired = true;
-+		sn = ieee80211_sn_add(buf->head_sn, i + 1);
-+	}
-+
-+	if (expired) {
-+		struct ieee80211_sta *sta;
-+
-+		rcu_read_lock();
-+		sta = rcu_dereference(buf->mvm->fw_id_to_mac_id[buf->sta_id]);
-+		/* SN is set to the last expired frame + 1 */
-+		iwl_mvm_release_frames(buf->mvm, sta, NULL, buf, sn);
-+		rcu_read_unlock();
-+	} else if (buf->num_stored) {
-+		/*
-+		 * If no frame expired and there are stored frames, index is now
-+		 * pointing to the first unexpired frame - modify timer
-+		 * accordingly to this frame.
-+		 */
-+		mod_timer(&buf->reorder_timer,
-+			  buf->reorder_time[index] +
-+			  1 + RX_REORDER_BUF_TIMEOUT_MQ);
-+	}
-+	spin_unlock_bh(&buf->lock);
- }
- 
- static void iwl_mvm_del_ba(struct iwl_mvm *mvm, int queue,
-@@ -448,9 +516,12 @@ static void iwl_mvm_del_ba(struct iwl_mvm *mvm, int queue,
- 	reorder_buf = &ba_data->reorder_buf[queue];
- 
- 	/* release all frames that are in the reorder buffer to the stack */
-+	spin_lock_bh(&reorder_buf->lock);
- 	iwl_mvm_release_frames(mvm, sta, NULL, reorder_buf,
- 			       ieee80211_sn_add(reorder_buf->head_sn,
- 						reorder_buf->buf_size));
-+	spin_unlock_bh(&reorder_buf->lock);
-+	del_timer_sync(&reorder_buf->reorder_timer);
- 
- out:
- 	rcu_read_unlock();
-@@ -545,6 +616,8 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 
- 	buffer = &baid_data->reorder_buf[queue];
- 
-+	spin_lock_bh(&buffer->lock);
-+
- 	/*
- 	 * If there was a significant jump in the nssn - adjust.
- 	 * If the SN is smaller than the NSSN it might need to first go into
-@@ -564,8 +637,10 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 
- 	/* release immediately if allowed by nssn and no stored frames */
- 	if (!buffer->num_stored && ieee80211_sn_less(sn, nssn)) {
--		buffer->head_sn = nssn;
-+		if (ieee80211_sn_less(buffer->head_sn, nssn))
-+			buffer->head_sn = nssn;
- 		/* No need to update AMSDU last SN - we are moving the head */
-+		spin_unlock_bh(&buffer->lock);
- 		return false;
- 	}
- 
-@@ -589,16 +664,20 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 	/* put in reorder buffer */
- 	__skb_queue_tail(&buffer->entries[index], skb);
- 	buffer->num_stored++;
-+	buffer->reorder_time[index] = jiffies;
-+
- 	if (amsdu) {
- 		buffer->last_amsdu = sn;
- 		buffer->last_sub_index = sub_frame_idx;
- 	}
- 
- 	iwl_mvm_release_frames(mvm, sta, napi, buffer, nssn);
-+	spin_unlock_bh(&buffer->lock);
- 	return true;
- 
- drop:
- 	kfree_skb(skb);
-+	spin_unlock_bh(&buffer->lock);
- 	return true;
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 2b83911..e7f1da5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1189,8 +1189,11 @@ static void iwl_mvm_free_reorder(struct iwl_mvm *mvm,
- 		struct iwl_mvm_reorder_buffer *reorder_buf =
- 			&data->reorder_buf[i];
- 
--		if (likely(!reorder_buf->num_stored))
-+		spin_lock_bh(&reorder_buf->lock);
-+		if (likely(!reorder_buf->num_stored)) {
-+			spin_unlock_bh(&reorder_buf->lock);
- 			continue;
-+		}
- 
- 		/*
- 		 * This shouldn't happen in regular DELBA since the internal
-@@ -1201,6 +1204,17 @@ static void iwl_mvm_free_reorder(struct iwl_mvm *mvm,
- 
- 		for (j = 0; j < reorder_buf->buf_size; j++)
- 			__skb_queue_purge(&reorder_buf->entries[j]);
-+		/*
-+		 * Prevent timer re-arm. This prevents a very far fetched case
-+		 * where we timed out on the notification. There may be prior
-+		 * RX frames pending in the RX queue before the notification
-+		 * that might get processed between now and the actual deletion
-+		 * and we would re-arm the timer although we are deleting the
-+		 * reorder buffer.
-+		 */
-+		reorder_buf->removed = true;
-+		spin_unlock_bh(&reorder_buf->lock);
-+		del_timer_sync(&reorder_buf->reorder_timer);
- 	}
- }
- 
-@@ -1219,6 +1233,13 @@ static void iwl_mvm_init_reorder_buffer(struct iwl_mvm *mvm,
- 		reorder_buf->num_stored = 0;
- 		reorder_buf->head_sn = ssn;
- 		reorder_buf->buf_size = buf_size;
-+		/* rx reorder timer */
-+		reorder_buf->reorder_timer.function =
-+			iwl_mvm_reorder_timer_expired;
-+		reorder_buf->reorder_timer.data = (unsigned long)reorder_buf;
-+		init_timer(&reorder_buf->reorder_timer);
-+		spin_lock_init(&reorder_buf->lock);
-+		reorder_buf->mvm = mvm;
- 		reorder_buf->queue = i;
- 		reorder_buf->sta_id = sta_id;
- 		for (j = 0; j < reorder_buf->buf_size; j++)
--- 
-2.8.1
-
+SGkgS2FsbGUsDQoNCk9uIE1vbiwgMjAxNi0wNS0xNiBhdCAxNjoxMCArMDMwMCwgS2FsbGUgVmFs
+byB3cm90ZToNCj4gKEFkZGluZyBMdWNhIGFuZCBsaW51eC13aXJlbGVzcykNCj4gDQo+IFN0ZXBo
+ZW4gUm90aHdlbGwgPHNmckBjYW5iLmF1dWcub3JnLmF1PiB3cml0ZXM6DQo+IA0KPiA+IA0KPiA+
+IFRvZGF5J3MgbGludXgtbmV4dCBtZXJnZSBvZiB0aGUgd2lyZWxlc3MtZHJpdmVycy1uZXh0IHRy
+ZWUgZ290IGENCj4gPiBjb25mbGljdCBpbjoNCj4gPiANCj4gPiDCoCBkcml2ZXJzL25ldC93aXJl
+bGVzcy9pbnRlbC9pd2x3aWZpL212bS90eC5jDQo+ID4gDQo+ID4gYmV0d2VlbiBjb21taXQ6DQo+
+ID4gDQo+ID4gwqAgOTA5YjI3ZjcwNjQzICgiTWVyZ2UNCj4gPiBnaXQ6Ly9naXQua2VybmVsLm9y
+Zy9wdWIvc2NtL2xpbnV4L2tlcm5lbC9naXQvZGF2ZW0vbmV0IikNCj4gPiANCj4gPiBmcm9tIHRo
+ZSBuZXQtbmV4dCB0cmVlIGFuZCBjb21taXQ6DQo+ID4gDQo+ID4gwqAgYTUyNWQwZWFiMTdkICgi
+TWVyZ2UgdGFnICdpd2x3aWZpLWZvci1rYWxsZS0yMDE2LTA1LTA0JyBvZg0KPiA+IGdpdDovL2dp
+dC5rZXJuZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2l3bHdpZmktDQo+
+ID4gZml4ZXMiKQ0KPiA+IA0KPiA+IGZyb20gdGhlIHdpcmVsZXNzLWRyaXZlcnMtbmV4dCB0cmVl
+Lg0KPiA+IA0KPiA+IEkgZml4ZWQgaXQgdXAgKEkgdGhpbmsgdGhhdCB0aGUgbmV0LW5leHQgdHJl
+ZSBtZXJnZSBsb3N0IHRoZQ0KPiA+IGNoYW5nZXMNCj4gPiB0byBpd2xfbXZtX3NldF90eF9jbWQo
+KSBhc3NvY2lhdGVkIHdpdGggY29tbWl0IDVjMDhiMGY1MDI2Zg0KPiA+ICgiaXdsd2lmaToNCj4g
+PiBtdm06IGRvbid0IG92ZXJyaWRlIHRoZSByYXRlIHdpdGggdGhlIEFNU0RVIGxlbiIpKSBhbmQg
+Y2FuIGNhcnJ5DQo+ID4gdGhlDQo+ID4gZml4IGFzIG5lY2Vzc2FyeS4NCj4gSG1tLCBJJ20gc3Rh
+cnRpbmcgdG8gc3VzcGVjdCBzb21ldGhpbmcgaXMgd3JvbmcuIEkgZGlkIGEgdGVzdCBtZXJnZQ0K
+PiBvZg0KPiBuZXQtbmV4dCBhbmQgd2lyZWxlc3MtZHJpdmVycy1uZXh0IGFuZCBnb3QgdGhpcyBh
+cyBhIGRpZmYgYWZ0ZXIgdGhlDQo+IG1lcmdlOg0KPiANCj4gLS0tIGEvZHJpdmVycy9uZXQvd2ly
+ZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0vdHguYw0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVz
+cy9pbnRlbC9pd2x3aWZpL212bS90eC5jDQo+IEBAIC0yMTEsNyArMjExLDYgQEAgdm9pZCBpd2xf
+bXZtX3NldF90eF9jbWQoc3RydWN0IGl3bF9tdm0gKm12bSwNCj4gc3RydWN0IHNrX2J1ZmYgKnNr
+YiwNCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgc3Ry
+dWN0IGl3bF90eF9jbWQgKnR4X2NtZCwNCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgc3RydWN0IGllZWU4MDIxMV90eF9pbmZvICppbmZvLCB1OCBzdGFf
+aWQpDQo+IMKgew0KPiAtwqDCoMKgwqDCoMKgwqBzdHJ1Y3QgaWVlZTgwMjExX3R4X2luZm8gKnNr
+Yl9pbmZvID0gSUVFRTgwMjExX1NLQl9DQihza2IpOw0KPiDCoMKgwqDCoMKgwqDCoMKgc3RydWN0
+IGllZWU4MDIxMV9oZHIgKmhkciA9ICh2b2lkICopc2tiLT5kYXRhOw0KPiDCoMKgwqDCoMKgwqDC
+oMKgX19sZTE2IGZjID0gaGRyLT5mcmFtZV9jb250cm9sOw0KPiDCoMKgwqDCoMKgwqDCoMKgdTMy
+IHR4X2ZsYWdzID0gbGUzMl90b19jcHUodHhfY21kLT50eF9mbGFncyk7DQo+IEBAIC0yOTUsNyAr
+Mjk0LDcgQEAgdm9pZCBpd2xfbXZtX3NldF90eF9jbWQoc3RydWN0IGl3bF9tdm0gKm12bSwNCj4g
+c3RydWN0IHNrX2J1ZmYgKnNrYiwNCj4gwqDCoMKgwqDCoMKgwqDCoHR4X2NtZC0+dHhfZmxhZ3Mg
+PSBjcHVfdG9fbGUzMih0eF9mbGFncyk7DQo+IMKgwqDCoMKgwqDCoMKgwqAvKiBUb3RhbCAjIGJ5
+dGVzIHRvIGJlIHRyYW5zbWl0dGVkICovDQo+IMKgwqDCoMKgwqDCoMKgwqB0eF9jbWQtPmxlbiA9
+IGNwdV90b19sZTE2KCh1MTYpc2tiLT5sZW4gKw0KPiAtwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgKHVpbnRwdHJfdClza2JfaW5mby0+ZHJpdmVyX2RhdGFbMF0pOw0KPiArwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgKHVpbnRwdHJfdClpbmZvLT5kcml2ZXJfZGF0YVswXSk7DQo+
+IMKgwqDCoMKgwqDCoMKgwqB0eF9jbWQtPmxpZmVfdGltZSA9IGNwdV90b19sZTMyKFRYX0NNRF9M
+SUZFX1RJTUVfSU5GSU5JVEUpOw0KPiDCoMKgwqDCoMKgwqDCoMKgdHhfY21kLT5zdGFfaWQgPSBz
+dGFfaWQ7DQo+IA0KPiBCdXQgY29tbWl0IDVjMDhiMGY1MDI2ZiAoIml3bHdpZmk6IG12bTogZG9u
+J3Qgb3ZlcnJpZGUgdGhlIHJhdGUgd2l0aA0KPiB0aGUNCj4gQU1TRFUgbGVuIikgc3BlY2lmaWNh
+bGx5IGFkZGVkIHNrYl9pbmZvIHZhcmlhYmxlIHRvIHRoYXQgZnVuY3Rpb246DQo+IA0KPiBAQCAt
+MTA1LDYgKzEwNSw3IEBAIHZvaWQgaXdsX212bV9zZXRfdHhfY21kKHN0cnVjdCBpd2xfbXZtICpt
+dm0sDQo+IHN0cnVjdCBza19idWZmICpza2IsDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCBpd2xfdHhfY21kICp0eF9jbWQsDQo+IMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCBpZWVlODAy
+MTFfdHhfaW5mbyAqaW5mbywgdTggc3RhX2lkKQ0KPiDCoHsNCj4gK8KgwqDCoMKgwqDCoMKgc3Ry
+dWN0IGllZWU4MDIxMV90eF9pbmZvICpza2JfaW5mbyA9IElFRUU4MDIxMV9TS0JfQ0Ioc2tiKTsN
+Cj4gwqDCoMKgwqDCoMKgwqDCoHN0cnVjdCBpZWVlODAyMTFfaGRyICpoZHIgPSAodm9pZCAqKXNr
+Yi0+ZGF0YTsNCj4gwqDCoMKgwqDCoMKgwqDCoF9fbGUxNiBmYyA9IGhkci0+ZnJhbWVfY29udHJv
+bDsNCj4gwqDCoMKgwqDCoMKgwqDCoHUzMiB0eF9mbGFncyA9IGxlMzJfdG9fY3B1KHR4X2NtZC0+
+dHhfZmxhZ3MpOw0KPiBAQCAtMTg1LDcgKzE4Niw3IEBAIHZvaWQgaXdsX212bV9zZXRfdHhfY21k
+KHN0cnVjdCBpd2xfbXZtICptdm0sDQo+IHN0cnVjdCBza19idWZmICpza2IsDQo+IMKgwqDCoMKg
+wqDCoMKgwqB0eF9jbWQtPnR4X2ZsYWdzID0gY3B1X3RvX2xlMzIodHhfZmxhZ3MpOw0KPiDCoMKg
+wqDCoMKgwqDCoMKgLyogVG90YWwgIyBieXRlcyB0byBiZSB0cmFuc21pdHRlZCAqLw0KPiDCoMKg
+wqDCoMKgwqDCoMKgdHhfY21kLT5sZW4gPSBjcHVfdG9fbGUxNigodTE2KXNrYi0+bGVuICsNCj4g
+LcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCh1aW50cHRyX3QpaW5mby0+ZHJpdmVyX2Rh
+dGFbMF0pOw0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgKHVpbnRwdHJfdClza2Jf
+aW5mby0+ZHJpdmVyX2RhdGFbMF0pOw0KPiDCoMKgwqDCoMKgwqDCoMKgdHhfY21kLT5uZXh0X2Zy
+YW1lX2xlbiA9IDA7DQo+IMKgwqDCoMKgwqDCoMKgwqB0eF9jbWQtPmxpZmVfdGltZSA9IGNwdV90
+b19sZTMyKFRYX0NNRF9MSUZFX1RJTUVfSU5GSU5JVEUpOw0KPiDCoMKgwqDCoMKgwqDCoMKgdHhf
+Y21kLT5zdGFfaWQgPSBzdGFfaWQ7DQo+IA0KPiBJIHdhc24ndCBleHBlY3RpbmcgdGhhdCBza2Jf
+aW5mbyB2YXJpYWJsZSBpcyByZW1vdmVkLiBEbyB3ZSBub3cgaGF2ZQ0KPiBtZXJnZSBkYW1hZ2Ug
+c29tZXdoZXJlPyBMdWNhLCB3aGF0IGRvIHlvdSB0aGluaz8NCg0KQXMgd2UgZGlzY3Vzc2VkIG9u
+IElSQywgaXQgc2VlbXMgdG8gbWUgdGhhdCB0aGVyZSB3YXMgYSBtZXJnZSBkYW1hZ2UNCndoZW4g
+RGF2ZSBtZXJnZWQgbmV0LmdpdCBpbnRvIG5ldC1uZXh0LmdpdCAoYXMgeW91IG1vc3RseSBmb3Vu
+ZCBvdXQgOykuDQoNCkknbSBub3Qgc3VyZSBob3cgdG8gc29sdmUgdGhhdCwgYnV0IEknbSBzdXJl
+IHlvdSBhbmQgRGF2ZSBjYW4gZmlndXJlDQpzb21ldGhpbmcgb3V0LiA6KSBQbGVhc2UgbGV0IG1l
+IGtub3cgaWYgeW91IG5lZWQgYW55IGhlbHAgd2l0aCBpdC4NCg0KLS0NCkNoZWVycywNCkx1Y2Eu
