@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0193.hostedemail.com ([216.40.44.193]:52516 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754750AbcE0SHp (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:48090 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754744AbcEQQVb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 14:07:45 -0400
-Message-ID: <1464372460.3938.13.camel@perches.com> (sfid-20160527_200748_643691_F055CC2E)
-Subject: Re: [PATCH] staging/wilc1000: fixes kzalloc call
-From: Joe Perches <joe@perches.com>
-To: Lidza Louina <lidza.louina@oracle.com>, johnny.kim@atmel.com,
-	austin.shin@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
-	glen.lee@atmel.com, leo.kim@atmel.com, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Date: Fri, 27 May 2016 11:07:40 -0700
-In-Reply-To: <1464371477-16965-1-git-send-email-lidza.louina@oracle.com>
-References: <1464371477-16965-1-git-send-email-lidza.louina@oracle.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+	Tue, 17 May 2016 12:21:31 -0400
+Date: Tue, 17 May 2016 12:21:29 -0400 (EDT)
+Message-Id: <20160517.122129.77809623717937332.davem@davemloft.net> (sfid-20160517_182136_619388_A4847DDD)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	luciano.coelho@intel.com, emmanuel.grumbach@intel.com
+Subject: Re: pull-request: wireless-drivers-next 2016-05-13
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <8737ph89rd.fsf@kamboji.qca.qualcomm.com>
+References: <87wpmu87ns.fsf@kamboji.qca.qualcomm.com>
+	<87futi858q.fsf@kamboji.qca.qualcomm.com>
+	<8737ph89rd.fsf@kamboji.qca.qualcomm.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-05-27 at 13:51 -0400, Lidza Louina wrote:
-> The wl pointer was initialized as a pointer to a struct wilc and
-> assigned to a piece of memory the size of the pointer. It should be the
-> size of struct wilc.
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Tue, 17 May 2016 09:43:34 +0300
 
-This isn't necessary.
+> I noticed that you had marked this as Superseded in pathwork[1]. I was
+> actually hoping that you would pull this with the instructions how to
+> fix the conflict. But do you actually want me to resubmit the pull
+> request? Or something else?
+> 
+> [1] https://patchwork.ozlabs.org/patch/621953/
 
-The code in question is:
+My impression is that you need to make adjustments to fix the merge error
+I made the other day, and that a new pull request would show up with that
+corrected.
 
-	struct wilc *wl;
+There is no rush, whenever you submit it I'll still take it.
 
-	sema_init(&close_exit_sync, 0);
-
-	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
-	if (!wl)
-		return -ENOMEM;
-
-	*wilc = wl;
-
-so this isn't any real change and the generally desired form for
-allocations from CodingStyle (Chapter 14: Allocating Memory) is:
-
-The preferred form for passing a size of a struct is the following:	p = kmalloc(sizeof(*p), ...);
-
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c
-[]
-> @@ -1260,7 +1260,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
->  
->  	sema_init(&close_exit_sync, 0);
->  
-> -	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
-> +	wl = kzalloc(sizeof(struct wilc), GFP_KERNEL);
->  	if (!wl)
->  		return -ENOMEM;
+THanks.
