@@ -1,28 +1,23 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:33405 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753114AbcE3Akx (ORCPT
+Received: from vpn.innerrange.com.au ([203.122.143.146]:29255 "EHLO
+	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932970AbcEQFKK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 29 May 2016 20:40:53 -0400
+	Tue, 17 May 2016 01:10:10 -0400
+From: Craig McQueen <craig.mcqueen@innerrange.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 17 May 2016 15:10:02 +1000
+Subject: rt2800 maximum clients in access point mode
+Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D20D2594E@IR-CENTRAL.corp.innerrange.com> (sfid-20160517_071015_102765_BAC4A90D)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgWMxU3qBsr0eu5cdAstu+s-0b9p1r-z5ZvkYejv2GtQLA@mail.gmail.com>
-References: <cover.1464492195.git.kirtika.ruchandani@gmail.com>
-	<5c2861995f05d456b3ce16e29ceae7e578b1456f.1464492195.git.kirtika.ruchandani@gmail.com>
-	<CAGRGNgWMxU3qBsr0eu5cdAstu+s-0b9p1r-z5ZvkYejv2GtQLA@mail.gmail.com>
-Date: Sun, 29 May 2016 17:40:51 -0700
-Message-ID: <CAA-b7a9QS+GqxrYhDFDbYmLGKPt=z_fP02KbsUfMPWLrqih76w@mail.gmail.com> (sfid-20160530_024100_916836_AC41DE13)
-Subject: Re: [PATCH 3/3] nl80211: Various checkpatch.pl fixes
-From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tina Ruchandani <ruchandani.tina@gmail.com>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> There's too much stuff here to quickly review, it'd be nice if you
-> could split this up into patches that do the following:
+What is the maximum number of clients that an rt2800 device can support simultaneously while in access point mode?
 
-Thanks, I will send out a v2 with the split you suggested.
+I've had a look through the Linux kernel code and searched online, but haven't been able to find an answer so far.
+
+-- 
+Craig McQueen
+
