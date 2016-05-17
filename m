@@ -1,58 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39105 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754865AbcESNIS (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:36659 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752178AbcEQDZj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2016 09:08:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Lauri Kasanen <cand@gmx.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RESEND] Re: updating carl9170-1.fw in linux-firmware.git
-References: <20160416113312.8de2266358165182bb4b4a15@gmx.com>
-	<2185358.G319l0XIJC@debian64>
-	<87wpnrcft4.fsf@kamboji.qca.qualcomm.com>
-	<54163090.DmVClckc2L@debian64>
-	<20160518114828.bfaef9e4fbe9e039687eab38@gmx.com>
-Date: Thu, 19 May 2016 16:08:10 +0300
-In-Reply-To: <20160518114828.bfaef9e4fbe9e039687eab38@gmx.com> (Lauri
-	Kasanen's message of "Wed, 18 May 2016 11:48:28 +0300")
-Message-ID: <87wpmqdwlh.fsf@kamboji.qca.qualcomm.com> (sfid-20160519_150835_491797_B0433CDB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 16 May 2016 23:25:39 -0400
+Received: by mail-pa0-f65.google.com with SMTP id xm6so465607pab.3
+        for <linux-wireless@vger.kernel.org>; Mon, 16 May 2016 20:25:38 -0700 (PDT)
+From: Adrian Chadd <adrian@freebsd.org>
+To: linux-wireless@vger.kernel.org
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	Kalle Valo <kvalo@codeaurora.org>, b43-dev@lists.infradead.org
+Subject: [PATCH] b43: don't fall back to CCK rates on 5GHz OFDM for RTS frames
+Date: Mon, 16 May 2016 20:25:33 -0700
+Message-Id: <1463455534-22512-1-git-send-email-adrian@freebsd.org> (sfid-20160517_052543_183473_A0541190)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lauri Kasanen <cand@gmx.com> writes:
+This fixes a small issue with selecting fallback rates for
+RTS frames.  For OFDM PHY rates in 5GHz mode we shouldn't
+fall back to CCK.
 
-> On Tue, 03 May 2016 15:09:39 +0200
-> Christian Lamparter <chunkeey@googlemail.com> wrote:
->
->> On Thursday, April 21, 2016 03:22:15 PM Kalle Valo wrote:
->> > Christian Lamparter <chunkeey@googlemail.com> writes:
->> > 
->> > > Maintainers. So for those people reading the fw list:
->> > >
->> > > What would it take to update the carl9170-1.fw firmware file in your
->> > > repository to the latest version?
->> > 
->> > Thanks for following up on this. It would be good to solve this finally.
->> Well, this was almost two weeks and no update yet.
->> Kalle, can you please apply the "[PATCH v2] carl9170: Clarify kconfig text"
->> patch from "Lauri Kasanen <cand@gmx.com>" [0].
->> 
->> [0] <https://marc.info/?l=linux-wireless&m=146081633405880>
->
-> Seems we missed 4.7?
+Adrian Chadd (1):
+  [b43] don't unconditionally fall back to CCK if the rate is 6MB OFDM.
 
-Yeah, I didn't consider this important enough and delayed it due to lack
-of time. I now put the patch back to my queue for 4.8, but please check
-that it's the correct version:
-
-https://patchwork.kernel.org/patch/8861621/
-
-But we really should figure out how to get the latest version to
-linux-firmware, this is not good in the long run.
+ drivers/net/wireless/broadcom/b43/xmit.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
 -- 
-Kalle Valo
+2.6.3
+
