@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39407 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbcEISN6 (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:14373 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750758AbcEQPI4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 14:13:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com, Felix Fietkau <nbd@openwrt.org>
-Subject: Re: [PATCH] ath9k: Fix symbol overlap window for half/quarter channels
-References: <1461935194-19632-1-git-send-email-helmut.schaa@googlemail.com>
-Date: Mon, 09 May 2016 21:13:44 +0300
-In-Reply-To: <1461935194-19632-1-git-send-email-helmut.schaa@googlemail.com>
-	(Helmut Schaa's message of "Fri, 29 Apr 2016 15:06:34 +0200")
-Message-ID: <87a8jzhzfr.fsf@kamboji.qca.qualcomm.com> (sfid-20160509_201400_679293_3FC6FDA4)
+	Tue, 17 May 2016 11:08:56 -0400
+Date: Tue, 17 May 2016 17:08:52 +0200 (CEST)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Kalle Valo <kvalo@codeaurora.org>
+cc: netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	devel@driverdev.osuosl.org, pmchba@pmcs.com
+Subject: Re: [PATCH 0/7] fix typo
+In-Reply-To: <874m9wpvt2.fsf@purkki.adurom.net>
+Message-ID: <alpine.DEB.2.10.1605171708260.3068@hadrien> (sfid-20160517_170921_547663_C3A7BFC6)
+References: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr> <874m9wpvt2.fsf@purkki.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa <helmut.schaa@googlemail.com> writes:
 
-> Since commit cd6cfd7311a385144a2f9c74f692ae2df3ae033f
-> "ath9k: do not set half/quarter channel flags in AR_PHY_MODE" the
-> condition "rfMode & (AR_PHY_MODE_QUARTER | AR_PHY_MODE_HALF)" would
-> never evaluate to true.
+
+On Tue, 17 May 2016, Kalle Valo wrote:
+
+> Julia Lawall <Julia.Lawall@lip6.fr> writes:
 >
-> Fix this by using the available IS_CHAN_HALF_RATE and IS_CHAN_QUARTER_RATE
-> marcros instead.
+> > firmare -> firmware
+> >
+> > ---
+> >
+> >  drivers/media/dvb-frontends/mn88473.c       |    2 +-
+> >  drivers/net/wireless/ath/ath6kl/core.h      |    2 +-
+> >  drivers/net/wireless/marvell/mwifiex/pcie.c |    2 +-
 >
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> Cc: Felix Fietkau <nbd@openwrt.org>
+> It would be good to know in advance what tree you are planning to submit
+> these for. For example, should I take ath6kl and mwifiex patches or
+> someone else?
 
-Thanks, applied to ath.git.
+I have no preference.  They are all independent in any case.
 
--- 
-Kalle Valo
+julia
