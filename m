@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:62909 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751453AbcEDNJi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2016 09:09:38 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Belisko Marek <marek.belisko@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: mwifiex 8897 disable 11ac in sta mode
-Date: Wed, 4 May 2016 13:04:56 +0000
-Message-ID: <a90ef573f6e443b6b968e263d51160c5@SC-EXCH04.marvell.com> (sfid-20160504_151003_840892_4F302B37)
-References: <CAAfyv37f-+suz206JR3Cdnzt57b1YEtfgVp0W+5GJ5keWNdnNQ@mail.gmail.com>
-In-Reply-To: <CAAfyv37f-+suz206JR3Cdnzt57b1YEtfgVp0W+5GJ5keWNdnNQ@mail.gmail.com>
-Content-Type: multipart/mixed;
-	boundary="_002_a90ef573f6e443b6b968e263d51160c5SCEXCH04marvellcom_"
-MIME-Version: 1.0
+Received: from mout.gmx.net ([212.227.15.15]:52214 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752342AbcEQXCP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2016 19:02:15 -0400
+From: Heinrich Schuchardt <xypron.glpk@gmx.de>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Xinming Hu <huxm@marvell.com>, Cathy Luo <cluo@marvell.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Subject: [PATCH 1/1] mwifiex: illegal assignment
+Date: Wed, 18 May 2016 01:01:58 +0200
+Message-Id: <1463526118-11822-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160518_010240_619792_42A64161)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---_002_a90ef573f6e443b6b968e263d51160c5SCEXCH04marvellcom_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Variable adapter is incorrectly initialized.
 
-SGkgTWFyZWssDQoNCj4gRnJvbTogQmVsaXNrbyBNYXJlayBbbWFpbHRvOm1hcmVrLmJlbGlza29A
-Z21haWwuY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIE1heSAwNCwgMjAxNiA1OjQ4IFBNDQo+IFRv
-OiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEFtaXRrdW1hciBLYXJ3YXINCj4gU3Vi
-amVjdDogbXdpZmlleCA4ODk3IGRpc2FibGUgMTFhYyBpbiBzdGEgbW9kZQ0KPiANCj4gSGksDQo+
-IA0KPiBpdCBpcyBwb3NzaWJsZSBzb21laG93IHRvIGRpc2FibGUgMTFhYyBpbiBtd2lmaWV4IGRy
-aXZlciBmb3Igc3RhIG1vZGUoSQ0KPiB0cmllZCBpbiB3cGFfc3VwcGxpY2FudCBieSBkaXNhYmxl
-X3ZodCB3aXRob3V0IHN1Y2Nlc3MpLiBBbnkgaWRlYXM/IE1hbnkNCj4gdGhhbmtzLg0KDQpUaGVy
-ZSBpcyBub3Qgc3RhbmRhcmQgd2F5LiBZb3UgY2FuIHRyeSBhdHRhY2hlZCBoYWNrLg0KDQpSZWdh
-cmRzLA0KQW1pdGt1bWFyDQo=
+Fixes: bf00dc22bc7a ("mwifiex: AMSDU Rx frame handling in AP mode")
+Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
+---
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---_002_a90ef573f6e443b6b968e263d51160c5SCEXCH04marvellcom_
-Content-Type: application/octet-stream; name="disable_11AC.diff"
-Content-Description: disable_11AC.diff
-Content-Disposition: attachment; filename="disable_11AC.diff"; size=480;
-	creation-date="Wed, 04 May 2016 13:03:37 GMT";
-	modification-date="Wed, 04 May 2016 13:03:37 GMT"
-Content-Transfer-Encoding: base64
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+index 666e91a..bf5660e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+@@ -272,7 +272,7 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
+ int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
+ 			    struct sk_buff *skb)
+ {
+-	struct mwifiex_adapter *adapter = adapter;
++	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct mwifiex_sta_node *src_node;
+ 	struct ethhdr *p_ethhdr;
+ 	struct sk_buff *skb_uap;
+-- 
+2.1.4
 
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9jbWRldnQu
-YyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9jbWRldnQuYwppbmRleCA2
-YmMyMDExLi43NWM2MjdiIDEwMDY0NAotLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxs
-L213aWZpZXgvY21kZXZ0LmMKKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lm
-aWV4L2NtZGV2dC5jCkBAIC0xNTE3LDYgKzE1MTcsOCBAQCBpbnQgbXdpZmlleF9yZXRfZ2V0X2h3
-X3NwZWMoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwKIAllbHNlCiAJCWFkYXB0ZXItPmZ3
-X2JhbmRzID0gQkFORF9COwogCisJYWRhcHRlci0+ZndfYmFuZHMgJj0gfkJBTkRfQUFDOworCiAJ
-YWRhcHRlci0+Y29uZmlnX2JhbmRzID0gYWRhcHRlci0+ZndfYmFuZHM7CiAKIAlpZiAoYWRhcHRl
-ci0+ZndfYmFuZHMgJiBCQU5EX0EpIHsK
-
---_002_a90ef573f6e443b6b968e263d51160c5SCEXCH04marvellcom_--
