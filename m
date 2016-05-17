@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:61269 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750980AbcEGTja (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 7 May 2016 15:39:30 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2016-05-04
-Date: Sat, 7 May 2016 19:39:27 +0000
-Message-ID: <1462649967.3545.4.camel@intel.com> (sfid-20160507_213933_716425_D4CAAB49)
-References: <1462385598.16756.9.camel@intel.com>
-	 <87twibs9m2.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87twibs9m2.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:19182 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755718AbcEQOya (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2016 10:54:30 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: Johnny Kim <johnny.kim@atmel.com>
+Cc: kernel-janitors@vger.kernel.org,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 4/7] staging: wilc1000: fix typo
+Date: Tue, 17 May 2016 16:38:43 +0200
+Message-Id: <1463495926-13728-5-git-send-email-Julia.Lawall@lip6.fr> (sfid-20160517_165812_628607_81ECF7D2)
+In-Reply-To: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE2LTA1LTA2IGF0IDE0OjM0ICswMzAwLCBLYWxsZSBWYWxvIHdyb3RlOg0KPiAi
-R3J1bWJhY2gsIEVtbWFudWVsIiA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cml0ZXM6
-DQo+IA0KPiA+IA0KPiA+IEkga25vdyBpdCBpcyBleHRyZW1lbHkgbGF0ZSBpbiB0aGUgY3ljbGUs
-IGJ1dCB0aGlzIHBhdGNoIGlzDQo+ID4gaW50ZW5kZWQNCj4gPiBmb3IgNC42Li4uIEl0IGZpeGVz
-IGEgcmVncmVzc2lvbiBJIGludHJvZHVjZWQ6IGEgUDJQIHNwZWNpZmljYXRpb24NCj4gPiB2aW9s
-YXRpb24gYXMgbWVudGlvbmVkIGluIHRoZSBjb21taXQgbWVzc2FnZS4NCj4gPiBUaGUgcGF0Y2gg
-aXMgcmF0aGVyIGJpZyBpbiB0ZXJtcyBvZiBudW1iZXIgb2YgbGluZXMgY2hhbmdlZCwgYnV0DQo+
-ID4gdGhlDQo+ID4gc2VtYW50aWNzIGlzIHZlcnkgc2ltcGxlLiBJIGhhdmUgdG8gY29weSB0aGUg
-Y29udHJvbCBibG9jayBvZiB0aGUNCj4gPiBza2INCj4gPiB0byB0aGUgc3RhY2sgd2hlcmVhcyB3
-ZSBhY2Nlc3NlZCB3ZSB1c2VkIHRvIGFjY2VzcyBpdCBkaXJlY3RseQ0KPiA+IHRocm91Z2gNCj4g
-PiBhIHBvaW50ZXIuDQo+ID4gVGhpcyBvYnZpb3VzbHkgaW50cm9kdWNlcyBhIGxvdCBvZiBsaW5l
-IGNoYW5nZXMsIGJ1dCBkb24ndCByZWFsbHkNCj4gPiBjaGFuZ2UgdGhlIGJlaGF2aW9yIG9mIHRo
-ZSBjb2RlIChzaW5jZSBtb3N0IG9mIHRoZSBhY2Nlc3NlcyBhcmUNCj4gPiByZWFkDQo+ID4gb25s
-eSkuDQo+ID4gDQo+ID4gTGV0IG1lIGtub3cgaG93IGl0IGdvZXMuDQo+IFsuLi5dDQo+IA0KPiA+
-IA0KPiA+IFRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21taXQNCj4gPiBmNzQyYWFmMzZl
-ZGYwMzkwYzU0ZDA2MTRiYzRkMjBmZDRjZDM3NjJhOg0KPiA+IA0KPiA+IMKgIGl3bHdpZmk6IG12
-bTogZml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgZHVyaW5nIGZ3IGR1bXANCj4gPiBjb2xsZWN0
-aW9uICgyMDE2LTA0LTEyIDExOjUyOjM5ICswMzAwKQ0KPiA+IA0KPiA+IGFyZSBhdmFpbGFibGUg
-aW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KPiA+IA0KPiA+IMKgIGh0dHBzOi8vZ2l0Lmtlcm5l
-bC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXdsd2lmaS1mDQo+ID4gaXhl
-cy5naXQgdGFncy9pd2x3aWZpLWZvci1rYWxsZS0yMDE2LTA1LTA0DQo+IFB1bGxlZCwgdGhhbmtz
-LiBMZXQncyBzZWUgaWYgdGhpcyBtYWtlcyBpdCB0byA0LjYuDQo+IA0KPiA+IA0KPiA+IEkgdGFr
-ZSB0aGlzIG9wcG9ydHVuaXR5IHRvIGluZm9ybSB5b3UgdGhhdCBJIHdpbGwgYmUgcmVwbGFjZWQg
-YnkNCj4gPiBMdWNhDQo+ID4gZm9yIGEgZmV3IG1vbnRocyBhdCBsZWFzdC4gSSB3aWxsIGJlIHdv
-cmtpbmcgZnVsbCBzdGVhbSBvbiBhIHNpZGUNCj4gPiBwcm9qZWN0IHRoYXQgd2lsbCBub3QgYWxs
-b3cgbWUgdG8gZG8gdGhlIG1haW50YWluZXIgam9iIGluDQo+ID4gcGFyYWxsZWwuDQo+IE9rLCBo
-YXZlIGZ1biBpbiB5b3VyIG5ldyBwcm9qZWN0Lg0KPiANCj4gTHVjYSwgYXMgd2UgX2ZpbmFsbHlf
-IGdvdCBzdW4gaGVyZSBpbiBGaW5sYW5kIHdlIGhhdmUgdG8gaGF2ZSBhICJraWNrDQo+IG9mZiBt
-ZWV0aW5nIGFib3V0IHRoZSBuZXcgb3JnYW5pc2F0aW9uIHN0cnVjdHVyZSIgYnkgeW91ciBncmls
-bCA7KQ0KDQpTb3VuZHMgZ29vZCEgV2hlbiBhcmUgeW91IGdvaW5nIHRvIGJlIGNvbWluZyB0byAi
-VGhlIFNvdXRoIj8gOikNCg0KLS0NCkx1Y2Eu
+firmare -> firmware
+
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+
+---
+ drivers/staging/wilc1000/linux_wlan.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4f93c11..274c390 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -362,7 +362,7 @@ int wilc_wlan_get_firmware(struct net_device *dev)
+ 		goto _fail_;
+ 
+ 	if (request_firmware(&wilc_firmware, firmware, wilc->dev) != 0) {
+-		netdev_err(dev, "%s - firmare not available\n", firmware);
++		netdev_err(dev, "%s - firmware not available\n", firmware);
+ 		ret = -1;
+ 		goto _fail_;
+ 	}
+
