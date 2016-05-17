@@ -1,58 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39797 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755867AbcEFSKH convert rfc822-to-8bit (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:36598 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbcEQMp1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2016 14:10:07 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Kolli, Anilkumar" <akolli@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"akolli@codeaurora.org" <akolli@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix kernel panic, move arvifs list head init
- before htt init
-Date: Fri, 6 May 2016 18:09:58 +0000
-Message-ID: <87a8k3njm2.fsf@kamboji.qca.qualcomm.com> (sfid-20160506_201016_726410_551D8812)
-References: <1461686748-862-1-git-send-email-akolli@qti.qualcomm.com>
-In-Reply-To: <1461686748-862-1-git-send-email-akolli@qti.qualcomm.com>
-	(akolli@qti.qualcomm.com's message of "Tue, 26 Apr 2016 21:35:48	+0530")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 17 May 2016 08:45:27 -0400
+Received: by mail-lb0-f178.google.com with SMTP id h1so5441798lbj.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 05:45:26 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org, leroi.lists@gmail.com
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [RFC/RFT] ath10k: disable wake_tx_queue for older devices
+Date: Tue, 17 May 2016 14:47:01 +0200
+Message-Id: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com> (sfid-20160517_144532_380303_16BB8FAB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<akolli@qti.qualcomm.com> writes:
+Some setups suffer performance regressions with
+current wake_tx_queue implementation.
 
-> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
->
-> It is observed that while loading and unloading ath10k modules
-> in an infinite loop, before ath10k_core_start() completion HTT
-> rx frames are received, while processing these frames,
-> dereferencing the arvifs list code is getting hit before
-> initilizing the arvifs list, causing a kernel panic.
->
-> This patch initilizes the arvifs list before initilizing htt.
->
-> Fixes the below issue:
->  [<bf88b058>] (ath10k_htt_rx_pktlog_completion_handler+0x278/0xd08 [ath10k_core])
->  [<bf88b058>] (ath10k_htt_rx_pktlog_completion_handler [ath10k_core])
->  [<bf88c0dc>] (ath10k_htt_txrx_compl_task+0x5f4/0xeb0 [ath10k_core])
->  [<bf88c0dc>] (ath10k_htt_txrx_compl_task [ath10k_core])
->  [<c0234100>] (tasklet_action+0x8c/0xec)
->  [<c0234100>] (tasklet_action)
->  [<c02337c0>] (__do_softirq+0xf8/0x228)
->  [<c02337c0>] (__do_softirq)  [<c0233920>] (run_ksoftirqd+0x30/0x90)
->  Code: e5954ad8 e2899008 e1540009 0a00000d (e5943008)
->  ---[ end trace 71de5c2e011dbf56 ]---
->  Kernel panic - not syncing: Fatal exception in interrupt
->
-> Fixes: 500ff9f9389d ("ath10k: implement chanctx API")
-> Cc: stable@vger.kernel.org
->
-> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+Hi Roman,
 
-Applied, thanks.
+Can you give this patch a try and see if it helps
+with your performance problems, please?
 
+
+ drivers/net/wireless/ath/ath10k/core.h |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 24 ++++++++++++++++++++++--
+ 2 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1379054000f9..44e7c2cd2e9b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -657,6 +657,7 @@ struct ath10k_fw_components {
+ struct ath10k {
+ 	struct ath_common ath_common;
+ 	struct ieee80211_hw *hw;
++	struct ieee80211_ops *ops;
+ 	struct device *dev;
+ 	u8 mac_addr[ETH_ALEN];
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0e24f9ee8bff..5fa3888afa41 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7396,21 +7396,32 @@ static const struct ieee80211_channel ath10k_5ghz_channels[] = {
+ struct ath10k *ath10k_mac_create(size_t priv_size)
+ {
+ 	struct ieee80211_hw *hw;
++	struct ieee80211_ops *ops;
+ 	struct ath10k *ar;
+ 
+-	hw = ieee80211_alloc_hw(sizeof(struct ath10k) + priv_size, &ath10k_ops);
+-	if (!hw)
++	ops = kmemdup(&ath10k_ops, sizeof(ath10k_ops), GFP_KERNEL);
++	if (!ops)
+ 		return NULL;
+ 
++	hw = ieee80211_alloc_hw(sizeof(struct ath10k) + priv_size, ops);
++	if (!hw) {
++		kfree(ops);
++		return NULL;
++	}
++
+ 	ar = hw->priv;
+ 	ar->hw = hw;
++	ar->ops = ops;
+ 
+ 	return ar;
+ }
+ 
+ void ath10k_mac_destroy(struct ath10k *ar)
+ {
++	struct ieee80211_ops *ops = ar->ops;
++
+ 	ieee80211_free_hw(ar->hw);
++	kfree(ops);
+ }
+ 
+ static const struct ieee80211_iface_limit ath10k_if_limits[] = {
+@@ -7838,6 +7849,15 @@ int ath10k_mac_register(struct ath10k *ar)
+ 			ath10k_warn(ar, "failed to initialise DFS pattern detector\n");
+ 	}
+ 
++	/* Current wake_tx_queue implementation imposes a significant
++	 * performance penalty in some setups. The tx scheduling code needs
++	 * more work anyway so disable the wake_tx_queue unless firmware
++	 * supports the pull-push mechanism.
++	 */
++	if (!test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL,
++		      ar->running_fw->fw_file.fw_features))
++		ar->ops->wake_tx_queue = NULL;
++
+ 	ret = ath_regd_init(&ar->ath_common.regulatory, ar->hw->wiphy,
+ 			    ath10k_reg_notifier);
+ 	if (ret) {
 -- 
-Kalle Valo
+2.1.4
+
