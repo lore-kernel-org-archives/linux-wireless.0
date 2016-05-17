@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34385 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753848AbcERR5h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2016 13:57:37 -0400
-Received: by mail-pf0-f193.google.com with SMTP id 145so5659019pfz.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2016 10:57:37 -0700 (PDT)
-From: Dan Lenski <dlenski@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: jes.sorensen@redhat.com
-Subject: [PATCH] rtl8xxxu: Increase default polling timeout for firmware startup
-Date: Wed, 18 May 2016 10:57:29 -0700
-Message-Id: <1463594249-19524-2-git-send-email-dlenski@gmail.com> (sfid-20160518_195742_876152_38559A53)
-In-Reply-To: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
-References: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
+Received: from mout.gmx.net ([212.227.15.18]:58766 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751895AbcEQWa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2016 18:30:58 -0400
+From: Heinrich Schuchardt <xypron.glpk@gmx.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Subject: [PATCH 1/1] net: rsi: eliminate superfluous NULL check
+Date: Wed, 18 May 2016 00:30:41 +0200
+Message-Id: <1463524241-11351-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160518_003124_144845_E19D33F8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch increases the default value for the maximum number of polling
-loops to wait for the rtl8xxxu MCU to start after the firmware is loaded
-(from 1000 to 5000).
+msg is dereferenced before checking against NULL, e.g.
+when assigning pad_bytes.
+Remove the superfluous check in function rsi_mgmt_pkt_to_core.
 
-With RTL8723AU chipset, I frequently encounter "Firmware failed to start"
-errors from rtl8xxxu after a cold boot.
-
-It appears that other chipsets supported by the driver have the same
-problem. Here are a couple of relevant bug reports:
-- http://ubuntuforums.org/showthread.php?t=2321756
-- https://www.mail-archive.com/ubuntu-bugs@lists.ubuntu.com/msg4942468.html
-
-This issue seems to occur because RTL8XXXU_FIRMWARE_POLL_MAX (1000) is
-too short, and the MCU fails to start up as quickly as expected.
-
-With a longer value (5000), the driver starts up consistently and
-successfully after cold-boot.
-
-Signed-off-by: Dan Lenski <dlenski@gmail.com>
+Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 2 +-
+ drivers/net/wireless/rsi/rsi_91x_mgmt.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 870c9cd..972767f 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -55,7 +55,7 @@
- #define TX_PAGE_NUM_NORM_PQ_8192E	0x00
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+index 40658b6..35c14cc 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
+@@ -398,7 +398,7 @@ static int rsi_mgmt_pkt_to_core(struct rsi_common *common,
+ 			return -ENOLINK;
  
- #define RTL_FW_PAGE_SIZE		4096
--#define RTL8XXXU_FIRMWARE_POLL_MAX	1000
-+#define RTL8XXXU_FIRMWARE_POLL_MAX	5000
- 
- #define RTL8723A_CHANNEL_GROUPS		3
- #define RTL8723A_MAX_RF_PATHS		2
+ 		msg_len -= pad_bytes;
+-		if ((msg_len <= 0) || (!msg)) {
++		if (msg_len <= 0) {
+ 			rsi_dbg(MGMT_RX_ZONE,
+ 				"%s: Invalid rx msg of len = %d\n",
+ 				__func__, msg_len);
 -- 
-2.8.2
+2.1.4
 
