@@ -1,50 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:34201 "EHLO
-	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752082AbcERJDA (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35509 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751817AbcEQWwl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2016 05:03:00 -0400
-Received: by mail-pf0-f178.google.com with SMTP id y69so16485041pfb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2016 02:03:00 -0700 (PDT)
-Subject: Re: [PATCH 1/1] brcm80211: simplify assignment
-To: Heinrich Schuchardt <xypron.glpk@gmx.de>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1463533033-13336-1-git-send-email-xypron.glpk@gmx.de>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <573C2FBB.2010809@broadcom.com> (sfid-20160518_110331_102482_8ED9E138)
-Date: Wed, 18 May 2016 11:02:51 +0200
-MIME-Version: 1.0
-In-Reply-To: <1463533033-13336-1-git-send-email-xypron.glpk@gmx.de>
-Content-Type: text/plain; charset=windows-1252
+	Tue, 17 May 2016 18:52:41 -0400
+Received: by mail-pf0-f196.google.com with SMTP id b66so3126787pfb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 15:52:40 -0700 (PDT)
+From: Dan Lenski <dlenski@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Lenski <dlenski@gmail.com>, jes.sorensen@redhat.com
+Subject: [PATCH] increase rtl8xxxu polling timeout for firmware startup
+Date: Tue, 17 May 2016 15:48:14 -0700
+Message-Id: <1463525295-10818-1-git-send-email-dlenski@gmail.com> (sfid-20160518_005245_102192_EED34E2D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18-5-2016 2:57, Heinrich Schuchardt wrote:
-> Simplify assignment in wlc_phy_rxcal_gainctrl_nphy_rev5.
+Here is the patch to increase the polling timeout for rtl8xxxu firmware
+startup, and to make it configurable, as referred to in my previous message.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-> index 99dac9b..b3aab2f 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
-> @@ -27017,7 +27017,7 @@ wlc_phy_rxcal_gainctrl_nphy_rev5(struct brcms_phy *pi, u8 rx_core,
->  		tx_core = 1 - rx_core;
->  
->  	num_samps = 1024;
-> -	desired_log2_pwr = (cal_type == 0) ? 13 : 13;
-> +	desired_log2_pwr = 13;
->  
->  	wlc_phy_rx_iq_coeffs_nphy(pi, 0, &save_comp);
->  	zero_comp.a0 = zero_comp.b0 = zero_comp.a1 = zero_comp.b1 = 0x0;
-> 
+Dan Lenski (1):
+  Make firmware startup polling timeout configurable, and increase
+    default
+
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 11 +++++++----
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  2 +-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
+-- 
+2.8.2
+
