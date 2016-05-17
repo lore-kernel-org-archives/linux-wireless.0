@@ -1,36 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59260 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932065AbcEKTqZ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57410 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487AbcEQIeU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 15:46:25 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 17 May 2016 04:34:20 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix legacy rate packet debug messages
+Date: Tue, 17 May 2016 14:05:31 +0530
+Message-ID: <1463474131-26835-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160517_103437_971913_8FDB3247)
 MIME-Version: 1.0
-Subject: Re: [v2,7/7] wil6210: add support for device led configuration
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1461589078-29854-8-git-send-email-qca_merez@qca.qualcomm.com>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Maya Erez <qca_merez@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>
-Message-ID: <42b47b29b209461e82c50c2b2ffff5a1@euamsexm01a.eu.qualcomm.com> (sfid-20160511_214631_632201_F061EE20)
-Date: Wed, 11 May 2016 21:46:12 +0200
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> wrote:
-> Add the ability to configure the device led to be used for notifying
-> the AP activity (60G device supports leds 0-2).
-> The host can also configure the blinking frequency of the led in
-> three states.
-> 
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Thanks, 1 patch applied to ath.git:
+Legacy rate packets may not necessarily be having a rx status
+flag of '0' always, for example management frame have flags
+like RX_FLAG_ONLY_MONITOR / RX_FLAG_MACTIME_END also set
 
-10d599ad84a1 wil6210: add support for device led configuration
+Just check 'VHT' and 'HT' flags are not set , and simply clasify it as
+legacy rate packets
 
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index cc979a4..0419a21 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -939,7 +939,8 @@ static void ath10k_process_rx(struct ath10k *ar,
+ 		   is_multicast_ether_addr(ieee80211_get_DA(hdr)) ?
+ 							"mcast" : "ucast",
+ 		   (__le16_to_cpu(hdr->seq_ctrl) & IEEE80211_SCTL_SEQ) >> 4,
+-		   status->flag == 0 ? "legacy" : "",
++		   (status->flag & (RX_FLAG_HT | RX_FLAG_VHT)) == 0 ?
++							"legacy" : "",
+ 		   status->flag & RX_FLAG_HT ? "ht" : "",
+ 		   status->flag & RX_FLAG_VHT ? "vht" : "",
+ 		   status->flag & RX_FLAG_40MHZ ? "40" : "",
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/8927801/
+1.7.9.5
 
