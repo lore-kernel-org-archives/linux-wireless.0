@@ -1,83 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53958 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752564AbcEKRCo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:44 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 11/21] ath10k: add fw-powerup-fail to ethtool stats.
-Date: Wed, 11 May 2016 10:02:23 -0700
-Message-Id: <1462986153-16318-12-git-send-email-greearb@candelatech.com> (sfid-20160511_192231_685518_D020BEB2)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+Received: from mout.gmx.net ([212.227.17.22]:57779 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751475AbcEQXQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2016 19:16:55 -0400
+From: Heinrich Schuchardt <xypron.glpk@gmx.de>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Subject: [PATCH 1/1] mwiflex: avoid possible null pointer dereference
+Date: Wed, 18 May 2016 01:16:01 +0200
+Message-Id: <1463526961-12019-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160518_011717_523970_B4557D01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Do not dereference card before checking against NULL value.
 
-This gives user-space a normal-ish way to detect that
-firmware has failed to start and that a reboot is
-probably required.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
 ---
- drivers/net/wireless/ath/ath10k/core.h  | 1 +
- drivers/net/wireless/ath/ath10k/debug.c | 2 ++
- drivers/net/wireless/ath/ath10k/pci.c   | 2 ++
- 3 files changed, 5 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 6aa7a14..e7c228a 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -698,6 +698,7 @@ struct ath10k {
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 0c7937e..ae1f79e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2901,10 +2901,11 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg;
+-	struct pci_dev *pdev = card->dev;
++	struct pci_dev *pdev;
+ 	int i;
  
- 	enum ath10k_hw_rev hw_rev;
- 	u16 dev_id;
-+	bool fw_powerup_failed; /* If true, might take reboot to recover. */
- 	u32 chip_id;
- 	u32 target_version;
- 	u8 fw_version_major;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 76b5163..05b5ea4 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1541,6 +1541,7 @@ static const char ath10k_gstrings_stats[][ETH_GSTRING_LEN] = {
- 	"d_fw_crash_count",
- 	"d_fw_warm_reset_count",
- 	"d_fw_cold_reset_count",
-+	"d_fw_powerup_failed", /* boolean */
- };
- 
- #define ATH10K_SSTATS_LEN ARRAY_SIZE(ath10k_gstrings_stats)
-@@ -1640,6 +1641,7 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
- 	data[i++] = ar->stats.fw_crash_counter;
- 	data[i++] = ar->stats.fw_warm_reset_counter;
- 	data[i++] = ar->stats.fw_cold_reset_counter;
-+	data[i++] = ar->fw_powerup_failed;
- 
- 	spin_unlock_bh(&ar->data_lock);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index dbf0db8..2adc459 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -2709,10 +2709,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
- 		goto err_ce;
- 	}
- 
-+	ar->fw_powerup_failed = false;
- 	return 0;
- 
- err_ce:
- 	ath10k_pci_ce_deinit(ar);
-+	ar->fw_powerup_failed = true;
- 
- err_sleep:
- 	return ret;
+ 	if (card) {
++		pdev = card->dev;
+ 		if (card->msix_enable) {
+ 			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+ 				synchronize_irq(card->msix_entries[i].vector);
 -- 
-2.4.3
+2.1.4
 
