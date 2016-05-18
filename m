@@ -1,247 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46786 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752937AbcEEQIC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2016 12:08:02 -0400
-Message-ID: <1462464478.23962.12.camel@redhat.com> (sfid-20160505_180827_364469_612D8411)
-Subject: Re: [PATCH] cfg80211/nl80211: add wifi tx power mode switching
- support
-From: Dan Williams <dcbw@redhat.com>
-To: Wei-Ning Huang <wnhuang@chromium.org>,
-	Linux-Wireless <linux-wireless@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sameer Nanda <snanda@chromium.org>,
-	Todd Broch <tbroch@chromium.org>, davem@davemloft.net,
-	netdev@vger.kernel.org
-Date: Thu, 05 May 2016 11:07:58 -0500
-In-Reply-To: <1462430663-9448-1-git-send-email-wnhuang@chromium.org>
-References: <1462430663-9448-1-git-send-email-wnhuang@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35290 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752362AbcERBP3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2016 21:15:29 -0400
+Received: by mail-pf0-f196.google.com with SMTP id b66so3395763pfb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 18:15:29 -0700 (PDT)
+From: Dan Lenski <dlenski@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Lenski <dlenski@gmail.com>, jes.sorensen@redhat.com
+Subject: [PATCH 2/2] rtl8xxxu: Make polling timeout for firmware configurable
+Date: Tue, 17 May 2016 18:14:46 -0700
+Message-Id: <1463534086-22353-3-git-send-email-dlenski@gmail.com> (sfid-20160518_031532_918884_487F3303)
+In-Reply-To: <1463534086-22353-1-git-send-email-dlenski@gmail.com>
+References: <1463534086-22353-1-git-send-email-dlenski@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-05-05 at 14:44 +0800, Wei-Ning Huang wrote:
-> Recent new hardware has the ability to switch between tablet mode and
-> clamshell mode. To optimize WiFi performance, we want to be able to
-> use
-> different power table between modes. This patch adds a new netlink
-> message type and cfg80211_ops function to allow userspace to trigger
-> a
-> power mode switch for a given wireless interface.
-> 
-> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
-> ---
->  include/net/cfg80211.h       | 11 +++++++++++
->  include/uapi/linux/nl80211.h | 21 +++++++++++++++++++++
->  net/wireless/nl80211.c       | 16 ++++++++++++++++
->  net/wireless/rdev-ops.h      | 22 ++++++++++++++++++++++
->  net/wireless/trace.h         | 20 ++++++++++++++++++++
->  5 files changed, 90 insertions(+)
-> 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 9e1b24c..aa77fa0 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -2370,6 +2370,12 @@ struct cfg80211_qos_map {
->   * @get_tx_power: store the current TX power into the dbm variable;
->   *	return 0 if successful
->   *
-> + * @set_tx_power_mode: set the transmit power mode. Some device have
-> the ability
-> + *	to transform between different mode such as clamshell and
-> tablet mode.
-> + *	set_tx_power_mode allows setting of different TX power
-> mode at runtime.
-> + * @get_tx_power_mode: store the current TX power mode into the mode
-> variable;
-> + *	return 0 if successful
-> + *
->   * @set_wds_peer: set the WDS peer for a WDS interface
->   *
->   * @rfkill_poll: polls the hw rfkill line, use cfg80211 reporting
-> @@ -2631,6 +2637,11 @@ struct cfg80211_ops {
->  	int	(*get_tx_power)(struct wiphy *wiphy, struct
-> wireless_dev *wdev,
->  				int *dbm);
->  
-> +	int	(*set_tx_power_mode)(struct wiphy *wiphy,
-> +				     enum nl80211_tx_power_mode
-> mode);
-> +	int	(*get_tx_power_mode)(struct wiphy *wiphy,
-> +				     enum nl80211_tx_power_mode
-> *mode);
-> +
->  	int	(*set_wds_peer)(struct wiphy *wiphy, struct
-> net_device *dev,
->  				const u8 *addr);
->  
-> diff --git a/include/uapi/linux/nl80211.h
-> b/include/uapi/linux/nl80211.h
-> index 5a30a75..9b1888a 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -1796,6 +1796,9 @@ enum nl80211_commands {
->   *	connecting to a PCP, and in %NL80211_CMD_START_AP to start
->   *	a PCP instead of AP. Relevant for DMG networks only.
->   *
-> + * @NL80211_ATTR_WIPHY_TX_POWER_MODE: Transmit power mode. See
-> + *      &enum nl80211_tx_power_mode for possible values.
-> + *
->   * @NUM_NL80211_ATTR: total number of nl80211_attrs available
->   * @NL80211_ATTR_MAX: highest attribute number currently defined
->   * @__NL80211_ATTR_AFTER_LAST: internal use
-> @@ -2172,6 +2175,8 @@ enum nl80211_attrs {
->  
->  	NL80211_ATTR_PBSS,
->  
-> +	NL80211_ATTR_WIPHY_TX_POWER_MODE,
-> +
->  	/* add attributes here, update the policy in nl80211.c */
->  
->  	__NL80211_ATTR_AFTER_LAST,
-> @@ -3703,6 +3708,22 @@ enum nl80211_tx_power_setting {
->  };
->  
->  /**
-> + * enum nl80211_tx_power_mode - TX power mode setting
-> + * @NL80211_TX_POWER_LOW: general low TX power mode
-> + * @NL80211_TX_POWER_MEDIUM: general medium TX power mode
-> + * @NL80211_TX_POWER_HIGH: general high TX power mode
-> + * @NL80211_TX_POWER_CLAMSHELL: clamshell mode TX power mode
-> + * @NL80211_TX_POWER_TABLET: tablet mode TX power mode
-> + */
-> +enum nl80211_tx_power_mode {
-> +	NL80211_TX_POWER_LOW,
-> +	NL80211_TX_POWER_MEDIUM,
-> +	NL80211_TX_POWER_HIGH,
-> +	NL80211_TX_POWER_CLAMSHELL,
-> +	NL80211_TX_POWER_TABLET,
+This patch makes RTL8XXXU_FIRMWARE_POLL_MAX into a configurable module
+parameter, firmware_poll_max.
 
-"clamshell" and "tablet" probably mean many different things to many
-different people with respect to whether or not they should do anything
-with power saving or wifi.  I feel like a more generic interface is
-needed here.
+Signed-off-by: Dan Lenski <dlenski@gmail.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-Could this be already done by:
-@NL80211_ATTR_WIPHY_TX_POWER_SETTING = NL80211_TX_POWER_LIMITED
-@NL80211_ATTR_WIPHY_TX_POWER_LEVEL = <limit for clamshell/tablet mode>
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 6aed923..a1efb2c 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -44,6 +44,7 @@
+ 
+ static int rtl8xxxu_debug;
+ static bool rtl8xxxu_ht40_2g;
++static int rtl8xxxu_firmware_poll_max = RTL8XXXU_FIRMWARE_POLL_MAX;
+ 
+ MODULE_AUTHOR("Jes Sorensen <Jes.Sorensen@redhat.com>");
+ MODULE_DESCRIPTION("RTL8XXXu USB mac80211 Wireless LAN Driver");
+@@ -59,6 +60,8 @@ module_param_named(debug, rtl8xxxu_debug, int, 0600);
+ MODULE_PARM_DESC(debug, "Set debug mask");
+ module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, 0600);
+ MODULE_PARM_DESC(ht40_2g, "Enable HT40 support on the 2.4GHz band");
++module_param_named(firmware_poll_max, rtl8xxxu_firmware_poll_max, int, 0600);
++MODULE_PARM_DESC(firmware_poll_max, "Maximum polling count for firmware startup (increase if firmware fails to start)");
+ 
+ #define USB_VENDOR_ID_REALTEK		0x0bda
+ /* Minimum IEEE80211_MAX_FRAME_LEN */
+@@ -2050,13 +2053,13 @@ static int rtl8xxxu_start_firmware(struct rtl8xxxu_priv *priv)
+ 	u32 val32;
+ 
+ 	/* Poll checksum report */
+-	for (i = 0; i < RTL8XXXU_FIRMWARE_POLL_MAX; i++) {
++	for (i = 0; i < rtl8xxxu_firmware_poll_max; i++) {
+ 		val32 = rtl8xxxu_read32(priv, REG_MCU_FW_DL);
+ 		if (val32 & MCU_FW_DL_CSUM_REPORT)
+ 			break;
+ 	}
+ 
+-	if (i == RTL8XXXU_FIRMWARE_POLL_MAX) {
++	if (i == rtl8xxxu_firmware_poll_max) {
+ 		dev_warn(dev, "Firmware checksum poll timed out\n");
+ 		ret = -EAGAIN;
+ 		goto exit;
+@@ -2068,7 +2071,7 @@ static int rtl8xxxu_start_firmware(struct rtl8xxxu_priv *priv)
+ 	rtl8xxxu_write32(priv, REG_MCU_FW_DL, val32);
+ 
+ 	/* Wait for firmware to become ready */
+-	for (i = 0; i < RTL8XXXU_FIRMWARE_POLL_MAX; i++) {
++	for (i = 0; i < rtl8xxxu_firmware_poll_max; i++) {
+ 		val32 = rtl8xxxu_read32(priv, REG_MCU_FW_DL);
+ 		if (val32 & MCU_WINT_INIT_READY)
+ 			break;
+@@ -2076,7 +2079,7 @@ static int rtl8xxxu_start_firmware(struct rtl8xxxu_priv *priv)
+ 		udelay(100);
+ 	}
+ 
+-	if (i == RTL8XXXU_FIRMWARE_POLL_MAX) {
++	if (i == rtl8xxxu_firmware_poll_max) {
+ 		dev_warn(dev, "Firmware failed to start\n");
+ 		ret = -EAGAIN;
+ 		goto exit;
+-- 
+2.8.2
 
-and then the device would be able to change its TX power as it saw fit
-up to that limit set by your application which figures out whether it's
-in clamshell or tablet mode?
-
-Dan
-
-> +};
-> +
-> +/**
->   * enum nl80211_packet_pattern_attr - packet pattern attribute
->   * @__NL80211_PKTPAT_INVALID: invalid number for nested attribute
->   * @NL80211_PKTPAT_PATTERN: the pattern, values where the mask has
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 056a730..61b474d 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -402,6 +402,7 @@ static const struct nla_policy
-> nl80211_policy[NUM_NL80211_ATTR] = {
->  	[NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
->  	[NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
->  	[NL80211_ATTR_PBSS] = { .type = NLA_FLAG },
-> +	[NL80211_ATTR_WIPHY_TX_POWER_MODE] = { .type = NLA_U32 },
->  };
->  
->  /* policy for the key attributes */
-> @@ -2218,6 +2219,21 @@ static int nl80211_set_wiphy(struct sk_buff
-> *skb, struct genl_info *info)
->  			return result;
->  	}
->  
-> +	if (info->attrs[NL80211_ATTR_WIPHY_TX_POWER_MODE]) {
-> +		enum nl80211_tx_power_mode mode;
-> +		int idx = 0;
-> +
-> +		if (!rdev->ops->set_tx_power_mode)
-> +			return -EOPNOTSUPP;
-> +
-> +		idx = NL80211_ATTR_WIPHY_TX_POWER_MODE;
-> +		mode = nla_get_u32(info->attrs[idx]);
-> +
-> +		result = rdev_set_tx_power_mode(rdev, mode);
-> +		if (result)
-> +			return result;
-> +	}
-> +
->  	if (info->attrs[NL80211_ATTR_WIPHY_ANTENNA_TX] &&
->  	    info->attrs[NL80211_ATTR_WIPHY_ANTENNA_RX]) {
->  		u32 tx_ant, rx_ant;
-> diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-> index 8ae0c04..c3a1035 100644
-> --- a/net/wireless/rdev-ops.h
-> +++ b/net/wireless/rdev-ops.h
-> @@ -552,6 +552,28 @@ static inline int rdev_get_tx_power(struct
-> cfg80211_registered_device *rdev,
->  	return ret;
->  }
->  
-> +static inline int
-> +rdev_set_tx_power_mode(struct cfg80211_registered_device *rdev,
-> +		       enum nl80211_tx_power_mode mode)
-> +{
-> +	int ret;
-> +	trace_rdev_set_tx_power_mode(&rdev->wiphy, mode);
-> +	ret = rdev->ops->set_tx_power_mode(&rdev->wiphy, mode);
-> +	trace_rdev_return_int(&rdev->wiphy, ret);
-> +	return ret;
-> +}
-> +
-> +static inline int
-> +rdev_get_tx_power_mode(struct cfg80211_registered_device *rdev,
-> +		       enum nl80211_tx_power_mode *mode)
-> +{
-> +	int ret;
-> +	trace_rdev_get_tx_power_mode(&rdev->wiphy);
-> +	ret = rdev->ops->get_tx_power_mode(&rdev->wiphy, mode);
-> +	trace_rdev_return_int_int(&rdev->wiphy, ret, *mode);
-> +	return ret;
-> +}
-> +
->  static inline int rdev_set_wds_peer(struct
-> cfg80211_registered_device *rdev,
->  				    struct net_device *dev, const u8
-> *addr)
->  {
-> diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-> index 09b242b..132c8c2 100644
-> --- a/net/wireless/trace.h
-> +++ b/net/wireless/trace.h
-> @@ -1420,6 +1420,26 @@ TRACE_EVENT(rdev_set_tx_power,
->  		  WIPHY_PR_ARG, WDEV_PR_ARG,__entry->type, __entry-
-> >mbm)
->  );
->  
-> +DEFINE_EVENT(wiphy_only_evt, rdev_get_tx_power_mode,
-> +	TP_PROTO(struct wiphy *wiphy),
-> +	TP_ARGS(wiphy)
-> +);
-> +
-> +TRACE_EVENT(rdev_set_tx_power_mode,
-> +	TP_PROTO(struct wiphy *wiphy, enum nl80211_tx_power_mode
-> mode),
-> +	TP_ARGS(wiphy, mode),
-> +	TP_STRUCT__entry(
-> +		WIPHY_ENTRY
-> +		__field(enum nl80211_tx_power_mode, mode)
-> +	),
-> +	TP_fast_assign(
-> +		WIPHY_ASSIGN;
-> +		__entry->mode = mode;
-> +	),
-> +	TP_printk(WIPHY_PR_FMT ", mode: %d",
-> +		  WIPHY_PR_ARG, __entry->mode)
-> +);
-> +
->  TRACE_EVENT(rdev_return_int_int,
->  	TP_PROTO(struct wiphy *wiphy, int func_ret, int func_fill),
->  	TP_ARGS(wiphy, func_ret, func_fill),
