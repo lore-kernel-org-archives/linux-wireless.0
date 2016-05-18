@@ -1,43 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:33607 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758AbcEQPO1 (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:36447 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753115AbcERMC5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 11:14:27 -0400
-Received: by mail-io0-f181.google.com with SMTP id f89so27366586ioi.0
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 08:14:27 -0700 (PDT)
+	Wed, 18 May 2016 08:02:57 -0400
+Subject: Re: [PATCH 1/1] rtlwifi: rtl8192ee: simplify coding
+To: Heinrich Schuchardt <xypron.glpk@gmx.de>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+References: <1463532238-13135-1-git-send-email-xypron.glpk@gmx.de>
+Cc: Wu Fengguang <fengguang.wu@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <573C59E9.8090902@lwfinger.net> (sfid-20160518_140326_796420_37EE4C0E)
+Date: Wed, 18 May 2016 07:02:49 -0500
 MIME-Version: 1.0
-In-Reply-To: <878tz9p4z7.fsf@purkki.adurom.net>
-References: <5500469A22567C4BAF673A6E86AFA3A4022D20D2594E@IR-CENTRAL.corp.innerrange.com>
-	<878tz9p4z7.fsf@purkki.adurom.net>
-Date: Tue, 17 May 2016 17:14:26 +0200
-Message-ID: <CAGXE3d8hme7it1uKxW8HTH=S_PvfE-J-Mzvj+WaaLPr=dxiv4Q@mail.gmail.com> (sfid-20160517_171431_273862_EAADB8F6)
-Subject: Re: rt2800 maximum clients in access point mode
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Craig McQueen <craig.mcqueen@innerrange.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1463532238-13135-1-git-send-email-xypron.glpk@gmx.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 17, 2016 at 8:34 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Craig McQueen <craig.mcqueen@innerrange.com> writes:
+On 05/17/2016 07:43 PM, Heinrich Schuchardt wrote:
+> Simplify _rtl92ee_phy_path_adda_on.
 >
->> What is the maximum number of clients that an rt2800 device can
->> support simultaneously while in access point mode?
->>
->> I've had a look through the Linux kernel code and searched online, but
->> haven't been able to find an answer so far.
+> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c | 13 ++-----------
+>   1 file changed, 2 insertions(+), 11 deletions(-)
 >
-> If you find the answer, please submit a patch to set
-> wiphy->max_ap_assoc_sta in the driver. That way the limit is clearly
-> visible and hostapd can make use of it.
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
+> index 018340a..c2bf8d1 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
+> @@ -2414,19 +2414,10 @@ static void _rtl92ee_phy_reload_mac_registers(struct ieee80211_hw *hw,
+>   static void _rtl92ee_phy_path_adda_on(struct ieee80211_hw *hw, u32 *addareg,
+>   				      bool is_patha_on, bool is2t)
+>   {
+> -	u32 pathon;
+>   	u32 i;
+>
+> -	pathon = is_patha_on ? 0x0fc01616 : 0x0fc01616;
+> -	if (!is2t) {
+> -		pathon = 0x0fc01616;
+> -		rtl_set_bbreg(hw, addareg[0], MASKDWORD, 0x0fc01616);
+> -	} else {
+> -		rtl_set_bbreg(hw, addareg[0], MASKDWORD, pathon);
+> -	}
+> -
+> -	for (i = 1; i < IQK_ADDA_REG_NUM; i++)
+> -		rtl_set_bbreg(hw, addareg[i], MASKDWORD, pathon);
+> +	for (i = 0; i < IQK_ADDA_REG_NUM; i++)
+> +		rtl_set_bbreg(hw, addareg[i], MASKDWORD, 0x0fc01616);
+>   }
+>
+>   static void _rtl92ee_phy_mac_setting_calibration(struct ieee80211_hw *hw,
 
-As far as I remember, rt2800 has a limited key table (222 entries
-according to the comments in the code).
-Adding more STAs worked fine for me last time I tried (couple of years
-ago). In that
-case rt2800 should fall back to software crypto.
+Initially the thought was that addareg[0] would need to be set differently for 
+devices with 2 TX paths. For that reason, this routine was coded as shown. As 
+that assumption is no longer valid, this change should be made.
 
-Helmut
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
