@@ -1,72 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53956 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752559AbcEKRCo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:44 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 10/21] ath10k: support logging ath10k_info as KERN_DEBUG
-Date: Wed, 11 May 2016 10:02:22 -0700
-Message-Id: <1462986153-16318-11-git-send-email-greearb@candelatech.com> (sfid-20160511_192231_187826_2C09DA29)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+Received: from mga04.intel.com ([192.55.52.120]:19355 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752580AbcERKv6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2016 06:51:58 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: [GIT] Networking
+Date: Wed, 18 May 2016 10:51:54 +0000
+Message-ID: <1463568714.13625.18.camel@intel.com> (sfid-20160518_125221_824015_83A17313)
+References: <20160517.151113.367799295750703003.davem@davemloft.net>
+	 <CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com>
+	 <CANUX_P3n0ZkTw0fY8wD3biu2mLzrwyX7n=bo1otw9m0bpfS07Q@mail.gmail.com>
+In-Reply-To: <CANUX_P3n0ZkTw0fY8wD3biu2mLzrwyX7n=bo1otw9m0bpfS07Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
-
-Helps keep messages off of (serial) console when
-that is desired.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/debug.c | 5 ++++-
- drivers/net/wireless/ath/ath10k/debug.h | 6 ++++++
- 2 files changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 97de9f37..76b5163 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -139,7 +139,10 @@ void ath10k_info(struct ath10k *ar, const char *fmt, ...)
- 
- 	va_start(args, fmt);
- 	vaf.va = &args;
--	dev_info(ar->dev, "%pV", &vaf);
-+	if (ath10k_debug_mask & ATH10K_DBG_INFO_AS_DBG)
-+		dev_printk(KERN_DEBUG, ar->dev, "%pV", &vaf);
-+	else
-+		dev_info(ar->dev, "%pV", &vaf);
- 	trace_ath10k_log_info(ar, &vaf);
- 	va_end(args);
- }
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 641fce1..070f1c6 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -21,6 +21,10 @@
- #include <linux/types.h>
- #include "trace.h"
- 
-+/**
-+ * ATH10K_DBG_INFO_AS_DBG: use dev_dbg instead of dev_info
-+ *       for ath10k_info messages
-+ */
- enum ath10k_debug_mask {
- 	ATH10K_DBG_PCI		= 0x00000001,
- 	ATH10K_DBG_WMI		= 0x00000002,
-@@ -38,6 +42,8 @@ enum ath10k_debug_mask {
- 	ATH10K_DBG_WMI_PRINT	= 0x00002000,
- 	ATH10K_DBG_PCI_PS	= 0x00004000,
- 	ATH10K_DBG_AHB		= 0x00008000,
-+
-+	ATH10K_DBG_INFO_AS_DBG	= 0x40000000,
- 	ATH10K_DBG_FW		= 0x80000000,
- 	ATH10K_DBG_ANY		= 0xffffffff,
- };
--- 
-2.4.3
-
+SGkgRW1tYW51ZWwsIExpbnVzLA0KDQoNCk9uIFdlZCwgMjAxNi0wNS0xOCBhdCAwNjozNyArMDMw
+MCwgRW1tYW51ZWwgR3J1bWJhY2ggd3JvdGU6DQo+IE9uIFdlZCwgTWF5IDE4LCAyMDE2IGF0IDQ6
+MDAgQU0sIExpbnVzIFRvcnZhbGRzDQo+IDx0b3J2YWxkc0BsaW51eC1mb3VuZGF0aW9uLm9yZz4g
+d3JvdGU6DQo+ID4gDQo+ID4gT24gVHVlLCBNYXkgMTcsIDIwMTYgYXQgMTI6MTEgUE0sIERhdmlk
+IE1pbGxlciA8ZGF2ZW1AZGF2ZW1sb2Z0Lm5ldA0KPiA+ID4gd3JvdGU6DQo+ID4gPiANCj4gPiA+
+IA0KPiA+ID4gSGlnaGxpZ2h0czoNCj4gPiBMb3dsaWdodHM6DQo+ID4gDQo+ID4gwqAxKSB0aGUg
+aXdsd2lmaSBkcml2ZXIgc2VlbXMgdG8gYmUgYnJva2VuDQo+ID4gDQo+ID4gTXkgbGFwdG9wIHRo
+YXQgdXNlcyB0aGUgaW50ZWwgNzY4MCBpd2x3aWZpIG1vZHVsZSBubyBsb25nZXINCj4gPiBjb25u
+ZWN0cw0KPiA+IHRvIHRoZSBuZXR3b3JrLiBJdCBmYWlscyB3aXRoIGEgIk1pY3JvY29kZSBTVyBl
+cnJvciBkZXRlY3RlZC4iIGFuZA0KPiA+IHNwZXdzIG91dCByZWdpc3RlciBzdGF0ZSBvdmVyIGFu
+ZCBvdmVyIGFnYWluLg0KPiBDYW4gd2UgaGF2ZSB0aGUgcmVnaXN0ZXIgc3RhdGUgYW5kIHRoZSBB
+U1NFUlQgLyBOTUkgLyB3aGF0ZXZlciB0aGF0DQo+IGdvZXMgYWxvbmcgd2l0aCBpdD8NCj4gVGhp
+cyBjbGVhcmx5IG1lYW5zIHRoYXQgdGhlIGZpcm13YXJlIGlzIGNyYXNoaW5nLCBidXQgSSBkb24n
+dCBrbm93DQo+IHdoeSwNCj4gSSBjb3BpZWQgaGVyZSB0aGUgbGluZXMgdGhhdCBJIG5lZWQgZnJv
+bSBhbm90aGVyIGJ1ZyB3aXRoIGFub3RoZXINCj4gZGV2aWNlIHdpdGggYW5vdGhlciBmaXJtd2Fy
+ZSwNCj4gYnV0IHRoZSBsb2cgdGhhdCB3ZSB3aWxsIHN0aWxsIGV4cGxhaW4gd2hhdCBJIG5lZWQ6
+DQoNCkkgbWFuYWdlZCB0byByZXByb2R1Y2UgdGhpcyBidWcgbG9jYWxseSB3aXRoIExpbnVzJyBt
+YXN0ZXIuIMKgSSdtDQppbnZlc3RpZ2F0aW5nIHRoZSBjYXVzZSBhbmQgSSdsbCBsZXQgeW91IGhv
+dyBpdCBnb2VzLg0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4=
