@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52614 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932320AbcE0Rwu (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33544 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750775AbcEREEb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 13:52:50 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 18 May 2016 00:04:31 -0400
+Received: by mail-wm0-f65.google.com with SMTP id r12so9526633wme.0
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 21:04:30 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [v2] brcmfmac: add fallback for devices that do not report
- per-chain values
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1463070308-30789-1-git-send-email-jjmeijer88@gmail.com>
-To: Jaap Jan Meijer <jjmeijer88@gmail.com>
-Cc: linux-wireless@vger.kernel.org, arend.vanspriel@broadcom.com,
-	brcm80211-dev-list@broadcom.com,
-	Jaap Jan Meijer <jjmeijer88@gmail.com>
-Message-Id: <20160527175249.C5F98613B2@smtp.codeaurora.org> (sfid-20160527_195254_452217_D0E98A58)
-Date: Fri, 27 May 2016 17:52:49 +0000 (UTC)
+In-Reply-To: <wrfja8jo3unl.fsf@redhat.com>
+References: <1463534086-22353-1-git-send-email-dlenski@gmail.com>
+ <1463534086-22353-2-git-send-email-dlenski@gmail.com> <wrfja8jo3unl.fsf@redhat.com>
+From: Daniel Lenski <dlenski@gmail.com>
+Date: Tue, 17 May 2016 21:03:50 -0700
+Message-ID: <CAOw_LSGGVAFpV9NRm3wp1_xNBpk+6ze4=0or+f9a4Dd75U-JEA@mail.gmail.com> (sfid-20160518_060435_288945_786F7CFC)
+Subject: Re: [PATCH 1/2] rtl8xxxu: Increase default polling timeout for
+ firmware startup
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jaap Jan Meijer <jjmeijer88@gmail.com> wrote:
-> If brcmf_cfg80211_get_station fails to determine the RSSI from the
-> per-chain values get the value individually as a fallback.
-> 
-> Fixes: 1f0dc59a6de9 ("brcmfmac: rework .get_station() callback")
-> Signed-off-by: Jaap Jan Meijer <jjmeijer88@gmail.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+On Tue, May 17, 2016 at 8:35 PM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Dan Lenski <dlenski@gmail.com> writes:
+>> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+>> b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+>> index f2a1bac..39c6ce7 100644
+>> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+>> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+>> @@ -49,7 +49,7 @@
+>>  #define TX_PAGE_NUM_NORM_PQ          0x02
+>>
+>>  #define RTL_FW_PAGE_SIZE             4096
+>> -#define RTL8XXXU_FIRMWARE_POLL_MAX   1000
+>> +#define RTL8XXXU_FIRMWARE_POLL_MAX   5000
+>
+> This is a long delay - how about 2000?
 
-Thanks, 1 patch applied to wireless-drivers.git:
+I tried 2000 first, and it worked for me on only 1 out of 3 cold boots.
 
-94abd778a7bb brcmfmac: add fallback for devices that do not report per-chain values
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9084101/
-
+Dan
