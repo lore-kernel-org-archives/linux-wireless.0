@@ -1,93 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40488 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751648AbcELLGO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2016 07:06:14 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2016-05-12
-Date: Thu, 12 May 2016 13:06:01 +0200
-Message-Id: <1463051162-30128-1-git-send-email-johannes@sipsolutions.net> (sfid-20160512_130620_168431_90FB9440)
+Received: from mail-qg0-f67.google.com ([209.85.192.67]:36268 "EHLO
+	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751442AbcERMv4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2016 08:51:56 -0400
+MIME-Version: 1.0
+In-Reply-To: <1463575273.13625.23.camel@intel.com>
+References: <20160517.151113.367799295750703003.davem@davemloft.net>
+	<CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com>
+	<CANUX_P3n0ZkTw0fY8wD3biu2mLzrwyX7n=bo1otw9m0bpfS07Q@mail.gmail.com>
+	<1463568714.13625.18.camel@intel.com>
+	<CAAA5faF=SxqCt0yDTbPyUoc3gFD--_co+fRj2Jfuy=whEQvcBQ@mail.gmail.com>
+	<1463575273.13625.23.camel@intel.com>
+Date: Wed, 18 May 2016 06:51:55 -0600
+Message-ID: <CAAA5faHtbt8oyKEQOJ+NMBKR24b7Nvm6uJ2qZid1sWY58e7f+A@mail.gmail.com> (sfid-20160518_145223_344709_52F5FE0C)
+Subject: Re: [GIT] Networking
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Wed, May 18, 2016 at 6:41 AM, Coelho, Luciano
+<luciano.coelho@intel.com> wrote:
+> On Wed, 2016-05-18 at 06:20 -0600, Reinoud Koornstra wrote:
+>> On Wed, May 18, 2016 at 4:51 AM, Coelho, Luciano
+>> <luciano.coelho@intel.com> wrote:
+>> >
+>> > Hi Emmanuel, Linus,
+>> >
+>> >
+>> > On Wed, 2016-05-18 at 06:37 +0300, Emmanuel Grumbach wrote:
+>> > >
+>> > > On Wed, May 18, 2016 at 4:00 AM, Linus Torvalds
+>> > > <torvalds@linux-foundation.org> wrote:
+>> > > >
+>> > > >
+>> > > > On Tue, May 17, 2016 at 12:11 PM, David Miller <davem@davemloft
+>> > > > .net
+>> > > > >
+>> > > > > wrote:
+>> > > > >
+>> > > > >
+>> > > > > Highlights:
+>> > > > Lowlights:
+>> > > >
+>> > > >  1) the iwlwifi driver seems to be broken
+>> > > >
+>> > > > My laptop that uses the intel 7680 iwlwifi module no longer
+>> > > > connects
+>> > > > to the network. It fails with a "Microcode SW error detected."
+>> > > > and
+>> > > > spews out register state over and over again.
+>> > > Can we have the register state and the ASSERT / NMI / whatever
+>> > > that
+>> > > goes along with it?
+>> > > This clearly means that the firmware is crashing, but I don't
+>> > > know
+>> > > why,
+>> > > I copied here the lines that I need from another bug with another
+>> > > device with another firmware,
+>> > > but the log that we will still explain what I need:
+>> > I managed to reproduce this bug locally with Linus' master.  I'm
+>> > investigating the cause and I'll let you how it goes.
+>> I did run the latest git code as well 4.6+
+>> iwlwifi went pearshape in my case as well.
+>> I just updated the microcode as well, it didn't matter.
+>> 4.6-rc7 works fine and no errors are reported with iwlwifi.
+>>
+>> Here's output that might come in handy
+>
+> Thanks! That is helpful.
+>
+> Since you say that 4.6-rc7 works but 4.6 doesn't, the prime suspect is
+> commit 5c08b0f5026f ("iwlwifi: mvm: don't override the rate with the
+> AMSDU len"), which is the only iwlwifi patch between those two
+> releases.
+>
+> Could you try to revert that and see if the error is gone?
 
-A few more patches for 4.7 - I listed the notable ones below in the tag
-message.
+Will do, since git revert failed I'll revert manually and report back.
 
-Note that this isn't the tip of my tree - I merged the namespace work
-for nl80211 and hwsim there, but at least the hwsim one needs some more
-follow-up work which I don't want to send in after the merge window.
-
-Let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 557fc4a098039cf296fe33f118bab99a925fd881:
-
-  fq: add fair queuing framework (2016-04-25 16:45:53 -0400)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-05-12
-
-for you to fetch changes up to 46fa38e84b656f80edf83d21144221b0cad18d61:
-
-  mac80211: allow software PS-Poll/U-APSD with AP_LINK_PS (2016-05-12 11:16:55 +0200)
-
-----------------------------------------------------------------
-Some more work for 4.7, notably:
- * completion and fixups of nla_put_64_64bit() work
- * remove a/b/g/n from wext nickname to avoid confusion
-   with 11ac (which wouldn't even fit fully there due to
-   string length restrictions)
-
-along with some other minor changes/cleanups.
-
-----------------------------------------------------------------
-David Spinadel (1):
-      mac80211: remove disconnected APs from BSS table
-
-Emmanuel Grumbach (1):
-      cfg80211: allow finding vendor with OUI without specifying the OUI type
-
-Johannes Berg (6):
-      nl80211: add missing kerneldoc for new *_PAD attributes
-      nl80211: use nla_put_u64_64bit() for the remaining u64 attributes
-      wext: remove a/b/g/n from SIOCGIWNAME
-      cfg80211: remove erroneous comment
-      cfg80211: make wdev_list accessible to drivers
-      mac80211: allow software PS-Poll/U-APSD with AP_LINK_PS
-
-Kanchanapally, Vidyullatha (1):
-      cfg80211: Add option to report the bss entry in connect result
-
-Mohammed Shafi Shajakhan (1):
-      cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
-
-Sara Sharon (1):
-      mac80211: allow same PN for AMSDU sub-frames
-
- Documentation/DocBook/80211.tmpl |  1 +
- include/net/cfg80211.h           | 52 +++++++++++++++++++++++++----
- include/net/mac80211.h           | 33 ++++++++++++++++++-
- include/uapi/linux/nl80211.h     | 11 +++++++
- net/mac80211/mlme.c              |  5 +++
- net/mac80211/rx.c                | 70 +++++++++++++++++++++++++---------------
- net/mac80211/wpa.c               | 16 ++++++---
- net/wireless/chan.c              |  2 +-
- net/wireless/core.c              | 17 ++++++----
- net/wireless/core.h              |  6 ++--
- net/wireless/nl80211.c           | 53 +++++++++++++++++-------------
- net/wireless/reg.c               |  2 +-
- net/wireless/scan.c              |  8 +++--
- net/wireless/sme.c               | 32 +++++++++++++-----
- net/wireless/sysfs.c             |  2 +-
- net/wireless/util.c              |  6 ++--
- net/wireless/wext-compat.c       | 35 --------------------
- 17 files changed, 230 insertions(+), 121 deletions(-)
+>
+> --
+> Cheers,
+> Luca.
