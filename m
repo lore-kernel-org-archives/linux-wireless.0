@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58724 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429AbcERS6M (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2016 14:58:12 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Coelho\, Luciano" <luciano.coelho@intel.com>
-Cc: "torvalds\@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Berg\, Johannes" <johannes.berg@intel.com>,
-	"akpm\@linux-foundation.org" <akpm@linux-foundation.org>,
-	"egrumbach\@gmail.com" <egrumbach@gmail.com>,
-	"reinoudkoornstra\@gmail.com" <reinoudkoornstra@gmail.com>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"davem\@davemloft.net" <davem@davemloft.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [GIT] Networking
-References: <20160517.151113.367799295750703003.davem@davemloft.net>
-	<CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com>
-	<CANUX_P3n0ZkTw0fY8wD3biu2mLzrwyX7n=bo1otw9m0bpfS07Q@mail.gmail.com>
-	<1463568714.13625.18.camel@intel.com>
-	<CAAA5faF=SxqCt0yDTbPyUoc3gFD--_co+fRj2Jfuy=whEQvcBQ@mail.gmail.com>
-	<1463575273.13625.23.camel@intel.com>
-	<CAAA5faHtbt8oyKEQOJ+NMBKR24b7Nvm6uJ2qZid1sWY58e7f+A@mail.gmail.com>
-	<1463581411.29999.1.camel@intel.com>
-	<CA+55aFxThzV3myrHv0XZbubEdGhg5=rGE6dK=+L1ddc9sufdCQ@mail.gmail.com>
-	<1463597411.29999.16.camel@intel.com>
-Date: Wed, 18 May 2016 21:58:05 +0300
-In-Reply-To: <1463597411.29999.16.camel@intel.com> (Luciano Coelho's message
-	of "Wed, 18 May 2016 18:50:11 +0000")
-Message-ID: <87zirnnqgy.fsf@purkki.adurom.net> (sfid-20160518_205838_489827_F5ACCC79)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:59603 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752602AbcERKVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2016 06:21:25 -0400
+Message-ID: <1463566881.2224.2.camel@sipsolutions.net> (sfid-20160518_122129_005329_3647E96A)
+Subject: Re: next wireless workshop - poll
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
+Date: Wed, 18 May 2016 12:21:21 +0200
+In-Reply-To: <1461850005.2352.9.camel@sipsolutions.net> (sfid-20160428_152701_448618_8DAD4328)
+References: <1461850005.2352.9.camel@sipsolutions.net>
+	 (sfid-20160428_152701_448618_8DAD4328)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Coelho, Luciano" <luciano.coelho@intel.com> writes:
+On Thu, 2016-04-28 at 15:26 +0200, Johannes Berg wrote:
+> Hi,
+> 
+> Since I've been getting questions about the next possible workshop
+> and
+> its organisation, I decided to make a poll about it:
+> 
+> http://goo.gl/forms/iMcE8b4TYU
+> 
+> Please reply by
+> 
+> 	May 16th
+> 
+> so I can aggregate/evaluate the responses and we can make a decision.
+> 
 
-> Kalle, David, what is the status with the fix that is on the way via
-> your trees?
+I didn't get many responses, but only a single one preferring *only*
+Tokyo, with a few others preferring Santa Fe.
 
-It would be best if you could send a patch either directly to Dave or
-Linus to resolve this quickly.
+So I'll look into the latter.
 
--- 
-Kalle Valo
+johannes
