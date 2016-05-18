@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53956 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752589AbcEKRCp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:45 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 18/21] ath10k: Note limitation on beaconing vdevs.
-Date: Wed, 11 May 2016 10:02:30 -0700
-Message-Id: <1462986153-16318-19-git-send-email-greearb@candelatech.com> (sfid-20160511_190254_021166_BE6DC90E)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+Received: from mout.gmx.net ([212.227.17.20]:50809 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751513AbcERA51 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2016 20:57:27 -0400
+From: Heinrich Schuchardt <xypron.glpk@gmx.de>
+To: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Subject: [PATCH 1/1] brcm80211: simplify assignment
+Date: Wed, 18 May 2016 02:57:13 +0200
+Message-Id: <1463533033-13336-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160518_025751_928816_FF339448)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Simplify assignment in wlc_phy_rxcal_gainctrl_nphy_rev5.
 
-This only pertains to CT firmware, as standard firmware
-can't do anywhere near this many vdevs anyway.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 373f2ee..f1bfb3a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1343,6 +1343,22 @@ static int ath10k_vdev_start_restart(struct ath10k_vif *arvif,
- 	arg.channel.max_reg_power = chandef->chan->max_reg_power * 2;
- 	arg.channel.max_antenna_gain = chandef->chan->max_antenna_gain * 2;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+index 99dac9b..b3aab2f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+@@ -27017,7 +27017,7 @@ wlc_phy_rxcal_gainctrl_nphy_rev5(struct brcms_phy *pi, u8 rx_core,
+ 		tx_core = 1 - rx_core;
  
-+	/* CT Firmware can support 32+ VDEVS, but can only support
-+	 * beacon-ing devs with dev ids 0 - 31 due to firmware limitations.
-+	 * Create VAPs first and all should be well...likely most people
-+	 * won't ever hit this anyway, but some day the vdev ID allocation
-+	 * could be made smarter to make it more likely to work no matter the
-+	 * order the vdevs are created. --Ben
-+	 */
-+	if ((arvif->vdev_type == WMI_VDEV_TYPE_AP) ||
-+	    (arvif->vdev_type == WMI_VDEV_TYPE_IBSS)) {
-+		if (arg.vdev_id > 31) {
-+			ath10k_warn(ar, "failed to start vdev %i  Beaconing VIFS must have IDs <= 31 to work-around firmware limitations.\n",
-+				    arg.vdev_id);
-+			return -EINVAL;
-+		}
-+	}
-+
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
- 		arg.ssid = arvif->u.ap.ssid;
- 		arg.ssid_len = arvif->u.ap.ssid_len;
+ 	num_samps = 1024;
+-	desired_log2_pwr = (cal_type == 0) ? 13 : 13;
++	desired_log2_pwr = 13;
+ 
+ 	wlc_phy_rx_iq_coeffs_nphy(pi, 0, &save_comp);
+ 	zero_comp.a0 = zero_comp.b0 = zero_comp.a1 = zero_comp.b1 = 0x0;
 -- 
-2.4.3
+2.1.4
 
