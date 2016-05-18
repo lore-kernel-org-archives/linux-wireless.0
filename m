@@ -1,93 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:36359 "EHLO
-	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560AbcEIMXY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 08:23:24 -0400
-Received: by mail-lf0-f43.google.com with SMTP id u64so198358828lff.3
-        for <linux-wireless@vger.kernel.org>; Mon, 09 May 2016 05:23:23 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: improve tx scheduling
-Date: Mon,  9 May 2016 14:25:08 +0200
-Message-Id: <1462796708-13880-1-git-send-email-michal.kazior@tieto.com> (sfid-20160509_142328_167431_09A26B9B)
+Received: from mga04.intel.com ([192.55.52.120]:61162 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753286AbcEROXh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2016 10:23:37 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "reinoudkoornstra@gmail.com" <reinoudkoornstra@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: [GIT] Networking
+Date: Wed, 18 May 2016 14:23:31 +0000
+Message-ID: <1463581411.29999.1.camel@intel.com> (sfid-20160518_162359_424681_8DFA4140)
+References: <20160517.151113.367799295750703003.davem@davemloft.net>
+	 <CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com>
+	 <CANUX_P3n0ZkTw0fY8wD3biu2mLzrwyX7n=bo1otw9m0bpfS07Q@mail.gmail.com>
+	 <1463568714.13625.18.camel@intel.com>
+	 <CAAA5faF=SxqCt0yDTbPyUoc3gFD--_co+fRj2Jfuy=whEQvcBQ@mail.gmail.com>
+	 <1463575273.13625.23.camel@intel.com>
+	 <CAAA5faHtbt8oyKEQOJ+NMBKR24b7Nvm6uJ2qZid1sWY58e7f+A@mail.gmail.com>
+In-Reply-To: <CAAA5faHtbt8oyKEQOJ+NMBKR24b7Nvm6uJ2qZid1sWY58e7f+A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recent changes revolving around implementing
-wake_tx_queue support introduced a significant
-performance regressions on some (slower, uni-proc)
-systems.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 3 ---
- drivers/net/wireless/ath/ath10k/mac.c    | 7 ++++---
- drivers/net/wireless/ath/ath10k/txrx.c   | 3 +++
- 3 files changed, 7 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index cc979a4faeb0..7411b69fde42 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2291,7 +2291,6 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 			ath10k_htt_tx_mgmt_dec_pending(htt);
- 			spin_unlock_bh(&htt->tx_lock);
- 		}
--		ath10k_mac_tx_push_pending(ar);
- 		break;
- 	}
- 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
-@@ -2442,8 +2441,6 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
- 		dev_kfree_skb_any(skb);
- 	}
- 
--	ath10k_mac_tx_push_pending(ar);
--
- 	num_mpdus = atomic_read(&htt->num_mpdus_ready);
- 
- 	while (num_mpdus) {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6dd1d26b357f..1dd415d3c0ee 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3781,6 +3781,9 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
- 	int ret;
- 	int max;
- 
-+	if (ar->htt.num_pending_tx >= (ar->htt.max_num_pending_tx / 2))
-+		return;
-+
- 	spin_lock_bh(&ar->txqs_lock);
- 	rcu_read_lock();
- 
-@@ -4051,9 +4054,7 @@ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
- 		list_add_tail(&artxq->list, &ar->txqs);
- 	spin_unlock_bh(&ar->txqs_lock);
- 
--	if (ath10k_mac_tx_can_push(hw, txq))
--		tasklet_schedule(&ar->htt.txrx_compl_task);
--
-+	ath10k_mac_tx_push_pending(ar);
- 	ath10k_htt_tx_txq_update(hw, txq);
- }
- 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 576e7c42ed65..1966c787998b 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -117,6 +117,9 @@ int ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 
- 	ieee80211_tx_status(htt->ar->hw, msdu);
- 	/* we do not own the msdu anymore */
-+
-+	ath10k_mac_tx_push_pending(ar);
-+
- 	return 0;
- }
- 
--- 
-2.1.4
-
+T24gV2VkLCAyMDE2LTA1LTE4IGF0IDA2OjUxIC0wNjAwLCBSZWlub3VkIEtvb3Juc3RyYSB3cm90
+ZToNCj4gT24gV2VkLCBNYXkgMTgsIDIwMTYgYXQgNjo0MSBBTSwgQ29lbGhvLCBMdWNpYW5vDQo+
+IDxsdWNpYW5vLmNvZWxob0BpbnRlbC5jb20+IHdyb3RlOg0KPiA+IA0KPiA+IE9uIFdlZCwgMjAx
+Ni0wNS0xOCBhdCAwNjoyMCAtMDYwMCwgUmVpbm91ZCBLb29ybnN0cmEgd3JvdGU6DQo+ID4gPiAN
+Cj4gPiA+IE9uIFdlZCwgTWF5IDE4LCAyMDE2IGF0IDQ6NTEgQU0sIENvZWxobywgTHVjaWFubw0K
+PiA+ID4gPGx1Y2lhbm8uY29lbGhvQGludGVsLmNvbT4gd3JvdGU6DQo+ID4gPiA+IA0KPiA+ID4g
+PiANCj4gPiA+ID4gSGkgRW1tYW51ZWwsIExpbnVzLA0KPiA+ID4gPiANCj4gPiA+ID4gDQo+ID4g
+PiA+IE9uIFdlZCwgMjAxNi0wNS0xOCBhdCAwNjozNyArMDMwMCwgRW1tYW51ZWwgR3J1bWJhY2gg
+d3JvdGU6DQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4gT24gV2VkLCBNYXkgMTgs
+IDIwMTYgYXQgNDowMCBBTSwgTGludXMgVG9ydmFsZHMNCj4gPiA+ID4gPiA8dG9ydmFsZHNAbGlu
+dXgtZm91bmRhdGlvbi5vcmc+IHdyb3RlOg0KPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiANCj4g
+PiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gT24gVHVlLCBNYXkgMTcsIDIwMTYgYXQgMTI6MTEgUE0s
+IERhdmlkIE1pbGxlciA8ZGF2ZW1AZGF2ZW0NCj4gPiA+ID4gPiA+IGxvZnQNCj4gPiA+ID4gPiA+
+IC5uZXQNCj4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiB3cm90
+ZToNCj4gPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiBIaWdobGln
+aHRzOg0KPiA+ID4gPiA+ID4gTG93bGlnaHRzOg0KPiA+ID4gPiA+ID4gDQo+ID4gPiA+ID4gPiDC
+oDEpIHRoZSBpd2x3aWZpIGRyaXZlciBzZWVtcyB0byBiZSBicm9rZW4NCj4gPiA+ID4gPiA+IA0K
+PiA+ID4gPiA+ID4gTXkgbGFwdG9wIHRoYXQgdXNlcyB0aGUgaW50ZWwgNzY4MCBpd2x3aWZpIG1v
+ZHVsZSBubyBsb25nZXINCj4gPiA+ID4gPiA+IGNvbm5lY3RzDQo+ID4gPiA+ID4gPiB0byB0aGUg
+bmV0d29yay4gSXQgZmFpbHMgd2l0aCBhICJNaWNyb2NvZGUgU1cgZXJyb3INCj4gPiA+ID4gPiA+
+IGRldGVjdGVkLiINCj4gPiA+ID4gPiA+IGFuZA0KPiA+ID4gPiA+ID4gc3Bld3Mgb3V0IHJlZ2lz
+dGVyIHN0YXRlIG92ZXIgYW5kIG92ZXIgYWdhaW4uDQo+ID4gPiA+ID4gQ2FuIHdlIGhhdmUgdGhl
+IHJlZ2lzdGVyIHN0YXRlIGFuZCB0aGUgQVNTRVJUIC8gTk1JIC8NCj4gPiA+ID4gPiB3aGF0ZXZl
+cg0KPiA+ID4gPiA+IHRoYXQNCj4gPiA+ID4gPiBnb2VzIGFsb25nIHdpdGggaXQ/DQo+ID4gPiA+
+ID4gVGhpcyBjbGVhcmx5IG1lYW5zIHRoYXQgdGhlIGZpcm13YXJlIGlzIGNyYXNoaW5nLCBidXQg
+SSBkb24ndA0KPiA+ID4gPiA+IGtub3cNCj4gPiA+ID4gPiB3aHksDQo+ID4gPiA+ID4gSSBjb3Bp
+ZWQgaGVyZSB0aGUgbGluZXMgdGhhdCBJIG5lZWQgZnJvbSBhbm90aGVyIGJ1ZyB3aXRoDQo+ID4g
+PiA+ID4gYW5vdGhlcg0KPiA+ID4gPiA+IGRldmljZSB3aXRoIGFub3RoZXIgZmlybXdhcmUsDQo+
+ID4gPiA+ID4gYnV0IHRoZSBsb2cgdGhhdCB3ZSB3aWxsIHN0aWxsIGV4cGxhaW4gd2hhdCBJIG5l
+ZWQ6DQo+ID4gPiA+IEkgbWFuYWdlZCB0byByZXByb2R1Y2UgdGhpcyBidWcgbG9jYWxseSB3aXRo
+IExpbnVzJw0KPiA+ID4gPiBtYXN0ZXIuwqDCoEknbQ0KPiA+ID4gPiBpbnZlc3RpZ2F0aW5nIHRo
+ZSBjYXVzZSBhbmQgSSdsbCBsZXQgeW91IGhvdyBpdCBnb2VzLg0KPiA+ID4gSSBkaWQgcnVuIHRo
+ZSBsYXRlc3QgZ2l0IGNvZGUgYXMgd2VsbCA0LjYrDQo+ID4gPiBpd2x3aWZpIHdlbnQgcGVhcnNo
+YXBlIGluIG15IGNhc2UgYXMgd2VsbC4NCj4gPiA+IEkganVzdCB1cGRhdGVkIHRoZSBtaWNyb2Nv
+ZGUgYXMgd2VsbCwgaXQgZGlkbid0IG1hdHRlci4NCj4gPiA+IDQuNi1yYzcgd29ya3MgZmluZSBh
+bmQgbm8gZXJyb3JzIGFyZSByZXBvcnRlZCB3aXRoIGl3bHdpZmkuDQo+ID4gPiANCj4gPiA+IEhl
+cmUncyBvdXRwdXQgdGhhdCBtaWdodCBjb21lIGluIGhhbmR5DQo+ID4gVGhhbmtzISBUaGF0IGlz
+IGhlbHBmdWwuDQo+ID4gDQo+ID4gU2luY2UgeW91IHNheSB0aGF0IDQuNi1yYzcgd29ya3MgYnV0
+IDQuNiBkb2Vzbid0LCB0aGUgcHJpbWUgc3VzcGVjdA0KPiA+IGlzDQo+ID4gY29tbWl0IDVjMDhi
+MGY1MDI2ZiAoIml3bHdpZmk6IG12bTogZG9uJ3Qgb3ZlcnJpZGUgdGhlIHJhdGUgd2l0aA0KPiA+
+IHRoZQ0KPiA+IEFNU0RVIGxlbiIpLCB3aGljaCBpcyB0aGUgb25seSBpd2x3aWZpIHBhdGNoIGJl
+dHdlZW4gdGhvc2UgdHdvDQo+ID4gcmVsZWFzZXMuDQo+ID4gDQo+ID4gQ291bGQgeW91IHRyeSB0
+byByZXZlcnQgdGhhdCBhbmQgc2VlIGlmIHRoZSBlcnJvciBpcyBnb25lPw0KPiBXaWxsIGRvLCBz
+aW5jZSBnaXQgcmV2ZXJ0IGZhaWxlZCBJJ2xsIHJldmVydCBtYW51YWxseSBhbmQgcmVwb3J0DQo+
+IGJhY2suDQoNCkkgY2FuIGNvbmZpcm0gdGhhdCA0LjYgY29udGFpbnMgdGhlIHNhbWUgYnVnLiDC
+oEFuZCByZXZlcnRpbmcgdGhlIHBhdGNoDQpJIG1lbnRpb25lZCBkb2VzIHNvbHZlIHRoZSBwcm9i
+bGVtLi4uDQoNClRoZSBzYW1lIHBhdGNoIHdvcmtzIGZpbmUgaW4gb3VyIGludGVybmFsIHRyZWUu
+IMKgSSdsbCBoYXZlIHRvIGZpZ3VyZQ0Kb3V0IHRvZ2V0aGVyIHdpdGggRW1tYW51ZWwgd2hhdCB0
+aGUgcHJvYmxlbSBhY3R1YWxseSBpcy4NCg0KLS0NCkx1Y2Eu
