@@ -1,55 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:59399 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755424AbcERAo2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 20:44:28 -0400
-From: Heinrich Schuchardt <xypron.glpk@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: Wu Fengguang <fengguang.wu@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Heinrich Schuchardt <xypron.glpk@gmx.de>
-Subject: [PATCH 1/1] rtlwifi: rtl8192ee: simplify coding
-Date: Wed, 18 May 2016 02:43:58 +0200
-Message-Id: <1463532238-13135-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160518_024444_756956_A05E5A6C)
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35202 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751964AbcERBPM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2016 21:15:12 -0400
+Received: by mail-pf0-f193.google.com with SMTP id b66so3395215pfb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 18:15:12 -0700 (PDT)
+From: Dan Lenski <dlenski@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dan Lenski <dlenski@gmail.com>, jes.sorensen@redhat.com
+Subject: [PATCH 0/2] rtl8xxxu: increase polling timeout for firmware startup
+Date: Tue, 17 May 2016 18:14:44 -0700
+Message-Id: <1463534086-22353-1-git-send-email-dlenski@gmail.com> (sfid-20160518_031521_971481_56C712DE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Simplify _rtl92ee_phy_path_adda_on.
+Here are patches patch to increase the polling timeout for rtl8xxxu firmware
+startup, and to make it configurable.
 
-Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+Resubmitting with changes per Julian Calaby's comments.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-index 018340a..c2bf8d1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-@@ -2414,19 +2414,10 @@ static void _rtl92ee_phy_reload_mac_registers(struct ieee80211_hw *hw,
- static void _rtl92ee_phy_path_adda_on(struct ieee80211_hw *hw, u32 *addareg,
- 				      bool is_patha_on, bool is2t)
- {
--	u32 pathon;
- 	u32 i;
- 
--	pathon = is_patha_on ? 0x0fc01616 : 0x0fc01616;
--	if (!is2t) {
--		pathon = 0x0fc01616;
--		rtl_set_bbreg(hw, addareg[0], MASKDWORD, 0x0fc01616);
--	} else {
--		rtl_set_bbreg(hw, addareg[0], MASKDWORD, pathon);
--	}
--
--	for (i = 1; i < IQK_ADDA_REG_NUM; i++)
--		rtl_set_bbreg(hw, addareg[i], MASKDWORD, pathon);
-+	for (i = 0; i < IQK_ADDA_REG_NUM; i++)
-+		rtl_set_bbreg(hw, addareg[i], MASKDWORD, 0x0fc01616);
- }
- 
- static void _rtl92ee_phy_mac_setting_calibration(struct ieee80211_hw *hw,
+
+Dan Lenski (2):
+  rtl8xxxu: Increase default polling timeout for firmware startup
+  rtl8xxxu: Make polling timeout for firmware configurable
+
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 11 +++++++----
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  2 +-
+ 2 files changed, 8 insertions(+), 5 deletions(-)
+
 -- 
-2.1.4
+2.8.2
 
