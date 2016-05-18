@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:13371 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755010AbcEDSOk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2016 14:14:40 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: pull request: iwlwifi 2016-05-04
-Date: Wed, 4 May 2016 18:13:18 +0000
-Message-ID: <1462385598.16756.9.camel@intel.com> (sfid-20160504_201443_224692_2B3840BB)
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:34201 "EHLO
+	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752082AbcERJDA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2016 05:03:00 -0400
+Received: by mail-pf0-f178.google.com with SMTP id y69so16485041pfb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 18 May 2016 02:03:00 -0700 (PDT)
+Subject: Re: [PATCH 1/1] brcm80211: simplify assignment
+To: Heinrich Schuchardt <xypron.glpk@gmx.de>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1463533033-13336-1-git-send-email-xypron.glpk@gmx.de>
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <573C2FBB.2010809@broadcom.com> (sfid-20160518_110331_102482_8ED9E138)
+Date: Wed, 18 May 2016 11:02:51 +0200
 MIME-Version: 1.0
+In-Reply-To: <1463533033-13336-1-git-send-email-xypron.glpk@gmx.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCkkga25vdyBpdCBpcyBleHRyZW1lbHkgbGF0ZSBpbiB0aGUgY3ljbGUsIGJ1
-dCB0aGlzIHBhdGNoIGlzIGludGVuZGVkDQpmb3IgNC42Li4uIEl0IGZpeGVzIGEgcmVncmVzc2lv
-biBJIGludHJvZHVjZWQ6IGEgUDJQIHNwZWNpZmljYXRpb24NCnZpb2xhdGlvbiBhcyBtZW50aW9u
-ZWQgaW4gdGhlIGNvbW1pdCBtZXNzYWdlLg0KVGhlIHBhdGNoIGlzIHJhdGhlciBiaWcgaW4gdGVy
-bXMgb2YgbnVtYmVyIG9mIGxpbmVzIGNoYW5nZWQsIGJ1dCB0aGUNCnNlbWFudGljcyBpcyB2ZXJ5
-IHNpbXBsZS4gSSBoYXZlIHRvIGNvcHkgdGhlIGNvbnRyb2wgYmxvY2sgb2YgdGhlIHNrYg0KdG8g
-dGhlIHN0YWNrIHdoZXJlYXMgd2UgYWNjZXNzZWQgd2UgdXNlZCB0byBhY2Nlc3MgaXQgZGlyZWN0
-bHkgdGhyb3VnaA0KYSBwb2ludGVyLg0KVGhpcyBvYnZpb3VzbHkgaW50cm9kdWNlcyBhIGxvdCBv
-ZiBsaW5lIGNoYW5nZXMsIGJ1dCBkb24ndCByZWFsbHkNCmNoYW5nZSB0aGUgYmVoYXZpb3Igb2Yg
-dGhlIGNvZGUgKHNpbmNlIG1vc3Qgb2YgdGhlIGFjY2Vzc2VzIGFyZSByZWFkDQpvbmx5KS4NCg0K
-TGV0IG1lIGtub3cgaG93IGl0IGdvZXMuDQoNCkkgdGFrZSB0aGlzIG9wcG9ydHVuaXR5IHRvIGlu
-Zm9ybSB5b3UgdGhhdCBJIHdpbGwgYmUgcmVwbGFjZWQgYnkgTHVjYQ0KZm9yIGEgZmV3IG1vbnRo
-cyBhdCBsZWFzdC4gSSB3aWxsIGJlIHdvcmtpbmcgZnVsbCBzdGVhbSBvbiBhIHNpZGUNCnByb2pl
-Y3QgdGhhdCB3aWxsIG5vdCBhbGxvdyBtZSB0byBkbyB0aGUgbWFpbnRhaW5lciBqb2IgaW4gcGFy
-YWxsZWwuDQoNClRoYW5rIHlvdSENCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1p
-dCBmNzQyYWFmMzZlZGYwMzkwYzU0ZDA2MTRiYzRkMjBmZDRjZDM3NjJhOg0KDQogIGl3bHdpZmk6
-IG12bTogZml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgZHVyaW5nIGZ3IGR1bXAgY29sbGVjdGlv
-biAoMjAxNi0wNC0xMiAxMTo1MjozOSArMDMwMCkNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0
-IHJlcG9zaXRvcnkgYXQ6DQoNCiAgaHR0cHM6Ly9naXQua2VybmVsLm9yZy9wdWIvc2NtL2xpbnV4
-L2tlcm5lbC9naXQvaXdsd2lmaS9pd2x3aWZpLWZpeGVzLmdpdCB0YWdzL2l3bHdpZmktZm9yLWth
-bGxlLTIwMTYtMDUtMDQNCg0KZm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRvIDVjMDhiMGY1
-MDI2ZmNjMTNlZmI5NDdjNGQxZjJjYTM1NTgxNDVmNjg6DQoNCiAgaXdsd2lmaTogbXZtOiBkb24n
-dCBvdmVycmlkZSB0aGUgcmF0ZSB3aXRoIHRoZSBBTVNEVSBsZW4gKDIwMTYtMDUtMDQgMjA6NTk6
-NTUgKzAzMDApDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0NCiogZml4IFAyUCByYXRlcyAoYW5kIHBvc3NpYmx5IG90aGVy
-IGlzc3VlcykNCg0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLQ0KRW1tYW51ZWwgR3J1bWJhY2ggKDEpOg0KICAgICAgaXdsd2lm
-aTogbXZtOiBkb24ndCBvdmVycmlkZSB0aGUgcmF0ZSB3aXRoIHRoZSBBTVNEVSBsZW4NCg0KIGRy
-aXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL3R4LmMgfCA4MyArKysrKysrKysr
-KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLQ0KIDEgZmlsZSBjaGFuZ2VkLCA0OCBpbnNlcnRpb25zKCspLCAzNSBk
-ZWxldGlvbnMoLSk=
+On 18-5-2016 2:57, Heinrich Schuchardt wrote:
+> Simplify assignment in wlc_phy_rxcal_gainctrl_nphy_rev5.
+
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+> index 99dac9b..b3aab2f 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/phy/phy_n.c
+> @@ -27017,7 +27017,7 @@ wlc_phy_rxcal_gainctrl_nphy_rev5(struct brcms_phy *pi, u8 rx_core,
+>  		tx_core = 1 - rx_core;
+>  
+>  	num_samps = 1024;
+> -	desired_log2_pwr = (cal_type == 0) ? 13 : 13;
+> +	desired_log2_pwr = 13;
+>  
+>  	wlc_phy_rx_iq_coeffs_nphy(pi, 0, &save_comp);
+>  	zero_comp.a0 = zero_comp.b0 = zero_comp.a1 = zero_comp.b1 = 0x0;
+> 
