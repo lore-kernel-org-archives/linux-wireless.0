@@ -1,61 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:38827 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbcEJLeq (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41852 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753863AbcERTAn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 07:34:46 -0400
-Received: by mail-wm0-f45.google.com with SMTP id g17so22197993wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2016 04:34:45 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <878tzjl3bq.fsf@kamboji.qca.qualcomm.com>
-References: <1462280620-13000-1-git-send-email-jjmeijer88@gmail.com>
- <87poszs8tc.fsf@kamboji.qca.qualcomm.com> <CAA+NYvTxA_u1kjwmY+VTnhK0G1b5cEcx2QA90fTTEkci4gWvcQ@mail.gmail.com>
- <87wpn7p6dv.fsf@kamboji.qca.qualcomm.com> <CAA+NYvS3ksstny_Lzw8mLu6=0uKO0VhjuwCyxS9YC-Pb+FaYJA@mail.gmail.com>
- <87futvp432.fsf@kamboji.qca.qualcomm.com> <5730542C.8020201@broadcom.com> <878tzjl3bq.fsf@kamboji.qca.qualcomm.com>
-From: Jaap Jan Meijer <jjmeijer88@gmail.com>
-Date: Tue, 10 May 2016 13:34:24 +0200
-Message-ID: <CAA+NYvQCmssjBWWTFPLa1tiTfpDMDmxKHa=4RXKQFaQ3XOYt8A@mail.gmail.com> (sfid-20160510_133450_324074_E58DB3B3)
-Subject: Re: [PATCH] Fix regression in Android due to rework .get_station() callback
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Content-Type: text/plain; charset=UTF-8
+	Wed, 18 May 2016 15:00:43 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linus@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, reinoudkoornstra@gmail.com,
+	linux-kernel@vger.kernel.org, linuxwifi@intel.com,
+	johannes.berg@intel.com, akpm@linux-foundation.org,
+	kvalo@codeaurora.org, egrumbach@gmail.com, netdev@vger.kernel.org,
+	davem@davemloft.net
+Date: Wed, 18 May 2016 22:00:09 +0300
+Message-Id: <1463598009-31865-1-git-send-email-luca@coelho.fi> (sfid-20160518_210057_649314_FAE6EC92)
+In-Reply-To: <1463597411.29999.16.camel@intel.com>
+References: <1463597411.29999.16.camel@intel.com>
+Subject: [PATCH] iwlwifi: mvm: fix merge damage in tx.c
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2016-05-09 16:21 GMT+02:00 Kalle Valo <kvalo@codeaurora.org>:
-> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
->> I did see the patch and noticed the procedural issues as well. However,
->> last week was a short week over here and I did not get to it to respond.
->> The fix is not done properly. The function determines the RSSI from the
->> per-chain values. I suspect that Jaap Jan is using a device which does
->> not report per-chain values so his solution should be used as fallback.
->> So can you revert the patch so Jaap Jan can rework the patch, ie.:
->>
->>       if (count_rssi) {
->>               :
->>       } else if (test_bit(BRCMF_VIF_STATUS_CONNECTED,
->>                           &ifp->vif->sme_state)) {
->>               memset(&scb_val, 0, sizeof(scb_val));
->>               err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_RSSI,
->>                                            &scb_val, sizeof(scb_val));
->>               if (err) {
->>                       brcmf_err("Could not get rssi (%d)\n", err);
->>                       goto done;
->>               } else {
->>                       rssi = le32_to_cpu(scb_val.val);
->>                       sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
->>                       sinfo->signal = rssi;
->>                       brcmf_dbg(CONN, "RSSI %d dBm\n", rssi);
->>               }
->>       }
->>
+From: Luca Coelho <luciano.coelho@intel.com>
 
+During the merge in commit 909b27f70643 ("Merge
+git://git.kernel.org/pub/scm/linux/kernel/git/davem/net"), there was a
+small merge damage where one instance of info was not converted into
+skb_info.  Fix this.
 
-Thank you for the feedback, I would like to contribute so I'll build a
-new patch.
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-One more question: I only included the signal strength because I
-needed it for Android, should I also include Beacon peroid and DTIM
-period again in this fallback? If so, I would probably need to
-separate this code in a new fallback method?
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 8802109..c53aa0f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -211,6 +211,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			struct iwl_tx_cmd *tx_cmd,
+ 			struct ieee80211_tx_info *info, u8 sta_id)
+ {
++	struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	__le16 fc = hdr->frame_control;
+ 	u32 tx_flags = le32_to_cpu(tx_cmd->tx_flags);
+@@ -294,7 +295,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	tx_cmd->tx_flags = cpu_to_le32(tx_flags);
+ 	/* Total # bytes to be transmitted */
+ 	tx_cmd->len = cpu_to_le16((u16)skb->len +
+-		(uintptr_t)info->driver_data[0]);
++		(uintptr_t)skb_info->driver_data[0]);
+ 	tx_cmd->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
+ 	tx_cmd->sta_id = sta_id;
+ 
+-- 
+2.8.1
+
