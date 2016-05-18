@@ -1,92 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37861 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932065AbcEKTee (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 15:34:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: merez@codeaurora.org
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH v2 7/7] wil6210: add support for device led configuration
-References: <1461589078-29854-1-git-send-email-qca_merez@qca.qualcomm.com>
-	<1461589078-29854-8-git-send-email-qca_merez@qca.qualcomm.com>
-	<87a8kh1pqw.fsf@kamboji.qca.qualcomm.com>
-	<c9158ef6654aa9b201909103b1300177@codeaurora.org>
-Date: Wed, 11 May 2016 22:34:28 +0300
-In-Reply-To: <c9158ef6654aa9b201909103b1300177@codeaurora.org>
-	(merez@codeaurora.org's message of "Sun, 01 May 2016 10:06:32 +0300")
-Message-ID: <878tzge6d7.fsf@kamboji.qca.qualcomm.com> (sfid-20160511_213437_593136_88AAE1D3)
+Received: from mga02.intel.com ([134.134.136.20]:63314 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752272AbcERTEH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2016 15:04:07 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"egrumbach@gmail.com" <egrumbach@gmail.com>,
+	"reinoudkoornstra@gmail.com" <reinoudkoornstra@gmail.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: [GIT] Networking
+Date: Wed, 18 May 2016 19:03:45 +0000
+Message-ID: <1463598225.29999.18.camel@intel.com> (sfid-20160518_210426_712759_F47FDFD6)
+References: <20160517.151113.367799295750703003.davem@davemloft.net>
+	 <CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com>
+	 <CANUX_P3n0ZkTw0fY8wD3biu2mLzrwyX7n=bo1otw9m0bpfS07Q@mail.gmail.com>
+	 <1463568714.13625.18.camel@intel.com>
+	 <CAAA5faF=SxqCt0yDTbPyUoc3gFD--_co+fRj2Jfuy=whEQvcBQ@mail.gmail.com>
+	 <1463575273.13625.23.camel@intel.com>
+	 <CAAA5faHtbt8oyKEQOJ+NMBKR24b7Nvm6uJ2qZid1sWY58e7f+A@mail.gmail.com>
+	 <1463581411.29999.1.camel@intel.com>
+	 <CA+55aFxThzV3myrHv0XZbubEdGhg5=rGE6dK=+L1ddc9sufdCQ@mail.gmail.com>
+	 <1463597411.29999.16.camel@intel.com> <87zirnnqgy.fsf@purkki.adurom.net>
+	 <CA+55aFxmMEB7v_K9j7+4DUj5nUendM=pz7JQE9XATQfe6xzdMA@mail.gmail.com>
+In-Reply-To: <CA+55aFxmMEB7v_K9j7+4DUj5nUendM=pz7JQE9XATQfe6xzdMA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-merez@codeaurora.org writes:
-
-> On 2016-04-25 21:56, Kalle Valo wrote:
->> Maya Erez <qca_merez@qca.qualcomm.com> writes:
->>
->>> Add the ability to configure the device led to be used for notifying
->>> the AP activity (60G device supports leds 0-2).
->>> The host can also configure the blinking frequency of the led in
->>> three states.
->>
->> [...]
->>
->>> +/* led_blink_time, write:
->>> + * "<blink_on_slow> <blink_off_slow> <blink_on_med> <blink_off_med>
->> <blink_on_fast> <blink_off_fast>
->>> + */
->>> +static ssize_t wil_write_led_blink_time(struct file *file,
->>> +					const char __user *buf,
->>> +					size_t len, loff_t *ppos)
->>> +{
->>> +	int rc;
->>> +	char *kbuf = kmalloc(len + 1, GFP_KERNEL);
->>> +
->>> +	if (!kbuf)
->>> +		return -ENOMEM;
->>> +
->>> +	rc = simple_write_to_buffer(kbuf, len, ppos, buf, len);
->>> +	if (rc != len) {
->>> +		kfree(kbuf);
->>> +		return rc >= 0 ? -EIO : rc;
->>> +	}
->>> +
->>> +	kbuf[len] = '\0';
->>> +	rc = sscanf(kbuf, "%d %d %d %d %d %d",
->>> +		    &led_blink_time[WIL_LED_TIME_SLOW].on_ms,
->>> +		    &led_blink_time[WIL_LED_TIME_SLOW].off_ms,
->>> +		    &led_blink_time[WIL_LED_TIME_MED].on_ms,
->>> +		    &led_blink_time[WIL_LED_TIME_MED].off_ms,
->>> +		    &led_blink_time[WIL_LED_TIME_FAST].on_ms,
->>> +		    &led_blink_time[WIL_LED_TIME_FAST].off_ms);
->>> +	kfree(kbuf);
->>> +
->>> +	if (rc < 0)
->>> +		return rc;
->>> +	if (rc < 6)
->>> +		return -EINVAL;
->>> +
->>> +	return len;
->>> +}
->>
->> Don't we already have a proper framework for leds? At least
->> include/linux/led.h and drivers/led/ makes me suspect that. I'm not
->> really fond of the idea reinventing the wheel, unless there's a really
->> good reason.
->
-> The kernel led framework provides the host the ability to toggle a
-> defined led, but in our case the led toggling is fully offloaded to
-> the device. The host only configures the device with the led to
-> activate and its parameters. I agree that reusing an existing
-> framework should be enforced when possible, but as the WIL6210 host
-> needs to align to the device led configuration we cannot reuse the led
-> kernel framework.
-
-Ok, thanks for checking. I'll apply the patch now.
-
--- 
-Kalle Valo
+T24gV2VkLCAyMDE2LTA1LTE4IGF0IDEyOjAwIC0wNzAwLCBMaW51cyBUb3J2YWxkcyB3cm90ZToN
+Cj4gT24gV2VkLCBNYXkgMTgsIDIwMTYgYXQgMTE6NTggQU0sIEthbGxlIFZhbG8gPGt2YWxvQGNv
+ZGVhdXJvcmEub3JnPg0KPiB3cm90ZToNCj4gPiANCj4gPiANCj4gPiBJdCB3b3VsZCBiZSBiZXN0
+IGlmIHlvdSBjb3VsZCBzZW5kIGEgcGF0Y2ggZWl0aGVyIGRpcmVjdGx5IHRvIERhdmUNCj4gPiBv
+cg0KPiA+IExpbnVzIHRvIHJlc29sdmUgdGhpcyBxdWlja2x5Lg0KPiBJJ20gY29tbWl0dGluZyBt
+eSBwYXRjaCBteXNlbGYgcmlnaHQgbm93LCBzaW5jZSB0aGlzIGJ1ZyBtYWtlcyBteQ0KPiBsYXB0
+b3AgdXNlbGVzcywgYW5kIEkgd2lsbCB0YWtlIGNyZWRpdCBmb3IgZmluZGluZyBhbmQgdGVzdGlu
+ZyBpdCBvbg0KPiBteSBvd24gZXZlbiBpZiBpdCB3YXMgYXBwYXJlbnRseSBhbHNvIGRpc2N1c3Nl
+ZCBpbmRlcGVuZGVudGx5IG9uIHRoZQ0KPiBuZXR3b3JraW5nIGxpc3QgOykNCg0KR3JlYXQhIDop
+DQoNCllvdSBiZWF0IG1lIGJ5IGEgZmV3IG1pbnV0ZXMsIGV2ZW4gdGhvdWdoIEkgaGFkIHRoZSB3
+aG9sZSBkYXkgdG8gcGxheQ0Kd2l0aCBpdC4gOlwNCg0KLS0NCkNoZWVycywNCkx1Y2Eu
