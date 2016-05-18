@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39616 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932762AbcECNFO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 09:05:14 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  3 May 2016 16:05:02 +0300
-Message-Id: <1462280702-20438-1-git-send-email-luca@coelho.fi> (sfid-20160503_150519_283240_1E2D82C5)
-Subject: [PATCH] mac80211: remove disconnected APs from BSS table
+Received: from mx1.redhat.com ([209.132.183.28]:33012 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751095AbcERDdQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2016 23:33:16 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Dan Lenski <dlenski@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Make firmware startup polling timeout configurable, and increase default
+References: <1463525295-10818-1-git-send-email-dlenski@gmail.com>
+	<1463525295-10818-2-git-send-email-dlenski@gmail.com>
+Date: Tue, 17 May 2016 23:33:12 -0400
+In-Reply-To: <1463525295-10818-2-git-send-email-dlenski@gmail.com> (Dan
+	Lenski's message of "Tue, 17 May 2016 15:48:15 -0700")
+Message-ID: <wrfjeg903urr.fsf@redhat.com> (sfid-20160518_053319_769016_0B7224E9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Dan Lenski <dlenski@gmail.com> writes:
+> This patch:
+>
+> - increases the default value for the maximum number of polling loops to
+>   wait for the rtl8xxxu MCU to start after the firmware is loaded (from
+>   1000 to 5000)
+> - makes this a configurable module parameter
+>
+> With RTL8723AU chipset, I frequently encounter "Firmware failed to start"
+> errors from rtl8xxxu after a cold boot.
+>
+> It appears that other chipsets supported by the driver have the same
+> problem. Here are a couple of relevant bug reports:
+> - http://ubuntuforums.org/showthread.php?t=2321756
+> - https://www.mail-archive.com/ubuntu-bugs-nLRlyDuq1AZFpShjVBNYrg <at> public.gmane.org/msg4942468.html
+>
+> This issue seems to occur because RTL8XXXU_FIRMWARE_POLL_MAX (1000) is
+> too short, and the MCU fails to start up as quickly as expected.
+>
+> With a longer value (5000), the driver starts up consistently and
+> successfully after cold-boot.
 
-In some cases, after a sudden AP disappearing and reconnection to
-another AP in the same ESS, user space gets the old AP in scan
-results (cached). User space may decide to roam to that old AP
-which will cause a disconnection and longer recovery.
-Remove APs that are probably out of range from BSS table.
+I am not against increasing the maximum value here, however I would like
+more details about the system where you see these problems. I have used
+this driver extensively for a long time with my Lenovo Yoga 13 laptop
+and not seen this issue.
 
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/mlme.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Second, I really don't think this warrants a module parameter. Bumping
+the value should suffice.
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 885f4ca..8d426f6 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -2399,6 +2399,11 @@ static void __ieee80211_disconnect(struct ieee80211_sub_if_data *sdata)
- 		return;
- 	}
- 
-+	/* AP is probably out of range (or not reachable for another reason) so
-+	 * remove the bss struct for that AP.
-+	 */
-+	cfg80211_unlink_bss(local->hw.wiphy, ifmgd->associated);
-+
- 	ieee80211_set_disassoc(sdata, IEEE80211_STYPE_DEAUTH,
- 			       WLAN_REASON_DISASSOC_DUE_TO_INACTIVITY,
- 			       true, frame_buf);
--- 
-2.8.0.rc3
+Please clean up your patch message to have the required information
+included, as previously pointed out on the list.
 
+Note that the patch should at least be relative to
+wireless-drivers-next, or preferably my rtl8xxxu-devel tree. In both of
+these trees, the rtl8xxxu driver has been split into multiple files and
+your patch will not apply.
+
+Last, neither of the links you included for external bug reports work.
+
+Jes
