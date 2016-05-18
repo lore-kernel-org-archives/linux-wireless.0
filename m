@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:36197 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753456AbcEBKsI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2016 06:48:08 -0400
-Received: by mail-pa0-f66.google.com with SMTP id i5so17651426pag.3
-        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2016 03:48:08 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 1/7] staging: wilc1000: change handle_get_ip_address's return type to void
-Date: Mon,  2 May 2016 19:47:49 +0900
-Message-Id: <1462186075-8549-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160502_124812_655623_2BB2F623)
+Received: from mx1.redhat.com ([209.132.183.28]:33434 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751667AbcERDfp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 17 May 2016 23:35:45 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Dan Lenski <dlenski@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] rtl8xxxu: Increase default polling timeout for firmware startup
+References: <1463534086-22353-1-git-send-email-dlenski@gmail.com>
+	<1463534086-22353-2-git-send-email-dlenski@gmail.com>
+Date: Tue, 17 May 2016 23:35:42 -0400
+In-Reply-To: <1463534086-22353-2-git-send-email-dlenski@gmail.com> (Dan
+	Lenski's message of "Tue, 17 May 2016 18:14:45 -0700")
+Message-ID: <wrfja8jo3unl.fsf@redhat.com> (sfid-20160518_053548_644102_FFE25AF9)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When handle_get_ip_address is called in hostIFthread that is a kernel
-thread, it is not checked return type of this function. This patch
-changes return type to void and removes braces if statement due to have
-a single statement.
+Dan Lenski <dlenski@gmail.com> writes:
+> This patch increases the default value for the maximum number of polling
+> loops to wait for the rtl8xxxu MCU to start after the firmware is loaded
+> (from 1000 to 5000).
+>
+> With RTL8723AU chipset, I frequently encounter "Firmware failed to start"
+> errors from rtl8xxxu after a cold boot.
+>
+> It appears that other chipsets supported by the driver have the same
+> problem. Here are a couple of relevant bug reports:
+> - http://ubuntuforums.org/showthread.php?t=2321756
+> - https://www.mail-archive.com/ubuntu-bugs@lists.ubuntu.com/msg4942468.html
+>
+> This issue seems to occur because RTL8XXXU_FIRMWARE_POLL_MAX (1000) is
+> too short, and the MCU fails to start up as quickly as expected.
+>
+> With a longer value (5000), the driver starts up consistently and
+> successfully after cold-boot.
+>
+> Signed-off-by: Dan Lenski <dlenski@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+As previously pointed out, please provide some details about the system
+where this goes wrong.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 605cf8f..ce1cd68 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -374,7 +374,7 @@ static void handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
- 		netdev_err(vif->ndev, "Failed to set IP address\n");
- }
- 
--static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
-+static void handle_get_ip_address(struct wilc_vif *vif, u8 idx)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -394,12 +394,8 @@ static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
- 	if (memcmp(get_ip[idx], set_ip[idx], IP_ALEN) != 0)
- 		wilc_setup_ipaddress(vif, set_ip[idx], idx);
- 
--	if (result != 0) {
-+	if (result != 0)
- 		netdev_err(vif->ndev, "Failed to get IP address\n");
--		return -EINVAL;
--	}
--
--	return result;
- }
- 
- static s32 handle_get_mac_address(struct wilc_vif *vif,
--- 
-2.8.2
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> index f2a1bac..39c6ce7 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> @@ -49,7 +49,7 @@
+>  #define TX_PAGE_NUM_NORM_PQ		0x02
+>  
+>  #define RTL_FW_PAGE_SIZE		4096
+> -#define RTL8XXXU_FIRMWARE_POLL_MAX	1000
+> +#define RTL8XXXU_FIRMWARE_POLL_MAX	5000
 
+This is a long delay - how about 2000?
+
+Jes
