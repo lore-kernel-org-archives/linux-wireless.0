@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51682 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754953AbcEBV1X (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59668 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752609AbcERTLY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2016 17:27:23 -0400
-Subject: Re: [PATCH] mac80211: add vht cap decode to debugfs.
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1462223956-23384-1-git-send-email-greearb@candelatech.com>
- <1462224233.5898.22.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <5727C63A.7020705@candelatech.com> (sfid-20160502_232727_112551_402689E4)
-Date: Mon, 2 May 2016 14:27:22 -0700
+	Wed, 18 May 2016 15:11:24 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Coelho\, Luciano" <luciano.coelho@intel.com>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Berg\, Johannes" <johannes.berg@intel.com>,
+	"akpm\@linux-foundation.org" <akpm@linux-foundation.org>,
+	"egrumbach\@gmail.com" <egrumbach@gmail.com>,
+	"reinoudkoornstra\@gmail.com" <reinoudkoornstra@gmail.com>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"davem\@davemloft.net" <davem@davemloft.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: [GIT] Networking
+References: <20160517.151113.367799295750703003.davem@davemloft.net>
+	<CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com>
+	<CANUX_P3n0ZkTw0fY8wD3biu2mLzrwyX7n=bo1otw9m0bpfS07Q@mail.gmail.com>
+	<1463568714.13625.18.camel@intel.com>
+	<CAAA5faF=SxqCt0yDTbPyUoc3gFD--_co+fRj2Jfuy=whEQvcBQ@mail.gmail.com>
+	<1463575273.13625.23.camel@intel.com>
+	<CAAA5faHtbt8oyKEQOJ+NMBKR24b7Nvm6uJ2qZid1sWY58e7f+A@mail.gmail.com>
+	<1463581411.29999.1.camel@intel.com>
+	<CA+55aFxThzV3myrHv0XZbubEdGhg5=rGE6dK=+L1ddc9sufdCQ@mail.gmail.com>
+	<1463597411.29999.16.camel@intel.com>
+	<87zirnnqgy.fsf@purkki.adurom.net>
+	<CA+55aFxmMEB7v_K9j7+4DUj5nUendM=pz7JQE9XATQfe6xzdMA@mail.gmail.com>
+Date: Wed, 18 May 2016 22:11:19 +0300
+In-Reply-To: <CA+55aFxmMEB7v_K9j7+4DUj5nUendM=pz7JQE9XATQfe6xzdMA@mail.gmail.com>
+	(Linus Torvalds's message of "Wed, 18 May 2016 12:00:27 -0700")
+Message-ID: <87shxfnpuw.fsf@purkki.adurom.net> (sfid-20160518_211149_108202_1C373885)
 MIME-Version: 1.0
-In-Reply-To: <1462224233.5898.22.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2016 02:23 PM, Johannes Berg wrote:
->
->> +			if (vhtc->cap & IEEE80211_VHT_CAP_ ## a)+		
->> 		p += scnprintf(p, sizeof(buf) + buf
->> - p, \
->> +					       "\t\t%s\n", b);	
->
-> Why not use #a instead of b?
->
->> +		PFLAG(MAX_MPDU_LENGTH_3895, "MAX-MPDU-3895");
->
->
-> Makes that a bit longer in the printout, but makes the code shorter.
+Linus Torvalds <torvalds@linux-foundation.org> writes:
 
-I don't care that much either way, but it seemed nicer to customize the output.
+> On Wed, May 18, 2016 at 11:58 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>
+>> It would be best if you could send a patch either directly to Dave or
+>> Linus to resolve this quickly.
+>
+> I'm committing my patch myself right now, since this bug makes my
+> laptop useless, and I will take credit for finding and testing it on
+> my own
 
-It at least won't change the actual compiled code much...
+Kiitti :)
 
-I'll change it to be as you suggest if you want.
+> even if it was apparently also discussed independently on the
+> networking list ;)
 
-Thanks,
-Ben
+Yeah, sorry about taking this too long.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Kalle Valo
