@@ -1,75 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35288 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752103AbcEWVsE (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36372 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751895AbcERBU1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2016 17:48:04 -0400
-Received: by mail-wm0-f67.google.com with SMTP id f75so407173wmf.2
-        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2016 14:48:03 -0700 (PDT)
+	Tue, 17 May 2016 21:20:27 -0400
+Received: by mail-oi0-f66.google.com with SMTP id i2so6824430oib.3
+        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 18:20:27 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <wrfjlh30mvbi.fsf@redhat.com>
-References: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
- <wrfjinyayf2i.fsf@redhat.com> <CAOw_LSHnV+244fT7YvEoV+7VSH_+OoGFmZSdGK4a3NqB407VGQ@mail.gmail.com>
- <wrfj4m9svn35.fsf@redhat.com> <CAOw_LSH8yGT+OoJU=a23B32mZ+qLkNuronB+vqZ5SaBRAG-fQw@mail.gmail.com>
- <wrfjlh30mvbi.fsf@redhat.com>
-From: Daniel Lenski <dlenski@gmail.com>
-Date: Mon, 23 May 2016 14:47:22 -0700
-Message-ID: <CAOw_LSGp42x1vxWajOsY8Q9revtRAjkuQiHgjWbHtP_oL+ND_w@mail.gmail.com> (sfid-20160523_234810_360261_0C4FB26A)
-Subject: Re: [PATCH] rtl8xxxu: increase polling timeout for firmware startup
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1463534086-22353-2-git-send-email-dlenski@gmail.com>
+References: <1463534086-22353-1-git-send-email-dlenski@gmail.com> <1463534086-22353-2-git-send-email-dlenski@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 18 May 2016 11:20:07 +1000
+Message-ID: <CAGRGNgWG=v1S_WGHSqCBNtMesfOJe7rnGVwTBKer4MXi_OhnFg@mail.gmail.com> (sfid-20160518_032031_330995_EBD48430)
+Subject: Re: [PATCH 1/2] rtl8xxxu: Increase default polling timeout for
+ firmware startup
+To: Dan Lenski <dlenski@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jes Sorensen <jes.sorensen@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, May 23, 2016 at 12:24 PM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> Interesting, so if I understand you correctly, if you run
-> rtl8xxxu_power_off() once, the driver comes up correctly?
+Hi,
 
-Right. If rtl8xxxu_init_device() fails, I simply call
-rtl8xxxu_power_off(), and then rtl8xxxu_init_device() again. It never
-fails on the second try.
+On Wed, May 18, 2016 at 11:14 AM, Dan Lenski <dlenski@gmail.com> wrote:
+> This patch increases the default value for the maximum number of polling
+> loops to wait for the rtl8xxxu MCU to start after the firmware is loaded
+> (from 1000 to 5000).
+>
+> With RTL8723AU chipset, I frequently encounter "Firmware failed to start"
+> errors from rtl8xxxu after a cold boot.
+>
+> It appears that other chipsets supported by the driver have the same
+> problem. Here are a couple of relevant bug reports:
+> - http://ubuntuforums.org/showthread.php?t=2321756
+> - https://www.mail-archive.com/ubuntu-bugs@lists.ubuntu.com/msg4942468.html
+>
+> This issue seems to occur because RTL8XXXU_FIRMWARE_POLL_MAX (1000) is
+> too short, and the MCU fails to start up as quickly as expected.
+>
+> With a longer value (5000), the driver starts up consistently and
+> successfully after cold-boot.
+>
+> Signed-off-by: Dan Lenski <dlenski@gmail.com>
 
-       for (retry=0; retry<2; retry++) {
-               ret = rtl8xxxu_init_device(hw);
-               if (ret==0) {
-                       break;
-               } else if (retry==1) {
-                       dev_err(&udev->dev, "Fatal - failed to init device.\n");
-                       goto exit;
-               } else {
-                       dev_warn(&udev->dev, "Failed to init device,
-will power off and retry.\n");
-                       rtl8xxxu_power_off(priv);
-                       msleep(50);
-               }
-       }
+This looks good to me.
 
-> It is possible that rtl8xxxu_power_off() resets something that isn't being
-> initialized normally in the init sequence. It would be interesting to
-> try to break it down to find out which piece of the _power_off() code
-> we're missing.
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-Here's the evidence that I have:
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> index f2a1bac..39c6ce7 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+> @@ -49,7 +49,7 @@
+>  #define TX_PAGE_NUM_NORM_PQ            0x02
+>
+>  #define RTL_FW_PAGE_SIZE               4096
+> -#define RTL8XXXU_FIRMWARE_POLL_MAX     1000
+> +#define RTL8XXXU_FIRMWARE_POLL_MAX     5000
+>
+>  #define RTL8723A_CHANNEL_GROUPS                3
+>  #define RTL8723A_MAX_RF_PATHS          2
+> --
+> 2.8.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-1. I can reliably induce the failure-to-start condition by warm-booting via
-   kexec --force, without rtl8xxxu_power_off()
 
-2. I can reliably recover from this artificially-induced failure-to-start using
-   rtl8xxxu_power_off(), and it appears to work for the "naturally occurring"
-   failure-to-start too.
 
-3. I can *not* recover from artificially induced failure-to-start by lengthening
-   the polling timeout.
+-- 
+Julian Calaby
 
-   (Which means that my previous patch to lengthen the timeout was
-   bogus, and it must have just worked by luck or some detail of how I was
-   rebooting while testing it.)
-
-> Nice work!
-
-Thanks. If someone else is able to reproduce the artificial failure-to-start,
-I'll be more confident that I've actually solved it this time.
-
-Thanks,
-Dan
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
