@@ -1,55 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39050 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753477AbcEWLZt (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:36046 "EHLO
+	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751549AbcERBAH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2016 07:25:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 33/54] MAINTAINERS: Add file patterns for wireless device tree bindings
-References: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
-	<1463907991-7916-34-git-send-email-geert@linux-m68k.org>
-Date: Mon, 23 May 2016 14:25:43 +0300
-In-Reply-To: <1463907991-7916-34-git-send-email-geert@linux-m68k.org> (Geert
-	Uytterhoeven's message of "Sun, 22 May 2016 11:06:10 +0200")
-Message-ID: <87k2il9ft4.fsf@kamboji.qca.qualcomm.com> (sfid-20160523_132611_555559_C04A40C6)
+	Tue, 17 May 2016 21:00:07 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160517.151113.367799295750703003.davem@davemloft.net>
+References: <20160517.151113.367799295750703003.davem@davemloft.net>
+Date: Tue, 17 May 2016 18:00:06 -0700
+Message-ID: <CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com> (sfid-20160518_030139_854534_7C7DDC52)
+Subject: Re: [GIT] Networking
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: David Miller <davem@davemloft.net>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
-
-> Submitters of device tree binding documentation may forget to CC
-> the subsystem maintainer if this is missing.
+On Tue, May 17, 2016 at 12:11 PM, David Miller <davem@davemloft.net> wrote:
 >
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: linux-wireless@vger.kernel.org
-> ---
-> Please apply this patch directly if you want to be involved in device
-> tree binding documentation for your subsystem.
-> ---
->  MAINTAINERS | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 7a9f1138131afcf1..604d5d4230406094 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -8023,6 +8023,7 @@ Q:	http://patchwork.kernel.org/project/linux-wireless/list/
->  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git
->  T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git
->  S:	Maintained
-> +F:	Documentation/devicetree/bindings/net/wireless/
->  F:	drivers/net/wireless/
->  
->  NETXEN (1/10) GbE SUPPORT
+> Highlights:
 
-A good idea, thanks. I'll apply this once I open wireless-drivers-next,
-sometime after the merge window closes.
+Lowlights:
 
--- 
-Kalle Valo
+ 1) the iwlwifi driver seems to be broken
+
+My laptop that uses the intel 7680 iwlwifi module no longer connects
+to the network. It fails with a "Microcode SW error detected." and
+spews out register state over and over again.
+
+The last thing it says before falling over is:
+
+  wlp1s0: authenticate with xx:xx:xx:xx:xx:xx
+  wlp1s0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
+  wlp1s0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
+
+and then it goes all titsup.
+
+I thought that it might be because I had downloaded one of the daily
+firmware versions (it calls itself iwlwifi-7260-17.ucode, but isn't a
+real release afaik - but it has worked fien for me before), but the
+problem persists with the ver-16 ucode too, so that wasn't it.
+
+I haven't bisected it, but there is absolutely nothing odd in my hardware.
+
+I do have a 802.11ac network, which apparently not everybody does,
+judging by previous bug-reports of mine..
+
+Intel iwlwifi people: please check this out.
+
+               Linus
