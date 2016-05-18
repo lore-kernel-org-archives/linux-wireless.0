@@ -1,70 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53950 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752569AbcEKRCo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:44 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 13/21] ath10k: Document cycle count related counters.
-Date: Wed, 11 May 2016 10:02:25 -0700
-Message-Id: <1462986153-16318-14-git-send-email-greearb@candelatech.com> (sfid-20160511_192231_294360_EB75FBAE)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:45258 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932413AbcERO5C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 18 May 2016 10:57:02 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Daniel Lenski <dlenski@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] Make firmware startup polling timeout configurable, and increase default
+References: <1463525295-10818-1-git-send-email-dlenski@gmail.com>
+	<1463525295-10818-2-git-send-email-dlenski@gmail.com>
+	<wrfjeg903urr.fsf@redhat.com>
+	<CAOw_LSEvU3OKm3MDe4FfHicd709548=S5Qm+wV=5mBOFV4TrKg@mail.gmail.com>
+Date: Wed, 18 May 2016 10:57:00 -0400
+In-Reply-To: <CAOw_LSEvU3OKm3MDe4FfHicd709548=S5Qm+wV=5mBOFV4TrKg@mail.gmail.com>
+	(Daniel Lenski's message of "Tue, 17 May 2016 21:01:22 -0700")
+Message-ID: <wrfj37pf1kjn.fsf@redhat.com> (sfid-20160518_165708_878493_C2595B08)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Daniel Lenski <dlenski@gmail.com> writes:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>>
+>> Dan Lenski <dlenski@gmail.com> writes:
+>> >
+>> > This issue seems to occur because RTL8XXXU_FIRMWARE_POLL_MAX (1000) is
+>> > too short, and the MCU fails to start up as quickly as expected.
+>> >
+>> > With a longer value (5000), the driver starts up consistently and
+>> > successfully after cold-boot.
+>>
+>> I am not against increasing the maximum value here, however I would like
+>> more details about the system where you see these problems. I have used
+>> this driver extensively for a long time with my Lenovo Yoga 13 laptop
+>> and not seen this issue.
+>
+> Mine is also a Yoga 13.
 
-They are not necessarily named in an intuitive manner,
-so at least add some comments to help the next person.
+Interesting, I thought it might have been an ARM board and it could be
+something else that wasn't happening correctly. So far I only know of
+the Yogas and certain ARM boards that have the 8723au.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/core.h | 8 ++++----
- drivers/net/wireless/ath/ath10k/wmi.h  | 8 ++++----
- 2 files changed, 8 insertions(+), 8 deletions(-)
+>> Second, I really don't think this warrants a module parameter. Bumping
+>> the value should suffice.
+>
+> Okay. Adding a module parameter was useful for me in debugging, and I
+> thought it might be a useful backup option for other end-users who may
+> find that the default value doesn't suffice.
+>
+> It seems plausible to me that the delay is due to waiting for some
+> kind of analog circuit to stabilize (PLL, maybe?) and that there could
+> be a large variation among devices.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index e7c228a..91b1f95 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -189,10 +189,10 @@ struct ath10k_fw_stats_pdev {
- 
- 	/* PDEV stats */
- 	s32 ch_noise_floor;
--	u32 tx_frame_count;
--	u32 rx_frame_count;
--	u32 rx_clear_count;
--	u32 cycle_count;
-+	u32 tx_frame_count; /* Cycles spent transmitting frames */
-+	u32 rx_frame_count; /* Cycles spent receiving frames */
-+	u32 rx_clear_count; /* Total channel busy time, evidently */
-+	u32 cycle_count; /* Total on-channel time */
- 	u32 phy_err_count;
- 	u32 chan_tx_power;
- 	u32 ack_rx_bad;
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 8d9b5b3..91c7df5 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4208,10 +4208,10 @@ struct wmi_10_2_stats_event {
-  */
- struct wmi_pdev_stats_base {
- 	__le32 chan_nf;
--	__le32 tx_frame_count;
--	__le32 rx_frame_count;
--	__le32 rx_clear_count;
--	__le32 cycle_count;
-+	__le32 tx_frame_count; /* Cycles spent transmitting frames */
-+	__le32 rx_frame_count; /* Cycles spent receiving frames */
-+	__le32 rx_clear_count; /* Total channel busy time, evidently */
-+	__le32 cycle_count; /* Total on-channel time */
- 	__le32 phy_err_count;
- 	__le32 chan_tx_pwr;
- } __packed;
--- 
-2.4.3
+I am surprised your system is that different from mine, but I am fine
+with bumping it. I don't really like to clutter the module parameters
+unnecessarily, and if we bump this to 5000, I think it is unlikely
+anyone else will hit this problem. If they do, I think there are other
+issues at play.
 
+>> Note that the patch should at least be relative to
+>> wireless-drivers-next, or preferably my rtl8xxxu-devel tree. In both of
+>> these trees, the rtl8xxxu driver has been split into multiple files and
+>> your patch will not apply.
+>>
+>> Last, neither of the links you included for external bug reports work.
+>
+> Are you still unable to follow them in the second version of the patches that
+> I submitted? (It appears that they were mangled by Gmane the first
+> time I posted them.)
+>
+> Here they are again:
+>
+> http://ubuntuforums.org/showthread.php?t=2321756
+>
+> That is, thread #2321756 at ubuntuforums.org
+>
+> https://www.mail-archive.com/ubuntu-bugs@lists.ubuntu.com/msg4942468.html
+>
+> That is, Ubuntu bug #1574622
+
+I found them from your second post.
+
+Cheers,
+Jes
