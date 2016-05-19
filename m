@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:60626 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827AbcEJOwt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39105 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754865AbcESNIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 10:52:49 -0400
-Message-ID: <5731F5BF.7080307@candelatech.com> (sfid-20160510_165252_562550_4F317248)
-Date: Tue, 10 May 2016 07:52:47 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 19 May 2016 09:08:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lauri Kasanen <cand@gmx.com>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RESEND] Re: updating carl9170-1.fw in linux-firmware.git
+References: <20160416113312.8de2266358165182bb4b4a15@gmx.com>
+	<2185358.G319l0XIJC@debian64>
+	<87wpnrcft4.fsf@kamboji.qca.qualcomm.com>
+	<54163090.DmVClckc2L@debian64>
+	<20160518114828.bfaef9e4fbe9e039687eab38@gmx.com>
+Date: Thu, 19 May 2016 16:08:10 +0300
+In-Reply-To: <20160518114828.bfaef9e4fbe9e039687eab38@gmx.com> (Lauri
+	Kasanen's message of "Wed, 18 May 2016 11:48:28 +0300")
+Message-ID: <87wpmqdwlh.fsf@kamboji.qca.qualcomm.com> (sfid-20160519_150835_491797_B0433CDB)
 MIME-Version: 1.0
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 15/21] ath10k: support CT firmware flag.
-References: <1462835475-11079-1-git-send-email-greearb@candelatech.com> <1462835475-11079-16-git-send-email-greearb@candelatech.com> <20160510072005.GE25626@atheros-ThinkPad-T61>
-In-Reply-To: <20160510072005.GE25626@atheros-ThinkPad-T61>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Lauri Kasanen <cand@gmx.com> writes:
 
-
-On 05/10/2016 12:20 AM, Mohammed Shafi Shajakhan wrote:
-> Hi Ben,
+> On Tue, 03 May 2016 15:09:39 +0200
+> Christian Lamparter <chunkeey@googlemail.com> wrote:
 >
-> On Mon, May 09, 2016 at 04:11:09PM -0700, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> Add placeholder so CT firmware can more easily co-exist with upstream
->> kernel.
+>> On Thursday, April 21, 2016 03:22:15 PM Kalle Valo wrote:
+>> > Christian Lamparter <chunkeey@googlemail.com> writes:
+>> > 
+>> > > Maintainers. So for those people reading the fw list:
+>> > >
+>> > > What would it take to update the carl9170-1.fw firmware file in your
+>> > > repository to the latest version?
+>> > 
+>> > Thanks for following up on this. It would be good to solve this finally.
+>> Well, this was almost two weeks and no update yet.
+>> Kalle, can you please apply the "[PATCH v2] carl9170: Clarify kconfig text"
+>> patch from "Lauri Kasanen <cand@gmx.com>" [0].
+>> 
+>> [0] <https://marc.info/?l=linux-wireless&m=146081633405880>
 >
-> [shafi] nitpick: good to provide an expansion in commit log as well, so that
-> if we can easily figure out in git log alone, rather than going through
-> the change and suggesting that it supports more vif's etc
+> Seems we missed 4.7?
 
-CT firmware supports a great deal of things, such as IBSS, tx-rate reporting,
-more control over tx-buffer allocation, rate-ctrl improvements and so forth.
+Yeah, I didn't consider this important enough and delayed it due to lack
+of time. I now put the patch back to my queue for 4.8, but please check
+that it's the correct version:
 
-I have another hundred or so patches that can enable and take advantage
-of this sort of thing, but in the past, there has been no desire to allow
-these patches upstream, so I am trying to feed some of the least controversial
-patches first in case attitudes have changed.
+https://patchwork.kernel.org/patch/8861621/
 
-If you would like to see my full patch tree, it is here:
-
-http://dmz2.candelatech.com/?p=linux-4.4.dev.y/.git;a=summary
-
-And, you can clone it:
-
-git clone git://dmz2.candelatech.com/linux-4.4.dev.y
-
-With regard to the patches in this series to dump the BSS regions and similar, I would
-be happy to share my packaging script with QCA folks so they can add that info to their
-own firmware. With BSS and Stack dumps, you can walk back through null-pointer exceptions
-in the firmware and get a full backtrace instead of just the last call location.  This means
-you can remove a huge number of ASSERTS, which frees up IRAM and overall makes the code
-faster.
-
-Thanks,
-Ben
+But we really should figure out how to get the latest version to
+linux-firmware, this is not good in the long run.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
