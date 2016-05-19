@@ -1,91 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f193.google.com ([209.85.217.193]:32819 "EHLO
-	mail-lb0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890AbcE3ElV (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:34385 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750764AbcESEI3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2016 00:41:21 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2 next] brcmfmac: don't remove interface on link down firmware event
-Date: Mon, 30 May 2016 06:40:54 +0200
-Message-Id: <1464583269-30255-1-git-send-email-zajec5@gmail.com> (sfid-20160530_064155_803497_198187C5)
-In-Reply-To: <1464557989-20003-1-git-send-email-zajec5@gmail.com>
-References: <1464557989-20003-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 19 May 2016 00:08:29 -0400
+Date: Wed, 18 May 2016 21:08:27 -0700 (PDT)
+Message-Id: <20160518.210827.2298957890402906546.davem@davemloft.net> (sfid-20160519_060852_376487_E8552401)
+To: torvalds@linux-foundation.org
+Cc: luciano.coelho@intel.com, reinoudkoornstra@gmail.com,
+	linux-kernel@vger.kernel.org, linuxwifi@intel.com,
+	johannes.berg@intel.com, akpm@linux-foundation.org,
+	kvalo@codeaurora.org, egrumbach@gmail.com, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
+Subject: Re: [GIT] Networking
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CA+55aFxThzV3myrHv0XZbubEdGhg5=rGE6dK=+L1ddc9sufdCQ@mail.gmail.com>
+References: <CAAA5faHtbt8oyKEQOJ+NMBKR24b7Nvm6uJ2qZid1sWY58e7f+A@mail.gmail.com>
+	<1463581411.29999.1.camel@intel.com>
+	<CA+55aFxThzV3myrHv0XZbubEdGhg5=rGE6dK=+L1ddc9sufdCQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are two firmware events we handle similarly in brcmfmac:
-BRCMF_E_LINK and BRCMF_E_IF. The difference from firmware point of view
-is that the first one means BSS remains present in the firmware. Trying
-to (re)create it (e.g. when adding new virtual interface) will result in
-an error.
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Wed, 18 May 2016 11:45:06 -0700
 
-Current code treats both events in a similar way. It removes Linux
-interface for each of them. It works OK with e.g. BCM43602. Its firmware
-generates both events for each interface. It means we get BRCMF_E_LINK
-and remove interface. That is soon followed by BRCMF_E_IF which means
-BSS was also removed in a firmware. The only downside of this is a
-harmless error like:
-[  208.643180] brcmfmac: brcmf_fweh_call_event_handler: no interface object
+> David, do you happen to recall that merge conflict? I think you must
+> have removed that "skb_info" variable declaration and initialization
+> manually (due to the "unused variable" warning, which in turn was due
+> to the incorrect merge of the actual conflict), because I think git
+> would have merged that line into the result.
 
-Unfortunately BCM4366 firmware doesn't automatically remove BSS and so
-it doesn't generate BRCMF_E_IF. In such case we incorrectly remove Linux
-interface on BRCMF_E_LINK as BSS is still present in the firmware. It
-results in an error when trying to re-create virtual interface, e.g.:
-> iw phy phy1 interface add wlan1-1 type __ap
-[ 3602.929199] brcmfmac: brcmf_ap_add_vif: timeout occurred
-command failed: I/O error (-5)
+Yes, I know I buggered this merge conflict and Kalle said he'd have
+a fix coming my way ASAP.
 
-With this patch we don't remove Linux interface while firmware keeps
-BSS. Thanks to this we keep a consistent states of host driver and
-device firmware.
-
-Further improvement should be to mark BSS as disabled and remove
-interface on BRCMF_E_LINK. Then we should add support for reusing
-BSS-es.
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Fix drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c:5431:19: warning: unused variable ‘ifp’ [-Wunused-variable]
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ---
- 1 file changed, 3 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 38df1be..d23b95e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -5428,7 +5428,6 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
- 			       struct net_device *ndev,
- 			       const struct brcmf_event_msg *e, void *data)
- {
--	struct brcmf_if *ifp = netdev_priv(ndev);
- 	static int generation;
- 	u32 event = e->event_code;
- 	u32 reason = e->reason;
-@@ -5439,8 +5438,6 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
- 	    ndev != cfg_to_ndev(cfg)) {
- 		brcmf_dbg(CONN, "AP mode link down\n");
- 		complete(&cfg->vif_disabled);
--		if (ifp->vif->mbss)
--			brcmf_remove_interface(ifp);
- 		return 0;
- 	}
- 
--- 
-1.8.4.5
-
+Sorry, I was travelling today, so I'll catch up with this tomorrow.
