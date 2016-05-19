@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:55308 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753449AbcE0OT0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 10:19:26 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Xinming Hu <huxm@marvell.com>,
-	Javier Martinez Canillas <javier@osg.samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 8/8] mwifiex: use better message and error code when OF node doesn't match
-Date: Fri, 27 May 2016 10:18:22 -0400
-Message-Id: <1464358702-19083-9-git-send-email-javier@osg.samsung.com> (sfid-20160527_161957_284386_594A6429)
-In-Reply-To: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
-References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+Received: from mout.kundenserver.de ([212.227.126.133]:55223 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002AbcESH7U (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2016 03:59:20 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] iwlegacy: avoid warning about missing braces
+Date: Thu, 19 May 2016 09:58:49 +0200
+Message-Id: <1463644741-529379-1-git-send-email-arnd@arndb.de> (sfid-20160519_095942_743679_0BBDCCBD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt DT
-binding document lists the possible compatible strings that a SDIO child
-node can have, so the driver checks if the defined in the node matches.
+gcc-6 warns about code in il3945_hw_txq_ctx_free() being
+somewhat ambiguous:
 
-But the error message when that's not the case is misleading, so change
-for one that makes clear what the error really is. Also, returning a -1
-as errno code is not correct since that's -EPERM. A -EINVAL seems to be
-a more appropriate one.
+drivers/net/wireless/intel/iwlegacy/3945.c:1022:5: warning: suggest explicit braces to avoid ambiguous 'else' [-Wparentheses]
 
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+This adds a set of curly braces to avoid the warning.
 
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
+ drivers/net/wireless/intel/iwlegacy/3945.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 8b3292eaecb2..e6d56be04e08 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -103,8 +103,8 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 	int ret;
+diff --git a/drivers/net/wireless/intel/iwlegacy/3945.c b/drivers/net/wireless/intel/iwlegacy/3945.c
+index 7bcedbb53d94..209dc9988455 100644
+--- a/drivers/net/wireless/intel/iwlegacy/3945.c
++++ b/drivers/net/wireless/intel/iwlegacy/3945.c
+@@ -1019,12 +1019,13 @@ il3945_hw_txq_ctx_free(struct il_priv *il)
+ 	int txq_id;
  
- 	if (!of_match_node(mwifiex_sdio_of_match_table, dev->of_node)) {
--		dev_err(dev, "sdio platform data not available\n");
--		return -1;
-+		dev_err(dev, "required compatible string missing\n");
-+		return -EINVAL;
- 	}
+ 	/* Tx queues */
+-	if (il->txq)
++	if (il->txq) {
+ 		for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++)
+ 			if (txq_id == IL39_CMD_QUEUE_NUM)
+ 				il_cmd_queue_free(il);
+ 			else
+ 				il_tx_queue_free(il, txq_id);
++	}
  
- 	card->plt_of_node = dev->of_node;
+ 	/* free tx queue structure */
+ 	il_free_txq_mem(il);
 -- 
-2.5.5
+2.7.0
 
