@@ -1,308 +1,274 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:31127 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755157AbcEDSPc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2016 14:15:32 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:33934 "EHLO
+	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752002AbcESIgG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 19 May 2016 04:36:06 -0400
+Received: by mail-lf0-f43.google.com with SMTP id m64so31604437lfd.1
+        for <linux-wireless@vger.kernel.org>; Thu, 19 May 2016 01:36:05 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] iwlwifi: mvm: don't override the rate with the AMSDU len
-Date: Wed,  4 May 2016 21:15:20 +0300
-Message-Id: <1462385720-21509-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160504_201535_811846_0B259C47)
-In-Reply-To: <1462385598.16756.9.camel@intel.com>
-References: <1462385598.16756.9.camel@intel.com>
+Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
+	make-wifi-fast@lists.bufferbloat.net, apenwarr@gmail.com,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv5 3/5] mac80211: add debug knobs for fair queuing
+Date: Thu, 19 May 2016 10:37:50 +0200
+Message-Id: <1463647072-16201-4-git-send-email-michal.kazior@tieto.com> (sfid-20160519_103618_084126_A402511F)
+In-Reply-To: <1463647072-16201-1-git-send-email-michal.kazior@tieto.com>
+References: <1462446039-1070-1-git-send-email-michal.kazior@tieto.com>
+ <1463647072-16201-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The TSO code creates A-MSDUs from a single large send. Each
-A-MSDU is an skb and skb->len doesn't include the number of
-bytes which need to be added for the headers being added
-(subframe header, TCP header, IP header, SNAP, padding).
+This adds a debugfs entry to read and modify some
+fq parameters and inroduces a module parameter to
+control number of flows mac80211 shuold maintain.
 
-To be able to set the right value in the Tx command, we
-put the number of bytes added by those headers in
-driver_data in iwl_mvm_tx_tso and use this value in
-iwl_mvm_set_tx_cmd.
+This makes it easy to debug, test and experiment.
 
-The problem by setting this value in driver_data is that
-it overrides the ieee80211_tx_info. The bug manifested
-itself when we send P2P related frames in CCK since the
-rate in ieee80211_tx_info is zero-ed. This of course is
-a violation of the P2P specification.
-
-To fix this, copy the original ieee80211_tx_info to the
-stack and pass it to the functions which need it.
-Assign the number of bytes added by the headers to the
-driver_data inside the skb itself.
-
-Fixes: a6d5e32f247c ("iwlwifi: mvm: send large SKBs to the transport")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 83 +++++++++++++++++------------
- 1 file changed, 48 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 75870e6..34731e2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -105,6 +105,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
- 			struct iwl_tx_cmd *tx_cmd,
- 			struct ieee80211_tx_info *info, u8 sta_id)
- {
-+	struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	__le16 fc = hdr->frame_control;
- 	u32 tx_flags = le32_to_cpu(tx_cmd->tx_flags);
-@@ -185,7 +186,7 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	tx_cmd->tx_flags = cpu_to_le32(tx_flags);
- 	/* Total # bytes to be transmitted */
- 	tx_cmd->len = cpu_to_le16((u16)skb->len +
--		(uintptr_t)info->driver_data[0]);
-+		(uintptr_t)skb_info->driver_data[0]);
- 	tx_cmd->next_frame_len = 0;
- 	tx_cmd->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
- 	tx_cmd->sta_id = sta_id;
-@@ -327,10 +328,11 @@ static void iwl_mvm_set_tx_cmd_crypto(struct iwl_mvm *mvm,
-  */
- static struct iwl_device_cmd *
- iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
--		      int hdrlen, struct ieee80211_sta *sta, u8 sta_id)
-+		      struct ieee80211_tx_info *info, int hdrlen,
-+		      struct ieee80211_sta *sta, u8 sta_id)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
- 	struct iwl_device_cmd *dev_cmd;
- 	struct iwl_tx_cmd *tx_cmd;
+Notes:
+    v5:
+     * expose a single "aqm" debugfs knob to maintain
+       coherent stat values [Dave]
+
+ net/mac80211/debugfs.c | 173 +++++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/tx.c      |   8 ++-
+ 2 files changed, 180 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index b251b2f7f8dd..2906c1004e1a 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -10,6 +10,7 @@
  
-@@ -350,10 +352,10 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ #include <linux/debugfs.h>
+ #include <linux/rtnetlink.h>
++#include <linux/vmalloc.h>
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
+ #include "rate.h"
+@@ -70,6 +71,177 @@ DEBUGFS_READONLY_FILE(wep_iv, "%#08x",
+ DEBUGFS_READONLY_FILE(rate_ctrl_alg, "%s",
+ 	local->rate_ctrl ? local->rate_ctrl->ops->name : "hw/driver");
  
- 	iwl_mvm_set_tx_cmd_rate(mvm, tx_cmd, info, sta, hdr->frame_control);
- 
--	memset(&info->status, 0, sizeof(info->status));
--	memset(info->driver_data, 0, sizeof(info->driver_data));
-+	memset(&skb_info->status, 0, sizeof(skb_info->status));
-+	memset(skb_info->driver_data, 0, sizeof(skb_info->driver_data));
- 
--	info->driver_data[1] = dev_cmd;
-+	skb_info->driver_data[1] = dev_cmd;
- 
- 	return dev_cmd;
- }
-@@ -361,22 +363,25 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
- int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_info info;
- 	struct iwl_device_cmd *dev_cmd;
- 	struct iwl_tx_cmd *tx_cmd;
- 	u8 sta_id;
- 	int hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
--	if (WARN_ON_ONCE(info->flags & IEEE80211_TX_CTL_AMPDU))
-+	memcpy(&info, skb->cb, sizeof(info));
++struct aqm_info {
++	struct ieee80211_local *local;
++	size_t size;
++	size_t len;
++	unsigned char buf[0];
++};
 +
-+	if (WARN_ON_ONCE(info.flags & IEEE80211_TX_CTL_AMPDU))
- 		return -1;
- 
--	if (WARN_ON_ONCE(info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM &&
--			 (!info->control.vif ||
--			  info->hw_queue != info->control.vif->cab_queue)))
-+	if (WARN_ON_ONCE(info.flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM &&
-+			 (!info.control.vif ||
-+			  info.hw_queue != info.control.vif->cab_queue)))
- 		return -1;
- 
- 	/* This holds the amsdu headers length */
--	info->driver_data[0] = (void *)(uintptr_t)0;
-+	skb_info->driver_data[0] = (void *)(uintptr_t)0;
- 
- 	/*
- 	 * IWL_MVM_OFFCHANNEL_QUEUE is used for ROC packets that can be used
-@@ -385,7 +390,7 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 	 * and hence needs to be sent on the aux queue
- 	 */
- 	if (IEEE80211_SKB_CB(skb)->hw_queue == IWL_MVM_OFFCHANNEL_QUEUE &&
--	    info->control.vif->type == NL80211_IFTYPE_STATION)
-+	    info.control.vif->type == NL80211_IFTYPE_STATION)
- 		IEEE80211_SKB_CB(skb)->hw_queue = mvm->aux_queue;
- 
- 	/*
-@@ -398,14 +403,14 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 	 * AUX station.
- 	 */
- 	sta_id = mvm->aux_sta.sta_id;
--	if (info->control.vif) {
-+	if (info.control.vif) {
- 		struct iwl_mvm_vif *mvmvif =
--			iwl_mvm_vif_from_mac80211(info->control.vif);
-+			iwl_mvm_vif_from_mac80211(info.control.vif);
- 
--		if (info->control.vif->type == NL80211_IFTYPE_P2P_DEVICE ||
--		    info->control.vif->type == NL80211_IFTYPE_AP)
-+		if (info.control.vif->type == NL80211_IFTYPE_P2P_DEVICE ||
-+		    info.control.vif->type == NL80211_IFTYPE_AP)
- 			sta_id = mvmvif->bcast_sta.sta_id;
--		else if (info->control.vif->type == NL80211_IFTYPE_STATION &&
-+		else if (info.control.vif->type == NL80211_IFTYPE_STATION &&
- 			 is_multicast_ether_addr(hdr->addr1)) {
- 			u8 ap_sta_id = ACCESS_ONCE(mvmvif->ap_sta_id);
- 
-@@ -414,19 +419,18 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 		}
- 	}
- 
--	IWL_DEBUG_TX(mvm, "station Id %d, queue=%d\n", sta_id, info->hw_queue);
-+	IWL_DEBUG_TX(mvm, "station Id %d, queue=%d\n", sta_id, info.hw_queue);
- 
--	dev_cmd = iwl_mvm_set_tx_params(mvm, skb, hdrlen, NULL, sta_id);
-+	dev_cmd = iwl_mvm_set_tx_params(mvm, skb, &info, hdrlen, NULL, sta_id);
- 	if (!dev_cmd)
- 		return -1;
- 
--	/* From now on, we cannot access info->control */
- 	tx_cmd = (struct iwl_tx_cmd *)dev_cmd->payload;
- 
- 	/* Copy MAC header from skb into command buffer */
- 	memcpy(tx_cmd->hdr, hdr, hdrlen);
- 
--	if (iwl_trans_tx(mvm->trans, skb, dev_cmd, info->hw_queue)) {
-+	if (iwl_trans_tx(mvm->trans, skb, dev_cmd, info.hw_queue)) {
- 		iwl_trans_free_tx_cmd(mvm->trans, dev_cmd);
- 		return -1;
- 	}
-@@ -445,11 +449,11 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 
- #ifdef CONFIG_INET
- static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
-+			  struct ieee80211_tx_info *info,
- 			  struct ieee80211_sta *sta,
- 			  struct sk_buff_head *mpdus_skb)
- {
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	unsigned int mss = skb_shinfo(skb)->gso_size;
- 	struct sk_buff *tmp, *next;
-@@ -544,6 +548,8 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 
- 	/* This skb fits in one single A-MSDU */
- 	if (num_subframes * mss >= tcp_payload_len) {
-+		struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
++#define AQM_HDR_LEN 200
++#define AQM_HW_ENTRY_LEN 40
++#define AQM_TXQ_ENTRY_LEN 110
 +
- 		/*
- 		 * Compute the length of all the data added for the A-MSDU.
- 		 * This will be used to compute the length to write in the TX
-@@ -552,11 +558,10 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		 * already had one set of SNAP / IP / TCP headers.
- 		 */
- 		num_subframes = DIV_ROUND_UP(tcp_payload_len, mss);
--		info = IEEE80211_SKB_CB(skb);
- 		amsdu_add = num_subframes * sizeof(struct ethhdr) +
- 			(num_subframes - 1) * (snap_ip_tcp + pad);
- 		/* This holds the amsdu headers length */
--		info->driver_data[0] = (void *)(uintptr_t)amsdu_add;
-+		skb_info->driver_data[0] = (void *)(uintptr_t)amsdu_add;
++static int aqm_open(struct inode *inode, struct file *file)
++{
++	struct ieee80211_local *local = inode->i_private;
++	struct ieee80211_sub_if_data *sdata;
++	struct sta_info *sta;
++	struct txq_info *txqi;
++	struct fq *fq = &local->fq;
++	struct aqm_info *info = NULL;
++	int len = 0;
++	int i;
++
++	if (!local->ops->wake_tx_queue)
++		return -EOPNOTSUPP;
++
++	len += AQM_HDR_LEN;
++	len += 6 * AQM_HW_ENTRY_LEN;
++
++	rcu_read_lock();
++	list_for_each_entry_rcu(sdata, &local->interfaces, list)
++		len += AQM_TXQ_ENTRY_LEN;
++	list_for_each_entry_rcu(sta, &local->sta_list, list)
++		len += AQM_TXQ_ENTRY_LEN * ARRAY_SIZE(sta->sta.txq);
++	rcu_read_unlock();
++
++	info = vmalloc(len);
++	if (!info)
++		return -ENOMEM;
++
++	spin_lock_bh(&local->fq.lock);
++	rcu_read_lock();
++
++	file->private_data = info;
++	info->local = local;
++	info->size = len;
++	len = 0;
++
++	len += scnprintf(info->buf + len, info->size - len,
++			 "* hw\n"
++			 "access name value\n"
++			 "R fq_flows_cnt %u\n"
++			 "R fq_backlog %u\n"
++			 "R fq_overlimit %u\n"
++			 "R fq_collisions %u\n"
++			 "RW fq_limit %u\n"
++			 "RW fq_quantum %u\n",
++			 fq->flows_cnt,
++			 fq->backlog,
++			 fq->overlimit,
++			 fq->collisions,
++			 fq->limit,
++			 fq->quantum);
++
++	len += scnprintf(info->buf + len,
++			 info->size - len,
++			 "* vif\n"
++			 "ifname addr ac backlog-bytes backlog-packets flows overlimit collisions tx-bytes tx-packets\n");
++
++	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
++		txqi = to_txq_info(sdata->vif.txq);
++		len += scnprintf(info->buf + len, info->size - len,
++				 "%s %pM %u %u %u %u %u %u %u %u\n",
++				 sdata->name,
++				 sdata->vif.addr,
++				 txqi->txq.ac,
++				 txqi->tin.backlog_bytes,
++				 txqi->tin.backlog_packets,
++				 txqi->tin.flows,
++				 txqi->tin.overlimit,
++				 txqi->tin.collisions,
++				 txqi->tin.tx_bytes,
++				 txqi->tin.tx_packets);
++	}
++
++	len += scnprintf(info->buf + len,
++			 info->size - len,
++			 "* sta\n"
++			 "ifname addr tid ac backlog-bytes backlog-packets flows overlimit collisions tx-bytes tx-packets\n");
++
++	list_for_each_entry_rcu(sta, &local->sta_list, list) {
++		sdata = sta->sdata;
++		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
++			txqi = to_txq_info(sta->sta.txq[i]);
++			len += scnprintf(info->buf + len, info->size - len,
++					 "%s %pM %d %d %u %u %u %u %u %u %u\n",
++					 sdata->name,
++					 sta->sta.addr,
++					 txqi->txq.tid,
++					 txqi->txq.ac,
++					 txqi->tin.backlog_bytes,
++					 txqi->tin.backlog_packets,
++					 txqi->tin.flows,
++					 txqi->tin.overlimit,
++					 txqi->tin.collisions,
++					 txqi->tin.tx_bytes,
++					 txqi->tin.tx_packets);
++		}
++	}
++
++	info->len = len;
++
++	rcu_read_unlock();
++	spin_unlock_bh(&local->fq.lock);
++
++	return 0;
++}
++
++static int aqm_release(struct inode *inode, struct file *file)
++{
++	vfree(file->private_data);
++	return 0;
++}
++
++static ssize_t aqm_read(struct file *file,
++			char __user *user_buf,
++			size_t count,
++			loff_t *ppos)
++{
++	struct aqm_info *info = file->private_data;
++
++	return simple_read_from_buffer(user_buf, count, ppos,
++				       info->buf, info->len);
++}
++
++static ssize_t aqm_write(struct file *file,
++			 const char __user *user_buf,
++			 size_t count,
++			 loff_t *ppos)
++{
++	struct aqm_info *info = file->private_data;
++	struct ieee80211_local *local = info->local;
++	char buf[100];
++	size_t len;
++
++	if (count > sizeof(buf))
++		return -EINVAL;
++
++	if (copy_from_user(buf, user_buf, count))
++		return -EFAULT;
++
++	buf[sizeof(buf) - 1] = '\0';
++	len = strlen(buf);
++	if (len > 0 && buf[len-1] == '\n')
++		buf[len-1] = 0;
++
++	if (sscanf(buf, "fq_limit %u", &local->fq.limit) == 1)
++		return count;
++	else if (sscanf(buf, "fq_quantum %u", &local->fq.quantum) == 1)
++		return count;
++
++	return -EINVAL;
++}
++
++static const struct file_operations aqm_ops = {
++	.write = aqm_write,
++	.read = aqm_read,
++	.open = aqm_open,
++	.release = aqm_release,
++	.llseek = default_llseek,
++};
++
+ #ifdef CONFIG_PM
+ static ssize_t reset_write(struct file *file, const char __user *user_buf,
+ 			   size_t count, loff_t *ppos)
+@@ -256,6 +428,7 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_ADD(hwflags);
+ 	DEBUGFS_ADD(user_power);
+ 	DEBUGFS_ADD(power);
++	DEBUGFS_ADD_MODE(aqm, 0600);
  
- 		__skb_queue_tail(mpdus_skb, skb);
+ 	statsd = debugfs_create_dir("statistics", phyd);
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1d8343fca6d4..2b60b10e6990 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -17,6 +17,7 @@
+ #include <linux/slab.h>
+ #include <linux/skbuff.h>
+ #include <linux/etherdevice.h>
++#include <linux/moduleparam.h>
+ #include <linux/bitmap.h>
+ #include <linux/rcupdate.h>
+ #include <linux/export.h>
+@@ -36,6 +37,11 @@
+ #include "wme.h"
+ #include "rate.h"
+ 
++static unsigned int fq_flows_cnt = 4096;
++module_param(fq_flows_cnt, uint, 0644);
++MODULE_PARM_DESC(fq_flows_cnt,
++		 "Maximum number of txq fair queuing flows. ");
++
+ /* misc utils */
+ 
+ static inline void ieee80211_tx_stats(struct net_device *dev, u32 len)
+@@ -1346,7 +1352,7 @@ int ieee80211_txq_setup_flows(struct ieee80211_local *local)
+ 	if (!local->ops->wake_tx_queue)
  		return 0;
-@@ -596,11 +601,14 @@ segment:
- 			ip_hdr(tmp)->id = htons(ip_base_id + i * num_subframes);
  
- 		if (tcp_payload_len > mss) {
-+			struct ieee80211_tx_info *skb_info =
-+				IEEE80211_SKB_CB(tmp);
-+
- 			num_subframes = DIV_ROUND_UP(tcp_payload_len, mss);
--			info = IEEE80211_SKB_CB(tmp);
- 			amsdu_add = num_subframes * sizeof(struct ethhdr) +
- 				(num_subframes - 1) * (snap_ip_tcp + pad);
--			info->driver_data[0] = (void *)(uintptr_t)amsdu_add;
-+			skb_info->driver_data[0] =
-+				(void *)(uintptr_t)amsdu_add;
- 			skb_shinfo(tmp)->gso_size = mss;
- 		} else {
- 			qc = ieee80211_get_qos_ctl((void *)tmp->data);
-@@ -622,6 +630,7 @@ segment:
- }
- #else /* CONFIG_INET */
- static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
-+			  struct ieee80211_tx_info *info,
- 			  struct ieee80211_sta *sta,
- 			  struct sk_buff_head *mpdus_skb)
- {
-@@ -636,10 +645,10 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
-  * Sets the fields in the Tx cmd that are crypto related
-  */
- static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
-+			   struct ieee80211_tx_info *info,
- 			   struct ieee80211_sta *sta)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct iwl_mvm_sta *mvmsta;
- 	struct iwl_device_cmd *dev_cmd;
- 	struct iwl_tx_cmd *tx_cmd;
-@@ -660,7 +669,8 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	if (WARN_ON_ONCE(mvmsta->sta_id == IWL_MVM_STATION_COUNT))
- 		return -1;
- 
--	dev_cmd = iwl_mvm_set_tx_params(mvm, skb, hdrlen, sta, mvmsta->sta_id);
-+	dev_cmd = iwl_mvm_set_tx_params(mvm, skb, info, hdrlen,
-+					sta, mvmsta->sta_id);
- 	if (!dev_cmd)
- 		goto drop;
- 
-@@ -736,7 +746,8 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		   struct ieee80211_sta *sta)
- {
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_info *skb_info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_tx_info info;
- 	struct sk_buff_head mpdus_skbs;
- 	unsigned int payload_len;
- 	int ret;
-@@ -747,21 +758,23 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	if (WARN_ON_ONCE(mvmsta->sta_id == IWL_MVM_STATION_COUNT))
- 		return -1;
- 
-+	memcpy(&info, skb->cb, sizeof(info));
-+
- 	/* This holds the amsdu headers length */
--	info->driver_data[0] = (void *)(uintptr_t)0;
-+	skb_info->driver_data[0] = (void *)(uintptr_t)0;
- 
- 	if (!skb_is_gso(skb))
--		return iwl_mvm_tx_mpdu(mvm, skb, sta);
-+		return iwl_mvm_tx_mpdu(mvm, skb, &info, sta);
- 
- 	payload_len = skb_tail_pointer(skb) - skb_transport_header(skb) -
- 		tcp_hdrlen(skb) + skb->data_len;
- 
- 	if (payload_len <= skb_shinfo(skb)->gso_size)
--		return iwl_mvm_tx_mpdu(mvm, skb, sta);
-+		return iwl_mvm_tx_mpdu(mvm, skb, &info, sta);
- 
- 	__skb_queue_head_init(&mpdus_skbs);
- 
--	ret = iwl_mvm_tx_tso(mvm, skb, sta, &mpdus_skbs);
-+	ret = iwl_mvm_tx_tso(mvm, skb, &info, sta, &mpdus_skbs);
+-	ret = fq_init(fq, 4096);
++	ret = fq_init(fq, max_t(u32, fq_flows_cnt, 1));
  	if (ret)
  		return ret;
  
-@@ -771,7 +784,7 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	while (!skb_queue_empty(&mpdus_skbs)) {
- 		skb = __skb_dequeue(&mpdus_skbs);
- 
--		ret = iwl_mvm_tx_mpdu(mvm, skb, sta);
-+		ret = iwl_mvm_tx_mpdu(mvm, skb, &info, sta);
- 		if (ret) {
- 			__skb_queue_purge(&mpdus_skbs);
- 			return ret;
 -- 
-2.5.0
+2.1.4
 
