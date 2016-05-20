@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56925 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753798AbcEWUXG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 23 May 2016 16:23:06 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mwifiex: handle edmac vendor command
-References: <1461945483-3239-1-git-send-email-akarwar@marvell.com>
-	<cbd542a552db4d368a5b402307976494@SC-EXCH04.marvell.com>
-Date: Mon, 23 May 2016 23:22:59 +0300
-In-Reply-To: <cbd542a552db4d368a5b402307976494@SC-EXCH04.marvell.com>
-	(Amitkumar Karwar's message of "Thu, 12 May 2016 15:39:29 +0000")
-Message-ID: <87zirg8qxo.fsf@kamboji.qca.qualcomm.com> (sfid-20160523_222311_597112_3742FD0E)
+Received: from mail.neratec.com ([46.140.151.2]:2150 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932232AbcETKqe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2016 06:46:34 -0400
+Subject: Re: Who is the maintainer of net/wireless/wext* ?
+To: sedat.dilek@gmail.com, Ujjal Roy <royujjal@gmail.com>
+References: <CAE2MWkk=mw0XiuimAQafTv=XtnBm2bCxH4Mf52veXgce6W8MrA@mail.gmail.com>
+ <CA+icZUUkx74CgNbNJt5pqoqWHWQNTNCfP2faDSW7H9VmSuj1KQ@mail.gmail.com>
+Cc: Kernel <linux-wireless@vger.kernel.org>
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Message-ID: <573EEB06.70109@neratec.com> (sfid-20160520_124638_225462_60BE0A70)
+Date: Fri, 20 May 2016 12:46:30 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+icZUUkx74CgNbNJt5pqoqWHWQNTNCfP2faDSW7H9VmSuj1KQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> writes:
+On 05/20/2016 12:34 PM, Sedat Dilek wrote:
+> On 5/20/16, Ujjal Roy <royujjal@gmail.com> wrote:
+>> I want to know the maintainer of
+>>
+>> net/wireless/wext*. Please any reply.
+>>
+> 
+> For example, you can look in the MAINTAINERS file.
+> 
+> CFG80211 and NL80211
+> M:	Johannes Berg <johannes@sipsolutions.net>
+> L:	linux-wireless@vger.kernel.org
+> W:	http://wireless.kernel.org/
+> T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git
+> T:	git git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git
+> S:	Maintained
+> F:	include/uapi/linux/nl80211.h
+> F:	include/net/cfg80211.h
+> F:	net/wireless/*
+> X:	net/wireless/wext*
+> 
+> - Sedat -
+> 
+> [1] http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/MAINTAINERS#n2890
 
-> Hi Kalle,
-> 	
->> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
->> Sent: Friday, April 29, 2016 9:28 PM
->> To: linux-wireless@vger.kernel.org
->> Cc: Jeff CF Chen; Amitkumar Karwar
->> Subject: [PATCH] mwifiex: handle edmac vendor command
->> 
->> From: chunfan chen <jeffc@marvell.com>
->> 
->> Userspace can configure edmac values through a custom vendor command.
->> They will be used by hardware for adaptivity.
->> 
->> Signed-off-by: chunfan chen <jeffc@marvell.com>
->> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Maybe also helpful: ./scripts/get_maintainer.pl -f net/wireless/wext*
 
-[deleted over 200 lines of unnecessary quotes]
-
-> This patch seems to have deferred. We basically want a way to download
-> a vendor specific configuration to our firmware. Do you have any
-> suggestions on how can achieve this in better way?
->
-> I can see below iw command suits our requirement.
->
-> iw dev <devname> vendor send <oui> <subcmd> <filename|-|hex data>
->
-> Please guide.
-
-It was deferred because use of the nl80211 vendor interface (which I
-don't think belong to upstream drivers). I'll take a look at this patch
-in detail after the merge window.
-
--- 
-Kalle Valo
+Cheers,
+Zefir
