@@ -1,101 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:32828 "EHLO
-	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750985AbcE0M1r (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:36006 "EHLO
+	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753918AbcETHmr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 08:27:47 -0400
-Received: by mail-pf0-f179.google.com with SMTP id b124so41565547pfb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2016 05:27:47 -0700 (PDT)
-From: Wei-Ning Huang <wnhuang@chromium.org>
-To: Linux-Wireless <linux-wireless@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, akarwar@marvell.com,
-	djkurtz@chromium.org, Wei-Ning Huang <wnhuang@chromium.org>
-Subject: [PATCH v2] mwifiex: fix race condition when downloading firmware
-Date: Fri, 27 May 2016 20:27:38 +0800
-Message-Id: <1464352059-13923-1-git-send-email-wnhuang@chromium.org> (sfid-20160527_142807_806895_D88750B6)
+	Fri, 20 May 2016 03:42:47 -0400
+Received: by mail-pf0-f169.google.com with SMTP id c189so40004678pfb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2016 00:42:46 -0700 (PDT)
+Subject: Re: [PATCH 4.8 2/2] brcmfmac: support get_channel cfg80211 callback
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1463655770-22467-1-git-send-email-zajec5@gmail.com>
+ <1463655770-22467-2-git-send-email-zajec5@gmail.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<linux-wireless@vger.kernel.org>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <48f4f8c9-b4a3-66f9-b4a5-640778ac8e79@broadcom.com> (sfid-20160520_094307_450952_0BE88AC2)
+Date: Fri, 20 May 2016 09:42:37 +0200
+MIME-Version: 1.0
+In-Reply-To: <1463655770-22467-2-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The action 'check for winner' and 'download firmware' should be an
-atomic action. This is true for btmrvl driver but not mwmfiex, which
-cause firmware download to fail when the following scenario happens:
+On 19-5-2016 13:02, Rafał Miłecki wrote:
+> This is important for brcmfmac as the firmware may pick different
+> channel than requested. This has been tested with BCM4366B1 (in D-Link
+> DIR-885L).
 
-1) mwifiex check winner status: true
-2) btmrvl check winner status: true, and start downloading firmware
-3) mwifiex tries to download firmware, but failed because btmrvl is
-already downloading.
+Can you elaborate? Is this for AP or STA mode?
 
-This won't happen if 1) and 3) is an atomic action. This patch adds
-sdio_claim/release_host call around those two actions to make sure it's
-atomic.
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 59 ++++++++++++++++++++++
+>  1 file changed, 59 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 597495d..4fb9e3a 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -4892,6 +4892,64 @@ exit:
+>  	return err;
+>  }
+>  
+> +static int brcmf_cfg80211_get_channel(struct wiphy *wiphy,
+> +				      struct wireless_dev *wdev,
+> +				      struct cfg80211_chan_def *chandef)
+> +{
+> +	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+> +	struct net_device *ndev = wdev->netdev;
+> +	struct brcmf_if *ifp = netdev_priv(ndev);
 
-Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/init.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+Can this operation be done on a P2P_DEVICE interface, ie. wdev->netdev
+== NULL?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 78c532f..7703438 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -24,6 +24,7 @@
- #include "main.h"
- #include "wmm.h"
- #include "11n.h"
-+#include "sdio.h"
- 
- /*
-  * This function adds a BSS priority table to the table list.
-@@ -737,16 +738,20 @@ mwifiex_shutdown_drv(struct mwifiex_adapter *adapter)
- int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
- 		    struct mwifiex_fw_image *pmfw)
- {
-+	struct sdio_mmc_card *card = adapter->card;
- 	int ret;
- 	u32 poll_num = 1;
- 
-+	if (adapter->iface_type == MWIFIEX_SDIO)
-+		sdio_claim_host(card->func);
-+
- 	if (adapter->if_ops.check_fw_status) {
- 		/* check if firmware is already running */
- 		ret = adapter->if_ops.check_fw_status(adapter, poll_num);
- 		if (!ret) {
- 			mwifiex_dbg(adapter, MSG,
- 				    "WLAN FW already running! Skip FW dnld\n");
--			return 0;
-+			goto release_host;
- 		}
- 	}
- 
-@@ -759,7 +764,7 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
- 		if (ret) {
- 			mwifiex_dbg(adapter, MSG,
- 				    "WLAN read winner status failed!\n");
--			return ret;
-+			goto release_host;
- 		}
- 
- 		if (!adapter->winner) {
-@@ -775,7 +780,7 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
- 		if (ret) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "prog_fw failed ret=%#x\n", ret);
--			return ret;
-+			goto release_host;
- 		}
- 	}
- 
-@@ -785,6 +790,9 @@ poll_fw:
- 	if (ret)
- 		mwifiex_dbg(adapter, ERROR,
- 			    "FW failed to be active in time\n");
-+release_host:
-+	if (adapter->iface_type == MWIFIEX_SDIO)
-+		sdio_release_host(card->func);
- 
- 	return ret;
- }
--- 
-2.1.2
+> +	struct brcmu_chan ch;
+> +	enum nl80211_band band = 0;
+> +	enum nl80211_chan_width width = 0;
+> +	u32 chanspec;
+> +	int freq, err;
+> +
+> +	err = brcmf_fil_iovar_int_get(ifp, "chanspec", &chanspec);
+> +	if (err) {
+> +		brcmf_err("chanspec failed (%d)\n", err);
+> +		return err;
+> +	}
+> +
+> +	ch.chspec = chanspec;
+> +	cfg->d11inf.decchspec(&ch);
+> +
+> +	switch (ch.band) {
+> +	case BRCMU_CHAN_BAND_2G:
+> +		band = NL80211_BAND_2GHZ;
+> +		break;
+> +	case BRCMU_CHAN_BAND_5G:
+> +		band = NL80211_BAND_5GHZ;
+> +		break;
+> +	}
+> +
+> +	switch (ch.bw) {
+> +	case BRCMU_CHAN_BW_80:
+> +		width = NL80211_CHAN_WIDTH_80;
+> +		break;
+> +	case BRCMU_CHAN_BW_40:
+> +		width = NL80211_CHAN_WIDTH_40;
+> +		break;
+> +	case BRCMU_CHAN_BW_20:
+> +		width = NL80211_CHAN_WIDTH_20;
+> +		break;
+> +	case BRCMU_CHAN_BW_80P80:
+> +		width = NL80211_CHAN_WIDTH_80P80;
+> +		break;
 
+Not much sense to support this given that center_freq2 is set to zero below.
+
+Regards,
+Arend
+
+> +	case BRCMU_CHAN_BW_160:
+> +		width = NL80211_CHAN_WIDTH_160;
+> +		break;
+> +	}
+> +
+> +	freq = ieee80211_channel_to_frequency(ch.control_ch_num, band);
+> +	chandef->chan = ieee80211_get_channel(wiphy, freq);
+> +	chandef->width = width;
+> +	chandef->center_freq1 = ieee80211_channel_to_frequency(ch.chnum, band);
+> +	chandef->center_freq2 = 0;
+> +
+> +	return 0;
+> +}
+> +
+>  static int brcmf_cfg80211_crit_proto_start(struct wiphy *wiphy,
+>  					   struct wireless_dev *wdev,
+>  					   enum nl80211_crit_proto_id proto,
+> @@ -5054,6 +5112,7 @@ static struct cfg80211_ops brcmf_cfg80211_ops = {
+>  	.mgmt_tx = brcmf_cfg80211_mgmt_tx,
+>  	.remain_on_channel = brcmf_p2p_remain_on_channel,
+>  	.cancel_remain_on_channel = brcmf_cfg80211_cancel_remain_on_channel,
+> +	.get_channel = brcmf_cfg80211_get_channel,
+>  	.start_p2p_device = brcmf_p2p_start_device,
+>  	.stop_p2p_device = brcmf_p2p_stop_device,
+>  	.crit_proto_start = brcmf_cfg80211_crit_proto_start,
+> 
