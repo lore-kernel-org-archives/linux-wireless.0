@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.161.176]:33412 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756255AbcECTu2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 15:50:28 -0400
-Received: by mail-yw0-f176.google.com with SMTP id t10so41187003ywa.0
-        for <linux-wireless@vger.kernel.org>; Tue, 03 May 2016 12:50:27 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:37314 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751284AbcETOIc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2016 10:08:32 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Daniel Lenski <dlenski@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: increase polling timeout for firmware startup
+References: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
+	<wrfjinyayf2i.fsf@redhat.com>
+	<CAOw_LSHnV+244fT7YvEoV+7VSH_+OoGFmZSdGK4a3NqB407VGQ@mail.gmail.com>
+Date: Fri, 20 May 2016 10:08:30 -0400
+In-Reply-To: <CAOw_LSHnV+244fT7YvEoV+7VSH_+OoGFmZSdGK4a3NqB407VGQ@mail.gmail.com>
+	(Daniel Lenski's message of "Thu, 19 May 2016 21:51:43 -0700")
+Message-ID: <wrfj4m9svn35.fsf@redhat.com> (sfid-20160520_160835_577886_5344E848)
 MIME-Version: 1.0
-In-Reply-To: <1462304144.10444.13.camel@sipsolutions.net>
-References: <CABPxzYLtu53V79O--eDJEdRfn-zw3Wq9Po04F=uFp_FrfJjuiA@mail.gmail.com>
- <1462281243.2251.2.camel@sipsolutions.net> <CABPxzYJjRMMaUn+zzpzm8Zv8XAn8nfA8FgMTr7bkZve3XWs8ow@mail.gmail.com>
- <CABPxzYKj-0kaBP6BYQvcTYZtaTTbtc0nR-=69qC9eCDDJoXxaA@mail.gmail.com>
- <1462291262.2251.4.camel@sipsolutions.net> <CABPxzY+JXre1SzGyqmwYhTw9BB_-PfR02basW0WS34wZKpxK7g@mail.gmail.com>
- <CALhHN=pxE2+dHxKLvsdWDt7fZ-FwYSUzps6hWB9m7dmZbFytgg@mail.gmail.com> <1462304144.10444.13.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 4 May 2016 01:20:07 +0530
-Message-ID: <CABPxzYL9ezhovark83mnSVkh7H3XQJjNU+XjvEHdMses6N3FBA@mail.gmail.com> (sfid-20160503_215030_852751_2A7630F3)
-Subject: Re: dynamic ps + offchannel mgmt_tx + HW RoC
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 4, 2016 at 1:05 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> There is, btw, perhaps a different way - just fix the damn stuff.
->
-> Requires moving everything into ifmgd rather than local, and then
-> perhaps if only a single managed interface exists mirroring its state
-> into the existing driver calls etc.
->
-> It'd still be a big task, and I don't see much advantage over just
-> reimplementing it.
+Daniel Lenski <dlenski@gmail.com> writes:
+> You're welcome, and thanks for writing this great driver. It really
+> makes a huge difference for stability of the Yoga 13 wifi!
 
-Yes, requires quite an effort and also need to handle lot of cases.
-Instead, why don't we make the default as complete PS offload
-and force the drivers who need to use mac80211 PS negate these
-in the register_hw? That way we are clear about the intentions.
+You're welcome! It made a big difference for my own Yoga 13 and it's
+been an exciting project. I learned a lot in the process.
 
--- 
-Thanks,
-Regards,
-Chaitanya T K.
+> Unfortunately, I ran into a case today where even 5000 loops was not
+> enough after a cold boot. 5000 loops meant about 1.5 second delay
+> between finishing the firmware checksum poll, while waiting for the
+> firmware to start. It now appears to me that the number of required
+> polling loops must be strongly bimodal.
+>
+> I added some logging, so that the driver reports to me the number of
+> loops required for the firmware to start.
+
+This is bizarre, I wonder if the hardware is having issues in your
+laptop? Another thing to try would be to do an additional reset of the
+chip and wait a bit before trying to load the firmware?
+
+Cheers,
+Jes
