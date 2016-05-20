@@ -1,67 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:45421 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643AbcESHQm (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:34879 "EHLO
+	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754949AbcETHxu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2016 03:16:42 -0400
-Date: Thu, 19 May 2016 09:16:39 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
-	<jprvita@endlessm.com>
-Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED
- trigger
-Message-ID: <20160519071639.GB17077@amd> (sfid-20160519_091703_103643_D92C0718)
-References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
- <1462199948-6424-2-git-send-email-jprvita@endlessm.com>
- <20160504072936.GB17045@amd>
- <1463045572.13313.21.camel@sipsolutions.net>
+	Fri, 20 May 2016 03:53:50 -0400
+Received: by mail-pf0-f182.google.com with SMTP id b66so18084655pfb.2
+        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2016 00:53:50 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: use kmemdup
+To: Muhammad Falak R Wani <falakreyaz@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1463666357-16719-1-git-send-email-falakreyaz@gmail.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <c7b2489d-8ae8-e1c5-ab85-ba88d27c9318@broadcom.com> (sfid-20160520_095427_847050_FAB3EF7B)
+Date: Fri, 20 May 2016 09:53:42 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1463045572.13313.21.camel@sipsolutions.net>
+In-Reply-To: <1463666357-16719-1-git-send-email-falakreyaz@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 2016-05-12 11:32:52, Johannes Berg wrote:
-> On Wed, 2016-05-04 at 09:29 +0200, Pavel Machek wrote:
-> > 
-> > If userspace wants to control the manually, it can do just that --
-> > control it manually. There should not be a need to "override the
-> > default policy".
+On 19-5-2016 15:59, Muhammad Falak R Wani wrote:
+> Use kmemdup when some other buffer is immediately copied into allocated
+> region. It replaces call to allocation followed by memcpy, by a single
+> call to kmemdup.
+
+Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Muhammad Falak R Wani <falakreyaz@gmail.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> I'm still not buying this.
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index d0631b6..705adaa 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -6699,11 +6699,10 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+>  		return NULL;
+>  	}
+>  
+> -	ops = kzalloc(sizeof(*ops), GFP_KERNEL);
+> +	ops = kmemdup(&brcmf_cfg80211_ops, sizeof(*ops), GFP_KERNEL);
+>  	if (!ops)
+>  		return NULL;
+>  
+> -	memcpy(ops, &brcmf_cfg80211_ops, sizeof(*ops));
+>  	ifp = netdev_priv(ndev);
+>  #ifdef CONFIG_PM
+>  	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_GTK))
 > 
-> In the original situation, without these patches, userspace has to have
-> a list of all LEDs that are supposed to indicate airplane mode.
-
-Well, that's situation for many LEDs.
-
-> With this patch only (without patch 2/3), userspace can look up the
-> default trigger, but then has to change it, causing the necessary
-> information to be lost immediately when you actually use it - that also
-> seems like a bad idea.
-
-We should not store "what kind of led this is" in a trigger. LED
-subsystem seems to use suffix of LED name to do that. So if we
-standartize, lets say "::rfkill" suffix for this, it should work and
-follow existing practice.
-
-> Now, if the LED subsystem had a really good way of specifying LED
-> intent, and it was widely used, and rfkill didn't already concern
-> itself with the rfkill status of all devices ... yeah maybe this
-> wouldn't be needed. As it stands, I still think this is the best way
-> forward.
-
-There is one -- suffix in the LED name.
-									Pavel
-
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
