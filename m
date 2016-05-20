@@ -1,117 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:34275 "EHLO
-	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751458AbcERDhO (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:58025 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075AbcETMON (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 23:37:14 -0400
+	Fri, 20 May 2016 08:14:13 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: Remove duplicate and unused rx rate flags
+Date: Fri, 20 May 2016 17:43:18 +0530
+Message-ID: <1463746399-22839-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160520_141416_806543_0C691DFD)
 MIME-Version: 1.0
-In-Reply-To: <CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com>
-References: <20160517.151113.367799295750703003.davem@davemloft.net>
-	<CA+55aFw_JRGNo3HYP3c=3VoGw_uYBP_h2OmxOMcUGsU=L43btw@mail.gmail.com>
-Date: Wed, 18 May 2016 06:37:12 +0300
-Message-ID: <CANUX_P3n0ZkTw0fY8wD3biu2mLzrwyX7n=bo1otw9m0bpfS07Q@mail.gmail.com> (sfid-20160518_053740_662166_C1131F94)
-Subject: Re: [GIT] Networking
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	Luca Coelho <luciano.coelho@intel.com>
-Cc: David Miller <davem@davemloft.net>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Intel Linux Wireless <linuxwifi@intel.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, May 18, 2016 at 4:00 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Tue, May 17, 2016 at 12:11 PM, David Miller <davem@davemloft.net> wrote:
->>
->> Highlights:
->
-> Lowlights:
->
->  1) the iwlwifi driver seems to be broken
->
-> My laptop that uses the intel 7680 iwlwifi module no longer connects
-> to the network. It fails with a "Microcode SW error detected." and
-> spews out register state over and over again.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Can we have the register state and the ASSERT / NMI / whatever that
-goes along with it?
-This clearly means that the firmware is crashing, but I don't know why,
-I copied here the lines that I need from another bug with another
-device with another firmware,
-but the log that we will still explain what I need:
+All these flags are not used and their use is completely
+covered by 'ath10k_hw_rate_ofdm', 'ath10k_hw_rate_cck',
+and RX_PPDU_START_RATE_FLAG
 
-[  800.880402] iwlwifi 0000:02:00.0: Start IWL Error Log Dump:
-[  800.880406] iwlwifi 0000:02:00.0: Status: 0x00000000, count: 6
-[  800.880409] iwlwifi 0000:02:00.0: Loaded firmware version: 21.311951.0
-[  800.880413] iwlwifi 0000:02:00.0: 0x00000394 | ADVANCED_SYSASSERT
-[  800.880416] iwlwifi 0000:02:00.0: 0x00000220 | trm_hw_status0
-[  800.880419] iwlwifi 0000:02:00.0: 0x00000000 | trm_hw_status1
-[  800.880422] iwlwifi 0000:02:00.0: 0x00000BD8 | branchlink2
-[  800.880425] iwlwifi 0000:02:00.0: 0x00026AC4 | interruptlink1
-[  800.880428] iwlwifi 0000:02:00.0: 0x00000000 | interruptlink2
-[  800.880431] iwlwifi 0000:02:00.0: 0x00000001 | data1
-[  800.880434] iwlwifi 0000:02:00.0: 0x02039845 | data2
-[  800.880437] iwlwifi 0000:02:00.0: 0x00000056 | data3
-[  800.880440] iwlwifi 0000:02:00.0: 0x8E4184A7 | beacon time
-[  800.880443] iwlwifi 0000:02:00.0: 0x30E2CB41 | tsf low
-[  800.880446] iwlwifi 0000:02:00.0: 0x00000027 | tsf hi
-[  800.880449] iwlwifi 0000:02:00.0: 0x00000000 | time gp1
-[  800.880451] iwlwifi 0000:02:00.0: 0x2F842F8A | time gp2
-[  800.880454] iwlwifi 0000:02:00.0: 0x00000000 | uCode revision type
-[  800.880457] iwlwifi 0000:02:00.0: 0x00000015 | uCode version major
-[  800.880460] iwlwifi 0000:02:00.0: 0x0004C28F | uCode version minor
-[  800.880463] iwlwifi 0000:02:00.0: 0x00000201 | hw version
-[  800.880466] iwlwifi 0000:02:00.0: 0x00489008 | board version
-[  800.880469] iwlwifi 0000:02:00.0: 0x0000001C | hcmd
-[  800.880472] iwlwifi 0000:02:00.0: 0x24022000 | isr0
-[  800.880475] iwlwifi 0000:02:00.0: 0x01000000 | isr1
-[  800.880478] iwlwifi 0000:02:00.0: 0x0000580A | isr2
-[  800.880481] iwlwifi 0000:02:00.0: 0x4041FCC1 | isr3
-[  800.880483] iwlwifi 0000:02:00.0: 0x00000000 | isr4
-[  800.880486] iwlwifi 0000:02:00.0: 0x00800110 | last cmd Id
-[  800.880489] iwlwifi 0000:02:00.0: 0x00000000 | wait_event
-[  800.880492] iwlwifi 0000:02:00.0: 0x000002C8 | l2p_control
-[  800.880495] iwlwifi 0000:02:00.0: 0x00018030 | l2p_duration
-[  800.880498] iwlwifi 0000:02:00.0: 0x000000BF | l2p_mhvalid
-[  800.880501] iwlwifi 0000:02:00.0: 0x000000EF | l2p_addr_match
-[  800.880503] iwlwifi 0000:02:00.0: 0x0000000D | lmpm_pmg_sel
-[  800.880506] iwlwifi 0000:02:00.0: 0x30031805 | timestamp
-[  800.880509] iwlwifi 0000:02:00.0: 0x0000E0F0 | flow_handler
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[thanks Michal/Kalle/Vasanth for the first level review]
 
+ drivers/net/wireless/ath/ath10k/rx_desc.h |   39 -----------------------------
+ 1 file changed, 39 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
+index ca8d168..aa660a4 100644
+--- a/drivers/net/wireless/ath/ath10k/rx_desc.h
++++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
+@@ -656,26 +656,6 @@ struct rx_msdu_end {
+  *		Reserved: HW should fill with zero.  FW should ignore.
+  */
+ 
+-#define RX_PPDU_START_SIG_RATE_SELECT_OFDM 0
+-#define RX_PPDU_START_SIG_RATE_SELECT_CCK  1
+-
+-#define RX_PPDU_START_SIG_RATE_OFDM_48 0
+-#define RX_PPDU_START_SIG_RATE_OFDM_24 1
+-#define RX_PPDU_START_SIG_RATE_OFDM_12 2
+-#define RX_PPDU_START_SIG_RATE_OFDM_6  3
+-#define RX_PPDU_START_SIG_RATE_OFDM_54 4
+-#define RX_PPDU_START_SIG_RATE_OFDM_36 5
+-#define RX_PPDU_START_SIG_RATE_OFDM_18 6
+-#define RX_PPDU_START_SIG_RATE_OFDM_9  7
+-
+-#define RX_PPDU_START_SIG_RATE_CCK_LP_11  0
+-#define RX_PPDU_START_SIG_RATE_CCK_LP_5_5 1
+-#define RX_PPDU_START_SIG_RATE_CCK_LP_2   2
+-#define RX_PPDU_START_SIG_RATE_CCK_LP_1   3
+-#define RX_PPDU_START_SIG_RATE_CCK_SP_11  4
+-#define RX_PPDU_START_SIG_RATE_CCK_SP_5_5 5
+-#define RX_PPDU_START_SIG_RATE_CCK_SP_2   6
+-
+ #define HTT_RX_PPDU_START_PREAMBLE_LEGACY        0x04
+ #define HTT_RX_PPDU_START_PREAMBLE_HT            0x08
+ #define HTT_RX_PPDU_START_PREAMBLE_HT_WITH_TXBF  0x09
+@@ -711,25 +691,6 @@ struct rx_msdu_end {
+ /* No idea what this flag means. It seems to be always set in rate. */
+ #define RX_PPDU_START_RATE_FLAG BIT(3)
+ 
+-enum rx_ppdu_start_rate {
+-	RX_PPDU_START_RATE_OFDM_48M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_48M,
+-	RX_PPDU_START_RATE_OFDM_24M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_24M,
+-	RX_PPDU_START_RATE_OFDM_12M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_12M,
+-	RX_PPDU_START_RATE_OFDM_6M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_6M,
+-	RX_PPDU_START_RATE_OFDM_54M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_54M,
+-	RX_PPDU_START_RATE_OFDM_36M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_36M,
+-	RX_PPDU_START_RATE_OFDM_18M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_18M,
+-	RX_PPDU_START_RATE_OFDM_9M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_9M,
+-
+-	RX_PPDU_START_RATE_CCK_LP_11M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_11M,
+-	RX_PPDU_START_RATE_CCK_LP_5_5M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_5_5M,
+-	RX_PPDU_START_RATE_CCK_LP_2M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_2M,
+-	RX_PPDU_START_RATE_CCK_LP_1M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_1M,
+-	RX_PPDU_START_RATE_CCK_SP_11M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_11M,
+-	RX_PPDU_START_RATE_CCK_SP_5_5M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_5_5M,
+-	RX_PPDU_START_RATE_CCK_SP_2M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_2M,
+-};
+-
+ struct rx_ppdu_start {
+ 	struct {
+ 		u8 pri20_mhz;
+-- 
+1.7.9.5
 
-
->
-> The last thing it says before falling over is:
->
->   wlp1s0: authenticate with xx:xx:xx:xx:xx:xx
->   wlp1s0: send auth to xx:xx:xx:xx:xx:xx (try 1/3)
->   wlp1s0: send auth to xx:xx:xx:xx:xx:xx (try 2/3)
->
-> and then it goes all titsup.
->
-> I thought that it might be because I had downloaded one of the daily
-> firmware versions (it calls itself iwlwifi-7260-17.ucode, but isn't a
-> real release afaik - but it has worked fien for me before), but the
-> problem persists with the ver-16 ucode too, so that wasn't it.
->
-> I haven't bisected it, but there is absolutely nothing odd in my hardware.
->
-> I do have a 802.11ac network, which apparently not everybody does,
-> judging by previous bug-reports of mine..
->
-> Intel iwlwifi people: please check this out.
->
->                Linus
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
