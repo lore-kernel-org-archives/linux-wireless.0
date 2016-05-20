@@ -1,89 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:54548 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753380AbcEZOwX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2016 10:52:23 -0400
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v1 1/1] rtl8xxxu: tuse %*ph to dump buffers
-Date: Thu, 26 May 2016 17:52:19 +0300
-Message-Id: <1464274339-103386-1-git-send-email-andriy.shevchenko@linux.intel.com> (sfid-20160526_165227_293620_D4649EFF)
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36140 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759AbcETSSL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2016 14:18:11 -0400
+Received: by mail-wm0-f66.google.com with SMTP id q62so3126521wmg.3
+        for <linux-wireless@vger.kernel.org>; Fri, 20 May 2016 11:18:10 -0700 (PDT)
+Subject: Re: updating carl9170-1.fw in linux-firmware.git
+To: Ben Hutchings <ben@decadent.org.uk>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <20160416113312.8de2266358165182bb4b4a15@gmx.com>
+ <11418613.XH7h8m2RjK@debian64> <87a8koiubz.fsf@kamboji.qca.qualcomm.com>
+ <2185358.G319l0XIJC@debian64>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Linux Firmware Maintainers <linux-firmware@kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <a2bcbbc3-e68d-72a7-ae11-29bb74fc1266@gmail.com> (sfid-20160520_201815_536329_809C2E06)
+Date: Fri, 20 May 2016 20:18:07 +0200
+MIME-Version: 1.0
+In-Reply-To: <2185358.G319l0XIJC@debian64>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use %*ph specifier to dump small buffers in hex format instead of doing this
-byte-by-byte.
+On 04/20/2016 11:11 PM, Christian Lamparter wrote:
 
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c | 9 ++-------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 9 ++-------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 9 ++-------
- 3 files changed, 6 insertions(+), 21 deletions(-)
+> On Wednesday, April 20, 2016 10:59:44 AM Kalle Valo wrote:
+>> Christian Lamparter <chunkeey@googlemail.com> writes:
+>>
+>>> On Monday, April 18, 2016 07:42:05 PM Kalle Valo wrote:
+>>>> Christian Lamparter <chunkeey@googlemail.com> writes:
+>>>>
+>>>>> On Monday, April 18, 2016 06:45:09 PM Kalle Valo wrote:
+>>>>>
+>>>>>> Why even mention anything about a "special firmware" as the firmware is
+>>>>>> already available from linux-firmware.git? 
+>>>>>
+>>>>> Yes and no. 1.9.6 is in linux-firmware.git. I've tried to add 1.9.9 too
+>>>>> but that failed.
+>>>>> <http://comments.gmane.org/gmane.linux.kernel.wireless.general/114639>
+>>>>
+>>>> Rick's comment makes sense to me, better just to provide the latest
+>>>> version. No need to unnecessary confuse the users. And if someone really
+>>>> wants to use an older version that she can retrieve it from the git
+>>>> history.
+>>>
+>>> Part of the fun here is that firmware is GPLv2. The linux-firmware.git has
+>>> to point to or add the firmware source to their tree. They have added every
+>>> single source file to it.... instead of "packaging" it in a tar.bz2/gz/xz
+>>> like you normally do for release sources.
+>>>
+>>> If you want to read more about it:
+>>> <http://www.spinics.net/lists/linux-wireless/msg101868.html>
+>>
+>> Yeah, that's more work. I get that. But I'm still not understanding
+>> what's the actual problem which prevents us from updating carl9170
+>> firmware in linux-firmware.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-index 2c86b55..eefb7ca 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
-@@ -413,13 +413,8 @@ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
- 		dev_info(&priv->udev->dev,
- 			 "%s: dumping efuse (0x%02zx bytes):\n",
- 			 __func__, sizeof(struct rtl8192cu_efuse));
--		for (i = 0; i < sizeof(struct rtl8192cu_efuse); i += 8) {
--			dev_info(&priv->udev->dev, "%02x: "
--				 "%02x %02x %02x %02x %02x %02x %02x %02x\n", i,
--				 raw[i], raw[i + 1], raw[i + 2],
--				 raw[i + 3], raw[i + 4], raw[i + 5],
--				 raw[i + 6], raw[i + 7]);
--		}
-+		for (i = 0; i < sizeof(struct rtl8192cu_efuse); i += 8)
-+			dev_info(&priv->udev->dev, "%02x: %8ph\n", i, &raw[i]);
- 	}
- 	return 0;
- }
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index fe19ace..65c079a 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -622,13 +622,8 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
- 		dev_info(&priv->udev->dev,
- 			 "%s: dumping efuse (0x%02zx bytes):\n",
- 			 __func__, sizeof(struct rtl8192eu_efuse));
--		for (i = 0; i < sizeof(struct rtl8192eu_efuse); i += 8) {
--			dev_info(&priv->udev->dev, "%02x: "
--				 "%02x %02x %02x %02x %02x %02x %02x %02x\n", i,
--				 raw[i], raw[i + 1], raw[i + 2],
--				 raw[i + 3], raw[i + 4], raw[i + 5],
--				 raw[i + 6], raw[i + 7]);
--		}
-+		for (i = 0; i < sizeof(struct rtl8192eu_efuse); i += 8)
-+			dev_info(&priv->udev->dev, "%02x: %8ph\n", i, &raw[i]);
- 	}
- 	return 0;
- }
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-index 4186e7c..9d45afb 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-@@ -466,13 +466,8 @@ static int rtl8723bu_parse_efuse(struct rtl8xxxu_priv *priv)
- 		dev_info(&priv->udev->dev,
- 			 "%s: dumping efuse (0x%02zx bytes):\n",
- 			 __func__, sizeof(struct rtl8723bu_efuse));
--		for (i = 0; i < sizeof(struct rtl8723bu_efuse); i += 8) {
--			dev_info(&priv->udev->dev, "%02x: "
--				 "%02x %02x %02x %02x %02x %02x %02x %02x\n", i,
--				 raw[i], raw[i + 1], raw[i + 2],
--				 raw[i + 3], raw[i + 4], raw[i + 5],
--				 raw[i + 6], raw[i + 7]);
--		}
-+		for (i = 0; i < sizeof(struct rtl8723bu_efuse); i += 8)
-+			dev_info(&priv->udev->dev, "%02x: %8ph\n", i, &raw[i]);
- 	}
- 
- 	return 0;
--- 
-2.8.1
+> I'm not sure, but why not ask? I've added the cc'ed Linux Firmware
+> Maintainers. So for those people reading the fw list:
+> 
+> What would it take to update the carl9170-1.fw firmware file in your
+> repository to the latest version?
+> 
+> Who has to sent the firmware update. Does it have to be the person who
+> sent the first request? (Xose)? The maintainer of the firmware (me)?
+> someone from Qualcomm Atheros? Or someone else (specific)? (the 
+> firmware is licensed as GPLv2 - in theory anyone should be able to
+> do that)
+> 
+> How should the firmware source update be handled? Currently the latest
+> .tar.xz of the firmware has ~130kb. The formated patches from 1.9.6 to
+> latest are about ~100kb (182 individual patches).
+> 
+> How does linux-firmware handle new binary firmware images and new 
+> sources? What if carl9170fw-2.bin is added. Do we need another
+> source directory for this in the current tree then? Because 
+> carl9170fw-1.bin will still be needed for backwards compatibility
+> so we basically need to duplicate parts of the source?
+> 
+> Also, how's the situation with ath9k_htc? The 1.4.0 image contains
+> some GPLv2 code as well? So, why is there no source in the tree, but 
+> just the link to it? Because, I would like to do basically the same
+> for carl9170fw and just add a link to the carl9170fw repository and
+> save everyone this source update "song and dance".
 
+Hi Ben, could you assist Christian ?
+
+-thanks-
