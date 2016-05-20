@@ -1,108 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:4730 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750993AbcEDIQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2016 04:16:55 -0400
-From: Felipe Balbi <felipe.balbi@linux.intel.com>
-To: Florian Westphal <fw@strlen.de>, netdev@vger.kernel.org
-Cc: Florian Westphal <fw@strlen.de>,
-	user-mode-linux-devel@lists.sourceforge.net,
-	linux-xtensa@linux-xtensa.org,
-	linux1394-devel@lists.sourceforge.net, linux-rdma@vger.kernel.org,
-	MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-	linux-can@vger.kernel.org, linux-parisc@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-hams@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-s390@vger.kernel.org, devel@driverdev.osuosl.org,
-	b.a.t.m.a.n@lists.open-mesh.org, linux-bluetooth@vger.kernel.org
-Subject: Re: [PATCH net-next 4/5] treewide: replace dev->trans_start update with helper
-In-Reply-To: <1462285994-31983-1-git-send-email-fw@strlen.de>
-References: <1462285862-30946-1-git-send-email-fw@strlen.de> <1462285994-31983-1-git-send-email-fw@strlen.de>
-Date: Wed, 04 May 2016 11:14:45 +0300
-Message-ID: <87vb2udytm.fsf@intel.com> (sfid-20160504_101703_087604_555751EB)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59648 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752075AbcETMOV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 20 May 2016 08:14:21 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: Fix CCK h/w rates for QCA99X0 and newer chipsets
+Date: Fri, 20 May 2016 17:43:19 +0530
+Message-ID: <1463746399-22839-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160520_141425_116009_E4E7A267)
+In-Reply-To: <1463746399-22839-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1463746399-22839-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha1; protocol="application/pgp-signature"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---=-=-=
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
+CCK hardware table mapping from QCA99X0 onwards got revised.
+The CCK hardware rate values are in a proper order wrt. to
+rate and preamble as below
 
-Hi,
+ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
+ATH10K_HW_RATE_REV2_CCK_LP_2M = 2,
+ATH10K_HW_RATE_REV2_CCK_LP_5_5M = 3,
+ATH10K_HW_RATE_REV2_CCK_LP_11M = 4,
+ATH10K_HW_RATE_REV2_CCK_SP_2M = 5,
+ATH10K_HW_RATE_REV2_CCK_SP_5_5M = 6,
+ATH10K_HW_RATE_REV2_CCK_SP_11M = 7,
 
-Florian Westphal <fw@strlen.de> writes:
-> Replace all trans_start updates with netif_trans_update helper.
-> change was done via spatch:
->
-> struct net_device *d;
-> @@
-> - d->trans_start =3D jiffies
-> + netif_trans_update(d)
->
-> Compile tested only.
->
-> Cc: user-mode-linux-devel@lists.sourceforge.net
-> Cc: linux-xtensa@linux-xtensa.org
-> Cc: linux1394-devel@lists.sourceforge.net
-> Cc: linux-rdma@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: MPT-FusionLinux.pdl@broadcom.com
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-can@vger.kernel.org
-> Cc: linux-parisc@vger.kernel.org
-> Cc: linux-omap@vger.kernel.org
-> Cc: linux-hams@vger.kernel.org
-> Cc: linux-usb@vger.kernel.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: linux-s390@vger.kernel.org
-> Cc: devel@driverdev.osuosl.org
-> Cc: b.a.t.m.a.n@lists.open-mesh.org
-> Cc: linux-bluetooth@vger.kernel.org
-> Signed-off-by: Florian Westphal <fw@strlen.de>
-> ---
+This results in reporting of rx frames (with CCK rates)
+totally wrong for QCA99X0, QCA4019. Fix this by having
+separate CCK rate table for these chipsets with rev2 suffix
+and registering the correct rate mapping to mac80211 based on
+the new hw_param (introduced) 'cck_rate_map_rev2' which shall
+be true for any newchipsets from QCA99X0 onwards
 
-for u_ether.c:
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[thanks Michal/Kalle/Vasanth for the first level review]
 
-Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
+ drivers/net/wireless/ath/ath10k/core.c |    2 ++
+ drivers/net/wireless/ath/ath10k/core.h |    6 +++++
+ drivers/net/wireless/ath/ath10k/hw.h   |   10 ++++++++
+ drivers/net/wireless/ath/ath10k/mac.c  |   39 ++++++++++++++++++++++++++++++--
+ 4 files changed, 55 insertions(+), 2 deletions(-)
 
-> diff --git a/drivers/usb/gadget/function/u_ether.c b/drivers/usb/gadget/f=
-unction/u_ether.c
-> index 637809e..a3f7e7c 100644
-> --- a/drivers/usb/gadget/function/u_ether.c
-> +++ b/drivers/usb/gadget/function/u_ether.c
-> @@ -597,7 +597,7 @@ static netdev_tx_t eth_start_xmit(struct sk_buff *skb,
->  		DBG(dev, "tx queue err %d\n", retval);
->  		break;
->  	case 0:
-> -		net->trans_start =3D jiffies;
-> +		netif_trans_update(net);
->  		atomic_inc(&dev->tx_qlen);
->  	}
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 49af624..86ed64d 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -148,6 +148,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.uart_pin = 7,
+ 		.otp_exe_param = 0x00000700,
+ 		.continuous_frag_desc = true,
++		.cck_rate_map_rev2 = true,
+ 		.channel_counters_freq_hz = 150000,
+ 		.max_probe_resp_desc_thres = 24,
+ 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
+@@ -205,6 +206,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.has_shifted_cc_wraparound = true,
+ 		.otp_exe_param = 0x0010000,
+ 		.continuous_frag_desc = true,
++		.cck_rate_map_rev2 = true,
+ 		.channel_counters_freq_hz = 125000,
+ 		.max_probe_resp_desc_thres = 24,
+ 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1852e0e..04cea23 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -716,6 +716,12 @@ struct ath10k {
+ 		 */
+ 		bool continuous_frag_desc;
+ 
++		/* CCK hardware rate table mapping for the newer chipsets
++		 * like QCA99X0, QCA4019 got revised. The CCK h/w rate values
++		 * are in a proper order with respect to the rate/preamble
++		 */
++		bool cck_rate_map_rev2;
++
+ 		u32 channel_counters_freq_hz;
+ 
+ 		/* Mgmt tx descriptors threshold for limiting probe response
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index aedd898..3d5648d 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -315,6 +315,16 @@ enum ath10k_hw_rate_cck {
+ 	ATH10K_HW_RATE_CCK_SP_2M,
+ };
+ 
++enum ath10k_hw_rate_rev2_cck {
++	ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
++	ATH10K_HW_RATE_REV2_CCK_LP_2M,
++	ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
++	ATH10K_HW_RATE_REV2_CCK_LP_11M,
++	ATH10K_HW_RATE_REV2_CCK_SP_2M,
++	ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
++	ATH10K_HW_RATE_REV2_CCK_SP_11M,
++};
++
+ enum ath10k_hw_4addr_pad {
+ 	ATH10K_HW_4ADDR_PAD_AFTER,
+ 	ATH10K_HW_4ADDR_PAD_BEFORE,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 6dd1d26..a55e3ae 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -62,6 +62,32 @@ static struct ieee80211_rate ath10k_rates[] = {
+ 	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
+ };
+ 
++static struct ieee80211_rate ath10k_rates_rev2[] = {
++	{ .bitrate = 10,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_1M },
++	{ .bitrate = 20,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_2M,
++	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_2M,
++	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 55,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
++	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
++	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 110,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_11M,
++	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_11M,
++	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++
++	{ .bitrate = 60, .hw_value = ATH10K_HW_RATE_OFDM_6M },
++	{ .bitrate = 90, .hw_value = ATH10K_HW_RATE_OFDM_9M },
++	{ .bitrate = 120, .hw_value = ATH10K_HW_RATE_OFDM_12M },
++	{ .bitrate = 180, .hw_value = ATH10K_HW_RATE_OFDM_18M },
++	{ .bitrate = 240, .hw_value = ATH10K_HW_RATE_OFDM_24M },
++	{ .bitrate = 360, .hw_value = ATH10K_HW_RATE_OFDM_36M },
++	{ .bitrate = 480, .hw_value = ATH10K_HW_RATE_OFDM_48M },
++	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
++};
++
+ #define ATH10K_MAC_FIRST_OFDM_RATE_IDX 4
+ 
+ #define ath10k_a_rates (ath10k_rates + ATH10K_MAC_FIRST_OFDM_RATE_IDX)
+@@ -70,6 +96,9 @@ static struct ieee80211_rate ath10k_rates[] = {
+ #define ath10k_g_rates (ath10k_rates + 0)
+ #define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
+ 
++#define ath10k_g_rates_rev2 (ath10k_rates_rev2 + 0)
++#define ath10k_g_rates_rev2_size (ARRAY_SIZE(ath10k_rates_rev2))
++
+ static bool ath10k_mac_bitrate_is_cck(int bitrate)
+ {
+ 	switch (bitrate) {
+@@ -7695,8 +7724,14 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
+ 		band->n_channels = ARRAY_SIZE(ath10k_2ghz_channels);
+ 		band->channels = channels;
+-		band->n_bitrates = ath10k_g_rates_size;
+-		band->bitrates = ath10k_g_rates;
++
++		if (ar->hw_params.cck_rate_map_rev2) {
++			band->n_bitrates = ath10k_g_rates_rev2_size;
++			band->bitrates = ath10k_g_rates_rev2;
++		} else {
++			band->n_bitrates = ath10k_g_rates_size;
++			band->bitrates = ath10k_g_rates;
++		}
+ 
+ 		ar->hw->wiphy->bands[NL80211_BAND_2GHZ] = band;
+ 	}
+-- 
+1.7.9.5
 
-=2D-=20
-balbi
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIcBAEBAgAGBQJXKa91AAoJEIaOsuA1yqREa0UP/35SFn4ZofIoB65PTj1xg8X/
-n7p9jjvrvEml10E4POQ/ZKeKzNBobiZfTvPVQ5fJ3DeaxYRMFNldcoNvv3XLHgb1
-J/A6NNdCBYPMo7cc/67RCJKC+NEMbplqQSrLyCL4N8KDaR0ToDvFOhDW5ENtYAFR
-+hHewPpprXHex8FPax3PMuuNCRkV/hz3PxCXnF+1h5nKD3hsXZwzQQAVC4OkWkzo
-f9pAczgygfMWpsdOK4lBqAf82sK9P/bOJoE7ag/6zJ3E8EvmiB2oqtBzWzpdpWgL
-JAZ4O8g2q2eV+vXK8ZqMt/yUwdS+V0ouR+iReYAATahEXzu0XPRZSHwmL0qKbl/D
-RN4cVtSHl9cYltkxEMUSNUWZhGDaAyOiYbWWXwDQvus915p5Nq41v2VJailJBQD0
-w+K4gJAw+0igWKgvq1M/JwoJftk9cA75Dw18f+6T6j/e78k0ZCnj1F4WHjWAIAAm
-b54FVVjKATCK8/vIl73vtUpgdAzYeue3mwfd+PP5UfMXRpcEZU2icEyvHgyvbU5U
-ChlCb1NRYIJ01e+J5Ov/Xd6+Pln8EwV4W4imFjzcsLNjiVU0OumWVqFqPtlDd4tq
-5rKSXFa4XdaMA0CAM48AjdQmE3ta+xFFe+Q0GqVTMgyc4QOvSmZuWmsdfTmgyqC+
-DjWMdryqMVHstUt2mUPA
-=NJVp
------END PGP SIGNATURE-----
---=-=-=--
