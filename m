@@ -1,111 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53944 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930AbcEKRCm (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33586 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751209AbcEUNny (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:42 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 03/21] ath10k:  Allow changing ath10k debug mask at runtime.
-Date: Wed, 11 May 2016 10:02:15 -0700
-Message-Id: <1462986153-16318-4-git-send-email-greearb@candelatech.com> (sfid-20160511_190259_705944_B04762CD)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+	Sat, 21 May 2016 09:43:54 -0400
+Received: by mail-wm0-f65.google.com with SMTP id 67so3621119wmg.0
+        for <linux-wireless@vger.kernel.org>; Sat, 21 May 2016 06:43:53 -0700 (PDT)
+From: Mathias Krause <minipli@googlemail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Dennis Wassenberg <dennis.wassenberg@secunet.com>,
+	Mathias Krause <minipli@googlemail.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Brad Spengler <spender@grsecurity.net>,
+	PaX Team <pageexec@freemail.hu>
+Subject: [PATCH] mwifiex: remove misleading GFP_DMA flag in buffer allocations
+Date: Sat, 21 May 2016 15:43:31 +0200
+Message-Id: <1463838211-31888-1-git-send-email-minipli@googlemail.com> (sfid-20160521_154405_930000_777B9CB1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+The GFP_DMA flag is obviously misunderstood in the mwifiex driver. It's
+meant for legacy ISA DMA memory mappings only -- the lower 16MB on x86.
+That doesn't apply to PCIe or SDIO devices, I guess.
 
-Using debugfs.  More convenient than module options
-in some cases.
+Remove the GFP_DMA flag to reduce the need to place the socket buffer
+allocation into the low mem DMA area, which might already be in use by
+other drivers.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+This misuse was flagged by the PaX USERCOPY feature by chance, as it
+detected the user copy operation from a DMA buffer in the recvfrom()
+syscall path.
+
+Signed-off-by: Mathias Krause <minipli@googlemail.com>
+Tested-by: Dennis Wassenberg <dennis.wassenberg@secunet.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>
+Cc: Xinming Hu <huxm@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Brad Spengler <spender@grsecurity.net>
+Cc: PaX Team <pageexec@freemail.hu>
 ---
- drivers/net/wireless/ath/ath10k/debug.c | 62 +++++++++++++++++++++++++++++++++
- 1 file changed, 62 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index e251155..d552a4a 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -870,6 +870,65 @@ static const struct file_operations fops_reg_addr = {
- 	.llseek = default_llseek,
- };
+This should go on top of wireless-drivers-next.git as it's an extension
+of commit 00c547804968 ("mwifiex: remove redundant GFP_DMA flag").
+
+ drivers/net/wireless/marvell/mwifiex/11n_aggr.c |    2 +-
+ drivers/net/wireless/marvell/mwifiex/pcie.c     |    4 ++--
+ drivers/net/wireless/marvell/mwifiex/sdio.c     |    4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+index 1efef3b8273d..dc49c3de1f25 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+@@ -184,7 +184,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
  
-+static ssize_t ath10k_read_debug_level(struct file *file,
-+				       char __user *user_buf,
-+				       size_t count, loff_t *ppos)
-+{
-+	int sz;
-+	const char buf[] =
-+		"To change debug level, set value adding up desired flags:\n"
-+		"PCI:                0x1\n"
-+		"WMI:                0x2\n"
-+		"HTC:                0x4\n"
-+		"HTT:                0x8\n"
-+		"MAC:               0x10\n"
-+		"BOOT:              0x20\n"
-+		"PCI-DUMP:          0x40\n"
-+		"HTT-DUMP:          0x80\n"
-+		"MGMT:             0x100\n"
-+		"DATA:             0x200\n"
-+		"BMI:              0x400\n"
-+		"REGULATORY:       0x800\n"
-+		"TESTMODE:        0x1000\n"
-+		"INFO-AS-DBG: 0x40000000\n"
-+		"FW:          0x80000000\n"
-+		"ALL:         0xFFFFFFFF\n";
-+	char wbuf[sizeof(buf) + 60];
-+	sz = snprintf(wbuf, sizeof(wbuf), "Current debug level: 0x%x\n\n%s",
-+		      ath10k_debug_mask, buf);
-+	wbuf[sizeof(wbuf) - 1] = 0;
-+
-+	return simple_read_from_buffer(user_buf, count, ppos, wbuf, sz);
-+}
-+
-+/* Set logging level.
-+ */
-+static ssize_t ath10k_write_debug_level(struct file *file,
-+					const char __user *user_buf,
-+					size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	int ret;
-+	unsigned long mask;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
-+	if (ret)
-+		return ret;
-+
-+	ath10k_warn(ar, "Setting debug-mask to: 0x%lx  old: 0x%x\n",
-+		    mask, ath10k_debug_mask);
-+	ath10k_debug_mask = mask;
-+	return count;
-+}
-+
-+static const struct file_operations fops_debug_level = {
-+	.read = ath10k_read_debug_level,
-+	.write = ath10k_write_debug_level,
-+	.open = simple_open,
-+	.owner = THIS_MODULE,
-+	.llseek = default_llseek,
-+};
-+
- static ssize_t ath10k_reg_value_read(struct file *file,
- 				     char __user *user_buf,
- 				     size_t count, loff_t *ppos)
-@@ -2375,6 +2434,9 @@ int ath10k_debug_register(struct ath10k *ar)
- 	debugfs_create_file("mem_value", S_IRUSR | S_IWUSR,
- 			    ar->debug.debugfs_phy, ar, &fops_mem_value);
+ 	tx_info_src = MWIFIEX_SKB_TXCB(skb_src);
+ 	skb_aggr = mwifiex_alloc_dma_align_buf(adapter->tx_buf_size,
+-					       GFP_ATOMIC | GFP_DMA);
++					       GFP_ATOMIC);
+ 	if (!skb_aggr) {
+ 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
+ 				       ra_list_flags);
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 0c7937eb6b77..adcf08bb14d5 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -507,7 +507,7 @@ static int mwifiex_init_rxq_ring(struct mwifiex_adapter *adapter)
+ 	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
+ 		/* Allocate skb here so that firmware can DMA data from it */
+ 		skb = mwifiex_alloc_dma_align_buf(MWIFIEX_RX_DATA_BUF_SIZE,
+-						  GFP_KERNEL | GFP_DMA);
++						  GFP_KERNEL);
+ 		if (!skb) {
+ 			mwifiex_dbg(adapter, ERROR,
+ 				    "Unable to allocate skb for RX ring.\n");
+@@ -1319,7 +1319,7 @@ static int mwifiex_pcie_process_recv_data(struct mwifiex_adapter *adapter)
+ 		}
  
-+	debugfs_create_file("debug_level", S_IRUSR, ar->debug.debugfs_phy,
-+			    ar, &fops_debug_level);
-+
- 	debugfs_create_file("chip_id", S_IRUSR, ar->debug.debugfs_phy,
- 			    ar, &fops_chip_id);
+ 		skb_tmp = mwifiex_alloc_dma_align_buf(MWIFIEX_RX_DATA_BUF_SIZE,
+-						      GFP_KERNEL | GFP_DMA);
++						      GFP_KERNEL);
+ 		if (!skb_tmp) {
+ 			mwifiex_dbg(adapter, ERROR,
+ 				    "Unable to allocate skb.\n");
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index bdc51ffd43ec..674465e0d837 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -1492,7 +1492,7 @@ rx_curr_single:
+ 		mwifiex_dbg(adapter, INFO, "info: RX: port: %d, rx_len: %d\n",
+ 			    port, rx_len);
+ 
+-		skb = mwifiex_alloc_dma_align_buf(rx_len, GFP_KERNEL | GFP_DMA);
++		skb = mwifiex_alloc_dma_align_buf(rx_len, GFP_KERNEL);
+ 		if (!skb) {
+ 			mwifiex_dbg(adapter, ERROR,
+ 				    "single skb allocated fail,\t"
+@@ -1597,7 +1597,7 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 		rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
+ 		mwifiex_dbg(adapter, INFO, "info: rx_len = %d\n", rx_len);
+ 
+-		skb = mwifiex_alloc_dma_align_buf(rx_len, GFP_KERNEL | GFP_DMA);
++		skb = mwifiex_alloc_dma_align_buf(rx_len, GFP_KERNEL);
+ 		if (!skb)
+ 			return -1;
  
 -- 
-2.4.3
+1.7.10.4
 
