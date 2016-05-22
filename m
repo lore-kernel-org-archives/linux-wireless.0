@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:28103 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752176AbcE3UhK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2016 16:37:10 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "Gottlieb, Matti" <matti.gottlieb@intel.com>,
-	"arnd@arndb.de" <arnd@arndb.de>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"torvalds@linux-foundation.org" <torvalds@linux-foundation.org>,
-	"Harel, Moshe" <moshe.harel@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: mvm: avoid harmless -Wmaybe-uninialized warning
-Date: Mon, 30 May 2016 20:37:02 +0000
-Message-ID: <1464640622.19317.54.camel@intel.com> (sfid-20160530_223735_787245_953C512A)
-References: <1464354462-1940949-1-git-send-email-arnd@arndb.de>
-In-Reply-To: <1464354462-1940949-1-git-send-email-arnd@arndb.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35819 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751732AbcEVOqk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 22 May 2016 10:46:40 -0400
+Received: by mail-oi0-f66.google.com with SMTP id w198so32842430oiw.2
+        for <linux-wireless@vger.kernel.org>; Sun, 22 May 2016 07:46:39 -0700 (PDT)
+Subject: Re: [PATCH] rtlwifi: Fix scheduling while atomic error from commit
+ 49f86ec21c01
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1463849435-2293-1-git-send-email-Larry.Finger@lwfinger.net>
+ <878tz2bpv0.fsf@kamboji.qca.qualcomm.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	James Feeney <james@nurealm.net>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <5741C64D.8050603@lwfinger.net> (sfid-20160522_165851_292220_EC756B9A)
+Date: Sun, 22 May 2016 09:46:37 -0500
 MIME-Version: 1.0
+In-Reply-To: <878tz2bpv0.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE2LTA1LTI3IGF0IDE1OjA3ICswMjAwLCBBcm5kIEJlcmdtYW5uIHdyb3RlOg0K
-PiBnY2MgaXMgYXBwYXJlbnRseSB1bmFibGVsIHRvIHRyYWNrIHRoZSBzdGF0ZSBvZiB0aGUgbG9j
-YWwgJ3Jlc3BfdjInDQo+IHZhcmlhYmxlIGFjcm9zcyB0aGUga3phbGxvYygpIGZ1bmN0aW9uLCBh
-bmQgd2FybnMgYWJvdXQgdGhlIHJlc3BvbnNlDQo+IHZhcmlhYmxlIGJlaW5nIHVzZWQgd2l0aG91
-dCBhbiBpbml0aWFsaXphdGlvbjoNCj4gDQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3
-bHdpZmkvbXZtL252bS5jOiBJbiBmdW5jdGlvbg0KPiDigJhpd2xfbXZtX3VwZGF0ZV9tY2PigJk6
-DQo+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL252bS5jOjcyNzozNjog
-d2FybmluZzoNCj4g4oCYbWNjX3Jlc3BfdjHigJkgbWF5IGJlIHVzZWQgdW5pbml0aWFsaXplZCBp
-biB0aGlzIGZ1bmN0aW9uIFstV21heWJlLQ0KPiB1bmluaXRpYWxpemVkXQ0KPiDCoMKgwqByZXNw
-X2NwLT5uX2NoYW5uZWxzID0gbWNjX3Jlc3BfdjEtPm5fY2hhbm5lbHM7DQo+IGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL252bS5jOjcyMTozOiB3YXJuaW5nOg0KPiDigJht
-Y2NfcmVzcOKAmSBtYXkgYmUgdXNlZCB1bmluaXRpYWxpemVkIGluIHRoaXMgZnVuY3Rpb24gWy1X
-bWF5YmUtDQo+IHVuaW5pdGlhbGl6ZWRdDQo+IMKgwqDCoG1lbWNweShyZXNwX2NwLCBtY2NfcmVz
-cCwgcmVzcF9sZW4pOw0KPiANCj4gVGhlIHdhcm5pbmcgc2hvd2VkIHVwIGluIHg4NiBhbGxtb2Rj
-b25maWcgYWZ0ZXIgbXkgcGF0Y2ggdG8NCj4gdW5oaWRlIC1XbWF5YmUtdW5pbml0aWFsaXplZCB3
-YXJuaW5ncyBieSBkZWZhdWx0IHdhcyBtZXJnZWQsDQo+IHRob3VnaCBpdCBhbHdheXMgZXhpc3Rl
-ZCBpbiByYW5kY29uZmlnIGJ1aWxkcy4gSSBkaWQgbm90DQo+IGNhdGNoIHRoZSB3YXJuaW5nIGVh
-cmxpZXIgYmVjYXVzZSBJIHdhcyB0ZXN0aW5nIG9uIEFSTSwgd2hpY2gNCj4gbmV2ZXIgcHJvZHVj
-ZWQgdGhlIHdhcm5pbmcuDQo+IA0KPiBUaGlzIHJlYXJyYW5nZXMgdGhlIGNvZGUgaW4gYSB3YXkg
-dGhhdCBpbXByb3ZlcyByZWFkYWJpbGl0eSBmb3INCj4gYm90aCBodW1hbnMgYW5kIHRoZSBjb21w
-aWxlciwgYW5kIHRoYXQgYXZvaWRzIHRoZSB3YXJuaW5nLg0KPiANCj4gU2lnbmVkLW9mZi1ieTog
-QXJuZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4NCj4gRml4ZXM6IDZmYTUyNDMwZjBiMyAoIml3
-bHdpZmk6IG12bTogY2hhbmdlIG1jYyB1cGRhdGUgQVBJIikNCj4gLS0tDQoNClRoYW5rcywgQXJu
-ZCEgSSBxdWV1ZWQgdGhpcyB2aWEgb3VyIGludGVybmFsIHRyZWUuDQoNCi0tDQpDaGVlcnMsDQpM
-dWNhLg==
+On 05/22/2016 12:53 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> Commit 49f86ec21c01 ("rtlwifi: Change long delays to sleeps") was correct
+>> for most cases; however, driver rtl8192ce calls the affected routines while
+>> in atomic context. The kernel bug output is as follows:
+>>
+>> BUG: scheduling while atomic: wpa_supplicant/627/0x00000002
+>> [...]
+>>    [<ffffffff815c2b39>] __schedule+0x899/0xad0
+>>    [<ffffffff815c2dac>] schedule+0x3c/0x90
+>>    [<ffffffff815c5bb2>] schedule_hrtimeout_range_clock+0xa2/0x120
+>>    [<ffffffff810e8b80>] ? hrtimer_init+0x120/0x120
+>>    [<ffffffff815c5ba6>] ? schedule_hrtimeout_range_clock+0x96/0x120
+>>    [<ffffffff815c5c43>] schedule_hrtimeout_range+0x13/0x20
+>>    [<ffffffff815c568f>] usleep_range+0x4f/0x70
+>>    [<ffffffffa0667218>] rtl_rfreg_delay+0x38/0x50 [rtlwifi]
+>>    [<ffffffffa06dd0e7>] rtl92c_phy_config_rf_with_headerfile+0xc7/0xe0 [rtl8192ce]
+>>
+>> To fix this bug, three of the changes from delay to sleep are reverted.
+>> Unfortunately, one of the changes involves a delay of 50 msec. The calling
+>> code will be modified so that this long delay can be avoided; however,
+>> this change is being pushed now to fix the problem in kernel 4.6.0.
+>>
+>> Fixes: 49f86ec21c01 ("rtlwifi: Change long delays to sleeps")
+>> Reported-by: James Feeney <james@nurealm.net>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: James Feeney <james@nurealm.net>
+>> Cc: Stable <stable@vger.kernel.org> [4.6+]
+>
+> I'm planning to queue this to 4.7.
+
+That will be good as it will be ported to 4.6 quickly after that.
+
+Larry
+
+
