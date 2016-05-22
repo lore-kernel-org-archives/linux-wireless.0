@@ -1,51 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:15021 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752948AbcEMPNo convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44679 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751007AbcEVFx3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 13 May 2016 11:13:44 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3 RESEND 1/2] ath10k: Add support for
- ath10k_sta_statistics support
-Date: Fri, 13 May 2016 15:13:36 +0000
-Message-ID: <87ziru9ejj.fsf@kamboji.qca.qualcomm.com> (sfid-20160513_171348_758440_C55E31DA)
-References: <1462204347-31012-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1462204347-31012-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Mon, 2 May 2016 21:22:27	+0530")
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 22 May 2016 01:53:29 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	James Feeney <james@nurealm.net>
+Subject: Re: [PATCH] rtlwifi: Fix scheduling while atomic error from commit 49f86ec21c01
+References: <1463849435-2293-1-git-send-email-Larry.Finger@lwfinger.net>
+Date: Sun, 22 May 2016 08:53:23 +0300
+In-Reply-To: <1463849435-2293-1-git-send-email-Larry.Finger@lwfinger.net>
+	(Larry Finger's message of "Sat, 21 May 2016 11:50:35 -0500")
+Message-ID: <878tz2bpv0.fsf@kamboji.qca.qualcomm.com> (sfid-20160522_075547_521226_826EFF50)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> Commit 49f86ec21c01 ("rtlwifi: Change long delays to sleeps") was correct
+> for most cases; however, driver rtl8192ce calls the affected routines while
+> in atomic context. The kernel bug output is as follows:
 >
-> Enable support for 'drv_sta_statistics' callback.
-> Export rx_duration support if available to cfg80211/nl80211
+> BUG: scheduling while atomic: wpa_supplicant/627/0x00000002
+> [...]
+>   [<ffffffff815c2b39>] __schedule+0x899/0xad0
+>   [<ffffffff815c2dac>] schedule+0x3c/0x90
+>   [<ffffffff815c5bb2>] schedule_hrtimeout_range_clock+0xa2/0x120
+>   [<ffffffff810e8b80>] ? hrtimer_init+0x120/0x120
+>   [<ffffffff815c5ba6>] ? schedule_hrtimeout_range_clock+0x96/0x120
+>   [<ffffffff815c5c43>] schedule_hrtimeout_range+0x13/0x20
+>   [<ffffffff815c568f>] usleep_range+0x4f/0x70
+>   [<ffffffffa0667218>] rtl_rfreg_delay+0x38/0x50 [rtlwifi]
+>   [<ffffffffa06dd0e7>] rtl92c_phy_config_rf_with_headerfile+0xc7/0xe0 [rtl8192ce]
 >
-> This can also act as a placeholder for any new per STA stats support
+> To fix this bug, three of the changes from delay to sleep are reverted.
+> Unfortunately, one of the changes involves a delay of 50 msec. The calling
+> code will be modified so that this long delay can be avoided; however,
+> this change is being pushed now to fix the problem in kernel 4.6.0.
 >
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> ---
-> [v3] removed conditions for ath10k state checks based on Michal's suggestion
+> Fixes: 49f86ec21c01 ("rtlwifi: Change long delays to sleeps")
+> Reported-by: James Feeney <james@nurealm.net>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: James Feeney <james@nurealm.net>
+> Cc: Stable <stable@vger.kernel.org> [4.6+]
 
-It's nicer to ping than resend a patch. This patchset has been in
-"Awaiting Upstream" state while waiting for the dependencies trickle
-down to ath-next.
-
-> Dependencies:
->
-> 1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION (under review)
-
-739960f128e5 cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
-
-Currently in net-next, should come to ath-next soon.
+I'm planning to queue this to 4.7.
 
 -- 
 Kalle Valo
