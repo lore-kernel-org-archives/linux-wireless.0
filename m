@@ -1,133 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40848 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751496AbcEJUav (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35288 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752103AbcEWVsE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 16:30:51 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Tue, 10 May 2016 23:06:27 +0300
-Message-Id: <1462910797-20303-31-git-send-email-luca@coelho.fi> (sfid-20160510_223056_329850_72678B32)
-In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
-References: <1462910585.25219.7.camel@coelho.fi>
- <1462910797-20303-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 31/41] iwlwifi: remove IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
+	Mon, 23 May 2016 17:48:04 -0400
+Received: by mail-wm0-f67.google.com with SMTP id f75so407173wmf.2
+        for <linux-wireless@vger.kernel.org>; Mon, 23 May 2016 14:48:03 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <wrfjlh30mvbi.fsf@redhat.com>
+References: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
+ <wrfjinyayf2i.fsf@redhat.com> <CAOw_LSHnV+244fT7YvEoV+7VSH_+OoGFmZSdGK4a3NqB407VGQ@mail.gmail.com>
+ <wrfj4m9svn35.fsf@redhat.com> <CAOw_LSH8yGT+OoJU=a23B32mZ+qLkNuronB+vqZ5SaBRAG-fQw@mail.gmail.com>
+ <wrfjlh30mvbi.fsf@redhat.com>
+From: Daniel Lenski <dlenski@gmail.com>
+Date: Mon, 23 May 2016 14:47:22 -0700
+Message-ID: <CAOw_LSGp42x1vxWajOsY8Q9revtRAjkuQiHgjWbHtP_oL+ND_w@mail.gmail.com> (sfid-20160523_234810_360261_0C4FB26A)
+Subject: Re: [PATCH] rtl8xxxu: increase polling timeout for firmware startup
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Mon, May 23, 2016 at 12:24 PM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Interesting, so if I understand you correctly, if you run
+> rtl8xxxu_power_off() once, the driver comes up correctly?
 
-This Kconfig option allows to load a firmware for
-debugging with a different name. This mechanism has not
-been used for a few years now and replacing the firmware
-file works as well.
-Kill this Kconfig option and all the code that goes with it.
+Right. If rtl8xxxu_init_device() fails, I simply call
+rtl8xxxu_power_off(), and then rtl8xxxu_init_device() again. It never
+fails on the second try.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/Kconfig   |  6 -----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 35 +++++++---------------------
- 2 files changed, 9 insertions(+), 32 deletions(-)
+       for (retry=0; retry<2; retry++) {
+               ret = rtl8xxxu_init_device(hw);
+               if (ret==0) {
+                       break;
+               } else if (retry==1) {
+                       dev_err(&udev->dev, "Fatal - failed to init device.\n");
+                       goto exit;
+               } else {
+                       dev_warn(&udev->dev, "Failed to init device,
+will power off and retry.\n");
+                       rtl8xxxu_power_off(priv);
+                       msleep(50);
+               }
+       }
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
-index 492035f..b64db47 100644
---- a/drivers/net/wireless/intel/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
-@@ -134,12 +134,6 @@ config IWLWIFI_DEBUGFS
- 	  is a low-impact option that allows getting insight into the
- 	  driver's state at runtime.
- 
--config IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
--        bool "Experimental uCode support"
--        depends on IWLWIFI_DEBUG
--        ---help---
--	  Enable use of experimental ucode for testing and debugging.
--
- config IWLWIFI_DEVICE_TRACING
- 	bool "iwlwifi device access tracing"
- 	depends on EVENT_TRACING
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 82434c5..b338230 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -211,20 +211,12 @@ static int iwl_alloc_fw_desc(struct iwl_drv *drv, struct fw_desc *desc,
- static void iwl_req_fw_callback(const struct firmware *ucode_raw,
- 				void *context);
- 
--#define UCODE_EXPERIMENTAL_INDEX	100
--#define UCODE_EXPERIMENTAL_TAG		"exp"
--
- static int iwl_request_firmware(struct iwl_drv *drv, bool first)
- {
- 	const char *name_pre = drv->cfg->fw_name_pre;
- 	char tag[8];
- 
- 	if (first) {
--#ifdef CONFIG_IWLWIFI_DEBUG_EXPERIMENTAL_UCODE
--		drv->fw_index = UCODE_EXPERIMENTAL_INDEX;
--		strcpy(tag, UCODE_EXPERIMENTAL_TAG);
--	} else if (drv->fw_index == UCODE_EXPERIMENTAL_INDEX) {
--#endif
- 		drv->fw_index = drv->cfg->ucode_api_max;
- 		sprintf(tag, "%d", drv->fw_index);
- 	} else {
-@@ -240,9 +232,7 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
- 	snprintf(drv->firmware_name, sizeof(drv->firmware_name), "%s%s.ucode",
- 		 name_pre, tag);
- 
--	IWL_DEBUG_INFO(drv, "attempting to load firmware %s'%s'\n",
--		       (drv->fw_index == UCODE_EXPERIMENTAL_INDEX)
--				? "EXPERIMENTAL " : "",
-+	IWL_DEBUG_INFO(drv, "attempting to load firmware '%s'\n",
- 		       drv->firmware_name);
- 
- 	return request_firmware_nowait(THIS_MODULE, 1, drv->firmware_name,
-@@ -541,9 +531,7 @@ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
- 	}
- 
- 	if (build)
--		sprintf(buildstr, " build %u%s", build,
--		       (drv->fw_index == UCODE_EXPERIMENTAL_INDEX)
--				? " (EXP)" : "");
-+		sprintf(buildstr, " build %u", build);
- 	else
- 		buildstr[0] = '\0';
- 
-@@ -627,9 +615,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 	build = le32_to_cpu(ucode->build);
- 
- 	if (build)
--		sprintf(buildstr, " build %u%s", build,
--		       (drv->fw_index == UCODE_EXPERIMENTAL_INDEX)
--				? " (EXP)" : "");
-+		sprintf(buildstr, " build %u", build);
- 	else
- 		buildstr[0] = '\0';
- 
-@@ -1274,15 +1260,12 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	 * firmware filename ... but we don't check for that and only rely
- 	 * on the API version read from firmware header from here on forward
- 	 */
--	/* no api version check required for experimental uCode */
--	if (drv->fw_index != UCODE_EXPERIMENTAL_INDEX) {
--		if (api_ver < api_min || api_ver > api_max) {
--			IWL_ERR(drv,
--				"Driver unable to support your firmware API. "
--				"Driver supports v%u, firmware is v%u.\n",
--				api_max, api_ver);
--			goto try_again;
--		}
-+	if (api_ver < api_min || api_ver > api_max) {
-+		IWL_ERR(drv,
-+			"Driver unable to support your firmware API. "
-+			"Driver supports v%u, firmware is v%u.\n",
-+			api_max, api_ver);
-+		goto try_again;
- 	}
- 
- 	/*
--- 
-2.8.1
+> It is possible that rtl8xxxu_power_off() resets something that isn't being
+> initialized normally in the init sequence. It would be interesting to
+> try to break it down to find out which piece of the _power_off() code
+> we're missing.
 
+Here's the evidence that I have:
+
+1. I can reliably induce the failure-to-start condition by warm-booting via
+   kexec --force, without rtl8xxxu_power_off()
+
+2. I can reliably recover from this artificially-induced failure-to-start using
+   rtl8xxxu_power_off(), and it appears to work for the "naturally occurring"
+   failure-to-start too.
+
+3. I can *not* recover from artificially induced failure-to-start by lengthening
+   the polling timeout.
+
+   (Which means that my previous patch to lengthen the timeout was
+   bogus, and it must have just worked by luck or some detail of how I was
+   rebooting while testing it.)
+
+> Nice work!
+
+Thanks. If someone else is able to reproduce the artificial failure-to-start,
+I'll be more confident that I've actually solved it this time.
+
+Thanks,
+Dan
