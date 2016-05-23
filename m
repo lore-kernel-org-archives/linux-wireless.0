@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53959 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752573AbcEKRCo (ORCPT
+Received: from resqmta-po-08v.sys.comcast.net ([96.114.154.167]:59558 "EHLO
+	resqmta-po-08v.sys.comcast.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752064AbcEWRh5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:44 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 12/21] ath10k: Support up to 64 vdevs.
-Date: Wed, 11 May 2016 10:02:24 -0700
-Message-Id: <1462986153-16318-13-git-send-email-greearb@candelatech.com> (sfid-20160511_192231_086235_C341EBB2)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+	Mon, 23 May 2016 13:37:57 -0400
+Reply-To: james@nurealm.net
+Subject: Re: "kernel: BUG: scheduling while atomic:" errors with linux kernel
+ 4.6
+References: <e2d89c7d-7567-c3ac-505e-7a9aa887c158@nurealm.net>
+ <20160519225612.GB12028@localhost> <573F2FB3.6090206@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Bob Copeland <me@bobcopeland.com>
+Cc: hostap@lists.infradead.org, linux-wireless@vger.kernel.org
+From: James Feeney <james@nurealm.net>
+Message-ID: <e69117a3-50d4-48bc-d67f-c083e6e3af13@nurealm.net> (sfid-20160523_193804_273697_AE1F055F)
+Date: Mon, 23 May 2016 11:29:46 -0600
+MIME-Version: 1.0
+In-Reply-To: <573F2FB3.6090206@lwfinger.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 05/20/2016 09:39 AM, Larry Finger wrote:
+> @James: Please run the command "dmesg | grep rtl_rfreg_delay". Do any of the
+> resulting lines show a value other than "+0x38" for the offset? If that is the
+> only one, the attached patch should fix the problem.
 
-The (1 << x) - 1 trick won't work when you
-are trying to fill up all 64 bits, so add special
-case for that.
+Sorry about the delayed response.
 
-And, move the limits to the per-nic structure instead
-of per-driver to allow better dynamic use of the limits.
+$ dmesg | grep rtl_rfreg_delay
+[   15.936262]  [<ffffffffa06b1218>] rtl_rfreg_delay+0x38/0x50 [rtlwifi]
+[  348.735402]  [<ffffffffa06b1218>] rtl_rfreg_delay+0x38/0x50 [rtlwifi]
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+So that looks like a no, just the "+0x38" for the offset.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 3f1786c..fa71d57 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1819,7 +1819,10 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 	if (status)
- 		goto err_hif_stop;
- 
--	ar->free_vdev_map = (1LL << ar->max_num_vdevs) - 1;
-+	if (ar->max_num_vdevs >= 64)
-+		ar->free_vdev_map = 0xFFFFFFFFFFFFFFFFLL;
-+	else
-+		ar->free_vdev_map = (1LL << ar->max_num_vdevs) - 1;
- 
- 	INIT_LIST_HEAD(&ar->arvifs);
- 
--- 
-2.4.3
-
+Thanks
+James
