@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29024 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753711AbcESI1T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2016 04:27:19 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"xypron.glpk@gmx.de" <xypron.glpk@gmx.de>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: linuxwifi <linuxwifi@intel.com>,
-	"eyal@wizery.com" <eyal@wizery.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Greenman, Gregory" <gregory.greenman@intel.com>,
-	"Bondar, Alexander" <alexander.bondar@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/1] iwlwifi: rs: remove superfluous check
-Date: Thu, 19 May 2016 08:27:13 +0000
-Message-ID: <1463646433.29999.50.camel@intel.com> (sfid-20160519_102749_261496_7FA48233)
-References: <1463527868-12226-1-git-send-email-xypron.glpk@gmx.de>
-In-Reply-To: <1463527868-12226-1-git-send-email-xypron.glpk@gmx.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-lb0-f196.google.com ([209.85.217.196]:36028 "EHLO
+	mail-lb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753369AbcEXVFT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 24 May 2016 17:05:19 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2] brcmfmac: print error if p2p_ifadd firmware command fails
+Date: Tue, 24 May 2016 23:05:07 +0200
+Message-Id: <1464123910-8281-1-git-send-email-zajec5@gmail.com> (sfid-20160524_230543_110837_56DE88CD)
+In-Reply-To: <1464123728-7555-1-git-send-email-zajec5@gmail.com>
+References: <1464123728-7555-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE2LTA1LTE4IGF0IDAxOjMxICswMjAwLCBIZWlucmljaCBTY2h1Y2hhcmR0IHdy
-b3RlOg0KPiBJZiB3ZSBkZXJlZmVyZW5jZSBhIHZhcmlhYmxlIGFueXdheSBpbiBvdGhlciBwYXJ0
-cyBvZiB0aGUgY29kZSwNCj4gdGhlcmUgaXMgbm8gbmVlZCB0byBjaGVjayBhZ2FpbnN0IE5VTEwg
-aW4gYSBzaW5nbGUgcGxhY2UuDQoNCk5BQ0suIMKgVGhpcyBpcyBub3QgdHJ1ZS4NCg0KSWYgbHFf
-c3RhIGlzIE5VTEwsIGl0IG1lYW5zIHRoYXQgbXZtX3N0YSBpcyBhbHNvIE5VTEwuwqDCoFRoZW4g
-d2UgY2FsbA0KdGhlIHJhdGVfY29udHJvbF9zZW5kIHdpdGggbXZtX3N0YSA9PSBOVUxMOg0KDQoJ
-aWYgKHJhdGVfY29udHJvbF9zZW5kX2xvdyhzdGEsIG12bV9zdGEsIHR4cmMpKQ0KCQlyZXR1cm47
-DQoNClRoZSByYXRlX2NvbnRyb2xfc2VuZF9sb3coKSBmdW5jdGlvbiBsb29rcyBsaWtlIHRoaXM6
-DQoNCg0KYm9vbCByYXRlX2NvbnRyb2xfc2VuZF9sb3coc3RydWN0IGllZWU4MDIxMV9zdGEgKnB1
-YnN0YSwNCgkJCcKgwqDCoHZvaWQgKnByaXZfc3RhLA0KCQkJwqDCoMKgc3RydWN0IGllZWU4MDIx
-MV90eF9yYXRlX2NvbnRyb2wgKnR4cmMpDQp7DQpbLi4uXQ0KCWlmICghcHVic3RhIHx8ICFwcml2
-X3N0YSB8fCByY19ub19kYXRhX29yX25vX2Fja191c2VfbWluKHR4cmMpKSB7DQpbLi4uXQ0KCQly
-ZXR1cm4gdHJ1ZTsNCgl9DQpbLi4uXQ0KfQ0KDQoNCldoaWNoIG1lYW5zIHRoYXQgaWYgcHJpdl9z
-dGEgKGFrYSBtdm1fc3RhKSBpcyBOVUxMLCB3ZSB3aWxsIHJldHVybg0Kd2l0aG91dCBydW5uaW5n
-IHRoZSByZXN0IG9mIHJzX2dldF9yYXRlKCkgd2hlcmUgbHFfc3RhIGlzIGFjY2Vzc2VkDQp3aXRo
-b3V0IGNoZWNrcy4NCg0KSSBhZG1pdCB0aGF0IHRoZSByc19nZXRfcmF0ZSgpIGZ1bmN0aW9uIGlz
-IGEgYml0IGhhcmQgdG8gcmVhZCwgYnV0DQpyZW1vdmluZyB0aGUgbHFfc3RhIGNoZWNrIGFzIHlv
-dSBkaWQgZG9lc24ndCBoZWxwLCBidXQgbWFrZXMgdGhpbmdzDQp3b3JzZS4NCg0KLS0NCkNoZWVy
-cywNCkx1Y2Eu
+This is helpful for debugging, without this all I was getting from "iw"
+command on device with BCM43602 was:
+> command failed: Too many open files in system (-23)
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V2: s/in/if/ in commit message
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 1652a48..f7b7e29 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2031,7 +2031,7 @@ static int brcmf_p2p_request_p2p_if(struct brcmf_p2p_info *p2p,
+ 	err = brcmf_fil_iovar_data_set(ifp, "p2p_ifadd", &if_request,
+ 				       sizeof(if_request));
+ 	if (err)
+-		return err;
++		brcmf_err("p2p_ifadd failed %d\n", err);
+ 
+ 	return err;
+ }
+-- 
+1.8.4.5
+
