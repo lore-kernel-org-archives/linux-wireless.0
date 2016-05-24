@@ -1,30 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:25945 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754111AbcEQOy0 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48667 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755042AbcEXRqk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 10:54:26 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: netdev@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org, devel@driverdev.osuosl.org,
-	pmchba@pmcs.com
-Subject: [PATCH 0/7] fix typo
-Date: Tue, 17 May 2016 16:38:39 +0200
-Message-Id: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20160517_165902_948499_2782A9B7)
+	Tue, 24 May 2016 13:46:40 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/4] ath10k: Move rx_location_info out of struct rx_pkt_end
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1461164356-9158-2-git-send-email-vthiagar@qti.qualcomm.com>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>
+Message-ID: <4f3064b4687744e7bf09e4c8941d117c@euamsexm01a.eu.qualcomm.com> (sfid-20160524_194643_237357_2429FE0B)
+Date: Tue, 24 May 2016 19:46:31 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-firmare -> firmware
+Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> wrote:
+> Define rx_location_info in struct rx_ppdu_end_qca99x0 after
+> rx_pkt_end. This is to prepare rx_ppdu_end for QCA9984 chip.
+> 
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 
----
+Thanks, 4 patches applied to ath.git:
 
- drivers/media/dvb-frontends/mn88473.c       |    2 +-
- drivers/net/wireless/ath/ath6kl/core.h      |    2 +-
- drivers/net/wireless/marvell/mwifiex/pcie.c |    2 +-
- drivers/scsi/pm8001/pm8001_init.c           |    2 +-
- drivers/scsi/snic/snic_fwint.h              |    2 +-
- drivers/staging/media/mn88472/mn88472.c     |    2 +-
- drivers/staging/wilc1000/linux_wlan.c       |    2 +-
- 7 files changed, 7 insertions(+), 7 deletions(-)
+8f09588b2cdc ath10k: move rx_location_info out of struct rx_pkt_end
+0fc7e270523b ath10k: clean up growing hw checks during safe and full reset
+acc6b5593eee ath10k: define rx_ppdu_end for QCA9984
+651b4cdcf97e ath10k: enable support for QCA9984
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/8890931/
+
