@@ -1,77 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33822 "EHLO
-	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932111AbcE3FcM (ORCPT
+Received: from mail2.openmailbox.org ([62.4.1.33]:40453 "EHLO
+	mail2.openmailbox.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754317AbcEXWhc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2016 01:32:12 -0400
+	Tue, 24 May 2016 18:37:32 -0400
+Received: from www.openmailbox.org (unknown [10.91.130.51])
+	by mail2.openmailbox.org (Postfix) with ESMTP id E999A1035FB
+	for <linux-wireless@vger.kernel.org>; Wed, 25 May 2016 00:37:27 +0200 (CEST)
 MIME-Version: 1.0
-In-Reply-To: <2b42b54b8128bb953569021ddadce77499859a79.1464576022.git.kirtika.ruchandani@gmail.com>
-References: <cover.1464576022.git.kirtika.ruchandani@gmail.com> <2b42b54b8128bb953569021ddadce77499859a79.1464576022.git.kirtika.ruchandani@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 30 May 2016 15:31:51 +1000
-Message-ID: <CAGRGNgVRGoqCeeVWq_zsqyKdfuGdEfiTimcwv3fBZAD5n8Bnhg@mail.gmail.com> (sfid-20160530_073219_122428_621A9AC0)
-Subject: Re: [PATCH v2 09/10] nl80211: Fix checkpatch.pl warning
-To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tina Ruchandani <ruchandani.tina@gmail.com>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 24 May 2016 18:37:27 -0400
+From: kufired@openmailbox.org
+To: linux-wireless@vger.kernel.org
+Subject: About the BCM43142
+Message-ID: <a07d2e6cf58712bbcd285bb198a2adc4@openmailbox.org> (sfid-20160525_003756_132043_ABECF71F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Hey guys,
 
-On Mon, May 30, 2016 at 12:54 PM, Kirtika Ruchandani
-<kirtika.ruchandani@gmail.com> wrote:
-> This patch fixes the checkpatch.pl warning "foo * bar should be
-> foo *bar"
->
-> Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+I would like to know if you have any news about the development on the 
+b43 module for the Broadcom BCM43142.
+I've never find myself in this kind of situation, the stability of the 
+wl module is just horrible and I wanted to install Linux in my new 
+laptop, but it's just being impossible.
 
-Looks right to me.
+I know it's impossible for you to tell me that it's gonna be deployed 
+tomorrow, but I would like to know at least if they are working on it, I 
+don't know, some information to keep my hopes up.
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-Thanks,
-
-Julian Calaby
-
-
-> ---
->  net/wireless/nl80211.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index c6d870e..46757af 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -12214,7 +12214,7 @@ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
->  }
->
->  void cfg80211_notify_new_peer_candidate(struct net_device *dev, const u8 *addr,
-> -                                       const u8* ie, u8 ie_len, gfp_t gfp)
-> +                                       const u8 *ie, u8 ie_len, gfp_t gfp)
->  {
->         struct wireless_dev *wdev = dev->ieee80211_ptr;
->         struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
-> @@ -13362,7 +13362,7 @@ void cfg80211_tdls_oper_request(struct net_device *dev, const u8 *peer,
->  }
->  EXPORT_SYMBOL(cfg80211_tdls_oper_request);
->
-> -static int nl80211_netlink_notify(struct notifier_block * nb,
-> +static int nl80211_netlink_notify(struct notifier_block *nb,
->                                   unsigned long state,
->                                   void *_notify)
->  {
-> --
-> 2.8.0.rc3.226.g39d4020
->
-
-
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Thank you very much.
