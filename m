@@ -1,69 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40552 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:42644 "EHLO
 	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752446AbcEJUHb (ORCPT
+	with ESMTP id S1753920AbcEXFxH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 16:07:31 -0400
+	Tue, 24 May 2016 01:53:07 -0400
+Message-ID: <1464069167.30665.23.camel@coelho.fi> (sfid-20160524_075313_001511_A30A6D87)
 From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Tue, 10 May 2016 23:05:59 +0300
-Message-Id: <1462910797-20303-3-git-send-email-luca@coelho.fi> (sfid-20160510_220737_005373_366CFC1D)
-In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
-References: <1462910585.25219.7.camel@coelho.fi>
- <1462910797-20303-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 03/41] iwlwifi: Edit the 8265 SDIO ID
+To: Ruben De Smet <ruben.de.smet@rubdos.be>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Cc: linuxwifi@intel.com
+Date: Tue, 24 May 2016 08:52:47 +0300
+In-Reply-To: <59296a1e-7083-a131-ec7c-e1833d4b3c38@rubdos.be>
+References: <59296a1e-7083-a131-ec7c-e1833d4b3c38@rubdos.be>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: Intel wifi card + TP-LINK AC1200 rev 1.2 = ???
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mordechai Goodstein <mordechay.goodstein@intel.com>
+Hi Ruben,
 
-Add new 8265 series SDIO ID.
+Thanks for the detailed report!
 
-Signed-off-by: Mordechai Goodstein <mordechay.goodstein@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c   | 14 ++++++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
- 2 files changed, 15 insertions(+)
+On Mon, 2016-05-23 at 21:08 +0200, Ruben De Smet wrote:
+> Hello,
+> 
+> My specs:
+> =========
+> 
+> Wireless Access Point:
+> ----------------------
+> TP-LINK AC1200 rev1.2
+> 
+> PC1 (my laptop)
+> ---
+> 
+> - Lenovo Thinkpad X250
+> - 03:00.0 Network controller: Intel Corporation Wireless 7265 (rev
+> 59)
+> - Arch Linux (4.6.0-rc6-mainline, I need to update)
+> - Confirm the bug under 4.5
+> 
+> PC2 (brother's laptop)
+> ---
+> Acer subnotebook
+> Intel 7250 (iirc)
+> Ubuntu 14.04 stock kernel
+> 
+> PC3 (htpc)
+> ---
+> Zotac HTPC (BI323)
+> 01:00.0 Network controller: Intel Corporation Wireless 3160 (rev 83)
+> Fedora 23 64 bit with boot-to-Kodi
+> 
+> 
+> Newly Ordered PC (cannot confirm yet, could possibly test windows):
+> ----------------
+> Lenovo Thinkpad T450
+> Intel 7/8250? Don't know yet, but I know it's Intel again.
+> Will run Ubuntu 16.04 or 14.04. Not sure yet
+> 
+> 
+> They all have in common:
+> ========================
+> - Linux, Intel wifi card and TP-LINK Archer AC router AC1200 rev 1.2.
+> 
+> 
+> The problem(s?):
+> ================
+> 
+> When near the TP-LINK access point, NetworkManager needs
+> reconfirmation
+> of password. On the htpc, this means loggin in on the console,
+> `nmtui`,
+> activate connection.
+> 
+> On the computers with DE, this means a dialog box opens asking for a
+> password, which is already filed. Pressing enter connects to the
+> network.
+> 
+> My laptop, as my brother's, tend to lose the connection now and then.
+> When I checked `dmesg`, it said to be "lowering the transmission
+> power
+> as requested by the accesspoint by -xdB" (not those exact words, I
+> can
+> retrigger the exact error though), before losing the connection some
+> seconds later.
+> 
+> Other tested (working) configurations:
+> - TP-LINK Archer C2 (which is without AC iirc)
+> - Good ol' Linksys WRT
+> - eduroam at my uni
+> - any other wifi point I've ever had access to.
+> - Tested another PC with a lot older (Intel) WiFi card (with AC):
+> same
+> issue.
+> 
+> Not tested:
+> - Windows (don't have any Windows pc with those cards near me atm)
+> 
+> I see two options here:
+> - TP-LINK bug
+> - Intel iwlwifi bug
+> 
+> Please advice on what I should test, which logs to send, ...
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-index 2d20556..d6bff16 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-@@ -237,6 +237,20 @@ const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
- 	.max_vht_ampdu_exponent = MAX_VHT_AMPDU_EXPONENT_8260_SDIO,
- };
- 
-+const struct iwl_cfg iwl8265_2ac_sdio_cfg = {
-+	.name = "Intel(R) Dual Band Wireless-AC 8265",
-+	.fw_name_pre = IWL8265_FW_PRE,
-+	IWL_DEVICE_8265,
-+	.ht_params = &iwl8000_ht_params,
-+	.nvm_ver = IWL8000_NVM_VERSION,
-+	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
-+	.max_rx_agg_size = MAX_RX_AGG_SIZE_8260_SDIO,
-+	.max_tx_agg_size = MAX_TX_AGG_SIZE_8260_SDIO,
-+	.disable_dummy_notification = true,
-+	.max_ht_ampdu_exponent  = MAX_HT_AMPDU_EXPONENT_8260_SDIO,
-+	.max_vht_ampdu_exponent = MAX_VHT_AMPDU_EXPONENT_8260_SDIO,
-+};
-+
- const struct iwl_cfg iwl4165_2ac_sdio_cfg = {
- 	.name = "Intel(R) Dual Band Wireless-AC 4165",
- 	.fw_name_pre = IWL8000_FW_PRE,
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 7206798..95558e3 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -437,6 +437,7 @@ extern const struct iwl_cfg iwl8260_2ac_cfg;
- extern const struct iwl_cfg iwl8265_2ac_cfg;
- extern const struct iwl_cfg iwl4165_2ac_cfg;
- extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
-+extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl9560_2ac_cfg;
- extern const struct iwl_cfg iwl5165_2ac_cfg;
--- 
-2.8.1
+This sounds like an interoperability issue between your AP (AC1200) and
+Intel's NICs.  Did you try any non-Intel NICs with the same AP?
 
+The other AP you mentioned (Archer C2) also supports 802.11ac.  I have
+one and haven't had problems with it (I use OpenWRT in it, though).
+
+To go forward on this investigation, could you please create a bugzilla
+entry at bugzilla.kernel.org as described in our debugging wikipage[1]?
+Please provide at least dmesg and trace-cmd logs of the failing case to
+start with.
+
+Additionally, you could capture sniffer logs with one of your devices
+while the other is having trouble so we can see what is going on.  Let
+us know if you need help with that.
+
+[1] https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging
+
+--
+Cheers,
+Luca.
+> 
