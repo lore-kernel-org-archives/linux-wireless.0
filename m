@@ -1,166 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f49.google.com ([209.85.213.49]:35454 "EHLO
-	mail-vk0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751405AbcEJMl3 (ORCPT
+Received: from mail-ob0-f182.google.com ([209.85.214.182]:33898 "EHLO
+	mail-ob0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205AbcEYVtn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 08:41:29 -0400
-Received: by mail-vk0-f49.google.com with SMTP id f66so13821885vkh.2
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2016 05:41:28 -0700 (PDT)
+	Wed, 25 May 2016 17:49:43 -0400
 MIME-Version: 1.0
-Date: Tue, 10 May 2016 22:41:28 +1000
-Message-ID: <CAD4Xxq89fe4kkqb68mKTL4BpDKgFYWuseQqGzfWNc9zzUWHECg@mail.gmail.com> (sfid-20160510_144133_178473_512A3F9B)
-Subject: Realtek USB WiFi rtl8192eu
-From: Fisher Grubb <fisher.grubb@gmail.com>
-To: linux-wireless@vger.kernel.org
+In-Reply-To: <57461435.9080708@broadcom.com>
+References: <1464080979-12150-1-git-send-email-zajec5@gmail.com>
+	<57461435.9080708@broadcom.com>
+Date: Wed, 25 May 2016 23:49:42 +0200
+Message-ID: <CACna6rxYaOtdjGwVenhz66khNMdpqvnbZWfNupBwtp13hbXfBg@mail.gmail.com> (sfid-20160525_235012_685785_B6C9105D)
+Subject: Re: [PATCH] brcmfmac: fix setting AP channel with new firmwares
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<linux-wireless@vger.kernel.org>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+On 25 May 2016 at 23:08, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> On 24-05-16 11:09, Rafał Miłecki wrote:
+>> Firmware for new chipsets is based on a new major version of code
+>> internally maintained at Broadcom. E.g. brcmfmac4366b-pcie.bin (used for
+>> BCM4366B1) is based on 10.10.69.3309 while brcmfmac43602-pcie.ap.bin was
+>> based on 7.35.177.56.
+>>
+>> Currently setting AP 5 GHz channel doesn't work reliably with BCM4366B1.
+>> When setting e.g. 36 control channel with VHT80 (center channel 42)
+>> firmware may randomly pick one of:
+>> 1) 52 control channel with 58 as center one
+>> 2) 100 control channel with 106 as center one
+>> 3) 116 control channel with 122 as center one
+>> 4) 149 control channel with 155 as center one
+>>
+>> It seems new firmwares require setting AP mode (BRCMF_C_SET_AP) before
+>> specifying a channel. Changing an order of firmware calls fixes the
+>> problem.
+>>
+>> This fix was verified with BCM4366B1 and tested for regressions on
+>> BCM43602. It's unclear if it's needed (or correct at all) for P2P
+>> interfaces so it leaves this code unaffected.
+>
+> In doing so the code reads a bit awkward so if P2P-GO works with the
+> changed order that would be preferable.
 
-I don't know if this stick's driver is in the process of being
-incorporated into the Kernel drivers, I havn't seen so yet.
+I'd prefer to have one code path as well, but my device/firmware
+doesn't support P2P so I couldn't test it.
 
-I've put the full lsusb -v at end of email as its a lot of stuff.
+Could you test it or check firmware code to see if it's safe to change
+P2P path as well?
 
-Please let me know if any other info is needed about it, I'm not a
-programmer but I have reasonable intermediate Linux knowledge.
-
-I have been commonly using this stick with my ARM based BeagleBone
-Black board, others commonly use it with their ARM based Raspberry
-PIs.
-
-lsusb gives:
-
-Bus 002 Device 003: ID 0bda:818b Realtek Semiconductor Corp.
-
-I'm not sure when Realtek released this version of their WiFi chip,
-Linux source code comes on the driver CD, but usually doesn't compile
-as it seems to be for older systems.
-
-I've found 2 DKMS deb files that work, as well as somone's modified
-source code on Github.
-
-Its still buggy and I don't think gives signal strength etc.
-
-Here's a link to modified source code on Github that compiled for me
-and worked when the DKMS debs didn't:
-
-https://github.com/bhuvanchandra/rtl8192eu
-
-Here's a link to the 2 deb DKMS packages, usually one compiles and
-works (the one with -2 at end of file name), it didn't compile on
-Debian 7.9 on my BeagleBone Black board the other night,   the other
-one did, though I couldn't get it to work with the wex driver using
-wpa_supplicant, complained of ioctl "operation not permitted" etc.
-
-http://laptopke.be/files/Debian/
-http://users.telenet.be/x86_64/Debian/
-
-Hopefully this can be properly incorporated and standardised with most
-commonly used driver/extensions etc as I understand that Realtek
-drivers don't conform properly with the Kernel wireless extensions.
-
-
-sudo lsusb -v:
-
-Bus 002 Device 003: ID 0bda:818b Realtek Semiconductor Corp.
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               2.10
-  bDeviceClass            0 (Defined at Interface level)
-  bDeviceSubClass         0
-  bDeviceProtocol         0
-  bMaxPacketSize0        64
-  idVendor           0x0bda Realtek Semiconductor Corp.
-  idProduct          0x818b
-  bcdDevice            2.00
-  iManufacturer           1 Realtek
-  iProduct                2 802.11n NIC
-  iSerial                 3 00e04c000001
-  bNumConfigurations      1
-  Configuration Descriptor:
-    bLength                 9
-    bDescriptorType         2
-    wTotalLength           53
-    bNumInterfaces          1
-    bConfigurationValue     1
-    iConfiguration          0
-    bmAttributes         0xe0
-      Self Powered
-      Remote Wakeup
-    MaxPower              500mA
-    Interface Descriptor:
-      bLength                 9
-      bDescriptorType         4
-      bInterfaceNumber        0
-      bAlternateSetting       0
-      bNumEndpoints           5
-      bInterfaceClass       255 Vendor Specific Class
-      bInterfaceSubClass    255 Vendor Specific Subclass
-      bInterfaceProtocol    255 Vendor Specific Protocol
-      iInterface              2 802.11n NIC
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x84  EP 4 IN
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x05  EP 5 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x06  EP 6 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x87  EP 7 IN
-        bmAttributes            3
-          Transfer Type            Interrupt
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0040  1x 64 bytes
-        bInterval               3
-      Endpoint Descriptor:
-        bLength                 7
-        bDescriptorType         5
-        bEndpointAddress     0x08  EP 8 OUT
-        bmAttributes            2
-          Transfer Type            Bulk
-          Synch Type               None
-          Usage Type               Data
-        wMaxPacketSize     0x0200  1x 512 bytes
-        bInterval               0
-Binary Object Store Descriptor:
-  bLength                 5
-  bDescriptorType        15
-  wTotalLength           12
-  bNumDeviceCaps          1
-  USB 2.0 Extension Device Capability:
-    bLength                 7
-    bDescriptorType        16
-    bDevCapabilityType      2
-    bmAttributes   0x00000002
-      Link Power Management (LPM) Supported
-Device Status:     0x0001
-  Self Powered
+-- 
+Rafał
