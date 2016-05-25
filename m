@@ -1,54 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15011 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756226AbcEELCc (ORCPT
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:33048 "EHLO
+	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752033AbcEYW6f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2016 07:02:32 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Ulf Hansson <ulf.hansson@linaro.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Nishant Sarmukadam" <nishants@marvell.com>,
-	linux-mmc <linux-mmc@vger.kernel.org>,
-	Bing Zhao <bin9zha0@gmail.com>, Cathy Luo <cluo@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Wei-Ning Huang <wnhuang@chromium.org>
-Subject: RE: [PATCH] mmc: add API for data write using scatter gather DMA
-Date: Thu, 5 May 2016 10:59:06 +0000
-Message-ID: <29cd9bbb3e3944f3bb1ac571b427bc4c@SC-EXCH04.marvell.com> (sfid-20160505_130236_545878_E220DCEE)
-References: <1459256261-22492-1-git-send-email-akarwar@marvell.com>
- <CAPDyKFpDyBtGKxqhuo2NnioXfXcn8ZKB=EbyoaFkZ1LX34ZzkQ@mail.gmail.com>
-In-Reply-To: <CAPDyKFpDyBtGKxqhuo2NnioXfXcn8ZKB=EbyoaFkZ1LX34ZzkQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 25 May 2016 18:58:35 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V3] brcmfmac: print error if p2p_ifadd firmware command fails
+Date: Thu, 26 May 2016 00:44:55 +0200
+Message-Id: <1464216299-25232-1-git-send-email-zajec5@gmail.com> (sfid-20160526_005900_130227_5F86DC51)
+In-Reply-To: <1464123910-8281-1-git-send-email-zajec5@gmail.com>
+References: <1464123910-8281-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgVWxmLA0KDQo+IEZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZyBb
-bWFpbHRvOmxpbnV4LXdpcmVsZXNzLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJlaGFs
-ZiBPZiBVbGYgSGFuc3Nvbg0KPiBTZW50OiBGcmlkYXksIEFwcmlsIDIyLCAyMDE2IDc6NDggUE0N
-Cj4gVG86IEFtaXRrdW1hciBLYXJ3YXINCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
-Lm9yZzsgTmlzaGFudCBTYXJtdWthZGFtOyBsaW51eC1tbWM7IEJpbmcNCj4gWmhhbzsgQ2F0aHkg
-THVvOyBCaW5nIFpoYW87IFhpbm1pbmcgSHUNCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gbW1jOiBh
-ZGQgQVBJIGZvciBkYXRhIHdyaXRlIHVzaW5nIHNjYXR0ZXIgZ2F0aGVyDQo+IERNQQ0KPiANCj4g
-T24gMjkgTWFyY2ggMjAxNiBhdCAxNDo1NywgQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2
-ZWxsLmNvbT4gd3JvdGU6DQo+ID4gRnJvbTogQmluZyBaaGFvIDxiemhhb0BtYXJ2ZWxsLmNvbT4N
-Cj4gPg0KPiA+IFRoaXMgcGF0Y2ggYWRkcyBuZXcgQVBJIGZvciBTRElPIHNjYXR0ZXIgZ2F0aGVy
-Lg0KPiA+DQo+ID4gRXhpc3RpbmcgbW1jX2lvX3J3X2V4dGVuZGVkKCkgQVBJIGV4cGVjdHMgY2Fs
-bGVyIHRvIHBhc3Mgc2luZ2xlDQo+ID4gY29udGlndW91cyBidWZmZXIuIEl0IHdpbGwgYmUgc3Bs
-aXQgaWYgaXQgZXhjZWVkcyBzZWdtZW50IHNpemUsIFNHDQo+ID4gdGFibGUgaXMgcHJlcGFyZWQg
-YW5kIHVzZWQgaXQgZm9yIHJlYWRpbmcvd3JpdGluZyB0aGUgZGF0YS4NCj4gPg0KPiA+IE91ciBp
-bnRlbnRpb24gZm9yIGRlZmluaW5nIG5ldyBBUEkgaGVyZSBpcyB0byBmYWNpbGl0YXRlIGNhbGxl
-ciB0bw0KPiA+IHByb3ZpZGUgcmVhZHkgU0cgdGFibGUoc2NhdHRlcmVkIGJ1ZmZlciBsaXN0KS4g
-SXQgd2lsbCBiZSB1c2VmdWwgZm9yDQo+ID4gdGhlIGRyaXZlcnMgd2hpY2ggaW50ZW5kIHRvIGhh
-bmRsZSBTRElPIFNHIGludGVybmFsbHkuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBCaW5nIFpo
-YW8gPGJ6aGFvQG1hcnZlbGwuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFhpbm1pbmcgSHUgPGh1
-eG1AbWFydmVsbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEthcndhciA8YWth
-cndhckBtYXJ2ZWxsLmNvbT4NCj4gPiAtLS0NCj4gDQo+IFNvIHRoaXMgaGFzIGJlZW4gcG9zdGVk
-IGFuZCBkaXNjdXNzZWQgZWFybGllci4gSW4gdXBjb21pbmcgcmV2aXNpb25zLA0KPiBwbGVhc2Ug
-YXR0YWNoIHRoYXQgaGlzdG9yeSBzbyBwZW9wbGUga25vdyB3aGVuIHJldmlld2luZy4NCj4gDQo+
-IE1vcmVvdmVyLCBpZiB5b3UgaGF2ZSBiZWVuIHVzaW5nIHRoaXMgQVBJIHRvIGltcHJvdmUgdGhy
-b3VnaHB1dCwgcGVyaGFwcw0KPiB5b3UgY2FuIHByb3ZpZGUgdXMgd2l0aCBzb21lIG51bWJlcnMg
-YXMgd2VsbCE/DQo+IA0KDQpUaGFua3MgZm9yIHlvdXIgY29tbWVudHMuDQpXZSBhcmUgd29ya2lu
-ZyBvbiB0aGUgdXBkYXRlZCB2ZXJzaW9uIHRvIHJlc29sdmUgdGhlbS4gV2Ugd2lsbCBpbmNsdWRl
-IHRoZSBjaGFuZ2VsaXN0IGhpc3RvcnkgYW5kIHNoYXJlIHRoZSB0aHJvdWdocHV0IGltcHJvdmVt
-ZW50IG51bWJlcnMuDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
+This is helpful for debugging, without this all I was getting from "iw"
+command on device with BCM43602 was:
+> command failed: Too many open files in system (-23)
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V2: s/in/if/ in commit message
+V3: Add one more error message as suggested by Arend
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 1652a48..bc26aec 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2031,7 +2031,7 @@ static int brcmf_p2p_request_p2p_if(struct brcmf_p2p_info *p2p,
+ 	err = brcmf_fil_iovar_data_set(ifp, "p2p_ifadd", &if_request,
+ 				       sizeof(if_request));
+ 	if (err)
+-		return err;
++		brcmf_err("p2p_ifadd failed %d\n", err);
+ 
+ 	return err;
+ }
+@@ -2185,6 +2185,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ 	err = brcmf_p2p_request_p2p_if(&cfg->p2p, ifp, cfg->p2p.int_addr,
+ 				       iftype);
+ 	if (err) {
++		brcmf_err("Failed to request P2P virtual interface %s\n", name);
+ 		brcmf_cfg80211_arm_vif_event(cfg, NULL);
+ 		goto fail;
+ 	}
+-- 
+1.8.4.5
+
