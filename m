@@ -1,74 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:34124 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753877AbcE3F0K (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33570 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755162AbcEZXDl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 30 May 2016 01:26:10 -0400
+	Thu, 26 May 2016 19:03:41 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V4] brcmfmac: print errors if creating interface fails
+Date: Fri, 27 May 2016 01:03:07 +0200
+Message-Id: <1464303792-3041-1-git-send-email-zajec5@gmail.com> (sfid-20160527_010412_290416_A715C86F)
+In-Reply-To: <1464216299-25232-1-git-send-email-zajec5@gmail.com>
+References: <1464216299-25232-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <80c4512b4c5ca1f26ecda9785a456c4d0cf4f937.1464576022.git.kirtika.ruchandani@gmail.com>
-References: <cover.1464576022.git.kirtika.ruchandani@gmail.com> <80c4512b4c5ca1f26ecda9785a456c4d0cf4f937.1464576022.git.kirtika.ruchandani@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 30 May 2016 15:25:50 +1000
-Message-ID: <CAGRGNgWYuEVnF7OG4GKJrnNNkn8DWaAor=ebbiwRbTZBP8qn5Q@mail.gmail.com> (sfid-20160530_072616_144161_E51EBF23)
-Subject: Re: [PATCH v2 06/10] nl80211: Various checkpatch.pl spacing fixes
-To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tina Ruchandani <ruchandani.tina@gmail.com>,
-	netdev <netdev@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+This is helpful for debugging. Without this all I was getting from "iw"
+command on failed creating of P2P interface was:
+> command failed: Too many open files in system (-23)
 
-On Mon, May 30, 2016 at 12:53 PM, Kirtika Ruchandani
-<kirtika.ruchandani@gmail.com> wrote:
-> This patch fixes the following spacing issues reported
-> by checkpatch.pl -
-> - space preferred around that <operator>
-> - no space needed after cast.
-> - Alignment should match open parenthesis
-> - suspect code indent for conditional statements
-> - Statements should start on a tabstop
->
-> This patch also contains two hunks to fix 'line over 80 characters',
-> that are spacing related.
-> All other instances of that warning have been ignored.
->
-> Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V2: s/in/if/ in commit message
+V3: Add one more error message as suggested by Arend
+V4: Also update brcmf_cfg80211_add_iface & print error for AP
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 8 ++++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      | 3 ++-
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
-Looks right to me except for one minor point:
-
-> ---
->  net/wireless/nl80211.c | 103 ++++++++++++++++++++++++++-----------------------
->  1 file changed, 54 insertions(+), 49 deletions(-)
->
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 11cbf0b..ad7cdce 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -1735,8 +1735,9 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
->                                rdev->wiphy.max_num_csa_counters))
->                         goto nla_put_failure;
->
-> -               if (rdev->wiphy.regulatory_flags & REGULATORY_WIPHY_SELF_MANAGED &&
-> -                   nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-> +               if ((rdev->wiphy.regulatory_flags &
-> +                    REGULATORY_WIPHY_SELF_MANAGED) &&
-> +                    nla_put_flag(msg, NL80211_ATTR_WIPHY_SELF_MANAGED_REG))
-
-Adding the brackets around the & expression doesn't look spacing
-related to me. What's the exact warning this is fixing?
-
->                         goto nla_put_failure;
->
->                 if (nla_put(msg, NL80211_ATTR_EXT_FEATURES,
-
-Thanks,
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 3d09d23..e7975a3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -669,14 +669,18 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+ 		return ERR_PTR(-EOPNOTSUPP);
+ 	case NL80211_IFTYPE_AP:
+ 		wdev = brcmf_ap_add_vif(wiphy, name, flags, params);
+-		if (!IS_ERR(wdev))
++		if (IS_ERR(wdev))
++			brcmf_err("Failed to create AP interface %s: %d\n", name, PTR_ERR(wdev));
++		else
+ 			brcmf_cfg80211_update_proto_addr_mode(wdev);
+ 		return wdev;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_P2P_GO:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		wdev = brcmf_p2p_add_vif(wiphy, name, name_assign_type, type, flags, params);
+-		if (!IS_ERR(wdev))
++		if (IS_ERR(wdev))
++			brcmf_err("Failed to create P2P interface %s: %d\n", name, PTR_ERR(wdev));
++		else
+ 			brcmf_cfg80211_update_proto_addr_mode(wdev);
+ 		return wdev;
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 1652a48..bc26aec 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2031,7 +2031,7 @@ static int brcmf_p2p_request_p2p_if(struct brcmf_p2p_info *p2p,
+ 	err = brcmf_fil_iovar_data_set(ifp, "p2p_ifadd", &if_request,
+ 				       sizeof(if_request));
+ 	if (err)
+-		return err;
++		brcmf_err("p2p_ifadd failed %d\n", err);
+ 
+ 	return err;
+ }
+@@ -2185,6 +2185,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ 	err = brcmf_p2p_request_p2p_if(&cfg->p2p, ifp, cfg->p2p.int_addr,
+ 				       iftype);
+ 	if (err) {
++		brcmf_err("Failed to request P2P virtual interface %s\n", name);
+ 		brcmf_cfg80211_arm_vif_event(cfg, NULL);
+ 		goto fail;
+ 	}
 -- 
-Julian Calaby
+1.8.4.5
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
