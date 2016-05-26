@@ -1,103 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:36598 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750940AbcEQMp1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54222 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751479AbcEZI1R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 08:45:27 -0400
-Received: by mail-lb0-f178.google.com with SMTP id h1so5441798lbj.3
-        for <linux-wireless@vger.kernel.org>; Tue, 17 May 2016 05:45:26 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org, leroi.lists@gmail.com
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC/RFT] ath10k: disable wake_tx_queue for older devices
-Date: Tue, 17 May 2016 14:47:01 +0200
-Message-Id: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com> (sfid-20160517_144532_380303_16BB8FAB)
+	Thu, 26 May 2016 04:27:17 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>,
+	Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix error while writing 'simulate_fw_crash' debugfs
+Date: Thu, 26 May 2016 13:57:42 +0530
+Message-ID: <1464251262-4889-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160526_102738_908864_FF0DD11C)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some setups suffer performance regressions with
-current wake_tx_queue implementation.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Fix invalid argument error while writing 'simulate_fw_crash',
+though the funcionality is working fine we get an error 'invalid
+argument' because 'count' value is not returned properly
+(no reason to reduce the count value for removing the newline)
+
+Fixes the below write error:
+
+/sys/kernel/debug/ieee80211/phy0/ath10k# echo hw-restart >
+simulate_fw_crash
+-bash: echo: write error: Invalid argument
+
+Also move the 'conf_mutex' as it is really not required for
+fetching the userspace buffer.
+
+Reported-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
 ---
-Hi Roman,
+ drivers/net/wireless/ath/ath10k/debug.c |   14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-Can you give this patch a try and see if it helps
-with your performance problems, please?
-
-
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 24 ++++++++++++++++++++++--
- 2 files changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 1379054000f9..44e7c2cd2e9b 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -657,6 +657,7 @@ struct ath10k_fw_components {
- struct ath10k {
- 	struct ath_common ath_common;
- 	struct ieee80211_hw *hw;
-+	struct ieee80211_ops *ops;
- 	struct device *dev;
- 	u8 mac_addr[ETH_ALEN];
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index e251155..54cb629 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -609,25 +609,23 @@ static ssize_t ath10k_write_simulate_fw_crash(struct file *file,
+ 	char buf[32];
+ 	int ret;
  
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0e24f9ee8bff..5fa3888afa41 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7396,21 +7396,32 @@ static const struct ieee80211_channel ath10k_5ghz_channels[] = {
- struct ath10k *ath10k_mac_create(size_t priv_size)
- {
- 	struct ieee80211_hw *hw;
-+	struct ieee80211_ops *ops;
- 	struct ath10k *ar;
+-	mutex_lock(&ar->conf_mutex);
+-
+ 	simple_write_to_buffer(buf, sizeof(buf) - 1, ppos, user_buf, count);
  
--	hw = ieee80211_alloc_hw(sizeof(struct ath10k) + priv_size, &ath10k_ops);
--	if (!hw)
-+	ops = kmemdup(&ath10k_ops, sizeof(ath10k_ops), GFP_KERNEL);
-+	if (!ops)
- 		return NULL;
+ 	/* make sure that buf is null terminated */
+ 	buf[sizeof(buf) - 1] = 0;
  
-+	hw = ieee80211_alloc_hw(sizeof(struct ath10k) + priv_size, ops);
-+	if (!hw) {
-+		kfree(ops);
-+		return NULL;
-+	}
++	/* drop the possible '\n' from the end */
++	if (buf[count - 1] == '\n')
++		buf[count - 1] = 0;
 +
- 	ar = hw->priv;
- 	ar->hw = hw;
-+	ar->ops = ops;
- 
- 	return ar;
- }
- 
- void ath10k_mac_destroy(struct ath10k *ar)
- {
-+	struct ieee80211_ops *ops = ar->ops;
++	mutex_lock(&ar->conf_mutex);
 +
- 	ieee80211_free_hw(ar->hw);
-+	kfree(ops);
- }
- 
- static const struct ieee80211_iface_limit ath10k_if_limits[] = {
-@@ -7838,6 +7849,15 @@ int ath10k_mac_register(struct ath10k *ar)
- 			ath10k_warn(ar, "failed to initialise DFS pattern detector\n");
+ 	if (ar->state != ATH10K_STATE_ON &&
+ 	    ar->state != ATH10K_STATE_RESTARTED) {
+ 		ret = -ENETDOWN;
+ 		goto exit;
  	}
  
-+	/* Current wake_tx_queue implementation imposes a significant
-+	 * performance penalty in some setups. The tx scheduling code needs
-+	 * more work anyway so disable the wake_tx_queue unless firmware
-+	 * supports the pull-push mechanism.
-+	 */
-+	if (!test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL,
-+		      ar->running_fw->fw_file.fw_features))
-+		ar->ops->wake_tx_queue = NULL;
-+
- 	ret = ath_regd_init(&ar->ath_common.regulatory, ar->hw->wiphy,
- 			    ath10k_reg_notifier);
- 	if (ret) {
+-	/* drop the possible '\n' from the end */
+-	if (buf[count - 1] == '\n') {
+-		buf[count - 1] = 0;
+-		count--;
+-	}
+-
+ 	if (!strcmp(buf, "soft")) {
+ 		ath10k_info(ar, "simulating soft firmware crash\n");
+ 		ret = ath10k_wmi_force_fw_hang(ar, WMI_FORCE_FW_HANG_ASSERT, 0);
 -- 
-2.1.4
+1.7.9.5
 
