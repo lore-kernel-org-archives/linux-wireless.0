@@ -1,62 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:55285 "EHLO lists.s-osg.org"
+Received: from mx1.redhat.com ([209.132.183.28]:52343 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932125AbcE0OS4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 10:18:56 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Xinming Hu <huxm@marvell.com>,
-	Javier Martinez Canillas <javier@osg.samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	id S1754361AbcEZUQv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 26 May 2016 16:16:51 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Joe Perches <joe@perches.com>, Kalle Valo <kvalo@codeaurora.org>,
 	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 3/8] mwifiex: propagate mwifiex_add_card() errno code in mwifiex_sdio_probe()
-Date: Fri, 27 May 2016 10:18:17 -0400
-Message-Id: <1464358702-19083-4-git-send-email-javier@osg.samsung.com> (sfid-20160527_162133_765756_9FA4B362)
-In-Reply-To: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
-References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+	Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v1 1/1] rtl8xxxu: tuse %*ph to dump buffers
+References: <1464274339-103386-1-git-send-email-andriy.shevchenko@linux.intel.com>
+	<1464278521.16344.35.camel@perches.com>
+	<1464281830.27624.27.camel@linux.intel.com>
+Date: Thu, 26 May 2016 16:16:49 -0400
+In-Reply-To: <1464281830.27624.27.camel@linux.intel.com> (Andy Shevchenko's
+	message of "Thu, 26 May 2016 19:57:10 +0300")
+Message-ID: <wrfjlh2wbmmm.fsf@redhat.com> (sfid-20160526_221655_526537_B64C5CFB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's only a check if mwifiex_add_card() returned a nonzero value, but
-the actual error code is neither stored nor propagated to the caller. So
-instead of always returning -1 (which is -EPERM and not a suitable errno
-code in this case), propagate the value returned by mwifiex_add_card().
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+> On Thu, 2016-05-26 at 09:02 -0700, Joe Perches wrote:
+>> On Thu, 2016-05-26 at 17:52 +0300, Andy Shevchenko wrote:
+>> > Use %*ph specifier to dump small buffers in hex format instead of
+>> > doing this
+>> > byte-by-byte.
+>> []
+>> > diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+>> > b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+>> []
+>> > @@ -413,13 +413,8 @@ static int rtl8192cu_parse_efuse(struct
+>> > rtl8xxxu_priv *priv)
+>> >  		dev_info(&priv->udev->dev,
+>> >  			 "%s: dumping efuse (0x%02zx bytes):\n",
+>> >  			 __func__, sizeof(struct rtl8192cu_efuse));
+>> > -		for (i = 0; i < sizeof(struct rtl8192cu_efuse); i
+>> > += 8) {
+>> > -			dev_info(&priv->udev->dev, "%02x: "
+>> > -				 "%02x %02x %02x %02x %02x %02x
+>> > %02x %02x\n", i,
+>> > -				 raw[i], raw[i + 1], raw[i + 2],
+>> > -				 raw[i + 3], raw[i + 4], raw[i +
+>> > 5],
+>> > -				 raw[i + 6], raw[i + 7]);
+>> > -		}
+>> > +		for (i = 0; i < sizeof(struct rtl8192cu_efuse); i
+>> > += 8)
+>> > +			dev_info(&priv->udev->dev, "%02x: %8ph\n",
+>> > i, &raw[i]);
+>> 
+>> print_hex_dump_bytes?
+>
+> I know, perhaps I had to mention that it is not too beneficial here. 
+>
+>> or maybe add a dev_print_hex_dump variant?
+>
+> I don't know how much users we have to introduce a such. This is
+> actually a main reason I avoid to use print_hex_dump() above. Btw, the
+> above might be collapsed into one function instead of 3 times of copy-n-
+> paste.
 
-Patch also removes the assignment of sdio_disable_func() returned value
-since it was overwritten anyways and what matters is to know the error
-value returned by the first function that failed.
+I think a dev_print_hex_dump() would be useful here. When I first read
+your patch I was a bit hmmmm but then I realized why you had stuck with
+the %8ph rather than print_hex_dump().
 
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
----
+I'll apply it shortly.
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index ab64507c84e1..81003fbe5025 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -191,14 +191,14 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 	if (func->dev.of_node)
- 		mwifiex_sdio_probe_of(&func->dev, card);
- 
--	if (mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
--			     MWIFIEX_SDIO)) {
-+	ret = mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
-+			       MWIFIEX_SDIO);
-+	if (ret) {
- 		pr_err("%s: add card failed\n", __func__);
- 		kfree(card);
- 		sdio_claim_host(func);
--		ret = sdio_disable_func(func);
-+		sdio_disable_func(func);
- 		sdio_release_host(func);
--		ret = -1;
- 	}
- 
- 	return ret;
--- 
-2.5.5
-
+Jes
