@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35498 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751667AbcERMMK (ORCPT
+Received: from smtprelay0193.hostedemail.com ([216.40.44.193]:52516 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754750AbcE0SHp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2016 08:12:10 -0400
-Subject: Re: [PATCH 1/1] rtlwifi: rtl8723be: avoid undefined behavior
-To: Heinrich Schuchardt <xypron.glpk@gmx.de>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1463525183-11483-1-git-send-email-xypron.glpk@gmx.de>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <573C5C18.8030300@lwfinger.net> (sfid-20160518_141233_963318_424DEB67)
-Date: Wed, 18 May 2016 07:12:08 -0500
-MIME-Version: 1.0
-In-Reply-To: <1463525183-11483-1-git-send-email-xypron.glpk@gmx.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Fri, 27 May 2016 14:07:45 -0400
+Message-ID: <1464372460.3938.13.camel@perches.com> (sfid-20160527_200748_643691_F055CC2E)
+Subject: Re: [PATCH] staging/wilc1000: fixes kzalloc call
+From: Joe Perches <joe@perches.com>
+To: Lidza Louina <lidza.louina@oracle.com>, johnny.kim@atmel.com,
+	austin.shin@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
+	glen.lee@atmel.com, leo.kim@atmel.com, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Date: Fri, 27 May 2016 11:07:40 -0700
+In-Reply-To: <1464371477-16965-1-git-send-email-lidza.louina@oracle.com>
+References: <1464371477-16965-1-git-send-email-lidza.louina@oracle.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/17/2016 05:46 PM, Heinrich Schuchardt wrote:
-> Do not return undefined value for transmission power
-> if the rate is invalid.
->
-> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
-> ---
->   drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-> index 445f681..c5ca9df 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-> @@ -1019,7 +1019,7 @@ static u8 _rtl8723be_get_txpower_index(struct ieee80211_hw *hw, u8 path,
->   	struct rtl_priv *rtlpriv = rtl_priv(hw);
->   	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
->   	u8 index = (channel - 1);
-> -	u8 txpower;
-> +	u8 txpower = 0;
->   	u8 power_diff_byrate = 0;
->
->   	if (channel > 14 || channel < 1) {
+On Fri, 2016-05-27 at 13:51 -0400, Lidza Louina wrote:
+> The wl pointer was initialized as a pointer to a struct wilc and
+> assigned to a piece of memory the size of the pointer. It should be the
+> size of struct wilc.
 
-Did gcc give you a warning about this variable not being initialized? Mine does 
-not. In any case, this change is appropriate.
+This isn't necessary.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+The code in question is:
 
-Thanks,
+	struct wilc *wl;
 
-Larry
+	sema_init(&close_exit_sync, 0);
 
+	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
+	if (!wl)
+		return -ENOMEM;
+
+	*wilc = wl;
+
+so this isn't any real change and the generally desired form for
+allocations from CodingStyle (Chapter 14: Allocating Memory) is:
+
+The preferred form for passing a size of a struct is the following:	p = kmalloc(sizeof(*p), ...);
+
+> diff --git a/drivers/staging/wilc1000/linux_wlan.c
+[]
+> @@ -1260,7 +1260,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+>  
+>  	sema_init(&close_exit_sync, 0);
+>  
+> -	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
+> +	wl = kzalloc(sizeof(struct wilc), GFP_KERNEL);
+>  	if (!wl)
+>  		return -ENOMEM;
