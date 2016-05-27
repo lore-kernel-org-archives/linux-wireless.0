@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:55295 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932125AbcE0OTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 10:19:08 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Xinming Hu <huxm@marvell.com>,
-	Javier Martinez Canillas <javier@osg.samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 5/8] mwifiex: use dev_err() instead of pr_err() in mwifiex_sdio_probe()
-Date: Fri, 27 May 2016 10:18:19 -0400
-Message-Id: <1464358702-19083-6-git-send-email-javier@osg.samsung.com> (sfid-20160527_162044_238854_C126AE5A)
-In-Reply-To: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
-References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22995 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932320AbcE0OrA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2016 10:47:00 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 4/5] ath10k: add new ATH10K_FW_FEATURE_BTCOEX_PARAM
+Date: Fri, 27 May 2016 20:15:58 +0530
+Message-ID: <20160527144559.4053-4-rmanohar@qti.qualcomm.com> (sfid-20160527_164705_003587_504139C0)
+In-Reply-To: <20160527144559.4053-1-rmanohar@qti.qualcomm.com>
+References: <20160527144559.4053-1-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's better to have the device name prefixed in the error message.
+This feature flag will be used for firmware to support BT-Coex feature
+without reloading firmware via WMI pdev param. To support Bluetooth
+coexistence pdev param, WMI_COEX_GPIO_SUPPORT of extended resource
+config should be enabled always. This firmware IE is used to configure
+WMI_COEX_GPIO_SUPPORT.
 
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ drivers/net/wireless/ath/ath10k/core.h | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 7aeee88b858f..1ffbb972318f 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -182,7 +182,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 	sdio_release_host(func);
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 21b8c8c2a08e..88b51225a52a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -258,6 +258,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_SUPPORTS_ADAPTIVE_CCA] = "adaptive-cca",
+ 	[ATH10K_FW_FEATURE_MFP_SUPPORT] = "mfp",
+ 	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] = "peer-flow-ctrl",
++	[ATH10K_FW_FEATURE_BTCOEX_PARAM] = "btcoex-param",
+ };
  
- 	if (ret) {
--		pr_err("%s: failed to enable function\n", __func__);
-+		dev_err(&func->dev, "failed to enable function\n");
- 		goto err_free;
- 	}
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1852e0ee3fa1..4462c3f81c05 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -535,6 +535,13 @@ enum ath10k_fw_features {
+ 	 */
+ 	ATH10K_FW_FEATURE_PEER_FLOW_CONTROL = 13,
  
-@@ -193,7 +193,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
- 	ret = mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
- 			       MWIFIEX_SDIO);
- 	if (ret) {
--		pr_err("%s: add card failed\n", __func__);
-+		dev_err(&func->dev, "add card failed\n");
- 		goto err_disable;
- 	}
- 
++	/* Firmware supports BT-Coex without reloading firmware via pdev param.
++	 * To support Bluetooth coexistence pdev param, WMI_COEX_GPIO_SUPPORT of
++	 * extended resource config should be enabled always. This firmware IE
++	 * is used to configure WMI_COEX_GPIO_SUPPORT.
++	 */
++	ATH10K_FW_FEATURE_BTCOEX_PARAM = 14,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
 -- 
-2.5.5
+2.8.3
 
