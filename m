@@ -1,72 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52343 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754361AbcEZUQv convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:35234 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932973AbcE0JNa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 26 May 2016 16:16:51 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Joe Perches <joe@perches.com>, Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org,
-	Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v1 1/1] rtl8xxxu: tuse %*ph to dump buffers
-References: <1464274339-103386-1-git-send-email-andriy.shevchenko@linux.intel.com>
-	<1464278521.16344.35.camel@perches.com>
-	<1464281830.27624.27.camel@linux.intel.com>
-Date: Thu, 26 May 2016 16:16:49 -0400
-In-Reply-To: <1464281830.27624.27.camel@linux.intel.com> (Andy Shevchenko's
-	message of "Thu, 26 May 2016 19:57:10 +0300")
-Message-ID: <wrfjlh2wbmmm.fsf@redhat.com> (sfid-20160526_221655_526537_B64C5CFB)
+	Fri, 27 May 2016 05:13:30 -0400
+Received: by mail-oi0-f49.google.com with SMTP id w184so157992554oiw.2
+        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2016 02:13:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1464338991-8284-1-git-send-email-arend@broadcom.com>
+References: <1464338991-8284-1-git-send-email-arend@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 27 May 2016 19:13:10 +1000
+Message-ID: <CAGRGNgWi+q=771XzQHz5dO4af0ySWc+fLWGM32HjWTXe8wMs2w@mail.gmail.com> (sfid-20160527_111335_419213_3557CD4E)
+Subject: Re: [PATCH V5] brcmfmac: print errors if creating interface fails
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
-> On Thu, 2016-05-26 at 09:02 -0700, Joe Perches wrote:
->> On Thu, 2016-05-26 at 17:52 +0300, Andy Shevchenko wrote:
->> > Use %*ph specifier to dump small buffers in hex format instead of
->> > doing this
->> > byte-by-byte.
->> []
->> > diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
->> > b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
->> []
->> > @@ -413,13 +413,8 @@ static int rtl8192cu_parse_efuse(struct
->> > rtl8xxxu_priv *priv)
->> >  		dev_info(&priv->udev->dev,
->> >  			 "%s: dumping efuse (0x%02zx bytes):\n",
->> >  			 __func__, sizeof(struct rtl8192cu_efuse));
->> > -		for (i = 0; i < sizeof(struct rtl8192cu_efuse); i
->> > += 8) {
->> > -			dev_info(&priv->udev->dev, "%02x: "
->> > -				 "%02x %02x %02x %02x %02x %02x
->> > %02x %02x\n", i,
->> > -				 raw[i], raw[i + 1], raw[i + 2],
->> > -				 raw[i + 3], raw[i + 4], raw[i +
->> > 5],
->> > -				 raw[i + 6], raw[i + 7]);
->> > -		}
->> > +		for (i = 0; i < sizeof(struct rtl8192cu_efuse); i
->> > += 8)
->> > +			dev_info(&priv->udev->dev, "%02x: %8ph\n",
->> > i, &raw[i]);
->> 
->> print_hex_dump_bytes?
->
-> I know, perhaps I had to mention that it is not too beneficial here. 
->
->> or maybe add a dev_print_hex_dump variant?
->
-> I don't know how much users we have to introduce a such. This is
-> actually a main reason I avoid to use print_hex_dump() above. Btw, the
-> above might be collapsed into one function instead of 3 times of copy-n-
-> paste.
+Hi Arend,
 
-I think a dev_print_hex_dump() would be useful here. When I first read
-your patch I was a bit hmmmm but then I realized why you had stuck with
-the %8ph rather than print_hex_dump().
+On Fri, May 27, 2016 at 6:49 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> From: Rafał Miłecki <zajec5@gmail.com>
+>
+> This is helpful for debugging. Without this all I was getting from "iw"
+> command on failed creating of P2P interface was:
+>> command failed: Too many open files in system (-23)
+>
+> Signed-off-by: Rafal Milecki <zajec5@gmail.com>
+> [arend@broadcom.com: reduce error prints upon iface creation]
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+> V2: s/in/if/ in commit message
+> V3: Add one more error message as suggested by Arend
+> V4: Also update brcmf_cfg80211_add_iface & print error for AP
+> V5: remove error prints from p2p.c
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 12 ++++++++++--
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      |  2 --
+>  2 files changed, 10 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index d0631b6..64ed003 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -671,18 +671,26 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+>                 wdev = brcmf_ap_add_vif(wiphy, name, flags, params);
+>                 if (!IS_ERR(wdev))
+>                         brcmf_cfg80211_update_proto_addr_mode(wdev);
+> -               return wdev;
+> +               break;
+>         case NL80211_IFTYPE_P2P_CLIENT:
+>         case NL80211_IFTYPE_P2P_GO:
+>         case NL80211_IFTYPE_P2P_DEVICE:
+>                 wdev = brcmf_p2p_add_vif(wiphy, name, name_assign_type, type, flags, params);
+>                 if (!IS_ERR(wdev))
+>                         brcmf_cfg80211_update_proto_addr_mode(wdev);
+> -               return wdev;
+> +               break;
+>         case NL80211_IFTYPE_UNSPECIFIED:
+>         default:
+>                 return ERR_PTR(-EINVAL);
+>         }
+> +
+> +       if (IS_ERR(wdev))
+> +               brcmf_err("add iface %s type %d failed: err=%d\n",
+> +                         name, type, PTR_ERR(wdev));
+> +       else
+> +               brcmf_cfg80211_update_proto_addr_mode(wdev);
 
-I'll apply it shortly.
+Doesn't this now get called twice?
 
-Jes
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
