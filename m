@@ -1,78 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:33188 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750927AbcE0WCO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 18:02:14 -0400
-Received: by mail-wm0-f46.google.com with SMTP id s131so6084737wme.0
-        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2016 15:02:13 -0700 (PDT)
-Subject: Re: [PATCH] remove lots of IS_ERR_VALUE abuses
-To: Arnd Bergmann <arnd@arndb.de>,
-	Linus Torvalds <torvalds@linux-foundation.org>
-References: <1464384685-347275-1-git-send-email-arnd@arndb.de>
-Cc: linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Andrzej Hajda <a.hajda@samsung.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	David Airlie <airlied@linux.ie>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Bob Peterson <rpeterso@redhat.com>, linux-acpi@vger.kernel.org,
-	iommu@lists.linux-foundation.org, linux-media@vger.kernel.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	v9fs-developer@lists.sourceforge.net
-From: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-Message-ID: <5748C3E1.2060004@linaro.org> (sfid-20160528_000240_187428_03F5CABE)
-Date: Fri, 27 May 2016 23:02:09 +0100
-MIME-Version: 1.0
-In-Reply-To: <1464384685-347275-1-git-send-email-arnd@arndb.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from lists.s-osg.org ([54.187.51.154]:55292 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932125AbcE0OTC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2016 10:19:02 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Xinming Hu <huxm@marvell.com>,
+	Javier Martinez Canillas <javier@osg.samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 4/8] mwifiex: consolidate mwifiex_sdio_probe() error paths
+Date: Fri, 27 May 2016 10:18:18 -0400
+Message-Id: <1464358702-19083-5-git-send-email-javier@osg.samsung.com> (sfid-20160527_162120_719886_24B497B6)
+In-Reply-To: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Instead of duplicating part of the cleanups needed in case of an error
+in .probe callback, have a single error path and use goto labels as is
+common practice in the kernel.
 
+This also has the nice side effect that the cleanup operations are made
+in the inverse order of their counterparts, which was not the case for
+the mwifiex_add_card() error path.
 
-On 27/05/16 22:23, Arnd Bergmann wrote:
->   drivers/acpi/acpi_dbg.c                          | 22 +++++++++++-----------
->   drivers/ata/sata_highbank.c                      |  2 +-
->   drivers/clk/tegra/clk-tegra210.c                 |  2 +-
->   drivers/cpufreq/omap-cpufreq.c                   |  2 +-
->   drivers/crypto/caam/ctrl.c                       |  2 +-
->   drivers/dma/sun4i-dma.c                          | 16 ++++++++--------
->   drivers/gpio/gpio-xlp.c                          |  2 +-
->   drivers/gpu/drm/sti/sti_vtg.c                    |  4 ++--
->   drivers/gpu/drm/tilcdc/tilcdc_tfp410.c           |  2 +-
->   drivers/gpu/host1x/hw/intr_hw.c                  |  2 +-
->   drivers/iommu/arm-smmu-v3.c                      | 18 +++++++++---------
-...
->   drivers/mmc/host/sdhci-of-at91.c                 |  2 +-
->   drivers/mmc/host/sdhci.c                         |  4 ++--
->   drivers/net/ethernet/freescale/fman/fman.c       |  2 +-
->   drivers/net/ethernet/freescale/fman/fman_muram.c |  4 ++--
->   drivers/net/ethernet/freescale/fman/fman_muram.h |  4 ++--
->   drivers/net/wireless/ti/wlcore/spi.c             |  4 ++--
->   drivers/nvmem/core.c                             | 22 +++++++++++-----------
+Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+---
 
-For nvmem part,
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 17 +++++++++++------
+ 1 file changed, 11 insertions(+), 6 deletions(-)
 
-Acked-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 81003fbe5025..7aeee88b858f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -183,8 +183,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 
+ 	if (ret) {
+ 		pr_err("%s: failed to enable function\n", __func__);
+-		kfree(card);
+-		return ret;
++		goto err_free;
+ 	}
+ 
+ 	/* device tree node parsing and platform specific configuration*/
+@@ -195,12 +194,18 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 			       MWIFIEX_SDIO);
+ 	if (ret) {
+ 		pr_err("%s: add card failed\n", __func__);
+-		kfree(card);
+-		sdio_claim_host(func);
+-		sdio_disable_func(func);
+-		sdio_release_host(func);
++		goto err_disable;
+ 	}
+ 
++	return 0;
++
++err_disable:
++	sdio_claim_host(func);
++	sdio_disable_func(func);
++	sdio_release_host(func);
++err_free:
++	kfree(card);
++
+ 	return ret;
+ }
+ 
+-- 
+2.5.5
 
->   drivers/tty/serial/amba-pl011.c                  |  2 +-
->   drivers/tty/serial/sprd_serial.c                 |  2 +-
->   drivers/video/fbdev/da8xx-fb.c                   |  4 ++--
->   fs/afs/write.c                                   |  4 ----
->   fs/binfmt_flat.c                                 |  6 +++---
->   fs/gfs2/dir.c                                    | 15 +++++++++------
->   kernel/pid.c                                     |  2 +-
->   net/9p/client.c                                  |  4 ++--
->   sound/soc/qcom/lpass-platform.c                  |  4 ++--
-There is already a patch for this in Mark Brown's sound tree,
-
-https://git.kernel.org/cgit/linux/kernel/git/broonie/sound.git/commit/?h=for-linus&id=cef794f76485f4a4e6affd851ae9f9d0eb4287a5
-
-Thanks,
-srini
->   38 files changed, 100 insertions(+), 101 deletions(-)
