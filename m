@@ -1,65 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:32846 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753587AbcEBKsU (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:34848 "EHLO
+	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750779AbcE0XYs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2016 06:48:20 -0400
-Received: by mail-pf0-f196.google.com with SMTP id e190so20540169pfe.0
-        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2016 03:48:20 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 5/7] staging: wilc1000: change handle_get_mac_address's return type to void
-Date: Mon,  2 May 2016 19:47:53 +0900
-Message-Id: <1462186075-8549-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160502_124823_822817_E1A74249)
-In-Reply-To: <1462186075-8549-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1462186075-8549-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 27 May 2016 19:24:48 -0400
+MIME-Version: 1.0
+In-Reply-To: <1464384685-347275-1-git-send-email-arnd@arndb.de>
+References: <1464384685-347275-1-git-send-email-arnd@arndb.de>
+Date: Fri, 27 May 2016 16:24:47 -0700
+Message-ID: <CA+55aFw_SZ7nydXMQKcaQJmYy1=pCg7S6mUgHJGyfGvNoRgoRg@mail.gmail.com> (sfid-20160528_012512_754205_AA825DE0)
+Subject: Re: [PATCH] remove lots of IS_ERR_VALUE abuses
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Andrzej Hajda <a.hajda@samsung.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	David Airlie <airlied@linux.ie>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+	Russell King <linux@armlinux.org.uk>,
+	Bob Peterson <rpeterso@redhat.com>,
+	Linux ACPI <linux-acpi@vger.kernel.org>,
+	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
+	Linux Media Mailing List <linux-media@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	V9FS Developers <v9fs-developer@lists.sourceforge.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When handle_get_mac_address is called in hostIFthread that is a kernel
-thread, it is not checked return type of this function. This patch
-changes return type to void and removes braces if statement due to have
-a single statement.
+On Fri, May 27, 2016 at 2:23 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> This patch changes all users of IS_ERR_VALUE() that I could find
+> on 32-bit ARM randconfig builds and x86 allmodconfig. For the
+> moment, this doesn't change the definition of IS_ERR_VALUE()
+> because there are probably still architecture specific users
+> elsewhere.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
+Patch applied with the fixups from Al Viro edited in.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8a269fd..23bbaa8 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -398,8 +398,8 @@ static void handle_get_ip_address(struct wilc_vif *vif, u8 idx)
- 		netdev_err(vif->ndev, "Failed to get IP address\n");
- }
- 
--static s32 handle_get_mac_address(struct wilc_vif *vif,
--				  struct get_mac_addr *get_mac_addr)
-+static void handle_get_mac_address(struct wilc_vif *vif,
-+				   struct get_mac_addr *get_mac_addr)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -412,13 +412,9 @@ static s32 handle_get_mac_address(struct wilc_vif *vif,
- 	result = wilc_send_config_pkt(vif, GET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
- 
--	if (result) {
-+	if (result)
- 		netdev_err(vif->ndev, "Failed to get mac address\n");
--		result = -EFAULT;
--	}
- 	complete(&hif_wait_response);
--
--	return result;
- }
- 
- static s32 handle_cfg_param(struct wilc_vif *vif,
--- 
-2.8.2
+I also ended up removing a few other users (due to the vm_brk()
+interface), and then made IS_ERR_VALUE() do the "void *" cast so that
+integer use of a non-pointer size should now complain.
 
+It works for me and has no new warnings in my allmodconfig build, and
+with your ARM work that is presumably clean too. But other
+architectures may see new warnings.
+
+People who got affected by this should check their subsystem code for
+the changes.
+
+              Linus
