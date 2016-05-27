@@ -1,105 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:34173 "EHLO
-	mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932521AbcEXJK4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44120 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754462AbcE0Oqs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2016 05:10:56 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] brcmfmac: fix setting AP channel with new firmwares
-Date: Tue, 24 May 2016 11:09:24 +0200
-Message-Id: <1464080979-12150-1-git-send-email-zajec5@gmail.com> (sfid-20160524_111147_918698_8A1755CF)
+	Fri, 27 May 2016 10:46:48 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 3/5] ath10k: update module description
+Date: Fri, 27 May 2016 20:15:57 +0530
+Message-ID: <20160527144559.4053-3-rmanohar@qti.qualcomm.com> (sfid-20160527_164651_707100_32E00ECC)
+In-Reply-To: <20160527144559.4053-1-rmanohar@qti.qualcomm.com>
+References: <20160527144559.4053-1-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware for new chipsets is based on a new major version of code
-internally maintained at Broadcom. E.g. brcmfmac4366b-pcie.bin (used for
-BCM4366B1) is based on 10.10.69.3309 while brcmfmac43602-pcie.ap.bin was
-based on 7.35.177.56.
+Update module description to advertise all supported QCA 802.11ac devices.
 
-Currently setting AP 5 GHz channel doesn't work reliably with BCM4366B1.
-When setting e.g. 36 control channel with VHT80 (center channel 42)
-firmware may randomly pick one of:
-1) 52 control channel with 58 as center one
-2) 100 control channel with 106 as center one
-3) 116 control channel with 122 as center one
-4) 149 control channel with 155 as center one
-
-It seems new firmwares require setting AP mode (BRCMF_C_SET_AP) before
-specifying a channel. Changing an order of firmware calls fixes the
-problem.
-
-This fix was verified with BCM4366B1 and tested for regressions on
-BCM43602. It's unclear if it's needed (or correct at all) for P2P
-interfaces so it leaves this code unaffected.
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 2 +-
+ drivers/net/wireless/ath/ath10k/pci.c  | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 299a404..3d09d23 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -4423,7 +4423,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 	struct brcmf_join_params join_params;
- 	enum nl80211_iftype dev_role;
- 	struct brcmf_fil_bss_enable_le bss_enable;
--	u16 chanspec;
-+	u16 chanspec = chandef_to_chanspec(&cfg->d11inf, &settings->chandef);
- 	bool mbss;
- 	int is_11d;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index a003980d8972..21b8c8c2a08e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2182,5 +2182,5 @@ void ath10k_core_destroy(struct ath10k *ar)
+ EXPORT_SYMBOL(ath10k_core_destroy);
  
-@@ -4499,16 +4499,16 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ MODULE_AUTHOR("Qualcomm Atheros");
+-MODULE_DESCRIPTION("Core module for QCA988X PCIe devices.");
++MODULE_DESCRIPTION("Core module for Qualcomm Atheros 802.11ac wireless LAN cards.");
+ MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 8e8e1eb4dd0a..7b101a93e619 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -3195,7 +3195,7 @@ static void __exit ath10k_pci_exit(void)
+ module_exit(ath10k_pci_exit);
  
- 	brcmf_config_ap_mgmt_ie(ifp->vif, &settings->beacon);
+ MODULE_AUTHOR("Qualcomm Atheros");
+-MODULE_DESCRIPTION("Driver support for Atheros QCA988X PCIe devices");
++MODULE_DESCRIPTION("Driver support for Qualcomm Atheros 802.11ac WLAN PCIe/AHB devices");
+ MODULE_LICENSE("Dual BSD/GPL");
  
--	if (!mbss) {
--		chanspec = chandef_to_chanspec(&cfg->d11inf,
--					       &settings->chandef);
-+	if (dev_role == NL80211_IFTYPE_P2P_GO) {
- 		err = brcmf_fil_iovar_int_set(ifp, "chanspec", chanspec);
- 		if (err < 0) {
- 			brcmf_err("Set Channel failed: chspec=%d, %d\n",
- 				  chanspec, err);
- 			goto exit;
- 		}
-+	}
- 
-+	if (!mbss) {
- 		if (is_11d != ifp->vif->is_11d) {
- 			err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_REGULATORY,
- 						    is_11d);
-@@ -4565,6 +4565,14 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 			brcmf_err("setting AP mode failed %d\n", err);
- 			goto exit;
- 		}
-+		if (!mbss) {
-+			err = brcmf_fil_iovar_int_set(ifp, "chanspec", chanspec);
-+			if (err < 0) {
-+				brcmf_err("Set Channel failed: chspec=%d, %d\n",
-+					  chanspec, err);
-+				goto exit;
-+			}
-+		}
- 		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 1);
- 		if (err < 0) {
- 			brcmf_err("BRCMF_C_UP error (%d)\n", err);
+ /* QCA988x 2.0 firmware files */
 -- 
-1.8.4.5
+2.8.3
 
