@@ -1,85 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail3-relais-sop.national.inria.fr ([192.134.164.104]:42400
-	"EHLO mail3-relais-sop.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751942AbcEAUNG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 1 May 2016 16:13:06 -0400
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: kernel-janitors@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] rtlwifi: rtl818x: constify rtl_intf_ops structures
-Date: Sun,  1 May 2016 21:57:44 +0200
-Message-Id: <1462132664-1619-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20160501_221330_802188_97284501)
+Received: from lists.s-osg.org ([54.187.51.154]:55295 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932125AbcE0OTI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2016 10:19:08 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Xinming Hu <huxm@marvell.com>,
+	Javier Martinez Canillas <javier@osg.samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 5/8] mwifiex: use dev_err() instead of pr_err() in mwifiex_sdio_probe()
+Date: Fri, 27 May 2016 10:18:19 -0400
+Message-Id: <1464358702-19083-6-git-send-email-javier@osg.samsung.com> (sfid-20160527_162044_238854_C126AE5A)
+In-Reply-To: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtl_intf_ops structures are never modified, so declare them as const.
+It's better to have the device name prefixed in the error message.
 
-Done with the help of Coccinelle.
-
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/pci.c  |    2 +-
- drivers/net/wireless/realtek/rtlwifi/pci.h  |    2 +-
- drivers/net/wireless/realtek/rtlwifi/usb.c  |    2 +-
- drivers/net/wireless/realtek/rtlwifi/wifi.h |    2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index 1ac41b8..66030ea 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -2456,7 +2456,7 @@ int rtl_pci_resume(struct device *dev)
- EXPORT_SYMBOL(rtl_pci_resume);
- #endif /* CONFIG_PM_SLEEP */
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 7aeee88b858f..1ffbb972318f 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -182,7 +182,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 	sdio_release_host(func);
  
--struct rtl_intf_ops rtl_pci_ops = {
-+const struct rtl_intf_ops rtl_pci_ops = {
- 	.read_efuse_byte = read_efuse_byte,
- 	.adapter_start = rtl_pci_start,
- 	.adapter_stop = rtl_pci_stop,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.h b/drivers/net/wireless/realtek/rtlwifi/pci.h
-index 5da6703..b951eba 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.h
-@@ -286,7 +286,7 @@ struct rtl_pci_priv {
+ 	if (ret) {
+-		pr_err("%s: failed to enable function\n", __func__);
++		dev_err(&func->dev, "failed to enable function\n");
+ 		goto err_free;
+ 	}
  
- int rtl_pci_reset_trx_ring(struct ieee80211_hw *hw);
+@@ -193,7 +193,7 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 	ret = mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
+ 			       MWIFIEX_SDIO);
+ 	if (ret) {
+-		pr_err("%s: add card failed\n", __func__);
++		dev_err(&func->dev, "add card failed\n");
+ 		goto err_disable;
+ 	}
  
--extern struct rtl_intf_ops rtl_pci_ops;
-+extern const struct rtl_intf_ops rtl_pci_ops;
- 
- int rtl_pci_probe(struct pci_dev *pdev,
- 			    const struct pci_device_id *id);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index aac1ed3..41617b7 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -1049,7 +1049,7 @@ static void rtl_fill_h2c_cmd_work_callback(struct work_struct *work)
- 	rtlpriv->cfg->ops->fill_h2c_cmd(hw, H2C_RA_MASK, 5, rtlpriv->rate_mask);
- }
- 
--static struct rtl_intf_ops rtl_usb_ops = {
-+static const struct rtl_intf_ops rtl_usb_ops = {
- 	.adapter_start = rtl_usb_start,
- 	.adapter_stop = rtl_usb_stop,
- 	.adapter_tx = rtl_usb_tx,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 11d9c23..4e0ab4d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2593,7 +2593,7 @@ struct rtl_priv {
- 	 *intf_ops : for diff interrface usb/pcie
- 	 */
- 	struct rtl_hal_cfg *cfg;
--	struct rtl_intf_ops *intf_ops;
-+	const struct rtl_intf_ops *intf_ops;
- 
- 	/*this var will be set by set_bit,
- 	   and was used to indicate status of
+-- 
+2.5.5
 
