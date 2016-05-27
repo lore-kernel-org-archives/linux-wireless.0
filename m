@@ -1,115 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51567 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755025AbcEBVTT (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5220 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755151AbcE0Oqv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2016 17:19:19 -0400
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] mac80211:  add vht cap decode to debugfs.
-Date: Mon,  2 May 2016 14:19:16 -0700
-Message-Id: <1462223956-23384-1-git-send-email-greearb@candelatech.com> (sfid-20160502_231923_106355_E5D1F0B9)
+	Fri, 27 May 2016 10:46:51 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/5] ath10k: remove unused phy_mode_to_band
+Date: Fri, 27 May 2016 20:15:56 +0530
+Message-ID: <20160527144559.4053-2-rmanohar@qti.qualcomm.com> (sfid-20160527_164654_572798_F052ECCC)
+In-Reply-To: <20160527144559.4053-1-rmanohar@qti.qualcomm.com>
+References: <20160527144559.4053-1-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Remove unused inline function phy_mode_to_band.
 
-This makes it a lot easier to understand the capabilities used
-by the station:
-
-VHT supported
-cap: 0x300819b2
-		MAX-MPDU-11454
-		RXLDPC
-		SHORT-GI-80
-		TXSTBC
-		RXSTBC_1
-		RXSTBC_3
-		SU-BEAMFORMER-CAPABLE
-		SU-BEAMFORMEE-CAPABLE
-		BEAMFORMEE-STS: 0x0
-		SOUNDING-DIMENSIONS: 0x0
-		MU-BEAMFORMER-CAPABLE
-		MPDU-LENGTH-EXPONENT: 0x0
-		LINK-ADAPTATION-VHT-MRQ-MFB: 0x0
-		RX-ANTENNA-PATTERN
-		RX-ANTENNA-PATTERN
-RX MCS: fffe
-TX MCS: fffe
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- net/mac80211/debugfs_sta.c | 50 ++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 48 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 28 ----------------------------
+ 1 file changed, 28 deletions(-)
 
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index 5d3d2ab..ff9d4dd 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -292,14 +292,60 @@ STA_OPS(ht_capa);
- static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
- 				 size_t count, loff_t *ppos)
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 7bf1909402c0..3b35c7ab5680 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2183,34 +2183,6 @@ static void ath10k_htt_rx_tx_mode_switch_ind(struct ath10k *ar,
+ 	ath10k_mac_tx_push_pending(ar);
+ }
+ 
+-static inline enum nl80211_band phy_mode_to_band(u32 phy_mode)
+-{
+-	enum nl80211_band band;
+-
+-	switch (phy_mode) {
+-	case MODE_11A:
+-	case MODE_11NA_HT20:
+-	case MODE_11NA_HT40:
+-	case MODE_11AC_VHT20:
+-	case MODE_11AC_VHT40:
+-	case MODE_11AC_VHT80:
+-		band = NL80211_BAND_5GHZ;
+-		break;
+-	case MODE_11G:
+-	case MODE_11B:
+-	case MODE_11GONLY:
+-	case MODE_11NG_HT20:
+-	case MODE_11NG_HT40:
+-	case MODE_11AC_VHT20_2G:
+-	case MODE_11AC_VHT40_2G:
+-	case MODE_11AC_VHT80_2G:
+-	default:
+-		band = NL80211_BAND_2GHZ;
+-	}
+-
+-	return band;
+-}
+-
+ void ath10k_htt_htc_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
  {
--	char buf[128], *p = buf;
-+	char buf[512], *p = buf;
- 	struct sta_info *sta = file->private_data;
- 	struct ieee80211_sta_vht_cap *vhtc = &sta->sta.vht_cap;
- 
- 	p += scnprintf(p, sizeof(buf) + buf - p, "VHT %ssupported\n",
- 			vhtc->vht_supported ? "" : "not ");
- 	if (vhtc->vht_supported) {
--		p += scnprintf(p, sizeof(buf)+buf-p, "cap: %#.8x\n", vhtc->cap);
-+		p += scnprintf(p, sizeof(buf) + buf - p, "cap: %#.8x\n",
-+			       vhtc->cap);
-+#define PFLAG(a, b)							\
-+		do {							\
-+			if (vhtc->cap & IEEE80211_VHT_CAP_ ## a)	\
-+				p += scnprintf(p, sizeof(buf) + buf - p, \
-+					       "\t\t%s\n", b);		\
-+		} while (0)
-+
-+		PFLAG(MAX_MPDU_LENGTH_3895, "MAX-MPDU-3895");
-+		PFLAG(MAX_MPDU_LENGTH_7991, "MAX-MPDU-7991");
-+		PFLAG(MAX_MPDU_LENGTH_11454, "MAX-MPDU-11454");
-+		PFLAG(SUPP_CHAN_WIDTH_160MHZ, "160Mhz");
-+		PFLAG(SUPP_CHAN_WIDTH_160_80PLUS80MHZ, "160-80+80Mhz");
-+		PFLAG(RXLDPC, "RXLDPC");
-+		PFLAG(SHORT_GI_80, "SHORT-GI-80");
-+		PFLAG(SHORT_GI_160, "SHORT-GI-160");
-+		PFLAG(TXSTBC, "TXSTBC");
-+		PFLAG(RXSTBC_1, "RXSTBC_1");
-+		PFLAG(RXSTBC_2, "RXSTBC_2");
-+		PFLAG(RXSTBC_3, "RXSTBC_3");
-+		PFLAG(RXSTBC_4, "RXSTBC_4");
-+		PFLAG(SU_BEAMFORMER_CAPABLE, "SU-BEAMFORMER-CAPABLE");
-+		PFLAG(SU_BEAMFORMEE_CAPABLE, "SU-BEAMFORMEE-CAPABLE");
-+		p += scnprintf(p, sizeof(buf) + buf - p,
-+			"\t\tBEAMFORMEE-STS: 0x%x\n",
-+			(vhtc->cap & IEEE80211_VHT_CAP_BEAMFORMEE_STS_MASK) >>
-+			IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT);
-+		p += scnprintf(p, sizeof(buf) + buf - p,
-+			"\t\tSOUNDING-DIMENSIONS: 0x%x\n",
-+			(vhtc->cap & IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_MASK)
-+			>> IEEE80211_VHT_CAP_SOUNDING_DIMENSIONS_SHIFT);
-+		PFLAG(MU_BEAMFORMER_CAPABLE, "MU-BEAMFORMER-CAPABLE");
-+		PFLAG(MU_BEAMFORMEE_CAPABLE, "MU-BEAMFORMEE-CAPABLE");
-+		PFLAG(VHT_TXOP_PS, "TXOP-PS");
-+		PFLAG(HTC_VHT, "HTC-VHT");
-+		p += scnprintf(p, sizeof(buf) + buf - p,
-+			"\t\tMPDU-LENGTH-EXPONENT: 0x%x\n",
-+			(vhtc->cap & IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_MASK) >>
-+			IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT);
-+		PFLAG(VHT_LINK_ADAPTATION_VHT_UNSOL_MFB,
-+		      "LINK-ADAPTATION-VHT-UNSOL-MFB");
-+		p += scnprintf(p, sizeof(buf) + buf - p,
-+			"\t\tLINK-ADAPTATION-VHT-MRQ-MFB: 0x%x\n",
-+			(vhtc->cap & IEEE80211_VHT_CAP_VHT_LINK_ADAPTATION_VHT_MRQ_MFB) >> 26);
-+		PFLAG(RX_ANTENNA_PATTERN, "RX-ANTENNA-PATTERN");
-+		PFLAG(TX_ANTENNA_PATTERN, "RX-ANTENNA-PATTERN");
- 
- 		p += scnprintf(p, sizeof(buf)+buf-p, "RX MCS: %.4x\n",
- 			       le16_to_cpu(vhtc->vht_mcs.rx_mcs_map));
+ 	bool release;
 -- 
-2.4.3
+2.8.3
 
