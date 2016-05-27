@@ -1,77 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49965 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752443AbcEIXLX (ORCPT
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:34545 "EHLO
+	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755862AbcE0SH7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 19:11:23 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 00/21] ath10k patches, generic and CT firmware related.
-Date: Mon,  9 May 2016 16:10:54 -0700
-Message-Id: <1462835475-11079-1-git-send-email-greearb@candelatech.com> (sfid-20160510_011133_252907_B0052132)
+	Fri, 27 May 2016 14:07:59 -0400
+Received: by mail-yw0-f169.google.com with SMTP id c127so113127039ywb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2016 11:07:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAFiGRCH9LE+7vkkQonJ4YfvbitxWT+OJfFWrV1hZ5ZE_5-j-tQ@mail.gmail.com>
+References: <CAFiGRCEyxdcuMf5yn3WU-bhnD5AhQmuP++eXaB1j8jmPkx7yQA@mail.gmail.com>
+ <CAFiGRCH9LE+7vkkQonJ4YfvbitxWT+OJfFWrV1hZ5ZE_5-j-tQ@mail.gmail.com>
+From: Aurimas Liutikas <aurimas@google.com>
+Date: Fri, 27 May 2016 11:07:56 -0700
+Message-ID: <CAFiGRCGXeLg3vhuCb0-=pRojvmeuuBmP03D=LX=Kbav=q3ULZA@mail.gmail.com> (sfid-20160527_200803_272004_D63CF080)
+Subject: Re: [PATCH] iw: Fix -Wabsolute-value compiler warning in iw.c
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hello again! I was curious if this looks like a reasonable change?
 
-These are against wireless-testing from a few days ago.
+Aurimas
 
-Here are a bunch of ath10k patches.  First one is a crash
-fix.  Next few are at least somewhat useful for generic
-firmware, and more useful for CT firmware.  Much of it is related
-to better debugging of firmware crashes.  If this can go in, then
-I can much better handle random bug reports from prople using
-stock kernels and CT firmware.  With some small tweaks to how they
-package firmware, QCA could benefit as well.
+On Wed, May 18, 2016 at 9:12 AM, Aurimas Liutikas <aurimas@google.com> wrote:
+> Hey there! Any thoughts on this patch?
+>
+> Aurimas
+>
+> On Thu, May 12, 2016 at 9:16 AM, Aurimas Liutikas <aurimas@google.com> wrote:
+>> Signed-off-by: Aurimas Liutikas <aurimas@google.com>
+>>
+>> diff --git a/iw.c b/iw.c
+>> index 2aabddb..a6efe5b 100644
+>> --- a/iw.c
+>> +++ b/iw.c
+>> @@ -516,7 +516,7 @@ int main(int argc, char **argv)
+>>         const struct cmd *cmd = NULL;
+>>
+>>         /* calculate command size including padding */
+>> -       cmd_size = abs((long)&__section_set - (long)&__section_get);
+>> +       cmd_size = labs((long)&__section_set - (long)&__section_get);
+>>         /* strip off self */
+>>         argc--;
+>>         argv0 = *argv++;
+>
+>
+>
+> --
+>
+>  Aurimas Liutikas | Software Engineer | Chrome / Google
 
-The last bit is some initial support for CT firmware.  I figure it
-is a long-shot, but it would surely be nice to get this (and more!)
-upstream.  If nothing else, these can be a basis for potential
-inclusion in openwrt or similar.
 
-These patches are not overly dependent on each other for the most
-part, so even if a few are not acceptable, maybe others can be
-applied upstream.
-
-Ben Greear (21):
-  ath10k:  Fix crash related to printing features.
-  ath10k: fix typo in logging message
-  ath10k: Support setting debug mask from driver code.
-  ath10k: rate-limit packet tx errors
-  ath10k: save firmware debug log messages.
-  ath10k: save firmware stacks upon firmware crash
-  ath10k: save firmware RAM and ROM BSS sections on crash
-  ath10k: make firmware text debug messages more verbose.
-  ath10k: print fw debug messages in hex.
-  ath10k: support logging ath10k_info as KERN_DEBUG
-  ath10k: add fw-powerup-fail to ethtool stats.
-  ath10k: Support up to 64 vdevs.
-  ath10k: Document cycle count related counters.
-  ath10k: Add tx/rx bytes, cycle counters to ethtool stats.
-  ath10k: support CT firmware flag.
-  ath10k: Support 32+ stations.
-  ath10k: Enable detecting failure to install key in firmware (CT).
-  ath10k: Note limitation on beaconing vdevs.
-  ath10k: Enable adhoc mode for CT firmware.
-  ath10k: read firmware crash over ioread32 if CE fails.
-  ath10k: Read dbglog buffers over register ping-pong.
-
- drivers/net/wireless/ath/ath10k/core.c   |  70 ++++++-
- drivers/net/wireless/ath/ath10k/core.h   |  52 +++++-
- drivers/net/wireless/ath/ath10k/debug.c  | 268 +++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/debug.h  |  18 ++
- drivers/net/wireless/ath/ath10k/htt.h    |   7 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c |  23 ++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  22 ++-
- drivers/net/wireless/ath/ath10k/hw.h     |  36 ++++
- drivers/net/wireless/ath/ath10k/mac.c    |  74 +++++++-
- drivers/net/wireless/ath/ath10k/pci.c    | 311 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.c    |  43 ++++-
- drivers/net/wireless/ath/ath10k/wmi.h    |   6 +
- 12 files changed, 897 insertions(+), 33 deletions(-)
 
 -- 
-2.4.3
-
+--
+Aurimas Liutikas
