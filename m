@@ -1,146 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:37837 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752208AbcEDPCC (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:54109 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250AbcE0PIk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2016 11:02:02 -0400
-Received: by mail-wm0-f42.google.com with SMTP id a17so99503899wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 04 May 2016 08:02:01 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Shiang Tu <shiang_tu@ralinktech.com>,
-	=?UTF-8?q?Hua=20Shao=20=28=E9=82=B5=E5=8D=8E=29?=
-	<hua.shao@mediatek.com>, Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, linux-firmware@kernel.org
-Subject: [PATCH 2/2] linux-firmware: update rt2870.bin, rt2800usb driver
-Date: Wed,  4 May 2016 17:00:00 +0200
-Message-Id: <1462374000-17149-2-git-send-email-xose.vazquez@gmail.com> (sfid-20160504_170209_422968_3F70F4DD)
-In-Reply-To: <1462374000-17149-1-git-send-email-xose.vazquez@gmail.com>
-References: <1462374000-17149-1-git-send-email-xose.vazquez@gmail.com>
+	Fri, 27 May 2016 11:08:40 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Arnaldo Carvalho de Melo <acme@kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] wl3501_cs: avoid bogus gcc-6 warning
+Date: Fri, 27 May 2016 17:08:33 +0200
+Message-ID: <4731273.LDpWBaOjNT@wuerfel> (sfid-20160527_170859_037912_E167C290)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf8
-To: unlisted-recipients:; (no To-header on input)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rt2870.bin from 29 to 0.36
+gcc-6 on x86 started warning about wl3501_get_encode when building
+with -O2:
 
-Cc: Shiang Tu <shiang_tu@ralinktech.com>
-Cc: Hua Shao (邵华) <hua.shao@mediatek.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: linux-firmware@kernel.org
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- WHENCE     |   4 +++-
- rt2870.bin | Bin 8192 -> 8192 bytes
- 2 files changed, 3 insertions(+), 1 deletion(-)
+drivers/net/wireless/wl3501_cs.c: In function ‘wl3501_get_encode’:
+drivers/net/wireless/wl3501_cs.c:1769:5: warning: ‘implemented’ may be used uninitialized in this function
+drivers/net/wireless/wl3501_cs.c:1686:19: warning: ‘threshold’ may be used uninitialized in this function
+drivers/net/wireless/wl3501_cs.c:1702:20: warning: ‘threshold’ may be used uninitialized in this function
+drivers/net/wireless/wl3501_cs.c:1719:23: warning: ‘txpow’ may be used uninitialized in this function
+drivers/net/wireless/wl3501_cs.c:1752:20: warning: ‘retry’ may be used uninitialized in this function
+drivers/net/wireless/wl3501_cs.c:1806:25: warning: ‘pwr_state’ may be used uninitialized in this function
+drivers/net/wireless/wl3501_cs.c:1383:24: warning: ‘value’ may be used uninitialized in this function
 
-diff --git a/WHENCE b/WHENCE
-index 3feac35..1b72160 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -1393,10 +1393,12 @@ Licence: Redistributable. See LICENCE.ralink-firmware.txt for details
- Driver: rt2800usb - Ralink RT2870, RT3070, RT3071, RT3072, RT5370 wireless MACs
- 
- File: rt2870.bin
-+Version: 36
- 
- Licence: Redistributable. See LICENCE.ralink-firmware.txt for details
- 
--Binary file supplied by Shiang Tu <shiang_tu@ralinktech.com>. Firmware Version 29
-+Binary file supplied originally by Shiang Tu <shiang_tu@ralinktech.com>, latest
-+from http://www.mediatek.com/en/downloads1/downloads/
- 
- --------------------------------------------------------------------------
- 
-diff --git a/rt2870.bin b/rt2870.bin
-index f1535d1eced0844d0aba9e65d188f769624c9fa4..9ddac4a4bb190770789b1fbd7e28cea0a6349854 100644
-GIT binary patch
-literal 8192
-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
-N^F&_)|NrHke*!^mhMoWb
+I could not figure out what exactly confuses gcc here, but splitting the
+wl3501_get_mib_value function into two helps the compiler to figure out
+that the variables are not actually used uninitialized, and makes it
+slightly clearer to a human reader what the function actually does and
+which parts of it are under the spinlock.
 
-delta 2149
-zcmchXe`p(J7{_z(U1HZX_I~BAO)e~rTheuNNq?}WaV@n!mQsgJ+q4xO8l*VNCS11U
-zA6>Vzv;U~fYu`DC8n#&!6toVv7A82!#z2HkEy(b%qvj?$WT*B(gf+f*S-Uh&r^5W>
-zF7Nw1-}^rIJa6tJwM*^w`FtLbwSa5@<T!8w;KYH`2b=-g`G60&#(?`3z|8^Y&mpVL
-z>%eItITaZi!(@?G^kJDG6uLY^eqT?1v5g{QRJ5Op4N$Q`Di)`vhA3s2ZWHOTB>nn6
-z=8^r3m|}NJ>`O9xe#&BTA`eQ@x94P$(PV;6Nt!ymB%<mVV1M@lJcN730lW-&!U#YP
-zdk71_0W4bBX0Qa>E@NJF|H#Jr0}`PImhv*Fy;1BVi=?t_6uSA-Z`bq@_yShN8Foc+
-zed5SrrI0FE{{WJmIsH++FCEFJx92|?nH{F>Q?l5Us@G;xel5%8^j-Sn`V+Dk(q^<Q
-zUwC`7k)jshX}qRj_zhm;%Bv#_C)zt?u~8k-jOux`R8S}hj}U(0oUvmy>0*iC!iiYW
-z5Ueu=1QNiPiA~r!c$WAShHdMe*^UKYhz-eNwK5byo>fYpZcfB%P6U2#dv7zxSh!OJ
-zmnq}MNiN{!q6zM?lNJj%GuhKQ+1oL>^GP*2YD?gNn}M18-m$uxXzuFA(J~E-1Z1#D
-zi7#tv=f!v>o2b~Zj4oVcvSF$6>#$^3cZ3%41qr(_9S%jUvjO1RY8(Ulfyr`)tbPj}
-zh!Tq8c?m4#Uk$*c<w3k98-|z4Ydgc)7KyoSfWi`yMZr*%n7wtJhFx^DBC!tL?dSzv
-zjU|5d_6P58ks?JdaIf9d+#*#Lg(R@X)clY5)aV&IX?AyAQv>nq-Q8$zpV{l|J#6Bc
-z4FDB$i%_?3>~cLNlY|ogRZI6{D5l0lTl#4uE7KMwj*IjmFO4+dZ6$slX+S}P1bbvK
-zqlB)Z)owUi@dglDryc7ZLaRD}21%d-LIiGc^ka+gpkph_!VewCfX@fNs@wvVO3(jv
-z@lBp=cr64PfwKvq&xEtl9Pj~m4-obM{x!gTc?$xb7>tlZdmD-=Fh~AaPhQ?eF)^yQ
-zpBfyX1_!CZICXT0`fiwhc$9utq>m@*OZ%7u`<YWI_PE4;BD0zS0%UV%5HtYi=G!2k
-zdBO;+fPjh?wi(I<0rfW^Fdj2LIlV63il^Jw=ky>{SSN45W+k@<5>ype5?_S`RaGd9
-zAkqCNNWA}-kkISygbA~s(@agl@*iO0%H1$w3RW?31)gQU4LBFoI-}La)X9xOeInPi
-zQ$MUEo;!4q=H_q2m%G4CW0`?-RxjY@;Z>{OhZ0?QAzbuOPO}Ep;F&Vq7+|x_dw2M7
-z2tL19c!}T-l<~Vr-sa`~3BDP@ho2~g4?lt6^De>A{QQ4pkK19g$L%oL<9fb?75|n!
-z$gY?@Zo0(pUb08%L+tT)wiTgA=vzUL&{u>WcUuv9Obr4{?+SW^9SA*dV#2h;TOq81
-W$5Xum9#0Sx?h$uv7K_F6V)hS!`6%E3
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
--- 
-2.5.5
+diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+index 13fd734b61ec..82d94f83b6b4 100644
+--- a/drivers/net/wireless/wl3501_cs.c
++++ b/drivers/net/wireless/wl3501_cs.c
+@@ -378,8 +378,7 @@ static int wl3501_esbq_exec(struct wl3501_card *this, void *sig, int sig_size)
+ 	return rc;
+ }
+ 
+-static int wl3501_get_mib_value(struct wl3501_card *this, u8 index,
+-				void *bf, int size)
++static int wl3501_request_mib(struct wl3501_card *this, u8 index, void *bf)
+ {
+ 	struct wl3501_get_req sig = {
+ 		.sig_id	    = WL3501_SIG_GET_REQ,
+@@ -395,20 +394,32 @@ static int wl3501_get_mib_value(struct wl3501_card *this, u8 index,
+ 			wl3501_set_to_wla(this, ptr, &sig, sizeof(sig));
+ 			wl3501_esbq_req(this, &ptr);
+ 			this->sig_get_confirm.mib_status = 255;
+-			spin_unlock_irqrestore(&this->lock, flags);
+-			rc = wait_event_interruptible(this->wait,
+-				this->sig_get_confirm.mib_status != 255);
+-			if (!rc)
+-				memcpy(bf, this->sig_get_confirm.mib_value,
+-				       size);
+-			goto out;
++			rc = 0;
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&this->lock, flags);
+-out:
++
+ 	return rc;
+ }
+ 
++static int wl3501_get_mib_value(struct wl3501_card *this, u8 index,
++				void *bf, int size)
++{
++	int rc;
++
++	rc = wl3501_request_mib(this, index, bf);
++	if (rc)
++		return rc;
++
++	rc = wait_event_interruptible(this->wait,
++		this->sig_get_confirm.mib_status != 255);
++	if (rc)
++		return rc;
++
++	memcpy(bf, this->sig_get_confirm.mib_value, size);
++	return 0;
++}
++
+ static int wl3501_pwr_mgmt(struct wl3501_card *this, int suspend)
+ {
+ 	struct wl3501_pwr_mgmt_req sig = {
 
