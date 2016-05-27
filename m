@@ -1,67 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:63805 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754371AbcEPTYL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2016 15:24:11 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 3/6] wil6210: protect wil_vring_fini_tx in parallel to tx completions
-Date: Mon, 16 May 2016 22:23:32 +0300
-Message-Id: <1463426615-15523-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160516_212423_128059_992A033C)
-In-Reply-To: <1463426615-15523-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1463426615-15523-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from lists.s-osg.org ([54.187.51.154]:55271 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932125AbcE0OSj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2016 10:18:39 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Xinming Hu <huxm@marvell.com>,
+	Javier Martinez Canillas <javier@osg.samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 0/8] mwifiex: Fix some error handling issues in mwifiex_sdio_probe() function
+Date: Fri, 27 May 2016 10:18:14 -0400
+Message-Id: <1464358702-19083-1-git-send-email-javier@osg.samsung.com> (sfid-20160527_162207_056165_4192266A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-napi_synchronize is called before releasing the vring, with the
-assumption that setting txdata->enabled to 0 will prevent handling
-of this vring in the next scheduled napi.
-To guarantee this assumption, a memory barrier is added after disabling
-the txdata.
-In addition, as the ctx is zeroed in wil_tx_complete after this
-descriptor is handled (protected by wmb), ctx needs to be checked
-before releasing this descriptor in wil_vring_free.
+Hello,
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/txrx.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+While booting a system with a mwifiex WiFi card, I noticed the following
+missleading error message:
 
-diff --git a/drivers/net/wireless/ath/wil6210/txrx.c b/drivers/net/wireless/ath/wil6210/txrx.c
-index 3909af1..483e063 100644
---- a/drivers/net/wireless/ath/wil6210/txrx.c
-+++ b/drivers/net/wireless/ath/wil6210/txrx.c
-@@ -184,6 +184,13 @@ static void wil_vring_free(struct wil6210_priv *wil, struct vring *vring,
- 					&vring->va[vring->swtail].tx;
- 
- 			ctx = &vring->ctx[vring->swtail];
-+			if (!ctx) {
-+				wil_dbg_txrx(wil,
-+					     "ctx(%d) was already completed\n",
-+					     vring->swtail);
-+				vring->swtail = wil_vring_next_tail(vring);
-+				continue;
-+			}
- 			*d = *_d;
- 			wil_txdesc_unmap(dev, d, ctx);
- 			if (ctx->skb)
-@@ -975,6 +982,13 @@ void wil_vring_fini_tx(struct wil6210_priv *wil, int id)
- 	txdata->dot1x_open = false;
- 	txdata->enabled = 0; /* no Tx can be in progress or start anew */
- 	spin_unlock_bh(&txdata->lock);
-+	/* napi_synchronize waits for completion of the current NAPI but will
-+	 * not prevent the next NAPI run.
-+	 * Add a memory barrier to guarantee that txdata->enabled is zeroed
-+	 * before napi_synchronize so that the next scheduled NAPI will not
-+	 * handle this vring
-+	 */
-+	wmb();
- 	/* make sure NAPI won't touch this vring */
- 	if (test_bit(wil_status_napi_en, wil->status))
- 		napi_synchronize(&wil->napi_tx);
+[  12.480042] mwifiex_sdio mmc2:0001:1: sdio platform data not available
+
+This error only applies to platforms that define a child node for the SDIO
+device, but it's currently shown even in platforms that don't have a child
+node defined.
+
+So this series fixes this issue and others I found in the .probe function
+(mostly related to error handling and the error path) while looking at it.
+
+Best regards,
+Javier
+
+
+Javier Martinez Canillas (8):
+  mwifiex: only call mwifiex_sdio_probe_of() if dev has an OF node
+  mwifiex: propagate sdio_enable_func() errno code in
+    mwifiex_sdio_probe()
+  mwifiex: propagate mwifiex_add_card() errno code in
+    mwifiex_sdio_probe()
+  mwifiex: consolidate mwifiex_sdio_probe() error paths
+  mwifiex: use dev_err() instead of pr_err() in mwifiex_sdio_probe()
+  mwifiex: check if mwifiex_sdio_probe_of() fails and return error
+  mwifiex: don't print an error if an optional DT property is missing
+  mwifiex: use better message and error code when OF node doesn't match
+
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 46 ++++++++++++++++++-----------
+ 1 file changed, 28 insertions(+), 18 deletions(-)
+
 -- 
-1.8.5.2
+2.5.5
 
