@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58598 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbcEKR4L convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:56:11 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: pull-request: iwlwifi-next 2016-05-10
-References: <1462910585.25219.7.camel@coelho.fi>
-Date: Wed, 11 May 2016 20:56:05 +0300
-In-Reply-To: <1462910585.25219.7.camel@coelho.fi> (Luca Coelho's message of
-	"Tue, 10 May 2016 23:03:05 +0300")
-Message-ID: <87lh3geax6.fsf@kamboji.qca.qualcomm.com> (sfid-20160511_195614_732630_57A221C8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from lists.s-osg.org ([54.187.51.154]:55278 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932125AbcE0OSo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2016 10:18:44 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Xinming Hu <huxm@marvell.com>,
+	Javier Martinez Canillas <javier@osg.samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 1/8] mwifiex: only call mwifiex_sdio_probe_of() if dev has an OF node
+Date: Fri, 27 May 2016 10:18:15 -0400
+Message-Id: <1464358702-19083-2-git-send-email-javier@osg.samsung.com> (sfid-20160527_162153_307335_E6DD1D98)
+In-Reply-To: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+SDIO is an auto enumerable bus so the SDIO devices are matched using the
+sdio_device_id table and not using compatible strings from a OF id table.
 
-> Here's another pull request that we would like to get into 4.7, if
-> possible.  I know it's a bit late, I was trying to send it out earlier,
-> but it took me much longer time than I expected.  I hope it can still
-> make it.
->
-> We're mostly continuing work that we already started in 4.6 and
-> cleaning things up and bugfixing.  I also merged mac80211-next and
-> iwlwifi-fixes because I had some dependencies that where applied there.
->
-> Let me know if anything is wrong.  As you know, I'm starting to send
-> pull requests again after a long break, so the chances that I did
-> something wrong are higher than usual. ;)
->
-> Thanks!
->
-> The following changes since commit 57fbcce37be7c1d2622b56587c10ade00e96afa3:
->
->   cfg80211: remove enum ieee80211_band (2016-04-12 15:56:15 +0200)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-05-10
+However, commit ce4f6f0c353b ("mwifiex: add platform specific wakeup
+interrupt support") allowed to match nodes defined as child of the SDIO
+host controller in the probe function using a compatible string to setup
+platform specific parameters in the DT.
 
-All looks good :) Pulled, thanks.
+The problem is that the OF parse function is always called regardless if
+the SDIO dev has an OF node associated or not, and prints an error if it
+is not found. So, on a platform that doesn't have a node for a SDIO dev,
+the following misleading error message will be printed:
 
+[  12.480042] mwifiex_sdio mmc2:0001:1: sdio platform data not available
+
+Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+---
+
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index bdc51ffd43ec..285b1b68f7e9 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -102,8 +102,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
+ 	struct mwifiex_plt_wake_cfg *cfg;
+ 	int ret;
+ 
+-	if (!dev->of_node ||
+-	    !of_match_node(mwifiex_sdio_of_match_table, dev->of_node)) {
++	if (!of_match_node(mwifiex_sdio_of_match_table, dev->of_node)) {
+ 		dev_err(dev, "sdio platform data not available\n");
+ 		return -1;
+ 	}
+@@ -189,7 +188,8 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 	}
+ 
+ 	/* device tree node parsing and platform specific configuration*/
+-	mwifiex_sdio_probe_of(&func->dev, card);
++	if (func->dev.of_node)
++		mwifiex_sdio_probe_of(&func->dev, card);
+ 
+ 	if (mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
+ 			     MWIFIEX_SDIO)) {
 -- 
-Kalle Valo
+2.5.5
+
