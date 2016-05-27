@@ -1,115 +1,234 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40788 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752482AbcEJUaJ (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:37839 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755453AbcE0UBL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 16:30:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Tue, 10 May 2016 23:06:13 +0300
-Message-Id: <1462910797-20303-17-git-send-email-luca@coelho.fi> (sfid-20160510_223101_630856_4517E204)
-In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
-References: <1462910585.25219.7.camel@coelho.fi>
- <1462910797-20303-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 17/41] iwlwifi: wake from runtime suspend before sending sync commands
+	Fri, 27 May 2016 16:01:11 -0400
+Received: by mail-wm0-f47.google.com with SMTP id z87so5001889wmh.0
+        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2016 13:01:10 -0700 (PDT)
+Subject: Re: [RFCv2] brcmfmac: Add tracepoints for bcmdhd-dissector tool
+To: Mikael Kanstrup <mikael.kanstrup@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <CACZXzRAVUoStnsBfAsPipangkPmXjUg4vYxENMEb15tnYjxk-g@mail.gmail.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <af9e3eac-ac88-56e0-d35c-61a781bdef54@broadcom.com> (sfid-20160527_220115_725824_3723E1D1)
+Date: Fri, 27 May 2016 22:01:02 +0200
+MIME-Version: 1.0
+In-Reply-To: <CACZXzRAVUoStnsBfAsPipangkPmXjUg4vYxENMEb15tnYjxk-g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+On 27-5-2016 16:24, Mikael Kanstrup wrote:
+> Add hexdump tracepoints to be used bcmdhd-dissector:
+>   https://github.com/kanstrup/bcmdhd-dissector
+> 
+> bcmdhd-dissector is a Wireshark LUA plugin dissector used to decode
+> protocol data between the brcmfmac driver and the wifi chip firmware.
+> This includes decoding firmware command requests and responses as
+> well as events and even tx/rx data interleaved if the data_dump
+> tracepoint is enabled.
 
-If a host command was queued while in runtime suspend, it would go out
-before the D0I3_END_CMD was sent.  Sometimes it works, but sometimes
-it fails, and it is obviously the wrong thing to do.
+I really don't know what to think of this. Adding tracepoints that do
+perform a memcpy() makes me want to push back. Also there are already
+tracepoints that capture bus protocol data. So I think it is better to
+see if you can use those and use the trace-cmd plugin to add ether
+header encapsulation. I have looked at your patch so there are some
+comments below.
 
-To fix this, have the opmode take a reference before sending a SYNC
-command and make the pcie trans wait for the runtime state to become
-active before actually queueing the command.
+> Signed-off-by: Mikael Kanstrup <mikael.kanstrup@gmail.com>
+> ---
+> v2:
+> - Add description of bcmdhd-dissector as suggested by Rafał
+> - Fix tx/rx data dump.
+> - Fix tx data dump on USB interface.
+> 
+> Also updated the github project page with some screenshots.
+> 
+>  .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    |  4 ++
+>  .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |  2 +
+>  .../wireless/broadcom/brcm80211/brcmfmac/core.c    |  1 +
+>  .../wireless/broadcom/brcm80211/brcmfmac/debug.c   | 54 ++++++++++++++++++++++
+>  .../wireless/broadcom/brcm80211/brcmfmac/debug.h   | 15 ++++++
+>  .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    |  2 +
+>  .../broadcom/brcm80211/brcmfmac/tracepoint.h       | 33 +++++++++++++
+>  .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |  3 ++
+>  8 files changed, 114 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+> index 6af658e..197942c 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+> @@ -134,6 +134,8 @@ brcmf_proto_bcdc_msg(struct brcmf_pub *drvr, int
+> ifidx, uint cmd, void *buf,
+>   if (len > BRCMF_TX_IOCTL_MAX_MSG_SIZE)
+>   len = BRCMF_TX_IOCTL_MAX_MSG_SIZE;
+> 
+> + brcmf_dbg_dissect_dump(BRCMF_DISSECT_IOCTL, 1, &bcdc->msg, len);
+> +
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c   |  8 +++++++-
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c     | 11 +++++++++++
- 4 files changed, 20 insertions(+), 1 deletion(-)
+Not sure what happened but your indentation has gone bonkers. Better fix it.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 362a546..513a8540 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1309,6 +1309,7 @@ static ssize_t iwl_dbgfs_d0i3_refs_read(struct file *file,
- 	PRINT_MVM_REF(IWL_MVM_REF_PROTECT_CSA);
- 	PRINT_MVM_REF(IWL_MVM_REF_FW_DBG_COLLECT);
- 	PRINT_MVM_REF(IWL_MVM_REF_INIT_UCODE);
-+	PRINT_MVM_REF(IWL_MVM_REF_SENDING_CMD);
- 
- 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 72c0467..23d7539 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -301,6 +301,7 @@ enum iwl_mvm_ref_type {
- 	IWL_MVM_REF_PROTECT_CSA,
- 	IWL_MVM_REF_FW_DBG_COLLECT,
- 	IWL_MVM_REF_INIT_UCODE,
-+	IWL_MVM_REF_SENDING_CMD,
- 
- 	/* update debugfs.c when changing this */
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index f0ffd62..eb41d3b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -90,11 +90,17 @@ int iwl_mvm_send_cmd(struct iwl_mvm *mvm, struct iwl_host_cmd *cmd)
- 	 * the mutex, this ensures we don't try to send two
- 	 * (or more) synchronous commands at a time.
- 	 */
--	if (!(cmd->flags & CMD_ASYNC))
-+	if (!(cmd->flags & CMD_ASYNC)) {
- 		lockdep_assert_held(&mvm->mutex);
-+		if (!(cmd->flags & CMD_SEND_IN_IDLE))
-+			iwl_mvm_ref(mvm, IWL_MVM_REF_SENDING_CMD);
-+	}
- 
- 	ret = iwl_trans_send_cmd(mvm->trans, cmd);
- 
-+	if (!(cmd->flags & (CMD_ASYNC | CMD_SEND_IN_IDLE)))
-+		iwl_mvm_unref(mvm, IWL_MVM_REF_SENDING_CMD);
-+
- 	/*
- 	 * If the caller wants the SKB, then don't hide any problems, the
- 	 * caller might access the response buffer which will be NULL if
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index e2eb130d..d6beac9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -32,6 +32,7 @@
- #include <linux/ieee80211.h>
- #include <linux/slab.h>
- #include <linux/sched.h>
-+#include <linux/pm_runtime.h>
- #include <net/ip6_checksum.h>
- #include <net/tso.h>
- 
-@@ -1799,6 +1800,16 @@ static int iwl_pcie_send_hcmd_sync(struct iwl_trans *trans,
- 	IWL_DEBUG_INFO(trans, "Setting HCMD_ACTIVE for command %s\n",
- 		       iwl_get_cmd_string(trans, cmd->id));
- 
-+	if (pm_runtime_suspended(&trans_pcie->pci_dev->dev)) {
-+		ret = wait_event_timeout(trans_pcie->d0i3_waitq,
-+				 pm_runtime_active(&trans_pcie->pci_dev->dev),
-+				 msecs_to_jiffies(IWL_TRANS_IDLE_TIMEOUT));
-+		if (!ret) {
-+			IWL_ERR(trans, "Timeout exiting D0i3 before hcmd\n");
-+			return -ETIMEDOUT;
-+		}
-+	}
-+
- 	cmd_idx = iwl_pcie_enqueue_hcmd(trans, cmd);
- 	if (cmd_idx < 0) {
- 		ret = cmd_idx;
--- 
-2.8.1
+>   /* Send request */
+>   return brcmf_bus_txctl(drvr->bus_if, (unsigned char *)&bcdc->msg, len);
+>  }
+> @@ -152,6 +154,8 @@ static int brcmf_proto_bcdc_cmplt(struct brcmf_pub
+> *drvr, u32 id, u32 len)
+>   break;
+>   } while (BCDC_DCMD_ID(le32_to_cpu(bcdc->msg.flags)) != id);
+> 
+> + brcmf_dbg_dissect_dump(BRCMF_DISSECT_IOCTL, 0, &bcdc->msg, len);
+> +
+>   return ret;
+>  }
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> index da0cdd3..1dc91ea 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+> @@ -782,6 +782,8 @@ int brcmf_sdiod_send_pkt(struct brcmf_sdio_dev *sdiodev,
+>   addr, skb);
+>   if (err)
+>   break;
+> + brcmf_dbg_dissect_data_dump(skb->data + 0x1a,
+> +    skb->len - 0x1a);
 
+Better come up with a reasonable define for that 0x1a value. Just seems
+like the wrong place to put the trace. Why not in core.c in the
+.start_xmit() callback or can this call sleep?
+
+>   }
+>   else
+>   err = brcmf_sdiod_sglist_rw(sdiodev, SDIO_FUNC_2, true, addr,
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index ff825cd..3415170 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -548,6 +548,7 @@ void brcmf_rx_frame(struct device *dev, struct sk_buff *skb)
+> 
+>   /* process and remove protocol-specific header */
+>   ret = brcmf_proto_hdrpull(drvr, true, skb, &ifp);
+> + brcmf_dbg_dissect_data_dump(skb->data, skb->len);
+
+Again the wrong place. Better put it just before netif_rx() call.
+
+>   if (ret || !ifp || !ifp->ndev) {
+>   if (ret != -ENODATA && ifp)
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> index e64557c..d0b078a 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.c
+> @@ -24,6 +24,7 @@
+>  #include "bus.h"
+>  #include "fweh.h"
+>  #include "debug.h"
+> +#include "tracepoint.h"
+> 
+>  static struct dentry *root_folder;
+> 
+> @@ -109,3 +110,56 @@ int brcmf_debugfs_add_entry(struct brcmf_pub
+> *drvr, const char *fn,
+>   drvr->dbgfs_dir, read_fn);
+>   return PTR_ERR_OR_ZERO(e);
+>  }
+> +
+> +static u8 brcmf_dbg_dump_buf[0x0e + BRCMF_DCMD_MAXLEN];
+
+Don't use a global. There are people out there who have more than one
+brcmfmac device running on their system.
+
+> +int brcmf_dbg_dissect_dump(int type, int tx, void *data, int len)
+
+just make this function void as you only return 0 below in every
+possible code path.
+
+> +{
+> + /* These are ethernet headers with ethertype BC01, BC02, BC03 */
+> + static const u8 event_hdr[] = {
+> + 0xfc, 0xff, 0xff, 0xff, 0xff, 0xff,
+> + 0x00, 0x01, 0x01, 0x01, 0x01, 0x01,
+> + 0xbc, 0x01 };
+> + static const u8 ioctl_out_hdr[] = {
+> + 0x00, 0x01, 0x01, 0x01, 0x01, 0x01,
+> + 0xfc, 0xff, 0xff, 0xff, 0xff, 0xff,
+> + 0xbc, 0x02 };
+> + static const u8 ioctl_in_hdr[] = {
+> + 0xfc, 0xff, 0xff, 0xff, 0xff, 0xff,
+> + 0x00, 0x01, 0x01, 0x01, 0x01, 0x01,
+> + 0xbc, 0x03 };
+> + const u8 *hdr;
+> +
+> + if (!trace_brcmf_dissect_hexdump_enabled())
+> + return 0;
+> +
+> + switch (type) {
+> + case BRCMF_DISSECT_IOCTL:
+> + hdr = tx ? ioctl_out_hdr : ioctl_in_hdr;
+> + break;
+> + case BRCMF_DISSECT_EVENT:
+> + /* If data dump is enabled all events will be
+> + * logged through data path so don't do it here
+> + */
+> + if (trace_brcmf_dissect_data_hexdump_enabled())
+> + return 0;
+> + hdr = event_hdr;
+> + break;
+> + default:
+> + return -EINVAL;
+> + }
+> +
+> + memcpy(brcmf_dbg_dump_buf, hdr, 0x0e);
+
+Is 0x0e maybe same as ETH_HLEN?
+
+> + memcpy(brcmf_dbg_dump_buf + 0x0e, data, len);
+> + trace_brcmf_dissect_hexdump(brcmf_dbg_dump_buf, len + 0x0e);
+> + return 0;
+> +}
+> +
+> +int brcmf_dbg_dissect_data_dump(void *data, int len)
+
+make it void.
+
+> +{
+> + if (!trace_brcmf_dissect_data_hexdump_enabled())
+> + return 0;
+> +
+> + trace_brcmf_dissect_data_hexdump(data, len);
+> + return 0;
+> +}
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> index 6687812..b889db8 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/debug.h
+> @@ -41,6 +41,9 @@
+>  #define BRCMF_PCIE_VAL 0x00080000
+>  #define BRCMF_FWCON_VAL 0x00100000
+> 
+> +#define BRCMF_DISSECT_IOCTL 0
+> +#define BRCMF_DISSECT_EVENT 1
+> +
+>  /* set default print format */
+>  #undef pr_fmt
+>  #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+> @@ -116,6 +119,8 @@ void brcmf_debug_detach(struct brcmf_pub *drvr);
+>  struct dentry *brcmf_debugfs_get_devdir(struct brcmf_pub *drvr);
+>  int brcmf_debugfs_add_entry(struct brcmf_pub *drvr, const char *fn,
+>      int (*read_fn)(struct seq_file *seq, void *data));
+> +int brcmf_dbg_dissect_dump(int type, int tx, void *data, int len);
+> +int brcmf_dbg_dissect_data_dump(void *data, int len);
+
+just make it void functions.
+
+Regards,
+Arend
