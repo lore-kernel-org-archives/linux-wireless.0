@@ -1,8 +1,8 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:55303 "EHLO lists.s-osg.org"
+Received: from lists.s-osg.org ([54.187.51.154]:55285 "EHLO lists.s-osg.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932802AbcE0OTW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 10:19:22 -0400
+	id S932125AbcE0OS4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2016 10:18:56 -0400
 From: Javier Martinez Canillas <javier@osg.samsung.com>
 To: linux-kernel@vger.kernel.org
 Cc: Xinming Hu <huxm@marvell.com>,
@@ -11,37 +11,52 @@ Cc: Xinming Hu <huxm@marvell.com>,
 	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org,
 	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH 7/8] mwifiex: don't print an error if an optional DT property is missing
-Date: Fri, 27 May 2016 10:18:21 -0400
-Message-Id: <1464358702-19083-8-git-send-email-javier@osg.samsung.com> (sfid-20160527_162018_239085_C9439BCC)
+Subject: [PATCH 3/8] mwifiex: propagate mwifiex_add_card() errno code in mwifiex_sdio_probe()
+Date: Fri, 27 May 2016 10:18:17 -0400
+Message-Id: <1464358702-19083-4-git-send-email-javier@osg.samsung.com> (sfid-20160527_162133_765756_9FA4B362)
 In-Reply-To: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
 References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt DT
-binding document say that the "interrupts" property in the child node is
-optional. So the property being missed shouldn't be treated as an error.
+There's only a check if mwifiex_add_card() returned a nonzero value, but
+the actual error code is neither stored nor propagated to the caller. So
+instead of always returning -1 (which is -EPERM and not a suitable errno
+code in this case), propagate the value returned by mwifiex_add_card().
+
+Patch also removes the assignment of sdio_disable_func() returned value
+since it was overwritten anyways and what matters is to know the error
+value returned by the first function that failed.
 
 Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 ---
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 1c17e624547a..8b3292eaecb2 100644
+index ab64507c84e1..81003fbe5025 100644
 --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
 +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -114,7 +114,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 	if (cfg && card->plt_of_node) {
- 		cfg->irq_wifi = irq_of_parse_and_map(card->plt_of_node, 0);
- 		if (!cfg->irq_wifi) {
--			dev_err(dev,
-+			dev_dbg(dev,
- 				"fail to parse irq_wifi from device tree\n");
- 		} else {
- 			ret = devm_request_irq(dev, cfg->irq_wifi,
+@@ -191,14 +191,14 @@ mwifiex_sdio_probe(struct sdio_func *func, const struct sdio_device_id *id)
+ 	if (func->dev.of_node)
+ 		mwifiex_sdio_probe_of(&func->dev, card);
+ 
+-	if (mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
+-			     MWIFIEX_SDIO)) {
++	ret = mwifiex_add_card(card, &add_remove_card_sem, &sdio_ops,
++			       MWIFIEX_SDIO);
++	if (ret) {
+ 		pr_err("%s: add card failed\n", __func__);
+ 		kfree(card);
+ 		sdio_claim_host(func);
+-		ret = sdio_disable_func(func);
++		sdio_disable_func(func);
+ 		sdio_release_host(func);
+-		ret = -1;
+ 	}
+ 
+ 	return ret;
 -- 
 2.5.5
 
