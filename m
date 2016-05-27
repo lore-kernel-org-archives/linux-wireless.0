@@ -1,41 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39890 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751853AbcEDGUJ (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:42111 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932456AbcE0IuR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 4 May 2016 02:20:09 -0400
-Date: Wed, 4 May 2016 09:19:54 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Intel Linux Wireless <linuxwifi@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Sara Sharon <sara.sharon@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>,
-	Golan Ben-Ami <golan.ben.ami@intel.com>,
-	Moshe Harel <moshe.harel@intel.com>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] iwlwifi: mvm: silence unintialized variable warning
-Message-ID: <20160504061954.GD22064@mwanda> (sfid-20160504_082018_402266_72B57710)
+	Fri, 27 May 2016 04:50:17 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V5] brcmfmac: print errors if creating interface fails
+Date: Fri, 27 May 2016 10:49:51 +0200
+Message-Id: <1464338991-8284-1-git-send-email-arend@broadcom.com> (sfid-20160527_105021_358526_9E57ECBF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"max_amsdu_len" isn't set if kstrtouint() fails.
+From: Rafał Miłecki <zajec5@gmail.com>
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+This is helpful for debugging. Without this all I was getting from "iw"
+command on failed creating of P2P interface was:
+> command failed: Too many open files in system (-23)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 362a546..cb8db23 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1020,6 +1020,8 @@ static ssize_t iwl_dbgfs_max_amsdu_len_write(struct iwl_mvm *mvm,
- 	int ret;
+Signed-off-by: Rafal Milecki <zajec5@gmail.com>
+[arend@broadcom.com: reduce error prints upon iface creation]
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+V2: s/in/if/ in commit message
+V3: Add one more error message as suggested by Arend
+V4: Also update brcmf_cfg80211_add_iface & print error for AP
+V5: remove error prints from p2p.c
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 12 ++++++++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      |  2 --
+ 2 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index d0631b6..64ed003 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -671,18 +671,26 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
+ 		wdev = brcmf_ap_add_vif(wiphy, name, flags, params);
+ 		if (!IS_ERR(wdev))
+ 			brcmf_cfg80211_update_proto_addr_mode(wdev);
+-		return wdev;
++		break;
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 	case NL80211_IFTYPE_P2P_GO:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		wdev = brcmf_p2p_add_vif(wiphy, name, name_assign_type, type, flags, params);
+ 		if (!IS_ERR(wdev))
+ 			brcmf_cfg80211_update_proto_addr_mode(wdev);
+-		return wdev;
++		break;
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 	default:
+ 		return ERR_PTR(-EINVAL);
+ 	}
++
++	if (IS_ERR(wdev))
++		brcmf_err("add iface %s type %d failed: err=%d\n",
++			  name, type, PTR_ERR(wdev));
++	else
++		brcmf_cfg80211_update_proto_addr_mode(wdev);
++
++	return wdev;
+ }
  
- 	ret = kstrtouint(buf, 0, &max_amsdu_len);
-+	if (ret)
-+		return ret;
+ static void brcmf_scan_config_mpc(struct brcmf_if *ifp, int mpc)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index a70cda6..a812381 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2030,8 +2030,6 @@ static int brcmf_p2p_request_p2p_if(struct brcmf_p2p_info *p2p,
  
- 	if (max_amsdu_len > IEEE80211_MAX_MPDU_LEN_VHT_11454)
- 		return -EINVAL;
+ 	err = brcmf_fil_iovar_data_set(ifp, "p2p_ifadd", &if_request,
+ 				       sizeof(if_request));
+-	if (err)
+-		return err;
+ 
+ 	return err;
+ }
+-- 
+1.9.1
+
