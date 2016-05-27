@@ -1,59 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:34848 "EHLO
-	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbcE0XYs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43237 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753187AbcE0PwS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 19:24:48 -0400
+	Fri, 27 May 2016 11:52:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Mikael Kanstrup <mikael.kanstrup@gmail.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: Re: [RFCv2] brcmfmac: Add tracepoints for bcmdhd-dissector tool
+References: <CACZXzRAVUoStnsBfAsPipangkPmXjUg4vYxENMEb15tnYjxk-g@mail.gmail.com>
+Date: Fri, 27 May 2016 18:52:11 +0300
+In-Reply-To: <CACZXzRAVUoStnsBfAsPipangkPmXjUg4vYxENMEb15tnYjxk-g@mail.gmail.com>
+	(Mikael Kanstrup's message of "Fri, 27 May 2016 16:24:35 +0200")
+Message-ID: <87oa7r4hxw.fsf@kamboji.qca.qualcomm.com> (sfid-20160527_175222_312733_1BB31F06)
 MIME-Version: 1.0
-In-Reply-To: <1464384685-347275-1-git-send-email-arnd@arndb.de>
-References: <1464384685-347275-1-git-send-email-arnd@arndb.de>
-Date: Fri, 27 May 2016 16:24:47 -0700
-Message-ID: <CA+55aFw_SZ7nydXMQKcaQJmYy1=pCg7S6mUgHJGyfGvNoRgoRg@mail.gmail.com> (sfid-20160528_012512_754205_AA825DE0)
-Subject: Re: [PATCH] remove lots of IS_ERR_VALUE abuses
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Linux Kbuild mailing list <linux-kbuild@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Andrzej Hajda <a.hajda@samsung.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	David Airlie <airlied@linux.ie>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-	Russell King <linux@armlinux.org.uk>,
-	Bob Peterson <rpeterso@redhat.com>,
-	Linux ACPI <linux-acpi@vger.kernel.org>,
-	"open list:AMD IOMMU (AMD-VI)" <iommu@lists.linux-foundation.org>,
-	Linux Media Mailing List <linux-media@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	V9FS Developers <v9fs-developer@lists.sourceforge.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 27, 2016 at 2:23 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+Mikael Kanstrup <mikael.kanstrup@gmail.com> writes:
+
+> Add hexdump tracepoints to be used bcmdhd-dissector:
+>   https://github.com/kanstrup/bcmdhd-dissector
 >
-> This patch changes all users of IS_ERR_VALUE() that I could find
-> on 32-bit ARM randconfig builds and x86 allmodconfig. For the
-> moment, this doesn't change the definition of IS_ERR_VALUE()
-> because there are probably still architecture specific users
-> elsewhere.
+> bcmdhd-dissector is a Wireshark LUA plugin dissector used to decode
+> protocol data between the brcmfmac driver and the wifi chip firmware.
+> This includes decoding firmware command requests and responses as
+> well as events and even tx/rx data interleaved if the data_dump
+> tracepoint is enabled.
+>
+> Signed-off-by: Mikael Kanstrup <mikael.kanstrup@gmail.com>
+> ---
+> v2:
+> - Add description of bcmdhd-dissector as suggested by Rafał
+> - Fix tx/rx data dump.
+> - Fix tx data dump on USB interface.
+>
+> Also updated the github project page with some screenshots.
 
-Patch applied with the fixups from Al Viro edited in.
+The patch looks corrupted, did you use git-send-email?
 
-I also ended up removing a few other users (due to the vm_brk()
-interface), and then made IS_ERR_VALUE() do the "void *" cast so that
-integer use of a non-pointer size should now complain.
+$ git am -s -3 mikael.mbox
+Applying: brcmfmac: Add tracepoints for bcmdhd-dissector tool
+fatal: corrupt patch at line 31
 
-It works for me and has no new warnings in my allmodconfig build, and
-with your ARM work that is presumably clean too. But other
-architectures may see new warnings.
+You can test this yourself by downloading the mbox patchwork (or mailing
+it to you directly) and trying apply it to your tree:
 
-People who got affected by this should check their subsystem code for
-the changes.
+https://patchwork.kernel.org/patch/9138515/
 
-              Linus
+-- 
+Kalle Valo
