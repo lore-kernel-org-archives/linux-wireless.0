@@ -1,37 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39683 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751497AbcELIXk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2016 04:23:40 -0400
-Message-ID: <1463041415.13313.6.camel@sipsolutions.net> (sfid-20160512_102344_060290_65B98E09)
-Subject: Re: [PATCH] mac80211: Get ethtool-stats frequency more often.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Thu, 12 May 2016 10:23:35 +0200
-In-Reply-To: <1462835537-11268-1-git-send-email-greearb@candelatech.com> (sfid-20160510_012230_890700_A6E8AB88)
-References: <1462835537-11268-1-git-send-email-greearb@candelatech.com>
-	 (sfid-20160510_012230_890700_A6E8AB88)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34562 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755355AbcE0Txy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 27 May 2016 15:53:54 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 4.7 FIX] brcmfmac: fix lockup when removing P2P interface after event timeout
+Date: Fri, 27 May 2016 21:53:14 +0200
+Message-Id: <1464378815-23282-1-git-send-email-zajec5@gmail.com> (sfid-20160527_215418_108795_F62BF39C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+Removing P2P interface is handled by sending a proper request to the
+firmware. On success firmware triggers an event and driver's handler
+removes a matching interface.
 
-I'm confused about the subject - "more often"?
+However on event timeout we remove interface directly from the cfg80211
+callback. Current code doesn't handle this case correctly as it always
+assumes rtnl to be unlocked.
 
-> Some NICs (ath9k_htc) don't use chanctx_conf, it
-> seems, so look at local->hw.conf.channel->center_freq
-> in that case.
+Fix it by adding an extra rtnl_locked parameter to functions and calling
+unregister_netdevice when needed.
 
-It shouldn't matter whether or not the *driver* (not NIC anyway) uses
-that structure - mac80211 uses it throughout internally. As such, this
-doesn't really make sense.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 29 +++++++++++++---------
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    |  2 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |  4 +--
+ 5 files changed, 22 insertions(+), 17 deletions(-)
 
-I also think that your patch is wrong because it causes a driver that
-doesn't report information for the current channel to still have a non-
-zero frequency, so userspace won't be able to tell if there's any data
-or not.
-
-johannes
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 62f475e..ef09382 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5364,7 +5364,7 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
+ 		brcmf_dbg(CONN, "AP mode link down\n");
+ 		complete(&cfg->vif_disabled);
+ 		if (ifp->vif->mbss)
+-			brcmf_remove_interface(ifp);
++			brcmf_remove_interface(ifp, false);
+ 		return 0;
+ 	}
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index b590499..7f8ba48c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -548,12 +548,16 @@ fail:
+ 	return -EBADE;
+ }
+ 
+-static void brcmf_net_detach(struct net_device *ndev)
++static void brcmf_net_detach(struct net_device *ndev, bool rtnl_locked)
+ {
+-	if (ndev->reg_state == NETREG_REGISTERED)
+-		unregister_netdev(ndev);
+-	else
++	if (ndev->reg_state == NETREG_REGISTERED) {
++		if (rtnl_locked)
++			unregister_netdevice(ndev);
++		else
++			unregister_netdev(ndev);
++	} else {
+ 		brcmf_cfg80211_free_netdev(ndev);
++	}
+ }
+ 
+ void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on)
+@@ -651,7 +655,7 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
+ 			brcmf_err("ERROR: netdev:%s already exists\n",
+ 				  ifp->ndev->name);
+ 			netif_stop_queue(ifp->ndev);
+-			brcmf_net_detach(ifp->ndev);
++			brcmf_net_detach(ifp->ndev, false);
+ 			drvr->iflist[bsscfgidx] = NULL;
+ 		} else {
+ 			brcmf_dbg(INFO, "netdev:%s ignore IF event\n",
+@@ -699,7 +703,8 @@ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
+ 	return ifp;
+ }
+ 
+-static void brcmf_del_if(struct brcmf_pub *drvr, s32 bsscfgidx)
++static void brcmf_del_if(struct brcmf_pub *drvr, s32 bsscfgidx,
++			 bool rtnl_locked)
+ {
+ 	struct brcmf_if *ifp;
+ 
+@@ -729,7 +734,7 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bsscfgidx)
+ 			cancel_work_sync(&ifp->multicast_work);
+ 			cancel_work_sync(&ifp->ndoffload_work);
+ 		}
+-		brcmf_net_detach(ifp->ndev);
++		brcmf_net_detach(ifp->ndev, rtnl_locked);
+ 	} else {
+ 		/* Only p2p device interfaces which get dynamically created
+ 		 * end up here. In this case the p2p module should be informed
+@@ -743,14 +748,14 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bsscfgidx)
+ 	}
+ }
+ 
+-void brcmf_remove_interface(struct brcmf_if *ifp)
++void brcmf_remove_interface(struct brcmf_if *ifp, bool rtnl_locked)
+ {
+ 	if (!ifp || WARN_ON(ifp->drvr->iflist[ifp->bsscfgidx] != ifp))
+ 		return;
+ 	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d, ifidx=%d\n", ifp->bsscfgidx,
+ 		  ifp->ifidx);
+ 	brcmf_fws_del_interface(ifp);
+-	brcmf_del_if(ifp->drvr, ifp->bsscfgidx);
++	brcmf_del_if(ifp->drvr, ifp->bsscfgidx, rtnl_locked);
+ }
+ 
+ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
+@@ -1081,9 +1086,9 @@ fail:
+ 		brcmf_fws_deinit(drvr);
+ 	}
+ 	if (ifp)
+-		brcmf_net_detach(ifp->ndev);
++		brcmf_net_detach(ifp->ndev, false);
+ 	if (p2p_ifp)
+-		brcmf_net_detach(p2p_ifp->ndev);
++		brcmf_net_detach(p2p_ifp->ndev, false);
+ 	drvr->iflist[0] = NULL;
+ 	drvr->iflist[1] = NULL;
+ 	if (drvr->settings->ignore_probe_fail)
+@@ -1152,7 +1157,7 @@ void brcmf_detach(struct device *dev)
+ 
+ 	/* make sure primary interface removed last */
+ 	for (i = BRCMF_MAX_IFS-1; i > -1; i--)
+-		brcmf_remove_interface(drvr->iflist[i]);
++		brcmf_remove_interface(drvr->iflist[i], false);
+ 
+ 	brcmf_cfg80211_detach(drvr->config);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 647d3cc..5c5a392 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -216,7 +216,7 @@ struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx);
+ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
+ struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
+ 			      bool is_p2pdev, char *name, u8 *mac_addr);
+-void brcmf_remove_interface(struct brcmf_if *ifp);
++void brcmf_remove_interface(struct brcmf_if *ifp, bool rtnl_locked);
+ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr);
+ void brcmf_txflowblock_if(struct brcmf_if *ifp,
+ 			  enum brcmf_netif_stop_reason reason, bool state);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index b390561..9da7a4c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -183,7 +183,7 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+ 	err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
+ 
+ 	if (ifp && ifevent->action == BRCMF_E_IF_DEL)
+-		brcmf_remove_interface(ifp);
++		brcmf_remove_interface(ifp, false);
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index a70cda6..c4dc6be 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2290,7 +2290,7 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 			err = 0;
+ 	}
+ 	if (err)
+-		brcmf_remove_interface(vif->ifp);
++		brcmf_remove_interface(vif->ifp, true);
+ 
+ 	brcmf_cfg80211_arm_vif_event(cfg, NULL);
+ 	if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
+@@ -2396,7 +2396,7 @@ void brcmf_p2p_detach(struct brcmf_p2p_info *p2p)
+ 	if (vif != NULL) {
+ 		brcmf_p2p_cancel_remain_on_channel(vif->ifp);
+ 		brcmf_p2p_deinit_discovery(p2p);
+-		brcmf_remove_interface(vif->ifp);
++		brcmf_remove_interface(vif->ifp, false);
+ 	}
+ 	/* just set it all to zero */
+ 	memset(p2p, 0, sizeof(*p2p));
+-- 
+1.8.4.5
 
