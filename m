@@ -1,47 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:36254 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753608AbcEBKsX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:41420 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751800AbcE1IX6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2016 06:48:23 -0400
-Received: by mail-pa0-f65.google.com with SMTP id i5so17651828pag.3
-        for <linux-wireless@vger.kernel.org>; Mon, 02 May 2016 03:48:23 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 6/7] staging: wilc1000: change data type of result in handle_get_mac_address
-Date: Mon,  2 May 2016 19:47:54 +0900
-Message-Id: <1462186075-8549-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160502_124826_502998_F4C74784)
-In-Reply-To: <1462186075-8549-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1462186075-8549-1-git-send-email-chaehyun.lim@gmail.com>
+	Sat, 28 May 2016 04:23:58 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: wifi: ath6kl: simplify logical condition
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1463531057-12917-1-git-send-email-xypron.glpk@gmx.de>
+To: Heinrich Schuchardt <xypron.glpk@gmx.de>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Message-ID: <01f13acfb14a475abc4a9b3c4b5a578b@euamsexm01a.eu.qualcomm.com> (sfid-20160528_102426_175530_07B5EA37)
+Date: Sat, 28 May 2016 10:23:50 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes data type of result variable from s32 to int. result
-is used to get return value from wilc_send_config_pkt that has return
-type of int.
+Heinrich Schuchardt <xypron.glpk@gmx.de> wrote:
+> x <= 7 implies x < 8.
+> 
+> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks, 1 patch applied to ath.git:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 23bbaa8..71d6b66 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -401,7 +401,7 @@ static void handle_get_ip_address(struct wilc_vif *vif, u8 idx)
- static void handle_get_mac_address(struct wilc_vif *vif,
- 				   struct get_mac_addr *get_mac_addr)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct wid wid;
- 
- 	wid.id = (u16)WID_MAC_ADDR;
+93b4a09f0f30 ath6kl: simplify logical condition
+
 -- 
-2.8.2
+Sent by pwcli
+https://patchwork.kernel.org/patch/9115691/
 
