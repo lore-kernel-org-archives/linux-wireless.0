@@ -1,82 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:36956 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751347AbcELVhi (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:35325 "EHLO
+	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752848AbcE2Vk2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 12 May 2016 17:37:38 -0400
-Received: by mail-wm0-f52.google.com with SMTP id a17so85581wme.0
-        for <linux-wireless@vger.kernel.org>; Thu, 12 May 2016 14:37:37 -0700 (PDT)
-Subject: Re: [PATCH v2] brcmfmac: add fallback for devices that do not report
- per-chain values
-To: Jaap Jan Meijer <jjmeijer88@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <CAA+NYvRvVXF0-x9s8qDBaL0_Weuin5+CAsZXZu5Wt+_M1FGMWw@mail.gmail.com>
- <1463070308-30789-1-git-send-email-jjmeijer88@gmail.com>
-Cc: kvalo@codeaurora.org, brcm80211-dev-list@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5734F79F.1020703@broadcom.com> (sfid-20160512_233742_277652_D677ABB4)
-Date: Thu, 12 May 2016 23:37:35 +0200
+	Sun, 29 May 2016 17:40:28 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH next] brcmfmac: don't remove interface on link down firmware event
+Date: Sun, 29 May 2016 23:39:28 +0200
+Message-Id: <1464557989-20003-1-git-send-email-zajec5@gmail.com> (sfid-20160529_234101_245230_277F49A9)
 MIME-Version: 1.0
-In-Reply-To: <1463070308-30789-1-git-send-email-jjmeijer88@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12-05-16 18:25, Jaap Jan Meijer wrote:
-> If brcmf_cfg80211_get_station fails to determine the RSSI from the
-> per-chain values get the value individually as a fallback.
-> 
-> Fixes: 1f0dc59a6de9 ("brcmfmac: rework .get_station() callback")
+There are two firmware events we handle similarly in brcmfmac:
+BRCMF_E_LINK and BRCMF_E_IF. The difference from firmware point of view
+is that the first one means BSS remains present in the firmware. Trying
+to (re)create it (e.g. when adding new virtual interface) will result in
+an error.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Jaap Jan Meijer <jjmeijer88@gmail.com>
-> ---
-> change log:
-> v2:
->  - remove beacon period and dtim, these values are obtained differently
->  - add reverence to fixed commit
-> ---
->  .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c  | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index d5c2a27..e19847c 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -2480,12 +2480,14 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
->  			   const u8 *mac, struct station_info *sinfo)
->  {
->  	struct brcmf_if *ifp = netdev_priv(ndev);
-> +	struct brcmf_scb_val_le scb_val;
->  	s32 err = 0;
->  	struct brcmf_sta_info_le sta_info_le;
->  	u32 sta_flags;
->  	u32 is_tdls_peer;
->  	s32 total_rssi;
->  	s32 count_rssi;
-> +	int rssi;
->  	u32 i;
->  
->  	brcmf_dbg(TRACE, "Enter, MAC %pM\n", mac);
-> @@ -2569,6 +2571,20 @@ brcmf_cfg80211_get_station(struct wiphy *wiphy, struct net_device *ndev,
->  			sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
->  			total_rssi /= count_rssi;
->  			sinfo->signal = total_rssi;
-> +		} else if (test_bit(BRCMF_VIF_STATUS_CONNECTED,
-> +			&ifp->vif->sme_state)) {
-> +			memset(&scb_val, 0, sizeof(scb_val));
-> +			err = brcmf_fil_cmd_data_get(ifp, BRCMF_C_GET_RSSI,
-> +						     &scb_val, sizeof(scb_val));
-> +			if (err) {
-> +				brcmf_err("Could not get rssi (%d)\n", err);
-> +				goto done;
-> +			} else {
-> +				rssi = le32_to_cpu(scb_val.val);
-> +				sinfo->filled |= BIT(NL80211_STA_INFO_SIGNAL);
-> +				sinfo->signal = rssi;
-> +				brcmf_dbg(CONN, "RSSI %d dBm\n", rssi);
-> +			}
->  		}
->  	}
->  done:
-> 
+Current code treats both events in a similar way. It removes Linux
+interface for each of them. It works OK with e.g. BCM43602. Its firmware
+generates both events for each interface. It means we get BRCMF_E_LINK
+and remove interface. That is soon followed by BRCMF_E_IF which means
+BSS was also removed in a firmware. The only downside of this is a
+harmless error like:
+[  208.643180] brcmfmac: brcmf_fweh_call_event_handler: no interface object
+
+Unfortunately BCM4366 firmware doesn't automatically remove BSS and so
+it doesn't generate BRCMF_E_IF. In such case we incorrectly remove Linux
+interface on BRCMF_E_LINK as BSS is still present in the firmware. It
+results in an error when trying to re-create virtual interface, e.g.:
+> iw phy phy1 interface add wlan1-1 type __ap
+[ 3602.929199] brcmfmac: brcmf_ap_add_vif: timeout occurred
+command failed: I/O error (-5)
+
+With this patch we don't remove Linux interface while firmware keeps
+BSS. Thanks to this we keep a consistent states of host driver and
+device firmware.
+
+Further improvement should be to mark BSS as disabled and remove
+interface on BRCMF_E_LINK. Then we should add support for reusing
+BSS-es.
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 38df1be..26ff0f4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5439,8 +5439,6 @@ brcmf_notify_connect_status_ap(struct brcmf_cfg80211_info *cfg,
+ 	    ndev != cfg_to_ndev(cfg)) {
+ 		brcmf_dbg(CONN, "AP mode link down\n");
+ 		complete(&cfg->vif_disabled);
+-		if (ifp->vif->mbss)
+-			brcmf_remove_interface(ifp);
+ 		return 0;
+ 	}
+ 
+-- 
+1.8.4.5
+
