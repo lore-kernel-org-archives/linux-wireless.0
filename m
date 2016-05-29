@@ -1,48 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58134 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753436AbcEaNZu (ORCPT
+Received: from mailout1.hostsharing.net ([83.223.95.204]:54000 "EHLO
+	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932135AbcE2K7R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2016 09:25:50 -0400
-Date: Tue, 31 May 2016 18:55:38 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] iw: Add support for NL80211_STA_INFO_RX_DURATION
- netlink attribute
-Message-ID: <20160531132538.GA3146@atheros-ThinkPad-T61> (sfid-20160531_152554_868925_EBABC2D6)
-References: <1460039420-5418-1-git-send-email-mohammed@qti.qualcomm.com>
- <1464687668.3076.1.camel@sipsolutions.net>
+	Sun, 29 May 2016 06:59:17 -0400
+Date: Sun, 29 May 2016 13:02:48 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>
+Cc: linux-wlan-client-support-list@broadcom.com, 1332647@gmail.com,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: Re: BCM4331 reset leads to wl lockup
+Message-ID: <20160529110248.GA12632@wunner.de> (sfid-20160529_125936_343540_FBCE1B7E)
+References: <20160526121210.GA7006@wunner.de>
+ <20160526144246.217bfff1@wiggum>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1464687668.3076.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20160526144246.217bfff1@wiggum>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 31, 2016 at 11:41:08AM +0200, Johannes Berg wrote:
-> On Thu, 2016-04-07 at 20:00 +0530, Mohammed Shafi Shajakhan wrote:
-> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> > 
-> > Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'.
-> > 'NL80211_STA_INFO_RX_DURATION' accounts for aggregate PPDU duration
-> > in microseconds for all the frames from a peer. Drivers can fill
-> > 'rx_duration' field and set the flag 'NL80211_STA_INFO_RX_DURATION'.
-> > 'rx_duration' will give an idea about the total time spent by our
-> > peer
-> > with each of its connected peers.
-> > 
-> > This will get dumped as part of 'iw dev wlan#N station dump'
-> > 
-> Applied.
+On Thu, May 26, 2016 at 02:42:46PM +0200, Michael Büsch wrote:
+> On Thu, 26 May 2016 14:12:10 +0200 Lukas Wunner <lukas@wunner.de> wrote:
+> > +	mmio = early_ioremap(addr, BCM4331_MMIO_SIZE);
+> > +	if (!mmio) {
+> > +		pr_err("Cannot iomap Apple AirPort card\n");
+> > +		return;
+> > +	}
+> > +	pr_info("Resetting Apple AirPort card\n");
+> > +	iowrite32(BCMA_RESET_CTL_RESET,
+> > +		  mmio + (1 * BCMA_CORE_SIZE) + BCMA_RESET_CTL);
+> > +	early_iounmap(mmio, BCM4331_MMIO_SIZE);
 > 
-> It's easier for me if you don't send nl80211.h changes in iw patches,
-> but I can deal with just removing those too.
-
-[shafi] sure Johannes, next time i will sending nl80211.h changes
-
+> Just writing that bit is not the correct reset procedure.
+> So it might cause problems depending on how wl does the core reset
+> later.
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please try this:
+> - wait for BCMA_RESET_ST to be 0
+> - set reset bit
+> - flush
+> - wait 1us
+> - reset reset bit
+> - flush
+> - wait 10us
+> 
+> See bcma_core_disable()
+
+It turned out that the lockups are triggered by bec3cfdca36b
+("net: skb_segment() provides list head and tail") in Linux 3.18
+and that Eric Duzamet has kindly provided a fix for broadcom-sta:
+https://bugs.gentoo.org/show_bug.cgi?id=523326#c24
+https://523326.bugs.gentoo.org/attachment.cgi?id=393374
+
+@Broadcom: Please consider releasing a new driver version which
+incorporates that patch. The latest version 6.30.223.271 of your
+driver is still missing it even though the issue has existed for
+almost 18 months now.
+
+Nevertheless I amended my patch to follow the reset procedure you
+specified above, just to cover all bases. Thanks Michael.
+
+Best regards,
+
+Lukas
