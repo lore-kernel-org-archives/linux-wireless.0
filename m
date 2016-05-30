@@ -1,88 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:34896 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932463AbcE0JP3 (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:38048 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752561AbcE3J5J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 27 May 2016 05:15:29 -0400
-Received: by mail-pa0-f43.google.com with SMTP id fy7so22013412pac.2
-        for <linux-wireless@vger.kernel.org>; Fri, 27 May 2016 02:15:28 -0700 (PDT)
-Subject: Re: [PATCH V5] brcmfmac: print errors if creating interface fails
-To: Julian Calaby <julian.calaby@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>
-References: <1464338991-8284-1-git-send-email-arend@broadcom.com>
- <CAGRGNgWi+q=771XzQHz5dO4af0ySWc+fLWGM32HjWTXe8wMs2w@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <d95e2130-f60c-1d1a-1c77-fd9bceee5da0@broadcom.com> (sfid-20160527_111541_638721_B656CF5D)
-Date: Fri, 27 May 2016 11:15:19 +0200
+	Mon, 30 May 2016 05:57:09 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgWi+q=771XzQHz5dO4af0ySWc+fLWGM32HjWTXe8wMs2w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+Date: Mon, 30 May 2016 11:57:08 +0200
+Message-ID: <CAFqH_517amqPDVCpK3b=RFLumV1K1yU02f_bLp50iudCjnvoDw@mail.gmail.com> (sfid-20160530_115727_904267_7198FBF8)
+Subject: Re: [PATCH 0/8] mwifiex: Fix some error handling issues in
+ mwifiex_sdio_probe() function
+From: Enric Balletbo Serra <eballetbo@gmail.com>
+To: Javier Martinez Canillas <javier@osg.samsung.com>
+Cc: linux-kernel@vger.kernel.org, Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-5-2016 11:13, Julian Calaby wrote:
-> Hi Arend,
-> 
-> On Fri, May 27, 2016 at 6:49 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> From: Rafał Miłecki <zajec5@gmail.com>
->>
->> This is helpful for debugging. Without this all I was getting from "iw"
->> command on failed creating of P2P interface was:
->>> command failed: Too many open files in system (-23)
->>
->> Signed-off-by: Rafal Milecki <zajec5@gmail.com>
->> [arend@broadcom.com: reduce error prints upon iface creation]
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->> ---
->> V2: s/in/if/ in commit message
->> V3: Add one more error message as suggested by Arend
->> V4: Also update brcmf_cfg80211_add_iface & print error for AP
->> V5: remove error prints from p2p.c
->> ---
->>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 12 ++++++++++--
->>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      |  2 --
->>  2 files changed, 10 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> index d0631b6..64ed003 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> @@ -671,18 +671,26 @@ static struct wireless_dev *brcmf_cfg80211_add_iface(struct wiphy *wiphy,
->>                 wdev = brcmf_ap_add_vif(wiphy, name, flags, params);
->>                 if (!IS_ERR(wdev))
->>                         brcmf_cfg80211_update_proto_addr_mode(wdev);
->> -               return wdev;
->> +               break;
->>         case NL80211_IFTYPE_P2P_CLIENT:
->>         case NL80211_IFTYPE_P2P_GO:
->>         case NL80211_IFTYPE_P2P_DEVICE:
->>                 wdev = brcmf_p2p_add_vif(wiphy, name, name_assign_type, type, flags, params);
->>                 if (!IS_ERR(wdev))
->>                         brcmf_cfg80211_update_proto_addr_mode(wdev);
->> -               return wdev;
->> +               break;
->>         case NL80211_IFTYPE_UNSPECIFIED:
->>         default:
->>                 return ERR_PTR(-EINVAL);
->>         }
->> +
->> +       if (IS_ERR(wdev))
->> +               brcmf_err("add iface %s type %d failed: err=%d\n",
->> +                         name, type, PTR_ERR(wdev));
->> +       else
->> +               brcmf_cfg80211_update_proto_addr_mode(wdev);
-> 
-> Doesn't this now get called twice?
+Hi Javier,
 
-I already had it fixed in my editor, but forgot the 'git commit' step
-:-( Anyway, I noticed it reading back the patch email and hence there is
-already a V6.
+2016-05-27 16:18 GMT+02:00 Javier Martinez Canillas <javier@osg.samsung.com>:
+> Hello,
+>
+> While booting a system with a mwifiex WiFi card, I noticed the following
+> missleading error message:
+>
+> [  12.480042] mwifiex_sdio mmc2:0001:1: sdio platform data not available
+>
+> This error only applies to platforms that define a child node for the SDIO
+> device, but it's currently shown even in platforms that don't have a child
+> node defined.
+>
+> So this series fixes this issue and others I found in the .probe function
+> (mostly related to error handling and the error path) while looking at it.
+>
 
-Regards,
-Arend
+The patches looks good to me and tested on my Veyron Chromebook, so
+for all this series:
 
-> Thanks,
-> 
+Tested-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+
+Thanks,
+  Enric
+
+> Best regards,
+> Javier
+>
+>
+> Javier Martinez Canillas (8):
+>   mwifiex: only call mwifiex_sdio_probe_of() if dev has an OF node
+>   mwifiex: propagate sdio_enable_func() errno code in
+>     mwifiex_sdio_probe()
+>   mwifiex: propagate mwifiex_add_card() errno code in
+>     mwifiex_sdio_probe()
+>   mwifiex: consolidate mwifiex_sdio_probe() error paths
+>   mwifiex: use dev_err() instead of pr_err() in mwifiex_sdio_probe()
+>   mwifiex: check if mwifiex_sdio_probe_of() fails and return error
+>   mwifiex: don't print an error if an optional DT property is missing
+>   mwifiex: use better message and error code when OF node doesn't match
+>
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 46 ++++++++++++++++++-----------
+>  1 file changed, 28 insertions(+), 18 deletions(-)
+>
+> --
+> 2.5.5
+>
