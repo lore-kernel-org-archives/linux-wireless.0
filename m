@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55499 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752542AbcEaMye (ORCPT
+Received: from mail-lf0-f51.google.com ([209.85.215.51]:36426 "EHLO
+	mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753988AbcE3GuU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2016 08:54:34 -0400
-Date: Tue, 31 May 2016 18:23:55 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	Sven Eckelmann <sven.eckelmann@open-mesh.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v1] ath10k: Fix 10.4 extended peer stats update
-Message-ID: <20160531125355.GA2911@atheros-ThinkPad-T61> (sfid-20160531_145437_805376_6538AF7A)
-References: <1462947870-17196-1-git-send-email-mohammed@qca.qualcomm.com>
- <6103547.auMgQrn60O@bentobox>
- <20160527090649.GA14846@atheros-ThinkPad-T61>
- <1464676666571.16234@qti.qualcomm.com>
- <87fusyeb6d.fsf@qca.qualcomm.com>
+	Mon, 30 May 2016 02:50:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87fusyeb6d.fsf@qca.qualcomm.com>
+In-Reply-To: <CAGRGNgVRJm3zSokQ2wxb8Kwd4UEzx7ZjRCHAmnA02cB89Usy-A@mail.gmail.com>
+References: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
+	<49c03996365360077fe7317d108072c30354b555.1464576022.git.kirtika.ruchandani@gmail.com>
+	<CAGRGNgVRJm3zSokQ2wxb8Kwd4UEzx7ZjRCHAmnA02cB89Usy-A@mail.gmail.com>
+Date: Sun, 29 May 2016 23:50:18 -0700
+Message-ID: <CAA-b7a8v8q5VnPxWw+o6Vj96KxeVhgfmZbre8+9rLRcB7-emyg@mail.gmail.com> (sfid-20160530_085028_455224_A73CB46E)
+Subject: Re: [PATCH v2 03/10] nl80211: Prefer ether_addr_copy
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tina Ruchandani <ruchandani.tina@gmail.com>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+> This looks right to me, but doesn't ether_addr_copy() have alignment
+> requirements? Could someone more familiar with that review these
+> changes to ensure they're met?
 
-On Tue, May 31, 2016 at 11:09:38AM +0000, Valo, Kalle wrote:
-> "Shajakhan, Mohammed Shafi (Mohammed Shafi)" <mohammed@qti.qualcomm.com>
-> writes:
-> > seems the change got merged in pending branch
-> > https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=master-pending&id=2a872321e07506e339fc1b3ca81aa3e88628cd6e
-> >
-> > Request if you can send the patch to address this(incase the patch cannot be dropped)
-> > and the v2 version cannot be picked
-> 
-> The pending branches (pending and pending-master) are just for build and
-> runtime testing, they can be freely modified or dropped. v2 is now in
-> pending branch and I'm looking at the patch right now.
->
+Thanks for catching this.
+The requirement is to be __aligned(2). I've added 4 instances of
+ether_addr_copy with 8 addresses as arguments.  Of these, the 4
+src arguments are really the same type (i.e. nla_data acting on a
+const nlattr*), so I'll try to reason about the 5 total cases below -
+1. cfg->dst_mac should be 16-bit aligned due to the layout of
+struct cfg80211_wowlan_tcp. Its offset is 10 or 12 bytes in the
+structure depending on the system.
+2 and 3. For mac_addr and mac_addr_mask, nl80211_parse_random_mac
+takes these in as u8* (and hence does not guarantee alignment?)
+Both the callers of this function today pass in arguments that are
+explicitly __aligned(2). But this cannot be said of future potential callers
+- so perhaps my patch introduces a bug?
+4. Based on struct cfg80211_acl_data, acl->mac_addrs[i] should be not
+guaranteed to be __aligned(2).
+5. For all the nla_data src arguments, the nla_data function returns
+((char*) foo + 5) for pointer foo. So likely not __aligned(2).
 
-[shafi] sure thanks for the clarification !
-
-regards,
-shafi
+Based on 3, 4 and 5, this patch should be revoked, but it would be nice
+to have a confirmation from someone else.
