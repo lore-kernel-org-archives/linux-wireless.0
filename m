@@ -1,60 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53949 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614AbcEKRCp (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:36897 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754087AbcE3Mfj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:45 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 15/21] ath10k: support CT firmware flag.
-Date: Wed, 11 May 2016 10:02:27 -0700
-Message-Id: <1462986153-16318-16-git-send-email-greearb@candelatech.com> (sfid-20160511_192231_580341_4C06002A)
-In-Reply-To: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+	Mon, 30 May 2016 08:35:39 -0400
+Received: by mail-wm0-f47.google.com with SMTP id z87so69716352wmh.0
+        for <linux-wireless@vger.kernel.org>; Mon, 30 May 2016 05:35:38 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87pos9dj2y.fsf@toke.dk>
+References: <87pos9dj2y.fsf@toke.dk>
+Date: Mon, 30 May 2016 14:35:37 +0200
+Message-ID: <CA+BoTQnzaE0hF7ja+BCT6-_WuMgG+e_Ln_G7PWh5TwHJ2ixVFA@mail.gmail.com> (sfid-20160530_143542_929226_D0C42902)
+Subject: Re: [Make-wifi-fast] [RFC] ath9k: Measure per-station airtime usage
+From: Michal Kazior <michal.kazior@tieto.com>
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	make-wifi-fast@lists.bufferbloat.net,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On 26 May 2016 at 15:50, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+> This is my attempt to add per-station airtime usage accounting to ath9k.
+> For now I just export it to a new debugfs entry, but my plan is to use
+> it to make (station) scheduling decisions. However, before attempting
+> that I would like some feedback from someone more familiar with the
+> ath9k than me as to whether this way of measuring airtime usage is
+> likely to give reasonable results.
+>
+> I realise that there's probably some things I'm missing, but an initial
+> test run indicates that the values are at least in the right ballpark (I
+> get a total of ~170k usecs of measured airtime per 200 ms sampling
+> interval when running three simultaneous TCP streams to three different
+> stations).
+>
+> So can anyone comment on whether I'm on the right track here? And
+> possibly provide some more detail as to what I'm missing and how to
+> remedy that?
+[...]
+>
+> +void ath_debug_tx_airtime(struct ath_softc *sc,
+> +                         struct ath_node *an,
+> +                         struct ath_tx_status *ts)
+> +{
+> +       struct ath_airtime_stats *astats;
+> +
+> +       rcu_read_lock();
+> +
+> +       astats = &an->airtime_stats;
+> +       astats->tx_airtime += ts->duration;
 
-Add placeholder so CT firmware can more easily co-exist with upstream
-kernel.  CT firmware should be backwards compatible with existing kernels,
-but it also has many new features.  Subsequent patches, if acceptable for
-upstream, can enable and further describe those features.
+I'm not ath9k expert but this seems to be oblivious to tx retries. The
+ts->duration is acquired from the last used tx rate for given frame.
+Or am I missing something?
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 1 +
- drivers/net/wireless/ath/ath10k/core.h | 3 +++
- 2 files changed, 4 insertions(+)
+I think you should use ts->ts_rateindex and ts->ts_longretry to factor
+in retries (see ath_tx_rc_status).
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index fa71d57..49c85c3 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -235,6 +235,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
- 	[ATH10K_FW_FEATURE_SUPPORTS_ADAPTIVE_CCA] = "adaptive-cca",
- 	[ATH10K_FW_FEATURE_MFP_SUPPORT] = "mfp",
- 	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] = "peer-flow-ctrl",
-+	[ATH10K_FW_FEATURE_WMI_10X_CT] = "wmi-10.x-CT",
- };
- 
- static unsigned int ath10k_core_get_fw_feature_str(char *buf,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index cb6aa8c..f9e3b20 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -566,6 +566,9 @@ enum ath10k_fw_features {
- 	 */
- 	ATH10K_FW_FEATURE_PEER_FLOW_CONTROL = 13,
- 
-+	/* Firmware from Candela Technologies, enables more VIFs, etc */
-+	ATH10K_FW_FEATURE_WMI_10X_CT = 31,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
--- 
-2.4.3
 
+Michał
