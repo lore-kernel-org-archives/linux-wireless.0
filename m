@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33414 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754474AbcEBRAs (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:33499 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751093AbcE3GGq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2016 13:00:48 -0400
-Subject: Re: [PATCH v2] rtlwifi: Fix logic error in enter/exit power-save mode
-To: Wang YanQing <udknight@gmail.com>, kvalo@codeaurora.org,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20160502163835.GA10925@udknight>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <572787BE.3040101@lwfinger.net> (sfid-20160502_190114_737303_7A889D8B)
-Date: Mon, 2 May 2016 12:00:46 -0500
+	Mon, 30 May 2016 02:06:46 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160502163835.GA10925@udknight>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <CAA-b7a_X=-Nk0CUD4ayssKB6nzDF9e7iWwD2gandxar-G35ZzA@mail.gmail.com>
+References: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
+ <80c4512b4c5ca1f26ecda9785a456c4d0cf4f937.1464576022.git.kirtika.ruchandani@gmail.com>
+ <CAGRGNgWYuEVnF7OG4GKJrnNNkn8DWaAor=ebbiwRbTZBP8qn5Q@mail.gmail.com> <CAA-b7a_X=-Nk0CUD4ayssKB6nzDF9e7iWwD2gandxar-G35ZzA@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 30 May 2016 16:06:26 +1000
+Message-ID: <CAGRGNgUbMQ5eh3aYdcRmoO7Qea_XTKzSXLYjf1NEAu6ZdJLPVg@mail.gmail.com> (sfid-20160530_080652_989701_EC15FB4D)
+Subject: Re: [PATCH v2 06/10] nl80211: Various checkpatch.pl spacing fixes
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tina Ruchandani <ruchandani.tina@gmail.com>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/02/2016 11:38 AM, Wang YanQing wrote:
-> In commit a269913c52ad ("rtlwifi: Rework rtl_lps_leave() and
-> rtl_lps_enter() to use work queue"), the tests for enter/exit
-> power-save mode were inverted. With this change applied, the
-> wifi connection becomes much more stable.
->
-> Fixes: a269913c52ad ("rtlwifi: Rework rtl_lps_leave() and rtl_lps_enter() to use work queue")
-> Signed-off-by: Wang YanQing <udknight@gmail.com>
-> CC: Stable <stable@vger.kernel.org> [3.10+]
-> ---
->   Hi, Larry!
->
->   Because commit a269913c52ad is the first commit bring this problem,
->   so maybe use above commit message is ok, right? And stable kernels
->   3.10-3.18 don't have commit fd09ff958777, but have a269913c52ad.
->
->   Thanks for suggestion concerning to good subject and commit message
->   writing, it is harder than coding sometimes:)
->
->   Changes:
->   v1-v2:
->   1: Fix subject and commit message.
+Hi Kirtika,
 
-Yes, I agree that the commit message is hard.
+On Mon, May 30, 2016 at 4:04 PM, Kirtika Ruchandani
+<kirtika.ruchandani@gmail.com> wrote:
+>> Adding the brackets around the & expression doesn't look spacing
+>> related to me. What's the exact warning this is fixing?
+>
+> From the commit message - "This patch also contains two hunks to fix
+> 'line over 80 characters',
+> that are spacing related". This is the second hunk, the first being
+> the comments in the nl80211_fam
+> definition. Should I resend with these two hunks omitted, or fix my wording?
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+That explains it, I missed that bit.
 
 Thanks,
 
-Larry
+-- 
+Julian Calaby
 
->
->   drivers/net/wireless/realtek/rtlwifi/base.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/base.c b/drivers/net/wireless/realtek/rtlwifi/base.c
-> index c74eb13..264466f 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/base.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/base.c
-> @@ -1660,9 +1660,9 @@ void rtl_watchdog_wq_callback(void *data)
->   		if (((rtlpriv->link_info.num_rx_inperiod +
->   		      rtlpriv->link_info.num_tx_inperiod) > 8) ||
->   		    (rtlpriv->link_info.num_rx_inperiod > 2))
-> -			rtl_lps_enter(hw);
-> -		else
->   			rtl_lps_leave(hw);
-> +		else
-> +			rtl_lps_enter(hw);
->   	}
->
->   	rtlpriv->link_info.num_rx_inperiod = 0;
->
-
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
