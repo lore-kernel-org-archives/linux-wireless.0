@@ -1,39 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:34397 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751208AbcEORri (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34951 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752073AbcE3FWq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 May 2016 13:47:38 -0400
-Received: by mail-io0-f173.google.com with SMTP id 190so186774004iow.1
-        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2016 10:47:38 -0700 (PDT)
-Date: Sun, 15 May 2016 13:47:05 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: andy <lgkbiti@163.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wifi driver crashes openwrt device
-Message-ID: <20160515174705.GA11620@localhost> (sfid-20160515_194744_335692_6F63CAB6)
-References: <loom.20160510T171307-937@post.gmane.org>
+	Mon, 30 May 2016 01:22:46 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <loom.20160510T171307-937@post.gmane.org>
+In-Reply-To: <cc580aa7b55b9546c71185b6b4e07aba00367e72.1464576022.git.kirtika.ruchandani@gmail.com>
+References: <cover.1464576022.git.kirtika.ruchandani@gmail.com> <cc580aa7b55b9546c71185b6b4e07aba00367e72.1464576022.git.kirtika.ruchandani@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 30 May 2016 15:22:25 +1000
+Message-ID: <CAGRGNgVq-QcoofQtnOG19Xh=yK61N1oVuq2XSNyjJA65kL1wtQ@mail.gmail.com> (sfid-20160530_072253_848226_93E2A8C6)
+Subject: Re: [PATCH v2 05/10] nl80211: Fix checkpatch.pl NULL comparison warning
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tina Ruchandani <ruchandani.tina@gmail.com>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, May 10, 2016 at 03:17:25PM +0000, andy wrote:
-> hello, every body.
->   I developed an openwrt device based on git clone 
-> git://git.openwrt.org/15.05/openwrt.git.
->   I found that my device rebooted during wifi initializing sometimes, maybe 
-> one in twenty. 
->   The wifi driver is compat-wireless-2016-01-10.tar.bz2.
->   Could somebody give some hint or help me to resolve this wired issue?
->   Thank you very much.
+Hi All,
 
-Hi Andy,
+On Mon, May 30, 2016 at 12:52 PM, Kirtika Ruchandani
+<kirtika.ruchandani@gmail.com> wrote:
+> This patch fixes the warning - "comparison to NULL (foo == NULL)
+> could be written as (!foo)"
+>
+> Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
 
-You will probably need to capture a stack trace from the device in order
-for someone to be able to help, otherwise we can only guess.  A serial
-console can help with that.
+Looks right to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+Thanks,
+
+Julian Calaby
+
+> ---
+>  net/wireless/nl80211.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 945405d..11cbf0b 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -928,7 +928,7 @@ static struct ieee80211_channel *nl80211_get_valid_chan(struct wiphy *wiphy,
+>  {
+>         struct ieee80211_channel *chan;
+>
+> -       if (tb == NULL)
+> +       if (!tb)
+>                 return NULL;
+>         chan = ieee80211_get_channel(wiphy, nla_get_u32(tb));
+>         if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
+> @@ -8575,7 +8575,7 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+>                 if (band < 0 || band >= NUM_NL80211_BANDS)
+>                         return -EINVAL;
+>                 sband = rdev->wiphy.bands[band];
+> -               if (sband == NULL)
+> +               if (!sband)
+>                         return -EINVAL;
+>                 err = nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
+>                                 nla_len(tx_rates), nl80211_txattr_policy);
+> --
+> 2.8.0.rc3.226.g39d4020
+>
+
+
 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
