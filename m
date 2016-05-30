@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45285 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752603AbcERLWQ convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35014 "EHLO
+	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751121AbcE3FbU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 18 May 2016 07:22:16 -0400
-From: "Tribush, Gil" <gil.tribush@intel.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: [PATCH] iw: Change socket configuration to avoid buffer allocation
- error
-Date: Wed, 18 May 2016 11:22:10 +0000
-Message-ID: <9500D1AF62AEC945997ED710048926644CF4360C@HASMSX106.ger.corp.intel.com> (sfid-20160518_132221_431126_4FD2CD37)
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 30 May 2016 01:31:20 -0400
 MIME-Version: 1.0
+In-Reply-To: <637c25b980379d1a98d7c57cc247d49ef295cbc5.1464576022.git.kirtika.ruchandani@gmail.com>
+References: <cover.1464576022.git.kirtika.ruchandani@gmail.com> <637c25b980379d1a98d7c57cc247d49ef295cbc5.1464576022.git.kirtika.ruchandani@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 30 May 2016 15:30:59 +1000
+Message-ID: <CAGRGNgX0B-Px5r4-Ad7f4B3Q6UrY=aGLn9g4Xd+=kJoXWt-_dQ@mail.gmail.com> (sfid-20160530_073124_244013_58D6B212)
+Subject: Re: [PATCH v2 07/10] nl80211: Avoid multiple assignments on same line
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tina Ruchandani <ruchandani.tina@gmail.com>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move  nl_socket_set_buffer_size() to be called after genl_connect(),
-otherwise nl_socket_set_buffer_size() always returns an NLE_BAD_SOCK
-error because sk->s_fd is equal to -1 at that stage.
+Hi All,
 
-Signed-off-by: Gil Treibush <gil.tribush@intel.com>
----
-iw.c | 4 ++--
-1 file changed, 2 insertions(+), 2 deletions(-)
+On Mon, May 30, 2016 at 12:53 PM, Kirtika Ruchandani
+<kirtika.ruchandani@gmail.com> wrote:
+> This patch fixes the checkpatch.pl warning "multiple assignments
+> should be avoided."
+>
+> Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+
+I'm not sure I agree with checkpatch here, but this looks right to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+Thanks,
+
+Julian Calaby
 
 
-diff --git a/iw.c b/iw.c
-index 0f511d9..e3742cd 100644
---- a/iw.c
-+++ b/iw.c
-@@ -54,14 +54,14 @@ static int nl80211_init(struct nl80211_state *state)
- 		return -ENOMEM;
- 	}
- 
--	nl_socket_set_buffer_size(state->nl_sock, 8192, 8192);
--
- 	if (genl_connect(state->nl_sock)) {
- 		fprintf(stderr, "Failed to connect to generic netlink.\n");
- 		err = -ENOLINK;
- 		goto out_handle_destroy;
- 	}
- 
-+	nl_socket_set_buffer_size(state->nl_sock, 8192, 8192);
-+
- 	state->nl80211_id = genl_ctrl_resolve(state->nl_sock, "nl80211");
- 	if (state->nl80211_id < 0) {
- 		fprintf(stderr, "nl80211 not found.\n");
---
-1.9.1
----------------------------------------------------------------------
-A member of the Intel Corporation group of companies
+> ---
+>  net/wireless/nl80211.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index ad7cdce..6f8e2a7 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -2603,7 +2603,8 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+>
+>         memset(&params, 0, sizeof(params));
+>
+> -       otype = ntype = dev->ieee80211_ptr->iftype;
+> +       otype = dev->ieee80211_ptr->iftype;
+> +       ntype = dev->ieee80211_ptr->iftype;
+>
+>         if (info->attrs[NL80211_ATTR_IFTYPE]) {
+>                 ntype = nla_get_u32(info->attrs[NL80211_ATTR_IFTYPE]);
+> --
+> 2.8.0.rc3.226.g39d4020
+>
 
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
 
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
