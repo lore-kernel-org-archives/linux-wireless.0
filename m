@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58038 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbcEPLlT convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:35746 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753318AbcE3Ari (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 16 May 2016 07:41:19 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>
-Cc: Adrian Chadd <adrian@freebsd.org>, b43-dev@lists.infradead.org,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [b43] don't unconditionally fall back to CCK if the rate is 6MB OFDM.
-References: <CAJ-Vmom45Pb9X_1Zw6VdszZAiizZUUd=HbEFw0hFMmPFFSNbpQ@mail.gmail.com>
-	<20160515163217.2b75ba97@wiggum>
-Date: Mon, 16 May 2016 14:41:14 +0300
-In-Reply-To: <20160515163217.2b75ba97@wiggum> ("Michael \=\?utf-8\?Q\?B\=C3\=BCs\?\=
- \=\?utf-8\?Q\?ch\=22's\?\= message of
-	"Sun, 15 May 2016 16:32:17 +0200")
-Message-ID: <87k2iup6w5.fsf@purkki.adurom.net> (sfid-20160516_134123_434498_70931E19)
+	Sun, 29 May 2016 20:47:38 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAA-b7a8XwUqRLdvL2EFJWmNnD11+bdV856xYXFKSGNAwSbYwKg@mail.gmail.com>
+References: <cover.1464492195.git.kirtika.ruchandani@gmail.com>
+ <5c2861995f05d456b3ce16e29ceae7e578b1456f.1464492195.git.kirtika.ruchandani@gmail.com>
+ <CAGRGNgWMxU3qBsr0eu5cdAstu+s-0b9p1r-z5ZvkYejv2GtQLA@mail.gmail.com>
+ <CAA-b7a9QS+GqxrYhDFDbYmLGKPt=z_fP02KbsUfMPWLrqih76w@mail.gmail.com> <CAA-b7a8XwUqRLdvL2EFJWmNnD11+bdV856xYXFKSGNAwSbYwKg@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 30 May 2016 10:47:18 +1000
+Message-ID: <CAGRGNgU9sxYbMp0SaHwoZnDuLJs9yy_wsPKxPCED=E27zU5Hfw@mail.gmail.com> (sfid-20160530_024745_625996_54665546)
+Subject: Re: [PATCH 3/3] nl80211: Various checkpatch.pl fixes
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tina Ruchandani <ruchandani.tina@gmail.com>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Büsch <m@bues.ch> writes:
+Hi Kirtika,
 
-> In the final submission please send this to Kalle Valo and add [PATCH]
-> to the subject, so tools can pick this up.
+On Mon, May 30, 2016 at 10:44 AM, Kirtika Ruchandani
+<kirtika.ruchandani@gmail.com> wrote:
+>>> There's too much stuff here to quickly review, it'd be nice if you
+>>> could split this up into patches that do the following:
+>
+> Is it preferable to resend the whole patch-set or just patch 3/3 in
+> this one as a separate set?
 
-And remember to CC linux-wireless so that patchwork sees the patch. I
-skip the patches sent via email and only follow patchwork:
+Re-send the entire set, make sure you mark it as v2, include a
+changelog in the cover letter or below the "---" in the patches
+themselves, and don't forget to include the reviewed-bys for any
+unchanged patches.
 
-https://patchwork.kernel.org/project/linux-wireless/list/?state=*
+Thanks,
 
 -- 
-Kalle Valo
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
