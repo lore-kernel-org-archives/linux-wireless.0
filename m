@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:55223 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752002AbcESH7U (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35453 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751151AbcE3Fce (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 19 May 2016 03:59:20 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlegacy: avoid warning about missing braces
-Date: Thu, 19 May 2016 09:58:49 +0200
-Message-Id: <1463644741-529379-1-git-send-email-arnd@arndb.de> (sfid-20160519_095942_743679_0BBDCCBD)
+	Mon, 30 May 2016 01:32:34 -0400
+MIME-Version: 1.0
+In-Reply-To: <ca13e9bde679512a872e5136c177676d0238dc25.1464576022.git.kirtika.ruchandani@gmail.com>
+References: <cover.1464576022.git.kirtika.ruchandani@gmail.com> <ca13e9bde679512a872e5136c177676d0238dc25.1464576022.git.kirtika.ruchandani@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 30 May 2016 15:32:14 +1000
+Message-ID: <CAGRGNgXVvX2zjp7HjNsYJP=tSc3XM7O5sSXf9=8JmPdd20QJtw@mail.gmail.com> (sfid-20160530_073238_132811_9294CDCC)
+Subject: Re: [PATCH v2 10/10] nl80211: Prefer kcalloc over kzalloc
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tina Ruchandani <ruchandani.tina@gmail.com>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc-6 warns about code in il3945_hw_txq_ctx_free() being
-somewhat ambiguous:
+Hi All,
 
-drivers/net/wireless/intel/iwlegacy/3945.c:1022:5: warning: suggest explicit braces to avoid ambiguous 'else' [-Wparentheses]
+On Mon, May 30, 2016 at 12:54 PM, Kirtika Ruchandani
+<kirtika.ruchandani@gmail.com> wrote:
+> This patch fixes the checkpatch.pl warning -
+> "prefer kcalloc over kzalloc with multiply"
+>
+> Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
 
-This adds a set of curly braces to avoid the warning.
+Looks right to me.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/intel/iwlegacy/3945.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/3945.c b/drivers/net/wireless/intel/iwlegacy/3945.c
-index 7bcedbb53d94..209dc9988455 100644
---- a/drivers/net/wireless/intel/iwlegacy/3945.c
-+++ b/drivers/net/wireless/intel/iwlegacy/3945.c
-@@ -1019,12 +1019,13 @@ il3945_hw_txq_ctx_free(struct il_priv *il)
- 	int txq_id;
- 
- 	/* Tx queues */
--	if (il->txq)
-+	if (il->txq) {
- 		for (txq_id = 0; txq_id < il->hw_params.max_txq_num; txq_id++)
- 			if (txq_id == IL39_CMD_QUEUE_NUM)
- 				il_cmd_queue_free(il);
- 			else
- 				il_tx_queue_free(il, txq_id);
-+	}
- 
- 	/* free tx queue structure */
- 	il_free_txq_mem(il);
+Thanks,
+
+Julian Calaby
+
+
+> ---
+>  net/wireless/nl80211.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 46757af..2964406 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -9482,7 +9482,7 @@ static int nl80211_parse_wowlan_nd(struct cfg80211_registered_device *rdev,
+>         struct nlattr **tb;
+>         int err;
+>
+> -       tb = kzalloc(NUM_NL80211_ATTR * sizeof(*tb), GFP_KERNEL);
+> +       tb = kcalloc(NUM_NL80211_ATTR, sizeof(*tb), GFP_KERNEL);
+>         if (!tb)
+>                 return -ENOMEM;
+>
+> --
+> 2.8.0.rc3.226.g39d4020
+>
+
+
+
 -- 
-2.7.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
