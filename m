@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from michel.telenet-ops.be ([195.130.137.88]:44770 "EHLO
-	michel.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752229AbcEVJGs (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36639 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753188AbcE3Cwz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 22 May 2016 05:06:48 -0400
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH 33/54] MAINTAINERS: Add file patterns for wireless device tree bindings
-Date: Sun, 22 May 2016 11:06:10 +0200
-Message-Id: <1463907991-7916-34-git-send-email-geert@linux-m68k.org> (sfid-20160522_111720_591638_8E850C86)
-In-Reply-To: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
-References: <1463907991-7916-1-git-send-email-geert@linux-m68k.org>
+	Sun, 29 May 2016 22:52:55 -0400
+Date: Sun, 29 May 2016 19:52:48 -0700
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ruchandani.tina@gmail.com,
+	netdev@vger.kernel.org, Julian.Calaby@gmail.com
+Subject: [PATCH v2 05/10] nl80211: Fix checkpatch.pl NULL comparison warning
+Message-ID: <cc580aa7b55b9546c71185b6b4e07aba00367e72.1464576022.git.kirtika.ruchandani@gmail.com> (sfid-20160530_045301_636061_284850EA)
+References: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Submitters of device tree binding documentation may forget to CC
-the subsystem maintainer if this is missing.
+This patch fixes the warning - "comparison to NULL (foo == NULL)
+could be written as (!foo)"
 
-Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
+Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
 ---
-Please apply this patch directly if you want to be involved in device
-tree binding documentation for your subsystem.
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+ net/wireless/nl80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 7a9f1138131afcf1..604d5d4230406094 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8023,6 +8023,7 @@ Q:	http://patchwork.kernel.org/project/linux-wireless/list/
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git
- S:	Maintained
-+F:	Documentation/devicetree/bindings/net/wireless/
- F:	drivers/net/wireless/
- 
- NETXEN (1/10) GbE SUPPORT
--- 
-1.9.1
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 945405d..11cbf0b 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -928,7 +928,7 @@ static struct ieee80211_channel *nl80211_get_valid_chan(struct wiphy *wiphy,
+ {
+ 	struct ieee80211_channel *chan;
+
+-	if (tb == NULL)
++	if (!tb)
+ 		return NULL;
+ 	chan = ieee80211_get_channel(wiphy, nla_get_u32(tb));
+ 	if (!chan || chan->flags & IEEE80211_CHAN_DISABLED)
+@@ -8575,7 +8575,7 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 		if (band < 0 || band >= NUM_NL80211_BANDS)
+ 			return -EINVAL;
+ 		sband = rdev->wiphy.bands[band];
+-		if (sband == NULL)
++		if (!sband)
+ 			return -EINVAL;
+ 		err = nla_parse(tb, NL80211_TXRATE_MAX, nla_data(tx_rates),
+ 				nla_len(tx_rates), nl80211_txattr_policy);
+--
+2.8.0.rc3.226.g39d4020
 
