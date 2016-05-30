@@ -1,62 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35555 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751004AbcEJHMZ (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:35998 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753423AbcE3CzC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 03:12:25 -0400
-Date: Tue, 10 May 2016 12:42:14 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: greearb@candelatech.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 3/5] ath10k: Add WARN_ON if we over-write peer-map
- pointer.
-Message-ID: <20160510071214.GD25626@atheros-ThinkPad-T61> (sfid-20160510_091229_016229_BF2BD9BC)
-References: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
- <1459545132-11295-3-git-send-email-greearb@candelatech.com>
+	Sun, 29 May 2016 22:55:02 -0400
+Date: Sun, 29 May 2016 19:54:52 -0700
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ruchandani.tina@gmail.com,
+	netdev@vger.kernel.org, Julian.Calaby@gmail.com
+Subject: [PATCH v2 10/10] nl80211: Prefer kcalloc over kzalloc
+Message-ID: <ca13e9bde679512a872e5136c177676d0238dc25.1464576022.git.kirtika.ruchandani@gmail.com> (sfid-20160530_045517_961853_10E8370F)
+References: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1459545132-11295-3-git-send-email-greearb@candelatech.com>
+In-Reply-To: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+This patch fixes the checkpatch.pl warning -
+"prefer kcalloc over kzalloc with multiply"
 
-On Fri, Apr 01, 2016 at 02:12:10PM -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Not sure this can happen, but seems like a reasonable sanity
-> check.
+Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+---
+ net/wireless/nl80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[shafi] possibly if the peer is removed and the bit is not cleared in the driver
-? when the new peer occupies the slot
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 46757af..2964406 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -9482,7 +9482,7 @@ static int nl80211_parse_wowlan_nd(struct cfg80211_registered_device *rdev,
+ 	struct nlattr **tb;
+ 	int err;
 
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/txrx.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-> index a779a4e..2edef8a 100644
-> --- a/drivers/net/wireless/ath/ath10k/txrx.c
-> +++ b/drivers/net/wireless/ath/ath10k/txrx.c
-> @@ -309,6 +309,7 @@ void ath10k_peer_map_event(struct ath10k_htt *htt,
->  	ath10k_warn(ar, /*ATH10K_DBG_HTT,*/ "htt peer map vdev %d peer %pM id %d\n",
->  		   ev->vdev_id, ev->addr, ev->peer_id);
->  
-> +	WARN_ON(ar->peer_map[ev->peer_id] && (ar->peer_map[ev->peer_id] != peer));
->  	ar->peer_map[ev->peer_id] = peer;
->  	set_bit(ev->peer_id, peer->peer_ids);
->  exit:
-> -- 
-> 2.4.3
+-	tb = kzalloc(NUM_NL80211_ATTR * sizeof(*tb), GFP_KERNEL);
++	tb = kcalloc(NUM_NL80211_ATTR, sizeof(*tb), GFP_KERNEL);
+ 	if (!tb)
+ 		return -ENOMEM;
 
-regards,
-shafi
+--
+2.8.0.rc3.226.g39d4020
 
-> 
-> 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
