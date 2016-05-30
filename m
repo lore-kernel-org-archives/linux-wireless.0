@@ -1,110 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:35827 "EHLO
-	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756701AbcEEK65 (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:34373 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753258AbcE3Cyk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 5 May 2016 06:58:57 -0400
-Received: by mail-lf0-f54.google.com with SMTP id j8so91363278lfd.2
-        for <linux-wireless@vger.kernel.org>; Thu, 05 May 2016 03:58:56 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
-	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
-	apenwarr@gmail.com, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv4 5/5] mac80211: add debug knobs for codel
-Date: Thu,  5 May 2016 13:00:39 +0200
-Message-Id: <1462446039-1070-6-git-send-email-michal.kazior@tieto.com> (sfid-20160505_125900_847285_8503B645)
-In-Reply-To: <1462446039-1070-1-git-send-email-michal.kazior@tieto.com>
-References: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
- <1462446039-1070-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 29 May 2016 22:54:40 -0400
+Date: Sun, 29 May 2016 19:54:28 -0700
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, ruchandani.tina@gmail.com,
+	netdev@vger.kernel.org, Julian.Calaby@gmail.com
+Subject: [PATCH v2 09/10] nl80211: Fix checkpatch.pl warning
+Message-ID: <2b42b54b8128bb953569021ddadce77499859a79.1464576022.git.kirtika.ruchandani@gmail.com> (sfid-20160530_045451_322827_4DDB7B79)
+References: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a few debugfs entries to make it easier
-to test, debug and experiment.
+This patch fixes the checkpatch.pl warning "foo * bar should be
+foo *bar"
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
 ---
+ net/wireless/nl80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Notes:
-    v4:
-     * stats adjustments (in-kernel codel has more of them)
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c6d870e..46757af 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -12214,7 +12214,7 @@ void nl80211_send_ibss_bssid(struct cfg80211_registered_device *rdev,
+ }
 
- net/mac80211/debugfs.c | 40 ++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ void cfg80211_notify_new_peer_candidate(struct net_device *dev, const u8 *addr,
+-					const u8* ie, u8 ie_len, gfp_t gfp)
++					const u8 *ie, u8 ie_len, gfp_t gfp)
+ {
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+@@ -13362,7 +13362,7 @@ void cfg80211_tdls_oper_request(struct net_device *dev, const u8 *peer,
+ }
+ EXPORT_SYMBOL(cfg80211_tdls_oper_request);
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 43592b6f79f0..c7cfedc61fc4 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -124,6 +124,15 @@ static const struct file_operations name## _ops = {	\
- 	res;								\
- })
- 
-+#define DEBUGFS_RW_BOOL(arg)						\
-+({									\
-+	int res;							\
-+	int val;							\
-+	res = mac80211_parse_buffer(userbuf, count, ppos, "%d", &val);	\
-+	arg = !!(val);							\
-+	res;								\
-+})
-+
- DEBUGFS_READONLY_FILE(fq_flows_cnt, "%u",
- 		      local->fq.flows_cnt);
- DEBUGFS_READONLY_FILE(fq_backlog, "%u",
-@@ -132,6 +141,16 @@ DEBUGFS_READONLY_FILE(fq_overlimit, "%u",
- 		      local->fq.overlimit);
- DEBUGFS_READONLY_FILE(fq_collisions, "%u",
- 		      local->fq.collisions);
-+DEBUGFS_READONLY_FILE(codel_maxpacket, "%u",
-+		      local->cstats.maxpacket);
-+DEBUGFS_READONLY_FILE(codel_drop_count, "%u",
-+		      local->cstats.drop_count);
-+DEBUGFS_READONLY_FILE(codel_drop_len, "%u",
-+		      local->cstats.drop_len);
-+DEBUGFS_READONLY_FILE(codel_ecn_mark, "%u",
-+		      local->cstats.ecn_mark);
-+DEBUGFS_READONLY_FILE(codel_ce_mark, "%u",
-+		      local->cstats.ce_mark);
- 
- DEBUGFS_RW_FILE(fq_limit,
- 		DEBUGFS_RW_EXPR_FQ("%u", &local->fq.limit),
-@@ -139,6 +158,18 @@ DEBUGFS_RW_FILE(fq_limit,
- DEBUGFS_RW_FILE(fq_quantum,
- 		DEBUGFS_RW_EXPR_FQ("%u", &local->fq.quantum),
- 		"%u", local->fq.quantum);
-+DEBUGFS_RW_FILE(codel_interval,
-+		DEBUGFS_RW_EXPR_FQ("%u", &local->cparams.interval),
-+		"%u", local->cparams.interval);
-+DEBUGFS_RW_FILE(codel_target,
-+		DEBUGFS_RW_EXPR_FQ("%u", &local->cparams.target),
-+		"%u", local->cparams.target);
-+DEBUGFS_RW_FILE(codel_mtu,
-+		DEBUGFS_RW_EXPR_FQ("%u", &local->cparams.mtu),
-+		"%u", local->cparams.mtu);
-+DEBUGFS_RW_FILE(codel_ecn,
-+		DEBUGFS_RW_BOOL(local->cparams.ecn),
-+		"%d", local->cparams.ecn ? 1 : 0);
- 
- #ifdef CONFIG_PM
- static ssize_t reset_write(struct file *file, const char __user *user_buf,
-@@ -333,6 +364,15 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	DEBUGFS_ADD(fq_collisions);
- 	DEBUGFS_ADD(fq_limit);
- 	DEBUGFS_ADD(fq_quantum);
-+	DEBUGFS_ADD(codel_maxpacket);
-+	DEBUGFS_ADD(codel_drop_count);
-+	DEBUGFS_ADD(codel_drop_len);
-+	DEBUGFS_ADD(codel_ecn_mark);
-+	DEBUGFS_ADD(codel_ce_mark);
-+	DEBUGFS_ADD(codel_interval);
-+	DEBUGFS_ADD(codel_target);
-+	DEBUGFS_ADD(codel_mtu);
-+	DEBUGFS_ADD(codel_ecn);
- 
- 	statsd = debugfs_create_dir("statistics", phyd);
- 
--- 
-2.1.4
+-static int nl80211_netlink_notify(struct notifier_block * nb,
++static int nl80211_netlink_notify(struct notifier_block *nb,
+ 				  unsigned long state,
+ 				  void *_notify)
+ {
+--
+2.8.0.rc3.226.g39d4020
 
