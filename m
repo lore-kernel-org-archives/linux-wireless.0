@@ -1,85 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:34760 "EHLO
-	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076AbcEKBcN (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:33221 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753114AbcE3Af7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 21:32:13 -0400
-Received: by mail-vk0-f65.google.com with SMTP id v68so3092244vka.1
-        for <linux-wireless@vger.kernel.org>; Tue, 10 May 2016 18:32:13 -0700 (PDT)
+	Sun, 29 May 2016 20:35:59 -0400
 MIME-Version: 1.0
-In-Reply-To: <wrfj1t59k56e.fsf@redhat.com>
-References: <d6e308b0-5deb-e792-5991-5afc46aa7420@gmail.com>
-	<e7b07631-da96-51c0-5960-ea5ed9d1d94f@gmail.com>
-	<CAD4Xxq_WPVxU8h3+KyxdgztchYyzkW7GOQ8iCOf4uKMQ_X-CMg@mail.gmail.com>
-	<wrfj1t59k56e.fsf@redhat.com>
-Date: Wed, 11 May 2016 11:32:12 +1000
-Message-ID: <CAD4Xxq8kEf6RJe=LD=uikSeC29RHO--ain0RhDL6976P2Vq=Xw@mail.gmail.com> (sfid-20160511_033217_437122_E4EAB924)
-Subject: Re: Realtek USB WiFi rtl8192eu
-From: Fisher Grubb <fisher.grubb@gmail.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <5c2861995f05d456b3ce16e29ceae7e578b1456f.1464492195.git.kirtika.ruchandani@gmail.com>
+References: <cover.1464492195.git.kirtika.ruchandani@gmail.com> <5c2861995f05d456b3ce16e29ceae7e578b1456f.1464492195.git.kirtika.ruchandani@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 30 May 2016 10:35:39 +1000
+Message-ID: <CAGRGNgWMxU3qBsr0eu5cdAstu+s-0b9p1r-z5ZvkYejv2GtQLA@mail.gmail.com> (sfid-20160530_023606_921975_244C60F7)
+Subject: Re: [PATCH 3/3] nl80211: Various checkpatch.pl fixes
+To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ruchandani.tina@gmail.com, netdev <netdev@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jes,
+Hi Kirtika,
 
-Thanks for the info.
+On Sun, May 29, 2016 at 1:31 PM, Kirtika Ruchandani
+<kirtika.ruchandani@gmail.com> wrote:
+> This patch fixes the following checkpatch.pl issues -
 
-Ok, so I assume I just Google how to bring/compile a newer
-"unreleased" driver into a previous kernel version.
+There's too much stuff here to quickly review, it'd be nice if you
+could split this up into patches that do the following:
 
-Do I just need my current kernel's headers and typical GCC build toolchain?
+Space issues:
+> - space preferred around that <operator>
+> - no space needed after cast.
+> - Alignment should match open parenthesis
+> - suspect code indent for conditional statements
+> - Statements should start on a tabstop
 
-This is for Debian 7.9 on the ARM based BeagleBone Black board (Texas
-Instruments Sitara AM3358 CPU), which I uses kernel v3.8.13-bone79.
+Braces:
+> - braces {} should be used on all arms of this statement
 
-I'm asking in case there's a big difference between kernel 3 to 4 for
-this type of driver to be compiled.
+Multiple assignments:
+> - multiple assignments should be avoided
 
-I'm pretty sure certain kernel customisations were added by Robert
-Nelson for this board (I think he is quite involved with
-porting/fixing stuff for this board and the raspberry pi) , so I don't
-know how easy it would be for me to use a version 4 kernel.
+ether_addr_copy:
+> - prefer ether_addr_copy over memcpy
+
+Spelling:
+> - correct spelling - 'implementation'
+
+NULL comparisons:
+> - comparison to NULL could be written as !foo
+
+kcalloc vs kzalloc:
+> - prefer kcalloc over kzalloc with multiply
 
 Thanks,
 
-Fisher
+-- 
+Julian Calaby
 
-On 11 May 2016 06:51, "Jes Sorensen" <Jes.Sorensen@redhat.com> wrote:
->
-> Fisher Grubb <fisher.grubb@gmail.com> writes:
-> > Hi Xose,
-> >
-> > I'm not sure, I have the latest version of Ubuntu on my laptop and I
-> > had to use the DKMS -2 deb file to get it working as no driver claimed
-> > it.
-> >
-> > After Googeling (especially for the 0bda:818b USB device and vendor
-> > ID), it seemed the driver supported most of Realtek's WiFi devices but
-> > mine wasn't listed.
-> >
-> > From memory, I used this page mainly when I was first checking:
-> > https://wiki.debian.org/rtl819x
-> >
-> > I didn't see any people in forums mentioning how they managed to get
-> > this standard driver working, they all seemed to either have no luck
-> > because code didn't compile, or link to source code that did compile.
-> >
-> > If that mainline driver does work, then I assume there could be some
-> > USB vendor and device IDs that it doesn't cover.
-> >
-> > Here's the link for where I bought it:
-> > http://www.ebay.com.au/itm/181860888357
->
-> Patches to add rtl8192eu support was pulled into wireless-drivers-next
-> recently and scheduled for the 4.7 kernel. It is not in Linus' tree
-> yet. You should be able to try it out by either building Kalle's
-> wireless-drivers-next or my rtl8xxxu-devel branch.
->
-> The Realtek 8192EU driver you referenced is not scheduled to get pulled
-> into the upstream Linux kernel.
->
-> Cheers,
-> Jes
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
