@@ -1,140 +1,380 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:33960 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758683AbcEFSF5 (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:54710 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161249AbcE3Pjs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 6 May 2016 14:05:57 -0400
-MIME-Version: 1.0
-In-Reply-To: <572CDBF0.9000607@lwfinger.net>
-References: <20160506163351.GA4589@udknight>
-	<CAKgT0Uff5dc3_iEjK6GScqgP5_1kcg3YQAv7AH3bzuVDguXiPw@mail.gmail.com>
-	<572CDBF0.9000607@lwfinger.net>
-Date: Fri, 6 May 2016 11:05:56 -0700
-Message-ID: <CAKgT0Ucf2u98_cSS8caaCeFvV_xBDv1O3VaQHb3qFiVKyS572w@mail.gmail.com> (sfid-20160506_200617_624548_EFAC4784)
-Subject: Re: [PATCH v2] rtlwifi: pci: use dev_kfree_skb_irq instead of
- kfree_skb in rtl_pci_reset_trx_ring
-From: Alexander Duyck <alexander.duyck@gmail.com>
+	Mon, 30 May 2016 11:39:48 -0400
+From: Arnd Bergmann <arnd@arndb.de>
 To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Wang YanQing <udknight@gmail.com>, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	Netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Taehee Yoo <ap420073@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: fix error handling in *_read_adapter_info()
+Date: Mon, 30 May 2016 17:26:16 +0200
+Message-Id: <1464622792-1749047-1-git-send-email-arnd@arndb.de> (sfid-20160530_174014_772260_6DE34982)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, May 6, 2016 at 11:01 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 05/06/2016 12:13 PM, Alexander Duyck wrote:
->>
->> On Fri, May 6, 2016 at 9:33 AM, Wang YanQing <udknight@gmail.com> wrote:
->>>
->>> We can't use kfree_skb in irq disable context, because spin_lock_irqsave
->>> make sure we are always in irq disable context, use dev_kfree_skb_irq
->>> instead of kfree_skb is better than dev_kfree_skb_any.
->>>
->>> This patch fix below kernel warning:
->>> [ 7612.095528] ------------[ cut here ]------------
->>> [ 7612.095546] WARNING: CPU: 3 PID: 4460 at kernel/softirq.c:150
->>> __local_bh_enable_ip+0x58/0x80()
->>> [ 7612.095550] Modules linked in: rtl8723be x86_pkg_temp_thermal
->>> btcoexist rtl_pci rtlwifi rtl8723_common
->>> [ 7612.095567] CPU: 3 PID: 4460 Comm: ifconfig Tainted: G        W
->>> 4.4.0+ #4
->>> [ 7612.095570] Hardware name: LENOVO 20DFA04FCD/20DFA04FCD, BIOS J5ET48WW
->>> (1.19 ) 08/27/2015
->>> [ 7612.095574]  00000000 00000000 da37fc70 c12ce7c5 00000000 da37fca0
->>> c104cc59 c19d4454
->>> [ 7612.095584]  00000003 0000116c c19d4784 00000096 c10508a8 c10508a8
->>> 00000200 c1b42400
->>> [ 7612.095594]  f29be780 da37fcb0 c104ccad 00000009 00000000 da37fcbc
->>> c10508a8 f21f08b8
->>> [ 7612.095604] Call Trace:
->>> [ 7612.095614]  [<c12ce7c5>] dump_stack+0x41/0x5c
->>> [ 7612.095620]  [<c104cc59>] warn_slowpath_common+0x89/0xc0
->>> [ 7612.095628]  [<c10508a8>] ? __local_bh_enable_ip+0x58/0x80
->>> [ 7612.095634]  [<c10508a8>] ? __local_bh_enable_ip+0x58/0x80
->>> [ 7612.095640]  [<c104ccad>] warn_slowpath_null+0x1d/0x20
->>> [ 7612.095646]  [<c10508a8>] __local_bh_enable_ip+0x58/0x80
->>> [ 7612.095653]  [<c16b7d34>] destroy_conntrack+0x64/0xa0
->>> [ 7612.095660]  [<c16b300f>] nf_conntrack_destroy+0xf/0x20
->>> [ 7612.095665]  [<c1677565>] skb_release_head_state+0x55/0xa0
->>> [ 7612.095670]  [<c16775bb>] skb_release_all+0xb/0x20
->>> [ 7612.095674]  [<c167760b>] __kfree_skb+0xb/0x60
->>> [ 7612.095679]  [<c16776f0>] kfree_skb+0x30/0x70
->>> [ 7612.095686]  [<f81b869d>] ? rtl_pci_reset_trx_ring+0x22d/0x370
->>> [rtl_pci]
->>> [ 7612.095692]  [<f81b869d>] rtl_pci_reset_trx_ring+0x22d/0x370 [rtl_pci]
->>> [ 7612.095698]  [<f81b87f9>] rtl_pci_start+0x19/0x190 [rtl_pci]
->>> [ 7612.095705]  [<f81970e6>] rtl_op_start+0x56/0x90 [rtlwifi]
->>> [ 7612.095712]  [<c17e3f16>] drv_start+0x36/0xc0
->>> [ 7612.095717]  [<c17f5ab3>] ieee80211_do_open+0x2d3/0x890
->>> [ 7612.095725]  [<c16820fe>] ? call_netdevice_notifiers_info+0x2e/0x60
->>> [ 7612.095730]  [<c17f60bd>] ieee80211_open+0x4d/0x50
->>> [ 7612.095736]  [<c16891b3>] __dev_open+0xa3/0x130
->>> [ 7612.095742]  [<c183fa53>] ? _raw_spin_unlock_bh+0x13/0x20
->>> [ 7612.095748]  [<c1689499>] __dev_change_flags+0x89/0x140
->>> [ 7612.095753]  [<c127c70d>] ? selinux_capable+0xd/0x10
->>> [ 7612.095759]  [<c1689589>] dev_change_flags+0x29/0x60
->>> [ 7612.095765]  [<c1700b93>] devinet_ioctl+0x553/0x670
->>> [ 7612.095772]  [<c12db758>] ? _copy_to_user+0x28/0x40
->>> [ 7612.095777]  [<c17018b5>] inet_ioctl+0x85/0xb0
->>> [ 7612.095783]  [<c166e647>] sock_ioctl+0x67/0x260
->>> [ 7612.095788]  [<c166e5e0>] ? sock_fasync+0x80/0x80
->>> [ 7612.095795]  [<c115c99b>] do_vfs_ioctl+0x6b/0x550
->>> [ 7612.095800]  [<c127c812>] ? selinux_file_ioctl+0x102/0x1e0
->>> [ 7612.095807]  [<c10a8914>] ? timekeeping_suspend+0x294/0x320
->>> [ 7612.095813]  [<c10a256a>] ? __hrtimer_run_queues+0x14a/0x210
->>> [ 7612.095820]  [<c1276e24>] ? security_file_ioctl+0x34/0x50
->>> [ 7612.095827]  [<c115cef0>] SyS_ioctl+0x70/0x80
->>> [ 7612.095832]  [<c1001804>] do_fast_syscall_32+0x84/0x120
->>> [ 7612.095839]  [<c183ff91>] sysenter_past_esp+0x36/0x55
->>> [ 7612.095844] ---[ end trace 97e9c637a20e8348 ]---
->>>
->>> Signed-off-by: Wang YanQing <udknight@gmail.com>
->>> Cc: Stable <stable@vger.kernel.org>
->>> ---
->>>   Changes:
->>>   v1-v2:
->>>   1: add a Cc to stable.
->>>
->>>   drivers/net/wireless/realtek/rtlwifi/pci.c | 2 +-
->>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c
->>> b/drivers/net/wireless/realtek/rtlwifi/pci.c
->>> index 1ac41b8..99a3a03 100644
->>> --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
->>> +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
->>> @@ -1572,7 +1572,7 @@ int rtl_pci_reset_trx_ring(struct ieee80211_hw *hw)
->>>                                                           true,
->>>
->>> HW_DESC_TXBUFF_ADDR),
->>>                                                   skb->len,
->>> PCI_DMA_TODEVICE);
->>> -                               kfree_skb(skb);
->>> +                               dev_kfree_skb_irq(skb);
->>>                                  ring->idx = (ring->idx + 1) %
->>> ring->entries;
->>>                          }
->>>                          ring->idx = 0;
->>
->>
->> Is this always called in IRQ context?  You might be better off using
->> dev_kfree_skb_any instead if this is something that can be called from
->> net_device_ops since that way you avoid having to call into the Tx
->> softirq cleanup routine to free the buffers later unless you really
->> need it.
->>
->> - Alex
->>
->
-> Alex,
->
-> Six lines below the change is a spin_unlock_irqrestore(), which is always
-> called. I believe that the patch is correct.
+There are nine copies of the _rtl88ee_read_adapter_info() function,
+and most but not all of them cause a build warning in some configurations:
 
-Okay.  That works then.
+rtl8192de/hw.c: In function '_rtl92de_read_adapter_info':
+rtl8192de/hw.c:1767:12: error: 'hwinfo' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+rtl8723ae/hw.c: In function '_rtl8723e_read_adapter_info.constprop':
+rtlwifi/rtl8723ae/hw.c:1654:12: error: 'hwinfo' may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-Thanks.
+The problem is that when rtlefuse->epromtype is something other than
+EEPROM_BOOT_EFUSE, the rest of the function uses undefined data, resulting
+in random behavior later.
 
-- Alex
+Apparently, in some drivers, the problem was already found and fixed
+but the fix did not make it into the others.
+
+This picks one approach to deal with the problem and applies identical
+code to all 9 files, to simplify the later consolidation of those.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c | 12 +++++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c | 17 ++++++++++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c | 16 +++++++++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c | 16 +++++++++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c | 12 +++++++-----
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c | 20 ++++++++++++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c | 13 +++++++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 16 ++++++++++++----
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c | 15 +++++++++++----
+ 9 files changed, 94 insertions(+), 43 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index 8ee83b093c0d..e26a233684bb 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -1839,20 +1839,22 @@ static void _rtl88ee_read_adapter_info(struct ieee80211_hw *hw)
+ 	u8 hwinfo[HWSET_MAX_SIZE];
+ 	u16 eeprom_id;
+ 
+-	if (rtlefuse->epromtype == EEPROM_BOOT_EFUSE) {
++	switch (rtlefuse->epromtype) {
++	case EEPROM_BOOT_EFUSE:
+ 		rtl_efuse_shadow_map_update(hw);
++		break;
+ 
+-		memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+-		       HWSET_MAX_SIZE);
+-	} else if (rtlefuse->epromtype == EEPROM_93C46) {
++	case EEPROM_93C46:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "RTL819X Not boot from eeprom, check it !!");
+ 		return;
+-	} else {
++
++	default:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "boot from neither eeprom nor efuse, check it !!");
+ 		return;
+ 	}
++	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+ 
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
+ 		      hwinfo, HWSET_MAX_SIZE);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+index 04eb5c3f8464..58b7ac6899ef 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+@@ -1680,21 +1680,28 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+ 	u16 i, usvalue;
+ 	u8 hwinfo[HWSET_MAX_SIZE];
+ 	u16 eeprom_id;
+ 
+-	if (rtlefuse->epromtype == EEPROM_BOOT_EFUSE) {
++	switch (rtlefuse->epromtype) {
++	case EEPROM_BOOT_EFUSE:
+ 		rtl_efuse_shadow_map_update(hw);
++		break;
+ 
+-		memcpy((void *)hwinfo,
+-		       (void *)&rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+-		       HWSET_MAX_SIZE);
+-	} else if (rtlefuse->epromtype == EEPROM_93C46) {
++	case EEPROM_93C46:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "RTL819X Not boot from eeprom, check it !!");
++		return;
++
++	default:
++		dev_warn(dev, "no efuse data\n");
++		return;
+ 	}
+ 
++	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
++
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP",
+ 		      hwinfo, HWSET_MAX_SIZE);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index 34ce06441d1b..ae1129f916d5 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -351,15 +351,21 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
+ 	u8 hwinfo[HWSET_MAX_SIZE] = {0};
+ 	u16 eeprom_id;
+ 
+-	if (rtlefuse->epromtype == EEPROM_BOOT_EFUSE) {
++	switch (rtlefuse->epromtype) {
++	case EEPROM_BOOT_EFUSE:
+ 		rtl_efuse_shadow_map_update(hw);
+-		memcpy((void *)hwinfo,
+-		       (void *)&rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+-		       HWSET_MAX_SIZE);
+-	} else if (rtlefuse->epromtype == EEPROM_93C46) {
++		break;
++
++	case EEPROM_93C46:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "RTL819X Not boot from eeprom, check it !!\n");
++		return;
++
++	default:
++		pr_warn("rtl92cu: no efuse data\n\n");
++		return;
+ 	}
++	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_LOUD, "MAP",
+ 		      hwinfo, HWSET_MAX_SIZE);
+ 	eeprom_id = le16_to_cpu(*((__le16 *)&hwinfo[0]));
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
+index f49b60d31450..8618c322a3f8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
+@@ -1744,23 +1744,29 @@ static void _rtl92de_read_adapter_info(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+ 	u16 i, usvalue;
+ 	u8 hwinfo[HWSET_MAX_SIZE];
+ 	u16 eeprom_id;
+ 	unsigned long flags;
+ 
+-	if (rtlefuse->epromtype == EEPROM_BOOT_EFUSE) {
++	switch (rtlefuse->epromtype) {
++	case EEPROM_BOOT_EFUSE:
+ 		spin_lock_irqsave(&globalmutex_for_power_and_efuse, flags);
+ 		rtl_efuse_shadow_map_update(hw);
+ 		_rtl92de_efuse_update_chip_version(hw);
+ 		spin_unlock_irqrestore(&globalmutex_for_power_and_efuse, flags);
+-		memcpy((void *)hwinfo, (void *)&rtlefuse->efuse_map
+-		       [EFUSE_INIT_MAP][0],
+-		       HWSET_MAX_SIZE);
+-	} else if (rtlefuse->epromtype == EEPROM_93C46) {
++		break;
++	case EEPROM_93C46:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "RTL819X Not boot from eeprom, check it !!\n");
++		return;
++	default:
++		dev_warn(dev, "no efuse data\n");
++		return;
+ 	}
++
++	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP",
+ 		      hwinfo, HWSET_MAX_SIZE);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+index 9fd3f1b6e4a8..28c260dd11ea 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+@@ -2102,20 +2102,22 @@ static void _rtl92ee_read_adapter_info(struct ieee80211_hw *hw)
+ 	u8 hwinfo[HWSET_MAX_SIZE];
+ 	u16 eeprom_id;
+ 
+-	if (rtlefuse->epromtype == EEPROM_BOOT_EFUSE) {
++	switch (rtlefuse->epromtype) {
++	case EEPROM_BOOT_EFUSE:
+ 		rtl_efuse_shadow_map_update(hw);
++		break;
+ 
+-		memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+-		       HWSET_MAX_SIZE);
+-	} else if (rtlefuse->epromtype == EEPROM_93C46) {
++	case EEPROM_93C46:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "RTL819X Not boot from eeprom, check it !!");
+ 		return;
+-	} else {
++
++	default:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "boot from neither eeprom nor efuse, check it !!");
+ 		return;
+ 	}
++	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+ 
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
+ 		      hwinfo, HWSET_MAX_SIZE);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
+index 12b0978ba4fa..442f2b68ee58 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
+@@ -1673,23 +1673,31 @@ static void _rtl92se_read_adapter_info(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_phy *rtlphy = &(rtlpriv->phy);
++	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+ 	u16 i, usvalue;
+ 	u16	eeprom_id;
+ 	u8 tempval;
+ 	u8 hwinfo[HWSET_MAX_SIZE_92S];
+ 	u8 rf_path, index;
+ 
+-	if (rtlefuse->epromtype == EEPROM_93C46) {
++	switch (rtlefuse->epromtype) {
++	case EEPROM_BOOT_EFUSE:
++		rtl_efuse_shadow_map_update(hw);
++		break;
++
++	case EEPROM_93C46:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "RTL819X Not boot from eeprom, check it !!\n");
+-	} else if (rtlefuse->epromtype == EEPROM_BOOT_EFUSE) {
+-		rtl_efuse_shadow_map_update(hw);
++		return;
+ 
+-		memcpy((void *)hwinfo, (void *)
+-			&rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+-			HWSET_MAX_SIZE_92S);
++	default:
++		dev_warn(dev, "no efuse data\n");
++		return;
+ 	}
+ 
++	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
++	       HWSET_MAX_SIZE_92S);
++
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP",
+ 		      hwinfo, HWSET_MAX_SIZE_92S);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index a4b7eac6856f..57a1ba8822b1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -1630,6 +1630,7 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+ 	u16 i, usvalue;
+ 	u8 hwinfo[HWSET_MAX_SIZE];
+ 	u16 eeprom_id;
+@@ -1638,15 +1639,19 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
+ 		/* need add */
+ 		return;
+ 	}
+-	if (rtlefuse->epromtype == EEPROM_BOOT_EFUSE) {
++	switch (rtlefuse->epromtype) {
++	case EEPROM_BOOT_EFUSE:
+ 		rtl_efuse_shadow_map_update(hw);
+ 
+-		memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+-		       HWSET_MAX_SIZE);
+-	} else if (rtlefuse->epromtype == EEPROM_93C46) {
++	case EEPROM_93C46:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "RTL819X Not boot from eeprom, check it !!");
++		return;
++
++	default:
++		dev_warn(dev, "no efuse data\n");
+ 	}
++	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+ 
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
+ 		      hwinfo, HWSET_MAX_SIZE);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index 5a3df9198ddf..08288ac9020a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -2026,6 +2026,7 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
++	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+ 	u16 i, usvalue;
+ 	u8 hwinfo[HWSET_MAX_SIZE];
+ 	u16 eeprom_id;
+@@ -2055,15 +2056,22 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
+ 		/* needs to be added */
+ 		return;
+ 	}
+-	if (rtlefuse->epromtype == EEPROM_BOOT_EFUSE) {
++
++	switch (rtlefuse->epromtype) {
++	case EEPROM_BOOT_EFUSE:
+ 		rtl_efuse_shadow_map_update(hw);
++		break;
+ 
+-		memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+-		       HWSET_MAX_SIZE);
+-	} else if (rtlefuse->epromtype == EEPROM_93C46) {
++	case EEPROM_93C46:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "RTL819X Not boot from eeprom, check it !!");
++		return;
++
++	default:
++		dev_warn(dev, "no efuse data\n");
++		return;
+ 	}
++	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, ("MAP\n"),
+ 		      hwinfo, HWSET_MAX_SIZE);
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index 71e4dd9965bb..b9436df9e1ec 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -3101,6 +3101,7 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
++	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+ 	u16 i, usvalue;
+ 	u8 hwinfo[HWSET_MAX_SIZE];
+ 	u16 eeprom_id;
+@@ -3109,14 +3110,20 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
+ 		;/* need add */
+ 	}
+ 
+-	if (rtlefuse->epromtype == EEPROM_BOOT_EFUSE) {
++	switch (rtlefuse->epromtype) {
++	case EEPROM_BOOT_EFUSE:
+ 		rtl_efuse_shadow_map_update(hw);
+-		memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0],
+-		       HWSET_MAX_SIZE);
+-	} else if (rtlefuse->epromtype == EEPROM_93C46) {
++		break;
++
++	case EEPROM_93C46:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "RTL819X Not boot from eeprom, check it !!");
++		return;
++
++	default:
++		dev_warn(dev, "no efuse data\n");
+ 	}
++	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+ 
+ 	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
+ 		      hwinfo, HWSET_MAX_SIZE);
+-- 
+2.7.0
+
