@@ -1,64 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40638 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750824AbcEaKeu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2016 06:34:50 -0400
-Message-ID: <1464690887.3076.24.camel@sipsolutions.net> (sfid-20160531_123505_511086_77B31D0F)
-Subject: Re: [PATCH v2 03/10] nl80211: Prefer ether_addr_copy
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>,
-	Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Tina Ruchandani <ruchandani.tina@gmail.com>,
-	netdev <netdev@vger.kernel.org>
-Date: Tue, 31 May 2016 12:34:47 +0200
-In-Reply-To: <CAA-b7a8v8q5VnPxWw+o6Vj96KxeVhgfmZbre8+9rLRcB7-emyg@mail.gmail.com> (sfid-20160530_085018_965596_090D7309)
-References: <cover.1464576022.git.kirtika.ruchandani@gmail.com>
-	 <49c03996365360077fe7317d108072c30354b555.1464576022.git.kirtika.ruchandani@gmail.com>
-	 <CAGRGNgVRJm3zSokQ2wxb8Kwd4UEzx7ZjRCHAmnA02cB89Usy-A@mail.gmail.com>
-	 <CAA-b7a8v8q5VnPxWw+o6Vj96KxeVhgfmZbre8+9rLRcB7-emyg@mail.gmail.com>
-	 (sfid-20160530_085018_965596_090D7309)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:34613 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751538AbcEaKDt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2016 06:03:49 -0400
+Received: by mail-oi0-f44.google.com with SMTP id e72so17890977oib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2016 03:03:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1464687856.3076.3.camel@sipsolutions.net>
+References: <1462376337-26902-1-git-send-email-zajec5@gmail.com>
+	<1464687856.3076.3.camel@sipsolutions.net>
+Date: Tue, 31 May 2016 12:03:48 +0200
+Message-ID: <CACna6rwWBxCBSmJ1yhb8-Ai-74XtiYh9VCQFGDS2En4n67kmwQ@mail.gmail.com> (sfid-20160531_120357_128758_7218DBA2)
+Subject: Re: [PATCH] iw: support setting frame subtype and reason code when
+ deleting station
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 31 May 2016 at 11:44, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Applied.
+>
+> On Wed, 2016-05-04 at 17:38 +0200, Rafał Miłecki wrote:
+>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>
+> Oddly enough, patchwork corrupted *this*, but not the From: line ...
 
-> The requirement is to be __aligned(2). I've added 4 instances of
-> ether_addr_copy with 8 addresses as arguments.  Of these, the 4
-> src arguments are really the same type (i.e. nla_data acting on a
-> const nlattr*), so I'll try to reason about the 5 total cases below -
-> 1. cfg->dst_mac should be 16-bit aligned due to the layout of
-> struct cfg80211_wowlan_tcp. Its offset is 10 or 12 bytes in the
-> structure depending on the system.
+This patch was sent before patchwork update, I guess crazy things
+could happen with old version and update could make things even more
+weird.
 
-I wouldn't want to rely on that, since internal structures can be
-changed pretty easily. If necessary, add __aligned(2) to the struct
-members where appropriate.
+Hopefully all further patches will be OK :)
 
-> 2 and 3. For mac_addr and mac_addr_mask, nl80211_parse_random_mac
-> takes these in as u8* (and hence does not guarantee alignment?)
-> Both the callers of this function today pass in arguments that are
-> explicitly __aligned(2). But this cannot be said of future potential
-> callers
-> - so perhaps my patch introduces a bug?
+Thanks
 
-That should be documented, but it's also pretty tricky to
-review/maintain that.
-
-I general, I don't really see much reason to use ether_addr_copy() in
-any of these code paths - it's not really a performance thing (in part
-due to the alignment, ether_addr_copy can be faster)
-
-> 4. Based on struct cfg80211_acl_data, acl->mac_addrs[i] should be not
-> guaranteed to be __aligned(2).
-
-See above.
-
-> 5. For all the nla_data src arguments, the nla_data function returns
-> ((char*) foo + 5) for pointer foo. So likely not __aligned(2).
-
-Those should be aligned since the data is copied into an SKB, and +5
-doesn't seem right - nla_data() should be +4.
-
-johannes
+-- 
+Rafał
