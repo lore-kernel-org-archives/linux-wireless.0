@@ -1,175 +1,353 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:36117 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbcEORTc (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33187 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751176AbcEaF70 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 15 May 2016 13:19:32 -0400
-Received: by mail-ig0-f173.google.com with SMTP id qe5so37834963igc.1
-        for <linux-wireless@vger.kernel.org>; Sun, 15 May 2016 10:19:31 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
+	Tue, 31 May 2016 01:59:26 -0400
+Date: Mon, 30 May 2016 22:58:58 -0700
+From: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, fred.veldini@gmail.com,
-	nbd@nbd.name, Bob Copeland <me@bobcopeland.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v2] mac80211: mesh: flush mesh paths unconditionally
-Date: Sun, 15 May 2016 13:19:16 -0400
-Message-Id: <1463332756-31423-1-git-send-email-me@bobcopeland.com> (sfid-20160515_191938_146938_9C9A7EEA)
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, davem@davemloft.net
+Subject: [PATCH] net/wireless: Fix 'multiple blank lines' check
+Message-ID: <20160531055858.GA32239@google.com> (sfid-20160531_075948_832795_CA61B435)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, the mesh paths associated with a nexthop station are cleaned
-up in the following code path:
+This patch fixes the checkpatch.pl check "Please don't use multiple
+blank lines" for all files in net/wireless, except nl80211.c which
+is covered in a separated patch.
 
-    __sta_info_destroy_part1
-    synchronize_net()
-    __sta_info_destroy_part2
-     -> cleanup_single_sta
-       -> mesh_sta_cleanup
-         -> mesh_plink_deactivate
-           -> mesh_path_flush_by_nexthop
-
-However, there are a couple of problems here:
-
-1) the paths aren't flushed at all if the MPM is running in userspace
-   (e.g. when using wpa_supplicant or authsae)
-
-2) there is no synchronize_rcu between removing the path and readers
-   accessing the nexthop, which means the following race is possible:
-
-CPU0                            CPU1
-~~~~                            ~~~~
-                                sta_info_destroy_part1()
-                                synchronize_net()
-rcu_read_lock()
-mesh_nexthop_resolve()
-  mpath = mesh_path_lookup()
-                                [...] -> mesh_path_flush_by_nexthop()
-  sta = rcu_dereference(
-    mpath->next_hop)
-                                kfree(sta)
-  access sta <-- CRASH
-
-Fix both of these by unconditionally flushing paths before destroying
-the sta, and by adding a synchronize_net() after path flush to ensure
-no active readers can still dereference the sta.
-
-Fixes this crash:
-
-[  348.529295] BUG: unable to handle kernel paging request at 00020040
-[  348.530014] IP: [<f929245d>] ieee80211_mps_set_frame_flags+0x40/0xaa [mac80211]
-[  348.530014] *pde = 00000000
-[  348.530014] Oops: 0000 [#1] PREEMPT
-[  348.530014] Modules linked in: drbg ansi_cprng ctr ccm ppp_generic slhc ipt_MASQUERADE nf_nat_masquerade_ipv4 8021q ]
-[  348.530014] CPU: 0 PID: 20597 Comm: wget Tainted: G           O 4.6.0-rc5-wt=V1 #1
-[  348.530014] Hardware name: To Be Filled By O.E.M./To be filled by O.E.M., BIOS 080016  11/07/2014
-[  348.530014] task: f64fa280 ti: f4f9c000 task.ti: f4f9c000
-[  348.530014] EIP: 0060:[<f929245d>] EFLAGS: 00010246 CPU: 0
-[  348.530014] EIP is at ieee80211_mps_set_frame_flags+0x40/0xaa [mac80211]
-[  348.530014] EAX: f4ce63e0 EBX: 00000088 ECX: f3788416 EDX: 00020008
-[  348.530014] ESI: 00000000 EDI: 00000088 EBP: f6409a4c ESP: f6409a40
-[  348.530014]  DS: 007b ES: 007b FS: 0000 GS: 0033 SS: 0068
-[  348.530014] CR0: 80050033 CR2: 00020040 CR3: 33190000 CR4: 00000690
-[  348.530014] Stack:
-[  348.530014]  00000000 f4ce63e0 f5f9bd80 f6409a64 f9291d80 0000ce67 f5d51e00 f4ce63e0
-[  348.530014]  f3788416 f6409a80 f9291dc1 f4ce8320 f4ce63e0 f5d51e00 f4ce63e0 f4ce8320
-[  348.530014]  f6409a98 f9277f6f 00000000 00000000 0000007c 00000000 f6409b2c f9278dd1
-[  348.530014] Call Trace:
-[  348.530014]  [<f9291d80>] mesh_nexthop_lookup+0xbb/0xc8 [mac80211]
-[  348.530014]  [<f9291dc1>] mesh_nexthop_resolve+0x34/0xd8 [mac80211]
-[  348.530014]  [<f9277f6f>] ieee80211_xmit+0x92/0xc1 [mac80211]
-[  348.530014]  [<f9278dd1>] __ieee80211_subif_start_xmit+0x807/0x83c [mac80211]
-[  348.530014]  [<c04df012>] ? sch_direct_xmit+0xd7/0x1b3
-[  348.530014]  [<c022a8c6>] ? __local_bh_enable_ip+0x5d/0x7b
-[  348.530014]  [<f956870c>] ? nf_nat_ipv4_out+0x4c/0xd0 [nf_nat_ipv4]
-[  348.530014]  [<f957e036>] ? iptable_nat_ipv4_fn+0xf/0xf [iptable_nat]
-[  348.530014]  [<c04c6f45>] ? netif_skb_features+0x14d/0x30a
-[  348.530014]  [<f9278e10>] ieee80211_subif_start_xmit+0xa/0xe [mac80211]
-[  348.530014]  [<c04c769c>] dev_hard_start_xmit+0x1f8/0x267
-[  348.530014]  [<c04c7261>] ?  validate_xmit_skb.isra.120.part.121+0x10/0x253
-[  348.530014]  [<c04defc6>] sch_direct_xmit+0x8b/0x1b3
-[  348.530014]  [<c04c7a9c>] __dev_queue_xmit+0x2c8/0x513
-[  348.530014]  [<c04c7cfb>] dev_queue_xmit+0xa/0xc
-[  348.530014]  [<f91bfc7a>] batadv_send_skb_packet+0xd6/0xec [batman_adv]
-[  348.530014]  [<f91bfdc4>] batadv_send_unicast_skb+0x15/0x4a [batman_adv]
-[  348.530014]  [<f91b5938>] batadv_dat_send_data+0x27e/0x310 [batman_adv]
-[  348.530014]  [<f91c30b5>] ? batadv_tt_global_hash_find.isra.11+0x8/0xa [batman_adv]
-[  348.530014]  [<f91b63f3>] batadv_dat_snoop_outgoing_arp_request+0x208/0x23d [batman_adv]
-[  348.530014]  [<f91c0cd9>] batadv_interface_tx+0x206/0x385 [batman_adv]
-[  348.530014]  [<c04c769c>] dev_hard_start_xmit+0x1f8/0x267
-[  348.530014]  [<c04c7261>] ?  validate_xmit_skb.isra.120.part.121+0x10/0x253
-[  348.530014]  [<c04defc6>] sch_direct_xmit+0x8b/0x1b3
-[  348.530014]  [<c04c7a9c>] __dev_queue_xmit+0x2c8/0x513
-[  348.530014]  [<f80cbd2a>] ? igb_xmit_frame+0x57/0x72 [igb]
-[  348.530014]  [<c04c7cfb>] dev_queue_xmit+0xa/0xc
-[  348.530014]  [<f843a326>] br_dev_queue_push_xmit+0xeb/0xfb [bridge]
-[  348.530014]  [<f843a35f>] br_forward_finish+0x29/0x74 [bridge]
-[  348.530014]  [<f843a23b>] ? deliver_clone+0x3b/0x3b [bridge]
-[  348.530014]  [<f843a714>] __br_forward+0x89/0xe7 [bridge]
-[  348.530014]  [<f843a336>] ? br_dev_queue_push_xmit+0xfb/0xfb [bridge]
-[  348.530014]  [<f843a234>] deliver_clone+0x34/0x3b [bridge]
-[  348.530014]  [<f843a68b>] ? br_flood+0x95/0x95 [bridge]
-[  348.530014]  [<f843a66d>] br_flood+0x77/0x95 [bridge]
-[  348.530014]  [<f843a809>] br_flood_forward+0x13/0x1a [bridge]
-[  348.530014]  [<f843a68b>] ? br_flood+0x95/0x95 [bridge]
-[  348.530014]  [<f843b877>] br_handle_frame_finish+0x392/0x3db [bridge]
-[  348.530014]  [<c04e9b2b>] ? nf_iterate+0x2b/0x6b
-[  348.530014]  [<f843baa6>] br_handle_frame+0x1e6/0x240 [bridge]
-[  348.530014]  [<f843b4e5>] ? br_handle_local_finish+0x6a/0x6a [bridge]
-[  348.530014]  [<c04c4ba0>] __netif_receive_skb_core+0x43a/0x66b
-[  348.530014]  [<f843b8c0>] ? br_handle_frame_finish+0x3db/0x3db [bridge]
-[  348.530014]  [<c023cea4>] ? resched_curr+0x19/0x37
-[  348.530014]  [<c0240707>] ? check_preempt_wakeup+0xbf/0xfe
-[  348.530014]  [<c0255dec>] ? ktime_get_with_offset+0x5c/0xfc
-[  348.530014]  [<c04c4fc1>] __netif_receive_skb+0x47/0x55
-[  348.530014]  [<c04c57ba>] netif_receive_skb_internal+0x40/0x5a
-[  348.530014]  [<c04c61ef>] napi_gro_receive+0x3a/0x94
-[  348.530014]  [<f80ce8d5>] igb_poll+0x6fd/0x9ad [igb]
-[  348.530014]  [<c0242bd8>] ? swake_up_locked+0x14/0x26
-[  348.530014]  [<c04c5d29>] net_rx_action+0xde/0x250
-[  348.530014]  [<c022a743>] __do_softirq+0x8a/0x163
-[  348.530014]  [<c022a6b9>] ? __hrtimer_tasklet_trampoline+0x19/0x19
-[  348.530014]  [<c021100f>] do_softirq_own_stack+0x26/0x2c
-[  348.530014]  <IRQ>
-[  348.530014]  [<c022a957>] irq_exit+0x31/0x6f
-[  348.530014]  [<c0210eb2>] do_IRQ+0x8d/0xa0
-[  348.530014]  [<c058152c>] common_interrupt+0x2c/0x40
-[  348.530014] Code: e7 8c 00 66 81 ff 88 00 75 12 85 d2 75 0e b2 c3 b8 83 e9 29 f9 e8 a7 5f f9 c6 eb 74 66 81 e3 8c 005
-[  348.530014] EIP: [<f929245d>] ieee80211_mps_set_frame_flags+0x40/0xaa [mac80211] SS:ESP 0068:f6409a40
-[  348.530014] CR2: 0000000000020040
-[  348.530014] ---[ end trace 48556ac26779732e ]---
-[  348.530014] Kernel panic - not syncing: Fatal exception in interrupt
-[  348.530014] Kernel Offset: disabled
-
-Cc: stable@vger.kernel.org
-Reported-by: Fred Veldini <fred.veldini@gmail.com>
-Tested-by: Fred Veldini <fred.veldini@gmail.com>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Kirtika Ruchandani <kirtika.ruchandani@gmail.com>
 ---
-v1: "mac80211: mesh: flush paths early in sta destroy"
+ net/wireless/ap.c          | 1 -
+ net/wireless/chan.c        | 3 ---
+ net/wireless/core.h        | 2 --
+ net/wireless/ibss.c        | 1 -
+ net/wireless/mlme.c        | 2 --
+ net/wireless/radiotap.c    | 2 --
+ net/wireless/rdev-ops.h    | 2 --
+ net/wireless/reg.c         | 3 ---
+ net/wireless/scan.c        | 1 -
+ net/wireless/sme.c         | 1 -
+ net/wireless/util.c        | 2 --
+ net/wireless/wext-compat.c | 3 ---
+ net/wireless/wext-compat.h | 2 --
+ net/wireless/wext-core.c   | 6 ------
+ net/wireless/wext-proc.c   | 1 -
+ net/wireless/wext-sme.c    | 1 -
+ 16 files changed, 33 deletions(-)
 
-v2: Dropped block_mpath bit, just do this in part2 so that
-    sta_info_get is guaranteed not to return the
-    to-be-deleted sta, and add a second synchronize_rcu to
-    wait for concurrent readers.  Changed title.
+diff --git a/net/wireless/ap.c b/net/wireless/ap.c
+index bdad1f9..23acf58 100644
+--- a/net/wireless/ap.c
++++ b/net/wireless/ap.c
+@@ -5,7 +5,6 @@
+ #include "core.h"
+ #include "rdev-ops.h"
 
- net/mac80211/mesh.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 4c6404e1ad6e..21b1fdf5d01d 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -161,6 +161,10 @@ void mesh_sta_cleanup(struct sta_info *sta)
- 		del_timer_sync(&sta->mesh->plink_timer);
- 	}
- 
-+	/* make sure no readers can access nexthop sta from here on */
-+	mesh_path_flush_by_nexthop(sta);
-+	synchronize_net();
-+
- 	if (changed)
- 		ieee80211_mbss_info_change_notify(sdata, changed);
+-
+ int __cfg80211_stop_ap(struct cfg80211_registered_device *rdev,
+ 		       struct net_device *dev, bool notify)
+ {
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index da49c0b..34cec73d 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -325,7 +325,6 @@ static int cfg80211_get_chans_dfs_required(struct wiphy *wiphy,
+ 	return 0;
  }
--- 
-2.6.1
+
+-
+ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+ 				  const struct cfg80211_chan_def *chandef,
+ 				  enum nl80211_iftype iftype)
+@@ -455,7 +454,6 @@ bool cfg80211_chandef_dfs_usable(struct wiphy *wiphy,
+ 	return (r1 + r2 > 0);
+ }
+
+-
+ static bool cfg80211_get_chans_dfs_available(struct wiphy *wiphy,
+ 					     u32 center_freq,
+ 					     u32 bandwidth)
+@@ -685,7 +683,6 @@ bool cfg80211_chandef_usable(struct wiphy *wiphy,
+ 	if (width < 20)
+ 		prohibited_flags |= IEEE80211_CHAN_NO_OFDM;
+
+-
+ 	if (!cfg80211_secondary_chans_ok(wiphy, chandef->center_freq1,
+ 					 width, prohibited_flags))
+ 		return false;
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 025b7a5..5c54a1e 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -16,7 +16,6 @@
+ #include <net/cfg80211.h>
+ #include "reg.h"
+
+-
+ #define WIPHY_IDX_INVALID	-1
+
+ struct cfg80211_registered_device {
+@@ -161,7 +160,6 @@ static inline void cfg80211_unhold_bss(struct cfg80211_internal_bss *bss)
+ 	WARN_ON(r < 0);
+ }
+
+-
+ struct cfg80211_registered_device *cfg80211_rdev_by_wiphy_idx(int wiphy_idx);
+ int get_wiphy_idx(struct wiphy *wiphy);
+
+diff --git a/net/wireless/ibss.c b/net/wireless/ibss.c
+index 4a4dda5..67b4f9b 100644
+--- a/net/wireless/ibss.c
++++ b/net/wireless/ibss.c
+@@ -13,7 +13,6 @@
+ #include "nl80211.h"
+ #include "rdev-ops.h"
+
+-
+ void __cfg80211_ibss_joined(struct net_device *dev, const u8 *bssid,
+ 			    struct ieee80211_channel *channel)
+ {
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index c284d88..332a143 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -18,7 +18,6 @@
+ #include "nl80211.h"
+ #include "rdev-ops.h"
+
+-
+ void cfg80211_rx_assoc_resp(struct net_device *dev, struct cfg80211_bss *bss,
+ 			    const u8 *buf, size_t len, int uapsd_queues)
+ {
+@@ -768,7 +767,6 @@ void cfg80211_dfs_channels_update_work(struct work_struct *work)
+ 				   next_time);
+ }
+
+-
+ void cfg80211_radar_event(struct wiphy *wiphy,
+ 			  struct cfg80211_chan_def *chandef,
+ 			  gfp_t gfp)
+diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
+index 6582d15..f193b88 100644
+--- a/net/wireless/radiotap.c
++++ b/net/wireless/radiotap.c
+@@ -184,8 +184,6 @@ static void find_ns(struct ieee80211_radiotap_iterator *iterator,
+ 	}
+ }
+
+-
+-
+ /**
+  * ieee80211_radiotap_iterator_next - return next radiotap parser iterator arg
+  * @iterator: radiotap_iterator to move to next arg (if any)
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 85ff30b..9ad56db 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -338,7 +338,6 @@ static inline int rdev_join_mesh(struct cfg80211_registered_device *rdev,
+ 	return ret;
+ }
+
+-
+ static inline int rdev_leave_mesh(struct cfg80211_registered_device *rdev,
+ 				  struct net_device *dev)
+ {
+@@ -569,7 +568,6 @@ static inline void rdev_rfkill_poll(struct cfg80211_registered_device *rdev)
+ 	trace_rdev_return_void(&rdev->wiphy);
+ }
+
+-
+ #ifdef CONFIG_NL80211_TESTMODE
+ static inline int rdev_testmode_cmd(struct cfg80211_registered_device *rdev,
+ 				    struct wireless_dev *wdev,
+diff --git a/net/wireless/reg.c b/net/wireless/reg.c
+index 5dbac37..cfd4d69 100644
+--- a/net/wireless/reg.c
++++ b/net/wireless/reg.c
+@@ -18,7 +18,6 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+
+-
+ /**
+  * DOC: Wireless regulatory infrastructure
+  *
+@@ -1969,7 +1968,6 @@ reg_process_hint_driver(struct wiphy *wiphy,
+ 		rcu_free_regdom(tmp);
+ 	}
+
+-
+ 	driver_request->intersect = treatment == REG_REQ_INTERSECT;
+ 	driver_request->processed = false;
+
+@@ -2715,7 +2713,6 @@ static void print_rd_rules(const struct ieee80211_regdomain *rd)
+ 		else
+ 			scnprintf(cac_time, sizeof(cac_time), "N/A");
+
+-
+ 		/*
+ 		 * There may not be documentation for max antenna gain
+ 		 * in certain regions
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index ef2955c..fb121ca 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1622,7 +1622,6 @@ ieee80211_bss(struct wiphy *wiphy, struct iw_request_info *info,
+ 	return current_ev;
+ }
+
+-
+ static int ieee80211_scan_results(struct cfg80211_registered_device *rdev,
+ 				  struct iw_request_info *info,
+ 				  char *buf, size_t len)
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 584fdc3..2c39dc5a 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -638,7 +638,6 @@ static void disconnect_work(struct work_struct *work)
+
+ static DECLARE_WORK(cfg80211_disconnect_work, disconnect_work);
+
+-
+ /*
+  * API calls for drivers implementing connect/disconnect and
+  * SME event handling
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 4e809e9..8f246c1 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -16,7 +16,6 @@
+ #include "core.h"
+ #include "rdev-ops.h"
+
+-
+ struct ieee80211_rate *
+ ieee80211_get_response_rate(struct ieee80211_supported_band *sband,
+ 			    u32 basic_rates, int bitrate)
+@@ -1310,7 +1309,6 @@ int cfg80211_get_p2p_attr(const u8 *ies, unsigned int len,
+ 				bufsize -= min(bufsize, copy);
+ 			}
+
+-
+ 			if (copy == attr_remaining)
+ 				return desired_len;
+ 		}
+diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
+index 9f27221..e9b724a 100644
+--- a/net/wireless/wext-compat.c
++++ b/net/wireless/wext-compat.c
+@@ -101,7 +101,6 @@ int cfg80211_wext_giwmode(struct net_device *dev, struct iw_request_info *info,
+ }
+ EXPORT_WEXT_HANDLER(cfg80211_wext_giwmode);
+
+-
+ int cfg80211_wext_giwrange(struct net_device *dev,
+ 			   struct iw_request_info *info,
+ 			   struct iw_point *data, char *extra)
+@@ -215,7 +214,6 @@ int cfg80211_wext_giwrange(struct net_device *dev,
+ }
+ EXPORT_WEXT_HANDLER(cfg80211_wext_giwrange);
+
+-
+ /**
+  * cfg80211_wext_freq - get wext frequency for non-"auto"
+  * @dev: the net device
+@@ -1013,7 +1011,6 @@ static int cfg80211_set_cipher_pairwise(struct wireless_dev *wdev, u32 cipher)
+ 	return 0;
+ }
+
+-
+ static int cfg80211_set_key_mgt(struct wireless_dev *wdev, u32 key_mgt)
+ {
+ 	int nr_akm_suites = 0;
+diff --git a/net/wireless/wext-compat.h b/net/wireless/wext-compat.h
+index 94c7405..4d6af53 100644
+--- a/net/wireless/wext-compat.h
++++ b/net/wireless/wext-compat.h
+@@ -55,9 +55,7 @@ int cfg80211_wext_siwgenie(struct net_device *dev,
+ 			   struct iw_request_info *info,
+ 			   struct iw_point *data, char *extra);
+
+-
+ int cfg80211_wext_freq(struct iw_freq *freq);
+
+-
+ extern const struct iw_handler_def cfg80211_wext_handler;
+ #endif /* __WEXT_COMPAT */
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index 6250b1c..1cbbe7c 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -24,7 +24,6 @@ typedef int (*wext_ioctl_func)(struct net_device *, struct iwreq *,
+ 			       unsigned int, struct iw_request_info *,
+ 			       iw_handler);
+
+-
+ /*
+  * Meta-data about all the standard Wireless Extension request we
+  * know about.
+@@ -339,7 +338,6 @@ static const int compat_event_type_size[] = {
+ };
+ #endif
+
+-
+ /* IW event code */
+
+ void wireless_nlevent_flush(void)
+@@ -444,7 +442,6 @@ static struct nlmsghdr *rtnetlink_ifinfo_prep(struct net_device *dev,
+ 	return NULL;
+ }
+
+-
+ /*
+  * Main event dispatcher. Called from other parts and drivers.
+  * Send the event on the appropriate channels.
+@@ -635,8 +632,6 @@ void wireless_send_event(struct net_device *	dev,
+ }
+ EXPORT_SYMBOL(wireless_send_event);
+
+-
+-
+ /* IW handlers */
+
+ struct iw_statistics *get_wireless_stats(struct net_device *dev)
+@@ -1038,7 +1033,6 @@ static int ioctl_standard_call(struct net_device *	dev,
+ 	return ret;
+ }
+
+-
+ int wext_handle_ioctl(struct net *net, struct ifreq *ifr, unsigned int cmd,
+ 		      void __user *arg)
+ {
+diff --git a/net/wireless/wext-proc.c b/net/wireless/wext-proc.c
+index e98a01c..3356c1b 100644
+--- a/net/wireless/wext-proc.c
++++ b/net/wireless/wext-proc.c
+@@ -25,7 +25,6 @@
+ #include <net/iw_handler.h>
+ #include <net/wext.h>
+
+-
+ static void wireless_seq_printf_stats(struct seq_file *seq,
+ 				      struct net_device *dev)
+ {
+diff --git a/net/wireless/wext-sme.c b/net/wireless/wext-sme.c
+index a4e8af3..8b8e468 100644
+--- a/net/wireless/wext-sme.c
++++ b/net/wireless/wext-sme.c
+@@ -106,7 +106,6 @@ int cfg80211_mgd_wext_siwfreq(struct net_device *dev,
+ 			goto out;
+ 	}
+
+-
+ 	wdev->wext.connect.channel = chan;
+
+ 	/*
+--
+2.8.0.rc3.226.g39d4020
 
