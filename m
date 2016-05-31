@@ -1,74 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36192 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:58134 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751212AbcEJHUS (ORCPT
+	with ESMTP id S1753436AbcEaNZu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 03:20:18 -0400
-Date: Tue, 10 May 2016 12:50:05 +0530
+	Tue, 31 May 2016 09:25:50 -0400
+Date: Tue, 31 May 2016 18:55:38 +0530
 From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: greearb@candelatech.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 15/21] ath10k: support CT firmware flag.
-Message-ID: <20160510072005.GE25626@atheros-ThinkPad-T61> (sfid-20160510_092022_913084_3F42E5D6)
-References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
- <1462835475-11079-16-git-send-email-greearb@candelatech.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] iw: Add support for NL80211_STA_INFO_RX_DURATION
+ netlink attribute
+Message-ID: <20160531132538.GA3146@atheros-ThinkPad-T61> (sfid-20160531_152554_868925_EBABC2D6)
+References: <1460039420-5418-1-git-send-email-mohammed@qti.qualcomm.com>
+ <1464687668.3076.1.camel@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1462835475-11079-16-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1464687668.3076.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
-
-On Mon, May 09, 2016 at 04:11:09PM -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On Tue, May 31, 2016 at 11:41:08AM +0200, Johannes Berg wrote:
+> On Thu, 2016-04-07 at 20:00 +0530, Mohammed Shafi Shajakhan wrote:
+> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> > 
+> > Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'.
+> > 'NL80211_STA_INFO_RX_DURATION' accounts for aggregate PPDU duration
+> > in microseconds for all the frames from a peer. Drivers can fill
+> > 'rx_duration' field and set the flag 'NL80211_STA_INFO_RX_DURATION'.
+> > 'rx_duration' will give an idea about the total time spent by our
+> > peer
+> > with each of its connected peers.
+> > 
+> > This will get dumped as part of 'iw dev wlan#N station dump'
+> > 
+> Applied.
 > 
-> Add placeholder so CT firmware can more easily co-exist with upstream
-> kernel.
+> It's easier for me if you don't send nl80211.h changes in iw patches,
+> but I can deal with just removing those too.
 
-[shafi] nitpick: good to provide an expansion in commit log as well, so that
-if we can easily figure out in git log alone, rather than going through
-the change and suggesting that it supports more vif's etc
-
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c | 1 +
->  drivers/net/wireless/ath/ath10k/core.h | 3 +++
->  2 files changed, 4 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index fa71d57..49c85c3 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -235,6 +235,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
->  	[ATH10K_FW_FEATURE_SUPPORTS_ADAPTIVE_CCA] = "adaptive-cca",
->  	[ATH10K_FW_FEATURE_MFP_SUPPORT] = "mfp",
->  	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] = "peer-flow-ctrl",
-> +	[ATH10K_FW_FEATURE_WMI_10X_CT] = "wmi-10.x-CT",
->  };
->  
->  static unsigned int ath10k_core_get_fw_feature_str(char *buf,
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> index 1a75e2e..dd38f34 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -566,6 +566,9 @@ enum ath10k_fw_features {
->  	 */
->  	ATH10K_FW_FEATURE_PEER_FLOW_CONTROL = 13,
->  
-> +	/* Firmware from Candela Technologies, enables more VIFs, etc */
-> +	ATH10K_FW_FEATURE_WMI_10X_CT = 31,
-> +
->  	/* keep last */
->  	ATH10K_FW_FEATURE_COUNT,
->  };
->
-regards,
-shafi
+[shafi] sure Johannes, next time i will sending nl80211.h changes
 
 > 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
