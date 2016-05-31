@@ -1,60 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:35431 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751069AbcEJRKN (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35621 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932223AbcEaNKJ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 13:10:13 -0400
-Subject: Re: [PATCH] ath10k: Fix 10.4 extended peer stats update
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-References: <1462897645-16219-1-git-send-email-mohammed@qca.qualcomm.com>
- <57320DAF.2040508@candelatech.com>
- <20160510164049.GC21638@atheros-ThinkPad-T61>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <573215F3.3050109@candelatech.com> (sfid-20160510_191018_285718_E239924A)
-Date: Tue, 10 May 2016 10:10:11 -0700
+	Tue, 31 May 2016 09:10:09 -0400
+Received: by mail-oi0-f65.google.com with SMTP id h125so30389010oib.2
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2016 06:10:09 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160510164049.GC21638@atheros-ThinkPad-T61>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1464689804.3076.13.camel@sipsolutions.net>
+References: <1463739223-19205-1-git-send-email-zajec5@gmail.com>
+	<1464689804.3076.13.camel@sipsolutions.net>
+Date: Tue, 31 May 2016 15:10:08 +0200
+Message-ID: <CACna6rw--bPNdWcp1Bx1GOKv9cnOgfr5D_YU1RF7A8CS_Bt7Vg@mail.gmail.com> (sfid-20160531_151028_128699_C77D7723)
+Subject: Re: [PATCH iw] add "channels" PHY command listing frequencies with
+ more details
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/10/2016 09:40 AM, Mohammed Shafi Shajakhan wrote:
-> On Tue, May 10, 2016 at 09:34:55AM -0700, Ben Greear wrote:
->> On 05/10/2016 09:27 AM, Mohammed Shafi Shajakhan wrote:
->>> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->>>
->>> 10.4 'extended peer stats' will be not be appended with normal peer stats
->>> data and they shall be coming in separate chunks. Fix this by maintaining
->>> a separate linked list 'extender peer stats' for 10.4 and update
->>> rx_duration for per station statistics. Also parse through beacon filter
->>> (if enabled), to make sure we parse the extended peer stats properly.
->>> This issue was exposed when more than one client is connected and
->>> extended peer stats for 10.4 is enabled
+On 31 May 2016 at 12:16, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Fri, 2016-05-20 at 12:13 +0200, Rafał Miłecki wrote:
+>> Channels (frequencies) are getting more details that users may want
+>> to
+>> know about. E.g. it's important to know which frequencies allow using
+>> 40/80/160 MHz channels to setup AP properly.
 >>
->> In general, maybe more of these stats should be kept in the driver instead
->> of the firmware?  The firmware is very tight on RAM already, and if
->> we can pass the needed info back to the host, it could gather arbitrary
->> amounts of stats as needed.
+>> We list channels in "info" command output but it's already quite big
+>> and
+>> it was agreed to introduce new command rather than expand the old
+>> one.
 >>
+>> This patch adds "channels" command printing what was already
+>> available
+>> in the "info" plus details about supported channel widths. It also
+>> removes DFS info from the "info" output.
 >
-> [shafi] agreed, probably thats why we are tracking u64 counters like rx_duration
-> etc in host while the firmware variable will wrap aroud in sometime
+> Very nice.
+>
+> Unfortunately, I get compiler warnings about width_* being possibly
+> used uninitialized. Can you address that please?
 
-If firmware could be modified to return more per-frame info, then the driver
-could do virtually all of the stats gathering.  It would cost a bit of RAM
-to hold that descriptor information, but over-all, the firmware might be a lot
-simpler....
+It's nice your compiled got this mistake, my didn't. There were
+actually meant to be static. I'll fix that.
 
-On the TX side, it would also allow intelligent host-based rate-ctrl.  Especially
-considering the complexity of mu-mimo, it might be nice to get rate-ctrl into the
-kernel where more people can work on it in a more flexible manner.
 
-Thanks,
-Ben
+>> +TOPLEVEL(channels, NULL, NL80211_CMD_GET_WIPHY, 0, CIB_PHY,
+>> handle_channels, "Show available channels.");
+>
+> Maybe that should be allowed for a CIB_DEV too?
+
+Since this is PHY specific, I was thinking it should be CIB_PHY. I
+didn't see reason to allow querying devices. Similarly we don't
+support "iw dev wlan0 reg get".
+
+Anyway, I can change that if you think it's better for some reason.
+Any hint how to make command usable with both: phy and dev?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Rafał
