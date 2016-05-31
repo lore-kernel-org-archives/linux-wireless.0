@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36839 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756112AbcECUDn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 3 May 2016 16:03:43 -0400
-Message-ID: <1462305820.10444.14.camel@sipsolutions.net> (sfid-20160503_220402_146462_249B39BA)
-Subject: Re: dynamic ps + offchannel mgmt_tx + HW RoC
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 03 May 2016 22:03:40 +0200
-In-Reply-To: <CABPxzYL9ezhovark83mnSVkh7H3XQJjNU+XjvEHdMses6N3FBA@mail.gmail.com> (sfid-20160503_215028_390679_45C6B6FE)
-References: <CABPxzYLtu53V79O--eDJEdRfn-zw3Wq9Po04F=uFp_FrfJjuiA@mail.gmail.com>
-	 <1462281243.2251.2.camel@sipsolutions.net>
-	 <CABPxzYJjRMMaUn+zzpzm8Zv8XAn8nfA8FgMTr7bkZve3XWs8ow@mail.gmail.com>
-	 <CABPxzYKj-0kaBP6BYQvcTYZtaTTbtc0nR-=69qC9eCDDJoXxaA@mail.gmail.com>
-	 <1462291262.2251.4.camel@sipsolutions.net>
-	 <CABPxzY+JXre1SzGyqmwYhTw9BB_-PfR02basW0WS34wZKpxK7g@mail.gmail.com>
-	 <CALhHN=pxE2+dHxKLvsdWDt7fZ-FwYSUzps6hWB9m7dmZbFytgg@mail.gmail.com>
-	 <1462304144.10444.13.camel@sipsolutions.net>
-	 <CABPxzYL9ezhovark83mnSVkh7H3XQJjNU+XjvEHdMses6N3FBA@mail.gmail.com>
-	 (sfid-20160503_215028_390679_45C6B6FE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f54.google.com ([209.85.218.54]:34651 "EHLO
+	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752837AbcEaMfx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2016 08:35:53 -0400
+Received: by mail-oi0-f54.google.com with SMTP id e72so21287088oib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2016 05:35:52 -0700 (PDT)
+Date: Tue, 31 May 2016 07:35:50 -0500
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	wil6210@qca.qualcomm.com
+Subject: Re: [PATCH] wireless-regdb: Republic of Korea: Add 60GHz regulatory
+ rules
+Message-ID: <20160531123550.GA93568@ubuntu-hedt> (sfid-20160531_143555_940879_E78CF89C)
+References: <1463822708-20053-1-git-send-email-qca_merez@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1463822708-20053-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-05-04 at 01:20 +0530, Krishna Chaitanya wrote:
-> On Wed, May 4, 2016 at 1:05 AM, Johannes Berg <johannes@sipsolutions.
-> net> wrote:
-> > 
-> > There is, btw, perhaps a different way - just fix the damn stuff.
-> > 
-> > Requires moving everything into ifmgd rather than local, and then
-> > perhaps if only a single managed interface exists mirroring its
-> > state
-> > into the existing driver calls etc.
-> > 
-> > It'd still be a big task, and I don't see much advantage over just
-> > reimplementing it.
-> Yes, requires quite an effort and also need to handle lot of cases.
-> Instead, why don't we make the default as complete PS offload
-> and force the drivers who need to use mac80211 PS negate these
-> in the register_hw? That way we are clear about the intentions.
+On Sat, May 21, 2016 at 12:25:08PM +0300, Maya Erez wrote:
+> Add 60GHz regulatory rules for Korea (KR).
+> Source is
+> http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
+> 
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+> ---
+>  db.txt | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/db.txt b/db.txt
+> index da16f7c..143f915 100644
+> --- a/db.txt
+> +++ b/db.txt
+> @@ -664,6 +664,10 @@ country KR: DFS-JP
+>  	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+>  	(5490 - 5710 @ 160), (30), DFS
+>  	(5735 - 5835 @ 80), (30)
+> +	# 60 GHz band channels 1-4,
+> +	# ref: http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
+> +	(57000 - 66000 @ 2160), (57)
+> +
 
-I don't really see a big advantage, and it'd create churn in a lot of
-drivers. Maybe documenting it with the flags that we really think you
-should set them or something, or making the powersave DOC section
-mention this would be good, but beyond that I don't think it'd be a
-good idea.
+Thanks for the patch. I wanted to double check with you that the power
+limit is correct though, since it seems extremely high (an order of
+magnitude higher than what we have for any other country in fact). I
+can't make out much of anything from the link, and I can't even run it
+through google translate since it's composed of images rather than text.
 
-johannes
+Thanks,
+Seth
+
