@@ -1,84 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:53937 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751528AbcEKRCm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55499 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752542AbcEaMye (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 11 May 2016 13:02:42 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 00/21] ath10k patches, generic and CT firmware related.
-Date: Wed, 11 May 2016 10:02:12 -0700
-Message-Id: <1462986153-16318-1-git-send-email-greearb@candelatech.com> (sfid-20160511_192231_911060_61D91B89)
+	Tue, 31 May 2016 08:54:34 -0400
+Date: Tue, 31 May 2016 18:23:55 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>,
+	Sven Eckelmann <sven.eckelmann@open-mesh.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v1] ath10k: Fix 10.4 extended peer stats update
+Message-ID: <20160531125355.GA2911@atheros-ThinkPad-T61> (sfid-20160531_145437_805376_6538AF7A)
+References: <1462947870-17196-1-git-send-email-mohammed@qca.qualcomm.com>
+ <6103547.auMgQrn60O@bentobox>
+ <20160527090649.GA14846@atheros-ThinkPad-T61>
+ <1464676666571.16234@qti.qualcomm.com>
+ <87fusyeb6d.fsf@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87fusyeb6d.fsf@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi Kalle,
 
-These are against wireless-testing from a few days ago.
+On Tue, May 31, 2016 at 11:09:38AM +0000, Valo, Kalle wrote:
+> "Shajakhan, Mohammed Shafi (Mohammed Shafi)" <mohammed@qti.qualcomm.com>
+> writes:
+> > seems the change got merged in pending branch
+> > https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=master-pending&id=2a872321e07506e339fc1b3ca81aa3e88628cd6e
+> >
+> > Request if you can send the patch to address this(incase the patch cannot be dropped)
+> > and the v2 version cannot be picked
+> 
+> The pending branches (pending and pending-master) are just for build and
+> runtime testing, they can be freely modified or dropped. v2 is now in
+> pending branch and I'm looking at the patch right now.
+>
 
-Here are a bunch of ath10k patches.  First one is a crash
-fix.  Next few are at least somewhat useful for generic
-firmware, and more useful for CT firmware.  Much of it is related
-to better debugging of firmware crashes.  If this can go in, then
-I can much better handle random bug reports from prople using
-stock kernels and CT firmware.  With some small tweaks to how they
-package firmware, QCA could benefit as well.
+[shafi] sure thanks for the clarification !
 
-The last bit is some initial support for CT firmware.  I figure it
-is a long-shot, but it would surely be nice to get this (and more!)
-upstream.  If nothing else, these can be a basis for potential
-inclusion in openwrt or similar.
-
-These patches are not overly dependent on each other for the most
-part, so even if a few are not acceptable, maybe others can be
-applied upstream.
-
-Changes from v1:
-
-Replace debug-mask patch to be one that allows changing mask using
-debugfs.
-Add some comments to the CT firmware placeholder patch as requested.
-Add and tweak comments related to cycle counters.
-
-Ben Greear (21):
-  ath10k:  Fix crash related to printing features.
-  ath10k: fix typo in logging message
-  ath10k:  Allow changing ath10k debug mask at runtime.
-  ath10k: rate-limit packet tx errors
-  ath10k: save firmware debug log messages.
-  ath10k: save firmware stacks upon firmware crash
-  ath10k: save firmware RAM and ROM BSS sections on crash
-  ath10k: make firmware text debug messages more verbose.
-  ath10k: print fw debug messages in hex.
-  ath10k: support logging ath10k_info as KERN_DEBUG
-  ath10k: add fw-powerup-fail to ethtool stats.
-  ath10k: Support up to 64 vdevs.
-  ath10k: Document cycle count related counters.
-  ath10k: Add tx/rx bytes, cycle counters to ethtool stats.
-  ath10k: support CT firmware flag.
-  ath10k: Support 32+ stations.
-  ath10k: Enable detecting failure to install key in firmware (CT).
-  ath10k: Note limitation on beaconing vdevs.
-  ath10k: Enable adhoc mode for CT firmware.
-  ath10k: read firmware crash over ioread32 if CE fails.
-  ath10k: Read dbglog buffers over register ping-pong.
-
- drivers/net/wireless/ath/ath10k/core.c   |  70 ++++++-
- drivers/net/wireless/ath/ath10k/core.h   |  52 ++++-
- drivers/net/wireless/ath/ath10k/debug.c  | 325 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/debug.h  |  17 ++
- drivers/net/wireless/ath/ath10k/htt.h    |   7 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c |  23 ++-
- drivers/net/wireless/ath/ath10k/htt_tx.c |  22 ++-
- drivers/net/wireless/ath/ath10k/hw.h     |  36 ++++
- drivers/net/wireless/ath/ath10k/mac.c    |  74 ++++++-
- drivers/net/wireless/ath/ath10k/pci.c    | 310 ++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.c    |  43 +++-
- drivers/net/wireless/ath/ath10k/wmi.h    |  14 +-
- 12 files changed, 956 insertions(+), 37 deletions(-)
-
--- 
-2.4.3
-
+regards,
+shafi
