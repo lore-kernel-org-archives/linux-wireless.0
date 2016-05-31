@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40756 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751479AbcEJU3z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 10 May 2016 16:29:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Date: Tue, 10 May 2016 23:06:32 +0300
-Message-Id: <1462910797-20303-36-git-send-email-luca@coelho.fi> (sfid-20160510_222957_579058_BA515AE9)
-In-Reply-To: <1462910797-20303-1-git-send-email-luca@coelho.fi>
-References: <1462910585.25219.7.camel@coelho.fi>
- <1462910797-20303-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 36/41] iwlwifi: pcie: avoid msleep() with short timeout
+Received: from s3.sipsolutions.net ([5.9.151.49]:40444 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754006AbcEaJu1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2016 05:50:27 -0400
+Message-ID: <1464688223.3076.5.camel@sipsolutions.net> (sfid-20160531_115059_944949_EF7C57D5)
+Subject: Re: [PATCH 1/1] version.sh: update to get version with git correctly
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yongqin Liu <yongqin.liu@linaro.org>,
+	linux-wireless@vger.kernel.org
+Cc: filbranden@google.com
+Date: Tue, 31 May 2016 11:50:23 +0200
+In-Reply-To: <1462254528-15911-1-git-send-email-yongqin.liu@linaro.org> (sfid-20160503_075053_321143_A72BBFC5)
+References: <1462254528-15911-1-git-send-email-yongqin.liu@linaro.org>
+	 (sfid-20160503_075053_321143_A72BBFC5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, 2016-05-03 at 13:48 +0800, Yongqin Liu wrote:
+> update to get the version information from the
+> git repository where this file is located instead of the
+> the current directory where it is executed, otherwise if
+> there is .git directory in the current directory, it will
+> get the wrong version information.
+> 
+> And improved the version check since the tag information
+> may not be mirrored like what AOSP does now.
 
-Since msleep is based on jiffies, it can sleep for a long time.
-Use usleep_range() instead to shorten the maximum time.
+Applied.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> Change-Id: I321113b74bf2a955c202f47dca68c1183ca55318
+> 
+I don't really need a change-id though :)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 59fd17a..f603d78 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -582,7 +582,7 @@ static int iwl_pcie_prepare_card_hw(struct iwl_trans *trans)
- 
- 	iwl_set_bit(trans, CSR_DBG_LINK_PWR_MGMT_REG,
- 		    CSR_RESET_LINK_PWR_MGMT_DISABLED);
--	msleep(1);
-+	usleep_range(1000, 2000);
- 
- 	for (iter = 0; iter < 10; iter++) {
- 		/* If HW is not ready, prepare the conditions to check again */
-@@ -1945,7 +1945,7 @@ static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, u32 txq_bm)
- 				      "WR pointer moved while flushing %d -> %d\n",
- 				      wr_ptr, write_ptr))
- 				return -ETIMEDOUT;
--			msleep(1);
-+			usleep_range(1000, 2000);
- 		}
- 
- 		if (q->read_ptr != q->write_ptr) {
--- 
-2.8.1
-
+johannes
