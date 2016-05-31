@@ -1,67 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:33907 "EHLO
-	mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754024AbcEBOj1 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24150 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755337AbcEaS6A convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 2 May 2016 10:39:27 -0400
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [RESEND PATCH 0/3] RFKill airplane-mode indicator
-Date: Mon,  2 May 2016 10:39:05 -0400
-Message-Id: <1462199948-6424-1-git-send-email-jprvita@endlessm.com> (sfid-20160502_163953_921468_B9D638CA)
+	Tue, 31 May 2016 14:58:00 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+CC: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: Fix 10.4 extended peer stats update
+Date: Tue, 31 May 2016 18:57:52 +0000
+Message-ID: <87r3cicaxi.fsf@qca.qualcomm.com> (sfid-20160531_205805_769234_D58DB612)
+References: <1464339926-12136-1-git-send-email-mohammed@qca.qualcomm.com>
+	<87vb1ucten.fsf@qca.qualcomm.com>
+	<20160531133700.GB3146@atheros-ThinkPad-T61>
+In-Reply-To: <20160531133700.GB3146@atheros-ThinkPad-T61> (Mohammed Shafi
+	Shajakhan's message of "Tue, 31 May 2016 19:07:00 +0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series implements an airplane-mode indicator LED trigger, which can be
-used by platform drivers. By default the trigger fires on RFKILL_OP_CHANGE_ALL,
-but this policy can be overwritten by userspace using the new operations
-_AIRPLANE_MODE_INDICATOR_ACQUIRE and _AIRPLANE_MODE_INDICATOR_CHANGE. When the
-airplane-mode indicator state changes, userspace gets notifications through the
-RFKill control misc device (/dev/rfkill). I also have patches to the rfkill
-userspace tool that makes use of this interface, so it can serve as API usage
-example and to do quick checks on a running system, which I'll send in a
-separate series.
+Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
 
-After some hiatus I found the time to get back to this, and this time I've used
-Jouni's hwsim suite to test the patches on top of mac80211-next/master. Lines
-containing rfkill are pasted bellow:
+>> > +void ath10k_sta_update_rx_duration(struct ath10k *ar,
+>> > +				   struct ath10k_fw_stats *stats)
+>> > +{
+>> > +	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
+>> > +
+>> > +	if (fw_file->wmi_op_version < ATH10K_FW_WMI_OP_VERSION_10_4)
+>> > +		ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
+>> > +	else
+>> > +		ath10k_sta_update_extd_stats_rx_duration(ar,
+>> > +							 &stats->peers_extd);
+>> > +}
+>> 
+>> _Ideally_ wmi_op_version should be used only in ath10k_wmi_attach() and
+>> nowhere else. Isn't there any other way to detect this scenario? For
+>> example, what if you store stats_id to struct ath10k_fw_stats and do
+>> something like this:
+>> 
+>> if (stats->stats_id & WMI_10_4_STAT_PEER_EXTD)
+>> 	ath10k_sta_update_extd_stats_rx_duration(ar,
+>> 						 &stats->peers_extd);
+>> else
+>> 	ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
+>> 
+>> Would that work?
+>
+> [shafi] I am also thinking to re-use (ar->fw_stats_req_mask & WMI_10_4_STAT_PEER_EXTD)
+> it might work, but will it conflict vdev stats WMI_STAT_VDEV (though its not currently
+> supported for 10.2 )
 
-START wext_rfkill 14/1880
-PASS wext_rfkill 4.100002 2016-04-29 12:30:23.792682
-START rfkill_wpas 571/1880
-PASS rfkill_wpas 1.245307 2016-04-29 12:48:51.804344
-START rfkill_autogo 572/1880
-PASS rfkill_autogo 1.154174 2016-04-29 12:48:52.959605
-START rfkill_p2p_discovery 573/1880
-PASS rfkill_p2p_discovery 0.534903 2016-04-29 12:48:53.495547
-START rfkill_open 574/1880
-PASS rfkill_open 0.34073 2016-04-29 12:48:53.836963
-START rfkill_p2p_discovery_p2p_dev 575/1880
-PASS rfkill_p2p_discovery_p2p_dev 1.159446 2016-04-29 12:48:54.997555
-START rfkill_hostapd 576/1880
-PASS rfkill_hostapd 3.686868 2016-04-29 12:48:58.685162
-START rfkill_wpa2_psk 577/1880
-PASS rfkill_wpa2_psk 0.330014 2016-04-29 12:48:59.016711
+Can you describe more how they conflict?
 
-João Paulo Rechi Vita (3):
-  rfkill: Create "rfkill-airplane-mode" LED trigger
-  rfkill: Userspace control for airplane mode
-  rfkill: Notify userspace of airplane-mode state changes
+> let me know your thoughts about this, seems extended stats was
+> implemented for 10.4 wmi version so i made it explicit
 
- Documentation/rfkill.txt    |  15 +++++++
- include/uapi/linux/rfkill.h |   6 +++
- net/rfkill/core.c           | 100 +++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 119 insertions(+), 2 deletions(-)
+I don't like hard coding features like this based on wmi_op_version as
+that might create problems managing the firmware interfaces in the
+future. The simplest is if we can automatically runtime detect if
+firmware uses the extended version or not.
 
 -- 
-2.5.0
-
+Kalle Valo
