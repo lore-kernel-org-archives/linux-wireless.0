@@ -1,121 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49987 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753492AbcEIXL2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 19:11:28 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 17/21] ath10k: Enable detecting failure to install key in firmware (CT).
-Date: Mon,  9 May 2016 16:11:11 -0700
-Message-Id: <1462835475-11079-18-git-send-email-greearb@candelatech.com> (sfid-20160510_011149_565062_25017192)
-In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
-References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:40609 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750783AbcEaKZv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2016 06:25:51 -0400
+Message-ID: <1464690345.3076.17.camel@sipsolutions.net> (sfid-20160531_122554_428016_EFE75DF1)
+Subject: Re: [PATCH] wext: Fix 32 bit iwpriv compatibility issue with 64 bit
+ Kernel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Prasun Maiti <prasunmaiti87@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>
+Date: Tue, 31 May 2016 12:25:45 +0200
+In-Reply-To: <1464248432-12595-1-git-send-email-prasunmaiti87@gmail.com> (sfid-20160526_094047_190562_9918B3AC)
+References: <1464248432-12595-1-git-send-email-prasunmaiti87@gmail.com>
+	 (sfid-20160526_094047_190562_9918B3AC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi,
 
-CT firmware has been modified so that it will always return
-a response message when user requests to add a key, even if
-the key could not actually be added.  Upstream firmware may
-assert or just not respond in a failure case.
+I must say, this is a bit of a surprise - where is iwpriv actually
+still relevant? What driver could this possibly matter for?
 
-This change should be compatible with non CT firmware.
+Anyway ...
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/core.h   |  1 +
- drivers/net/wireless/ath/ath10k/htt.h    |  7 +++++--
- drivers/net/wireless/ath/ath10k/htt_rx.c | 20 +++++++++++++++++---
- drivers/net/wireless/ath/ath10k/mac.c    |  3 ++-
- 4 files changed, 25 insertions(+), 6 deletions(-)
+> +	if (dev->netdev_ops->ndo_do_ioctl) {
+> +		if ((info->flags & IW_REQUEST_FLAG_COMPAT) &&
+> +				(cmd >= SIOCIWFIRSTPRIV && cmd <=
+> SIOCIWLASTPRIV)) {
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index dd38f34..dae453a 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -848,6 +848,7 @@ struct ath10k {
- 	unsigned int filter_flags;
- 	unsigned long dev_flags;
- 	bool dfs_block_radar_events;
-+	int install_key_rv; /* Store error code from key-install */
- 
- 	/* protected by conf_mutex */
- 	bool radar_enabled;
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 911c535..c50b343 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -702,8 +702,9 @@ enum htt_security_types {
- };
- 
- enum htt_security_flags {
--#define HTT_SECURITY_TYPE_MASK 0x7F
-+#define HTT_SECURITY_TYPE_MASK 0x3F
- #define HTT_SECURITY_TYPE_LSB  0
-+	HTT_SECURITY_IS_FAILURE = 1 << 6, /* CT firmware only */
- 	HTT_SECURITY_IS_UNICAST = 1 << 7
- };
- 
-@@ -712,7 +713,9 @@ struct htt_security_indication {
- 		/* dont use bitfields; undefined behaviour */
- 		u8 flags; /* %htt_security_flags */
- 		struct {
--			u8 security_type:7, /* %htt_security_types */
-+			u8 security_type:6, /* %htt_security_types */
-+			   is_failure:1, /* does this response indicate failure
-+					    (CT Firmware) */
- 			   is_unicast:1;
- 		} __packed;
- 	} __packed;
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 47da904..02b5417 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2307,9 +2307,23 @@ bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 
- 		ath10k_dbg(ar, ATH10K_DBG_HTT,
- 			   "sec ind peer_id %d unicast %d type %d\n",
--			  __le16_to_cpu(ev->peer_id),
--			  !!(ev->flags & HTT_SECURITY_IS_UNICAST),
--			  MS(ev->flags, HTT_SECURITY_TYPE));
-+			   __le16_to_cpu(ev->peer_id),
-+			   !!(ev->flags & HTT_SECURITY_IS_UNICAST),
-+			   MS(ev->flags, HTT_SECURITY_TYPE));
-+
-+		/* CT firmware adds way to determine failure of key set, without
-+		 * just timing things out.  Indication of failure is determined
-+		 * by the 6th bit of the security-type being set.
-+		 */
-+		if (ev->flags & HTT_SECURITY_IS_FAILURE) {
-+			ath10k_warn(ar, "Firmware failed to set security key, peer_id: %d unicast %d type %d\n",
-+				    __le16_to_cpu(ev->peer_id),
-+				    !!(ev->flags & HTT_SECURITY_IS_UNICAST),
-+				    MS(ev->flags, HTT_SECURITY_TYPE));
-+			ar->install_key_rv = -EINVAL;
-+		} else {
-+			ar->install_key_rv = 0;
-+		}
- 		complete(&ar->install_key_done);
- 		break;
- 	}
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 2169337..373f2ee 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -255,7 +255,8 @@ static int ath10k_install_key(struct ath10k_vif *arvif,
- 	if (time_left == 0)
- 		return -ETIMEDOUT;
- 
--	return 0;
-+	ret = ar->install_key_rv;
-+	return ret;
- }
- 
- static int ath10k_install_peer_wep_keys(struct ath10k_vif *arvif,
--- 
-2.4.3
+This has coding style issues, obviously.
 
+Also, handling the non-compat case would allow you to return and reduce
+indentation by one in the large code block that handles the compat.
+
+> +			int ret = 0;
+> +			struct compat_iw_point *iwp_compat = (struct compat_iw_point *) &iwr->u.data;
+> +			struct iw_point *iwp = &iwr->u.data;
+> +			__u16 length = iwp_compat->length, flags = iwp_compat->flags;
+> +
+> +			iwp->pointer = compat_ptr(iwp_compat->pointer);
+> +			iwp->length = length;
+> +			iwp->flags = flags;
+> +
+> +			ret = dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
+> +
+> +			length = iwp->length;
+> +			flags = iwp->flags;
+> +			iwp_compat->pointer = ptr_to_compat(iwp->pointer);
+> +			iwp_compat->length = length;
+> +			iwp_compat->flags = flags;
+
+Why don't you just put another ifr/iwr on the stack, and use that to
+pass things to the driver? This modify-in-place of 'iwp', which
+requires loading all the variables first, seems very awkward to me.
+
+
+johannes
