@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25463 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932185AbcEXRxF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 24 May 2016 13:53:05 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: ath10k: improve tx scheduling
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1462796708-13880-1-git-send-email-michal.kazior@tieto.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	"Michal Kazior" <michal.kazior@tieto.com>
-Message-ID: <58d94fea017e4e04aa287f9cc45d7a6c@euamsexm01a.eu.qualcomm.com> (sfid-20160524_195311_481940_CFB4FD3D)
-Date: Tue, 24 May 2016 19:52:55 +0200
+Received: from s3.sipsolutions.net ([5.9.151.49]:40650 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751801AbcEaKfc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2016 06:35:32 -0400
+Message-ID: <1464690929.3076.25.camel@sipsolutions.net> (sfid-20160531_123536_960977_5BF5ACB8)
+Subject: Re: [PATCH] iw: support setting frame subtype and reason code when
+ deleting station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Tue, 31 May 2016 12:35:29 +0200
+In-Reply-To: <CACna6rwWBxCBSmJ1yhb8-Ai-74XtiYh9VCQFGDS2En4n67kmwQ@mail.gmail.com> (sfid-20160531_120349_582115_395912FD)
+References: <1462376337-26902-1-git-send-email-zajec5@gmail.com>
+	 <1464687856.3076.3.camel@sipsolutions.net>
+	 <CACna6rwWBxCBSmJ1yhb8-Ai-74XtiYh9VCQFGDS2En4n67kmwQ@mail.gmail.com>
+	 (sfid-20160531_120349_582115_395912FD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> wrote:
-> Recent changes revolving around implementing
-> wake_tx_queue support introduced a significant
-> performance regressions on some (slower, uni-proc)
-> systems.
+On Tue, 2016-05-31 at 12:03 +0200, Rafał Miłecki wrote:
+> On 31 May 2016 at 11:44, Johannes Berg <johannes@sipsolutions.net>
+> wrote:
+> > 
+> > Applied.
+> > 
+> > On Wed, 2016-05-04 at 17:38 +0200, Rafał Miłecki wrote:
+> > > 
+> > > Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> > Oddly enough, patchwork corrupted *this*, but not the From: line
+> > ...
+> This patch was sent before patchwork update, I guess crazy things
+> could happen with old version and update could make things even more
+> weird.
 > 
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Hopefully all further patches will be OK :)
+> 
 
-Thanks, 1 patch applied to ath.git:
+Yeah, indeed, I realized that when I reviewed your other patch (the
+channels one) which is perfectly correct in both places.
 
-7a0adc83f34d ath10k: improve tx scheduling
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9045961/
-
+johannes
