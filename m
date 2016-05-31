@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36786 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754811AbcEaPED (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 31 May 2016 11:04:03 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Dan Lenski <dlenski@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: increase polling timeout for firmware startup
-References: <1463594249-19524-1-git-send-email-dlenski@gmail.com>
-	<wrfjinyayf2i.fsf@redhat.com>
-Date: Tue, 31 May 2016 11:04:02 -0400
-In-Reply-To: <wrfjinyayf2i.fsf@redhat.com> (Jes Sorensen's message of "Wed, 18
-	May 2016 22:08:53 -0400")
-Message-ID: <wrfjwpmagtgd.fsf@redhat.com> (sfid-20160531_170408_538913_6271760E)
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:36482 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751498AbcEaMbC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2016 08:31:02 -0400
+Received: by mail-wm0-f53.google.com with SMTP id n129so129140182wmn.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2016 05:31:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87zir6ctpc.fsf@toke.dk>
+References: <1462446039-1070-1-git-send-email-michal.kazior@tieto.com>
+	<1463647072-16201-1-git-send-email-michal.kazior@tieto.com>
+	<87zir6ctpc.fsf@toke.dk>
+Date: Tue, 31 May 2016 14:31:00 +0200
+Message-ID: <CA+BoTQkUt1rxLwX4oBYi4QhLMe+2nGJuE+pG3nguTDJdJsZ8vg@mail.gmail.com> (sfid-20160531_143107_385706_E98AE680)
+Subject: Re: [Make-wifi-fast] [PATCHv5 0/5] mac80211: implement fq_codel
+From: Michal Kazior <michal.kazior@tieto.com>
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	make-wifi-fast@lists.bufferbloat.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Avery Pennarun <apenwarr@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> Dan Lenski <dlenski@gmail.com> writes:
->> Here is a patch to increase the polling timeout for rtl8xxxu firmware
->> startup.
->>
->> This patch now applies cleanly to Jes Sorensen's rtl8xxxu-devel tree
->> (86c89dd4782030c4f9e0c82424a8b92f9fdb35aa).
->>
->> The patch to make this a module parameter was removed.
->>
->> Dan Lenski (1):
->>   rtl8xxxu: Increase default polling timeout for firmware startup
->>
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
+On 31 May 2016 at 14:12, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
 >
-> Dan,
+>> This patchset disables qdiscs for drivers
+>> using software queuing and performs fq_codel-like
+>> dequeuing on txqs.
 >
-> Thanks for the patch, I'll apply it shortly.
+> Hi Michal
+>
+> Is this version in a git repo somewhere I can pull from? :)
 
-Dan,
+Just pushed, enjoy!
 
-Given your follow-on discoveries, do you still want me to apply the poll
-timeout patch, or should we wait until we nail down the reset code issue
-first?
+  https://github.com/kazikcz/linux/tree/fqmac-v5
 
-Cheers,
-Jes
+
+Michał
