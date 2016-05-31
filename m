@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48374 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948AbcEQPHn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 17 May 2016 11:07:43 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: netdev@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-media@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-	devel@driverdev.osuosl.org, pmchba@pmcs.com
-Subject: Re: [PATCH 0/7] fix typo
-References: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr>
-Date: Tue, 17 May 2016 18:07:37 +0300
-In-Reply-To: <1463495926-13728-1-git-send-email-Julia.Lawall@lip6.fr> (Julia
-	Lawall's message of "Tue, 17 May 2016 16:38:39 +0200")
-Message-ID: <874m9wpvt2.fsf@purkki.adurom.net> (sfid-20160517_170809_522604_0DCCC725)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:40391 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757053AbcEaJmm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 31 May 2016 05:42:42 -0400
+Message-ID: <1464687759.3076.2.camel@sipsolutions.net> (sfid-20160531_114245_859652_B7166348)
+Subject: Re: [PATCH] iw: add vendor command response support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 31 May 2016 11:42:39 +0200
+In-Reply-To: <1462218930-6300-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20160502_215537_638667_1DA34076)
+References: <1462218930-6300-1-git-send-email-erik.stromdahl@gmail.com>
+	 (sfid-20160502_215537_638667_1DA34076)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julia Lawall <Julia.Lawall@lip6.fr> writes:
+On Mon, 2016-05-02 at 21:55 +0200, Erik Stromdahl wrote:
+> Introduced two new commands for reading vendor command responses:
+> recv and recvbin
+> Both will send a vendor command (typically some kind of GET request)
+> in the same way as the current send command and print the received
+> response in ASCII or binary.
+> 
+The bin thing seems a bit strange, but I can live with that :)
 
-> firmare -> firmware
->
-> ---
->
->  drivers/media/dvb-frontends/mn88473.c       |    2 +-
->  drivers/net/wireless/ath/ath6kl/core.h      |    2 +-
->  drivers/net/wireless/marvell/mwifiex/pcie.c |    2 +-
+Applied.
 
-It would be good to know in advance what tree you are planning to submit
-these for. For example, should I take ath6kl and mwifiex patches or
-someone else?
-
--- 
-Kalle Valo
+johannes
