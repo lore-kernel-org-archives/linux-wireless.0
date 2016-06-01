@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:36684 "EHLO
-	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379AbcFXRqz (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35500 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753775AbcFAEPd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2016 13:46:55 -0400
+	Wed, 1 Jun 2016 00:15:33 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160616135245.3198419-3-arnd@arndb.de>
-References: <20160616135020.3154461-1-arnd@arndb.de> <20160616135245.3198419-1-arnd@arndb.de>
- <20160616135245.3198419-3-arnd@arndb.de>
-From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
-Date: Fri, 24 Jun 2016 21:46:54 +0400
-Message-ID: <CA++WF2MkLgLNNnjrtUbKE7wJ_XHhq8SU_g93XkykoUEoUYOMdw@mail.gmail.com> (sfid-20160624_194719_055956_EC16511A)
-Subject: Re: [PATCH 3/8] wireless: ipw2200: fix old-style declaration
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Johannes Berg <johannes.berg@intel.com>,
-	wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
+In-Reply-To: <1464358702-19083-3-git-send-email-javier@osg.samsung.com>
+References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com> <1464358702-19083-3-git-send-email-javier@osg.samsung.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 1 Jun 2016 14:15:12 +1000
+Message-ID: <CAGRGNgW_Re_bHnhkLW1wUGANOheoizm-zNK996nJQqBZJ=XY4w@mail.gmail.com> (sfid-20160601_061551_035661_DC241B24)
+Subject: Re: [PATCH 2/8] mwifiex: propagate sdio_enable_func() errno code in mwifiex_sdio_probe()
+To: Javier Martinez Canillas <javier@osg.samsung.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 June 2016 at 17:52, Arnd Bergmann <arnd@arndb.de> wrote:
-> Modern C standards expect the 'inline' keyword to come before the return
-> type in a declaration, and we get a warning for this with "make W=1":
+Hi All,
+
+On Sat, May 28, 2016 at 12:18 AM, Javier Martinez Canillas
+<javier@osg.samsung.com> wrote:
+> If the sdio_enable_func() function fails on .probe, the -EIO errno code
+> is always returned but that could make more difficult to debug and find
+> the cause of why the function actually failed.
 >
-> drivers/net/wireless/intel/ipw2x00/ipw2200.c:4096:1: error: 'inline' is not at beginning of declaration [-Werror=old-style-declaration]
+> Since the driver/device core prints the value returned by .probe in its
+> error message propagate what was returned by sdio_enable_func() at fail.
 >
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+
+This looks sensible to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
 > ---
->  drivers/net/wireless/intel/ipw2x00/ipw2200.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
 >
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Acked-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+Thanks,
 
-Stanislav.
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
