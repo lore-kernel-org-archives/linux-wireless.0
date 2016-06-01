@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41018 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932072AbcF3P3h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 11:29:37 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u5UF1xRR020794
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 08:02:40 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 23ssffacjw-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 08:02:40 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 0/2] mwifiex: manufacturing mode
-Date: Thu, 30 Jun 2016 20:31:13 +0530
-Message-ID: <1467298875-3581-1-git-send-email-akarwar@marvell.com> (sfid-20160630_172956_648797_4FE80D32)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:47648 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751700AbcFAKLY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2016 06:11:24 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2016-06-01
+Date: Wed,  1 Jun 2016 12:11:14 +0200
+Message-Id: <1464775875-10494-1-git-send-email-johannes@sipsolutions.net> (sfid-20160601_121129_179018_9027FB17)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds support for loading the driver in manufacturing
-mode. It's needed to perform certain factory tests.
+Hi Dave,
 
-Amitkumar Karwar (1):
-  mwifiex: add manufacturing mode support
+For now, I have just three fixes for the current cycle.
 
-Xinming Hu (1):
-  mwifiex: add hostcmd wext ioctl support
+One of them, the hwsim one, becomes interesting with some pending
+work to make hwsim work for unprivileged users in namespaces, and
+I don't want to allow them to crash the system ... I'll thus wait
+with that patch until you pull this into net-next also, so I can
+pull it back for mac80211-next.
 
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 67 ++++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/init.c   | 22 +++++---
- drivers/net/wireless/marvell/mwifiex/main.c   | 73 +++++++++++++++++++++++++--
- drivers/net/wireless/marvell/mwifiex/main.h   | 13 ++++-
- drivers/net/wireless/marvell/mwifiex/pcie.c   |  2 +-
- drivers/net/wireless/marvell/mwifiex/sdio.c   |  2 +-
- drivers/net/wireless/marvell/mwifiex/usb.c    |  2 +-
- 7 files changed, 166 insertions(+), 15 deletions(-)
+Let me know if there's any problem.
 
--- 
-1.9.1
+Thanks,
+johannes
 
+
+
+The following changes since commit 0e6b5259824e97a0f7e7b450421ff12865d3b0e2:
+
+  net: l2tp: Make l2tp_ip6 namespace aware (2016-05-30 00:03:53 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-06-01
+
+for you to fetch changes up to 6fe04128f158c5ad27e7504bfdf1b12e63331bc9:
+
+  mac80211: fix fast_tx header alignment (2016-05-31 12:14:04 +0200)
+
+----------------------------------------------------------------
+Three small fixes for the current cycle:
+ * missing netlink attribute check in hwsim wmediumd (Martin)
+ * fast xmit structure alignment fix (Felix)
+ * mesh path flush/synchronisation fix (Bob)
+
+----------------------------------------------------------------
+Bob Copeland (1):
+      mac80211: mesh: flush mesh paths unconditionally
+
+Felix Fietkau (1):
+      mac80211: fix fast_tx header alignment
+
+Martin Willi (1):
+      mac80211_hwsim: Add missing check for HWSIM_ATTR_SIGNAL
+
+ drivers/net/wireless/mac80211_hwsim.c | 1 +
+ net/mac80211/mesh.c                   | 4 ++++
+ net/mac80211/sta_info.h               | 2 +-
+ 3 files changed, 6 insertions(+), 1 deletion(-)
