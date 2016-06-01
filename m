@@ -1,109 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53157 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932344AbcFBJoS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 05:44:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Franky Lin <franky.lin@broadcom.com>
-Subject: Re: [PATCH for-4.7] brcmfmac: add eth_type_trans back for PCIe full dongle
-References: <1464815616-21551-1-git-send-email-arend@broadcom.com>
-	<87mvn4lyle.fsf@purkki.adurom.net>
-Date: Thu, 02 Jun 2016 12:44:13 +0300
-In-Reply-To: <87mvn4lyle.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu,
-	02 Jun 2016 12:38:37 +0300")
-Message-ID: <87a8j4lyc2.fsf@purkki.adurom.net> (sfid-20160602_114421_806329_F25EF1AD)
+Received: from mga09.intel.com ([134.134.136.24]:51781 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751570AbcFANTT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2016 09:19:19 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "me@bobcopeland.com" <me@bobcopeland.com>,
+	"reinoudkoornstra@gmail.com" <reinoudkoornstra@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: wireless-testing on 4.7
+Date: Wed, 1 Jun 2016 13:19:00 +0000
+Message-ID: <1464787139.2554.74.camel@intel.com> (sfid-20160601_151923_055488_72EDEEBE)
+References: <20160529214059.GA15677@localhost>
+	 <CAAA5faFNa1sQrj6Yfq+hrXfUOi0Lek4qL8Zzpdv27-4+Z4n6mQ@mail.gmail.com>
+	 <20160601125453.GB12977@localhost>
+In-Reply-To: <20160601125453.GB12977@localhost>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-
-> Arend van Spriel <arend@broadcom.com> writes:
->
->> From: Franky Lin <franky.lin@broadcom.com>
->>
->> A regression was introduced in commit 9c349892ccc9 ("brcmfmac: revise
->> handling events in receive path") which moves eth_type_trans() call
->> to brcmf_rx_frame(). Msgbuf layer doesn't use brcmf_rx_frame() but invokes
->> brcmf_netif_rx() directly. In such case the Ethernet header was not
->> stripped out resulting in null pointer dereference in the networking
->> stack.
->>
->> BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
->> IP: [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
->> PGD 0
->> Oops: 0000 [#1] PREEMPT SMP
->> Modules linked in: fuse ipt_MASQUERADE nf_nat_masquerade_ipv4
->> iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype
->> [...]
->> rtsx_pci scsi_mod usbcore usb_common i8042 serio nvme nvme_core
->> CPU: 7 PID: 1340 Comm: irq/136-brcmf_p Not tainted 4.7.0-rc1-mainline #1
->> Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 01.02.00 04/07/2016
->> task: ffff8804a0c5bd00 ti: ffff88049e124000 task.ti: ffff88049e124000
->> RIP: 0010:[<ffffffff814c3ce6>] [<ffffffff814c3ce6>]
->> enqueue_to_backlog+0x56/0x260
->> RSP: 0018:ffff88049e127ca0 EFLAGS: 00010046
->> RAX: 0000000000000000 RBX: ffff8804bddd7c40 RCX: 000000000000002f
->> RDX: 0000000000000000 RSI: 0000000000000007 RDI: ffff8804bddd7d4c
->> RBP: ffff88049e127ce8 R08: 0000000000000000 R09: 0000000000000000
->> R10: ffff8804bddd12c0 R11: 000000000000149e R12: 0000000000017c40
->> R13: ffff88049e127d08 R14: ffff8804a9bd6d00 R15: ffff8804bddd7d4c
->> FS: 0000000000000000(0000) GS:ffff8804bddc0000(0000) knlGS:0000000000000000
->> CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
->> CR2: 0000000000000048 CR3: 0000000001806000 CR4: 00000000003406e0
->> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
->> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
->> Stack:
->> ffff8804bdddad00 ffff8804ad089e00 0000000000000000 0000000000000282
->> 0000000000000000 ffff8804a9bd6d00 ffff8804a1b27e00 ffff8804a9bd6d00
->> ffff88002ee88000 ffff88049e127d28 ffffffff814c3f3b ffffffff81311fc3
->> Call Trace:
->> [<ffffffff814c3f3b>] netif_rx_internal+0x4b/0x170
->> [<ffffffff81311fc3>] ? swiotlb_tbl_unmap_single+0xf3/0x120
->> [<ffffffff814c5467>] netif_rx_ni+0x27/0xc0
->> [<ffffffffa08519e9>] brcmf_netif_rx+0x49/0x70 [brcmfmac]
->> [<ffffffffa08564d4>] brcmf_msgbuf_process_rx+0x2b4/0x570 [brcmfmac]
->> [<ffffffff81020017>] ? __xen_set_pgd_hyper+0x57/0xd0
->> [<ffffffff810d60b0>] ? irq_forced_thread_fn+0x70/0x70
->> [<ffffffffa0857381>] brcmf_proto_msgbuf_rx_trigger+0x31/0xe0 [brcmfmac]
->> [<ffffffffa0861e8f>] brcmf_pcie_isr_thread+0x7f/0x110 [brcmfmac]
->> [<ffffffff810d60d0>] irq_thread_fn+0x20/0x50
->> [<ffffffff810d63ad>] irq_thread+0x12d/0x1c0
->> [<ffffffff815d07d5>] ? __schedule+0x2f5/0x7a0
->> [<ffffffff810d61d0>] ? wake_threads_waitq+0x30/0x30
->> [<ffffffff810d6280>] ? irq_thread_dtor+0xb0/0xb0
->> [<ffffffff81098ea8>] kthread+0xd8/0xf0
->> [<ffffffff815d4b7f>] ret_from_fork+0x1f/0x40
->> [<ffffffff81098dd0>] ? kthread_worker_fn+0x170/0x170
->> Code: 1c f5 60 9a 8e 81 9c 58 0f 1f 44 00 00 48 89 45 d0 fa 66 0f 1f
->> 44 00 00 4c 8d bb 0c 01 00 00 4c 89 ff e8 5e 08 11 00 49 8b 56 20 <48>
->> 8b 52 48 83 e2 01 74 10 8b 8b 08 01 00 00 8b 15 59 c5 42 00
->> RIP [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
->> RSP <ffff88049e127ca0>
->> CR2: 0000000000000048
->>
->> Reported-by: Grey Christoforo <grey@christoforo.net>
->
-> I'll add a fixes line before I commit:
->
-> Fixes: 9c349892ccc9 ("brcmfmac: revise handling events in receive path")
->
->> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
->> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
->> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
->> Signed-off-by: Franky Lin <franky.lin@broadcom.com>
->> [arend@broadcom.com: rephrased the commit message]
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->>
->> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->
-> And a reminder to myself to remove the two extra S-o-b lines :)
-
-Oh, forgot to mention that I'm planning to push this to 4.7.
-
--- 
-Kalle Valo
+T24gV2VkLCAyMDE2LTA2LTAxIGF0IDA4OjU0IC0wNDAwLCBCb2IgQ29wZWxhbmQgd3JvdGU6DQo+
+ICsgTHVjYSwgRW1tYW51ZWwNCg0KVGhhbmtzLCBCb2IhDQoNCg0KPiBPbiBUdWUsIE1heSAzMSwg
+MjAxNiBhdCAxMDowNjo1N1BNIC0wNjAwLCBSZWlub3VkIEtvb3Juc3RyYSB3cm90ZToNCj4gPiBU
+b2RheSBJIGNvbXBpbGVkIDQuNisgYW5kIHB1bGxlZCBzb3VyY2VzIHRvZGF5DQo+ID4gaXdsd2lm
+aSBpc24ndCBzdXBlciBzbW9vdGguDQo+IA0KPiBJIGFzc3VtZSB5b3UgbWVhbiB3aXJlbGVzcy10
+ZXN0aW5nLCBiYXNlZCBvbiA0LjctcmMxIChhcyB0aGlzIGVtYWlsDQo+IGlzDQo+IGluIHJlcGx5
+IHRvIG15IGFubm91bmNlbWVudCBvZiBzYW1lKS4NCg0KWWVzLCB3ZSBuZWVkIHRvIGtub3cgZXhh
+Y3RseSB3aGF0IGtlcm5lbCB5b3UncmUgdXNpbmcgc28gd2Uga25vdyB3aGF0DQp3ZSdyZSBkZWJ1
+Z2dpbmcuDQoNCj4gPiANCj4gPiBbwqDCoDExMi4zNDU0NTddIHdscDRzMDogYXV0aGVudGljYXRl
+IHdpdGggMDA6MzA6NDQ6MWQ6Y2Y6MmINCj4gPiBbwqDCoDExMi4zNDkwMDJdIHdscDRzMDogc2Vu
+ZCBhdXRoIHRvIDAwOjMwOjQ0OjFkOmNmOjJiICh0cnkgMS8zKQ0KPiA+IFvCoMKgMTEyLjM0OTY0
+N10gd2xwNHMwOiBhdXRoZW50aWNhdGVkDQo+ID4gW8KgwqAxMTIuMzUyNDU2XSB3bHA0czA6IGFz
+c29jaWF0ZSB3aXRoIDAwOjMwOjQ0OjFkOmNmOjJiICh0cnkgMS8zKQ0KPiA+IFvCoMKgMTEyLjM1
+Mzc2NF0gd2xwNHMwOiBSWCBBc3NvY1Jlc3AgZnJvbSAwMDozMDo0NDoxZDpjZjoyYg0KPiA+IChj
+YXBhYj0weDExDQo+ID4gc3RhdHVzPTAgYWlkPTMpDQo+ID4gW8KgwqAxMTIuMzU1MDM1XSB3bHA0
+czA6IGFzc29jaWF0ZWQNCj4gPiBbwqDCoDExMi4zNTUzOTNdIElQdjY6IEFERFJDT05GKE5FVERF
+Vl9DSEFOR0UpOiB3bHA0czA6IGxpbmsgYmVjb21lcw0KPiA+IHJlYWR5DQo+ID4gW8KgwqAxMTgu
+NjE2MzI3XSB3bHA0czA6IGRlYXV0aGVudGljYXRlZCBmcm9tIDAwOjMwOjQ0OjFkOmNmOjJiDQo+
+ID4gKFJlYXNvbjoNCj4gPiAxNT00V0FZX0hBTkRTSEFLRV9USU1FT1VUKQ0KPiA+IFvCoMKgMTI4
+LjY3MzgxMl0gd2xwNHMwOiBhdXRoZW50aWNhdGUgd2l0aCAwMDozMDo0NDoxZDpjZjoyYg0KPiA+
+IFvCoMKgMTI4LjY3Njk5N10gd2xwNHMwOiBzZW5kIGF1dGggdG8gMDA6MzA6NDQ6MWQ6Y2Y6MmIg
+KHRyeSAxLzMpDQo+ID4gW8KgwqAxMjguNjc3NjQ4XSB3bHA0czA6IGF1dGhlbnRpY2F0ZWQNCj4g
+PiBbwqDCoDEyOC42Nzg2OTFdIHdscDRzMDogYXNzb2NpYXRlIHdpdGggMDA6MzA6NDQ6MWQ6Y2Y6
+MmIgKHRyeSAxLzMpDQo+ID4gW8KgwqAxMjguNjc5ODA3XSB3bHA0czA6IFJYIEFzc29jUmVzcCBm
+cm9tIDAwOjMwOjQ0OjFkOmNmOjJiDQo+ID4gKGNhcGFiPTB4MTENCj4gPiBzdGF0dXM9MCBhaWQ9
+MykNCj4gPiBbwqDCoDEyOC42ODExOThdIHdscDRzMDogYXNzb2NpYXRlZA0KPiA+IA0KPiA+IEkg
+bmV2ZXIgZXhwZXJpZW5jZWQgdGhlIDQgd2F5IGhhbmRzaGFrZSA4MDIuMTFpIHRpbWVvdXQgaW4g
+bXkgaG9tZQ0KPiA+IHNldHVwLg0KPiA+IFdpdGggb3RoZXIgc2V0dXBzIHBsZW50eSBvZiB0aW1l
+cywgZXNwZWNpYWxseSB3aXRoIG1lZGlhdGVrDQo+ID4gZHJpdmVycy4gOikNCj4gPiBJZiB5b3Ug
+d2lzaCBJIGNhbiBzbmlmZiBhbmQgc2VlIHdoaWNoIHNpZGUgaXMgYXQgZmF1bHQuDQo+IA0KPiBJ
+IGhhdmUgbm90IG5vdGljZWQgYW55IHByb2JsZW1zIG9uIG15IGxhcHRvcCB3aXRoIGl3bGR2bSBv
+biBhIDYyMDUsDQo+IHdpdGgNCj4gbGF0ZXN0IHdpcmVsZXNzLXRlc3RpbmcuwqDCoEJ1dCBtYXli
+ZSBpbnRlbCBkZXZzIGNhbiB3ZWlnaCBpbi4NCg0KSSdtIG5vdCBnb2luZyB0byBwdXQgYWxsIG15
+IHdlaWdodCBpbiBsZXN0IEkgYnJlYWsgdGhpbmdzIGV2ZW4gbW9yZS4gOlANCg0KSSBjYW4ndCBy
+ZWFsbHkgc2VlIG11Y2ggZnJvbSB0aGUgbG9nIGV4dHJhY3QgeW91IHBvc3RlZC4gwqBDYW4geW91
+IGdldA0Kc29tZSBsb2dzIChlc3BlY2lhbGx5IHRyYWNlLWNtZCBhbmQgYSBzbmlmZmVyIGNhcHR1
+cmUpIGFuZCByZXBvcnQgYSBidWcNCmluIGJ1Z3ppbGxhPyBXZSBoYXZlIHNvbWUgaW5zdHJ1Y3Rp
+b25zIG9uIGhvdyB0byBkbyBpdCBoZXJlOg0KDQpodHRwczovL3dpcmVsZXNzLndpa2kua2VybmVs
+Lm9yZy9lbi91c2Vycy9kcml2ZXJzL2l3bHdpZmkvZGVidWdnaW5nDQoNClRoYW5rcyBmb3IgcmVw
+b3J0aW5nIQ0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4=
