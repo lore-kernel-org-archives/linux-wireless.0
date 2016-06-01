@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f43.google.com ([209.85.214.43]:35942 "EHLO
-	mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbcFDKnn (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:34430 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751488AbcFAEQb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 06:43:43 -0400
+	Wed, 1 Jun 2016 00:16:31 -0400
 MIME-Version: 1.0
-In-Reply-To: <1465000772-1447-1-git-send-email-hgsipiere@gmail.com>
-References: <1465000772-1447-1-git-send-email-hgsipiere@gmail.com>
+In-Reply-To: <1464358702-19083-6-git-send-email-javier@osg.samsung.com>
+References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com> <1464358702-19083-6-git-send-email-javier@osg.samsung.com>
 From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sat, 4 Jun 2016 20:35:46 +1000
-Message-ID: <CAGRGNgV_tcM+3L7eWjWfuOEeWWo+ThWK_+GTNiGbZLL=acg8VA@mail.gmail.com> (sfid-20160604_124352_012939_F5028535)
-Subject: Re: [PATCH] Drivers: ssb: Fix bare unsigned and changed to trailing comments
-To: Hugh Sipiere <hgsipiere@gmail.com>
-Cc: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
+Date: Wed, 1 Jun 2016 14:16:05 +1000
+Message-ID: <CAGRGNgXWAAw7OFOVLUPEYhu-knqQXCMduaxYp+ejSAKGb0WS8g@mail.gmail.com> (sfid-20160601_061648_838107_224FE7A2)
+Subject: Re: [PATCH 5/8] mwifiex: use dev_err() instead of pr_err() in mwifiex_sdio_probe()
+To: Javier Martinez Canillas <javier@osg.samsung.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	netdev <netdev@vger.kernel.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+	Nishant Sarmukadam <nishants@marvell.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hugh,
+Hi All,
 
-On Sat, Jun 4, 2016 at 10:39 AM, Hugh Sipiere <hgsipiere@gmail.com> wrote:
-> I changed drivers/ssb/driver_gpio.c to better fit the coding style.
-> I changed unsigned to unsigned int
-> Two comments were changed to not end on a line with the text.
+On Sat, May 28, 2016 at 12:18 AM, Javier Martinez Canillas
+<javier@osg.samsung.com> wrote:
+> It's better to have the device name prefixed in the error message.
 >
-> Signed-off-by: Hugh Sipiere <hgsipiere@gmail.com>
+> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 
-You should separate the changes into two patches, one to change
-"unsigned" to "unsigned int" and one to fix the comments.
+This looks right to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+> ---
+>
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 
 Thanks,
 
