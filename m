@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:26385 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752867AbcFBTdM (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:54626 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751206AbcFAQX4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 15:33:12 -0400
-From: Maya Erez <qca_merez@qualcomm.com>
-Cc: Maya Erez <qca_merez@qualcomm.com>, linux-wireless@vger.kernel.org,
-	wireless-regdb@lists.infradead.org, wil6210@qualcomm.com
-To: Seth Forshee <seth.forshee@canonical.com>
-Subject: [PATCH v2] wireless-regdb: Republic of Korea: Add 60GHz regulatory rules
-Date: Thu,  2 Jun 2016 22:33:05 +0300
-Message-Id: <1464895985-7182-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160602_213316_127350_5D307025)
+	Wed, 1 Jun 2016 12:23:56 -0400
+From: Colin King <colin.king@canonical.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] rtl8xxxu: fix typo on variable name, compare against correct variable
+Date: Wed,  1 Jun 2016 17:23:45 +0100
+Message-Id: <1464798225-7315-1-git-send-email-colin.king@canonical.com> (sfid-20160601_182441_444808_17D81AD3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add 60GHz regulatory rules for Korea (KR).
-Source is
-http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+path_b_ok is being assigned but immediately after path_a_ok is being
+compared to the value 0x03.  This appears to be a typo on the
+variable name, compare path_b_ok instead.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- db.txt | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/db.txt b/db.txt
-index da16f7c..48df9a5 100644
---- a/db.txt
-+++ b/db.txt
-@@ -664,6 +664,10 @@ country KR: DFS-JP
- 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
- 	(5490 - 5710 @ 160), (30), DFS
- 	(5735 - 5835 @ 80), (30)
-+	# 60 GHz band channels 1-4,
-+	# ref: http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
-+	(57000 - 66000 @ 2160), (43)
-+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index fe19ace..b04cf30 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1149,7 +1149,7 @@ static void rtl8192eu_phy_iqcalibrate(struct rtl8xxxu_priv *priv,
  
- country KW: DFS-ETSI
- 	(2402 - 2482 @ 40), (20)
+ 		for (i = 0; i < retry; i++) {
+ 			path_b_ok = rtl8192eu_rx_iqk_path_b(priv);
+-			if (path_a_ok == 0x03) {
++			if (path_b_ok == 0x03) {
+ 				val32 = rtl8xxxu_read32(priv,
+ 							REG_RX_POWER_BEFORE_IQK_B_2);
+ 				result[t][6] = (val32 >> 16) & 0x3ff;
 -- 
-1.8.5.2
+2.8.1
 
