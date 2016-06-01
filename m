@@ -1,48 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37363 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752101AbcFJIup convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 04:50:45 -0400
-Received: by mail-wm0-f51.google.com with SMTP id k204so92512351wmk.0
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 01:50:44 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <ff65514a-47a3-2f32-658c-a2177401aa9a@bk.ru>
-References: <ff65514a-47a3-2f32-658c-a2177401aa9a@bk.ru>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 10 Jun 2016 10:50:43 +0200
-Message-ID: <CA+BoTQmJ+JruxZ9WsG8Dnz=cwNY+e3Dy=g74-brS+0OE_5iu0Q@mail.gmail.com> (sfid-20160610_105050_761105_4A078307)
-Subject: Re: ath10k/QCA9980 - Issues introduced in wireless testing 2016-05
-To: "A. Benz" <ash.benz@bk.ru>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:35835 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750749AbcFAScM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2016 14:32:12 -0400
+Message-ID: <1464805919.4958.31.camel@redhat.com> (sfid-20160601_203216_220591_701EB4B5)
+Subject: Re: Where to post Wireless Tools Patches
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 01 Jun 2016 13:31:59 -0500
+In-Reply-To: <1464802721.3465.1.camel@sipsolutions.net>
+References: <CACtQq=bixCDdZpSvj6W+SZKt5N6FSebfgPBjQcqePuj2aN8OAA@mail.gmail.com>
+	 <1464801615.4958.6.camel@redhat.com>
+	 (sfid-20160601_192032_001317_E1E532F3) <1464802721.3465.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 June 2016 at 09:46, A. Benz <ash.benz@bk.ru> wrote:
-> Dear All,
->
-> I am using LEDE on my IPQ806x (QCA9980) system (Archer C2600).
-> With compat-wireless-2016-05-12, I observed traces attached below.
-> The router is unstable and eventually reboots by itself (randomly).
->
-> Upon reverting to compat-wireless-2016-01, the issue disappears. Nothing
-> else is changed (software-wise or hardware).
-> This was confirmed with other users.
->
-> A new compile with the fixes below:
-> https://git.lede-project.org/?p=lede/nbd/staging.git;a=commit;h=858e26f3c0fc11231f25497cbb2ddca1e5f101e0
->
-> Did not solve the problem.
->
-> Please let me know if I need to provide any further information.
->
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 558 at
-> compat-wireless-2016-05-12/net/mac80211/rx.c:4068
-> ieee80211_rx_napi+0x8c/0x8a4 [mac80211]()
+On Wed, 2016-06-01 at 19:38 +0200, Johannes Berg wrote:
+> On Wed, 2016-06-01 at 12:20 -0500, Dan Williams wrote:
+> 
+> > 
+> > Assuming you mean the "wireless-tools" package, this list is OK.
+> >  But
+> > probably nobody will apply the patches, since wireless-tools and
+> > the
+> > WEXT API are long-since deprecated
+> I don't think anyone even maintains the wireless-tools package any
+> more. I don't know who would, anyway, since I haven't heard anything
+> from Jean in many years.
 
-Can you post what is at rx.c line 4068 (and +/- 3 lines), please?
+I was surprised to run into Jean at the 2015 OVS Fall Conference last
+November.  He's spent the last few years shepherding OpenFlow
+specifications though formalization and hasn't done any work in
+wireless for a long long time.  He also said he's extremely unlikely to
+do any wireless stuff now or in the future :)  So yeah, wireless-tools
+is unmaintained.
 
-
-Michał
+Dan
