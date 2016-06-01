@@ -1,67 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vpn.innerrange.com.au ([203.122.143.146]:40062 "EHLO
-	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751466AbcFICrR (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:36673 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750914AbcFAXN4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 22:47:17 -0400
-From: Craig McQueen <craig.mcqueen@innerrange.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 9 Jun 2016 12:47:03 +1000
-Subject: RE: rt2800usb firmware rt2870.bin 0.36 not scanning
-Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D2A096849@IR-CENTRAL.corp.innerrange.com> (sfid-20160609_044720_980597_80FC29BF)
-References: <f2d6e3de-826a-c7b6-ac29-16b83be758e8@gmail.com>
-In-Reply-To: <f2d6e3de-826a-c7b6-ac29-16b83be758e8@gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 1 Jun 2016 19:13:56 -0400
 MIME-Version: 1.0
+In-Reply-To: <ec09757e-302a-b341-6bf0-46737abb7976@osg.samsung.com>
+References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+ <1464358702-19083-8-git-send-email-javier@osg.samsung.com>
+ <CAGRGNgUZ+mG_KzhiOzquB3qd-V_Pdbazag=nrFpG87mRQGmXLg@mail.gmail.com> <ec09757e-302a-b341-6bf0-46737abb7976@osg.samsung.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 2 Jun 2016 09:13:35 +1000
+Message-ID: <CAGRGNgUaNAxhhvnVJDx73yABvp3HXfqK5JFKCKvOgkM0DyFuPA@mail.gmail.com> (sfid-20160602_011430_309618_E3F22810)
+Subject: Re: [PATCH 7/8] mwifiex: don't print an error if an optional DT
+ property is missing
+To: Javier Martinez Canillas <javier@osg.samsung.com>,
+	Xinming Hu <huxm@marvell.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WG9zZSBWYXpxdWV6IFBlcmV6IHdyb3RlOg0KPiBDcmFpZyBNY1F1ZWVuIHdyb3RlOg0KPiANCj4g
-PiBJIGhhdmUgYSBELUxpbmsgRFdBLTE0MCBVU0IgV2ktRmkgZGV2aWNlIHdoaWNoIGlzIHJ0Mjgw
-MCBiYXNlZCAoNTM5Mg0KPiA+IGNoaXBzZXQpLiBJJ20gdHJ5aW5nIHRvIHVzZSBpdCBvbiBhIEJl
-YWdsZUJvbmUgQmxhY2sgYmFzZWQgc3lzdGVtIHdpdGgNCj4gPiAzLjE0Lngga2VybmVsIGJ1aWx0
-IHdpdGggWW9jdG8uIFdlJ3JlIHVzaW5nIENvbm5NYW4gMS4zMCBhdCB0aGUgbW9tZW50Lg0KPiAN
-Cj4gVHJ5IGl0IHdpdGggYSBfZGVza3RvcCB4ODZfNjQgZGlzdHJpYnV0aW9uXyAsIHdpdGggYSAq
-cmVjZW50IGtlcm5lbCogYXMNCj4gRmVkb3JhOiAoV09SSyBpcyBnbm9tZSkgaHR0cHM6Ly9hbHQu
-ZmVkb3JhcHJvamVjdC5vcmcvcHViL2FsdC9saXZlLXJlc3BpbnMvDQoNCkhtbSwgdGhhdCBpcyBu
-b24tdHJpdmlhbCBidXQgSSBtYXkgdHJ5IGl0Lg0KDQpGb3Igbm93LCBJJ2xsIGFsc28gdHJ5IGEg
-NC40LjYga2VybmVsIHJ1bm5pbmcgb24gYSBCZWFnbGVCb25lIEJsYWNrICh3aXRoIGEgVVNCIGh1
-YiB0byB3b3JrIGFyb3VuZCBhbm90aGVyIGlzc3VlIHdpdGggdGhlIHJ0MjgwMHVzYiBkcml2ZXIg
-Y3Jhc2hpbmcgYXMgZGVzY3JpYmVkIGluIGFub3RoZXIgZS1tYWlsKS4NCg0KPiA+IFdlJ3ZlIGJl
-ZW4gZmluZGluZyBzb21lIGluc3RhYmlsaXRpZXMgd2l0aCBpdCBwZXJpb2RpY2FsbHkNCj4gPiBk
-aXNjb25uZWN0aW5nIGZyb20gc29tZSBuZXR3b3Jrcy4gU28gd2UgdHJpZWQgdXBncmFkaW5nIHRo
-ZSBmaXJtd2FyZQ0KPiA+IGZpbGUgcnQyODcwLmJpbiBmcm9tIHZlcnNpb24gMC4yOSB0byAwLjM2
-LiBUaGF0IHNlZW1zIHRvIGJlIG1vcmUNCj4gPiBzdGFibGUgd2l0aCB0aGUgbmV0d29yay4gSG93
-ZXZlciwgd2UncmUgZmluZGluZyB0aGF0IGl0IGluaXRpYWxseQ0KPiA+IGRvZXNuJ3QgY29ubmVj
-dCwgdW50aWwgdGhlIFdpLUZpIGhhcyBiZWVuIGRpc2FibGVkIGFuZCB0aGVuIHJlLWVuYWJsZWQu
-ICcNCj4gc2NhbiB3aWZpJw0KPiA+IGFuZCAnaXdsaXN0IHNjYW4nIGRvbid0IHJldHVybiBhbnl0
-aGluZyB1bnRpbCBXaS1GaSBoYXMgYmVlbiBkaXNhYmxlZA0KPiA+IGFuZCB0aGVuIHJlLWVuYWJs
-ZWQuDQo+IA0KPiBEb24ndCB1c2UgYW55IHdyYXBwZXIoTk0sIENvbm5NYW4sIHdpY2QsIC4uLiks
-IHVzdWFsbHkgYXJlIGJ1Z2d5LiBZb3UNCj4gc2hvdWxkIHVzZSByYXcgY29tbWFuZHMgIml3IiBh
-bmQgIndwYV9zdXBwbGljYW50Ii4gSGludHM6DQo+IGh0dHBzOi8vd2lyZWxlc3Mud2lraS5rZXJu
-ZWwub3JnL2VuL3VzZXJzL2RvY3VtZW50YXRpb24vaXcgYW5kDQo+IHdwYV9zdXBwbGljYW50IGFs
-d2F5cyBydW5uaW5nIHdpdGggIi1Ebmw4MDIxMSINCg0KT2theSwgSSd2ZSBzdHJpcHBlZCBkb3du
-IHRoZSBzeXN0ZW0gc28gQ29ubk1hbiwgdWRldiBydWxlcyBhcmVuJ3QgcnVubmluZy4NCg0KT24g
-YWxsIHN5c3RlbXMsIGFmdGVyIHBsdWdnaW5nIGluIHRoZSBkZXZpY2UsIEkgaGF2ZSB0byBpc3N1
-ZToNCg0KICAgIGlwIGxpbmsgc2V0IHdsYW4wIHVwDQoNCkFmdGVyIHRoaXMsIEkgdHJ5IHRvIGRv
-IGEgc2NhbjoNCg0KICAgIGl3IGRldiB3bGFuMCBzY2FuDQoNCk9uIGtlcm5lbCA0LjQuNiwgd2l0
-aCBmaXJtd2FyZSAwLjM2LCBpdCB3b3JrcyBmaW5lIChsaXN0cyBBUHMgaXQgZmluZHMpLiBPbiBr
-ZXJuZWwgMy4xNC54LCB3aXRoIGZpcm13YXJlIDAuMjksIGl0IHdvcmtzIGZpbmUuIEJ1dCBvbiBr
-ZXJuZWwgMy4xNC54LCB3aXRoIGZpcm13YXJlIDAuMzYsIGl0IHJldHVybnMgbm90aGluZy4gQnV0
-IHRoZW4sIGlmIEkgZG8gdGhpczoNCg0KICAgIGlwIGxpbmsgc2V0IHdsYW4wIGRvd24NCiAgICBp
-cCBsaW5rIHNldCB3bGFuMCB1cA0KICAgIGl3IGRldiB3bGFuMCBzY2FuDQoNClRoZW4gaXQgd29y
-a3MgZmluZS4NCg0KU28sIHRoZSBxdWVzdGlvbiBpcywgd2h5IGRvZXMgZmlybXdhcmUgMC4zNiB3
-aXRoIGtlcm5lbCAzLjE0Lnggbm90IHdvcmsgdW50aWwgSSd2ZSBtYWRlIHRoZSBpbnRlcmZhY2Ug
-Z28gdXAsIHRoZW4gZG93biwgYW5kIHRoZW4gdXAgYWdhaW4/DQoNCj4gPiBIYXZlIHRoZXJlIGJl
-ZW4gYW55IExpbnV4IGRyaXZlciBjaGFuZ2VzIG5lZWRlZCB0byBzdXBwb3J0IHRoaXMgMC4zNg0K
-PiA+IGZpcm13YXJlPyBEb2VzIGFueW9uZSBoYXZlIGFueSBwb2ludGVycyBvbiB3aGVyZSB0byBs
-b29rIHRvIHVuZGVyc3RhbmQNCj4gPiB0aGlzIGJlaGF2aW91ciBiZXR3ZWVuIDAuMjkgYW5kIDAu
-MzYgZmlybXdhcmU/DQo+IA0KPiBjbG9zZWQgc291cmNlLCBidXQgb2xkIGNoYW5nZWxvZ3MgYXJl
-IGF2YWlsYWJsZSBhdDoNCj4gaHR0cDovL3J0MngwMC5zZXJpYWxtb25rZXkuY29tL3BpcGVybWFp
-bC91c2Vyc19ydDJ4MDAuc2VyaWFsbW9ua2V5LmNvbS8NCj4gMjAxMy1TZXB0ZW1iZXIvMDA2Mzkx
-Lmh0bWwNCj4gDQo+IFJlbGF0ZWQgdG8gbGF0ZXN0IGZpcm13YXJlIHJlbGVhc2VzLCByYWxpbmsv
-bWVkaWF0ZWsgZ3V5cyBzYXk6DQo+ICJBY2NvcmRpbmcgdG8gdGhlIGVuZ2luZWVycyBjb21tZW50
-LCB0aGUgZmlybXdhcmUgZGlkbid0IGNoYW5nZSBtdWNoDQo+IHRoZXNlIHllYXJzLCBqdXN0IHNv
-bWUgYmJwIHJlZ2lzdGVyIHVwZGF0ZSBhbmQgbGVkIHN0dWZmLiINCg0KLS0gDQpDcmFpZyBNY1F1
-ZWVuDQoNCg==
+Hi Javier,
+
+On Wed, Jun 1, 2016 at 11:51 PM, Javier Martinez Canillas
+<javier@osg.samsung.com> wrote:
+> Hello Julian,
+>
+> Thanks a lot for your feedback and reviews.
+>
+> On 06/01/2016 12:20 AM, Julian Calaby wrote:
+>> Hi All,
+>>
+>> On Sat, May 28, 2016 at 12:18 AM, Javier Martinez Canillas
+>> <javier@osg.samsung.com> wrote:
+>>> The Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt DT
+>>> binding document say that the "interrupts" property in the child node is
+>>> optional. So the property being missed shouldn't be treated as an error.
+>>
+>> Have you checked whether it is truly optional? I.e. nothing else
+>> breaks if this property isn't set?
+>>
+>
+> That's what the DT binding says and the IRQ is only used as a wakeup source
+> during system suspend, it is not used during runtime. And that is why the
+> mwifiex_sdio_probe_of() function does not fail if the IRQ is missing.
+
+Awesome, that's what I wanted to know.
+
+> Now, I just got to that conclusion by reading the binding docs, the message
+> in the commits that introduced this and the driver code. Xinming Hu should
+> comment on how critical this feature is for systems that needs to be wakeup.
+
+Xinming, could you review this also?
+
+> In any case I think that the code should be consistent with what the binding
+> doc says and also the function does (i.e: dev_err only if returns an error).
+>
+>>> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+>>
+>> Other than that, this looks sensible to me.
+>>
+>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+>>
+>
+> Best regards,
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
