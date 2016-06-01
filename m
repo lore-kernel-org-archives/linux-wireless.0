@@ -1,159 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40941 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752014AbcF0QcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 12:32:17 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 05/12] rtl8xxxu: Add support for aggregated RX packets on gen1 parts
-Date: Mon, 27 Jun 2016 12:32:03 -0400
-Message-Id: <1467045130-18874-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183222_490406_CD54A0B4)
-In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:33993 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752119AbcFAEG6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2016 00:06:58 -0400
+Received: by mail-qg0-f44.google.com with SMTP id p34so32438620qgp.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2016 21:06:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160529214059.GA15677@localhost>
+References: <20160529214059.GA15677@localhost>
+Date: Tue, 31 May 2016 22:06:57 -0600
+Message-ID: <CAAA5faFNa1sQrj6Yfq+hrXfUOi0Lek4qL8Zzpdv27-4+Z4n6mQ@mail.gmail.com> (sfid-20160601_060702_678405_20B60373)
+Subject: Re: wireless-testing on 4.7
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Today I compiled 4.6+ and pulled sources today
+iwlwifi isn't super smooth.
 
-This implements support for demuxing aggregated RX packets on gen1
-devices, using the rxdesc16 format.
+[  112.345457] wlp4s0: authenticate with 00:30:44:1d:cf:2b
+[  112.349002] wlp4s0: send auth to 00:30:44:1d:cf:2b (try 1/3)
+[  112.349647] wlp4s0: authenticated
+[  112.352456] wlp4s0: associate with 00:30:44:1d:cf:2b (try 1/3)
+[  112.353764] wlp4s0: RX AssocResp from 00:30:44:1d:cf:2b (capab=0x11
+status=0 aid=3)
+[  112.355035] wlp4s0: associated
+[  112.355393] IPv6: ADDRCONF(NETDEV_CHANGE): wlp4s0: link becomes ready
+[  118.616327] wlp4s0: deauthenticated from 00:30:44:1d:cf:2b (Reason:
+15=4WAY_HANDSHAKE_TIMEOUT)
+[  128.673812] wlp4s0: authenticate with 00:30:44:1d:cf:2b
+[  128.676997] wlp4s0: send auth to 00:30:44:1d:cf:2b (try 1/3)
+[  128.677648] wlp4s0: authenticated
+[  128.678691] wlp4s0: associate with 00:30:44:1d:cf:2b (try 1/3)
+[  128.679807] wlp4s0: RX AssocResp from 00:30:44:1d:cf:2b (capab=0x11
+status=0 aid=3)
+[  128.681198] wlp4s0: associated
 
-So far this has only been tested with rtl8723au devices.
+I never experienced the 4 way handshake 802.11i timeout in my home setup.
+With other setups plenty of times, especially with mediatek drivers. :)
+If you wish I can sniff and see which side is at fault.
+Thanks,
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 103 ++++++++++++++-------
- 1 file changed, 69 insertions(+), 34 deletions(-)
+Reinoud.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 52652e6..01a4f89 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5093,53 +5093,88 @@ static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
- int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
- {
- 	struct ieee80211_hw *hw = priv->hw;
--	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
--	struct rtl8xxxu_rxdesc16 *rx_desc =
--		(struct rtl8xxxu_rxdesc16 *)skb->data;
-+	struct ieee80211_rx_status *rx_status;
-+	struct rtl8xxxu_rxdesc16 *rx_desc;
- 	struct rtl8723au_phy_stats *phy_stats;
--	__le32 *_rx_desc_le = (__le32 *)skb->data;
--	u32 *_rx_desc = (u32 *)skb->data;
-+	struct sk_buff *next_skb = NULL;
-+	__le32 *_rx_desc_le;
-+	u32 *_rx_desc;
- 	int drvinfo_sz, desc_shift;
--	int i;
-+	int i, pkt_cnt, pkt_len, urb_len, pkt_offset;
- 
--	for (i = 0; i < (sizeof(struct rtl8xxxu_rxdesc16) / sizeof(u32)); i++)
--		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
-+	urb_len = skb->len;
-+	pkt_cnt = 0;
- 
--	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-+	do {
-+		rx_desc = (struct rtl8xxxu_rxdesc16 *)skb->data;
-+		_rx_desc_le = (__le32 *)skb->data;
-+		_rx_desc = (u32 *)skb->data;
- 
--	skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc16));
-+		for (i = 0;
-+		     i < (sizeof(struct rtl8xxxu_rxdesc16) / sizeof(u32)); i++)
-+			_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
- 
--	phy_stats = (struct rtl8723au_phy_stats *)skb->data;
-+		/*
-+		 * Only read pkt_cnt from the header if we're parsing the
-+		 * first packet
-+		 */
-+		if (!pkt_cnt)
-+			pkt_cnt = rx_desc->pkt_cnt;
-+		pkt_len = rx_desc->pktlen;
- 
--	drvinfo_sz = rx_desc->drvinfo_sz * 8;
--	desc_shift = rx_desc->shift;
--	skb_pull(skb, drvinfo_sz + desc_shift);
-+		drvinfo_sz = rx_desc->drvinfo_sz * 8;
-+		desc_shift = rx_desc->shift;
-+		pkt_offset = roundup(pkt_len + drvinfo_sz + desc_shift +
-+				     sizeof(struct rtl8xxxu_rxdesc16), 128);
- 
--	if (rx_desc->phy_stats)
--		rtl8xxxu_rx_parse_phystats(priv, rx_status, phy_stats,
--					   rx_desc->rxmcs);
-+		if (pkt_cnt > 1)
-+			next_skb = skb_clone(skb, GFP_ATOMIC);
- 
--	rx_status->mactime = le32_to_cpu(rx_desc->tsfl);
--	rx_status->flag |= RX_FLAG_MACTIME_START;
-+		rx_status = IEEE80211_SKB_RXCB(skb);
-+		memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
- 
--	if (!rx_desc->swdec)
--		rx_status->flag |= RX_FLAG_DECRYPTED;
--	if (rx_desc->crc32)
--		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
--	if (rx_desc->bw)
--		rx_status->flag |= RX_FLAG_40MHZ;
-+		skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc16));
- 
--	if (rx_desc->rxht) {
--		rx_status->flag |= RX_FLAG_HT;
--		rx_status->rate_idx = rx_desc->rxmcs - DESC_RATE_MCS0;
--	} else {
--		rx_status->rate_idx = rx_desc->rxmcs;
--	}
-+		phy_stats = (struct rtl8723au_phy_stats *)skb->data;
- 
--	rx_status->freq = hw->conf.chandef.chan->center_freq;
--	rx_status->band = hw->conf.chandef.chan->band;
-+		skb_pull(skb, drvinfo_sz + desc_shift);
-+
-+		skb_trim(skb, pkt_len);
-+
-+		if (rx_desc->phy_stats)
-+			rtl8xxxu_rx_parse_phystats(priv, rx_status, phy_stats,
-+						   rx_desc->rxmcs);
-+
-+		rx_status->mactime = le32_to_cpu(rx_desc->tsfl);
-+		rx_status->flag |= RX_FLAG_MACTIME_START;
-+
-+		if (!rx_desc->swdec)
-+			rx_status->flag |= RX_FLAG_DECRYPTED;
-+		if (rx_desc->crc32)
-+			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
-+		if (rx_desc->bw)
-+			rx_status->flag |= RX_FLAG_40MHZ;
-+
-+		if (rx_desc->rxht) {
-+			rx_status->flag |= RX_FLAG_HT;
-+			rx_status->rate_idx = rx_desc->rxmcs - DESC_RATE_MCS0;
-+		} else {
-+			rx_status->rate_idx = rx_desc->rxmcs;
-+		}
-+
-+		rx_status->freq = hw->conf.chandef.chan->center_freq;
-+		rx_status->band = hw->conf.chandef.chan->band;
-+
-+		ieee80211_rx_irqsafe(hw, skb);
-+
-+		skb = next_skb;
-+		if (skb)
-+			skb_pull(next_skb, pkt_offset);
-+
-+		pkt_cnt--;
-+		urb_len -= pkt_offset;
-+	} while (skb && urb_len > 0 && pkt_cnt > 0);
- 
--	ieee80211_rx_irqsafe(hw, skb);
- 	return RX_TYPE_DATA_PKT;
- }
- 
--- 
-2.7.4
 
+On Sun, May 29, 2016 at 3:40 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> Since Linus released 4.7-rc1 today, I've resumed wireless-testing
+> updates since its merge window hiatus, with tag wt-2016-05-29.
+>
+> Please test and let me know of any issues.
+>
+> --
+> Bob Copeland %% http://bobcopeland.com/
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
