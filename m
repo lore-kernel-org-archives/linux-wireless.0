@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:33457 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673AbcF1LQ0 (ORCPT
+Received: from mail-it0-f48.google.com ([209.85.214.48]:37280 "EHLO
+	mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161156AbcFAMzN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 07:16:26 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Meirav Kama <meiravk@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH] mac80211: rx: frames received out of order
-Date: Tue, 28 Jun 2016 14:15:03 +0300
-Message-ID: <20160628111510.8857-1-yanivma@ti.com> (sfid-20160628_131645_940728_36460092)
+	Wed, 1 Jun 2016 08:55:13 -0400
+Received: by mail-it0-f48.google.com with SMTP id z123so18585099itg.0
+        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2016 05:55:12 -0700 (PDT)
+Date: Wed, 1 Jun 2016 08:54:53 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: wireless-testing on 4.7
+Message-ID: <20160601125453.GB12977@localhost> (sfid-20160601_145521_854648_3562563C)
+References: <20160529214059.GA15677@localhost>
+ <CAAA5faFNa1sQrj6Yfq+hrXfUOi0Lek4qL8Zzpdv27-4+Z4n6mQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAA5faFNa1sQrj6Yfq+hrXfUOi0Lek4qL8Zzpdv27-4+Z4n6mQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meirav Kama <meiravk@ti.com>
++ Luca, Emmanuel
 
-MP received data frames from another MP. Frames are forwarded
-from Rx to Tx to be transmitted to a third MP.
-Upon cloning the skb, the tx_info was zeroed, and the
-hw_queue wasn't set correctly, causing frames to be
-inserted to queue 0 (VOICE). If re-queue occurred for some
-reason, frame will be inserted to correct queue 2 (BE).
-In this case frames are now dequeued from 2 different queues and
-sent out of order.
+On Tue, May 31, 2016 at 10:06:57PM -0600, Reinoud Koornstra wrote:
+> Today I compiled 4.6+ and pulled sources today
+> iwlwifi isn't super smooth.
 
-Signed-off-by: Meirav Kama <meiravk@ti.com>
-Acked-by: Yaniv Machani <yanivma@ti.com>
----
- net/mac80211/rx.c | 1 +
- 1 file changed, 1 insertion(+)
+I assume you mean wireless-testing, based on 4.7-rc1 (as this email is
+in reply to my announcement of same).
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9a1eb70..88dc744 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2392,6 +2392,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
- 	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 	info->control.vif = &rx->sdata->vif;
- 	info->control.jiffies = jiffies;
-+	info->hw_queue = q;
- 	if (is_multicast_ether_addr(fwd_hdr->addr1)) {
- 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_mcast);
- 		memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
+> 
+> [  112.345457] wlp4s0: authenticate with 00:30:44:1d:cf:2b
+> [  112.349002] wlp4s0: send auth to 00:30:44:1d:cf:2b (try 1/3)
+> [  112.349647] wlp4s0: authenticated
+> [  112.352456] wlp4s0: associate with 00:30:44:1d:cf:2b (try 1/3)
+> [  112.353764] wlp4s0: RX AssocResp from 00:30:44:1d:cf:2b (capab=0x11
+> status=0 aid=3)
+> [  112.355035] wlp4s0: associated
+> [  112.355393] IPv6: ADDRCONF(NETDEV_CHANGE): wlp4s0: link becomes ready
+> [  118.616327] wlp4s0: deauthenticated from 00:30:44:1d:cf:2b (Reason:
+> 15=4WAY_HANDSHAKE_TIMEOUT)
+> [  128.673812] wlp4s0: authenticate with 00:30:44:1d:cf:2b
+> [  128.676997] wlp4s0: send auth to 00:30:44:1d:cf:2b (try 1/3)
+> [  128.677648] wlp4s0: authenticated
+> [  128.678691] wlp4s0: associate with 00:30:44:1d:cf:2b (try 1/3)
+> [  128.679807] wlp4s0: RX AssocResp from 00:30:44:1d:cf:2b (capab=0x11
+> status=0 aid=3)
+> [  128.681198] wlp4s0: associated
+> 
+> I never experienced the 4 way handshake 802.11i timeout in my home setup.
+> With other setups plenty of times, especially with mediatek drivers. :)
+> If you wish I can sniff and see which side is at fault.
+
+I have not noticed any problems on my laptop with iwldvm on a 6205, with
+latest wireless-testing.  But maybe intel devs can weigh in.
+
 -- 
-2.9.0
-
+Bob Copeland %% http://bobcopeland.com/
