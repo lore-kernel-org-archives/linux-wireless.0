@@ -1,93 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33334 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228AbcFDTSu (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:33985 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757154AbcFACEn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 15:18:50 -0400
-Subject: Patch "ath9k: Add a module parameter to invert LED polarity." has been added to the 4.4-stable tree
-To: linux-wireless@vittgam.net, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com, gregkh@linuxfoundation.org,
-	kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	linuxbugs@vittgam.net
-Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@linuxfoundation.org>
-Date: Sat, 04 Jun 2016 12:18:49 -0700
-Message-ID: <1465067929178129@kroah.com> (sfid-20160604_211854_385295_F3BC56BF)
+	Tue, 31 May 2016 22:04:43 -0400
+Received: by mail-oi0-f44.google.com with SMTP id e72so6868748oib.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2016 19:04:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+In-Reply-To: <1464348331-585-1-git-send-email-eduardo.abinader@riverbed.com>
+References: <1464348331-585-1-git-send-email-eduardo.abinader@riverbed.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 1 Jun 2016 12:04:22 +1000
+Message-ID: <CAGRGNgUefNsCOFgr+i7AEdQdMcVP7CLzwrr92sJE9QxLAQXk_w@mail.gmail.com> (sfid-20160601_040446_902686_B63FB6BC)
+Subject: Re: [PATCH] cfg80211: remove extra space on alpha2 definition
+To: Eduardo Abinader <eabinader@ocedo.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Eduardo Abinader <eduardo.abinader@riverbed.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi All,
 
-This is a note to let you know that I've just added the patch titled
+On Fri, May 27, 2016 at 9:25 PM, Eduardo Abinader <eabinader@ocedo.com> wrote:
+> Just small adjustment.
+>
+> Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
 
-    ath9k: Add a module parameter to invert LED polarity.
+This looks right to me.
 
-to the 4.4-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-The filename of the patch is:
-     ath9k-add-a-module-parameter-to-invert-led-polarity.patch
-and it can be found in the queue-4.4 subdirectory.
+> ---
+>  net/wireless/reg.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
+Thanks,
 
+-- 
+Julian Calaby
 
->From cd84042ce9040ad038e958bc67a46fcfc015c736 Mon Sep 17 00:00:00 2001
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Date: Mon, 11 Apr 2016 04:48:54 +0200
-Subject: ath9k: Add a module parameter to invert LED polarity.
-
-From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
-
-commit cd84042ce9040ad038e958bc67a46fcfc015c736 upstream.
-
-The LED can be active high instead of active low on some hardware.
-
-Add the led_active_high module parameter. It defaults to -1 to obey
-platform data as before.
-
-Setting the parameter to 1 or 0 will force the LED respectively
-active high or active low.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/net/wireless/ath/ath9k/init.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -49,6 +49,10 @@ int ath9k_led_blink;
- module_param_named(blink, ath9k_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
-+static int ath9k_led_active_high = -1;
-+module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
-+MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
-+
- static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-@@ -600,6 +604,9 @@ static int ath9k_init_softc(u16 devid, s
- 	if (ret)
- 		return ret;
- 
-+	if (ath9k_led_active_high != -1)
-+		ah->config.led_active_high = ath9k_led_active_high == 1;
-+
- 	/*
- 	 * Enable WLAN/BT RX Antenna diversity only when:
- 	 *
-
-
-Patches currently in stable-queue which might be from linux-wireless@vittgam.net are
-
-queue-4.4/ath9k-add-a-module-parameter-to-invert-led-polarity.patch
-queue-4.4/ath9k-fix-led-polarity-for-some-mini-pci-ar9220-mb92-cards.patch
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
