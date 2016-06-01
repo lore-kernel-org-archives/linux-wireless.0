@@ -1,47 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58795 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:43724 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754572AbcFPPVD (ORCPT
+	with ESMTP id S1751106AbcFATcU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 11:21:03 -0400
-Content-Type: text/plain; charset="utf-8"
+	Wed, 1 Jun 2016 15:32:20 -0400
 MIME-Version: 1.0
-Subject: Re: [1/6] brcmfmac: fix skb priority handling
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1464989472-29684-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20160616152102.981CD6134F@smtp.codeaurora.org> (sfid-20160616_172108_564521_D6A32DBF)
-Date: Thu, 16 Jun 2016 15:21:02 +0000 (UTC)
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 01 Jun 2016 22:32:14 +0300
+From: merez@codeaurora.org
+To: Seth Forshee <seth.forshee@canonical.com>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org,
+	wil6210@qca.qualcomm.com, linux-wireless-owner@vger.kernel.org
+Subject: Re: [PATCH] wireless-regdb: Republic of Korea: Add 60GHz regulatory
+ rules
+In-Reply-To: <20160531123550.GA93568@ubuntu-hedt>
+References: <1463822708-20053-1-git-send-email-qca_merez@qca.qualcomm.com>
+ <20160531123550.GA93568@ubuntu-hedt>
+Message-ID: <e2e7d60b6e5b597e1de15605ee19b082@codeaurora.org> (sfid-20160601_213224_301052_CBB9BEB0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> From: Hante Meuleman <hante.meuleman@broadcom.com>
+On 2016-05-31 15:35, Seth Forshee wrote:
+> On Sat, May 21, 2016 at 12:25:08PM +0300, Maya Erez wrote:
+>> Add 60GHz regulatory rules for Korea (KR).
+>> Source is
+>> 
+> http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%
+> A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
+>> 
+>> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+>> ---
+>>  db.txt | 4 ++++
+>>  1 file changed, 4 insertions(+)
+>> 
+>> diff --git a/db.txt b/db.txt
+>> index da16f7c..143f915 100644
+>> --- a/db.txt
+>> +++ b/db.txt
+>> @@ -664,6 +664,10 @@ country KR: DFS-JP
+>>  	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+>>  	(5490 - 5710 @ 160), (30), DFS
+>>  	(5735 - 5835 @ 80), (30)
+>> +	# 60 GHz band channels 1-4,
+>> +	# ref:
+> http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%
+> A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
+>> +	(57000 - 66000 @ 2160), (57)
+>> +
 > 
-> SKBs can come with a prioriy. Currently a priority of 0..7 is
-> assumed. But this assumption is incorrect. To fix this any
-> priority of 0 or higher then 7 will be adjusted by calling
-> cfg80211_classify8021d
+> Thanks for the patch. I wanted to double check with you that the power
+> limit is correct though, since it seems extremely high (an order of
+> magnitude higher than what we have for any other country in fact). I
+> can't make out much of anything from the link, and I can't even run it
+> through google translate since it's composed of images rather than 
+> text.
 > 
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-
-Thanks, 6 patches applied to wireless-drivers-next.git:
-
-10d096f708e8 brcmfmac: fix skb priority handling
-d922dfa372ed brcmfmac: revise SDIO error message in brcmf_sdio_drivestrengthinit
-cb39288fd6bb brcmfmac: use ndev->needed_headroom to reserve additional header space
-43819926eda5 brcmfmac: add support for the PCIE devices 43525 and 43465
-98aff6c005e3 brcmfmac: change rx_seq check log from error print to debug print
-2a7344510286 brcm80211: update maintainers email addresses
-
+> Thanks,
+> Seth
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for your comment. I double checked it and the power limit should 
+be 43dBm. I'll send an updated patch.
+This value is determined due to the following statement:
+"The antenna power is 500 mW or less, if you are using a non-directional 
+antenna 100 mW or less, power density should be 13 dBm / MHz or less, 
+the equivalent isotropic radiated power is less than 43 dBm."
+We fit the 500mW or less power, hence the EIRP is 43 dBm.
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9154099/
-
+Maya Erez
+Qualcomm Israel, Inc. on behalf of Qualcomm Innovation Center, Inc.
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a 
+Linux Foundation Collaborative Project
