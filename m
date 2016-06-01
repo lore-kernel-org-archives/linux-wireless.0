@@ -1,50 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hmm.wantstofly.org ([138.201.34.84]:54596 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753746AbcFUILL (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33367 "EHLO
+	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964806AbcFAERj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 04:11:11 -0400
-Date: Tue, 21 Jun 2016 11:01:23 +0300
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: David Gilman <dgilman@gilslotd.com>
-Cc: linux-wireless@vger.kernel.org,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: Troubleshooting mwl8k driver issue
-Message-ID: <20160621080123.GV20238@wantstofly.org> (sfid-20160621_101140_704057_DDD49EB1)
-References: <20160604035452.GA5925@dar.local>
- <20160606065146.GK8402@wantstofly.org>
- <20160610040247.GA16190@dar.local>
- <20160617194303.GA33130@dar.local>
- <20160618084828.GN20238@wantstofly.org>
- <20160621003630.GA39401@dar.local>
+	Wed, 1 Jun 2016 00:17:39 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160621003630.GA39401@dar.local>
+In-Reply-To: <1464358702-19083-4-git-send-email-javier@osg.samsung.com>
+References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com> <1464358702-19083-4-git-send-email-javier@osg.samsung.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 1 Jun 2016 14:17:19 +1000
+Message-ID: <CAGRGNgXYBucEh+D3ceHR5xg4fPuNhx-CCjHPRewhNWZJzgV-kg@mail.gmail.com> (sfid-20160601_061806_505706_33CBE1F6)
+Subject: Re: [PATCH 3/8] mwifiex: propagate mwifiex_add_card() errno code in mwifiex_sdio_probe()
+To: Javier Martinez Canillas <javier@osg.samsung.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 20, 2016 at 07:36:30PM -0500, David Gilman wrote:
+Hi All,
 
-> > Nothing in here seems particularly bad.  So whatever the problem is,
-> > I don't think it can be diagnosed from these messages alone.
-> > 
-> > I went back to the email thread, and it seems that the problem is that
-> > you're trying to run the card in AP mode but no traffic is making it
-> > through?  Is AP association working at all, or is that failing too?
-> 
-> The mwl8k is in AP mode and it gets associated just fine.  It'll work
-> for five or so minutes and then you'll get the disconnect and the log
-> messages in the earlier emails.  And it only happens with one of my
-> wireless devices - the other one will browse all day with a stable
-> connection to the mwl8k router.
-> 
-> Back in the OpenWRT issue a few more people have stuck their heads in
-> to say they're also seeing the same issue.
-> 
-> https://dev.openwrt.org/ticket/21284
+On Sat, May 28, 2016 at 12:18 AM, Javier Martinez Canillas
+<javier@osg.samsung.com> wrote:
+> There's only a check if mwifiex_add_card() returned a nonzero value, but
+> the actual error code is neither stored nor propagated to the caller. So
+> instead of always returning -1 (which is -EPERM and not a suitable errno
+> code in this case), propagate the value returned by mwifiex_add_card().
+>
+> Patch also removes the assignment of sdio_disable_func() returned value
+> since it was overwritten anyways and what matters is to know the error
+> value returned by the first function that failed.
+>
+> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 
-The only thing the log tells me is that this disconnect happens
-voluntarily, so I see nothing wrong from just those log messages.
-Can you run a sniffer to see what happens on the air when this
-disconnect occurs, or increase hostapd verbosity/debugging somehow?
+This looks sensible to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+> ---
+>
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
