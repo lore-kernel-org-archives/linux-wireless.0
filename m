@@ -1,68 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:55809 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750919AbcFDOcZ convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35588 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752689AbcFAPnH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 10:32:25 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Tim Shepard <shep@alum.mit.edu>
-Cc: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org
-Subject: Re: [RFC/RFT 2/5] ath9k: use mac80211 intermediate software queues
-References: <E1b8sbm-00083e-00@www.xplot.org>
-Date: Sat, 04 Jun 2016 16:32:20 +0200
-In-Reply-To: <E1b8sbm-00083e-00@www.xplot.org> (Tim Shepard's message of "Fri,
-	03 Jun 2016 13:10:06 -0400")
-Message-ID: <87fustrpmz.fsf@toke.dk> (sfid-20160604_163229_504930_135E477D)
+	Wed, 1 Jun 2016 11:43:07 -0400
+Message-ID: <574EC331.1080901@gmail.com> (sfid-20160601_174334_276584_0F6097C7)
+Date: Wed, 01 Jun 2016 16:42:49 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: Stephen Rothwell <sfr@canb.auug.org.au>,
+	ath9k-devel <ath9k-devel@qualcomm.com>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: Re: ath9k gpio request
+References: <20160530132225.4d297678@canb.auug.org.au>	<574C4851.9090201@gmail.com> <87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com>,<574D3EAA.3060102@gmail.com> <1464764036580.70506@qti.qualcomm.com>
+In-Reply-To: <1464764036580.70506@qti.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tim Shepard <shep@alum.mit.edu> writes:
+On Wednesday 01 June 2016 12:24 PM, Pan, Miaoqing wrote:
+> which chip ?  And what's the GPIO number ?
 
->> Reworked to not require the global variable renaming in ath9k.
->> 
->> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
->
-> Huh.  I wonder why you did that?  Is it really better to call the
-> ieee80211_txq a swq and call the ath9k hardware queue a txq?  I
-> thought doing the renaming made for more readable and much more
-> maintainable code (where searching for text strings produced much
-> cleaner results when trying to track down all references).
+lspci -v reports:
+09:00.0 Network controller: Qualcomm Atheros AR9462 Wireless Network 
+Adapter (rev 01)
+	Subsystem: Foxconn International, Inc. Device e052
+	Flags: bus master, fast devsel, latency 0, IRQ 19
+	Memory at c0500000 (64-bit, non-prefetchable) [size=512K]
+	Expansion ROM at c0580000 [disabled] [size=64K]
+	Capabilities: [40] Power Management version 2
+	Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
+	Capabilities: [70] Express Endpoint, MSI 00
+	Capabilities: [100] Advanced Error Reporting
+	Capabilities: [140] Virtual Channel
+	Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
+	Kernel driver in use: ath9k
 
-Well, the immediate reason was that at the time I just spent two weeks
-figuring out how ath9k worked and what the different concepts were, and
-suddenly they start to mean something different. The txq->hwq renaming
-would probably make sense in itself, but suddenly the same variable
-(txq) meant something different, which was quite confusing. So I found
-it was easier to change your patch to not require the renaming.
+Any easy way to find out the gpio number or i can modify the module to 
+find that out.
 
-A secondary reason was to keep the patch delta as small as possible. I'm
-definitely not the right person to make that call, but I found the
-global renaming somewhat intrusive.
-
-As for the first point, I think it would be easier if you did not call
-the mac80211 queues 'txq' but something else ('swq' like I did, perhaps;
-I also considered 'imq' for intermediate queue). This will at least make
-it clear at a glance that it is something different than 'txq' was
-previously.
-
-> I am grateful to learn that someone has read my patched version of
-> ath9k at least enough to do this rework. Any comments on the actual
-> work?
-
-Well, it seems to work well enough (haven't noticed the pending_frames
-issue, but on the other hand I haven't been looking very hard). However,
-it does fell like somewhat of a temporary solution. Having another
-intermediate queue in the driver (tid->i_q) and having a side-effect in
-ath_tid_has_buffered() seems a bit iffy to me. Wouldn't the 'right' way
-to do it be to have ath_tid_has_buffered() ask the mac layer if it has
-any frames queued, and then have ath_tx_get_tid_subframe() basically
-translate straight to a call to ieee80211_tx_dequeue() (taking into
-account the retry queue)? Not sure if that covers all code paths, but
-the current approach seems like it has one too many layers of queues?
-
-Haven't given the above a lot of thought, but since you asked... :)
-
--Toke
+Regards
+Sudip
