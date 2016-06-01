@@ -1,92 +1,258 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:45521 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbcFBHXH (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:33863 "EHLO
+	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751197AbcFAFv0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 03:23:07 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH v2 1/2] ath10k: remove duplicate and unused rx rate flags
-Date: Thu, 2 Jun 2016 12:53:54 +0530
-Message-ID: <1464852235-13110-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160602_092324_031531_11DCE338)
+	Wed, 1 Jun 2016 01:51:26 -0400
+Received: by mail-lf0-f67.google.com with SMTP id 65so805021lfq.1
+        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2016 22:51:25 -0700 (PDT)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH V3 iw] add "channels" PHY command listing frequencies with more details
+Date: Wed,  1 Jun 2016 07:51:14 +0200
+Message-Id: <1464760274-15530-1-git-send-email-zajec5@gmail.com> (sfid-20160601_075130_805124_27F17593)
+In-Reply-To: <1464712100-4489-1-git-send-email-zajec5@gmail.com>
+References: <1464712100-4489-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Channels (frequencies) are getting more details that users may want to
+know about. E.g. it's important to know which frequencies allow using
+40/80/160 MHz channels to setup AP properly.
 
-All these flags are not used and their use is completely
-covered by 'ath10k_hw_rate_ofdm', 'ath10k_hw_rate_cck',
-and RX_PPDU_START_RATE_FLAG
+We list channels in "info" command output but it's already quite big and
+it was agreed to introduce new command rather than expand the old one.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Patchwork-Id: 9129361
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+This patch adds "channels" command printing what was already available
+in the "info" plus details about supported channel widths. It also
+removes DFS info from the "info" output.
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/rx_desc.h |   39 -----------------------------
- 1 file changed, 39 deletions(-)
+V2: Make width_40, width_80 & width_160 variables static. This is needed
+    to keep their values across separated handler calls.
+V3: Introduce struct channels_ctx to avoid multiple static variables in
+    a print_channels_handler.
+---
+ info.c |  30 -------------
+ phy.c  | 152 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 152 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
-index 9ceebea..034e7a5 100644
---- a/drivers/net/wireless/ath/ath10k/rx_desc.h
-+++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
-@@ -656,26 +656,6 @@ struct rx_msdu_end {
-  *		Reserved: HW should fill with zero.  FW should ignore.
-  */
+diff --git a/info.c b/info.c
+index 32de0af..b375123 100644
+--- a/info.c
++++ b/info.c
+@@ -47,20 +47,6 @@ static char *cipher_name(__u32 c)
+ 	}
+ }
  
--#define RX_PPDU_START_SIG_RATE_SELECT_OFDM 0
--#define RX_PPDU_START_SIG_RATE_SELECT_CCK  1
+-static char *dfs_state_name(enum nl80211_dfs_state state)
+-{
+-	switch (state) {
+-	case NL80211_DFS_USABLE:
+-		return "usable";
+-	case NL80211_DFS_AVAILABLE:
+-		return "available";
+-	case NL80211_DFS_UNAVAILABLE:
+-		return "unavailable";
+-	default:
+-		return "unknown";
+-	}
+-}
 -
--#define RX_PPDU_START_SIG_RATE_OFDM_48 0
--#define RX_PPDU_START_SIG_RATE_OFDM_24 1
--#define RX_PPDU_START_SIG_RATE_OFDM_12 2
--#define RX_PPDU_START_SIG_RATE_OFDM_6  3
--#define RX_PPDU_START_SIG_RATE_OFDM_54 4
--#define RX_PPDU_START_SIG_RATE_OFDM_36 5
--#define RX_PPDU_START_SIG_RATE_OFDM_18 6
--#define RX_PPDU_START_SIG_RATE_OFDM_9  7
+ static int ext_feature_isset(const unsigned char *ext_features, int ext_features_len,
+ 			     enum nl80211_ext_feature_index ftidx)
+ {
+@@ -198,22 +184,6 @@ next:
+ 					if (open)
+ 						printf(")");
+ 					printf("\n");
 -
--#define RX_PPDU_START_SIG_RATE_CCK_LP_11  0
--#define RX_PPDU_START_SIG_RATE_CCK_LP_5_5 1
--#define RX_PPDU_START_SIG_RATE_CCK_LP_2   2
--#define RX_PPDU_START_SIG_RATE_CCK_LP_1   3
--#define RX_PPDU_START_SIG_RATE_CCK_SP_11  4
--#define RX_PPDU_START_SIG_RATE_CCK_SP_5_5 5
--#define RX_PPDU_START_SIG_RATE_CCK_SP_2   6
+-					if (!tb_freq[NL80211_FREQUENCY_ATTR_DISABLED] && tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
+-						enum nl80211_dfs_state state = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]);
+-						unsigned long time;
 -
- #define HTT_RX_PPDU_START_PREAMBLE_LEGACY        0x04
- #define HTT_RX_PPDU_START_PREAMBLE_HT            0x08
- #define HTT_RX_PPDU_START_PREAMBLE_HT_WITH_TXBF  0x09
-@@ -711,25 +691,6 @@ struct rx_msdu_end {
- /* No idea what this flag means. It seems to be always set in rate. */
- #define RX_PPDU_START_RATE_FLAG BIT(3)
+-						printf("\t\t\t  DFS state: %s", dfs_state_name(state));
+-						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]) {
+-							time = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]);
+-							printf(" (for %lu sec)", time/1000);
+-						}
+-						printf("\n");
+-						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME])
+-							printf("\t\t\t  DFS CAC time: %u ms\n",
+-							       nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME]));
+-					}
+-
+ 				}
+ 			}
  
--enum rx_ppdu_start_rate {
--	RX_PPDU_START_RATE_OFDM_48M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_48M,
--	RX_PPDU_START_RATE_OFDM_24M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_24M,
--	RX_PPDU_START_RATE_OFDM_12M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_12M,
--	RX_PPDU_START_RATE_OFDM_6M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_6M,
--	RX_PPDU_START_RATE_OFDM_54M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_54M,
--	RX_PPDU_START_RATE_OFDM_36M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_36M,
--	RX_PPDU_START_RATE_OFDM_18M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_18M,
--	RX_PPDU_START_RATE_OFDM_9M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_9M,
--
--	RX_PPDU_START_RATE_CCK_LP_11M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_11M,
--	RX_PPDU_START_RATE_CCK_LP_5_5M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_5_5M,
--	RX_PPDU_START_RATE_CCK_LP_2M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_2M,
--	RX_PPDU_START_RATE_CCK_LP_1M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_1M,
--	RX_PPDU_START_RATE_CCK_SP_11M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_11M,
--	RX_PPDU_START_RATE_CCK_SP_5_5M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_5_5M,
--	RX_PPDU_START_RATE_CCK_SP_2M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_2M,
--};
--
- struct rx_ppdu_start {
- 	struct {
- 		u8 pri20_mhz;
+diff --git a/phy.c b/phy.c
+index 13e8260..c57a71f 100644
+--- a/phy.c
++++ b/phy.c
+@@ -14,6 +14,158 @@
+ #include "nl80211.h"
+ #include "iw.h"
+ 
++struct channels_ctx {
++	int last_band;
++	bool width_40;
++	bool width_80;
++	bool width_160;
++};
++
++static char *dfs_state_name(enum nl80211_dfs_state state)
++{
++	switch (state) {
++	case NL80211_DFS_USABLE:
++		return "usable";
++	case NL80211_DFS_AVAILABLE:
++		return "available";
++	case NL80211_DFS_UNAVAILABLE:
++		return "unavailable";
++	default:
++		return "unknown";
++	}
++}
++
++static int print_channels_handler(struct nl_msg *msg, void *arg)
++{
++	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
++	struct channels_ctx *ctx = arg;
++	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
++	struct nlattr *tb_band[NL80211_BAND_ATTR_MAX + 1];
++	struct nlattr *tb_freq[NL80211_FREQUENCY_ATTR_MAX + 1];
++	struct nlattr *nl_band;
++	struct nlattr *nl_freq;
++	int rem_band, rem_freq;
++
++	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), NULL);
++
++	if (tb_msg[NL80211_ATTR_WIPHY_BANDS]) {
++		nla_for_each_nested(nl_band, tb_msg[NL80211_ATTR_WIPHY_BANDS], rem_band) {
++			if (ctx->last_band != nl_band->nla_type) {
++				printf("Band %d:\n", nl_band->nla_type + 1);
++				ctx->width_40 = false;
++				ctx->width_80 = false;
++				ctx->width_160 = false;
++				ctx->last_band = nl_band->nla_type;
++			}
++
++			nla_parse(tb_band, NL80211_BAND_ATTR_MAX, nla_data(nl_band), nla_len(nl_band), NULL);
++
++			if (tb_band[NL80211_BAND_ATTR_HT_CAPA]) {
++				__u16 cap = nla_get_u16(tb_band[NL80211_BAND_ATTR_HT_CAPA]);
++
++				if (cap & BIT(1))
++					ctx->width_40 = true;
++			}
++
++			if (tb_band[NL80211_BAND_ATTR_VHT_CAPA]) {
++				__u32 capa;
++
++				ctx->width_80 = true;
++
++				capa = nla_get_u32(tb_band[NL80211_BAND_ATTR_VHT_CAPA]);
++				switch ((capa >> 2) & 3) {
++				case 2:
++					/* width_80p80 = true; */
++					/* fall through */
++				case 1:
++					ctx->width_160 = true;
++				break;
++				}
++			}
++
++			if (tb_band[NL80211_BAND_ATTR_FREQS]) {
++				nla_for_each_nested(nl_freq, tb_band[NL80211_BAND_ATTR_FREQS], rem_freq) {
++					uint32_t freq;
++
++					nla_parse(tb_freq, NL80211_FREQUENCY_ATTR_MAX, nla_data(nl_freq), nla_len(nl_freq), NULL);
++
++					if (!tb_freq[NL80211_FREQUENCY_ATTR_FREQ])
++						continue;
++					freq = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_FREQ]);
++					printf("\t* %d MHz [%d] ", freq, ieee80211_frequency_to_channel(freq));
++
++					if (tb_freq[NL80211_FREQUENCY_ATTR_DISABLED]) {
++						printf("(disabled)\n");
++						continue;
++					}
++					printf("\n");
++
++					if (tb_freq[NL80211_FREQUENCY_ATTR_MAX_TX_POWER])
++						printf("\t  Maximum TX power: %.1f dBm\n", 0.01 * nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_MAX_TX_POWER]));
++
++					/* If both flags are set assume an new kernel */
++					if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IR] && tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]) {
++						printf("\t  No IR\n");
++					} else if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN]) {
++						printf("\t  Passive scan\n");
++					} else if (tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]){
++						printf("\t  No IBSS\n");
++					}
++
++					if (tb_freq[NL80211_FREQUENCY_ATTR_RADAR])
++						printf("\t  Radar detection\n");
++
++					printf("\t  Channel widths:");
++					if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_20MHZ])
++						printf(" 20MHz");
++					if (ctx->width_40 && !tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40_MINUS])
++						printf(" HT40-");
++					if (ctx->width_40 && !tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40_PLUS])
++						printf(" HT40+");
++					if (ctx->width_80 && !tb_freq[NL80211_FREQUENCY_ATTR_NO_80MHZ])
++						printf(" VHT80");
++					if (ctx->width_160 && !tb_freq[NL80211_FREQUENCY_ATTR_NO_160MHZ])
++						printf(" VHT160");
++					printf("\n");
++
++					if (!tb_freq[NL80211_FREQUENCY_ATTR_DISABLED] && tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
++						enum nl80211_dfs_state state = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]);
++						unsigned long time;
++
++						printf("\t  DFS state: %s", dfs_state_name(state));
++						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]) {
++							time = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]);
++							printf(" (for %lu sec)", time / 1000);
++						}
++						printf("\n");
++						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME])
++							printf("\t  DFS CAC time: %u ms\n",
++							       nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME]));
++					}
++				}
++			}
++		}
++	}
++
++	return NL_SKIP;
++}
++
++static int handle_channels(struct nl80211_state *state, struct nl_msg *msg,
++			   int argc, char **argv, enum id_input id)
++{
++	static struct channels_ctx ctx = {
++		.last_band = -1,
++	};
++
++	nla_put_flag(msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
++	nlmsg_hdr(msg)->nlmsg_flags |= NLM_F_DUMP;
++
++	register_handler(print_channels_handler, &ctx);
++
++	return 0;
++}
++TOPLEVEL(channels, NULL, NL80211_CMD_GET_WIPHY, 0, CIB_PHY, handle_channels, "Show available channels.");
++
+ static int handle_name(struct nl80211_state *state,
+ 		       struct nl_msg *msg,
+ 		       int argc, char **argv,
 -- 
-1.7.9.5
+1.8.4.5
 
