@@ -1,135 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34000 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752845AbcFHPJt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:46423 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956AbcFAPMt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 11:09:49 -0400
-From: Prasun Maiti <prasunmaiti87@gmail.com>
-To: Linux Kernel <linux-kernel@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-	Linux Next <linux-next@vger.kernel.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Prasun Maiti <prasunmaii87@gmail.com>
-Subject: [PATCH] Add .set_antenna callback in ath6kl driver to fix wireless core warns
-Date: Wed,  8 Jun 2016 20:39:40 +0530
-Message-Id: <1465398580-21262-1-git-send-email-prasunmaiti87@gmail.com> (sfid-20160608_171012_874423_B4068500)
-In-Reply-To: <87wplzkbd9.fsf@kamboji.qca.qualcomm.com>
-References: <87wplzkbd9.fsf@kamboji.qca.qualcomm.com>
+	Wed, 1 Jun 2016 11:12:49 -0400
+Date: Wed, 1 Jun 2016 20:42:38 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: Fix 10.4 extended peer stats update
+Message-ID: <20160601151238.GA9766@atheros-ThinkPad-T61> (sfid-20160601_171253_469370_41F65148)
+References: <1464339926-12136-1-git-send-email-mohammed@qca.qualcomm.com>
+ <87vb1ucten.fsf@qca.qualcomm.com>
+ <20160531133700.GB3146@atheros-ThinkPad-T61>
+ <87r3cicaxi.fsf@qca.qualcomm.com>
+ <20160601090805.GA7773@atheros-ThinkPad-T61>
+ <877fe92he0.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <877fe92he0.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since add more warnings for inconsistent ops in cfg80211, the wireless
-core warns if a driver implements a cfg80211 callback but doesn't
-implements the inverse operation. The ath6kl driver implements a cfg80211
-.get_antenna operation handler but doesn't have the inverse .set_antenna
-callback. So, it makes warning.
-
-To remove this warning, add .set_antenna callback in ath6kl driver and
-also send a cmd to firmware with it's values.
-
-Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.c      | 18 ++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |  6 ++++++
- 3 files changed, 48 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 4e11ba0..0d51228 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3231,6 +3231,29 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 					wait, buf, len, no_cck);
- }
- 
-+static int ath6kl_set_antenna(struct wiphy *wiphy,
-+				u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath6kl *ar = wiphy_priv(wiphy);
-+	struct ath6kl_vif *vif = NULL;
-+
-+	vif = ath6kl_vif_first(ar);
-+	if (!vif)
-+		return -EIO;
-+
-+	if (!ath6kl_cfg80211_ready(vif))
-+		return -EIO;
-+
-+	if (!tx_ant || !rx_ant)
-+		return -EINVAL;
-+
-+	ar->hw.tx_ant = tx_ant;
-+	ar->hw.rx_ant = rx_ant;
-+
-+	return ath6kl_wmi_set_antenna(ar->wmi, vif->fw_vif_idx,
-+			tx_ant, rx_ant);
-+}
-+
- static int ath6kl_get_antenna(struct wiphy *wiphy,
- 			      u32 *tx_ant, u32 *rx_ant)
- {
-@@ -3456,6 +3479,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
- 	.cancel_remain_on_channel = ath6kl_cancel_remain_on_channel,
- 	.mgmt_tx = ath6kl_mgmt_tx,
- 	.mgmt_frame_register = ath6kl_mgmt_frame_register,
-+	.set_antenna = ath6kl_set_antenna,
- 	.get_antenna = ath6kl_get_antenna,
- 	.sched_scan_start = ath6kl_cfg80211_sscan_start,
- 	.sched_scan_stop = ath6kl_cfg80211_sscan_stop,
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 631c3a0..3a7b5e9 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1605,6 +1605,24 @@ static int ath6kl_wmi_txe_notify_event_rx(struct wmi *wmi, u8 *datap, int len,
- 	return 0;
- }
- 
-+int ath6kl_wmi_set_antenna(struct wmi *wmi, u8 idx,
-+			      u32 tx_ant, u32 rx_ant)
-+{
-+	struct sk_buff *skb;
-+	struct wmi_set_antenna_cmd *cmd;
-+
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_set_antenna_cmd *) skb->data;
-+	cmd->tx_ant = cpu_to_le32(tx_ant);
-+	cmd->rx_ant = cpu_to_le32(rx_ant);
-+
-+	return ath6kl_wmi_cmd_send(wmi, idx, skb, WMI_SET_ANTENNA_CMDID,
-+			NO_SYNC_WMIFLAG);
-+}
-+
- int ath6kl_wmi_set_txe_notify(struct wmi *wmi, u8 idx,
- 			      u32 rate, u32 pkts, u32 intvl)
- {
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 3af464a..f2e65b3 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -642,6 +642,7 @@ enum wmi_cmd_id {
- 	WMI_SET_RECOVERY_TEST_PARAMETER_CMDID, /*0xf094*/
- 
- 	WMI_ENABLE_SCHED_SCAN_CMDID,
-+	WMI_SET_ANTENNA_CMDID,
- };
- 
- enum wmi_mgmt_frame_type {
-@@ -2312,6 +2313,11 @@ struct wmi_ap_set_apsd_cmd {
- 	u8 enable;
- } __packed;
- 
-+struct wmi_set_antenna_cmd {
-+	__le32 tx_ant;
-+	__le32 rx_ant;
-+} __packed;
-+
- enum wmi_ap_apsd_buffered_traffic_flags {
- 	WMI_AP_APSD_NO_DELIVERY_FRAMES =  0x1,
- };
--- 
-1.9.1
-
+On Wed, Jun 01, 2016 at 01:00:40PM +0000, Valo, Kalle wrote:
+> Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
+> 
+> > Hello,
+> >
+> > On Tue, May 31, 2016 at 06:57:52PM +0000, Valo, Kalle wrote:
+> >> Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
+> >> 
+> >> >> > +void ath10k_sta_update_rx_duration(struct ath10k *ar,
+> >> >> > +				   struct ath10k_fw_stats *stats)
+> >> >> > +{
+> >> >> > +	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
+> >> >> > +
+> >> >> > +	if (fw_file->wmi_op_version < ATH10K_FW_WMI_OP_VERSION_10_4)
+> >> >> > +		ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
+> >> >> > +	else
+> >> >> > +		ath10k_sta_update_extd_stats_rx_duration(ar,
+> >> >> > +							 &stats->peers_extd);
+> >> >> > +}
+> >> >> 
+> >> >> _Ideally_ wmi_op_version should be used only in ath10k_wmi_attach() and
+> >> >> nowhere else. Isn't there any other way to detect this scenario? For
+> >> >> example, what if you store stats_id to struct ath10k_fw_stats and do
+> >> >> something like this:
+> >> >> 
+> >> >> if (stats->stats_id & WMI_10_4_STAT_PEER_EXTD)
+> >> >> 	ath10k_sta_update_extd_stats_rx_duration(ar,
+> >> >> 						 &stats->peers_extd);
+> >> >> else
+> >> >> 	ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
+> >> >> 
+> >> >> Would that work?
+> >> >
+> >> > [shafi] I am also thinking to re-use (ar->fw_stats_req_mask & WMI_10_4_STAT_PEER_EXTD)
+> >> > it might work, but will it conflict vdev stats WMI_STAT_VDEV (though its not currently
+> >> > supported for 10.2 )
+> >> 
+> >> Can you describe more how they conflict?
+> >
+> > [shafi] 'WMI_STAT_VDEV' and 'WMI_10_4_STAT_PEER_EXTD' are having the same value
+> > BIT(3), though as of now we are only 'WMI_10_4_STAT_PEER_EXTD' for 10.4
+> 
+> Ah. But that's easy to solve, for example you could use a bool instead.
+>
+[shafi] sure thanks will do the same, i had a similar change in my mind as well
+!
