@@ -1,45 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:44804 "EHLO mail.ispras.ru"
+Received: from mga01.intel.com ([192.55.52.88]:35227 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752433AbcFNPqM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2016 11:46:12 -0400
-Message-ID: <576017D8.9080207@ispras.ru> (sfid-20160614_174651_025621_97916E98)
-Date: Tue, 14 Jun 2016 18:42:32 +0400
-From: Pavel Andrianov <andrianov@ispras.ru>
-MIME-Version: 1.0
-To: Eugene Krasnikov <k.eugene.e@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org,
-	Vaishali Thakkar <vaishali.thakkar@oracle.com>
-Subject: [ldv-project] [net] wcn36xx: potential race condition
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1757333AbcFAIk1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 1 Jun 2016 04:40:27 -0400
+From: maxin.john@gmail.com
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	"Maxin B. John" <maxin.john@intel.com>
+Subject: [PATCH] iw: support and enable separate build dir
+Date: Wed,  1 Jun 2016 11:40:16 +0300
+Message-Id: <1464770416-17514-1-git-send-email-maxin.john@gmail.com> (sfid-20160601_104047_570997_0D3EB884)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+From: "Maxin B. John" <maxin.john@intel.com>
 
-There is a potential race condition in 
-drivers/net/wireless/ath/wcn36xx/wcn36xx.ko. In wcn36xx_tx -> 
-wcn36xx_start_tx -> wcn36xx_set_tx_data 
-(http://lxr.free-electrons.com/source/drivers/net/wireless/ath/wcn36xx/txrx.c#L176) 
-there is a read of sta_priv->bss_dpu_desc_index and 
-sta_priv->bss_sta_index. In wcn36xx_bss_info_changed -> 
-wcn36xx_smd_config_bss -> wcn36xx_smd_config_bss_rsp 
-(http://lxr.free-electrons.com/source/drivers/net/wireless/ath/wcn36xx/smd.c#L1204) 
-there is a write to the same fields. It  seems that the handlers may be 
-called in parallel and inconsistent data may be obtained.
-The same problem is with sta_priv->sta_index and 
-sta_priv->sta_dpu_desc_index:
-http://lxr.free-electrons.com/source/drivers/net/wireless/ath/wcn36xx/txrx.c#L181 
+Support separation of SRCDIR and OBJDIR
 
-http://lxr.free-electrons.com/source/drivers/net/wireless/ath/wcn36xx/smd.c#L986 
+Signed-off-by: Christopher Larson <chris_larson@mentor.com>
+Signed-off-by: Maxin B. John <maxin.john@intel.com>
+---
+ Makefile | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-Is it a real bug? Is it enough to add mutex_lock to wcn36xx_set_tx_data?
-
+diff --git a/Makefile b/Makefile
+index e61825e..1bc27c1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,5 +1,7 @@
+ MAKEFLAGS += --no-print-directory
+-
++SRCDIR ?= $(dir $(lastword $(MAKEFILE_LIST)))
++OBJDIR ?= $(PWD)
++VPATH = $(SRCDIR)
+ PREFIX ?= /usr
+ SBINDIR ?= $(PREFIX)/sbin
+ MANDIR ?= $(PREFIX)/share/man
+@@ -96,11 +98,11 @@ VERSION_OBJS := $(filter-out version.o, $(OBJS))
+ version.c: version.sh $(patsubst %.o,%.c,$(VERSION_OBJS)) nl80211.h iw.h Makefile \
+ 		$(wildcard .git/index .git/refs/tags)
+ 	@$(NQ) ' GEN ' $@
+-	$(Q)./version.sh $@
++	$(Q)cd $(SRCDIR) && ./version.sh $(OBJDIR)/$@
+ 
+ %.o: %.c iw.h nl80211.h
+ 	@$(NQ) ' CC  ' $@
+-	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
++	$(Q)$(CC) -I$(SRCDIR) $(CFLAGS) -c -o $@ $<
+ 
+ ifeq ($(IW_ANDROID_BUILD),)
+ iw:	$(OBJS)
 -- 
-Pavel Andrianov
-Linux Verification Center, ISPRAS
-web: http://linuxtesting.org
-e-mail: andrianov@ispras.ru
+2.4.0
 
