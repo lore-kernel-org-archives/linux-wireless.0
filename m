@@ -1,70 +1,185 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:41063 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752101AbcFJIxk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 04:53:40 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [Make-wifi-fast] [RFC/RFT 5/5] ath9k: Count RX airtime in airtime
-	deficit
-References: <20160603165144.17356-1-toke@toke.dk>
-	<20160603165144.17356-6-toke@toke.dk>
-	<CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
-	<8737orucq4.fsf@toke.dk>
-	<CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
-	<CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
-	<87k2i1ml43.fsf@toke.dk> <87wpm1b6bu.fsf@toke.dk>
-	<CA+BoTQ=2GNSW7uSw9acPxO6C22itbWtahmuNj2cT5_09QkNr-A@mail.gmail.com>
-Date: Fri, 10 Jun 2016 10:53:33 +0200
-In-Reply-To: <CA+BoTQ=2GNSW7uSw9acPxO6C22itbWtahmuNj2cT5_09QkNr-A@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 10 Jun 2016 10:40:49 +0200")
-Message-ID: <87inxhl90y.fsf@toke.dk> (sfid-20160610_105343_937086_4336A140)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9977 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932297AbcFBOYK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2016 10:24:10 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v3 2/2] ath10k: fix CCK h/w rates for QCA99X0 and newer chipsets
+Date: Thu, 2 Jun 2016 19:54:42 +0530
+Message-ID: <1464877482-14620-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160602_162415_881690_E21B0753)
+In-Reply-To: <1464877482-14620-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1464877482-14620-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
->> I initially thought that using the timestamp put into the frame by the
->> hardware could be a way to get timing. But there's only a timestamp of
->> the first symbol in rs_tstamp, and getting a time to compare it with is
->> difficult; by the time the frame is handled in the rx tasklet, way too
->> much time has been spent on interrupt handling etc for the current time
->> to be worth comparing with.
+CCK hardware table mapping from QCA99X0 onwards got revised.
+The CCK hardware rate values are in a proper order wrt. to
+rate and preamble as below
 
-As an aside, I'm no longer sure this explanation for why I got wrong
-timings for this way of measuring RX time is correct. It may simply be
-that I was counting the same time interval more than once because I
-didn't realise that the handler would be called for each frame. See
-below.
+ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
+ATH10K_HW_RATE_REV2_CCK_LP_2M = 2,
+ATH10K_HW_RATE_REV2_CCK_LP_5_5M = 3,
+ATH10K_HW_RATE_REV2_CCK_LP_11M = 4,
+ATH10K_HW_RATE_REV2_CCK_SP_2M = 5,
+ATH10K_HW_RATE_REV2_CCK_SP_5_5M = 6,
+ATH10K_HW_RATE_REV2_CCK_SP_11M = 7,
 
-> I think rs_tstamp in rx-status is different for first MPDU and last
-> MPDU in an A-MPDU meaning you should be able to compute the entire
-> duration (if you track it, and this should be fairly straightforward
-> as you can't really rx interleaved MPDUs from different
-> A-MPDUs/stations). I'm not sure if the last MPDU defines the tstamp of
-> first symbol or last one.
+This results in reporting of rx frames (with CCK rates)
+totally wrong for QCA99X0, QCA4019. Fix this by having
+separate CCK rate table for these chipsets with rev2 suffix
+and registering the correct rate mapping to mac80211 based on
+the new hw_param (introduced) 'cck_rate_map_rev2' which shall
+be true for any newchipsets from QCA99X0 onwards
 
-I actually went down this path again last night, but haven't had a
-chance to test it yet.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[v2: Enabled the fix for QCA9984 - thanks Kalle]
+[v3: removed patch id]
 
-So what I have now is this:
+ drivers/net/wireless/ath/ath10k/core.c |    3 +++
+ drivers/net/wireless/ath/ath10k/core.h |    6 +++++
+ drivers/net/wireless/ath/ath10k/hw.h   |   10 ++++++++
+ drivers/net/wireless/ath/ath10k/mac.c  |   39 ++++++++++++++++++++++++++++++--
+ 4 files changed, 56 insertions(+), 2 deletions(-)
 
-       /* Only count airtime for last frame in an aggregate. FIXME: Should
-        * this be only the first frame? */
-       if (!rs->rs_isaggr || !rs->rs_moreaggr)
-               airtime = (tsf & 0xffffffff) - rs->rs_tstamp;
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index a003980..2692243 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -148,6 +148,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.uart_pin = 7,
+ 		.otp_exe_param = 0x00000700,
+ 		.continuous_frag_desc = true,
++		.cck_rate_map_rev2 = true,
+ 		.channel_counters_freq_hz = 150000,
+ 		.max_probe_resp_desc_thres = 24,
+ 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
+@@ -170,6 +171,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.uart_pin = 7,
+ 		.otp_exe_param = 0x00000700,
+ 		.continuous_frag_desc = true,
++		.cck_rate_map_rev2 = true,
+ 		.channel_counters_freq_hz = 150000,
+ 		.max_probe_resp_desc_thres = 24,
+ 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
+@@ -227,6 +229,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.has_shifted_cc_wraparound = true,
+ 		.otp_exe_param = 0x0010000,
+ 		.continuous_frag_desc = true,
++		.cck_rate_map_rev2 = true,
+ 		.channel_counters_freq_hz = 125000,
+ 		.max_probe_resp_desc_thres = 24,
+ 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1852e0e..04cea23 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -716,6 +716,12 @@ struct ath10k {
+ 		 */
+ 		bool continuous_frag_desc;
+ 
++		/* CCK hardware rate table mapping for the newer chipsets
++		 * like QCA99X0, QCA4019 got revised. The CCK h/w rate values
++		 * are in a proper order with respect to the rate/preamble
++		 */
++		bool cck_rate_map_rev2;
++
+ 		u32 channel_counters_freq_hz;
+ 
+ 		/* Mgmt tx descriptors threshold for limiting probe response
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index f41c91c..4ed5be9 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -326,6 +326,16 @@ enum ath10k_hw_rate_cck {
+ 	ATH10K_HW_RATE_CCK_SP_2M,
+ };
+ 
++enum ath10k_hw_rate_rev2_cck {
++	ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
++	ATH10K_HW_RATE_REV2_CCK_LP_2M,
++	ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
++	ATH10K_HW_RATE_REV2_CCK_LP_11M,
++	ATH10K_HW_RATE_REV2_CCK_SP_2M,
++	ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
++	ATH10K_HW_RATE_REV2_CCK_SP_11M,
++};
++
+ enum ath10k_hw_4addr_pad {
+ 	ATH10K_HW_4ADDR_PAD_AFTER,
+ 	ATH10K_HW_4ADDR_PAD_BEFORE,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1dd415d..e7162db 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -62,6 +62,32 @@ static struct ieee80211_rate ath10k_rates[] = {
+ 	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
+ };
+ 
++static struct ieee80211_rate ath10k_rates_rev2[] = {
++	{ .bitrate = 10,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_1M },
++	{ .bitrate = 20,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_2M,
++	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_2M,
++	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 55,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
++	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
++	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 110,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_11M,
++	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_11M,
++	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++
++	{ .bitrate = 60, .hw_value = ATH10K_HW_RATE_OFDM_6M },
++	{ .bitrate = 90, .hw_value = ATH10K_HW_RATE_OFDM_9M },
++	{ .bitrate = 120, .hw_value = ATH10K_HW_RATE_OFDM_12M },
++	{ .bitrate = 180, .hw_value = ATH10K_HW_RATE_OFDM_18M },
++	{ .bitrate = 240, .hw_value = ATH10K_HW_RATE_OFDM_24M },
++	{ .bitrate = 360, .hw_value = ATH10K_HW_RATE_OFDM_36M },
++	{ .bitrate = 480, .hw_value = ATH10K_HW_RATE_OFDM_48M },
++	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
++};
++
+ #define ATH10K_MAC_FIRST_OFDM_RATE_IDX 4
+ 
+ #define ath10k_a_rates (ath10k_rates + ATH10K_MAC_FIRST_OFDM_RATE_IDX)
+@@ -70,6 +96,9 @@ static struct ieee80211_rate ath10k_rates[] = {
+ #define ath10k_g_rates (ath10k_rates + 0)
+ #define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
+ 
++#define ath10k_g_rates_rev2 (ath10k_rates_rev2 + 0)
++#define ath10k_g_rates_rev2_size (ARRAY_SIZE(ath10k_rates_rev2))
++
+ static bool ath10k_mac_bitrate_is_cck(int bitrate)
+ {
+ 	switch (bitrate) {
+@@ -7696,8 +7725,14 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
+ 		band->n_channels = ARRAY_SIZE(ath10k_2ghz_channels);
+ 		band->channels = channels;
+-		band->n_bitrates = ath10k_g_rates_size;
+-		band->bitrates = ath10k_g_rates;
++
++		if (ar->hw_params.cck_rate_map_rev2) {
++			band->n_bitrates = ath10k_g_rates_rev2_size;
++			band->bitrates = ath10k_g_rates_rev2;
++		} else {
++			band->n_bitrates = ath10k_g_rates_size;
++			band->bitrates = ath10k_g_rates;
++		}
+ 
+ 		ar->hw->wiphy->bands[NL80211_BAND_2GHZ] = band;
+ 	}
+-- 
+1.7.9.5
 
-Which was under the assumption that rs_tstamp will be the time of the
-first symbol *of the whole ampdu* for all the frames in that aggregate.
-However, if rs_tstamp differs between frames, tracking it at the first
-frame might be the right things to do?
-
-Is the entire A-MPDU received before the RX handler is called for the
-first frame?
-
--Toke
