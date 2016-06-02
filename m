@@ -1,45 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45658 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751344AbcFISiw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 14:38:52 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 1/4] rtl8xxxu: Add bit definitions for REG_USB_SPECIAL_OPTION
-Date: Thu,  9 Jun 2016 14:38:47 -0400
-Message-Id: <1465497530-18510-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160609_203858_264597_D24C4523)
-In-Reply-To: <1465497530-18510-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1465497530-18510-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:38530 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932660AbcFBLxH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2016 07:53:07 -0400
+Received: by mail-wm0-f54.google.com with SMTP id a20so64052398wma.1
+        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2016 04:53:05 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <0c511fa2-8ad5-7f12-65d8-646ad87ae65c@broadcom.com>
+References: <CADbsYN1w2DT58fwuGcqSK91Dz_-GMxX5H6boULN2WZ0fbPs50w@mail.gmail.com>
+ <0c511fa2-8ad5-7f12-65d8-646ad87ae65c@broadcom.com>
+From: Grey Christoforo <grey@christoforo.net>
+Date: Thu, 2 Jun 2016 12:52:45 +0100
+Message-ID: <CADbsYN1VaS55JJ9Kfw6_qQprMG=k_hAvVeXyDBio2AeUmx+n0A@mail.gmail.com> (sfid-20160602_135334_613826_08EB484E)
+Subject: Re: 4.7-rc1 wifi driver bug report
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Wed, Jun 1, 2016 at 10:22 PM, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 31-5-2016 13:46, Grey Christoforo wrote:
+>> Hi,
+>>
+>> I found the following in my dmesg today when I tried out 4.7-rc1 on my
+>> Dell XPS15 9550. My WiFi doesn't work.
+>>
+>> Relevant bits of my lsusb & lspci are:
+>>
+>> $ lsusb
+>> ...
+>> Bus 001 Device 002: ID 0a5c:6410 Broadcom Corp.
+>> ...
+>> $ lspci
+>> ...
+>> 02:00.0 Network controller: Broadcom Corporation BCM43602 802.11ac
+>> Wireless LAN SoC (rev 01)
+>> ...
+>>
+>> and here's the first BUG from from dmesg:
+>
+> Hi Grey,
+>
+> I have submitted a patch for this a moment ago. You can find it here [1]
+> as well. Let me know if it works for you.
+>
+> Regards,
+> Arend
+>
+> [1]
+> http://mid.gmane.org/1464815616-21551-1-git-send-email-arend@broadcom.com
 
-Documentation for enabling USB aggregation and whether to select
-interrupt or bulk delivery of interrupt events.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index b0e0c64..bff883c 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -1052,6 +1052,10 @@
- #define  USB_HIMR_ROK			BIT(0)	/*  Receive DMA OK Interrupt */
- 
- #define REG_USB_SPECIAL_OPTION		0xfe55
-+#define  USB_SPEC_USB_AGG_ENABLE	BIT(3)	/* Enable USB aggregation */
-+#define  USB_SPEC_INT_BULK_SELECT	BIT(4)	/* Use interrupt endpoint to
-+						   deliver interrupt packet.
-+						   0: Use int, 1: use bulk */
- #define REG_USB_HRPWM			0xfe58
- #define REG_USB_DMA_AGG_TO		0xfe5b
- #define REG_USB_AGG_TO			0xfe5c
--- 
-2.5.5
-
+Hi Arend,
+That patch solves the issue for me. Thanks very much!
+¬grey
