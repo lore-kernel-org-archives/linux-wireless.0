@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54509 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750752AbcFIXp4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43372 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932210AbcFBO6e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 19:45:56 -0400
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: Any reason to allow MGT TID to be paused by power-save?
-Message-ID: <5759FFAF.4040609@candelatech.com> (sfid-20160610_014613_099266_13AC418C)
-Date: Thu, 9 Jun 2016 16:45:51 -0700
+	Thu, 2 Jun 2016 10:58:34 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: ath10k: enable ipq4019 device probe in ahb module
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1464613883-24036-1-git-send-email-c_traja@qti.qualcomm.com>
+To: <c_traja@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Message-ID: <1d9f58c8d04842c19383fc5c9d84a442@euamsexm01a.eu.qualcomm.com> (sfid-20160602_165837_351626_15731F42)
+Date: Thu, 2 Jun 2016 16:58:26 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I'm trying to track down a tricky problem with a Mac book and power save
-with my ath10k firmware.
+c_traja@qti.qualcomm.com wrote:
+> From: Raja Mani <rmani@qti.qualcomm.com>
+> 
+> All the necessary patches to make wifi running (over AHB)
+> on ipq4019 SoC are ready now. It's good to enable
+> ipq4019 wifi device probing in ahb module and
+> remove work in progress debug print.
+> 
+> Device tree change is there in the public review by
+> below commit message
+> "qcom: ipq4019: add wifi nodes to ipq4019 SoC device tree"
+> 
+> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 
-At least part of the issue is that when the Mac sleeps, it goes into power-save
-state as far as AP is concerned, and then it simply turns itself off.  When it wakes
-up a short time later, it then tries to scan and re-associate.  But, if hostapd
-hasn't timed out the station (due to longer idle timer), then STA still is treated
-as being in power-save in the firmware.  It appears that this causes mgt-frames (probe responses)
-not be sent back out of the firmware, so Mac gives up fairly quickly.
+Thanks, 1 patch applied to ath.git:
 
-I fixed at least some of this by forcing a power-save wake on
-receipt of probe requests and auth requests, but some issues remain
-for one reason or another.
-
-One thing that came to mind:  Is it *ever* a good idea to pause a mgt-tid due to
-power-save?  A second non-pausable TID also exists in the firmware...maybe all
-mgt frames should use that?  But if so, then why have a mgt tid at all?
-
-Thanks,
-Ben
+280e762e9c72 ath10k: enable ipq4019 device probe in ahb module
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Sent by pwcli
+https://patchwork.kernel.org/patch/9141355/
 
