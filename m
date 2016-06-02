@@ -1,88 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:61667 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752339AbcFPNXu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9776 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751721AbcFBIDP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 09:23:50 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u5GDM9Ra019733
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:23:49 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0b-0016f401.pphosted.com with ESMTP id 23gj5fs01c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:23:49 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
-	Ganapathi Bhat <gbhat@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/6] mwifiex: Fix an issue spotted by KASAN
-Date: Thu, 16 Jun 2016 18:52:21 +0530
-Message-ID: <1466083346-18607-1-git-send-email-akarwar@marvell.com> (sfid-20160616_152352_791126_165DD4DB)
+	Thu, 2 Jun 2016 04:03:15 -0400
+From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: Stephen Rothwell <sfr@canb.auug.org.au>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: Re: ath9k gpio request
+Date: Thu, 2 Jun 2016 08:02:50 +0000
+Message-ID: <1464854569880.79341@qti.qualcomm.com> (sfid-20160602_100322_957777_C4B7B411)
+References: <20160530132225.4d297678@canb.auug.org.au>
+	<574C4851.9090201@gmail.com>
+ <87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com>,<574D3EAA.3060102@gmail.com>
+ <1464764036580.70506@qti.qualcomm.com>
+ <574EC331.1080901@gmail.com>,<574ED297.4080004@gmail.com>
+In-Reply-To: <574ED297.4080004@gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ganapathi Bhat <gbhat@marvell.com>
+Seems there are something wrong in the datasheet,  try
 
-When an association command is sent to firmware but the process is
-killed before the command response arrives, driver will try to
-access bss_desc which is already freed. This issue is fixed by
-checking return value of bss_start.
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1122,8 +1122,8 @@ enum {
+ #define AR9300_NUM_GPIO                          16
+ #define AR9330_NUM_GPIO                                 16
+ #define AR9340_NUM_GPIO                                 23
+-#define AR9462_NUM_GPIO                                 10
+-#define AR9485_NUM_GPIO                                 12
++#define AR9462_NUM_GPIO                                 14
++#define AR9485_NUM_GPIO                                 11
+ #define AR9531_NUM_GPIO                                 18
+ #define AR9550_NUM_GPIO                                 24
+ #define AR9561_NUM_GPIO                                 23
+@@ -1139,8 +1139,8 @@ enum {
+ #define AR9300_GPIO_MASK                        0x0000F4FF
+ #define AR9330_GPIO_MASK                        0x0000F4FF
+ #define AR9340_GPIO_MASK                        0x0000000F
+-#define AR9462_GPIO_MASK                        0x000003FF
+-#define AR9485_GPIO_MASK                        0x00000FFF
++#define AR9462_GPIO_MASK                        0x00003FFF
++#define AR9485_GPIO_MASK                        0x000007FF
+ #define AR9531_GPIO_MASK                        0x0000000F
+ #define AR9550_GPIO_MASK                        0x0000000F
+ #define AR9561_GPIO_MASK                        0x0000000F
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/join.c      | 12 ++++++++++++
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c |  4 ++++
- 2 files changed, 16 insertions(+)
+Thanks,
+Miaoqing
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/join.c b/drivers/net/wireless/marvell/mwifiex/join.c
-index a4b773d..1c7b006 100644
---- a/drivers/net/wireless/marvell/mwifiex/join.c
-+++ b/drivers/net/wireless/marvell/mwifiex/join.c
-@@ -647,6 +647,12 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
- 	const u8 *ie_ptr;
- 	struct ieee80211_ht_operation *assoc_resp_ht_oper;
- 
-+	if (!priv->attempted_bss_desc) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "ASSOC_RESP: failed, association terminated by host\n");
-+		goto done;
-+	}
-+
- 	assoc_rsp = (struct ieee_types_assoc_rsp *) &resp->params;
- 
- 	cap_info = le16_to_cpu(assoc_rsp->cap_info_bitmap);
-@@ -1270,6 +1276,12 @@ int mwifiex_ret_802_11_ad_hoc(struct mwifiex_private *priv,
- 	u16 cmd = le16_to_cpu(resp->command);
- 	u8 result;
- 
-+	if (!priv->attempted_bss_desc) {
-+		mwifiex_dbg(priv->adapter, ERROR,
-+			    "ADHOC_RESP: failed, association terminated by host\n");
-+		goto done;
-+	}
-+
- 	if (cmd == HostCmd_CMD_802_11_AD_HOC_START)
- 		result = start_result->result;
- 	else
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 8e08626..2ba5397 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -426,6 +426,10 @@ done:
- 	if (bss_desc)
- 		kfree(bss_desc->beacon_buf);
- 	kfree(bss_desc);
-+
-+	if (ret < 0)
-+		priv->attempted_bss_desc = NULL;
-+
- 	return ret;
- }
- 
--- 
-1.9.1
+________________________________________
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Sent: Wednesday, June 1, 2016 8:18 PM
+To: Pan, Miaoqing; Kalle Valo
+Cc: Stephen Rothwell; ath9k-devel; linux-next@vger.kernel.org; linux-kernel@vger.kernel.org; linux-wireless@vger.kernel.org; ath9k-devel@lists.ath9k.org; netdev@vger.kernel.org; Miaoqing Pan
+Subject: Re: ath9k gpio request
 
+On Wednesday 01 June 2016 04:42 PM, Sudip Mukherjee wrote:
+> On Wednesday 01 June 2016 12:24 PM, Pan, Miaoqing wrote:
+>> which chip ?  And what's the GPIO number ?
+>
+> lspci -v reports:
+> 09:00.0 Network controller: Qualcomm Atheros AR9462 Wireless Network
+> Adapter (rev 01)
+>      Subsystem: Foxconn International, Inc. Device e052
+>      Flags: bus master, fast devsel, latency 0, IRQ 19
+>      Memory at c0500000 (64-bit, non-prefetchable) [size=512K]
+>      Expansion ROM at c0580000 [disabled] [size=64K]
+>      Capabilities: [40] Power Management version 2
+>      Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
+>      Capabilities: [70] Express Endpoint, MSI 00
+>      Capabilities: [100] Advanced Error Reporting
+>      Capabilities: [140] Virtual Channel
+>      Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
+>      Kernel driver in use: ath9k
+>
+> Any easy way to find out the gpio number or i can modify the module to
+> find that out.
+
+Its trying for GPIO 11 with label ath9k-rfkill.
+
+The attached dmesg is with some modification as below.
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c
+b/drivers/net/wireless/ath/ath9k/hw.c
+index 8b2895f9..23deea7 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2729,14 +2729,16 @@ static void ath9k_hw_gpio_cfg_wmac(struct ath_hw
+*ah, u32 gpio, bool out,
+  static void ath9k_hw_gpio_request(struct ath_hw *ah, u32 gpio, bool out,
+                                   const char *label, u32 ah_signal_type)
+  {
+-       WARN_ON(gpio >= ah->caps.num_gpio_pins);
++//     WARN_ON(gpio >= ah->caps.num_gpio_pins);
++
++       pr_err("sudip: %d %s\n", gpio, label);
+
+         if (BIT(gpio) & ah->caps.gpio_mask)
+                 ath9k_hw_gpio_cfg_wmac(ah, gpio, out, ah_signal_type);
+         else if (AR_SREV_SOC(ah))
+                 ath9k_hw_gpio_cfg_soc(ah, gpio, out, label);
+-       else
+-               WARN_ON(1);
++//     else
++//             WARN_ON(1);
+  }
+
+Regards
+Sudip
