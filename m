@@ -1,60 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:65195 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751748AbcF0QcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 12:32:11 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 00/12] rtl8xxxu: Add RX packet DMA aggregation
-Date: Mon, 27 Jun 2016 12:31:58 -0400
-Message-Id: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_184249_002935_E5164653)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45531 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751248AbcFBHXT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2016 03:23:19 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v2 2/2] ath10k: fix CCK h/w rates for QCA99X0 and newer chipsets
+Date: Thu, 2 Jun 2016 12:53:55 +0530
+Message-ID: <1464852235-13110-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160602_092324_641225_2D901F8B)
+In-Reply-To: <1464852235-13110-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1464852235-13110-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Hi
+CCK hardware table mapping from QCA99X0 onwards got revised.
+The CCK hardware rate values are in a proper order wrt. to
+rate and preamble as below
 
-This patchset enabled RX packet DMA aggregation, batching multiple
-received packets into larger buffers. This should reduce the number of
-DMA transactions and the number of USB interrupts due to DMA complete
-notifications.
+ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
+ATH10K_HW_RATE_REV2_CCK_LP_2M = 2,
+ATH10K_HW_RATE_REV2_CCK_LP_5_5M = 3,
+ATH10K_HW_RATE_REV2_CCK_LP_11M = 4,
+ATH10K_HW_RATE_REV2_CCK_SP_2M = 5,
+ATH10K_HW_RATE_REV2_CCK_SP_5_5M = 6,
+ATH10K_HW_RATE_REV2_CCK_SP_11M = 7,
 
-Since this is new code, I am leaving it disabled per default for
-now. In order to enable it, a user must set dma_aggregation=1 on
-module load.
+This results in reporting of rx frames (with CCK rates)
+totally wrong for QCA99X0, QCA4019. Fix this by having
+separate CCK rate table for these chipsets with rev2 suffix
+and registering the correct rate mapping to mac80211 based on
+the new hw_param (introduced) 'cck_rate_map_rev2' which shall
+be true for any newchipsets from QCA99X0 onwards
 
-I'd love to hear feedback from people testing this feature. For those
-who wish to compile directly, you can checkout the
-rtl8xxxu-aggregation branch of my git tree.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[v2: Enabled the fix for QCA9984 - thanks Kalle]
 
-Cheers,
-Jes
+ drivers/net/wireless/ath/ath10k/core.c |    3 +++
+ drivers/net/wireless/ath/ath10k/core.h |    6 +++++
+ drivers/net/wireless/ath/ath10k/hw.h   |   10 ++++++++
+ drivers/net/wireless/ath/ath10k/mac.c  |   39 ++++++++++++++++++++++++++++++--
+ 4 files changed, 56 insertions(+), 2 deletions(-)
 
-Jes Sorensen (12):
-  rtl8xxxu: Set all ieee80211_rx_status values in parse_rx_desc()
-  rtl8xxxu: Move skb delivery into parse_tx_desc() handler
-  rtl8xxxu: Obtain ieee80211_rx_status within parse_rx_desc()
-  rtl8xxxu: Correct rxdesc16 definition
-  rtl8xxxu: Add support for aggregated RX packets on gen1 parts
-  rtl8xxxu: Allocate larger RX skbs when aggregation is enabled
-  rtl8xxxu: Adjust RX skb size to include space for phystats
-  rtl8xxxu: Enable aggregation for rtl8723au
-  rtl8xxxu: Enable aggregation for rtl8192cu/rtl8188cu/rtl8188ru
-  rtl8xxxu: Make DMA aggregation optional by setting a module parameter
-  rtl8xxxu: gen1: Set aggregation timeout (REG_RXDMA_AGG_PG_TH + 1) as
-    well
-  rtl8xxxu: gen1: Add module parameters to adjust DMA aggregation
-    parameters
-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  18 +-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c |   2 +
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c |   2 +
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 313 ++++++++++++++-------
- 4 files changed, 230 insertions(+), 105 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index a003980..2692243 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -148,6 +148,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.uart_pin = 7,
+ 		.otp_exe_param = 0x00000700,
+ 		.continuous_frag_desc = true,
++		.cck_rate_map_rev2 = true,
+ 		.channel_counters_freq_hz = 150000,
+ 		.max_probe_resp_desc_thres = 24,
+ 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
+@@ -170,6 +171,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.uart_pin = 7,
+ 		.otp_exe_param = 0x00000700,
+ 		.continuous_frag_desc = true,
++		.cck_rate_map_rev2 = true,
+ 		.channel_counters_freq_hz = 150000,
+ 		.max_probe_resp_desc_thres = 24,
+ 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
+@@ -227,6 +229,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.has_shifted_cc_wraparound = true,
+ 		.otp_exe_param = 0x0010000,
+ 		.continuous_frag_desc = true,
++		.cck_rate_map_rev2 = true,
+ 		.channel_counters_freq_hz = 125000,
+ 		.max_probe_resp_desc_thres = 24,
+ 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 1852e0e..04cea23 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -716,6 +716,12 @@ struct ath10k {
+ 		 */
+ 		bool continuous_frag_desc;
+ 
++		/* CCK hardware rate table mapping for the newer chipsets
++		 * like QCA99X0, QCA4019 got revised. The CCK h/w rate values
++		 * are in a proper order with respect to the rate/preamble
++		 */
++		bool cck_rate_map_rev2;
++
+ 		u32 channel_counters_freq_hz;
+ 
+ 		/* Mgmt tx descriptors threshold for limiting probe response
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index f41c91c..4ed5be9 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -326,6 +326,16 @@ enum ath10k_hw_rate_cck {
+ 	ATH10K_HW_RATE_CCK_SP_2M,
+ };
+ 
++enum ath10k_hw_rate_rev2_cck {
++	ATH10K_HW_RATE_REV2_CCK_LP_1M = 1,
++	ATH10K_HW_RATE_REV2_CCK_LP_2M,
++	ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
++	ATH10K_HW_RATE_REV2_CCK_LP_11M,
++	ATH10K_HW_RATE_REV2_CCK_SP_2M,
++	ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
++	ATH10K_HW_RATE_REV2_CCK_SP_11M,
++};
++
+ enum ath10k_hw_4addr_pad {
+ 	ATH10K_HW_4ADDR_PAD_AFTER,
+ 	ATH10K_HW_4ADDR_PAD_BEFORE,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1dd415d..e7162db 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -62,6 +62,32 @@ static struct ieee80211_rate ath10k_rates[] = {
+ 	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
+ };
+ 
++static struct ieee80211_rate ath10k_rates_rev2[] = {
++	{ .bitrate = 10,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_1M },
++	{ .bitrate = 20,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_2M,
++	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_2M,
++	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 55,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_5_5M,
++	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_5_5M,
++	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++	{ .bitrate = 110,
++	  .hw_value = ATH10K_HW_RATE_REV2_CCK_LP_11M,
++	  .hw_value_short = ATH10K_HW_RATE_REV2_CCK_SP_11M,
++	  .flags = IEEE80211_RATE_SHORT_PREAMBLE },
++
++	{ .bitrate = 60, .hw_value = ATH10K_HW_RATE_OFDM_6M },
++	{ .bitrate = 90, .hw_value = ATH10K_HW_RATE_OFDM_9M },
++	{ .bitrate = 120, .hw_value = ATH10K_HW_RATE_OFDM_12M },
++	{ .bitrate = 180, .hw_value = ATH10K_HW_RATE_OFDM_18M },
++	{ .bitrate = 240, .hw_value = ATH10K_HW_RATE_OFDM_24M },
++	{ .bitrate = 360, .hw_value = ATH10K_HW_RATE_OFDM_36M },
++	{ .bitrate = 480, .hw_value = ATH10K_HW_RATE_OFDM_48M },
++	{ .bitrate = 540, .hw_value = ATH10K_HW_RATE_OFDM_54M },
++};
++
+ #define ATH10K_MAC_FIRST_OFDM_RATE_IDX 4
+ 
+ #define ath10k_a_rates (ath10k_rates + ATH10K_MAC_FIRST_OFDM_RATE_IDX)
+@@ -70,6 +96,9 @@ static struct ieee80211_rate ath10k_rates[] = {
+ #define ath10k_g_rates (ath10k_rates + 0)
+ #define ath10k_g_rates_size (ARRAY_SIZE(ath10k_rates))
+ 
++#define ath10k_g_rates_rev2 (ath10k_rates_rev2 + 0)
++#define ath10k_g_rates_rev2_size (ARRAY_SIZE(ath10k_rates_rev2))
++
+ static bool ath10k_mac_bitrate_is_cck(int bitrate)
+ {
+ 	switch (bitrate) {
+@@ -7696,8 +7725,14 @@ int ath10k_mac_register(struct ath10k *ar)
+ 		band = &ar->mac.sbands[NL80211_BAND_2GHZ];
+ 		band->n_channels = ARRAY_SIZE(ath10k_2ghz_channels);
+ 		band->channels = channels;
+-		band->n_bitrates = ath10k_g_rates_size;
+-		band->bitrates = ath10k_g_rates;
++
++		if (ar->hw_params.cck_rate_map_rev2) {
++			band->n_bitrates = ath10k_g_rates_rev2_size;
++			band->bitrates = ath10k_g_rates_rev2;
++		} else {
++			band->n_bitrates = ath10k_g_rates_size;
++			band->bitrates = ath10k_g_rates;
++		}
+ 
+ 		ar->hw->wiphy->bands[NL80211_BAND_2GHZ] = band;
+ 	}
 -- 
-2.7.4
+1.7.9.5
 
