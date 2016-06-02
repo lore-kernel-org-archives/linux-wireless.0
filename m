@@ -1,556 +1,377 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:46737 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875AbcFDEMJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:45883 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750744AbcFBHMf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 00:12:09 -0400
-From: Guenter Roeck <linux@roeck-us.net>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org, m@bues.ch,
-	Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH v2 2/2] b43: Completely remove support for phy_a
-Date: Fri,  3 Jun 2016 21:11:52 -0700
-Message-Id: <1465013512-30301-2-git-send-email-linux@roeck-us.net> (sfid-20160604_061256_064478_CFC4A5A7)
-In-Reply-To: <1465013512-30301-1-git-send-email-linux@roeck-us.net>
-References: <1465013512-30301-1-git-send-email-linux@roeck-us.net>
+	Thu, 2 Jun 2016 03:12:35 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v3] ath10k: Fix 10.4 extended peer stats update
+Date: Thu, 2 Jun 2016 12:43:22 +0530
+Message-ID: <1464851602-12969-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160602_091240_409112_ADBB88D9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Per Michael Büsch: "All a-phy code is usused", so remove it all.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+10.4 'extended peer stats' will be not be appended with normal peer stats
+data and they shall be coming in separate chunks. Fix this by maintaining
+a separate linked list 'extender peer stats' for 10.4 and update
+rx_duration for per station statistics. Also parse through beacon filter
+(if enabled), to make sure we parse the extended peer stats properly.
+This issue was exposed when more than one client is connected and
+extended peer stats for 10.4 is enabled
+
+The order for the stats is as below
+S - standard peer stats, E- extended peer stats, B - beacon filter stats
+
+{S1, S2, S3..} -> {B1, B2, B3..}(if available) -> {E1, E2, E3..}
+
+Fixes: f9575793d44c ("ath10k: enable parsing per station rx duration for 10.4")
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 ---
-v2: Added patch
+[v1: addressed line wrap around comment from Kalle]
+[v2: fixed ; in dummy inline function definition - thanks Sven Eckelmann]
+[v3: removed wmi-op-version suggested by Kalle, introduced fw specifi hw param for extd_stats]
 
- drivers/net/wireless/broadcom/b43/main.c |  31 +---
- drivers/net/wireless/broadcom/b43/wa.c   | 283 +++----------------------------
- drivers/net/wireless/broadcom/b43/xmit.c |  17 +-
- 3 files changed, 24 insertions(+), 307 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c        |    3 ++
+ drivers/net/wireless/ath/ath10k/core.h        |    9 +++++
+ drivers/net/wireless/ath/ath10k/debug.c       |   18 ++++++++-
+ drivers/net/wireless/ath/ath10k/debug.h       |    8 ++--
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   32 ++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.c         |   53 ++++++++++++++++++-------
+ drivers/net/wireless/ath/ath10k/wmi.h         |   14 ++++++-
+ 7 files changed, 117 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index 4ee5c5853f9f..6e5d9095b195 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -3180,7 +3180,6 @@ static void b43_rate_memory_write(struct b43_wldev *dev, u16 rate, int is_ofdm)
- static void b43_rate_memory_init(struct b43_wldev *dev)
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 9ccb69c..bfa96ac 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
+ 			.board_size = QCA99X0_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
++			.extd_peer_stats = true,
+ 		},
+ 	},
+ 	{
+@@ -203,6 +204,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board = QCA9984_HW_1_0_BOARD_DATA_FILE,
+ 			.board_size = QCA99X0_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
++			.extd_peer_stats = true,
+ 		},
+ 	},
+ 	{
+@@ -261,6 +263,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
+ 			.board_size = QCA4019_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
++			.extd_peer_stats = true,
+ 		},
+ 	},
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index bbc4e0f..da9b2a9 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -165,6 +165,13 @@ struct ath10k_fw_stats_peer {
+ 	u32 rx_duration;
+ };
+ 
++struct ath10k_fw_extd_stats_peer {
++	struct list_head list;
++
++	u8 peer_macaddr[ETH_ALEN];
++	u32 rx_duration;
++};
++
+ struct ath10k_fw_stats_vdev {
+ 	struct list_head list;
+ 
+@@ -259,6 +266,7 @@ struct ath10k_fw_stats {
+ 	struct list_head pdevs;
+ 	struct list_head vdevs;
+ 	struct list_head peers;
++	struct list_head peers_extd;
+ };
+ 
+ #define ATH10K_TPC_TABLE_TYPE_FLAG	1
+@@ -752,6 +760,7 @@ struct ath10k {
+ 			const char *board;
+ 			size_t board_size;
+ 			size_t board_ext_size;
++			bool extd_peer_stats;
+ 		} fw;
+ 	} hw_params;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 8fbb8f2..001c0a1 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -313,6 +313,16 @@ static void ath10k_fw_stats_peers_free(struct list_head *head)
+ 	}
+ }
+ 
++static void ath10k_fw_extd_stats_peers_free(struct list_head *head)
++{
++	struct ath10k_fw_extd_stats_peer *i, *tmp;
++
++	list_for_each_entry_safe(i, tmp, head, list) {
++		list_del(&i->list);
++		kfree(i);
++	}
++}
++
+ static void ath10k_debug_fw_stats_reset(struct ath10k *ar)
  {
- 	switch (dev->phy.type) {
--	case B43_PHYTYPE_A:
- 	case B43_PHYTYPE_G:
- 	case B43_PHYTYPE_N:
- 	case B43_PHYTYPE_LP:
-@@ -3194,8 +3193,6 @@ static void b43_rate_memory_init(struct b43_wldev *dev)
- 		b43_rate_memory_write(dev, B43_OFDM_RATE_36MB, 1);
- 		b43_rate_memory_write(dev, B43_OFDM_RATE_48MB, 1);
- 		b43_rate_memory_write(dev, B43_OFDM_RATE_54MB, 1);
--		if (dev->phy.type == B43_PHYTYPE_A)
--			break;
- 		/* fallthrough */
- 	case B43_PHYTYPE_B:
- 		b43_rate_memory_write(dev, B43_CCK_RATE_1MB, 0);
-@@ -4604,14 +4601,6 @@ static int b43_phy_versioning(struct b43_wldev *dev)
- 	if (radio_manuf != 0x17F /* Broadcom */)
- 		unsupported = 1;
- 	switch (phy_type) {
--	case B43_PHYTYPE_A:
--		if (radio_id != 0x2060)
--			unsupported = 1;
--		if (radio_rev != 1)
--			unsupported = 1;
--		if (radio_manuf != 0x17F)
--			unsupported = 1;
--		break;
- 	case B43_PHYTYPE_B:
- 		if ((radio_id & 0xFFF0) != 0x2050)
- 			unsupported = 1;
-@@ -4766,10 +4755,7 @@ static void b43_set_synth_pu_delay(struct b43_wldev *dev, bool idle)
- 	u16 pu_delay;
+ 	spin_lock_bh(&ar->data_lock);
+@@ -320,6 +330,7 @@ static void ath10k_debug_fw_stats_reset(struct ath10k *ar)
+ 	ath10k_fw_stats_pdevs_free(&ar->debug.fw_stats.pdevs);
+ 	ath10k_fw_stats_vdevs_free(&ar->debug.fw_stats.vdevs);
+ 	ath10k_fw_stats_peers_free(&ar->debug.fw_stats.peers);
++	ath10k_fw_extd_stats_peers_free(&ar->debug.fw_stats.peers_extd);
+ 	spin_unlock_bh(&ar->data_lock);
+ }
  
- 	/* The time value is in microseconds. */
--	if (dev->phy.type == B43_PHYTYPE_A)
--		pu_delay = 3700;
--	else
--		pu_delay = 1050;
-+	pu_delay = 1050;
- 	if (b43_is_mode(dev->wl, NL80211_IFTYPE_ADHOC) || idle)
- 		pu_delay = 500;
- 	if ((dev->phy.radio_ver == 0x2050) && (dev->phy.radio_rev == 8))
-@@ -4784,14 +4770,10 @@ static void b43_set_pretbtt(struct b43_wldev *dev)
- 	u16 pretbtt;
+@@ -334,6 +345,7 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+ 	INIT_LIST_HEAD(&stats.pdevs);
+ 	INIT_LIST_HEAD(&stats.vdevs);
+ 	INIT_LIST_HEAD(&stats.peers);
++	INIT_LIST_HEAD(&stats.peers_extd);
  
- 	/* The time value is in microseconds. */
--	if (b43_is_mode(dev->wl, NL80211_IFTYPE_ADHOC)) {
-+	if (b43_is_mode(dev->wl, NL80211_IFTYPE_ADHOC))
- 		pretbtt = 2;
--	} else {
--		if (dev->phy.type == B43_PHYTYPE_A)
--			pretbtt = 120;
--		else
--			pretbtt = 250;
--	}
+ 	spin_lock_bh(&ar->data_lock);
+ 	ret = ath10k_wmi_pull_fw_stats(ar, skb, &stats);
+@@ -354,7 +366,7 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+ 	 *     delivered which is treated as end-of-data and is itself discarded
+ 	 */
+ 	if (ath10k_peer_stats_enabled(ar))
+-		ath10k_sta_update_rx_duration(ar, &stats.peers);
++		ath10k_sta_update_rx_duration(ar, &stats);
+ 
+ 	if (ar->debug.fw_stats_done) {
+ 		if (!ath10k_peer_stats_enabled(ar))
+@@ -396,6 +408,8 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 		list_splice_tail_init(&stats.peers, &ar->debug.fw_stats.peers);
+ 		list_splice_tail_init(&stats.vdevs, &ar->debug.fw_stats.vdevs);
++		list_splice_tail_init(&stats.peers_extd,
++				      &ar->debug.fw_stats.peers_extd);
+ 	}
+ 
+ 	complete(&ar->debug.fw_stats_complete);
+@@ -407,6 +421,7 @@ free:
+ 	ath10k_fw_stats_pdevs_free(&stats.pdevs);
+ 	ath10k_fw_stats_vdevs_free(&stats.vdevs);
+ 	ath10k_fw_stats_peers_free(&stats.peers);
++	ath10k_fw_extd_stats_peers_free(&stats.peers_extd);
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+ }
+@@ -2330,6 +2345,7 @@ int ath10k_debug_create(struct ath10k *ar)
+ 	INIT_LIST_HEAD(&ar->debug.fw_stats.pdevs);
+ 	INIT_LIST_HEAD(&ar->debug.fw_stats.vdevs);
+ 	INIT_LIST_HEAD(&ar->debug.fw_stats.peers);
++	INIT_LIST_HEAD(&ar->debug.fw_stats.peers_extd);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 75c89e3..dc549c4 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -154,10 +154,12 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir);
+-void ath10k_sta_update_rx_duration(struct ath10k *ar, struct list_head *peer);
++void ath10k_sta_update_rx_duration(struct ath10k *ar,
++				   struct ath10k_fw_stats *stats);
+ #else
+-static inline void ath10k_sta_update_rx_duration(struct ath10k *ar,
+-						 struct list_head *peer)
++static inline
++void ath10k_sta_update_rx_duration(struct ath10k *ar,
++				   struct ath10k_fw_stats *stats)
+ {
+ }
+ #endif /* CONFIG_MAC80211_DEBUGFS */
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 67ef75b..af3d49a 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -18,7 +18,27 @@
+ #include "wmi-ops.h"
+ #include "debug.h"
+ 
+-void ath10k_sta_update_rx_duration(struct ath10k *ar, struct list_head *head)
++static void ath10k_sta_update_extd_stats_rx_duration(struct ath10k *ar,
++						     struct list_head *head)
++{
++	struct ieee80211_sta *sta;
++	struct ath10k_fw_extd_stats_peer *peer;
++	struct ath10k_sta *arsta;
++
++	rcu_read_lock();
++	list_for_each_entry(peer, head, list) {
++		sta = ieee80211_find_sta_by_ifaddr(ar->hw, peer->peer_macaddr,
++						   NULL);
++		if (!sta)
++			continue;
++		arsta = (struct ath10k_sta *)sta->drv_priv;
++		arsta->rx_duration += (u64)peer->rx_duration;
++	}
++	rcu_read_unlock();
++}
++
++static void ath10k_sta_update_stats_rx_duration(struct ath10k *ar,
++						struct list_head *head)
+ {	struct ieee80211_sta *sta;
+ 	struct ath10k_fw_stats_peer *peer;
+ 	struct ath10k_sta *arsta;
+@@ -35,6 +55,16 @@ void ath10k_sta_update_rx_duration(struct ath10k *ar, struct list_head *head)
+ 	rcu_read_unlock();
+ }
+ 
++void ath10k_sta_update_rx_duration(struct ath10k *ar,
++				   struct ath10k_fw_stats *stats)
++{
++	if (ar->hw_params.fw.extd_peer_stats)
++		ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
 +	else
-+		pretbtt = 250;
- 	b43_shm_write16(dev, B43_SHM_SHARED, B43_SHM_SH_PRETBTT, pretbtt);
- 	b43_write16(dev, B43_MMIO_TSF_CFP_PRETBTT, pretbtt);
- }
-@@ -5380,10 +5362,6 @@ static void b43_supported_bands(struct b43_wldev *dev, bool *have_2ghz_phy,
- 
- 	/* As a fallback, try to guess using PHY type */
- 	switch (dev->phy.type) {
--	case B43_PHYTYPE_A:
--		*have_2ghz_phy = false;
--		*have_5ghz_phy = true;
--		return;
- 	case B43_PHYTYPE_G:
- 	case B43_PHYTYPE_N:
- 	case B43_PHYTYPE_LP:
-@@ -5455,7 +5433,6 @@ static int b43_wireless_core_attach(struct b43_wldev *dev)
- 	/* We don't support 5 GHz on some PHYs yet */
- 	if (have_5ghz_phy) {
- 		switch (dev->phy.type) {
--		case B43_PHYTYPE_A:
- 		case B43_PHYTYPE_G:
- 		case B43_PHYTYPE_LP:
- 		case B43_PHYTYPE_HT:
-diff --git a/drivers/net/wireless/broadcom/b43/wa.c b/drivers/net/wireless/broadcom/b43/wa.c
-index c218c08fb2f5..0e96c08d1e17 100644
---- a/drivers/net/wireless/broadcom/b43/wa.c
-+++ b/drivers/net/wireless/broadcom/b43/wa.c
-@@ -30,33 +30,6 @@
- #include "phy_common.h"
- #include "wa.h"
- 
--static void b43_wa_papd(struct b43_wldev *dev)
--{
--	u16 backup;
--
--	backup = b43_ofdmtab_read16(dev, B43_OFDMTAB_PWRDYN2, 0);
--	b43_ofdmtab_write16(dev, B43_OFDMTAB_PWRDYN2, 0, 7);
--	b43_ofdmtab_write16(dev, B43_OFDMTAB_UNKNOWN_APHY, 0, 0);
--	b43_dummy_transmission(dev, true, true);
--	b43_ofdmtab_write16(dev, B43_OFDMTAB_PWRDYN2, 0, backup);
--}
--
--static void b43_wa_auxclipthr(struct b43_wldev *dev)
--{
--	b43_phy_write(dev, B43_PHY_OFDM(0x8E), 0x3800);
--}
--
--static void b43_wa_afcdac(struct b43_wldev *dev)
--{
--	b43_phy_write(dev, 0x0035, 0x03FF);
--	b43_phy_write(dev, 0x0036, 0x0400);
--}
--
--static void b43_wa_txdc_offset(struct b43_wldev *dev)
--{
--	b43_ofdmtab_write16(dev, B43_OFDMTAB_DC, 0, 0x0051);
--}
--
- void b43_wa_initgains(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
-@@ -81,41 +54,6 @@ void b43_wa_initgains(struct b43_wldev *dev)
- 		b43_phy_write(dev, 0x00BA, 0x3ED5);
- }
- 
--static void b43_wa_divider(struct b43_wldev *dev)
--{
--	b43_phy_mask(dev, 0x002B, ~0x0100);
--	b43_phy_write(dev, 0x008E, 0x58C1);
--}
--
--static void b43_wa_gt(struct b43_wldev *dev) /* Gain table. */
--{
--	if (dev->phy.rev <= 2) {
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN2, 0, 15);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN2, 1, 31);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN2, 2, 42);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN2, 3, 48);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN2, 4, 58);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 0, 19);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 1, 19);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 2, 19);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 3, 19);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 4, 21);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 5, 21);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 6, 25);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN1, 0, 3);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN1, 1, 3);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN1, 2, 7);
--	} else {
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 0, 19);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 1, 19);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 2, 19);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 3, 19);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 4, 21);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 5, 21);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_GAIN0, 6, 25);
--	}
--}
--
- static void b43_wa_rssi_lt(struct b43_wldev *dev) /* RSSI lookup table */
- {
++		ath10k_sta_update_extd_stats_rx_duration(ar,
++							 &stats->peers_extd);
++}
++
+ static ssize_t ath10k_dbg_sta_read_aggr_mode(struct file *file,
+ 					     char __user *user_buf,
+ 					     size_t count, loff_t *ppos)
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6279ab4..5f2d423 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2924,6 +2924,7 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
+ 	u32 num_pdev_ext_stats;
+ 	u32 num_vdev_stats;
+ 	u32 num_peer_stats;
++	u32 num_bcnflt_stats;
+ 	u32 stats_id;
  	int i;
-@@ -133,15 +71,11 @@ static void b43_wa_rssi_lt(struct b43_wldev *dev) /* RSSI lookup table */
  
- static void b43_wa_analog(struct b43_wldev *dev)
- {
--	struct b43_phy *phy = &dev->phy;
- 	u16 ofdmrev;
+@@ -2934,6 +2935,7 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
+ 	num_pdev_ext_stats = __le32_to_cpu(ev->num_pdev_ext_stats);
+ 	num_vdev_stats = __le32_to_cpu(ev->num_vdev_stats);
+ 	num_peer_stats = __le32_to_cpu(ev->num_peer_stats);
++	num_bcnflt_stats = __le32_to_cpu(ev->num_bcnflt_stats);
+ 	stats_id = __le32_to_cpu(ev->stats_id);
  
- 	ofdmrev = b43_phy_read(dev, B43_PHY_VERSION_OFDM) & B43_PHYVER_VERSION;
- 	if (ofdmrev > 2) {
--		if (phy->type == B43_PHYTYPE_A)
--			b43_phy_write(dev, B43_PHY_PWRDOWN, 0x1808);
+ 	for (i = 0; i < num_pdev_stats; i++) {
+@@ -2974,32 +2976,55 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
+ 	/* fw doesn't implement vdev stats */
+ 
+ 	for (i = 0; i < num_peer_stats; i++) {
+-		const struct wmi_10_4_peer_extd_stats *src;
++		const struct wmi_10_4_peer_stats *src;
+ 		struct ath10k_fw_stats_peer *dst;
+-		int stats_len;
+-		bool extd_peer_stats = !!(stats_id & WMI_10_4_STAT_PEER_EXTD);
+-
+-		if (extd_peer_stats)
+-			stats_len = sizeof(struct wmi_10_4_peer_extd_stats);
 -		else
--			b43_phy_write(dev, B43_PHY_PWRDOWN, 0x1000);
-+		b43_phy_write(dev, B43_PHY_PWRDOWN, 0x1000);
- 	} else {
- 		b43_ofdmtab_write16(dev, B43_OFDMTAB_DAC, 3, 0x1044);
- 		b43_ofdmtab_write16(dev, B43_OFDMTAB_DAC, 4, 0x7201);
-@@ -149,26 +83,13 @@ static void b43_wa_analog(struct b43_wldev *dev)
+-			stats_len = sizeof(struct wmi_10_4_peer_stats);
+ 
+ 		src = (void *)skb->data;
+-		if (!skb_pull(skb, stats_len))
++		if (!skb_pull(skb, sizeof(*src)))
+ 			return -EPROTO;
+ 
+ 		dst = kzalloc(sizeof(*dst), GFP_ATOMIC);
+ 		if (!dst)
+ 			continue;
+ 
+-		ath10k_wmi_10_4_pull_peer_stats(&src->common, dst);
+-		/* FIXME: expose 10.4 specific values */
+-		if (extd_peer_stats)
+-			dst->rx_duration = __le32_to_cpu(src->rx_duration);
+-
++		ath10k_wmi_10_4_pull_peer_stats(src, dst);
+ 		list_add_tail(&dst->list, &stats->peers);
  	}
+ 
++	for (i = 0; i < num_bcnflt_stats; i++) {
++		const struct wmi_10_4_bss_bcn_filter_stats *src;
++
++		src = (void *)skb->data;
++		if (!skb_pull(skb, sizeof(*src)))
++			return -EPROTO;
++
++		/* FIXME: expose values to userspace
++		 *
++		 * Note: Even though this loop seems to do nothing it is
++		 * required to parse following sub-structures properly.
++		 */
++	}
++
++	if ((stats_id & WMI_10_4_STAT_PEER_EXTD) == 0)
++		return 0;
++
++	for (i = 0; i < num_peer_stats; i++) {
++		const struct wmi_10_4_peer_extd_stats *src;
++		struct ath10k_fw_extd_stats_peer *dst;
++
++		src = (void *)skb->data;
++		if (!skb_pull(skb, sizeof(*src)))
++			return -EPROTO;
++
++		dst = kzalloc(sizeof(*dst), GFP_ATOMIC);
++		if (!dst)
++			continue;
++
++		ether_addr_copy(dst->peer_macaddr, src->peer_macaddr.addr);
++		dst->rx_duration = __le32_to_cpu(src->rx_duration);
++		list_add_tail(&dst->list, &stats->peers_extd);
++	}
++
+ 	return 0;
  }
  
--static void b43_wa_dac(struct b43_wldev *dev)
--{
--	if (dev->phy.analog == 1)
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_DAC, 1,
--			(b43_ofdmtab_read16(dev, B43_OFDMTAB_DAC, 1) & ~0x0034) | 0x0008);
--	else
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_DAC, 1,
--			(b43_ofdmtab_read16(dev, B43_OFDMTAB_DAC, 1) & ~0x0078) | 0x0010);
--}
--
- static void b43_wa_fft(struct b43_wldev *dev) /* Fine frequency table */
- {
- 	int i;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 90f594e..3ef4688 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4340,7 +4340,6 @@ struct wmi_10_4_peer_stats {
+ } __packed;
  
--	if (dev->phy.type == B43_PHYTYPE_A)
--		for (i = 0; i < B43_TAB_FINEFREQA_SIZE; i++)
--			b43_ofdmtab_write16(dev, B43_OFDMTAB_DACRFPABB, i, b43_tab_finefreqa[i]);
--	else
--		for (i = 0; i < B43_TAB_FINEFREQG_SIZE; i++)
--			b43_ofdmtab_write16(dev, B43_OFDMTAB_DACRFPABB, i, b43_tab_finefreqg[i]);
-+	for (i = 0; i < B43_TAB_FINEFREQG_SIZE; i++)
-+		b43_ofdmtab_write16(dev, B43_OFDMTAB_DACRFPABB, i,
-+				    b43_tab_finefreqg[i]);
- }
+ struct wmi_10_4_peer_extd_stats {
+-	struct wmi_10_4_peer_stats common;
+ 	struct wmi_mac_addr peer_macaddr;
+ 	__le32 inactive_time;
+ 	__le32 peer_chain_rssi;
+@@ -4348,6 +4347,19 @@ struct wmi_10_4_peer_extd_stats {
+ 	__le32 reserved[10];
+ } __packed;
  
- static void b43_wa_nft(struct b43_wldev *dev) /* Noise figure table */
-@@ -176,21 +97,14 @@ static void b43_wa_nft(struct b43_wldev *dev) /* Noise figure table */
- 	struct b43_phy *phy = &dev->phy;
- 	int i;
- 
--	if (phy->type == B43_PHYTYPE_A) {
--		if (phy->rev == 2)
--			for (i = 0; i < B43_TAB_NOISEA2_SIZE; i++)
--				b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC2, i, b43_tab_noisea2[i]);
--		else
--			for (i = 0; i < B43_TAB_NOISEA3_SIZE; i++)
--				b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC2, i, b43_tab_noisea3[i]);
--	} else {
--		if (phy->rev == 1)
--			for (i = 0; i < B43_TAB_NOISEG1_SIZE; i++)
--				b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC2, i, b43_tab_noiseg1[i]);
--		else
--			for (i = 0; i < B43_TAB_NOISEG2_SIZE; i++)
--				b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC2, i, b43_tab_noiseg2[i]);
--	}
-+	if (phy->rev == 1)
-+		for (i = 0; i < B43_TAB_NOISEG1_SIZE; i++)
-+			b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC2, i,
-+					    b43_tab_noiseg1[i]);
-+	else
-+		for (i = 0; i < B43_TAB_NOISEG2_SIZE; i++)
-+			b43_ofdmtab_write16(dev, B43_OFDMTAB_AGC2, i,
-+					    b43_tab_noiseg2[i]);
- }
- 
- static void b43_wa_rt(struct b43_wldev *dev) /* Rotor table */
-@@ -201,14 +115,6 @@ static void b43_wa_rt(struct b43_wldev *dev) /* Rotor table */
- 		b43_ofdmtab_write32(dev, B43_OFDMTAB_ROTOR, i, b43_tab_rotor[i]);
- }
- 
--static void b43_write_null_nst(struct b43_wldev *dev)
--{
--	int i;
--
--	for (i = 0; i < B43_TAB_NOISESCALE_SIZE; i++)
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_NOISESCALE, i, 0);
--}
--
- static void b43_write_nst(struct b43_wldev *dev, const u16 *nst)
- {
- 	int i;
-@@ -221,24 +127,13 @@ static void b43_wa_nst(struct b43_wldev *dev) /* Noise scale table */
- {
- 	struct b43_phy *phy = &dev->phy;
- 
--	if (phy->type == B43_PHYTYPE_A) {
--		if (phy->rev <= 1)
--			b43_write_null_nst(dev);
--		else if (phy->rev == 2)
--			b43_write_nst(dev, b43_tab_noisescalea2);
--		else if (phy->rev == 3)
--			b43_write_nst(dev, b43_tab_noisescalea3);
--		else
-+	if (phy->rev >= 6) {
-+		if (b43_phy_read(dev, B43_PHY_ENCORE) & B43_PHY_ENCORE_EN)
- 			b43_write_nst(dev, b43_tab_noisescaleg3);
-+		else
-+			b43_write_nst(dev, b43_tab_noisescaleg2);
- 	} else {
--		if (phy->rev >= 6) {
--			if (b43_phy_read(dev, B43_PHY_ENCORE) & B43_PHY_ENCORE_EN)
--				b43_write_nst(dev, b43_tab_noisescaleg3);
--			else
--				b43_write_nst(dev, b43_tab_noisescaleg2);
--		} else {
--			b43_write_nst(dev, b43_tab_noisescaleg1);
--		}
-+		b43_write_nst(dev, b43_tab_noisescaleg1);
- 	}
- }
- 
-@@ -251,41 +146,13 @@ static void b43_wa_art(struct b43_wldev *dev) /* ADV retard table */
- 				i, b43_tab_retard[i]);
- }
- 
--static void b43_wa_txlna_gain(struct b43_wldev *dev)
--{
--	b43_ofdmtab_write16(dev, B43_OFDMTAB_DC, 13, 0x0000);
--}
--
--static void b43_wa_crs_reset(struct b43_wldev *dev)
--{
--	b43_phy_write(dev, 0x002C, 0x0064);
--}
--
--static void b43_wa_2060txlna_gain(struct b43_wldev *dev)
--{
--	b43_hf_write(dev, b43_hf_read(dev) |
--			 B43_HF_2060W);
--}
--
--static void b43_wa_lms(struct b43_wldev *dev)
--{
--	b43_phy_maskset(dev, 0x0055, 0xFFC0, 0x0004);
--}
--
--static void b43_wa_mixedsignal(struct b43_wldev *dev)
--{
--	b43_ofdmtab_write16(dev, B43_OFDMTAB_DAC, 1, 3);
--}
--
- static void b43_wa_msst(struct b43_wldev *dev) /* Min sigma square table */
- {
- 	struct b43_phy *phy = &dev->phy;
- 	int i;
- 	const u16 *tab;
- 
--	if (phy->type == B43_PHYTYPE_A) {
--		tab = b43_tab_sigmasqr1;
--	} else if (phy->type == B43_PHYTYPE_G) {
-+	if (phy->type == B43_PHYTYPE_G) {
- 		tab = b43_tab_sigmasqr2;
- 	} else {
- 		B43_WARN_ON(1);
-@@ -298,13 +165,6 @@ static void b43_wa_msst(struct b43_wldev *dev) /* Min sigma square table */
- 	}
- }
- 
--static void b43_wa_iqadc(struct b43_wldev *dev)
--{
--	if (dev->phy.analog == 4)
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_DAC, 0,
--			b43_ofdmtab_read16(dev, B43_OFDMTAB_DAC, 0) & ~0xF000);
--}
--
- static void b43_wa_crs_ed(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
-@@ -450,38 +310,6 @@ static void b43_wa_cpll_nonpilot(struct b43_wldev *dev)
- 	b43_ofdmtab_write16(dev, B43_OFDMTAB_UNKNOWN_11, 1, 0);
- }
- 
--static void b43_wa_rssi_adc(struct b43_wldev *dev)
--{
--	if (dev->phy.analog == 4)
--		b43_phy_write(dev, 0x00DC, 0x7454);
--}
--
--static void b43_wa_boards_a(struct b43_wldev *dev)
--{
--	if (dev->dev->board_vendor == SSB_BOARDVENDOR_BCM &&
--	    dev->dev->board_type == SSB_BOARD_BU4306 &&
--	    dev->dev->board_rev < 0x30) {
--		b43_phy_write(dev, 0x0010, 0xE000);
--		b43_phy_write(dev, 0x0013, 0x0140);
--		b43_phy_write(dev, 0x0014, 0x0280);
--	} else {
--		if (dev->dev->board_type == SSB_BOARD_MP4318 &&
--		    dev->dev->board_rev < 0x20) {
--			b43_phy_write(dev, 0x0013, 0x0210);
--			b43_phy_write(dev, 0x0014, 0x0840);
--		} else {
--			b43_phy_write(dev, 0x0013, 0x0140);
--			b43_phy_write(dev, 0x0014, 0x0280);
--		}
--		if (dev->phy.rev <= 4)
--			b43_phy_write(dev, 0x0010, 0xE000);
--		else
--			b43_phy_write(dev, 0x0010, 0x2000);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_DC, 1, 0x0039);
--		b43_ofdmtab_write16(dev, B43_OFDMTAB_UNKNOWN_APHY, 7, 0x0040);
--	}
--}
--
- static void b43_wa_boards_g(struct b43_wldev *dev)
- {
- 	struct ssb_sprom *sprom = dev->dev->bus_sprom;
-@@ -518,80 +346,7 @@ void b43_wa_all(struct b43_wldev *dev)
- {
- 	struct b43_phy *phy = &dev->phy;
- 
--	if (phy->type == B43_PHYTYPE_A) {
--		switch (phy->rev) {
--		case 2:
--			b43_wa_papd(dev);
--			b43_wa_auxclipthr(dev);
--			b43_wa_afcdac(dev);
--			b43_wa_txdc_offset(dev);
--			b43_wa_initgains(dev);
--			b43_wa_divider(dev);
--			b43_wa_gt(dev);
--			b43_wa_rssi_lt(dev);
--			b43_wa_analog(dev);
--			b43_wa_dac(dev);
--			b43_wa_fft(dev);
--			b43_wa_nft(dev);
--			b43_wa_rt(dev);
--			b43_wa_nst(dev);
--			b43_wa_art(dev);
--			b43_wa_txlna_gain(dev);
--			b43_wa_crs_reset(dev);
--			b43_wa_2060txlna_gain(dev);
--			b43_wa_lms(dev);
--			break;
--		case 3:
--			b43_wa_papd(dev);
--			b43_wa_mixedsignal(dev);
--			b43_wa_rssi_lt(dev);
--			b43_wa_txdc_offset(dev);
--			b43_wa_initgains(dev);
--			b43_wa_dac(dev);
--			b43_wa_nft(dev);
--			b43_wa_nst(dev);
--			b43_wa_msst(dev);
--			b43_wa_analog(dev);
--			b43_wa_gt(dev);
--			b43_wa_txpuoff_rxpuon(dev);
--			b43_wa_txlna_gain(dev);
--			break;
--		case 5:
--			b43_wa_iqadc(dev);
--		case 6:
--			b43_wa_papd(dev);
--			b43_wa_rssi_lt(dev);
--			b43_wa_txdc_offset(dev);
--			b43_wa_initgains(dev);
--			b43_wa_dac(dev);
--			b43_wa_nft(dev);
--			b43_wa_nst(dev);
--			b43_wa_msst(dev);
--			b43_wa_analog(dev);
--			b43_wa_gt(dev);
--			b43_wa_txpuoff_rxpuon(dev);
--			b43_wa_txlna_gain(dev);
--			break;
--		case 7:
--			b43_wa_iqadc(dev);
--			b43_wa_papd(dev);
--			b43_wa_rssi_lt(dev);
--			b43_wa_txdc_offset(dev);
--			b43_wa_initgains(dev);
--			b43_wa_dac(dev);
--			b43_wa_nft(dev);
--			b43_wa_nst(dev);
--			b43_wa_msst(dev);
--			b43_wa_analog(dev);
--			b43_wa_gt(dev);
--			b43_wa_txpuoff_rxpuon(dev);
--			b43_wa_txlna_gain(dev);
--			b43_wa_rssi_adc(dev);
--		default:
--			B43_WARN_ON(1);
--		}
--		b43_wa_boards_a(dev);
--	} else if (phy->type == B43_PHYTYPE_G) {
-+	if (phy->type == B43_PHYTYPE_G) {
- 		switch (phy->rev) {
- 		case 1://XXX review rev1
- 			b43_wa_crs_ed(dev);
-diff --git a/drivers/net/wireless/broadcom/b43/xmit.c b/drivers/net/wireless/broadcom/b43/xmit.c
-index f6201264de49..6ddd2a125ddc 100644
---- a/drivers/net/wireless/broadcom/b43/xmit.c
-+++ b/drivers/net/wireless/broadcom/b43/xmit.c
-@@ -642,11 +642,7 @@ static s8 b43_rssinoise_postprocess(struct b43_wldev *dev, u8 in_rssi)
- 	struct b43_phy *phy = &dev->phy;
- 	s8 ret;
- 
--	if (phy->type == B43_PHYTYPE_A) {
--		//TODO: Incomplete specs.
--		ret = 0;
--	} else
--		ret = b43_rssi_postprocess(dev, in_rssi, 0, 1, 1);
-+	ret = b43_rssi_postprocess(dev, in_rssi, 0, 1, 1);
- 
- 	return ret;
- }
-@@ -663,7 +659,6 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 	u16 uninitialized_var(chanstat), uninitialized_var(mactime);
- 	u32 uninitialized_var(macstat);
- 	u16 chanid;
--	u16 phytype;
- 	int padding, rate_idx;
- 
- 	memset(&status, 0, sizeof(status));
-@@ -684,7 +679,6 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 		chanstat = le16_to_cpu(rxhdr->format_351.channel);
- 		break;
- 	}
--	phytype = chanstat & B43_RX_CHAN_PHYTYPE;
- 
- 	if (unlikely(macstat & B43_RX_MAC_FCSERR)) {
- 		dev->wl->ieee_stats.dot11FCSErrorCount++;
-@@ -755,7 +749,6 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 		else
- 			status.signal = max(rxhdr->power0, rxhdr->power1);
- 		break;
--	case B43_PHYTYPE_A:
- 	case B43_PHYTYPE_B:
- 	case B43_PHYTYPE_G:
- 	case B43_PHYTYPE_LP:
-@@ -802,14 +795,6 @@ void b43_rx(struct b43_wldev *dev, struct sk_buff *skb, const void *_rxhdr)
- 
- 	chanid = (chanstat & B43_RX_CHAN_ID) >> B43_RX_CHAN_ID_SHIFT;
- 	switch (chanstat & B43_RX_CHAN_PHYTYPE) {
--	case B43_PHYTYPE_A:
--		status.band = NL80211_BAND_5GHZ;
--		B43_WARN_ON(1);
--		/* FIXME: We don't really know which value the "chanid" contains.
--		 *        So the following assignment might be wrong. */
--		status.freq =
--			ieee80211_channel_to_frequency(chanid, status.band);
--		break;
- 	case B43_PHYTYPE_G:
- 		status.band = NL80211_BAND_2GHZ;
- 		/* Somewhere between 478.104 and 508.1084 firmware for G-PHY
++struct wmi_10_4_bss_bcn_stats {
++	__le32 vdev_id;
++	__le32 bss_bcns_dropped;
++	__le32 bss_bcn_delivered;
++} __packed;
++
++struct wmi_10_4_bss_bcn_filter_stats {
++	__le32 bcns_dropped;
++	__le32 bcns_delivered;
++	__le32 active_filters;
++	struct wmi_10_4_bss_bcn_stats bss_stats;
++} __packed;
++
+ struct wmi_10_2_pdev_ext_stats {
+ 	__le32 rx_rssi_comb;
+ 	__le32 rx_rssi[4];
 -- 
-2.5.0
+1.7.9.5
 
