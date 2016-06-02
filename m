@@ -1,75 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56501 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751721AbcFULNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 07:13:10 -0400
-Message-ID: <1466502039.3170.16.camel@sipsolutions.net> (sfid-20160621_131349_210496_0B92B655)
-Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when
- building IEs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 21 Jun 2016 11:40:39 +0200
-In-Reply-To: <575B0A58.8070408@candelatech.com>
-References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
- <1453807009.2759.23.camel@sipsolutions.net>
- <56A78E8F.1080505@candelatech.com>
-	 <1454576521.2564.6.camel@sipsolutions.net>
- <56B38FD1.40902@candelatech.com>
-	 <1455827536.2084.35.camel@sipsolutions.net>
- <56C62C4E.7020600@candelatech.com>
- <1455828330.2084.38.camel@sipsolutions.net>
- <56C630B7.7020604@candelatech.com>
- <1455830078.2084.47.camel@sipsolutions.net>
- <56C63D8B.9020900@candelatech.com>
- <1456225589.2041.24.camel@sipsolutions.net>
- <56E1B556.4080004@candelatech.com>
- <1458051349.2871.19.camel@sipsolutions.net>
- <56E833FE.1080904@candelatech.com>
- <1458073224.2871.22.camel@sipsolutions.net>
-	 <575B0A58.8070408@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:35779 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932297AbcFBOYB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2016 10:24:01 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v3 1/2] ath10k: remove duplicate and unused rx rate flags
+Date: Thu, 2 Jun 2016 19:54:41 +0530
+Message-ID: <1464877482-14620-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160602_162406_065876_8ED84430)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-06-10 at 11:43 -0700, Ben Greear wrote:
-> On 03/15/2016 01:20 PM, Johannes Berg wrote:
-> > On Tue, 2016-03-15 at 09:10 -0700, Ben Greear wrote:
-> > > 
-> > > The logic I wrote is basically exactly this.  It uses the
-> > > configured
-> > > rates to specify which of the hardware's rates are allowed and
-> > > disabled.
-> > > 
-> > 
-> > I understand that. I just take issue with the fact that we have to
-> > sprinkle "magic pixie dust" (in form of the override function
-> > calls)
-> > everywhere throughout the code.
-> > 
-> > johannes
-> > 
-> 
-> So, I never could think up a way to make this more acceptable and
-> meet my own goals.
-> 
-> Any chance I could get just the netlink enum in place, even if it is
-> called something like 'api_placeholder_x'?
-> 
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-No, I don't think I want to do that.
+All these flags are not used and their use is completely
+covered by 'ath10k_hw_rate_ofdm', 'ath10k_hw_rate_cck',
+and RX_PPDU_START_RATE_FLAG
 
-But if you're not too worried about space consumption, you could pick a
-higher number:
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/rx_desc.h |   39 -----------------------------
+ 1 file changed, 39 deletions(-)
 
-	/* add attributes here, update the policy in nl80211.c */
+[v3: removing patch id]
 
-	NL80211_ATTR_TX_ADVERT_RATEMASK = 300,
+diff --git a/drivers/net/wireless/ath/ath10k/rx_desc.h b/drivers/net/wireless/ath/ath10k/rx_desc.h
+index 9ceebea..034e7a5 100644
+--- a/drivers/net/wireless/ath/ath10k/rx_desc.h
++++ b/drivers/net/wireless/ath/ath10k/rx_desc.h
+@@ -656,26 +656,6 @@ struct rx_msdu_end {
+  *		Reserved: HW should fill with zero.  FW should ignore.
+  */
+ 
+-#define RX_PPDU_START_SIG_RATE_SELECT_OFDM 0
+-#define RX_PPDU_START_SIG_RATE_SELECT_CCK  1
+-
+-#define RX_PPDU_START_SIG_RATE_OFDM_48 0
+-#define RX_PPDU_START_SIG_RATE_OFDM_24 1
+-#define RX_PPDU_START_SIG_RATE_OFDM_12 2
+-#define RX_PPDU_START_SIG_RATE_OFDM_6  3
+-#define RX_PPDU_START_SIG_RATE_OFDM_54 4
+-#define RX_PPDU_START_SIG_RATE_OFDM_36 5
+-#define RX_PPDU_START_SIG_RATE_OFDM_18 6
+-#define RX_PPDU_START_SIG_RATE_OFDM_9  7
+-
+-#define RX_PPDU_START_SIG_RATE_CCK_LP_11  0
+-#define RX_PPDU_START_SIG_RATE_CCK_LP_5_5 1
+-#define RX_PPDU_START_SIG_RATE_CCK_LP_2   2
+-#define RX_PPDU_START_SIG_RATE_CCK_LP_1   3
+-#define RX_PPDU_START_SIG_RATE_CCK_SP_11  4
+-#define RX_PPDU_START_SIG_RATE_CCK_SP_5_5 5
+-#define RX_PPDU_START_SIG_RATE_CCK_SP_2   6
+-
+ #define HTT_RX_PPDU_START_PREAMBLE_LEGACY        0x04
+ #define HTT_RX_PPDU_START_PREAMBLE_HT            0x08
+ #define HTT_RX_PPDU_START_PREAMBLE_HT_WITH_TXBF  0x09
+@@ -711,25 +691,6 @@ struct rx_msdu_end {
+ /* No idea what this flag means. It seems to be always set in rate. */
+ #define RX_PPDU_START_RATE_FLAG BIT(3)
+ 
+-enum rx_ppdu_start_rate {
+-	RX_PPDU_START_RATE_OFDM_48M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_48M,
+-	RX_PPDU_START_RATE_OFDM_24M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_24M,
+-	RX_PPDU_START_RATE_OFDM_12M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_12M,
+-	RX_PPDU_START_RATE_OFDM_6M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_6M,
+-	RX_PPDU_START_RATE_OFDM_54M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_54M,
+-	RX_PPDU_START_RATE_OFDM_36M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_36M,
+-	RX_PPDU_START_RATE_OFDM_18M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_18M,
+-	RX_PPDU_START_RATE_OFDM_9M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_OFDM_9M,
+-
+-	RX_PPDU_START_RATE_CCK_LP_11M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_11M,
+-	RX_PPDU_START_RATE_CCK_LP_5_5M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_5_5M,
+-	RX_PPDU_START_RATE_CCK_LP_2M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_2M,
+-	RX_PPDU_START_RATE_CCK_LP_1M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_LP_1M,
+-	RX_PPDU_START_RATE_CCK_SP_11M  = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_11M,
+-	RX_PPDU_START_RATE_CCK_SP_5_5M = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_5_5M,
+-	RX_PPDU_START_RATE_CCK_SP_2M   = RX_PPDU_START_RATE_FLAG | ATH10K_HW_RATE_CCK_SP_2M,
+-};
+-
+ struct rx_ppdu_start {
+ 	struct {
+ 		u8 pri20_mhz;
+-- 
+1.7.9.5
 
-	__NL80211_ATTR_AFTER_LAST,
-
-We currently use about 230 attributes, so that'll give you lots of
-breathing room.
-
-johannes
