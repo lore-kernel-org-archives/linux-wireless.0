@@ -1,67 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f46.google.com ([209.85.214.46]:36357 "EHLO
-	mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752010AbcFFC0a convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48618 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753119AbcFBMUv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2016 22:26:30 -0400
-Received: by mail-it0-f46.google.com with SMTP id f67so31955792ith.1
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Jun 2016 19:26:29 -0700 (PDT)
+	Thu, 2 Jun 2016 08:20:51 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Fix some of the macro definitions of HTT_RX_IND message
+Date: Thu, 2 Jun 2016 17:50:25 +0530
+Message-ID: <1464870025-4557-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160602_142054_920486_3E627CDE)
 MIME-Version: 1.0
-In-Reply-To: <20160603165144.17356-2-toke@toke.dk>
-References: <20160603165144.17356-1-toke@toke.dk> <20160603165144.17356-2-toke@toke.dk>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 6 Jun 2016 12:26:09 +1000
-Message-ID: <CAGRGNgUpVrfAhH18JUA4ON=zk=dJ1wQ0dcPcBZEyzJDQFAtTrw@mail.gmail.com> (sfid-20160606_042634_528871_58B15AF6)
-Subject: Re: [RFC/RFT 1/5] mac80211: skip netdev queue control with software queuing
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Toke,
+Only five bits are defined to pass tid information in HTT_RX_IND
+message, so the mask which can be used to extract tid should be 0x1f
+instead of the current 0x3f. Also, macros which can be used to extract
+flush_valid and release_valid bits have to be left shifted one bit less
+because these information follow the tid right after. This patch does
+not really fix anything functionally because these macros are not used
+currently.
 
-On Sat, Jun 4, 2016 at 2:51 AM, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
-> From: Michal Kazior <michal.kazior@tieto.com>
->
-> Qdiscs are designed with no regard to 802.11
-> aggregation requirements and hand out
-> packet-by-packet with no guarantee they are
-> destined to the same tid. This does more bad than
-> good no matter how fairly a given qdisc may behave
-> on an ethernet interface.
->
-> Software queuing used per-AC netdev subqueue
-> congestion control whenever a global AC limit was
-> hit. This meant in practice a single station or
-> tid queue could starve others rather easily. This
-> could resonate with qdiscs in a bad way or could
-> just end up with poor aggregation performance.
-> Increasing the AC limit would increase induced
-> latency which is also bad.
->
-> Disabling qdiscs by default and performing
-> taildrop instead of netdev subqueue congestion
-> control on the other hand makes it possible for
-> tid queues to fill up "in the meantime" while
-> preventing stations starving each other.
->
-> This increases aggregation opportunities and
-> should allow software queuing based drivers
-> achieve better performance by utilizing airtime
-> more efficiently with big aggregates.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-As this patch is passing through your hands, you need to add your
-Signed-off-by too.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 911c535..430a83e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -485,10 +485,10 @@ struct htt_mgmt_tx_completion {
+ 	__le32 status;
+ } __packed;
+ 
+-#define HTT_RX_INDICATION_INFO0_EXT_TID_MASK  (0x3F)
++#define HTT_RX_INDICATION_INFO0_EXT_TID_MASK  (0x1F)
+ #define HTT_RX_INDICATION_INFO0_EXT_TID_LSB   (0)
+-#define HTT_RX_INDICATION_INFO0_FLUSH_VALID   (1 << 6)
+-#define HTT_RX_INDICATION_INFO0_RELEASE_VALID (1 << 7)
++#define HTT_RX_INDICATION_INFO0_FLUSH_VALID   (1 << 5)
++#define HTT_RX_INDICATION_INFO0_RELEASE_VALID (1 << 6)
+ 
+ #define HTT_RX_INDICATION_INFO1_FLUSH_START_SEQNO_MASK   0x0000003F
+ #define HTT_RX_INDICATION_INFO1_FLUSH_START_SEQNO_LSB    0
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
