@@ -1,55 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:41487 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751988AbcFJJIG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 05:08:06 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [Make-wifi-fast] [RFC/RFT 5/5] ath9k: Count RX airtime in airtime
-	deficit
-References: <20160603165144.17356-1-toke@toke.dk>
-	<20160603165144.17356-6-toke@toke.dk>
-	<CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
-	<8737orucq4.fsf@toke.dk>
-	<CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
-	<CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
-	<87k2i1ml43.fsf@toke.dk> <87wpm1b6bu.fsf@toke.dk>
-	<CA+BoTQ=2GNSW7uSw9acPxO6C22itbWtahmuNj2cT5_09QkNr-A@mail.gmail.com>
-	<87inxhl90y.fsf@toke.dk>
-	<CA+BoTQ=9X8621AbG+S3MqYFpeySsYSr3iiwCTHf3VpQAkXAHiQ@mail.gmail.com>
-Date: Fri, 10 Jun 2016 11:08:01 +0200
-In-Reply-To: <CA+BoTQ=9X8621AbG+S3MqYFpeySsYSr3iiwCTHf3VpQAkXAHiQ@mail.gmail.com>
-	(Michal Kazior's message of "Fri, 10 Jun 2016 11:02:35 +0200")
-Message-ID: <877fdxl8cu.fsf@toke.dk> (sfid-20160610_110812_083799_3522BA45)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26385 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752867AbcFBTdM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2016 15:33:12 -0400
+From: Maya Erez <qca_merez@qualcomm.com>
+Cc: Maya Erez <qca_merez@qualcomm.com>, linux-wireless@vger.kernel.org,
+	wireless-regdb@lists.infradead.org, wil6210@qualcomm.com
+To: Seth Forshee <seth.forshee@canonical.com>
+Subject: [PATCH v2] wireless-regdb: Republic of Korea: Add 60GHz regulatory rules
+Date: Thu,  2 Jun 2016 22:33:05 +0300
+Message-Id: <1464895985-7182-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160602_213316_127350_5D307025)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Add 60GHz regulatory rules for Korea (KR).
+Source is
+http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
 
-> For A-MPDU all MPDU rx status (except last one) should share the same
-> timestamp. Last one has a different one so all you need is to
-> distinguish first and last MPDU. Non A-MPDU obviously are special case
-> (status bits are pricky).
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ db.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Right. So comparing the rs_stamp between first and last MPDU should give
-the duration of the entire thing? This would require keeping state
-between subsequent calls to the RX handler. Also, what happens if the
-last MPDU is lost?
+diff --git a/db.txt b/db.txt
+index da16f7c..48df9a5 100644
+--- a/db.txt
++++ b/db.txt
+@@ -664,6 +664,10 @@ country KR: DFS-JP
+ 	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
+ 	(5490 - 5710 @ 160), (30), DFS
+ 	(5735 - 5835 @ 80), (30)
++	# 60 GHz band channels 1-4,
++	# ref: http://www.law.go.kr/%ED%96%89%EC%A0%95%EA%B7%9C%EC%B9%99/%EB%AC%B4%EC%84%A0%EC%84%A4%EB%B9%84%EA%B7%9C%EC%B9%99
++	(57000 - 66000 @ 2160), (43)
++
+ 
+ country KW: DFS-ETSI
+ 	(2402 - 2482 @ 40), (20)
+-- 
+1.8.5.2
 
->> Is the entire A-MPDU received before the RX handler is called for the
->> first frame?
->
-> No idea. Maybe it is as there's distinction between "more" and
-> "moreaggr".
-
-Hmm. If it is, comparing the stamp of the first MPDU to the current time
-(when handling it) should give the needed duration? Will try doing that
-and see what the result is.
-
--Toke
