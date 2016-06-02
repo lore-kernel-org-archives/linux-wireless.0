@@ -1,85 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40483 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752320AbcFTNAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 09:00:03 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <johannes@sipsolutions.net>, <kvalo@codeaurora.org>
-CC: <eliad@wizery.com>, <yanivma@ti.com>, <guym@ti.com>,
-	<arik@wizery.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <davem@davemloft.net>,
-	Maxim Altshul <maxim.altshul@ti.com>
-Subject: [PATCH 3/3] mac80211: mesh: Add support for HW RC implementation
-Date: Mon, 20 Jun 2016 16:00:22 +0300
-Message-ID: <1466427622-5953-4-git-send-email-maxim.altshul@ti.com> (sfid-20160620_150129_488060_6B500CD1)
-In-Reply-To: <1466427622-5953-3-git-send-email-maxim.altshul@ti.com>
-References: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com>
- <1466427622-5953-2-git-send-email-maxim.altshul@ti.com>
- <1466427622-5953-3-git-send-email-maxim.altshul@ti.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52748 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932481AbcFBJim (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2016 05:38:42 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	Franky Lin <franky.lin@broadcom.com>
+Subject: Re: [PATCH for-4.7] brcmfmac: add eth_type_trans back for PCIe full dongle
+References: <1464815616-21551-1-git-send-email-arend@broadcom.com>
+Date: Thu, 02 Jun 2016 12:38:37 +0300
+In-Reply-To: <1464815616-21551-1-git-send-email-arend@broadcom.com> (Arend van
+	Spriel's message of "Wed, 1 Jun 2016 14:13:36 -0700")
+Message-ID: <87mvn4lyle.fsf@purkki.adurom.net> (sfid-20160602_113902_051369_5D36C613)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh HWMP module will be able to rely on the HW
-RC algorithm if it exists, for path metric calculations.
+Arend van Spriel <arend@broadcom.com> writes:
 
-This allows the metric calculation mechanism to calculate
-a correct metric, based on PER and last TX rate both via
-HW RC algorithm if it exists or via parameters collected
-by the SW.
+> From: Franky Lin <franky.lin@broadcom.com>
+>
+> A regression was introduced in commit 9c349892ccc9 ("brcmfmac: revise
+> handling events in receive path") which moves eth_type_trans() call
+> to brcmf_rx_frame(). Msgbuf layer doesn't use brcmf_rx_frame() but invokes
+> brcmf_netif_rx() directly. In such case the Ethernet header was not
+> stripped out resulting in null pointer dereference in the networking
+> stack.
+>
+> BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
+> IP: [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
+> PGD 0
+> Oops: 0000 [#1] PREEMPT SMP
+> Modules linked in: fuse ipt_MASQUERADE nf_nat_masquerade_ipv4
+> iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype
+> [...]
+> rtsx_pci scsi_mod usbcore usb_common i8042 serio nvme nvme_core
+> CPU: 7 PID: 1340 Comm: irq/136-brcmf_p Not tainted 4.7.0-rc1-mainline #1
+> Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 01.02.00 04/07/2016
+> task: ffff8804a0c5bd00 ti: ffff88049e124000 task.ti: ffff88049e124000
+> RIP: 0010:[<ffffffff814c3ce6>] [<ffffffff814c3ce6>]
+> enqueue_to_backlog+0x56/0x260
+> RSP: 0018:ffff88049e127ca0 EFLAGS: 00010046
+> RAX: 0000000000000000 RBX: ffff8804bddd7c40 RCX: 000000000000002f
+> RDX: 0000000000000000 RSI: 0000000000000007 RDI: ffff8804bddd7d4c
+> RBP: ffff88049e127ce8 R08: 0000000000000000 R09: 0000000000000000
+> R10: ffff8804bddd12c0 R11: 000000000000149e R12: 0000000000017c40
+> R13: ffff88049e127d08 R14: ffff8804a9bd6d00 R15: ffff8804bddd7d4c
+> FS: 0000000000000000(0000) GS:ffff8804bddc0000(0000) knlGS:0000000000000000
+> CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> CR2: 0000000000000048 CR3: 0000000001806000 CR4: 00000000003406e0
+> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> Stack:
+> ffff8804bdddad00 ffff8804ad089e00 0000000000000000 0000000000000282
+> 0000000000000000 ffff8804a9bd6d00 ffff8804a1b27e00 ffff8804a9bd6d00
+> ffff88002ee88000 ffff88049e127d28 ffffffff814c3f3b ffffffff81311fc3
+> Call Trace:
+> [<ffffffff814c3f3b>] netif_rx_internal+0x4b/0x170
+> [<ffffffff81311fc3>] ? swiotlb_tbl_unmap_single+0xf3/0x120
+> [<ffffffff814c5467>] netif_rx_ni+0x27/0xc0
+> [<ffffffffa08519e9>] brcmf_netif_rx+0x49/0x70 [brcmfmac]
+> [<ffffffffa08564d4>] brcmf_msgbuf_process_rx+0x2b4/0x570 [brcmfmac]
+> [<ffffffff81020017>] ? __xen_set_pgd_hyper+0x57/0xd0
+> [<ffffffff810d60b0>] ? irq_forced_thread_fn+0x70/0x70
+> [<ffffffffa0857381>] brcmf_proto_msgbuf_rx_trigger+0x31/0xe0 [brcmfmac]
+> [<ffffffffa0861e8f>] brcmf_pcie_isr_thread+0x7f/0x110 [brcmfmac]
+> [<ffffffff810d60d0>] irq_thread_fn+0x20/0x50
+> [<ffffffff810d63ad>] irq_thread+0x12d/0x1c0
+> [<ffffffff815d07d5>] ? __schedule+0x2f5/0x7a0
+> [<ffffffff810d61d0>] ? wake_threads_waitq+0x30/0x30
+> [<ffffffff810d6280>] ? irq_thread_dtor+0xb0/0xb0
+> [<ffffffff81098ea8>] kthread+0xd8/0xf0
+> [<ffffffff815d4b7f>] ret_from_fork+0x1f/0x40
+> [<ffffffff81098dd0>] ? kthread_worker_fn+0x170/0x170
+> Code: 1c f5 60 9a 8e 81 9c 58 0f 1f 44 00 00 48 89 45 d0 fa 66 0f 1f
+> 44 00 00 4c 8d bb 0c 01 00 00 4c 89 ff e8 5e 08 11 00 49 8b 56 20 <48>
+> 8b 52 48 83 e2 01 74 10 8b 8b 08 01 00 00 8b 15 59 c5 42 00
+> RIP [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
+> RSP <ffff88049e127ca0>
+> CR2: 0000000000000048
+>
+> Reported-by: Grey Christoforo <grey@christoforo.net>
 
-Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
----
- net/mac80211/mesh_hwmp.c | 23 +++++++++++++++--------
- 1 file changed, 15 insertions(+), 8 deletions(-)
+I'll add a fixes line before I commit:
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index c6be0b4..e3ce40d 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -12,6 +12,7 @@
- #include <asm/unaligned.h>
- #include "wme.h"
- #include "mesh.h"
-+#include "driver-ops.h"
- 
- #define TEST_FRAME_LEN	8192
- #define MAX_METRIC	0xffffffff
-@@ -322,19 +323,25 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	int device_constant = 1 << ARITH_SHIFT;
- 	int test_frame_len = TEST_FRAME_LEN << ARITH_SHIFT;
- 	int s_unit = 1 << ARITH_SHIFT;
--	int rate, err;
-+	int rate, err = 0;
- 	u32 tx_time, estimated_retx;
- 	u64 result;
- 
--	if (sta->mesh->fail_avg >= 100)
--		return MAX_METRIC;
-+	/* try to get rate based on HW RC algorithm */
-+	rate = drv_get_expected_throughput(local, &sta->sta);
- 
--	sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate, &rinfo);
--	rate = cfg80211_calculate_bitrate(&rinfo);
--	if (WARN_ON(!rate))
--		return MAX_METRIC;
-+	/* if HW does not provide us with a rate */
-+	if (!rate) {
-+		if (sta->mesh->fail_avg >= 100)
-+			return MAX_METRIC;
- 
--	err = (sta->mesh->fail_avg << ARITH_SHIFT) / 100;
-+		sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate, &rinfo);
-+		rate = cfg80211_calculate_bitrate(&rinfo);
-+		if (WARN_ON(!rate))
-+			return MAX_METRIC;
-+
-+		err = (sta->mesh->fail_avg << ARITH_SHIFT) / 100;
-+	}
- 
- 	/* bitrate is in units of 100 Kbps, while we need rate in units of
- 	 * 1Mbps. This will be corrected on tx_time computation.
+Fixes: 9c349892ccc9 ("brcmfmac: revise handling events in receive path")
+
+> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+> Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+> [arend@broadcom.com: rephrased the commit message]
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+
+And a reminder to myself to remove the two extra S-o-b lines :)
+
 -- 
-2.7.2
-
+Kalle Valo
