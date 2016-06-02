@@ -1,187 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55858 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704AbcF3LAn (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:29639 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751148AbcFBJAc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 07:00:43 -0400
-Date: Thu, 30 Jun 2016 16:29:51 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: Fix 10.4 extended peer stats update
-Message-ID: <20160630105951.GA10001@atheros-ThinkPad-T61> (sfid-20160630_130048_069577_7895EC0E)
-References: <1464851602-12969-1-git-send-email-mohammed@qca.qualcomm.com>
- <87vb0r5529.fsf@kamboji.qca.qualcomm.com>
- <87r3bf54v6.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87r3bf54v6.fsf@kamboji.qca.qualcomm.com>
+	Thu, 2 Jun 2016 05:00:32 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+	Franky Lin <franky.lin@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 for-4.7] brcmfmac: add eth_type_trans back for PCIe full dongle
+Date: Thu,  2 Jun 2016 02:00:27 -0700
+Message-Id: <1464858027-107357-1-git-send-email-arend@broadcom.com> (sfid-20160602_110038_736653_AE143A13)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+From: Franky Lin <franky.lin@broadcom.com>
 
-On Thu, Jun 30, 2016 at 10:49:02AM +0000, Valo, Kalle wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
-> 
-> >> @@ -261,6 +263,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
-> >>  			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
-> >>  			.board_size = QCA4019_BOARD_DATA_SZ,
-> >>  			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
-> >> +			.extd_peer_stats = true,
-> >>  		},
-> >>  	},
-> >>  };
-> >
-> > This is not a hardware feature so hw_params is not really the right
-> > place to handle this. In the pending branch I tried to solve this a bit
-> > differently:
-> >
-> > https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=ecf4daadc7677518ec7185dbddab959ac6e2db96
-> >
-> > I added a bool "extended" to struct ath10k_fw_stats which is used to
-> > detect if extended stats are used. Would that work? Please note that I
-> > have only compile tested the patch.
+A regression was introduced in commit 9c349892ccc9 ("brcmfmac: revise
+handling events in receive path") which moves eth_type_trans() call
+to brcmf_rx_frame(). Msgbuf layer doesn't use brcmf_rx_frame() but invokes
+brcmf_netif_rx() directly. In such case the Ethernet header was not
+stripped out resulting in null pointer dereference in the networking
+stack.
 
-[shafi] thanks for taking time to do this, the change looks fine to me !
-since 'ath10k_sta_update_rx_duration' is called right after 'ath10k_wmi_pull_fw_stats'
-this should properly update the rx_duration based on the current data
+BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
+IP: [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
+PGD 0
+Oops: 0000 [#1] PREEMPT SMP
+Modules linked in: fuse ipt_MASQUERADE nf_nat_masquerade_ipv4
+iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype
+[...]
+rtsx_pci scsi_mod usbcore usb_common i8042 serio nvme nvme_core
+CPU: 7 PID: 1340 Comm: irq/136-brcmf_p Not tainted 4.7.0-rc1-mainline #1
+Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 01.02.00 04/07/2016
+task: ffff8804a0c5bd00 ti: ffff88049e124000 task.ti: ffff88049e124000
+RIP: 0010:[<ffffffff814c3ce6>] [<ffffffff814c3ce6>]
+enqueue_to_backlog+0x56/0x260
+RSP: 0018:ffff88049e127ca0 EFLAGS: 00010046
+RAX: 0000000000000000 RBX: ffff8804bddd7c40 RCX: 000000000000002f
+RDX: 0000000000000000 RSI: 0000000000000007 RDI: ffff8804bddd7d4c
+RBP: ffff88049e127ce8 R08: 0000000000000000 R09: 0000000000000000
+R10: ffff8804bddd12c0 R11: 000000000000149e R12: 0000000000017c40
+R13: ffff88049e127d08 R14: ffff8804a9bd6d00 R15: ffff8804bddd7d4c
+FS: 0000000000000000(0000) GS:ffff8804bddc0000(0000) knlGS:0000000000000000
+CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000000000048 CR3: 0000000001806000 CR4: 00000000003406e0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+Stack:
+ffff8804bdddad00 ffff8804ad089e00 0000000000000000 0000000000000282
+0000000000000000 ffff8804a9bd6d00 ffff8804a1b27e00 ffff8804a9bd6d00
+ffff88002ee88000 ffff88049e127d28 ffffffff814c3f3b ffffffff81311fc3
+Call Trace:
+[<ffffffff814c3f3b>] netif_rx_internal+0x4b/0x170
+[<ffffffff81311fc3>] ? swiotlb_tbl_unmap_single+0xf3/0x120
+[<ffffffff814c5467>] netif_rx_ni+0x27/0xc0
+[<ffffffffa08519e9>] brcmf_netif_rx+0x49/0x70 [brcmfmac]
+[<ffffffffa08564d4>] brcmf_msgbuf_process_rx+0x2b4/0x570 [brcmfmac]
+[<ffffffff81020017>] ? __xen_set_pgd_hyper+0x57/0xd0
+[<ffffffff810d60b0>] ? irq_forced_thread_fn+0x70/0x70
+[<ffffffffa0857381>] brcmf_proto_msgbuf_rx_trigger+0x31/0xe0 [brcmfmac]
+[<ffffffffa0861e8f>] brcmf_pcie_isr_thread+0x7f/0x110 [brcmfmac]
+[<ffffffff810d60d0>] irq_thread_fn+0x20/0x50
+[<ffffffff810d63ad>] irq_thread+0x12d/0x1c0
+[<ffffffff815d07d5>] ? __schedule+0x2f5/0x7a0
+[<ffffffff810d61d0>] ? wake_threads_waitq+0x30/0x30
+[<ffffffff810d6280>] ? irq_thread_dtor+0xb0/0xb0
+[<ffffffff81098ea8>] kthread+0xd8/0xf0
+[<ffffffff815d4b7f>] ret_from_fork+0x1f/0x40
+[<ffffffff81098dd0>] ? kthread_worker_fn+0x170/0x170
+Code: 1c f5 60 9a 8e 81 9c 58 0f 1f 44 00 00 48 89 45 d0 fa 66 0f 1f
+44 00 00 4c 8d bb 0c 01 00 00 4c 89 ff e8 5e 08 11 00 49 8b 56 20 <48>
+8b 52 48 83 e2 01 74 10 8b 8b 08 01 00 00 8b 15 59 c5 42 00
+RIP [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
+RSP <ffff88049e127ca0>
+CR2: 0000000000000048
 
-> 
-> Here's a diff of what I did:
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index 58932c09efc5..b734345ab598 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -180,7 +180,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->  			.board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
->  			.board_size = QCA99X0_BOARD_DATA_SZ,
->  			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
-> -			.extd_peer_stats = true,
->  		},
->  	},
->  	{
-> @@ -203,7 +202,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->  			.board = QCA9984_HW_1_0_BOARD_DATA_FILE,
->  			.board_size = QCA99X0_BOARD_DATA_SZ,
->  			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
-> -			.extd_peer_stats = true,
->  		},
->  	},
->  	{
-> @@ -261,7 +259,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->  			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
->  			.board_size = QCA4019_BOARD_DATA_SZ,
->  			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
-> -			.extd_peer_stats = true,
->  		},
->  	},
->  };
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> index 73a0b1ae1559..3707d8a707a2 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -263,6 +263,7 @@ struct ath10k_fw_stats_pdev {
->  };
->  
->  struct ath10k_fw_stats {
-> +	bool extended;
->  	struct list_head pdevs;
->  	struct list_head vdevs;
->  	struct list_head peers;
-> @@ -754,7 +755,6 @@ struct ath10k {
->  			const char *board;
->  			size_t board_size;
->  			size_t board_ext_size;
-> -			bool extd_peer_stats;
->  		} fw;
->  	} hw_params;
->  
-> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-> index 001c0a144614..355e1ae665f9 100644
-> --- a/drivers/net/wireless/ath/ath10k/debug.c
-> +++ b/drivers/net/wireless/ath/ath10k/debug.c
-> @@ -327,6 +327,7 @@ static void ath10k_debug_fw_stats_reset(struct ath10k *ar)
->  {
->  	spin_lock_bh(&ar->data_lock);
->  	ar->debug.fw_stats_done = false;
-> +	ar->debug.fw_stats.extended = false;
->  	ath10k_fw_stats_pdevs_free(&ar->debug.fw_stats.pdevs);
->  	ath10k_fw_stats_vdevs_free(&ar->debug.fw_stats.vdevs);
->  	ath10k_fw_stats_peers_free(&ar->debug.fw_stats.peers);
-> diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-> index af3d49af9eab..0da8a57e0ba7 100644
-> --- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-> +++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-> @@ -19,14 +19,14 @@
->  #include "debug.h"
->  
->  static void ath10k_sta_update_extd_stats_rx_duration(struct ath10k *ar,
-> -						     struct list_head *head)
-> +						     struct ath10k_fw_stats *stats)
->  {
-> -	struct ieee80211_sta *sta;
->  	struct ath10k_fw_extd_stats_peer *peer;
-> +	struct ieee80211_sta *sta;
->  	struct ath10k_sta *arsta;
->  
->  	rcu_read_lock();
-> -	list_for_each_entry(peer, head, list) {
-> +	list_for_each_entry(peer, &stats->peers_extd, list) {
->  		sta = ieee80211_find_sta_by_ifaddr(ar->hw, peer->peer_macaddr,
->  						   NULL);
->  		if (!sta)
-> @@ -38,13 +38,14 @@ static void ath10k_sta_update_extd_stats_rx_duration(struct ath10k *ar,
->  }
->  
->  static void ath10k_sta_update_stats_rx_duration(struct ath10k *ar,
-> -						struct list_head *head)
-> -{	struct ieee80211_sta *sta;
-> +						struct ath10k_fw_stats *stats)
-> +{
->  	struct ath10k_fw_stats_peer *peer;
-> +	struct ieee80211_sta *sta;
->  	struct ath10k_sta *arsta;
->  
->  	rcu_read_lock();
-> -	list_for_each_entry(peer, head, list) {
-> +	list_for_each_entry(peer, &stats->peers, list) {
->  		sta = ieee80211_find_sta_by_ifaddr(ar->hw, peer->peer_macaddr,
->  						   NULL);
->  		if (!sta)
-> @@ -58,11 +59,10 @@ static void ath10k_sta_update_stats_rx_duration(struct ath10k *ar,
->  void ath10k_sta_update_rx_duration(struct ath10k *ar,
->  				   struct ath10k_fw_stats *stats)
->  {
-> -	if (ar->hw_params.fw.extd_peer_stats)
-> -		ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
-> +	if (stats->extended)
-> +		ath10k_sta_update_extd_stats_rx_duration(ar, stats);
->  	else
-> -		ath10k_sta_update_extd_stats_rx_duration(ar,
-> -							 &stats->peers_extd);
-> +		ath10k_sta_update_stats_rx_duration(ar, stats);
->  }
->  
->  static ssize_t ath10k_dbg_sta_read_aggr_mode(struct file *file,
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-> index 5f2d423b1c33..16bd79716a6c 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -3008,6 +3008,8 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
->  	if ((stats_id & WMI_10_4_STAT_PEER_EXTD) == 0)
->  		return 0;
->  
-> +	stats->extended = true;
-> +
->  	for (i = 0; i < num_peer_stats; i++) {
->  		const struct wmi_10_4_peer_extd_stats *src;
->  		struct ath10k_fw_extd_stats_peer *dst;
-> 
-> 
-> -- 
-> Kalle Valo
+Fixes: 9c349892ccc9 ("brcmfmac: revise handling events in receive path")
+Reported-by: Rafal Milecki <zajec5@gmail.com>
+Reported-by: Grey Christoforo <grey@christoforo.net>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+[arend@broadcom.com: rephrased the commit message]
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index 68f1ce0..2b9a2bc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@ -1157,6 +1157,8 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		return;
+ 	}
++
++	skb->protocol = eth_type_trans(skb, ifp->ndev);
+ 	brcmf_netif_rx(ifp, skb);
+ }
+ 
+-- 
+2.1.0
+
