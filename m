@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:33025 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754273AbcFTUlL (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:56638 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964772AbcFBUPO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 16:41:11 -0400
-Subject: Re: ath9k: Support 4.9Ghz channels on AR9580 adapter.
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-References: <300e3070916441609ff73ea8e06ddb77@euamsexm01a.eu.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <576854E5.5030206@candelatech.com> (sfid-20160620_224131_439949_979E2C1C)
-Date: Mon, 20 Jun 2016 13:41:09 -0700
+	Thu, 2 Jun 2016 16:15:14 -0400
+Date: Thu, 2 Jun 2016 16:00:10 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: Anyone have a clone of wireless-legacy.git?
+Message-ID: <20160602200009.GJ6230@tuxdriver.com> (sfid-20160602_221537_571414_F177E3FD)
+References: <20160602183803.GH6230@tuxdriver.com>
+ <20160602204808.3ff37346@lxorguk.ukuu.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <300e3070916441609ff73ea8e06ddb77@euamsexm01a.eu.qualcomm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160602204808.3ff37346@lxorguk.ukuu.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/20/2016 01:34 PM, Kalle Valo wrote:
-> Ben Greear <greearb@candelatech.com> wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> NOTE:  These channels must not be used in most regulatory
->> domains unless you have a license from the FCC or similar!
->>
->> A proper regulatory database is also required to actually use
->> these channels.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->
-> I feel that the license is a problem and this doesn't belong to the kernel.
-> The patch has been dropped.
+On Thu, Jun 02, 2016 at 08:48:08PM +0100, One Thousand Gnomes wrote:
+> On Thu, 2 Jun 2016 14:38:04 -0400
+> "John W. Linville" <linville@tuxdriver.com> wrote:
+> 
+> > It has recently come to my attention that the old wireless-legacy.git
+> > tree is no longer available on kernel.org.  I honestly have no idea
+> > what happened to it -- for all I know I fat-fingered it some time
+> > ago or whatever.  Anyway, apparently there are some references in it
+> > "out there" and it would be good if we had a copy available somewhere
+> > public.
+> > 
+> > If you have an old clone of wireless-legacy.git, PLEASE DO NOT DELETE
+> > IT!  Please let me know that you've got it and I will arrange to get
+> > a copy of it from you in order to make it available publicly again.
+> 
+> Before you do that please make sure you get multiple copies from
+> unconnected sources and confirm none of them are trojanned.
 
-It's not a lot different from having to be in normal FCC regulations w/regard to
-DFS channels, tx power, and such, but maybe having driver support is considered to make it
-too easy for users to hack around restrictions?
+I will endeavour to ensurance provenance, certainly.
 
-Another part of this is that Cisco APs, at least, use fractional center
-frequencies (4942.5, for instance) when using 5Mhz bandwidths on 4.9Ghz
-channels, and that requires more patches that I don't think I even bothered
-to post.
-
-I'll keep this in my trees, someone needing it can just clone it and/or borrow
-patches as needed.
-
-Thanks,
-Ben
-
+John
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
