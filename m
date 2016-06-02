@@ -1,101 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52527 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751784AbcF0QcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 12:32:12 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 01/12] rtl8xxxu: Set all ieee80211_rx_status values in parse_rx_desc()
-Date: Mon, 27 Jun 2016 12:31:59 -0400
-Message-Id: <1467045130-18874-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183217_062141_95F38E8F)
-In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59771 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751813AbcFBPeV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 2 Jun 2016 11:34:21 -0400
+Date: Thu, 2 Jun 2016 21:04:08 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"mike@fireburn.co.uk" <mike@fireburn.co.uk>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+Subject: Re: Bug 119151 - [regression] ath10k no longer authenitcates and
+ freezes system
+Message-ID: <20160602153408.GA5110@atheros-ThinkPad-T61> (sfid-20160602_173424_353404_12168A92)
+References: <8760trzoiw.fsf@kamboji.qca.qualcomm.com>
+ <871t4fzn1x.fsf@kamboji.qca.qualcomm.com>
+ <57504F05.3040200@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57504F05.3040200@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Thu, Jun 02, 2016 at 08:21:41AM -0700, Ben Greear wrote:
+> On 06/02/2016 07:24 AM, Valo, Kalle wrote:
+> >Kalle Valo <kvalo@qca.qualcomm.com> writes:
+> >
+> >>there's a regression in ath10k:
+> >>
+> >>https://bugzilla.kernel.org/show_bug.cgi?id=119151
+> >>
+> >>Reporter bisected it to this:
+> >>
+> >>5c86d97bcc1d42ce7f75685a61be4dad34ee8183 is the first bad commit
+> >>commit 5c86d97bcc1d42ce7f75685a61be4dad34ee8183
+> >>Author: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> >>Date:   Tue Mar 22 17:22:19 2016 +0530
+> >>
+> >>ath10k: combine txrx and replenish task
+> >>
+> >>Since tx completion and rx indication processing are moved out
+> >>of txrx tasklet and rx ring lock contention also removed from txrx
+> >>for rx_ind messages, it would be efficient to combine both replenish
+> >>and txrx tasks. Refill threshold is adjusted for both AP135 and AP148
+> >>(low and high end systems). With this adjustment in AP135, TCP DL is
+> >>improved from 603 Mbps to 620 Mbps and UDP DL is improved from 758 Mbps
+> >>to 803 Mbps. Also no watchdog are observed on UDP BiDi.
+> >>
+> >>Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> >>Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> >
+> >Adding Mike, the bug reporter.
+> 
+> 
+> I found a lot of problems with this code as well, and the 5 patches
+> starting from the URL below fixed the issues for me.
+> 
+> They are stuck as 'NA' in patchwork, but I don't know why.
+> 
+> http://lists.infradead.org/pipermail/ath10k/2016-April/007218.html
+> 
+> You probably need this patch as well, or ath10k will crash when you
+> enable the debug-mask:
+> 
+> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/151890
+> 
+> It is also 'NA' in patchwork.
 
-This needs to be handled locally in the parse_rx_desc() function in
-order to be able to handle aggregated packets in the future.
+[shafi] i think this is already in the pending branch
+https://patchwork.kernel.org/patch/9073471/
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index dfe61e4..4ebd819 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5048,6 +5048,7 @@ static void rtl8xxxu_rx_urb_work(struct work_struct *work)
- int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 			    struct ieee80211_rx_status *rx_status)
- {
-+	struct ieee80211_hw *hw = priv->hw;
- 	struct rtl8xxxu_rxdesc16 *rx_desc =
- 		(struct rtl8xxxu_rxdesc16 *)skb->data;
- 	struct rtl8723au_phy_stats *phy_stats;
-@@ -5059,6 +5060,8 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 	for (i = 0; i < (sizeof(struct rtl8xxxu_rxdesc16) / sizeof(u32)); i++)
- 		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
- 
-+	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-+
- 	skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc16));
- 
- 	phy_stats = (struct rtl8723au_phy_stats *)skb->data;
-@@ -5088,12 +5091,16 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 		rx_status->rate_idx = rx_desc->rxmcs;
- 	}
- 
-+	rx_status->freq = hw->conf.chandef.chan->center_freq;
-+	rx_status->band = hw->conf.chandef.chan->band;
-+
- 	return RX_TYPE_DATA_PKT;
- }
- 
- int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 			    struct ieee80211_rx_status *rx_status)
- {
-+	struct ieee80211_hw *hw = priv->hw;
- 	struct rtl8xxxu_rxdesc24 *rx_desc =
- 		(struct rtl8xxxu_rxdesc24 *)skb->data;
- 	struct rtl8723au_phy_stats *phy_stats;
-@@ -5105,6 +5112,8 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 	for (i = 0; i < (sizeof(struct rtl8xxxu_rxdesc24) / sizeof(u32)); i++)
- 		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
- 
-+	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
-+
- 	skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc24));
- 
- 	phy_stats = (struct rtl8723au_phy_stats *)skb->data;
-@@ -5140,6 +5149,9 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 		rx_status->rate_idx = rx_desc->rxmcs;
- 	}
- 
-+	rx_status->freq = hw->conf.chandef.chan->center_freq;
-+	rx_status->band = hw->conf.chandef.chan->band;
-+
- 	return RX_TYPE_DATA_PKT;
- }
- 
-@@ -5202,13 +5214,8 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
- 	skb_put(skb, urb->actual_length);
- 
- 	if (urb->status == 0) {
--		memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
--
- 		rx_type = priv->fops->parse_rx_desc(priv, skb, rx_status);
- 
--		rx_status->freq = hw->conf.chandef.chan->center_freq;
--		rx_status->band = hw->conf.chandef.chan->band;
--
- 		if (rx_type == RX_TYPE_DATA_PKT)
- 			ieee80211_rx_irqsafe(hw, skb);
- 		else {
--- 
-2.7.4
-
+> 
+> Thanks,
+> Ben
+> 
+> -- 
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+> 
+> _______________________________________________
+> ath10k mailing list
+> ath10k@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/ath10k
