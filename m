@@ -1,74 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39547 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932300AbcFONC0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53157 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932344AbcFBJoS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2016 09:02:26 -0400
-Subject: Re: [PATCH] libertas: Add spinlock to avoid race condition
-To: Pavel Andrianov <andrianov@ispras.ru>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1465990443-19738-1-git-send-email-andrianov@ispras.ru>
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ldv-project@linuxtesting.org
-From: Vaishali Thakkar <vaishali.thakkar@oracle.com>
-Message-ID: <576151B3.9040802@oracle.com> (sfid-20160615_150249_028578_D11FC530)
-Date: Wed, 15 Jun 2016 18:31:39 +0530
+	Thu, 2 Jun 2016 05:44:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+	Franky Lin <franky.lin@broadcom.com>
+Subject: Re: [PATCH for-4.7] brcmfmac: add eth_type_trans back for PCIe full dongle
+References: <1464815616-21551-1-git-send-email-arend@broadcom.com>
+	<87mvn4lyle.fsf@purkki.adurom.net>
+Date: Thu, 02 Jun 2016 12:44:13 +0300
+In-Reply-To: <87mvn4lyle.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu,
+	02 Jun 2016 12:38:37 +0300")
+Message-ID: <87a8j4lyc2.fsf@purkki.adurom.net> (sfid-20160602_114421_806329_F25EF1AD)
 MIME-Version: 1.0
-In-Reply-To: <1465990443-19738-1-git-send-email-andrianov@ispras.ru>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Kalle Valo <kvalo@codeaurora.org> writes:
 
+> Arend van Spriel <arend@broadcom.com> writes:
+>
+>> From: Franky Lin <franky.lin@broadcom.com>
+>>
+>> A regression was introduced in commit 9c349892ccc9 ("brcmfmac: revise
+>> handling events in receive path") which moves eth_type_trans() call
+>> to brcmf_rx_frame(). Msgbuf layer doesn't use brcmf_rx_frame() but invokes
+>> brcmf_netif_rx() directly. In such case the Ethernet header was not
+>> stripped out resulting in null pointer dereference in the networking
+>> stack.
+>>
+>> BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
+>> IP: [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
+>> PGD 0
+>> Oops: 0000 [#1] PREEMPT SMP
+>> Modules linked in: fuse ipt_MASQUERADE nf_nat_masquerade_ipv4
+>> iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype
+>> [...]
+>> rtsx_pci scsi_mod usbcore usb_common i8042 serio nvme nvme_core
+>> CPU: 7 PID: 1340 Comm: irq/136-brcmf_p Not tainted 4.7.0-rc1-mainline #1
+>> Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 01.02.00 04/07/2016
+>> task: ffff8804a0c5bd00 ti: ffff88049e124000 task.ti: ffff88049e124000
+>> RIP: 0010:[<ffffffff814c3ce6>] [<ffffffff814c3ce6>]
+>> enqueue_to_backlog+0x56/0x260
+>> RSP: 0018:ffff88049e127ca0 EFLAGS: 00010046
+>> RAX: 0000000000000000 RBX: ffff8804bddd7c40 RCX: 000000000000002f
+>> RDX: 0000000000000000 RSI: 0000000000000007 RDI: ffff8804bddd7d4c
+>> RBP: ffff88049e127ce8 R08: 0000000000000000 R09: 0000000000000000
+>> R10: ffff8804bddd12c0 R11: 000000000000149e R12: 0000000000017c40
+>> R13: ffff88049e127d08 R14: ffff8804a9bd6d00 R15: ffff8804bddd7d4c
+>> FS: 0000000000000000(0000) GS:ffff8804bddc0000(0000) knlGS:0000000000000000
+>> CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>> CR2: 0000000000000048 CR3: 0000000001806000 CR4: 00000000003406e0
+>> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+>> Stack:
+>> ffff8804bdddad00 ffff8804ad089e00 0000000000000000 0000000000000282
+>> 0000000000000000 ffff8804a9bd6d00 ffff8804a1b27e00 ffff8804a9bd6d00
+>> ffff88002ee88000 ffff88049e127d28 ffffffff814c3f3b ffffffff81311fc3
+>> Call Trace:
+>> [<ffffffff814c3f3b>] netif_rx_internal+0x4b/0x170
+>> [<ffffffff81311fc3>] ? swiotlb_tbl_unmap_single+0xf3/0x120
+>> [<ffffffff814c5467>] netif_rx_ni+0x27/0xc0
+>> [<ffffffffa08519e9>] brcmf_netif_rx+0x49/0x70 [brcmfmac]
+>> [<ffffffffa08564d4>] brcmf_msgbuf_process_rx+0x2b4/0x570 [brcmfmac]
+>> [<ffffffff81020017>] ? __xen_set_pgd_hyper+0x57/0xd0
+>> [<ffffffff810d60b0>] ? irq_forced_thread_fn+0x70/0x70
+>> [<ffffffffa0857381>] brcmf_proto_msgbuf_rx_trigger+0x31/0xe0 [brcmfmac]
+>> [<ffffffffa0861e8f>] brcmf_pcie_isr_thread+0x7f/0x110 [brcmfmac]
+>> [<ffffffff810d60d0>] irq_thread_fn+0x20/0x50
+>> [<ffffffff810d63ad>] irq_thread+0x12d/0x1c0
+>> [<ffffffff815d07d5>] ? __schedule+0x2f5/0x7a0
+>> [<ffffffff810d61d0>] ? wake_threads_waitq+0x30/0x30
+>> [<ffffffff810d6280>] ? irq_thread_dtor+0xb0/0xb0
+>> [<ffffffff81098ea8>] kthread+0xd8/0xf0
+>> [<ffffffff815d4b7f>] ret_from_fork+0x1f/0x40
+>> [<ffffffff81098dd0>] ? kthread_worker_fn+0x170/0x170
+>> Code: 1c f5 60 9a 8e 81 9c 58 0f 1f 44 00 00 48 89 45 d0 fa 66 0f 1f
+>> 44 00 00 4c 8d bb 0c 01 00 00 4c 89 ff e8 5e 08 11 00 49 8b 56 20 <48>
+>> 8b 52 48 83 e2 01 74 10 8b 8b 08 01 00 00 8b 15 59 c5 42 00
+>> RIP [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
+>> RSP <ffff88049e127ca0>
+>> CR2: 0000000000000048
+>>
+>> Reported-by: Grey Christoforo <grey@christoforo.net>
+>
+> I'll add a fixes line before I commit:
+>
+> Fixes: 9c349892ccc9 ("brcmfmac: revise handling events in receive path")
+>
+>> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+>> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+>> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+>> Signed-off-by: Franky Lin <franky.lin@broadcom.com>
+>> [arend@broadcom.com: rephrased the commit message]
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>
+> And a reminder to myself to remove the two extra S-o-b lines :)
 
-On Wednesday 15 June 2016 05:04 PM, Pavel Andrianov wrote:
-> lbs_mac_event_disconnected may free priv->currenttxskb
-> while lbs_hard_start_xmit accesses to it.
-> The patch adds a spinlock for mutual exclusion.
-> 
-> Tested on OLPC XO-1 (usb8388) and XO-1.5 (sd8686) with v4.7-rc3.
-> 
-> Confirmed that lbs_mac_event_disconnected is being called on the
-> station when hostapd on access point is given SIGHUP.
-> 
-> Signed-off-by: Pavel <andrianov@ispras.ru>
-> Tested-by: James Cameron <quozl@laptop.org>
-
-Looks good to me.
-
-Acked-by: Vaishali Thakkar <vaishali.thakkar@oracle.com>
-
-> ---
->  drivers/net/wireless/marvell/libertas/cmdresp.c | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/marvell/libertas/cmdresp.c b/drivers/net/wireless/marvell/libertas/cmdresp.c
-> index c95bf6d..c67ae07 100644
-> --- a/drivers/net/wireless/marvell/libertas/cmdresp.c
-> +++ b/drivers/net/wireless/marvell/libertas/cmdresp.c
-> @@ -27,6 +27,8 @@
->  void lbs_mac_event_disconnected(struct lbs_private *priv,
->  				bool locally_generated)
->  {
-> +	unsigned long flags;
-> +
->  	if (priv->connect_status != LBS_CONNECTED)
->  		return;
->  
-> @@ -46,9 +48,11 @@ void lbs_mac_event_disconnected(struct lbs_private *priv,
->  	netif_carrier_off(priv->dev);
->  
->  	/* Free Tx and Rx packets */
-> +	spin_lock_irqsave(&priv->driver_lock, flags);
->  	kfree_skb(priv->currenttxskb);
->  	priv->currenttxskb = NULL;
->  	priv->tx_pending_len = 0;
-> +	spin_unlock_irqrestore(&priv->driver_lock, flags);
->  
->  	priv->connect_status = LBS_DISCONNECTED;
->  
-> 
+Oh, forgot to mention that I'm planning to push this to 4.7.
 
 -- 
-Vaishali
+Kalle Valo
