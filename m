@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:33336 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379AbcFTAvb (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:16427 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932608AbcFCVbX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2016 20:51:31 -0400
-Received: by mail-pa0-f68.google.com with SMTP id ts6so9713330pac.0
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2016 17:51:31 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: Encrypt "Group addressed privacy" action frames
-To: Jouni Malinen <j@w1.fi>
-References: <1465969112-2814-1-git-send-email-masashi.honma@gmail.com>
- <20160618091116.GA2972@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <57673E10.7070706@gmail.com> (sfid-20160620_034224_871538_C10EC263)
-Date: Mon, 20 Jun 2016 09:51:28 +0900
-MIME-Version: 1.0
-In-Reply-To: <20160618091116.GA2972@w1.fi>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Fri, 3 Jun 2016 17:31:23 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	wrightf <wright.feng@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 2/6] brcmfmac: revise SDIO error message in brcmf_sdio_drivestrengthinit
+Date: Fri,  3 Jun 2016 23:31:08 +0200
+Message-Id: <1464989472-29684-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160603_233126_762769_BB1895AF)
+In-Reply-To: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016年06月18日 18:11, Jouni Malinen wrote:
-> What about RX side? Shouldn't there be a matching change there to
-> enforce use of group addressed privacy for the specific Action
-> categories?
+From: wrightf <wright.feng@broadcom.com>
 
-Thank you. Yes, RX side modification is needed.
-I was not aware of it because ping test was OK.
-Now I recognize it is because MGTK and IGTK is same as you say.
+The error message is given for something that is not an error here as
+the drive strength configuration may not be applicable for specific
+devices. Therefor the error message is rephrased and changed to a
+debug message.
 
-> This will make devices using fixed implementation not
-> interoperate with devices using older version, I'd assume, but it looks
-> like the current use of mesh with RSN is pretty hopelessly broken as far
-> as no PMF case is concerned at least when using the wpa_supplicant
-> implementation (sets IGTK incorrectly and ends up using BIP even when
-> PMF was not enabled), so there does not seem to be any convenient way of
-> addressing this apart from requiring all devices in the MBSS to get
-> updated to the fixed versions.
-Yes. This patch breaks backward compatibility.
-I do not have smart idea to avoid also.
-I will create new define like this.
-CONFIG_MAC80211_MESH_GROUP_ADDRESSED_PRIVACY
+Signed-off-by: Wright Feng <wright.feng@broadcom.com>
+[arend@broadcom.com: rephrase commit message]
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-> And this helper should likely be in some more generic location so that 
-> it could be shared for TX and RX.. 
-
-Sure.
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 67e69bf..22b7dc0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -3666,7 +3666,7 @@ brcmf_sdio_drivestrengthinit(struct brcmf_sdio_dev *sdiodev,
+ 		str_shift = 11;
+ 		break;
+ 	default:
+-		brcmf_err("No SDIO Drive strength init done for chip %s rev %d pmurev %d\n",
++		brcmf_dbg(INFO, "No SDIO driver strength init needed for chip %s rev %d pmurev %d\n",
+ 			  ci->name, ci->chiprev, ci->pmurev);
+ 		break;
+ 	}
+-- 
+1.9.1
 
