@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34154 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751425AbcFVKx7 (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34130 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186AbcFCPsj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2016 06:53:59 -0400
-Received: by mail-pf0-f195.google.com with SMTP id 66so3840150pfy.1
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2016 03:53:59 -0700 (PDT)
-Subject: Re: [PATCH v2] mac80211: Encrypt "Group addressed privacy" action
- frames
-To: Jouni Malinen <j@w1.fi>
-References: <20160620212529.GA19076@w1.fi>
- <1466490219-2891-1-git-send-email-masashi.honma@gmail.com>
- <20160621164207.GA7323@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <576A6E43.2000003@gmail.com> (sfid-20160622_125403_301712_FF24103C)
-Date: Wed, 22 Jun 2016 19:53:55 +0900
+	Fri, 3 Jun 2016 11:48:39 -0400
+Subject: Re: [PATCH 2/2] ath10k: remove 10.1 firmware support
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org
+References: <20160603153328.11947-1-rmanohar@qti.qualcomm.com>
+ <20160603153328.11947-2-rmanohar@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <5751A6D5.7080901@candelatech.com> (sfid-20160603_174843_265261_10212B5B)
+Date: Fri, 3 Jun 2016 08:48:37 -0700
 MIME-Version: 1.0
-In-Reply-To: <20160621164207.GA7323@w1.fi>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <20160603153328.11947-2-rmanohar@qti.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016年06月22日 01:42, Jouni Malinen wrote:
->
-> This is somewhat problematic since no indication of the frame length is
-> passed in here and we are reading beyond the frame header below.. Maybe
-> this should use the same style as ieee80211_is_robust_mgmt_frame()
-> instead, i.e., use skb as the argument and define
-> _ieee80211_is_group_privacy_action() to take in struct ieee80211_hdr *.
-Thank you. I will modify it.
+On 06/03/2016 08:33 AM, Rajkumar Manoharan wrote:
+> Earlier qca9888 device was brought up using 10.1 firmware and then
+> later all firmware fixes and new features are migrated to 10.2/10.2.x
+> firmware branch. As all of 10.1 funtionalities are supported in 10.2
+> based firmware, removing 10.1 firmware support for qca9888 device.
 
+Oh please do not do this.  My 10.1 firmware works very nicely,
+and out-performs 10.2 in my testing.  Lots of people use my firmware
+when they need IBSS support or other features not found in
+official firmware, so it is not just me that will have
+problems if you remove this support.
 
->
-> These read the buffer at offset 24, i.e., just after the header. This
-> should do same as ieee80211_is_robust_mgmt_frame(), i.e., return false
-> if skb->len < 25.
-Thank you. I will modify it also.
+Thanks,
+Ben
 
->
-> This looks completely separate item and I don't see why we would even
-> delete that empty line.. In any case, it should probably not be in this
-> patch.
->    
-
-Sorry. This is just a miss of removal of printk().
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
