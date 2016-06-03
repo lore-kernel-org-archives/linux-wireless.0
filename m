@@ -1,80 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:36673 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750914AbcFAXN4 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55728 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751828AbcFCF7o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 19:13:56 -0400
-MIME-Version: 1.0
-In-Reply-To: <ec09757e-302a-b341-6bf0-46737abb7976@osg.samsung.com>
-References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
- <1464358702-19083-8-git-send-email-javier@osg.samsung.com>
- <CAGRGNgUZ+mG_KzhiOzquB3qd-V_Pdbazag=nrFpG87mRQGmXLg@mail.gmail.com> <ec09757e-302a-b341-6bf0-46737abb7976@osg.samsung.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 2 Jun 2016 09:13:35 +1000
-Message-ID: <CAGRGNgUaNAxhhvnVJDx73yABvp3HXfqK5JFKCKvOgkM0DyFuPA@mail.gmail.com> (sfid-20160602_011430_309618_E3F22810)
-Subject: Re: [PATCH 7/8] mwifiex: don't print an error if an optional DT
- property is missing
-To: Javier Martinez Canillas <javier@osg.samsung.com>,
-	Xinming Hu <huxm@marvell.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 3 Jun 2016 01:59:44 -0400
+Message-ID: <1464933580.11694.44.camel@coelho.fi> (sfid-20160603_075952_637763_ED43C617)
+From: Luca Coelho <luca@coelho.fi>
+To: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"me@bobcopeland.com" <me@bobcopeland.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Date: Fri, 03 Jun 2016 08:59:40 +0300
+In-Reply-To: <CAAA5faEJuydHyOgoB=R3HrucRLr4mhbwJPp=29SzmaJOzw9Gdw@mail.gmail.com>
+References: <20160529214059.GA15677@localhost>
+	 <CAAA5faFNa1sQrj6Yfq+hrXfUOi0Lek4qL8Zzpdv27-4+Z4n6mQ@mail.gmail.com>
+ <20160601125453.GB12977@localhost> <1464787139.2554.74.camel@intel.com>
+ <CAAA5faFaPow=Rw-1btgag9wRV-ub8=np2FgpRsoF99MPyb7row@mail.gmail.com>
+ <1464841636.11694.10.camel@intel.com>
+	 <CAAA5faGpjybA63PMp5pzGOxbw8Zjy+vK1HwnQA4-jGGk8XWJvA@mail.gmail.com>
+ <1464855365.11694.35.camel@coelho.fi>
+	 <CAAA5faEJuydHyOgoB=R3HrucRLr4mhbwJPp=29SzmaJOzw9Gdw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: wireless-testing on 4.7
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Javier,
+On Thu, 2016-06-02 at 23:09 -0600, Reinoud Koornstra wrote:
+> On Thu, Jun 2, 2016 at 2:16 AM, Luca Coelho <luca@coelho.fi> wrote:
+> > This shows that you have iwlwifi-7260-16.ucode in your file system.
+> >  But here we are reading it much later.  So it's possible that the
+> > kernel cannot access the firmware at a very early stage (because
+> > the
+> > filesystem that contains it is not mounted yet) when you use in-
+> > kernel.
+> > 
+> > So, first of all, please make sure they're built as modules.  We
+> > can
+> > continue from there then.
+> 
+> Your suggestion worked. When it's compiled as module, the
+> iwlwifi-7260-16.ucode loads fine.
+> No problems detected so far.
 
-On Wed, Jun 1, 2016 at 11:51 PM, Javier Martinez Canillas
-<javier@osg.samsung.com> wrote:
-> Hello Julian,
->
-> Thanks a lot for your feedback and reviews.
->
-> On 06/01/2016 12:20 AM, Julian Calaby wrote:
->> Hi All,
->>
->> On Sat, May 28, 2016 at 12:18 AM, Javier Martinez Canillas
->> <javier@osg.samsung.com> wrote:
->>> The Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt DT
->>> binding document say that the "interrupts" property in the child node is
->>> optional. So the property being missed shouldn't be treated as an error.
->>
->> Have you checked whether it is truly optional? I.e. nothing else
->> breaks if this property isn't set?
->>
->
-> That's what the DT binding says and the IRQ is only used as a wakeup source
-> during system suspend, it is not used during runtime. And that is why the
-> mwifiex_sdio_probe_of() function does not fail if the IRQ is missing.
+Great! :)
 
-Awesome, that's what I wanted to know.
 
-> Now, I just got to that conclusion by reading the binding docs, the message
-> in the commits that introduced this and the driver code. Xinming Hu should
-> comment on how critical this feature is for systems that needs to be wakeup.
+> It does make me think whether this is desired behavior though that
+> due
+> to the later reading we cannot have iwlwifi build in the kernel.
 
-Xinming, could you review this also?
+It should work, but then you have to make sure the firmware is
+available at very early stages of boot.  If you add it to the proper
+place in your initrd, the kernel should find it when the driver
+requests it.
 
-> In any case I think that the code should be consistent with what the binding
-> doc says and also the function does (i.e: dev_err only if returns an error).
->
->>> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
->>
->> Other than that, this looks sensible to me.
->>
->> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->>
->
-> Best regards,
+I didn't want to go into the details of this, because in most cases the
+best option is to have the driver as a module.  If you really need it
+in-kernel, then you need to make sure all the needed pieces are
+available very early as well.
 
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+--
+Cheers,
+Luca.
