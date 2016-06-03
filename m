@@ -1,86 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54831 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872AbcF0QcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 12:32:12 -0400
-From: Jes.Sorensen@redhat.com
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:33991 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818AbcFCR0T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2016 13:26:19 -0400
+Received: by mail-oi0-f47.google.com with SMTP id e72so137323489oib.1
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2016 10:26:19 -0700 (PDT)
+MIME-Version: 1.0
+From: bruce m beach <brucembeach@gmail.com>
+Date: Fri, 3 Jun 2016 10:26:18 -0700
+Message-ID: <CAArymCnfQaa29D2EXGzwOrp0yvXES+Qq1X-HbSUxC6gig8pH_A@mail.gmail.com> (sfid-20160603_192624_483637_C98A5241)
+Subject: ath9k_htc firmware
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 06/12] rtl8xxxu: Allocate larger RX skbs when aggregation is enabled
-Date: Mon, 27 Jun 2016 12:32:04 -0400
-Message-Id: <1467045130-18874-7-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183221_304007_15D067E1)
-In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+Cc: ath9k_htc_fw@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hello All
 
-This adds support for allocating larger skbs for devices which
-indicate they support it.
+ I am still working on cleaning up ath9k_htc firmware build tree for about 6
+months now ( and looks like I'll be doing this for all eternity**2 ) and am
+not clear myself what I'm looking for right now.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      |  2 ++
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 13 +++++++++----
- 2 files changed, 11 insertions(+), 4 deletions(-)
+I'm looking for some kind of simple request in the ath9k_htc driver, through
+the usb ep0, like a memory read on the card, where a urb is sent with
+the resulting chain of events. The simpler the better. The simplest.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index e8158c0..f06e3aa 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1247,6 +1247,7 @@ struct rtl8xxxu_priv {
- 	u32 ep_tx_normal_queue:1;
- 	u32 ep_tx_low_queue:1;
- 	u32 has_xtalk:1;
-+	u32 rx_buf_aggregation:1;
- 	u8 xtalk;
- 	unsigned int pipe_interrupt;
- 	unsigned int pipe_in;
-@@ -1330,6 +1331,7 @@ struct rtl8xxxu_fileops {
- 	void (*report_connect) (struct rtl8xxxu_priv *priv,
- 				u8 macid, bool connect);
- 	int writeN_block_size;
-+	int rx_agg_buf_size;
- 	char tx_desc_size;
- 	char rx_desc_size;
- 	char has_s0s1;
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 01a4f89..393ae3b3 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -64,8 +64,6 @@ module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, 0600);
- MODULE_PARM_DESC(ht40_2g, "Enable HT40 support on the 2.4GHz band");
- 
- #define USB_VENDOR_ID_REALTEK		0x0bda
--/* Minimum IEEE80211_MAX_FRAME_LEN */
--#define RTL_RX_BUFFER_SIZE		IEEE80211_MAX_FRAME_LEN
- #define RTL8XXXU_RX_URBS		32
- #define RTL8XXXU_RX_URB_PENDING_WATER	8
- #define RTL8XXXU_TX_URBS		64
-@@ -5271,12 +5269,19 @@ cleanup:
- static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
- 				  struct rtl8xxxu_rx_urb *rx_urb)
- {
-+	struct rtl8xxxu_fileops *fops = priv->fops;
- 	struct sk_buff *skb;
- 	int skb_size;
- 	int ret, rx_desc_sz;
- 
--	rx_desc_sz = priv->fops->rx_desc_size;
--	skb_size = rx_desc_sz + RTL_RX_BUFFER_SIZE;
-+	rx_desc_sz = fops->rx_desc_size;
-+
-+	if (priv->rx_buf_aggregation && fops->rx_agg_buf_size)
-+		skb_size = fops->rx_agg_buf_size;
-+	else
-+		skb_size = IEEE80211_MAX_FRAME_LEN;
-+	skb_size += rx_desc_sz;
-+
- 	skb = __netdev_alloc_skb(NULL, skb_size, GFP_KERNEL);
- 	if (!skb)
- 		return -ENOMEM;
--- 
-2.7.4
-
+Bruce
