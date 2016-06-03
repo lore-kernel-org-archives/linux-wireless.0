@@ -1,60 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:45651 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161453AbcFMTAw (ORCPT
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:34914 "EHLO
+	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751159AbcFCHBZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 15:00:52 -0400
-Date: Mon, 13 Jun 2016 21:00:48 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: =?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
-	<jprvita@endlessm.com>
-Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED
- trigger
-Message-ID: <20160613190048.GA17101@amd> (sfid-20160613_210129_973272_01578C2D)
-References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
- <1462199948-6424-2-git-send-email-jprvita@endlessm.com>
- <20160504072936.GB17045@amd>
- <1463045572.13313.21.camel@sipsolutions.net>
- <20160519071639.GB17077@amd>
- <1465476194.3442.21.camel@sipsolutions.net>
- <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com>
+	Fri, 3 Jun 2016 03:01:25 -0400
+Received: by mail-yw0-f194.google.com with SMTP id n16so9837323ywd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2016 00:01:25 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com>
+In-Reply-To: <CAAfyv37zUXh+4g8Vr1Ee3ypfnA9ebNbx=xJ-cGBs3StaB-ANfQ@mail.gmail.com>
+References: <CAAfyv37Sr7JRtfrZYyb=c530sK8PR_ymeJ6w38274i1aDkHZ8A@mail.gmail.com>
+ <CABPxzYLe27gzQdEEU=5z6Bbmfduscjgry3gfQ6KRrWfngQt-Mg@mail.gmail.com> <CAAfyv37zUXh+4g8Vr1Ee3ypfnA9ebNbx=xJ-cGBs3StaB-ANfQ@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 3 Jun 2016 12:31:05 +0530
+Message-ID: <CABPxzYKvcS-ai90Fzw70d0tcT9GT=N6UzJQ966Jas2xDCzvQbg@mail.gmail.com> (sfid-20160603_090128_911419_25D5F9CB)
+Subject: Re: iw reg overwritten after connecting to AP
+To: Belisko Marek <marek.belisko@gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Fri, Jun 3, 2016 at 2:02 AM, Belisko Marek <marek.belisko@gmail.com> wrote:
+>
+> Hi Krishna,
+>
+> On Thu, Jun 2, 2016 at 10:21 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+> > On Thu, Jun 2, 2016 at 7:34 PM, Belisko Marek <marek.belisko@gmail.com> wrote:
+> >>
+> >> Hello,
+> >>
+> >> I'm using kernel 4.1 with option CONFIG_CFG80211_INTERNAL_REGDB
+> >> enabled. I have set one country in db.txt which during startup I set
+> >> via 'iw reg set XX'. When connected to some AP which sends country
+> >> code (e.g. SK) region is overwritten to 00 (in kernel log there is
+> >> some timeout message - I suppose it's communication with crda daemon
+> >> which I'm not using). Is there a way how to override this behavior (to
+> >> keep my regulatory persistent). Many thanks.
+> >>
+> > You need to disable country_ie hints, you driver has to advertise
+> > REGULATORY_WIPHY_SELF_MANAGED in the wiphy.regualtory_flags
+> > to disable beacon and country_ie hints.
+> I would like to keep beacon hinting (maybe disable only country_ie). I
+> have same setup but with 3.9 kernel and regulatory isn't overwritten.
+>
+>
+> > Which driver are you using?
+> I'm using mwifiex driver
 
-> > João, that means you should send a patch to add the ::rfkill suffix.
-> >
-> 
-> IMO "airplane" (or maybe "airplane-mode") is a better suffix, as it
-> reflects the label on the machine's chassis. I'll name it
-> "asus-wireless::airplane" and send this through platform-drivers-x86,
-> as this is now contained in the platform-drivers-x86 subsystem. Thanks
-> Johannes for your patience and help designing and reviewing the rfkill
-> changes, even if not all of them made it through in the end. And
-> thanks everyone else involved for the feedback.
+I am not familiar with this driver.
 
-Actually, I'd do '::rfkill', for consistency with other places in
-/sys.
+But looks like for any other country except for WORLD mode
+ it is disabling both beacon and country_ie hints. But for any
+other country these hints are enabled.
 
-/sys/devices/platform/thinkpad_acpi/rfkill/rfkill1/name
-/sys/class/rfkill
-/sys/module/rfkill
+may be you can try the below patch (not based on 4.1 so you might have to port)
+for your case disabling country_ie for all regulatory domains.
 
-Thanks for patience,
-									Pavel
--- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 6db202f..cb95138 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -4072,8 +4072,9 @@ int mwifiex_register_cfg80211(struct
+mwifiex_adapter *adapter)
+        wiphy->n_cipher_suites = ARRAY_SIZE(mwifiex_cipher_suites);
+
+        if (adapter->region_code)
+-               wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
+-                                          REGULATORY_COUNTRY_IE_IGNORE;
++               wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS;
++
++       wiphy->regulatory_flags |= REGULATORY_COUNTRY_IE_IGNORE;
+
+        ether_addr_copy(wiphy->perm_addr, adapter->perm_addr);
+        wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
