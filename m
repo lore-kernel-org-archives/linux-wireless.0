@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:34408 "EHLO
-	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932082AbcFMQmh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 12:42:37 -0400
-MIME-Version: 1.0
-From: David Binderman <linuxdev.baldrick@gmail.com>
-Date: Mon, 13 Jun 2016 17:42:35 +0100
-Message-ID: <CAMzoamZjA4XfL1b5Hqo7F+97PY-MEaijJ24iY+53L9ntNZromw@mail.gmail.com> (sfid-20160613_184255_379450_E01BCF8C)
-Subject: linux-4.7-rc3/drivers/net/wireless/ath/ath9k/htc_drv_main.c: 2 *
- strange tests ?
-To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+Received: from mx1.redhat.com ([209.132.183.28]:55676 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751826AbcFCTbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2016 15:31:04 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Colin King <colin.king@canonical.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
 	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] rtl8xxxu: fix typo on variable name, compare against correct variable
+References: <1464798225-7315-1-git-send-email-colin.king@canonical.com>
+Date: Fri, 03 Jun 2016 15:31:03 -0400
+In-Reply-To: <1464798225-7315-1-git-send-email-colin.king@canonical.com>
+	(Colin King's message of "Wed, 1 Jun 2016 17:23:45 +0100")
+Message-ID: <wrfjoa7iysqw.fsf@redhat.com> (sfid-20160603_213109_721427_AAA93372)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello there,
+Colin King <colin.king@canonical.com> writes:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> path_b_ok is being assigned but immediately after path_a_ok is being
+> compared to the value 0x03.  This appears to be a typo on the
+> variable name, compare path_b_ok instead.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+> index fe19ace..b04cf30 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+> @@ -1149,7 +1149,7 @@ static void rtl8192eu_phy_iqcalibrate(struct rtl8xxxu_priv *priv,
+>  
+>  		for (i = 0; i < retry; i++) {
+>  			path_b_ok = rtl8192eu_rx_iqk_path_b(priv);
+> -			if (path_a_ok == 0x03) {
+> +			if (path_b_ok == 0x03) {
+>  				val32 = rtl8xxxu_read32(priv,
+>  							REG_RX_POWER_BEFORE_IQK_B_2);
+>  				result[t][6] = (val32 >> 16) & 0x3ff;
 
-1.
+Nice catch, that does indeed look like a bug!
 
-linux-4.7-rc3/drivers/net/wireless/ath/ath9k/htc_drv_main.c:798]:
-(warning) Comparison of a boolean expression with an integer other
-than 0 or 1.
+Thanks, I want to test it, but I plan to apply it to rtl8xxxu-devel
+shortly.
 
-Source code is
-
-   if (common->ani.caldone <= 0) {
-
-but
-
-drivers/net/wireless/ath/ath.h:    bool caldone;
-
-Maybe better code
-
-  if (!(common->ani.caldone)) {
-
-2.
-
-linux-4.7-rc3/drivers/net/wireless/ath/ath9k/htc_drv_main.c:851]:
-(warning) Comparison of a boolean expression with an integer other
-than 0 or 1.
-
-   if (common->ani.caldone <= 0)
-
-Duplicate. Also in the same file:
-
-drivers/net/wireless/ath/ath9k/htc_drv_main.c:228]: (style) Variable
-'ret' is assigned a value that is never used.
-
-This might be a case where a function return value is not checked.
-
-Regards
-
-David Binderman
+Cheers,
+Jes
