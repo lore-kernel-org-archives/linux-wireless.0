@@ -1,90 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:46502 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639AbcF0Ipg (ORCPT
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:34555 "EHLO
+	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750923AbcFCHbX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 04:45:36 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCH 2/3] ath10k: handle testmode events for 10.2 and 10.4 based firmware
-Date: Mon, 27 Jun 2016 14:20:50 +0530
-Message-ID: <1467017450-7552-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_104539_342675_59A7CA13)
+	Fri, 3 Jun 2016 03:31:23 -0400
+Received: by mail-vk0-f66.google.com with SMTP id a6so12093543vkg.1
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2016 00:31:23 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1464881803.2169.11.camel@sipsolutions.net>
+References: <1464880903-13116-1-git-send-email-dibyajyotig@gmail.com> <1464881803.2169.11.camel@sipsolutions.net>
+From: Dibyajyoti Ghosh <dibyajyotig@gmail.com>
+Date: Fri, 3 Jun 2016 13:01:21 +0530
+Message-ID: <CACtQq=YDbYsO4k5oERvqwR38i1BYQkC0_4So6W3D4Atk-_NTpQ@mail.gmail.com> (sfid-20160603_093126_817821_84C2AA0D)
+Subject: Re: [PATCH] Support for 32 bit iwpriv on 64 bits kernels
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: WiFi Mailing List <linux-wireless@vger.kernel.org>,
+	Ujjal Roy <royujjal@gmail.com>,
+	Prasun Maiti <prasunmaiti87@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Hi
 
-Currently testmode events for 10.x firmware are processed from
-10.1 wmi event processing. This patch is used to handle testmode
-events in 10.2 and 10.4 based firmware.
+Sorry for the conflict. We misunderstood from our kernel-patch related
+conversation that it is you are reluctant to accept that. So we
+attempted to accomplish the same through app-side modification. Any
+way, sorry again.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |   26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+However, we are again concentrating on our kernel side modification,
+and will update you soon.
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 6279ab4..72b5483 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -5095,6 +5095,7 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_cmd_hdr *cmd_hdr;
- 	enum wmi_10_2_event_id id;
-+	bool consumed;
- 
- 	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
- 	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
-@@ -5104,6 +5105,18 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
- 
-+	consumed = ath10k_tm_event_wmi(ar, id, skb);
-+
-+	/* Ready event must be handled normally also in UTF mode so that we
-+	 * know the UTF firmware has booted, others we are just bypass WMI
-+	 * events to testmode.
-+	 */
-+	if (consumed && id != WMI_10_2_READY_EVENTID) {
-+		ath10k_dbg(ar, ATH10K_DBG_WMI,
-+			   "wmi testmode consumed 0x%x\n", id);
-+		goto out;
-+	}
-+
- 	switch (id) {
- 	case WMI_10_2_MGMT_RX_EVENTID:
- 		ath10k_wmi_event_mgmt_rx(ar, skb);
-@@ -5219,6 +5232,7 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_cmd_hdr *cmd_hdr;
- 	enum wmi_10_4_event_id id;
-+	bool consumed;
- 
- 	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
- 	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
-@@ -5228,6 +5242,18 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
- 
-+	consumed = ath10k_tm_event_wmi(ar, id, skb);
-+
-+	/* Ready event must be handled normally also in UTF mode so that we
-+	 * know the UTF firmware has booted, others we are just bypass WMI
-+	 * events to testmode.
-+	 */
-+	if (consumed && id != WMI_10_4_READY_EVENTID) {
-+		ath10k_dbg(ar, ATH10K_DBG_WMI,
-+			   "wmi testmode consumed 0x%x\n", id);
-+		goto out;
-+	}
-+
- 	switch (id) {
- 	case WMI_10_4_MGMT_RX_EVENTID:
- 		ath10k_wmi_event_mgmt_rx(ar, skb);
--- 
-1.7.9.5
+Thanks,
+Dibyajyoti
 
+
+On Thu, Jun 2, 2016 at 9:06 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2016-06-02 at 20:51 +0530, Dibyajyoti Ghosh wrote:
+>> This patch adds pointer conversion from 32 bit to 64 bit and vice
+>> versa,
+>> if the ioctl is issued from 32 bit iwpriv to 64 bit Kernel.
+>>
+> Huh? the kernel should handle that, no? And didn't you just submit a
+> patch for it, so you break it again with this change?
+>
+> johannes
