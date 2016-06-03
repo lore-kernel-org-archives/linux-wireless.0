@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:45802 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751828AbcFTWVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 18:21:54 -0400
-Subject: [PATCH] leds: Add no-op gpio_led_register_device when LED subsystem
- is disabled
-To: Jacek Anaszewski <j.anaszewski@samsung.com>
-References: <20160613200211.14790-1-afd@ti.com>
- <20160613200211.14790-13-afd@ti.com> <5760FA52.7010806@samsung.com>
- <57647DBD.2010406@ti.com> <57679E38.3080901@samsung.com>
-CC: Russell King <linux@armlinux.org.uk>,
-	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Sebastian Reichel <sre@kernel.org>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Richard Purdie <rpurdie@rpsys.net>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Ingo Molnar <mingo@kernel.org>, <linux-pwm@vger.kernel.org>,
-	<lguest@lists.ozlabs.org>, <linux-wireless@vger.kernel.org>,
-	<linux-mmc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-gpio@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>, <linux-leds@vger.kernel.org>,
-	<linux-media@vger.kernel.org>
-From: "Andrew F. Davis" <afd@ti.com>
-Message-ID: <57686A94.2010704@ti.com> (sfid-20160621_002244_001809_68016211)
-Date: Mon, 20 Jun 2016 17:13:40 -0500
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40349 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932590AbcFCOaS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2016 10:30:18 -0400
+Date: Fri, 3 Jun 2016 10:19:57 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: Anyone have a clone of wireless-legacy.git?
+Message-ID: <20160603141956.GK6230@tuxdriver.com> (sfid-20160603_163039_741740_7B4E76C3)
+References: <20160602183803.GH6230@tuxdriver.com>
+ <20160603011827.GA2542@roeck-us.net>
 MIME-Version: 1.0
-In-Reply-To: <57679E38.3080901@samsung.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160603011827.GA2542@roeck-us.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some systems use 'gpio_led_register_device' to make an in-memory copy of
-their LED device table so the original can be removed as .init.rodata.
-When the LED subsystem is not enabled source in the led directory is not
-built and so this function may be undefined. Fix this here.
+On Thu, Jun 02, 2016 at 06:18:27PM -0700, Guenter Roeck wrote:
+> On Thu, Jun 02, 2016 at 02:38:04PM -0400, John W. Linville wrote:
+> > It has recently come to my attention that the old wireless-legacy.git
+> > tree is no longer available on kernel.org.  I honestly have no idea
+> > what happened to it -- for all I know I fat-fingered it some time
+> > ago or whatever.  Anyway, apparently there are some references in it
+> > "out there" and it would be good if we had a copy available somewhere
+> > public.
+> > 
+> > If you have an old clone of wireless-legacy.git, PLEASE DO NOT DELETE
+> > IT!  Please let me know that you've got it and I will arrange to get
+> > a copy of it from you in order to make it available publicly again.
+> > 
+> > I appreciate your support!
+> > 
+> http://www.filewatcher.com/_/?q=wireless-legacy.git, maybe ?
 
-Signed-off-by: Andrew F. Davis <afd@ti.com>
----
- include/linux/leds.h | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Awesome...thanks for the tip!
 
-diff --git a/include/linux/leds.h b/include/linux/leds.h
-index d2b1306..a4a3da6 100644
---- a/include/linux/leds.h
-+++ b/include/linux/leds.h
-@@ -386,8 +386,16 @@ struct gpio_led_platform_data {
-                                        unsigned long *delay_off);
- };
-
-+#ifdef CONFIG_NEW_LEDS
- struct platform_device *gpio_led_register_device(
-                int id, const struct gpio_led_platform_data *pdata);
-+#else
-+static inline struct platform_device *gpio_led_register_device(
-+               int id, const struct gpio_led_platform_data *pdata)
-+{
-+       return 0;
-+}
-+#endif
-
- enum cpu_led_event {
-        CPU_LED_IDLE_START,     /* CPU enters idle */
+John
 -- 
-2.9.0
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
