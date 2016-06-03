@@ -1,100 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43266 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752294AbcFUORd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 10:17:33 -0400
-Message-ID: <57694C77.5090203@candelatech.com> (sfid-20160621_161916_123953_FE57EFFC)
-Date: Tue, 21 Jun 2016 07:17:27 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from bues.ch ([80.190.117.144]:49020 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932987AbcFCVgM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2016 17:36:12 -0400
+Date: Fri, 3 Jun 2016 23:35:19 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] b43: Remove unused phy_a code
+Message-ID: <20160603233519.4606b1ef@wiggum> (sfid-20160603_233616_517355_C2F82CF1)
+In-Reply-To: <1464989566-1393-1-git-send-email-linux@roeck-us.net>
+References: <1464989566-1393-1-git-send-email-linux@roeck-us.net>
 MIME-Version: 1.0
-To: Jouni Malinen <j@w1.fi>, Julian Calaby <julian.calaby@gmail.com>
-CC: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH] ath9k: Support 4.9Ghz channels on AR9580 adapter.
-References: <CAGRGNgWOScCrLPyqRNus2319BPOehv3awQChoHw=RRMcSDUqzQ@mail.gmail.com> <1466470940-25229-1-git-send-email-julian.calaby@gmail.com> <20160621094146.GA3196@w1.fi>
-In-Reply-To: <20160621094146.GA3196@w1.fi>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/GoH64hS27nGJOm4mgDWYd/V"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--Sig_/GoH64hS27nGJOm4mgDWYd/V
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Fri,  3 Jun 2016 14:32:46 -0700
+Guenter Roeck <linux@roeck-us.net> wrote:
+
+> gcc-6 reports the following error with -Werror=3Dunused-const-variable.
+>=20
+> drivers/net/wireless/broadcom/b43/phy_a.c:576:40: error:
+> 	'b43_phyops_a' defined but not used
+>=20
+> Turns out a lot of code in this file is unused, so let's remove it.
 
 
-On 06/21/2016 02:41 AM, Jouni Malinen wrote:
-> On Tue, Jun 21, 2016 at 11:02:20AM +1000, Julian Calaby wrote:
->> I've only done this work as I hate to see people's efforts go to
->> waste and I feel that there's enough roadblocks in the way of
->> actually using this functionality that casual idiots won't be able
->> to.
->
-> Are these really ready to go to the upstream kernel in this state and
-> without the other changes that would be needed to operate correctly?
-> What is the use case for these and how have these been tested?
-
-More patches are needed to make this work properly.  My full patchset, with
-modifications to supplicant, *has* been tested, including against a Cisco
-AP running 5Mhz channels.
+All a-phy code is usused.
+So you can basically remove the whole file and any other A-PHY code.
+... or just leave it as-is.
 
 
->> This is compile tested only as I cannot test this for real as I lack
->> both the hardware and license required.
->
-> I don't think this is sufficient when touching this type of area. I
-> would not apply these without proper testing and full set of
-> functionality being available. I see no point in ath9k defining
-> additional channels if all those new channels can cause is harm and not
-> correct functionality. This channel list addition looks like the easiest
-> part to handle compared to the other patches needed for 4.9 GHz and this
-> would be the last patch on my list to get accepted..
->
->
->> diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
->> +#ifdef ATH9K_49_GHZ_CHAN
->> +	/* 4.9Ghz channels, public safety channels, license is required in US
->> +	 * and most other regulatory domains!
->> +	 */
->> +	CHAN5G(4915, 38), /* Channel 183 */
->> +	CHAN5G(4920, 39), /* Channel 184 */
->> +	CHAN5G(4925, 40), /* Channel 185 */
->> +	CHAN5G(4935, 41), /* Channel 187 */
->> +	CHAN5G(4940, 42), /* Channel 188 */
->> +	CHAN5G(4945, 43), /* Channel 189 */
->> +	CHAN5G(4960, 44), /* Channel 192 */
->> +	CHAN5G(4970, 45), /* Channel 194 */
->> +	CHAN5G(4980, 46), /* Channel 196 */
->
-> Where are these channels defined and are these really correct
-> frequencies for them? Please note that many of the 4.9 GHz channels have
-> channel starting frequencies like 4.9375 GHz and 4.0025 GHz, i.e.,
-> fractional MHz.. While US public safety may not have all those cases,
-> even there are some 0.5 MHz cases. In addition, those channel numbers
-> sound more like some of the channels defined in Japan rather than US
-> public safety operating class. In addition, some of these channels seem
-> to be outside the US public safety range.
+--=20
+Michael
 
-I got these from WiKi pedia.  There is a later patch that adds the 5Mhz
-channels that Cisco uses.  I figured that since this is all restricted anyway,
-that users of it would know how to make it work (and they would have to hack
-regdb in order to use any of them anyway).
+--Sig_/GoH64hS27nGJOm4mgDWYd/V
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-> Is this trying to add 4.9 GHz channels in general for multiple different
-> use cases? And if so, what are those use cases? Or is this only for some
-> public safety cases? And if so, for which regulatory domains?
->
-> To be frank, I really don't see how this would be even close to a state
-> that should be accepted into the upstream tree.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-It was a starting point, and posted mainly to let folks know how to get started.
+iQIcBAEBCAAGBQJXUfgXAAoJEPUyvh2QjYsODCQP/RKpxE69wX0oQf7rLDl14s/Q
+WuBQ8LU8PwcHJMymq2xe1pGNRAvJhoEg30hQGm3DeOX2wJNfDDFm4S3oYTmnacxL
+YYzs2nSPnRiYzFP8PE7OX10EiOrMlYVMiYJY+mW0BVO1uxlJ5lmsGT/44TJhoerg
+a9Z007ffGu0PM2EGltnr06OmnEqoEOt6o/P3lnJcXeMqBn37gL32vtE9HcWcfNl0
+2i/B2+mIHfE0t+a/ZRViNICOOVNVNRPDmz+qHFix2lB7LHATDJ0msCkVyoWzcBZw
++unmqqJ5HpIdKdB9MYUjwUb+OX94TifJs/fq06t7Gi6pyzZSfiDjHZYlDqARpB8T
+x3HV4Qqbn7kJF5I13qkK5Z5hJJG8aDr06J6xkqKwC46KxwTxfJt1H8R8QMFCjLIR
+hqPj6AwAMQzIpqybT/pxzTZQ5PMBM8pDkv+pAUqBE7TuSM5lFvQusTGQJyV/nqT0
+XCeU7f4b9wOetv8LrWtfQM2U5vvGBYbqesJtgIhpBvcDpMz1ALj75WPIAqLJdbU0
+R1GtPYtARXXHftYwY1zFTYXJbFR7cr+M3ZIZzd8a3SlkTtZiAK6STm8yZGy8YVZp
+slJoOliVlSosgMZigfCBsn3mAt9L3Y/ZJM4yM8Ao3CpQZ//0cI2jpbIoQU0V490j
+27jnMszysvfI7LHDDA+J
+=2o1O
+-----END PGP SIGNATURE-----
 
-As I said, I don't have interest in trying to push all the changes upstream,
-but they are in my kernel tree on dmz2.candelatech.com and hostap tree on
-github, so maybe someone who has interest in dealing with upstreaming them
-can take them over.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+--Sig_/GoH64hS27nGJOm4mgDWYd/V--
