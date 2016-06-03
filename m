@@ -1,125 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:35575 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752248AbcF1LLR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 07:11:17 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S . Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-CC: Meirav Kama <meiravk@ti.com>
-Subject: [PATCH 3/4] mac80211: mesh: fixed HT ies in beacon template
-Date: Tue, 28 Jun 2016 14:13:06 +0300
-Message-ID: <20160628111307.8784-4-yanivma@ti.com> (sfid-20160628_131210_067398_BE527307)
-In-Reply-To: <20160628111307.8784-3-yanivma@ti.com>
-References: <20160628111307.8784-1-yanivma@ti.com>
- <20160628111307.8784-2-yanivma@ti.com>
- <20160628111307.8784-3-yanivma@ti.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:47143 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932119AbcFCQ23 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2016 12:28:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 03 Jun 2016 21:58:28 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] ath10k: remove 10.1 firmware support
+In-Reply-To: <5751AB3F.2070604@candelatech.com>
+References: <20160603153328.11947-1-rmanohar@qti.qualcomm.com>
+ <20160603153328.11947-2-rmanohar@qti.qualcomm.com>
+ <5751A6D5.7080901@candelatech.com>
+ <743182bcbd1efbdb576bcc51b0215300@codeaurora.org>
+ <5751AB3F.2070604@candelatech.com>
+Message-ID: <0ec837e1ff03d8a7df8bc06ebca7c635@codeaurora.org> (sfid-20160603_182832_321227_53F8A1C0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Meirav Kama <meiravk@ti.com>
+On 2016-06-03 21:37, Ben Greear wrote:
+> On 06/03/2016 08:55 AM, Rajkumar Manoharan wrote:
+>> On 2016-06-03 21:18, Ben Greear wrote:
+>>> On 06/03/2016 08:33 AM, Rajkumar Manoharan wrote:
+>>>> Earlier qca9888 device was brought up using 10.1 firmware and then
+>>>> later all firmware fixes and new features are migrated to 
+>>>> 10.2/10.2.x
+>>>> firmware branch. As all of 10.1 funtionalities are supported in 10.2
+>>>> based firmware, removing 10.1 firmware support for qca9888 device.
+>>> 
+>>> Oh please do not do this.  My 10.1 firmware works very nicely,
+>>> and out-performs 10.2 in my testing.  Lots of people use my firmware
+>>> when they need IBSS support or other features not found in
+>>> official firmware, so it is not just me that will have
+>>> problems if you remove this support.
+>>> 
+>> Aah.. I thought CT firmware is 10.2 based. Since most of firmware bug 
+>> fixes and enhancements are integrated into 10.2 based firmware, we 
+>> thought of get rid of
+>> 10.1 firmware to reduce code size. Moreover existing 10.1 official 
+>> firmware has known issues. Is it possible to upgrade CT firmware to 
+>> 10.2 WMI/HTT interfaces?
+> 
+> I have a 10.2 firmware too, but it is less stable, performs worse,
+> uses more RAM on the NIC (so I can do fewer virtual stations),
+> and I am not sure I can squeeze enough RAM out of it to port some
+> of the more interesting rate-ctrl fixes from 10.1 to 10.2.
+> I have recently started backporting a lot of 10.2.4 changes
+> into 10.1, which will aid any users on pre 4.0 kernels since they 
+> cannot
+> run 10.2.4 firmware w/out backporting.
+> 
+> I might could make my 10.1 work with a 10.2 driver API, but it would
+> take quite a bit of
+> effort, way more than what removing 10.1 from the driver saves in my 
+> opinion.
+> The driver already separates firmware specific logic pretty well, so I
+> don't think
+> it should be a huge maintenance effort to keep 10.1 support in the 
+> driver.
+> 
+> Maybe you could delete the 10.2 (not 10.2.4) firmware support and gain
+> some space that way?  I
+> doubt anyone is using that productively....
+> 
+Nope. There are customers who are still using 10.2.2 firmware. My kind 
+advice is that please try to optimize latest firmware. 10.2 is nothing 
+but based on 10.1 trunk so there wont be much interface difference... 
+Will drop this series as of now...
 
-There are several values in HT info elements of mesh beacon (built by the
-mac80211) that are incorrect.
-To fix them:
-1. mac80211 will check configuration from cfg and will build accordingly.
-2. changes made in mesh default values.
+Kalle,
 
-Signed-off-by: Meirav Kama <meiravk@ti.com>
-Acked-by: Yaniv Machani <yanivma@ti.com>
----
- net/mac80211/mesh.c | 33 ++++++++++++++++++++++++++++++++-
- net/mac80211/util.c |  3 ---
- net/wireless/mesh.c |  2 +-
- 3 files changed, 33 insertions(+), 5 deletions(-)
+Please drop this series.. Sorry for the noise.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 1f5be54..1b63b11 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -423,6 +423,8 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
- 	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
- 	struct ieee80211_supported_band *sband;
- 	u8 *pos;
-+	u16 cap;
-+
- 
- 	sband = local->hw.wiphy->bands[band];
- 	if (!sband->ht_cap.ht_supported ||
-@@ -431,11 +433,40 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
- 		return 0;
- 
-+    /* determine capability flags */
-+	cap = sband->ht_cap.cap;
-+
-+    /* if channel width is 20MHz - configure HT capab accordingly*/
-+	if (sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20) {
-+		cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+		cap &= ~IEEE80211_HT_CAP_DSSSCCK40;
-+	}
-+
-+	/* set SM PS mode properly */
-+	cap &= ~IEEE80211_HT_CAP_SM_PS;
-+	switch (sdata->smps_mode) {
-+	case IEEE80211_SMPS_AUTOMATIC:
-+	case IEEE80211_SMPS_NUM_MODES:
-+		WARN_ON(1);
-+	case IEEE80211_SMPS_OFF:
-+		cap |= WLAN_HT_CAP_SM_PS_DISABLED <<
-+			IEEE80211_HT_CAP_SM_PS_SHIFT;
-+		break;
-+	case IEEE80211_SMPS_STATIC:
-+		cap |= WLAN_HT_CAP_SM_PS_STATIC <<
-+			IEEE80211_HT_CAP_SM_PS_SHIFT;
-+		break;
-+	case IEEE80211_SMPS_DYNAMIC:
-+		cap |= WLAN_HT_CAP_SM_PS_DYNAMIC <<
-+			IEEE80211_HT_CAP_SM_PS_SHIFT;
-+		break;
-+	}
-+
- 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
- 		return -ENOMEM;
- 
- 	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_cap));
--	ieee80211_ie_build_ht_cap(pos, &sband->ht_cap, sband->ht_cap.cap);
-+	ieee80211_ie_build_ht_cap(pos, &sband->ht_cap, cap);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 42bf0b6..5375a82 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2349,10 +2349,7 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 	ht_oper->operation_mode = cpu_to_le16(prot_mode);
- 	ht_oper->stbc_param = 0x0000;
- 
--	/* It seems that Basic MCS set and Supported MCS set
--	   are identical for the first 10 bytes */
- 	memset(&ht_oper->basic_set, 0, 16);
--	memcpy(&ht_oper->basic_set, &ht_cap->mcs, 10);
- 
- 	return pos + sizeof(struct ieee80211_ht_operation);
- }
-diff --git a/net/wireless/mesh.c b/net/wireless/mesh.c
-index fa2066b..ac19a19 100644
---- a/net/wireless/mesh.c
-+++ b/net/wireless/mesh.c
-@@ -70,7 +70,7 @@ const struct mesh_config default_mesh_config = {
- 	.dot11MeshGateAnnouncementProtocol = false,
- 	.dot11MeshForwarding = true,
- 	.rssi_threshold = MESH_RSSI_THRESHOLD,
--	.ht_opmode = IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED,
-+	.ht_opmode = IEEE80211_HT_OP_MODE_PROTECTION_NONE,
- 	.dot11MeshHWMPactivePathToRootTimeout = MESH_PATH_TO_ROOT_TIMEOUT,
- 	.dot11MeshHWMProotInterval = MESH_ROOT_INTERVAL,
- 	.dot11MeshHWMPconfirmationInterval = MESH_ROOT_CONFIRMATION_INTERVAL,
--- 
-2.9.0
+-Rajkumar
 
