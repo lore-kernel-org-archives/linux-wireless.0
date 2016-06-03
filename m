@@ -1,118 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33346 "EHLO
-	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728AbcFYTxu (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63245 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752535AbcFCVbR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 15:53:50 -0400
-Received: by mail-oi0-f68.google.com with SMTP id w141so24214222oia.0
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 12:53:50 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 03/10] rtlwifi: rtl8192cu: Convert driver to use common hardware info routine
-Date: Sat, 25 Jun 2016 14:53:34 -0500
-Message-Id: <1466884421-722-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_221248_758288_B91FB953)
-In-Reply-To: <1466884421-722-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1466884421-722-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 3 Jun 2016 17:31:17 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 4/6] brcmfmac: add support for the PCIE devices 43525 and 43465
+Date: Fri,  3 Jun 2016 23:31:10 +0200
+Message-Id: <1464989472-29684-5-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160603_233122_507117_B34A25C5)
+In-Reply-To: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for RTL8192CU chips is converted to use the common routine
-for getting the hardware information.
+From: Hante Meuleman <hante.meuleman@broadcom.com>
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnd Bergmann <arnd@arndb.de>
+This patch adds support for the new PCIE devices 43525 and 43465.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <franky.lin@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    | 61 ++++++----------------
- 1 file changed, 15 insertions(+), 46 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c       | 2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c       | 6 +++++-
+ drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 2 ++
+ 3 files changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index ae1129f..c281f94 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -347,56 +347,24 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u16 i, usvalue;
--	u8 hwinfo[HWSET_MAX_SIZE] = {0};
--	u16 eeprom_id;
--
--	switch (rtlefuse->epromtype) {
--	case EEPROM_BOOT_EFUSE:
--		rtl_efuse_shadow_map_update(hw);
--		break;
--
--	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
-+	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
-+			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
-+			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
-+			0};
-+	u8 *hwinfo;
-+
-+	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
-+	if (!hwinfo)
- 		return;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index d3fd6b1..05f22ff 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -685,6 +685,8 @@ static u32 brcmf_chip_tcm_rambase(struct brcmf_chip_priv *ci)
+ 	case BRCM_CC_43602_CHIP_ID:
+ 	case BRCM_CC_4371_CHIP_ID:
+ 		return 0x180000;
++	case BRCM_CC_43465_CHIP_ID:
++	case BRCM_CC_43525_CHIP_ID:
+ 	case BRCM_CC_4365_CHIP_ID:
+ 	case BRCM_CC_4366_CHIP_ID:
+ 		return 0x200000;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 0af8db8..3deba90 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -54,21 +54,25 @@ BRCMF_FW_NVRAM_DEF(43570, "brcmfmac43570-pcie.bin", "brcmfmac43570-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4358, "brcmfmac4358-pcie.bin", "brcmfmac4358-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4359, "brcmfmac4359-pcie.bin", "brcmfmac4359-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4365B, "brcmfmac4365b-pcie.bin", "brcmfmac4365b-pcie.txt");
++BRCMF_FW_NVRAM_DEF(4365C, "brcmfmac4365c-pcie.bin", "brcmfmac4365c-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4366B, "brcmfmac4366b-pcie.bin", "brcmfmac4366b-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4366C, "brcmfmac4366c-pcie.bin", "brcmfmac4366c-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4371, "brcmfmac4371-pcie.bin", "brcmfmac4371-pcie.txt");
  
--	default:
--		pr_warn("rtl92cu: no efuse data\n\n");
--		return;
--	}
--	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
--	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_LOUD, "MAP",
--		      hwinfo, HWSET_MAX_SIZE);
--	eeprom_id = le16_to_cpu(*((__le16 *)&hwinfo[0]));
--	if (eeprom_id != RTL8190_EEPROM_ID) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
--		rtlefuse->autoload_failflag = true;
--	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
--		rtlefuse->autoload_failflag = false;
--	}
--	if (rtlefuse->autoload_failflag)
--		return;
--	for (i = 0; i < 6; i += 2) {
--		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
--		*((u16 *) (&rtlefuse->dev_addr[i])) = usvalue;
--	}
--	pr_info("MAC address: %pM\n", rtlefuse->dev_addr);
-+	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params));
-+		goto exit;
-+
- 	_rtl92cu_read_txpower_info_from_hwpg(hw,
- 					   rtlefuse->autoload_failflag, hwinfo);
--	rtlefuse->eeprom_vid = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VID]);
--	rtlefuse->eeprom_did = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_DID]);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, " VID = 0x%02x PID = 0x%02x\n",
--		 rtlefuse->eeprom_vid, rtlefuse->eeprom_did);
--	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
--	rtlefuse->eeprom_version =
--			 le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VERSION]);
-+	_rtl92cu_read_board_type(hw, hwinfo);
-+
- 	rtlefuse->txpwr_fromeprom = true;
--	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "EEPROM Customer ID: 0x%2x\n",
--		 rtlefuse->eeprom_oemid);
- 	if (rtlhal->oem_id == RT_CID_DEFAULT) {
- 		switch (rtlefuse->eeprom_oemid) {
- 		case EEPROM_CID_DEFAULT:
-@@ -422,7 +390,8 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
- 			break;
- 		}
- 	}
--	_rtl92cu_read_board_type(hw, hwinfo);
-+exit:
-+	kfree(hwinfo);
- }
- 
- static void _rtl92cu_hal_customized_behavior(struct ieee80211_hw *hw)
+ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43465_CHIP_ID, 0xFFFFFFF0, 4366C),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0x000000FF, 4350C),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0xFFFFFF00, 4350),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43525_CHIP_ID, 0xFFFFFFF0, 4365C),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43567_CHIP_ID, 0xFFFFFFFF, 43570),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43569_CHIP_ID, 0xFFFFFFFF, 43570),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43570_CHIP_ID, 0xFFFFFFFF, 43570),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4358_CHIP_ID, 0xFFFFFFFF, 4358),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
+-	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFFF, 4365B),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0x0000000F, 4365B),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFF0, 4365C),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0x0000000F, 4366B),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFF0, 4366C),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
+diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+index 699f2c2..3cc42be 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+@@ -40,7 +40,9 @@
+ #define BRCM_CC_4339_CHIP_ID		0x4339
+ #define BRCM_CC_43430_CHIP_ID		43430
+ #define BRCM_CC_4345_CHIP_ID		0x4345
++#define BRCM_CC_43465_CHIP_ID		43465
+ #define BRCM_CC_4350_CHIP_ID		0x4350
++#define BRCM_CC_43525_CHIP_ID		43525
+ #define BRCM_CC_4354_CHIP_ID		0x4354
+ #define BRCM_CC_4356_CHIP_ID		0x4356
+ #define BRCM_CC_43566_CHIP_ID		43566
 -- 
-2.1.4
+1.9.1
 
