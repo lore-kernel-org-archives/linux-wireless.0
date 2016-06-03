@@ -1,110 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:35052 "EHLO
-	mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828AbcFRSTV (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:17235 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422645AbcFCVrI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2016 14:19:21 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH RFC 2/2] brcmfmac: support removing AP interfaces with "interface_remove"
-Date: Sat, 18 Jun 2016 20:18:35 +0200
-Message-Id: <1466273932-11554-2-git-send-email-zajec5@gmail.com> (sfid-20160618_201943_948412_F71A776E)
-In-Reply-To: <1466273932-11554-1-git-send-email-zajec5@gmail.com>
-References: <1466273932-11554-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Fri, 3 Jun 2016 17:47:08 -0400
+From: Sasha Levin <sasha.levin@oracle.com>
+To: stable@vger.kernel.org, stable-commits@vger.kernel.org
+Cc: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+	<ath9k-devel@venema.h4ckr.net>,
+	Vittorio Gambaletta <linuxbugs@vittgam.net>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Sasha Levin <sasha.levin@oracle.com>
+Subject: [added to the 3.18 stable tree] ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
+Date: Fri,  3 Jun 2016 17:45:06 -0400
+Message-Id: <1464990398-17381-16-git-send-email-sasha.levin@oracle.com> (sfid-20160603_234712_122381_0C72DFC6)
+In-Reply-To: <1464990398-17381-1-git-send-email-sasha.levin@oracle.com>
+References: <1464990398-17381-1-git-send-email-sasha.levin@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New firmwares (e.g. 10.10.69.36 for BCM4366) support "interface_remove"
-for removing interfaces. Try to use this method on cfg80211 request. In
-case of older firmwares (e.g. 7.35.177.56 for BCM43602 as I tested) this
-will just result in firmware rejecting command and this won't change any
-behavior.
+From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+This patch has been added to the 3.18 stable tree. If you have any
+objections, please let us know.
+
+===============
+
+[ Upstream commit 0f9edcdd88a993914fa1d1dc369b35dc503979db ]
+
+The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
+(active high instead of active low).
+
+The same PCI Subsystem ID is used by both cards, which are based on
+the same Atheros MB92 design.
+
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <ath9k-devel@qca.qualcomm.com>
+Cc: <ath9k-devel@lists.ath9k.org>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 37 +++++++++++++++++++++-
- 1 file changed, 36 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/pci.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 502b0a0..aff76c2 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -785,12 +785,46 @@ s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 	return err;
- }
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index c018dea..5ca08ed 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pci_id_table[] = {
+ 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
++
++#ifdef CONFIG_ATH9K_PCOEM
++	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0029,
++			 PCI_VENDOR_ID_ATHEROS,
++			 0x2096),
++	  .driver_data = ATH9K_PCI_LED_ACT_HI },
++#endif
++
+ 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
  
-+static int brcmf_cfg80211_del_ap_iface(struct wiphy *wiphy,
-+				       struct wireless_dev *wdev)
-+{
-+	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
-+	struct net_device *ndev = wdev->netdev;
-+	struct brcmf_if *ifp = netdev_priv(ndev);
-+	int ret;
-+	int err;
-+
-+	brcmf_cfg80211_arm_vif_event(cfg, ifp->vif);
-+
-+	err = brcmf_fil_bsscfg_data_set(ifp, "interface_remove", NULL, 0);
-+	if (err) {
-+		brcmf_err("interface_remove failed %d\n", err);
-+		goto err_unarm;
-+	}
-+
-+	/* wait for firmware event */
-+	ret = brcmf_cfg80211_wait_vif_event(cfg, BRCMF_E_IF_DEL,
-+					    BRCMF_VIF_EVENT_TIMEOUT);
-+	if (!ret) {
-+		brcmf_err("timeout occurred\n");
-+		err = -EIO;
-+		goto err_unarm;
-+	}
-+
-+err_unarm:
-+	brcmf_cfg80211_arm_vif_event(cfg, NULL);
-+	return err;
-+}
-+
- static
- int brcmf_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
- 	struct net_device *ndev = wdev->netdev;
- 
-+	if (ndev == cfg_to_ndev(cfg))
-+		return -ENOTSUPP;
-+
- 	/* vif event pending in firmware */
- 	if (brcmf_cfg80211_vif_event_armed(cfg))
- 		return -EBUSY;
-@@ -807,12 +841,13 @@ int brcmf_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_WDS:
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_MESH_POINT:
- 		return -EOPNOTSUPP;
-+	case NL80211_IFTYPE_AP:
-+		return brcmf_cfg80211_del_ap_iface(wiphy, wdev);
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_P2P_GO:
- 	case NL80211_IFTYPE_P2P_DEVICE:
+ 	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
 -- 
-1.8.4.5
+2.5.0
 
