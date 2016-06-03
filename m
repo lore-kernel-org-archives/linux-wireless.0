@@ -1,47 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:38587 "EHLO mail.ispras.ru"
+Received: from s3.sipsolutions.net ([5.9.151.49]:46466 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751630AbcFJJZX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 05:25:23 -0400
-Message-ID: <575A788C.5020509@ispras.ru> (sfid-20160610_112547_238977_2BB193FC)
-Date: Fri, 10 Jun 2016 12:21:32 +0400
-From: Pavel Andrianov <andrianov@ispras.ru>
-MIME-Version: 1.0
-To: Larry Finger <Larry.Finger@lwfinger.net>
-CC: Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Vaishali Thakkar <vaishali.thakkar@oracle.com>,
-	ldv-project@linuxtesting.org
-Subject: [ldv-project] [net] rtl8188ee: a potential race condition
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S932343AbcFCSrH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2016 14:47:07 -0400
+Message-ID: <1464979620.2224.5.camel@sipsolutions.net> (sfid-20160603_204712_366360_49A51FA8)
+Subject: Re: [PATCH] wext: Fix 32 bit iwpriv compatibility issue with 64 bit
+ Kernel
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Prasun Maiti <prasunmaiti87@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>
+Date: Fri, 03 Jun 2016 20:47:00 +0200
+In-Reply-To: <CAEO8o4=-oYuHuh42yfRa6kAUZ2hBmxHabU-W3V82kURg-GZv_g@mail.gmail.com> (sfid-20160603_112414_628143_FA6C3B59)
+References: <1464248432-12595-1-git-send-email-prasunmaiti87@gmail.com>
+	 <1464690345.3076.17.camel@sipsolutions.net>
+	 <CAEO8o4=-oYuHuh42yfRa6kAUZ2hBmxHabU-W3V82kURg-GZv_g@mail.gmail.com>
+	 (sfid-20160603_112414_628143_FA6C3B59)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
 
-There is a potential data race in 
-drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rtl8188ee.ko.
 
-In the function rtl88ee_gpio_radio_on_off_checking the flag 
-ppsc->rfchange_inprogress is set with a spinlock protection. In the 
-function rtl_ps_set_rf_state the flag is read also under a spinlock. But 
-the function rtl88e_dm_watchdog read it without any locks. As a result 
-rtl88e_dm_watchdog may execute the succeeding code while changing (with 
-the flag rfchange_inprogress == true). I do not exactly determine the 
-consequences, but likely they are not good if there exists such check. 
-Could anybody more confident confirm this?
+>      diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+> index 6250b1c..50583fb 100644
+> --- a/net/wireless/wext-core.c
+> +++ b/net/wireless/wext-core.c
+> @@ -958,8 +958,28 @@ static int wireless_process_ioctl(struct net
+> *net, struct ifreq *ifr,
+>             return private(dev, iwr, cmd, info, handler);
+>     }
+>     /* Old driver API : call driver ioctl handler */
+> -   if (dev->netdev_ops->ndo_do_ioctl)
+> -       return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
+> +   if (dev->netdev_ops->ndo_do_ioctl) {
+> +       if (info->flags & IW_REQUEST_FLAG_COMPAT) {
+> +           int ret = 0;
+> +           struct iwreq iwrp;
+> +           struct compat_iw_point *iwp_compat =
+> +               (struct compat_iw_point *) &iwr->u.data;
 
-The function rtl_ps_set_rf_state is always called with its parameter 
-[protect_or_not == false]. Is this flag really necessary, if the value 
-'true' is never used? The function is also set the flag 
-ppsc->rfchange_inprogress and may affect the rtl88e_dm_watchdog as in 
-the previous case.
+No need for the long cast - use (void *).
 
--- 
-Pavel Andrianov
-Linux Verification Center, ISPRAS
-web: http://linuxtesting.org
-e-mail: andrianov@ispras.ru
+> +           strncpy(iwrp.ifr_ifrn.ifrn_name, iwr->ifr_ifrn.ifrn_name, 
+> IFNAMSIZ);
+> +           iwrp.u.data.pointer = compat_ptr(iwp_compat->pointer);
+> +           iwrp.u.data.length = iwp_compat->length;
+> +           iwrp.u.data.flags = iwp_compat->flags;
 
+Maybe you should clear iwrp first?
+
+> +           ret = dev->netdev_ops->ndo_do_ioctl(dev, (struct ifreq *)
+> &iwrp, cmd);
+
+Same here with the cast.
+
+I'd blissfully forgotten how totally crufty this API is ... oh well.
+
+> +           iwp_compat->pointer = ptr_to_compat(iwrp.u.data.pointer);
+> +           iwp_compat->length = iwrp.u.data.length;
+> +           iwp_compat->flags = iwrp.u.data.flags;
+> +           return ret;
+> +       } else {
+> +           return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
+
+
+
+
+
+Please resend as a proper patch, with signed-off-by etc., and a commit
+log explaining the problem and solution.
+
+Thanks,
+johannes
