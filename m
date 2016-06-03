@@ -1,38 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57916 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754659AbcFPPOc (ORCPT
+Received: from bh-25.webhostbox.net ([208.91.199.152]:55015 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161013AbcFCUsz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 11:14:32 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: libertas_tf: Drop unused variable and define
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1464986935-23361-1-git-send-email-linux@roeck-us.net>
-To: Guenter Roeck <linux@roeck-us.net>
+	Fri, 3 Jun 2016 16:48:55 -0400
+From: Guenter Roeck <linux@roeck-us.net>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>
-Message-Id: <20160616151431.5429461372@smtp.codeaurora.org> (sfid-20160616_171451_270653_5C9788CA)
-Date: Thu, 16 Jun 2016 15:14:31 +0000 (UTC)
+Subject: [PATCH] libertas_tf: Drop unused variable and define
+Date: Fri,  3 Jun 2016 13:48:55 -0700
+Message-Id: <1464986935-23361-1-git-send-email-linux@roeck-us.net> (sfid-20160603_224921_060026_BC5C2206)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Guenter Roeck <linux@roeck-us.net> wrote:
-> gcc-6 reports:
-> 
-> drivers/net/wireless/marvell/libertas_tf/main.c:30:19: error:
-> 	'lbtf_driver_version' defined but not used
-> 
-> with -Werror=unused-const-variable=.
-> 
-> Reported-by: Fengguang Wu <fengguang.wu@intel.com> [0-day test robot]
-> Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+gcc-6 reports:
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+drivers/net/wireless/marvell/libertas_tf/main.c:30:19: error:
+	'lbtf_driver_version' defined but not used
 
-035ddbc59f54 libertas_tf: Drop unused variable and define
+with -Werror=unused-const-variable=.
 
+Reported-by: Fengguang Wu <fengguang.wu@intel.com> [0-day test robot]
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+---
+ drivers/net/wireless/marvell/libertas_tf/main.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
+index 0bf8916a02cf..75bf0c8a2f6f 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/main.c
++++ b/drivers/net/wireless/marvell/libertas_tf/main.c
+@@ -16,7 +16,6 @@
+ #include <linux/module.h>
+ #include "libertas_tf.h"
+ 
+-#define DRIVER_RELEASE_VERSION "004.p0"
+ /* thinfirm version: 5.132.X.pX */
+ #define LBTF_FW_VER_MIN		0x05840300
+ #define LBTF_FW_VER_MAX		0x0584ffff
+@@ -27,12 +26,6 @@ unsigned int lbtf_debug;
+ EXPORT_SYMBOL_GPL(lbtf_debug);
+ module_param_named(libertas_tf_debug, lbtf_debug, int, 0644);
+ 
+-static const char lbtf_driver_version[] = "THINFIRM-USB8388-" DRIVER_RELEASE_VERSION
+-#ifdef DEBUG
+-	"-dbg"
+-#endif
+-	"";
+-
+ struct workqueue_struct *lbtf_wq;
+ 
+ static const struct ieee80211_channel lbtf_channels[] = {
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9154015/
+2.5.0
 
