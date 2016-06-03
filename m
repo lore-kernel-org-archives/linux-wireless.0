@@ -1,61 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:32842 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752488AbcFUOrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 10:47:10 -0400
-Subject: Re: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl
- file
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
- <1465232558-31678-3-git-send-email-javier@osg.samsung.com>
- <87wplxdsln.fsf@kamboji.qca.qualcomm.com>
- <12ccd90e-e3eb-ecac-b23f-8124b0db32ad@osg.samsung.com>
- <2b5e5833ecc74a2b9cd822e8455cd0af@SC-EXCH04.marvell.com>
- <8dc6e64a-3429-4bed-e5c9-da6880eb9505@osg.samsung.com>
- <87shwkes65.fsf@kamboji.qca.qualcomm.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-Message-ID: <aeeb25f2-3253-0931-1e84-edc4590208b3@osg.samsung.com> (sfid-20160621_164741_309363_A2BA71F5)
-Date: Tue, 21 Jun 2016 10:47:01 -0400
-MIME-Version: 1.0
-In-Reply-To: <87shwkes65.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from bh-25.webhostbox.net ([208.91.199.152]:35161 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932980AbcFCVjY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2016 17:39:24 -0400
+From: Guenter Roeck <linux@roeck-us.net>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: linuxwifi@intel.com, Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH] iwlwifi: Remove unused array 'iwlagn_loose_lookup'
+Date: Fri,  3 Jun 2016 14:39:19 -0700
+Message-Id: <1464989959-2021-1-git-send-email-linux@roeck-us.net> (sfid-20160603_234016_500754_9DDBBA01)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle,
+gcc-6 reports the following error if -Werror=unused-const-variable
+is enabled.
 
-On 06/10/2016 03:54 PM, Kalle Valo wrote:
-> Javier Martinez Canillas <javier@osg.samsung.com> writes:
-> 
->>> This patch (2/3) is only for code rearrangement and adds an
->>> unnecessary wrapper function. We can simply drop the patch.
->>
->> Agreed.
->>
->> Kalle,
->>
->> Patch 3/3 applies cleanly even after dropping patch 2/3.
->> Is that Ok for you or do you want me to re-resend a v3
->> with only patches 1/3 and 3/3?
-> 
-> I can drop patch 2, no need to resend. Thanks.
-> 
+drivers/net/wireless/intel/iwlwifi/dvm/lib.c:210:21: error:
+	'iwlagn_loose_lookup' defined but not used
 
-I saw that you sent your pull request for v4.8 but the
-patches from this series were not included:
+Signed-off-by: Guenter Roeck <linux@roeck-us.net>
+---
+ drivers/net/wireless/intel/iwlwifi/dvm/lib.c | 17 -----------------
+ 1 file changed, 17 deletions(-)
 
-https://lkml.org/lkml/2016/6/21/400
-
-Best regards,
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
+index 8dda52ae3bb5..6c2d6da7eec6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
+@@ -205,23 +205,6 @@ static const __le32 iwlagn_def_3w_lookup[IWLAGN_BT_DECISION_LUT_SIZE] = {
+ 	cpu_to_le32(0xf0005000),
+ };
+ 
+-
+-/* Loose Coex */
+-static const __le32 iwlagn_loose_lookup[IWLAGN_BT_DECISION_LUT_SIZE] = {
+-	cpu_to_le32(0xaaaaaaaa),
+-	cpu_to_le32(0xaaaaaaaa),
+-	cpu_to_le32(0xaeaaaaaa),
+-	cpu_to_le32(0xaaaaaaaa),
+-	cpu_to_le32(0xcc00ff28),
+-	cpu_to_le32(0x0000aaaa),
+-	cpu_to_le32(0xcc00aaaa),
+-	cpu_to_le32(0x0000aaaa),
+-	cpu_to_le32(0x00000000),
+-	cpu_to_le32(0x00000000),
+-	cpu_to_le32(0xf0005000),
+-	cpu_to_le32(0xf0005000),
+-};
+-
+ /* Full concurrency */
+ static const __le32 iwlagn_concurrent_lookup[IWLAGN_BT_DECISION_LUT_SIZE] = {
+ 	cpu_to_le32(0xaaaaaaaa),
 -- 
-Javier Martinez Canillas
-Open Source Group
-Samsung Research America
+2.5.0
+
