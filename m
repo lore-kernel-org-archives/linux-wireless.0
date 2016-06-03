@@ -1,107 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:34424 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752576AbcFTGT6 (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:23013 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161112AbcFCVhu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 02:19:58 -0400
-Received: by mail-pf0-f172.google.com with SMTP id h14so35641813pfe.1
-        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2016 23:19:57 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org
-Subject: [PATCH 6/6] wcn36xx: Fix up wcn36xx_smd_update_scan_params()
-Date: Sun, 19 Jun 2016 23:19:48 -0700
-Message-Id: <1466403588-7041-6-git-send-email-bjorn.andersson@linaro.org> (sfid-20160620_082025_552741_230CE99C)
-In-Reply-To: <1466403588-7041-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1466403588-7041-1-git-send-email-bjorn.andersson@linaro.org>
+	Fri, 3 Jun 2016 17:37:50 -0400
+From: Sasha Levin <sasha.levin@oracle.com>
+To: stable@vger.kernel.org, stable-commits@vger.kernel.org
+Cc: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>,
+	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
+	<ath9k-devel@venema.h4ckr.net>,
+	Vittorio Gambaletta <linuxbugs@vittgam.net>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Sasha Levin <sasha.levin@oracle.com>
+Subject: [added to the 4.1 stable tree] ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
+Date: Fri,  3 Jun 2016 17:35:24 -0400
+Message-Id: <1464989831-16666-29-git-send-email-sasha.levin@oracle.com> (sfid-20160603_233757_510247_4B75C753)
+In-Reply-To: <1464989831-16666-1-git-send-email-sasha.levin@oracle.com>
+References: <1464989831-16666-1-git-send-email-sasha.levin@oracle.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix up the wcn36xx_smd_update_scan_params() to work with non-ancient
-versions of the firmware and support actually specifying the list of
-channels.
+From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
 
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+This patch has been added to the 4.1 stable tree. If you have any
+objections, please let us know.
+
+===============
+
+[ Upstream commit 0f9edcdd88a993914fa1d1dc369b35dc503979db ]
+
+The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
+(active high instead of active low).
+
+The same PCI Subsystem ID is used by both cards, which are based on
+the same Atheros MB92 design.
+
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <ath9k-devel@qca.qualcomm.com>
+Cc: <ath9k-devel@lists.ath9k.org>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
 ---
- drivers/net/wireless/ath/wcn36xx/hal.h |  4 ++--
- drivers/net/wireless/ath/wcn36xx/smd.c | 15 +++++++++------
- drivers/net/wireless/ath/wcn36xx/smd.h |  2 +-
- 3 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/pci.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 658bfb8baabe..4f87ef1e1eb8 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -4123,7 +4123,7 @@ struct wcn36xx_hal_update_scan_params_req {
- 
- /* Update scan params - sent from host to PNO to be used during PNO
-  * scanningx */
--struct update_scan_params_req_ex {
-+struct wcn36xx_hal_update_scan_params_req_ex {
- 
- 	struct wcn36xx_hal_msg_header header;
- 
-@@ -4151,7 +4151,7 @@ struct update_scan_params_req_ex {
- 
- 	/* Cb State */
- 	enum phy_chan_bond_state state;
--};
-+} __packed;
- 
- /* Update scan params - sent from host to PNO to be used during PNO
-  * scanningx */
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index f9b2785cc277..994eba6cbaa8 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -675,22 +675,25 @@ static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
- 	return 0;
- }
- 
--int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn)
-+int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn,
-+				   u8 *channels, size_t channel_count)
- {
--	struct wcn36xx_hal_update_scan_params_req msg_body;
-+	struct wcn36xx_hal_update_scan_params_req_ex msg_body;
- 	int ret = 0;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_SCAN_PARAM_REQ);
- 
--	msg_body.dot11d_enabled	= 0;
--	msg_body.dot11d_resolved = 0;
--	msg_body.channel_count = 26;
-+	msg_body.dot11d_enabled	= false;
-+	msg_body.dot11d_resolved = true;
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index e6fef1b..7cdaf40 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pci_id_table[] = {
+ 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
 +
-+	msg_body.channel_count = channel_count;
-+	memcpy(msg_body.channels, channels, channel_count);
- 	msg_body.active_min_ch_time = 60;
- 	msg_body.active_max_ch_time = 120;
- 	msg_body.passive_min_ch_time = 60;
- 	msg_body.passive_max_ch_time = 110;
--	msg_body.state = 0;
-+	msg_body.state = PHY_SINGLE_CHANNEL_CENTERED;
++#ifdef CONFIG_ATH9K_PCOEM
++	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0029,
++			 PCI_VENDOR_ID_ATHEROS,
++			 0x2096),
++	  .driver_data = ATH9K_PCI_LED_ACT_HI },
++#endif
++
+ 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
  
- 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
- 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
-index 493f6191a173..40d829563c2b 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.h
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.h
-@@ -64,7 +64,7 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn);
- int wcn36xx_smd_end_scan(struct wcn36xx *wcn);
- int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
- 			    enum wcn36xx_hal_sys_mode mode);
--int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
-+int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn, u8 *channels, size_t channel_count);
- int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct ieee80211_vif *vif);
- int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
- int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
+ #ifdef CONFIG_ATH9K_PCOEM
 -- 
 2.5.0
 
