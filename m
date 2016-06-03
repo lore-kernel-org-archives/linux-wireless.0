@@ -1,64 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iodev.co.uk ([82.211.30.53]:56826 "EHLO iodev.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754547AbcFUBNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 21:13:49 -0400
-From: Ismael Luceno <ismael@iodev.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list@broadcom.com, Ismael Luceno <ismael@iodev.co.uk>
-Subject: [PATCH] brcmfmac: Add USB ID for Cisco Linksys AE1200
-Date: Mon, 20 Jun 2016 21:18:41 -0300
-Message-Id: <20160621001841.5383-1-ismael@iodev.co.uk> (sfid-20160621_031354_040437_757E0658)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:60576 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750816AbcFCFtN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2016 01:49:13 -0400
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	ath9k-devel <ath9k-devel@qualcomm.com>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: ath9k gpio request
+Date: Fri, 3 Jun 2016 05:49:06 +0000
+Message-ID: <1464932944074.85131@qti.qualcomm.com> (sfid-20160603_074938_587568_3AAC514F)
+References: <20160530132225.4d297678@canb.auug.org.au>
+	<574C4851.9090201@gmail.com>	<87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com>
+	<574D3EAA.3060102@gmail.com> <1464764036580.70506@qti.qualcomm.com>
+	<574EC331.1080901@gmail.com> <574ED297.4080004@gmail.com>
+	<1464854569880.79341@qti.qualcomm.com>
+ <57501AE4.7080104@gmail.com>,<8760tqn8fc.fsf@purkki.adurom.net>
+In-Reply-To: <8760tqn8fc.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=US-ASCII
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Ismael Luceno <ismael@iodev.co.uk>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 4 ++++
- drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 3 +++
- 2 files changed, 7 insertions(+)
+Done, https://patchwork.kernel.org/patch/9151847/.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 98b15a9..455fc69 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1462,11 +1462,15 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
- #define BRCMF_USB_DEVICE(dev_id)	\
- 	{ USB_DEVICE(BRCM_USB_VENDOR_ID_BROADCOM, dev_id) }
- 
-+#define LINKSYS_USB_DEVICE(dev_id)	\
-+	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LINKSYS, dev_id) }
-+
- static struct usb_device_id brcmf_usb_devid_table[] = {
- 	BRCMF_USB_DEVICE(BRCM_USB_43143_DEVICE_ID),
- 	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
- 	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
- 	BRCMF_USB_DEVICE(BRCM_USB_43569_DEVICE_ID),
-+	LINKSYS_USB_DEVICE(BRCM_USB_43235_LINKSYS_DEVICE_ID),
- 	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LG, BRCM_USB_43242_LG_DEVICE_ID) },
- 	/* special entry for device with firmware loaded and running */
- 	BRCMF_USB_DEVICE(BRCM_USB_BCMFW_DEVICE_ID),
-diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-index 699f2c2..6666513 100644
---- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-@@ -22,6 +22,7 @@
- 
- #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
- #define BRCM_USB_VENDOR_ID_LG		0x043e
-+#define BRCM_USB_VENDOR_ID_LINKSYS	0x13b1
- #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
- 
- /* Chipcommon Core Chip IDs */
-@@ -56,6 +57,8 @@
- 
- /* USB Device IDs */
- #define BRCM_USB_43143_DEVICE_ID	0xbd1e
-+#define BRCM_USB_43235_LINKSYS_DEVICE_ID \
-+					0x0039
- #define BRCM_USB_43236_DEVICE_ID	0xbd17
- #define BRCM_USB_43242_DEVICE_ID	0xbd1f
- #define BRCM_USB_43242_LG_DEVICE_ID	0x3101
--- 
-2.9.0
+Thanks,
+Miaoqing
+________________________________________
+From: Kalle Valo <kvalo@codeaurora.org>
+Sent: Friday, June 3, 2016 1:33 PM
+To: Pan, Miaoqing
+Cc: Sudip Mukherjee; Stephen Rothwell; ath9k-devel; linux-next@vger.kernel.org; linux-kernel@vger.kernel.org; linux-wireless@vger.kernel.org; ath9k-devel@lists.ath9k.org; netdev@vger.kernel.org; Miaoqing Pan
+Subject: Re: ath9k gpio request
 
+Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+
+> On Thursday 02 June 2016 01:32 PM, Pan, Miaoqing wrote:
+>> Seems there are something wrong in the datasheet,  try
+>>
+>> --- a/drivers/net/wireless/ath/ath9k/reg.h
+>> +++ b/drivers/net/wireless/ath/ath9k/reg.h
+>> @@ -1122,8 +1122,8 @@ enum {
+>>   #define AR9300_NUM_GPIO                          16
+>>   #define AR9330_NUM_GPIO                                 16
+>>   #define AR9340_NUM_GPIO                                 23
+>> -#define AR9462_NUM_GPIO                                 10
+>> -#define AR9485_NUM_GPIO                                 12
+>> +#define AR9462_NUM_GPIO                                 14
+>> +#define AR9485_NUM_GPIO                                 11
+>>   #define AR9531_NUM_GPIO                                 18
+>>   #define AR9550_NUM_GPIO                                 24
+>>   #define AR9561_NUM_GPIO                                 23
+>> @@ -1139,8 +1139,8 @@ enum {
+>>   #define AR9300_GPIO_MASK                        0x0000F4FF
+>>   #define AR9330_GPIO_MASK                        0x0000F4FF
+>>   #define AR9340_GPIO_MASK                        0x0000000F
+>> -#define AR9462_GPIO_MASK                        0x000003FF
+>> -#define AR9485_GPIO_MASK                        0x00000FFF
+>> +#define AR9462_GPIO_MASK                        0x00003FFF
+>> +#define AR9485_GPIO_MASK                        0x000007FF
+>>   #define AR9531_GPIO_MASK                        0x0000000F
+>>   #define AR9550_GPIO_MASK                        0x0000000F
+>>   #define AR9561_GPIO_MASK                        0x0000000F
+>
+> solves the problem.
+>
+> Tested-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+
+Great, thanks for testing everyone. Miaoqing, please send a proper patch
+ASAP and I'll push it to 4.7.
+
+--
+Kalle Valo
