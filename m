@@ -1,86 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33930 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751054AbcFWO5m (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63245 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932551AbcFCVbS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 10:57:42 -0400
-Received: by mail-wm0-f68.google.com with SMTP id 187so11673655wmz.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 07:57:42 -0700 (PDT)
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: nbd@nbd.name,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 4/6] ath9k: remove return value from ath9k_hw_init_macaddr
-Date: Thu, 23 Jun 2016 16:57:12 +0200
-Message-Id: <20160623145714.20576-5-martin.blumenstingl@googlemail.com> (sfid-20160623_165751_092429_531818BC)
-In-Reply-To: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
-References: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
+	Fri, 3 Jun 2016 17:31:18 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 1/6] brcmfmac: fix skb priority handling
+Date: Fri,  3 Jun 2016 23:31:07 +0200
+Message-Id: <1464989472-29684-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160603_233124_058724_9CC3F931)
+In-Reply-To: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath9k_hw_init_macaddr unconditionally returns 0 in all cases, making the
-return value unnecessary.
+From: Hante Meuleman <hante.meuleman@broadcom.com>
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+SKBs can come with a prioriy. Currently a priority of 0..7 is
+assumed. But this assumption is incorrect. To fix this any
+priority of 0 or higher then 7 will be adjusted by calling
+cfg80211_classify8021d
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 15 +++++----------
- 1 file changed, 5 insertions(+), 10 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4dd3aca..fa59117 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -471,7 +471,7 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- 		ah->tx_trig_level = (AR_FTRIG_512B >> AR_FTRIG_S);
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index 5b30922..cd221ab 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -2101,7 +2101,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
  
--static int ath9k_hw_init_macaddr(struct ath_hw *ah)
-+static void ath9k_hw_init_macaddr(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int i;
-@@ -480,7 +480,7 @@ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
+ 	brcmf_dbg(DATA, "tx proto=0x%X\n", ntohs(eh->h_proto));
+ 	/* determine the priority */
+-	if (!skb->priority)
++	if ((skb->priority == 0) || (skb->priority > 7))
+ 		skb->priority = cfg80211_classify8021d(skb, NULL);
  
- 	/* MAC address may already be loaded via ath9k_platform_data */
- 	if (is_valid_ether_addr(common->macaddr))
--		return 0;
-+		return;
- 
- 	for (i = 0; i < 3; i++) {
- 		eeval = ah->eep_ops->get_eeprom(ah, EEP_MAC[i]);
-@@ -489,7 +489,7 @@ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
- 	}
- 
- 	if (is_valid_ether_addr(common->macaddr))
--		return 0;
-+		return;
- 
- 	ath_err(common, "eeprom contains invalid mac address: %pM\n",
- 		common->macaddr);
-@@ -498,7 +498,7 @@ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
- 	ath_err(common, "random mac address will be used: %pM\n",
- 		common->macaddr);
- 
--	return 0;
-+	return;
- }
- 
- static int ath9k_hw_post_init(struct ath_hw *ah)
-@@ -637,12 +637,7 @@ static int __ath9k_hw_init(struct ath_hw *ah)
- 	if (r)
- 		return r;
- 
--	r = ath9k_hw_init_macaddr(ah);
--	if (r) {
--		ath_err(common, "Failed to initialize MAC address\n");
--		return r;
--	}
--
-+	ath9k_hw_init_macaddr(ah);
- 	ath9k_hw_init_hang_checks(ah);
- 
- 	common->state = ATH_HW_INITIALIZED;
+ 	drvr->tx_multicast += !!multicast;
 -- 
-2.9.0
+1.9.1
 
