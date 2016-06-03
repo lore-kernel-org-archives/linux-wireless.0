@@ -1,46 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f170.google.com ([209.85.214.170]:35173 "EHLO
-	mail-ob0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752513AbcFURdM convert rfc822-to-8bit (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:40492 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932301AbcFCOpR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 13:33:12 -0400
-Received: by mail-ob0-f170.google.com with SMTP id c3so32802867obc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2016 10:33:12 -0700 (PDT)
+	Fri, 3 Jun 2016 10:45:17 -0400
+Date: Fri, 3 Jun 2016 10:34:08 -0400
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Guenter Roeck <linux@roeck-us.net>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: Anyone have a clone of wireless-legacy.git?
+Message-ID: <20160603143408.GL6230@tuxdriver.com> (sfid-20160603_164540_653040_1C8C02CD)
+References: <20160602183803.GH6230@tuxdriver.com>
+ <20160603011827.GA2542@roeck-us.net>
+ <1464937583.2224.0.camel@sipsolutions.net>
 MIME-Version: 1.0
-In-Reply-To: <20160621165837.dctu6i75lsg7onzn@pirotess>
-References: <20160621001841.5383-1-ismael@iodev.co.uk> <CACna6ry-0ZO_JRm976APtRoPXqgMYEh4UrLK+SH0vVV21dX+wQ@mail.gmail.com>
- <20160621165837.dctu6i75lsg7onzn@pirotess>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Tue, 21 Jun 2016 19:27:45 +0200
-Message-ID: <CACna6rzUdcvMo9jqE9MXUg6fOw_Xn=iyvG3FHKGWm6axZUmZGw@mail.gmail.com> (sfid-20160621_193402_355120_1D1DED4F)
-Subject: Re: [PATCH] brcmfmac: Add USB ID for Cisco Linksys AE1200
-To: Ismael Luceno <ismael@iodev.co.uk>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1464937583.2224.0.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 June 2016 at 18:58, Ismael Luceno <ismael@iodev.co.uk> wrote:
-> On 21/Jun/2016 07:45, Rafa≈Ç Mi≈Çecki wrote:
->> On 21 June 2016 at 02:18, Ismael Luceno <ismael@iodev.co.uk> wrote:
->> > @@ -56,6 +57,8 @@
->> >
->> >  /* USB Device IDs */
->> >  #define BRCM_USB_43143_DEVICE_ID       0xbd1e
->> > +#define BRCM_USB_43235_LINKSYS_DEVICE_ID \
->> > +                                       0x0039
->>
->> I guess you wanted to have number aligned to the column of other ones?
->> I'm not sure if that improves readability at all.
->
-> Yes. Would you suggest to align more to the right? I didn't want to
-> modify everything just to add a new one.
+On Fri, Jun 03, 2016 at 09:06:23AM +0200, Johannes Berg wrote:
+> 
+> > http://www.filewatcher.com/_/?q=wireless-legacy.git, maybe ?
+> > 
+> 
+> Seems to work - both have the same branches:
+> 
+> † adm8211†††††††††††††††††72c942ed694e [PATCH] adm8211: fix build breakage from skb->mac.raw
+> † at76††††††††††††††††††††279f8592e428 cfg80211: keep track of supported interface modes (at76)
+> † ath5k†††††††††††††††††††8584ac94e3bb [PATCH] ath5k: Internalize Atheros Turbo modes
+> † ath5k-2008-01-21††††††††5b8ca29e11b5 ath5k: remove duplicate bssid variable
+> † mac80211-attic††††††††††2bc68d999610 [PATCH] mac80211: remove scan struct from hostapd_param
+> † mac80211-dungeon††††††††ad097a32e9ad [PATCH] mac80211 [HT] 802.11 code compiles under CONFIG_MAC80211_HT
+> † prism54usb††††††††††††††101e59f5e18a prism54usb: more fix for wireless Kconfig changes
+> † rtl8180-2008-01-21††††††55fc0e806a93 rtl8180: remove calibration error message for rtl8225z2
+> † tiacx†††††††††††††††††††d6a6811c508b [PATCH] TI acx100/acx111: Make debug level selectable in configuration
+> † wireless-dev-2007-08-10 ca29ec8f05c1 Merge ../wireless-dev-legacy into wireless-dev-2007-08-10
+> † wireless-dev-2007-09-24 cd799e167394 Merge branch 'p54' into everything
+> 
+> johannes
 
-I wouldn't care that much about alignment. I'm sure there already some
-misaligned numbers, fields & comments in brcm80211 header.
+I got them both from the two FTP sites, and both git repos appear to
+be identical.  It would be best if someone had an actual record of
+the commit hash values, but this might be the best I/we can do...?
 
-I would just use name\t0x0039 pattern.
-
+John
 -- 
-Rafa≈Ç
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
