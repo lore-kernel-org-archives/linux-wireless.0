@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50678 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752693AbcFIVRl (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:18211 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932259AbcFCQdX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 17:17:41 -0400
-From: Kamal Mostafa <kamal@canonical.com>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	kernel-team@lists.ubuntu.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	ath9k-devel@lists.ath9k.org,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Kamal Mostafa <kamal@canonical.com>
-Subject: [PATCH 4.2.y-ckt 029/206] ath9k: Add a module parameter to invert LED polarity.
-Date: Thu,  9 Jun 2016 14:13:58 -0700
-Message-Id: <1465507015-23052-30-git-send-email-kamal@canonical.com> (sfid-20160610_001435_380860_CE7582BE)
-In-Reply-To: <1465507015-23052-1-git-send-email-kamal@canonical.com>
-References: <1465507015-23052-1-git-send-email-kamal@canonical.com>
+	Fri, 3 Jun 2016 12:33:23 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Rajkumar Manoharan <rmanohar@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 2/2] ath10k: remove 10.1 firmware support
+Date: Fri, 3 Jun 2016 16:33:16 +0000
+Message-ID: <87oa7iut9x.fsf@kamboji.qca.qualcomm.com> (sfid-20160603_183327_103471_4A4E9620)
+References: <20160603153328.11947-1-rmanohar@qti.qualcomm.com>
+	<20160603153328.11947-2-rmanohar@qti.qualcomm.com>
+	<5751A6D5.7080901@candelatech.com>
+	<743182bcbd1efbdb576bcc51b0215300@codeaurora.org>
+	<87shwuuuct.fsf@kamboji.qca.qualcomm.com>	<5751AE44.8050607@candelatech.com>
+In-Reply-To: <5751AE44.8050607@candelatech.com> (Ben Greear's message of "Fri,
+	3 Jun 2016 09:20:20 -0700")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-4.2.8-ckt12 -stable review patch.  If anyone has any objections, please let me know.
+Ben Greear <greearb@candelatech.com> writes:
 
----8<------------------------------------------------------------
+>>> Is it possible to upgrade CT firmware to 10.2 WMI/HTT interfaces?
+>>
+>> That's a good idea. That shouldn't be too hard, right? I don't think HTT needs
+>> any changes, but for WMI few commands and ids need to be changed.
+>
+> I was thinking the 10.2 mgt-over-htt API would be trouble-some to make work on
+> 10.1 firmware.
 
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
+Yeah, that would be harder. But I don't see Rajkumar removing support
+for that (yet) or am I missing something?
 
-commit cd84042ce9040ad038e958bc67a46fcfc015c736 upstream.
-
-The LED can be active high instead of active low on some hardware.
-
-Add the led_active_high module parameter. It defaults to -1 to obey
-platform data as before.
-
-Setting the parameter to 1 or 0 will force the LED respectively
-active high or active low.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Kamal Mostafa <kamal@canonical.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index fc6dc52..6a571d8 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -49,6 +49,10 @@ int ath9k_led_blink;
- module_param_named(blink, ath9k_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
-+static int ath9k_led_active_high = -1;
-+module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
-+MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
-+
- static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-@@ -600,6 +604,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		return ret;
- 
-+	if (ath9k_led_active_high != -1)
-+		ah->config.led_active_high = ath9k_led_active_high == 1;
-+
- 	/*
- 	 * Enable WLAN/BT RX Antenna diversity only when:
- 	 *
 -- 
-2.7.4
-
+Kalle Valo
