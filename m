@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57183 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756722AbcFHPv0 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:65080 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932377AbcFCPdx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 11:51:26 -0400
-Subject: Re: [PATCH] Add .set_antenna callback in ath6kl driver to remove
- wireless core warns
-To: Prasun Maiti <prasunmaiti87@gmail.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <1465388474-20503-1-git-send-email-prasunmaiti87@gmail.com>
- <87wplzkbd9.fsf@kamboji.qca.qualcomm.com>
- <CAEO8o4=DnEfXQAnAOxugC9TngbhvgV9DXz0HOVHNLk0B2fAXQA@mail.gmail.com>
- <87porrkaax.fsf@kamboji.qca.qualcomm.com>
- <CAEO8o4kD7MU09o+xOwPLn-PAgcuMExQ0MbNWgqv0fOs61rG8Xw@mail.gmail.com>
- <87d1nrk89v.fsf@kamboji.qca.qualcomm.com>
- <CAEO8o4=XEr4DQC3bqAXGE01s5WC+kuZ3PqoJFtuSCE52RNyDzA@mail.gmail.com>
-Cc: Linux Next <linux-next@vger.kernel.org>,
-	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <57583EFC.3070901@candelatech.com> (sfid-20160608_175149_563715_186590CD)
-Date: Wed, 8 Jun 2016 08:51:24 -0700
+	Fri, 3 Jun 2016 11:33:53 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: handle testmode events for 10.2 based firmware
+Date: Fri, 3 Jun 2016 21:03:27 +0530
+Message-ID: <20160603153328.11947-1-rmanohar@qti.qualcomm.com> (sfid-20160603_173356_695374_61BE56CB)
 MIME-Version: 1.0
-In-Reply-To: <CAEO8o4=XEr4DQC3bqAXGE01s5WC+kuZ3PqoJFtuSCE52RNyDzA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/08/2016 08:46 AM, Prasun Maiti wrote:
-> Please tell me if I mention that this code is untested in commit log,
-> then could you check the code kindly and also help me to fix this type
-> of warning?
+Currently testmode events for 10.x firmware are processed from
+10.1 wmi event processing. In order to remove 10.1 firmware support,
+testmode events should be handled from 10.2 event processing.
 
-In my experience, ath6kl has very fragile and buggy firmware, so I would
-not add any new API to it unless you have tested this thoroughly.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Thanks,
-Ben
-
->
-> On Wed, Jun 8, 2016 at 9:00 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->> Prasun Maiti <prasunmaiti87@gmail.com> writes:
->>
->>> I am not sure it works fine. Like ath6kl driver send another cmd to
->>> firmare, I have just filled up the cmd buffer with "tx_ant", and
->>> "rx_ant" values, then use "ath6kl_wmi_cmd_send()" api to send the cmd
->>> buffer to firmware. I have resend the patch as there are some errors
->>> in the previous patch. Let me know if any modifications are needed?
->>
->> I don't take untested code. In some special cases it might be ok to send
->> untested code but even then it needs to be clearly stated in the commit
->> log that it's untested.
->>
->> Please resend once you have tested this, I'm dropping this now.
->>
->> --
->> Kalle Valo
->
->
->
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6279ab4a760e..b7fb0d76c433 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5095,6 +5095,7 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_cmd_hdr *cmd_hdr;
+ 	enum wmi_10_2_event_id id;
++	bool consumed;
+ 
+ 	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
+ 	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
+@@ -5104,6 +5105,17 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
+ 
++	consumed = ath10k_tm_event_wmi(ar, id, skb);
++	/* Ready event must be handled normally also in UTF mode so that we
++	 * know the UTF firmware has booted, others we are just bypass WMI
++	 * events to testmode.
++	 */
++	if (consumed && id != WMI_10_2_READY_EVENTID) {
++		ath10k_dbg(ar, ATH10K_DBG_WMI,
++			   "wmi testmode consumed 0x%x\n", id);
++		goto out;
++	}
++
+ 	switch (id) {
+ 	case WMI_10_2_MGMT_RX_EVENTID:
+ 		ath10k_wmi_event_mgmt_rx(ar, skb);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.8.3
 
