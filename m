@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53164 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751622AbcF2Qmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 12:42:50 -0400
-Message-ID: <1467217536.2461.11.camel@sipsolutions.net> (sfid-20160629_184252_903050_F32BE313)
-Subject: Re: [PATCH v3] mac80211: Encrypt "Group addressed privacy" action
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>, j@w1.fi
-Cc: linux-wireless@vger.kernel.org
-Date: Wed, 29 Jun 2016 18:25:36 +0200
-In-Reply-To: <5773E453.9060206@gmail.com> (sfid-20160629_170808_017136_351F2679)
-References: <20160621170120.GA24882@w1.fi>
- <1466592920-2716-1-git-send-email-masashi.honma@gmail.com>
-	 <5773E453.9060206@gmail.com> (sfid-20160629_170808_017136_351F2679)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from bh-25.webhostbox.net ([208.91.199.152]:33409 "EHLO
+	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750862AbcFDAty (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 3 Jun 2016 20:49:54 -0400
+Subject: Re: [PATCH] b43: Remove unused phy_a code
+To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
+References: <1464989566-1393-1-git-send-email-linux@roeck-us.net>
+ <20160603233519.4606b1ef@wiggum>
+Cc: Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	linux-kernel@vger.kernel.org
+From: Guenter Roeck <linux@roeck-us.net>
+Message-ID: <575225B8.2040607@roeck-us.net> (sfid-20160604_025021_637103_CBAF61AC)
+Date: Fri, 3 Jun 2016 17:50:00 -0700
+MIME-Version: 1.0
+In-Reply-To: <20160603233519.4606b1ef@wiggum>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-06-30 at 00:08 +0900, Masashi Honma wrote:
-[please don't quote everything to add a single line]
+On 06/03/2016 02:35 PM, Michael Büsch wrote:
+> On Fri,  3 Jun 2016 14:32:46 -0700
+> Guenter Roeck <linux@roeck-us.net> wrote:
+>
+>> gcc-6 reports the following error with -Werror=unused-const-variable.
+>>
+>> drivers/net/wireless/broadcom/b43/phy_a.c:576:40: error:
+>> 	'b43_phyops_a' defined but not used
+>>
+>> Turns out a lot of code in this file is unused, so let's remove it.
+>
+>
+> All a-phy code is usused.
+> So you can basically remove the whole file and any other A-PHY code.
 
-> Is there any comment about this ?
-> 
+I love removing code. I'll resend with more code removed.
 
-I applied it today, but forgot to say so. Sorry about that.
+Guenter
 
-johannes
