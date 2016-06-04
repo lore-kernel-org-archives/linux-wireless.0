@@ -1,108 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:34740 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751784AbcF0Jxj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 05:53:39 -0400
-Received: by mail-pa0-f65.google.com with SMTP id us13so14948113pab.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 02:53:39 -0700 (PDT)
-From: Chaitanya TK <chaitanya.mgit@gmail.com>
-To: linux-wireless@vger.kernel.org,
-	Karl Beldan <karl.beldan@gmail.com>,
-	Felix Fietkau <nbd@nbd.name>
-Cc: Chaitanya T K <chaitanya.mgit@gmail.com>
-Subject: [PATCH] mac80211: minstrel: Enable STBC and LDPC for VHT Rates
-Date: Mon, 27 Jun 2016 15:23:26 +0530
-Message-Id: <1467021206-2702-1-git-send-email-chaitanya.mgit@gmail.com> (sfid-20160627_115343_453707_E3F0C168)
+Received: from mout.gmx.net ([212.227.17.21]:54657 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750777AbcFDFze (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jun 2016 01:55:34 -0400
+Subject: Re: ath9k_htc firmware
+To: bruce m beach <brucembeach@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <CAArymCnfQaa29D2EXGzwOrp0yvXES+Qq1X-HbSUxC6gig8pH_A@mail.gmail.com>
+Cc: ath9k_htc_fw@lists.infradead.org
+From: Oleksij Rempel <fishor@gmx.net>
+Message-ID: <57526D1D.9000305@gmx.net> (sfid-20160604_075536_847147_82964C2C)
+Date: Sat, 4 Jun 2016 07:54:37 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAArymCnfQaa29D2EXGzwOrp0yvXES+Qq1X-HbSUxC6gig8pH_A@mail.gmail.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="Vxlja0aqvL0tcchTuJCIF66TsPhGSt6nn"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaitanya T K <chaitanya.mgit@gmail.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--Vxlja0aqvL0tcchTuJCIF66TsPhGSt6nn
+Content-Type: multipart/mixed; boundary="s8jeXg9ps4kGAOx2dCPqRd004wSnLD153"
+From: Oleksij Rempel <fishor@gmx.net>
+To: bruce m beach <brucembeach@gmail.com>, linux-wireless@vger.kernel.org
+Cc: ath9k_htc_fw@lists.infradead.org
+Message-ID: <57526D1D.9000305@gmx.net>
+Subject: Re: ath9k_htc firmware
+References: <CAArymCnfQaa29D2EXGzwOrp0yvXES+Qq1X-HbSUxC6gig8pH_A@mail.gmail.com>
+In-Reply-To: <CAArymCnfQaa29D2EXGzwOrp0yvXES+Qq1X-HbSUxC6gig8pH_A@mail.gmail.com>
 
-If peer support reception of STBC and LDPC, enable them for better
-performance.
+--s8jeXg9ps4kGAOx2dCPqRd004wSnLD153
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Chaitanya TK <chaitanya.mgit@gmail.com>
----
- include/linux/ieee80211.h          |    1 +
- net/mac80211/rc80211_minstrel_ht.c |   25 +++++++++++++++++--------
- 2 files changed, 18 insertions(+), 8 deletions(-)
+Am 03.06.2016 um 19:26 schrieb bruce m beach:
+> Hello All
+>=20
+>  I am still working on cleaning up ath9k_htc firmware build tree for ab=
+out 6
+> months now ( and looks like I'll be doing this for all eternity**2 ) an=
+d am
+> not clear myself what I'm looking for right now.
+>=20
+> I'm looking for some kind of simple request in the ath9k_htc driver, th=
+rough
+> the usb ep0, like a memory read on the card, where a urb is sent with
+> the resulting chain of events. The simpler the better. The simplest.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b118744..4d01130 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -1550,6 +1550,7 @@ struct ieee80211_vht_operation {
- #define IEEE80211_VHT_CAP_RXSTBC_3				0x00000300
- #define IEEE80211_VHT_CAP_RXSTBC_4				0x00000400
- #define IEEE80211_VHT_CAP_RXSTBC_MASK				0x00000700
-+#define IEEE80211_VHT_CAP_RXSTBC_SHIFT				8
- #define IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE			0x00000800
- #define IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE			0x00001000
- #define IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT                  13
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 30fbabf..e2fcdea 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1166,13 +1166,14 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	struct minstrel_ht_sta_priv *msp = priv_sta;
- 	struct minstrel_ht_sta *mi = &msp->ht;
- 	struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
--	u16 sta_cap = sta->ht_cap.cap;
-+	u16 ht_cap = sta->ht_cap.cap;
- 	struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
- 	int use_vht;
- 	int n_supported = 0;
- 	int ack_dur;
- 	int stbc;
- 	int i;
-+	bool ldpc;
- 
- 	/* fall back to the old minstrel for legacy stations */
- 	if (!sta->ht_cap.ht_supported)
-@@ -1210,16 +1211,24 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 	}
- 	mi->sample_tries = 4;
- 
--	/* TODO tx_flags for vht - ATM the RC API is not fine-grained enough */
- 	if (!use_vht) {
--		stbc = (sta_cap & IEEE80211_HT_CAP_RX_STBC) >>
-+		stbc = (ht_cap & IEEE80211_HT_CAP_RX_STBC) >>
- 			IEEE80211_HT_CAP_RX_STBC_SHIFT;
--		mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
- 
--		if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
--			mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
-+		if (ht_cap & IEEE80211_HT_CAP_LDPC_CODING)
-+			ldpc = true;
-+	} else {
-+		stbc = (vht_cap->cap & IEEE80211_VHT_CAP_RXSTBC_MASK) >>
-+			IEEE80211_VHT_CAP_RXSTBC_SHIFT;
-+
-+		if (vht_cap->cap & IEEE80211_VHT_CAP_RXLDPC)
-+			ldpc = true;
- 	}
- 
-+	mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
-+	if (ldpc)
-+		mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
-+
- 	for (i = 0; i < ARRAY_SIZE(mi->groups); i++) {
- 		u32 gflags = minstrel_mcs_groups[i].flags;
- 		int bw, nss;
-@@ -1232,10 +1241,10 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
- 
- 		if (gflags & IEEE80211_TX_RC_SHORT_GI) {
- 			if (gflags & IEEE80211_TX_RC_40_MHZ_WIDTH) {
--				if (!(sta_cap & IEEE80211_HT_CAP_SGI_40))
-+				if (!(ht_cap & IEEE80211_HT_CAP_SGI_40))
- 					continue;
- 			} else {
--				if (!(sta_cap & IEEE80211_HT_CAP_SGI_20))
-+				if (!(ht_cap & IEEE80211_HT_CAP_SGI_20))
- 					continue;
- 			}
- 		}
--- 
-1.7.9.5
+For EP0 on drivers site:
+static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
+{
+        int transfer, err;
+        const void *data =3D hif_dev->fw_data;
+        size_t len =3D hif_dev->fw_size;
+        u32 addr =3D AR9271_FIRMWARE;
+        u8 *buf =3D kzalloc(4096, GFP_KERNEL);
+        u32 firm_offset;
 
+        if (!buf)
+                return -ENOMEM;
+
+        while (len) {
+                transfer =3D min_t(size_t, len, 4096);
+                memcpy(buf, data, transfer);
+
+                err =3D usb_control_msg(hif_dev->udev,
+                                      usb_sndctrlpipe(hif_dev->udev, 0),
+                                      FIRMWARE_DOWNLOAD, 0x40 | USB_DIR_O=
+UT,
+                                      addr >> 8, 0, buf, transfer, HZ);
+
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D
+
+
+
+On side of pre installed firmware, the code looks like this:
+open-ath9k-htc-firmware/sboot/magpie_1_1/sboot/hif/usb/src/usb_api.c
+LOCAL void VendorCommand(void)
+{
+#define cUSB_REQ_DOWNLOAD          0x30
+#define cUSB_REQ_DOWNLOAD_COMP     0x31
+#define cUSB_REQ_BOOT              0x32
+#define cUSB_REQ_RESERVED_1        0x33
+#define cUSB_REQ_RESERVED_2        0x34
+
+#define cUSB_REQ_FLASH_READ        0x35
+#define cUSB_REQ_FLASH_READ_COMP   0x36
+
+//#define ZM_FIRMWARE_ADDR           0x200000
+
+    void (*funcPtr)(void);
+    uint16_t *text_addr =3D 0;
+    uint32_t ep0_data =3D 0x0;
+=2E..
+
+
+--s8jeXg9ps4kGAOx2dCPqRd004wSnLD153--
+
+--Vxlja0aqvL0tcchTuJCIF66TsPhGSt6nn
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAldSbSoACgkQHwImuRkmbWmo6QD+NDlezBIA5ela9tNrCH9vARV0
+CKO/WUp7IttJskfRefAA/2Vd3QNl2zuHZp68lk13iqVQoduIxYhYlXOHdX/y4WhV
+=7y/f
+-----END PGP SIGNATURE-----
+
+--Vxlja0aqvL0tcchTuJCIF66TsPhGSt6nn--
