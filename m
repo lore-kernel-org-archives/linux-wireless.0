@@ -1,79 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout4.w1.samsung.com ([210.118.77.14]:15908 "EHLO
-	mailout4.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751493AbcFOGs4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44027 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916AbcFDQwH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2016 02:48:56 -0400
-Message-id: <5760FA52.7010806@samsung.com> (sfid-20160615_084903_802813_9378AA67)
-Date: Wed, 15 Jun 2016 08:48:50 +0200
-From: Jacek Anaszewski <j.anaszewski@samsung.com>
-MIME-version: 1.0
-To: "Andrew F. Davis" <afd@ti.com>
-Cc: Russell King <linux@armlinux.org.uk>,
-	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Sebastian Reichel <sre@kernel.org>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Richard Purdie <rpurdie@rpsys.net>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Ingo Molnar <mingo@kernel.org>, linux-pwm@vger.kernel.org,
-	lguest@lists.ozlabs.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-leds@vger.kernel.org,
-	linux-media@vger.kernel.org
-Subject: Re: [PATCH 12/12] leds: Only descend into leds directory when
- CONFIG_NEW_LEDS is set
-References: <20160613200211.14790-1-afd@ti.com>
- <20160613200211.14790-13-afd@ti.com>
-In-reply-to: <20160613200211.14790-13-afd@ti.com>
-Content-type: text/plain; charset=UTF-8; format=flowed
+	Sat, 4 Jun 2016 12:52:07 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jan Kiszka <jan.kiszka@web.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: Change long delays to sleeps
+References: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
+	<57530495.50302@web.de>
+Date: Sat, 04 Jun 2016 19:52:00 +0300
+In-Reply-To: <57530495.50302@web.de> (Jan Kiszka's message of "Sat, 4 Jun 2016
+	18:40:53 +0200")
+Message-ID: <87fusssxqn.fsf@kamboji.qca.qualcomm.com> (sfid-20160604_185518_607647_916254C7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrew,
+Jan Kiszka <jan.kiszka@web.de> writes:
 
-Thanks for the patch.
+> On 2016-02-15 23:12, Larry Finger wrote:
+>> Routine rtl_addr_delay() uses delay statements in code that can
+>> sleep. To improve system responsiveness, the various delay statements
+>> are changed.
+>> 
+>> In addition, routines rtl_rfreg_delay() and rtl_bb_delay() are
+>> rewritten to use the code in rtl_addr_delay() for most of their
+>> input values.
+>> 
+>> Suggested-by: Byeoungwook Kim <quddnr145@gmail.com>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Please address the issue [1] raised by test bot and resubmit.
+[...]
 
-Thanks,
-Jacek Anaszewski
-
-[1] https://lkml.org/lkml/2016/6/13/1091
-
-On 06/13/2016 10:02 PM, Andrew F. Davis wrote:
-> When CONFIG_NEW_LEDS is not set make will still descend into the leds
-> directory but nothing will be built. This produces unneeded build
-> artifacts and messages in addition to slowing the build. Fix this here.
+> This breaks spectacularly when turning on a little bit of correctness
+> checking:
 >
-> Signed-off-by: Andrew F. Davis <afd@ti.com>
-> ---
->   drivers/Makefile | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/Makefile b/drivers/Makefile
-> index 567e32c..fa514d5 100644
-> --- a/drivers/Makefile
-> +++ b/drivers/Makefile
-> @@ -127,7 +127,7 @@ obj-$(CONFIG_CPU_FREQ)		+= cpufreq/
->   obj-$(CONFIG_CPU_IDLE)		+= cpuidle/
->   obj-$(CONFIG_MMC)		+= mmc/
->   obj-$(CONFIG_MEMSTICK)		+= memstick/
-> -obj-y				+= leds/
-> +obj-$(CONFIG_NEW_LEDS)		+= leds/
->   obj-$(CONFIG_INFINIBAND)	+= infiniband/
->   obj-$(CONFIG_SGI_SN)		+= sn/
->   obj-y				+= firmware/
->
+> BUG: scheduling while atomic: wpa_supplicant/1116/0x00000002
 
+This should fix it:
+
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=de26859dcf363d520cc44e59f6dcaf20ebe0aadf
 
 -- 
-Best regards,
-Jacek Anaszewski
+Kalle Valo
