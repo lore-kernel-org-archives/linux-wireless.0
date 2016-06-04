@@ -1,129 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:35125 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422699AbcFMKij (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35372 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750726AbcFDAjg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 06:38:39 -0400
-Received: by mail-pa0-f45.google.com with SMTP id hl6so44780108pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 03:38:39 -0700 (PDT)
-From: Binoy Jayan <binoy.jayan@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Binoy Jayan <binoy.jayan@linaro.org>
-Subject: [PATCH 7/7] staging: wilc1000: Remove unused inclusion of semaphore header
-Date: Mon, 13 Jun 2016 16:07:39 +0530
-Message-Id: <1465814259-3009-8-git-send-email-binoy.jayan@linaro.org> (sfid-20160613_123902_678492_4B7FB440)
-In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
-References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+	Fri, 3 Jun 2016 20:39:36 -0400
+From: Hugh Sipiere <hgsipiere@gmail.com>
+To: m@bues.ch
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Hugh Sipiere <hgsipiere@gmail.com>
+Subject: [PATCH] Drivers: ssb: Fix bare unsigned and changed to trailing comments
+Date: Sat,  4 Jun 2016 01:39:32 +0100
+Message-Id: <1465000772-1447-1-git-send-email-hgsipiere@gmail.com> (sfid-20160604_023954_277820_F6A671CF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unused inclusions of semaphore header and remove the same
-from the todo list. Also remove the now unused wrapper 'wilc_lock_timeout'.
-Semaphores are going away in the future.
+I changed drivers/ssb/driver_gpio.c to better fit the coding style.
+I changed unsigned to unsigned int
+Two comments were changed to not end on a line with the text.
 
-Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+Signed-off-by: Hugh Sipiere <hgsipiere@gmail.com>
 ---
- drivers/staging/wilc1000/TODO                 |  1 -
- drivers/staging/wilc1000/linux_wlan.c         | 12 ------------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  3 +--
- drivers/staging/wilc1000/wilc_wlan.h          |  2 +-
- drivers/staging/wilc1000/wilc_wlan_if.h       |  1 -
- 5 files changed, 2 insertions(+), 17 deletions(-)
+ drivers/ssb/driver_gpio.c | 26 ++++++++++++++------------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
-index 95199d8..83e66b2 100644
---- a/drivers/staging/wilc1000/TODO
-+++ b/drivers/staging/wilc1000/TODO
-@@ -3,7 +3,6 @@ TODO:
- - remove OS wrapper functions
- - remove custom debug and tracing functions
- - rework comments and function headers(also coding style)
--- replace all semaphores with mutexes or completions
- - make spi and sdio components coexist in one build
- - turn compile-time platform configuration (BEAGLE_BOARD,
-   PANDA_BOARD, PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...)
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index ac537c7..66c1dd7 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -21,7 +21,6 @@
- #include <linux/kernel.h>
- #include <linux/skbuff.h>
- #include <linux/mutex.h>
--#include <linux/semaphore.h>
- #include <linux/completion.h>
+diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
+index 180e027..49f858c 100644
+--- a/drivers/ssb/driver_gpio.c
++++ b/drivers/ssb/driver_gpio.c
+@@ -23,7 +23,7 @@
+  **************************************************/
  
- static int dev_state_ev_handler(struct notifier_block *this,
-@@ -221,17 +220,6 @@ static void deinit_irq(struct net_device *dev)
- 	}
+ #if IS_ENABLED(CONFIG_SSB_EMBEDDED)
+-static int ssb_gpio_to_irq(struct gpio_chip *chip, unsigned gpio)
++static int ssb_gpio_to_irq(struct gpio_chip *chip, unsigned int gpio)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
+ 
+@@ -38,14 +38,14 @@ static int ssb_gpio_to_irq(struct gpio_chip *chip, unsigned gpio)
+  * ChipCommon
+  **************************************************/
+ 
+-static int ssb_gpio_chipco_get_value(struct gpio_chip *chip, unsigned gpio)
++static int ssb_gpio_chipco_get_value(struct gpio_chip *chip, unsigned int gpio)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
+ 
+ 	return !!ssb_chipco_gpio_in(&bus->chipco, 1 << gpio);
  }
  
--int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
--{
--	/* FIXME: replace with mutex_lock or wait_for_completion */
--	int error = -1;
--
--	if (vp)
--		error = down_timeout(vp,
--				     msecs_to_jiffies(timeout));
--	return error;
--}
--
- void wilc_mac_indicate(struct wilc *wilc, int flag)
+-static void ssb_gpio_chipco_set_value(struct gpio_chip *chip, unsigned gpio,
++static void ssb_gpio_chipco_set_value(struct gpio_chip *chip, unsigned int gpio,
+ 				      int value)
  {
- 	int status;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 5cc6a82..b1db761 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -131,7 +131,7 @@ struct wilc_priv {
- 	struct wilc_wfi_key *wilc_gtk[MAX_NUM_STA];
- 	struct wilc_wfi_key *wilc_ptk[MAX_NUM_STA];
- 	u8 wilc_groupkey;
--	/* semaphores */
-+	/* locks */
- 	struct mutex scan_req_lock;
- 	/*  */
- 	bool gbAutoRateAdjusted;
-@@ -225,7 +225,6 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif);
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
+@@ -54,7 +54,7 @@ static void ssb_gpio_chipco_set_value(struct gpio_chip *chip, unsigned gpio,
+ }
  
- void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
- void wilc_mac_indicate(struct wilc *wilc, int flag);
--int wilc_lock_timeout(struct wilc *wilc, void *, u32 timeout);
- void wilc_netdev_cleanup(struct wilc *wilc);
- int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
- 		     const struct wilc_hif_func *ops);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 30e5312..de6c4dd 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -192,7 +192,7 @@
+ static int ssb_gpio_chipco_direction_input(struct gpio_chip *chip,
+-					   unsigned gpio)
++					   unsigned int gpio)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
  
- #define ENABLE_RX_VMM		(SEL_VMM_TBL1 | EN_VMM)
- #define ENABLE_TX_VMM		(SEL_VMM_TBL0 | EN_VMM)
--/*time for expiring the semaphores of cfg packets*/
-+/*time for expiring the completion of cfg packets*/
- #define CFG_PKTS_TIMEOUT	2000
- /********************************************
-  *
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 410bfc0..439ac6f 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -10,7 +10,6 @@
- #ifndef WILC_WLAN_IF_H
- #define WILC_WLAN_IF_H
+@@ -63,7 +63,7 @@ static int ssb_gpio_chipco_direction_input(struct gpio_chip *chip,
+ }
  
--#include <linux/semaphore.h>
- #include <linux/netdevice.h>
+ static int ssb_gpio_chipco_direction_output(struct gpio_chip *chip,
+-					    unsigned gpio, int value)
++					    unsigned int gpio, int value)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
  
- /********************************************
+@@ -72,7 +72,7 @@ static int ssb_gpio_chipco_direction_output(struct gpio_chip *chip,
+ 	return 0;
+ }
+ 
+-static int ssb_gpio_chipco_request(struct gpio_chip *chip, unsigned gpio)
++static int ssb_gpio_chipco_request(struct gpio_chip *chip, unsigned int gpio)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
+ 
+@@ -85,7 +85,7 @@ static int ssb_gpio_chipco_request(struct gpio_chip *chip, unsigned gpio)
+ 	return 0;
+ }
+ 
+-static void ssb_gpio_chipco_free(struct gpio_chip *chip, unsigned gpio)
++static void ssb_gpio_chipco_free(struct gpio_chip *chip, unsigned int gpio)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
+ 
+@@ -231,7 +231,8 @@ static int ssb_gpio_chipco_init(struct ssb_bus *bus)
+ 	chip->ngpio		= 16;
+ 	/* There is just one SoC in one device and its GPIO addresses should be
+ 	 * deterministic to address them more easily. The other buses could get
+-	 * a random base number. */
++	 * a random base number.
++	 */
+ 	if (bus->bustype == SSB_BUSTYPE_SSB)
+ 		chip->base		= 0;
+ 	else
+@@ -256,14 +257,14 @@ static int ssb_gpio_chipco_init(struct ssb_bus *bus)
+ 
+ #ifdef CONFIG_SSB_DRIVER_EXTIF
+ 
+-static int ssb_gpio_extif_get_value(struct gpio_chip *chip, unsigned gpio)
++static int ssb_gpio_extif_get_value(struct gpio_chip *chip, unsigned int gpio)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
+ 
+ 	return !!ssb_extif_gpio_in(&bus->extif, 1 << gpio);
+ }
+ 
+-static void ssb_gpio_extif_set_value(struct gpio_chip *chip, unsigned gpio,
++static void ssb_gpio_extif_set_value(struct gpio_chip *chip, unsigned int gpio,
+ 				     int value)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
+@@ -281,7 +282,7 @@ static int ssb_gpio_extif_direction_input(struct gpio_chip *chip,
+ }
+ 
+ static int ssb_gpio_extif_direction_output(struct gpio_chip *chip,
+-					   unsigned gpio, int value)
++					   unsigned int gpio, int value)
+ {
+ 	struct ssb_bus *bus = gpiochip_get_data(chip);
+ 
+@@ -424,7 +425,8 @@ static int ssb_gpio_extif_init(struct ssb_bus *bus)
+ 	chip->ngpio		= 5;
+ 	/* There is just one SoC in one device and its GPIO addresses should be
+ 	 * deterministic to address them more easily. The other buses could get
+-	 * a random base number. */
++	 * a random base number.
++	 */
+ 	if (bus->bustype == SSB_BUSTYPE_SSB)
+ 		chip->base		= 0;
+ 	else
 -- 
-2.7.4
+2.5.5
 
