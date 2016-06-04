@@ -1,62 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51781 "EHLO mga09.intel.com"
+Received: from bues.ch ([80.190.117.144]:49118 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751570AbcFANTT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 09:19:19 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "me@bobcopeland.com" <me@bobcopeland.com>,
-	"reinoudkoornstra@gmail.com" <reinoudkoornstra@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: wireless-testing on 4.7
-Date: Wed, 1 Jun 2016 13:19:00 +0000
-Message-ID: <1464787139.2554.74.camel@intel.com> (sfid-20160601_151923_055488_72EDEEBE)
-References: <20160529214059.GA15677@localhost>
-	 <CAAA5faFNa1sQrj6Yfq+hrXfUOi0Lek4qL8Zzpdv27-4+Z4n6mQ@mail.gmail.com>
-	 <20160601125453.GB12977@localhost>
-In-Reply-To: <20160601125453.GB12977@localhost>
-Content-Type: text/plain; charset="utf-8"
+	id S1750761AbcFDICy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jun 2016 04:02:54 -0400
+Date: Sat, 4 Jun 2016 10:01:40 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Guenter Roeck <linux@roeck-us.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] b43: Remove unused phy_a code
+Message-ID: <20160604100140.43ca7621@wiggum> (sfid-20160604_100322_629200_F73FBBA1)
+In-Reply-To: <1465013512-30301-1-git-send-email-linux@roeck-us.net>
+References: <1465013512-30301-1-git-send-email-linux@roeck-us.net>
 MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/ARXZz6nF1DU.aW8+ynAz7ZG"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE2LTA2LTAxIGF0IDA4OjU0IC0wNDAwLCBCb2IgQ29wZWxhbmQgd3JvdGU6DQo+
-ICsgTHVjYSwgRW1tYW51ZWwNCg0KVGhhbmtzLCBCb2IhDQoNCg0KPiBPbiBUdWUsIE1heSAzMSwg
-MjAxNiBhdCAxMDowNjo1N1BNIC0wNjAwLCBSZWlub3VkIEtvb3Juc3RyYSB3cm90ZToNCj4gPiBU
-b2RheSBJIGNvbXBpbGVkIDQuNisgYW5kIHB1bGxlZCBzb3VyY2VzIHRvZGF5DQo+ID4gaXdsd2lm
-aSBpc24ndCBzdXBlciBzbW9vdGguDQo+IA0KPiBJIGFzc3VtZSB5b3UgbWVhbiB3aXJlbGVzcy10
-ZXN0aW5nLCBiYXNlZCBvbiA0LjctcmMxIChhcyB0aGlzIGVtYWlsDQo+IGlzDQo+IGluIHJlcGx5
-IHRvIG15IGFubm91bmNlbWVudCBvZiBzYW1lKS4NCg0KWWVzLCB3ZSBuZWVkIHRvIGtub3cgZXhh
-Y3RseSB3aGF0IGtlcm5lbCB5b3UncmUgdXNpbmcgc28gd2Uga25vdyB3aGF0DQp3ZSdyZSBkZWJ1
-Z2dpbmcuDQoNCj4gPiANCj4gPiBbwqDCoDExMi4zNDU0NTddIHdscDRzMDogYXV0aGVudGljYXRl
-IHdpdGggMDA6MzA6NDQ6MWQ6Y2Y6MmINCj4gPiBbwqDCoDExMi4zNDkwMDJdIHdscDRzMDogc2Vu
-ZCBhdXRoIHRvIDAwOjMwOjQ0OjFkOmNmOjJiICh0cnkgMS8zKQ0KPiA+IFvCoMKgMTEyLjM0OTY0
-N10gd2xwNHMwOiBhdXRoZW50aWNhdGVkDQo+ID4gW8KgwqAxMTIuMzUyNDU2XSB3bHA0czA6IGFz
-c29jaWF0ZSB3aXRoIDAwOjMwOjQ0OjFkOmNmOjJiICh0cnkgMS8zKQ0KPiA+IFvCoMKgMTEyLjM1
-Mzc2NF0gd2xwNHMwOiBSWCBBc3NvY1Jlc3AgZnJvbSAwMDozMDo0NDoxZDpjZjoyYg0KPiA+IChj
-YXBhYj0weDExDQo+ID4gc3RhdHVzPTAgYWlkPTMpDQo+ID4gW8KgwqAxMTIuMzU1MDM1XSB3bHA0
-czA6IGFzc29jaWF0ZWQNCj4gPiBbwqDCoDExMi4zNTUzOTNdIElQdjY6IEFERFJDT05GKE5FVERF
-Vl9DSEFOR0UpOiB3bHA0czA6IGxpbmsgYmVjb21lcw0KPiA+IHJlYWR5DQo+ID4gW8KgwqAxMTgu
-NjE2MzI3XSB3bHA0czA6IGRlYXV0aGVudGljYXRlZCBmcm9tIDAwOjMwOjQ0OjFkOmNmOjJiDQo+
-ID4gKFJlYXNvbjoNCj4gPiAxNT00V0FZX0hBTkRTSEFLRV9USU1FT1VUKQ0KPiA+IFvCoMKgMTI4
-LjY3MzgxMl0gd2xwNHMwOiBhdXRoZW50aWNhdGUgd2l0aCAwMDozMDo0NDoxZDpjZjoyYg0KPiA+
-IFvCoMKgMTI4LjY3Njk5N10gd2xwNHMwOiBzZW5kIGF1dGggdG8gMDA6MzA6NDQ6MWQ6Y2Y6MmIg
-KHRyeSAxLzMpDQo+ID4gW8KgwqAxMjguNjc3NjQ4XSB3bHA0czA6IGF1dGhlbnRpY2F0ZWQNCj4g
-PiBbwqDCoDEyOC42Nzg2OTFdIHdscDRzMDogYXNzb2NpYXRlIHdpdGggMDA6MzA6NDQ6MWQ6Y2Y6
-MmIgKHRyeSAxLzMpDQo+ID4gW8KgwqAxMjguNjc5ODA3XSB3bHA0czA6IFJYIEFzc29jUmVzcCBm
-cm9tIDAwOjMwOjQ0OjFkOmNmOjJiDQo+ID4gKGNhcGFiPTB4MTENCj4gPiBzdGF0dXM9MCBhaWQ9
-MykNCj4gPiBbwqDCoDEyOC42ODExOThdIHdscDRzMDogYXNzb2NpYXRlZA0KPiA+IA0KPiA+IEkg
-bmV2ZXIgZXhwZXJpZW5jZWQgdGhlIDQgd2F5IGhhbmRzaGFrZSA4MDIuMTFpIHRpbWVvdXQgaW4g
-bXkgaG9tZQ0KPiA+IHNldHVwLg0KPiA+IFdpdGggb3RoZXIgc2V0dXBzIHBsZW50eSBvZiB0aW1l
-cywgZXNwZWNpYWxseSB3aXRoIG1lZGlhdGVrDQo+ID4gZHJpdmVycy4gOikNCj4gPiBJZiB5b3Ug
-d2lzaCBJIGNhbiBzbmlmZiBhbmQgc2VlIHdoaWNoIHNpZGUgaXMgYXQgZmF1bHQuDQo+IA0KPiBJ
-IGhhdmUgbm90IG5vdGljZWQgYW55IHByb2JsZW1zIG9uIG15IGxhcHRvcCB3aXRoIGl3bGR2bSBv
-biBhIDYyMDUsDQo+IHdpdGgNCj4gbGF0ZXN0IHdpcmVsZXNzLXRlc3RpbmcuwqDCoEJ1dCBtYXli
-ZSBpbnRlbCBkZXZzIGNhbiB3ZWlnaCBpbi4NCg0KSSdtIG5vdCBnb2luZyB0byBwdXQgYWxsIG15
-IHdlaWdodCBpbiBsZXN0IEkgYnJlYWsgdGhpbmdzIGV2ZW4gbW9yZS4gOlANCg0KSSBjYW4ndCBy
-ZWFsbHkgc2VlIG11Y2ggZnJvbSB0aGUgbG9nIGV4dHJhY3QgeW91IHBvc3RlZC4gwqBDYW4geW91
-IGdldA0Kc29tZSBsb2dzIChlc3BlY2lhbGx5IHRyYWNlLWNtZCBhbmQgYSBzbmlmZmVyIGNhcHR1
-cmUpIGFuZCByZXBvcnQgYSBidWcNCmluIGJ1Z3ppbGxhPyBXZSBoYXZlIHNvbWUgaW5zdHJ1Y3Rp
-b25zIG9uIGhvdyB0byBkbyBpdCBoZXJlOg0KDQpodHRwczovL3dpcmVsZXNzLndpa2kua2VybmVs
-Lm9yZy9lbi91c2Vycy9kcml2ZXJzL2l3bHdpZmkvZGVidWdnaW5nDQoNClRoYW5rcyBmb3IgcmVw
-b3J0aW5nIQ0KDQotLQ0KQ2hlZXJzLA0KTHVjYS4=
+--Sig_/ARXZz6nF1DU.aW8+ynAz7ZG
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
+
+On Fri,  3 Jun 2016 21:11:51 -0700
+Guenter Roeck <linux@roeck-us.net> wrote:
+
+> +static void __b43_phy_initg(struct b43_wldev *dev)
+> +{
+> +	struct b43_phy *phy =3D &dev->phy;
+> +
+> +	might_sleep();
+> +
+> +	if (phy->rev >=3D 6) {
+> +		if (b43_phy_read(dev, B43_PHY_ENCORE) & B43_PHY_ENCORE_EN)
+> +			b43_phy_set(dev, B43_PHY_ENCORE, 0x0010);
+> +		else
+> +			b43_phy_mask(dev, B43_PHY_ENCORE, ~0x1010);
+> +	}
+> +
+> +	b43_wa_all(dev);
+> +
+> +	if (dev->dev->bus_sprom->boardflags_lo & B43_BFL_PACTRL)
+> +		b43_phy_maskset(dev, B43_PHY_OFDM(0x6E), 0xE000, 0x3CF);
+> +}
+> +
+>  static void b43_phy_initg(struct b43_wldev *dev)
+>  {
+>  	struct b43_phy *phy =3D &dev->phy;
+> @@ -1999,7 +2019,7 @@ static void b43_phy_initg(struct b43_wldev *dev)
+>  		b43_phy_initb6(dev);
+> =20
+>  	if (phy->rev >=3D 2 || phy->gmode)
+> -		b43_phy_inita(dev);
+> +		__b43_phy_initg(dev);
+
+This actually is correctly called inita(), because there are A-phy parts
+in the G-phy.
+So I wasn't 100% correct saying that _all_ a-phy code is unused.
+I'm Ok with moving that into the g-phy file though. But don't rename it.
+
+
+--=20
+Michael
+
+--Sig_/ARXZz6nF1DU.aW8+ynAz7ZG
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXUorkAAoJEPUyvh2QjYsOe/gQAI5qWGqNekiB4NSp/+UX/CVX
+zIDkCiAqivdDG7fucktLCvjBxzfQzBaI1cw+kSVjcFwANs1JPvh5rP/QwiW5TZeV
+RQbODg60P/Lkza415eVWlTT6AZqvlzcGx4i/O8RjAPmtaA3OKSt5fTRIJDCiqSPL
+WyTnjFjZd4GPnmkt9tTfNWQiiLAKRFzFG0t/gwPT1lqy2eHl3dZc+sJ2yVLAcdZ3
+roPhNkYy6wCBcGQ3cTBIemYvR/KN7hak1ihtGIF9y708ClBiy8qNBJuO0oDSQ6oL
+H9QvCiqkndAhAPaiy0WGh1uMIxKEueQyb3z5WWrtNyBLcEMDnv1q3U/z/CSCWBGg
+9UUmYUS9EMyVEgfQFZAZ7GiPO3CDDkazkkc59V79oYr9S1QLkbxs+XWjcs0XavgS
+uvXI+VlyJUsoxivzlzGOvx5FAyPk5CN32MBjs8WADFHIuy6t2jySP+IxpEwQmxtJ
+bZoI2E9gdM/h2BmpfzOOIMRywtxRkhD8nu6G3HBlvrY3LLyaPhxUpTce5xcQ2aHL
+tww9Yjjo+YZFr2WV4PfoCbqRGSoSJZ9/XfgrYiLG65fQ98Tct1vDm42+YrDmhs8+
+lXDRT9IKoRj83OiWkxKZ/Pm61DWxAznD5gIs/qfhJU7EiQGeUCq4LAGIc22/KjLU
+6lj7WuLS/JUdG4gKWAkx
+=nC7Y
+-----END PGP SIGNATURE-----
+
+--Sig_/ARXZz6nF1DU.aW8+ynAz7ZG--
