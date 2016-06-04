@@ -1,90 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:54103 "EHLO lists.s-osg.org"
+Received: from bues.ch ([80.190.117.144]:49142 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751480AbcFYVnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 17:43:40 -0400
-Message-ID: <576EFB05.1060902@osg.samsung.com> (sfid-20160625_234400_814335_7E87F7CB)
-Date: Sat, 25 Jun 2016 22:43:33 +0100
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
+	id S1751175AbcFDLuc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jun 2016 07:50:32 -0400
+Date: Sat, 4 Jun 2016 13:50:10 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Hugh =?UTF-8?B?U2lwacOocmU=?= <hgsipiere@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: ssb: Fix comments to suit coding style
+Message-ID: <20160604135010.4066a7a6@wiggum> (sfid-20160604_135037_461848_6F0A6218)
+In-Reply-To: <1465039933-3984-1-git-send-email-hgsipiere@gmail.com>
+References: <1465039933-3984-1-git-send-email-hgsipiere@gmail.com>
 MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, chris.park@atmel.com,
-	austin.shin@atmel.com, johnny.kim@atmel.com,
-	julian.calaby@gmail.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH v2 1/2] staging: wilc1000: fix error handling in wilc_debugfs_init()
-References: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com> <20160625213606.GA15125@kroah.com>
-In-Reply-To: <20160625213606.GA15125@kroah.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/5L6kmpIXHnFj3pDdgIIjjZQ"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25/06/16 22:36, Greg KH wrote:
-> On Thu, Jun 23, 2016 at 01:36:17PM +0100, Luis de Bethencourt wrote:
->> The common format to check if a function returned an error pointer is to
->> use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
->>
->> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
->> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->> ---
->>  drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
->> index fcbc95d..48797dc 100644
->> --- a/drivers/staging/wilc1000/wilc_debugfs.c
->> +++ b/drivers/staging/wilc1000/wilc_debugfs.c
->> @@ -107,7 +107,7 @@ static int __init wilc_debugfs_init(void)
->>  	struct wilc_debugfs_info_t *info;
->>  
->>  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
->> -	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
->> +	if (PTR_ERR(wilc_dir) == -ENODEV) {
->>  		/* it's not error. the debugfs is just not being enabled. */
->>  		printk("ERR, kernel has built without debugfs support\n");
->>  		return 0;
-> 
-> No, the best way to do this is to just ignore the return value, you
-> don't care about it.  It can be passed back into any debugfs calls just
-> fine.
-> 
-> So don't check the value and all is good, debugfs was written in a way
-> to make it _easy_ to use, no need for fancy error checking at all with
-> it.
-> 
-> thanks,
-> 
-> greg k-h
-> 
+--Sig_/5L6kmpIXHnFj3pDdgIIjjZQ
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Thanks for the review Greg.
+On Sat,  4 Jun 2016 12:32:13 +0100
+Hugh Sipi=C3=A8re <hgsipiere@gmail.com> wrote:
 
-Just to make sure. You are proposing I just drop the 3 if checks? [0]
-
-If that's what you mean I will send a patch as soon as you confirm :)
-
-Happy hacking,
-Luis
+> I changed it so that these two comments do not end on a line with text.
+>=20
+> Signed-off-by: Hugh Sipi=C3=A8re <hgsipiere@gmail.com>
+> ---
+>  drivers/ssb/driver_gpio.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
+> index 180e027..f2435f3 100644
+> --- a/drivers/ssb/driver_gpio.c
+> +++ b/drivers/ssb/driver_gpio.c
+> @@ -231,7 +231,8 @@ static int ssb_gpio_chipco_init(struct ssb_bus *bus)
+>  	chip->ngpio		=3D 16;
+>  	/* There is just one SoC in one device and its GPIO addresses should be
+>  	 * deterministic to address them more easily. The other buses could get
+> -	 * a random base number. */
+> +	 * a random base number.
+> +	 */
+>  	if (bus->bustype =3D=3D SSB_BUSTYPE_SSB)
+>  		chip->base		=3D 0;
+>  	else
+> @@ -424,7 +425,8 @@ static int ssb_gpio_extif_init(struct ssb_bus *bus)
+>  	chip->ngpio		=3D 5;
+>  	/* There is just one SoC in one device and its GPIO addresses should be
+>  	 * deterministic to address them more easily. The other buses could get
+> -	 * a random base number. */
+> +	 * a random base number.
+> +	 */
+>  	if (bus->bustype =3D=3D SSB_BUSTYPE_SSB)
+>  		chip->base		=3D 0;
+>  	else
 
 
+What's the benefit from this change?
+Will the next person submit a patch to remove wasted lines that just
+contain a */?
 
-[0] Making the function look like this:
-static int __init wilc_debugfs_init(void)
-{
-        int i;
 
-        struct dentry *debugfs_files;
-        struct wilc_debugfs_info_t *info;
+--=20
+Michael
 
-        wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
-        for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
-                info = &debugfs_info[i];
-                debugfs_files = debugfs_create_file(info->name,
-                                                    info->perm,
-                                                    wilc_dir,
-                                                    &info->data,
-                                                    &info->fops);
-        }
-        return 0;
-}
+--Sig_/5L6kmpIXHnFj3pDdgIIjjZQ
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXUsByAAoJEPUyvh2QjYsOzzEQAJa3Y/n7vs2MFR7sPoWzVCJM
+Iu4pfkD8aT3JlmQo1ebNevhjVSt6z2NKwesOGHlhaSbYGX9O2o/8nIqjE/QKSBat
+jwVZV1MhkE9yuXho9p3mpzrA6YCa/ehP8OwEGEhJXOzeSEVicxMNGSzf/ld2oMnE
+mOOEvkeT7Bolbt1UcBwSaaUE3e4cq8FPROiqEZ7O/fJtKcAh23tBfDb8vtur6x54
+UngnQmLEvPGBvMvcdwoXvYZ4LE6VnLV78M1PmzMTJa+1RJCtDMiD6lkW+6YWERja
+HJzQD+YG4yCc51mq/pFxDCZiaua2MGwxrRMmiZP0fne8ofDTYczoAQG3Wn9g61lE
+4IRPcNsd44vM93nS9jZpmFyzCvU4+Z2ksDcKZYDGQ6tJJeXtPqmOq1qRdF8bNKgN
+nFkS6ogbfzk26F1UclV1Zc7CMUcQ4xGO63oi/JjHClzxuVgK5ARQHFBBOyKRKY/j
+6XIyGMnP8MnF/aLM8t68YPB353uWOC6IxFZW0YsDf8BuXHaNh8di8TA+GIJjTx0N
+uEM0ThVGkL/gXTku/PGt6MIzE3RnvFfVz+SHKq9U2UIaR5hOephfZDo3HgAIv7+8
+HSqbqzm3f73S96Ex33sPCmmjS8leoO130BK3xEJeKpFhd9ox4UOcqFbMG4vv255v
+tpAZ5ohv5TGM3/rVDKzY
+=Vitr
+-----END PGP SIGNATURE-----
+
+--Sig_/5L6kmpIXHnFj3pDdgIIjjZQ--
