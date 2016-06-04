@@ -1,64 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:38172 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385AbcF0J13 convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33854 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbcFDLcS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 05:27:29 -0400
-Received: by mail-wm0-f49.google.com with SMTP id r201so105938245wme.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 02:27:29 -0700 (PDT)
+	Sat, 4 Jun 2016 07:32:18 -0400
+From: =?UTF-8?q?Hugh=20Sipi=C3=A8re?= <hgsipiere@gmail.com>
+To: m@bues.ch
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Hugh=20Sipi=C3=A8re?= <hgsipiere@gmail.com>
+Subject: [PATCH] drivers: ssb: Fix comments to suit coding style
+Date: Sat,  4 Jun 2016 12:32:13 +0100
+Message-Id: <1465039933-3984-1-git-send-email-hgsipiere@gmail.com> (sfid-20160604_133236_367676_DF67654A)
 MIME-Version: 1.0
-In-Reply-To: <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
-References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com> <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Mon, 27 Jun 2016 11:27:27 +0200
-Message-ID: <CA+BoTQnUvF2Zy7_WuEi0V+KjByRghVmoeR6yrs6hu6ag=KmBqQ@mail.gmail.com> (sfid-20160627_112733_378120_6724A4FB)
-Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
- QCA99X0 and later
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 June 2016 at 18:40, Mohammed Shafi Shajakhan
-<mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
-> NULL func status (always acked/successs !!) when hostapd does a
-> PROBE_CLIENT via nullfunc frames when the station is powered off
-> abruptly (inactive timer probes client via null func after the inactive
-> time reaches beyond the threshold). Fix this by disabling the workaround
-> (getting the ACK status of NULL func frames by sending via HTT mgmt-tx
->  path) introduced by the change ("ath10k: fix beacon loss handling ")
-> for QCA99X0 and later chipsets. The normal tx path provides the proper
-> ACK status for NULL data frames. As of now disable this workaround for
-> chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
-> completely get rid of this workaround for all the chipsets
->
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c | 3 +++
->  drivers/net/wireless/ath/ath10k/core.h | 6 ++++++
->  drivers/net/wireless/ath/ath10k/mac.c  | 1 +
->  3 files changed, 10 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index 689d6ce..9978e4a 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->                         .board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
->                         .board_size = QCA99X0_BOARD_DATA_SZ,
->                         .board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
-> +                       .disable_null_func_workaround = true,
+I changed it so that these two comments do not end on a line with text.
 
-Tx completion (bugs) are firmware specific, not hardware. This should
-be expressed via features bits in ath10k FW API, no?
+Signed-off-by: Hugh Sipière <hgsipiere@gmail.com>
+---
+ drivers/ssb/driver_gpio.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
+index 180e027..f2435f3 100644
+--- a/drivers/ssb/driver_gpio.c
++++ b/drivers/ssb/driver_gpio.c
+@@ -231,7 +231,8 @@ static int ssb_gpio_chipco_init(struct ssb_bus *bus)
+ 	chip->ngpio		= 16;
+ 	/* There is just one SoC in one device and its GPIO addresses should be
+ 	 * deterministic to address them more easily. The other buses could get
+-	 * a random base number. */
++	 * a random base number.
++	 */
+ 	if (bus->bustype == SSB_BUSTYPE_SSB)
+ 		chip->base		= 0;
+ 	else
+@@ -424,7 +425,8 @@ static int ssb_gpio_extif_init(struct ssb_bus *bus)
+ 	chip->ngpio		= 5;
+ 	/* There is just one SoC in one device and its GPIO addresses should be
+ 	 * deterministic to address them more easily. The other buses could get
+-	 * a random base number. */
++	 * a random base number.
++	 */
+ 	if (bus->bustype == SSB_BUSTYPE_SSB)
+ 		chip->base		= 0;
+ 	else
+-- 
+2.5.5
 
-Michał
