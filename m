@@ -1,82 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:34944 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752689AbcF1M2C (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:33356 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750740AbcFDDyz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 08:28:02 -0400
-Received: by mail-io0-f196.google.com with SMTP id u25so1948471iou.2
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2016 05:28:01 -0700 (PDT)
-Date: Tue, 28 Jun 2016 08:27:47 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Yaniv Machani <yanivma@ti.com>
-Cc: linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S . Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Maital Hahn <maitalm@ti.com>
-Subject: Re: [PATCH 2/4] mac80211/cfg: mesh: fix healing time when a mesh
- peer is disconnecting
-Message-ID: <20160628122747.GA7757@localhost> (sfid-20160628_142835_892590_1DA10E15)
-References: <20160628111307.8784-1-yanivma@ti.com>
- <20160628111307.8784-2-yanivma@ti.com>
- <20160628111307.8784-3-yanivma@ti.com>
+	Fri, 3 Jun 2016 23:54:55 -0400
+Received: by mail-oi0-f43.google.com with SMTP id k23so155543820oih.0
+        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2016 20:54:54 -0700 (PDT)
+Date: Fri, 3 Jun 2016 22:54:52 -0500
+From: David Gilman <dgilman@gilslotd.com>
+To: buytenh@wantstofly.org
+Cc: linux-wireless@vger.kernel.org
+Subject: Troubleshooting mwl8k driver issue
+Message-ID: <20160604035452.GA5925@dar.local> (sfid-20160604_055459_200020_ACA46742)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160628111307.8784-3-yanivma@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 28, 2016 at 02:13:05PM +0300, Yaniv Machani wrote:
-> From: Maital Hahn <maitalm@ti.com>
-> 
-> Once receiving a CLOSE action frame from the disconnecting peer,
-> flush all entries in the path table which has this peer as the
-> next hop.
+Lennert, I am a user of your mwl8k driver through the OpenWRT
+distribution.  When working with certain WiFi devices I get errors in
+the kernel logs and network connectivity errors on the wireless device.
+The dmesg logs look like this:
 
-Please address the user-visible behavior in your commit messages.
-Does it crash?  Does it send frames to an invalid peer?  Do
-frames get dropped?
+[539374.394607] ieee80211 phy1: Added a new stream for (BSSID MAC) 0
+[539374.394650] ieee80211 phy1: Started stream for (BSSID MAC) 0
+[539374.394732] ieee80211 phy1: tx rings drained
+[539374.401372] ieee80211 phy1: Created a BA stream for (BSSID MAC) : tid 0
 
-> In addition, upon receiving a packet, if next hop is not found,
-> trigger PERQ immidiatly, instead of just putting it in the queue.
+`iw event -t' logs (it looks like OpenWRT is patching the heck out of this
+tool):
 
-"PREQ"
+1465008930.594531: wlan1 (phy #1): unknown event 60
+1465008930.652119: wlan1 (phy #1): unknown event 60
+1465008930.653494: wlan1 (phy #1): unknown event 60
+1465008930.655582: wlan1: new station (BSSID MAC)
 
-Please split this into a separate patch that we can review
-separately (and also give the "why" in the commit log).
+There are a number of other users who are also experiencing the same
+issue on the OpenWRT bug tracker:
 
-> Signed-off-by: Maital Hahn <maitalm@ti.com>
-> Acked-by: Yaniv Machani <yanivma@ti.com>
-> ---
->  net/mac80211/cfg.c       |  1 +
->  net/mac80211/mesh.c      |  3 ++-
->  net/mac80211/mesh_hwmp.c | 42 +++++++++++++++++++++++++-----------------
->  3 files changed, 28 insertions(+), 18 deletions(-)
-> 
-> diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-> index 0c12e40..f876ef7 100644
-> --- a/net/mac80211/cfg.c
-> +++ b/net/mac80211/cfg.c
-> @@ -1011,6 +1011,7 @@ static void sta_apply_mesh_params(struct ieee80211_local *local,
->  			if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
->  				changed = mesh_plink_dec_estab_count(sdata);
->  			sta->mesh->plink_state = params->plink_state;
-> +			mesh_path_flush_by_nexthop(sta);
+https://dev.openwrt.org/ticket/21284
 
-This isn't necessary, caller should already be doing
-mesh_path_flush_by_nexthop() in every case I could see.  Besides it
-cannot be done under plink lock.
+As I noted in the bug the driver works with some of my wireless devices
+and not others which suggests that something subtle is up with some
+driver in this picture.
 
-> +++ b/net/mac80211/mesh.c
-> @@ -159,7 +159,8 @@ void mesh_sta_cleanup(struct sta_info *sta)
->  	if (!sdata->u.mesh.user_mpm) {
->  		changed |= mesh_plink_deactivate(sta);
->  		del_timer_sync(&sta->mesh->plink_timer);
-> -	}
-> +	} else
-> +		mesh_path_flush_by_nexthop(sta);
-
-And this is already fixed in mac80211-next.
+I don't have a whole lot of experience with kernel development (pretty
+much none actually) and I know absolutely nothing about how these WiFi
+devices work.  However I am willing to work with you or anyone else on
+the linux-wireless list (which I have CCd) to help troubleshoot this
+issue.  I am using OpenWRT on this router and I can get a build
+environment set up for debug kernel builds with their toolchain.  I'm
+running a pretty recent kernel (4.4.7) but git log suggests this driver
+hasn't been touched in a while.
 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+David Gilman  :DG<
+http://gilslotd.com
