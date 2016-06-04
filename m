@@ -1,54 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:57861 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754312AbcFPNvw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 09:51:52 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: netdev@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/8] wireless: brcmsmac: fix old-style declaration
-Date: Thu, 16 Jun 2016 15:52:09 +0200
-Message-Id: <20160616135245.3198419-2-arnd@arndb.de> (sfid-20160616_155214_230187_257DF66A)
-In-Reply-To: <20160616135245.3198419-1-arnd@arndb.de>
-References: <20160616135020.3154461-1-arnd@arndb.de>
- <20160616135245.3198419-1-arnd@arndb.de>
+Received: from mout.web.de ([212.227.15.14]:54053 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750740AbcFDUDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jun 2016 16:03:13 -0400
+Subject: Re: [PATCH] rtlwifi: Change long delays to sleeps
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
+ <57530495.50302@web.de> <87fusssxqn.fsf@kamboji.qca.qualcomm.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Jan Kiszka <jan.kiszka@web.de>
+Message-ID: <575333EB.1060101@web.de> (sfid-20160604_220317_385956_F9AF9369)
+Date: Sat, 4 Jun 2016 22:02:51 +0200
+MIME-Version: 1.0
+In-Reply-To: <87fusssxqn.fsf@kamboji.qca.qualcomm.com>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="WCFEgWEdhRMKoUtf3IA1a5bAtHd55m729"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Modern C standards expect the 'static' keyword to come first in a
-declaration, and we get a warning for this with "make W=1":
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--WCFEgWEdhRMKoUtf3IA1a5bAtHd55m729
+Content-Type: multipart/mixed; boundary="SJCbkLx6VuddDrprM5aWcrKxVsxLdncTu"
+From: Jan Kiszka <jan.kiszka@web.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>, devel@driverdev.osuosl.org,
+ linux-wireless@vger.kernel.org,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Message-ID: <575333EB.1060101@web.de>
+Subject: Re: [PATCH] rtlwifi: Change long delays to sleeps
+References: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
+ <57530495.50302@web.de> <87fusssxqn.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87fusssxqn.fsf@kamboji.qca.qualcomm.com>
 
-drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c:3353:1: error: 'static' is not at beginning of declaration [-Werror=old-style-declaration]
+--SJCbkLx6VuddDrprM5aWcrKxVsxLdncTu
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On 2016-06-04 18:52, Kalle Valo wrote:
+> Jan Kiszka <jan.kiszka@web.de> writes:
+>=20
+>> On 2016-02-15 23:12, Larry Finger wrote:
+>>> Routine rtl_addr_delay() uses delay statements in code that can
+>>> sleep. To improve system responsiveness, the various delay statements=
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-index e16ee60639f5..c2a938b59044 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-@@ -3349,8 +3349,8 @@ static void brcms_b_coreinit(struct brcms_c_info *wlc)
- 	dma_rxfill(wlc_hw->di[RX_FIFO]);
- }
- 
--void
--static brcms_b_init(struct brcms_hardware *wlc_hw, u16 chanspec) {
-+static void brcms_b_init(struct brcms_hardware *wlc_hw, u16 chanspec)
-+{
- 	u32 macintmask;
- 	bool fastclk;
- 	struct brcms_c_info *wlc = wlc_hw->wlc;
--- 
-2.9.0
+>>> are changed.
+>>>
+>>> In addition, routines rtl_rfreg_delay() and rtl_bb_delay() are
+>>> rewritten to use the code in rtl_addr_delay() for most of their
+>>> input values.
+>>>
+>>> Suggested-by: Byeoungwook Kim <quddnr145@gmail.com>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>=20
+> [...]
+>=20
+>> This breaks spectacularly when turning on a little bit of correctness
+>> checking:
+>>
+>> BUG: scheduling while atomic: wpa_supplicant/1116/0x00000002
+>=20
+> This should fix it:
+>=20
+> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git=
+/commit/?id=3Dde26859dcf363d520cc44e59f6dcaf20ebe0aadf
+>=20
 
+Probably, will test later. But you should really work on making all
+these task-context-only. Threaded IRQs?
+
+Jan
+
+
+--SJCbkLx6VuddDrprM5aWcrKxVsxLdncTu--
+
+--WCFEgWEdhRMKoUtf3IA1a5bAtHd55m729
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iEYEARECAAYFAldTM+sACgkQitSsb3rl5xS13gCghEWxFzlOLXs+fIf7EQRLGpVu
+7VEAnAsYE+V9V8nziVl7hwi3ge7UZEpF
+=OAtT
+-----END PGP SIGNATURE-----
+
+--WCFEgWEdhRMKoUtf3IA1a5bAtHd55m729--
