@@ -1,63 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60734 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbcF3TuC (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16849 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750996AbcFDOyH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 15:50:02 -0400
-Date: Fri, 1 Jul 2016 01:19:49 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Sat, 4 Jun 2016 10:54:07 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: Fix 10.4 extended peer stats update
-Message-ID: <20160630194949.GA13923@atheros-ThinkPad-T61> (sfid-20160630_215007_779240_E3C2575F)
-References: <1464851602-12969-1-git-send-email-mohammed@qca.qualcomm.com>
- <87vb0r5529.fsf@kamboji.qca.qualcomm.com>
- <87r3bf54v6.fsf@kamboji.qca.qualcomm.com>
- <20160630105951.GA10001@atheros-ThinkPad-T61>
- <87mvm353x1.fsf@kamboji.qca.qualcomm.com>
+Subject: Re: [PATCH 1/2] ath10k: Define an enum to enable cycle counter
+ wraparound logic
+Date: Sat, 4 Jun 2016 14:53:54 +0000
+Message-ID: <8760tpt37i.fsf@kamboji.qca.qualcomm.com> (sfid-20160604_165411_619445_06441A92)
+References: <1464968596-19834-1-git-send-email-vthiagar@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87mvm353x1.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 30, 2016 at 11:09:31AM +0000, Valo, Kalle wrote:
-> Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
-> 
-> > Hi Kalle,
-> >
-> > On Thu, Jun 30, 2016 at 10:49:02AM +0000, Valo, Kalle wrote:
-> >> Kalle Valo <kvalo@qca.qualcomm.com> writes:
-> >> 
-> >> >> @@ -261,6 +263,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
-> >> >>  			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
-> >> >>  			.board_size = QCA4019_BOARD_DATA_SZ,
-> >> >>  			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
-> >> >> +			.extd_peer_stats = true,
-> >> >>  		},
-> >> >>  	},
-> >> >>  };
-> >> >
-> >> > This is not a hardware feature so hw_params is not really the right
-> >> > place to handle this. In the pending branch I tried to solve this a bit
-> >> > differently:
-> >> >
-> >> > https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=ecf4daadc7677518ec7185dbddab959ac6e2db96
-> >> >
-> >> > I added a bool "extended" to struct ath10k_fw_stats which is used to
-> >> > detect if extended stats are used. Would that work? Please note that I
-> >> > have only compile tested the patch.
-> >
-> > [shafi] thanks for taking time to do this, the change looks fine to me !
-> > since 'ath10k_sta_update_rx_duration' is called right after 'ath10k_wmi_pull_fw_stats'
-> > this should properly update the rx_duration based on the current data
-> 
-> Could you also run some tests to make sure? I don't trust my own code :)
->
-[shafi] sure no problem, will do that, thanks for fixing this properly
+Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
 
-regards,
-shafi
+> QCA988X hw implements a different cycle counter wraparound
+> behaviour when compared to QCA4019. To properly handle different
+> wraparound logic for these chipsets replace already available
+> bool hw_params member, has_shifted_cc_wraparound, with an
+> enum which could be extended to handle different wraparound
+> behaviour. This patch keeps the existing logic functionally
+> same and a prepares cycle counter wraparound handling to
+> extend for other chips.
+>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+
+[...]
+
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -55,7 +55,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>  		.name = "qca988x hw2.0",
+>  		.patch_load_addr = QCA988X_HW_2_0_PATCH_LOAD_ADDR,
+>  		.uart_pin = 7,
+> -		.has_shifted_cc_wraparound = true,
+> +		.cc_wraparound_type = ATH10K_HW_CC_WRAP_SHIFTED_ALL,
+>  		.otp_exe_param = 0,
+>  		.channel_counters_freq_hz = 88000,
+>  		.max_probe_resp_desc_thres = 0,
+> @@ -224,7 +224,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>  		.name = "qca4019 hw1.0",
+>  		.patch_load_addr = QCA4019_HW_1_0_PATCH_LOAD_ADDR,
+>  		.uart_pin = 7,
+> -		.has_shifted_cc_wraparound = true,
+> +		.cc_wraparound_type = ATH10K_HW_CC_WRAP_SHIFTED_ALL,
+>  		.otp_exe_param = 0x0010000,
+>  		.continuous_frag_desc = true,
+>  		.channel_counters_freq_hz = 125000,
+
+As the pending branch has the QCA9887 patch I added
+ATH10K_HW_CC_WRAP_SHIFTED_ALL also for QCA9887. Please review my changes
+in the pending branch:
+
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=2fa32dbd9f26e8b2f323ca30ad116ea486840aba
+
+-- 
+Kalle Valo
