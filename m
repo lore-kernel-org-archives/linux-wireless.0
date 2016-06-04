@@ -1,79 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:33484 "EHLO
-	mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753142AbcFIAGH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 20:06:07 -0400
+Received: from bues.ch ([80.190.117.144]:49143 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750834AbcFDLza (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 4 Jun 2016 07:55:30 -0400
+Date: Sat, 4 Jun 2016 13:55:13 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Hugh =?UTF-8?B?U2lwacOocmU=?= <hgsipiere@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: ssb: Change bare unsigned to unsigned int to
+ suit coding style
+Message-ID: <20160604135513.7e905c3c@wiggum> (sfid-20160604_135553_205229_79BC305A)
+In-Reply-To: <1465041005-5511-1-git-send-email-hgsipiere@gmail.com>
+References: <1465041005-5511-1-git-send-email-hgsipiere@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAEO8o4kD7MU09o+xOwPLn-PAgcuMExQ0MbNWgqv0fOs61rG8Xw@mail.gmail.com>
-References: <1465388474-20503-1-git-send-email-prasunmaiti87@gmail.com>
- <87wplzkbd9.fsf@kamboji.qca.qualcomm.com> <CAEO8o4=DnEfXQAnAOxugC9TngbhvgV9DXz0HOVHNLk0B2fAXQA@mail.gmail.com>
- <87porrkaax.fsf@kamboji.qca.qualcomm.com> <CAEO8o4kD7MU09o+xOwPLn-PAgcuMExQ0MbNWgqv0fOs61rG8Xw@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 9 Jun 2016 10:05:45 +1000
-Message-ID: <CAGRGNgV4sL2TypkR+zsaDHN26KCF0kjtWPsi9y9D_JkGpvWrUw@mail.gmail.com> (sfid-20160609_020625_103504_341B507F)
-Subject: Re: [PATCH] Add .set_antenna callback in ath6kl driver to remove
- wireless core warns
-To: Prasun Maiti <prasunmaiti87@gmail.com>
-Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-	Linux Next <linux-next@vger.kernel.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/GLkzHrpXbrgrOubiXYMwQZD"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Prasun,
+--Sig_/GLkzHrpXbrgrOubiXYMwQZD
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Jun 9, 2016 at 1:20 AM, Prasun Maiti <prasunmaiti87@gmail.com> wrote:
-> I am not sure it works fine. Like ath6kl driver send another cmd to
-> firmare, I have just filled up the cmd buffer with "tx_ant", and
-> "rx_ant" values, then use "ath6kl_wmi_cmd_send()" api to send the cmd
-> buffer to firmware.
-> I have resend the patch as there are some errors in the previous patch.
-> Let me know if any modifications are needed?
+On Sat,  4 Jun 2016 12:50:05 +0100
+Hugh Sipi=C3=A8re <hgsipiere@gmail.com> wrote:
 
-Let me ask the question in another way: how do you know that the
-command WMI_SET_ANTENNA_CMDID exists, has that number, takes arguments
-in that format and works?
+> These lines just have unsigned gpio rather than unsigned int gpio.
+> I changed it to suit the coding style.
+>=20
+> Signed-off-by: Hugh Sipi=C3=A8re <hgsipiere@gmail.com>
 
-Thanks,
+Acked-by: Michael Buesch <m@bues.ch>
 
-Julian Calaby
+Please send this to the MIPS tree, because this basically is MIPS-only
+code:
 
-
-> On Wed, Jun 8, 2016 at 8:16 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->> Prasun Maiti <prasunmaiti87@gmail.com> writes:
->>
->>> No. I did not any test for that case.
->>> This driver create a new wiphy for use with cfg80211 through
->>> "wiphy_new_nm" api, but in this api, I found that more warnings for
->>> inconsistent ops are added there. e.g; "WARN_ON(ops->set_antenna &&
->>> !ops->get_antenna);"
->>> So, warning comes during creation of a new wiphy. That's why It is needed.
->>
->> I'm confused. Are you really saying that you added a new firmware
->> command (WMI_SET_ANTENNA_CMDID) to ath6kl but you didn't test it in any
->> way? How do you know that it works then?
->>
->> --
->> Kalle Valo
->
->
->
-> --
-> Thanks,
-> Prasun
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+MIPS
+M:      Ralf Baechle <ralf@linux-mips.org>
+L:      linux-mips@linux-mips.org
 
 
+--=20
+Michael
 
--- 
-Julian Calaby
+--Sig_/GLkzHrpXbrgrOubiXYMwQZD
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJXUsGhAAoJEPUyvh2QjYsORLIQAMEAbIWEON42ZtZYytY9JLBP
++ZgEoSy7Dl/9WZyBAhwXmsBpaY4Ba8y6gL/JZY3tKNFURSnXAJtSWUrqC/x9X/qR
+se7mN9D4xTyq+fu0/iSfofr+z3cJ0iWnS3AvOhqyZpTM6Ioi5wc2otH3D3SeSs9v
+3frbJBKTrKWTwjWx34NRhluNR13PBN/qd1Jbkc74gwi2nGQDXmbzDMrPGsLCx4jb
+JyNc2IZRKAdefF89U/AE1/Z7zaDOv6tNp2hqC/OFtBx9FI5F5MC/VjIGfdAaasCN
+GKBwmthc46BULVDh+jyywsGCjBwJSWuxV6LCTxkwJCOp/XMKkjPEnZ6laX2vPkY6
+ocVwuxVAc/nPoPihPbCgcynp5BB7EYctqMmFlDGppKTISSeBdIKLMVU++Ja0TcRg
+z7EEiWmC+F7jS9Y1HczBOqilon+j0W1x2D7V2XPqyL0eXDx6cUAntOnSnSA7x5wa
+/T8F77fz89SsNgqeJTjy1FJUv9baizx+ieyU+pn2Fgk7zaBelgofIibkeLbI7kus
+FjBJOEXlPV71B3pZ/U6t3j20Tk6y8T7dBiUjGn4wZego0abKVFptel65Ccu9arMI
+HnUw+uOWofTLTamJsevoT78mvRIx2zqvETAzj+JzwEoXBtw6+Io5HDc9tIOG2sl0
+WwNOUGpQsb8sUbDGe5uN
+=B2EL
+-----END PGP SIGNATURE-----
+
+--Sig_/GLkzHrpXbrgrOubiXYMwQZD--
