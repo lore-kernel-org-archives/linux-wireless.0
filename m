@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63245 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932608AbcFCVbS (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43382 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753923AbcFEVxD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 17:31:18 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wrightf <wright.feng@broadcom.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 5/6] brcmfmac: change rx_seq check log from error print to debug print
-Date: Fri,  3 Jun 2016 23:31:11 +0200
-Message-Id: <1464989472-29684-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160603_233126_193355_E238510E)
-In-Reply-To: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
+	Sun, 5 Jun 2016 17:53:03 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Vittorio Gambaletta <linuxbugs@vittgam.net>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 4.6 039/121] ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
+Date: Sun,  5 Jun 2016 14:43:11 -0700
+Message-Id: <20160605214418.917729690@linuxfoundation.org> (sfid-20160606_001617_085740_09C44F0C)
+In-Reply-To: <20160605214417.708509043@linuxfoundation.org>
+References: <20160605214417.708509043@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: wrightf <wright.feng@broadcom.com>
+4.6-stable review patch.  If anyone has any objections, please let me know.
 
-The bus rx sequence is not in order because that control and event
-frames always cause immediate send, but data frames may be held
-for glomming in firmware side. It is not actually an error as the
-packets are still processed even if the RX sequence is not in order.
-Therefor the error message is rephrased and changed to a debug
-message.
+------------------
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Signed-off-by: Wright Feng <wright.feng@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
+
+commit 0f9edcdd88a993914fa1d1dc369b35dc503979db upstream.
+
+The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
+(active high instead of active low).
+
+The same PCI Subsystem ID is used by both cards, which are based on
+the same Atheros MB92 design.
+
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <ath9k-devel@qca.qualcomm.com>
+Cc: <ath9k-devel@lists.ath9k.org>
+Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/pci.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 22b7dc0..5fb8b91 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -1384,8 +1384,7 @@ static int brcmf_sdio_hdparse(struct brcmf_sdio *bus, u8 *header,
- 		return -ENXIO;
- 	}
- 	if (rd->seq_num != rx_seq) {
--		brcmf_err("seq %d: sequence number error, expect %d\n",
--			  rx_seq, rd->seq_num);
-+		brcmf_dbg(SDIO, "seq %d, expected %d\n", rx_seq, rd->seq_num);
- 		bus->sdcnt.rx_badseq++;
- 		rd->seq_num = rx_seq;
- 	}
--- 
-1.9.1
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pc
+ 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
++
++#ifdef CONFIG_ATH9K_PCOEM
++	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0029,
++			 PCI_VENDOR_ID_ATHEROS,
++			 0x2096),
++	  .driver_data = ATH9K_PCI_LED_ACT_HI },
++#endif
++
+ 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
+ 
+ #ifdef CONFIG_ATH9K_PCOEM
+
 
