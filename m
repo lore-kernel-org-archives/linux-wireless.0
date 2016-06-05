@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50409 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751173AbcF2HKV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 03:10:21 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-06-29
-Date: Wed, 29 Jun 2016 09:10:14 +0200
-Message-Id: <1467184215-4598-1-git-send-email-johannes@sipsolutions.net> (sfid-20160629_091030_745623_EE23E06B)
+Received: from mail-qt0-f193.google.com ([209.85.216.193]:33399 "EHLO
+	mail-qt0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752426AbcFEKfR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jun 2016 06:35:17 -0400
+Date: Sun, 5 Jun 2016 06:22:38 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Kemnade <andreas@kemnade.info>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	"Andrew F. Davis" <afd@ti.com>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Mark Brown <broonie@kernel.org>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] net: wireless: marvell: libertas: Remove create_workqueue
+Message-ID: <20160605102238.GA31708@htj.duckdns.org> (sfid-20160605_123533_943679_3A2BEF08)
+References: <20160604135901.GA29897@Karyakshetra>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160604135901.GA29897@Karyakshetra>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Sat, Jun 04, 2016 at 07:29:01PM +0530, Bhaktipriya Shridhar wrote:
+> alloc_workqueue replaces deprecated create_workqueue().
+> 
+> In if_sdio.c, the workqueue card->workqueue has workitem
+> &card->packet_worker, which is mapped to if_sdio_host_to_card_worker.
+> The workitem is involved in sending packets to firmware.
+> Forward progress under memory pressure is a requirement here.
+> 
+> In if_spi.c, the workqueue card->workqueue has workitem
+> &card->packet_worker, which is mapped to if_spi_host_to_card_worker.
+> The workitem is involved in sending command packets from the host.
+> Forward progress under memory pressure is a requirement here.
+> 
+> Dedicated workqueues have been used in both cases since the workitems
+> on the workqueues are involved in normal device operation with
+> WQ_MEM_RECLAIM set to gurantee forward progress under memory pressure.
+> Since there are only a fixed number of work items, explicit concurrency
+> limit is unnecessary.
+> 
+> flush_workqueue is unnecessary since destroy_workqueue() itself calls
+> drain_workqueue() which flushes repeatedly till the workqueue
+> becomes empty. Hence the calls to flush_workqueue() before
+> destroy_workqueue() have been dropped.
+> 
+> Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
 
-Another (pretty old) bug showed up, and I have a single fix for it
-from Jouni; would be nice to still get it in, but it's in mesh which
-seems to mostly have users who integrate everything themselves.
+Acked-by: Tejun Heo <tj@kernel.org>
 
-Let me know if there's any problem.
+Thanks.
 
-Thanks,
-johannes
-
-
-
-The following changes since commit 3d5fdff46c4b2b9534fa2f9fc78e90a48e0ff724:
-
-  wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel (2016-06-09 09:56:11 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-06-29
-
-for you to fetch changes up to 126e7557328a1cd576be4fca95b133a2695283ff:
-
-  mac80211: Fix mesh estab_plinks counting in STA removal case (2016-06-28 12:39:50 +0200)
-
-----------------------------------------------------------------
-A single fix:
- * fix mesh peer link counter, decrement wasn't always done at all
-
-----------------------------------------------------------------
-Jouni Malinen (1):
-      mac80211: Fix mesh estab_plinks counting in STA removal case
-
- net/mac80211/mesh.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+-- 
+tejun
