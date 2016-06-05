@@ -1,63 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:49312 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751667AbcFVMj3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2016 08:39:29 -0400
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:44135 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932495AbcFEWZE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jun 2016 18:25:04 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To: linux-kernel@vger.kernel.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org,
-	Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: [PATCH] staging: wilc1000: fix error handling in wilc_debugfs_init()
-Date: Wed, 22 Jun 2016 13:39:14 +0100
-Message-Id: <1466599154-4782-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160622_143947_246604_7D0D5A08)
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Vittorio Gambaletta <linuxbugs@vittgam.net>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 4.5 036/128] ath9k: Add a module parameter to invert LED polarity.
+Date: Sun,  5 Jun 2016 15:23:11 -0700
+Message-Id: <20160605222322.367292850@linuxfoundation.org> (sfid-20160606_004008_605658_4B31718A)
+In-Reply-To: <20160605222321.183131188@linuxfoundation.org>
+References: <20160605222321.183131188@linuxfoundation.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The common format to check if a function returned an error pointer is to
-use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
+4.5-stable review patch.  If anyone has any objections, please let me know.
 
-Also, if there was an error returning -EINVAL instead of -1 is more
-appropriate.
+------------------
 
-Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
+
+commit cd84042ce9040ad038e958bc67a46fcfc015c736 upstream.
+
+The LED can be active high instead of active low on some hardware.
+
+Add the led_active_high module parameter. It defaults to -1 to obey
+platform data as before.
+
+Setting the parameter to 1 or 0 will force the LED respectively
+active high or active low.
+
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <ath9k-devel@qca.qualcomm.com>
+Cc: <ath9k-devel@lists.ath9k.org>
+Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- drivers/staging/wilc1000/wilc_debugfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index fcbc95d..6252931 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -107,7 +107,7 @@ static int __init wilc_debugfs_init(void)
- 	struct wilc_debugfs_info_t *info;
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -49,6 +49,10 @@ int ath9k_led_blink;
+ module_param_named(blink, ath9k_led_blink, int, 0444);
+ MODULE_PARM_DESC(blink, "Enable LED blink on activity");
  
- 	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
--	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
-+	if (PTR_ERR(wilc_dir) == -ENODEV) {
- 		/* it's not error. the debugfs is just not being enabled. */
- 		printk("ERR, kernel has built without debugfs support\n");
- 		return 0;
-@@ -115,7 +115,7 @@ static int __init wilc_debugfs_init(void)
++static int ath9k_led_active_high = -1;
++module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
++MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
++
+ static int ath9k_btcoex_enable;
+ module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
+ MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+@@ -600,6 +604,9 @@ static int ath9k_init_softc(u16 devid, s
+ 	if (ret)
+ 		return ret;
  
- 	if (!wilc_dir) {
- 		printk("ERR, debugfs create dir\n");
--		return -1;
-+		return -EINVAL;
- 	}
- 
- 	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
-@@ -129,7 +129,7 @@ static int __init wilc_debugfs_init(void)
- 		if (!debugfs_files) {
- 			printk("ERR fail to create the debugfs file, %s\n", info->name);
- 			debugfs_remove_recursive(wilc_dir);
--			return -1;
-+			return -EINVAL;
- 		}
- 	}
- 	return 0;
--- 
-2.5.1
++	if (ath9k_led_active_high != -1)
++		ah->config.led_active_high = ath9k_led_active_high == 1;
++
+ 	/*
+ 	 * Enable WLAN/BT RX Antenna diversity only when:
+ 	 *
+
 
