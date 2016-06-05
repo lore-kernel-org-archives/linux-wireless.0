@@ -1,46 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:33621 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753362AbcFQJ6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 05:58:36 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	Sven Eckelmann <sven@narfation.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>,
-	Sujith Manoharan <c_manoha@qca.qualcomm.com>
-Subject: [PATCH] ath9k: Fix programming of minCCA power threshold
-Date: Fri, 17 Jun 2016 11:58:20 +0200
-Message-Id: <1466157500-30791-1-git-send-email-sven@narfation.org> (sfid-20160617_115840_251052_E2D93D56)
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33053 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751348AbcFERkh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jun 2016 13:40:37 -0400
+Message-ID: <57546409.70506@gmail.com> (sfid-20160605_194104_851495_5C2F875A)
+Date: Sun, 05 Jun 2016 23:10:25 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+MIME-Version: 1.0
+To: Kalle Valo <kvalo@codeaurora.org>,
+	"Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+CC: Stephen Rothwell <sfr@canb.auug.org.au>,
+	ath9k-devel <ath9k-devel@qualcomm.com>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: Re: ath9k gpio request
+References: <20160530132225.4d297678@canb.auug.org.au>	<574C4851.9090201@gmail.com>	<87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com>	<574D3EAA.3060102@gmail.com> <1464764036580.70506@qti.qualcomm.com>	<574EC331.1080901@gmail.com> <574ED297.4080004@gmail.com>	<1464854569880.79341@qti.qualcomm.com> <57501AE4.7080104@gmail.com>	<8760tqn8fc.fsf@purkki.adurom.net>	<1464932944074.85131@qti.qualcomm.com> <87d1nxt3y9.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87d1nxt3y9.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function ar9003_hw_apply_minccapwr_thresh takes as second parameter not
-a pointer to the channel but a boolean value describing whether the channel
-is 2.4GHz or not. This broke (according to the origin commit) the ETSI
-regulatory compliance on 5GHz channels.
+On Saturday 04 June 2016 08:07 PM, Kalle Valo wrote:
+> (Fixing top posting)
+>
+> "Pan, Miaoqing" <miaoqing@qti.qualcomm.com> writes:
+>
+>>>> --- a/drivers/net/wireless/ath/ath9k/reg.h
+>>>> +++ b/drivers/net/wireless/ath/ath9k/reg.h
+>>>> @@ -1122,8 +1122,8 @@ enum {
+>>>>    #define AR9300_NUM_GPIO                          16
+>>>>    #define AR9330_NUM_GPIO                                 16
+>>>>    #define AR9340_NUM_GPIO                                 23
+>>>> -#define AR9462_NUM_GPIO                                 10
+>>>> -#define AR9485_NUM_GPIO                                 12
+>>>> +#define AR9462_NUM_GPIO                                 14
+>>>> +#define AR9485_NUM_GPIO                                 11
+>>>>    #define AR9531_NUM_GPIO                                 18
+>>>>    #define AR9550_NUM_GPIO                                 24
+>>>>    #define AR9561_NUM_GPIO                                 23
+>>>> @@ -1139,8 +1139,8 @@ enum {
+>>>>    #define AR9300_GPIO_MASK                        0x0000F4FF
+>>>>    #define AR9330_GPIO_MASK                        0x0000F4FF
+>>>>    #define AR9340_GPIO_MASK                        0x0000000F
+>>>> -#define AR9462_GPIO_MASK                        0x000003FF
+>>>> -#define AR9485_GPIO_MASK                        0x00000FFF
+>>>> +#define AR9462_GPIO_MASK                        0x00003FFF
+>>>> +#define AR9485_GPIO_MASK                        0x000007FF
+>>>>    #define AR9531_GPIO_MASK                        0x0000000F
+>>>>    #define AR9550_GPIO_MASK                        0x0000000F
+>>>>    #define AR9561_GPIO_MASK                        0x0000000F
+>>>
+>>> solves the problem.
+>>>
+>>> Tested-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+>>
+>> Done, https://patchwork.kernel.org/patch/9151847/
+>
+> But the patch 9151847 is different from what Sudip tested above? Why?
+>
+> And if you modify something _after_ the reporter has tested the patch
+> clearly document what you changed and why. I do not want find hidden
+> changes like this, even more so when the patch is going to a 4.7-rc
+> release.
+>
+> Sudip, could you also test patch 9151847, please? You can download the
+> patch from the patchwork link above.
 
-Fixes: 3533bf6b15a0 ("ath9k: Fix regulatory compliance")
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>
-Cc: Sujith Manoharan <c_manoha@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This is also ok. Please add my
+Tested-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index dec1a31..e2083f4 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4176,7 +4176,7 @@ static void ath9k_hw_ar9300_set_board_values(struct ath_hw *ah,
- 	if (!AR_SREV_9330(ah) && !AR_SREV_9340(ah) && !AR_SREV_9531(ah))
- 		ar9003_hw_internal_regulator_apply(ah);
- 	ar9003_hw_apply_tuning_caps(ah);
--	ar9003_hw_apply_minccapwr_thresh(ah, chan);
-+	ar9003_hw_apply_minccapwr_thresh(ah, is2ghz);
- 	ar9003_hw_txend_to_xpa_off_apply(ah, is2ghz);
- 	ar9003_hw_thermometer_apply(ah);
- 	ar9003_hw_thermo_cal_apply(ah);
--- 
-2.8.1
+and maybe a Reported-by tag is also appropriate in this case.
 
+
+Regards
+Sudip
