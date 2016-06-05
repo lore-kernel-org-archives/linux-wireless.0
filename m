@@ -1,54 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47262 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752097AbcFPMxL (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:42922 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753452AbcFEVmr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 08:53:11 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Enable beacon loss detection support for 10.4
-Date: Thu, 16 Jun 2016 18:24:44 +0530
-Message-ID: <1466081684-8074-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160616_145315_237467_1D228F20)
+	Sun, 5 Jun 2016 17:42:47 -0400
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org, linux-wireless@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
+	Vittorio Gambaletta <linuxbugs@vittgam.net>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Subject: [PATCH 4.4 32/99] ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
+Date: Sun,  5 Jun 2016 14:41:05 -0700
+Message-Id: <20160605213906.184537257@linuxfoundation.org> (sfid-20160606_005514_835959_9E2AC788)
+In-Reply-To: <20160605213902.974592018@linuxfoundation.org>
+References: <20160605213902.974592018@linuxfoundation.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+4.4-stable review patch.  If anyone has any objections, please let me know.
 
-Enable beacon loss detection support for 10.4 by handling
-roam event. With this change QCA99X0 station is able to
-detect beacon loss when the AP is powered off
+------------------
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
+
+commit 0f9edcdd88a993914fa1d1dc369b35dc503979db upstream.
+
+The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
+(active high instead of active low).
+
+The same PCI Subsystem ID is used by both cards, which are based on
+the same Atheros MB92 design.
+
+Cc: <linux-wireless@vger.kernel.org>
+Cc: <ath9k-devel@qca.qualcomm.com>
+Cc: <ath9k-devel@lists.ath9k.org>
+Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/net/wireless/ath/ath9k/pci.c |   10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 6279ab4..4dd35f1 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -5257,6 +5257,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 	case WMI_10_4_PEER_STA_KICKOUT_EVENTID:
- 		ath10k_wmi_event_peer_sta_kickout(ar, skb);
- 		break;
-+	case WMI_10_4_ROAM_EVENTID:
-+		ath10k_wmi_event_roam(ar, skb);
-+		break;
- 	case WMI_10_4_HOST_SWBA_EVENTID:
- 		ath10k_wmi_event_host_swba(ar, skb);
- 		break;
-@@ -7903,6 +7906,7 @@ static const struct wmi_ops wmi_10_4_ops = {
- 	.pull_phyerr = ath10k_wmi_10_4_op_pull_phyerr_ev,
- 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
- 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
-+	.pull_roam_ev = ath10k_wmi_op_pull_roam_ev,
- 	.get_txbf_conf_scheme = ath10k_wmi_10_4_txbf_conf_scheme,
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pc
+ 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
+ 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
++
++#ifdef CONFIG_ATH9K_PCOEM
++	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
++	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
++			 0x0029,
++			 PCI_VENDOR_ID_ATHEROS,
++			 0x2096),
++	  .driver_data = ATH9K_PCI_LED_ACT_HI },
++#endif
++
+ 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
  
- 	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
--- 
-1.9.1
+ #ifdef CONFIG_ATH9K_PCOEM
+
 
