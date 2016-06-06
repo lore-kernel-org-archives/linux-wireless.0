@@ -1,283 +1,226 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:33326 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750894AbcF0KN3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 06:13:29 -0400
-From: Prasun Maiti <prasunmaiti87@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux Next <linux-next@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v4] mwifiex: Reduce endian conversion for REG Host Commands
-Date: Mon, 27 Jun 2016 15:43:22 +0530
-Message-Id: <1467022402-23990-1-git-send-email-prasunmaiti87@gmail.com> (sfid-20160627_121346_261540_B7519811)
-In-Reply-To: <39f33dff10344e53b0fbbc9681f90b33@SC-EXCH04.marvell.com>
-References: <39f33dff10344e53b0fbbc9681f90b33@SC-EXCH04.marvell.com>
+Received: from lists.s-osg.org ([54.187.51.154]:41346 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752681AbcFFRDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2016 13:03:15 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Javier Martinez Canillas <javier@osg.samsung.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH v2 3/3] mwifiex: add get_antenna support for cfg80211
+Date: Mon,  6 Jun 2016 13:02:38 -0400
+Message-Id: <1465232558-31678-4-git-send-email-javier@osg.samsung.com> (sfid-20160606_190343_458113_1946547A)
+In-Reply-To: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
+References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For multiple REG Host Commands (e.g HostCmd_CMD_802_11_EEPROM_ACCESS,
-HostCmd_CMD_MAC_REG_ACCESS etc.) "cpu_to_leX"-converted values are
-saved to driver. So, "leX_to_cpu" conversion is required too many
-times afterwards in driver.
+From: Shengzhen Li <szli@marvell.com>
 
-This patch reduces the endian: conversion without saving "cpu_to_leX"
-converted values in driver. This will convert endianness in prepare
-command and command response path.
+Since commit de3bb771f471 ("cfg80211: add more warnings for inconsistent
+ops") the wireless core warns if a driver implements a cfg80211 callback
+but doesn't implements the inverse operation.
 
-Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
+The mwifiex driver defines a .set_antenna handler but not a .get_antenna
+so this not only makes the core to print a warning when creating a new
+wiphy but also the antenna isn't reported to user-space apps such as iw.
+
+This patch queries the antenna to the firmware so is properly reported to
+user-space. With this patch, the wireless core does not warn anymore and:
+
+$ iw phy phy0 info | grep Antennas
+        Available Antennas: TX 0x3 RX 0x3
+        Configured Antennas: TX 0x3 RX 0x3
+
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+[javier: expand the commit message]
+Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+
 ---
-Changes in v3:
-	- Fixed the following warnings:
-	* sta_ioctl.c:1339:34: warning: comparison of distinct pointer types lacks a cast [enabled by default]
-	* sta_cmdresp.c:821:6: warning: comparison of distinct pointer types lacks a cast [enabled by default]
 
-Changes in v4:
-	- Fixed the sparse compilation warnings:
-	* warning: cast from restricted __le32
-	* warning: cast from restricted __le16
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 16 +++++++
+ drivers/net/wireless/marvell/mwifiex/fw.h          |  3 ++
+ drivers/net/wireless/marvell/mwifiex/init.c        |  2 +
+ drivers/net/wireless/marvell/mwifiex/main.h        |  2 +
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 50 +++++++++++++++-------
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 10 +++--
+ 6 files changed, 64 insertions(+), 19 deletions(-)
 
- drivers/net/wireless/marvell/mwifiex/ioctl.h       | 10 +++---
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 28 +++++++---------
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 37 +++++++++++-----------
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   | 21 ++++++------
- 4 files changed, 46 insertions(+), 50 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/ioctl.h b/drivers/net/wireless/marvell/mwifiex/ioctl.h
-index a5a48c1..4ce9330 100644
---- a/drivers/net/wireless/marvell/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/marvell/mwifiex/ioctl.h
-@@ -341,16 +341,16 @@ enum {
- };
-
- struct mwifiex_ds_reg_rw {
--	__le32 type;
--	__le32 offset;
--	__le32 value;
-+	u32 type;
-+	u32 offset;
-+	u32 value;
- };
-
- #define MAX_EEPROM_DATA 256
-
- struct mwifiex_ds_read_eeprom {
--	__le16 offset;
--	__le16 byte_count;
-+	u16 offset;
-+	u16 byte_count;
- 	u8 value[MAX_EEPROM_DATA];
- };
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index ff3f63ed95e1..ff1eefe5087b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1819,6 +1819,21 @@ mwifiex_cfg80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
+ 				HostCmd_ACT_GEN_SET, 0, &ant_cfg, true);
+ }
+ 
++static int
++mwifiex_cfg80211_get_antenna(struct wiphy *wiphy, u32 *tx_ant, u32 *rx_ant)
++{
++	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
++	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
++							MWIFIEX_BSS_ROLE_ANY);
++	mwifiex_send_cmd(priv, HostCmd_CMD_RF_ANTENNA,
++			 HostCmd_ACT_GEN_GET, 0, NULL, true);
++
++	*tx_ant = priv->tx_ant;
++	*rx_ant = priv->rx_ant;
++
++	return 0;
++}
++
+ /* cfg80211 operation handler for stop ap.
+  * Function stops BSS running at uAP interface.
+  */
+@@ -3962,6 +3977,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.change_beacon = mwifiex_cfg80211_change_beacon,
+ 	.set_cqm_rssi_config = mwifiex_cfg80211_set_cqm_rssi_config,
+ 	.set_antenna = mwifiex_cfg80211_set_antenna,
++	.get_antenna = mwifiex_cfg80211_get_antenna,
+ 	.del_station = mwifiex_cfg80211_del_station,
+ 	.sched_scan_start = mwifiex_cfg80211_sched_scan_start,
+ 	.sched_scan_stop = mwifiex_cfg80211_sched_scan_stop,
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 8e4145abdbfa..cef72343f5b6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -462,6 +462,9 @@ enum P2P_MODES {
+ #define HostCmd_ACT_SET_RX              0x0001
+ #define HostCmd_ACT_SET_TX              0x0002
+ #define HostCmd_ACT_SET_BOTH            0x0003
++#define HostCmd_ACT_GET_RX              0x0004
++#define HostCmd_ACT_GET_TX              0x0008
++#define HostCmd_ACT_GET_BOTH            0x000c
+ 
+ #define RF_ANTENNA_AUTO                 0xFFFF
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 78c532f0d286..fbaf49056746 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -110,6 +110,8 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
+ 	priv->tx_power_level = 0;
+ 	priv->max_tx_power_level = 0;
+ 	priv->min_tx_power_level = 0;
++	priv->tx_ant = 0;
++	priv->rx_ant = 0;
+ 	priv->tx_rate = 0;
+ 	priv->rxpd_htinfo = 0;
+ 	priv->rxpd_rate = 0;
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 79c28cfb7780..2ae7ff74e1c6 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -533,6 +533,8 @@ struct mwifiex_private {
+ 	u16 tx_power_level;
+ 	u8 max_tx_power_level;
+ 	u8 min_tx_power_level;
++	u32 tx_ant;
++	u32 rx_ant;
+ 	u8 tx_rate;
+ 	u8 tx_htinfo;
+ 	u8 rxpd_htinfo;
 diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index e436574..9df02ba 100644
+index e436574b1698..8c658495bf66 100644
 --- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
 +++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1130,9 +1130,8 @@ static int mwifiex_cmd_reg_access(struct host_cmd_ds_command *cmd,
- 		cmd->size = cpu_to_le16(sizeof(*mac_reg) + S_DS_GEN);
- 		mac_reg = &cmd->params.mac_reg;
- 		mac_reg->action = cpu_to_le16(cmd_action);
--		mac_reg->offset =
--			cpu_to_le16((u16) le32_to_cpu(reg_rw->offset));
--		mac_reg->value = reg_rw->value;
-+		mac_reg->offset = cpu_to_le16((u16) reg_rw->offset);
-+		mac_reg->value = cpu_to_le32(reg_rw->value);
- 		break;
+@@ -313,23 +313,41 @@ static int mwifiex_cmd_rf_antenna(struct mwifiex_private *priv,
+ 
+ 	cmd->command = cpu_to_le16(HostCmd_CMD_RF_ANTENNA);
+ 
+-	if (cmd_action != HostCmd_ACT_GEN_SET)
+-		return 0;
+-
+-	if (priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2) {
+-		cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_rf_ant_mimo) +
+-					S_DS_GEN);
+-		ant_mimo->action_tx = cpu_to_le16(HostCmd_ACT_SET_TX);
+-		ant_mimo->tx_ant_mode = cpu_to_le16((u16)ant_cfg->tx_ant);
+-		ant_mimo->action_rx = cpu_to_le16(HostCmd_ACT_SET_RX);
+-		ant_mimo->rx_ant_mode = cpu_to_le16((u16)ant_cfg->rx_ant);
+-	} else {
+-		cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_rf_ant_siso) +
+-					S_DS_GEN);
+-		ant_siso->action = cpu_to_le16(HostCmd_ACT_SET_BOTH);
+-		ant_siso->ant_mode = cpu_to_le16((u16)ant_cfg->tx_ant);
++	switch (cmd_action) {
++	case HostCmd_ACT_GEN_SET:
++		if (priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2) {
++			cmd->size = cpu_to_le16(sizeof(struct
++						host_cmd_ds_rf_ant_mimo)
++						+ S_DS_GEN);
++			ant_mimo->action_tx = cpu_to_le16(HostCmd_ACT_SET_TX);
++			ant_mimo->tx_ant_mode = cpu_to_le16((u16)ant_cfg->
++							    tx_ant);
++			ant_mimo->action_rx = cpu_to_le16(HostCmd_ACT_SET_RX);
++			ant_mimo->rx_ant_mode = cpu_to_le16((u16)ant_cfg->
++							    rx_ant);
++		} else {
++			cmd->size = cpu_to_le16(sizeof(struct
++						host_cmd_ds_rf_ant_siso) +
++						S_DS_GEN);
++			ant_siso->action = cpu_to_le16(HostCmd_ACT_SET_BOTH);
++			ant_siso->ant_mode = cpu_to_le16((u16)ant_cfg->tx_ant);
++		}
++		break;
++	case HostCmd_ACT_GEN_GET:
++		if (priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2) {
++			cmd->size = cpu_to_le16(sizeof(struct
++						host_cmd_ds_rf_ant_mimo) +
++						S_DS_GEN);
++			ant_mimo->action_tx = cpu_to_le16(HostCmd_ACT_GET_TX);
++			ant_mimo->action_rx = cpu_to_le16(HostCmd_ACT_GET_RX);
++		} else {
++			cmd->size = cpu_to_le16(sizeof(struct
++						host_cmd_ds_rf_ant_siso) +
++						S_DS_GEN);
++			ant_siso->action = cpu_to_le16(HostCmd_ACT_GET_BOTH);
++		}
++		break;
  	}
- 	case HostCmd_CMD_BBP_REG_ACCESS:
-@@ -1142,9 +1141,8 @@ static int mwifiex_cmd_reg_access(struct host_cmd_ds_command *cmd,
- 		cmd->size = cpu_to_le16(sizeof(*bbp_reg) + S_DS_GEN);
- 		bbp_reg = &cmd->params.bbp_reg;
- 		bbp_reg->action = cpu_to_le16(cmd_action);
--		bbp_reg->offset =
--			cpu_to_le16((u16) le32_to_cpu(reg_rw->offset));
--		bbp_reg->value = (u8) le32_to_cpu(reg_rw->value);
-+		bbp_reg->offset = cpu_to_le16((u16) reg_rw->offset);
-+		bbp_reg->value = (u8) reg_rw->value;
- 		break;
- 	}
- 	case HostCmd_CMD_RF_REG_ACCESS:
-@@ -1154,8 +1152,8 @@ static int mwifiex_cmd_reg_access(struct host_cmd_ds_command *cmd,
- 		cmd->size = cpu_to_le16(sizeof(*rf_reg) + S_DS_GEN);
- 		rf_reg = &cmd->params.rf_reg;
- 		rf_reg->action = cpu_to_le16(cmd_action);
--		rf_reg->offset = cpu_to_le16((u16) le32_to_cpu(reg_rw->offset));
--		rf_reg->value = (u8) le32_to_cpu(reg_rw->value);
-+		rf_reg->offset = cpu_to_le16((u16) reg_rw->offset);
-+		rf_reg->value = (u8) reg_rw->value;
- 		break;
- 	}
- 	case HostCmd_CMD_PMIC_REG_ACCESS:
-@@ -1165,9 +1163,8 @@ static int mwifiex_cmd_reg_access(struct host_cmd_ds_command *cmd,
- 		cmd->size = cpu_to_le16(sizeof(*pmic_reg) + S_DS_GEN);
- 		pmic_reg = &cmd->params.pmic_reg;
- 		pmic_reg->action = cpu_to_le16(cmd_action);
--		pmic_reg->offset =
--				cpu_to_le16((u16) le32_to_cpu(reg_rw->offset));
--		pmic_reg->value = (u8) le32_to_cpu(reg_rw->value);
-+		pmic_reg->offset = cpu_to_le16((u16) reg_rw->offset);
-+		pmic_reg->value = (u8) reg_rw->value;
- 		break;
- 	}
- 	case HostCmd_CMD_CAU_REG_ACCESS:
-@@ -1177,9 +1174,8 @@ static int mwifiex_cmd_reg_access(struct host_cmd_ds_command *cmd,
- 		cmd->size = cpu_to_le16(sizeof(*cau_reg) + S_DS_GEN);
- 		cau_reg = &cmd->params.rf_reg;
- 		cau_reg->action = cpu_to_le16(cmd_action);
--		cau_reg->offset =
--				cpu_to_le16((u16) le32_to_cpu(reg_rw->offset));
--		cau_reg->value = (u8) le32_to_cpu(reg_rw->value);
-+		cau_reg->offset = cpu_to_le16((u16) reg_rw->offset);
-+		cau_reg->value = (u8) reg_rw->value;
- 		break;
- 	}
- 	case HostCmd_CMD_802_11_EEPROM_ACCESS:
-@@ -1190,8 +1186,8 @@ static int mwifiex_cmd_reg_access(struct host_cmd_ds_command *cmd,
-
- 		cmd->size = cpu_to_le16(sizeof(*cmd_eeprom) + S_DS_GEN);
- 		cmd_eeprom->action = cpu_to_le16(cmd_action);
--		cmd_eeprom->offset = rd_eeprom->offset;
--		cmd_eeprom->byte_count = rd_eeprom->byte_count;
-+		cmd_eeprom->offset = cpu_to_le16(rd_eeprom->offset);
-+		cmd_eeprom->byte_count = cpu_to_le16(rd_eeprom->byte_count);
- 		cmd_eeprom->value = 0;
- 		break;
- 	}
+-
+ 	return 0;
+ }
+ 
 diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index d18c797..1832511 100644
+index d18c7979d723..11f19b668e13 100644
 --- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
 +++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -781,45 +781,44 @@ static int mwifiex_ret_reg_access(u16 type, struct host_cmd_ds_command *resp,
- 	switch (type) {
- 	case HostCmd_CMD_MAC_REG_ACCESS:
- 		r.mac = &resp->params.mac_reg;
--		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.mac->offset));
--		reg_rw->value = r.mac->value;
-+		reg_rw->offset = (u32) le16_to_cpu(r.mac->offset);
-+		reg_rw->value = le32_to_cpu(r.mac->value);
- 		break;
- 	case HostCmd_CMD_BBP_REG_ACCESS:
- 		r.bbp = &resp->params.bbp_reg;
--		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.bbp->offset));
--		reg_rw->value = cpu_to_le32((u32) r.bbp->value);
-+		reg_rw->offset = (u32) le16_to_cpu(r.bbp->offset);
-+		reg_rw->value = (u32) r.bbp->value;
- 		break;
-
- 	case HostCmd_CMD_RF_REG_ACCESS:
- 		r.rf = &resp->params.rf_reg;
--		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.rf->offset));
--		reg_rw->value = cpu_to_le32((u32) r.bbp->value);
-+		reg_rw->offset = (u32) le16_to_cpu(r.rf->offset);
-+		reg_rw->value = (u32) r.bbp->value;
- 		break;
- 	case HostCmd_CMD_PMIC_REG_ACCESS:
- 		r.pmic = &resp->params.pmic_reg;
--		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.pmic->offset));
--		reg_rw->value = cpu_to_le32((u32) r.pmic->value);
-+		reg_rw->offset = (u32) le16_to_cpu(r.pmic->offset);
-+		reg_rw->value = (u32) r.pmic->value;
- 		break;
- 	case HostCmd_CMD_CAU_REG_ACCESS:
- 		r.rf = &resp->params.rf_reg;
--		reg_rw->offset = cpu_to_le32((u32) le16_to_cpu(r.rf->offset));
--		reg_rw->value = cpu_to_le32((u32) r.rf->value);
-+		reg_rw->offset = (u32) le16_to_cpu(r.rf->offset);
-+		reg_rw->value = (u32) r.rf->value;
- 		break;
- 	case HostCmd_CMD_802_11_EEPROM_ACCESS:
- 		r.eeprom = &resp->params.eeprom;
--		pr_debug("info: EEPROM read len=%x\n", r.eeprom->byte_count);
--		if (le16_to_cpu(eeprom->byte_count) <
--		    le16_to_cpu(r.eeprom->byte_count)) {
--			eeprom->byte_count = cpu_to_le16(0);
-+		pr_debug("info: EEPROM read len=%x\n",
-+				le16_to_cpu(r.eeprom->byte_count));
-+		if (eeprom->byte_count < le16_to_cpu(r.eeprom->byte_count)) {
-+			eeprom->byte_count = 0;
- 			pr_debug("info: EEPROM read length is too big\n");
- 			return -1;
- 		}
--		eeprom->offset = r.eeprom->offset;
--		eeprom->byte_count = r.eeprom->byte_count;
--		if (le16_to_cpu(eeprom->byte_count) > 0)
-+		eeprom->offset = le16_to_cpu(r.eeprom->offset);
-+		eeprom->byte_count = le16_to_cpu(r.eeprom->byte_count);
-+		if (eeprom->byte_count > 0)
- 			memcpy(&eeprom->value, &r.eeprom->value,
--			       le16_to_cpu(r.eeprom->byte_count));
+@@ -469,7 +469,9 @@ static int mwifiex_ret_rf_antenna(struct mwifiex_private *priv,
+ 	struct host_cmd_ds_rf_ant_siso *ant_siso = &resp->params.ant_siso;
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 
+-	if (adapter->hw_dev_mcs_support == HT_STREAM_2X2)
++	if (adapter->hw_dev_mcs_support == HT_STREAM_2X2) {
++		priv->tx_ant = le16_to_cpu(ant_mimo->tx_ant_mode);
++		priv->rx_ant = le16_to_cpu(ant_mimo->rx_ant_mode);
+ 		mwifiex_dbg(adapter, INFO,
+ 			    "RF_ANT_RESP: Tx action = 0x%x, Tx Mode = 0x%04x\t"
+ 			    "Rx action = 0x%x, Rx Mode = 0x%04x\n",
+@@ -477,12 +479,14 @@ static int mwifiex_ret_rf_antenna(struct mwifiex_private *priv,
+ 			    le16_to_cpu(ant_mimo->tx_ant_mode),
+ 			    le16_to_cpu(ant_mimo->action_rx),
+ 			    le16_to_cpu(ant_mimo->rx_ant_mode));
+-	else
++	} else {
++		priv->tx_ant = le16_to_cpu(ant_siso->ant_mode);
++		priv->rx_ant = le16_to_cpu(ant_siso->ant_mode);
+ 		mwifiex_dbg(adapter, INFO,
+ 			    "RF_ANT_RESP: action = 0x%x, Mode = 0x%04x\n",
+ 			    le16_to_cpu(ant_siso->action),
+ 			    le16_to_cpu(ant_siso->ant_mode));
 -
-+			       min((u16)MAX_EEPROM_DATA, eeprom->byte_count));
- 		break;
- 	default:
- 		return -1;
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 8e08626..6dab5ca 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -1247,7 +1247,7 @@ static int mwifiex_reg_mem_ioctl_reg_rw(struct mwifiex_private *priv,
- {
- 	u16 cmd_no;
-
--	switch (le32_to_cpu(reg_rw->type)) {
-+	switch (reg_rw->type) {
- 	case MWIFIEX_REG_MAC:
- 		cmd_no = HostCmd_CMD_MAC_REG_ACCESS;
- 		break;
-@@ -1282,9 +1282,9 @@ mwifiex_reg_write(struct mwifiex_private *priv, u32 reg_type,
- {
- 	struct mwifiex_ds_reg_rw reg_rw;
-
--	reg_rw.type = cpu_to_le32(reg_type);
--	reg_rw.offset = cpu_to_le32(reg_offset);
--	reg_rw.value = cpu_to_le32(reg_value);
-+	reg_rw.type = reg_type;
-+	reg_rw.offset = reg_offset;
-+	reg_rw.value = reg_value;
-
- 	return mwifiex_reg_mem_ioctl_reg_rw(priv, &reg_rw, HostCmd_ACT_GEN_SET);
++	}
+ 	return 0;
  }
-@@ -1302,14 +1302,14 @@ mwifiex_reg_read(struct mwifiex_private *priv, u32 reg_type,
- 	int ret;
- 	struct mwifiex_ds_reg_rw reg_rw;
-
--	reg_rw.type = cpu_to_le32(reg_type);
--	reg_rw.offset = cpu_to_le32(reg_offset);
-+	reg_rw.type = reg_type;
-+	reg_rw.offset = reg_offset;
- 	ret = mwifiex_reg_mem_ioctl_reg_rw(priv, &reg_rw, HostCmd_ACT_GEN_GET);
-
- 	if (ret)
- 		goto done;
-
--	*value = le32_to_cpu(reg_rw.value);
-+	*value = reg_rw.value;
-
- done:
- 	return ret;
-@@ -1328,15 +1328,16 @@ mwifiex_eeprom_read(struct mwifiex_private *priv, u16 offset, u16 bytes,
- 	int ret;
- 	struct mwifiex_ds_read_eeprom rd_eeprom;
-
--	rd_eeprom.offset = cpu_to_le16((u16) offset);
--	rd_eeprom.byte_count = cpu_to_le16((u16) bytes);
-+	rd_eeprom.offset =  offset;
-+	rd_eeprom.byte_count = bytes;
-
- 	/* Send request to firmware */
- 	ret = mwifiex_send_cmd(priv, HostCmd_CMD_802_11_EEPROM_ACCESS,
- 			       HostCmd_ACT_GEN_GET, 0, &rd_eeprom, true);
-
- 	if (!ret)
--		memcpy(value, rd_eeprom.value, MAX_EEPROM_DATA);
-+		memcpy(value, rd_eeprom.value, min((u16)MAX_EEPROM_DATA,
-+		       rd_eeprom.byte_count));
- 	return ret;
- }
-
---
-1.9.1
+ 
+-- 
+2.5.5
 
