@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:35814 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161138AbcFBOYT convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:51185 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750933AbcFFS11 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 10:24:19 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mike@fireburn.co.uk" <mike@fireburn.co.uk>
-Subject: Re: Bug 119151 - [regression] ath10k no longer authenitcates and
- freezes system
-Date: Thu, 2 Jun 2016 14:24:11 +0000
-Message-ID: <871t4fzn1x.fsf@kamboji.qca.qualcomm.com> (sfid-20160602_162423_111404_BDF00BAB)
-References: <8760trzoiw.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <8760trzoiw.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Thu, 02 Jun 2016 16:52:23 +0300")
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 6 Jun 2016 14:27:27 -0400
+Subject: Re: How to use fractional center frequencies (4942.5, for instance)?
+To: Dave Taht <dave.taht@gmail.com>
+References: <57559106.5060606@candelatech.com>
+ <CAA93jw6S789CV3WJczYiRfD++yQ3F+1RPypTt2dnKxcZVtNyoA@mail.gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <5755C08B.1040100@candelatech.com> (sfid-20160606_202730_434863_5EEE4573)
+Date: Mon, 6 Jun 2016 11:27:23 -0700
 MIME-Version: 1.0
+In-Reply-To: <CAA93jw6S789CV3WJczYiRfD++yQ3F+1RPypTt2dnKxcZVtNyoA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+On 06/06/2016 11:19 AM, Dave Taht wrote:
+> On Mon, Jun 6, 2016 at 8:04 AM, Ben Greear <greearb@candelatech.com> wrote:
+>>
+>> It appears that some cisco equipment, at least, uses fractional center
+>> frequencies for 5Mhz channels.
+>
+> I was not aware that anything supported 5Mhz other than ath9k and
+> ath5k. Thx. Can you identify what cisco gear supports this?
 
-> there's a regression in ath10k:
->
-> https://bugzilla.kernel.org/show_bug.cgi?id=119151
->
-> Reporter bisected it to this:
->
-> 5c86d97bcc1d42ce7f75685a61be4dad34ee8183 is the first bad commit
-> commit 5c86d97bcc1d42ce7f75685a61be4dad34ee8183
-> Author: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> Date:   Tue Mar 22 17:22:19 2016 +0530
->
-> ath10k: combine txrx and replenish task
->
-> Since tx completion and rx indication processing are moved out
-> of txrx tasklet and rx ring lock contention also removed from txrx
-> for rx_ind messages, it would be efficient to combine both replenish
-> and txrx tasks. Refill threshold is adjusted for both AP135 and AP148
-> (low and high end systems). With this adjustment in AP135, TCP DL is
-> improved from 603 Mbps to 620 Mbps and UDP DL is improved from 758 Mbps
-> to 803 Mbps. Also no watchdog are observed on UDP BiDi.
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+http://www.cisco.com/c/en/us/products/wireless/aironet-1520-series/index.html
 
-Adding Mike, the bug reporter.
+Probably could find others...seems 'public safety' is the sales jargon
+to look for.
+
+Thanks,
+Ben
+
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
