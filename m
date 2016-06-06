@@ -1,89 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21250 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbcF3Koy convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:38347 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751017AbcFFKKV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 06:44:54 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
+	Mon, 6 Jun 2016 06:10:21 -0400
+Received: by mail-wm0-f53.google.com with SMTP id m124so65146859wme.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2016 03:10:20 -0700 (PDT)
+From: Sven Eckelmann <sven.eckelmann@open-mesh.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: Fix 10.4 extended peer stats update
-Date: Thu, 30 Jun 2016 10:44:47 +0000
-Message-ID: <87vb0r5529.fsf@kamboji.qca.qualcomm.com> (sfid-20160630_124621_520599_EA6F2234)
-References: <1464851602-12969-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1464851602-12969-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Thu, 2 Jun 2016 12:43:22	+0530")
-Content-Type: text/plain; charset="us-ascii"
+Subject: Re: [PATCH 2/2] ath10k: Add board data download from target
+Date: Mon, 06 Jun 2016 12:10:17 +0200
+Message-ID: <3343488.td5VS5T2AQ@bentobox> (sfid-20160606_121024_430864_3575DEC8)
+In-Reply-To: <87porxt78w.fsf@kamboji.qca.qualcomm.com>
+References: <1568876.Six5hABE57@bentobox> <1463755272-12912-2-git-send-email-sven.eckelmann@open-mesh.com> <87porxt78w.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart2361524.rvb1iTLHtp"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
+--nextPart2361524.rvb1iTLHtp
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> 10.4 'extended peer stats' will be not be appended with normal peer stats
-> data and they shall be coming in separate chunks. Fix this by maintaining
-> a separate linked list 'extender peer stats' for 10.4 and update
-> rx_duration for per station statistics. Also parse through beacon filter
-> (if enabled), to make sure we parse the extended peer stats properly.
-> This issue was exposed when more than one client is connected and
-> extended peer stats for 10.4 is enabled
->
-> The order for the stats is as below
-> S - standard peer stats, E- extended peer stats, B - beacon filter stats
->
-> {S1, S2, S3..} -> {B1, B2, B3..}(if available) -> {E1, E2, E3..}
->
-> Fixes: f9575793d44c ("ath10k: enable parsing per station rx duration for 10.4")
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> ---
-> [v1: addressed line wrap around comment from Kalle]
-> [v2: fixed ; in dummy inline function definition - thanks Sven Eckelmann]
-> [v3: removed wmi-op-version suggested by Kalle, introduced fw specifi hw param for extd_stats]
+On Saturday 04 June 2016 13:26:39 you wrote:
+[...]
+> Looking at this again I noticed that we issue this warning even if
+> EEPROM is not supported, which I think is wrong. I fixed this in the
+> pending branch, the diff is below.
+> 
+> I also renamed target_board_data to cal_eeprom because, at least to my
+> understanding, the eeprom actually contains the real calibration data,
+> not the board data file.
+> 
+> Please review so that I didn't break anything.
 
-I was sure I replied to this, but I can't find my reply anywhere. So I
-guess I didn't, sorry about that.
+Thanks for the changes. Looks good to me.
 
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->  			.board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
->  			.board_size = QCA99X0_BOARD_DATA_SZ,
->  			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
-> +			.extd_peer_stats = true,
->  		},
->  	},
->  	{
-> @@ -203,6 +204,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->  			.board = QCA9984_HW_1_0_BOARD_DATA_FILE,
->  			.board_size = QCA99X0_BOARD_DATA_SZ,
->  			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
-> +			.extd_peer_stats = true,
->  		},
->  	},
->  	{
-> @@ -261,6 +263,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->  			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
->  			.board_size = QCA4019_BOARD_DATA_SZ,
->  			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
-> +			.extd_peer_stats = true,
->  		},
->  	},
->  };
+Kind regards,
+	Sven
+--nextPart2361524.rvb1iTLHtp
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-This is not a hardware feature so hw_params is not really the right
-place to handle this. In the pending branch I tried to solve this a bit
-differently:
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=ecf4daadc7677518ec7185dbddab959ac6e2db96
+iQIcBAABCgAGBQJXVUwJAAoJEF2HCgfBJntGSygP/R1wwTnPf9TzX0Xf6X3X04Sv
+xfRCfNwwyMZUV9ahGW8EN1QtcahUJhr2NGfrwsJ6XcEK+AMcoxq3HsUlPfZ4xQrN
++yy5R1SXXUINtKgJjh3yuGBmQ+IbXc2TjzAn/R6nB7yDCaMM2A9lmUQkgvHRZrwK
+0SnaxM1j6F793WJ3qZ/+Xcq7gbjK0mENwzOtL+47X15gvYU5XEuC+TbI9RiMuD8t
+5DSqdUjOUHXU3vM2h8WK7m4z6kSIjKD1tx1YL5MJLNnmPUkpbjA5DA103fVc433G
+G0s3CjeQzRSMvi3hQI3JkaxH48n28B1V2IFhdPw3hTKczwBzSOYX6i8bxdva2gT+
+wz0Kk+jH5jBQQQoUgbzaBsfaE8POd3LF9W1q0TJi8PgphtR+HyogsmkvxdU78WjQ
+5uuCifta2QEOEO/PvLXiUAUpk2fEL8ziDwG5XUs8LxrgpkE79tLfBpvQyoudg9GR
+yfektx72fbntw4S9iRyXRjEORNiW6/2DA4cps9eVPO1Ts+lA/Xpph7TqVbErRjbs
+wtuwKAvuEtPFDnniZ+M38sJ7cxxnogGcMwG84ZynUoQixX98dQn7BAc6udqpLUGO
+Y1h1mDZJili1Mn7u2PBqBUWMzVwiGkIBKCICxi2m1jVZ/MkkjDafm3H4DqbrFhaY
+gREg9y4rrPZB3YFlK8dB
+=0vYh
+-----END PGP SIGNATURE-----
 
-I added a bool "extended" to struct ath10k_fw_stats which is used to
-detect if extended stats are used. Would that work? Please note that I
-have only compile tested the patch.
+--nextPart2361524.rvb1iTLHtp--
 
--- 
-Kalle Valo
