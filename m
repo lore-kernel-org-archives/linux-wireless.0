@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34219 "EHLO
-	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750697AbcFAEOp (ORCPT
+Received: from smtp.riverbed.com ([208.70.196.45]:14115 "EHLO
+	smtp1.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751738AbcFFO5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 00:14:45 -0400
+	Mon, 6 Jun 2016 10:57:10 -0400
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: johannes.berg@intel.com
+From: Eduardo Abinader <eduardo.abinader@riverbed.com>
+Subject: [PATCH] nl80211: avoid possible memleak on nl80211_set_reg
+Message-ID: <57558CCC.7030800@riverbed.com> (sfid-20160606_165714_376632_80401FBE)
+Date: Mon, 6 Jun 2016 16:46:36 +0200
 MIME-Version: 1.0
-In-Reply-To: <1464358702-19083-2-git-send-email-javier@osg.samsung.com>
-References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com> <1464358702-19083-2-git-send-email-javier@osg.samsung.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 1 Jun 2016 14:14:25 +1000
-Message-ID: <CAGRGNgWHGR_KJW1SExte-YSG1ynxy-GrtKjO-GRKEadUx4HpWA@mail.gmail.com> (sfid-20160601_061518_244845_3E250019)
-Subject: Re: [PATCH 1/8] mwifiex: only call mwifiex_sdio_probe_of() if dev has
- an OF node
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Setting NULL just after freeing regdomain.
 
-On Sat, May 28, 2016 at 12:18 AM, Javier Martinez Canillas
-<javier@osg.samsung.com> wrote:
-> SDIO is an auto enumerable bus so the SDIO devices are matched using the
-> sdio_device_id table and not using compatible strings from a OF id table.
->
-> However, commit ce4f6f0c353b ("mwifiex: add platform specific wakeup
-> interrupt support") allowed to match nodes defined as child of the SDIO
-> host controller in the probe function using a compatible string to setup
-> platform specific parameters in the DT.
->
-> The problem is that the OF parse function is always called regardless if
-> the SDIO dev has an OF node associated or not, and prints an error if it
-> is not found. So, on a platform that doesn't have a node for a SDIO dev,
-> the following misleading error message will be printed:
->
-> [  12.480042] mwifiex_sdio mmc2:0001:1: sdio platform data not available
->
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
+---
+  net/wireless/nl80211.c | 3 ++-
+  1 file changed, 2 insertions(+), 1 deletion(-)
 
-This looks sensible to me.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d120449..39d107d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5839,10 +5839,11 @@ static int nl80211_set_reg(struct sk_buff *skb, 
+struct genl_info *info)
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+  	r = set_regdom(rd, REGD_SOURCE_CRDA);
+  	/* set_regdom took ownership */
+-	rd = NULL;
 
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-
-Thanks,
-
+   bad_reg:
+  	kfree(rd);
++	rd = NULL;
++
+  	return r;
+  }
+  #endif /* CONFIG_CFG80211_CRDA_SUPPORT */
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+2.5.0
