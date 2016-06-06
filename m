@@ -1,55 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34669 "EHLO
-	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbcFYSiR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 14:38:17 -0400
-Received: by mail-oi0-f68.google.com with SMTP id s17so23970698oih.1
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 11:38:17 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Andrianov <andrianov@ispras.ru>
-Subject: [PATCH 4/6] rtlwifi: rtl8723be: Fix potential race condition
-Date: Sat, 25 Jun 2016 13:37:45 -0500
-Message-Id: <1466879867-2499-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_203830_531075_36271F33)
-In-Reply-To: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from lists.s-osg.org ([54.187.51.154]:40259 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753196AbcFFO7i (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2016 10:59:38 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+	Javier Martinez Canillas <javier@osg.samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH 0/2] mwifiex: add .get_tx_power and .get_antenna cfg80211 operations
+Date: Mon,  6 Jun 2016 10:59:19 -0400
+Message-Id: <1465225161-23492-1-git-send-email-javier@osg.samsung.com> (sfid-20160606_170107_452595_31834BE0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flag rfchange_inprogress in struct rtl_ps_ctl is protected by a spinlock
-in most routines but not in rtl8723be_dm_watchdog(), which could
-lead to a race condition. The necessary locking to prevent this condition
-is added.
+Hello,
 
-Reported-by: Pavel Andrianov <andrianov@ispras.ru>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pavel Andrianov <andrianov@ispras.ru>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c | 2 ++
- 1 file changed, 2 insertions(+)
+Since commit de3bb771f471 ("cfg80211: add more warnings for inconsistent
+ops") the wireless core warns if a driver implements a cfg80211 callback
+but doesn't implements the inverse operation. The mwifiex driver has two
+set operations defined without the get counterpat so warnings are shown:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-index 3a81cdb..9a4715ab 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
-@@ -1279,6 +1279,7 @@ void rtl8723be_dm_watchdog(struct ieee80211_hw *hw)
- 	if (ppsc->p2p_ps_info.p2p_ps_mode)
- 		fw_ps_awake = false;
- 
-+	spin_lock(&rtlpriv->locks.rf_ps_lock);
- 	if ((ppsc->rfpwr_state == ERFON) &&
- 		((!fw_current_inpsmode) && fw_ps_awake) &&
- 		(!ppsc->rfchange_inprogress)) {
-@@ -1294,5 +1295,6 @@ void rtl8723be_dm_watchdog(struct ieee80211_hw *hw)
- 		rtl8723be_dm_check_txpower_tracking(hw);
- 		rtl8723be_dm_dynamic_txpower(hw);
- 	}
-+	spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 	rtlpriv->dm.dbginfo.num_qry_beacon_pkt = 0;
- }
+WARNING: CPU: 3 PID: 127 at net/wireless/core.c:366 wiphy_new_nm+0x66c/0x6ac
+Modules linked in: mwifiex_sdio mwifiex
+CPU: 3 PID: 127 Comm: kworker/3:1 Tainted: G        W       4.7.0-rc1-next-20160531-00006-g569df5b983f3
+Hardware name: SAMSUNG EXYNOS (Flattened Device Tree)
+Workqueue: events request_firmware_work_func
+[<c010e1ac>] (unwind_backtrace) from [<c010af38>] (show_stack+0x10/0x14)
+[<c010af38>] (show_stack) from [<c0323b9c>] (dump_stack+0x88/0x9c)
+[<c0323b9c>] (dump_stack) from [<c011a828>] (__warn+0xe8/0x100)
+[<c011a828>] (__warn) from [<c011a8f0>] (warn_slowpath_null+0x20/0x28)
+[<c011a8f0>] (warn_slowpath_null) from [<c06a42d4>] (wiphy_new_nm+0x66c/0x6ac)
+[<c06a42d4>] (wiphy_new_nm) from [<bf1c24cc>] (mwifiex_register_cfg80211+0x28/0x3f0 [mwifiex])
+[<bf1c24cc>] (mwifiex_register_cfg80211 [mwifiex]) from [<bf1a0018>] (mwifiex_fw_dpc+0x2b0/0x474 [mwifiex])
+[<bf1a0018>] (mwifiex_fw_dpc [mwifiex]) from [<c040eb74>] (request_firmware_work_func+0x30/0x58)
+[<c040eb74>] (request_firmware_work_func) from [<c012fe90>] (process_one_work+0x124/0x338)
+[<c012fe90>] (process_one_work) from [<c01300dc>] (worker_thread+0x38/0x4d4)
+[<c01300dc>] (worker_thread) from [<c01353b8>] (kthread+0xdc/0xf4)
+[<c01353b8>] (kthread) from [<c0107978>] (ret_from_fork+0x14/0x3c)
+
+This patch series fixes the warnings by implementing callbacks for the
+get operations.
+
+There isn't public documentation about the firmware interface so the
+data is only queried to the firmware if the driver already supports
+it as is the case of the Tx power. For the antenna the driver only
+supports the get command so the get returns the cached values that
+were previously set. This can be changed to query the firmware as a
+followup by someone with access to the docs, if this is supported.
+
+Best regards,
+Javier
+
+
+Javier Martinez Canillas (2):
+  mwifiex: add a cfg80211 .get_tx_power operation callback
+  mwifiex: add a cfg80211 .get_antenna operation callback
+
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 50 ++++++++++++++++++++++++-
+ drivers/net/wireless/marvell/mwifiex/main.h     |  1 +
+ 2 files changed, 49 insertions(+), 2 deletions(-)
+
 -- 
-2.1.4
+2.5.5
 
