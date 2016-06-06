@@ -1,112 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f41.google.com ([209.85.215.41]:34922 "EHLO
-	mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993AbcF2Lur (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:35487 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752183AbcFFOea (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 07:50:47 -0400
-Received: by mail-lf0-f41.google.com with SMTP id l188so31607177lfe.2
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2016 04:50:46 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: disable wake_tx_queue for older devices
-Date: Wed, 29 Jun 2016 13:52:26 +0200
-Message-Id: <1467201146-6844-1-git-send-email-michal.kazior@tieto.com> (sfid-20160629_135051_213610_B5BA1E3F)
-In-Reply-To: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com>
-References: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 6 Jun 2016 10:34:30 -0400
+Received: by mail-pa0-f66.google.com with SMTP id gp3so11955192pac.2
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2016 07:34:25 -0700 (PDT)
+From: Prasun Maiti <prasunmaiti87@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>
+Subject: [PATCH] wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel
+Date: Mon,  6 Jun 2016 20:04:19 +0530
+Message-Id: <1465223659-11530-1-git-send-email-prasunmaiti87@gmail.com> (sfid-20160606_163435_275621_781F2C12)
+In-Reply-To: <1464690345.3076.17.camel@sipsolutions.net>
+References: <1464690345.3076.17.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ideally wake_tx_queue should be used regardless as
-it is a requirement for reducing bufferbloat and
-implementing airtime fairness in the future.
+iwpriv app uses iw_point structure to send data to Kernel. The iw_point
+structure holds a pointer. For compatibility Kernel converts the pointer
+as required for WEXT IOCTLs (SIOCIWFIRST to SIOCIWLAST). Some drivers
+may use iw_handler_def.private_args to populate iwpriv commands instead
+of iw_handler_def.private. For those case, the IOCTLs from
+SIOCIWFIRSTPRIV to SIOCIWLASTPRIV will follow the path ndo_do_ioctl().
+Accordingly when the filled up iw_point structure comes from 32 bit
+iwpriv to 64 bit Kernel, Kernel will not convert the pointer and sends
+it to driver. So, the driver may get the invalid data.
 
-However some setups (typically low-end platforms
-hosting QCA988X) suffer performance regressions
-with the current wake_tx_queue implementation.
-Therefore disable it unless it is really
-beneficial with current codebase (which is when
-firmware supports smart pull-push tx scheduling).
+The pointer conversion for the IOCTLs (SIOCIWFIRSTPRIV to
+SIOCIWLASTPRIV), which follow the path ndo_do_ioctl(), is mandatory.
+This patch adds pointer conversion from 32 bit to 64 bit and vice versa,
+if the ioctl comes from 32 bit iwpriv to 64 bit Kernel.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
+Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+Tested-by: Dibyajyoti Ghosh <dibyajyotig@gmail.com>
 ---
+ net/wireless/wext-core.c | 24 ++++++++++++++++++++++--
+ 1 file changed, 22 insertions(+), 2 deletions(-)
 
-Notes:
-    v1:
-     - improve commit log
-
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 24 ++++++++++++++++++++++--
- 2 files changed, 23 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 3da18c9dbd7a..de580af2e5ef 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -667,6 +667,7 @@ struct ath10k_fw_components {
- struct ath10k {
- 	struct ath_common ath_common;
- 	struct ieee80211_hw *hw;
-+	struct ieee80211_ops *ops;
- 	struct device *dev;
- 	u8 mac_addr[ETH_ALEN];
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index d4b7a168f7c0..958bc6c91aac 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7471,21 +7471,32 @@ static const struct ieee80211_channel ath10k_5ghz_channels[] = {
- struct ath10k *ath10k_mac_create(size_t priv_size)
- {
- 	struct ieee80211_hw *hw;
-+	struct ieee80211_ops *ops;
- 	struct ath10k *ar;
- 
--	hw = ieee80211_alloc_hw(sizeof(struct ath10k) + priv_size, &ath10k_ops);
--	if (!hw)
-+	ops = kmemdup(&ath10k_ops, sizeof(ath10k_ops), GFP_KERNEL);
-+	if (!ops)
- 		return NULL;
- 
-+	hw = ieee80211_alloc_hw(sizeof(struct ath10k) + priv_size, ops);
-+	if (!hw) {
-+		kfree(ops);
-+		return NULL;
-+	}
-+
- 	ar = hw->priv;
- 	ar->hw = hw;
-+	ar->ops = ops;
- 
- 	return ar;
- }
- 
- void ath10k_mac_destroy(struct ath10k *ar)
- {
-+	struct ieee80211_ops *ops = ar->ops;
-+
- 	ieee80211_free_hw(ar->hw);
-+	kfree(ops);
- }
- 
- static const struct ieee80211_iface_limit ath10k_if_limits[] = {
-@@ -7919,6 +7930,15 @@ int ath10k_mac_register(struct ath10k *ar)
- 			ath10k_warn(ar, "failed to initialise DFS pattern detector\n");
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index 6250b1c..a96dcc6 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -958,8 +958,28 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 			return private(dev, iwr, cmd, info, handler);
  	}
- 
-+	/* Current wake_tx_queue implementation imposes a significant
-+	 * performance penalty in some setups. The tx scheduling code needs
-+	 * more work anyway so disable the wake_tx_queue unless firmware
-+	 * supports the pull-push mechanism.
-+	 */
-+	if (!test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL,
-+		      ar->running_fw->fw_file.fw_features))
-+		ar->ops->wake_tx_queue = NULL;
+ 	/* Old driver API : call driver ioctl handler */
+-	if (dev->netdev_ops->ndo_do_ioctl)
+-		return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
++	if (dev->netdev_ops->ndo_do_ioctl) {
++#ifdef CONFIG_COMPAT
++		if (info->flags & IW_REQUEST_FLAG_COMPAT) {
++			int ret = 0;
++			struct iwreq iwr_lcl;
++			struct compat_iw_point *iwp_compat = (void *) &iwr->u.data;
 +
- 	ret = ath_regd_init(&ar->ath_common.regulatory, ar->hw->wiphy,
- 			    ath10k_reg_notifier);
- 	if (ret) {
--- 
-2.1.4
++			memcpy(&iwr_lcl, iwr, sizeof(struct iwreq));
++			iwr_lcl.u.data.pointer = compat_ptr(iwp_compat->pointer);
++			iwr_lcl.u.data.length = iwp_compat->length;
++			iwr_lcl.u.data.flags = iwp_compat->flags;
++
++			ret = dev->netdev_ops->ndo_do_ioctl(dev, (void *) &iwr_lcl, cmd);
++
++			iwp_compat->pointer = ptr_to_compat(iwr_lcl.u.data.pointer);
++			iwp_compat->length = iwr_lcl.u.data.length;
++			iwp_compat->flags = iwr_lcl.u.data.flags;
++			return ret;
++		} else
++#endif
++			return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
++	}
+ 	return -EOPNOTSUPP;
+ }
+
+--
+1.9.1
 
