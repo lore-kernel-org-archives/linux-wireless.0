@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60759 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751831AbcF0QcQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 12:32:16 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 04/12] rtl8xxxu: Correct rxdesc16 definition
-Date: Mon, 27 Jun 2016 12:32:02 -0400
-Message-Id: <1467045130-18874-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183231_757378_5B4D1918)
-In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34570 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751904AbcFFR0u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2016 13:26:50 -0400
+Received: by mail-oi0-f66.google.com with SMTP id r4so6700312oib.1
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2016 10:26:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CAA93jw7fdZhQvgCx7PXdB9yOS7ssKQFv6RG=RR2Hw9rjeXDYNQ@mail.gmail.com>
+References: <CAA93jw4bwvzfOVqVAzAYJO1tmrpqEV3-=EjChgWdF-6qRhB+3Q@mail.gmail.com>
+ <E1b9nQv-0001fc-00@www.xplot.org> <CAA93jw7fdZhQvgCx7PXdB9yOS7ssKQFv6RG=RR2Hw9rjeXDYNQ@mail.gmail.com>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Mon, 6 Jun 2016 10:26:49 -0700
+Message-ID: <CAA93jw6_A=jjzd9KAS_k9R8xYn3a003tqORU0ufKb=eOb62auQ@mail.gmail.com> (sfid-20160606_192655_270446_B6594B33)
+Subject: Re: [RFC/RFT 2/5] ath9k: use mac80211 intermediate software queues
+To: Tim Shepard <shep@alum.mit.edu>
+Cc: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	make-wifi-fast@lists.bufferbloat.net,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+For the record, michal's lastest patchset for the ath10k is here:
 
-This corrects the definition of rxdesc16 to correctly specify pkt_cnt
-for aggregated packets. This is based on the code of the vendor
-rtl8723au driver, as opposed to the struct definitions they use.
+https://github.com/kazikcz/linux/tree/fqmac-v5
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+which includes the reworked codel.h support (which also landed in
+net-next as of april 22) (no, haven't tried it yet, I'm only a day
+back from vacation)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index d0ccda8..e8158c0 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -135,7 +135,8 @@ struct rtl8xxxu_rxdesc16 {
- 
- 	u32 seq:12;
- 	u32 frag:4;
--	u32 nextpktlen:14;
-+	u32 pkt_cnt:8;
-+	u32 reserved:6;
- 	u32 nextind:1;
- 	u32 reserved0:1;
- 
-@@ -198,7 +199,8 @@ struct rtl8xxxu_rxdesc16 {
- 
- 	u32 reserved0:1;
- 	u32 nextind:1;
--	u32 nextpktlen:14;
-+	u32 reserved:6;
-+	u32 pkt_cnt:8;
- 	u32 frag:4;
- 	u32 seq:12;
- 
--- 
-2.7.4
+... but it would pay to leverage rate control more, for the ath9k, and
+I'd like folk to agree on a standardized set of statistics in a std
+location that can be polled for all implementations (ath9k, ath10k,
+mt76)
 
+
+I am also reviewing this:
+
+http://info.iet.unipi.it/~luigi/papers/20160511-mysched-preprint.pdf
+
+as we have a chance to innovate and use less locking with all this
+stuff happening at the mac80211 layer.
