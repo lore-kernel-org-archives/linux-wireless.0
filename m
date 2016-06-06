@@ -1,139 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:38111 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751517AbcFIS44 (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:34975 "EHLO
+	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752095AbcFFVEY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 14:56:56 -0400
-Received: by mail-wm0-f52.google.com with SMTP id m124so72733957wme.1
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2016 11:56:55 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: slightly simplify building interface
- combinations
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1465326626-365-1-git-send-email-zajec5@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
+	Mon, 6 Jun 2016 17:04:24 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
 	Arend van Spriel <arend@broadcom.com>,
 	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
 	Hante Meuleman <meuleman@broadcom.com>,
 	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<linux-wireless@vger.kernel.org>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<brcm80211-dev-list@broadcom.com>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <5759BBF4.1080807@broadcom.com> (sfid-20160609_205740_928572_F7DB8A82)
-Date: Thu, 9 Jun 2016 20:56:52 +0200
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] brcmfmac: drop unused pm_block vif attribute
+Date: Mon,  6 Jun 2016 23:03:55 +0200
+Message-Id: <1465247047-19412-1-git-send-email-zajec5@gmail.com> (sfid-20160606_230444_983638_2870088C)
 MIME-Version: 1.0
-In-Reply-To: <1465326626-365-1-git-send-email-zajec5@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07-06-16 21:10, Rafał Miłecki wrote:
-> This change reorders some operations in brcmf_setup_ifmodes in hope to
-> make it simpler:
-> 1) It allocates arrays right before filling them. This way it's easier
->    to follow requested array length as it's immediately followed by
->    code filling it. It's easier to check e.g. why we need 4 entries for
->    P2P. Other than that it deduplicates some checks (e.g. for P2P).
-> 2) It reorders code to first prepare limits and then define a new combo.
->    Previously this was mixed (e.g. we were setting num of channels
->    before preparing limits).
-> 3) It modifies mbss code to use i variable just like other combos do.
+This attribute was added 3 years ago by
+commit 3eacf866559c ("brcmfmac: introduce brcmf_cfg80211_vif structure")
+but it remains unused since then. It seems we can safely drop it.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
->  .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 37 ++++++++++------------
->  1 file changed, 16 insertions(+), 21 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index 4894eb7..33e682e 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -6300,29 +6300,15 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
->  	if (!combo)
->  		goto err;
->  
-> -	c0_limits = kcalloc(p2p ? 3 : 2, sizeof(*c0_limits), GFP_KERNEL);
-> -	if (!c0_limits)
-> -		goto err;
-> -
-> -	if (p2p) {
-> -		p2p_limits = kcalloc(4, sizeof(*p2p_limits), GFP_KERNEL);
-> -		if (!p2p_limits)
-> -			goto err;
-> -	}
-> -
-> -	if (mbss) {
-> -		mbss_limits = kcalloc(1, sizeof(*mbss_limits), GFP_KERNEL);
-> -		if (!mbss_limits)
-> -			goto err;
-> -	}
-> -
->  	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
->  				 BIT(NL80211_IFTYPE_ADHOC) |
->  				 BIT(NL80211_IFTYPE_AP);
->  
->  	c = 0;
->  	i = 0;
-> -	combo[c].num_different_channels = 1;
-> +	c0_limits = kcalloc(p2p ? 3 : 2, sizeof(*c0_limits), GFP_KERNEL);
-> +	if (!c0_limits)
-> +		goto err;
->  	c0_limits[i].max = 1;
->  	c0_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
->  	if (p2p) {
-> @@ -6340,6 +6326,7 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
->  		c0_limits[i].max = 1;
->  		c0_limits[i++].types = BIT(NL80211_IFTYPE_AP);
->  	}
-> +	combo[c].num_different_channels = 1;
->  	combo[c].max_interfaces = i;
->  	combo[c].n_limits = i;
->  	combo[c].limits = c0_limits;
-> @@ -6347,7 +6334,9 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
->  	if (p2p) {
->  		c++;
->  		i = 0;
-> -		combo[c].num_different_channels = 1;
-> +		p2p_limits = kcalloc(4, sizeof(*p2p_limits), GFP_KERNEL);
-> +		if (!p2p_limits)
-> +			goto err;
->  		p2p_limits[i].max = 1;
->  		p2p_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
->  		p2p_limits[i].max = 1;
-> @@ -6356,6 +6345,7 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
->  		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT);
->  		p2p_limits[i].max = 1;
->  		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
-> +		combo[c].num_different_channels = 1;
->  		combo[c].max_interfaces = i;
->  		combo[c].n_limits = i;
->  		combo[c].limits = p2p_limits;
-> @@ -6363,14 +6353,19 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
->  
->  	if (mbss) {
->  		c++;
-> +		i = 0;
-> +		mbss_limits = kcalloc(1, sizeof(*mbss_limits), GFP_KERNEL);
-> +		if (!mbss_limits)
-> +			goto err;
-> +		mbss_limits[i].max = 4;
-> +		mbss_limits[i++].types = BIT(NL80211_IFTYPE_AP);
->  		combo[c].beacon_int_infra_match = true;
->  		combo[c].num_different_channels = 1;
-> -		mbss_limits[0].max = 4;
-> -		mbss_limits[0].types = BIT(NL80211_IFTYPE_AP);
->  		combo[c].max_interfaces = 4;
-> -		combo[c].n_limits = 1;
-> +		combo[c].n_limits = i;
->  		combo[c].limits = mbss_limits;
->  	}
-> +
->  	wiphy->n_iface_combinations = n_combos;
->  	wiphy->iface_combinations = combo;
->  	return 0;
-> 
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 9 +++------
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h | 5 +----
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c      | 5 ++---
+ 3 files changed, 6 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ce35ada..4894eb7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -603,7 +603,7 @@ struct wireless_dev *brcmf_ap_add_vif(struct wiphy *wiphy, const char *name,
+ 
+ 	brcmf_dbg(INFO, "Adding vif \"%s\"\n", name);
+ 
+-	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_AP, false);
++	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_AP);
+ 	if (IS_ERR(vif))
+ 		return (struct wireless_dev *)vif;
+ 
+@@ -5190,8 +5190,7 @@ static struct cfg80211_ops brcmf_cfg80211_ops = {
+ };
+ 
+ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
+-					   enum nl80211_iftype type,
+-					   bool pm_block)
++					   enum nl80211_iftype type)
+ {
+ 	struct brcmf_cfg80211_vif *vif_walk;
+ 	struct brcmf_cfg80211_vif *vif;
+@@ -5206,8 +5205,6 @@ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
+ 	vif->wdev.wiphy = cfg->wiphy;
+ 	vif->wdev.iftype = type;
+ 
+-	vif->pm_block = pm_block;
+-
+ 	brcmf_init_prof(&vif->profile);
+ 
+ 	if (type == NL80211_IFTYPE_AP) {
+@@ -6850,7 +6847,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	init_vif_event(&cfg->vif_event);
+ 	INIT_LIST_HEAD(&cfg->vif_list);
+ 
+-	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_STATION, false);
++	vif = brcmf_alloc_vif(cfg, NL80211_IFTYPE_STATION);
+ 	if (IS_ERR(vif))
+ 		goto wiphy_out;
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 95e35bc..c6f9986 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -167,7 +167,6 @@ struct vif_saved_ie {
+  * @wdev: wireless device.
+  * @profile: profile information.
+  * @sme_state: SME state using enum brcmf_vif_status bits.
+- * @pm_block: power-management blocked.
+  * @list: linked list.
+  * @mgmt_rx_reg: registered rx mgmt frame types.
+  * @mbss: Multiple BSS type, set if not first AP (not relevant for P2P).
+@@ -177,7 +176,6 @@ struct brcmf_cfg80211_vif {
+ 	struct wireless_dev wdev;
+ 	struct brcmf_cfg80211_profile profile;
+ 	unsigned long sme_state;
+-	bool pm_block;
+ 	struct vif_saved_ie saved_ie;
+ 	struct list_head list;
+ 	u16 mgmt_rx_reg;
+@@ -388,8 +386,7 @@ s32 brcmf_cfg80211_down(struct net_device *ndev);
+ enum nl80211_iftype brcmf_cfg80211_get_iftype(struct brcmf_if *ifp);
+ 
+ struct brcmf_cfg80211_vif *brcmf_alloc_vif(struct brcmf_cfg80211_info *cfg,
+-					   enum nl80211_iftype type,
+-					   bool pm_block);
++					   enum nl80211_iftype type);
+ void brcmf_free_vif(struct brcmf_cfg80211_vif *vif);
+ 
+ s32 brcmf_vif_set_mgmt_ie(struct brcmf_cfg80211_vif *vif, s32 pktflag,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index 1652a48..fd49cdf 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2076,8 +2076,7 @@ static struct wireless_dev *brcmf_p2p_create_p2pdev(struct brcmf_p2p_info *p2p,
+ 	if (p2p->bss_idx[P2PAPI_BSSCFG_DEVICE].vif)
+ 		return ERR_PTR(-ENOSPC);
+ 
+-	p2p_vif = brcmf_alloc_vif(p2p->cfg, NL80211_IFTYPE_P2P_DEVICE,
+-				  false);
++	p2p_vif = brcmf_alloc_vif(p2p->cfg, NL80211_IFTYPE_P2P_DEVICE);
+ 	if (IS_ERR(p2p_vif)) {
+ 		brcmf_err("could not create discovery vif\n");
+ 		return (struct wireless_dev *)p2p_vif;
+@@ -2177,7 +2176,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
+ 		return ERR_PTR(-EOPNOTSUPP);
+ 	}
+ 
+-	vif = brcmf_alloc_vif(cfg, type, false);
++	vif = brcmf_alloc_vif(cfg, type);
+ 	if (IS_ERR(vif))
+ 		return (struct wireless_dev *)vif;
+ 	brcmf_cfg80211_arm_vif_event(cfg, vif);
+-- 
+1.8.4.5
+
