@@ -1,57 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56798 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753900AbcFPPFh (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:32873 "EHLO
+	mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751174AbcFFSTx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 11:05:37 -0400
-Content-Type: text/plain; charset="utf-8"
+	Mon, 6 Jun 2016 14:19:53 -0400
+Received: by mail-oi0-f42.google.com with SMTP id k23so239490387oih.0
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2016 11:19:52 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [1/8] mwifiex: only call mwifiex_sdio_probe_of() if dev has an OF
- node
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1464358702-19083-2-git-send-email-javier@osg.samsung.com>
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org, Xinming Hu <huxm@marvell.com>,
-	Javier Martinez Canillas <javier@osg.samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Message-Id: <20160616150531.8368261418@smtp.codeaurora.org> (sfid-20160616_170605_424630_EB96C296)
-Date: Thu, 16 Jun 2016 15:05:31 +0000 (UTC)
+In-Reply-To: <57559106.5060606@candelatech.com>
+References: <57559106.5060606@candelatech.com>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Mon, 6 Jun 2016 11:19:51 -0700
+Message-ID: <CAA93jw6S789CV3WJczYiRfD++yQ3F+1RPypTt2dnKxcZVtNyoA@mail.gmail.com> (sfid-20160606_201957_240241_CFA2194F)
+Subject: Re: How to use fractional center frequencies (4942.5, for instance)?
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Javier Martinez Canillas <javier@osg.samsung.com> wrote:
-> SDIO is an auto enumerable bus so the SDIO devices are matched using the
-> sdio_device_id table and not using compatible strings from a OF id table.
-> 
-> However, commit ce4f6f0c353b ("mwifiex: add platform specific wakeup
-> interrupt support") allowed to match nodes defined as child of the SDIO
-> host controller in the probe function using a compatible string to setup
-> platform specific parameters in the DT.
-> 
-> The problem is that the OF parse function is always called regardless if
-> the SDIO dev has an OF node associated or not, and prints an error if it
-> is not found. So, on a platform that doesn't have a node for a SDIO dev,
-> the following misleading error message will be printed:
-> 
-> [  12.480042] mwifiex_sdio mmc2:0001:1: sdio platform data not available
-> 
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+On Mon, Jun 6, 2016 at 8:04 AM, Ben Greear <greearb@candelatech.com> wrote:
+>
+> It appears that some cisco equipment, at least, uses fractional center
+> frequencies for 5Mhz channels.
 
-Thanks, 8 patches applied to wireless-drivers-next.git:
+I was not aware that anything supported 5Mhz other than ath9k and
+ath5k. Thx. Can you identify what cisco gear supports this?
 
-6f49208fec85 mwifiex: only call mwifiex_sdio_probe_of() if dev has an OF node
-cc524d1706b7 mwifiex: propagate sdio_enable_func() errno code in mwifiex_sdio_probe()
-032e0f546c7e mwifiex: propagate mwifiex_add_card() errno code in mwifiex_sdio_probe()
-a82f65aae143 mwifiex: consolidate mwifiex_sdio_probe() error paths
-d3f04ece53a4 mwifiex: use dev_err() instead of pr_err() in mwifiex_sdio_probe()
-213d9421c165 mwifiex: check if mwifiex_sdio_probe_of() fails and return error
-806dd220340d mwifiex: don't print an error if an optional DT property is missing
-5e94913f676a mwifiex: use better message and error code when OF node doesn't match
+I have long advocated that meshy networks in increasingly dense areas
+use narrower channels.
+
+https://www.usenix.org/system/files/conference/nsdi12/nsdi12-final142.pdf
+
+was one of the better papers that went into it back in the day.
+
+
+> Has anyone attempted to support this with ath9k?
+>
+> Thanks,
+> Ben
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9138513/
-
+Dave Täht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
