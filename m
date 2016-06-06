@@ -1,97 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:37661 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751671AbcF0NCk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 09:02:40 -0400
-Message-ID: <577123D1.2020708@osg.samsung.com> (sfid-20160627_150300_820811_754B038E)
-Date: Mon, 27 Jun 2016 14:02:09 +0100
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48057 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751806AbcFFBvs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 5 Jun 2016 21:51:48 -0400
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	ath9k-devel <ath9k-devel@qualcomm.com>,
+	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: RE: ath9k gpio request
+Date: Mon, 6 Jun 2016 01:51:37 +0000
+Message-ID: <cc8b9924e18f421a8da13464672e9d4d@aptaiexm02f.ap.qualcomm.com> (sfid-20160606_035209_896080_1D7B391E)
+References: <20160530132225.4d297678@canb.auug.org.au>
+	<574C4851.9090201@gmail.com>	<87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com>
+	<574D3EAA.3060102@gmail.com> <1464764036580.70506@qti.qualcomm.com>
+	<574EC331.1080901@gmail.com> <574ED297.4080004@gmail.com>
+	<1464854569880.79341@qti.qualcomm.com> <57501AE4.7080104@gmail.com>
+	<8760tqn8fc.fsf@purkki.adurom.net>	<1464932944074.85131@qti.qualcomm.com>
+ <87d1nxt3y9.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87d1nxt3y9.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, julian.calaby@gmail.com
-Subject: Re: [PATCH v2 1/2] staging: wilc1000: fix error handling in wilc_debugfs_init()
-References: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com> <20160625213606.GA15125@kroah.com> <576EFB05.1060902@osg.samsung.com> <20160625221659.GA11632@kroah.com>
-In-Reply-To: <20160625221659.GA11632@kroah.com>
-Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25/06/16 23:16, Greg KH wrote:
-> On Sat, Jun 25, 2016 at 10:43:33PM +0100, Luis de Bethencourt wrote:
->> On 25/06/16 22:36, Greg KH wrote:
->>> On Thu, Jun 23, 2016 at 01:36:17PM +0100, Luis de Bethencourt wrote:
->>>> The common format to check if a function returned an error pointer is to
->>>> use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
->>>>
->>>> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
->>>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->>>> ---
->>>>  drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
->>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
->>>> index fcbc95d..48797dc 100644
->>>> --- a/drivers/staging/wilc1000/wilc_debugfs.c
->>>> +++ b/drivers/staging/wilc1000/wilc_debugfs.c
->>>> @@ -107,7 +107,7 @@ static int __init wilc_debugfs_init(void)
->>>>  	struct wilc_debugfs_info_t *info;
->>>>  
->>>>  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
->>>> -	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
->>>> +	if (PTR_ERR(wilc_dir) == -ENODEV) {
->>>>  		/* it's not error. the debugfs is just not being enabled. */
->>>>  		printk("ERR, kernel has built without debugfs support\n");
->>>>  		return 0;
->>>
->>> No, the best way to do this is to just ignore the return value, you
->>> don't care about it.  It can be passed back into any debugfs calls just
->>> fine.
->>>
->>> So don't check the value and all is good, debugfs was written in a way
->>> to make it _easy_ to use, no need for fancy error checking at all with
->>> it.
->>>
->>> thanks,
->>>
->>> greg k-h
->>>
->>
->> Thanks for the review Greg.
->>
->> Just to make sure. You are proposing I just drop the 3 if checks? [0]
->>
->> If that's what you mean I will send a patch as soon as you confirm :)
->>
->> Happy hacking,
->> Luis
->>
->>
->>
->> [0] Making the function look like this:
->> static int __init wilc_debugfs_init(void)
->> {
->>         int i;
->>
->>         struct dentry *debugfs_files;
->>         struct wilc_debugfs_info_t *info;
->>
->>         wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
->>         for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
->>                 info = &debugfs_info[i];
->>                 debugfs_files = debugfs_create_file(info->name,
->>                                                     info->perm,
->>                                                     wilc_dir,
->>                                                     &info->data,
->>                                                     &info->fops);
-> 
-> Why even assign anything to debugfs_files?
-> 
+Got it, thanks.  There is no difference of the changes for AR9462 which is the chip Sudip tested.
 
-Sorry Greg.
+Thanks,
+Miaoqing
 
-I was just confirming I understood your suggestion, and pasted that
-without cleaning the code.
+-----Original Message-----
+From: Kalle Valo [mailto:kvalo@codeaurora.org] 
+Sent: Saturday, June 04, 2016 10:38 PM
+To: Pan, Miaoqing <miaoqing@qti.qualcomm.com>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>; Stephen Rothwell <sfr@canb.auug.org.au>; ath9k-devel <ath9k-devel@qca.qualcomm.com>; linux-next@vger.kernel.org; linux-kernel@vger.kernel.org; linux-wireless@vger.kernel.org; ath9k-devel@lists.ath9k.org; netdev@vger.kernel.org; Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: Re: ath9k gpio request
 
-Thanks for review and idea!
-Luis
+(Fixing top posting)
+
+"Pan, Miaoqing" <miaoqing@qti.qualcomm.com> writes:
+
+>>> --- a/drivers/net/wireless/ath/ath9k/reg.h
+>>> +++ b/drivers/net/wireless/ath/ath9k/reg.h
+>>> @@ -1122,8 +1122,8 @@ enum {
+>>>   #define AR9300_NUM_GPIO                          16
+>>>   #define AR9330_NUM_GPIO                                 16
+>>>   #define AR9340_NUM_GPIO                                 23
+>>> -#define AR9462_NUM_GPIO                                 10
+>>> -#define AR9485_NUM_GPIO                                 12
+>>> +#define AR9462_NUM_GPIO                                 14
+>>> +#define AR9485_NUM_GPIO                                 11
+>>>   #define AR9531_NUM_GPIO                                 18
+>>>   #define AR9550_NUM_GPIO                                 24
+>>>   #define AR9561_NUM_GPIO                                 23
+>>> @@ -1139,8 +1139,8 @@ enum {
+>>>   #define AR9300_GPIO_MASK                        0x0000F4FF
+>>>   #define AR9330_GPIO_MASK                        0x0000F4FF
+>>>   #define AR9340_GPIO_MASK                        0x0000000F
+>>> -#define AR9462_GPIO_MASK                        0x000003FF
+>>> -#define AR9485_GPIO_MASK                        0x00000FFF
+>>> +#define AR9462_GPIO_MASK                        0x00003FFF
+>>> +#define AR9485_GPIO_MASK                        0x000007FF
+>>>   #define AR9531_GPIO_MASK                        0x0000000F
+>>>   #define AR9550_GPIO_MASK                        0x0000000F
+>>>   #define AR9561_GPIO_MASK                        0x0000000F
+>>
+>> solves the problem.
+>>
+>> Tested-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+>
+> Done, https://patchwork.kernel.org/patch/9151847/
+
+But the patch 9151847 is different from what Sudip tested above? Why?
+
+And if you modify something _after_ the reporter has tested the patch clearly document what you changed and why. I do not want find hidden changes like this, even more so when the patch is going to a 4.7-rc release.
+
+Sudip, could you also test patch 9151847, please? You can download the patch from the patchwork link above.
+
+--
+Kalle Valo
