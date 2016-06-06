@@ -1,55 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:52065 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751286AbcFXUsE (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47084 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750764AbcFFPEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2016 16:48:04 -0400
-Date: Fri, 24 Jun 2016 23:47:59 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Erik Stromdahl <erik.stromdahl@gmail.com>
-Cc: johannes@sipsolutions.net, johannes.berg@intel.com,
-	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] mac80211_hwsim: Added vendor echo command
-Message-ID: <20160624204759.GA15514@w1.fi> (sfid-20160624_224809_308178_CCC3DFE1)
-References: <1466756034-5485-1-git-send-email-erik.stromdahl@gmail.com>
+	Mon, 6 Jun 2016 11:04:39 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail2.candelatech.com (Postfix) with ESMTPSA id BB1C140A5C4
+	for <linux-wireless@vger.kernel.org>; Mon,  6 Jun 2016 08:04:38 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: How to use fractional center frequencies (4942.5, for instance)?
+Message-ID: <57559106.5060606@candelatech.com> (sfid-20160606_170442_505965_D955804B)
+Date: Mon, 6 Jun 2016 08:04:38 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466756034-5485-1-git-send-email-erik.stromdahl@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 24, 2016 at 10:13:54AM +0200, Erik Stromdahl wrote:
-> The purpose of the echo command is to provide a test
-> facility for user space programs.
 
-> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-> @@ -332,14 +332,16 @@ static const struct ieee80211_rate hwsim_rates[] = {
->  #define QCA_NL80211_SUBCMD_TEST 1
-> +#define QCA_NL80211_SUBCMD_ECHO 2
+It appears that some cisco equipment, at least, uses fractional center
+frequencies for 5Mhz channels.
 
-NAK. That QCA vendor specific value has not been assigned nor have I
-even seen a request to assign such a value.
+Has anyone attempted to support this with ath9k?
 
->  enum qca_nl80211_vendor_subcmds {
->  	QCA_WLAN_VENDOR_ATTR_TEST = 8,
-> -	QCA_WLAN_VENDOR_ATTR_MAX = QCA_WLAN_VENDOR_ATTR_TEST
-> +	QCA_WLAN_VENDOR_ATTR_ECHO,
+Thanks,
+Ben
 
-And this vendor attribute value has already been assigned for another
-purpose.
-
-It is no acceptable to pick arbitrary values of identifiers without
-proper request to the owner of the OUI that is used to assign the
-values.
-
-As far as the QCA vendor specific identifiers are concerned, their
-assignment process is described here:
-http://w1.fi/cgit/hostap/plain/src/common/qca-vendor.h
-
-Please do not submit kernel changes that use any unassigned vendor
-identifier or even worse, a value that have already been assigned for a
-completely different purpose.
- 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
