@@ -1,107 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.w1.samsung.com ([210.118.77.12]:55772 "EHLO
-	mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752822AbcFTHzJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 03:55:09 -0400
-Message-id: <57679E38.3080901@samsung.com> (sfid-20160620_095536_544036_A2C2E230)
-Date: Mon, 20 Jun 2016 09:41:44 +0200
-From: Jacek Anaszewski <j.anaszewski@samsung.com>
-MIME-version: 1.0
-To: "Andrew F. Davis" <afd@ti.com>
-Cc: Russell King <linux@armlinux.org.uk>,
-	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Sebastian Reichel <sre@kernel.org>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Richard Purdie <rpurdie@rpsys.net>,
-	Rusty Russell <rusty@rustcorp.com.au>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Ingo Molnar <mingo@kernel.org>, linux-pwm@vger.kernel.org,
-	lguest@lists.ozlabs.org, linux-wireless@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-leds@vger.kernel.org,
-	linux-media@vger.kernel.org
-Subject: Re: [PATCH 12/12] leds: Only descend into leds directory when
- CONFIG_NEW_LEDS is set
-References: <20160613200211.14790-1-afd@ti.com>
- <20160613200211.14790-13-afd@ti.com> <5760FA52.7010806@samsung.com>
- <57647DBD.2010406@ti.com>
-In-reply-to: <57647DBD.2010406@ti.com>
-Content-type: text/plain; charset=UTF-8; format=flowed
+Received: from lists.s-osg.org ([54.187.51.154]:41339 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752681AbcFFRDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 6 Jun 2016 13:03:09 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Javier Martinez Canillas <javier@osg.samsung.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl file
+Date: Mon,  6 Jun 2016 13:02:37 -0400
+Message-Id: <1465232558-31678-3-git-send-email-javier@osg.samsung.com> (sfid-20160606_190352_264434_7B217B43)
+In-Reply-To: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
+References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/18/2016 12:46 AM, Andrew F. Davis wrote:
-> On 06/15/2016 01:48 AM, Jacek Anaszewski wrote:
->> Hi Andrew,
->>
->> Thanks for the patch.
->>
->> Please address the issue [1] raised by test bot and resubmit.
->>
->> Thanks,
->> Jacek Anaszewski
->>
->> [1] https://lkml.org/lkml/2016/6/13/1091
->>
->
-> It looks like some systems use 'gpio_led_register_device' to make an
-> in-memory copy of their LED device table so the original can be removed
-> as .init.rodata. This doesn't necessarily depend on the LED subsystem
-> but it kind of seems useless when the rest of the subsystem is disabled.
->
-> One solution could be to use a dummy 'gpio_led_register_device' when the
-> subsystem is not enabled.
+From: Shengzhen Li <szli@marvell.com>
 
-It sounds good. Please add a no-op version of gpio_led_register_device()
-to include/leds.h, in a separate patch.
+Most cfg80211 operations are just a wrappers to functions defined in the
+sta_ioctl.c file, so for consistency move the .get_tx_power logic there.
 
-Thanks,
-Jacek Anaszewski
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+[javier: update the subject line and commit message]
+Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 
-> Another is just to remove the five or so uses
-> of 'gpio_led_register_device' and have those systems register LED device
-> tables like other systems do.
->
-> If nether of these are acceptable then this patch can be dropped from
-> this series for now.
->
-> Thanks,
-> Andrew
->
->> On 06/13/2016 10:02 PM, Andrew F. Davis wrote:
->>> When CONFIG_NEW_LEDS is not set make will still descend into the leds
->>> directory but nothing will be built. This produces unneeded build
->>> artifacts and messages in addition to slowing the build. Fix this here.
->>>
->>> Signed-off-by: Andrew F. Davis <afd@ti.com>
->>> ---
->>>    drivers/Makefile | 2 +-
->>>    1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/Makefile b/drivers/Makefile
->>> index 567e32c..fa514d5 100644
->>> --- a/drivers/Makefile
->>> +++ b/drivers/Makefile
->>> @@ -127,7 +127,7 @@ obj-$(CONFIG_CPU_FREQ)        += cpufreq/
->>>    obj-$(CONFIG_CPU_IDLE)        += cpuidle/
->>>    obj-$(CONFIG_MMC)        += mmc/
->>>    obj-$(CONFIG_MEMSTICK)        += memstick/
->>> -obj-y                += leds/
->>> +obj-$(CONFIG_NEW_LEDS)        += leds/
->>>    obj-$(CONFIG_INFINIBAND)    += infiniband/
->>>    obj-$(CONFIG_SGI_SN)        += sn/
->>>    obj-y                += firmware/
->>>
->>
->>
->
->
+---
+
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 14 +++-----------
+ drivers/net/wireless/marvell/mwifiex/main.h      |  2 ++
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 18 ++++++++++++++++++
+ 3 files changed, 23 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index b17f3d09a2c7..ff3f63ed95e1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -385,18 +385,10 @@ mwifiex_cfg80211_get_tx_power(struct wiphy *wiphy,
+ 			      int *dbm)
+ {
+ 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
+-	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
+-							MWIFIEX_BSS_ROLE_ANY);
+-	int ret = mwifiex_send_cmd(priv, HostCmd_CMD_RF_TX_PWR,
+-				   HostCmd_ACT_GEN_GET, 0, NULL, true);
+-
+-	if (ret < 0)
+-		return ret;
+-
+-	/* tx_power_level is set in HostCmd_CMD_RF_TX_PWR command handler */
+-	*dbm = priv->tx_power_level;
++	struct mwifiex_private *priv;
+ 
+-	return 0;
++	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
++	return mwifiex_get_tx_power(priv, dbm);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 0207af00be42..79c28cfb7780 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1464,6 +1464,8 @@ int mwifiex_drv_get_driver_version(struct mwifiex_adapter *adapter,
+ int mwifiex_set_tx_power(struct mwifiex_private *priv,
+ 			 struct mwifiex_power_cfg *power_cfg);
+ 
++int mwifiex_get_tx_power(struct mwifiex_private *priv, int *dbm);
++
+ int mwifiex_main_process(struct mwifiex_adapter *);
+ 
+ int mwifiex_queue_tx_pkt(struct mwifiex_private *priv, struct sk_buff *skb);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index 8e0862657122..70ff9b805b5b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -775,6 +775,24 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
+ }
+ 
+ /*
++ * IOCTL request handler to get tx power configuration.
++ *
++ * This function prepares the correct firmware command and
++ * issues it.
++ */
++int mwifiex_get_tx_power(struct mwifiex_private *priv, int *dbm)
++{
++	int ret;
++
++	ret = mwifiex_send_cmd(priv, HostCmd_CMD_TXPWR_CFG,
++			       HostCmd_ACT_GEN_GET, 0, NULL, true);
++
++	*dbm = priv->tx_power_level;
++
++	return ret;
++}
++
++/*
+  * IOCTL request handler to get power save mode.
+  *
+  * This function prepares the correct firmware command and
+-- 
+2.5.5
 
