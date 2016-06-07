@@ -1,87 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:32777 "EHLO
-	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753409AbcFQFdW convert rfc822-to-8bit (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36358 "EHLO
+	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750792AbcFGGVB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 01:33:22 -0400
-MIME-Version: 1.0
-In-Reply-To: <87lh24v1n6.fsf@kamboji.qca.qualcomm.com>
-References: <1464378815-23282-1-git-send-email-zajec5@gmail.com>
- <877fdpw4no.fsf@kamboji.qca.qualcomm.com> <CACna6rzXzj4DJNA6855Qy6QnxETnYEPmqtw3Bcx8WWCtYwYvuw@mail.gmail.com>
- <87lh24v1n6.fsf@kamboji.qca.qualcomm.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Fri, 17 Jun 2016 07:33:20 +0200
-Message-ID: <CACna6rym3y0sqAUptgnt-mUiBidFGzVAzw4XcYr95q6MD2r5yw@mail.gmail.com> (sfid-20160617_073345_456067_20A6DCA3)
-Subject: Re: [PATCH 4.7 FIX] brcmfmac: fix lockup when removing P2P interface
- after event timeout
+	Tue, 7 Jun 2016 02:21:01 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Brett Rudley <brudley@broadcom.com>,
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
 	Arend van Spriel <arend@broadcom.com>,
 	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
 	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] brcmfmac: include required headers in cfg80211.h
+Date: Tue,  7 Jun 2016 08:20:21 +0200
+Message-Id: <1465280428-5782-1-git-send-email-zajec5@gmail.com> (sfid-20160607_082124_663779_DE93A3C5)
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 June 2016 at 07:13, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
->
->> On 16 June 2016 at 17:10, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Rafał Miłecki <zajec5@gmail.com> writes:
->>>
->>>> Removing P2P interface is handled by sending a proper request to the
->>>> firmware. On success firmware triggers an event and driver's handler
->>>> removes a matching interface.
->>>>
->>>> However on event timeout we remove interface directly from the cfg80211
->>>> callback. Current code doesn't handle this case correctly as it always
->>>> assumes rtnl to be unlocked.
->>>>
->>>> Fix it by adding an extra rtnl_locked parameter to functions and calling
->>>> unregister_netdevice when needed.
->>>>
->>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>>
->>> Failed to apply, please rebase:
->>>
->>> Applying: brcmfmac: fix lockup when removing P2P interface after event timeout
->>> Using index info to reconstruct a base tree...
->>> Falling back to patching base and 3-way merge...
->>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
->>> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
->>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
->>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->>> Failed to merge in the changes.
->>> Patch failed at 0001 brcmfmac: fix lockup when removing P2P interface after event timeout
->>
->> What tree did you try it on?
->>
->> I just went into a dir where I have cloned:
->> git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git
->>
->> My HEAD commit is:
->> 034fdd4 Merge ath-current from ath.git
->>
->> And I can apply this patch cleanly doing:
->> curl https://patchwork.kernel.org/patch/9138925/mbox/ | git am
->
-> I was trying to apply this to wireless-drivers-next. I didn't get a
-> confirmation from Arend and I didn't consider the fix important enough
-> for 4.7. But of course I can reconsider if needed.
+Without this including cfg80211.h in a wrong order could result in:
 
-I think I agree it won't hurt to get it into -next. Noone earlier
-reported this bug and it seems to be there for a long time. Also
-applying it to -next will allow avoiding merge conflicts and immediate
-development work on -next.
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:122:24: error: array type has incomplete element type
+  struct brcmf_wsec_key key[BRCMF_MAX_DEFAULT_KEYS];
+                        ^
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:291:24: error: field ‘p2p’ has incomplete type
+  struct brcmf_p2p_info p2p;
+                        ^
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:297:27: error: field ‘pmk_list’ has incomplete type
+  struct brcmf_pmk_list_le pmk_list;
+                           ^
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:317:28: error: field ‘assoclist’ has incomplete type
+  struct brcmf_assoclist_le assoclist;
 
-I'll resend this patch rebased on -next soon.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index c6f9986..04bfc7e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -20,6 +20,9 @@
+ /* for brcmu_d11inf */
+ #include <brcmu_d11.h>
+ 
++#include "fwil_types.h"
++#include "p2p.h"
++
+ #define WL_NUM_SCAN_MAX			10
+ #define WL_TLV_INFO_MAX			1024
+ #define WL_BSS_INFO_MAX			2048
 -- 
-Rafał
+1.8.4.5
+
