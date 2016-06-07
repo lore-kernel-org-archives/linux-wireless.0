@@ -1,37 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38106 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933686AbcFTUej (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 16:34:39 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.ispras.ru ([83.149.199.45]:56070 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753980AbcFGKeM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2016 06:34:12 -0400
+Message-ID: <57569424.9040906@ispras.ru> (sfid-20160607_123432_194820_F07704CD)
+Date: Tue, 07 Jun 2016 13:30:12 +0400
+From: Pavel Andrianov <andrianov@ispras.ru>
 MIME-Version: 1.0
-Subject: Re: ath9k: Support 4.9Ghz channels on AR9580 adapter.
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1463092857-18503-1-git-send-email-greearb@candelatech.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-	"Ben Greear" <greearb@candelatech.com>
-Message-ID: <300e3070916441609ff73ea8e06ddb77@euamsexm01a.eu.qualcomm.com> (sfid-20160620_223527_017608_89E813C0)
-Date: Mon, 20 Jun 2016 22:34:31 +0200
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	vaishali.thakkar@oracle.com, LDV list <ldv-project@ispras.ru>
+Subject: [ldv-project] [net] libertas: potential race condition
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> NOTE:  These channels must not be used in most regulatory
-> domains unless you have a license from the FCC or similar!
-> 
-> A proper regulatory database is also required to actually use
-> these channels.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+Hi!
 
-I feel that the license is a problem and this doesn't belong to the kernel.
-The patch has been dropped.
+There is a potential race condition in 
+drivers/net/wireless/libertas/libertas.ko.
+In the function lbs_hard_start_xmit(..), line 159, a socket buffer is 
+written to priv->current_skb with a spin_lock protection.
+In the function lbs_mac_event_disconnected(..), lines 50-51, the field 
+current_skb is cleaned. There is no protection used. The corresponding 
+handlers are activated at the same time in lbs_start_card(..) and then 
+may be executed simultaneously. Note, there are two structures 
+lbs_netdev_ops and mesh_netdev_ops, which have the target handler 
+lbs_hard_start_xmit.
+Is it a real race or I have missed something?
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9086491/
+Pavel Andrianov
+Linux Verification Center, ISPRAS
+web: http://linuxtesting.org
+e-mail: andrianov@ispras.ru
 
