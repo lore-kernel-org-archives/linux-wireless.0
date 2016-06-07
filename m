@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:59003 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751037AbcFWMhA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 08:37:00 -0400
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, julian.calaby@gmail.com,
-	Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: [PATCH v2 2/2] staging: wilc1000: fix error values in wilc_debugfs_init()
-Date: Thu, 23 Jun 2016 13:36:18 +0100
-Message-Id: <1466685378-15597-2-git-send-email-luisbg@osg.samsung.com> (sfid-20160623_143759_393921_9D9F822C)
-In-Reply-To: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com>
-References: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com>
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:32791 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1162046AbcFGUJB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2016 16:09:01 -0400
+Date: Wed, 8 Jun 2016 01:38:53 +0530
+From: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Johannes Berg <johannes.berg@intel.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] libertas_tf: Remove create_workqueue
+Message-ID: <20160607200853.GA13742@Karyakshetra> (sfid-20160607_220939_915506_10A6F9CD)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If there was an error, returning -EINVAL is more appropriate than -1.
+alloc_workqueue replaces deprecated create_workqueue().
 
-Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+A dedicated workqueue has been used since the workitem (viz
+&priv->cmd_work per priv, which maps to lbtf_cmd_work) is involved in
+actual command processing and may be used on a memory reclaim path.
+The workitems require forward progress under memory pressure and hence,
+WQ_MEM_RECLAIM has been set. Since there are only a fixed number of work
+items, explicit concurrency limit is unnecessary here.
+
+Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_debugfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/marvell/libertas_tf/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index 48797dc..6252931 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -115,7 +115,7 @@ static int __init wilc_debugfs_init(void)
- 
- 	if (!wilc_dir) {
- 		printk("ERR, debugfs create dir\n");
--		return -1;
-+		return -EINVAL;
- 	}
- 
- 	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
-@@ -129,7 +129,7 @@ static int __init wilc_debugfs_init(void)
- 		if (!debugfs_files) {
- 			printk("ERR fail to create the debugfs file, %s\n", info->name);
- 			debugfs_remove_recursive(wilc_dir);
--			return -1;
-+			return -EINVAL;
- 		}
- 	}
- 	return 0;
--- 
-2.6.4
+diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
+index 0bf8916..81463f7 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/main.c
++++ b/drivers/net/wireless/marvell/libertas_tf/main.c
+@@ -742,7 +742,7 @@ EXPORT_SYMBOL_GPL(lbtf_bcn_sent);
+ static int __init lbtf_init_module(void)
+ {
+ 	lbtf_deb_enter(LBTF_DEB_MAIN);
+-	lbtf_wq = create_workqueue("libertastf");
++	lbtf_wq = alloc_workqueue("libertastf", WQ_MEM_RECLAIM, 0);
+ 	if (lbtf_wq == NULL) {
+ 		printk(KERN_ERR "libertastf: couldn't create workqueue\n");
+ 		return -ENOMEM;
+--
+2.1.4
 
