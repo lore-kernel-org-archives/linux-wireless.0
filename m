@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45292 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932223AbcFJMdK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 08:33:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wrightf <wright.feng@broadcom.com>
-Subject: Re: [PATCH 3/6] brcmfmac: use ndev->needed_headroom to reserve additional header space
-References: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
-	<1464989472-29684-4-git-send-email-arend.vanspriel@broadcom.com>
-Date: Fri, 10 Jun 2016 15:33:06 +0300
-In-Reply-To: <1464989472-29684-4-git-send-email-arend.vanspriel@broadcom.com>
-	(Arend van Spriel's message of "Fri, 3 Jun 2016 23:31:09 +0200")
-Message-ID: <877fdxkyv1.fsf@purkki.adurom.net> (sfid-20160610_143336_267695_2D3BFF90)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:43695 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751103AbcFGHOE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2016 03:14:04 -0400
+Message-ID: <1465283632.2304.16.camel@sipsolutions.net> (sfid-20160607_091408_316148_D8CEDC48)
+Subject: Re: wext: making deprecation more visible
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Prasun Maiti <prasunmaiti87@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
+	Ujjal Roy <royujjal@gmail.com>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>
+Date: Tue, 07 Jun 2016 09:13:52 +0200
+In-Reply-To: <87porxlfqb.fsf_-_@purkki.adurom.net>
+References: <1464248432-12595-1-git-send-email-prasunmaiti87@gmail.com>
+	 <1464690345.3076.17.camel@sipsolutions.net>
+	 <CAEO8o4=-oYuHuh42yfRa6kAUZ2hBmxHabU-W3V82kURg-GZv_g@mail.gmail.com>
+	 <1464979620.2224.5.camel@sipsolutions.net>
+	 <87porxlfqb.fsf_-_@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
 
-> From: wrightf <wright.feng@broadcom.com>
+> I know we can't remove wext because of legacy applications but is
+> there anything more we can do to make the users aware that wext is
+> depreciated and really should be avoided? For example a onetime
+> kernel warning? Or is that too spammy? Anything else?
 
-Before I apply I'll fix this to:
+The problem is that wext is in this weird hybrid state where it's
+really deprecated if you can use nl80211, but you are required to use
+wext if you can't use nl80211. Now, we disabled wext-for-cfg80211 by
+default, but it's still there and could be used for some cases.
 
-From: Wright Feng <wright.feng@broadcom.com>
+We probably should try to fix things, but I realize that code that
+never gets tested [1].
 
--- 
-Kalle Valo
+Maybe we could print a message in the special cfg80211-wext case, which
+has a special case in wext-core to avoid creating all those iw_handler
+tables?
+
+johannes
+
+[1] and yeah - people move to nl80211 once told, so there's evidently
+very little incentive to keep using wext, so in reality people don't
+really seem to have applications that only use wext even with pure
+cfg80211 drivers ...
