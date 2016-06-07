@@ -1,68 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36804 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751210AbcFXMfB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2016 08:35:01 -0400
-Received: by mail-wm0-f65.google.com with SMTP id c82so4612316wme.3
-        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2016 05:35:00 -0700 (PDT)
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: nbd@nbd.name, chunkeey@googlemail.com, mark.rutland@arm.com,
-	robh+dt@kernel.org, arend.vanspriel@broadcom.com,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v3 2/3] ath9k: add a helper to get the string representation of ath_bus_type
-Date: Fri, 24 Jun 2016 14:34:29 +0200
-Message-Id: <20160624123430.4097-3-martin.blumenstingl@googlemail.com> (sfid-20160624_143509_469375_F0C90486)
-In-Reply-To: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
-References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45940 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932506AbcFGNKK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2016 09:10:10 -0400
+From: Benjamin Berg <benjamin@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@nbd.name>,
+	ath9k-devel@lists.ath9k.org,
+	Benjamin Berg <benjamin.berg@open-mesh.com>
+Subject: [PATCH 2/6] ath9k: Handle channel context in get_/set_/reset_tsf
+Date: Tue,  7 Jun 2016 15:09:57 +0200
+Message-Id: <1465305001-26067-2-git-send-email-benjamin@sipsolutions.net> (sfid-20160607_151018_516055_430A58E3)
+In-Reply-To: <1465305001-26067-1-git-send-email-benjamin@sipsolutions.net>
+References: <1465305001-26067-1-git-send-email-benjamin@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+From: Benjamin Berg <benjamin.berg@open-mesh.com>
+
+Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
 ---
-this is a new patch which didn't exist in v2 yet, it prepares the new
-function ath_bus_type_to_string which will be used in patch #3
+ drivers/net/wireless/ath/ath9k/main.c | 21 ++++++++++++++++++---
+ 1 file changed, 18 insertions(+), 3 deletions(-)
 
- drivers/net/wireless/ath/ath.h  |  2 ++
- drivers/net/wireless/ath/main.c | 15 +++++++++++++++
- 2 files changed, 17 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-index da7a7c8..be0d292 100644
---- a/drivers/net/wireless/ath/ath.h
-+++ b/drivers/net/wireless/ath/ath.h
-@@ -327,4 +327,6 @@ static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
- }
- #endif
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 8b63988..375c2ac 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1823,11 +1823,18 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
+ static u64 ath9k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
+ 	struct ath_softc *sc = hw->priv;
++	struct ath_vif *avp = (void *)vif->drv_priv;
+ 	u64 tsf;
  
-+const char *ath_bus_type_to_string(enum ath_bus_type bustype);
-+
- #endif /* ATH_H */
-diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-index 338d723..90427cb 100644
---- a/drivers/net/wireless/ath/main.c
-+++ b/drivers/net/wireless/ath/main.c
-@@ -90,3 +90,18 @@ void ath_printk(const char *level, const struct ath_common* common,
- 	va_end(args);
- }
- EXPORT_SYMBOL(ath_printk);
-+
-+const char *ath_bus_type_to_string(enum ath_bus_type bustype)
-+{
-+	switch (bustype) {
-+	case ATH_PCI:
-+		return "pci";
-+	case ATH_AHB:
-+		return "ahb";
-+	case ATH_USB:
-+		return "usb";
-+	default:
-+		return "unknown";
+ 	mutex_lock(&sc->mutex);
+ 	ath9k_ps_wakeup(sc);
+-	tsf = ath9k_hw_gettsf64(sc->sc_ah);
++	/* Get current TSF either from HW or kernel time. */
++	if (sc->cur_chan == avp->chanctx) {
++		tsf = ath9k_hw_gettsf64(sc->sc_ah);
++	} else {
++		tsf = sc->cur_chan->tsf_val +
++		      ath9k_hw_get_tsf_offset(&sc->cur_chan->tsf_ts, NULL);
 +	}
-+}
-+EXPORT_SYMBOL(ath_bus_type_to_string);
+ 	ath9k_ps_restore(sc);
+ 	mutex_unlock(&sc->mutex);
+ 
+@@ -1839,10 +1846,14 @@ static void ath9k_set_tsf(struct ieee80211_hw *hw,
+ 			  u64 tsf)
+ {
+ 	struct ath_softc *sc = hw->priv;
++	struct ath_vif *avp = (void *)vif->drv_priv;
+ 
+ 	mutex_lock(&sc->mutex);
+ 	ath9k_ps_wakeup(sc);
+-	ath9k_hw_settsf64(sc->sc_ah, tsf);
++	getrawmonotonic(&avp->chanctx->tsf_ts);
++	if (sc->cur_chan == avp->chanctx)
++		ath9k_hw_settsf64(sc->sc_ah, tsf);
++	avp->chanctx->tsf_val = tsf;
+ 	ath9k_ps_restore(sc);
+ 	mutex_unlock(&sc->mutex);
+ }
+@@ -1850,11 +1861,15 @@ static void ath9k_set_tsf(struct ieee80211_hw *hw,
+ static void ath9k_reset_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ {
+ 	struct ath_softc *sc = hw->priv;
++	struct ath_vif *avp = (void *)vif->drv_priv;
+ 
+ 	mutex_lock(&sc->mutex);
+ 
+ 	ath9k_ps_wakeup(sc);
+-	ath9k_hw_reset_tsf(sc->sc_ah);
++	getrawmonotonic(&avp->chanctx->tsf_ts);
++	if (sc->cur_chan == avp->chanctx)
++		ath9k_hw_reset_tsf(sc->sc_ah);
++	avp->chanctx->tsf_val = 0;
+ 	ath9k_ps_restore(sc);
+ 
+ 	mutex_unlock(&sc->mutex);
 -- 
-2.9.0
+2.8.1
 
