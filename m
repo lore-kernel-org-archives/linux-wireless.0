@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45550 "EHLO mx1.redhat.com"
+Received: from mail.ispras.ru ([83.149.199.45]:42351 "EHLO mail.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752013AbcF2OVa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 10:21:30 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 4/4] ARM: dts: sun5i-a10s-auxtek-t004: Set brcm,nvram_file_name
-Date: Wed, 29 Jun 2016 16:04:34 +0200
-Message-Id: <1467209074-15634-4-git-send-email-hdegoede@redhat.com> (sfid-20160629_162136_043634_D7617F3B)
-In-Reply-To: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+	id S1750995AbcFGP6V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2016 11:58:21 -0400
+Message-ID: <5756E01F.6080107@ispras.ru> (sfid-20160607_175846_905086_4F771A62)
+Date: Tue, 07 Jun 2016 18:54:23 +0400
+From: Pavel Andrianov <andrianov@ispras.ru>
+MIME-Version: 1.0
+To: Dan Williams <dcbw@redhat.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	libertas-dev@lists.infradead.org, ldv-project@linuxtesting.org,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, vaishali.thakkar@oracle.com
+Subject: Re: [ldv-project] [net] libertas: potential race condition
+References: <57569424.9040906@ispras.ru> <1465310395.29158.2.camel@redhat.com>
+In-Reply-To: <1465310395.29158.2.camel@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The auxtek t004 uses a toc9002 sdio wifi module, the android nvram file
-for this is for an older firmware which does not work with the mainline
-kernel driver.
+07.06.2016 18:39, Dan Williams пишет:
+> On Tue, 2016-06-07 at 13:30 +0400, Pavel Andrianov wrote:
+>> Hi!
+>>
+>> There is a potential race condition in
+>> drivers/net/wireless/libertas/libertas.ko.
+>> In the function lbs_hard_start_xmit(..), line 159, a socket buffer
+>> is
+>> written to priv->current_skb with a spin_lock protection.
+>> In the function lbs_mac_event_disconnected(..), lines 50-51, the
+>> field
+>> current_skb is cleaned. There is no protection used. The
+>> corresponding
+>> handlers are activated at the same time in lbs_start_card(..) and
+>> then
+>> may be executed simultaneously. Note, there are two structures
+>> lbs_netdev_ops and mesh_netdev_ops, which have the target handler
+>> lbs_hard_start_xmit.
+>> Is it a real race or I have missed something?
+> Yeah, it looks like it should be grabbing priv->driver_lock before
+> clearing priv->currenttxskb in lbs_mac_event_disconnected().  Care to
+> submit a patch after testing?  Do you have any of that hardware?
+>
+> Dan
+I have no that hardware and I have some doubts about the simple fix, 
+you've suggested. For instance, in lbs_hard_start_xmit the lock is 
+acquired twice and the priv->tx_pending_len can be modified also by 
+lbs_mac_event_disconnected (even if spin_lock will be added to 
+lbs_mac_event_disconnected). Moreover, the function lbs_send_tx_feedback 
+also cleaned priv->currenttxskb, but it happens also without any 
+protection. Thus, the fix has to be more complicated, and I have no 
+ideas about it.
 
-So we set brcm,nvram_file_name to brcmfmac43362-ap6210.txt which
-works fine for this wifi module.
-
-Setting brcm,nvram_file_name allows us to ship the ap6210 specific nvram
-file in linux-firmware to get the wifi to work out of the box without
-users needing to download and install the nvram file themselves.
-
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
----
- arch/arm/boot/dts/sun5i-a10s-auxtek-t004.dts | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/arch/arm/boot/dts/sun5i-a10s-auxtek-t004.dts b/arch/arm/boot/dts/sun5i-a10s-auxtek-t004.dts
-index a790ec8..e15d1ef 100644
---- a/arch/arm/boot/dts/sun5i-a10s-auxtek-t004.dts
-+++ b/arch/arm/boot/dts/sun5i-a10s-auxtek-t004.dts
-@@ -118,6 +118,12 @@
- 	non-removable;
- 	cap-sdio-irq;
- 	status = "okay";
-+
-+	brcmf: bcrmf@1 {
-+		reg = <1>;
-+		compatible = "brcm,bcm4329-fmac";
-+		brcm,nvram_file_name = "brcm/brcmfmac43362-ap6210.txt";
-+	};
- };
- 
- &ohci0 {
 -- 
-2.7.4
+Pavel Andrianov
+Linux Verification Center, ISPRAS
+web: http://linuxtesting.org
+e-mail: andrianov@ispras.ru
 
