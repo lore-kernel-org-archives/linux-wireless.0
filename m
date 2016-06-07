@@ -1,172 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:49986 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753410AbcEIXL1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 9 May 2016 19:11:27 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 09/21] ath10k: print fw debug messages in hex.
-Date: Mon,  9 May 2016 16:11:03 -0700
-Message-Id: <1462835475-11079-10-git-send-email-greearb@candelatech.com> (sfid-20160510_011144_961829_3F1AEAC5)
-In-Reply-To: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
-References: <1462835475-11079-1-git-send-email-greearb@candelatech.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45933 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932589AbcFGNKK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2016 09:10:10 -0400
+From: Benjamin Berg <benjamin@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@nbd.name>,
+	ath9k-devel@lists.ath9k.org,
+	Benjamin Berg <benjamin.berg@open-mesh.com>
+Subject: [PATCH 3/6] ath9k: Use tsf offset helper in ath9k_hw_reset
+Date: Tue,  7 Jun 2016 15:09:58 +0200
+Message-Id: <1465305001-26067-3-git-send-email-benjamin@sipsolutions.net> (sfid-20160607_151030_828333_7A827F54)
+In-Reply-To: <1465305001-26067-1-git-send-email-benjamin@sipsolutions.net>
+References: <1465305001-26067-1-git-send-email-benjamin@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Benjamin Berg <benjamin.berg@open-mesh.com>
 
-This allows user-space tools to decode debug-log
-messages by parsing dmesg or /var/log/messages.
+Not much of a change. Only small fix is that we don't assume that
+exactly 1.5ms have passed for the second AR91xx SoC TSF setting.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.c | 72 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/debug.h |  5 +++
- drivers/net/wireless/ath/ath10k/pci.c   |  3 ++
- drivers/net/wireless/ath/ath10k/wmi.c   | 12 ++++++
- 4 files changed, 92 insertions(+)
+ drivers/net/wireless/ath/ath9k/hw.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 28e0c05..c38862b 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -2660,3 +2660,75 @@ void ath10k_dbg_dump(struct ath10k *ar,
- EXPORT_SYMBOL(ath10k_dbg_dump);
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8b2895f..1c27e2d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1832,8 +1832,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	u32 saveLedState;
+ 	u32 saveDefAntenna;
+ 	u32 macStaId1;
++	struct timespec tsf_ts;
++	u32 tsf_offset;
+ 	u64 tsf = 0;
+-	s64 usec = 0;
+ 	int r;
+ 	bool start_mci_reset = false;
+ 	bool save_fullsleep = ah->chip_fullsleep;
+@@ -1877,8 +1878,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	macStaId1 = REG_READ(ah, AR_STA_ID1) & AR_STA_ID1_BASE_RATE_11B;
  
- #endif /* CONFIG_ATH10K_DEBUG */
-+
-+void ath10k_dbg_print_fw_dbg_buffer(struct ath10k *ar, __le32 *ibuf, int len,
-+				    const char* lvl)
-+{
-+	/* Print out raw hex, external tools can decode if
-+	 * they care.
-+	 * TODO:  Add ar identifier to messages.
-+	 */
-+	int q = 0;
-+
-+	dev_printk(lvl, ar->dev, "ath10k_pci ATH10K_DBG_BUFFER:\n");
-+	while (q < len) {
-+		if (q + 8 <= len) {
-+			printk("%sath10k: [%04d]: %08X %08X %08X %08X %08X %08X %08X %08X\n",
-+			       lvl, q,
-+			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3],
-+			       ibuf[q+4], ibuf[q+5], ibuf[q+6], ibuf[q+7]);
-+			q += 8;
-+		}
-+		else if (q + 7 <= len) {
-+			printk("%sath10k: [%04d]: %08X %08X %08X %08X %08X %08X %08X\n",
-+			       lvl, q,
-+			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3],
-+			       ibuf[q+4], ibuf[q+5], ibuf[q+6]);
-+			q += 7;
-+		}
-+		else if (q + 6 <= len) {
-+			printk("%sath10k: [%04d]: %08X %08X %08X %08X %08X %08X\n",
-+			       lvl, q,
-+			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3],
-+			       ibuf[q+4], ibuf[q+5]);
-+			q += 6;
-+		}
-+		else if (q + 5 <= len) {
-+			printk("%sath10k: [%04d]: %08X %08X %08X %08X %08X\n",
-+			       lvl, q,
-+			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3],
-+			       ibuf[q+4]);
-+			q += 5;
-+		}
-+		else if (q + 4 <= len) {
-+			printk("%sath10k: [%04d]: %08X %08X %08X %08X\n",
-+			       lvl, q,
-+			       ibuf[q], ibuf[q+1], ibuf[q+2], ibuf[q+3]);
-+			q += 4;
-+		}
-+		else if (q + 3 <= len) {
-+			printk("%sath10k: [%04d]: %08X %08X %08X\n",
-+			       lvl, q,
-+			       ibuf[q], ibuf[q+1], ibuf[q+2]);
-+			q += 3;
-+		}
-+		else if (q + 2 <= len) {
-+			printk("%sath10k: [%04d]: %08X %08X\n",
-+			       lvl, q,
-+			       ibuf[q], ibuf[q+1]);
-+			q += 2;
-+		}
-+		else if (q + 1 <= len) {
-+			printk("%sath10k: [%04d]: %08X\n",
-+			       lvl, q,
-+			       ibuf[q]);
-+			q += 1;
-+		}
-+		else {
-+			break;
-+		}
-+	}/* while */
-+
-+	dev_printk(lvl, ar->dev, "ATH10K_END\n");
-+}
-+EXPORT_SYMBOL(ath10k_dbg_print_fw_dbg_buffer);
-diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
-index 613ad7e..6356dce 100644
---- a/drivers/net/wireless/ath/ath10k/debug.h
-+++ b/drivers/net/wireless/ath/ath10k/debug.h
-@@ -38,6 +38,7 @@ enum ath10k_debug_mask {
- 	ATH10K_DBG_WMI_PRINT	= 0x00002000,
- 	ATH10K_DBG_PCI_PS	= 0x00004000,
- 	ATH10K_DBG_AHB		= 0x00008000,
-+	ATH10K_DBG_FW		= 0x80000000,
- 	ATH10K_DBG_ANY		= 0xffffffff,
- };
+ 	/* Save TSF before chip reset, a cold reset clears it */
++	getrawmonotonic(&tsf_ts);
+ 	tsf = ath9k_hw_gettsf64(ah);
+-	usec = ktime_to_us(ktime_get_raw());
  
-@@ -193,4 +194,8 @@ static inline void ath10k_dbg_dump(struct ath10k *ar,
- {
- }
- #endif /* CONFIG_ATH10K_DEBUG */
-+
-+void ath10k_dbg_print_fw_dbg_buffer(struct ath10k *ar, __le32 *buffer,
-+				    int len, const char* lvl);
-+
- #endif /* _DEBUG_H_ */
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index e6315ec..dbf0db8 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1623,6 +1623,9 @@ static void ath10k_pci_dump_dbglog(struct ath10k *ar)
- 		WARN_ON(len & 0x3);
+ 	saveLedState = REG_READ(ah, AR_CFG_LED) &
+ 		(AR_CFG_LED_ASSOC_CTL | AR_CFG_LED_MODE_SEL |
+@@ -1911,8 +1912,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	}
  
- 		ath10k_dbg_save_fw_dbg_buffer(ar, (__le32 *)(buffer), len >> 2);
-+		ath10k_dbg_print_fw_dbg_buffer(ar, (__le32 *)(buffer),
-+					       dbuf.length/sizeof(__le32),
-+					       KERN_ERR);
- 		kfree(buffer);
+ 	/* Restore TSF */
+-	usec = ktime_to_us(ktime_get_raw()) - usec;
+-	ath9k_hw_settsf64(ah, tsf + usec);
++	tsf_offset = ath9k_hw_get_tsf_offset(&tsf_ts, NULL);
++	ath9k_hw_settsf64(ah, tsf + tsf_offset);
  
- next:
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index d9e4b77..6cfba41 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2510,6 +2510,18 @@ int ath10k_wmi_event_debug_mesg(struct ath10k *ar, struct sk_buff *skb)
- 				      (skb->len - 4)/sizeof(__le32));
- 	spin_unlock_bh(&ar->data_lock);
+ 	if (AR_SREV_9280_20_OR_LATER(ah))
+ 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+@@ -1932,12 +1933,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	/*
+ 	 * Some AR91xx SoC devices frequently fail to accept TSF writes
+ 	 * right after the chip reset. When that happens, write a new
+-	 * value after the initvals have been applied, with an offset
+-	 * based on measured time difference
++	 * value after the initvals have been applied.
+ 	 */
+ 	if (AR_SREV_9100(ah) && (ath9k_hw_gettsf64(ah) < tsf)) {
+-		tsf += 1500;
+-		ath9k_hw_settsf64(ah, tsf);
++		tsf_offset = ath9k_hw_get_tsf_offset(&tsf_ts, NULL);
++		ath9k_hw_settsf64(ah, tsf + tsf_offset);
+ 	}
  
-+	if (ev->dropped_count)
-+		ath10k_warn(ar, "WARNING: Dropped dbglog buffers: %d\n", __le32_to_cpu(ev->dropped_count));
-+
-+	if (ath10k_debug_mask & ATH10K_DBG_FW)
-+		ath10k_dbg_print_fw_dbg_buffer(ar, ev->messages,
-+					       (skb->len - 4)/sizeof(__le32),
-+					       KERN_INFO);
-+	else
-+		ath10k_dbg_print_fw_dbg_buffer(ar, ev->messages,
-+					       (skb->len - 4)/sizeof(__le32),
-+					       KERN_DEBUG);
-+
- 	return 0;
- }
- 
+ 	ath9k_hw_init_mfp(ah);
 -- 
-2.4.3
+2.8.1
 
