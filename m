@@ -1,123 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:32975 "EHLO
-	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751443AbcF2IUa (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:36826 "EHLO
+	mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754498AbcFGTKi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 04:20:30 -0400
-Received: by mail-qk0-f193.google.com with SMTP id n132so8333403qka.0
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2016 01:20:29 -0700 (PDT)
+	Tue, 7 Jun 2016 15:10:38 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] brcmfmac: slightly simplify building interface combinations
+Date: Tue,  7 Jun 2016 21:10:18 +0200
+Message-Id: <1465326626-365-1-git-send-email-zajec5@gmail.com> (sfid-20160607_211059_133911_8D14D3EE)
 MIME-Version: 1.0
-In-Reply-To: <CACYmx9O-xnLLUWgVFBWnY2L2ArsHW_+voOA+xeTBMqOK9mAPLg@mail.gmail.com>
-References: <1467021206-2702-1-git-send-email-chaitanya.mgit@gmail.com> <CACYmx9O-xnLLUWgVFBWnY2L2ArsHW_+voOA+xeTBMqOK9mAPLg@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 29 Jun 2016 13:50:09 +0530
-Message-ID: <CABPxzYLQyBsDD+HK=eS7qBXtrAdxwOajC3-xyYhKP8Bf_HExww@mail.gmail.com> (sfid-20160629_102039_214140_972ABD8F)
-Subject: Re: [PATCH] mac80211: minstrel: Enable STBC and LDPC for VHT Rates
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 29, 2016 at 1:41 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
-> On Mon, Jun 27, 2016 at 9:53 AM, Chaitanya TK <chaitanya.mgit@gmail.com>
-> wrote:
->>
->> From: Chaitanya T K <chaitanya.mgit@gmail.com>
->>
->> If peer support reception of STBC and LDPC, enable them for better
->> performance.
->>
->> Signed-off-by: Chaitanya TK <chaitanya.mgit@gmail.com>
->> ---
->>  include/linux/ieee80211.h          |    1 +
->>  net/mac80211/rc80211_minstrel_ht.c |   25 +++++++++++++++++--------
->>  2 files changed, 18 insertions(+), 8 deletions(-)
->>
->> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
->> index b118744..4d01130 100644
->> --- a/include/linux/ieee80211.h
->> +++ b/include/linux/ieee80211.h
->> @@ -1550,6 +1550,7 @@ struct ieee80211_vht_operation {
->>  #define IEEE80211_VHT_CAP_RXSTBC_3                             0x00000300
->>  #define IEEE80211_VHT_CAP_RXSTBC_4                             0x00000400
->>  #define IEEE80211_VHT_CAP_RXSTBC_MASK                          0x00000700
->> +#define IEEE80211_VHT_CAP_RXSTBC_SHIFT                         8
->>  #define IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE
->> 0x00000800
->>  #define IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE
->> 0x00001000
->>  #define IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT                  13
->> diff --git a/net/mac80211/rc80211_minstrel_ht.c
->> b/net/mac80211/rc80211_minstrel_ht.c
->> index 30fbabf..e2fcdea 100644
->> --- a/net/mac80211/rc80211_minstrel_ht.c
->> +++ b/net/mac80211/rc80211_minstrel_ht.c
->> @@ -1166,13 +1166,14 @@ minstrel_ht_update_caps(void *priv, struct
->> ieee80211_supported_band *sband,
->>         struct minstrel_ht_sta_priv *msp = priv_sta;
->>         struct minstrel_ht_sta *mi = &msp->ht;
->>         struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
->> -       u16 sta_cap = sta->ht_cap.cap;
->> +       u16 ht_cap = sta->ht_cap.cap;
->>         struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
->>         int use_vht;
->>         int n_supported = 0;
->>         int ack_dur;
->>         int stbc;
->>         int i;
->> +       bool ldpc;
->>
->>         /* fall back to the old minstrel for legacy stations */
->>         if (!sta->ht_cap.ht_supported)
->> @@ -1210,16 +1211,24 @@ minstrel_ht_update_caps(void *priv, struct
->> ieee80211_supported_band *sband,
->>         }
->>         mi->sample_tries = 4;
->>
->> -       /* TODO tx_flags for vht - ATM the RC API is not fine-grained
->> enough */
->>         if (!use_vht) {
->> -               stbc = (sta_cap & IEEE80211_HT_CAP_RX_STBC) >>
->> +               stbc = (ht_cap & IEEE80211_HT_CAP_RX_STBC) >>
->>                         IEEE80211_HT_CAP_RX_STBC_SHIFT;
->> -               mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
->>
->> -               if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
->> -                       mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
->> +               if (ht_cap & IEEE80211_HT_CAP_LDPC_CODING)
->> +                       ldpc = true;
->> +       } else {
->> +               stbc = (vht_cap->cap & IEEE80211_VHT_CAP_RXSTBC_MASK) >>
->> +                       IEEE80211_VHT_CAP_RXSTBC_SHIFT;
->> +
->> +               if (vht_cap->cap & IEEE80211_VHT_CAP_RXLDPC)
->> +                       ldpc = true;
->>         }
->>
->> +       mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
->> +       if (ldpc)
->> +               mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
->> +
->
->
-> Here you are using ldpc uninitialized.
->
->
-> As for the idea, ldpc and stbc support/enable in HT and VHT being
-> independant and tx_flags being shared by all the info.rates, you cannot use
-> it as you are trying to (e.g. you might end up asking lower layers to send
-> stbc/vht with a hw only supporting stbc/ht or/and trying to send stbc/vht
-> with inappropriate advertised vht caps).
-The design in minstrel is it checks only for peers capabilities and it doesn't
-check local hw capabilities (except for those in MCS_GROUPS), so minstrel
-just informs the we can use STBC/LDPC, its HW's decision whether to
-actually use or not.
-> This stems from the STBC/LDPC CTL flags being a mac80211_tx_info_flags, this
-> is what should be changed.
-I understand the problem here, if all rates are same then its no problem.
-But if some rates are HT and some are VHT, then we might end up in problem.
+This change reorders some operations in brcmf_setup_ifmodes in hope to
+make it simpler:
+1) It allocates arrays right before filling them. This way it's easier
+   to follow requested array length as it's immediately followed by
+   code filling it. It's easier to check e.g. why we need 4 entries for
+   P2P. Other than that it deduplicates some checks (e.g. for P2P).
+2) It reorders code to first prepare limits and then define a new combo.
+   Previously this was mixed (e.g. we were setting num of channels
+   before preparing limits).
+3) It modifies mbss code to use i variable just like other combos do.
 
-To solve this, we need to move this to mac80211_rate_control_flags so that
-we can convey per rate info.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 37 ++++++++++------------
+ 1 file changed, 16 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 4894eb7..33e682e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6300,29 +6300,15 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	if (!combo)
+ 		goto err;
+ 
+-	c0_limits = kcalloc(p2p ? 3 : 2, sizeof(*c0_limits), GFP_KERNEL);
+-	if (!c0_limits)
+-		goto err;
+-
+-	if (p2p) {
+-		p2p_limits = kcalloc(4, sizeof(*p2p_limits), GFP_KERNEL);
+-		if (!p2p_limits)
+-			goto err;
+-	}
+-
+-	if (mbss) {
+-		mbss_limits = kcalloc(1, sizeof(*mbss_limits), GFP_KERNEL);
+-		if (!mbss_limits)
+-			goto err;
+-	}
+-
+ 	wiphy->interface_modes = BIT(NL80211_IFTYPE_STATION) |
+ 				 BIT(NL80211_IFTYPE_ADHOC) |
+ 				 BIT(NL80211_IFTYPE_AP);
+ 
+ 	c = 0;
+ 	i = 0;
+-	combo[c].num_different_channels = 1;
++	c0_limits = kcalloc(p2p ? 3 : 2, sizeof(*c0_limits), GFP_KERNEL);
++	if (!c0_limits)
++		goto err;
+ 	c0_limits[i].max = 1;
+ 	c0_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
+ 	if (p2p) {
+@@ -6340,6 +6326,7 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 		c0_limits[i].max = 1;
+ 		c0_limits[i++].types = BIT(NL80211_IFTYPE_AP);
+ 	}
++	combo[c].num_different_channels = 1;
+ 	combo[c].max_interfaces = i;
+ 	combo[c].n_limits = i;
+ 	combo[c].limits = c0_limits;
+@@ -6347,7 +6334,9 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	if (p2p) {
+ 		c++;
+ 		i = 0;
+-		combo[c].num_different_channels = 1;
++		p2p_limits = kcalloc(4, sizeof(*p2p_limits), GFP_KERNEL);
++		if (!p2p_limits)
++			goto err;
+ 		p2p_limits[i].max = 1;
+ 		p2p_limits[i++].types = BIT(NL80211_IFTYPE_STATION);
+ 		p2p_limits[i].max = 1;
+@@ -6356,6 +6345,7 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_CLIENT);
+ 		p2p_limits[i].max = 1;
+ 		p2p_limits[i++].types = BIT(NL80211_IFTYPE_P2P_DEVICE);
++		combo[c].num_different_channels = 1;
+ 		combo[c].max_interfaces = i;
+ 		combo[c].n_limits = i;
+ 		combo[c].limits = p2p_limits;
+@@ -6363,14 +6353,19 @@ static int brcmf_setup_ifmodes(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 
+ 	if (mbss) {
+ 		c++;
++		i = 0;
++		mbss_limits = kcalloc(1, sizeof(*mbss_limits), GFP_KERNEL);
++		if (!mbss_limits)
++			goto err;
++		mbss_limits[i].max = 4;
++		mbss_limits[i++].types = BIT(NL80211_IFTYPE_AP);
+ 		combo[c].beacon_int_infra_match = true;
+ 		combo[c].num_different_channels = 1;
+-		mbss_limits[0].max = 4;
+-		mbss_limits[0].types = BIT(NL80211_IFTYPE_AP);
+ 		combo[c].max_interfaces = 4;
+-		combo[c].n_limits = 1;
++		combo[c].n_limits = i;
+ 		combo[c].limits = mbss_limits;
+ 	}
++
+ 	wiphy->n_iface_combinations = n_combos;
+ 	wiphy->iface_combinations = combo;
+ 	return 0;
+-- 
+1.8.4.5
+
