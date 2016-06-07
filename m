@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:43634 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750910AbcFCBSZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 21:18:25 -0400
-Date: Thu, 2 Jun 2016 18:18:27 -0700
-From: Guenter Roeck <linux@roeck-us.net>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: Anyone have a clone of wireless-legacy.git?
-Message-ID: <20160603011827.GA2542@roeck-us.net> (sfid-20160603_031844_518277_F56E1CB4)
-References: <20160602183803.GH6230@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160602183803.GH6230@tuxdriver.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37580 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754948AbcFGOj6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 7 Jun 2016 10:39:58 -0400
+Message-ID: <1465310395.29158.2.camel@redhat.com> (sfid-20160607_164044_407443_22396C57)
+Subject: Re: [ldv-project] [net] libertas: potential race condition
+From: Dan Williams <dcbw@redhat.com>
+To: Pavel Andrianov <andrianov@ispras.ru>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: libertas-dev@lists.infradead.org, LDV list <ldv-project@ispras.ru>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, vaishali.thakkar@oracle.com
+Date: Tue, 07 Jun 2016 09:39:55 -0500
+In-Reply-To: <57569424.9040906@ispras.ru>
+References: <57569424.9040906@ispras.ru>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 02, 2016 at 02:38:04PM -0400, John W. Linville wrote:
-> It has recently come to my attention that the old wireless-legacy.git
-> tree is no longer available on kernel.org.  I honestly have no idea
-> what happened to it -- for all I know I fat-fingered it some time
-> ago or whatever.  Anyway, apparently there are some references in it
-> "out there" and it would be good if we had a copy available somewhere
-> public.
+On Tue, 2016-06-07 at 13:30 +0400, Pavel Andrianov wrote:
+> Hi!
 > 
-> If you have an old clone of wireless-legacy.git, PLEASE DO NOT DELETE
-> IT!  Please let me know that you've got it and I will arrange to get
-> a copy of it from you in order to make it available publicly again.
-> 
-> I appreciate your support!
-> 
-http://www.filewatcher.com/_/?q=wireless-legacy.git, maybe ?
+> There is a potential race condition in 
+> drivers/net/wireless/libertas/libertas.ko.
+> In the function lbs_hard_start_xmit(..), line 159, a socket buffer
+> is 
+> written to priv->current_skb with a spin_lock protection.
+> In the function lbs_mac_event_disconnected(..), lines 50-51, the
+> field 
+> current_skb is cleaned. There is no protection used. The
+> corresponding 
+> handlers are activated at the same time in lbs_start_card(..) and
+> then 
+> may be executed simultaneously. Note, there are two structures 
+> lbs_netdev_ops and mesh_netdev_ops, which have the target handler 
+> lbs_hard_start_xmit.
+> Is it a real race or I have missed something?
 
-Guenter
+Yeah, it looks like it should be grabbing priv->driver_lock before
+clearing priv->currenttxskb in lbs_mac_event_disconnected().  Care to
+submit a patch after testing?  Do you have any of that hardware?
+
+Dan
