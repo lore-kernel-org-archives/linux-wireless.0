@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:52857 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423115AbcFMNTn (ORCPT
+Received: from mail-it0-f44.google.com ([209.85.214.44]:35212 "EHLO
+	mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751105AbcFGABJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 09:19:43 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Binoy Jayan <binoy.jayan@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/7] staging: wilc1000: Replace semaphore txq_add_to_head_cs with mutex
-Date: Mon, 13 Jun 2016 15:20:57 +0200
-Message-ID: <4729653.WB7hDso2I6@wuerfel> (sfid-20160613_152004_008850_729E6ACD)
-In-Reply-To: <1465814259-3009-3-git-send-email-binoy.jayan@linaro.org>
-References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org> <1465814259-3009-3-git-send-email-binoy.jayan@linaro.org>
+	Mon, 6 Jun 2016 20:01:09 -0400
+Received: by mail-it0-f44.google.com with SMTP id z189so59428184itg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2016 17:01:09 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
+References: <20160603165144.17356-1-toke@toke.dk> <20160603165144.17356-6-toke@toke.dk>
+ <CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
+ <8737orucq4.fsf@toke.dk> <CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Mon, 6 Jun 2016 17:01:08 -0700
+Message-ID: <CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com> (sfid-20160607_020114_318883_2CB7E913)
+Subject: Re: [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	make-wifi-fast@lists.bufferbloat.net,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, June 13, 2016 4:07:34 PM CEST Binoy Jayan wrote:
-> The semaphore 'txq_add_to_head_cs' is a simple mutex, so it should be
-> written as one. Semaphores are going away in the future.
+[snip]
 
-Looks good to me.
+I also found one of my notes in my version of this - how can we
+estimate the duration of an A-MPDU, when we only get hardware
+de-encapsulated frames?
 
-> Also, removing
-> the timeout scenario as the error handling code does not propagate the
-> timeout properly.
 
-Good catch! I guess wilc_wlan_handle_txq() running into a timeout 
-would end putting the semaphore in a state in which we never again
-block on it because the count is now one higher than it should be.
 
-	Arnd
+-adrian
