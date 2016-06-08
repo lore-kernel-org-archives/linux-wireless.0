@@ -1,66 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34378 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750870AbcF0HWj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57416 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161190AbcFHMnR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 03:22:39 -0400
-Received: by mail-wm0-f68.google.com with SMTP id 187so22128662wmz.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 00:22:38 -0700 (PDT)
-Date: Mon, 27 Jun 2016 09:22:35 +0200
-From: Mirco Tischler <mt-ml@gmx.de>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	miaoqing pan <miaoqing@codeaurora.org>
-Subject: Re: ath9k: fix GPIO mask for AR9462 and AR9565
-Message-ID: <20160627072235.GB31166@frangipani> (sfid-20160627_092242_353793_FFB73A94)
+	Wed, 8 Jun 2016 08:43:17 -0400
+Date: Wed, 8 Jun 2016 18:13:08 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Sven Eckelmann <sven.eckelmann@open-mesh.com>
+Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	marek.lindner@open-mesh.com
+Subject: Re: [PATCH 0/2] ath10k: Add support for QCA9887
+Message-ID: <20160608124308.GB29340@atheros-ThinkPad-T61> (sfid-20160608_144320_743059_D21D7E2E)
+References: <1568876.Six5hABE57@bentobox>
+ <2262792.6VVL0Htyzj@bentobox>
+ <20160607145002.GB11250@atheros-ThinkPad-T61>
+ <2104766.hdzL6bzVNd@bentobox>
+ <20160607171110.GA13293@atheros-ThinkPad-T61>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160607171110.GA13293@atheros-ThinkPad-T61>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kva..@qca.qualcomm.com> wrote:
->miaoqing pan <miaoq...@codeaurora.org> wrote:
->> From: Miaoqing Pan <miaoq...@codeaurora.org>
->> 
->> The incorrect GPIO mask cause kernel warning, when AR9462 access GPIO11.
->> Also fix the mask for AR9565.
->> 
->> WARNING: CPU: 1 PID: 199 at ../drivers/net/wireless/ath/ath9k/hw.c:2778 
->> ath9k_hw_gpio_get+0x1a9/0x1b0 [ath9k_hw]
->> CPU: 1 PID: 199 Comm: kworker/u16:9 Not tainted 4.7.0-rc1-next-20160530+ #5
->> Hardware name: Acer TravelMate P243/BA40_HC, BIOS V1.01 04/20/2012
->> Workqueue: events_power_efficient rfkill_poll
->>  0000000000000000 ffff88002cf73d28 ffffffff813b8ddc 0000000000000000
->>  0000000000000000 ffff88002cf73d68 ffffffff8107a331 00000ada00000086
->>  ffff880148d9c018 000000000000000b ffff880147e68720 0000000000000200
->> Call Trace:
->>  [<ffffffff813b8ddc>] dump_stack+0x63/0x87
->>  [<ffffffff8107a331>] __warn+0xd1/0xf0
->>  [<ffffffff8107a41d>] warn_slowpath_null+0x1d/0x20
->>  [<ffffffffc0775b19>] ath9k_hw_gpio_get+0x1a9/0x1b0 [ath9k_hw]
->>  [<ffffffffc047f3e4>] ath9k_rfkill_poll_state+0x34/0x60 [ath9k]
->>  [<ffffffffc06dbb53>] ieee80211_rfkill_poll+0x33/0x40 [mac80211]
->>  [<ffffffffc03ad65a>] cfg80211_rfkill_poll+0x2a/0xc0 [cfg80211]
->>  [<ffffffff817c5514>] rfkill_poll+0x24/0x50
->>  [<ffffffff81093183>] process_one_work+0x153/0x3f0
->>  [<ffffffff8109393b>] worker_thread+0x12b/0x4b0
->>  [<ffffffff81093810>] ? rescuer_thread+0x340/0x340
->>  [<ffffffff81099129>] kthread+0xc9/0xe0
->>  [<ffffffff817d8f1f>] ret_from_fork+0x1f/0x40
->>  [<ffffffff81099060>] ? kthread_park+0x60/0x60
->> 
->> Signed-off-by: Miaoqing Pan <miaoq...@codeaurora.org>
->
->
->Thanks, 1 patch applied to ath-current branch of ath.git:
->
->e024111f6946 ath9k: fix GPIO mask for AR9462 and AR9565
->
-Hello Kalle,
-I see this warning in 4.7-rc4. Could the fix please go into 4.7? if I understand correctly
-it is only queued for 4.8?
+On Tue, Jun 07, 2016 at 10:41:48PM +0530, Mohammed Shafi Shajakhan wrote:
+> Hi Sven,
+> 
+> On Tue, Jun 07, 2016 at 06:54:54PM +0200, Sven Eckelmann wrote:
+> > On Tuesday 07 June 2016 20:20:02 Mohammed Shafi Shajakhan wrote:
+> > [...]
+> > > [shafi] it would be helpful if you can share your basic test results (if its
+> > > possible to share). Have you tried to bring up the card in 5ghz (or) 2ghz.
+> > > Or both of them were tried ?
+> > 
+> > * 5GHz-only (I have no 2.4GHz capable card)
+> > * card is able to scan
+> > * card is able to create an AP
+> > * data can be transferred via AP and client (bidirectional connection)
+> > * performance was more like 15 Mibit/s for 1x1 HT20 11n devices instead of
+> >   something like 35-40 Mibit/s
+> 
+> [shafi] sure thanks a lot, this is a good start, i will keep you posted
+> with my findings and results.
 
-Btw. I applied the patch and it does fix the problem :)
+[shafi] request if you can disable TX-STBC for both HT and VHT, it helped
+me though. Will keep you posted with more updates.
 
-Thank you,
-Mirco
+> 
+> > 
+> > I cannot give you any more detailed, current performance test results because
+> > they were done months ago and are most likely not relevant to describe the
+> > current state. Please ask Kalle if you want to know why the old tests were
+> > done many, many months ago.
+> 
+> [shafi] sure, hopefully we can get this sorted out. Thank you for the patches
+> and support.
+> 
+> > 
+> > Please ask Marek when you want to have tests done with the current
+> > mac8011+ath10k.
+> 
+> [shafi] thanks
+> 
+> > 
+> > Kind regards,
+> > 	Sven
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
