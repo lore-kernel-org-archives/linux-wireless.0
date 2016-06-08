@@ -1,75 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:44135 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932495AbcFEWZE (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60776 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753613AbcFHNZV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2016 18:25:04 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 4.5 036/128] ath9k: Add a module parameter to invert LED polarity.
-Date: Sun,  5 Jun 2016 15:23:11 -0700
-Message-Id: <20160605222322.367292850@linuxfoundation.org> (sfid-20160606_004008_605658_4B31718A)
-In-Reply-To: <20160605222321.183131188@linuxfoundation.org>
-References: <20160605222321.183131188@linuxfoundation.org>
+	Wed, 8 Jun 2016 09:25:21 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: Jonas Gorski <jogo@openwrt.org>,
+	Avinash Patil <avinashp@quantenna.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<dlebed@quantenna.com>, <smaksimenko@quantenna.com>,
+	<smatyukevich@quantenna.com>, <imitsyanko@quantenna.com>,
+	<btherthala@quantenna.com>, <hwang@quantenna.com>,
+	<krath@quantenna.com>
+Subject: Re: [PATCH] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
+References: <1464288752-6625-1-git-send-email-avinashp@quantenna.com>
+	<CAOiHx==C56Pj768bRX16VOaxj0Qf_oh5KXfhFJakT2zi-SokQQ@mail.gmail.com>
+	<0f6a9c71-f6d5-235f-2883-114c22ebebff@quantenna.com>
+Date: Wed, 08 Jun 2016 16:25:11 +0300
+In-Reply-To: <0f6a9c71-f6d5-235f-2883-114c22ebebff@quantenna.com> (Igor
+	Mitsyanko's message of "Wed, 8 Jun 2016 14:35:40 +0300")
+Message-ID: <87inxjlsnc.fsf@kamboji.qca.qualcomm.com> (sfid-20160608_152525_546310_35834802)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-4.5-stable review patch.  If anyone has any objections, please let me know.
+Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> writes:
 
-------------------
+> On 05/29/2016 02:35 PM, Jonas Gorski wrote:
+>> Hi,
+>>
+>> On 26 May 2016 at 20:52, Avinash Patil <avinashp@quantenna.com> wrote:
+>>> This patch adds support for new FullMAC WiFi driver for Quantenna
+>>> QSR10G chipsets.
+>>>
+>>> QSR10G is Quantenna's 8x8, 160M, 11ac offering.
+>>> QSR10G supports 2 simultaneous WMACs- one 5G and one 2G. 5G WMAC
+>>> supports 160M, 8x8 configuration.
+>>> FW supports 8 concurrent virtual interfaces on each WMAC.
+>>>
+>>> Patch introduces 2 new drivers- qtnfmac.ko for interfacing with
+>>> kernel/cfg80211 and qtnfmac_pcie.ko for PCIe bus interface.
+>> Nice to see this one, will you also provide a pearl-linux.lzma.img as
+>> required for the firmware? What about cards in embedded devices, might
+>> they require a uboot as well? Since requesting uboot seems to be
+>> specifically supported by the card/firmware interface.
+>
+> Hi Jonas,
+> we will provide firmware, but we're not sure at which point it should
+> be done: addressing any review comments for driver may affect firmware
+> itself, probably the best time to provide firmware would be after new
+> driver is accepted and merged?
 
-From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
+I would prefer to see the firmware images publically available before
+the driver gets applied. What if you send the firmware patches as RFC
+only to linux-wireless? That way linux-firmware.git maintainers won't
+apply them, hopefully. And mention in the commit log that this is just
+for testing purposes, not to be applied.
 
-commit cd84042ce9040ad038e958bc67a46fcfc015c736 upstream.
-
-The LED can be active high instead of active low on some hardware.
-
-Add the led_active_high module parameter. It defaults to -1 to obey
-platform data as before.
-
-Setting the parameter to 1 or 0 will force the LED respectively
-active high or active low.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/net/wireless/ath/ath9k/init.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -49,6 +49,10 @@ int ath9k_led_blink;
- module_param_named(blink, ath9k_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
-+static int ath9k_led_active_high = -1;
-+module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
-+MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
-+
- static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-@@ -600,6 +604,9 @@ static int ath9k_init_softc(u16 devid, s
- 	if (ret)
- 		return ret;
- 
-+	if (ath9k_led_active_high != -1)
-+		ah->config.led_active_high = ath9k_led_active_high == 1;
-+
- 	/*
- 	 * Enable WLAN/BT RX Antenna diversity only when:
- 	 *
-
-
+-- 
+Kalle Valo
