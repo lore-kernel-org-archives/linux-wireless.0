@@ -1,72 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23013 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161112AbcFCVhu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 17:37:50 -0400
-From: Sasha Levin <sasha.levin@oracle.com>
-To: stable@vger.kernel.org, stable-commits@vger.kernel.org
-Cc: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<ath9k-devel@venema.h4ckr.net>,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Sasha Levin <sasha.levin@oracle.com>
-Subject: [added to the 4.1 stable tree] ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
-Date: Fri,  3 Jun 2016 17:35:24 -0400
-Message-Id: <1464989831-16666-29-git-send-email-sasha.levin@oracle.com> (sfid-20160603_233757_510247_4B75C753)
-In-Reply-To: <1464989831-16666-1-git-send-email-sasha.levin@oracle.com>
-References: <1464989831-16666-1-git-send-email-sasha.levin@oracle.com>
+Received: from mail-by2on0068.outbound.protection.outlook.com ([207.46.100.68]:53152
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752979AbcFHLzI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2016 07:55:08 -0400
+Subject: Re: [PATCH] qtnfmac: announcement of new FullMAC driver for Quantenna
+ chipsets
+To: Kalle Valo <kvalo@codeaurora.org>, Jonas Gorski <jogo@openwrt.org>
+References: <1464288752-6625-1-git-send-email-avinashp@quantenna.com>
+ <CAOiHx==C56Pj768bRX16VOaxj0Qf_oh5KXfhFJakT2zi-SokQQ@mail.gmail.com>
+ <87wpm5rn9h.fsf@kamboji.qca.qualcomm.com>
+CC: Avinash Patil <avinashp@quantenna.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	<dlebed@quantenna.com>, <smaksimenko@quantenna.com>,
+	<smatyukevich@quantenna.com>, <btherthala@quantenna.com>,
+	<hwang@quantenna.com>, <krath@quantenna.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <d6d402f7-087a-ad97-31f5-788f7288403b@quantenna.com> (sfid-20160608_135516_196492_B492C323)
+Date: Wed, 8 Jun 2016 14:22:13 +0300
+MIME-Version: 1.0
+In-Reply-To: <87wpm5rn9h.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
+On 06/04/2016 06:23 PM, Kalle Valo wrote:
+> Jonas Gorski <jogo@openwrt.org> writes:
+>
+>> On 26 May 2016 at 20:52, Avinash Patil <avinashp@quantenna.com> wrote:
+>>
+>>> This email, including its contents and any attachment(s), may contain
+>>> confidential information of Quantenna Communications, Inc. and is
+>>> solely for the intended recipient(s). If you may have received this
+>>> in error, please contact the sender and permanently delete this
+>>> email, its contents and any attachment(s).
+>> You will need to remove this footer to be taken seriously, as
+>> confidential information would be not GPL compatible, and "may
+>> contain" means it is too risky to accept that.
+> Yeah, I'm not going to take (or even look) patches with such
+> disclaimers. So please resend so that we can start the review.
+>
 
-This patch has been added to the 4.1 stable tree. If you have any
-objections, please let us know.
-
-===============
-
-[ Upstream commit 0f9edcdd88a993914fa1d1dc369b35dc503979db ]
-
-The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
-(active high instead of active low).
-
-The same PCI Subsystem ID is used by both cards, which are based on
-the same Atheros MB92 design.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
----
- drivers/net/wireless/ath/ath9k/pci.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index e6fef1b..7cdaf40 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pci_id_table[] = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
-+
-+#ifdef CONFIG_ATH9K_PCOEM
-+	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0029,
-+			 PCI_VENDOR_ID_ATHEROS,
-+			 0x2096),
-+	  .driver_data = ATH9K_PCI_LED_ACT_HI },
-+#endif
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
- 
- #ifdef CONFIG_ATH9K_PCOEM
--- 
-2.5.0
-
+Kalle, Jonas,
+we will resend the patch without disclaimer, sorry for inconvenience.
