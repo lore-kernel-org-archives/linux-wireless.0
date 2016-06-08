@@ -1,99 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:19330 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751735AbcF3IzU convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 04:55:20 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Prasun Maiti <prasunmaiti87@gmail.com>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux Next <linux-next@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: RE: [PATCH v2] mwifiex: Fix endianness for event TLV type
- TLV_BTCOEX_WL_SCANTIME
-Date: Thu, 30 Jun 2016 08:37:15 +0000
-Message-ID: <9f524718509042ac904b2db09081048e@SC-EXCH04.marvell.com> (sfid-20160630_105528_512365_F37A987E)
-References: <10cf2879532349d29143ecbac3b459b7@SC-EXCH04.marvell.com>
- <1467275483-24091-1-git-send-email-prasunmaiti87@gmail.com>
-In-Reply-To: <1467275483-24091-1-git-send-email-prasunmaiti87@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail2.tohojo.dk ([77.235.48.147]:51152 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1160995AbcFHNGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2016 09:06:33 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	make-wifi-fast@lists.bufferbloat.net,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Subject: Re: [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
+References: <20160603165144.17356-1-toke@toke.dk>
+	<20160603165144.17356-6-toke@toke.dk>
+	<CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
+	<8737orucq4.fsf@toke.dk>
+	<CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
+	<CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
+	<87k2i1ml43.fsf@toke.dk> <87wpm1b6bu.fsf@toke.dk>
+	<CAJ-VmonOKjeY5uLeKFOVGmdBmm1V37TH72avf4XNe=-884Szwg@mail.gmail.com>
+Date: Wed, 08 Jun 2016 15:06:26 +0200
+In-Reply-To: <CAJ-VmonOKjeY5uLeKFOVGmdBmm1V37TH72avf4XNe=-884Szwg@mail.gmail.com>
+	(Adrian Chadd's message of "Tue, 7 Jun 2016 18:41:19 -0700")
+Message-ID: <87eg87q17x.fsf@toke.dk> (sfid-20160608_150656_645425_374030CA)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Prasun,
+Adrian Chadd <adrian@freebsd.org> writes:
 
-> -----Original Message-----
-> From: Prasun Maiti [mailto:prasunmaiti87@gmail.com]
-> Sent: Thursday, June 30, 2016 2:01 PM
-> To: Amitkumar Karwar
-> Cc: Nishant Sarmukadam; Linux Wireless; Linux Next; Linux Kernel; Kalle
-> Valo
-> Subject: [PATCH v2] mwifiex: Fix endianness for event TLV type
-> TLV_BTCOEX_WL_SCANTIME
-> 
-> The two members min_scan_time and max_scan_time of structure
-> "mwifiex_ie_types_btcoex_scan_time" are of two bytes each. The values
-> are assigned directtly from firmware without endian conversion handling.
-> So, wrong datas will get saved in big-endian systems.
-> 
-> This patch converts the values into cpu's byte order before assigning
-> them into the local members.
-> 
-> Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
-> ---
-> Changes in v2:
-> 	- Fixed the following sparse compilation warnings:
-> 	* sta_event.c:477:55: warning: cast to restricted __le16
-> 	* sta_event.c:478:55: warning: cast to restricted __le16
-> 
->  drivers/net/wireless/marvell/mwifiex/fw.h        | 4 ++--
->  drivers/net/wireless/marvell/mwifiex/sta_event.c | 4 ++--
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h
-> b/drivers/net/wireless/marvell/mwifiex/fw.h
-> index 8e4145a..03d3edf 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/fw.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-> @@ -1958,8 +1958,8 @@ struct mwifiex_ie_types_btcoex_scan_time {
->  	struct mwifiex_ie_types_header header;
->  	u8 coex_scan;
->  	u8 reserved;
-> -	u16 min_scan_time;
-> -	u16 max_scan_time;
-> +	__le16 min_scan_time;
-> +	__le16 max_scan_time;
->  } __packed;
-> 
->  struct mwifiex_ie_types_btcoex_aggr_win_size { diff --git
-> a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-> b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-> index 0104108..7dff452 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-> @@ -474,8 +474,8 @@ void mwifiex_bt_coex_wlan_param_update_event(struct
-> mwifiex_private *priv,
->  			scantlv =
->  			    (struct mwifiex_ie_types_btcoex_scan_time *)tlv;
->  			adapter->coex_scan = scantlv->coex_scan;
-> -			adapter->coex_min_scan_time = scantlv->min_scan_time;
-> -			adapter->coex_max_scan_time = scantlv->max_scan_time;
-> +			adapter->coex_min_scan_time = le16_to_cpu(scantlv-
-> >min_scan_time);
-> +			adapter->coex_max_scan_time = le16_to_cpu(scantlv-
-> >max_scan_time);
->  			break;
-> 
->  		default:
-> --
-> 1.9.1
+> Right. In the case of RX'ing an A-MPDU, we only get told about the
+> A-MPDU boundaries (isaggr/lastaggr or something in the RX descriptor)
+> but nothing telling us how long the original RX'ed PPDU is.
+>
+> So if we get say 16 frames and we are missing the middle one, we can
+> reconstruct things okay. But if we miss the first 8 frames, we don't
+> know when it started - we only get the RX aggr boundary flags set on
+> the 9th and the 16th and we don't even know about the missed frames.
 
-Updated change looks fine to me.
+Yes, discovering retransmissions is difficult at the RX side by nature.
+Another approach to catching (some of) these is trying to parse the MAC
+address even for corrupted frames, and if it fits to a station, account
+the airtime. Of course this will only catch cases where the frame header
+does make it through, and it won't work if the hardware discards the
+frame as corrupt before we get to see it.
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+> I think that's going to be a shortcoming right now. I couldn't think
+> of a clever way to figure it out except to detect holes in the BAW and
+> determine the client is missing frames and take actions there.
 
-Regards,
-Amitkumar
+Yes, I'm fine with having the RX side airtime accounting just ignore the
+retransmission issue, at least for now.
+
+-Toke
