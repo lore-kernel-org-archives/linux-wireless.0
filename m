@@ -1,79 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f46.google.com ([209.85.215.46]:33556 "EHLO
-	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752010AbcFUTCi (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33916 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929AbcFHPUm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 15:02:38 -0400
-Received: by mail-lf0-f46.google.com with SMTP id f6so38086047lfg.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2016 12:02:37 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: Add USB ID for Cisco Linksys AE1200
-To: Ismael Luceno <ismael@iodev.co.uk>, linux-wireless@vger.kernel.org
-References: <20160621001841.5383-1-ismael@iodev.co.uk>
-Cc: brcm80211-dev-list@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <57698F43.3050303@broadcom.com> (sfid-20160621_210241_983260_59665901)
-Date: Tue, 21 Jun 2016 21:02:27 +0200
+	Wed, 8 Jun 2016 11:20:42 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160621001841.5383-1-ismael@iodev.co.uk>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <87porrkaax.fsf@kamboji.qca.qualcomm.com>
+References: <1465388474-20503-1-git-send-email-prasunmaiti87@gmail.com>
+ <87wplzkbd9.fsf@kamboji.qca.qualcomm.com> <CAEO8o4=DnEfXQAnAOxugC9TngbhvgV9DXz0HOVHNLk0B2fAXQA@mail.gmail.com>
+ <87porrkaax.fsf@kamboji.qca.qualcomm.com>
+From: Prasun Maiti <prasunmaiti87@gmail.com>
+Date: Wed, 8 Jun 2016 20:50:40 +0530
+Message-ID: <CAEO8o4kD7MU09o+xOwPLn-PAgcuMExQ0MbNWgqv0fOs61rG8Xw@mail.gmail.com> (sfid-20160608_172048_815603_1B532A9D)
+Subject: Re: [PATCH] Add .set_antenna callback in ath6kl driver to remove
+ wireless core warns
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21-06-16 02:18, Ismael Luceno wrote:
-> Signed-off-by: Ismael Luceno <ismael@iodev.co.uk>
+I am not sure it works fine. Like ath6kl driver send another cmd to
+firmare, I have just filled up the cmd buffer with "tx_ant", and
+"rx_ant" values, then use "ath6kl_wmi_cmd_send()" api to send the cmd
+buffer to firmware.
+I have resend the patch as there are some errors in the previous patch.
+Let me know if any modifications are needed?
 
-A bit more description would be nice. I am actually wondering why you
-would be adding this. If I am not mistaken the AE1200 can not be handled
-by brcmfmac. Otherwise I am interested in a kernel log showing the
-device probe sequence with brcmfmac loaded with parameter debug=0x1416.
 
-Regards,
-Arend
+On Wed, Jun 8, 2016 at 8:16 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Prasun Maiti <prasunmaiti87@gmail.com> writes:
+>
+>> No. I did not any test for that case.
+>> This driver create a new wiphy for use with cfg80211 through
+>> "wiphy_new_nm" api, but in this api, I found that more warnings for
+>> inconsistent ops are added there. e.g; "WARN_ON(ops->set_antenna &&
+>> !ops->get_antenna);"
+>> So, warning comes during creation of a new wiphy. That's why It is needed.
+>
+> I'm confused. Are you really saying that you added a new firmware
+> command (WMI_SET_ANTENNA_CMDID) to ath6kl but you didn't test it in any
+> way? How do you know that it works then?
+>
+> --
+> Kalle Valo
 
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 4 ++++
->  drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 3 +++
->  2 files changed, 7 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> index 98b15a9..455fc69 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-> @@ -1462,11 +1462,15 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
->  #define BRCMF_USB_DEVICE(dev_id)	\
->  	{ USB_DEVICE(BRCM_USB_VENDOR_ID_BROADCOM, dev_id) }
->  
-> +#define LINKSYS_USB_DEVICE(dev_id)	\
-> +	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LINKSYS, dev_id) }
-> +
->  static struct usb_device_id brcmf_usb_devid_table[] = {
->  	BRCMF_USB_DEVICE(BRCM_USB_43143_DEVICE_ID),
->  	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
->  	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
->  	BRCMF_USB_DEVICE(BRCM_USB_43569_DEVICE_ID),
-> +	LINKSYS_USB_DEVICE(BRCM_USB_43235_LINKSYS_DEVICE_ID),
->  	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LG, BRCM_USB_43242_LG_DEVICE_ID) },
->  	/* special entry for device with firmware loaded and running */
->  	BRCMF_USB_DEVICE(BRCM_USB_BCMFW_DEVICE_ID),
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-> index 699f2c2..6666513 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-> @@ -22,6 +22,7 @@
->  
->  #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
->  #define BRCM_USB_VENDOR_ID_LG		0x043e
-> +#define BRCM_USB_VENDOR_ID_LINKSYS	0x13b1
->  #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
->  
->  /* Chipcommon Core Chip IDs */
-> @@ -56,6 +57,8 @@
->  
->  /* USB Device IDs */
->  #define BRCM_USB_43143_DEVICE_ID	0xbd1e
-> +#define BRCM_USB_43235_LINKSYS_DEVICE_ID \
-> +					0x0039
->  #define BRCM_USB_43236_DEVICE_ID	0xbd17
->  #define BRCM_USB_43242_DEVICE_ID	0xbd1f
->  #define BRCM_USB_43242_LG_DEVICE_ID	0x3101
-> 
+
+
+-- 
+Thanks,
+Prasun
