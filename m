@@ -1,93 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57800 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbcFZOnj (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:35102 "EHLO
+	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752379AbcFHBlV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jun 2016 10:43:39 -0400
-Date: Sat, 25 Jun 2016 15:16:59 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Luis de Bethencourt <luisbg@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, chris.park@atmel.com,
-	austin.shin@atmel.com, johnny.kim@atmel.com,
-	julian.calaby@gmail.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH v2 1/2] staging: wilc1000: fix error handling in
- wilc_debugfs_init()
-Message-ID: <20160625221659.GA11632@kroah.com> (sfid-20160626_164414_464850_1F968BB9)
-References: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com>
- <20160625213606.GA15125@kroah.com>
- <576EFB05.1060902@osg.samsung.com>
+	Tue, 7 Jun 2016 21:41:21 -0400
+Received: by mail-io0-f194.google.com with SMTP id n127so4049660iof.2
+        for <linux-wireless@vger.kernel.org>; Tue, 07 Jun 2016 18:41:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <576EFB05.1060902@osg.samsung.com>
+In-Reply-To: <87wpm1b6bu.fsf@toke.dk>
+References: <20160603165144.17356-1-toke@toke.dk> <20160603165144.17356-6-toke@toke.dk>
+ <CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
+ <8737orucq4.fsf@toke.dk> <CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
+ <CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
+ <87k2i1ml43.fsf@toke.dk> <87wpm1b6bu.fsf@toke.dk>
+From: Adrian Chadd <adrian@freebsd.org>
+Date: Tue, 7 Jun 2016 18:41:19 -0700
+Message-ID: <CAJ-VmonOKjeY5uLeKFOVGmdBmm1V37TH72avf4XNe=-884Szwg@mail.gmail.com> (sfid-20160608_034125_089556_6380246A)
+Subject: Re: [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	make-wifi-fast@lists.bufferbloat.net,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 25, 2016 at 10:43:33PM +0100, Luis de Bethencourt wrote:
-> On 25/06/16 22:36, Greg KH wrote:
-> > On Thu, Jun 23, 2016 at 01:36:17PM +0100, Luis de Bethencourt wrote:
-> >> The common format to check if a function returned an error pointer is to
-> >> use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
-> >>
-> >> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
-> >> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-> >> ---
-> >>  drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-> >> index fcbc95d..48797dc 100644
-> >> --- a/drivers/staging/wilc1000/wilc_debugfs.c
-> >> +++ b/drivers/staging/wilc1000/wilc_debugfs.c
-> >> @@ -107,7 +107,7 @@ static int __init wilc_debugfs_init(void)
-> >>  	struct wilc_debugfs_info_t *info;
-> >>  
-> >>  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
-> >> -	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
-> >> +	if (PTR_ERR(wilc_dir) == -ENODEV) {
-> >>  		/* it's not error. the debugfs is just not being enabled. */
-> >>  		printk("ERR, kernel has built without debugfs support\n");
-> >>  		return 0;
-> > 
-> > No, the best way to do this is to just ignore the return value, you
-> > don't care about it.  It can be passed back into any debugfs calls just
-> > fine.
-> > 
-> > So don't check the value and all is good, debugfs was written in a way
-> > to make it _easy_ to use, no need for fancy error checking at all with
-> > it.
-> > 
-> > thanks,
-> > 
-> > greg k-h
-> > 
-> 
-> Thanks for the review Greg.
-> 
-> Just to make sure. You are proposing I just drop the 3 if checks? [0]
-> 
-> If that's what you mean I will send a patch as soon as you confirm :)
-> 
-> Happy hacking,
-> Luis
-> 
-> 
-> 
-> [0] Making the function look like this:
-> static int __init wilc_debugfs_init(void)
-> {
->         int i;
-> 
->         struct dentry *debugfs_files;
->         struct wilc_debugfs_info_t *info;
-> 
->         wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
->         for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
->                 info = &debugfs_info[i];
->                 debugfs_files = debugfs_create_file(info->name,
->                                                     info->perm,
->                                                     wilc_dir,
->                                                     &info->data,
->                                                     &info->fops);
+On 7 June 2016 at 04:12, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+> Toke Høiland-Jørgensen <toke@toke.dk> writes:
+>
+>>> [snip]
+>>>
+>>> I also found one of my notes in my version of this - how can we
+>>> estimate the duration of an A-MPDU, when we only get hardware
+>>> de-encapsulated frames?
+>>
+>> Well in my case I'm sidestepping this by getting the TX duration from
+>> a register in the hardware. There seems to be registers containing the
+>> duration spent on each step in the retry chain; I simply sum these.
+>
+> Ah, but you're still talking RX? Hmm, I'm using ath_pkt_duration() to
+> compute the RX time, which does take into account MIMO (I think) but
+> expects the size to include padding. Which is probably not included in
+> the rs_datalen field of struct ath_rx_status that I'm using.
+>
+> So yeah, how to account for that?
+>
+> I initially thought that using the timestamp put into the frame by the
+> hardware could be a way to get timing. But there's only a timestamp of
+> the first symbol in rs_tstamp, and getting a time to compare it with is
+> difficult; by the time the frame is handled in the rx tasklet, way too
+> much time has been spent on interrupt handling etc for the current time
+> to be worth comparing with.
 
-Why even assign anything to debugfs_files?
+Right. In the case of RX'ing an A-MPDU, we only get told about the
+A-MPDU boundaries (isaggr/lastaggr or something in the RX descriptor)
+but nothing telling us how long the original RX'ed PPDU is.
+
+So if we get say 16 frames and we are missing the middle one, we can
+reconstruct things okay. But if we miss the first 8 frames, we don't
+know when it started - we only get the RX aggr boundary flags set on
+the 9th and the 16th and we don't even know about the missed frames.
+
+I think that's going to be a shortcoming right now. I couldn't think
+of a clever way to figure it out except to detect holes in the BAW and
+determine the client is missing frames and take actions there.
+
+
+-adrian
