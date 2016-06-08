@@ -1,130 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:34571 "EHLO
-	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753205AbcF2P4y (ORCPT
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:35466 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756008AbcFHHlO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 11:56:54 -0400
-Received: by mail-qk0-f193.google.com with SMTP id j2so10642474qkf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2016 08:56:36 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYLQyBsDD+HK=eS7qBXtrAdxwOajC3-xyYhKP8Bf_HExww@mail.gmail.com>
-References: <1467021206-2702-1-git-send-email-chaitanya.mgit@gmail.com>
- <CACYmx9O-xnLLUWgVFBWnY2L2ArsHW_+voOA+xeTBMqOK9mAPLg@mail.gmail.com> <CABPxzYLQyBsDD+HK=eS7qBXtrAdxwOajC3-xyYhKP8Bf_HExww@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 29 Jun 2016 21:26:16 +0530
-Message-ID: <CABPxzYKnfUMEyWnjw9oqDm2dBMZK5v_KaSLz5D9XrpXeJg39vQ@mail.gmail.com> (sfid-20160629_175712_609417_7B337101)
-Subject: Re: [PATCH] mac80211: minstrel: Enable STBC and LDPC for VHT Rates
-To: Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 8 Jun 2016 03:41:14 -0400
+Received: by mail-pa0-f49.google.com with SMTP id hl6so13799pac.2
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jun 2016 00:41:14 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	driverdev-devel@linuxdriverproject.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH 1/2] staging: r8723au: pwrctrl_priv: Replace semaphore lock with mutex
+Date: Wed,  8 Jun 2016 13:10:54 +0530
+Message-Id: <1465371655-6768-2-git-send-email-binoy.jayan@linaro.org> (sfid-20160608_094222_845221_75FF8963)
+In-Reply-To: <1465371655-6768-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465371655-6768-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jun 29, 2016 at 1:50 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Wed, Jun 29, 2016 at 1:41 PM, Karl Beldan <karl.beldan@gmail.com> wrote:
->> On Mon, Jun 27, 2016 at 9:53 AM, Chaitanya TK <chaitanya.mgit@gmail.com>
->> wrote:
->>>
->>> From: Chaitanya T K <chaitanya.mgit@gmail.com>
->>>
->>> If peer support reception of STBC and LDPC, enable them for better
->>> performance.
->>>
->>> Signed-off-by: Chaitanya TK <chaitanya.mgit@gmail.com>
->>> ---
->>>  include/linux/ieee80211.h          |    1 +
->>>  net/mac80211/rc80211_minstrel_ht.c |   25 +++++++++++++++++--------
->>>  2 files changed, 18 insertions(+), 8 deletions(-)
->>>
->>> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
->>> index b118744..4d01130 100644
->>> --- a/include/linux/ieee80211.h
->>> +++ b/include/linux/ieee80211.h
->>> @@ -1550,6 +1550,7 @@ struct ieee80211_vht_operation {
->>>  #define IEEE80211_VHT_CAP_RXSTBC_3                             0x00000300
->>>  #define IEEE80211_VHT_CAP_RXSTBC_4                             0x00000400
->>>  #define IEEE80211_VHT_CAP_RXSTBC_MASK                          0x00000700
->>> +#define IEEE80211_VHT_CAP_RXSTBC_SHIFT                         8
->>>  #define IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE
->>> 0x00000800
->>>  #define IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE
->>> 0x00001000
->>>  #define IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT                  13
->>> diff --git a/net/mac80211/rc80211_minstrel_ht.c
->>> b/net/mac80211/rc80211_minstrel_ht.c
->>> index 30fbabf..e2fcdea 100644
->>> --- a/net/mac80211/rc80211_minstrel_ht.c
->>> +++ b/net/mac80211/rc80211_minstrel_ht.c
->>> @@ -1166,13 +1166,14 @@ minstrel_ht_update_caps(void *priv, struct
->>> ieee80211_supported_band *sband,
->>>         struct minstrel_ht_sta_priv *msp = priv_sta;
->>>         struct minstrel_ht_sta *mi = &msp->ht;
->>>         struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
->>> -       u16 sta_cap = sta->ht_cap.cap;
->>> +       u16 ht_cap = sta->ht_cap.cap;
->>>         struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
->>>         int use_vht;
->>>         int n_supported = 0;
->>>         int ack_dur;
->>>         int stbc;
->>>         int i;
->>> +       bool ldpc;
->>>
->>>         /* fall back to the old minstrel for legacy stations */
->>>         if (!sta->ht_cap.ht_supported)
->>> @@ -1210,16 +1211,24 @@ minstrel_ht_update_caps(void *priv, struct
->>> ieee80211_supported_band *sband,
->>>         }
->>>         mi->sample_tries = 4;
->>>
->>> -       /* TODO tx_flags for vht - ATM the RC API is not fine-grained
->>> enough */
->>>         if (!use_vht) {
->>> -               stbc = (sta_cap & IEEE80211_HT_CAP_RX_STBC) >>
->>> +               stbc = (ht_cap & IEEE80211_HT_CAP_RX_STBC) >>
->>>                         IEEE80211_HT_CAP_RX_STBC_SHIFT;
->>> -               mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
->>>
->>> -               if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
->>> -                       mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
->>> +               if (ht_cap & IEEE80211_HT_CAP_LDPC_CODING)
->>> +                       ldpc = true;
->>> +       } else {
->>> +               stbc = (vht_cap->cap & IEEE80211_VHT_CAP_RXSTBC_MASK) >>
->>> +                       IEEE80211_VHT_CAP_RXSTBC_SHIFT;
->>> +
->>> +               if (vht_cap->cap & IEEE80211_VHT_CAP_RXLDPC)
->>> +                       ldpc = true;
->>>         }
->>>
->>> +       mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
->>> +       if (ldpc)
->>> +               mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
->>> +
->>
->>
->> Here you are using ldpc uninitialized.
->>
->>
->> As for the idea, ldpc and stbc support/enable in HT and VHT being
->> independant and tx_flags being shared by all the info.rates, you cannot use
->> it as you are trying to (e.g. you might end up asking lower layers to send
->> stbc/vht with a hw only supporting stbc/ht or/and trying to send stbc/vht
->> with inappropriate advertised vht caps).
-> The design in minstrel is it checks only for peers capabilities and it doesn't
-> check local hw capabilities (except for those in MCS_GROUPS), so minstrel
-> just informs the we can use STBC/LDPC, its HW's decision whether to
-> actually use or not.
->> This stems from the STBC/LDPC CTL flags being a mac80211_tx_info_flags, this
->> is what should be changed.
-> I understand the problem here, if all rates are same then its no problem.
-> But if some rates are HT and some are VHT, then we might end up in problem.
->
-> To solve this, we need to move this to mac80211_rate_control_flags so that
-> we can convey per rate info.
-Karl/Johannes,
+The semaphore 'lock' in pwrctrl_priv is a simple mutex, so it should
+be written as one. Semaphores are going away in the future.
 
-Any thoughts on this? This impacts all drivers, so it would be good
-to finalize on design before submitting patches.
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+---
+ drivers/staging/rtl8723au/core/rtw_pwrctrl.c    | 11 ++++++-----
+ drivers/staging/rtl8723au/include/rtw_pwrctrl.h |  3 ++-
+ drivers/staging/rtl8723au/os_dep/usb_intf.c     | 11 ++++++-----
+ 3 files changed, 14 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_pwrctrl.c b/drivers/staging/rtl8723au/core/rtw_pwrctrl.c
+index 7488a10..2d43958 100644
+--- a/drivers/staging/rtl8723au/core/rtw_pwrctrl.c
++++ b/drivers/staging/rtl8723au/core/rtw_pwrctrl.c
+@@ -14,6 +14,7 @@
+  ******************************************************************************/
+ #define _RTW_PWRCTRL_C_
+ 
++#include <linux/mutex.h>
+ #include <osdep_service.h>
+ #include <drv_types.h>
+ #include <osdep_intf.h>
+@@ -27,7 +28,7 @@ void ips_enter23a(struct rtw_adapter *padapter)
+ {
+ 	struct pwrctrl_priv *pwrpriv = &padapter->pwrctrlpriv;
+ 
+-	down(&pwrpriv->lock);
++	mutex_lock(&pwrpriv->mutex_lock);
+ 
+ 	pwrpriv->bips_processing = true;
+ 
+@@ -50,7 +51,7 @@ void ips_enter23a(struct rtw_adapter *padapter)
+ 	}
+ 	pwrpriv->bips_processing = false;
+ 
+-	up(&pwrpriv->lock);
++	mutex_unlock(&pwrpriv->mutex_lock);
+ }
+ 
+ int ips_leave23a(struct rtw_adapter *padapter)
+@@ -61,7 +62,7 @@ int ips_leave23a(struct rtw_adapter *padapter)
+ 	int result = _SUCCESS;
+ 	int keyid;
+ 
+-	down(&pwrpriv->lock);
++	mutex_lock(&pwrpriv->mutex_lock);
+ 
+ 	if (pwrpriv->rf_pwrstate == rf_off && !pwrpriv->bips_processing) {
+ 		pwrpriv->bips_processing = true;
+@@ -106,7 +107,7 @@ int ips_leave23a(struct rtw_adapter *padapter)
+ 		pwrpriv->bpower_saving = false;
+ 	}
+ 
+-	up(&pwrpriv->lock);
++	mutex_unlock(&pwrpriv->mutex_lock);
+ 
+ 	return result;
+ }
+@@ -423,7 +424,7 @@ void rtw_init_pwrctrl_priv23a(struct rtw_adapter *padapter)
+ {
+ 	struct pwrctrl_priv *pwrctrlpriv = &padapter->pwrctrlpriv;
+ 
+-	sema_init(&pwrctrlpriv->lock, 1);
++	mutex_init(&pwrctrlpriv->mutex_lock);
+ 	pwrctrlpriv->rf_pwrstate = rf_on;
+ 	pwrctrlpriv->ips_enter23a_cnts = 0;
+ 	pwrctrlpriv->ips_leave23a_cnts = 0;
+diff --git a/drivers/staging/rtl8723au/include/rtw_pwrctrl.h b/drivers/staging/rtl8723au/include/rtw_pwrctrl.h
+index 599fed9..699b9f3 100644
+--- a/drivers/staging/rtl8723au/include/rtw_pwrctrl.h
++++ b/drivers/staging/rtl8723au/include/rtw_pwrctrl.h
+@@ -15,6 +15,7 @@
+ #ifndef __RTW_PWRCTRL_H_
+ #define __RTW_PWRCTRL_H_
+ 
++#include <linux/mutex.h>
+ #include <osdep_service.h>
+ #include <drv_types.h>
+ 
+@@ -149,7 +150,7 @@ enum { /*  for ips_mode */
+ };
+ 
+ struct pwrctrl_priv {
+-	struct semaphore lock;
++	struct mutex mutex_lock;
+ 	volatile u8 rpwm; /* requested power state for fw */
+ 	volatile u8 cpwm; /* fw current power state. updated when 1.
+ 			   * read from HCPWM 2. driver lowers power level
+diff --git a/drivers/staging/rtl8723au/os_dep/usb_intf.c b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+index cf83eff..fa7dda5 100644
+--- a/drivers/staging/rtl8723au/os_dep/usb_intf.c
++++ b/drivers/staging/rtl8723au/os_dep/usb_intf.c
+@@ -14,6 +14,7 @@
+  ******************************************************************************/
+ #define _HCI_INTF_C_
+ 
++#include <linux/mutex.h>
+ #include <osdep_service.h>
+ #include <drv_types.h>
+ #include <recv_osdep.h>
+@@ -291,7 +292,7 @@ static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
+ 	rtw_cancel_all_timer23a(padapter);
+ 	LeaveAllPowerSaveMode23a(padapter);
+ 
+-	down(&pwrpriv->lock);
++	mutex_lock(&pwrpriv->mutex_lock);
+ 	/* padapter->net_closed = true; */
+ 	/* s1. */
+ 	if (pnetdev) {
+@@ -321,7 +322,7 @@ static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
+ 	rtw_free_network_queue23a(padapter);
+ 
+ 	rtw_dev_unload(padapter);
+-	up(&pwrpriv->lock);
++	mutex_unlock(&pwrpriv->mutex_lock);
+ 
+ 	if (check_fwstate(pmlmepriv, _FW_UNDER_SURVEY))
+ 		rtw_cfg80211_indicate_scan_done(
+@@ -353,20 +354,20 @@ static int rtw_resume(struct usb_interface *pusb_intf)
+ 	pnetdev = padapter->pnetdev;
+ 	pwrpriv = &padapter->pwrctrlpriv;
+ 
+-	down(&pwrpriv->lock);
++	mutex_lock(&pwrpriv->mutex_lock);
+ 	rtw_reset_drv_sw23a(padapter);
+ 	pwrpriv->bkeepfwalive = false;
+ 
+ 	DBG_8723A("bkeepfwalive(%x)\n", pwrpriv->bkeepfwalive);
+ 	if (pm_netdev_open23a(pnetdev, true) != 0) {
+-		up(&pwrpriv->lock);
++		mutex_unlock(&pwrpriv->mutex_lock);
+ 		goto exit;
+ 	}
+ 
+ 	netif_device_attach(pnetdev);
+ 	netif_carrier_on(pnetdev);
+ 
+-	up(&pwrpriv->lock);
++	mutex_unlock(&pwrpriv->mutex_lock);
+ 
+ 	if (padapter->pid[1] != 0) {
+ 		DBG_8723A("pid[1]:%d\n", padapter->pid[1]);
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
