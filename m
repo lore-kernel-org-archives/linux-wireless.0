@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:35873 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752416AbcF1M4f (ORCPT
+Received: from mail-vk0-f41.google.com ([209.85.213.41]:33977 "EHLO
+	mail-vk0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932516AbcFHLjF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 08:56:35 -0400
-Received: by mail-io0-f174.google.com with SMTP id s63so15584698ioi.3
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2016 05:56:35 -0700 (PDT)
-Date: Tue, 28 Jun 2016 08:56:21 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Yaniv Machani <yanivma@ti.com>
-Cc: linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S . Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Meirav Kama <meiravk@ti.com>
-Subject: Re: [PATCH 4/4] mac80211: sta_info: max_peers reached falsely
-Message-ID: <20160628125621.GA9223@localhost> (sfid-20160628_145700_880097_817DB92E)
-References: <20160628111307.8784-1-yanivma@ti.com>
- <20160628111307.8784-2-yanivma@ti.com>
- <20160628111307.8784-3-yanivma@ti.com>
- <20160628111307.8784-4-yanivma@ti.com>
- <20160628111307.8784-5-yanivma@ti.com>
+	Wed, 8 Jun 2016 07:39:05 -0400
+Received: by mail-vk0-f41.google.com with SMTP id e4so6972796vkb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jun 2016 04:39:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160628111307.8784-5-yanivma@ti.com>
+In-Reply-To: <87inxrzqa5.fsf@kamboji.qca.qualcomm.com>
+References: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com> <87inxrzqa5.fsf@kamboji.qca.qualcomm.com>
+From: Roman Yeryomin <leroi.lists@gmail.com>
+Date: Wed, 8 Jun 2016 14:39:03 +0300
+Message-ID: <CACiydbLvke0UxJbg2sn0q-=FwXpmX+FKUV7wwEMT=qUYekJrJA@mail.gmail.com> (sfid-20160608_133909_994099_47E9CC1E)
+Subject: Re: [RFC/RFT] ath10k: disable wake_tx_queue for older devices
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 28, 2016 at 02:13:07PM +0300, Yaniv Machani wrote:
-> From: Meirav Kama <meiravk@ti.com>
-> 
-> Issue happened when receiving delete_sta command without
-> changing plink_state from ESTAB to HOLDING before.
-> When receiving delete_sta command for mesh interface
-> verify plink_state is not ESTAB and if so, decrease
-> plink count and update beacon.
+On 2 June 2016 at 16:14, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Some setups suffer performance regressions with
+>> current wake_tx_queue implementation.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>> Hi Roman,
+>>
+>> Can you give this patch a try and see if it helps
+>> with your performance problems, please?
+>
+> Did anyone seeing the performance regression manage to test this? It
+> would be good to get feedback, good or bad, before I push this to 4.7.
+>
+> Full patch here:
+>
+> https://patchwork.kernel.org/patch/9111981/
 
-This should be fixed already (and properly) by the patch
-"mac80211: Fix mesh estab links counting" -- please let us
-know if you have a case that's still broken with that fix.
+Sorry, didn't try yet, bad timing for me :(
+Will try to test by the end of the week
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+Regards,
+Roman
