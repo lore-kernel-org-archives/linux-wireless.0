@@ -1,87 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33510 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253AbcFDTa4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48958 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758166AbcFHRHx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 15:30:56 -0400
-Subject: Patch "ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards." has been added to the 4.6-stable tree
-To: linux-wireless@vittgam.net, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com, gregkh@linuxfoundation.org,
-	kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	linuxbugs@vittgam.net
-Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@linuxfoundation.org>
-Date: Sat, 04 Jun 2016 12:30:54 -0700
-Message-ID: <1465068654154135@kroah.com> (sfid-20160604_213100_223448_3FD3BB27)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+	Wed, 8 Jun 2016 13:07:53 -0400
+From: Maya Erez <qca_merez@qualcomm.com>
+Cc: Maya Erez <qca_merez@qualcomm.com>, linux-wireless@vger.kernel.org,
+	wil6210@qualcomm.com
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 0/2] wil6210 patches
+Date: Wed,  8 Jun 2016 20:07:46 +0300
+Message-Id: <1465405668-15881-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160608_190757_216596_9C8C383B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+wil6210 P2P fixes
 
-This is a note to let you know that I've just added the patch titled
+Lior David (1):
+  wil6210: abort P2P search when stopping P2P device
 
-    ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
+Maya Erez (1):
+  wil6210: fix chan check in wil_p2p_listen
 
-to the 4.6-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 16 ++++++++++++++++
+ drivers/net/wireless/ath/wil6210/p2p.c      |  6 ++++--
+ drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
+ 3 files changed, 21 insertions(+), 2 deletions(-)
 
-The filename of the patch is:
-     ath9k-fix-led-polarity-for-some-mini-pci-ar9220-mb92-cards.patch
-and it can be found in the queue-4.6 subdirectory.
+-- 
+1.8.5.2
 
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
->From 0f9edcdd88a993914fa1d1dc369b35dc503979db Mon Sep 17 00:00:00 2001
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Date: Mon, 11 Apr 2016 04:48:55 +0200
-Subject: ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
-
-From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
-
-commit 0f9edcdd88a993914fa1d1dc369b35dc503979db upstream.
-
-The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
-(active high instead of active low).
-
-The same PCI Subsystem ID is used by both cards, which are based on
-the same Atheros MB92 design.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/net/wireless/ath/ath9k/pci.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pc
- 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
-+
-+#ifdef CONFIG_ATH9K_PCOEM
-+	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0029,
-+			 PCI_VENDOR_ID_ATHEROS,
-+			 0x2096),
-+	  .driver_data = ATH9K_PCI_LED_ACT_HI },
-+#endif
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
- 
- #ifdef CONFIG_ATH9K_PCOEM
-
-
-Patches currently in stable-queue which might be from linux-wireless@vittgam.net are
-
-queue-4.6/ath9k-add-a-module-parameter-to-invert-led-polarity.patch
-queue-4.6/ath9k-fix-led-polarity-for-some-mini-pci-ar9220-mb92-cards.patch
