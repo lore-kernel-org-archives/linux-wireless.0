@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33475 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752023AbcF1OTy (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:35544 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755590AbcFHPql (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 10:19:54 -0400
-Subject: Re: [PATCH] rtlwifi: Create _rtl_dbg_trace function to reduce
- RT_TRACE code size
-To: Joe Perches <joe@perches.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-References: <90cd7c8f12b51571db565fd496a2fcf610e2e484.1466894688.git.joe@perches.com>
- <5771CA6C.1060403@lwfinger.net> <1467086116.24287.11.camel@perches.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <57728787.8060400@lwfinger.net> (sfid-20160628_162018_561977_832CC980)
-Date: Tue, 28 Jun 2016 09:19:51 -0500
+	Wed, 8 Jun 2016 11:46:41 -0400
 MIME-Version: 1.0
-In-Reply-To: <1467086116.24287.11.camel@perches.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <87d1nrk89v.fsf@kamboji.qca.qualcomm.com>
+References: <1465388474-20503-1-git-send-email-prasunmaiti87@gmail.com>
+ <87wplzkbd9.fsf@kamboji.qca.qualcomm.com> <CAEO8o4=DnEfXQAnAOxugC9TngbhvgV9DXz0HOVHNLk0B2fAXQA@mail.gmail.com>
+ <87porrkaax.fsf@kamboji.qca.qualcomm.com> <CAEO8o4kD7MU09o+xOwPLn-PAgcuMExQ0MbNWgqv0fOs61rG8Xw@mail.gmail.com>
+ <87d1nrk89v.fsf@kamboji.qca.qualcomm.com>
+From: Prasun Maiti <prasunmaiti87@gmail.com>
+Date: Wed, 8 Jun 2016 21:16:39 +0530
+Message-ID: <CAEO8o4=XEr4DQC3bqAXGE01s5WC+kuZ3PqoJFtuSCE52RNyDzA@mail.gmail.com> (sfid-20160608_174704_294075_F079ACFD)
+Subject: Re: [PATCH] Add .set_antenna callback in ath6kl driver to remove
+ wireless core warns
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/27/2016 10:55 PM, Joe Perches wrote:
-> On Mon, 2016-06-27 at 19:53 -0500, Larry Finger wrote:
->> On 06/25/2016 05:46 PM, Joe Perches wrote:
->>>
->>> This debugging macro can expand to a lot of code.
->>> Make it a function to reduce code size.
->>>
->>> (x86-64 defconfig w/ all rtlwifi drivers and allyesconfig)
->>> $ size drivers/net/wireless/realtek/rtlwifi/built-in.o*
->>>      text	   data	    bss	    dec	    hex	filename
->>>    900083	 200499	   1907	1102489	 10d299	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.new
->>> 1113597	 200499	   1907	1316003	 1414a3	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.old
->>> 1746879	 453503	   8512	2208894	 21b47e	drivers/net/wireless/realtek/rtlwifi/built-in.o.new
->>> 2051965	 503311	   8512	2563788	 271ecc	drivers/net/wireless/realtek/rtlwifi/built-in.o.old
->>>
->>> Signed-off-by: Joe Perches <joe@perches.com>
->> I acked this before; however there is a bug that breaks the build if
->> CONFIG_RTLWIFI_DEBUG is not defined. The rest of the code calls
->> _rtl_dbg_trace(), but that symbol is never defined. The problem can be fixed in
->> debug.c or debug.h.
+Please tell me if I mention that this code is untested in commit log,
+then could you check the code kindly and also help me to fix this type
+of warning?
+
+On Wed, Jun 8, 2016 at 9:00 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Prasun Maiti <prasunmaiti87@gmail.com> writes:
 >
-> Confused a bit.  What breaks again?
+>> I am not sure it works fine. Like ath6kl driver send another cmd to
+>> firmare, I have just filled up the cmd buffer with "tx_ant", and
+>> "rx_ant" values, then use "ath6kl_wmi_cmd_send()" api to send the cmd
+>> buffer to firmware. I have resend the patch as there are some errors
+>> in the previous patch. Let me know if any modifications are needed?
+>
+> I don't take untested code. In some special cases it might be ok to send
+> untested code but even then it needs to be clearly stated in the commit
+> log that it's untested.
+>
+> Please resend once you have tested this, I'm dropping this now.
+>
+> --
+> Kalle Valo
 
-Nothing breaks and your patch is OK. I had ported it to a GitHub repo of these 
-drivers, which had a different debug.h. That led to the missing global when 
-CONFIG_RTLWIFI_DEBUG was not defined. That has now been fixed.
-
-Sorry for the confusion.
-
-Larry
 
 
+-- 
+Thanks,
+Prasun
