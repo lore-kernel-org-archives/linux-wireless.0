@@ -1,138 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46446 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751455AbcFINYA convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 09:24:00 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Mathias Krause <minipli@googlemail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Dennis Wassenberg <dennis.wassenberg@secunet.com>,
-	Brad Spengler <spender@grsecurity.net>,
-	"PaX Team" <pageexec@freemail.hu>
-Subject: RE: [PATCH] mwifiex: remove misleading GFP_DMA flag in buffer
- allocations
-Date: Thu, 9 Jun 2016 13:23:41 +0000
-Message-ID: <ecc0f0402515460182b67f5d57a4d903@SC-EXCH04.marvell.com> (sfid-20160609_152406_646943_93EBD6A9)
-References: <1463838211-31888-1-git-send-email-minipli@googlemail.com>
-In-Reply-To: <1463838211-31888-1-git-send-email-minipli@googlemail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:33238 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161912AbcFHOfQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2016 10:35:16 -0400
 MIME-Version: 1.0
+In-Reply-To: <87wplzkbd9.fsf@kamboji.qca.qualcomm.com>
+References: <1465388474-20503-1-git-send-email-prasunmaiti87@gmail.com> <87wplzkbd9.fsf@kamboji.qca.qualcomm.com>
+From: Prasun Maiti <prasunmaiti87@gmail.com>
+Date: Wed, 8 Jun 2016 20:05:15 +0530
+Message-ID: <CAEO8o4=DnEfXQAnAOxugC9TngbhvgV9DXz0HOVHNLk0B2fAXQA@mail.gmail.com> (sfid-20160608_163535_306196_16E29F8B)
+Subject: Re: [PATCH] Add .set_antenna callback in ath6kl driver to remove
+ wireless core warns
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel <prasunmaii87@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Mathias Krause [mailto:minipli@googlemail.com]
-> Sent: Saturday, May 21, 2016 7:14 PM
-> To: Amitkumar Karwar; Nishant Sarmukadam; linux-wireless@vger.kernel.org
-> Cc: Kalle Valo; Dennis Wassenberg; Mathias Krause; Xinming Hu; Brad
-> Spengler; PaX Team
-> Subject: [PATCH] mwifiex: remove misleading GFP_DMA flag in buffer
-> allocations
-> 
-> The GFP_DMA flag is obviously misunderstood in the mwifiex driver. It's
-> meant for legacy ISA DMA memory mappings only -- the lower 16MB on x86.
-> That doesn't apply to PCIe or SDIO devices, I guess.
-> 
-> Remove the GFP_DMA flag to reduce the need to place the socket buffer
-> allocation into the low mem DMA area, which might already be in use by
-> other drivers.
-> 
-> This misuse was flagged by the PaX USERCOPY feature by chance, as it
-> detected the user copy operation from a DMA buffer in the recvfrom()
-> syscall path.
-> 
-> Signed-off-by: Mathias Krause <minipli@googlemail.com>
-> Tested-by: Dennis Wassenberg <dennis.wassenberg@secunet.com>
-> Cc: Amitkumar Karwar <akarwar@marvell.com>
-> Cc: Nishant Sarmukadam <nishants@marvell.com>
-> Cc: Xinming Hu <huxm@marvell.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Brad Spengler <spender@grsecurity.net>
-> Cc: PaX Team <pageexec@freemail.hu>
-> ---
-> 
-> This should go on top of wireless-drivers-next.git as it's an extension
-> of commit 00c547804968 ("mwifiex: remove redundant GFP_DMA flag").
-> 
->  drivers/net/wireless/marvell/mwifiex/11n_aggr.c |    2 +-
->  drivers/net/wireless/marvell/mwifiex/pcie.c     |    4 ++--
->  drivers/net/wireless/marvell/mwifiex/sdio.c     |    4 ++--
->  3 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> index 1efef3b8273d..dc49c3de1f25 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-> @@ -184,7 +184,7 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private
-> *priv,
-> 
->  	tx_info_src = MWIFIEX_SKB_TXCB(skb_src);
->  	skb_aggr = mwifiex_alloc_dma_align_buf(adapter->tx_buf_size,
-> -					       GFP_ATOMIC | GFP_DMA);
-> +					       GFP_ATOMIC);
->  	if (!skb_aggr) {
->  		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
->  				       ra_list_flags);
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 0c7937eb6b77..adcf08bb14d5 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -507,7 +507,7 @@ static int mwifiex_init_rxq_ring(struct
-> mwifiex_adapter *adapter)
->  	for (i = 0; i < MWIFIEX_MAX_TXRX_BD; i++) {
->  		/* Allocate skb here so that firmware can DMA data from it
-> */
->  		skb = mwifiex_alloc_dma_align_buf(MWIFIEX_RX_DATA_BUF_SIZE,
-> -						  GFP_KERNEL | GFP_DMA);
-> +						  GFP_KERNEL);
->  		if (!skb) {
->  			mwifiex_dbg(adapter, ERROR,
->  				    "Unable to allocate skb for RX ring.\n"); @@
-> -1319,7 +1319,7 @@ static int mwifiex_pcie_process_recv_data(struct
-> mwifiex_adapter *adapter)
->  		}
-> 
->  		skb_tmp =
-> mwifiex_alloc_dma_align_buf(MWIFIEX_RX_DATA_BUF_SIZE,
-> -						      GFP_KERNEL | GFP_DMA);
-> +						      GFP_KERNEL);
->  		if (!skb_tmp) {
->  			mwifiex_dbg(adapter, ERROR,
->  				    "Unable to allocate skb.\n");
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> index bdc51ffd43ec..674465e0d837 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -1492,7 +1492,7 @@ rx_curr_single:
->  		mwifiex_dbg(adapter, INFO, "info: RX: port: %d, rx_len:
-> %d\n",
->  			    port, rx_len);
-> 
-> -		skb = mwifiex_alloc_dma_align_buf(rx_len, GFP_KERNEL |
-> GFP_DMA);
-> +		skb = mwifiex_alloc_dma_align_buf(rx_len, GFP_KERNEL);
->  		if (!skb) {
->  			mwifiex_dbg(adapter, ERROR,
->  				    "single skb allocated fail,\t"
-> @@ -1597,7 +1597,7 @@ static int mwifiex_process_int_status(struct
-> mwifiex_adapter *adapter)
->  		rx_len = (u16) (rx_blocks * MWIFIEX_SDIO_BLOCK_SIZE);
->  		mwifiex_dbg(adapter, INFO, "info: rx_len = %d\n", rx_len);
-> 
-> -		skb = mwifiex_alloc_dma_align_buf(rx_len, GFP_KERNEL |
-> GFP_DMA);
-> +		skb = mwifiex_alloc_dma_align_buf(rx_len, GFP_KERNEL);
->  		if (!skb)
->  			return -1;
-> 
+No. I did not any test for that case.
+This driver create a new wiphy for use with cfg80211 through
+"wiphy_new_nm" api, but in this api, I found that more warnings for
+inconsistent ops are added there. e.g; "WARN_ON(ops->set_antenna &&
+!ops->get_antenna);"
+So, warning comes during creation of a new wiphy. That's why It is needed.
+
+On Wed, Jun 8, 2016 at 7:53 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Prasun Maiti <prasunmaiti87@gmail.com> writes:
+>
+>> Since add more warnings for inconsistent ops in cfg80211, the wireless
+>> core warns if a driver implements a cfg80211 callback but doesn't
+>> implements the inverse operation. The ath6kl driver implements a cfg80211
+>> .get_antenna operation handler but doesn't have the inverse .set_antenna
+>> callback. So, it makes warning.
+>>
+>> To remove this warning, add .set_antenna callback in ath6kl driver and
+>> also send a cmd to firmware with it's values.
+>>
+>> Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
+>
+> Did you test this? What hardware and firmware version?
+>
 > --
-> 1.7.10.4
+> Kalle Valo
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Regards,
-Amitkumar
+
+-- 
+Thanks,
+Prasun
