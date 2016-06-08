@@ -1,85 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35457 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751743AbcFWRpw (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:34316 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756005AbcFHHlL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 13:45:52 -0400
-Received: by mail-wm0-f66.google.com with SMTP id a66so12814659wme.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 10:45:51 -0700 (PDT)
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: nbd@nbd.name, chunkeey@googlemail.com, mark.rutland@arm.com,
-	robh+dt@kernel.org,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH RFC v2 1/2] Documentation: dt: net: add ath9k wireless device binding
-Date: Thu, 23 Jun 2016 19:45:35 +0200
-Message-Id: <20160623174536.5967-2-martin.blumenstingl@googlemail.com> (sfid-20160623_194555_926658_B9C4E85C)
-In-Reply-To: <20160623174536.5967-1-martin.blumenstingl@googlemail.com>
-References: <20160623174536.5967-1-martin.blumenstingl@googlemail.com>
+	Wed, 8 Jun 2016 03:41:11 -0400
+Received: by mail-pf0-f173.google.com with SMTP id 62so36501pfd.1
+        for <linux-wireless@vger.kernel.org>; Wed, 08 Jun 2016 00:41:10 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	driverdev-devel@linuxdriverproject.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH 0/2] *** r8723au: Replace semaphore lock with mutex ***
+Date: Wed,  8 Jun 2016 13:10:53 +0530
+Message-Id: <1465371655-6768-1-git-send-email-binoy.jayan@linaro.org> (sfid-20160608_094201_692839_E88AD14A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation how devicetree can be used to configure ath9k based
-devices.
+Hi,
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
-changes in v1 -> v2:
-- use vendor prefix "qca" instead of "ath"
-- extend the example so it includes the "compatible" property
+These are a set of patches which removes semaphores from:
 
- .../devicetree/bindings/net/wireless/qca,ath9k.txt | 41 ++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+drivers/staging/rtl8723au
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-new file mode 100644
-index 0000000..bb78f68
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-@@ -0,0 +1,41 @@
-+* Qualcomm Atheros ath9k wireless devices
-+
-+This node provides properties for configuring the ath9k wireless device. The
-+node is expected to be specified as a child node of the PCI controller to
-+which the wireless chip is connected.
-+
-+Required properties:
-+- compatible: Should be "qca,ath9k"
-+
-+Optional properties:
-+- reg: Address and length of the register set for the device.
-+- qca,gpio-mask: The GPIO mask
-+- qca,gpio-val: The GPIO value
-+- qca,led-pin: The GPIO number to which the LED is connected
-+- qca,led-active-high: The LED is active when the GPIO is HIGH
-+- qca,clk-25mhz: Defines that at 25MHz clock is used
-+- qca,eeprom-name: The name of the file which contains the EEPROM data (which
-+			will be loaded via request_firmware)
-+- qca,check-eeprom-endianness: Allow checking the EEPROM endianness and
-+				swapping of the EEPROM data if required
-+- qca,disable-2ghz: Disables the 2.4GHz band, even if enabled in the EEPROM
-+- qca,disable-5ghz: Disables the 5GHz band, even if enabled in the EEPROM
-+
-+In this example, the node is defined as child node of the PCI controller.
-+
-+pci {
-+	pcie@0 {
-+		reg = <0 0 0 0 0>;
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		device_type = "pci";
-+
-+		ath9k@0,0 {
-+			compatible = "qca,ath9k";
-+			reg = <0 0 0 0 0>;
-+			device_type = "pci";
-+			qca,disable-5ghz;
-+		};
-+	};
-+};
+These are part of a bigger effort to eliminate all semaphores 
+from the linux kernel.
+
+They build correctly (individually and as a whole).
+NB: I have not tested this as I do not have the following hardware:
+
+R8723AU
+"Realtek RTL8723AU Wireless LAN NIC driver"
+
+Thanks,
+Binoy
+
+Binoy Jayan (2):
+  staging: r8723au: pwrctrl_priv: Replace semaphore lock with mutex
+  staging: r8723au: Remove unused semaphores
+
+ drivers/staging/rtl8723au/core/rtw_pwrctrl.c      | 11 ++++++-----
+ drivers/staging/rtl8723au/core/rtw_xmit.c         |  4 ----
+ drivers/staging/rtl8723au/include/osdep_service.h |  1 -
+ drivers/staging/rtl8723au/include/rtw_io.h        |  2 --
+ drivers/staging/rtl8723au/include/rtw_pwrctrl.h   |  3 ++-
+ drivers/staging/rtl8723au/include/rtw_xmit.h      |  5 -----
+ drivers/staging/rtl8723au/os_dep/usb_intf.c       | 11 ++++++-----
+ 7 files changed, 14 insertions(+), 23 deletions(-)
+
 -- 
-2.9.0
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
