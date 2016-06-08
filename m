@@ -1,57 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34371 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756131AbcFGUET (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2016 16:04:19 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: fix typo on variable name, compare against correct variable
-References: <1464798225-7315-1-git-send-email-colin.king@canonical.com>
-	<wrfjoa7iysqw.fsf@redhat.com>
-Date: Tue, 07 Jun 2016 16:04:17 -0400
-In-Reply-To: <wrfjoa7iysqw.fsf@redhat.com> (Jes Sorensen's message of "Fri, 03
-	Jun 2016 15:31:03 -0400")
-Message-ID: <wrfjr3c8yddq.fsf@redhat.com> (sfid-20160607_220442_174208_646C68B0)
+Received: from smtp.codeaurora.org ([198.145.29.96]:50299 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752067AbcFHPw4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 8 Jun 2016 11:52:56 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 08 Jun 2016 21:22:55 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Mike Lothian <mike@fireburn.co.uk>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: Bug 119151 - [regression] ath10k no longer authenitcates and
+ freezes system
+In-Reply-To: <CAHbf0-GT0y1pEs-ToxbPAf+aRo7TNAyV_Emies_rjL27R1fk2A@mail.gmail.com>
+References: <8760trzoiw.fsf@kamboji.qca.qualcomm.com>
+ <871t4fzn1x.fsf@kamboji.qca.qualcomm.com> <57504F05.3040200@candelatech.com>
+ <1464887026467.72937@qti.qualcomm.com> <57506BA1.2090303@candelatech.com>
+ <CAHbf0-GT0y1pEs-ToxbPAf+aRo7TNAyV_Emies_rjL27R1fk2A@mail.gmail.com>
+Message-ID: <c36f442934605c492525af72fa04ada9@codeaurora.org> (sfid-20160608_175259_907744_32D57D6C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> Colin King <colin.king@canonical.com> writes:
->> From: Colin Ian King <colin.king@canonical.com>
->>
->> path_b_ok is being assigned but immediately after path_a_ok is being
->> compared to the value 0x03.  This appears to be a typo on the
->> variable name, compare path_b_ok instead.
->>
->> Signed-off-by: Colin Ian King <colin.king@canonical.com>
->> ---
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
->> index fe19ace..b04cf30 100644
->> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
->> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
->> @@ -1149,7 +1149,7 @@ static void rtl8192eu_phy_iqcalibrate(struct rtl8xxxu_priv *priv,
->>  
->>  		for (i = 0; i < retry; i++) {
->>  			path_b_ok = rtl8192eu_rx_iqk_path_b(priv);
->> -			if (path_a_ok == 0x03) {
->> +			if (path_b_ok == 0x03) {
->>  				val32 = rtl8xxxu_read32(priv,
->>  							REG_RX_POWER_BEFORE_IQK_B_2);
->>  				result[t][6] = (val32 >> 16) & 0x3ff;
->
-> Nice catch, that does indeed look like a bug!
->
-> Thanks, I want to test it, but I plan to apply it to rtl8xxxu-devel
-> shortly.
+On 2016-06-02 23:03, Mike Lothian wrote:
+> I've just tried those two changes, the machine now locks up before X
+> has even started
+> 
+Mike,
 
-Tested and applied!
+Sorry for the delay. Found root cause for dead lock. Can you please give 
+a try with below change?
 
-Thanks,
-Jes
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c 
+b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 3b35c7ab5680..80e645302b54 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1905,7 +1905,6 @@ static void ath10k_htt_rx_in_ord_ind(struct ath10k 
+*ar, struct sk_buff *skb)
+                         return;
+                 }
+         }
+-       ath10k_htt_rx_msdu_buff_replenish(htt);
+  }
+
+
+-Rajkumar
