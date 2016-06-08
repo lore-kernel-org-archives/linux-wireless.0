@@ -1,44 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:60898 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751704AbcF3MnW convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:34515 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754682AbcFHP5B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 08:43:22 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHV2 1/3] ath10k: move firmware_swap_code_seg_info to
- ath10k_fw_file
-Date: Thu, 30 Jun 2016 12:40:16 +0000
-Message-ID: <8760sq6ea9.fsf@kamboji.qca.qualcomm.com> (sfid-20160630_144328_934406_50D246D5)
-References: <1467018404-24460-1-git-send-email-c_traja@qti.qualcomm.com>
-In-Reply-To: <1467018404-24460-1-git-send-email-c_traja@qti.qualcomm.com> (c.
-	traja's message of "Mon, 27 Jun 2016 14:36:44 +0530")
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 8 Jun 2016 11:57:01 -0400
 MIME-Version: 1.0
+In-Reply-To: <57583EFC.3070901@candelatech.com>
+References: <1465388474-20503-1-git-send-email-prasunmaiti87@gmail.com>
+ <87wplzkbd9.fsf@kamboji.qca.qualcomm.com> <CAEO8o4=DnEfXQAnAOxugC9TngbhvgV9DXz0HOVHNLk0B2fAXQA@mail.gmail.com>
+ <87porrkaax.fsf@kamboji.qca.qualcomm.com> <CAEO8o4kD7MU09o+xOwPLn-PAgcuMExQ0MbNWgqv0fOs61rG8Xw@mail.gmail.com>
+ <87d1nrk89v.fsf@kamboji.qca.qualcomm.com> <CAEO8o4=XEr4DQC3bqAXGE01s5WC+kuZ3PqoJFtuSCE52RNyDzA@mail.gmail.com>
+ <57583EFC.3070901@candelatech.com>
+From: Prasun Maiti <prasunmaiti87@gmail.com>
+Date: Wed, 8 Jun 2016 21:26:59 +0530
+Message-ID: <CAEO8o4=a54o0qvQ7ynQW=tJ95OY0_BiNYPP-5uj5jozDLQCp4Q@mail.gmail.com> (sfid-20160608_175723_959964_9CF2FD7F)
+Subject: Re: [PATCH] Add .set_antenna callback in ath6kl driver to remove
+ wireless core warns
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	Linux Next <linux-next@vger.kernel.org>,
+	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<c_traja@qti.qualcomm.com> writes:
+Please help me how to test this one?? It will be great to me if you help me.
 
-> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+On Wed, Jun 8, 2016 at 9:21 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 06/08/2016 08:46 AM, Prasun Maiti wrote:
+>>
+>> Please tell me if I mention that this code is untested in commit log,
+>> then could you check the code kindly and also help me to fix this type
+>> of warning?
 >
-> Preparation to make use of firmware_swap_code_seg_info for
-> UTF binary.
 >
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+> In my experience, ath6kl has very fragile and buggy firmware, so I would
+> not add any new API to it unless you have tested this thoroughly.
+>
+> Thanks,
+> Ben
+>
+>>
+>> On Wed, Jun 8, 2016 at 9:00 PM, Valo, Kalle <kvalo@qca.qualcomm.com>
+>> wrote:
+>>>
+>>> Prasun Maiti <prasunmaiti87@gmail.com> writes:
+>>>
+>>>> I am not sure it works fine. Like ath6kl driver send another cmd to
+>>>> firmare, I have just filled up the cmd buffer with "tx_ant", and
+>>>> "rx_ant" values, then use "ath6kl_wmi_cmd_send()" api to send the cmd
+>>>> buffer to firmware. I have resend the patch as there are some errors
+>>>> in the previous patch. Let me know if any modifications are needed?
+>>>
+>>>
+>>> I don't take untested code. In some special cases it might be ok to send
+>>> untested code but even then it needs to be clearly stated in the commit
+>>> log that it's untested.
+>>>
+>>> Please resend once you have tested this, I'm dropping this now.
+>>>
+>>> --
+>>> Kalle Valo
+>>
+>>
+>>
+>>
+>
+>
+> --
+> Ben Greear <greearb@candelatech.com>
+> Candela Technologies Inc  http://www.candelatech.com
+>
 
-This patchset crashes my x86 laptop once I start hostapd. Unfortunately
-I can't provide any logs as I don't have netconsole set up yet, but this
-is the board I'm using:
 
-[   58.481559] ath10k_pci 0000:02:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
-[   58.633122] ath10k_pci 0000:02:00.0: qca988x hw2.0 target 0x4100016c chip_id 0x043202ff sub 0000:0000
-[   58.633126] ath10k_pci 0000:02:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 0 testmode 1
-[   58.633318] ath10k_pci 0000:02:00.0: firmware ver 10.2.4.70.52 api 5 features no-p2p,raw-mode,mfp crc32 67c4d25c
-[   58.690098] ath10k_pci 0000:02:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
-[   59.950554] ath10k_pci 0000:02:00.0: htt-ver 2.1 wmi-op 5 htt-op 2 cal otp max-sta 128 raw 0 hwcrypto 1
 
 -- 
-Kalle Valo
+Thanks,
+Prasun
