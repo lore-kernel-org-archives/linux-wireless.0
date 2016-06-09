@@ -1,77 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42195 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932458AbcFAJIU (ORCPT
+Received: from mail-it0-f68.google.com ([209.85.214.68]:33484 "EHLO
+	mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753142AbcFIAGH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 05:08:20 -0400
-Date: Wed, 1 Jun 2016 14:38:05 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: Fix 10.4 extended peer stats update
-Message-ID: <20160601090805.GA7773@atheros-ThinkPad-T61> (sfid-20160601_110826_637662_ADA63DBC)
-References: <1464339926-12136-1-git-send-email-mohammed@qca.qualcomm.com>
- <87vb1ucten.fsf@qca.qualcomm.com>
- <20160531133700.GB3146@atheros-ThinkPad-T61>
- <87r3cicaxi.fsf@qca.qualcomm.com>
+	Wed, 8 Jun 2016 20:06:07 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87r3cicaxi.fsf@qca.qualcomm.com>
+In-Reply-To: <CAEO8o4kD7MU09o+xOwPLn-PAgcuMExQ0MbNWgqv0fOs61rG8Xw@mail.gmail.com>
+References: <1465388474-20503-1-git-send-email-prasunmaiti87@gmail.com>
+ <87wplzkbd9.fsf@kamboji.qca.qualcomm.com> <CAEO8o4=DnEfXQAnAOxugC9TngbhvgV9DXz0HOVHNLk0B2fAXQA@mail.gmail.com>
+ <87porrkaax.fsf@kamboji.qca.qualcomm.com> <CAEO8o4kD7MU09o+xOwPLn-PAgcuMExQ0MbNWgqv0fOs61rG8Xw@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 9 Jun 2016 10:05:45 +1000
+Message-ID: <CAGRGNgV4sL2TypkR+zsaDHN26KCF0kjtWPsi9y9D_JkGpvWrUw@mail.gmail.com> (sfid-20160609_020625_103504_341B507F)
+Subject: Re: [PATCH] Add .set_antenna callback in ath6kl driver to remove
+ wireless core warns
+To: Prasun Maiti <prasunmaiti87@gmail.com>
+Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi Prasun,
 
-On Tue, May 31, 2016 at 06:57:52PM +0000, Valo, Kalle wrote:
-> Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
-> 
-> >> > +void ath10k_sta_update_rx_duration(struct ath10k *ar,
-> >> > +				   struct ath10k_fw_stats *stats)
-> >> > +{
-> >> > +	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
-> >> > +
-> >> > +	if (fw_file->wmi_op_version < ATH10K_FW_WMI_OP_VERSION_10_4)
-> >> > +		ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
-> >> > +	else
-> >> > +		ath10k_sta_update_extd_stats_rx_duration(ar,
-> >> > +							 &stats->peers_extd);
-> >> > +}
-> >> 
-> >> _Ideally_ wmi_op_version should be used only in ath10k_wmi_attach() and
-> >> nowhere else. Isn't there any other way to detect this scenario? For
-> >> example, what if you store stats_id to struct ath10k_fw_stats and do
-> >> something like this:
-> >> 
-> >> if (stats->stats_id & WMI_10_4_STAT_PEER_EXTD)
-> >> 	ath10k_sta_update_extd_stats_rx_duration(ar,
-> >> 						 &stats->peers_extd);
-> >> else
-> >> 	ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
-> >> 
-> >> Would that work?
-> >
-> > [shafi] I am also thinking to re-use (ar->fw_stats_req_mask & WMI_10_4_STAT_PEER_EXTD)
-> > it might work, but will it conflict vdev stats WMI_STAT_VDEV (though its not currently
-> > supported for 10.2 )
-> 
-> Can you describe more how they conflict?
+On Thu, Jun 9, 2016 at 1:20 AM, Prasun Maiti <prasunmaiti87@gmail.com> wrote:
+> I am not sure it works fine. Like ath6kl driver send another cmd to
+> firmare, I have just filled up the cmd buffer with "tx_ant", and
+> "rx_ant" values, then use "ath6kl_wmi_cmd_send()" api to send the cmd
+> buffer to firmware.
+> I have resend the patch as there are some errors in the previous patch.
+> Let me know if any modifications are needed?
 
-[shafi] 'WMI_STAT_VDEV' and 'WMI_10_4_STAT_PEER_EXTD' are having the same value
-BIT(3), though as of now we are only 'WMI_10_4_STAT_PEER_EXTD' for 10.4
+Let me ask the question in another way: how do you know that the
+command WMI_SET_ANTENNA_CMDID exists, has that number, takes arguments
+in that format and works?
 
-> 
-> > let me know your thoughts about this, seems extended stats was
-> > implemented for 10.4 wmi version so i made it explicit
-> 
-> I don't like hard coding features like this based on wmi_op_version as
-> that might create problems managing the firmware interfaces in the
-> future. The simplest is if we can automatically runtime detect if
-> firmware uses the extended version or not.
+Thanks,
+
+Julian Calaby
+
+
+> On Wed, Jun 8, 2016 at 8:16 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+>> Prasun Maiti <prasunmaiti87@gmail.com> writes:
+>>
+>>> No. I did not any test for that case.
+>>> This driver create a new wiphy for use with cfg80211 through
+>>> "wiphy_new_nm" api, but in this api, I found that more warnings for
+>>> inconsistent ops are added there. e.g; "WARN_ON(ops->set_antenna &&
+>>> !ops->get_antenna);"
+>>> So, warning comes during creation of a new wiphy. That's why It is needed.
+>>
+>> I'm confused. Are you really saying that you added a new firmware
+>> command (WMI_SET_ANTENNA_CMDID) to ath6kl but you didn't test it in any
+>> way? How do you know that it works then?
+>>
+>> --
+>> Kalle Valo
 >
-[shafi] Sure i come up with something else to address this in v3.
+>
+>
+> --
+> Thanks,
+> Prasun
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-regards
-shafi
+
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
