@@ -1,68 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40472 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751938AbcFTNAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 09:00:03 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <johannes@sipsolutions.net>, <kvalo@codeaurora.org>
-CC: <eliad@wizery.com>, <yanivma@ti.com>, <guym@ti.com>,
-	<arik@wizery.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <davem@davemloft.net>,
-	Maxim Altshul <maxim.altshul@ti.com>
-Subject: [PATCH 0/3] *** Mesh Path Selection Metric Calculation ***
-Date: Mon, 20 Jun 2016 16:00:19 +0300
-Message-ID: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com> (sfid-20160620_150124_024285_D9A1D09E)
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:35283 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751778AbcFITQu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2016 15:16:50 -0400
+Received: by mail-wm0-f43.google.com with SMTP id v199so120627933wmv.0
+        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2016 12:16:50 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: rework function picking free BSS index
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1464219876-13776-1-git-send-email-zajec5@gmail.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<linux-wireless@vger.kernel.org>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5759C09F.7020704@broadcom.com> (sfid-20160609_211719_980001_8C3E331A)
+Date: Thu, 9 Jun 2016 21:16:47 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1464219876-13776-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-This patch series focuses on metric calculation that
-occurs during the path selection phase of a mesh network.
+On 26-05-16 01:44, Rafał Miłecki wrote:
+> The old implementation was overcomplicated and slightly bugged in some
+> corner cases.
+> 
+> Consider following state of BSS-es (limited to 6 for simplification):
+> drvr->iflist[0]: { bsscfgidx:0, ndev->name:wlan1, }
+> drvr->iflist[1]:  (null)
+> drvr->iflist[2]: { bsscfgidx:2, ndev->name:wlan1-1, }
+> drvr->iflist[3]: { bsscfgidx:3, ndev->name:wlan1-2, }
+> drvr->iflist[4]:  (null)
+> drvr->iflist[5]:  (null)
+> In such case the next AP interface should bsscfgidx 4 (we don't use 1 as
+> it's reserved for P2P).
+> 
+> With old code the loop iterations were following:
+> [ifidx = 0] [bsscfgidx = 2] [highest = 2]
+> [ifidx = 1] [bsscfgidx = 2] [highest = 2] available = true
+> [ifidx = 2] [bsscfgidx = 2] [highest = 2] bsscfgidx = highest + 1
+> [ifidx = 3] [bsscfgidx = 3] [highest = 2] bsscfgidx = highest + 1
+> [ifidx = 4] [bsscfgidx = 3] [highest = 2] available = true
+> [ifidx = 5] [bsscfgidx = 3] [highest = 2] available = true
+> There were 2 obvious problems:
+> 1) Having empty BSS at index 1 was resulting in available being always
+>    set to true, even if we would run out of BSS-es.
+> 2) Calculated bsscfgidx was invalid (3 instead of 4) resulting in driver
+>    not being able to create the 4th AP interface.
+> 
+> New code is simpler, placed in file where it's really used, handles
+> running out of free BSS-es and allows using 4 interfaces at the same
+> time. It also looks for the first free BSS instead of one after the last
+> in use. It works well with current driver (which doesn't allow deleting
+> interfaces) and should be future proof (if we ever allow deleting).
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 17 ++++++++++++++-
+>  .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 ----------------------
+>  .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 -
+>  3 files changed, 16 insertions(+), 26 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 3d09d23..d00eef8 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -541,6 +541,21 @@ brcmf_cfg80211_update_proto_addr_mode(struct wireless_dev *wdev)
+>  						ADDR_INDIRECT);
+>  }
+>  
+> +static int brcmf_get_first_free_bsscfgidx(struct brcmf_pub *drvr)
+> +{
+> +	int bsscfgidx;
+> +
+> +	for (bsscfgidx = 0; bsscfgidx < BRCMF_MAX_IFS; bsscfgidx++) {
+> +		/* bsscfgidx 1 is reserved for legacy P2P */
 
-During the path selection phase, the mesh hwmp module
-performs metric calculations, that take as parameters
-the last TX rate that was used for a specific link,
-and the packet error rate.
+Hi Rafał,
 
-These parameters should be reported by the FW to the driver
-constantly for the mechanism to work properly.
+A bit late as the patch is already applied, but this reserved index is
+no longer needed as we removed all trickery that was build on the
+assumption that the P2P_DEVICE interface was always in bsscfgidx 1.
+Hence this could be removed.
 
-In case that a vendor offloads the rate control mechanism
-to the FW, these parameters will be rarely updated,
-or updated incorrectly.
+Regards,
+Arend
 
-This situation causes the mesh hwmp module to calculate incorrect
-metrics and as a consequence, not to choose the best paths possible.
-
-
-This patch series is divided to three patches and does the following:
-
-1. Modifies mesh hwmp module and allows vendors that offload the
-rate control mechanism to their FW, to report last TX rates and PER
-to the mesh hwmp module by using an existing op called
-get_expected_throughput.
-In case that a vendor does not implement the op, all previous
-functionality still applies.
-
-2. Implements the opcode and the mechanism that reports the rates
-in TI driver.
-
-Maxim Altshul (3):
-  wlcore/wl18xx: Add functionality to accept TX rate per link
-  wlcore: Add support for get_expected_throughput opcode
-  mac80211: mesh: Add support for HW RC implementation
-
- drivers/net/wireless/ti/wl18xx/main.c     |  4 ++++
- drivers/net/wireless/ti/wl18xx/tx.c       | 22 ++++++++++++++++++----
- drivers/net/wireless/ti/wl18xx/wl18xx.h   |  6 +++++-
- drivers/net/wireless/ti/wlcore/main.c     | 16 ++++++++++++++++
- drivers/net/wireless/ti/wlcore/rx.c       |  7 +++++++
- drivers/net/wireless/ti/wlcore/wlcore_i.h | 13 +++++++++++++
- net/mac80211/mesh_hwmp.c                  | 23 +++++++++++++++--------
- 7 files changed, 78 insertions(+), 13 deletions(-)
-
--- 
-2.7.2
-
+> +		if (bsscfgidx == 1)
+> +			continue;
+> +		if (!drvr->iflist[bsscfgidx])
+> +			return bsscfgidx;
+> +	}
+> +
+> +	return -ENOMEM;
+> +}
+> +
+>  static int brcmf_cfg80211_request_ap_if(struct brcmf_if *ifp)
+>  {
+>  	struct brcmf_mbss_ssid_le mbss_ssid_le;
+> @@ -548,7 +563,7 @@ static int brcmf_cfg80211_request_ap_if(struct brcmf_if *ifp)
+>  	int err;
+>  
+>  	memset(&mbss_ssid_le, 0, sizeof(mbss_ssid_le));
+> -	bsscfgidx = brcmf_get_next_free_bsscfgidx(ifp->drvr);
+> +	bsscfgidx = brcmf_get_first_free_bsscfgidx(ifp->drvr);
+>  	if (bsscfgidx < 0)
+>  		return bsscfgidx;
+>  
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> index b590499..6a76480 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+> @@ -753,30 +753,6 @@ void brcmf_remove_interface(struct brcmf_if *ifp)
+>  	brcmf_del_if(ifp->drvr, ifp->bsscfgidx);
+>  }
+>  
+> -int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
+> -{
+> -	int ifidx;
+> -	int bsscfgidx;
+> -	bool available;
+> -	int highest;
+> -
+> -	available = false;
+> -	bsscfgidx = 2;
+> -	highest = 2;
+> -	for (ifidx = 0; ifidx < BRCMF_MAX_IFS; ifidx++) {
+> -		if (drvr->iflist[ifidx]) {
+> -			if (drvr->iflist[ifidx]->bsscfgidx == bsscfgidx)
+> -				bsscfgidx = highest + 1;
+> -			else if (drvr->iflist[ifidx]->bsscfgidx > highest)
+> -				highest = drvr->iflist[ifidx]->bsscfgidx;
+> -		} else {
+> -			available = true;
+> -		}
+> -	}
+> -
+> -	return available ? bsscfgidx : -ENOMEM;
+> -}
+> -
+>  #ifdef CONFIG_INET
+>  #define ARPOL_MAX_ENTRIES	8
+>  static int brcmf_inetaddr_changed(struct notifier_block *nb,
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+> index 647d3cc..2a075c5 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+> @@ -217,7 +217,6 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
+>  struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
+>  			      bool is_p2pdev, char *name, u8 *mac_addr);
+>  void brcmf_remove_interface(struct brcmf_if *ifp);
+> -int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr);
+>  void brcmf_txflowblock_if(struct brcmf_if *ifp,
+>  			  enum brcmf_netif_stop_reason reason, bool state);
+>  void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
+> 
