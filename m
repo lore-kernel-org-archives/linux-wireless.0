@@ -1,88 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:32950 "EHLO
-	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752574AbcFTKKu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 06:10:50 -0400
-Received: by mail-pf0-f169.google.com with SMTP id i123so49141422pfg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2016 03:10:33 -0700 (PDT)
-From: Binoy Jayan <binoy.jayan@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
-Subject: [PATCH v2 0/2] *** staging: wilc1000: Replace semaphores ***
-Date: Mon, 20 Jun 2016 15:40:17 +0530
-Message-Id: <1466417419-13568-1-git-send-email-binoy.jayan@linaro.org> (sfid-20160620_121133_647799_06D9B8F6)
-In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
-References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+Received: from mx1.redhat.com ([209.132.183.28]:45664 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752467AbcFISiw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2016 14:38:52 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 2/4] rtl8xxxu: Add additional documentation for RX DMA registers
+Date: Thu,  9 Jun 2016 14:38:48 -0400
+Message-Id: <1465497530-18510-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160609_203900_413211_E3A1D605)
+In-Reply-To: <1465497530-18510-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1465497530-18510-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the second patch series for 'wilc1000'. The original patch series
-consisted 7 patches of which only the first 5 are good. The patch 6 and 7
-are being worked on in this series in a different way.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This patch series removes the semaphore 'sem' in 'wilc1000' and also
-restructures the implementation of kthread / message_queue logic with
-a create_singlethread_workqueue() / queue_work() setup.
+This also renames REG_USB_AGG_{TO,TH} to REG_USB_AGG_{TIMEOUT,THRESH}
 
-These are part of a bigger effort to eliminate all semaphores
-from the linux kernel.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-They build correctly (individually and as a whole).
-
-NB: The changes are untested
-
-Rework on the review comments by Arnd w.r.t. v1 for patch 2:
-
-struct message_queue can be removed since
- - after the workqueue conversion, mq->sem is no longer needed
- - recv_count is not needed, it just counts the number of entries in the list
- - struct wilc' pointer can be retrieved from the host_if_msg, (vif->wilc)
- - the message list is not needed because we always look only at the
-   first entry, except in wilc_mq_destroy(), but it would be better
-   to just call destroy_workqueue(), which also drains the remaining work.
- - the exiting flag is also handled by destroy_workqueue()   
- - with everything else gone, the spinlock is also not needed any more.
-
-Do 'kfree' only at the end of 'host_if_work' 
-
-wilc_initialized is always '1' so the conditional 'wilc_mq_send'
-in 'hostIFthread' can be removed.
-
-A connect command (HOST_IF_MSG_CONNECT) does not complete while scan is ongoing. 
-So, the special handling of this command needs to be preserved.
-
-Use create_singlethread_workqueue() instead of alloc_workqueue(), so that
-we stay closer to the current behavior by having the thread run only
-on one CPU at a time and not having a 'dedicated' thread for each.
-
-Split the patch to seperate interface changes to 'wilc_mq_send'
-    No easy way found to split the patch to change the interface
-    'wilc_mq_send' and to 'wilc_enqueue_cmd' as the parameters 
-    'mq' 'send_buf' and 'send_buf_size' itself are part of the message
-    queue implementation.
-
-
-Binoy Jayan (2):
-  staging: wilc1000: message_queue: Move code to host interface
-  staging: wilc1000: Replace kthread with workqueue for host interface
-
- drivers/staging/wilc1000/Makefile         |   1 -
- drivers/staging/wilc1000/TODO             |   5 +
- drivers/staging/wilc1000/host_interface.c | 417 +++++++++++++++---------------
- drivers/staging/wilc1000/wilc_msgqueue.c  | 144 -----------
- drivers/staging/wilc1000/wilc_msgqueue.h  |  28 --
- 5 files changed, 216 insertions(+), 379 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/wilc_msgqueue.c
- delete mode 100644 drivers/staging/wilc1000/wilc_msgqueue.h
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index bff883c..921c565 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -405,7 +405,11 @@
+ #define REG_DWBCN1_CTRL_8723B		0x0228
+ 
+ /* 0x0280 ~ 0x02FF	RXDMA Configuration */
+-#define REG_RXDMA_AGG_PG_TH		0x0280
++#define REG_RXDMA_AGG_PG_TH		0x0280	/* 0-7 : USB DMA size bits
++						   8-14: USB DMA timeout
++						   15  : Aggregation enable
++						         Only seems to be used
++							 on 8723bu/8192eu */
+ #define  RXDMA_USB_AGG_ENABLE		BIT(31)
+ #define REG_RXPKT_NUM			0x0284
+ #define  RXPKT_NUM_RXDMA_IDLE		BIT(17)
+@@ -1058,8 +1062,8 @@
+ 						   0: Use int, 1: use bulk */
+ #define REG_USB_HRPWM			0xfe58
+ #define REG_USB_DMA_AGG_TO		0xfe5b
+-#define REG_USB_AGG_TO			0xfe5c
+-#define REG_USB_AGG_TH			0xfe5d
++#define REG_USB_AGG_TIMEOUT		0xfe5c
++#define REG_USB_AGG_THRESH		0xfe5d
+ 
+ #define REG_NORMAL_SIE_VID		0xfe60	/* 0xfe60 - 0xfe61 */
+ #define REG_NORMAL_SIE_PID		0xfe62	/* 0xfe62 - 0xfe63 */
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.5.5
 
