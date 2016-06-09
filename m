@@ -1,87 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33346 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751193AbcFDTSv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59336 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1426641AbcFIFHJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 15:18:51 -0400
-Subject: Patch "ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards." has been added to the 4.4-stable tree
-To: linux-wireless@vittgam.net, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com, gregkh@linuxfoundation.org,
-	kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	linuxbugs@vittgam.net
-Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@linuxfoundation.org>
-Date: Sat, 04 Jun 2016 12:18:49 -0700
-Message-ID: <1465067929249254@kroah.com> (sfid-20160604_211925_239486_CC135585)
+	Thu, 9 Jun 2016 01:07:09 -0400
+Date: Thu, 9 Jun 2016 10:36:58 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Sven Eckelmann <sven.eckelmann@open-mesh.com>
+Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	marek.lindner@open-mesh.com
+Subject: Re: [PATCH 0/2] ath10k: Add support for QCA9887
+Message-ID: <20160609050657.GA31330@atheros-ThinkPad-T61> (sfid-20160609_070723_459522_78363082)
+References: <1568876.Six5hABE57@bentobox>
+ <2262792.6VVL0Htyzj@bentobox>
+ <20160607145002.GB11250@atheros-ThinkPad-T61>
+ <2104766.hdzL6bzVNd@bentobox>
+ <20160607171110.GA13293@atheros-ThinkPad-T61>
+ <20160608124308.GB29340@atheros-ThinkPad-T61>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160608124308.GB29340@atheros-ThinkPad-T61>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Sven,
 
-This is a note to let you know that I've just added the patch titled
+i have something like this as of now(generically
+disabling TX-STBC for streams <= 1 just like ath9k
+does
 
-    ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
-
-to the 4.4-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
-
-The filename of the patch is:
-     ath9k-fix-led-polarity-for-some-mini-pci-ar9220-mb92-cards.patch
-and it can be found in the queue-4.4 subdirectory.
-
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
->From 0f9edcdd88a993914fa1d1dc369b35dc503979db Mon Sep 17 00:00:00 2001
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Date: Mon, 11 Apr 2016 04:48:55 +0200
-Subject: ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
-
-From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
-
-commit 0f9edcdd88a993914fa1d1dc369b35dc503979db upstream.
-
-The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
-(active high instead of active low).
-
-The same PCI Subsystem ID is used by both cards, which are based on
-the same Atheros MB92 design.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/net/wireless/ath/ath9k/pci.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pc
- 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
-+
-+#ifdef CONFIG_ATH9K_PCOEM
-+	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0029,
-+			 PCI_VENDOR_ID_ATHEROS,
-+			 0x2096),
-+	  .driver_data = ATH9K_PCI_LED_ACT_HI },
-+#endif
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4194,6 +4194,9 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
+ 			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2);
+ 	}
  
- #ifdef CONFIG_ATH9K_PCOEM
++	if (ar->cfg_tx_chainmask <= 1)
++		vht_cap.cap &= ~IEEE80211_VHT_CAP_TXSTBC;
++
+ 	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
+ 	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
+ 
+@@ -4231,7 +4234,7 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
+ 		ht_cap.cap |= smps;
+ 	}
+ 
+-	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC)
++	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC && (ar->cfg_tx_chainmask > 1))
+ 		ht_cap.cap |= IEEE80211_HT_CAP_TX_STBC;
+ 
+ 	if (ar->ht_cap_info & WMI_HT_CAP_RX_STBC) {
+-- 
 
+regards,
+shafi
 
-Patches currently in stable-queue which might be from linux-wireless@vittgam.net are
-
-queue-4.4/ath9k-add-a-module-parameter-to-invert-led-polarity.patch
-queue-4.4/ath9k-fix-led-polarity-for-some-mini-pci-ar9220-mb92-cards.patch
+On Wed, Jun 08, 2016 at 06:13:08PM +0530, Mohammed Shafi Shajakhan wrote:
+> On Tue, Jun 07, 2016 at 10:41:48PM +0530, Mohammed Shafi Shajakhan wrote:
+> > Hi Sven,
+> > 
+> > On Tue, Jun 07, 2016 at 06:54:54PM +0200, Sven Eckelmann wrote:
+> > > On Tuesday 07 June 2016 20:20:02 Mohammed Shafi Shajakhan wrote:
+> > > [...]
+> > > > [shafi] it would be helpful if you can share your basic test results (if its
+> > > > possible to share). Have you tried to bring up the card in 5ghz (or) 2ghz.
+> > > > Or both of them were tried ?
+> > > 
+> > > * 5GHz-only (I have no 2.4GHz capable card)
+> > > * card is able to scan
+> > > * card is able to create an AP
+> > > * data can be transferred via AP and client (bidirectional connection)
+> > > * performance was more like 15 Mibit/s for 1x1 HT20 11n devices instead of
+> > >   something like 35-40 Mibit/s
+> > 
+> > [shafi] sure thanks a lot, this is a good start, i will keep you posted
+> > with my findings and results.
+> 
+> [shafi] request if you can disable TX-STBC for both HT and VHT, it helped
+> me though. Will keep you posted with more updates.
+> 
+> > 
+> > > 
+> > > I cannot give you any more detailed, current performance test results because
+> > > they were done months ago and are most likely not relevant to describe the
+> > > current state. Please ask Kalle if you want to know why the old tests were
+> > > done many, many months ago.
+> > 
+> > [shafi] sure, hopefully we can get this sorted out. Thank you for the patches
+> > and support.
+> > 
+> > > 
+> > > Please ask Marek when you want to have tests done with the current
+> > > mac8011+ath10k.
+> > 
+> > [shafi] thanks
+> > 
+> > > 
+> > > Kind regards,
+> > > 	Sven
+> > 
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
