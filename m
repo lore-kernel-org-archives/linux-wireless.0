@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:33190 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752525AbcFTUzq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 16:55:46 -0400
-Subject: Re: [PATCH v2 01/21] ath10k: Fix crash related to printing features.
-To: ath10k@lists.infradead.org
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
- <1462986153-16318-2-git-send-email-greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <576856E6.2030003@candelatech.com> (sfid-20160620_225550_256592_9D7760FD)
-Date: Mon, 20 Jun 2016 13:49:42 -0700
-MIME-Version: 1.0
-In-Reply-To: <1462986153-16318-2-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:58028 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1424480AbcFIH6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2016 03:58:04 -0400
+Message-ID: <1465459080.3442.2.camel@sipsolutions.net> (sfid-20160609_095810_154226_06D7286F)
+Subject: Re: [PATCH] nl80211: avoid possible memleak on nl80211_set_reg
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eduardo Abinader <eabinader@ocedo.com>,
+	linux-wireless@vger.kernel.org
+Cc: Eduardo Abinader <eduardo.abinader@riverbed.com>
+Date: Thu, 09 Jun 2016 09:58:00 +0200
+In-Reply-To: <1465224967-26892-1-git-send-email-eduardo.abinader@riverbed.com> (sfid-20160606_165618_946135_D46C5895)
+References: <1465224967-26892-1-git-send-email-eduardo.abinader@riverbed.com>
+	 (sfid-20160606_165618_946135_D46C5895)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/11/2016 10:02 AM, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> This looks like a regression from
-> c4cdf753 (move fw_features to struct ath10k_fw_file)
-
-Just FYI, this patch does not appear to be in 4.7-rc4 as of today, and so kernel crashes on
-startup when loading ath10k, at least when DBG_BOOT logging is enabled....
-
-Thanks,
-Ben
-
->
-> Signed-off-by:  Ben Greear <greearb@candelatech.com>
+On Mon, 2016-06-06 at 16:56 +0200, Eduardo Abinader wrote:
+> Setting NULL just after freeing regdomain.
+> 
+> Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
 > ---
->   drivers/net/wireless/ath/ath10k/core.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> index e94cb87..b7318b8 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -1078,7 +1078,7 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
->   			}
->
->   			ath10k_dbg_dump(ar, ATH10K_DBG_BOOT, "features", "",
-> -					ar->running_fw->fw_file.fw_features,
-> +					fw_file->fw_features,
->   					sizeof(fw_file->fw_features));
->   			break;
->   		case ATH10K_FW_IE_FW_IMAGE:
->
+>  net/wireless/nl80211.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index d120449..39d107d 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -5839,10 +5839,11 @@ static int nl80211_set_reg(struct sk_buff
+> *skb, struct genl_info *info)
+>  
+>  	r = set_regdom(rd, REGD_SOURCE_CRDA);
+>  	/* set_regdom took ownership */
+> -	rd = NULL;
+>  
+>   bad_reg:
+>  	kfree(rd);
+> +	rd = NULL;
 
+To this I can only say: what?
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+johannes
