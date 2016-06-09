@@ -1,102 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39622 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752385AbcFUFSr (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:54396 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392AbcFIN2u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 01:18:47 -0400
-Date: Tue, 21 Jun 2016 10:48:30 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: Re: Bug with: ath10k: enable parsing per station rx duration for
- 10.4?
-Message-ID: <20160621051829.GA20604@atheros-ThinkPad-T61> (sfid-20160621_071851_748289_48ED8816)
-References: <5768770C.5050305@candelatech.com>
+	Thu, 9 Jun 2016 09:28:50 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Remove unneccessary WARN_ON_ONCE in rx during ACS
+Date: Thu, 9 Jun 2016 18:59:51 +0530
+Message-ID: <1465478991-21449-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160609_152854_229117_7A589474)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5768770C.5050305@candelatech.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-thanks for reporting ...
+The below warning message seems to hit occasionally with the following
+combination (IPQ4019 + ACS scan) where we receive packets as a self peer
+when hostapd does ACS when we bring up AP mode . ath10k has the below
+fall back mechanism to fetch current operating channel in rx (it will
+check for the next channel tracking variable if the current one is NULL)
 
-On Mon, Jun 20, 2016 at 04:06:52PM -0700, Ben Greear wrote:
-> I'm working on bringing up my hacked up version of 4.7 ath10k and 10.4 firmware, and I think
-> I may have found a regression.
+	[scan channel] --> [rx channel] --> [peer channel] -->
+	[vdev channel] -->  [any vdev channel] --> [target oper channel]
 
-[shafi] let me know what is the issue.. some steps to recreate the issue.
-> 
-> My 10.4.3-ish firmware source has a bunch of:
-> 
-> if (stats_id == WMI_REQUEST_PEER_STAT)
-> logic in it.  In other words, it is not using that id as a bitfield.
+'scan channel' and 'target operating channel' are directly fetched from
+firmware events. All the others should be updated by mac80211.
 
-[shafi] will check this.
+During ACS scan we wouldn't have a valid channel context
+assigned from mac80211 ('ar->rx_channel'), and also relying on
+('ar->scan_channel') is not helpful (it becomes NULL when it goes to
+BSS channel and also when the scan event is completed). In short we
+cannot always rely on these two channel tracking variables.
 
-> 
-> Now, I can fix the firmware, but I am guessing that at least some stock
-> 10.4 firmware has this same issue, and of course any older firmware
-> that does not have this change will still be broken.
-> 
-> So, do you want to back out this patch below, at least the part where it sends
-> in 0x9 as the stats_id?
+'Target Operating Channel' (ar->tgt_oper_chan) seems to keep track of
+the current operating even while we are doing ACS scan and etc. Hence
+remove this un-necessary warning message and continue with
+target_operating channel. At the worst case scenario when the target
+operating channel is invalid (NULL) we already have an ath10k warning
+message to notify we really don't have a proper channel configured in
+rx to update the rx status("no channel configured; ignoring frame(s)!")
 
-[shafi] request if you can check this please, there was some misunderstanding
-in the design when this feature got enabled in 10.4, we fixed it in
-https://patchwork.kernel.org/patch/9149357/
+    WARNING: CPU: 0 PID: 0 at ath/ath10k/htt_rx.c:803
+    [<c0318838>] (warn_slowpath_null) from [<bf4a0104>]
+    (ath10k_htt_rx_h_channel+0xe0/0x1b8 [ath10k_core])
+    [<bf4a0104>] (ath10k_htt_rx_h_channel [ath10k_core]) from
+    [<bf4a025c>] (ath10k_htt_rx_h_ppdu+0x80/0x288 [ath10k_core])
+    [<bf4a025c>] (ath10k_htt_rx_h_ppdu [ath10k_core]) from
+    [<bf4a1a9c>] (ath10k_htt_txrx_compl_task+0x724/0x9d4 [ath10k_core])
+    [<bf4a1a9c>] (ath10k_htt_txrx_compl_task [ath10k_core])
 
-> 
-> Or, is all available upstream 10.4 firmware OK with this and I should just fix mine?
-> 
-> Or possibly, this is all my fault and I somehow screwed up when rebasing....
+Fixes:3b0499e9ce42 ("ath10k: reduce warning messages during rx without proper channel context")
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
 
-[shafi] i will check this and get back to you by end of day.
+[updated commit log - Michal Kazior]
 
-regards,
-shafi
-> 
-> 
-> Author: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>  2016-03-16 05:43:34
-> Committer: Kalle Valo <kvalo@qca.qualcomm.com>  2016-04-04 07:02:47
-> Parent: 47771902a9beb23859805721f1d98d03dee5da7c (ath10k: introduce Extended Resource Config support for 10.4)
-> Child:  59465fe46ef1c2caf2c1beca828c4f29d28b98ca (ath10k: speedup htt rx descriptor processing for tx completion)
-> Branches: master, master.stgit, remotes/origin/master, remotes/origin/master.stgit
-> Follows: v4.5-rc5
-> Precedes: v4.7-rc1
-> 
->     ath10k: enable parsing per station rx duration for 10.4
-> 
->     Rx duration support for per station is part of extended peer
->     stats, enable provision to parse the same and provide backward
->     compatibility based on the 'stats_id' event
-> 
->     Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->     Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> 
-> ....
-> 
-> @@ -1615,7 +1615,8 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
->  		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
->  		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
->  		ar->num_tids = TARGET_10_4_TGT_NUM_TIDS;
-> -		ar->fw_stats_req_mask = WMI_STAT_PEER;
-> +		ar->fw_stats_req_mask = WMI_10_4_STAT_PEER |
-> +					WMI_10_4_STAT_PEER_EXTD;
->  		ar->max_spatial_stream = ar->hw_params.max_spatial_stream;
-> 
->  		if (test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL,
-> 
-> 
-> -- 
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-> 
-> 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+ drivers/net/wireless/ath/ath10k/htt_rx.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 7bf1909..aa44c09 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -748,7 +748,7 @@ ath10k_htt_rx_h_peer_channel(struct ath10k *ar, struct htt_rx_desc *rxd)
+ 	if (WARN_ON_ONCE(!arvif))
+ 		return NULL;
+ 
+-	if (WARN_ON_ONCE(ath10k_mac_vif_chan(arvif->vif, &def)))
++	if (ath10k_mac_vif_chan(arvif->vif, &def))
+ 		return NULL;
+ 
+ 	return def.chan;
+-- 
+1.7.9.5
+
