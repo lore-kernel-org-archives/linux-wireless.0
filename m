@@ -1,86 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44963 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751940AbcF0IqD (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:63983 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751168AbcFINvt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 04:46:03 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCH 3/3] ath10k: add testmode support for 10.4 firmware
-Date: Mon, 27 Jun 2016 14:21:20 +0530
-Message-ID: <1467017480-12374-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_104626_765354_BC688FD2)
+	Thu, 9 Jun 2016 09:51:49 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Julian Calaby <julian.calaby@gmail.com>,
+	Javier Martinez Canillas <javier@osg.samsung.com>,
+	Xinming Hu <huxm@marvell.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	netdev <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: RE: [PATCH 7/8] mwifiex: don't print an error if an optional DT
+ property is missing
+Date: Thu, 9 Jun 2016 13:51:45 +0000
+Message-ID: <01bb6d9c1c7f4419b2d88051b8e811f4@SC-EXCH04.marvell.com> (sfid-20160609_155553_361436_7C9DFE21)
+References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
+ <1464358702-19083-8-git-send-email-javier@osg.samsung.com>
+ <CAGRGNgUZ+mG_KzhiOzquB3qd-V_Pdbazag=nrFpG87mRQGmXLg@mail.gmail.com>
+ <ec09757e-302a-b341-6bf0-46737abb7976@osg.samsung.com>
+ <CAGRGNgUaNAxhhvnVJDx73yABvp3HXfqK5JFKCKvOgkM0DyFuPA@mail.gmail.com>
+In-Reply-To: <CAGRGNgUaNAxhhvnVJDx73yABvp3HXfqK5JFKCKvOgkM0DyFuPA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
-
-This patch adds testmode support for QCA99X0 chipsets which uses
-10.4 firmware and added code swap support for UTF binary.
-
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/testmode.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
-index 120f423..2c10c0e 100644
---- a/drivers/net/wireless/ath/ath10k/testmode.c
-+++ b/drivers/net/wireless/ath/ath10k/testmode.c
-@@ -23,6 +23,7 @@
- #include "wmi.h"
- #include "hif.h"
- #include "hw.h"
-+#include "core.h"
- 
- #include "testmode_i.h"
- 
-@@ -240,6 +241,18 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
- 		goto err;
- 	}
- 
-+	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
-+	    ar->testmode.utf_mode_fw.fw_file.codeswap_len) {
-+		ret = ath10k_swap_code_seg_init(ar,
-+					&ar->testmode.utf_mode_fw.fw_file);
-+		if (ret) {
-+			ath10k_warn(ar,
-+				"failed to init utf code swap segment: %d\n",
-+				ret);
-+			goto err_release_utf_mode_fw;
-+		}
-+	}
-+
- 	spin_lock_bh(&ar->data_lock);
- 	ar->testmode.utf_monitor = true;
- 	spin_unlock_bh(&ar->data_lock);
-@@ -279,6 +292,11 @@ err_power_down:
- 	ath10k_hif_power_down(ar);
- 
- err_release_utf_mode_fw:
-+	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
-+	    ar->testmode.utf_mode_fw.fw_file.codeswap_len)
-+		ath10k_swap_code_seg_release(ar,
-+					&ar->testmode.utf_mode_fw.fw_file);
-+
- 	release_firmware(ar->testmode.utf_mode_fw.fw_file.firmware);
- 	ar->testmode.utf_mode_fw.fw_file.firmware = NULL;
- 
-@@ -301,6 +319,11 @@ static void __ath10k_tm_cmd_utf_stop(struct ath10k *ar)
- 
- 	spin_unlock_bh(&ar->data_lock);
- 
-+	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
-+	    ar->testmode.utf_mode_fw.fw_file.codeswap_len)
-+		ath10k_swap_code_seg_release(ar,
-+					&ar->testmode.utf_mode_fw.fw_file);
-+
- 	release_firmware(ar->testmode.utf_mode_fw.fw_file.firmware);
- 	ar->testmode.utf_mode_fw.fw_file.firmware = NULL;
- 
--- 
-1.7.9.5
-
+PiBGcm9tOiBKdWxpYW4gQ2FsYWJ5IFttYWlsdG86anVsaWFuLmNhbGFieUBnbWFpbC5jb21dDQo+
+IFNlbnQ6IFRodXJzZGF5LCBKdW5lIDAyLCAyMDE2IDQ6NDQgQU0NCj4gVG86IEphdmllciBNYXJ0
+aW5leiBDYW5pbGxhczsgWGlubWluZyBIdQ0KPiBDYzogbGludXgta2VybmVsQHZnZXIua2VybmVs
+Lm9yZzsgQW1pdGt1bWFyIEthcndhcjsgS2FsbGUgVmFsbzsgbmV0ZGV2Ow0KPiBsaW51eC13aXJl
+bGVzczsgTmlzaGFudCBTYXJtdWthZGFtDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggNy84XSBtd2lm
+aWV4OiBkb24ndCBwcmludCBhbiBlcnJvciBpZiBhbiBvcHRpb25hbCBEVA0KPiBwcm9wZXJ0eSBp
+cyBtaXNzaW5nDQo+IA0KPiBIaSBKYXZpZXIsDQo+IA0KPiBPbiBXZWQsIEp1biAxLCAyMDE2IGF0
+IDExOjUxIFBNLCBKYXZpZXIgTWFydGluZXogQ2FuaWxsYXMNCj4gPGphdmllckBvc2cuc2Ftc3Vu
+Zy5jb20+IHdyb3RlOg0KPiA+IEhlbGxvIEp1bGlhbiwNCj4gPg0KPiA+IFRoYW5rcyBhIGxvdCBm
+b3IgeW91ciBmZWVkYmFjayBhbmQgcmV2aWV3cy4NCj4gPg0KPiA+IE9uIDA2LzAxLzIwMTYgMTI6
+MjAgQU0sIEp1bGlhbiBDYWxhYnkgd3JvdGU6DQo+ID4+IEhpIEFsbCwNCj4gPj4NCj4gPj4gT24g
+U2F0LCBNYXkgMjgsIDIwMTYgYXQgMTI6MTggQU0sIEphdmllciBNYXJ0aW5leiBDYW5pbGxhcw0K
+PiA+PiA8amF2aWVyQG9zZy5zYW1zdW5nLmNvbT4gd3JvdGU6DQo+ID4+PiBUaGUNCj4gPj4+IERv
+Y3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9uZXQvd2lyZWxlc3MvbWFydmVsbC1zZDh4
+eHgudHh0IERUDQo+ID4+PiBiaW5kaW5nIGRvY3VtZW50IHNheSB0aGF0IHRoZSAiaW50ZXJydXB0
+cyIgcHJvcGVydHkgaW4gdGhlIGNoaWxkDQo+IG5vZGUgaXMgb3B0aW9uYWwuIFNvIHRoZSBwcm9w
+ZXJ0eSBiZWluZyBtaXNzZWQgc2hvdWxkbid0IGJlIHRyZWF0ZWQgYXMNCj4gYW4gZXJyb3IuDQo+
+ID4+DQo+ID4+IEhhdmUgeW91IGNoZWNrZWQgd2hldGhlciBpdCBpcyB0cnVseSBvcHRpb25hbD8g
+SS5lLiBub3RoaW5nIGVsc2UNCj4gPj4gYnJlYWtzIGlmIHRoaXMgcHJvcGVydHkgaXNuJ3Qgc2V0
+Pw0KPiA+Pg0KPiA+DQo+ID4gVGhhdCdzIHdoYXQgdGhlIERUIGJpbmRpbmcgc2F5cyBhbmQgdGhl
+IElSUSBpcyBvbmx5IHVzZWQgYXMgYSB3YWtldXANCj4gPiBzb3VyY2UgZHVyaW5nIHN5c3RlbSBz
+dXNwZW5kLCBpdCBpcyBub3QgdXNlZCBkdXJpbmcgcnVudGltZS4gQW5kIHRoYXQNCj4gPiBpcyB3
+aHkgdGhlDQo+ID4gbXdpZmlleF9zZGlvX3Byb2JlX29mKCkgZnVuY3Rpb24gZG9lcyBub3QgZmFp
+bCBpZiB0aGUgSVJRIGlzIG1pc3NpbmcuDQo+IA0KPiBBd2Vzb21lLCB0aGF0J3Mgd2hhdCBJIHdh
+bnRlZCB0byBrbm93Lg0KPiANCj4gPiBOb3csIEkganVzdCBnb3QgdG8gdGhhdCBjb25jbHVzaW9u
+IGJ5IHJlYWRpbmcgdGhlIGJpbmRpbmcgZG9jcywgdGhlDQo+ID4gbWVzc2FnZSBpbiB0aGUgY29t
+bWl0cyB0aGF0IGludHJvZHVjZWQgdGhpcyBhbmQgdGhlIGRyaXZlciBjb2RlLg0KPiA+IFhpbm1p
+bmcgSHUgc2hvdWxkIGNvbW1lbnQgb24gaG93IGNyaXRpY2FsIHRoaXMgZmVhdHVyZSBpcyBmb3Ig
+c3lzdGVtcw0KPiB0aGF0IG5lZWRzIHRvIGJlIHdha2V1cC4NCj4gDQo+IFhpbm1pbmcsIGNvdWxk
+IHlvdSByZXZpZXcgdGhpcyBhbHNvPw0KPiANCg0KWWVzLiBJUlEgaXMgdGhlIG9wdGlvbmFsIHBh
+cmFtZXRlci4gU3lzdGVtIGhhcyBhIGZsZXhpYmlsaXR5IHRvIG5vdCB1c2UgaXQsIGJ1dCBpdCBz
+dGlsbCBjYW4gY29uZmlndXJlIG90aGVyIGRldmljZSB0cmVlIHBhcmFtZXRlcnMuIFRoZSBwYXRj
+aCBsb29rcyBnb29kLg0KDQpSZWdhcmRzLA0KQW1pdGt1bWFyDQo=
