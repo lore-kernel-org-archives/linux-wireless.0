@@ -1,83 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f194.google.com ([209.85.161.194]:34975 "EHLO
-	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161278AbcFMVKn convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12631 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161753AbcFIGEZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 17:10:43 -0400
+	Thu, 9 Jun 2016 02:04:25 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: fix deadlock while processing rx_in_ord_ind
+Date: Thu, 9 Jun 2016 11:33:55 +0530
+Message-ID: <20160609060355.16219-1-rmanohar@qti.qualcomm.com> (sfid-20160609_080440_750236_1CD3DB0E)
 MIME-Version: 1.0
-In-Reply-To: <20160613210109.GA9303@amd>
-References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
- <1462199948-6424-2-git-send-email-jprvita@endlessm.com> <20160504072936.GB17045@amd>
- <1463045572.13313.21.camel@sipsolutions.net> <20160519071639.GB17077@amd>
- <1465476194.3442.21.camel@sipsolutions.net> <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com>
- <20160613190048.GA17101@amd> <CA+A7VXXOfN1Td2T6uiunWZMS4gvS5sHDzPiDp9VEdx+OPJpSmA@mail.gmail.com>
- <20160613210109.GA9303@amd>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Mon, 13 Jun 2016 17:10:02 -0400
-Message-ID: <CA+A7VXWdt16KHNx0n9jnpimCvN9dV38kb6smTbGWaJYo5VYcOQ@mail.gmail.com> (sfid-20160613_231107_452161_74A7E63A)
-Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED trigger
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 June 2016 at 17:01, Pavel Machek <pavel@ucw.cz> wrote:
-> On Mon 2016-06-13 15:59:35, João Paulo Rechi Vita wrote:
->> On 13 June 2016 at 15:00, Pavel Machek <pavel@ucw.cz> wrote:
->> > Hi!
->> >
->> >> > João, that means you should send a patch to add the ::rfkill suffix.
->> >> >
->> >>
->> >> IMO "airplane" (or maybe "airplane-mode") is a better suffix, as it
->> >> reflects the label on the machine's chassis. I'll name it
->> >> "asus-wireless::airplane" and send this through platform-drivers-x86,
->> >> as this is now contained in the platform-drivers-x86 subsystem. Thanks
->> >> Johannes for your patience and help designing and reviewing the rfkill
->> >> changes, even if not all of them made it through in the end. And
->> >> thanks everyone else involved for the feedback.
->> >
->> > Actually, I'd do '::rfkill', for consistency with other places in
->> > /sys.
->> >
->> > /sys/devices/platform/thinkpad_acpi/rfkill/rfkill1/name
->> > /sys/class/rfkill
->> > /sys/module/rfkill
->> >
->>
->> If we use "rfkill" as a suffix, how do you expect userspace to be able
->> to differentiate between a LED that indicates airplane-mode (LED ON
->> when all radios are OFF) and a LED that indicates the state of a
->> specific radio like WiFi or Bluetooth (LED ON when that specific radio
->> is ON)? If we're going this route we should provide meaningful
->> information here.
->
-> '::airplane' has same problem, no?
->
+commit 5c86d97bcc1d ("ath10k: combine txrx and replenish task")
+introduced deadlock while processing rx in order indication message
+for qca6174 based devices. While merging replenish and txrx tasklets,
+replenish task should be called out of htt rx ring locking since it
+is also try to acquire the same lock.
 
-No, because in this case we would not use "airplane" as a suffix for a
-LED associated with an individual radio.
+Unfortunately this issue is not exposed by other solutions (qca988x,
+qca99x0 & qca4019), as rx_in_ord_ind message is specific to qca6174
+based devices. This patch fixes
 
-> If you want to distinguish that, maybe you can do '::rfkill' for
-> everything vs '::rfkill-wifi' for wifi-only and '::rfkill-bt' for
-> bluetooth...
->
+=============================================
+[ INFO: possible recursive locking detected ]
+4.7.0-rc2-wt-ath+ #1353 Tainted: G            E
+---------------------------------------------
+swapper/3/0 is trying to acquire lock:
+ (&(&htt->rx_ring.lock)->rlock){+.-...}, at: [<f8d7ef19>]
+ath10k_htt_rx_msdu_buff_replenish+0x29/0x90 [ath10k_core]
 
-The problem here is that the "rfkill" name is already associated with
-individual rfkill switches under /sys/class/rfkill,
-/sys/devices/platform/*/rfkill etc, so I think we're better off
-distinguishing "airplane" vs "wifi" vs "bluetooth" etc, to avoid
-confusion.
+but task is already holding lock:
+ (&(&htt->rx_ring.lock)->rlock){+.-...}, at: [<f8d82cab>]
+ath10k_htt_txrx_compl_task+0x21b/0x250 [ath10k_core]
 
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+other info that might help us debug this:
+ Possible unsafe locking scenario:
+
+       CPU0
+       ----
+  lock(&(&htt->rx_ring.lock)->rlock);
+  lock(&(&htt->rx_ring.lock)->rlock);
+
+ *** DEADLOCK ***
+
+ May be due to missing lock nesting notation
+
+1 lock held by swapper/3/0:
+ #0:  (&(&htt->rx_ring.lock)->rlock){+.-...}, at: [<f8d82cab>]
+ath10k_htt_txrx_compl_task+0x21b/0x250 [ath10k_core]
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=119151
+Fixes: 5c86d97bcc1d ("ath10k: combine txrx and replenish task")
+Reported-by: Mike Lothian <mike@fireburn.co.uk>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 3b35c7ab5680..80e645302b54 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1905,7 +1905,6 @@ static void ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
+ 			return;
+ 		}
+ 	}
+-	ath10k_htt_rx_msdu_buff_replenish(htt);
+ }
+ 
+ static void ath10k_htt_rx_tx_fetch_resp_id_confirm(struct ath10k *ar,
+-- 
+2.8.3
+
