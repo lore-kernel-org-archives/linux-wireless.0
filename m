@@ -1,70 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:18348 "EHLO
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47838 "EHLO
 	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753861AbcFPNbV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 09:31:21 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u5GDQYjR018615
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:31:20 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 23gg0ksmwh-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:31:20 -0700
+	by vger.kernel.org with ESMTP id S1750810AbcFINas convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2016 09:30:48 -0400
 From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 6/6] mwifiex: fix AP start problem for newly added interface
-Date: Thu, 16 Jun 2016 18:52:26 +0530
-Message-ID: <1466083346-18607-6-git-send-email-akarwar@marvell.com> (sfid-20160616_153124_417575_B28E92ED)
-In-Reply-To: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
-References: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
+To: Wei-Ning Huang <wnhuang@chromium.org>,
+	Linux-Wireless <linux-wireless@vger.kernel.org>
+CC: LKML <linux-kernel@vger.kernel.org>,
+	"djkurtz@chromium.org" <djkurtz@chromium.org>
+Subject: RE: [PATCH v2] mwifiex: fix race condition when downloading firmware
+Date: Thu, 9 Jun 2016 13:30:44 +0000
+Message-ID: <e45dbcc3886e4accb4073a46baf8bb88@SC-EXCH04.marvell.com> (sfid-20160609_153129_757183_3E790782)
+References: <1464352059-13923-1-git-send-email-wnhuang@chromium.org>
+In-Reply-To: <1464352059-13923-1-git-send-email-wnhuang@chromium.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's been observed that if interface type is changed from managed to
-__ap, AP can be successfully started. But there is a problem if new
-ap interface is added.
+> From: Wei-Ning Huang [mailto:wnhuang@chromium.org]
+> Sent: Friday, May 27, 2016 5:58 PM
+> To: Linux-Wireless
+> Cc: LKML; Amitkumar Karwar; djkurtz@chromium.org; Wei-Ning Huang
+> Subject: [PATCH v2] mwifiex: fix race condition when downloading
+> firmware
+> 
+> The action 'check for winner' and 'download firmware' should be an
+> atomic action. This is true for btmrvl driver but not mwmfiex, which
+> cause firmware download to fail when the following scenario happens:
+> 
+> 1) mwifiex check winner status: true
+> 2) btmrvl check winner status: true, and start downloading firmware
+> 3) mwifiex tries to download firmware, but failed because btmrvl is
+> already downloading.
+> 
+> This won't happen if 1) and 3) is an atomic action. This patch adds
+> sdio_claim/release_host call around those two actions to make sure it's
+> atomic.
+> 
+> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/init.c | 14 +++++++++++---
+>  1 file changed, 11 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c
+> b/drivers/net/wireless/marvell/mwifiex/init.c
+> index 78c532f..7703438 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> @@ -24,6 +24,7 @@
+>  #include "main.h"
+>  #include "wmm.h"
+>  #include "11n.h"
+> +#include "sdio.h"
+> 
+>  /*
+>   * This function adds a BSS priority table to the table list.
+> @@ -737,16 +738,20 @@ mwifiex_shutdown_drv(struct mwifiex_adapter
+> *adapter)  int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
+>  		    struct mwifiex_fw_image *pmfw)
+>  {
+> +	struct sdio_mmc_card *card = adapter->card;
+>  	int ret;
+>  	u32 poll_num = 1;
+> 
+> +	if (adapter->iface_type == MWIFIEX_SDIO)
+> +		sdio_claim_host(card->func);
+> +
+>  	if (adapter->if_ops.check_fw_status) {
+>  		/* check if firmware is already running */
+>  		ret = adapter->if_ops.check_fw_status(adapter, poll_num);
+>  		if (!ret) {
+>  			mwifiex_dbg(adapter, MSG,
+>  				    "WLAN FW already running! Skip FW dnld\n");
+> -			return 0;
+> +			goto release_host;
+>  		}
+>  	}
+> 
+> @@ -759,7 +764,7 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
+>  		if (ret) {
+>  			mwifiex_dbg(adapter, MSG,
+>  				    "WLAN read winner status failed!\n");
+> -			return ret;
+> +			goto release_host;
+>  		}
+> 
+>  		if (!adapter->winner) {
+> @@ -775,7 +780,7 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
+>  		if (ret) {
+>  			mwifiex_dbg(adapter, ERROR,
+>  				    "prog_fw failed ret=%#x\n", ret);
+> -			return ret;
+> +			goto release_host;
+>  		}
+>  	}
+> 
+> @@ -785,6 +790,9 @@ poll_fw:
+>  	if (ret)
+>  		mwifiex_dbg(adapter, ERROR,
+>  			    "FW failed to be active in time\n");
+> +release_host:
+> +	if (adapter->iface_type == MWIFIEX_SDIO)
+> +		sdio_release_host(card->func);
+> 
+>  	return ret;
+>  }
+> --
+> 2.1.2
 
-The problem got resolved after sending appropriate commands to firmware
-in add_interface handler.
+Patch looks fine to me.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index cd50425..81ff8bb 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2775,6 +2775,7 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	struct mwifiex_private *priv;
- 	struct net_device *dev;
- 	void *mdev_priv;
-+	int ret;
- 
- 	if (!adapter)
- 		return ERR_PTR(-EFAULT);
-@@ -2900,6 +2901,13 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 	mwifiex_init_priv_params(priv, dev);
- 	priv->netdev = dev;
- 
-+	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
-+			       HostCmd_ACT_GEN_SET, 0, NULL, true);
-+		return ERR_PTR(ret);
-+
-+	ret = mwifiex_sta_init_cmd(priv, false, false);
-+		return ERR_PTR(ret);
-+
- 	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
- 	if (adapter->is_hw_11ac_capable)
- 		mwifiex_setup_vht_caps(
--- 
-1.9.1
-
+Regards,
+Amitkumar
