@@ -1,40 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:34697 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751810AbcF3Lge convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 07:36:34 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCHV2 3/3] ath10k: add testmode support for 10.4 firmware
-Date: Thu, 30 Jun 2016 11:36:26 +0000
-Message-ID: <87eg7e6h8n.fsf@kamboji.qca.qualcomm.com> (sfid-20160630_133637_975748_B671FF20)
-References: <1467018454-24530-1-git-send-email-c_traja@qti.qualcomm.com>
-In-Reply-To: <1467018454-24530-1-git-send-email-c_traja@qti.qualcomm.com> (c.
-	traja's message of "Mon, 27 Jun 2016 14:37:34 +0530")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:58291 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932332AbcFIIj7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2016 04:39:59 -0400
+Message-ID: <1465461594.3442.7.camel@sipsolutions.net> (sfid-20160609_104007_839805_F27295C4)
+Subject: Re: [PATCH] nl80211: avoid possible memleak on nl80211_set_reg
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	Eduardo Abinader <eabinader@ocedo.com>,
+	linux-wireless@vger.kernel.org
+Cc: Eduardo Abinader <eduardo.abinader@riverbed.com>
+Date: Thu, 09 Jun 2016 10:39:54 +0200
+In-Reply-To: <a961b2ee-b4fa-dec9-72ed-f9b600fa51b2@broadcom.com> (sfid-20160609_103604_383463_C1E1294A)
+References: <1465224967-26892-1-git-send-email-eduardo.abinader@riverbed.com>
+	 <1465459080.3442.2.camel@sipsolutions.net>
+	 <a961b2ee-b4fa-dec9-72ed-f9b600fa51b2@broadcom.com>
+	 (sfid-20160609_103604_383463_C1E1294A)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<c_traja@qti.qualcomm.com> writes:
 
-> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
->
-> This patch adds testmode support for QCA99X0 chipsets which uses
-> 10.4 firmware and added code swap support for UTF binary.
->
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+> > > +++ b/net/wireless/nl80211.c
+> > > @@ -5839,10 +5839,11 @@ static int nl80211_set_reg(struct sk_buff
+> > > *skb, struct genl_info *info)
+> > >  
+> > >  	r = set_regdom(rd, REGD_SOURCE_CRDA);
+> > >  	/* set_regdom took ownership */
+> > > -	rd = NULL;
+> > >  
+> > >   bad_reg:
+> > >  	kfree(rd);
+> > > +	rd = NULL;
+> > To this I can only say: what?
+> The patch is bad, but the confusion starts with the original code
+> (ab)using kfree() behaviour by setting rd to NULL. Personally, I do
+> not like it, but prefer it over bugs ;-)
+> 
 
-There were few checkpatch warnings, I fixed them in the pending branch:
+Yeah, fair enough. I'll make the following patch:
 
-$ ath10k-check 
-drivers/net/wireless/ath/ath10k/testmode.c:247: Alignment should match open parenthesis
-drivers/net/wireless/ath/ath10k/testmode.c:250: Alignment should match open parenthesis
-drivers/net/wireless/ath/ath10k/testmode.c:298: Alignment should match open parenthesis
-drivers/net/wireless/ath/ath10k/testmode.c:325: Alignment should match open parenthesis
+-	r = set_regdom(rd, REGD_SOURCE_CRDA);
+-	/* set_regdom took ownership */
+-	rd = NULL;
++	/* set_regdom takes ownership of rd */
++	return set_regdom(rd, REGD_SOURCE_CRDA);
 
--- 
-Kalle Valo
+johannes
