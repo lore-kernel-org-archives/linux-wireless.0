@@ -1,58 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:33356 "EHLO
-	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750740AbcFDDyz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 23:54:55 -0400
-Received: by mail-oi0-f43.google.com with SMTP id k23so155543820oih.0
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2016 20:54:54 -0700 (PDT)
-Date: Fri, 3 Jun 2016 22:54:52 -0500
-From: David Gilman <dgilman@gilslotd.com>
-To: buytenh@wantstofly.org
-Cc: linux-wireless@vger.kernel.org
-Subject: Troubleshooting mwl8k driver issue
-Message-ID: <20160604035452.GA5925@dar.local> (sfid-20160604_055459_200020_ACA46742)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:43135 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752466AbcFISiw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2016 14:38:52 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Colin Ian King <colin.king@canonical.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 4/4] rtl8xxxu: fix typo on variable name, compare against correct variable
+Date: Thu,  9 Jun 2016 14:38:50 -0400
+Message-Id: <1465497530-18510-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160609_203856_938765_9CA68856)
+In-Reply-To: <1465497530-18510-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1465497530-18510-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lennert, I am a user of your mwl8k driver through the OpenWRT
-distribution.  When working with certain WiFi devices I get errors in
-the kernel logs and network connectivity errors on the wireless device.
-The dmesg logs look like this:
+From: Colin Ian King <colin.king@canonical.com>
 
-[539374.394607] ieee80211 phy1: Added a new stream for (BSSID MAC) 0
-[539374.394650] ieee80211 phy1: Started stream for (BSSID MAC) 0
-[539374.394732] ieee80211 phy1: tx rings drained
-[539374.401372] ieee80211 phy1: Created a BA stream for (BSSID MAC) : tid 0
+path_b_ok is being assigned but immediately after path_a_ok is being
+compared to the value 0x03.  This appears to be a typo on the
+variable name, compare path_b_ok instead.
 
-`iw event -t' logs (it looks like OpenWRT is patching the heck out of this
-tool):
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-1465008930.594531: wlan1 (phy #1): unknown event 60
-1465008930.652119: wlan1 (phy #1): unknown event 60
-1465008930.653494: wlan1 (phy #1): unknown event 60
-1465008930.655582: wlan1: new station (BSSID MAC)
-
-There are a number of other users who are also experiencing the same
-issue on the OpenWRT bug tracker:
-
-https://dev.openwrt.org/ticket/21284
-
-As I noted in the bug the driver works with some of my wireless devices
-and not others which suggests that something subtle is up with some
-driver in this picture.
-
-I don't have a whole lot of experience with kernel development (pretty
-much none actually) and I know absolutely nothing about how these WiFi
-devices work.  However I am willing to work with you or anyone else on
-the linux-wireless list (which I have CCd) to help troubleshoot this
-issue.  I am using OpenWRT on this router and I can get a build
-environment set up for debug kernel builds with their toolchain.  I'm
-running a pretty recent kernel (4.4.7) but git log suggests this driver
-hasn't been touched in a while.
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index 65c079a..5b825fa 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1144,7 +1144,7 @@ static void rtl8192eu_phy_iqcalibrate(struct rtl8xxxu_priv *priv,
+ 
+ 		for (i = 0; i < retry; i++) {
+ 			path_b_ok = rtl8192eu_rx_iqk_path_b(priv);
+-			if (path_a_ok == 0x03) {
++			if (path_b_ok == 0x03) {
+ 				val32 = rtl8xxxu_read32(priv,
+ 							REG_RX_POWER_BEFORE_IQK_B_2);
+ 				result[t][6] = (val32 >> 16) & 0x3ff;
 -- 
-David Gilman  :DG<
-http://gilslotd.com
+2.5.5
+
