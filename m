@@ -1,41 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:52129 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750770AbcFVJBt convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57891 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751153AbcFIKjW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2016 05:01:49 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>
-Subject: Re: [PATCH V2 2/2] ath6kl: replace semaphore with mutex
-Date: Wed, 22 Jun 2016 08:59:59 +0000
-Message-ID: <87h9cliooi.fsf@kamboji.qca.qualcomm.com> (sfid-20160622_110217_739745_F23F3388)
-References: <20160621232210.5801-1-chaehyun.lim@gmail.com>
-In-Reply-To: <20160621232210.5801-1-chaehyun.lim@gmail.com> (Chaehyun Lim's
-	message of "Wed, 22 Jun 2016 08:22:10 +0900")
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 9 Jun 2016 06:39:22 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Benjamin Berg <benjamin@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+	ath9k-devel@lists.ath9k.org,
+	Benjamin Berg <benjamin.berg@open-mesh.com>
+Subject: Re: [PATCH 3/6] ath9k: Use tsf offset helper in ath9k_hw_reset
+References: <1465305001-26067-1-git-send-email-benjamin@sipsolutions.net>
+	<1465305001-26067-3-git-send-email-benjamin@sipsolutions.net>
+Date: Thu, 09 Jun 2016 13:39:14 +0300
+In-Reply-To: <1465305001-26067-3-git-send-email-benjamin@sipsolutions.net>
+	(Benjamin Berg's message of "Tue, 7 Jun 2016 15:09:58 +0200")
+Message-ID: <87inxiir3h.fsf@kamboji.qca.qualcomm.com> (sfid-20160609_123926_393279_DC770447)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Adding ath6k list)
+Benjamin Berg <benjamin@sipsolutions.net> writes:
 
-Chaehyun Lim <chaehyun.lim@gmail.com> writes:
-
-> It replaces struct semaphore sem with struct mutex mutex
+> From: Benjamin Berg <benjamin.berg@open-mesh.com>
 >
-> Reported-by: kbuild test robot <lkp@intel.com>
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> ---
-> V2: fix build failure reported by kbuild test robot
+> Not much of a change. Only small fix is that we don't assume that
+> exactly 1.5ms have passed for the second AR91xx SoC TSF setting.
+>
+> Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
 
-I don't think Reported-by is correct, it should be only used when
-reporting the original issue
-
-Have you tested this on a real device? I'm reluctant to apply this big
-locking change without some level of testing.
+Why we don't need that 1.5 ms delta anymore? It would be good to
+document that in the commit log in case someone else wonders why that
+change was made.
 
 -- 
 Kalle Valo
