@@ -1,60 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:34486 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751040AbcFWXPX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 19:15:23 -0400
+Received: from mail.kernel.org ([198.145.29.136]:35560 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750772AbcFIW6E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2016 18:58:04 -0400
+Date: Thu, 9 Jun 2016 17:57:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
+	Chris Milsted <cmilsted@redhat.com>,
+	Matthew Garrett <mjg59@srcf.ucam.org>,
+	Andi Kleen <ak@linux.intel.com>, Michael Buesch <m@bues.ch>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Matt Fleming <matt@codeblueprint.co.uk>,
+	Konstantin Simanov <k.simanov@stlk.ru>,
+	Bryan Paradis <bryan.paradis@gmail.com>,
+	Andrew Worsley <amworsley@gmail.com>,
+	Chris Bainbridge <chris.bainbridge@gmail.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, zajec5@gmail.com
+Subject: Re: [PATCH] x86: Add early quirk to reset Apple AirPort card
+Message-ID: <20160609225758.GC19309@localhost> (sfid-20160610_005825_256568_531E9354)
+References: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <1466709897.1847.24.camel@perches.com>
-References: <1466704629-26084-1-git-send-email-luisbg@osg.samsung.com> <1466709897.1847.24.camel@perches.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 24 Jun 2016 09:15:02 +1000
-Message-ID: <CAGRGNgVtQhFvn_LUjt-v8Kp+qHuxUaNAriS3UROAQfg725bQiQ@mail.gmail.com> (sfid-20160624_011556_062608_705BD688)
-Subject: Re: [PATCH] staging: wilc1000: arrays can't be NULL
-To: Joe Perches <joe@perches.com>
-Cc: Luis de Bethencourt <luisbg@osg.samsung.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+On Sun, May 29, 2016 at 01:35:28AM +0200, Lukas Wunner wrote:
+> The EFI firmware on Macs contains a full-fledged network stack for
+> downloading OS X images from osrecovery.apple.com. Unfortunately
+> on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
+> wireless card on every boot and leaves it enabled even after
+> ExitBootServices has been called. The card continues to assert its IRQ
+> line, causing spurious interrupts if the IRQ is shared. It also corrupts
+> memory by DMAing received packets, allowing for remote code execution
+> over the air. This only stops when a driver is loaded for the wireless
+> card, which may be never if the driver is not installed or blacklisted.
+> ...
 
-On Fri, Jun 24, 2016 at 5:24 AM, Joe Perches <joe@perches.com> wrote:
-> On Thu, 2016-06-23 at 18:57 +0100, Luis de Bethencourt wrote:
->> hif_drv->usr_scan_req.net.net_info[i] contains found_net_info structs
->> which have the following element:
->> u8 bssid[6];
-> []
->> I am aware this patch gives a few checkpatch.pl warnings about lines being
->> over 80 characters. Fixing that would be a completely different issue, and
->> a lengthy one since the file has loads of them.
->>
->> Hopefully somebody else picks that up. Maybe I should send a hit to the
->> kernelnewbies mailing list :)
->
-> Or not.
->
-> really_long_identifiers™ makes using 80 columns silly.
->
-> The hungarian could probably be converted though.
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=111781
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=728916
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951#c16
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1098621
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632#c5
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1279130
+> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1332732
 
-The main developers of this driver are slowly working through the
-driver's style issues, which is part of the reason why it's in
-staging.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+I think I saw mail about this being applied via the x86 tree.  Let me
+know if I need to do anything more here.
