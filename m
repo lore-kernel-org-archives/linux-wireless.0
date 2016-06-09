@@ -1,46 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55173 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932741AbcFGNca (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2016 09:32:30 -0400
-Subject: Re: [PATCH 5/6] ath9k: Use defined constants consistently.
-To: Benjamin Berg <benjamin@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1465305001-26067-1-git-send-email-benjamin@sipsolutions.net>
- <1465305001-26067-5-git-send-email-benjamin@sipsolutions.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>, ath9k-devel@lists.ath9k.org,
+Received: from smtp.codeaurora.org ([198.145.29.96]:57785 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751964AbcFIKh5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2016 06:37:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Benjamin Berg <benjamin@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>,
+	ath9k-devel@lists.ath9k.org,
 	Benjamin Berg <benjamin.berg@open-mesh.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <78e285a7-19bb-dcfe-9319-0b0ef41aebcc@nbd.name> (sfid-20160607_153235_239689_E7A60EDE)
-Date: Tue, 7 Jun 2016 15:32:18 +0200
+Subject: Re: [PATCH 2/6] ath9k: Handle channel context in get_/set_/reset_tsf
+References: <1465305001-26067-1-git-send-email-benjamin@sipsolutions.net>
+	<1465305001-26067-2-git-send-email-benjamin@sipsolutions.net>
+Date: Thu, 09 Jun 2016 13:37:49 +0300
+In-Reply-To: <1465305001-26067-2-git-send-email-benjamin@sipsolutions.net>
+	(Benjamin Berg's message of "Tue, 7 Jun 2016 15:09:57 +0200")
+Message-ID: <87mvmuir5u.fsf@kamboji.qca.qualcomm.com> (sfid-20160609_123801_383114_33DCD5F5)
 MIME-Version: 1.0
-In-Reply-To: <1465305001-26067-5-git-send-email-benjamin@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-06-07 15:10, Benjamin Berg wrote:
+Benjamin Berg <benjamin@sipsolutions.net> writes:
+
 > From: Benjamin Berg <benjamin.berg@open-mesh.com>
-> 
+>
 > Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
-> ---
->  drivers/net/wireless/ath/ath9k/main.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-> index f2ebc85..6a81298 100644
-> --- a/drivers/net/wireless/ath/ath9k/main.c
-> +++ b/drivers/net/wireless/ath/ath9k/main.c
-> @@ -1785,9 +1785,10 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
->  	if ((avp->chanctx == sc->cur_chan) &&
->  	    (changed & BSS_CHANGED_ERP_SLOT)) {
->  		if (bss_conf->use_short_slot)
-> -			slottime = 9;
-> +			slottime = ATH9K_SLOT_TIME_9;
->  		else
-> -			slottime = 20;
-> +			slottime = ATH9K_SLOT_TIME_20;
-Wouldn't it be better to just remove those pointless defines?
 
-- Felix
+Please avoid empty commit logs, it's just unfriendly to everyone. It
+doesn't take long for you to answer "Why?" in the log.
 
+-- 
+Kalle Valo
