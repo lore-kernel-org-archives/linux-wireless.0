@@ -1,147 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36737 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871AbcF0PxS (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:36680 "EHLO
+	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933180AbcFIIKt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 11:53:18 -0400
-Received: by mail-oi0-f66.google.com with SMTP id x6so31303158oif.3
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 08:53:18 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 06/10] rtlwifi: rtl8723ae: Convert driver to use common hardware info routine
-Date: Mon, 27 Jun 2016 10:52:34 -0500
-Message-Id: <1467042758-25742-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160627_175322_315102_E5B21B6A)
-In-Reply-To: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 9 Jun 2016 04:10:49 -0400
+MIME-Version: 1.0
+In-Reply-To: <1465232558-31678-2-git-send-email-javier@osg.samsung.com>
+References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com> <1465232558-31678-2-git-send-email-javier@osg.samsung.com>
+From: Enric Balletbo Serra <eballetbo@gmail.com>
+Date: Thu, 9 Jun 2016 10:10:47 +0200
+Message-ID: <CAFqH_51792OS-mFSdTddjOL9+xdAk-ariP_sffS9=6ACK8ZdMQ@mail.gmail.com> (sfid-20160609_101144_482059_937EE25F)
+Subject: Re: [PATCH v2 1/3] mwifiex: add a cfg80211 .get_tx_power operation callback
+To: Javier Martinez Canillas <javier@osg.samsung.com>
+Cc: linux-kernel@vger.kernel.org,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for RTL8723AE chips is converted to use the common routine
-for getting the hardware information.
+2016-06-06 19:02 GMT+02:00 Javier Martinez Canillas <javier@osg.samsung.com>:
+> The mwifiex driver implements a cfg80211 .set_tx_power operation handler
+> but doesn't have the inverse .get_tx_power callback.
+>
+> This not only has the effect that the Tx power can't be reported to user
+> space tools such as iwconfig and iwlist but also that the wireless core
+> prints a warning when a new wiphy is created due an cfg80211 operation
+> being implemented without its counterpart.
+>
+> After this patch, the Tx power is properly reported to user-space tools:
+>
+> $ iwlist mlan0 txpower
+> mlan0     unknown transmit-power information.
+>
+>           Current Tx-Power=13 dBm       (19 mW)
+>
+> and also the following warning isn't shown anymore on the driver probe:
+>
+> WARNING: CPU: 3 PID: 127 at net/wireless/core.c:366 wiphy_new_nm+0x66c/0x6ac
+> Modules linked in: mwifiex_sdio mwifiex
+> CPU: 3 PID: 127 Comm: kworker/3:1 Tainted: G        W       4.7.0-rc1-next-20160531-00006-g569df5b983f3
+> Hardware name: SAMSUNG EXYNOS (Flattened Device Tree)
+> Workqueue: events request_firmware_work_func
+> [<c010e1ac>] (unwind_backtrace) from [<c010af38>] (show_stack+0x10/0x14)
+> [<c010af38>] (show_stack) from [<c0323b9c>] (dump_stack+0x88/0x9c)
+> [<c0323b9c>] (dump_stack) from [<c011a828>] (__warn+0xe8/0x100)
+> [<c011a828>] (__warn) from [<c011a8f0>] (warn_slowpath_null+0x20/0x28)
+> [<c011a8f0>] (warn_slowpath_null) from [<c06a42d4>] (wiphy_new_nm+0x66c/0x6ac)
+> [<c06a42d4>] (wiphy_new_nm) from [<bf1c24cc>] (mwifiex_register_cfg80211+0x28/0x3f0 [mwifiex])
+> [<bf1c24cc>] (mwifiex_register_cfg80211 [mwifiex]) from [<bf1a0018>] (mwifiex_fw_dpc+0x2b0/0x474 [mwifiex])
+> [<bf1a0018>] (mwifiex_fw_dpc [mwifiex]) from [<c040eb74>] (request_firmware_work_func+0x30/0x58)
+> [<c040eb74>] (request_firmware_work_func) from [<c012fe90>] (process_one_work+0x124/0x338)
+> [<c012fe90>] (process_one_work) from [<c01300dc>] (worker_thread+0x38/0x4d4)
+> [<c01300dc>] (worker_thread) from [<c01353b8>] (kthread+0xdc/0xf4)
+> [<c01353b8>] (kthread) from [<c0107978>] (ret_from_fork+0x14/0x3c)
+>
+> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+> ---
+>
+>  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 24 ++++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> index ff948a922222..b17f3d09a2c7 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> @@ -377,6 +377,29 @@ mwifiex_cfg80211_set_tx_power(struct wiphy *wiphy,
+>  }
+>
+>  /*
+> + * CFG802.11 operation handler to get Tx power.
+> + */
+> +static int
+> +mwifiex_cfg80211_get_tx_power(struct wiphy *wiphy,
+> +                             struct wireless_dev *wdev,
+> +                             int *dbm)
+> +{
+> +       struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
+> +       struct mwifiex_private *priv = mwifiex_get_priv(adapter,
+> +                                                       MWIFIEX_BSS_ROLE_ANY);
+> +       int ret = mwifiex_send_cmd(priv, HostCmd_CMD_RF_TX_PWR,
+> +                                  HostCmd_ACT_GEN_GET, 0, NULL, true);
+> +
+> +       if (ret < 0)
+> +               return ret;
+> +
+> +       /* tx_power_level is set in HostCmd_CMD_RF_TX_PWR command handler */
+> +       *dbm = priv->tx_power_level;
+> +
+> +       return 0;
+> +}
+> +
+> +/*
+>   * CFG802.11 operation handler to set Power Save option.
+>   *
+>   * The timeout value, if provided, is currently ignored.
+> @@ -3940,6 +3963,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+>         .set_default_key = mwifiex_cfg80211_set_default_key,
+>         .set_power_mgmt = mwifiex_cfg80211_set_power_mgmt,
+>         .set_tx_power = mwifiex_cfg80211_set_tx_power,
+> +       .get_tx_power = mwifiex_cfg80211_get_tx_power,
+>         .set_bitrate_mask = mwifiex_cfg80211_set_bitrate_mask,
+>         .start_ap = mwifiex_cfg80211_start_ap,
+>         .stop_ap = mwifiex_cfg80211_stop_ap,
+> --
+> 2.5.5
+>
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnd Bergmann <arnd@arndb.de>
----
-V2 - Fixes bug found after V1 was submitted.
+This fixes the WARN_ON and makes things work, thanks.
 
-This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
-	submitted by Joe Perches.
----
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    | 76 ++++------------------
- 1 file changed, 11 insertions(+), 65 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index 0025e21..662c445 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -1630,67 +1630,22 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
--	u16 i, usvalue;
--	u8 hwinfo[HWSET_MAX_SIZE];
--	u16 eeprom_id;
-+	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
-+			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
-+			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
-+			COUNTRY_CODE_WORLD_WIDE_13};
-+	u8 *hwinfo;
- 
- 	if (b_pseudo_test) {
- 		/* need add */
- 		return;
- 	}
--	switch (rtlefuse->epromtype) {
--	case EEPROM_BOOT_EFUSE:
--		rtl_efuse_shadow_map_update(hw);
--
--	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
-+	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
-+	if (!hwinfo)
- 		return;
- 
--	default:
--		dev_warn(dev, "no efuse data\n");
--	}
--	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
--
--	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
--		      hwinfo, HWSET_MAX_SIZE);
--
--	eeprom_id = *((u16 *)&hwinfo[0]);
--	if (eeprom_id != RTL8190_EEPROM_ID) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
--		rtlefuse->autoload_failflag = true;
--	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
--		rtlefuse->autoload_failflag = false;
--	}
--
--	if (rtlefuse->autoload_failflag)
--		return;
--
--	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
--	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
--	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
--	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROMId = 0x%4x\n", eeprom_id);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
--
--	for (i = 0; i < 6; i += 2) {
--		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
--		*((u16 *)(&rtlefuse->dev_addr[i])) = usvalue;
--	}
--
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--		 "dev_addr: %pM\n", rtlefuse->dev_addr);
-+	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
-+		goto exit;
- 
- 	_rtl8723e_read_txpower_info_from_hwpg(hw, rtlefuse->autoload_failflag,
- 					      hwinfo);
-@@ -1698,17 +1653,6 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
- 	rtl8723e_read_bt_coexist_info_from_hwpg(hw,
- 			rtlefuse->autoload_failflag, hwinfo);
- 
--	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
--	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
--	rtlefuse->txpwr_fromeprom = true;
--	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
--
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
--
--	/* set channel paln to world wide 13 */
--	rtlefuse->channel_plan = COUNTRY_CODE_WORLD_WIDE_13;
--
- 	if (rtlhal->oem_id == RT_CID_DEFAULT) {
- 		switch (rtlefuse->eeprom_oemid) {
- 		case EEPROM_CID_DEFAULT:
-@@ -1836,6 +1780,8 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
- 
- 		}
- 	}
-+exit:
-+	kfree(hwinfo);
- }
- 
- static void _rtl8723e_hal_customized_behavior(struct ieee80211_hw *hw)
--- 
-2.1.4
-
+Tested-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
