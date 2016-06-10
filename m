@@ -1,79 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:12631 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161753AbcFIGEZ (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:36152 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751698AbcFJJKp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 02:04:25 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: fix deadlock while processing rx_in_ord_ind
-Date: Thu, 9 Jun 2016 11:33:55 +0530
-Message-ID: <20160609060355.16219-1-rmanohar@qti.qualcomm.com> (sfid-20160609_080440_750236_1CD3DB0E)
+	Fri, 10 Jun 2016 05:10:45 -0400
+Received: by mail-wm0-f43.google.com with SMTP id n184so257987754wmn.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 02:10:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <d836933e-ddbb-d10c-0715-6bce4396fd41@nbd.name>
+References: <ff65514a-47a3-2f32-658c-a2177401aa9a@bk.ru> <CA+BoTQmJ+JruxZ9WsG8Dnz=cwNY+e3Dy=g74-brS+0OE_5iu0Q@mail.gmail.com>
+ <d836933e-ddbb-d10c-0715-6bce4396fd41@nbd.name>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 10 Jun 2016 11:10:43 +0200
+Message-ID: <CA+BoTQ=xWetiO9GK_staz=M=rAT4_tA5khedqn206mjyRHsmQg@mail.gmail.com> (sfid-20160610_111051_322091_FF8AB05C)
+Subject: Re: ath10k/QCA9980 - Issues introduced in wireless testing 2016-05
+To: Felix Fietkau <nbd@nbd.name>
+Cc: "A. Benz" <ash.benz@bk.ru>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-commit 5c86d97bcc1d ("ath10k: combine txrx and replenish task")
-introduced deadlock while processing rx in order indication message
-for qca6174 based devices. While merging replenish and txrx tasklets,
-replenish task should be called out of htt rx ring locking since it
-is also try to acquire the same lock.
+On 10 June 2016 at 10:55, Felix Fietkau <nbd@nbd.name> wrote:
+> On 2016-06-10 10:50, Michal Kazior wrote:
+>> On 9 June 2016 at 09:46, A. Benz <ash.benz@bk.ru> wrote:
+>>> Dear All,
+>>>
+>>> I am using LEDE on my IPQ806x (QCA9980) system (Archer C2600).
+>>> With compat-wireless-2016-05-12, I observed traces attached below.
+>>> The router is unstable and eventually reboots by itself (randomly).
+>>>
+>>> Upon reverting to compat-wireless-2016-01, the issue disappears. Nothing
+>>> else is changed (software-wise or hardware).
+>>> This was confirmed with other users.
+>>>
+>>> A new compile with the fixes below:
+>>> https://git.lede-project.org/?p=lede/nbd/staging.git;a=commit;h=858e26f3c0fc11231f25497cbb2ddca1e5f101e0
+>>>
+>>> Did not solve the problem.
+>>>
+>>> Please let me know if I need to provide any further information.
+>>>
+>>> ------------[ cut here ]------------
+>>> WARNING: CPU: 0 PID: 558 at
+>>> compat-wireless-2016-05-12/net/mac80211/rx.c:4068
+>>> ieee80211_rx_napi+0x8c/0x8a4 [mac80211]()
+>>
+>> Can you post what is at rx.c line 4068 (and +/- 3 lines), please?
+> It's early in ieee80211_rx_napi:
+>
+>     sband = local->hw.wiphy->bands[status->band];
+>     if (WARN_ON(!sband))
+>         goto drop;
 
-Unfortunately this issue is not exposed by other solutions (qca988x,
-qca99x0 & qca4019), as rx_in_ord_ind message is specific to qca6174
-based devices. This patch fixes
+Thanks.
 
-=============================================
-[ INFO: possible recursive locking detected ]
-4.7.0-rc2-wt-ath+ #1353 Tainted: G            E
----------------------------------------------
-swapper/3/0 is trying to acquire lock:
- (&(&htt->rx_ring.lock)->rlock){+.-...}, at: [<f8d7ef19>]
-ath10k_htt_rx_msdu_buff_replenish+0x29/0x90 [ath10k_core]
 
-but task is already holding lock:
- (&(&htt->rx_ring.lock)->rlock){+.-...}, at: [<f8d82cab>]
-ath10k_htt_txrx_compl_task+0x21b/0x250 [ath10k_core]
+> I could not easily find a scenario under which status->band would not be
+> set properly by the driver, so my guess is there is some nasty memory
+> corruption going on.
 
-other info that might help us debug this:
- Possible unsafe locking scenario:
+Hmm.. could it be related to ath10k not fulfilling (some) NAPI's
+locking requirements and thus ending up with, e.g. linked-list mayhem?
 
-       CPU0
-       ----
-  lock(&(&htt->rx_ring.lock)->rlock);
-  lock(&(&htt->rx_ring.lock)->rlock);
 
- *** DEADLOCK ***
-
- May be due to missing lock nesting notation
-
-1 lock held by swapper/3/0:
- #0:  (&(&htt->rx_ring.lock)->rlock){+.-...}, at: [<f8d82cab>]
-ath10k_htt_txrx_compl_task+0x21b/0x250 [ath10k_core]
-
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=119151
-Fixes: 5c86d97bcc1d ("ath10k: combine txrx and replenish task")
-Reported-by: Mike Lothian <mike@fireburn.co.uk>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 3b35c7ab5680..80e645302b54 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1905,7 +1905,6 @@ static void ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
- 			return;
- 		}
- 	}
--	ath10k_htt_rx_msdu_buff_replenish(htt);
- }
- 
- static void ath10k_htt_rx_tx_fetch_resp_id_confirm(struct ath10k *ar,
--- 
-2.8.3
-
+Michał
