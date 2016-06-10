@@ -1,54 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35307 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751660AbcFYSiQ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56588 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932156AbcFJMhA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 14:38:16 -0400
-Received: by mail-oi0-f66.google.com with SMTP id d132so23953065oig.2
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 11:38:16 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Andrianov <andrianov@ispras.ru>
-Subject: [PATCH 3/6] rtlwifi: rtl8192ee: Fix potential race condition
-Date: Sat, 25 Jun 2016 13:37:44 -0500
-Message-Id: <1466879867-2499-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_203829_178548_7B0E1EAE)
-In-Reply-To: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 10 Jun 2016 08:37:00 -0400
+Message-ID: <1465562195.29614.5.camel@coelho.fi> (sfid-20160610_143706_363909_84E4C3AC)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 10 Jun 2016 15:36:35 +0300
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-jtifOd/6u4CGKFSPtADv"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi 2016-06-10
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flag rfchange_inprogress in struct rtl_ps_ctl is protected by a spinlock
-in most routines but not in rtl92ee_dm_watchdog(), which could
-lead to a race condition. The necessary locking to prevent this condition
-is added.
 
-Reported-by: Pavel Andrianov <andrianov@ispras.ru>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pavel Andrianov <andrianov@ispras.ru>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c | 2 ++
- 1 file changed, 2 insertions(+)
+--=-jtifOd/6u4CGKFSPtADv
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-index 459f3d0..46efba0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-@@ -1219,6 +1219,7 @@ void rtl92ee_dm_watchdog(struct ieee80211_hw *hw)
- 	if (ppsc->p2p_ps_info.p2p_ps_mode)
- 		fw_ps_awake = false;
- 
-+	spin_lock(&rtlpriv->locks.rf_ps_lock);
- 	if ((ppsc->rfpwr_state == ERFON) &&
- 	    ((!fw_current_inpsmode) && fw_ps_awake) &&
- 	    (!ppsc->rfchange_inprogress)) {
-@@ -1233,4 +1234,5 @@ void rtl92ee_dm_watchdog(struct ieee80211_hw *hw)
- 		rtl92ee_dm_dynamic_atc_switch(hw);
- 		rtl92ee_dm_dynamic_primary_cca_ckeck(hw);
- 	}
-+	spin_unlock(&rtlpriv->locks.rf_ps_lock);
- }
--- 
-2.1.4
+Hi Kalle,
+
+Here are some fixes intended for 4.7.  Nothing really big, just some
+fixes for bugs introduced in recent patches and a long-standing bug
+with IGTK keys, which apparently had never worked properly before. =C2=A0A
+few more details in the tag message.
+
+Let me know if everything's fine (or not). :)
+
+Luca.
+
+
+The following changes since commit 182fd9eecb287e696c82b30d06c6150d80a49c5b=
+:
+
+=C2=A0 MAINTAINERS: Add file patterns for wireless device tree bindings (20=
+16-06-04 17:24:02 +0300)
+
+are available in the git repository at:
+
+=C2=A0 git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.=
+git tags/iwlwifi-for-kalle-2016-06-10
+
+for you to fetch changes up to 280a3efa82fccc9532c968a77e5162cb9f0af497:
+
+=C2=A0 iwlwifi: mvm: fix a few firmware capability checks (2016-06-10 14:20=
+:08 +0300)
+
+----------------------------------------------------------------
+* fix the scan timeout for long scans
+* fix an RCU splat caused when updating the TKIP key
+* fix a potential NULL-derefence introduced recently
+* fix a IGTK key bug that has existed since the MVM driver was introduced
+* fix some fw capabilities checks that got accidentally inverted
+
+----------------------------------------------------------------
+Ayala Beker (1):
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: set the encryption type o=
+f an IGTK key
+
+Emmanuel Grumbach (1):
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: fix RCU splat in TKIP's u=
+pdate_key
+
+Johannes Berg (1):
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: fix a few firmware capabi=
+lity checks
+
+Luca Coelho (2):
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: increase scan timeout to =
+20 seconds
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: fix potential NULL-derefe=
+rence in iwl_mvm_reorder()
+
+=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |=C2=A0=C2=A08 ++++=
+----
+=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0|=C2=A0=C2=A04 +++-
+=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/scan.c=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0|=C2=A0=C2=A02 +-
+=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/sta.c=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0| 16 +++++++++++++++-
+=C2=A04 files changed, 23 insertions(+), 7 deletions(-)
+--=-jtifOd/6u4CGKFSPtADv
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJXWrRTAAoJEKFHnKIaPMX6t/4P/2S3GPbU5g5H0WIVbjEPjtdt
+8JyoXgJ5PihtI4w6gddV68PqX53ciZCdCGkxJrV5yPrOLiCbMaoN32/cVAkLhSVd
+rDFUVz6ZNwEzvUYRZilhgjVay5WTEXobSn2ysUyfbaQOIP+86DEYqQFNhjqHzIex
+tmMykzfRzfn74AVazK757jDVswfxKD9mEtdKJePsOOr6lxqe84Y1a87wMF/te6lL
+eTmsnX9YlBTzftKZpbSsT6ZE8Jd4uS9qTUxwiT/zzK7RokJJKYCKcH/Unv5mDFsg
+JpWocHAvfupe84WPVv/kUCvygvynnZpkZCfHRNpQq0yJXAu5HWf2GS4Hwk5vCNby
+mxVBdPU5Rj52Or0vgw7pKI5m7k0DuDntUKpwliGT6PyeC1SLAeAH+HXwZr5MHSY6
+EsDI0IdyeH2nSYa6G9nk9An9HThQTdIrVngJarOwp7927goB78Jq9sIXc3Y/Q/gK
+2aUS+/JtygPAIq+pYyXPepZVwtge6RxKHI1EsAVweAw6mjJEHbocRVw00G0bfSUg
+1LChHHw81Hhg/HQ4wmQnXGci9v7npLtMyIRV8x5p9ksSR7WDgJjFRWtRMvnF2Sns
+RSpNHOiB/kCRIyEz9QEyeoYp4m1UwrxwkelpyQavVvh/lXbTcxQaNeNy4KC2kZlo
+qPhfd4wTcoI7q02UVZjf
+=rBXF
+-----END PGP SIGNATURE-----
+
+--=-jtifOd/6u4CGKFSPtADv--
 
