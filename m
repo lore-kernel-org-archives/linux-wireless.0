@@ -1,34 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iodev.co.uk ([82.211.30.53]:56870 "EHLO iodev.co.uk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752275AbcFUQ6r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 12:58:47 -0400
-Date: Tue, 21 Jun 2016 13:58:38 -0300
-From: Ismael Luceno <ismael@iodev.co.uk>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Subject: Re: [PATCH] brcmfmac: Add USB ID for Cisco Linksys AE1200
-Message-ID: <20160621165837.dctu6i75lsg7onzn@pirotess> (sfid-20160621_185851_343025_53A7CBCD)
-References: <20160621001841.5383-1-ismael@iodev.co.uk>
- <CACna6ry-0ZO_JRm976APtRoPXqgMYEh4UrLK+SH0vVV21dX+wQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <CACna6ry-0ZO_JRm976APtRoPXqgMYEh4UrLK+SH0vVV21dX+wQ@mail.gmail.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:56604 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752020AbcFJMkG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2016 08:40:06 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 10 Jun 2016 15:39:53 +0300
+Message-Id: <1465562397-1402-1-git-send-email-luca@coelho.fi> (sfid-20160610_144054_441787_E681D917)
+In-Reply-To: <1465562195.29614.5.camel@coelho.fi>
+References: <1465562195.29614.5.camel@coelho.fi>
+Subject: [PATCH 1/5] iwlwifi: mvm: increase scan timeout to 20 seconds
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21/Jun/2016 07:45, Rafał Miłecki wrote:
-> On 21 June 2016 at 02:18, Ismael Luceno <ismael@iodev.co.uk> wrote:
-> > @@ -56,6 +57,8 @@
-> >
-> >  /* USB Device IDs */
-> >  #define BRCM_USB_43143_DEVICE_ID       0xbd1e
-> > +#define BRCM_USB_43235_LINKSYS_DEVICE_ID \
-> > +                                       0x0039
-> 
-> I guess you wanted to have number aligned to the column of other ones?
-> I'm not sure if that improves readability at all.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Yes. Would you suggest to align more to the right? I didn't want to
-modify everything just to add a new one.
+The 16 seconds timeout we were using turned out to be too short.
+Recalculations by system show that the total time in both bands should
+be < 18.5 seconds, even in the slowest cases (e.g. DCM P2P with
+DTIM=2).  Rounding it up to 20 seconds for a bit more safety.
+
+Fixes: 728e825f81b1 ("iwlwifi: mvm: add a scan timeout for regular scans")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 6f609dd..e78fc56 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -1222,7 +1222,7 @@ static int iwl_mvm_check_running_scans(struct iwl_mvm *mvm, int type)
+ 	return -EIO;
+ }
+ 
+-#define SCAN_TIMEOUT (16 * HZ)
++#define SCAN_TIMEOUT (20 * HZ)
+ 
+ void iwl_mvm_scan_timeout(unsigned long data)
+ {
+-- 
+2.8.1
+
