@@ -1,57 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:38647 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751062AbcFRWz5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2016 18:55:57 -0400
-Date: Sun, 19 Jun 2016 00:55:54 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: pali.rohar@gmail.com, sre@kernel.org,
-	kernel list <linux-kernel@vger.kernel.org>,
-	aaro.koskinen@iki.fi, ivo.g.dimitrov.75@gmail.com,
-	patrikbachan@gmail.com, serge@hallyn.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: N900, wl1251: wifi is now slow, even with powersave off
-Message-ID: <20160618225554.GA27771@amd> (sfid-20160619_005627_623171_2A2F06F4)
-References: <20160618155946.GA16792@amd>
+Received: from lists.s-osg.org ([54.187.51.154]:44654 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751951AbcFJOhf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2016 10:37:35 -0400
+Subject: Re: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl
+ file
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
+ <1465232558-31678-3-git-send-email-javier@osg.samsung.com>
+ <87wplxdsln.fsf@kamboji.qca.qualcomm.com>
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+Cc: linux-kernel@vger.kernel.org,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+	Amitkumar Karwar <akarwar@marvell.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>
+Message-ID: <12ccd90e-e3eb-ecac-b23f-8124b0db32ad@osg.samsung.com> (sfid-20160610_163757_577249_6A134342)
+Date: Fri, 10 Jun 2016 10:37:24 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160618155946.GA16792@amd>
+In-Reply-To: <87wplxdsln.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Hello Kalle,
 
-> Ping to N900:
+On 06/10/2016 10:30 AM, Kalle Valo wrote:
+> Javier Martinez Canillas <javier@osg.samsung.com> writes:
 > 
-> 64 bytes from maemo (10.0.0.8): icmp_seq=187 ttl=64 time=124 ms
-> rtt min/avg/max/mdev = 4.382/101.866/453.145/42.395 ms
-> root@duo:/data/pavel#
+>> From: Shengzhen Li <szli@marvell.com>
+>>
+>> Most cfg80211 operations are just a wrappers to functions defined in the
+>> sta_ioctl.c file, so for consistency move the .get_tx_power logic there.
+>>
+>> Signed-off-by: Shengzhen Li <szli@marvell.com>
+>> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>> [javier: update the subject line and commit message]
+>> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 > 
-> Now on n900:
+> [...]
 > 
-> pavel@n900:/my/tui/ofone$ sudo iw dev wlan0 set power_save off
-> pavel@n900:/my/tui/ofone$
+>> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+>> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+>> @@ -385,18 +385,10 @@ mwifiex_cfg80211_get_tx_power(struct wiphy *wiphy,
+>>  			      int *dbm)
+>>  {
+>>  	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
+>> -	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
+>> -							MWIFIEX_BSS_ROLE_ANY);
+>> -	int ret = mwifiex_send_cmd(priv, HostCmd_CMD_RF_TX_PWR,
+>> -				   HostCmd_ACT_GEN_GET, 0, NULL, true);
+>> -
+>> -	if (ret < 0)
+>> -		return ret;
+>> -
+>> -	/* tx_power_level is set in HostCmd_CMD_RF_TX_PWR command handler */
+>> -	*dbm = priv->tx_power_level;
+>> +	struct mwifiex_private *priv;
+>>  
+>> -	return 0;
+>> +	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+>> +	return mwifiex_get_tx_power(priv, dbm);
+>>  }
 > 
-> That should bring ping back to < 2 msec range, but nothing changes:
-> 
-> root@duo:/data/pavel# ping maemo
-> PING maemo (10.0.0.8) 56(84) bytes of data.
-> 64 bytes from maemo (10.0.0.8): icmp_seq=1 ttl=64 time=78.5 ms
-> rtt min/avg/max/mdev = 18.298/68.025/118.223/30.756 ms
-> root@duo:/data/pavel#
-> 
-> Any ideas what is going on there?
+> So in patch 1 you added the patch and in patch 2 you move it to a
+> different location? That doesn't make any sense, can't you just fold the
+> two patches into one so that the function is added only once.
+>
 
-v4.4: works ok, rtt min/avg/max/mdev = 2.111/2.243/2.524/0.150 ms
-v4.5-rc0: can't get wifi to work.
-v4.6: slow as described.
-v4.7-rc3: slow as described.
+I posted this patch in v1 but then Amitkumar shared his patch with me that
+was very similar to mine, only that the logic was in a different location.
 
-Even confirming you see same problem would help :-).
+So I included his delta as a separate patch to try keeping attribution as
+best as possible.
 
-Thanks,
-								Pavel
+Best regards,
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Javier Martinez Canillas
+Open Source Group
+Samsung Research America
