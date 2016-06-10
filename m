@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lxorguk.ukuu.org.uk ([81.2.110.251]:35592 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932637AbcFBTsa (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56618 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752020AbcFJMkI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 15:48:30 -0400
-Date: Thu, 2 Jun 2016 20:48:08 +0100
-From: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: Anyone have a clone of wireless-legacy.git?
-Message-ID: <20160602204808.3ff37346@lxorguk.ukuu.org.uk> (sfid-20160602_214851_014539_2B0EDA48)
-In-Reply-To: <20160602183803.GH6230@tuxdriver.com>
-References: <20160602183803.GH6230@tuxdriver.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Fri, 10 Jun 2016 08:40:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 10 Jun 2016 15:39:57 +0300
+Message-Id: <1465562397-1402-5-git-send-email-luca@coelho.fi> (sfid-20160610_144051_833479_819255BE)
+In-Reply-To: <1465562397-1402-1-git-send-email-luca@coelho.fi>
+References: <1465562195.29614.5.camel@coelho.fi>
+ <1465562397-1402-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 5/5] iwlwifi: mvm: fix a few firmware capability checks
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2 Jun 2016 14:38:04 -0400
-"John W. Linville" <linville@tuxdriver.com> wrote:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> It has recently come to my attention that the old wireless-legacy.git
-> tree is no longer available on kernel.org.  I honestly have no idea
-> what happened to it -- for all I know I fat-fingered it some time
-> ago or whatever.  Anyway, apparently there are some references in it
-> "out there" and it would be good if we had a copy available somewhere
-> public.
-> 
-> If you have an old clone of wireless-legacy.git, PLEASE DO NOT DELETE
-> IT!  Please let me know that you've got it and I will arrange to get
-> a copy of it from you in order to make it available publicly again.
+My cleanup in "iwlwifi: prepare for higher API/CAPA bits" accidentally
+inverted a few tests - fix them.
 
-Before you do that please make sure you get multiple copies from
-unconnected sources and confirm none of them are trojanned.
+Fixes: 859d914c8f5c ("iwlwifi: prepare for higher API/CAPA bits")
+Reported-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Alan
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index e5f267b..18a8474 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -3851,8 +3851,8 @@ static int iwl_mvm_mac_get_survey(struct ieee80211_hw *hw, int idx,
+ 	if (idx != 0)
+ 		return -ENOENT;
+ 
+-	if (fw_has_capa(&mvm->fw->ucode_capa,
+-			IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS))
++	if (!fw_has_capa(&mvm->fw->ucode_capa,
++			 IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS))
+ 		return -ENOENT;
+ 
+ 	mutex_lock(&mvm->mutex);
+@@ -3898,8 +3898,8 @@ static void iwl_mvm_mac_sta_statistics(struct ieee80211_hw *hw,
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 
+-	if (fw_has_capa(&mvm->fw->ucode_capa,
+-			IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS))
++	if (!fw_has_capa(&mvm->fw->ucode_capa,
++			 IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS))
+ 		return;
+ 
+ 	/* if beacon filtering isn't on mac80211 does it anyway */
+-- 
+2.8.1
+
