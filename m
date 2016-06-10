@@ -1,43 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:21828 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751787AbcF0Hxy (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37363 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752101AbcFJIup convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 03:53:54 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <tamizhchelvam@codeaurora.org>
-Subject: [PATCH 0/3] Add testmode support for 10.4
-Date: Mon, 27 Jun 2016 13:29:11 +0530
-Message-ID: <1467014351-30894-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_095358_117650_AAA9ADBF)
+	Fri, 10 Jun 2016 04:50:45 -0400
+Received: by mail-wm0-f51.google.com with SMTP id k204so92512351wmk.0
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 01:50:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <ff65514a-47a3-2f32-658c-a2177401aa9a@bk.ru>
+References: <ff65514a-47a3-2f32-658c-a2177401aa9a@bk.ru>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 10 Jun 2016 10:50:43 +0200
+Message-ID: <CA+BoTQmJ+JruxZ9WsG8Dnz=cwNY+e3Dy=g74-brS+0OE_5iu0Q@mail.gmail.com> (sfid-20160610_105050_761105_4A078307)
+Subject: Re: ath10k/QCA9980 - Issues introduced in wireless testing 2016-05
+To: "A. Benz" <ash.benz@bk.ru>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
+On 9 June 2016 at 09:46, A. Benz <ash.benz@bk.ru> wrote:
+> Dear All,
+>
+> I am using LEDE on my IPQ806x (QCA9980) system (Archer C2600).
+> With compat-wireless-2016-05-12, I observed traces attached below.
+> The router is unstable and eventually reboots by itself (randomly).
+>
+> Upon reverting to compat-wireless-2016-01, the issue disappears. Nothing
+> else is changed (software-wise or hardware).
+> This was confirmed with other users.
+>
+> A new compile with the fixes below:
+> https://git.lede-project.org/?p=lede/nbd/staging.git;a=commit;h=858e26f3c0fc11231f25497cbb2ddca1e5f101e0
+>
+> Did not solve the problem.
+>
+> Please let me know if I need to provide any further information.
+>
+> ------------[ cut here ]------------
+> WARNING: CPU: 0 PID: 558 at
+> compat-wireless-2016-05-12/net/mac80211/rx.c:4068
+> ieee80211_rx_napi+0x8c/0x8a4 [mac80211]()
 
-*The below patches add testmode support for 10.4.
+Can you post what is at rx.c line 4068 (and +/- 3 lines), please?
 
-*Some of the codeswap related code in ath10k for example code
-which  initializes the code swap segment works only on normal fw,
-below patches  make such code generic so that it can be used
-for utf binary as well.
 
-Tamizh chelvam (3):
-  ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
-  ath10k: handle testmode events for 10.2 and 10.4 based firmware
-  ath10k: add testmode support for 10.4 firmware
-
- drivers/net/wireless/ath/ath10k/core.c     |    6 +++---
- drivers/net/wireless/ath/ath10k/core.h     |    6 ++----
- drivers/net/wireless/ath/ath10k/swap.c     |   26 ++++++++++++++------------
- drivers/net/wireless/ath/ath10k/swap.h     |   11 ++++++++---
- drivers/net/wireless/ath/ath10k/testmode.c |   23 +++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c      |   26 ++++++++++++++++++++++++++
- 6 files changed, 76 insertions(+), 22 deletions(-)
-
--- 
-1.7.9.5
-
+Michał
