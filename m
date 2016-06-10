@@ -1,52 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:57807 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752060AbcFZOnk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jun 2016 10:43:40 -0400
-Date: Sat, 25 Jun 2016 15:17:45 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Luis de Bethencourt <luisbg@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
-	davem@davemloft.net, mchehab@kernel.org,
-	linux-wireless@vger.kernel.org, glen.lee@atmel.com
-Subject: Re: [RFC PATCH v2] MAINTAINERS: remove unreachable people that have
- left Atmel
-Message-ID: <20160625221744.GB11632@kroah.com> (sfid-20160626_164451_627052_27A71C4E)
-References: <1466892036-10619-1-git-send-email-luisbg@osg.samsung.com>
+Received: from nbd.name ([46.4.11.11]:55917 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751698AbcFJIzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2016 04:55:41 -0400
+Subject: Re: ath10k/QCA9980 - Issues introduced in wireless testing 2016-05
+To: Michal Kazior <michal.kazior@tieto.com>, "A. Benz" <ash.benz@bk.ru>
+References: <ff65514a-47a3-2f32-658c-a2177401aa9a@bk.ru>
+ <CA+BoTQmJ+JruxZ9WsG8Dnz=cwNY+e3Dy=g74-brS+0OE_5iu0Q@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <d836933e-ddbb-d10c-0715-6bce4396fd41@nbd.name> (sfid-20160610_105546_893838_A975E606)
+Date: Fri, 10 Jun 2016 10:55:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466892036-10619-1-git-send-email-luisbg@osg.samsung.com>
+In-Reply-To: <CA+BoTQmJ+JruxZ9WsG8Dnz=cwNY+e3Dy=g74-brS+0OE_5iu0Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jun 25, 2016 at 11:00:36PM +0100, Luis de Bethencourt wrote:
-> When sending an email regarding a patch to wilc1000, you get the following
-> automatic replies:
-> "Sung_hoon Cho is no longer with Atmel Corporation."
-> "Kang_hee Park is no longer with Atmel Corporation."
-> "Dong_ho Shin is no longer with Atmel Corporation."
-> "Bo_moon Kim is no longer with Atmel Corporation."
-> "Min_su Kim is no longer with Atmel Corporation."
-> "Jun_hyuk Lee is no longer with Atmel Corporation."
+On 2016-06-10 10:50, Michal Kazior wrote:
+> On 9 June 2016 at 09:46, A. Benz <ash.benz@bk.ru> wrote:
+>> Dear All,
+>>
+>> I am using LEDE on my IPQ806x (QCA9980) system (Archer C2600).
+>> With compat-wireless-2016-05-12, I observed traces attached below.
+>> The router is unstable and eventually reboots by itself (randomly).
+>>
+>> Upon reverting to compat-wireless-2016-01, the issue disappears. Nothing
+>> else is changed (software-wise or hardware).
+>> This was confirmed with other users.
+>>
+>> A new compile with the fixes below:
+>> https://git.lede-project.org/?p=lede/nbd/staging.git;a=commit;h=858e26f3c0fc11231f25497cbb2ddca1e5f101e0
+>>
+>> Did not solve the problem.
+>>
+>> Please let me know if I need to provide any further information.
+>>
+>> ------------[ cut here ]------------
+>> WARNING: CPU: 0 PID: 558 at
+>> compat-wireless-2016-05-12/net/mac80211/rx.c:4068
+>> ieee80211_rx_napi+0x8c/0x8a4 [mac80211]()
 > 
-> Removing these email addresses that don't reach the addressee anymore.
-> 
-> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
-> ---
-> 
-> Hi,
-> 
-> Just got the same automatic reply from Glen Lee's address.
-> 
-> This is unfortunate since it means this driver has no maintainer listed.
-> What do people suggest to do in this case?
+> Can you post what is at rx.c line 4068 (and +/- 3 lines), please?
+It's early in ieee80211_rx_napi:
 
-Let's delete the whole entry please.
+    sband = local->hw.wiphy->bands[status->band];
+    if (WARN_ON(!sband))
+        goto drop;
 
-And, if no one steps up from Atmel, we might just have to delete the
-driver as well :(
+I could not easily find a scenario under which status->band would not be
+set properly by the driver, so my guess is there is some nasty memory
+corruption going on.
 
-thanks,
+FWIW, I've received several reports like this from different people on
+different devices. They're also confirming that reverting to the
+snapshot from January makes things stable again.
 
-greg k-h
+- Felix
