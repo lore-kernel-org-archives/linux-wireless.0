@@ -1,87 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33178 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750938AbcFDTP6 (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35062 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932483AbcFJK7A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 15:15:58 -0400
-Subject: Patch "ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards." has been added to the 4.5-stable tree
-To: linux-wireless@vittgam.net, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com, gregkh@linuxfoundation.org,
-	kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	linuxbugs@vittgam.net
-Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@linuxfoundation.org>
-Date: Sat, 04 Jun 2016 12:15:57 -0700
-Message-ID: <1465067757216135@kroah.com> (sfid-20160604_211604_224918_37448567)
+	Fri, 10 Jun 2016 06:59:00 -0400
+Received: by mail-io0-f196.google.com with SMTP id n127so8458027iof.2
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 03:58:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+In-Reply-To: <1465460710.3442.4.camel@sipsolutions.net>
+References: <1464770416-17514-1-git-send-email-maxin.john@gmail.com> <1465460710.3442.4.camel@sipsolutions.net>
+From: "Maxin B. John" <maxin.john@gmail.com>
+Date: Fri, 10 Jun 2016 13:58:58 +0300
+Message-ID: <CAMhs6Yw-ScHvfjsxKGG-teXAYtebsrOEmRzt9-VBepoeNkpjWg@mail.gmail.com> (sfid-20160610_125912_798912_F12624ED)
+Subject: Re: [PATCH] iw: support and enable separate build dir
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	"Maxin B. John" <maxin.john@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Johannes,
 
-This is a note to let you know that I've just added the patch titled
+On Thu, Jun 9, 2016 at 11:25 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Wed, 2016-06-01 at 11:40 +0300, maxin.john@gmail.com wrote:
+>> From: "Maxin B. John" <maxin.john@intel.com>
+>>
+>> Support separation of SRCDIR and OBJDIR
+>>
+> Doesn't seem to work:
+>
+> $ mkdir /tmp/obj
+> $ make clean
+> $ make OBJDIR=/tmp/obj
+> [...]
+>  GEN  version.c
+>  CC   version.o
+> cc: error: version.c: No such file or directory
+> cc: fatal error: no input files
+> compilation terminated.
+> Makefile:104: recipe for target 'version.o' failed
+> make: *** [version.o] Error 1
+> $ ls *.o
+> event.o  genl.o  ibss.o  info.o  interface.o  iw.o  mesh.o  mpath.o
+> mpp.o  ocb.o  phy.o  reg.o  scan.o  station.o  survey.o  util.o
+>
+> (object files are in the wrong place too)
 
-    ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
+I was following the below listed steps to verify this patch:
 
-to the 4.5-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+# mkdir build
+# cd build
+#  make -f <path>/iw/Makefile
+# ls *.o
+bitrate.o  coalesce.o  connect.o  cqm.o  event.o  genl.o  ibss.o  info.o
+interface.o  iw  iw.o  link.o  mesh.o  mpath.o  mpp.o  ocb.o  offch.o  p2p.o
+phy.o  ps.o  reason.o  reg.o  roc.o  scan.o  sections.o  station.o  status.o
+survey.o  util.o  vendor.o  version.c  version.o  wowlan.o
 
-The filename of the patch is:
-     ath9k-fix-led-polarity-for-some-mini-pci-ar9220-mb92-cards.patch
-and it can be found in the queue-4.5 subdirectory.
+> johannes
 
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
->From 0f9edcdd88a993914fa1d1dc369b35dc503979db Mon Sep 17 00:00:00 2001
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Date: Mon, 11 Apr 2016 04:48:55 +0200
-Subject: ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
-
-From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
-
-commit 0f9edcdd88a993914fa1d1dc369b35dc503979db upstream.
-
-The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
-(active high instead of active low).
-
-The same PCI Subsystem ID is used by both cards, which are based on
-the same Atheros MB92 design.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/net/wireless/ath/ath9k/pci.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pc
- 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
-+
-+#ifdef CONFIG_ATH9K_PCOEM
-+	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0029,
-+			 PCI_VENDOR_ID_ATHEROS,
-+			 0x2096),
-+	  .driver_data = ATH9K_PCI_LED_ACT_HI },
-+#endif
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
- 
- #ifdef CONFIG_ATH9K_PCOEM
-
-
-Patches currently in stable-queue which might be from linux-wireless@vittgam.net are
-
-queue-4.5/ath9k-add-a-module-parameter-to-invert-led-polarity.patch
-queue-4.5/ath9k-fix-led-polarity-for-some-mini-pci-ar9220-mb92-cards.patch
+Best Regards,
+Maxin
