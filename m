@@ -1,68 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2on0084.outbound.protection.outlook.com ([207.46.100.84]:26848
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1754935AbcFHLvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 07:51:04 -0400
-Subject: Re: [PATCH] qtnfmac: announcement of new FullMAC driver for Quantenna
- chipsets
-To: Jonas Gorski <jogo@openwrt.org>,
-	Avinash Patil <avinashp@quantenna.com>
-References: <1464288752-6625-1-git-send-email-avinashp@quantenna.com>
- <CAOiHx==C56Pj768bRX16VOaxj0Qf_oh5KXfhFJakT2zi-SokQQ@mail.gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	<dlebed@quantenna.com>, <smaksimenko@quantenna.com>,
-	<smatyukevich@quantenna.com>, <imitsyanko@quantenna.com>,
-	<btherthala@quantenna.com>, <hwang@quantenna.com>,
-	<krath@quantenna.com>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <0f6a9c71-f6d5-235f-2883-114c22ebebff@quantenna.com> (sfid-20160608_135110_505109_C783827B)
-Date: Wed, 8 Jun 2016 14:35:40 +0300
-MIME-Version: 1.0
-In-Reply-To: <CAOiHx==C56Pj768bRX16VOaxj0Qf_oh5KXfhFJakT2zi-SokQQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Received: from paleale.coelho.fi ([176.9.41.70]:56606 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753226AbcFJMkH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2016 08:40:07 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 10 Jun 2016 15:39:55 +0300
+Message-Id: <1465562397-1402-3-git-send-email-luca@coelho.fi> (sfid-20160610_144012_563856_990AB671)
+In-Reply-To: <1465562397-1402-1-git-send-email-luca@coelho.fi>
+References: <1465562195.29614.5.camel@coelho.fi>
+ <1465562397-1402-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 3/5] iwlwifi: mvm: fix potential NULL-dereference in iwl_mvm_reorder()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 05/29/2016 02:35 PM, Jonas Gorski wrote:
-> Hi,
->
-> On 26 May 2016 at 20:52, Avinash Patil <avinashp@quantenna.com> wrote:
->> This patch adds support for new FullMAC WiFi driver for Quantenna
->> QSR10G chipsets.
->>
->> QSR10G is Quantenna's 8x8, 160M, 11ac offering.
->> QSR10G supports 2 simultaneous WMACs- one 5G and one 2G. 5G WMAC
->> supports 160M, 8x8 configuration.
->> FW supports 8 concurrent virtual interfaces on each WMAC.
->>
->> Patch introduces 2 new drivers- qtnfmac.ko for interfacing with
->> kernel/cfg80211 and qtnfmac_pcie.ko for PCIe bus interface.
-> Nice to see this one, will you also provide a pearl-linux.lzma.img as
-> required for the firmware? What about cards in embedded devices, might
-> they require a uboot as well? Since requesting uboot seems to be
-> specifically supported by the card/firmware interface.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-Hi Jonas,
-we will provide firmware, but we're not sure at which point it should be 
-done: addressing any review comments for driver may affect firmware 
-itself, probably the best time to provide firmware would be after new 
-driver is accepted and merged?
+We try to access sta before we check for IS_ERR_OR_NULL(), so we may
+end up accessing a NULL pointer.  To prevent that, move the conversion
+from sta to mvm_sta below the check.
 
-Uboot is currently not needed: right now device only supports booting 
-with uboot binary stored in internal flash memory, we do not transfer it 
-from host over PCIe.
+Fixes: b915c10174fb ("iwlwifi: mvm: add reorder buffer per queue")
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
->
->> This email, including its contents and any attachment(s), may contain confidential information of Quantenna Communications, Inc. and is solely for the intended recipient(s). If you may have received this in error, please contact the sender and permanently delete this email, its contents and any attachment(s).
-> You will need to remove this footer to be taken seriously, as
-> confidential information would be not GPL compatible, and "may
-> contain" means it is too risky to accept that.
->
->
-> Regards
-> Jonas
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index ac2c571..2c61516 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -581,7 +581,7 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 			    struct iwl_rx_mpdu_desc *desc)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	struct iwl_mvm_sta *mvm_sta = iwl_mvm_sta_from_mac80211(sta);
++	struct iwl_mvm_sta *mvm_sta;
+ 	struct iwl_mvm_baid_data *baid_data;
+ 	struct iwl_mvm_reorder_buffer *buffer;
+ 	struct sk_buff *tail;
+@@ -604,6 +604,8 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
+ 	if (WARN_ON(IS_ERR_OR_NULL(sta)))
+ 		return false;
+ 
++	mvm_sta = iwl_mvm_sta_from_mac80211(sta);
++
+ 	/* not a data packet */
+ 	if (!ieee80211_is_data_qos(hdr->frame_control) ||
+ 	    is_multicast_ether_addr(hdr->addr1))
+-- 
+2.8.1
 
