@@ -1,51 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:51679 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751134AbcFQTQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 15:16:05 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Tim Shepard <shep@alum.mit.edu>
-Cc: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org
-Subject: Re: [PATCH 1/2] ath9k: use mac80211 intermediate software queues
-References: <E1bDxpG-0004Ic-00@www.xplot.org>
-Date: Fri, 17 Jun 2016 21:15:58 +0200
-In-Reply-To: <E1bDxpG-0004Ic-00@www.xplot.org> (Tim Shepard's message of "Fri,
-	17 Jun 2016 13:45:01 -0400")
-Message-ID: <87h9cr4oep.fsf@toke.dk> (sfid-20160617_211609_836909_DCDF081D)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:23459 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932860AbcFJQ0s convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 10 Jun 2016 12:26:48 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Javier Martinez Canillas <javier@osg.samsung.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Julian Calaby" <julian.calaby@gmail.com>,
+	Shengzhen Li <szli@marvell.com>,
+	"Enric Balletbo i Serra" <enric.balletbo@collabora.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: RE: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl
+ file
+Date: Fri, 10 Jun 2016 16:26:40 +0000
+Message-ID: <2b5e5833ecc74a2b9cd822e8455cd0af@SC-EXCH04.marvell.com> (sfid-20160610_182710_412558_4054598B)
+References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
+ <1465232558-31678-3-git-send-email-javier@osg.samsung.com>
+ <87wplxdsln.fsf@kamboji.qca.qualcomm.com>
+ <12ccd90e-e3eb-ecac-b23f-8124b0db32ad@osg.samsung.com>
+In-Reply-To: <12ccd90e-e3eb-ecac-b23f-8124b0db32ad@osg.samsung.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tim Shepard <shep@alum.mit.edu> writes:
+Hi Kalle/Javier,
 
-> Hmm... if the renaming is going to go in mainline, I feel pretty
-> strongly it should go in *before* a patch to switch over to use the
-> intermediate queues.  The whole point of the renaming was to make the
-> code that uses the intermediate queues much more understandable
-> (avoiding the unfortuante collision of "txq" meaning two different
-> things throughout the code).
->
-> Once it is all done and everyone's done reading and trying to
-> understand this code, there's much less reason to do the renaming.
->
-> Toke, how do you feel about this at this point?
+> From: Javier Martinez Canillas [mailto:javier@osg.samsung.com]
+> Sent: Friday, June 10, 2016 8:07 PM
+> To: Kalle Valo
+> Cc: linux-kernel@vger.kernel.org; Julian Calaby; Shengzhen Li; Enric
+> Balletbo i Serra; Amitkumar Karwar; netdev@vger.kernel.org; linux-
+> wireless@vger.kernel.org; Nishant Sarmukadam
+> Subject: Re: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station
+> ioctl file
+> 
+> Hello Kalle,
+> 
+> On 06/10/2016 10:30 AM, Kalle Valo wrote:
+> > Javier Martinez Canillas <javier@osg.samsung.com> writes:
+> >
+> >> From: Shengzhen Li <szli@marvell.com>
+> >>
+> >> Most cfg80211 operations are just a wrappers to functions defined in
+> >> the sta_ioctl.c file, so for consistency move the .get_tx_power logic
+> there.
+> >>
+> >> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> >> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> >> [javier: update the subject line and commit message]
+> >> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+> >
+> > [...]
+> >
+> >> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> >> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> >> @@ -385,18 +385,10 @@ mwifiex_cfg80211_get_tx_power(struct wiphy
+> *wiphy,
+> >>  			      int *dbm)
+> >>  {
+> >>  	struct mwifiex_adapter *adapter =
+> mwifiex_cfg80211_get_adapter(wiphy);
+> >> -	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
+> >> -							MWIFIEX_BSS_ROLE_ANY);
+> >> -	int ret = mwifiex_send_cmd(priv, HostCmd_CMD_RF_TX_PWR,
+> >> -				   HostCmd_ACT_GEN_GET, 0, NULL, true);
+> >> -
+> >> -	if (ret < 0)
+> >> -		return ret;
+> >> -
+> >> -	/* tx_power_level is set in HostCmd_CMD_RF_TX_PWR command handler
+> */
+> >> -	*dbm = priv->tx_power_level;
+> >> +	struct mwifiex_private *priv;
+> >>
+> >> -	return 0;
+> >> +	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+> >> +	return mwifiex_get_tx_power(priv, dbm);
+> >>  }
+> >
+> > So in patch 1 you added the patch and in patch 2 you move it to a
+> > different location? That doesn't make any sense, can't you just fold
+> > the two patches into one so that the function is added only once.
+> >
+> 
+> I posted this patch in v1 but then Amitkumar shared his patch with me
+> that was very similar to mine, only that the logic was in a different
+> location.
+> 
+> So I included his delta as a separate patch to try keeping attribution
+> as best as possible.
+> 
 
-I'm fine with not renaming things for now. Been looking at the current
-code enough that it doesn't bother me.
+This patch (2/3) is only for code rearrangement and adds an unnecessary wrapper function. We can simply drop the patch.
 
-Oh, and you can hide most of the ieee80211_txq stuff behind macros, so
-it doesn't have to be all over the code. Makes the patch set smaller
-too...
-
-> I'm asking because I hope to have a new version of my patch soon
-> (fixing a bug in how it handles tid->hwq->pending_frames and
-> hq_max_pending[*] ),
-
-Cool. I started looking into what it will take to do a full conversion
-(getting rid of the old TX path). Not quite there yet (to say the
-least), so if you have a less buggy base I can work from that would be
-cool ;)
-
--Toke
+Regards,
+Amitkumar
