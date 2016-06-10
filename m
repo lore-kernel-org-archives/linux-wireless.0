@@ -1,50 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35669 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750988AbcFXOqO (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:36868 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751354AbcFJIk4 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2016 10:46:14 -0400
-Subject: Re: [ldv-project] [net] rtl8188ee: a potential race condition
-To: Vaishali Thakkar <vaishali.thakkar@oracle.com>,
-	Pavel Andrianov <andrianov@ispras.ru>
-References: <575A788C.5020509@ispras.ru> <576D40F1.9040009@oracle.com>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <576D47B3.60808@lwfinger.net> (sfid-20160624_164630_227151_C8B54804)
-Date: Fri, 24 Jun 2016 09:46:11 -0500
+	Fri, 10 Jun 2016 04:40:56 -0400
+Received: by mail-wm0-f48.google.com with SMTP id k204so92170881wmk.0
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 01:40:55 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <576D40F1.9040009@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <87wpm1b6bu.fsf@toke.dk>
+References: <20160603165144.17356-1-toke@toke.dk> <20160603165144.17356-6-toke@toke.dk>
+ <CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
+ <8737orucq4.fsf@toke.dk> <CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
+ <CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
+ <87k2i1ml43.fsf@toke.dk> <87wpm1b6bu.fsf@toke.dk>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 10 Jun 2016 10:40:49 +0200
+Message-ID: <CA+BoTQ=2GNSW7uSw9acPxO6C22itbWtahmuNj2cT5_09QkNr-A@mail.gmail.com> (sfid-20160610_104102_577969_AA7B7C02)
+Subject: Re: [Make-wifi-fast] [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	make-wifi-fast@lists.bufferbloat.net,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/24/2016 09:17 AM, Vaishali Thakkar wrote:
+On 7 June 2016 at 13:12, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+> Toke Høiland-Jørgensen <toke@toke.dk> writes:
 >
->
-> On Friday 10 June 2016 01:51 PM, Pavel Andrianov wrote:
->> Hi!
+>>> [snip]
+>>>
+>>> I also found one of my notes in my version of this - how can we
+>>> estimate the duration of an A-MPDU, when we only get hardware
+>>> de-encapsulated frames?
 >>
->> There is a potential data race in drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rtl8188ee.ko.
->>
->> In the function rtl88ee_gpio_radio_on_off_checking the flag ppsc->rfchange_inprogress is set with a spinlock protection. In the function rtl_ps_set_rf_state the flag is read also under a spinlock. But the function rtl88e_dm_watchdog read it without any locks. As a result rtl88e_dm_watchdog may execute the succeeding code while changing (with the flag rfchange_inprogress == true). I do not exactly determine the consequences, but likely they are not good if there exists such check. Could anybody more confident confirm this?
->>
->> The function rtl_ps_set_rf_state is always called with its parameter [protect_or_not == false]. Is this flag really necessary, if the value 'true' is never used? The function is also set the flag ppsc->rfchange_inprogress and may affect the rtl88e_dm_watchdog as in the previous case.
+>> Well in my case I'm sidestepping this by getting the TX duration from
+>> a register in the hardware. There seems to be registers containing the
+>> duration spent on each step in the retry chain; I simply sum these.
 >
-> I think the patch was sent sometime ago for removing the parameter. But I am not sure why it's not applied.
-> May be Larry can have better idea about this.
+> Ah, but you're still talking RX? Hmm, I'm using ath_pkt_duration() to
+> compute the RX time, which does take into account MIMO (I think) but
+> expects the size to include padding. Which is probably not included in
+> the rs_datalen field of struct ath_rx_status that I'm using.
 >
-> Here, is link to the patch: http://linux-wireless.vger.kernel.narkive.com/mu4t9xxr/patch-3-4-rtlwifi-rtl8192cu-remove-unused-parameter
+> So yeah, how to account for that?
+>
+> I initially thought that using the timestamp put into the frame by the
+> hardware could be a way to get timing. But there's only a timestamp of
+> the first symbol in rs_tstamp, and getting a time to compare it with is
+> difficult; by the time the frame is handled in the rx tasklet, way too
+> much time has been spent on interrupt handling etc for the current time
+> to be worth comparing with.
 
-The patch for rtl8192cu was applied as commit 4b9d8d67b44a on Jun 20 2011, but 
-the unused parameter was reintroduced as part of an update of the power-save 
-code with commit d3feae41a347 on Sep 22 2014. My recollection is that Realtek 
-envisioned a driver that needed this parameter to be true. As none has yet been 
-introduced, I will prepare a patch to remove it again.
+I think rs_tstamp in rx-status is different for first MPDU and last
+MPDU in an A-MPDU meaning you should be able to compute the entire
+duration (if you track it, and this should be fairly straightforward
+as you can't really rx interleaved MPDUs from different
+A-MPDUs/stations). I'm not sure if the last MPDU defines the tstamp of
+first symbol or last one.
 
-I am also testing a patch to remove the race condition in rtl8188ee.
 
-Larry
-
+Michał
