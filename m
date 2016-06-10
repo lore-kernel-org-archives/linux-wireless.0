@@ -1,140 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34609 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751673AbcF0PxM (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:36834 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751988AbcFJJCh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 11:53:12 -0400
-Received: by mail-oi0-f65.google.com with SMTP id s17so31356071oih.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 08:53:11 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 04/10] rtlwifi: rtl8188ee: Convert driver to use common hardware info routine
-Date: Mon, 27 Jun 2016 10:52:32 -0500
-Message-Id: <1467042758-25742-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160627_175326_191846_6025963B)
-In-Reply-To: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 10 Jun 2016 05:02:37 -0400
+Received: by mail-wm0-f48.google.com with SMTP id n184so257696925wmn.1
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 02:02:36 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <87inxhl90y.fsf@toke.dk>
+References: <20160603165144.17356-1-toke@toke.dk> <20160603165144.17356-6-toke@toke.dk>
+ <CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
+ <8737orucq4.fsf@toke.dk> <CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
+ <CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
+ <87k2i1ml43.fsf@toke.dk> <87wpm1b6bu.fsf@toke.dk> <CA+BoTQ=2GNSW7uSw9acPxO6C22itbWtahmuNj2cT5_09QkNr-A@mail.gmail.com>
+ <87inxhl90y.fsf@toke.dk>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Fri, 10 Jun 2016 11:02:35 +0200
+Message-ID: <CA+BoTQ=9X8621AbG+S3MqYFpeySsYSr3iiwCTHf3VpQAkXAHiQ@mail.gmail.com> (sfid-20160610_110244_396875_A7DD4D01)
+Subject: Re: [Make-wifi-fast] [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: Adrian Chadd <adrian@freebsd.org>,
+	make-wifi-fast@lists.bufferbloat.net,
+	ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for RTL8188EE chips is converted to use the common routine
-for getting the hardware information.
+On 10 June 2016 at 10:53, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+>
+>>> I initially thought that using the timestamp put into the frame by the
+>>> hardware could be a way to get timing. But there's only a timestamp of
+>>> the first symbol in rs_tstamp, and getting a time to compare it with is
+>>> difficult; by the time the frame is handled in the rx tasklet, way too
+>>> much time has been spent on interrupt handling etc for the current time
+>>> to be worth comparing with.
+>
+> As an aside, I'm no longer sure this explanation for why I got wrong
+> timings for this way of measuring RX time is correct. It may simply be
+> that I was counting the same time interval more than once because I
+> didn't realise that the handler would be called for each frame. See
+> below.
+>
+>> I think rs_tstamp in rx-status is different for first MPDU and last
+>> MPDU in an A-MPDU meaning you should be able to compute the entire
+>> duration (if you track it, and this should be fairly straightforward
+>> as you can't really rx interleaved MPDUs from different
+>> A-MPDUs/stations). I'm not sure if the last MPDU defines the tstamp of
+>> first symbol or last one.
+>
+> I actually went down this path again last night, but haven't had a
+> chance to test it yet.
+>
+> So what I have now is this:
+>
+>        /* Only count airtime for last frame in an aggregate. FIXME: Should
+>         * this be only the first frame? */
+>        if (!rs->rs_isaggr || !rs->rs_moreaggr)
+>                airtime = (tsf & 0xffffffff) - rs->rs_tstamp;
+>
+> Which was under the assumption that rs_tstamp will be the time of the
+> first symbol *of the whole ampdu* for all the frames in that aggregate.
+> However, if rs_tstamp differs between frames, tracking it at the first
+> frame might be the right things to do?
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnd Bergmann <arnd@arndb.de>
----
-V2 - Fixes bug found after V1 was submitted.
+For A-MPDU all MPDU rx status (except last one) should share the same
+timestamp. Last one has a different one so all you need is to
+distinguish first and last MPDU. Non A-MPDU obviously are special case
+(status bits are pricky).
 
-This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
-	submitted by Joe Perches.
----
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    | 76 ++++------------------
- 1 file changed, 13 insertions(+), 63 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-index cfdf6d8..4ab6201 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-@@ -1835,76 +1835,24 @@ static void _rtl88ee_read_adapter_info(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u16 i, usvalue;
--	u8 hwinfo[HWSET_MAX_SIZE];
--	u16 eeprom_id;
--
--	switch (rtlefuse->epromtype) {
--	case EEPROM_BOOT_EFUSE:
--		rtl_efuse_shadow_map_update(hw);
--		break;
--
--	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
-+	int params[] = {RTL8188E_EEPROM_ID, EEPROM_VID, EEPROM_DID,
-+			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
-+			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
-+			COUNTRY_CODE_WORLD_WIDE_13};
-+	u8 *hwinfo;
-+
-+	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
-+	if (!hwinfo)
- 		return;
- 
--	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "boot from neither eeprom nor efuse, check it !!\n");
--		return;
--	}
--	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
--
--	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
--		      hwinfo, HWSET_MAX_SIZE);
--
--	eeprom_id = *((u16 *)&hwinfo[0]);
--	if (eeprom_id != RTL8188E_EEPROM_ID) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
--		rtlefuse->autoload_failflag = true;
--	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
--		rtlefuse->autoload_failflag = false;
--	}
-+	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
-+		goto exit;
- 
--	if (rtlefuse->autoload_failflag == true)
--		return;
--	/*VID DID SVID SDID*/
--	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
--	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
--	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
--	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROMId = 0x%4x\n", eeprom_id);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
--	/*customer ID*/
--	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
- 	if (rtlefuse->eeprom_oemid == 0xFF)
--		rtlefuse->eeprom_oemid =	0;
-+		rtlefuse->eeprom_oemid = 0;
- 
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
- 		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
--	/*EEPROM version*/
--	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
--	/*mac address*/
--	for (i = 0; i < 6; i += 2) {
--		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
--		*((u16 *)(&rtlefuse->dev_addr[i])) = usvalue;
--	}
--
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--		 "dev_addr: %pM\n", rtlefuse->dev_addr);
--	/*channel plan */
--	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
- 	/* set channel plan from efuse */
- 	rtlefuse->channel_plan = rtlefuse->eeprom_channelplan;
- 	/*tx power*/
-@@ -1978,6 +1926,8 @@ static void _rtl88ee_read_adapter_info(struct ieee80211_hw *hw)
- 
- 		}
- 	}
-+exit:
-+	kfree(hwinfo);
- }
- 
- static void _rtl88ee_hal_customized_behavior(struct ieee80211_hw *hw)
--- 
-2.1.4
+> Is the entire A-MPDU received before the RX handler is called for the
+> first frame?
 
+No idea. Maybe it is as there's distinction between "more" and "moreaggr".
+
+
+Michał
