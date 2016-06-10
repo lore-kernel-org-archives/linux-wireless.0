@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43135 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752466AbcFISiw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 14:38:52 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Colin Ian King <colin.king@canonical.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 4/4] rtl8xxxu: fix typo on variable name, compare against correct variable
-Date: Thu,  9 Jun 2016 14:38:50 -0400
-Message-Id: <1465497530-18510-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160609_203856_938765_9CA68856)
-In-Reply-To: <1465497530-18510-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1465497530-18510-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:34342 "EHLO
+	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772AbcFJArH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 9 Jun 2016 20:47:07 -0400
+From: Bruno Herrera <bruherrera@gmail.com>
+To: kvalo@codeaurora.org
+Cc: poggi.raph@gmail.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] wlcore: sdio: Fix crash on wlcore_probe_of when failing to parse/map irq
+Date: Thu,  9 Jun 2016 21:46:46 -0300
+Message-Id: <1465519606-68129-1-git-send-email-bruherrera@gmail.com> (sfid-20160610_024732_158879_CFF02C0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+pdev_data pointer is being freed with kfree but the pointer is not dynamic allocated.
 
-path_b_ok is being assigned but immediately after path_a_ok is being
-compared to the value 0x03.  This appears to be a typo on the
-variable name, compare path_b_ok instead.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Bruno Herrera <bruherrera@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ti/wlcore/sdio.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index 65c079a..5b825fa 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -1144,7 +1144,7 @@ static void rtl8192eu_phy_iqcalibrate(struct rtl8xxxu_priv *priv,
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index c172da5..5839acb 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -241,7 +241,6 @@ static int wlcore_probe_of(struct device *dev, int *irq,
+ 	*irq = irq_of_parse_and_map(np, 0);
+ 	if (!*irq) {
+ 		dev_err(dev, "No irq in platform data\n");
+-		kfree(pdev_data);
+ 		return -EINVAL;
+ 	}
  
- 		for (i = 0; i < retry; i++) {
- 			path_b_ok = rtl8192eu_rx_iqk_path_b(priv);
--			if (path_a_ok == 0x03) {
-+			if (path_b_ok == 0x03) {
- 				val32 = rtl8xxxu_read32(priv,
- 							REG_RX_POWER_BEFORE_IQK_B_2);
- 				result[t][6] = (val32 >> 16) & 0x3ff;
 -- 
-2.5.5
+2.7.4 (Apple Git-66)
 
