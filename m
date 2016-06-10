@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:51494 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752538AbcFUQmL (ORCPT
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:35005 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932300AbcFJU3B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 12:42:11 -0400
-Date: Tue, 21 Jun 2016 19:42:07 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2] mac80211: Encrypt "Group addressed privacy" action
- frames
-Message-ID: <20160621164207.GA7323@w1.fi> (sfid-20160621_184214_800459_B912B04F)
-References: <20160620212529.GA19076@w1.fi>
- <1466490219-2891-1-git-send-email-masashi.honma@gmail.com>
+	Fri, 10 Jun 2016 16:29:01 -0400
+Received: by mail-wm0-f42.google.com with SMTP id v199so6296209wmv.0
+        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 13:29:00 -0700 (PDT)
+Subject: Re: NL80211_ATTR_PAD question
+To: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <575B1964.2030806@candelatech.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <575B230A.3070208@broadcom.com> (sfid-20160610_222905_493367_69BA6082)
+Date: Fri, 10 Jun 2016 22:28:58 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466490219-2891-1-git-send-email-masashi.honma@gmail.com>
+In-Reply-To: <575B1964.2030806@candelatech.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2016 at 03:23:39PM +0900, Masashi Honma wrote:
 
-> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-> +static inline bool ieee80211_is_group_privacy_action(struct ieee80211_hdr *hdr)
 
-This is somewhat problematic since no indication of the frame length is
-passed in here and we are reading beyond the frame header below.. Maybe
-this should use the same style as ieee80211_is_robust_mgmt_frame()
-instead, i.e., use skb as the argument and define
-_ieee80211_is_group_privacy_action() to take in struct ieee80211_hdr *.
+On 10-06-16 21:47, Ben Greear wrote:
+> I see this was added sometime recently:  NL80211_ATTR_PAD
+> 
+> If another enum member is added, should it replace the PAD enum?
 
-> +	return mgmt->u.action.category == WLAN_CATEGORY_MESH_ACTION ||
-> +		mgmt->u.action.category == WLAN_CATEGORY_MULTIHOP_ACTION;
+Nope. This attribute is used as padattr by 64-bit aligned netlink
+functions, ie. nla_put_u64_64bit().
 
-These read the buffer at offset 24, i.e., just after the header. This
-should do same as ieee80211_is_robust_mgmt_frame(), i.e., return false
-if skb->len < 25.
+> At the least, I think we need some comments about how this is to be dealt
+> with.
 
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> @@ -608,7 +611,6 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
->  		bool skip_hw = false;
->  
->  		/* TODO: add threshold stuff again */
-> -
->  		switch (tx->key->conf.cipher) {
->  		case WLAN_CIPHER_SUITE_WEP40:
->  		case WLAN_CIPHER_SUITE_WEP104:
+> * @NL80211_ATTR_PAD: attribute used for padding for 64-bit alignment
 
-This looks completely separate item and I don't see why we would even
-delete that empty line.. In any case, it should probably not be in this
-patch.
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+This could indeed use a bit more explanation.
+
+Regards,
+Arend
