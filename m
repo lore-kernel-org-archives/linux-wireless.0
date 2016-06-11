@@ -1,70 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59607 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751601AbcF0K0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 06:26:44 -0400
-Subject: Re: [PATCH v3 2/3] ath9k: add a helper to get the string
- representation of ath_bus_type
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
- <20160624123430.4097-3-martin.blumenstingl@googlemail.com>
-Cc: chunkeey@googlemail.com, mark.rutland@arm.com, robh+dt@kernel.org,
-	arend.vanspriel@broadcom.com
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <a19c21f6-40b9-98e9-30dc-c21fb2143534@nbd.name> (sfid-20160627_122656_288940_5F0426A2)
-Date: Mon, 27 Jun 2016 12:26:36 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160624123430.4097-3-martin.blumenstingl@googlemail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from shards.monkeyblade.net ([149.20.54.216]:38758 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651AbcFKRdS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 11 Jun 2016 13:33:18 -0400
+Date: Sat, 11 Jun 2016 10:33:16 -0700 (PDT)
+Message-Id: <20160611.103316.1890396721765986770.davem@davemloft.net> (sfid-20160611_193327_583639_B8514EBB)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2016-06-09
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1465631903.2827.0.camel@sipsolutions.net>
+References: <1465477466-23756-1-git-send-email-johannes@sipsolutions.net>
+	<20160610.231604.604019579709781335.davem@davemloft.net>
+	<1465631903.2827.0.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-06-24 14:34, Martin Blumenstingl wrote:
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-> ---
-> this is a new patch which didn't exist in v2 yet, it prepares the new
-> function ath_bus_type_to_string which will be used in patch #3
-> 
->  drivers/net/wireless/ath/ath.h  |  2 ++
->  drivers/net/wireless/ath/main.c | 15 +++++++++++++++
->  2 files changed, 17 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
-> index da7a7c8..be0d292 100644
-> --- a/drivers/net/wireless/ath/ath.h
-> +++ b/drivers/net/wireless/ath/ath.h
-> @@ -327,4 +327,6 @@ static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
->  }
->  #endif
->  
-> +const char *ath_bus_type_to_string(enum ath_bus_type bustype);
-> +
->  #endif /* ATH_H */
-> diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
-> index 338d723..90427cb 100644
-> --- a/drivers/net/wireless/ath/main.c
-> +++ b/drivers/net/wireless/ath/main.c
-> @@ -90,3 +90,18 @@ void ath_printk(const char *level, const struct ath_common* common,
->  	va_end(args);
->  }
->  EXPORT_SYMBOL(ath_printk);
-> +
-> +const char *ath_bus_type_to_string(enum ath_bus_type bustype)
-> +{
-> +	switch (bustype) {
-> +	case ATH_PCI:
-> +		return "pci";
-> +	case ATH_AHB:
-> +		return "ahb";
-> +	case ATH_USB:
-> +		return "usb";
-> +	default:
-> +		return "unknown";
-> +	}
-> +}
-> +EXPORT_SYMBOL(ath_bus_type_to_string);
-Why not simply add a const char* array with ath_bus_type as index?
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Sat, 11 Jun 2016 09:58:23 +0200
 
-- Felix
+> On Fri, 2016-06-10 at 23:16 -0700, David Miller wrote:
+> 
+>> > Can I ask you to pull net into net-next, preferably before merging
+>> > this?
+> 
+>> Looks good, pulled, thanks!
+> 
+> Thanks! I see you also had pulled net in for other reasons, so I'll
+> include the hwsim namespace patch in the next pull request :)
+
+I pulled it in because you said that I had to before pulling this one.
