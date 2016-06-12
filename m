@@ -1,82 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fallback7.mail.ru ([94.100.181.128]:40556 "EHLO
-	fallback7.mail.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932815AbcFIHq5 (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:35126 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090AbcFLX2c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 03:46:57 -0400
-Received: from smtp12.mail.ru (smtp12.mail.ru [94.100.181.93])
-	by fallback7.mail.ru (mPOP.Fallback_MX) with ESMTP id 5094A16130944
-	for <linux-wireless@vger.kernel.org>; Thu,  9 Jun 2016 10:45:48 +0300 (MSK)
-Received: from 83.194.48.60.klj02-home.tm.net.my ([60.48.194.83]:57718 helo=[10.0.0.80])
-	by smtp12.mail.ru with esmtpa (envelope-from <ash.benz@bk.ru>)
-	id 1bAuev-0007dS-NU
-	for linux-wireless@vger.kernel.org; Thu, 09 Jun 2016 10:45:46 +0300
-To: linux-wireless@vger.kernel.org
-From: "A. Benz" <ash.benz@bk.ru>
-Subject: ath10k/QCA9980 - Issues introduced in wireless testing 2016-05
-Message-ID: <ff65514a-47a3-2f32-658c-a2177401aa9a@bk.ru> (sfid-20160609_094716_951186_3140E6AF)
-Date: Thu, 9 Jun 2016 15:46:30 +0800
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Sun, 12 Jun 2016 19:28:32 -0400
+Received: by mail-pa0-f65.google.com with SMTP id hf6so1327224pac.2
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2016 16:28:32 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 3/6] staging: wilc1000: rename result in handle_cfg_param
+Date: Mon, 13 Jun 2016 08:28:12 +0900
+Message-Id: <20160612232815.12112-3-chaehyun.lim@gmail.com> (sfid-20160613_012837_111180_DC716C80)
+In-Reply-To: <20160612232815.12112-1-chaehyun.lim@gmail.com>
+References: <20160612232815.12112-1-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear All,
+This patch renames result to ret that is used to get return value from
+wilc_send_config_pkt. Some handle_*() functions are used as result,
+others are used as ret. It will be changed as ret in all handle_*()
+functions to match variable name.
 
-I am using LEDE on my IPQ806x (QCA9980) system (Archer C2600).
-With compat-wireless-2016-05-12, I observed traces attached below.
-The router is unstable and eventually reboots by itself (randomly).
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Upon reverting to compat-wireless-2016-01, the issue disappears. Nothing 
-else is changed (software-wise or hardware).
-This was confirmed with other users.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0220045..ea5cb2d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -420,7 +420,7 @@ static void handle_get_mac_address(struct wilc_vif *vif,
+ static void handle_cfg_param(struct wilc_vif *vif,
+ 			     struct cfg_param_attr *cfg_param_attr)
+ {
+-	int result = 0;
++	int ret = 0;
+ 	struct wid wid_list[32];
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 	int i = 0;
+@@ -682,10 +682,10 @@ static void handle_cfg_param(struct wilc_vif *vif,
+ 		i++;
+ 	}
+ 
+-	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
+-				      i, wilc_get_vif_idx(vif));
++	ret = wilc_send_config_pkt(vif, SET_CFG, wid_list,
++				   i, wilc_get_vif_idx(vif));
+ 
+-	if (result)
++	if (ret)
+ 		netdev_err(vif->ndev, "Error in setting CFG params\n");
+ 
+ unlock:
+-- 
+2.8.4
 
-A new compile with the fixes below:
-https://git.lede-project.org/?p=lede/nbd/staging.git;a=commit;h=858e26f3c0fc11231f25497cbb2ddca1e5f101e0
-
-Did not solve the problem.
-
-Please let me know if I need to provide any further information.
-
-------------[ cut here ]------------
-WARNING: CPU: 0 PID: 558 at 
-compat-wireless-2016-05-12/net/mac80211/rx.c:4068 
-ieee80211_rx_napi+0x8c/0x8a4 [mac80211]()
-Modules linked in: pppoe ppp_async iptable_nat pppox ppp_generic 
-nf_nat_ipv4 nf_conntrack_ipv6 nf_conntrack_ipv4 ipt_REJECT 
-ipt_MASQUERADE xt_time xt_tcpudp xt_state xt_nat xt_multiport xt_mark 
-xt_mac xt_limit xt_id xt_conntrack xt_comment xt_TCPMSS xt_REDIRECT 
-xt_LOG xt_CT slhc nf_reject_ipv4 nf_nat_redirect nf_nat_masquerade_ipv4 
-nf_nat nf_log_ipv4 nf_defrag_ipv6 nf_defrag_ipv4 nf_conntrack_rtcache 
-nf_conntrack iptable_raw iptable_mangle iptable_fWed May 25 21:21:57 
-2016 kern.warn kernel: [24187.498347] CPU: 0 PID: 558 Comm: hostapd 
-Tainted: G        W       4.4.11 #2
-Hardware name: Qualcomm (Flattened Device Tree)
-[<c021ff34>] (unwind_backtrace) from [<c021cb9c>] (show_stack+0x10/0x14)
-[<c021cb9c>] (show_stack) from [<c03a2218>] (dump_stack+0x88/0x9c)
-[<c03a2218>] (dump_stack) from [<c0227adc>] (warn_slowpath_common+0x94/0xb0)
-[<c0227adc>] (warn_slowpath_common) from [<c0227b94>] 
-(warn_slowpath_null+0x1c/0x24)
-[<c0227b94>] (warn_slowpath_null) from [<bf19fa44>] 
-(ieee80211_rx_napi+0x8c/0x8a4 [mac80211])
-[<bf19fa44>] (ieee80211_rx_napi [mac80211]) from [<bf20e9d0>] 
-(ath10k_htt_t2h_msg_handler+0x92c/0x988 [ath10k_core])
-[<bf20e9d0>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from 
-[<bf20f3e8>] (ath10k_htt_txrx_compl_task+0x9bc/0x117c [ath10k_core])
-[<bf20f3e8>] (ath10k_htt_txrx_compl_task [ath10k_core]) from 
-[<c022b158>] (tasklet_action+0xb8/0x144)
-[<c022b158>] (tasklet_action) from [<c022b32c>] (__do_softirq+0xe0/0x21c)
-[<c022b32c>] (__do_softirq) from [<c022b4d4>] (do_softirq.part.2+0x28/0x30)
-[<c022b4d4>] (do_softirq.part.2) from [<c022b590>] 
-(__local_bh_enable_ip+0xb4/0x104)
-[<c022b590>] (__local_bh_enable_ip) from [<c0596684>] 
-(packet_poll+0xc0/0x100)
-[<c0596684>] (packet_poll) from [<c04b1368>] (sock_poll+0xec/0xf8)
-[<c04b1368>] (sock_poll) from [<c02e7fc4>] (do_select+0x2f8/0x62c)
-[<c02e7fc4>] (do_select) from [<c02e858c>] (core_sys_select+0x294/0x424)
-[<c02e858c>] (core_sys_select) from [<c02e8820>] (SyS_select+0x104/0x130)
-[<c02e8820>] (SyS_select) from [<c0209c00>] (ret_fast_syscall+0x0/0x3c)
----[ end trace e55b94e0d302fcd8 ]---
-
-Regards,
-A. Benz
