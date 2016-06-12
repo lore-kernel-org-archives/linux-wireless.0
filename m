@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:34350 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422821AbcFMNFW (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:36809 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090AbcFLX2f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 09:05:22 -0400
-Received: by mail-qg0-f44.google.com with SMTP id p34so67494264qgp.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 06:05:22 -0700 (PDT)
-Date: Mon, 13 Jun 2016 09:05:07 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: fix potential null dereference bugs
-Message-ID: <20160613130507.GA11074@localhost> (sfid-20160613_150539_264237_4D03E63D)
-References: <1465563164-783-1-git-send-email-me@bobcopeland.com>
- <CA+BoTQkg+uea_YzUgrVBPhA8uRxNpd29Kd1y1tvt0a-JyOSLQw@mail.gmail.com>
- <1465808939.2434.1.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1465808939.2434.1.camel@sipsolutions.net>
+	Sun, 12 Jun 2016 19:28:35 -0400
+Received: by mail-pa0-f67.google.com with SMTP id fg1so9133268pad.3
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2016 16:28:34 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 4/6] staging: wilc1000: remove unused struct set_mac_addr
+Date: Mon, 13 Jun 2016 08:28:13 +0900
+Message-Id: <20160612232815.12112-4-chaehyun.lim@gmail.com> (sfid-20160613_012838_743611_B5A50260)
+In-Reply-To: <20160612232815.12112-1-chaehyun.lim@gmail.com>
+References: <20160612232815.12112-1-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 13, 2016 at 11:08:59AM +0200, Johannes Berg wrote:
-> On Mon, 2016-06-13 at 07:39 +0200, Michal Kazior wrote:
-> > 
-> > FWIW all of these are false positives. I think this was already
-> > pointed out some time ago. The drv_priv stuff is merely an offset
-> > (see how ieee80211_vif and ieee80211_sta are defined) and the
-> > according structure is always checked beforehand.
+struct set_mac_addr is not used anymore, so just remove it.
 
-OK, fair enough, sorry for the noise.  I'm daily running sparse / smatch
-on wireless-testing; although these had been around for a while they
-showed up as new "errors" because of some line number changes, but I'll
-squelch them going forward.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 1 -
+ drivers/staging/wilc1000/host_interface.h | 4 ----
+ 2 files changed, 5 deletions(-)
 
-> IIRC, doing something like that can (sometimes?) still get you into
-> undefined behaviour territory, so the compiler could potentially
-> "optimize" away the later NULL check.
-
-So I did just go and check the generated code for each of these cases
-and gcc didn't elide the subsequent if-test, at least on x86-64 and my
-compiler / build config.  Given http://lwn.net/Articles/342330, it seems
-possible, though.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ea5cb2d..96821f6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -181,7 +181,6 @@ union message_body {
+ 	struct drv_handler drv;
+ 	struct set_multicast multicast_info;
+ 	struct op_mode mode;
+-	struct set_mac_addr set_mac_info;
+ 	struct get_mac_addr get_mac_info;
+ 	struct ba_session_info session_info;
+ 	struct remain_ch remain_on_ch;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 8d2dd0d..ddfea29 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -224,10 +224,6 @@ struct op_mode {
+ 	u32 mode;
+ };
+ 
+-struct set_mac_addr {
+-	u8 mac_addr[ETH_ALEN];
+-};
+-
+ struct get_mac_addr {
+ 	u8 *mac_addr;
+ };
 -- 
-Bob Copeland %% http://bobcopeland.com/
+2.8.4
+
