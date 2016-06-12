@@ -1,51 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63245 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932551AbcFCVbS (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36395 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753090AbcFLX2l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 17:31:18 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 1/6] brcmfmac: fix skb priority handling
-Date: Fri,  3 Jun 2016 23:31:07 +0200
-Message-Id: <1464989472-29684-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160603_233124_058724_9CC3F931)
-In-Reply-To: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1464989472-29684-1-git-send-email-arend.vanspriel@broadcom.com>
+	Sun, 12 Jun 2016 19:28:41 -0400
+Received: by mail-pf0-f193.google.com with SMTP id 62so9239239pfd.3
+        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2016 16:28:40 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 6/6] staging: wilc1000: remove unnecesary type cast of bss_type
+Date: Mon, 13 Jun 2016 08:28:15 +0900
+Message-Id: <20160612232815.12112-6-chaehyun.lim@gmail.com> (sfid-20160613_012843_889505_9CED2C44)
+In-Reply-To: <20160612232815.12112-1-chaehyun.lim@gmail.com>
+References: <20160612232815.12112-1-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <hante.meuleman@broadcom.com>
+There is no need to use type cast of bss_type because
+hif_drv->cfg_values.bss_type is u8.
 
-SKBs can come with a prioriy. Currently a priority of 0..7 is
-assumed. But this assumption is incorrect. To fix this any
-priority of 0 or higher then 7 will be adjusted by calling
-cfg80211_classify8021d
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 2 +-
+ drivers/staging/wilc1000/host_interface.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index 5b30922..cd221ab 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -2101,7 +2101,7 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 
- 	brcmf_dbg(DATA, "tx proto=0x%X\n", ntohs(eh->h_proto));
- 	/* determine the priority */
--	if (!skb->priority)
-+	if ((skb->priority == 0) || (skb->priority > 7))
- 		skb->priority = cfg80211_classify8021d(skb, NULL);
- 
- 	drvr->tx_multicast += !!multicast;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 828efff..5b2278b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -434,7 +434,7 @@ static void handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[i].val = (s8 *)&bss_type;
+ 			wid_list[i].type = WID_CHAR;
+ 			wid_list[i].size = sizeof(char);
+-			hif_drv->cfg_values.bss_type = (u8)bss_type;
++			hif_drv->cfg_values.bss_type = bss_type;
+ 		} else {
+ 			netdev_err(vif->ndev, "check value 6 over\n");
+ 			goto unlock;
 -- 
-1.9.1
+2.8.4
 
