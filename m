@@ -1,165 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44629 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753978AbcFPNY5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 09:24:57 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u5GDHP8S017196
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:24:56 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 23gj5fs041-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:24:56 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/6] mwifiex: factor out mwifiex_cancel_scan
-Date: Thu, 16 Jun 2016 18:52:22 +0530
-Message-ID: <1466083346-18607-2-git-send-email-akarwar@marvell.com> (sfid-20160616_152501_368992_0FC6F7AE)
-In-Reply-To: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
-References: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:60204 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423225AbcFMNSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2016 09:18:05 -0400
+Message-ID: <1465823880.10050.3.camel@sipsolutions.net> (sfid-20160613_151808_748113_8C92EA2C)
+Subject: Re: [PATCH] ath10k: fix potential null dereference bugs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Date: Mon, 13 Jun 2016 15:18:00 +0200
+In-Reply-To: <20160613130507.GA11074@localhost> (sfid-20160613_150522_731750_3B82E728)
+References: <1465563164-783-1-git-send-email-me@bobcopeland.com>
+ <CA+BoTQkg+uea_YzUgrVBPhA8uRxNpd29Kd1y1tvt0a-JyOSLQw@mail.gmail.com>
+ <1465808939.2434.1.camel@sipsolutions.net>
+	 <20160613130507.GA11074@localhost> (sfid-20160613_150522_731750_3B82E728)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Mon, 2016-06-13 at 09:05 -0400, Bob Copeland wrote:
+> 
+> So I did just go and check the generated code for each of these cases
+> and gcc didn't elide the subsequent if-test, at least on x86-64 and
+> my compiler / build config.  Given http://lwn.net/Articles/342330, it
+> seems possible, though.
 
-This patch creates common function mwifiex_cancel_scan to remove
-duplication of code.
+It's not clear that's the same situation, since tun->sk is very likely
+to have been an actual pointer, not an embedded thing like drv_priv.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 40 ++-------------------------
- drivers/net/wireless/marvell/mwifiex/main.h   |  1 +
- drivers/net/wireless/marvell/mwifiex/scan.c   | 26 +++++++++++++++++
- 3 files changed, 29 insertions(+), 38 deletions(-)
+However, with all this, I think I'd simply not take any chances - the
+patch isn't exactly invasive and in some cases (for example the first
+hunk of the patch) will even improve the code to the point where the
+compiler could warn about uninitialized usage of the pointer when the
+code gets modified to use it in case of !txq->sta.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 6bc2011..c29f26d 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -1020,8 +1020,6 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
- {
- 	struct cmd_ctrl_node *cmd_node = NULL, *tmp_node;
- 	unsigned long flags, cmd_flags;
--	struct mwifiex_private *priv;
--	int i;
- 
- 	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
- 	/* Cancel current cmd */
-@@ -1046,23 +1044,7 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
- 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
- 	spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
- 
--	mwifiex_cancel_pending_scan_cmd(adapter);
--
--	if (adapter->scan_processing) {
--		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
--		adapter->scan_processing = false;
--		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
--		for (i = 0; i < adapter->priv_num; i++) {
--			priv = adapter->priv[i];
--			if (!priv)
--				continue;
--			if (priv->scan_request) {
--				mwifiex_dbg(adapter, WARN, "info: aborting scan\n");
--				cfg80211_scan_done(priv->scan_request, 1);
--				priv->scan_request = NULL;
--			}
--		}
--	}
-+	mwifiex_cancel_scan(adapter);
- }
- 
- /*
-@@ -1080,8 +1062,6 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
- {
- 	struct cmd_ctrl_node *cmd_node = NULL;
- 	unsigned long cmd_flags;
--	struct mwifiex_private *priv;
--	int i;
- 
- 	if ((adapter->curr_cmd) &&
- 	    (adapter->curr_cmd->wait_q_enabled)) {
-@@ -1101,23 +1081,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
- 		mwifiex_recycle_cmd_node(adapter, cmd_node);
- 	}
- 
--	mwifiex_cancel_pending_scan_cmd(adapter);
--
--	if (adapter->scan_processing) {
--		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
--		adapter->scan_processing = false;
--		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
--		for (i = 0; i < adapter->priv_num; i++) {
--			priv = adapter->priv[i];
--			if (!priv)
--				continue;
--			if (priv->scan_request) {
--				mwifiex_dbg(adapter, WARN, "info: aborting scan\n");
--				cfg80211_scan_done(priv->scan_request, 1);
--				priv->scan_request = NULL;
--			}
--		}
--	}
-+	mwifiex_cancel_scan(adapter);
- }
- 
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 39bb5bc..9f6bb40 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1056,6 +1056,7 @@ int mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_pending_scan_cmd(struct mwifiex_adapter *adapter);
-+void mwifiex_cancel_scan(struct mwifiex_adapter *adapter);
- 
- void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
- 			      struct cmd_ctrl_node *cmd_node);
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index bc5e52c..e331122 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -2001,6 +2001,32 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- 	return;
- }
- 
-+void mwifiex_cancel_scan(struct mwifiex_adapter *adapter)
-+{
-+	struct mwifiex_private *priv;
-+	unsigned long cmd_flags;
-+	int i;
-+
-+	mwifiex_cancel_pending_scan_cmd(adapter);
-+
-+	if (adapter->scan_processing) {
-+		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
-+		adapter->scan_processing = false;
-+		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
-+		for (i = 0; i < adapter->priv_num; i++) {
-+			priv = adapter->priv[i];
-+			if (!priv)
-+				continue;
-+			if (priv->scan_request) {
-+				mwifiex_dbg(adapter, INFO,
-+					    "info: aborting scan\n");
-+				cfg80211_scan_done(priv->scan_request, 1);
-+				priv->scan_request = NULL;
-+			}
-+		}
-+	}
-+}
-+
- /*
-  * This function handles the command response of scan.
-  *
--- 
-1.9.1
+I'd take it, but I guess it's Kalle's decision :)
 
+johannes
