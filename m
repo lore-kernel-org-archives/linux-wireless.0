@@ -1,62 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56502 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751911AbcFULNN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 07:13:13 -0400
-Message-ID: <1466502087.3170.17.camel@sipsolutions.net> (sfid-20160621_131325_530385_22EA0382)
-Subject: Re: [PATCH] iw: support and enable separate build dir
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Maxin B. John" <maxin.john@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"Maxin B. John" <maxin.john@intel.com>
-Date: Tue, 21 Jun 2016 11:41:27 +0200
-In-Reply-To: <CAMhs6Yw-ScHvfjsxKGG-teXAYtebsrOEmRzt9-VBepoeNkpjWg@mail.gmail.com> (sfid-20160610_125900_263648_E37B4F59)
-References: <1464770416-17514-1-git-send-email-maxin.john@gmail.com>
-	 <1465460710.3442.4.camel@sipsolutions.net>
-	 <CAMhs6Yw-ScHvfjsxKGG-teXAYtebsrOEmRzt9-VBepoeNkpjWg@mail.gmail.com>
-	 (sfid-20160610_125900_263648_E37B4F59)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:32905 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965411AbcFMKiM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2016 06:38:12 -0400
+Received: by mail-pa0-f52.google.com with SMTP id b13so22371490pat.0
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 03:38:12 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH 2/7] staging: wilc1000: Replace semaphore txq_add_to_head_cs with mutex
+Date: Mon, 13 Jun 2016 16:07:34 +0530
+Message-Id: <1465814259-3009-3-git-send-email-binoy.jayan@linaro.org> (sfid-20160613_124026_438125_FA8F4E3C)
+In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-06-10 at 13:58 +0300, Maxin B. John wrote:
-> Hi Johannes,
-> 
-> On Thu, Jun 9, 2016 at 11:25 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
-> > On Wed, 2016-06-01 at 11:40 +0300, maxin.john@gmail.com wrote:
-> > > From: "Maxin B. John" <maxin.john@intel.com>
-> > > 
-> > > Support separation of SRCDIR and OBJDIR
-> > > 
-> > Doesn't seem to work:
-> > 
-> > $ mkdir /tmp/obj
-> > $ make clean
-> > $ make OBJDIR=/tmp/obj
-> > [...]
-> >  GEN  version.c
-> >  CC   version.o
-> > cc: error: version.c: No such file or directory
-> > cc: fatal error: no input files
-> > compilation terminated.
-> > Makefile:104: recipe for target 'version.o' failed
-> > make: *** [version.o] Error 1
-> > $ ls *.o
-> > event.o  genl.o  ibss.o  info.o  interface.o  iw.o  mesh.o  mpath.o
-> > mpp.o  ocb.o  phy.o  reg.o  scan.o  station.o  survey.o  util.o
-> > 
-> > (object files are in the wrong place too)
-> 
-> I was following the below listed steps to verify this patch:
-> 
-> # mkdir build
-> # cd build
-> #  make -f <path>/iw/Makefile
-> 
+The semaphore 'txq_add_to_head_cs' is a simple mutex, so it should be
+written as one. Semaphores are going away in the future. Also, removing
+the timeout scenario as the error handling code does not propagate the
+timeout properly.
 
-Oh. Any chance you could make both work, since the "make O=..." is
-something kernel people are used to/familiar with?
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+---
+ drivers/staging/wilc1000/linux_wlan.c         |  4 ++--
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  3 ++-
+ drivers/staging/wilc1000/wilc_wlan.c          | 11 ++++-------
+ 3 files changed, 8 insertions(+), 10 deletions(-)
 
-johannes
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 90f906d..a933551 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -20,7 +20,7 @@
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/skbuff.h>
+-
++#include <linux/mutex.h>
+ #include <linux/semaphore.h>
+ #include <linux/completion.h>
+ 
+@@ -679,7 +679,7 @@ static int wlan_init_locks(struct net_device *dev)
+ 	mutex_init(&wl->rxq_cs);
+ 
+ 	spin_lock_init(&wl->txq_spinlock);
+-	sema_init(&wl->txq_add_to_head_cs, 1);
++	mutex_init(&wl->txq_add_to_head_cs);
+ 
+ 	init_completion(&wl->txq_event);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 12d7c7b..239cd43 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -43,6 +43,7 @@
+ #include "wilc_wlan.h"
+ #include <linux/wireless.h>
+ #include <linux/completion.h>
++#include <linux/mutex.h>
+ 
+ #define FLOW_CONTROL_LOWER_THRESHOLD	128
+ #define FLOW_CONTROL_UPPER_THRESHOLD	256
+@@ -171,7 +172,7 @@ struct wilc {
+ 	struct wilc_vif *vif[NUM_CONCURRENT_IFC];
+ 	u8 open_ifcs;
+ 
+-	struct semaphore txq_add_to_head_cs;
++	struct mutex txq_add_to_head_cs;
+ 	spinlock_t txq_spinlock;
+ 
+ 	struct mutex rxq_cs;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 1a57135..9afbe8d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -99,9 +99,7 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 	unsigned long flags;
+ 	struct wilc *wilc = vif->wilc;
+ 
+-	if (wilc_lock_timeout(wilc, &wilc->txq_add_to_head_cs,
+-				    CFG_PKTS_TIMEOUT))
+-		return -1;
++	mutex_lock(&wilc->txq_add_to_head_cs);
+ 
+ 	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+ 
+@@ -119,7 +117,7 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 	wilc->txq_entries += 1;
+ 
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+-	up(&wilc->txq_add_to_head_cs);
++	mutex_unlock(&wilc->txq_add_to_head_cs);
+ 	complete(&wilc->txq_event);
+ 
+ 	return 0;
+@@ -573,8 +571,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 		if (wilc->quit)
+ 			break;
+ 
+-		wilc_lock_timeout(wilc, &wilc->txq_add_to_head_cs,
+-					CFG_PKTS_TIMEOUT);
++		mutex_lock(&wilc->txq_add_to_head_cs);
+ 		wilc_wlan_txq_filter_dup_tcp_ack(dev);
+ 		tqe = wilc_wlan_txq_get_first(wilc);
+ 		i = 0;
+@@ -755,7 +752,7 @@ _end_:
+ 		if (ret != 1)
+ 			break;
+ 	} while (0);
+-	up(&wilc->txq_add_to_head_cs);
++	mutex_unlock(&wilc->txq_add_to_head_cs);
+ 
+ 	wilc->txq_exit = 1;
+ 	*txq_count = wilc->txq_entries;
+-- 
+2.7.4
+
