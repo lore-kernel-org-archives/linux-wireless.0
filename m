@@ -1,161 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:35527 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752496AbcFNLoy (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:35058 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965368AbcFMKiH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2016 07:44:54 -0400
-Received: by mail-wm0-f52.google.com with SMTP id v199so117259675wmv.0
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 04:44:54 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: netdev@vger.kernel.org
-Cc: hannes@stressinduktion.org, nbd@nbd.name,
-	linux-kernel@vger.kernel.org, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv2 2/2] mt7601u: use linux/bitfield.h
-Date: Tue, 14 Jun 2016 12:44:20 +0100
-Message-Id: <1465904660-22242-3-git-send-email-jakub.kicinski@netronome.com> (sfid-20160614_134619_854290_C46FEE6A)
-In-Reply-To: <1465904660-22242-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1465904660-22242-1-git-send-email-jakub.kicinski@netronome.com>
+	Mon, 13 Jun 2016 06:38:07 -0400
+Received: by mail-pa0-f42.google.com with SMTP id hl6so44776247pac.2
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 03:38:06 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH 1/7] staging: wilc1000: Replace semaphore txq_event with completion
+Date: Mon, 13 Jun 2016 16:07:33 +0530
+Message-Id: <1465814259-3009-2-git-send-email-binoy.jayan@linaro.org> (sfid-20160613_124041_363356_A3EAB144)
+In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the newly added linux/bitfield.h.
+The semaphore 'txq_event' is used as completion, so convert it
+to a struct completion type.
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
 ---
- drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
- drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
- 3 files changed, 4 insertions(+), 80 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+ drivers/staging/wilc1000/linux_wlan.c         | 8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 3 ++-
+ drivers/staging/wilc1000/wilc_wlan.c          | 8 +++++---
+ 3 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.h b/drivers/net/wireless/mediatek/mt7601u/dma.h
-index 978e8a90b87f..166ac71905d2 100644
---- a/drivers/net/wireless/mediatek/mt7601u/dma.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/dma.h
-@@ -18,8 +18,6 @@
- #include <asm/unaligned.h>
- #include <linux/skbuff.h>
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4f93c11..90f906d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -316,7 +316,7 @@ static int linux_wlan_txq_task(void *vp)
  
--#include "util.h"
--
- #define MT_DMA_HDR_LEN			4
- #define MT_RX_INFO_LEN			4
- #define MT_FCE_INFO_LEN			4
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-index 428bd2f10b7b..5ef62e02ce66 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-@@ -15,6 +15,7 @@
- #ifndef MT7601U_H
- #define MT7601U_H
+ 	complete(&wl->txq_thread_started);
+ 	while (1) {
+-		down(&wl->txq_event);
++		wait_for_completion(&wl->txq_event);
  
-+#include <linux/bitfield.h>
- #include <linux/kernel.h>
- #include <linux/device.h>
- #include <linux/mutex.h>
-@@ -24,7 +25,6 @@
- #include <linux/debugfs.h>
+ 		if (wl->close) {
+ 			complete(&wl->txq_thread_started);
+@@ -650,7 +650,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 			mutex_unlock(&wl->hif_cs);
+ 		}
+ 		if (&wl->txq_event)
+-			up(&wl->txq_event);
++			wait_for_completion(&wl->txq_event);
  
- #include "regs.h"
--#include "util.h"
+ 		wlan_deinitialize_threads(dev);
+ 		deinit_irq(dev);
+@@ -681,7 +681,7 @@ static int wlan_init_locks(struct net_device *dev)
+ 	spin_lock_init(&wl->txq_spinlock);
+ 	sema_init(&wl->txq_add_to_head_cs, 1);
  
- #define MT_CALIBRATE_INTERVAL		(4 * HZ)
+-	sema_init(&wl->txq_event, 0);
++	init_completion(&wl->txq_event);
  
-@@ -282,6 +282,9 @@ struct mt7601u_rxwi;
+ 	sema_init(&wl->cfg_event, 0);
+ 	sema_init(&wl->sync_event, 0);
+@@ -738,7 +738,7 @@ static void wlan_deinitialize_threads(struct net_device *dev)
+ 	wl->close = 1;
  
- extern const struct ieee80211_ops mt7601u_ops;
+ 	if (&wl->txq_event)
+-		up(&wl->txq_event);
++		complete(&wl->txq_event);
  
-+#define MT76_SET	FIELD_PUT
-+#define MT76_GET	FIELD_GET
-+
- void mt7601u_init_debugfs(struct mt7601u_dev *dev);
+ 	if (wl->txq_thread) {
+ 		kthread_stop(wl->txq_thread);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 3a561df6..12d7c7b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -42,6 +42,7 @@
+ #include "host_interface.h"
+ #include "wilc_wlan.h"
+ #include <linux/wireless.h>
++#include <linux/completion.h>
  
- u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset);
-diff --git a/drivers/net/wireless/mediatek/mt7601u/util.h b/drivers/net/wireless/mediatek/mt7601u/util.h
-deleted file mode 100644
-index b89140bf1210..000000000000
---- a/drivers/net/wireless/mediatek/mt7601u/util.h
-+++ /dev/null
-@@ -1,77 +0,0 @@
--/*
-- * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
-- * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2
-- * as published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- */
--
--#ifndef __MT76_UTIL_H
--#define __MT76_UTIL_H
--
--/*
-- * Power of two check, this will check
-- * if the mask that has been given contains and contiguous set of bits.
-- * Note that we cannot use the is_power_of_2() function since this
-- * check must be done at compile-time.
-- */
--#define is_power_of_two(x)	( !((x) & ((x)-1)) )
--#define low_bit_mask(x)		( ((x)-1) & ~(x) )
--#define is_valid_mask(x)	is_power_of_two(1LU + (x) + low_bit_mask(x))
--
--/*
-- * Macros to find first set bit in a variable.
-- * These macros behave the same as the __ffs() functions but
-- * the most important difference that this is done during
-- * compile-time rather then run-time.
-- */
--#define compile_ffs2(__x) \
--	__builtin_choose_expr(((__x) & 0x1), 0, 1)
--
--#define compile_ffs4(__x) \
--	__builtin_choose_expr(((__x) & 0x3), \
--			      (compile_ffs2((__x))), \
--			      (compile_ffs2((__x) >> 2) + 2))
--
--#define compile_ffs8(__x) \
--	__builtin_choose_expr(((__x) & 0xf), \
--			      (compile_ffs4((__x))), \
--			      (compile_ffs4((__x) >> 4) + 4))
--
--#define compile_ffs16(__x) \
--	__builtin_choose_expr(((__x) & 0xff), \
--			      (compile_ffs8((__x))), \
--			      (compile_ffs8((__x) >> 8) + 8))
--
--#define compile_ffs32(__x) \
--	__builtin_choose_expr(((__x) & 0xffff), \
--			      (compile_ffs16((__x))), \
--			      (compile_ffs16((__x) >> 16) + 16))
--
--/*
-- * This macro will check the requirements for the FIELD{8,16,32} macros
-- * The mask should be a constant non-zero contiguous set of bits which
-- * does not exceed the given typelimit.
-- */
--#define FIELD_CHECK(__mask) \
--	BUILD_BUG_ON(!(__mask) || !is_valid_mask(__mask))
--
--#define MT76_SET(_mask, _val)						\
--	({								\
--		FIELD_CHECK(_mask);					\
--		(((u32) (_val)) << compile_ffs32(_mask)) & _mask;	\
--	})
--
--#define MT76_GET(_mask, _val)						\
--	({								\
--		FIELD_CHECK(_mask);					\
--		(u32) (((_val) & _mask) >> compile_ffs32(_mask));	\
--	})
--
--#endif
+ #define FLOW_CONTROL_LOWER_THRESHOLD	128
+ #define FLOW_CONTROL_UPPER_THRESHOLD	256
+@@ -178,7 +179,7 @@ struct wilc {
+ 
+ 	struct semaphore cfg_event;
+ 	struct semaphore sync_event;
+-	struct semaphore txq_event;
++	struct completion txq_event;
+ 	struct completion txq_thread_started;
+ 
+ 	struct task_struct *txq_thread;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 11e16d5..1a57135 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1,3 +1,4 @@
++#include <linux/completion.h>
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
+ #include "wilc_wfi_netdevice.h"
+@@ -89,7 +90,7 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
+ 
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 
+-	up(&wilc->txq_event);
++	complete(&wilc->txq_event);
+ }
+ 
+ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+@@ -119,7 +120,7 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 	up(&wilc->txq_add_to_head_cs);
+-	up(&wilc->txq_event);
++	complete(&wilc->txq_event);
+ 
+ 	return 0;
+ }
+@@ -287,7 +288,8 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
+ 
+ 	while (dropped > 0) {
+-		wilc_lock_timeout(wilc, &wilc->txq_event, 1);
++		wait_for_completion_timeout(&wilc->txq_event,
++						msecs_to_jiffies(1));
+ 		dropped--;
+ 	}
+ 
 -- 
-1.9.1
+2.7.4
 
