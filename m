@@ -1,82 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38783 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbcFDOh6 (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:55668 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422893AbcFMNkr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 10:37:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Pan\, Miaoqing" <miaoqing@qti.qualcomm.com>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	ath9k-devel <ath9k-devel@qualcomm.com>,
-	"linux-next\@vger.kernel.org" <linux-next@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: Re: ath9k gpio request
-References: <20160530132225.4d297678@canb.auug.org.au>
-	<574C4851.9090201@gmail.com>
-	<87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com>
-	<574D3EAA.3060102@gmail.com> <1464764036580.70506@qti.qualcomm.com>
-	<574EC331.1080901@gmail.com> <574ED297.4080004@gmail.com>
-	<1464854569880.79341@qti.qualcomm.com> <57501AE4.7080104@gmail.com>
-	<8760tqn8fc.fsf@purkki.adurom.net>
-	<1464932944074.85131@qti.qualcomm.com>
-Date: Sat, 04 Jun 2016 17:37:50 +0300
-In-Reply-To: <1464932944074.85131@qti.qualcomm.com> (Miaoqing Pan's message of
-	"Fri, 3 Jun 2016 05:49:06 +0000")
-Message-ID: <87d1nxt3y9.fsf@kamboji.qca.qualcomm.com> (sfid-20160604_163812_953507_D48B6E59)
+	Mon, 13 Jun 2016 09:40:47 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 5/7] staging: wilc1000: Replace semaphore close_exit_sync with completion
+Date: Mon, 13 Jun 2016 15:42:08 +0200
+Message-ID: <3987173.lIusvGA2iF@wuerfel> (sfid-20160613_154104_397391_81EB1E70)
+In-Reply-To: <1465814259-3009-6-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org> <1465814259-3009-6-git-send-email-binoy.jayan@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Fixing top posting)
+On Monday, June 13, 2016 4:07:37 PM CEST Binoy Jayan wrote:
+> @@ -31,7 +31,7 @@ static struct notifier_block g_dev_notifier = {
+> 
+>         .notifier_call = dev_state_ev_handler
+>  
+>  };
+> 
+> -static struct semaphore close_exit_sync;
+> +static struct completion close_exit_sync;
+> 
+>  static int wlan_deinit_locks(struct net_device *dev);
+>  static void wlan_deinitialize_threads(struct net_device *dev);
+> @@ -1088,7 +1088,7 @@ int wilc_mac_close(struct net_device *ndev)
+>                 WILC_WFI_deinit_mon_interface();
+>         }
+>  
+> -       up(&close_exit_sync);
+> +       complete(&close_exit_sync);
+>         vif->mac_opened = 0;
+>  
+>         return 0;
+> @@ -1232,7 +1232,8 @@ void wilc_netdev_cleanup(struct wilc *wilc)
+>         }
+>  
+>         if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev)) {
+> -               wilc_lock_timeout(wilc, &close_exit_sync, 5 * 1000);
+> +               wait_for_completion_timeout(&close_exit_sync,
+> +                                               msecs_to_jiffies(5000));
+>  
+>                 for (i = 0; i < NUM_CONCURRENT_IFC; i++)
+>                         if (wilc->vif[i]->ndev)
+> @@ -1258,7 +1259,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+>         struct net_device *ndev;
+>         struct wilc *wl;
+>  
+> -       sema_init(&close_exit_sync, 0);
+> +       init_completion(&close_exit_sync);
+>  
+>         wl = kzalloc(sizeof(*wl), GFP_KERNEL);
+>         if (!wl)
 
-"Pan, Miaoqing" <miaoqing@qti.qualcomm.com> writes:
+Here the original code seems wrong. Your patch doesn't make it worse, but
+it also doesn't make it better.
 
->>> --- a/drivers/net/wireless/ath/ath9k/reg.h
->>> +++ b/drivers/net/wireless/ath/ath9k/reg.h
->>> @@ -1122,8 +1122,8 @@ enum {
->>>   #define AR9300_NUM_GPIO                          16
->>>   #define AR9330_NUM_GPIO                                 16
->>>   #define AR9340_NUM_GPIO                                 23
->>> -#define AR9462_NUM_GPIO                                 10
->>> -#define AR9485_NUM_GPIO                                 12
->>> +#define AR9462_NUM_GPIO                                 14
->>> +#define AR9485_NUM_GPIO                                 11
->>>   #define AR9531_NUM_GPIO                                 18
->>>   #define AR9550_NUM_GPIO                                 24
->>>   #define AR9561_NUM_GPIO                                 23
->>> @@ -1139,8 +1139,8 @@ enum {
->>>   #define AR9300_GPIO_MASK                        0x0000F4FF
->>>   #define AR9330_GPIO_MASK                        0x0000F4FF
->>>   #define AR9340_GPIO_MASK                        0x0000000F
->>> -#define AR9462_GPIO_MASK                        0x000003FF
->>> -#define AR9485_GPIO_MASK                        0x00000FFF
->>> +#define AR9462_GPIO_MASK                        0x00003FFF
->>> +#define AR9485_GPIO_MASK                        0x000007FF
->>>   #define AR9531_GPIO_MASK                        0x0000000F
->>>   #define AR9550_GPIO_MASK                        0x0000000F
->>>   #define AR9561_GPIO_MASK                        0x0000000F
->>
->> solves the problem.
->>
->> Tested-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
->
-> Done, https://patchwork.kernel.org/patch/9151847/
+What I see here is:
 
-But the patch 9151847 is different from what Sudip tested above? Why?
+- There is a global semaphore for what should be per-device if anything
 
-And if you modify something _after_ the reporter has tested the patch
-clearly document what you changed and why. I do not want find hidden
-changes like this, even more so when the patch is going to a 4.7-rc
-release.
+- we call up() or complete() every time we close one of the subdevices,
+  but we do nothing when we open them, so the count will just go up
+  over time as the device is being used.
 
-Sudip, could you also test patch 9151847, please? You can download the
-patch from the patchwork link above.
+- if the device is never used, the semaphore is locked and we end up
+  having to wait for the timeout here, for no reason at all.
 
--- 
-Kalle Valo
+- if the timeout happens, this has no other consequences than running
+  the following code later, we don't even warn about this.
+
+- I don't see any reason why we even need a semaphore or completion here,
+  it only blocks (or delays) the unregistering of the netdev, which
+  we should always be able to unregister.
+
+To conclude, I think we can just remove this semaphore without a replacement
+(but with my findings above). Maybe the owners of the driver can shed some
+more light on this question.
+
+	Arnd
