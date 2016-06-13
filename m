@@ -1,69 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:35102 "EHLO
-	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752379AbcFHBlV convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:55086 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424120AbcFMOYQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2016 21:41:21 -0400
-Received: by mail-io0-f194.google.com with SMTP id n127so4049660iof.2
-        for <linux-wireless@vger.kernel.org>; Tue, 07 Jun 2016 18:41:20 -0700 (PDT)
+	Mon, 13 Jun 2016 10:24:16 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 6/7] staging: wilc1000: message_queue: Replace semaphore sem with completion
+Date: Mon, 13 Jun 2016 16:24:57 +0200
+Message-ID: <3241664.xlvexBiRFW@wuerfel> (sfid-20160613_162438_177298_6A96EBDD)
+In-Reply-To: <1465814259-3009-7-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org> <1465814259-3009-7-git-send-email-binoy.jayan@linaro.org>
 MIME-Version: 1.0
-In-Reply-To: <87wpm1b6bu.fsf@toke.dk>
-References: <20160603165144.17356-1-toke@toke.dk> <20160603165144.17356-6-toke@toke.dk>
- <CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
- <8737orucq4.fsf@toke.dk> <CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
- <CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
- <87k2i1ml43.fsf@toke.dk> <87wpm1b6bu.fsf@toke.dk>
-From: Adrian Chadd <adrian@freebsd.org>
-Date: Tue, 7 Jun 2016 18:41:19 -0700
-Message-ID: <CAJ-VmonOKjeY5uLeKFOVGmdBmm1V37TH72avf4XNe=-884Szwg@mail.gmail.com> (sfid-20160608_034125_089556_6380246A)
-Subject: Re: [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 June 2016 at 04:12, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
-> Toke Høiland-Jørgensen <toke@toke.dk> writes:
->
->>> [snip]
->>>
->>> I also found one of my notes in my version of this - how can we
->>> estimate the duration of an A-MPDU, when we only get hardware
->>> de-encapsulated frames?
->>
->> Well in my case I'm sidestepping this by getting the TX duration from
->> a register in the hardware. There seems to be registers containing the
->> duration spent on each step in the retry chain; I simply sum these.
->
-> Ah, but you're still talking RX? Hmm, I'm using ath_pkt_duration() to
-> compute the RX time, which does take into account MIMO (I think) but
-> expects the size to include padding. Which is probably not included in
-> the rs_datalen field of struct ath_rx_status that I'm using.
->
-> So yeah, how to account for that?
->
-> I initially thought that using the timestamp put into the frame by the
-> hardware could be a way to get timing. But there's only a timestamp of
-> the first symbol in rs_tstamp, and getting a time to compare it with is
-> difficult; by the time the frame is handled in the rx tasklet, way too
-> much time has been spent on interrupt handling etc for the current time
-> to be worth comparing with.
+On Monday, June 13, 2016 4:07:38 PM CEST Binoy Jayan wrote:
+> The semaphore 'sem' is used as completion, so convert it to a
+> struct completion type.
+> 
+> Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
 
-Right. In the case of RX'ing an A-MPDU, we only get told about the
-A-MPDU boundaries (isaggr/lastaggr or something in the RX descriptor)
-but nothing telling us how long the original RX'ed PPDU is.
+This does not really look like a classic completion, instead
+I'd classify this as a counting semaphore.
 
-So if we get say 16 frames and we are missing the middle one, we can
-reconstruct things okay. But if we miss the first 8 frames, we don't
-know when it started - we only get the RX aggr boundary flags set on
-the 9th and the 16th and we don't even know about the missed frames.
+> ---
+>  drivers/staging/wilc1000/wilc_msgqueue.c | 13 +++++++------
+>  drivers/staging/wilc1000/wilc_msgqueue.h |  4 ++--
+>  2 files changed, 9 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+> index 6cb894e..80c9631 100644
+> --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+> +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+> @@ -3,6 +3,7 @@
+>  #include <linux/spinlock.h>
+>  #include <linux/errno.h>
+>  #include <linux/slab.h>
+> +#include <linux/completion.h>
+>  
+>  /*!
+>   *  @author		syounan
+> @@ -13,7 +14,7 @@
+>  int wilc_mq_create(struct message_queue *mq)
+>  {
+>  	spin_lock_init(&mq->lock);
+> -	sema_init(&mq->sem, 0);
+> +	init_completion(&mq->comp);
+>  	INIT_LIST_HEAD(&mq->msg_list);
+>  	mq->recv_count = 0;
+>  	mq->exiting = false;
+> @@ -34,7 +35,7 @@ int wilc_mq_destroy(struct message_queue *mq)
+>  
+>  	/* Release any waiting receiver thread. */
+>  	while (mq->recv_count > 0) {
+> -		up(&mq->sem);
+> +		complete(&mq->comp);
+>  		mq->recv_count--;
+>  	}
+>  
 
-I think that's going to be a shortcoming right now. I couldn't think
-of a clever way to figure it out except to detect holes in the BAW and
-determine the client is missing frames and take actions there.
+Here it gets released multiple times in a row, always corresponding
+to recv_count.
 
+> @@ -85,7 +86,7 @@ int wilc_mq_send(struct message_queue *mq,
+>  
+>  	spin_unlock_irqrestore(&mq->lock, flags);
+>  
+> -	up(&mq->sem);
+> +	complete(&mq->comp);
+>  
+>  	return 0;
+>  }
+> @@ -112,19 +113,19 @@ int wilc_mq_recv(struct message_queue *mq,
+>  	mq->recv_count++;
+>  	spin_unlock_irqrestore(&mq->lock, flags);
+>  
+> -	down(&mq->sem);
+> +	wait_for_completion(&mq->comp);
+>  	spin_lock_irqsave(&mq->lock, flags);
+>  
+>  	if (list_empty(&mq->msg_list)) {
+>  		spin_unlock_irqrestore(&mq->lock, flags);
+> -		up(&mq->sem);
+> +		complete(&mq->comp);
+>  		return -EFAULT;
+>  	}
+>  	/* check buffer size */
+>  	msg = list_first_entry(&mq->msg_list, struct message, list);
+>  	if (recv_buf_size < msg->len) {
+>  		spin_unlock_irqrestore(&mq->lock, flags);
+> -		up(&mq->sem);
+> +		complete(&mq->comp);
+>  		return -EOVERFLOW;
+>  	}
+>  
 
--adrian
+And here you have the same function call both up() and down(),
+which is fairly unusual.
+
+My reading of the functions is that the semaphore value is the number
+of messages currently outstanding to be consumed by wilc_mq_recv.
+
+Interestingly, there is only one instance of the message queue, in
+host_interface.c, with a single caller of the recv function and many
+instances of send, so a good start for a cleanup would be to move
+all the contents of wilc_msgqueue.c and wilc_msgqueue.h into
+host_interface.c, making the functions all 'static'.
+
+After that, the next observation is that the entire host_interface.c
+file is basically a reimplementation of a 'work queue', and that should
+not be needed.
+
+We can deconstruct that kthread/message_queue logic by replacing it
+with a regular create_singlethread_workqueue()/queue_work() setup,
+by adding a 'struct work_struct' to 'struct host_if_msg'. The current
+hostIFthread() loop then becomes a simple work queue helper
+(without the loop).
+
+Finally, we could move handling for each individual members of
+'union message_body' out into a separate 'struct work_struct' and
+completely remove the multiplexer that is currently part of
+hostIFthread(), allowing us to move the implementation of each
+message handler into the callsite of the function that currently
+sends the 'host_if_msg'. I would suggest adding this last part to
+the TODO file, but trying to just do the previous step of using
+a single work function to get rid of the message queue implementation
+and the semaphore inside of it.
+
+	Arnd
