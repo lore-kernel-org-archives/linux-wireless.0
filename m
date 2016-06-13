@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48618 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753119AbcFBMUv (ORCPT
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:34103 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424071AbcFMPZF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 08:20:51 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix some of the macro definitions of HTT_RX_IND message
-Date: Thu, 2 Jun 2016 17:50:25 +0530
-Message-ID: <1464870025-4557-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160602_142054_920486_3E627CDE)
+	Mon, 13 Jun 2016 11:25:05 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1465476194.3442.21.camel@sipsolutions.net>
+References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
+ <1462199948-6424-2-git-send-email-jprvita@endlessm.com> <20160504072936.GB17045@amd>
+ <1463045572.13313.21.camel@sipsolutions.net> <20160519071639.GB17077@amd> <1465476194.3442.21.camel@sipsolutions.net>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Mon, 13 Jun 2016 11:24:24 -0400
+Message-ID: <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com> (sfid-20160613_172530_745186_E8D00B29)
+Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED trigger
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Pavel Machek <pavel@ucw.cz>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux@endlessm.com,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only five bits are defined to pass tid information in HTT_RX_IND
-message, so the mask which can be used to extract tid should be 0x1f
-instead of the current 0x3f. Also, macros which can be used to extract
-flush_valid and release_valid bits have to be left shifted one bit less
-because these information follow the tid right after. This patch does
-not really fix anything functionally because these macros are not used
-currently.
+On 9 June 2016 at 08:43, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2016-05-19 at 09:16 +0200, Pavel Machek wrote:
+>
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+(...)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 911c535..430a83e 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -485,10 +485,10 @@ struct htt_mgmt_tx_completion {
- 	__le32 status;
- } __packed;
- 
--#define HTT_RX_INDICATION_INFO0_EXT_TID_MASK  (0x3F)
-+#define HTT_RX_INDICATION_INFO0_EXT_TID_MASK  (0x1F)
- #define HTT_RX_INDICATION_INFO0_EXT_TID_LSB   (0)
--#define HTT_RX_INDICATION_INFO0_FLUSH_VALID   (1 << 6)
--#define HTT_RX_INDICATION_INFO0_RELEASE_VALID (1 << 7)
-+#define HTT_RX_INDICATION_INFO0_FLUSH_VALID   (1 << 5)
-+#define HTT_RX_INDICATION_INFO0_RELEASE_VALID (1 << 6)
- 
- #define HTT_RX_INDICATION_INFO1_FLUSH_START_SEQNO_MASK   0x0000003F
- #define HTT_RX_INDICATION_INFO1_FLUSH_START_SEQNO_LSB    0
--- 
-1.9.1
+>> LED
+>> subsystem seems to use suffix of LED name to do that. So if we
+>> standartize, lets say "::rfkill" suffix for this, it should work and
+>> follow existing practice.
+> [...]
+>> There is one -- suffix in the LED name.
+>
+> I don't really think that's a good way, and it doesn't seem to be used
+> universally, but I suppose it's good enough.
+>
 
+The main practical drawback of this approach IMO is that we can't
+guarantee that userspace processes will not step on each other's toes
+trying to control the LED concurrently. But I guess that is something
+that userspace will have to solve for now, I rather get this moving
+without the trigger than not moving at all.
+
+> João, that means you should send a patch to add the ::rfkill suffix.
+>
+
+IMO "airplane" (or maybe "airplane-mode") is a better suffix, as it
+reflects the label on the machine's chassis. I'll name it
+"asus-wireless::airplane" and send this through platform-drivers-x86,
+as this is now contained in the platform-drivers-x86 subsystem. Thanks
+Johannes for your patience and help designing and reviewing the rfkill
+changes, even if not all of them made it through in the end. And
+thanks everyone else involved for the feedback.
+
+Best regards,
+
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
