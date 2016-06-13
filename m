@@ -1,85 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:38549 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385AbcF0O7O (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:34551 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965028AbcFMKiW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 10:59:14 -0400
-Received: by mail-wm0-f51.google.com with SMTP id r201so119322780wme.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 07:59:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160627125709.GF1113@leverpostej>
-References: <20160623174536.5967-1-martin.blumenstingl@googlemail.com>
- <20160623174536.5967-2-martin.blumenstingl@googlemail.com>
- <20160623175809.GA31170@leverpostej> <CAFBinCC6iY_y-_w_yeoqOOysqYBQxcRf8oVgXYs3YqqSE=sJrQ@mail.gmail.com>
- <20160627125709.GF1113@leverpostej>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Mon, 27 Jun 2016 16:58:53 +0200
-Message-ID: <CAFBinCBJdibUJH1jwEZObWVLNAGyh+ZH9XzB1CbmoGr+nUZYbg@mail.gmail.com> (sfid-20160627_165923_417540_63AAB8D2)
-Subject: Re: [PATCH RFC v2 1/2] Documentation: dt: net: add ath9k wireless
- device binding
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, nbd@nbd.name, chunkeey@googlemail.com,
-	robh+dt@kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Mon, 13 Jun 2016 06:38:22 -0400
+Received: by mail-pf0-f174.google.com with SMTP id 62so45157891pfd.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 03:38:22 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH 4/7] staging: wilc1000: Replace semaphore sync_event with completion
+Date: Mon, 13 Jun 2016 16:07:36 +0530
+Message-Id: <1465814259-3009-5-git-send-email-binoy.jayan@linaro.org> (sfid-20160613_123928_884697_132C6B17)
+In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jun 27, 2016 at 2:57 PM, Mark Rutland <mark.rutland@arm.com> wrote:
->> > Please find a better way to identify relevant FW. What exactly affects
->> > which FW can be used, or would ideally be used? Are different FWs
->> > required for the same HW in some contexts?
->> >
->> > Can we not figure out the relevant FW names in the driver based on some
->> > identification mechanism (e.g. a more thoroughly defined set of
->> > compatible strings)?
->> The only way of auto-detecting a "correct" name would be via
->> dev_name() (with some prefix this could give something like
->> ath9k-pci-0000:00:0e.0.bin).
->
-> That may work, if the above is not an option.
-I would also prefer this (Felix' email already contains an explanation
-why this way is preferred and I fully agree with him).
+The semaphore 'sync_event' is used as completion, so convert
+it to a struct completion type. Also, return -ETIME if the return
+value of wait_for_completion_timeout is 0.
 
->> >> +- qca,check-eeprom-endianness: Allow checking the EEPROM endianness and
->> >> +                             swapping of the EEPROM data if required
->> >
->> > CAn we not simply always do this?
->> I've asked myself this question as well, but unfortunately some
->> manufacturers ship the EEPROM data with incorrect endianness magic.
->> Thus I decided to stay consistent with ath9k_platform_data which also
->> has a boolean (which defaults to false).
->
-> Ah. It's probably worth a note in the binding that this is not always
-> safe, and should only be set if the eeprom is known to have valid
-> endianness magic.
->
-> It would also be worth specifying teh behaviour in the absence of this
-> property.
-noted, I will fix this in the next round
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+---
+ drivers/staging/wilc1000/linux_wlan.c         | 10 +++++-----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
->>
->> >> +- qca,disable-2ghz: Disables the 2.4GHz band, even if enabled in the EEPROM
->> >> +- qca,disable-5ghz: Disables the 5GHz band, even if enabled in the EEPROM
->> >
->> > When/why would these be necessary?
->> sometimes a manufacturer (accidentally) leaves both bands enabled in
->> the EEPROM data,while the RF hardware is only suitable for one of both
->> bands. The same settings exist in ath9k_platform_data, serving exactly
->> the same purpose
->
-> Ok. Can we invert these instead (i.e. describe when the feature is
-> available)? e.g. qca,supports-2ghz.
-we could invert these, but I think the "disable" logic was chosen with
-a good reason:
-the ath9k calibration data already contains the information which
-bands are enabled/disabled. Enabling a band via devicetree / platform
-data is not possible, because that would mean we would have to pass
-additional calibration data for this band.
-The only use-case where these disable-Xghz properties are used is when
-the device vendor forgot to disable one of the bands. I can improve
-the documentation for this one, but I would prefer to stay with the
-disable naming/logic
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 81a469a..39fe350 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -241,7 +241,7 @@ void wilc_mac_indicate(struct wilc *wilc, int flag)
+ 				      (unsigned char *)&status, 4);
+ 		if (wilc->mac_status == WILC_MAC_STATUS_INIT) {
+ 			wilc->mac_status = status;
+-			up(&wilc->sync_event);
++			complete(&wilc->sync_event);
+ 		} else {
+ 			wilc->mac_status = status;
+ 		}
+@@ -386,9 +386,9 @@ static int linux_wlan_start_firmware(struct net_device *dev)
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = wilc_lock_timeout(wilc, &wilc->sync_event, 5000);
+-	if (ret)
+-		return ret;
++	if (!wait_for_completion_timeout(&wilc->sync_event,
++					msecs_to_jiffies(5000)))
++		return -ETIME;
+ 
+ 	return 0;
+ }
+@@ -684,7 +684,7 @@ static int wlan_init_locks(struct net_device *dev)
+ 	init_completion(&wl->txq_event);
+ 
+ 	init_completion(&wl->cfg_event);
+-	sema_init(&wl->sync_event, 0);
++	init_completion(&wl->sync_event);
+ 	init_completion(&wl->txq_thread_started);
+ 
+ 	return 0;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 5fbc07c..5cc6a82 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -179,7 +179,7 @@ struct wilc {
+ 	struct mutex hif_cs;
+ 
+ 	struct completion cfg_event;
+-	struct semaphore sync_event;
++	struct completion sync_event;
+ 	struct completion txq_event;
+ 	struct completion txq_thread_started;
+ 
+-- 
+2.7.4
 
-
-Martin
