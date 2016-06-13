@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:40492 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932301AbcFCOpR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42274 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423429AbcFMOCk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 10:45:17 -0400
-Date: Fri, 3 Jun 2016 10:34:08 -0400
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Guenter Roeck <linux@roeck-us.net>, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: Anyone have a clone of wireless-legacy.git?
-Message-ID: <20160603143408.GL6230@tuxdriver.com> (sfid-20160603_164540_653040_1C8C02CD)
-References: <20160602183803.GH6230@tuxdriver.com>
- <20160603011827.GA2542@roeck-us.net>
- <1464937583.2224.0.camel@sipsolutions.net>
+	Mon, 13 Jun 2016 10:02:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/2] register-field manipulation macros
+References: <1465824594-29662-1-git-send-email-jakub.kicinski@netronome.com>
+Date: Mon, 13 Jun 2016 17:02:30 +0300
+In-Reply-To: <1465824594-29662-1-git-send-email-jakub.kicinski@netronome.com>
+	(Jakub Kicinski's message of "Mon, 13 Jun 2016 14:29:52 +0100")
+Message-ID: <87bn35chl5.fsf@kamboji.qca.qualcomm.com> (sfid-20160613_160258_885444_C2DE83D0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1464937583.2224.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 03, 2016 at 09:06:23AM +0200, Johannes Berg wrote:
-> 
-> > http://www.filewatcher.com/_/?q=wireless-legacy.git, maybe ?
-> > 
-> 
-> Seems to work - both have the same branches:
-> 
->   adm8211                 72c942ed694e [PATCH] adm8211: fix build breakage from skb->mac.raw
->   at76                    279f8592e428 cfg80211: keep track of supported interface modes (at76)
->   ath5k                   8584ac94e3bb [PATCH] ath5k: Internalize Atheros Turbo modes
->   ath5k-2008-01-21        5b8ca29e11b5 ath5k: remove duplicate bssid variable
->   mac80211-attic          2bc68d999610 [PATCH] mac80211: remove scan struct from hostapd_param
->   mac80211-dungeon        ad097a32e9ad [PATCH] mac80211 [HT] 802.11 code compiles under CONFIG_MAC80211_HT
->   prism54usb              101e59f5e18a prism54usb: more fix for wireless Kconfig changes
->   rtl8180-2008-01-21      55fc0e806a93 rtl8180: remove calibration error message for rtl8225z2
->   tiacx                   d6a6811c508b [PATCH] TI acx100/acx111: Make debug level selectable in configuration
->   wireless-dev-2007-08-10 ca29ec8f05c1 Merge ../wireless-dev-legacy into wireless-dev-2007-08-10
->   wireless-dev-2007-09-24 cd799e167394 Merge branch 'p54' into everything
-> 
-> johannes
+Jakub Kicinski <jakub.kicinski@netronome.com> writes:
 
-I got them both from the two FTP sites, and both git repos appear to
-be identical.  It would be best if someone had an actual record of
-the commit hash values, but this might be the best I/we can do...?
+> Hi!
+>
+> This set moves to a global header file macros which I find
+> very useful and worth popularising.  The basic problem is
+> that since C bitfields are not very dependable accessing
+> subfields of registers becomes slightly inconvenient.
+> It is nice to have the necessary mask and shift operations
+> wrapped in a macro.  It is also nice to have that macro
+> compute the shift amount based on the mask automatically.
+>
+> My implementation follows what Felix Fietkau has done in
+> mt76.  Hannes Frederic Sowa suggested more use of standard
+> Linux/GCC functions.  Since the RFC I've also added a 
+> compile-time check to validate that the value passed to
+> setters fits in the mask.
+>
+> I attempted the use of static inlines instead of macros
+> but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
+> I also noticed that forcing arguments to be u32 for inlines
+> makes the compiler use 32bit arithmetic where it could
+> get away with 64bit before (on 64bit machines, obviously).
+> That's a potential performance concern but probably not
+> a very practical one today.  Apart from looking "cleaner"
+> static inlines would have the advantage that we could #undef
+> the auxiliary macros at the end of the header.
+>
+> Please review and advise on improvements.
+>
+> If accepted I think would be best to push this through
+> Kalle's tree, since the only existing user is in
+> drivers/net/wireless/.
+>
+> Jakub Kicinski (2):
+>   add basic register-field manipulation macros
+>   mt7601u: use linux/bitfield.h
 
-John
+I guess you forgot to CC linux-wireless, adding it now, and hence I
+don't see these in my patchwork either. So better to resend.
+
 -- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kalle Valo
