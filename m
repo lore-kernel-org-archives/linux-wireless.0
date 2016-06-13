@@ -1,138 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34620 "EHLO
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33370 "EHLO
 	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751974AbcF0PxZ (ORCPT
+	with ESMTP id S1161183AbcFMUZH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 11:53:25 -0400
-Received: by mail-oi0-f68.google.com with SMTP id s17so31356152oih.1
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 08:53:12 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 05/10] rtlwifi: rtl8192ee: Convert driver to use common hardware info routine
-Date: Mon, 27 Jun 2016 10:52:33 -0500
-Message-Id: <1467042758-25742-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160627_175329_601316_6FC1964B)
-In-Reply-To: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 13 Jun 2016 16:25:07 -0400
+MIME-Version: 1.0
+In-Reply-To: <575F09D7.6030505@broadcom.com>
+References: <1464219876-13776-1-git-send-email-zajec5@gmail.com>
+ <5759C09F.7020704@broadcom.com> <575F09D7.6030505@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 13 Jun 2016 22:25:05 +0200
+Message-ID: <CACna6rwJUFzBbggtcmz_LYLRe-9TN1LeKtsGDuavLhAkWD90nQ@mail.gmail.com> (sfid-20160613_222532_720603_765B225D)
+Subject: Re: [PATCH] brcmfmac: rework function picking free BSS index
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<linux-wireless@vger.kernel.org>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for RTL8192EE chips is converted to use the common routine
-for getting the hardware information.
+On 13 June 2016 at 21:30, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> On 09-06-16 21:16, Arend van Spriel wrote:
+>> On 26-05-16 01:44, Rafał Miłecki wrote:
+>>> The old implementation was overcomplicated and slightly bugged in some
+>>> corner cases.
+>>>
+>
+> [...]
+>
+>>> New code is simpler, placed in file where it's really used, handles
+>>> running out of free BSS-es and allows using 4 interfaces at the same
+>>> time. It also looks for the first free BSS instead of one after the last
+>>> in use. It works well with current driver (which doesn't allow deleting
+>>> interfaces) and should be future proof (if we ever allow deleting).
+>>>
+>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>> ---
+>>>  .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 17 ++++++++++++++-
+>>>  .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 ----------------------
+>>>  .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 -
+>>>  3 files changed, 16 insertions(+), 26 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> index 3d09d23..d00eef8 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> @@ -541,6 +541,21 @@ brcmf_cfg80211_update_proto_addr_mode(struct wireless_dev *wdev)
+>>>                                              ADDR_INDIRECT);
+>>>  }
+>>>
+>>> +static int brcmf_get_first_free_bsscfgidx(struct brcmf_pub *drvr)
+>>> +{
+>>> +    int bsscfgidx;
+>>> +
+>>> +    for (bsscfgidx = 0; bsscfgidx < BRCMF_MAX_IFS; bsscfgidx++) {
+>>> +            /* bsscfgidx 1 is reserved for legacy P2P */
+>>
+>> Hi Rafał,
+>>
+>> A bit late as the patch is already applied, but this reserved index is
+>> no longer needed as we removed all trickery that was build on the
+>> assumption that the P2P_DEVICE interface was always in bsscfgidx 1.
+>> Hence this could be removed.
+>
+> I tested STA on bsscfgidx=0, AP on bsscfgidx=1, and P2P_DEV on
+> bsscfgidx=2. P2P discovery on P2P_DEV interface works as expected so we
+> can indeed drop the 'bsscfgidx 1 is reserved' statement. I want to
+> verify on an older device before creating a patch.
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnd Bergmann <arnd@arndb.de>
----
-V2 - Fixes bug found after V1 was submitted.
+Thanks for taking look at this.
 
-This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
-	submitted by Joe Perches.
----
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    | 73 ++++------------------
- 1 file changed, 12 insertions(+), 61 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index 9d1ecba..b07af8d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -2098,75 +2098,24 @@ static void _rtl92ee_read_adapter_info(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u16 i, usvalue;
--	u8 hwinfo[HWSET_MAX_SIZE];
--	u16 eeprom_id;
--
--	switch (rtlefuse->epromtype) {
--	case EEPROM_BOOT_EFUSE:
--		rtl_efuse_shadow_map_update(hw);
--		break;
--
--	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
--		return;
--
--	default:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "boot from neither eeprom nor efuse, check it !!\n");
-+	int params[] = {RTL8192E_EEPROM_ID, EEPROM_VID, EEPROM_DID,
-+			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
-+			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
-+			COUNTRY_CODE_WORLD_WIDE_13};
-+	u8 *hwinfo;
-+
-+	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
-+	if (!hwinfo)
- 		return;
--	}
--	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
- 
--	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
--		      hwinfo, HWSET_MAX_SIZE);
-+	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
-+		goto exit;
- 
--	eeprom_id = *((u16 *)&hwinfo[0]);
--	if (eeprom_id != RTL8192E_EEPROM_ID) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
--		rtlefuse->autoload_failflag = true;
--	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
--		rtlefuse->autoload_failflag = false;
--	}
--
--	if (rtlefuse->autoload_failflag)
--		return;
--	/*VID DID SVID SDID*/
--	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
--	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
--	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
--	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "EEPROMId = 0x%4x\n", eeprom_id);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
--	/*customer ID*/
--	rtlefuse->eeprom_oemid = *(u8 *)&hwinfo[EEPROM_CUSTOMER_ID];
- 	if (rtlefuse->eeprom_oemid == 0xFF)
- 		rtlefuse->eeprom_oemid = 0;
- 
- 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
- 		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
--	/*EEPROM version*/
--	rtlefuse->eeprom_version = *(u8 *)&hwinfo[EEPROM_VERSION];
--	/*mac address*/
--	for (i = 0; i < 6; i += 2) {
--		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
--		*((u16 *)(&rtlefuse->dev_addr[i])) = usvalue;
--	}
--
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
--		 "dev_addr: %pM\n", rtlefuse->dev_addr);
--	/*channel plan */
--	rtlefuse->eeprom_channelplan = *(u8 *)&hwinfo[EEPROM_CHANNELPLAN];
- 	/* set channel plan from efuse */
- 	rtlefuse->channel_plan = rtlefuse->eeprom_channelplan;
- 	/*tx power*/
-@@ -2208,6 +2157,8 @@ static void _rtl92ee_read_adapter_info(struct ieee80211_hw *hw)
- 			break;
- 		}
- 	}
-+exit:
-+	kfree(hwinfo);
- }
- 
- static void _rtl92ee_hal_customized_behavior(struct ieee80211_hw *hw)
 -- 
-2.1.4
-
+Rafał
