@@ -1,72 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43391 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751736AbcFUOZ3 (ORCPT
+Received: from mail-vk0-f43.google.com ([209.85.213.43]:36147 "EHLO
+	mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423779AbcFMOsG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 10:25:29 -0400
-Message-ID: <57694CEB.1050200@candelatech.com> (sfid-20160621_162533_374002_C443F94D)
-Date: Tue, 21 Jun 2016 07:19:23 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 13 Jun 2016 10:48:06 -0400
+Received: by mail-vk0-f43.google.com with SMTP id u64so70382566vkf.3
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 07:48:05 -0700 (PDT)
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when building
- IEs.
-References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>	 <1453807009.2759.23.camel@sipsolutions.net>	 <56A78E8F.1080505@candelatech.com>	 <1454576521.2564.6.camel@sipsolutions.net>	 <56B38FD1.40902@candelatech.com>	 <1455827536.2084.35.camel@sipsolutions.net>	 <56C62C4E.7020600@candelatech.com>	 <1455828330.2084.38.camel@sipsolutions.net>	 <56C630B7.7020604@candelatech.com>	 <1455830078.2084.47.camel@sipsolutions.net>	 <56C63D8B.9020900@candelatech.com>	 <1456225589.2041.24.camel@sipsolutions.net>	 <56E1B556.4080004@candelatech.com>	 <1458051349.2871.19.camel@sipsolutions.net>	 <56E833FE.1080904@candelatech.com>	 <1458073224.2871.22.camel@sipsolutions.net>	 <575B0A58.8070408@candelatech.com> <1466502039.3170.16.camel@sipsolutions.net>
-In-Reply-To: <1466502039.3170.16.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <3475016.uenfZZHUnB@wuerfel>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org> <3475016.uenfZZHUnB@wuerfel>
+From: Binoy Jayan <binoy.jayan@linaro.org>
+Date: Mon, 13 Jun 2016 20:18:04 +0530
+Message-ID: <CAHv-k__2APMhcgD6VoQ1DX9XebO5P=5eaqfACvk8U5Sd-XfvCQ@mail.gmail.com> (sfid-20160613_164827_252978_770F3BFA)
+Subject: Re: [PATCH 0/7] *** staging: wilc1000: Replace semaphores with
+ mutexes or completions ***
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 06/21/2016 02:40 AM, Johannes Berg wrote:
-> On Fri, 2016-06-10 at 11:43 -0700, Ben Greear wrote:
->> On 03/15/2016 01:20 PM, Johannes Berg wrote:
->>> On Tue, 2016-03-15 at 09:10 -0700, Ben Greear wrote:
->>>>
->>>> The logic I wrote is basically exactly this.  It uses the
->>>> configured
->>>> rates to specify which of the hardware's rates are allowed and
->>>> disabled.
->>>>
->>>
->>> I understand that. I just take issue with the fact that we have to
->>> sprinkle "magic pixie dust" (in form of the override function
->>> calls)
->>> everywhere throughout the code.
->>>
->>> johannes
->>>
+On 13 June 2016 at 19:59, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday, June 13, 2016 4:07:32 PM CEST Binoy Jayan wrote:
+>> Hi,
 >>
->> So, I never could think up a way to make this more acceptable and
->> meet my own goals.
+>> These are a set of patches which removes semaphores from:
 >>
->> Any chance I could get just the netlink enum in place, even if it is
->> called something like 'api_placeholder_x'?
+>> drivers/staging/wilc1000
+>>
+>> These are part of a bigger effort to eliminate all semaphores
+>> from the linux kernel.
+>>
+>> They build correctly (individually and as a whole).
+>>
+>> NB: The changes are untested
 >>
 >
-> No, I don't think I want to do that.
+> Most of these look really good, but I've commented on what I think
+> should be done differently, most importantly using a work_queue
+> rather than a completion to replace the semaphore in patch 6.
 >
-> But if you're not too worried about space consumption, you could pick a
-> higher number:
+> Maybe you can resend the first five patches after addressing
+> my comments so we can get those tested and queued already while
+> you look into reworking patch 6. Let me know if that one ends up
+> being more complicated than I thought so we can come up with
+> a different approach.
 >
-> 	/* add attributes here, update the policy in nl80211.c */
->
-> 	NL80211_ATTR_TX_ADVERT_RATEMASK = 300,
->
-> 	__NL80211_ATTR_AFTER_LAST,
->
-> We currently use about 230 attributes, so that'll give you lots of
-> breathing room.
+>         Arnd
 
- From a pure hack point of view, maybe re-purposing some already existing
-attribute that has nothing to do with scanning is the way to go.
+Thank you for reviewing the patches thoroughly. I overlooked the
+problem with using
+completion directly. Thank you for pointing that out. As you have
+suggested, I'll rework
+on the first 5 patches and work on the last one.
 
-Thanks,
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Binoy
