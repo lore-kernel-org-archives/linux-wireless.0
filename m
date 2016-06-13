@@ -1,183 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45723 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751875AbcF0QcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 12:32:12 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 02/12] rtl8xxxu: Move skb delivery into parse_tx_desc() handler
-Date: Mon, 27 Jun 2016 12:32:00 -0400
-Message-Id: <1467045130-18874-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183220_637357_8E9DBAAE)
-In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:33178 "EHLO
+	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965047AbcFMKiC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2016 06:38:02 -0400
+Received: by mail-pf0-f169.google.com with SMTP id y124so45213656pfy.0
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 03:38:01 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH 0/7] *** staging: wilc1000: Replace semaphores with mutexes or completions ***
+Date: Mon, 13 Jun 2016 16:07:32 +0530
+Message-Id: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org> (sfid-20160613_124051_007301_DBCE23D4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hi,
 
-This is another prepatory patch to be able to handle aggregated RX
-packets.
+These are a set of patches which removes semaphores from:
 
-In order to avoid adding a prototype, this also moves the
-rtl8723bu_handle_c2h() function.
+drivers/staging/wilc1000
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 104 ++++++++++-----------
- 1 file changed, 50 insertions(+), 54 deletions(-)
+These are part of a bigger effort to eliminate all semaphores
+from the linux kernel.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 4ebd819..7c4df4d 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5045,6 +5045,51 @@ static void rtl8xxxu_rx_urb_work(struct work_struct *work)
- 	}
- }
- 
-+static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
-+				 struct sk_buff *skb)
-+{
-+	struct rtl8723bu_c2h *c2h = (struct rtl8723bu_c2h *)skb->data;
-+	struct device *dev = &priv->udev->dev;
-+	int len;
-+
-+	len = skb->len - 2;
-+
-+	dev_dbg(dev, "C2H ID %02x seq %02x, len %02x source %02x\n",
-+		c2h->id, c2h->seq, len, c2h->bt_info.response_source);
-+
-+	switch(c2h->id) {
-+	case C2H_8723B_BT_INFO:
-+		if (c2h->bt_info.response_source >
-+		    BT_INFO_SRC_8723B_BT_ACTIVE_SEND)
-+			dev_dbg(dev, "C2H_BT_INFO WiFi only firmware\n");
-+		else
-+			dev_dbg(dev, "C2H_BT_INFO BT/WiFi coexist firmware\n");
-+
-+		if (c2h->bt_info.bt_has_reset)
-+			dev_dbg(dev, "BT has been reset\n");
-+		if (c2h->bt_info.tx_rx_mask)
-+			dev_dbg(dev, "BT TRx mask\n");
-+
-+		break;
-+	case C2H_8723B_BT_MP_INFO:
-+		dev_dbg(dev, "C2H_MP_INFO ext ID %02x, status %02x\n",
-+			c2h->bt_mp_info.ext_id, c2h->bt_mp_info.status);
-+		break;
-+	case C2H_8723B_RA_REPORT:
-+		dev_dbg(dev,
-+			"C2H RA RPT: rate %02x, unk %i, macid %02x, noise %i\n",
-+			c2h->ra_report.rate, c2h->ra_report.dummy0_0,
-+			c2h->ra_report.macid, c2h->ra_report.noisy_state);
-+		break;
-+	default:
-+		dev_info(dev, "Unhandled C2H event %02x seq %02x\n",
-+			 c2h->id, c2h->seq);
-+		print_hex_dump(KERN_INFO, "C2H content: ", DUMP_PREFIX_NONE,
-+			       16, 1, c2h->raw.payload, len, false);
-+		break;
-+	}
-+}
-+
- int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 			    struct ieee80211_rx_status *rx_status)
- {
-@@ -5094,6 +5139,7 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
- 	rx_status->band = hw->conf.chandef.chan->band;
- 
-+	ieee80211_rx_irqsafe(hw, skb);
- 	return RX_TYPE_DATA_PKT;
- }
- 
-@@ -5125,6 +5171,8 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 	if (rx_desc->rpt_sel) {
- 		struct device *dev = &priv->udev->dev;
- 		dev_dbg(dev, "%s: C2H packet\n", __func__);
-+		rtl8723bu_handle_c2h(priv, skb);
-+		dev_kfree_skb(skb);
- 		return RX_TYPE_C2H;
- 	}
- 
-@@ -5152,54 +5200,10 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
- 	rx_status->freq = hw->conf.chandef.chan->center_freq;
- 	rx_status->band = hw->conf.chandef.chan->band;
- 
-+	ieee80211_rx_irqsafe(hw, skb);
- 	return RX_TYPE_DATA_PKT;
- }
- 
--static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
--				 struct sk_buff *skb)
--{
--	struct rtl8723bu_c2h *c2h = (struct rtl8723bu_c2h *)skb->data;
--	struct device *dev = &priv->udev->dev;
--	int len;
--
--	len = skb->len - 2;
--
--	dev_dbg(dev, "C2H ID %02x seq %02x, len %02x source %02x\n",
--		c2h->id, c2h->seq, len, c2h->bt_info.response_source);
--
--	switch(c2h->id) {
--	case C2H_8723B_BT_INFO:
--		if (c2h->bt_info.response_source >
--		    BT_INFO_SRC_8723B_BT_ACTIVE_SEND)
--			dev_dbg(dev, "C2H_BT_INFO WiFi only firmware\n");
--		else
--			dev_dbg(dev, "C2H_BT_INFO BT/WiFi coexist firmware\n");
--
--		if (c2h->bt_info.bt_has_reset)
--			dev_dbg(dev, "BT has been reset\n");
--		if (c2h->bt_info.tx_rx_mask)
--			dev_dbg(dev, "BT TRx mask\n");
--
--		break;
--	case C2H_8723B_BT_MP_INFO:
--		dev_dbg(dev, "C2H_MP_INFO ext ID %02x, status %02x\n",
--			c2h->bt_mp_info.ext_id, c2h->bt_mp_info.status);
--		break;
--	case C2H_8723B_RA_REPORT:
--		dev_dbg(dev,
--			"C2H RA RPT: rate %02x, unk %i, macid %02x, noise %i\n",
--			c2h->ra_report.rate, c2h->ra_report.dummy0_0,
--			c2h->ra_report.macid, c2h->ra_report.noisy_state);
--		break;
--	default:
--		dev_info(dev, "Unhandled C2H event %02x seq %02x\n",
--			 c2h->id, c2h->seq);
--		print_hex_dump(KERN_INFO, "C2H content: ", DUMP_PREFIX_NONE,
--			       16, 1, c2h->raw.payload, len, false);
--		break;
--	}
--}
--
- static void rtl8xxxu_rx_complete(struct urb *urb)
- {
- 	struct rtl8xxxu_rx_urb *rx_urb =
-@@ -5209,19 +5213,11 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
- 	struct sk_buff *skb = (struct sk_buff *)urb->context;
- 	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
- 	struct device *dev = &priv->udev->dev;
--	int rx_type;
- 
- 	skb_put(skb, urb->actual_length);
- 
- 	if (urb->status == 0) {
--		rx_type = priv->fops->parse_rx_desc(priv, skb, rx_status);
--
--		if (rx_type == RX_TYPE_DATA_PKT)
--			ieee80211_rx_irqsafe(hw, skb);
--		else {
--			rtl8723bu_handle_c2h(priv, skb);
--			dev_kfree_skb(skb);
--		}
-+		priv->fops->parse_rx_desc(priv, skb, rx_status);
- 
- 		skb = NULL;
- 		rx_urb->urb.context = NULL;
+They build correctly (individually and as a whole).
+
+NB: The changes are untested
+
+Thanks,
+Binoy
+
+Binoy Jayan (7):
+  staging: wilc1000: Replace semaphore txq_event with completion
+  staging: wilc1000: Replace semaphore txq_add_to_head_cs with mutex
+  staging: wilc1000: Replace semaphore cfg_event with completion
+  staging: wilc1000: Replace semaphore sync_event with completion
+  staging: wilc1000: Replace semaphore close_exit_sync with completion
+  staging: wilc1000: message_queue: Replace semaphore sem with
+    completion
+  staging: wilc1000: Remove unused inclusion of semaphore header
+
+ drivers/staging/wilc1000/TODO                 |  1 -
+ drivers/staging/wilc1000/linux_wlan.c         | 45 ++++++++++-----------------
+ drivers/staging/wilc1000/wilc_msgqueue.c      | 13 ++++----
+ drivers/staging/wilc1000/wilc_msgqueue.h      |  4 +--
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 13 ++++----
+ drivers/staging/wilc1000/wilc_wlan.c          | 35 +++++++++++----------
+ drivers/staging/wilc1000/wilc_wlan.h          |  2 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h       |  1 -
+ 8 files changed, 52 insertions(+), 62 deletions(-)
+
 -- 
 2.7.4
 
