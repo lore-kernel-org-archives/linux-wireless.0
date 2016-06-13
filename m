@@ -1,44 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.riverbed.com ([208.70.196.45]:14115 "EHLO
-	smtp1.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751738AbcFFO5K (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.133]:63050 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423255AbcFMO2k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2016 10:57:10 -0400
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: johannes.berg@intel.com
-From: Eduardo Abinader <eduardo.abinader@riverbed.com>
-Subject: [PATCH] nl80211: avoid possible memleak on nl80211_set_reg
-Message-ID: <57558CCC.7030800@riverbed.com> (sfid-20160606_165714_376632_80401FBE)
-Date: Mon, 6 Jun 2016 16:46:36 +0200
+	Mon, 13 Jun 2016 10:28:40 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/7] *** staging: wilc1000: Replace semaphores with mutexes or completions ***
+Date: Mon, 13 Jun 2016 16:29:56 +0200
+Message-ID: <3475016.uenfZZHUnB@wuerfel> (sfid-20160613_162859_001115_6BF0F1D9)
+In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Setting NULL just after freeing regdomain.
+On Monday, June 13, 2016 4:07:32 PM CEST Binoy Jayan wrote:
+> Hi,
+> 
+> These are a set of patches which removes semaphores from:
+> 
+> drivers/staging/wilc1000
+> 
+> These are part of a bigger effort to eliminate all semaphores
+> from the linux kernel.
+> 
+> They build correctly (individually and as a whole).
+> 
+> NB: The changes are untested
+> 
 
-Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
----
-  net/wireless/nl80211.c | 3 ++-
-  1 file changed, 2 insertions(+), 1 deletion(-)
+Most of these look really good, but I've commented on what I think
+should be done differently, most importantly using a work_queue
+rather than a completion to replace the semaphore in patch 6.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d120449..39d107d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5839,10 +5839,11 @@ static int nl80211_set_reg(struct sk_buff *skb, 
-struct genl_info *info)
+Maybe you can resend the first five patches after addressing
+my comments so we can get those tested and queued already while
+you look into reworking patch 6. Let me know if that one ends up
+being more complicated than I thought so we can come up with
+a different approach.
 
-  	r = set_regdom(rd, REGD_SOURCE_CRDA);
-  	/* set_regdom took ownership */
--	rd = NULL;
-
-   bad_reg:
-  	kfree(rd);
-+	rd = NULL;
-+
-  	return r;
-  }
-  #endif /* CONFIG_CFG80211_CRDA_SUPPORT */
--- 
-2.5.0
+	Arnd
