@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:33409 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862AbcFDAty (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:38724 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753665AbcFMTZS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 20:49:54 -0400
-Subject: Re: [PATCH] b43: Remove unused phy_a code
-To: =?UTF-8?Q?Michael_B=c3=bcsch?= <m@bues.ch>
-References: <1464989566-1393-1-git-send-email-linux@roeck-us.net>
- <20160603233519.4606b1ef@wiggum>
-Cc: Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-From: Guenter Roeck <linux@roeck-us.net>
-Message-ID: <575225B8.2040607@roeck-us.net> (sfid-20160604_025021_637103_CBAF61AC)
-Date: Fri, 3 Jun 2016 17:50:00 -0700
+	Mon, 13 Jun 2016 15:25:18 -0400
+Received: by mail-wm0-f48.google.com with SMTP id m124so93215207wme.1
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 12:25:18 -0700 (PDT)
+Subject: Re: NL80211_ATTR_PAD question
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <575B1964.2030806@candelatech.com>
+ <1465592932.2308.6.camel@sipsolutions.net>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <575F089C.3020201@broadcom.com> (sfid-20160613_212524_217769_6D0403DD)
+Date: Mon, 13 Jun 2016 21:25:16 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160603233519.4606b1ef@wiggum>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1465592932.2308.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/03/2016 02:35 PM, Michael Büsch wrote:
-> On Fri,  3 Jun 2016 14:32:46 -0700
-> Guenter Roeck <linux@roeck-us.net> wrote:
->
->> gcc-6 reports the following error with -Werror=unused-const-variable.
+
+
+On 10-06-16 23:08, Johannes Berg wrote:
+> On Fri, 2016-06-10 at 12:47 -0700, Ben Greear wrote:
+>> I see this was added sometime recently:  NL80211_ATTR_PAD
 >>
->> drivers/net/wireless/broadcom/b43/phy_a.c:576:40: error:
->> 	'b43_phyops_a' defined but not used
+>> If another enum member is added, should it replace the PAD enum?
+> 
+> No.
+> 
+>> At the least, I think we need some comments about how this is to be
+>> dealt with.
 >>
->> Turns out a lot of code in this file is unused, so let's remove it.
->
->
-> All a-phy code is usused.
-> So you can basically remove the whole file and any other A-PHY code.
+> 
+> You simply ignore it :)
 
-I love removing code. I'll resend with more code removed.
+So do you know why the caller of nla_put_u64_64bit() would need to
+specify the padattr. I mean, why is this not an generic attribute that
+netlink deals with internally. It has probably been discussed on the
+netdev list but I could not find the right thread.
 
-Guenter
-
+Regards,
+Arend
