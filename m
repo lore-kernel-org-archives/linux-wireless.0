@@ -1,60 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:34604 "EHLO
-	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751343AbcFRQuN (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.73]:52857 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423115AbcFMNTn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2016 12:50:13 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] brcmfmac: include also core.h header in cfg80211.h
-Date: Sat, 18 Jun 2016 18:49:38 +0200
-Message-Id: <1466268596-12178-1-git-send-email-zajec5@gmail.com> (sfid-20160618_185049_206086_F5D55E2F)
+	Mon, 13 Jun 2016 09:19:43 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/7] staging: wilc1000: Replace semaphore txq_add_to_head_cs with mutex
+Date: Mon, 13 Jun 2016 15:20:57 +0200
+Message-ID: <4729653.WB7hDso2I6@wuerfel> (sfid-20160613_152004_008850_729E6ACD)
+In-Reply-To: <1465814259-3009-3-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org> <1465814259-3009-3-git-send-email-binoy.jayan@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This header provides two inline functions using struct brcmf_if so we
-need core.h to avoid:
+On Monday, June 13, 2016 4:07:34 PM CEST Binoy Jayan wrote:
+> The semaphore 'txq_add_to_head_cs' is a simple mutex, so it should be
+> written as one. Semaphores are going away in the future.
 
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h: In function ‘ndev_to_prof’:
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:368:13: error: dereferencing pointer to incomplete type
-  return &ifp->vif->profile;
-             ^
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h: In function ‘ndev_to_vif’:
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:374:12: error: dereferencing pointer to incomplete type
-  return ifp->vif;
-            ^
+Looks good to me.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h | 1 +
- 1 file changed, 1 insertion(+)
+> Also, removing
+> the timeout scenario as the error handling code does not propagate the
+> timeout properly.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-index 04bfc7e..7d77f86 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-@@ -20,6 +20,7 @@
- /* for brcmu_d11inf */
- #include <brcmu_d11.h>
- 
-+#include "core.h"
- #include "fwil_types.h"
- #include "p2p.h"
- 
--- 
-1.8.4.5
+Good catch! I guess wilc_wlan_handle_txq() running into a timeout 
+would end putting the semaphore in a state in which we never again
+block on it because the count is now one higher than it should be.
 
+	Arnd
