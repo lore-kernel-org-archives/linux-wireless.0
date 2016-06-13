@@ -1,95 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.xplot.org ([66.92.66.146]:57087 "EHLO www.xplot.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750743AbcFFFug (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2016 01:50:36 -0400
-From: Tim Shepard <shep@alum.mit.edu>
-To: Dave Taht <dave.taht@gmail.com>
-cc: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:35144 "EHLO
+	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932430AbcFMUAQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 13 Jun 2016 16:00:16 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160613190048.GA17101@amd>
+References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
+ <1462199948-6424-2-git-send-email-jprvita@endlessm.com> <20160504072936.GB17045@amd>
+ <1463045572.13313.21.camel@sipsolutions.net> <20160519071639.GB17077@amd>
+ <1465476194.3442.21.camel@sipsolutions.net> <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com>
+ <20160613190048.GA17101@amd>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Mon, 13 Jun 2016 15:59:35 -0400
+Message-ID: <CA+A7VXXOfN1Td2T6uiunWZMS4gvS5sHDzPiDp9VEdx+OPJpSmA@mail.gmail.com> (sfid-20160613_220039_917940_B932FD63)
+Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED trigger
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [RFC/RFT 2/5] ath9k: use mac80211 intermediate software queues 
-In-reply-to: Your message of Sun, 05 Jun 2016 21:26:00 -0700.
-             <CAA93jw4bwvzfOVqVAzAYJO1tmrpqEV3-=EjChgWdF-6qRhB+3Q@mail.gmail.com>
-Date: Mon, 06 Jun 2016 01:50:41 -0400
-Message-Id: <E1b9nQv-0001fc-00@www.xplot.org> (sfid-20160606_075040_512447_0CED48E3)
+	Network Development <netdev@vger.kernel.org>,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux@endlessm.com,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 13 June 2016 at 15:00, Pavel Machek <pavel@ucw.cz> wrote:
+> Hi!
+>
+>> > João, that means you should send a patch to add the ::rfkill suffix.
+>> >
+>>
+>> IMO "airplane" (or maybe "airplane-mode") is a better suffix, as it
+>> reflects the label on the machine's chassis. I'll name it
+>> "asus-wireless::airplane" and send this through platform-drivers-x86,
+>> as this is now contained in the platform-drivers-x86 subsystem. Thanks
+>> Johannes for your patience and help designing and reviewing the rfkill
+>> changes, even if not all of them made it through in the end. And
+>> thanks everyone else involved for the feedback.
+>
+> Actually, I'd do '::rfkill', for consistency with other places in
+> /sys.
+>
+> /sys/devices/platform/thinkpad_acpi/rfkill/rfkill1/name
+> /sys/class/rfkill
+> /sys/module/rfkill
+>
 
+If we use "rfkill" as a suffix, how do you expect userspace to be able
+to differentiate between a LED that indicates airplane-mode (LED ON
+when all radios are OFF) and a LED that indicates the state of a
+specific radio like WiFi or Bluetooth (LED ON when that specific radio
+is ON)? If we're going this route we should provide meaningful
+information here.
 
-> > Thanks.  I've gotten no other feedback that suggests anyone else has
-> > read the code.  So I very much appreciate it.
-> 
-> I not only read it but tested it extensively against the ath9k stock,
-> ath10k stock, ath10k -michal's fqmac 3.5 patches, and your ath9k
-> patches...
-
-My patch to ath9k shouldn't have any effect on any of the ath10k
-stuff.  It only cuts ath9k over to use the new intermediate queues.
-
-I should point out again that Avery's observation that michal's
-mac80211 flow queueing patches and mac80211 codel stuff aren't needed
-to the improvement between competing client stations.  All that's
-needed is to use the new mac80211 per-station per-tid intermediate
-queues and also set the IFF_NO_QUEUE bit.
-
-For ath9k, Felix's mac80211 interemediate queues patch (already in
-mainline Linux over a year ago), my patch to ath9k, and just
-Michal's first patch alone "[PATCHv3 1/5] mac80211: skip netdev
-queue control with software queuing" should (and seems to in
-testing I've done so far) get all the latency improvement there is
-to be had when the competing traffic is to a different client
-station.
-
-
-
-> After losing my temper at the impact of channel scans...
-> 
-> ( https://plus.google.com/u/0/107942175615993706558/posts/WA915Pt4SRN
-> ), I got told how to get rid of them for testing, and started redoing
-> the work when I got back from vacation. 
-
-Heh... I've never seen that problem.  But I'm not running
-network-manager on any machine in my testbed.
-
-
-> > I looked for a way to ask mac80211 if there are any packets left in
-> > the intermediate queue without dequeueing a packet and I failed to
-> > find such an interface.
-> 
-> qdisc->peek like function? A bitmap that says these stations have data
-> outstanding?
-> 
-
-I'm not sure what you mean here.  Are you asking if that was what I
-was looking for in the existing mac80211 code?  If so, yes, that is
-what I was looking for.  Or are you suggesting (or agreeing) that
-indeed such an interface should be added to mac80211?
-
-Though I don't see how it could be a bitmap...  stations don't have
-any obvious stable associated index into such a bitmap.
-
-The real problem might be the way all the code in ath9k/xmit.c is
-designed where it needs ath_tid_has_buffered() in so many places.
-
-Look at the mt76 driver, and see how it also maintains a small
-(probably only at most one packet ever) queue "retry_q" which
-sometimes does hold a packet which will get sent before it will
-pull another packet from ieee80211_tx_dequeue.  But the rest of the
-driver is structured so that a NULL return from mt76_txq_dequeue()
-is all it needs.  That's probably the sort of structure we ought to
-have in ath9k, but that's going to be a more invasive patch to
-ath9k (and I haven't figured out how to do it yet).
-
-I think we can get there incrementally though.  I hope the patch for
-ath9k that I've got now (and the one I hope to have soon that fixes
-the problem of not making use of hwq_max_pending() ) might be useful
-intermediate steps (that work, and provide improvements) then we can
-clean up ath9k removing mechanisms that are no longer needed (breaking
-the old transmit path, and somehow handling the chanctx stuff).
-
-
-			-Tim Shepard
-			 shep@alum.mit.edu
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
