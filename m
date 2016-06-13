@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40853 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932125AbcFGLoJ (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:45651 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161453AbcFMTAw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2016 07:44:09 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: "Pan\, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	ath9k-devel <ath9k-devel@qualcomm.com>,
-	"linux-next\@vger.kernel.org" <linux-next@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: Re: ath9k gpio request
-References: <20160530132225.4d297678@canb.auug.org.au>
-	<574C4851.9090201@gmail.com>
-	<87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com>
-	<574D3EAA.3060102@gmail.com> <1464764036580.70506@qti.qualcomm.com>
-	<574EC331.1080901@gmail.com> <574ED297.4080004@gmail.com>
-	<1464854569880.79341@qti.qualcomm.com> <57501AE4.7080104@gmail.com>
-	<8760tqn8fc.fsf@purkki.adurom.net>
-	<1464932944074.85131@qti.qualcomm.com>
-	<87d1nxt3y9.fsf@kamboji.qca.qualcomm.com> <57546409.70506@gmail.com>
-Date: Tue, 07 Jun 2016 14:43:59 +0300
-In-Reply-To: <57546409.70506@gmail.com> (Sudip Mukherjee's message of "Sun, 05
-	Jun 2016 23:10:25 +0530")
-Message-ID: <87ziqxns00.fsf@kamboji.qca.qualcomm.com> (sfid-20160607_134436_749825_252754DA)
+	Mon, 13 Jun 2016 15:00:52 -0400
+Date: Mon, 13 Jun 2016 21:00:48 +0200
+From: Pavel Machek <pavel@ucw.cz>
+To: =?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux@endlessm.com,
+	=?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>
+Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED
+ trigger
+Message-ID: <20160613190048.GA17101@amd> (sfid-20160613_210129_973272_01578C2D)
+References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
+ <1462199948-6424-2-git-send-email-jprvita@endlessm.com>
+ <20160504072936.GB17045@amd>
+ <1463045572.13313.21.camel@sipsolutions.net>
+ <20160519071639.GB17077@amd>
+ <1465476194.3442.21.camel@sipsolutions.net>
+ <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+Hi!
 
->> Sudip, could you also test patch 9151847, please? You can download the
->> patch from the patchwork link above.
->
-> This is also ok. Please add my
-> Tested-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
->
-> and maybe a Reported-by tag is also appropriate in this case.
+> > João, that means you should send a patch to add the ::rfkill suffix.
+> >
+> 
+> IMO "airplane" (or maybe "airplane-mode") is a better suffix, as it
+> reflects the label on the machine's chassis. I'll name it
+> "asus-wireless::airplane" and send this through platform-drivers-x86,
+> as this is now contained in the platform-drivers-x86 subsystem. Thanks
+> Johannes for your patience and help designing and reviewing the rfkill
+> changes, even if not all of them made it through in the end. And
+> thanks everyone else involved for the feedback.
 
-Yeah, I add those. Thanks Sudip.
+Actually, I'd do '::rfkill', for consistency with other places in
+/sys.
 
+/sys/devices/platform/thinkpad_acpi/rfkill/rfkill1/name
+/sys/class/rfkill
+/sys/module/rfkill
+
+Thanks for patience,
+									Pavel
 -- 
-Kalle Valo
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
