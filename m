@@ -1,73 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38336 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750910AbcFDO30 (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:35527 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752496AbcFNLoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 10:29:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
-Cc: Andreas Kemnade <andreas@kemnade.info>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	"Andrew F. Davis" <afd@ti.com>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Mark Brown <broonie@kernel.org>, Tejun Heo <tj@kernel.org>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] net: wireless: marvell: libertas: Remove create_workqueue
-References: <20160604135901.GA29897@Karyakshetra>
-Date: Sat, 04 Jun 2016 17:29:20 +0300
-In-Reply-To: <20160604135901.GA29897@Karyakshetra> (Bhaktipriya Shridhar's
-	message of "Sat, 4 Jun 2016 19:29:01 +0530")
-Message-ID: <87h9d9t4cf.fsf@kamboji.qca.qualcomm.com> (sfid-20160604_162953_717748_5E29B6D0)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 14 Jun 2016 07:44:54 -0400
+Received: by mail-wm0-f52.google.com with SMTP id v199so117259675wmv.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 04:44:54 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: netdev@vger.kernel.org
+Cc: hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv2 2/2] mt7601u: use linux/bitfield.h
+Date: Tue, 14 Jun 2016 12:44:20 +0100
+Message-Id: <1465904660-22242-3-git-send-email-jakub.kicinski@netronome.com> (sfid-20160614_134619_854290_C46FEE6A)
+In-Reply-To: <1465904660-22242-1-git-send-email-jakub.kicinski@netronome.com>
+References: <1465904660-22242-1-git-send-email-jakub.kicinski@netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bhaktipriya Shridhar <bhaktipriya96@gmail.com> writes:
+Use the newly added linux/bitfield.h.
 
-> alloc_workqueue replaces deprecated create_workqueue().
->
-> In if_sdio.c, the workqueue card->workqueue has workitem
-> &card->packet_worker, which is mapped to if_sdio_host_to_card_worker.
-> The workitem is involved in sending packets to firmware.
-> Forward progress under memory pressure is a requirement here.
->
-> In if_spi.c, the workqueue card->workqueue has workitem
-> &card->packet_worker, which is mapped to if_spi_host_to_card_worker.
-> The workitem is involved in sending command packets from the host.
-> Forward progress under memory pressure is a requirement here.
->
-> Dedicated workqueues have been used in both cases since the workitems
-> on the workqueues are involved in normal device operation with
-> WQ_MEM_RECLAIM set to gurantee forward progress under memory pressure.
-> Since there are only a fixed number of work items, explicit concurrency
-> limit is unnecessary.
->
-> flush_workqueue is unnecessary since destroy_workqueue() itself calls
-> drain_workqueue() which flushes repeatedly till the workqueue
-> becomes empty. Hence the calls to flush_workqueue() before
-> destroy_workqueue() have been dropped.
->
-> Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+---
+ drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
+ drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
+ 3 files changed, 4 insertions(+), 80 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
 
-"libertas:" as a prefix is enough, no need to put the full path to the
-title. I can fix that this time.
-
-You can actually check yourself what prefix is commonly used in a
-particular file or directory:
-
-$ git log --oneline --no-merges -10 drivers/net/wireless/marvell/libertas/
-57fbcce37be7 cfg80211: remove enum ieee80211_band
-3691ac4a9c95 libertas: fix an error code in probe
-143e49458424 libertas: add an cfg80211 interface for powersaving
-0b8802dc5f59 libertas: fix ps-mode related removal problems
-fada24a54770 libertas: go back to ps mode without commands pending
-57954b94cad7 libertas: do not confirm sleep if commands are pending
-fae4f9f78ab1 libertas: check whether bus can do more than polling
-0a7701b4defc libertas: fix pointer bugs for PS_MODE commands
-6d91ff7acc90 libertas: cleanup a variable name
-0a38c8e1b592 libertas: check for NULL before use
-$
+diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.h b/drivers/net/wireless/mediatek/mt7601u/dma.h
+index 978e8a90b87f..166ac71905d2 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/dma.h
++++ b/drivers/net/wireless/mediatek/mt7601u/dma.h
+@@ -18,8 +18,6 @@
+ #include <asm/unaligned.h>
+ #include <linux/skbuff.h>
+ 
+-#include "util.h"
+-
+ #define MT_DMA_HDR_LEN			4
+ #define MT_RX_INFO_LEN			4
+ #define MT_FCE_INFO_LEN			4
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
+index 428bd2f10b7b..5ef62e02ce66 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
++++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
+@@ -15,6 +15,7 @@
+ #ifndef MT7601U_H
+ #define MT7601U_H
+ 
++#include <linux/bitfield.h>
+ #include <linux/kernel.h>
+ #include <linux/device.h>
+ #include <linux/mutex.h>
+@@ -24,7 +25,6 @@
+ #include <linux/debugfs.h>
+ 
+ #include "regs.h"
+-#include "util.h"
+ 
+ #define MT_CALIBRATE_INTERVAL		(4 * HZ)
+ 
+@@ -282,6 +282,9 @@ struct mt7601u_rxwi;
+ 
+ extern const struct ieee80211_ops mt7601u_ops;
+ 
++#define MT76_SET	FIELD_PUT
++#define MT76_GET	FIELD_GET
++
+ void mt7601u_init_debugfs(struct mt7601u_dev *dev);
+ 
+ u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset);
+diff --git a/drivers/net/wireless/mediatek/mt7601u/util.h b/drivers/net/wireless/mediatek/mt7601u/util.h
+deleted file mode 100644
+index b89140bf1210..000000000000
+--- a/drivers/net/wireless/mediatek/mt7601u/util.h
++++ /dev/null
+@@ -1,77 +0,0 @@
+-/*
+- * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
+- * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2
+- * as published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- */
+-
+-#ifndef __MT76_UTIL_H
+-#define __MT76_UTIL_H
+-
+-/*
+- * Power of two check, this will check
+- * if the mask that has been given contains and contiguous set of bits.
+- * Note that we cannot use the is_power_of_2() function since this
+- * check must be done at compile-time.
+- */
+-#define is_power_of_two(x)	( !((x) & ((x)-1)) )
+-#define low_bit_mask(x)		( ((x)-1) & ~(x) )
+-#define is_valid_mask(x)	is_power_of_two(1LU + (x) + low_bit_mask(x))
+-
+-/*
+- * Macros to find first set bit in a variable.
+- * These macros behave the same as the __ffs() functions but
+- * the most important difference that this is done during
+- * compile-time rather then run-time.
+- */
+-#define compile_ffs2(__x) \
+-	__builtin_choose_expr(((__x) & 0x1), 0, 1)
+-
+-#define compile_ffs4(__x) \
+-	__builtin_choose_expr(((__x) & 0x3), \
+-			      (compile_ffs2((__x))), \
+-			      (compile_ffs2((__x) >> 2) + 2))
+-
+-#define compile_ffs8(__x) \
+-	__builtin_choose_expr(((__x) & 0xf), \
+-			      (compile_ffs4((__x))), \
+-			      (compile_ffs4((__x) >> 4) + 4))
+-
+-#define compile_ffs16(__x) \
+-	__builtin_choose_expr(((__x) & 0xff), \
+-			      (compile_ffs8((__x))), \
+-			      (compile_ffs8((__x) >> 8) + 8))
+-
+-#define compile_ffs32(__x) \
+-	__builtin_choose_expr(((__x) & 0xffff), \
+-			      (compile_ffs16((__x))), \
+-			      (compile_ffs16((__x) >> 16) + 16))
+-
+-/*
+- * This macro will check the requirements for the FIELD{8,16,32} macros
+- * The mask should be a constant non-zero contiguous set of bits which
+- * does not exceed the given typelimit.
+- */
+-#define FIELD_CHECK(__mask) \
+-	BUILD_BUG_ON(!(__mask) || !is_valid_mask(__mask))
+-
+-#define MT76_SET(_mask, _val)						\
+-	({								\
+-		FIELD_CHECK(_mask);					\
+-		(((u32) (_val)) << compile_ffs32(_mask)) & _mask;	\
+-	})
+-
+-#define MT76_GET(_mask, _val)						\
+-	({								\
+-		FIELD_CHECK(_mask);					\
+-		(u32) (((_val) & _mask) >> compile_ffs32(_mask));	\
+-	})
+-
+-#endif
 -- 
-Kalle Valo
+1.9.1
+
