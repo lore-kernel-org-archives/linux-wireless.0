@@ -1,61 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35573 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750950AbcFWO5j (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11926 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752860AbcFNRqk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 10:57:39 -0400
-Received: by mail-wm0-f68.google.com with SMTP id a66so11659159wme.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 07:57:38 -0700 (PDT)
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: nbd@nbd.name,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 1/6] ath9k: Allow configuration of LED polarity in platform data.
-Date: Thu, 23 Jun 2016 16:57:09 +0200
-Message-Id: <20160623145714.20576-2-martin.blumenstingl@googlemail.com> (sfid-20160623_165742_655756_32BF11CA)
-In-Reply-To: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
-References: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
+	Tue, 14 Jun 2016 13:46:40 -0400
+From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	<arnagara@codeaurora.org>,
+	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Subject: [PATCH] iw: Add support for controlling tx power for per station
+Date: Tue, 14 Jun 2016 23:16:00 +0530
+Message-ID: <1465926360-6561-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20160614_194701_619325_1A0462EE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some devices running OpenWrt need this and it makes sense to add this
-to ath9k_platform_data as the next patches will add a devicetree
-(boolean) property for it as well.
+This patch allows userspace to set transmit power, in mBm units, to a
+station associated to the AP.
 
-Suggested-by: Vittorio Gambaletta <openwrt@vittgam.net>
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To set a limit tx power of 2000 mBm:
+iw wlan0 station set <mac-addr> txpwr limit 2000
+
+To revert the user defined tx power for a station:
+iw wlan0 station set <mac-addr> txpwr auto
+
+Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 3 +++
- include/linux/ath9k_platform.h        | 1 +
- 2 files changed, 4 insertions(+)
+ station.c | 69 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 69 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 2ee8624..384929d 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -527,6 +527,9 @@ static int ath9k_init_soc_platform(struct ath_softc *sc)
- 			return ret;
- 	}
+diff --git a/station.c b/station.c
+index f3e3da8..8364593 100644
+--- a/station.c
++++ b/station.c
+@@ -569,6 +569,7 @@ COMMAND(station, del, "<MAC address> [subtype <subtype>] [reason-code <code>]",
+ static const struct cmd *station_set_plink;
+ static const struct cmd *station_set_vlan;
+ static const struct cmd *station_set_mesh_power_mode;
++static const struct cmd *station_set_txpwr;
  
-+	if (pdata->led_active_high)
-+		ah->config.led_active_high = true;
+ static const struct cmd *select_station_cmd(int argc, char **argv)
+ {
+@@ -580,6 +581,8 @@ static const struct cmd *select_station_cmd(int argc, char **argv)
+ 		return station_set_vlan;
+ 	if (strcmp(argv[1], "mesh_power_mode") == 0)
+ 		return station_set_mesh_power_mode;
++	if (strcmp(argv[1], "txpwr") == 0)
++		return station_set_txpwr;
+ 	return NULL;
+ }
+ 
+@@ -731,6 +734,72 @@ COMMAND_ALIAS(station, set, "<MAC address> mesh_power_mode "
+ 	"Set link-specific mesh power mode for this station",
+ 	select_station_cmd, station_set_mesh_power_mode);
+ 
++static int handle_station_set_txpwr(struct nl80211_state *state,
++				    struct nl_msg *msg,
++				    int argc, char **argv,
++				    enum id_input id)
++{
++	enum nl80211_tx_power_setting type;
++	unsigned char mac_addr[ETH_ALEN];
++	unsigned int sta_txpwr = 0;
++	char *err = NULL;
 +
- 	if (pdata->tx_gain_buffalo)
- 		ah->config.tx_gain_buffalo = true;
- 
-diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
-index e66153d..76860a4 100644
---- a/include/linux/ath9k_platform.h
-+++ b/include/linux/ath9k_platform.h
-@@ -40,6 +40,7 @@ struct ath9k_platform_data {
- 	bool tx_gain_buffalo;
- 	bool disable_2ghz;
- 	bool disable_5ghz;
-+	bool led_active_high;
- 
- 	int (*get_mac_revision)(void);
- 	int (*external_reset)(void);
++	if (argc != 3 && argc != 4)
++		return 1;
++
++	if (mac_addr_a2n(mac_addr, argv[0])) {
++		fprintf(stderr, "invalid mac address\n");
++		return 2;
++	}
++
++	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr);
++	argc--;
++	argv++;
++
++	if (strcmp("txpwr", argv[0]) != 0)
++		return 1;
++	argc--;
++	argv++;
++
++	if (!strcmp(argv[0], "auto"))
++		type = NL80211_TX_POWER_AUTOMATIC;
++	else if (!strcmp(argv[0], "limit"))
++		type = NL80211_TX_POWER_LIMITED;
++	else {
++		printf("Invalid parameter: %s\n", argv[0]);
++		return 2;
++	}
++
++	NLA_PUT_U32(msg, NL80211_ATTR_STA_TX_POWER_SETTING, type);
++
++	if (type != NL80211_TX_POWER_AUTOMATIC) {
++		if (argc != 2) {
++			printf("Missing TX power level argument.\n");
++			return 2;
++		}
++
++		argc--;
++		argv++;
++
++		sta_txpwr = strtoul(argv[0], &err, 0);
++		NLA_PUT_U32(msg, NL80211_ATTR_STA_TX_POWER, sta_txpwr);
++	}
++
++	argc--;
++	argv++;
++
++	if (argc)
++		return 1;
++
++	return 0;
++ nla_put_failure:
++	return -ENOBUFS;
++}
++COMMAND_ALIAS(station, set, "<MAC address> txpwr <auto|limit> [<tx power mBm>]",
++	NL80211_CMD_SET_STATION, 0, CIB_NETDEV, handle_station_set_txpwr,
++	"Set Tx power for this station.",
++	select_station_cmd, station_set_txpwr);
++
+ static int handle_station_dump(struct nl80211_state *state,
+ 			       struct nl_msg *msg,
+ 			       int argc, char **argv,
 -- 
-2.9.0
+1.9.1
 
