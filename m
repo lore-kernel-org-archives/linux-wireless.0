@@ -1,110 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:34094 "EHLO
-	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751167AbcFSQjj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2016 12:39:39 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2 RFC 1/2] brcmfmac: delete interface directly in code that sent fw request
-Date: Sun, 19 Jun 2016 18:23:24 +0200
-Message-Id: <1466353420-30998-1-git-send-email-zajec5@gmail.com> (sfid-20160619_183943_148193_7333077D)
-In-Reply-To: <1466273932-11554-1-git-send-email-zajec5@gmail.com>
-References: <1466273932-11554-1-git-send-email-zajec5@gmail.com>
+Received: from mail.ispras.ru ([83.149.199.45]:41973 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750762AbcFNOTw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2016 10:19:52 -0400
+Message-ID: <5760039B.4050902@ispras.ru> (sfid-20160614_162042_356385_6B84EB1C)
+Date: Tue, 14 Jun 2016 17:16:11 +0400
+From: Pavel Andrianov <andrianov@ispras.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: James Cameron <quozl@laptop.org>
+CC: Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@codeaurora.org>,
+	libertas-dev@lists.infradead.org, LDV list <ldv-project@ispras.ru>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, vaishali.thakkar@oracle.com
+Subject: Re: [ldv-project] [net] libertas: potential race condition
+References: <57569424.9040906@ispras.ru> <1465310395.29158.2.camel@redhat.com> <20160607225114.GA21437@us.netrek.org>
+In-Reply-To: <20160607225114.GA21437@us.netrek.org>
+Content-Type: multipart/mixed;
+ boundary="------------020407090508040300010402"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So far when receiving event about in-firmware-interface removal our
-event worker was notifying listener and afterwards it was removing Linux
-interface.
+This is a multi-part message in MIME format.
+--------------020407090508040300010402
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-First of all it was resulting in slightly unexpected order. The listener
-(del_virtual_intf callback) was (usually) returning with success before
-we even called unregister_netdev(ice).
+08.06.2016 02:51, James Cameron пишет:
+> On Tue, Jun 07, 2016 at 09:39:55AM -0500, Dan Williams wrote:
+>> On Tue, 2016-06-07 at 13:30 +0400, Pavel Andrianov wrote:
+>>> Hi!
+>>>
+>>> There is a potential race condition in
+>>> drivers/net/wireless/libertas/libertas.ko.
+>>> In the function lbs_hard_start_xmit(..), line 159, a socket buffer
+>>> is
+>>> written to priv->current_skb with a spin_lock protection.
+>>> In the function lbs_mac_event_disconnected(..), lines 50-51, the
+>>> field
+>>> current_skb is cleaned. There is no protection used. The
+>>> corresponding
+>>> handlers are activated at the same time in lbs_start_card(..) and
+>>> then
+>>> may be executed simultaneously. Note, there are two structures
+>>> lbs_netdev_ops and mesh_netdev_ops, which have the target handler
+>>> lbs_hard_start_xmit.
+>>> Is it a real race or I have missed something?
+>> Yeah, it looks like it should be grabbing priv->driver_lock before
+>> clearing priv->currenttxskb in lbs_mac_event_disconnected().  Care to
+>> submit a patch after testing?  Do you have any of that hardware?
+> I've hardware, with serial console.
+>
+> Can test any patch, on USB (8388) or SDIO (8686).
+>
+Hi!
 
-Please note this couldn't be simply fixed by changing order of calls in
-brcmf_fweh_handle_if_event as unregistering interface earlier could free
-struct brcmf_if.
+I've prepare the patch for this issue. Could you test it?
 
-Another problem of current implementation are possible lockups. Focus on
-the time slot between calling event handler and removing Linux
-interface. During that time original caller may leave (unlocking rtnl
-semaphore) *and* another call to the same code may be done (locking it
-again). If that happens our event handler will stuck at removing Linux
-interface, it won't handle another event and will block process holding
-rtnl lock.
+Thank you.
 
-This can be simply solved by unregistering interface in a proper
-callback, right after receiving confirmation event from firmware. This
-only required modifying worker to don't unregister on its own if there
-is someone waiting for the event.
-
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Modification of brcmf_fweh_handle_if_event done in V1 was a wrong
-    idea as it could result in use-after-free regarding struct brcmf_if.
-    Thanks Arend for noticing that!
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 10 ++++++++--
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c  |  3 +--
- 2 files changed, 9 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-index 9da7a4c..79c081f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-@@ -18,6 +18,7 @@
- #include "brcmu_wifi.h"
- #include "brcmu_utils.h"
- 
-+#include "cfg80211.h"
- #include "core.h"
- #include "debug.h"
- #include "tracepoint.h"
-@@ -182,8 +183,13 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
- 
- 	err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
- 
--	if (ifp && ifevent->action == BRCMF_E_IF_DEL)
--		brcmf_remove_interface(ifp, false);
-+	if (ifp && ifevent->action == BRCMF_E_IF_DEL) {
-+		bool armed = brcmf_cfg80211_vif_event_armed(drvr->config);
-+
-+		/* Default handling in case no-one waits for this event */
-+		if (!armed)
-+			brcmf_remove_interface(ifp, false);
-+	}
- }
- 
- /**
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index f6241fd..66f942f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -2288,8 +2288,7 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
- 		else
- 			err = 0;
- 	}
--	if (err)
--		brcmf_remove_interface(vif->ifp, true);
-+	brcmf_remove_interface(vif->ifp, true);
- 
- 	brcmf_cfg80211_arm_vif_event(cfg, NULL);
- 	if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
 -- 
-1.8.4.5
+Pavel Andrianov
+Linux Verification Center, ISPRAS
+web: http://linuxtesting.org
+e-mail: andrianov@ispras.ru
 
+
+--------------020407090508040300010402
+Content-Type: text/x-patch;
+ name="0001-libertas-Add-spinlock-to-avoid-race-condition.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="0001-libertas-Add-spinlock-to-avoid-race-condition.patch"
+
+>From b1a9e157ccdf8650da93844fd2dbdb6fca509b59 Mon Sep 17 00:00:00 2001
+From: Pavel <andrianov@ispras.ru>
+Date: Tue, 14 Jun 2016 16:59:00 +0400
+Subject: [PATCH] libertas: Add spinlock to avoid race condition
+
+lbs_mac_event_disconnected may free priv->currenttxskb
+while lbs_hard_start_xmit accesses to it.
+The patch adds a spinlock for mutual exclusion.
+
+Signed-off-by: Pavel <andrianov@ispras.ru>
+---
+ drivers/net/wireless/marvell/libertas/cmdresp.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/libertas/cmdresp.c b/drivers/net/wireless/marvell/libertas/cmdresp.c
+index c95bf6d..c67ae07 100644
+--- a/drivers/net/wireless/marvell/libertas/cmdresp.c
++++ b/drivers/net/wireless/marvell/libertas/cmdresp.c
+@@ -27,6 +27,8 @@
+ void lbs_mac_event_disconnected(struct lbs_private *priv,
+ 				bool locally_generated)
+ {
++	unsigned long flags;
++
+ 	if (priv->connect_status != LBS_CONNECTED)
+ 		return;
+ 
+@@ -46,9 +48,11 @@ void lbs_mac_event_disconnected(struct lbs_private *priv,
+ 	netif_carrier_off(priv->dev);
+ 
+ 	/* Free Tx and Rx packets */
++	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	kfree_skb(priv->currenttxskb);
+ 	priv->currenttxskb = NULL;
+ 	priv->tx_pending_len = 0;
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 
+ 	priv->connect_status = LBS_DISCONNECTED;
+ 
+-- 
+1.7.11.7
+
+
+--------------020407090508040300010402--
