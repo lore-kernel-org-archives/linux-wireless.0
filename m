@@ -1,110 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:33995 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932892AbcFBPRn (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48938 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703AbcFNHxC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 11:17:43 -0400
-Received: by mail-pa0-f68.google.com with SMTP id x1so3567358pav.1
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2016 08:17:43 -0700 (PDT)
-From: Dibyajyoti Ghosh <dibyajyotig@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: WiFi Mailing List <linux-wireless@vger.kernel.org>,
-	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Prasun Maiti <prasunmaiti87@gmail.com>
-Subject: [PATCH] Support for 32 bit iwpriv on 64 bits kernels
-Date: Thu,  2 Jun 2016 20:51:43 +0530
-Message-Id: <1464880903-13116-1-git-send-email-dibyajyotig@gmail.com> (sfid-20160602_171747_578378_55F11DF0)
+	Tue, 14 Jun 2016 03:53:02 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v4 1/2] ath10k: Add support for ath10k_sta_statistics support
+Date: Tue, 14 Jun 2016 13:24:25 +0530
+Message-ID: <1465890866-2390-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160614_095308_126371_2EA9241B)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds pointer conversion from 32 bit to 64 bit and vice versa,
-if the ioctl is issued from 32 bit iwpriv to 64 bit Kernel.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Signed-off-by: Dibyajyoti Ghosh <dibyajyotig@gmail.com>
+Enable support for 'drv_sta_statistics' callback.
+Export rx_duration support if available to cfg80211/nl80211
+
+This can also act as a placeholder for any new per STA stats support
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 ---
- wireless_tools.29/iwpriv.c | 41 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
 
-diff --git a/wireless_tools.29/iwpriv.c b/wireless_tools.29/iwpriv.c
-index 4172fe2..a0b1b02 100644
---- a/wireless_tools.29/iwpriv.c
-+++ b/wireless_tools.29/iwpriv.c
-@@ -243,6 +243,7 @@ iw_usage(void)
-   fprintf(stderr, "Usage: iwpriv interface [private-command [private-arguments]]\n");
+[v4] rebased over 'pending' branch
+[v3] removed conditions for ath10k state checks based on Michal's suggestion
+
+Both the dependent changes are merged now in master tree
+
+1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+2. iw: Add support for NL80211_STA_INFO_RX_DURATION netlink
+ attribute
+---
+ drivers/net/wireless/ath/ath10k/debug.h       |  3 +++
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c | 14 ++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.c         |  1 +
+ 3 files changed, 18 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index dc549c4..c458fa9 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -156,6 +156,9 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir);
+ void ath10k_sta_update_rx_duration(struct ath10k *ar,
+ 				   struct ath10k_fw_stats *stats);
++void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct station_info *sinfo);
+ #else
+ static inline
+ void ath10k_sta_update_rx_duration(struct ath10k *ar,
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 0da8a57..60e5da0 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -65,6 +65,20 @@ void ath10k_sta_update_rx_duration(struct ath10k *ar,
+ 		ath10k_sta_update_stats_rx_duration(ar, stats);
  }
  
-+#include<stdio.h>
- /************************* SETTING ROUTINES **************************/
- 
- /*------------------------------------------------------------------*/
-@@ -259,12 +260,20 @@ set_private_cmd(int		skfd,		/* Socket */
- 		int		priv_num)	/* Number of descriptions */
- {
-   struct iwreq	wrq;
-+  struct compat_iw_point {
-+    __u64 pointer;
-+    __u16 length;
-+    __u16 flags;
-+  };
-   u_char	buffer[4096];	/* Only that big in v25 and later */
-   int		i = 0;		/* Start with first command arg */
-   int		k;		/* Index in private description table */
-   int		temp;
-   int		subcmd = 0;	/* sub-ioctl index */
-   int		offset = 0;	/* Space for sub-ioctl index */
-+  FILE		*in;
-+  char 		buff[4];
-+  int		kspace, uspace;
- 
-   /* Check if we have a token index.
-    * Do it now so that sub-ioctl takes precedence, and so that we
-@@ -457,6 +466,26 @@ set_private_cmd(int		skfd,		/* Socket */
- 	}
-     }
- 
-+  in = popen("getconf LONG_BIT", "r");
-+  fgets(buff, sizeof(buff), in);
-+  pclose(in);
-+  kspace = atoi(buff);
-+  uspace = sizeof(char *) * 8;
++void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct station_info *sinfo)
++{
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	struct ath10k *ar = arsta->arvif->ar;
 +
-+  struct compat_iw_point *iwp_compat = (struct compat_iw_point *)&wrq.u.data;
-+  __u16 len = wrq.u.data.length;
-+  __u16 flags = wrq.u.data.flags;
++	if (!ath10k_peer_stats_enabled(ar))
++		return;
 +
-+  /* If 32 bit app is running on 64 bit kernel
-+   * convert 32 bit iw_point type payload to 64 bit
-+   */
-+  if(uspace == 32 && kspace == 64)
-+    {
-+      iwp_compat->pointer = (__u64)((__u32)wrq.u.data.pointer);
-+      iwp_compat->length = len;
-+      iwp_compat->flags = flags;
-+    }
++	sinfo->rx_duration = arsta->rx_duration;
++	sinfo->filled |= 1ULL << NL80211_STA_INFO_RX_DURATION;
++}
 +
-   /* Perform the private ioctl */
-   if(ioctl(skfd, priv[k].cmd, &wrq) < 0)
-     {
-@@ -465,6 +494,18 @@ set_private_cmd(int		skfd,		/* Socket */
-       return(-1);
-     }
+ static ssize_t ath10k_dbg_sta_read_aggr_mode(struct file *file,
+ 					     char __user *user_buf,
+ 					     size_t count, loff_t *ppos)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 3a170b1..1fe33c36 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7402,6 +7402,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ #endif
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	.sta_add_debugfs		= ath10k_sta_add_debugfs,
++	.sta_statistics			= ath10k_sta_statistics,
+ #endif
+ };
  
-+  /* If 32 bit app is running on 64 bit kernel, convert the
-+   * 64 bit result back to 32 bit to fit the app
-+   */
-+  if(uspace == 32 && kspace == 64)
-+    {
-+      flags = iwp_compat->flags;
-+      len = iwp_compat->length;
-+      wrq.u.data.pointer = (__u32)iwp_compat->pointer;
-+      wrq.u.data.length = iwp_compat->length;
-+      wrq.u.data.flags = iwp_compat->flags;
-+    }
-+
-   /* If we have to get some data */
-   if((priv[k].get_args & IW_PRIV_TYPE_MASK) &&
-      (priv[k].get_args & IW_PRIV_SIZE_MASK))
 -- 
 1.9.1
 
