@@ -1,46 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.189]:51796 "EHLO
-	smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751619AbcFPQKF convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41010 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750977AbcFNPVm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 12:10:05 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Arnd Bergmann' <arnd@arndb.de>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] rtlwifi: use s8 instead of char
-Date: Thu, 16 Jun 2016 16:02:38 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D5F4DA915@AcuExch.aculab.com> (sfid-20160616_181016_370262_CC5F4815)
-References: <20160615210318.4130648-1-arnd@arndb.de>
- <wrfjbn32taxw.fsf@redhat.com> <5245411.kmNEkqpVVS@wuerfel>
-In-Reply-To: <5245411.kmNEkqpVVS@wuerfel>
-Content-Type: text/plain; charset="Windows-1252"
+	Tue, 14 Jun 2016 11:21:42 -0400
+Date: Tue, 14 Jun 2016 20:51:31 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v4 1/2] ath10k: Add support for ath10k_sta_statistics
+ support
+Message-ID: <20160614152131.GA3941@atheros-ThinkPad-T61> (sfid-20160614_172144_846763_7A7B3DFA)
+References: <1465890866-2390-1-git-send-email-mohammed@qca.qualcomm.com>
+ <87k2hr3m9r.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87k2hr3m9r.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arnd Bergmann
-> On Wednesday, June 15, 2016 5:10:51 PM CEST Jes Sorensen wrote:
-> >
-> > Arnd,
-> >
-> > rtlwifi and rtl8xxxu are two distinct drivers managed by different
-> > people. I'd be really nice if you could split this into a per driver
-> > patch.
-> >
-> > That said, the use of char in rtl8xxxu is all as a flag indicator, so I
-> > don't think the s/char/s8/ conversion is justified. I used char rather
-> > than ugly bool to reduce the size of the struct.
+Hi Kalle,
+
+On Tue, Jun 14, 2016 at 01:58:25PM +0000, Valo, Kalle wrote:
+> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 > 
-> Makes sense, I'll resend without that change. If anything, the flag
-> should become u8, not s8 anyway.
+> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> >
+> > Enable support for 'drv_sta_statistics' callback.
+> > Export rx_duration support if available to cfg80211/nl80211
+> >
+> > This can also act as a placeholder for any new per STA stats support
+> >
+> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> > ---
+> >
+> > [v4] rebased over 'pending' branch
+> > [v3] removed conditions for ath10k state checks based on Michal's suggestion
+> >
+> > Both the dependent changes are merged now in master tree
+> >
+> > 1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+> > 2. iw: Add support for NL80211_STA_INFO_RX_DURATION netlink
+> >  attribute
+> 
+> But these are not in ath-next branch yet, so I can't take these until I
+> have updated ath-next.
 
-Does bool:8 work ?
+[shafi] oops ! sorry i thought they are finally in
 
-	David
+> 
+> Also please ping instead of resending patches. These are already waiting
+> in patchwork:
+> 
+> https://patchwork.kernel.org/patch/8993601/
+> https://patchwork.kernel.org/patch/8993621/
+>
 
+[shafi] oh ok thanks, sorry i thought this required a rebased over pending
+branch next time i will do this
+
+a) ping you first
+b) if required send a rebased version
+
+regards,
+shafi
