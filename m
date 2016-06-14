@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:35350 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752367AbcF1VVe (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:37811 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752203AbcFNLow (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 17:21:34 -0400
-Message-ID: <5772EA58.3030508@candelatech.com> (sfid-20160628_232138_589464_6E04FBF2)
-Date: Tue, 28 Jun 2016 14:21:28 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211:  ensure info->control.vif is set for queued
- pkts.
-References: <1466015073-8418-1-git-send-email-greearb@candelatech.com>	 <1467122419.2493.18.camel@sipsolutions.net>	 <57728EB2.2030706@candelatech.com> (sfid-20160628_165029_450743_D8773180) <1467144189.2493.19.camel@sipsolutions.net>
-In-Reply-To: <1467144189.2493.19.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Tue, 14 Jun 2016 07:44:52 -0400
+Received: by mail-wm0-f45.google.com with SMTP id k204so119015212wmk.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 04:44:52 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: netdev@vger.kernel.org
+Cc: hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv2 0/2] register-field manipulation macros
+Date: Tue, 14 Jun 2016 12:44:18 +0100
+Message-Id: <1465904660-22242-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160614_134908_525985_3ECC540A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/28/2016 01:03 PM, Johannes Berg wrote:
-> On Tue, 2016-06-28 at 07:50 -0700, Ben Greear wrote:
->
->> So, maybe a WARN_ON would be appropriate at the place frames are
->> enqueued in the backlog queue?  Since this patch did fix my problem,
->> maybe that WARN_ON would show the path that allow frames with bad
->> control.vif to be inserted?
->
-> Yeah that might make sense, if you're willing to test that.
->
->> I had also found another problem with pktgen using the headroom
->> wrong, so possibly that would have also fixed my problem..I'm not
->> sure which patch I put in first.
->>
->
-> That seems very unlikely to be related.
+Hi!
 
-Well, it was very easy to reproduce:  Just over-drive tx on a station
-using pktgen.  My pktgen is modified, but nothing that should affect
-this bug as far as I know.
+This set moves to a global header file macros which I find
+very useful and worth popularising.  The basic problem is
+that since C bitfields are not very dependable accessing
+subfields of registers becomes slightly inconvenient.
+It is nice to have the necessary mask and shift operations
+wrapped in a macro.  It is also nice to have that macro
+compute the shift amount based on the mask automatically.
 
-I can retest with a WARN_ON, but will be a week or two before I'm back in the office.
+My implementation follows what Felix Fietkau has done in
+mt76.  Hannes Frederic Sowa suggested more use of standard
+Linux/GCC functions.  Since the RFC I've also added a 
+compile-time check to validate that the value passed to
+setters fits in the mask.
 
-Thanks,
-Ben
+I attempted the use of static inlines instead of macros
+but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
+I also noticed that forcing arguments to be u32 for inlines
+makes the compiler use 32bit arithmetic where it could
+get away with 64bit before (on 64bit machines, obviously).
+That's a potential performance concern but probably not
+a very practical one today.  Apart from looking "cleaner"
+static inlines would have the advantage that we could #undef
+the auxiliary macros at the end of the header.
 
+Please review and advise on improvements.
+
+If accepted I think would be best to push this through
+Kalle's tree, since the only existing user is in
+drivers/net/wireless/.
+
+v2:
+ - change Felix's email address.
+
+Jakub Kicinski (2):
+  add basic register-field manipulation macros
+  mt7601u: use linux/bitfield.h
+
+ drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
+ drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
+ include/linux/bitfield.h                        | 58 +++++++++++++++++++
+ include/linux/log2.h                            |  6 ++
+ 5 files changed, 68 insertions(+), 80 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+ create mode 100644 include/linux/bitfield.h
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
