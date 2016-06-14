@@ -1,54 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:51152 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1160995AbcFHNGd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 09:06:33 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Subject: Re: [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
-References: <20160603165144.17356-1-toke@toke.dk>
-	<20160603165144.17356-6-toke@toke.dk>
-	<CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
-	<8737orucq4.fsf@toke.dk>
-	<CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
-	<CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
-	<87k2i1ml43.fsf@toke.dk> <87wpm1b6bu.fsf@toke.dk>
-	<CAJ-VmonOKjeY5uLeKFOVGmdBmm1V37TH72avf4XNe=-884Szwg@mail.gmail.com>
-Date: Wed, 08 Jun 2016 15:06:26 +0200
-In-Reply-To: <CAJ-VmonOKjeY5uLeKFOVGmdBmm1V37TH72avf4XNe=-884Szwg@mail.gmail.com>
-	(Adrian Chadd's message of "Tue, 7 Jun 2016 18:41:19 -0700")
-Message-ID: <87eg87q17x.fsf@toke.dk> (sfid-20160608_150656_645425_374030CA)
+Received: from smtp7.emailarray.com ([65.39.216.66]:22888 "EHLO
+	smtp7.emailarray.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932111AbcFNSnT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2016 14:43:19 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Tue, 14 Jun 2016 20:36:37 +0200
+From: Esben Stien <b0ef@esben-stien.name>
+To: linux-wireless@vger.kernel.org
+Subject: Failed to set mode: Blocked through rfkill (0x12)
+Message-ID: <9acc4dbc18e8738dd2766b7b1531b802@esben-stien.name> (sfid-20160614_204329_149509_58016AE6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian Chadd <adrian@freebsd.org> writes:
+I'm trying to get bluetooth working and it sometimes does and sometimes 
+not;)
 
-> Right. In the case of RX'ing an A-MPDU, we only get told about the
-> A-MPDU boundaries (isaggr/lastaggr or something in the RX descriptor)
-> but nothing telling us how long the original RX'ed PPDU is.
->
-> So if we get say 16 frames and we are missing the middle one, we can
-> reconstruct things okay. But if we miss the first 8 frames, we don't
-> know when it started - we only get the RX aggr boundary flags set on
-> the 9th and the 16th and we don't even know about the missed frames.
+I've got two chips:
 
-Yes, discovering retransmissions is difficult at the RX side by nature.
-Another approach to catching (some of) these is trying to parse the MAC
-address even for corrupted frames, and if it fits to a station, account
-the airtime. Of course this will only catch cases where the frame header
-does make it through, and it won't work if the hardware discards the
-frame as corrupt before we get to see it.
+BCM4360 (on motherboard, which never works)
+BCM20702A0 (Targus BT USB Adapter, which works mostly)
 
-> I think that's going to be a shortcoming right now. I couldn't think
-> of a clever way to figure it out except to detect holes in the BAW and
-> determine the client is missing frames and take actions there.
+I'm only interested in the BCM20702A0, right now.
 
-Yes, I'm fine with having the RX side airtime accounting just ignore the
-retransmission issue, at least for now.
+When I do sudo systemctl status bluetooth.service, I get:
+● bluetooth.service - Bluetooth service
+    Loaded: loaded (/lib/systemd/system/bluetooth.service; enabled; 
+vendor preset: enabled)
+    Active: active (running) since ti. 2016-06-14 15:10:14 CEST; 4h 50min 
+ago
+      Docs: man:bluetoothd(8)
+  Main PID: 1036 (bluetoothd)
+    Status: "Running"
+    CGroup: /system.slice/bluetooth.service
+            └─1036 /usr/lib/bluetooth/bluetoothd
 
--Toke
+juni 14 19:38:58 quasar bluetoothd[1036]: Failed to set mode: Blocked 
+through rfkill (0x12)
+juni 14 19:39:10 quasar bluetoothd[1036]: Failed to set mode: Blocked 
+through rfkill (0x12)
+juni 14 19:39:22 quasar bluetoothd[1036]: Failed to set mode: Failed 
+(0x03)
+juni 14 19:39:59 quasar bluetoothd[1036]: Failed to set mode: Failed 
+(0x03)
+juni 14 19:40:09 quasar bluetoothd[1036]: Failed to set mode: Failed 
+(0x03)
+juni 14 19:40:32 quasar bluetoothd[1036]: Failed to set mode: Failed 
+(0x03)
+juni 14 19:40:52 quasar bluetoothd[1036]: Failed to set mode: Failed 
+(0x03)
+juni 14 19:44:20 quasar bluetoothd[1036]: Failed to set mode: Failed 
+(0x03)
+juni 14 19:45:56 quasar bluetoothd[1036]: Failed to set mode: Failed 
+(0x03)
+juni 14 19:46:17 quasar bluetoothd[1036]: Failed to set mode: Failed 
+(0x03)
+
+, but if I check rfkill list, it's not blocked:
+0: hci0: Bluetooth
+	Soft blocked: no
+	Hard blocked: no
+2: hci1: Bluetooth
+	Soft blocked: no
+	Hard blocked: no
+
+Any pointers to what may cause this? Where does these messages come 
+from? I'm sure it works again if
+I reboot, but I need to get to the bottom of this;)
