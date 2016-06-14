@@ -1,64 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44323 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:58272 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750937AbcF3JC2 (ORCPT
+	with ESMTP id S1751186AbcFNOJ6 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 05:02:28 -0400
+	Tue, 14 Jun 2016 10:09:58 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Priit Laes <plaes@plaes.org>
-Cc: arnd@arndb.de, Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
-	<ea10ff70-26e6-e151-5cea-c54bd12a054c@redhat.com>
-	<f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
-	<6402170.5s0abZDqlD@wuerfel> <1467230078.2598.2.camel@plaes.org>
-Date: Thu, 30 Jun 2016 12:02:17 +0300
-In-Reply-To: <1467230078.2598.2.camel@plaes.org> (Priit Laes's message of
-	"Wed, 29 Jun 2016 22:54:38 +0300")
-Message-ID: <87eg7f6odi.fsf@kamboji.qca.qualcomm.com> (sfid-20160630_110231_788952_D9C64DD7)
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: pull-request: iwlwifi 2016-06-10
+References: <1465562195.29614.5.camel@coelho.fi>
+Date: Tue, 14 Jun 2016 17:09:52 +0300
+In-Reply-To: <1465562195.29614.5.camel@coelho.fi> (Luca Coelho's message of
+	"Fri, 10 Jun 2016 15:36:35 +0300")
+Message-ID: <87fusf3lqn.fsf@kamboji.qca.qualcomm.com> (sfid-20160614_161008_018300_C22DAA34)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Priit Laes <plaes@plaes.org> writes:
+Luca Coelho <luca@coelho.fi> writes:
 
->> What is the size of this nvram file? As it's board specific, I wonder
->> if we can simply include it inside of the DT verbatim. I remember
->> doing that (in the pre-dtb days, on real open firmware) for the
->> "spidernet"
->> ethernet driver.
+> Here are some fixes intended for 4.7.  Nothing really big, just some
+> fixes for bugs introduced in recent patches and a long-standing bug
+> with IGTK keys, which apparently had never worked properly before.  A
+> few more details in the tag message.
 >
-> It contains a bit too much info:
+> Let me know if everything's fine (or not). :)
 >
-> This is what CubieTruck requires:
+> Luca.
 >
-> http://dl.cubieboard.org/public/Cubieboard/benn/firmware/ap6210/nvram_ap6210.txt
+>
+> The following changes since commit 182fd9eecb287e696c82b30d06c6150d80a49c5b:
+>
+>   MAINTAINERS: Add file patterns for wireless device tree bindings (2016-06-04 17:24:02 +0300)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2016-06-10
 
-In the nvram file I see lots of identifiers:
-
-manfid=0x2d0
-prodid=0x492
-vendid=0x14e4
-devid=0x4343
-boardtype=0x0598
-boardrev=0x1307
-boardnum=777
-
-Are any of these (or a combination of them) unique for each board type?
-What if one of these is provided through DT and then the driver could
-choose the nvram file based on the board id? Just another idea...
+Pulled, thanks.
 
 -- 
 Kalle Valo
