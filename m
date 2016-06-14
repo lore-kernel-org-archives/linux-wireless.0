@@ -1,25 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f48.google.com ([209.85.213.48]:33334 "EHLO
-	mail-vk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750727AbcFAQMz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59033 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239AbcFNOSS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 12:12:55 -0400
-Received: by mail-vk0-f48.google.com with SMTP id r140so33907542vkf.0
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2016 09:12:55 -0700 (PDT)
+	Tue, 14 Jun 2016 10:18:18 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Date: Wed, 1 Jun 2016 21:42:54 +0530
-Message-ID: <CACtQq=bixCDdZpSvj6W+SZKt5N6FSebfgPBjQcqePuj2aN8OAA@mail.gmail.com> (sfid-20160601_181258_723115_86E21853)
-Subject: Where to post Wireless Tools Patches
-From: Dibyajyoti Ghosh <dibyajyotig@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [1/1] rsi: eliminate superfluous NULL check
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1463524241-11351-1-git-send-email-xypron.glpk@gmx.de>
+To: Heinrich Schuchardt <xypron.glpk@gmx.de>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Message-Id: <20160614141818.2ED106120D@smtp.codeaurora.org> (sfid-20160614_161841_947379_C9B7F5CF)
+Date: Tue, 14 Jun 2016 14:18:18 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Heinrich Schuchardt <xypron.glpk@gmx.de> wrote:
+> msg is dereferenced before checking against NULL, e.g.
+> when assigning pad_bytes.
+> Remove the superfluous check in function rsi_mgmt_pkt_to_core.
+> 
+> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
 
-I want to know the mail id list to send a patch on Wireless Tools.
-Kindly reply ASAP.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Thanks,
-Dibyajyoti
+9b648d788d78 rsi: eliminate superfluous NULL check
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9115441/
+
