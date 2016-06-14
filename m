@@ -1,70 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f45.google.com ([209.85.214.45]:38509 "EHLO
-	mail-it0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751109AbcFWL3u (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 07:29:50 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:54731 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751671AbcFNNw3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2016 09:52:29 -0400
+Date: Tue, 14 Jun 2016 15:50:16 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+	linux-wireless@vger.kernel.org
+Subject: Problems with mwifiex_pcie firmware activation
+Message-ID: <20160614135015.GB4962@redhat.com> (sfid-20160614_155231_806852_6CCCE69A)
 MIME-Version: 1.0
-In-Reply-To: <576BC73B.9070503@osg.samsung.com>
-References: <1466599154-4782-1-git-send-email-luisbg@osg.samsung.com>
- <CAGRGNgUoptASqK7jD-K-=zp7eYbJDq+2+u7mj_MabaGtOb9=kQ@mail.gmail.com> <576BC73B.9070503@osg.samsung.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 23 Jun 2016 21:29:30 +1000
-Message-ID: <CAGRGNgW52h=X1_Pac+VJKmpBC_MODzu00JnfDOk180FYmvPKyg@mail.gmail.com> (sfid-20160623_133009_422834_1190A444)
-Subject: Re: [PATCH] staging: wilc1000: fix error handling in wilc_debugfs_init()
-To: Luis de Bethencourt <luisbg@osg.samsung.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Luis,
+I have two systems with this device:
 
-On Thu, Jun 23, 2016 at 9:25 PM, Luis de Bethencourt
-<luisbg@osg.samsung.com> wrote:
-> On 23/06/16 02:29, Julian Calaby wrote:
->> Hi All,
->>
->> On Wed, Jun 22, 2016 at 10:39 PM, Luis de Bethencourt
->> <luisbg@osg.samsung.com> wrote:
->>> The common format to check if a function returned an error pointer is to
->>> use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
->>>
->>> Also, if there was an error returning -EINVAL instead of -1 is more
->>> appropriate.
->>
->> These two changes could be argued to be separate changes deserving of
->> their own patches.
->>
->>> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
->>
->> However if everyone else is ok with that, this is:
->>
->> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->>
->> Thanks,
->>
->
-> Hi Julian,
->
-> If you don't mind I will resend as two separate patches and include your
-> Reviewed-by in both.
+03:00.0 Ethernet controller [0200]: Marvell Technology Group Ltd. 88W8897 [AVASTAR] 802.11ac Wireless [11ab:2b38]
+	Flags: bus master, fast devsel, latency 0, IRQ 92
+	Memory at 90700000 (64-bit, prefetchable) [size=1M]
+	Memory at 90600000 (64-bit, prefetchable) [size=1M]
+	Capabilities: [40] Power Management version 3
+	Capabilities: [50] MSI: Enable+ Count=1/32 Maskable+ 64bit+
+	Capabilities: [70] Express Endpoint, MSI 00
+	Capabilities: [100] Advanced Error Reporting
+	Capabilities: [140] Device Serial Number 00-00-00-00-00-00-00-00
+	Capabilities: [150] Power Budgeting <?>
+	Capabilities: [160] Latency Tolerance Reporting
+	Capabilities: [168] L1 PM Substates
+	Kernel driver in use: mwifiex_pcie
 
-Providing there are no changes other than rebasing and splitting, I'm
-fine with that.,
+Originally mwifiex_pcie driver from linux-4.7-rc3 fails to initialize
+the device with messages:
 
-Thanks,
+[   18.057875] mwifiex_pcie: try set_consistent_dma_mask(32)
+[   18.068694] mwifiex_pcie: PCI memory map Virt0: ffffc90000c00000 PCI memory map Virt2: ffffc90001c00000
+[   18.089754] mwifiex: rx work enabled, cpus 2
+[   18.317941] mwifiex_pcie 0000:02:00.0: PCI-E is not the winner <0x0,0>, exit dnld
+[   18.325531] mwifiex_pcie 0000:02:00.0: WLAN is not the winner! Skip FW dnld
+[   33.460842] mwifiex_pcie 0000:02:00.0: FW failed to be active in time
+[   33.467424] mwifiex_pcie 0000:02:00.0: info: mwifiex_fw_dpc: unregister device
 
--- 
-Julian Calaby
+On one system, I modify driver to skip check_winner_status() in
+mwifiex_dnld_fw() i.e. force firmware upload to device. On first boot
+of that modified kernel, system soft hang - there was very long
+or infinite loop on some mwifiex procedure (I fail to get exact 
+logs from this problem). On second boot, soft hang was gone and
+device still fail (with different messages): 
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+[    8.167830] mwifiex_pcie: try set_consistent_dma_mask(32)
+[    8.174098] mwifiex_pcie: PCI memory map Virt0: ffffc90001c00000 PCI memory map Virt2: ffffc90001e00000
+[    8.195099] mwifiex: rx work enabled, cpus 2
+[    9.595060] mwifiex_pcie 0000:03:00.0: info: FW download over, size 820212 bytes
+[    9.714066] mwifiex_pcie 0000:03:00.0: FW failed to be active in time
+[    9.720598] mwifiex_pcie 0000:03:00.0: info: mwifiex_fw_dpc: unregister device
+
+However now on unmodified kernel on the same system, driver is capable
+to initialize the device:
+
+[    8.751231] mwifiex_pcie: try set_consistent_dma_mask(32)
+[    8.792175] mwifiex_pcie: PCI memory map Virt0: ffffc90001c00000 PCI memory map Virt2: ffffc90001e00000
+[    8.814868] mwifiex: rx work enabled, cpus 2
+[   10.218692] mwifiex_pcie 0000:03:00.0: info: FW download over, size 820212 bytes
+[   10.937332] mwifiex_pcie 0000:03:00.0: WLAN FW is active
+[   11.052624] mwifiex_pcie 0000:03:00.0: info: MWIFIEX VERSION: mwifiex 1.0 (15.68.7.p77) 
+[   11.060810] mwifiex_pcie 0000:03:00.0: driver_version = mwifiex 1.0 (15.68.7.p77) 
+[   11.218702] mwifiex_pcie 0000:03:00.0 wlp3s0: renamed from mlan0
+
+Hence looks like forcing firmware upload somehow changed device, now it
+is capable to initialize. On my second system device is on pristine state
+and original problem is still reproducible. Do you have good solution
+for this problem ?
+
+Thanks
+Stanislaw
