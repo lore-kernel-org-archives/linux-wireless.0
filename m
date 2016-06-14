@@ -1,44 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58196 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751576AbcFIIZP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 04:25:15 -0400
-Message-ID: <1465460710.3442.4.camel@sipsolutions.net> (sfid-20160609_102546_760749_57A8F201)
-Subject: Re: [PATCH] iw: support and enable separate build dir
-From: Johannes Berg <johannes@sipsolutions.net>
-To: maxin.john@gmail.com
-Cc: linux-wireless@vger.kernel.org,
-	"Maxin B. John" <maxin.john@intel.com>
-Date: Thu, 09 Jun 2016 10:25:10 +0200
-In-Reply-To: <1464770416-17514-1-git-send-email-maxin.john@gmail.com>
-References: <1464770416-17514-1-git-send-email-maxin.john@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:33420 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbcFNG6u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2016 02:58:50 -0400
+Received: by mail-oi0-f44.google.com with SMTP id u201so115730253oie.0
+        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 23:58:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160613200211.14790-2-afd@ti.com>
+References: <20160613200211.14790-1-afd@ti.com> <20160613200211.14790-2-afd@ti.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Tue, 14 Jun 2016 08:58:49 +0200
+Message-ID: <CACRpkdaEkCzp3W4x3HSurpHb1qtkJp-SvWCAQivuL3x8CBY-iQ@mail.gmail.com> (sfid-20160614_085916_759651_755B8D57)
+Subject: Re: [PATCH 01/12] gpio: Only descend into gpio directory when
+ CONFIG_GPIOLIB is set
+To: "Andrew F. Davis" <afd@ti.com>
+Cc: Russell King <linux@armlinux.org.uk>,
+	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	Jacek Anaszewski <j.anaszewski@samsung.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>,
+	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
+	"linux-i2c@vger.kernel.org" <linux-i2c@vger.kernel.org>,
+	"linux-leds@vger.kernel.org" <linux-leds@vger.kernel.org>,
+	lguest@lists.ozlabs.org,
+	"linuxppc-dev@lists.ozlabs.org list" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-pwm@vger.kernel.org" <linux-pwm@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-06-01 at 11:40 +0300, maxin.john@gmail.com wrote:
-> From: "Maxin B. John" <maxin.john@intel.com>
-> 
-> Support separation of SRCDIR and OBJDIR
-> 
-Doesn't seem to work:
+On Mon, Jun 13, 2016 at 10:02 PM, Andrew F. Davis <afd@ti.com> wrote:
 
-$ mkdir /tmp/obj
-$ make clean
-$ make OBJDIR=/tmp/obj
-[...]
- GEN  version.c
- CC   version.o
-cc: error: version.c: No such file or directory
-cc: fatal error: no input files
-compilation terminated.
-Makefile:104: recipe for target 'version.o' failed
-make: *** [version.o] Error 1
-$ ls *.o
-event.o  genl.o  ibss.o  info.o  interface.o  iw.o  mesh.o  mpath.o
-mpp.o  ocb.o  phy.o  reg.o  scan.o  station.o  survey.o  util.o
+> When CONFIG_GPIOLIB is not set make will still descend into the gpio
+> directory but nothing will be built. This produces unneeded build
+> artifacts and messages in addition to slowing the build. Fix this here.
+>
+> Signed-off-by: Andrew F. Davis <afd@ti.com>
 
-(object files are in the wrong place too)
+Patch applied. Strange that this went unnoticed for years.
 
-johannes
+Yours,
+Linus Walleij
