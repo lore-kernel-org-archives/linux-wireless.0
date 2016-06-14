@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43058 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751570AbcFCPzB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 11:55:01 -0400
+Received: from mail.ispras.ru ([83.149.199.45]:44804 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752433AbcFNPqM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 14 Jun 2016 11:46:12 -0400
+Message-ID: <576017D8.9080207@ispras.ru> (sfid-20160614_174651_025621_97916E98)
+Date: Tue, 14 Jun 2016 18:42:32 +0400
+From: Pavel Andrianov <andrianov@ispras.ru>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 03 Jun 2016 21:25:00 +0530
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] ath10k: remove 10.1 firmware support
-In-Reply-To: <5751A6D5.7080901@candelatech.com>
-References: <20160603153328.11947-1-rmanohar@qti.qualcomm.com>
- <20160603153328.11947-2-rmanohar@qti.qualcomm.com>
- <5751A6D5.7080901@candelatech.com>
-Message-ID: <743182bcbd1efbdb576bcc51b0215300@codeaurora.org> (sfid-20160603_175508_017724_5D033339)
+To: Eugene Krasnikov <k.eugene.e@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>, wcn36xx@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org,
+	Vaishali Thakkar <vaishali.thakkar@oracle.com>
+Subject: [ldv-project] [net] wcn36xx: potential race condition
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-06-03 21:18, Ben Greear wrote:
-> On 06/03/2016 08:33 AM, Rajkumar Manoharan wrote:
->> Earlier qca9888 device was brought up using 10.1 firmware and then
->> later all firmware fixes and new features are migrated to 10.2/10.2.x
->> firmware branch. As all of 10.1 funtionalities are supported in 10.2
->> based firmware, removing 10.1 firmware support for qca9888 device.
-> 
-> Oh please do not do this.  My 10.1 firmware works very nicely,
-> and out-performs 10.2 in my testing.  Lots of people use my firmware
-> when they need IBSS support or other features not found in
-> official firmware, so it is not just me that will have
-> problems if you remove this support.
-> 
-Aah.. I thought CT firmware is 10.2 based. Since most of firmware bug 
-fixes and enhancements are integrated into 10.2 based firmware, we 
-thought of get rid of 10.1 firmware to reduce code size. Moreover 
-existing 10.1 official firmware has known issues. Is it possible to 
-upgrade CT firmware to 10.2 WMI/HTT interfaces?
+Hi!
 
--Rajkumar
+There is a potential race condition in 
+drivers/net/wireless/ath/wcn36xx/wcn36xx.ko. In wcn36xx_tx -> 
+wcn36xx_start_tx -> wcn36xx_set_tx_data 
+(http://lxr.free-electrons.com/source/drivers/net/wireless/ath/wcn36xx/txrx.c#L176) 
+there is a read of sta_priv->bss_dpu_desc_index and 
+sta_priv->bss_sta_index. In wcn36xx_bss_info_changed -> 
+wcn36xx_smd_config_bss -> wcn36xx_smd_config_bss_rsp 
+(http://lxr.free-electrons.com/source/drivers/net/wireless/ath/wcn36xx/smd.c#L1204) 
+there is a write to the same fields. It  seems that the handlers may be 
+called in parallel and inconsistent data may be obtained.
+The same problem is with sta_priv->sta_index and 
+sta_priv->sta_dpu_desc_index:
+http://lxr.free-electrons.com/source/drivers/net/wireless/ath/wcn36xx/txrx.c#L181 
+
+http://lxr.free-electrons.com/source/drivers/net/wireless/ath/wcn36xx/smd.c#L986 
+
+Is it a real bug? Is it enough to add mutex_lock to wcn36xx_set_tx_data?
+
+-- 
+Pavel Andrianov
+Linux Verification Center, ISPRAS
+web: http://linuxtesting.org
+e-mail: andrianov@ispras.ru
+
