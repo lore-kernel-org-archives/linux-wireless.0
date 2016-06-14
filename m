@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:34430 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751488AbcFAEQb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60158 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751239AbcFNO2U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 00:16:31 -0400
+	Tue, 14 Jun 2016 10:28:20 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1464358702-19083-6-git-send-email-javier@osg.samsung.com>
-References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com> <1464358702-19083-6-git-send-email-javier@osg.samsung.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 1 Jun 2016 14:16:05 +1000
-Message-ID: <CAGRGNgXWAAw7OFOVLUPEYhu-knqQXCMduaxYp+ejSAKGb0WS8g@mail.gmail.com> (sfid-20160601_061648_838107_224FE7A2)
-Subject: Re: [PATCH 5/8] mwifiex: use dev_err() instead of pr_err() in mwifiex_sdio_probe()
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [V2, 4.8,
+ 1/2] brcmutil: add field storing control channel to the struct
+ brcmu_chan
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1463744355-5528-1-git-send-email-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Message-Id: <20160614142819.8522261381@smtp.codeaurora.org> (sfid-20160614_162847_662946_1D724418)
+Date: Tue, 14 Jun 2016 14:28:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Rafał Miłecki wrote:
+> Our d11 code supports encoding/decoding channel info into/from chanspec
+> format used by firmware. Current implementation is quite misleading
+> because of the way "chnum" field is used.
+> When encoding channel info, "chnum" has to be filled by a caller with
+> *center* channel number. However when decoding chanspec the same field
+> is filled with a *control* channel number.
+> 
+> 1) This can be confusing. It's expected for information to be the same
+>    after encoding and decoding.
+> 2) It doesn't allow accessing all info when decoding. Some functions may
+>    need to know both channel numbers, e.g. cfg80211 callback getting
+>    current channel.
+> Solve this by adding a separated field for control channel.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> Reviewed-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-On Sat, May 28, 2016 at 12:18 AM, Javier Martinez Canillas
-<javier@osg.samsung.com> wrote:
-> It's better to have the device name prefixed in the error message.
->
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+Thanks, 2 patches applied to wireless-drivers-next.git:
 
-This looks right to me.
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-
-Thanks,
+4712d88a5732 brcmutil: add field storing control channel to the struct brcmu_chan
+ee6e7aa38394 brcmfmac: support get_channel cfg80211 callback
 
 -- 
-Julian Calaby
+Sent by pwcli
+https://patchwork.kernel.org/patch/9129323/
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
