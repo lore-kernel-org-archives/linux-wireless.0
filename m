@@ -1,138 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:34218 "EHLO
-	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752221AbcFOFYt (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:62295 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028AbcFNRpO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2016 01:24:49 -0400
-Received: by mail-pf0-f182.google.com with SMTP id 62so5029615pfd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:24:48 -0700 (PDT)
-From: Binoy Jayan <binoy.jayan@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
-Subject: [PATCH v2 1/5] staging: wilc1000: Replace semaphore txq_event with completion
-Date: Wed, 15 Jun 2016 10:54:27 +0530
-Message-Id: <1465968271-21540-2-git-send-email-binoy.jayan@linaro.org> (sfid-20160615_072509_288445_6C619D1A)
-In-Reply-To: <1465968271-21540-1-git-send-email-binoy.jayan@linaro.org>
-References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
- <1465968271-21540-1-git-send-email-binoy.jayan@linaro.org>
+	Tue, 14 Jun 2016 13:45:14 -0400
+From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+	<arnagara@codeaurora.org>,
+	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Subject: [PATCH 2/2] mac80211: store tx power value from user to station
+Date: Tue, 14 Jun 2016 23:14:37 +0530
+Message-ID: <1465926277-6509-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20160614_194520_389429_820BEEF5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The semaphore 'txq_event' is used as completion, so convert it
-to a struct completion type.
+This patch introduce a new driver callback drv_sta_set_txpwr. This API will
+copy the transmit power value passed from user space and call the driver
+callback to set the tx power for the station.
 
-Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c         | 8 ++++----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 3 ++-
- drivers/staging/wilc1000/wilc_wlan.c          | 8 +++++---
- 3 files changed, 11 insertions(+), 8 deletions(-)
+ include/net/mac80211.h    |  6 ++++++
+ net/mac80211/cfg.c        |  7 +++++++
+ net/mac80211/driver-ops.c | 21 +++++++++++++++++++++
+ net/mac80211/driver-ops.h |  5 +++++
+ net/mac80211/trace.h      | 27 +++++++++++++++++++++++++++
+ 5 files changed, 66 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 4f93c11..90f906d 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -316,7 +316,7 @@ static int linux_wlan_txq_task(void *vp)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index be30b05..70c02d7 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1755,6 +1755,8 @@ struct ieee80211_sta_rates {
+  *	This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 2).
+  * @support_p2p_ps: indicates whether the STA supports P2P PS mechanism or not.
+  * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
++ * @txpwr: indicates the tx power, in dBm, to be used when sending data frames
++ *	to the STA. Value of 0 means, automatic (default) tx power.
+  * @txq: per-TID data TX queues (if driver uses the TXQ abstraction)
+  */
+ struct ieee80211_sta {
+@@ -1777,6 +1779,7 @@ struct ieee80211_sta {
+ 	u16 max_amsdu_len;
+ 	bool support_p2p_ps;
+ 	u16 max_rc_amsdu_len;
++	u8 txpwr;
  
- 	complete(&wl->txq_thread_started);
- 	while (1) {
--		down(&wl->txq_event);
-+		wait_for_completion(&wl->txq_event);
+ 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
  
- 		if (wl->close) {
- 			complete(&wl->txq_thread_started);
-@@ -650,7 +650,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
- 			mutex_unlock(&wl->hif_cs);
- 		}
- 		if (&wl->txq_event)
--			up(&wl->txq_event);
-+			wait_for_completion(&wl->txq_event);
+@@ -3484,6 +3487,9 @@ struct ieee80211_ops {
+ #endif
+ 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			enum sta_notify_cmd, struct ieee80211_sta *sta);
++	int (*sta_set_txpwr)(struct ieee80211_hw *hw,
++			     struct ieee80211_vif *vif,
++			     struct ieee80211_sta *sta);
+ 	int (*sta_state)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			 struct ieee80211_sta *sta,
+ 			 enum ieee80211_sta_state old_state,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 0c12e40..d439854 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1181,6 +1181,13 @@ static int sta_apply_parameters(struct ieee80211_local *local,
+ 	if (params->listen_interval >= 0)
+ 		sta->listen_interval = params->listen_interval;
  
- 		wlan_deinitialize_threads(dev);
- 		deinit_irq(dev);
-@@ -681,7 +681,7 @@ static int wlan_init_locks(struct net_device *dev)
- 	spin_lock_init(&wl->txq_spinlock);
- 	sema_init(&wl->txq_add_to_head_cs, 1);
- 
--	sema_init(&wl->txq_event, 0);
-+	init_completion(&wl->txq_event);
- 
- 	sema_init(&wl->cfg_event, 0);
- 	sema_init(&wl->sync_event, 0);
-@@ -738,7 +738,7 @@ static void wlan_deinitialize_threads(struct net_device *dev)
- 	wl->close = 1;
- 
- 	if (&wl->txq_event)
--		up(&wl->txq_event);
-+		complete(&wl->txq_event);
- 
- 	if (wl->txq_thread) {
- 		kthread_stop(wl->txq_thread);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 3a561df6..12d7c7b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -42,6 +42,7 @@
- #include "host_interface.h"
- #include "wilc_wlan.h"
- #include <linux/wireless.h>
-+#include <linux/completion.h>
- 
- #define FLOW_CONTROL_LOWER_THRESHOLD	128
- #define FLOW_CONTROL_UPPER_THRESHOLD	256
-@@ -178,7 +179,7 @@ struct wilc {
- 
- 	struct semaphore cfg_event;
- 	struct semaphore sync_event;
--	struct semaphore txq_event;
-+	struct completion txq_event;
- 	struct completion txq_thread_started;
- 
- 	struct task_struct *txq_thread;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 11e16d5..1a57135 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1,3 +1,4 @@
-+#include <linux/completion.h>
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
- #include "wilc_wfi_netdevice.h"
-@@ -89,7 +90,7 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
- 
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- 
--	up(&wilc->txq_event);
-+	complete(&wilc->txq_event);
++	if (params->txpwr >= 0) {
++		sta->sta.txpwr = MBM_TO_DBM(params->txpwr);
++		ret = drv_sta_set_txpwr(local, sdata, sta);
++		if (ret)
++			return ret;
++	}
++
+ 	if (params->supported_rates) {
+ 		ieee80211_parse_bitrates(&sdata->vif.bss_conf.chandef,
+ 					 sband, params->supported_rates,
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index c258f10..638480c 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -138,6 +138,27 @@ int drv_sta_state(struct ieee80211_local *local,
+ 	return ret;
  }
  
- static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
-@@ -119,7 +120,7 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
++__must_check
++int drv_sta_set_txpwr(struct ieee80211_local *local,
++		      struct ieee80211_sub_if_data *sdata,
++		      struct sta_info *sta)
++{
++	int ret = -EOPNOTSUPP;
++
++	might_sleep();
++
++	sdata = get_bss_sdata(sdata);
++	if (!check_sdata_in_driver(sdata))
++		return -EIO;
++
++	trace_drv_sta_set_txpwr(local, sdata, &sta->sta);
++	if (local->ops->sta_set_txpwr)
++		ret = local->ops->sta_set_txpwr(&local->hw, &sdata->vif,
++						&sta->sta);
++	trace_drv_return_int(local, ret);
++	return ret;
++}
++
+ void drv_sta_rc_update(struct ieee80211_local *local,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct ieee80211_sta *sta, u32 changed)
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 184473c..59b2f28 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -539,6 +539,11 @@ int drv_sta_state(struct ieee80211_local *local,
+ 		  enum ieee80211_sta_state old_state,
+ 		  enum ieee80211_sta_state new_state);
  
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- 	up(&wilc->txq_add_to_head_cs);
--	up(&wilc->txq_event);
-+	complete(&wilc->txq_event);
++__must_check
++int drv_sta_set_txpwr(struct ieee80211_local *local,
++		      struct ieee80211_sub_if_data *sdata,
++		      struct sta_info *sta);
++
+ void drv_sta_rc_update(struct ieee80211_local *local,
+ 		       struct ieee80211_sub_if_data *sdata,
+ 		       struct ieee80211_sta *sta, u32 changed);
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 77e4c53..78c37e9 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -823,6 +823,33 @@ TRACE_EVENT(drv_sta_state,
+ 	)
+ );
  
- 	return 0;
- }
-@@ -287,7 +288,8 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
- 
- 	while (dropped > 0) {
--		wilc_lock_timeout(wilc, &wilc->txq_event, 1);
-+		wait_for_completion_timeout(&wilc->txq_event,
-+						msecs_to_jiffies(1));
- 		dropped--;
- 	}
- 
++TRACE_EVENT(drv_sta_set_txpwr,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct ieee80211_sta *sta),
++
++	TP_ARGS(local, sdata, sta),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		STA_ENTRY
++		__field(u8, txpwr)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		STA_ASSIGN;
++		__entry->txpwr = sta->txpwr;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT  STA_PR_FMT " txpwr: %d",
++		LOCAL_PR_ARG, VIF_PR_ARG, STA_PR_ARG, __entry->txpwr
++	)
++);
++
+ TRACE_EVENT(drv_sta_rc_update,
+ 	TP_PROTO(struct ieee80211_local *local,
+ 		 struct ieee80211_sub_if_data *sdata,
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+1.9.1
 
