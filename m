@@ -1,39 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:29065 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1422893AbcFMNlD (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:36403 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751153AbcFNTSk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 09:41:03 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Vincent CESSON <vincent.cesson@smile.fr>
-CC: Raymond Hayes <hayesr@google.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Shengzhen Li <szli@marvell.com>
-Subject: RE: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
-Date: Mon, 13 Jun 2016 13:40:49 +0000
-Message-ID: <db092693c63a4a06ada95537e22d5abf@SC-EXCH04.marvell.com> (sfid-20160613_154108_099862_8A4C8F62)
-References: <4eed6159efdc3f86e4f549bb31ce6a74@smile.fr>
- <CAKVVYBk2Rf6RMPW1uySq4M7LeFCRHBGipYdiOqwQSHxFNmst=A@mail.gmail.com>
- <053ed5ba9d69bc5e6f36ed7e95526663@smile.fr>
- <4fdb1514a02744ad9b8ac11b96e57130@SC-EXCH04.marvell.com>
- <404feff5a5bca118ba53b69301700e2f@smile.fr>
-In-Reply-To: <404feff5a5bca118ba53b69301700e2f@smile.fr>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 14 Jun 2016 15:18:40 -0400
+Received: by mail-wm0-f49.google.com with SMTP id n184so135175370wmn.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 12:18:39 -0700 (PDT)
+Date: Tue, 14 Jun 2016 20:18:15 +0100
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCHv2 1/2] add basic register-field manipulation macros
+Message-ID: <20160614201815.0e0c384c@jkicinski-Precision-T1700> (sfid-20160614_211905_714797_8780C126)
+In-Reply-To: <576052A7.2030503@broadcom.com>
+References: <1465904660-22242-1-git-send-email-jakub.kicinski@netronome.com>
+	<1465904660-22242-2-git-send-email-jakub.kicinski@netronome.com>
+	<576052A7.2030503@broadcom.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgVmluY2VudCwNCg0KPiBGcm9tOiBWaW5jZW50IENFU1NPTiBbbWFpbHRvOnZpbmNlbnQuY2Vz
-c29uQHNtaWxlLmZyXQ0KPiBTZW50OiBNb25kYXksIEp1bmUgMTMsIDIwMTYgNzowOSBQTQ0KPiBU
-bzogQW1pdGt1bWFyIEthcndhcg0KPiBDYzogUmF5bW9uZCBIYXllczsgbGludXgtd2lyZWxlc3NA
-dmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJFOiBtd2lmaWV4K3dwYV9zdXBwbGljYW50IGNh
-bm5vdCBzZXQgdXAgV1BBL1dQQTIgQURIT0MNCj4gDQo+IEFib3V0IHRoZSBzdHJhbmdlIGJlaGF2
-aW91ciB3aXRoIHRoZSB0d28gZGV2aWNlcyBjb25uZWN0aW5nIGRlc3BpdGUgdGhlDQo+IGJhZCBw
-YXNzd29yZHMsIEkgbWFkZSBhIGxpdHRsZSBtaXN0YWtlOiBvbiB0aGUgZGV2aWNlIDIsIHdwYV9z
-dXBwbGljYW50DQo+IHdhcyBub3QgYnVpbHQgd2l0aCBvcHRpb24gQ09ORklHX0lCU1NfUlNOPXku
-IEJ1dCBzdGlsbCwgZGV2aWNlIDEgc2hvdWxkDQo+IG5vdCBhY2NlcHQgZGV2aWNlIDIuLi4NCj4g
-DQo+IE5vdGUgdGhhdCB3aXRoIG9wdGlvbiBDT05GSUdfSUJTU19SU049eSBlbmFibGVkIG9uIGJv
-dGggZGV2aWNlcywgV1BBLVBTSw0KPiBjb25uZWN0aW9uIGRvZXMgbm90IHdvcmssIGV2ZW4gd2l0
-aCB0aGUgcmlnaHQgcGFzc3dvcmQuLi4NCj4gDQoNCkkgc2VlLiBQbGVhc2Ugc2hhcmUgdGhlIHdw
-YV9zdXBwbGljYW50IGxvZ3Mgd2l0aCBDT05GSUdfSUJTU19SU049eSBlbmFibGVkIGZvciBhbmFs
-eXNpcy4NCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0K
+On Tue, 14 Jun 2016 20:53:28 +0200, Arend van Spriel wrote:
+> On 14-06-16 13:44, Jakub Kicinski wrote:
+> > +#ifndef _LINUX_BITFIELD_H
+> > +#define _LINUX_BITFIELD_H
+> > +
+> > +#include <asm/types.h>
+> > +#include <linux/bug.h>
+> > +#include <linux/log2.h>
+> > +
+> > +#define _bf_shf(x) (__builtin_ffsll(x) - 1)
+> > +
+> > +#define _BF_FIELD_CHECK(_mask, _val)					\
+> > +	({								\
+> > +		const u64 hi = (_mask) + (1ULL << _bf_shf(_mask));	\
+> > +									\
+> > +		BUILD_BUG_ON(!(_mask) || (hi && !is_power_of_2_u64(hi))); \
+> > +		BUILD_BUG_ON(__builtin_constant_p(_val) ?		\
+> > +			     ~((_mask) >> _bf_shf(_mask)) & (_val) :	\
+> > +			     0);					\
+> > +	})  
+> 
+> I am sceptic whether it is useful to have 64-bit used here and there is
+> a price to pay on (many) 32-bit architectures for using 64-bit
+> operations. Maybe it is not an issue because it is inside BUILD_BUG_ON()
+> macro.
+
+It's a trade-off between having a separate set of macros for 32-bit
+machines and risking someone potentially loosing cycles when using the
+macros in a non-standard way.  Note that all 64 bit operations are
+performed on the mask which I expect to be compile time constant.
+
+> > +#define FIELD_PUT(_mask, _val)					\
+> > +	({							\
+> > +		_BF_FIELD_CHECK(_mask, _val);			\
+> > +		((u32)(_val) << _bf_shf(_mask)) & (_mask);	\
+> > +	})
+> > +
+> > +#define FIELD_GET(_mask, _val)					\
+> > +	({							\
+> > +		_BF_FIELD_CHECK(_mask, 0);			\
+> > +		(u32)(((_val) & (_mask)) >> _bf_shf(_mask));	\
+> > +	})
+> > +
+> > +#define FIELD_PUT64(_mask, _val)				\
+> > +	({							\
+> > +		_BF_FIELD_CHECK(_mask, _val);			\
+> > +		((u64)(_val) << _bf_shf(_mask)) & (_mask);	\
+> > +	})
+> > +
+> > +#define FIELD_GET64(_mask, _val)				\
+> > +	({							\
+> > +		_BF_FIELD_CHECK(_mask, 0);			\
+> > +		(u64)(((_val) & (_mask)) >> _bf_shf(_mask));	\
+> > +	})  
+> 
+> Is there really hardware out there that exposes 64-bit wide hardware
+> registers?
+
+I need this for encoding 64-bit wide RISC instructions [1] to be honest.
+
+[1] http://thread.gmane.org/gmane.linux.network/414538
