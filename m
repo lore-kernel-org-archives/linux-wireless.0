@@ -1,93 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37544 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710AbcF1Gsl convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:36699 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752028AbcFNRox (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 02:48:41 -0400
-Received: by mail-wm0-f51.google.com with SMTP id a66so12260230wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 23:48:40 -0700 (PDT)
+	Tue, 14 Jun 2016 13:44:53 -0400
+From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+	<arnagara@codeaurora.org>,
+	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Subject: [PATCH 1/2] cfg80211: Add support to set tx power for a station associated
+Date: Tue, 14 Jun 2016 23:14:16 +0530
+Message-ID: <1465926256-6463-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20160614_194457_479464_1DFBB7C4)
 MIME-Version: 1.0
-In-Reply-To: <20160627143600.GA5292@atheros-ThinkPad-T61>
-References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
- <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
- <CA+BoTQnUvF2Zy7_WuEi0V+KjByRghVmoeR6yrs6hu6ag=KmBqQ@mail.gmail.com> <20160627143600.GA5292@atheros-ThinkPad-T61>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Tue, 28 Jun 2016 08:48:38 +0200
-Message-ID: <CA+BoTQn+HeishCMf4hjpWjLBmvFG2r0gosBv77RTyk7+uOAvPA@mail.gmail.com> (sfid-20160628_084848_067106_EF43D503)
-Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
- QCA99X0 and later
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 June 2016 at 16:36, Mohammed Shafi Shajakhan
-<mohammed@codeaurora.org> wrote:
-> Hi Michal,
->
-> thanks for the review ..
->
-> On Mon, Jun 27, 2016 at 11:27:27AM +0200, Michal Kazior wrote:
->> On 23 June 2016 at 18:40, Mohammed Shafi Shajakhan
->> <mohammed@qti.qualcomm.com> wrote:
->> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->> >
->> > For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
->> > NULL func status (always acked/successs !!) when hostapd does a
->> > PROBE_CLIENT via nullfunc frames when the station is powered off
->> > abruptly (inactive timer probes client via null func after the inactive
->> > time reaches beyond the threshold). Fix this by disabling the workaround
->> > (getting the ACK status of NULL func frames by sending via HTT mgmt-tx
->> >  path) introduced by the change ("ath10k: fix beacon loss handling ")
->> > for QCA99X0 and later chipsets. The normal tx path provides the proper
->> > ACK status for NULL data frames. As of now disable this workaround for
->> > chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
->> > completely get rid of this workaround for all the chipsets
->> >
->> > Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
->> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->> > ---
->> >  drivers/net/wireless/ath/ath10k/core.c | 3 +++
->> >  drivers/net/wireless/ath/ath10k/core.h | 6 ++++++
->> >  drivers/net/wireless/ath/ath10k/mac.c  | 1 +
->> >  3 files changed, 10 insertions(+)
->> >
->> > diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
->> > index 689d6ce..9978e4a 100644
->> > --- a/drivers/net/wireless/ath/ath10k/core.c
->> > +++ b/drivers/net/wireless/ath/ath10k/core.c
->> > @@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->> >                         .board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
->> >                         .board_size = QCA99X0_BOARD_DATA_SZ,
->> >                         .board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
->> > +                       .disable_null_func_workaround = true,
->>
->> Tx completion (bugs) are firmware specific, not hardware. This should
->> be expressed via features bits in ath10k FW API, no?
->>
->>
-> [shafi] Are you suggesting me to introduce something like
-> "ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT" ? Kalle any suggestions ?
->
-> Also how about getting this workaround completely if Ben had fixed this in his tree,
-> will this affect older 10.2.4 ?
+This patch adds support to set transmit power setting type and transmit
+power level attributes to NL80211_CMD_SET_STATION in order to facilitate
+adjusting the transmit power level of a station associated to the AP.
 
-There's still 636.
+The added attributes allow selection of automatic and limited transmit
+power level, with the level defined in mBm format.
 
-We could probably get rid of this as long as:
- - ath10k can express the need to use Probe Requests for AP probing
-(in client mode) and beacon loss handling purposes instead of NullFunc
-to mac80211
- - everyone uses hostapd with disassoc_low_ack=1 with affected
-firmware revisions
- - supplicant uses disassoc_low_ack=1 for p2p go
- - I have no idea about mesh/ibss but they might require some work as well
+Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+---
+ include/net/cfg80211.h       |  5 ++++
+ include/uapi/linux/nl80211.h | 12 ++++++++++
+ net/wireless/nl80211.c       | 54 ++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 71 insertions(+)
 
-Otherwise you'll introduce regressions.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 6392167..4bf761d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -797,6 +797,10 @@ enum station_parameters_apply_mask {
+  * @opmode_notif: operating mode field from Operating Mode Notification
+  * @opmode_notif_used: information if operating mode field is used
+  * @support_p2p_ps: information if station supports P2P PS mechanism
++ * @txpwr: tx power (in mBm) to be used for sending data traffic. If tx power
++ *	is not provided, the default per-interface tx power setting will be
++ *	overriding. Driver should be picking up the lowest tx power, either tx
++ *	power per-interface or per-station.
+  */
+ struct station_parameters {
+ 	const u8 *supported_rates;
+@@ -823,6 +827,7 @@ struct station_parameters {
+ 	u8 opmode_notif;
+ 	bool opmode_notif_used;
+ 	int support_p2p_ps;
++	unsigned int txpwr;
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index e23d786..fe28006 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1819,6 +1819,15 @@ enum nl80211_commands {
+  *
+  * @NL80211_ATTR_PAD: attribute used for padding for 64-bit alignment
+  *
++ * @NL80211_ATTR_STA_TX_POWER_SETTING: Transmit power setting type (u32) for
++ *	station associated with the AP. See &enum nl80211_tx_power_setting for
++ *	possible values.
++ * @NL80211_ATTR_STA_TX_POWER: Transmit power level (u32) in mBm units. This
++ *	allows to set Tx power for a station. If this attribute is not included,
++ *	the default per-interface tx power setting will be overriding. Driver
++ *	should be picking up the lowest tx power, either tx power per-interface
++ *	or per-station.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2201,6 +2210,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_PAD,
+ 
++	NL80211_ATTR_STA_TX_POWER_SETTING,
++	NL80211_ATTR_STA_TX_POWER,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d759901..0ef7377 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -257,6 +257,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_STA_SUPPORTED_RATES] = { .type = NLA_BINARY,
+ 					       .len = NL80211_MAX_SUPP_RATES },
+ 	[NL80211_ATTR_STA_PLINK_ACTION] = { .type = NLA_U8 },
++	[NL80211_ATTR_STA_TX_POWER_SETTING] = { .type = NLA_U32 },
++	[NL80211_ATTR_STA_TX_POWER] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_STA_VLAN] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_MNTR_FLAGS] = { /* NLA_NESTED can't be empty */ },
+ 	[NL80211_ATTR_MESH_ID] = { .type = NLA_BINARY,
+@@ -4380,6 +4382,32 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
+ 		params.local_pm = pm;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_STA_TX_POWER_SETTING]) {
++		enum nl80211_tx_power_setting type;
++		int idx;
++
++		if (!rdev->ops->set_tx_power)
++			return -EOPNOTSUPP;
++
++		idx = NL80211_ATTR_STA_TX_POWER_SETTING;
++		type = nla_get_u32(info->attrs[idx]);
++
++		if (!info->attrs[NL80211_ATTR_STA_TX_POWER] &&
++		    (type != NL80211_TX_POWER_AUTOMATIC))
++			return -EINVAL;
++
++		if (type != NL80211_TX_POWER_AUTOMATIC) {
++			if (type == NL80211_TX_POWER_LIMITED) {
++				idx = NL80211_ATTR_STA_TX_POWER;
++				params.txpwr = nla_get_u32(info->attrs[idx]);
++			} else {
++				return -EINVAL;
++			}
++		} else {
++			params.txpwr = 0;
++		}
++	}
++
+ 	/* Include parameters for TDLS peer (will check later) */
+ 	err = nl80211_set_station_tdls(info, &params);
+ 	if (err)
+@@ -4507,6 +4535,32 @@ static int nl80211_new_station(struct sk_buff *skb, struct genl_info *info)
+ 			return -EINVAL;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_STA_TX_POWER_SETTING]) {
++		enum nl80211_tx_power_setting type;
++		int idx;
++
++		if (!rdev->ops->set_tx_power)
++			return -EOPNOTSUPP;
++
++		idx = NL80211_ATTR_STA_TX_POWER_SETTING;
++		type = nla_get_u32(info->attrs[idx]);
++
++		if (!info->attrs[NL80211_ATTR_STA_TX_POWER] &&
++		    (type != NL80211_TX_POWER_AUTOMATIC))
++			return -EINVAL;
++
++		if (type != NL80211_TX_POWER_AUTOMATIC) {
++			if (type == NL80211_TX_POWER_LIMITED) {
++				idx = NL80211_ATTR_STA_TX_POWER;
++				params.txpwr = nla_get_u32(info->attrs[idx]);
++			} else {
++				return -EINVAL;
++			}
++		} else {
++			params.txpwr = 0;
++		}
++	}
++
+ 	err = nl80211_parse_sta_channel_info(info, &params);
+ 	if (err)
+ 		return err;
+-- 
+1.9.1
 
-
-Michał
