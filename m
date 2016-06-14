@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:33963 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751235AbcFTVwJ (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:35430 "EHLO
+	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751186AbcFNOQX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 17:52:09 -0400
-To: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: Stand-alone ath10k-ct driver.
-Message-ID: <57686587.9050607@candelatech.com> (sfid-20160620_235213_543367_1C77D61D)
-Date: Mon, 20 Jun 2016 14:52:07 -0700
+	Tue, 14 Jun 2016 10:16:23 -0400
+Received: by mail-qk0-f193.google.com with SMTP id b136so6029105qkg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 07:16:23 -0700 (PDT)
+Date: Tue, 14 Jun 2016 10:16:06 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix potential null dereference bugs
+Message-ID: <20160614141606.GA713@localhost> (sfid-20160614_161627_133331_624EF1AD)
+References: <1465563164-783-1-git-send-email-me@bobcopeland.com>
+ <CA+BoTQkg+uea_YzUgrVBPhA8uRxNpd29Kd1y1tvt0a-JyOSLQw@mail.gmail.com>
+ <1465808939.2434.1.camel@sipsolutions.net>
+ <20160613130507.GA11074@localhost>
+ <1465823880.10050.3.camel@sipsolutions.net>
+ <87shwf3mlh.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87shwf3mlh.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On Tue, Jun 14, 2016 at 01:51:24PM +0000, Kalle Valo wrote:
+> > It's not clear that's the same situation, since tun->sk is very likely
+> > to have been an actual pointer, not an embedded thing like drv_priv.
 
-I have made an attempt to provide a stand-alone ath10k driver that should compile
-and work against stock 4.7 kernels.  This should provide better support for CT ath10k
-firmware without having to apply large numbers of patches.  My 4.7 kernel has only been very lightly tested
-to date, and the stand-alone driver is only compile tested.  I will update the
-ath-ct repo often as testing progresses on 4.7.
+Just to follow up on that thread, I did research it a bit yesterday and
+came to the conclusion that it is UB even when the target is in the same
+struct.  However, in a not very scientific survey, I didn't see either clang
+or gcc remove the test in a simplified test case (with -O3 and without
+-fno-delete-null-pointer-checks).  If drv_priv were an actual pointer, gcc
+did remove it but clang did not.  So, there's that.
 
-If there are brave souls that want to try it out, I'd appreciate any feedback.
+> > However, with all this, I think I'd simply not take any chances - the
+> > patch isn't exactly invasive and in some cases (for example the first
+> > hunk of the patch) will even improve the code to the point where the
+> > compiler could warn about uninitialized usage of the pointer when the
+> > code gets modified to use it in case of !txq->sta.
+> >
+> > I'd take it, but I guess it's Kalle's decision :)
+> 
+> Yeah, I'm leaning towards Johannes. These are not really invasive.
 
-https://github.com/greearb/ath-ct
-
-See the README.txt for some details.  This will require at least some familiarity
-with building kernels since I do not have any nice automation to compile against
-the current running kernel yet, for instance.
-
-Thanks,
-Ben
+Thanks, and sorry about the checkpatch -- I did run checkpatch on it but
+for some reason my version only complained about some of them.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Bob Copeland %% http://bobcopeland.com/
