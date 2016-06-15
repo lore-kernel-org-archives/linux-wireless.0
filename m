@@ -1,86 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plaes.org ([188.166.43.21]:33416 "EHLO plaes.org"
+Received: from mail.kernel.org ([198.145.29.136]:58742 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751839AbcF2TzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 15:55:01 -0400
-Message-ID: <1467230078.2598.2.camel@plaes.org> (sfid-20160629_215505_927197_CD032CD5)
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add
- brcm,nvram_file_name dt property
-From: Priit Laes <plaes@plaes.org>
-To: arnd@arndb.de, Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Date: Wed, 29 Jun 2016 22:54:38 +0300
-In-Reply-To: <6402170.5s0abZDqlD@wuerfel>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
-	 <ea10ff70-26e6-e151-5cea-c54bd12a054c@redhat.com>
-	 <f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
-	 <6402170.5s0abZDqlD@wuerfel>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753146AbcFOMsr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2016 08:48:47 -0400
+Date: Wed, 15 Jun 2016 14:48:42 +0200
+From: Sebastian Reichel <sre@kernel.org>
+To: "Andrew F. Davis" <afd@ti.com>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+	Russell King <linux@armlinux.org.uk>,
+	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	Jacek Anaszewski <j.anaszewski@samsung.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>, linux-pwm@vger.kernel.org,
+	lguest@lists.ozlabs.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-leds@vger.kernel.org,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH] hsi: Build hsi_boardinfo.c into hsi core if enabled
+Message-ID: <20160615124842.GA6702@earth> (sfid-20160615_144910_304900_DA4AB5B9)
+References: <201606140808.bRJtAy1i%fengguang.wu@intel.com>
+ <57602D10.4080708@ti.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="h31gzZEtNLTqOjlF"
+In-Reply-To: <57602D10.4080708@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-06-29 at 21:33 +0200, Arnd Bergmann wrote:
-> On Wednesday, June 29, 2016 8:51:44 PM CEST Arend Van Spriel wrote:
-> > > Typical wifi devices will have some sort of non volatile storage
-> > > on board to not only store the ethernet(mac) address, but also
-> > > to contain e.g. info about the antenna gain so that the firmware
-> > > and/or the driver can take the antenna gain into account and
-> > > ensure
-> > > that they never exceed the maximum allowed broadcast strength.
-> > > 
-> > > However on some embedded devices there is no non-volatile storage
-> > > for the wifi (for cost reasons) and instead this configuration
-> > > info
-> > > (which is board / pcb specific) is loaded in the form of a
-> > > file which contains the contents which would normally be in the
-> > > non-volatile storage.
-> > > 
-> > > Since we are dealing with a per-board config-file here, which is
-> > > loaded from the os filesystem we really need to specify a
-> > > basename
-> > > here as the list of possible boards is endless, so we cannot
-> > > have a lookup table in the driver.
-> > 
-> > As Jonas mentioned the general principle of device tree is to be
-> > agnostic with regards to OS and/or driver as you undoubtedly know.
-> > His
-> > proposal seems like a usable solution for your problem while
-> > complying
-> > to the device tree principle. So instead of overriding the default
-> > brcmfmac should modify it when dt specifies the "module" property,
-> > ie:
-> > 
-> > no "module" in DT:      nvram filename = brcm/brcmfmac43362-
-> > sdio.txt
-> > "module=ap6210" in DT:  nvram filename = brcm/brcmfmac43362-
-> > ap6210.txt
-> > 
-> > By the way, the example in the bindings file does not seem to
-> > specify a
-> > basename, but path+basename+fileext.
-> 
-> What is the size of this nvram file? As it's board specific, I wonder
-> if we can simply include it inside of the DT verbatim. I remember
-> doing that (in the pre-dtb days, on real open firmware) for the
-> "spidernet"
-> ethernet driver.
 
-It contains a bit too much info:
+--h31gzZEtNLTqOjlF
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This is what CubieTruck requires:
+Hi Andrew,
 
-http://dl.cubieboard.org/public/Cubieboard/benn/firmware/ap6210/nvram_a
-p6210.txt
+On Tue, Jun 14, 2016 at 11:13:04AM -0500, Andrew F. Davis wrote:
+> If the HSI core is built as a module hsi_boardinfo may still
+> be built-in as its Kconfig type is bool, which can cause build
+> issues. Fix this by building this code into the HSI core when
+> enabled.
+>=20
+> Reported-by: kbuild test robot <lkp@intel.com>
+> Signed-off-by: Andrew F. Davis <afd@ti.com>
+> ---
+> This build error seems to be due to Kconfig symbol CONFIG_HSI_BOARDINFO
+> being a bool but depending on a tristate (CONFIG_HSI). This is normally
+> okay when it is just a flag to enable a feature in source, but the
+> helper code file hsi_boardinfo.c is built as a separate entity when
+> enabled. This patch is probably how it was intended, and is more like
+> how others do this kind of thing.
+>=20
+> This patch should be applied before the parent patch:
 
+Thanks, I applied both patches.
+
+-- Sebastian
+
+--h31gzZEtNLTqOjlF
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJXYU6oAAoJENju1/PIO/qae6QP/35LQ3B8vO2lZZLD3fJoRLEz
+yJp80KFgWVGLlJIxoywl6Lm8tK1b48miCd73ee7Euagta3zJqZMutPO3lCiaExQh
+QXIykcVyzZXxa6AELhlPXbJlffoetyTvq7n831+Hk1IqhwOgCpm8jSVszgw11fyH
+FIDtsW7QpUnhq/lBIl+6yc8OYszH3N69Cv0sS3J5neDT2W9dochTcv01JEMAmFIL
+8TWT+5hZ/7WvvXt2tDJ03uP7aNbpDOAhutNaAjsYZEA9pX+SVa17O9eQGT5tAT5a
+0pWIFazcVt06+phTF28XlkPqVhSA0wtXeRoyLuz+UHFjGWJiwmbKTJ6QipFclEL7
+yXNE8V+g2FRiH4ZqBQ3EQtzusatln5CixirVF1wtPXp75mpZ9XHynDS2tvI6GmO+
+7jPGFRtp8QueA6LzlQN6AskCEm7BpVX2CbwTc4k3W5BDn3kmeVKdcd7a5fVLfN7Z
+y6e3kkYa8MSNfu/GFEXzeYfraIrtjwE2JfcqjDp8SgOcEaxI46n5fXNhqs4Mq/Kd
+FXUswYrJPl+hbCAklxt0YouQP55fzhBBc6FZIf3sCg/Tw1RhUs7ka0X0yKwGBp1r
+K8rHk8x9QA7ypJ66vOr4bYmqvXn5SzBb6pF4HkKLFDIrWYTrym/z2uD+H4wFq6ZN
+3viKiXS2qFAhhSbKm82E
+=h2dd
+-----END PGP SIGNATURE-----
+
+--h31gzZEtNLTqOjlF--
