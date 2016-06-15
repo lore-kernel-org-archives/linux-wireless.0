@@ -1,57 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bh-25.webhostbox.net ([208.91.199.152]:55015 "EHLO
-	bh-25.webhostbox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161013AbcFCUsz (ORCPT
+Received: from vpn.innerrange.com.au ([203.122.143.146]:6944 "EHLO
+	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751269AbcFOECT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 16:48:55 -0400
-From: Guenter Roeck <linux@roeck-us.net>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Guenter Roeck <linux@roeck-us.net>
-Subject: [PATCH] libertas_tf: Drop unused variable and define
-Date: Fri,  3 Jun 2016 13:48:55 -0700
-Message-Id: <1464986935-23361-1-git-send-email-linux@roeck-us.net> (sfid-20160603_224921_060026_BC5C2206)
+	Wed, 15 Jun 2016 00:02:19 -0400
+From: Craig McQueen <craig.mcqueen@innerrange.com>
+To: Craig McQueen <craig.mcqueen@innerrange.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 15 Jun 2016 14:02:06 +1000
+Subject: RE: rt2800usb firmware rt2870.bin 0.36 not scanning
+Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D2A096D09@IR-CENTRAL.corp.innerrange.com> (sfid-20160615_060237_664875_48E8581F)
+References: <f2d6e3de-826a-c7b6-ac29-16b83be758e8@gmail.com>
+ <5500469A22567C4BAF673A6E86AFA3A4022D2A096849@IR-CENTRAL.corp.innerrange.com>
+In-Reply-To: <5500469A22567C4BAF673A6E86AFA3A4022D2A096849@IR-CENTRAL.corp.innerrange.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-gcc-6 reports:
-
-drivers/net/wireless/marvell/libertas_tf/main.c:30:19: error:
-	'lbtf_driver_version' defined but not used
-
-with -Werror=unused-const-variable=.
-
-Reported-by: Fengguang Wu <fengguang.wu@intel.com> [0-day test robot]
-Signed-off-by: Guenter Roeck <linux@roeck-us.net>
----
- drivers/net/wireless/marvell/libertas_tf/main.c | 7 -------
- 1 file changed, 7 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/libertas_tf/main.c b/drivers/net/wireless/marvell/libertas_tf/main.c
-index 0bf8916a02cf..75bf0c8a2f6f 100644
---- a/drivers/net/wireless/marvell/libertas_tf/main.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/main.c
-@@ -16,7 +16,6 @@
- #include <linux/module.h>
- #include "libertas_tf.h"
- 
--#define DRIVER_RELEASE_VERSION "004.p0"
- /* thinfirm version: 5.132.X.pX */
- #define LBTF_FW_VER_MIN		0x05840300
- #define LBTF_FW_VER_MAX		0x0584ffff
-@@ -27,12 +26,6 @@ unsigned int lbtf_debug;
- EXPORT_SYMBOL_GPL(lbtf_debug);
- module_param_named(libertas_tf_debug, lbtf_debug, int, 0644);
- 
--static const char lbtf_driver_version[] = "THINFIRM-USB8388-" DRIVER_RELEASE_VERSION
--#ifdef DEBUG
--	"-dbg"
--#endif
--	"";
--
- struct workqueue_struct *lbtf_wq;
- 
- static const struct ieee80211_channel lbtf_channels[] = {
--- 
-2.5.0
-
+Q3JhaWcgTWNRdWVlbiB3cm90ZToNCj4gWG9zZSBWYXpxdWV6IFBlcmV6IHdyb3RlOg0KPiA+IENy
+YWlnIE1jUXVlZW4gd3JvdGU6DQo+ID4NCj4gPiA+IEkgaGF2ZSBhIEQtTGluayBEV0EtMTQwIFVT
+QiBXaS1GaSBkZXZpY2Ugd2hpY2ggaXMgcnQyODAwIGJhc2VkICg1MzkyDQo+ID4gPiBjaGlwc2V0
+KS4gSSdtIHRyeWluZyB0byB1c2UgaXQgb24gYSBCZWFnbGVCb25lIEJsYWNrIGJhc2VkIHN5c3Rl
+bQ0KPiA+ID4gd2l0aCAzLjE0Lngga2VybmVsIGJ1aWx0IHdpdGggWW9jdG8uIFdlJ3JlIHVzaW5n
+IENvbm5NYW4gMS4zMCBhdCB0aGUNCj4gbW9tZW50Lg0KPiA+DQo+ID4gVHJ5IGl0IHdpdGggYSBf
+ZGVza3RvcCB4ODZfNjQgZGlzdHJpYnV0aW9uXyAsIHdpdGggYSAqcmVjZW50IGtlcm5lbCoNCj4g
+PiBhcw0KPiA+IEZlZG9yYTogKFdPUksgaXMgZ25vbWUpDQo+ID4gaHR0cHM6Ly9hbHQuZmVkb3Jh
+cHJvamVjdC5vcmcvcHViL2FsdC9saXZlLXJlc3BpbnMvDQo+IA0KPiBIbW0sIHRoYXQgaXMgbm9u
+LXRyaXZpYWwgYnV0IEkgbWF5IHRyeSBpdC4NCj4gDQo+IEZvciBub3csIEknbGwgYWxzbyB0cnkg
+YSA0LjQuNiBrZXJuZWwgcnVubmluZyBvbiBhIEJlYWdsZUJvbmUgQmxhY2sgKHdpdGggYSBVU0IN
+Cj4gaHViIHRvIHdvcmsgYXJvdW5kIGFub3RoZXIgaXNzdWUgd2l0aCB0aGUgcnQyODAwdXNiIGRy
+aXZlciBjcmFzaGluZyBhcw0KPiBkZXNjcmliZWQgaW4gYW5vdGhlciBlLW1haWwpLg0KPiANCj4g
+PiA+IFdlJ3ZlIGJlZW4gZmluZGluZyBzb21lIGluc3RhYmlsaXRpZXMgd2l0aCBpdCBwZXJpb2Rp
+Y2FsbHkNCj4gPiA+IGRpc2Nvbm5lY3RpbmcgZnJvbSBzb21lIG5ldHdvcmtzLiBTbyB3ZSB0cmll
+ZCB1cGdyYWRpbmcgdGhlIGZpcm13YXJlDQo+ID4gPiBmaWxlIHJ0Mjg3MC5iaW4gZnJvbSB2ZXJz
+aW9uIDAuMjkgdG8gMC4zNi4gVGhhdCBzZWVtcyB0byBiZSBtb3JlDQo+ID4gPiBzdGFibGUgd2l0
+aCB0aGUgbmV0d29yay4gSG93ZXZlciwgd2UncmUgZmluZGluZyB0aGF0IGl0IGluaXRpYWxseQ0K
+PiA+ID4gZG9lc24ndCBjb25uZWN0LCB1bnRpbCB0aGUgV2ktRmkgaGFzIGJlZW4gZGlzYWJsZWQg
+YW5kIHRoZW4gcmUtZW5hYmxlZC4gJw0KPiA+IHNjYW4gd2lmaScNCj4gPiA+IGFuZCAnaXdsaXN0
+IHNjYW4nIGRvbid0IHJldHVybiBhbnl0aGluZyB1bnRpbCBXaS1GaSBoYXMgYmVlbg0KPiA+ID4g
+ZGlzYWJsZWQgYW5kIHRoZW4gcmUtZW5hYmxlZC4NCj4gPg0KPiA+IERvbid0IHVzZSBhbnkgd3Jh
+cHBlcihOTSwgQ29ubk1hbiwgd2ljZCwgLi4uKSwgdXN1YWxseSBhcmUgYnVnZ3kuIFlvdQ0KPiA+
+IHNob3VsZCB1c2UgcmF3IGNvbW1hbmRzICJpdyIgYW5kICJ3cGFfc3VwcGxpY2FudCIuIEhpbnRz
+Og0KPiA+IGh0dHBzOi8vd2lyZWxlc3Mud2lraS5rZXJuZWwub3JnL2VuL3VzZXJzL2RvY3VtZW50
+YXRpb24vaXcgYW5kDQo+ID4gd3BhX3N1cHBsaWNhbnQgYWx3YXlzIHJ1bm5pbmcgd2l0aCAiLURu
+bDgwMjExIg0KPiANCj4gT2theSwgSSd2ZSBzdHJpcHBlZCBkb3duIHRoZSBzeXN0ZW0gc28gQ29u
+bk1hbiwgdWRldiBydWxlcyBhcmVuJ3QgcnVubmluZy4NCj4gDQo+IE9uIGFsbCBzeXN0ZW1zLCBh
+ZnRlciBwbHVnZ2luZyBpbiB0aGUgZGV2aWNlLCBJIGhhdmUgdG8gaXNzdWU6DQo+IA0KPiAgICAg
+aXAgbGluayBzZXQgd2xhbjAgdXANCj4gDQo+IEFmdGVyIHRoaXMsIEkgdHJ5IHRvIGRvIGEgc2Nh
+bjoNCj4gDQo+ICAgICBpdyBkZXYgd2xhbjAgc2Nhbg0KPiANCj4gT24ga2VybmVsIDQuNC42LCB3
+aXRoIGZpcm13YXJlIDAuMzYsIGl0IHdvcmtzIGZpbmUgKGxpc3RzIEFQcyBpdCBmaW5kcykuIE9u
+IGtlcm5lbA0KPiAzLjE0LngsIHdpdGggZmlybXdhcmUgMC4yOSwgaXQgd29ya3MgZmluZS4gQnV0
+IG9uIGtlcm5lbCAzLjE0LngsIHdpdGggZmlybXdhcmUNCj4gMC4zNiwgaXQgcmV0dXJucyBub3Ro
+aW5nLiBCdXQgdGhlbiwgaWYgSSBkbyB0aGlzOg0KPiANCj4gICAgIGlwIGxpbmsgc2V0IHdsYW4w
+IGRvd24NCj4gICAgIGlwIGxpbmsgc2V0IHdsYW4wIHVwDQo+ICAgICBpdyBkZXYgd2xhbjAgc2Nh
+bg0KPiANCj4gVGhlbiBpdCB3b3JrcyBmaW5lLg0KPiANCj4gU28sIHRoZSBxdWVzdGlvbiBpcywg
+d2h5IGRvZXMgZmlybXdhcmUgMC4zNiB3aXRoIGtlcm5lbCAzLjE0Lnggbm90IHdvcmsgdW50aWwN
+Cj4gSSd2ZSBtYWRlIHRoZSBpbnRlcmZhY2UgZ28gdXAsIHRoZW4gZG93biwgYW5kIHRoZW4gdXAg
+YWdhaW4/DQoNCkkndmUgbWFuYWdlZCB0byBidWlsZCwgdXNpbmcgWW9jdG8sIGtlcm5lbCA0LjQu
+MTIgZm9yIEJlYWdsZUJvbmUuIFdoZW4gSSBydW4gaXQsIGl0IGhhcyB0aGUgc2FtZSBwcm9ibGVt
+LiBUaGF0J3MgZGlmZmVyZW50IGZyb20gdGhlIFVidW50dSAxNi4wNCBmb3IgQmVhZ2xlQm9uZSB1
+c2luZyA0LjQuNiBrZXJuZWwuDQoNCldpdGggbXkgWW9jdG8gYnVpbGQsIGl0IGhhZCBhIGRpZmZl
+cmVudCB2ZXJzaW9uIG9mIHRoZSAnaXAnIGFuZCAnaXcnIGNvbW1hbmRzLiBTbyBJIHRyaWVkIGNv
+cHlpbmcgdGhlIFVidW50dSB2ZXJzaW9ucywgYnV0IHRoYXQgZGlkbid0IG1ha2UgYSBkaWZmZXJl
+bmNlLiBJIHRyaWVkIHVzaW5nIHRoZSBZb2N0byBidWlsdCA0LjQuMTIga2VybmVsIHdpdGggdGhl
+IFVidW50dSByb290IGZpbGVzeXN0ZW0sIGJ1dCBpdCBoYWx0ZWQgZHVyaW5nIHRoZSBib290IHBy
+b2Nlc3MgKGRvbid0IGtub3cgd2h5KS4gTXkgYmVzdCBndWVzcyBpcyB0aGF0IHRoZXJlJ3Mgc29t
+ZSBrZXJuZWwgY29uZmlnIGRpZmZlcmVuY2UgdGhhdCBtYWtlcyBhIGRpZmZlcmVuY2UsIGJ1dCB0
+aGVyZSBhcmUgbWFueSBkaWZmZXJlbmNlcywgc28gSSdtIG5vdCBzdXJlIHdoaWNoIG9uZSBpdCBt
+aWdodCBiZS4NCg0KSSdtIG5vdCBzdXJlIGF0IHRoaXMgcG9pbnQgaG93IHRvIG5hcnJvdyBpdCBk
+b3duIHRvIHRoZSByb290IGNhdXNlLiBBbnkgYWR2aWNlPw0KDQpJIHdvbmRlciBpZiBtYXliZSB0
+aGVyZSdzIGEgcmFjZSBjb25kaXRpb24gaW4gdGhlIHJ0MjgwMHVzYiBkcml2ZXIgYmV0d2VlbiBs
+b2FkaW5nIHRoZSBydDI4NzAuYmluIGZpcm13YXJlIGFuZCBkb2luZyB0aGUgaW50ZXJmYWNlLXVw
+IGluaXRpYWxpc2F0aW9uLiBOb3JtYWxseSB0aGUgZmlybXdhcmUgbG9hZHMgYXQgdGhlIHBvaW50
+IG9mIGRvaW5nIHRoZSAnaXcgbGluayBzZXQgd2xhbjAgdXAnIGNvbW1hbmQuIElzIHRoZXJlIGEg
+d2F5IHRvIGZvcmNlIHRoZSBmaXJtd2FyZSB0byBsb2FkIGJlZm9yZSB0aGF0IGNvbW1hbmQ/DQoN
+Ci0tIA0KQ3JhaWcgTWNRdWVlbg0KDQo=
