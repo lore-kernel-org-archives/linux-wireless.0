@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:36555 "EHLO
-	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750790AbcFGBbK convert rfc822-to-8bit (ORCPT
+Received: from smtp.riverbed.com ([208.70.196.45]:46832 "EHLO
+	smtp1.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932432AbcFOOvR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2016 21:31:10 -0400
-Received: by mail-lf0-f45.google.com with SMTP id b73so105321895lfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2016 18:31:10 -0700 (PDT)
-Content-Type: text/plain; charset=utf-8
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: [Make-wifi-fast] [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
-From: Jonathan Morton <chromatix99@gmail.com>
-In-Reply-To: <CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
-Date: Tue, 7 Jun 2016 04:31:06 +0300
-Cc: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	make-wifi-fast@lists.bufferbloat.net,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Message-Id: <17429B50-653E-4D4A-A49B-A40DB5CF6311@gmail.com> (sfid-20160607_033134_078521_36C3F5AF)
-References: <20160603165144.17356-1-toke@toke.dk> <20160603165144.17356-6-toke@toke.dk> <CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com> <8737orucq4.fsf@toke.dk> <CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com> <CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
-To: Adrian Chadd <adrian@freebsd.org>
+	Wed, 15 Jun 2016 10:51:17 -0400
+To: ath9k-devel@lists.ath9k.org
+Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com
+From: Eduardo Abinader <eduardo.abinader@riverbed.com>
+Subject: [PATCH] ath9k: return false when reading wrong eeprom offset
+Message-ID: <57616B61.8020406@riverbed.com> (sfid-20160615_165131_206635_F627D600)
+Date: Wed, 15 Jun 2016 16:51:13 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Just setting the proper return for reading beyond the
+eeprom data.
 
-> On 7 Jun, 2016, at 03:01, Adrian Chadd <adrian@freebsd.org> wrote:
-> 
-> I also found one of my notes in my version of this - how can we
-> estimate the duration of an A-MPDU, when we only get hardware
-> de-encapsulated frames?
+Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
+---
+  drivers/net/wireless/ath/ath9k/pci.c | 2 ++
+  1 file changed, 2 insertions(+)
 
-If my understanding is correct:
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c 
+b/drivers/net/wireless/ath/ath9k/pci.c
+index 7cdaf40..aa04b13 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -794,6 +794,8 @@ static bool ath_pci_eeprom_read(struct ath_common 
+*common, u32 off, u16 *data)
+  			ath_err(common,
+  				"%s: eeprom read failed, offset %08x is out of range\n",
+  				__func__, off);
++
++			return false;
+  		}
 
-The A-MPDU itself is sent at the “data” rate (selected by Minstrel), so its total size can be used to calculate this portion of its duration in the same way as any other packet.
-
-It is also surrounded by the same framing/preamble material, sent at the fixed “control” rate, as any normal frame.
-
-The sum of these two major components should be the total airtime, no?
-
-Or is the difficulty in identifying which de-encapsulated frames belonged to a particular A-MPDU?
-
- - Jonathan Morton
-
+  		*data = pdata->eeprom_data[off];
+-- 
+2.5.0
