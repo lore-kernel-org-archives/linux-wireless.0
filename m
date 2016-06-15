@@ -1,41 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38056 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424457AbcFHOq5 convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36623 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752908AbcFOFbN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 10:46:57 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Prasun Maiti <prasunmaiti87@gmail.com>
-CC: Linux Kernel <linux-kernel@vger.kernel.org>,
-	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-	Linux Next <linux-next@vger.kernel.org>,
-	"Linux Wireless" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Add .set_antenna callback in ath6kl driver to remove
- wireless core warns
-Date: Wed, 8 Jun 2016 14:46:47 +0000
-Message-ID: <87porrkaax.fsf@kamboji.qca.qualcomm.com> (sfid-20160608_164935_290745_74BBAD00)
-References: <1465388474-20503-1-git-send-email-prasunmaiti87@gmail.com>
-	<87wplzkbd9.fsf@kamboji.qca.qualcomm.com>
-	<CAEO8o4=DnEfXQAnAOxugC9TngbhvgV9DXz0HOVHNLk0B2fAXQA@mail.gmail.com>
-In-Reply-To: <CAEO8o4=DnEfXQAnAOxugC9TngbhvgV9DXz0HOVHNLk0B2fAXQA@mail.gmail.com>	(Prasun
- Maiti's message of "Wed, 8 Jun 2016 20:05:15 +0530")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 15 Jun 2016 01:31:13 -0400
+Received: by mail-pa0-f45.google.com with SMTP id b5so3922621pas.3
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:31:13 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH v3 5/5] staging: wilc1000: Remove semaphore close_exit_sync
+Date: Wed, 15 Jun 2016 11:00:38 +0530
+Message-Id: <1465968638-22129-6-git-send-email-binoy.jayan@linaro.org> (sfid-20160615_073135_215257_3FB15DE3)
+In-Reply-To: <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+ <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prasun Maiti <prasunmaiti87@gmail.com> writes:
+The semaphore 'close_exit_sync' does not serve any purpose other
+than delaying the deregistration of the device which it is trying
+to protect from shared access. 'up' is called only when a subdevice
+is closed and not when it is opened. So, the semaphore count only
+goes up when the device is used.
 
-> No. I did not any test for that case.
-> This driver create a new wiphy for use with cfg80211 through
-> "wiphy_new_nm" api, but in this api, I found that more warnings for
-> inconsistent ops are added there. e.g; "WARN_ON(ops->set_antenna &&
-> !ops->get_antenna);"
-> So, warning comes during creation of a new wiphy. That's why It is needed.
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 7 -------
+ 1 file changed, 7 deletions(-)
 
-I'm confused. Are you really saying that you added a new firmware
-command (WMI_SET_ANTENNA_CMDID) to ath6kl but you didn't test it in any
-way? How do you know that it works then?
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 39fe350..f87a30f 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -31,8 +31,6 @@ static struct notifier_block g_dev_notifier = {
+ 	.notifier_call = dev_state_ev_handler
+ };
+ 
+-static struct semaphore close_exit_sync;
+-
+ static int wlan_deinit_locks(struct net_device *dev);
+ static void wlan_deinitialize_threads(struct net_device *dev);
+ 
+@@ -1088,7 +1086,6 @@ int wilc_mac_close(struct net_device *ndev)
+ 		WILC_WFI_deinit_mon_interface();
+ 	}
+ 
+-	up(&close_exit_sync);
+ 	vif->mac_opened = 0;
+ 
+ 	return 0;
+@@ -1232,8 +1229,6 @@ void wilc_netdev_cleanup(struct wilc *wilc)
+ 	}
+ 
+ 	if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev)) {
+-		wilc_lock_timeout(wilc, &close_exit_sync, 5 * 1000);
+-
+ 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
+ 			if (wilc->vif[i]->ndev)
+ 				if (vif[i]->mac_opened)
+@@ -1258,8 +1253,6 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 	struct net_device *ndev;
+ 	struct wilc *wl;
+ 
+-	sema_init(&close_exit_sync, 0);
+-
+ 	wl = kzalloc(sizeof(*wl), GFP_KERNEL);
+ 	if (!wl)
+ 		return -ENOMEM;
 -- 
-Kalle Valo
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
