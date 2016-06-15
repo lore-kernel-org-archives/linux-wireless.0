@@ -1,346 +1,245 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:52997 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751983AbcFZKLD convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.74]:50428 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884AbcFOU2w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jun 2016 06:11:03 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
-CC: Rob Herring <robh@kernel.org>
-Subject: [PATCH v4] wlcore: spi: add wl18xx support
-Date: Sun, 26 Jun 2016 10:10:54 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B3613BF60@DFRE01.ent.ti.com> (sfid-20160626_121145_622514_D9DC6B70)
-References: <1466935675-14696-1-git-send-email-eyalr@ti.com>
-In-Reply-To: <1466935675-14696-1-git-send-email-eyalr@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Wed, 15 Jun 2016 16:28:52 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	"David S. Miller" <davem@davemloft.net>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] nl80211: improve nl80211_parse_mesh_config type checking
+Date: Wed, 15 Jun 2016 22:29:41 +0200
+Message-Id: <20160615203012.3544326-1-arnd@arndb.de> (sfid-20160615_222913_528784_54F26291)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for using with both wl12xx and wl18xx.
+When building a kernel with W=1, the nl80211.c file causes a number of
+warnings, all about the same problem:
 
-- all wilink family needs special init command for entering wspi mode.
-  extra clock cycles should be sent after the spi init command while the
-  cs pin is high.
-- Use inverted chip select for sending a dummy 4 bytes command that
-  completes the init stage.
+net/wireless/nl80211.c: In function 'nl80211_parse_mesh_config':
+net/wireless/nl80211.c:5287:103: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+net/wireless/nl80211.c:5290:96: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+net/wireless/nl80211.c:5293:124: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+net/wireless/nl80211.c:5295:148: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+net/wireless/nl80211.c:5298:106: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+net/wireless/nl80211.c:5305:116: error: comparison is always false due to limited range of data type [-Werror=type-limits]
 
-Signed-off-by: Eyal Reizer <eyalr@ti.com>
+The problem is that gcc does not notice that the check is generate
+by a macro, so it complains about comparing an unsigned type against 0.
+
+I've tried to come up with a way to rephrase that code in a way that
+avoids the warnings and otherwise improves the code as well.
+
+This uses a set of new helper functions that perform the range checking,
+and should provide slightly better type safety than the older patch,
+at the expense of adding 44 lines to the code. Binary code size is
+basically unchanged though (20 bytes added to 126561 bytes .text).
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
-v1->v2:update device tree bindings configuration
-v2->v3:revert from manual gpio manipulation. use inverted chip select instead
-for sending the extra init cycle which, achieves the same hardware purpose.
-update device tree bindings docucmentation accordingly
-v3->v4: Remove redundant data form binding documentation and fix chip select
-number mismatch in wl1271 example
+ net/wireless/nl80211.c | 104 +++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 74 insertions(+), 30 deletions(-)
 
- .../bindings/net/wireless/ti,wlcore,spi.txt        |  41 +++++--
- drivers/net/wireless/ti/wlcore/spi.c               | 124 +++++++++++++++++----
- 2 files changed, 137 insertions(+), 28 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
-index 9180724..8f9ced0 100644
---- a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
-@@ -1,19 +1,30 @@
--* Texas Instruments wl1271 wireless lan controller
-+* Texas Instruments wl12xx/wl18xx wireless lan controller
- 
--The wl1271 chip can be connected via SPI or via SDIO. This
-+The wl12xx/wl18xx chips can be connected via SPI or via SDIO. This
- document describes the binding for the SPI connected chip.
- 
- Required properties:
--- compatible :          Should be "ti,wl1271"
-+- compatible :          Should be one of the following:
-+    * "ti,wl1271"
-+    * "ti,wl1273"
-+    * "ti,wl1281"
-+    * "ti,wl1283"
-+    * "ti,wl1801"
-+    * "ti,wl1805"
-+    * "ti,wl1807"
-+    * "ti,wl1831"
-+    * "ti,wl1835"
-+    * "ti,wl1837"
- - reg :                 Chip select address of device
- - spi-max-frequency :   Maximum SPI clocking speed of device in Hz
--- ref-clock-frequency : Reference clock frequency
- - interrupt-parent, interrupts :
-                         Should contain parameters for 1 interrupt line.
-                         Interrupt parameters: parent, line number, type.
--- vwlan-supply :        Point the node of the regulator that powers/enable the wl1271 chip
-+- vwlan-supply :        Point the node of the regulator that powers/enable the
-+                        wl12xx/wl18xx chip
- 
- Optional properties:
-+- ref-clock-frequency : Reference clock frequency (should be set for wl12xx)
- - clock-xtal :          boolean, clock is generated from XTAL
- 
- - Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
-@@ -21,16 +32,28 @@ Optional properties:
- 
- Examples:
- 
-+For wl12xx family:
- &spi1 {
--	wl1271@1 {
-+	wlcore: wlcore@1 {
- 		compatible = "ti,wl1271";
--
- 		reg = <1>;
- 		spi-max-frequency = <48000000>;
--		clock-xtal;
--		ref-clock-frequency = <38400000>;
- 		interrupt-parent = <&gpio3>;
- 		interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
- 		vwlan-supply = <&vwlan_fixed>;
-+		clock-xtal;
-+		ref-clock-frequency = <38400000>;
-+	};
-+};
-+
-+For wl18xx family:
-+&spi0 {
-+	wlcore: wlcore@0 {
-+		compatible = "ti,wl1835";
-+		reg = <0>;
-+		spi-max-frequency = <48000000>;
-+		interrupt-parent = <&gpio0>;
-+		interrupts = <27 IRQ_TYPE_EDGE_RISING>;
-+		vwlan-supply = <&vwlan_fixed>;
- 	};
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c503e96bfd5a..244d552d5647 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5287,6 +5287,51 @@ static const struct nla_policy
+ 	[NL80211_MESH_SETUP_USERSPACE_AMPE] = { .type = NLA_FLAG },
  };
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index 020ac1a..bd1253d 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -70,16 +70,30 @@
- #define WSPI_MAX_CHUNK_SIZE    4092
  
- /*
-- * only support SPI for 12xx - this code should be reworked when 18xx
-- * support is introduced
-+ * wl18xx driver aggregation buffer size is (13 * PAGE_SIZE) compared to
-+ * (4 * PAGE_SIZE) for wl12xx, so use the larger buffer needed for wl18xx
-  */
--#define SPI_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
-+#define SPI_AGGR_BUFFER_SIZE (13 * PAGE_SIZE)
- 
- /* Maximum number of SPI write chunks */
- #define WSPI_MAX_NUM_OF_CHUNKS \
- 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
- 
- 
-+struct wilink_familiy_data {
-+	char name[8];
-+};
-+
-+const struct wilink_familiy_data *wilink_data;
-+
-+static const struct wilink_familiy_data wl18xx_data = {
-+	.name = "wl18xx",
-+};
-+
-+static const struct wilink_familiy_data wl12xx_data = {
-+	.name = "wl12xx",
-+};
-+
- struct wl12xx_spi_glue {
- 	struct device *dev;
- 	struct platform_device *core;
-@@ -119,6 +133,7 @@ static void wl12xx_spi_init(struct device *child)
- 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
- 	struct spi_transfer t;
- 	struct spi_message m;
-+	struct spi_device *spi = to_spi_device(glue->dev);
- 	u8 *cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
- 
- 	if (!cmd) {
-@@ -151,6 +166,7 @@ static void wl12xx_spi_init(struct device *child)
- 		cmd[6] |= WSPI_INIT_CMD_EN_FIXEDBUSY;
- 
- 	cmd[7] = crc7_be(0, cmd+2, WSPI_INIT_CMD_CRC_LEN) | WSPI_INIT_CMD_END;
-+
- 	/*
- 	 * The above is the logical order; it must actually be stored
- 	 * in the buffer byte-swapped.
-@@ -163,6 +179,28 @@ static void wl12xx_spi_init(struct device *child)
- 	spi_message_add_tail(&t, &m);
- 
- 	spi_sync(to_spi_device(glue->dev), &m);
-+
-+	/* Send extra clocks with inverted CS (high). this is required
-+	 * by the wilink family in order to successfully enter WSPI mode.
-+	 */
-+	spi->mode ^= SPI_CS_HIGH;
-+	memset(&m, 0, sizeof(m));
-+	spi_message_init(&m);
-+
-+	cmd[0] = 0xff;
-+	cmd[1] = 0xff;
-+	cmd[2] = 0xff;
-+	cmd[3] = 0xff;
-+	__swab32s((u32 *)cmd);
-+
-+	t.tx_buf = cmd;
-+	t.len = 4;
-+	spi_message_add_tail(&t, &m);
-+
-+	spi_sync(to_spi_device(glue->dev), &m);
-+
-+	/* Restore chip select configration to normal */
-+	spi->mode ^= SPI_CS_HIGH;
- 	kfree(cmd);
- }
- 
-@@ -270,22 +308,25 @@ static int __must_check wl12xx_spi_raw_read(struct device *child, int addr,
- 	return 0;
- }
- 
--static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
--					     void *buf, size_t len, bool fixed)
-+static int __wl12xx_spi_raw_write(struct device *child, int addr,
-+				  void *buf, size_t len, bool fixed)
- {
- 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
--	/* SPI write buffers - 2 for each chunk */
--	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
-+	struct spi_transfer *t;
- 	struct spi_message m;
- 	u32 commands[WSPI_MAX_NUM_OF_CHUNKS]; /* 1 command per chunk */
- 	u32 *cmd;
- 	u32 chunk_len;
- 	int i;
- 
-+	/* SPI write buffers - 2 for each chunk */
-+	t = kzalloc(sizeof(*t) * 2 * WSPI_MAX_NUM_OF_CHUNKS, GFP_KERNEL);
-+	if (!t)
-+		return -ENOMEM;
-+
- 	WARN_ON(len > SPI_AGGR_BUFFER_SIZE);
- 
- 	spi_message_init(&m);
--	memset(t, 0, sizeof(t));
- 
- 	cmd = &commands[0];
- 	i = 0;
-@@ -318,9 +359,26 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
- 
- 	spi_sync(to_spi_device(glue->dev), &m);
- 
-+	kfree(t);
- 	return 0;
- }
- 
-+static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
-+					     void *buf, size_t len, bool fixed)
++static int nl80211_check_bool(const struct nlattr *nla, u8 min, u8 max, bool *out)
 +{
-+	int ret;
-+
-+	/* The ELP wakeup write may fail the first time due to internal
-+	 * hardware latency. It is safer to send the wakeup command twice to
-+	 * avoid unexpected failures.
-+	 */
-+	if (addr == HW_ACCESS_ELP_CTRL_REG)
-+		ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
-+	ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
-+
-+	return ret;
++	u8 val = nla_get_u8(nla);
++	if (val < min || val > max)
++		return -EINVAL;
++	*out = val;
++	return 0;
 +}
 +
- /**
-  * wl12xx_spi_set_power - power on/off the wl12xx unit
-  * @child: wl12xx device handle.
-@@ -349,17 +407,38 @@ static int wl12xx_spi_set_power(struct device *child, bool enable)
- 	return ret;
- }
- 
-+/**
-+ * wl12xx_spi_set_block_size
-+ *
-+ * This function is not needed for spi mode, but need to be present.
-+ * Without it defined the wlcore fallback to use the wrong packet
-+ * allignment on tx.
-+ */
-+static void wl12xx_spi_set_block_size(struct device *child,
-+				      unsigned int blksz)
++static int nl80211_check_u8(const struct nlattr *nla, u8 min, u8 max, u8 *out)
 +{
++	u8 val = nla_get_u8(nla);
++	if (val < min || val > max)
++		return -EINVAL;
++	*out = val;
++	return 0;
 +}
 +
- static struct wl1271_if_operations spi_ops = {
- 	.read		= wl12xx_spi_raw_read,
- 	.write		= wl12xx_spi_raw_write,
- 	.reset		= wl12xx_spi_reset,
- 	.init		= wl12xx_spi_init,
- 	.power		= wl12xx_spi_set_power,
--	.set_block_size = NULL,
-+	.set_block_size = wl12xx_spi_set_block_size,
- };
- 
- static const struct of_device_id wlcore_spi_of_match_table[] = {
--	{ .compatible = "ti,wl1271" },
-+	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1831", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1835", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1837", .data = &wl18xx_data},
- 	{ }
- };
- MODULE_DEVICE_TABLE(of, wlcore_spi_of_match_table);
-@@ -375,18 +454,24 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
- 			   struct wlcore_platdev_data *pdev_data)
- {
- 	struct device_node *dt_node = spi->dev.of_node;
--	int ret;
-+	const struct of_device_id *of_id;
++static int nl80211_check_u16(const struct nlattr *nla, u16 min, u16 max, u16 *out)
++{
++	u16 val = nla_get_u16(nla);
++	if (val < min || val > max)
++		return -EINVAL;
++	*out = val;
++	return 0;
++}
 +
-+	of_id = of_match_node(wlcore_spi_of_match_table, dt_node);
-+	if (!of_id)
-+		return -ENODEV;
++static int nl80211_check_u32(const struct nlattr *nla, u32 min, u32 max, u32 *out)
++{
++	u32 val = nla_get_u32(nla);
++	if (val < min || val > max)
++		return -EINVAL;
++	*out = val;
++	return 0;
++}
 +
-+	wilink_data = of_id->data;
-+	dev_info(&spi->dev, "selected chip familiy is %s\n",
-+		 wilink_data->name);
++static int nl80211_check_s32(const struct nlattr *nla, s32 min, s32 max, s32 *out)
++{
++	s32 val = nla_get_s32(nla);
++	if (val < min || val > max)
++		return -EINVAL;
++	*out = val;
++	return 0;
++}
++
+ static int nl80211_parse_mesh_config(struct genl_info *info,
+ 				     struct mesh_config *cfg,
+ 				     u32 *mask_out)
+@@ -5297,9 +5342,8 @@ static int nl80211_parse_mesh_config(struct genl_info *info,
+ #define FILL_IN_MESH_PARAM_IF_SET(tb, cfg, param, min, max, mask, attr, fn) \
+ do {									    \
+ 	if (tb[attr]) {							    \
+-		if (fn(tb[attr]) < min || fn(tb[attr]) > max)		    \
++		if (fn(tb[attr], min, max, &cfg->param))		    \
+ 			return -EINVAL;					    \
+-		cfg->param = fn(tb[attr]);				    \
+ 		mask |= (1 << (attr - 1));				    \
+ 	}								    \
+ } while (0)
+@@ -5318,99 +5362,99 @@ do {									    \
+ 	/* Fill in the params struct */
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshRetryTimeout, 1, 255,
+ 				  mask, NL80211_MESHCONF_RETRY_TIMEOUT,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshConfirmTimeout, 1, 255,
+ 				  mask, NL80211_MESHCONF_CONFIRM_TIMEOUT,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHoldingTimeout, 1, 255,
+ 				  mask, NL80211_MESHCONF_HOLDING_TIMEOUT,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxPeerLinks, 0, 255,
+ 				  mask, NL80211_MESHCONF_MAX_PEER_LINKS,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshMaxRetries, 0, 16,
+ 				  mask, NL80211_MESHCONF_MAX_RETRIES,
+-				  nla_get_u8);
++				  nl80211_check_u8);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshTTL, 1, 255,
+-				  mask, NL80211_MESHCONF_TTL, nla_get_u8);
++				  mask, NL80211_MESHCONF_TTL, nl80211_check_u8);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, element_ttl, 1, 255,
+ 				  mask, NL80211_MESHCONF_ELEMENT_TTL,
+-				  nla_get_u8);
++				  nl80211_check_u8);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, auto_open_plinks, 0, 1,
+ 				  mask, NL80211_MESHCONF_AUTO_OPEN_PLINKS,
+-				  nla_get_u8);
++				  nl80211_check_bool);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshNbrOffsetMaxNeighbor,
+ 				  1, 255, mask,
+ 				  NL80211_MESHCONF_SYNC_OFFSET_MAX_NEIGHBOR,
+-				  nla_get_u32);
++				  nl80211_check_u32);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPmaxPREQretries, 0, 255,
+ 				  mask, NL80211_MESHCONF_HWMP_MAX_PREQ_RETRIES,
+-				  nla_get_u8);
++				  nl80211_check_u8);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, path_refresh_time, 1, 65535,
+ 				  mask, NL80211_MESHCONF_PATH_REFRESH_TIME,
+-				  nla_get_u32);
++				  nl80211_check_u32);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, min_discovery_timeout, 1, 65535,
+ 				  mask, NL80211_MESHCONF_MIN_DISCOVERY_TIMEOUT,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathTimeout,
+ 				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_ACTIVE_PATH_TIMEOUT,
+-				  nla_get_u32);
++				  nl80211_check_u32);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPpreqMinInterval,
+ 				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_PREQ_MIN_INTERVAL,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPperrMinInterval,
+ 				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_PERR_MIN_INTERVAL,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
+ 				  dot11MeshHWMPnetDiameterTraversalTime,
+ 				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_NET_DIAM_TRVS_TIME,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRootMode, 0, 4,
+ 				  mask, NL80211_MESHCONF_HWMP_ROOTMODE,
+-				  nla_get_u8);
++				  nl80211_check_u8);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPRannInterval, 1, 65535,
+ 				  mask, NL80211_MESHCONF_HWMP_RANN_INTERVAL,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
+ 				  dot11MeshGateAnnouncementProtocol, 0, 1,
+ 				  mask, NL80211_MESHCONF_GATE_ANNOUNCEMENTS,
+-				  nla_get_u8);
++				  nl80211_check_bool);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshForwarding, 0, 1,
+ 				  mask, NL80211_MESHCONF_FORWARDING,
+-				  nla_get_u8);
++				  nl80211_check_bool);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, -255, 0,
+ 				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
+-				  nla_get_s32);
++				  nl80211_check_s32);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
+ 				  mask, NL80211_MESHCONF_HT_OPMODE,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathToRootTimeout,
+ 				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
+-				  nla_get_u32);
++				  nl80211_check_u32);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMProotInterval, 1, 65535,
+ 				  mask, NL80211_MESHCONF_HWMP_ROOT_INTERVAL,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg,
+ 				  dot11MeshHWMPconfirmationInterval,
+ 				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_CONFIRMATION_INTERVAL,
+-				  nla_get_u16);
++				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, power_mode,
+ 				  NL80211_MESH_POWER_ACTIVE,
+ 				  NL80211_MESH_POWER_MAX,
+ 				  mask, NL80211_MESHCONF_POWER_MODE,
+-				  nla_get_u32);
++				  nl80211_check_u32);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshAwakeWindowDuration,
+ 				  0, 65535, mask,
+-				  NL80211_MESHCONF_AWAKE_WINDOW, nla_get_u16);
++				  NL80211_MESHCONF_AWAKE_WINDOW, nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, plink_timeout, 0, 0xffffffff,
+ 				  mask, NL80211_MESHCONF_PLINK_TIMEOUT,
+-				  nla_get_u32);
++				  nl80211_check_u32);
+ 	if (mask_out)
+ 		*mask_out = mask;
  
- 	if (of_find_property(dt_node, "clock-xtal", NULL))
- 		pdev_data->ref_clock_xtal = true;
- 
--	ret = of_property_read_u32(dt_node, "ref-clock-frequency",
--				   &pdev_data->ref_clock_freq);
--	if (IS_ERR_VALUE(ret)) {
--		dev_err(glue->dev,
--			"can't get reference clock frequency (%d)\n", ret);
--		return ret;
--	}
-+	/* optional clock frequency params */
-+	of_property_read_u32(dt_node, "ref-clock-frequency",
-+			     &pdev_data->ref_clock_freq);
-+	of_property_read_u32(dt_node, "tcxo-clock-frequency",
-+			     &pdev_data->tcxo_clock_freq);
- 
- 	return 0;
- }
-@@ -437,7 +522,8 @@ static int wl1271_probe(struct spi_device *spi)
- 		return ret;
- 	}
- 
--	glue->core = platform_device_alloc("wl12xx", PLATFORM_DEVID_AUTO);
-+	glue->core = platform_device_alloc(wilink_data->name,
-+					   PLATFORM_DEVID_AUTO);
- 	if (!glue->core) {
- 		dev_err(glue->dev, "can't allocate platform_device\n");
- 		return -ENOMEM;
 -- 
-2.7.4
+2.9.0
 
