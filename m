@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59557 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752079AbcFPP0x (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:32818 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751429AbcFOFau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 11:26:53 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: include required headers in cfg80211.h
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1465280428-5782-1-git-send-email-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Message-Id: <20160616152652.ED17F61418@smtp.codeaurora.org> (sfid-20160616_172716_973519_8243D809)
-Date: Thu, 16 Jun 2016 15:26:52 +0000 (UTC)
+	Wed, 15 Jun 2016 01:30:50 -0400
+Received: by mail-pa0-f53.google.com with SMTP id b13so3952145pat.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:30:50 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH v3 0/5] *** staging: wilc1000: Replace semaphores with mutexes or completions ***
+Date: Wed, 15 Jun 2016 11:00:33 +0530
+Message-Id: <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org> (sfid-20160615_073310_604281_5A39104A)
+In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> Without this including cfg80211.h in a wrong order could result in:
-> 
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:122:24: error: array type has incomplete element type
->   struct brcmf_wsec_key key[BRCMF_MAX_DEFAULT_KEYS];
->                         ^
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:291:24: error: field ‘p2p’ has incomplete type
->   struct brcmf_p2p_info p2p;
->                         ^
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:297:27: error: field ‘pmk_list’ has incomplete type
->   struct brcmf_pmk_list_le pmk_list;
->                            ^
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:317:28: error: field ‘assoclist’ has incomplete type
->   struct brcmf_assoclist_le assoclist;
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+These are a set of patches [v3] which removes semaphores from:
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+drivers/staging/wilc1000
 
-29477269a27d brcmfmac: include required headers in cfg80211.h
+These are part of a bigger effort to eliminate all semaphores
+from the linux kernel.
+
+They build correctly (individually and as a whole).
+
+NB: The changes are untested
+
+Changes w.r.t. review comments on v1
+
+1. Whitespace removed in patch 3
+2. Removed semaphore 'close_exit_sync'
+3. To rework on patch 6 and send in a seperate patch series
+
+Binoy Jayan (5):
+  staging: wilc1000: Replace semaphore txq_event with completion
+  staging: wilc1000: Replace semaphore txq_add_to_head_cs with mutex
+  staging: wilc1000: Replace semaphore cfg_event with completion
+  staging: wilc1000: Replace semaphore sync_event with completion
+  staging: wilc1000: Remove semaphore close_exit_sync
+
+ drivers/staging/wilc1000/linux_wlan.c         | 31 ++++++++++--------------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 10 ++++----
+ drivers/staging/wilc1000/wilc_wlan.c          | 34 +++++++++++++--------------
+ 3 files changed, 35 insertions(+), 40 deletions(-)
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9159889/
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
