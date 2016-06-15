@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43382 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753923AbcFEVxD (ORCPT
+Received: from sitav-80046.hsr.ch ([152.96.80.46]:58674 "EHLO
+	mail.strongswan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753132AbcFOMhR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2016 17:53:03 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 4.6 039/121] ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
-Date: Sun,  5 Jun 2016 14:43:11 -0700
-Message-Id: <20160605214418.917729690@linuxfoundation.org> (sfid-20160606_001617_085740_09C44F0C)
-In-Reply-To: <20160605214417.708509043@linuxfoundation.org>
-References: <20160605214417.708509043@linuxfoundation.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Wed, 15 Jun 2016 08:37:17 -0400
+Message-ID: <1465994233.3807.18.camel@strongswan.org> (sfid-20160615_143721_901756_42AFE6A3)
+Subject: Re: [PATCH] mac80211_hwsim: Allow wmediumd to attach to radios
+ created in its netns
+From: Martin Willi <martin@strongswan.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 15 Jun 2016 14:37:13 +0200
+In-Reply-To: <1465978217.2994.4.camel@sipsolutions.net>
+References: <1463214884-5983-1-git-send-email-martin@strongswan.org>
+	 <1465978217.2994.4.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-4.6-stable review patch.  If anyone has any objections, please let me know.
+> 
+> >  printk(KERN_INFO "mac80211_hwsim: wmediumd released netlink"
+> >         " socket, switching to perfect channel medium\n");
 
-------------------
+> I wonder if we can do something better about them? Or perhaps if we
+> should remove them, so other namespaces won't mess up the kernel log
 
-From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
+This is in fact not very nice, but not specific to hwsim. Any namespace
+can mess up the kernel log from different (networking) subsystems. This
+has been discussed some time ago [1], but AFAIK there is no real
+solution so far.
 
-commit 0f9edcdd88a993914fa1d1dc369b35dc503979db upstream.
+For this patch I think we have the following options:
+ * Keep the printk() messages as proposed
+ * Remove those callable from non-initial namespaces completely
+ * Suppress them when called from non-initial namespaces
+ * Include the associated "netgroup" in the message
 
-The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
-(active high instead of active low).
+I personally would prefer the first option, as this problem is not
+specific to hwsim or mac80211, but many subsystems. So we certainly can
+add some work-around, but there is not much to gain if other modules
+don't.
 
-The same PCI Subsystem ID is used by both cards, which are based on
-the same Atheros MB92 design.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/net/wireless/ath/ath9k/pci.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pc
- 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
-+
-+#ifdef CONFIG_ATH9K_PCOEM
-+	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0029,
-+			 PCI_VENDOR_ID_ATHEROS,
-+			 0x2096),
-+	  .driver_data = ATH9K_PCI_LED_ACT_HI },
-+#endif
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
- 
- #ifdef CONFIG_ATH9K_PCOEM
+Regards
+Martin
 
 
+[1]https://lwn.net/Articles/527342/
