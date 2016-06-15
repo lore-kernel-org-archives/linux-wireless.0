@@ -1,37 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37576 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751946AbcF1RC7 (ORCPT
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:34218 "EHLO
+	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752221AbcFOFYt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 13:02:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	"Linux-Kernel\@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] libertas_tf: Remove create_workqueue
-References: <20160607200853.GA13742@Karyakshetra>
-	<20160611224708.GC31708@htj.duckdns.org>
-	<CAFNHFT8_4P3h1Ou0PZ6d4tPbJ1ysb5JjPc=NL2GiVO-tUZAp5g@mail.gmail.com>
-Date: Tue, 28 Jun 2016 20:02:53 +0300
-In-Reply-To: <CAFNHFT8_4P3h1Ou0PZ6d4tPbJ1ysb5JjPc=NL2GiVO-tUZAp5g@mail.gmail.com>
-	(Bhaktipriya Shridhar's message of "Tue, 28 Jun 2016 22:20:11 +0530")
-Message-ID: <87shvxb60y.fsf@kamboji.qca.qualcomm.com> (sfid-20160628_190340_823433_3A9833FB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 15 Jun 2016 01:24:49 -0400
+Received: by mail-pf0-f182.google.com with SMTP id 62so5029615pfd.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:24:48 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH v2 1/5] staging: wilc1000: Replace semaphore txq_event with completion
+Date: Wed, 15 Jun 2016 10:54:27 +0530
+Message-Id: <1465968271-21540-2-git-send-email-binoy.jayan@linaro.org> (sfid-20160615_072509_288445_6C619D1A)
+In-Reply-To: <1465968271-21540-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+ <1465968271-21540-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bhaktipriya Shridhar <bhaktipriya96@gmail.com> writes:
+The semaphore 'txq_event' is used as completion, so convert it
+to a struct completion type.
 
-> Ping!
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+---
+ drivers/staging/wilc1000/linux_wlan.c         | 8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 3 ++-
+ drivers/staging/wilc1000/wilc_wlan.c          | 8 +++++---
+ 3 files changed, 11 insertions(+), 8 deletions(-)
 
-I'm lagging behind, the patch is still on my queue:
-
-https://patchwork.kernel.org/patch/9162447/
-
-Please don't top most, it's annoying.
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4f93c11..90f906d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -316,7 +316,7 @@ static int linux_wlan_txq_task(void *vp)
+ 
+ 	complete(&wl->txq_thread_started);
+ 	while (1) {
+-		down(&wl->txq_event);
++		wait_for_completion(&wl->txq_event);
+ 
+ 		if (wl->close) {
+ 			complete(&wl->txq_thread_started);
+@@ -650,7 +650,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 			mutex_unlock(&wl->hif_cs);
+ 		}
+ 		if (&wl->txq_event)
+-			up(&wl->txq_event);
++			wait_for_completion(&wl->txq_event);
+ 
+ 		wlan_deinitialize_threads(dev);
+ 		deinit_irq(dev);
+@@ -681,7 +681,7 @@ static int wlan_init_locks(struct net_device *dev)
+ 	spin_lock_init(&wl->txq_spinlock);
+ 	sema_init(&wl->txq_add_to_head_cs, 1);
+ 
+-	sema_init(&wl->txq_event, 0);
++	init_completion(&wl->txq_event);
+ 
+ 	sema_init(&wl->cfg_event, 0);
+ 	sema_init(&wl->sync_event, 0);
+@@ -738,7 +738,7 @@ static void wlan_deinitialize_threads(struct net_device *dev)
+ 	wl->close = 1;
+ 
+ 	if (&wl->txq_event)
+-		up(&wl->txq_event);
++		complete(&wl->txq_event);
+ 
+ 	if (wl->txq_thread) {
+ 		kthread_stop(wl->txq_thread);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 3a561df6..12d7c7b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -42,6 +42,7 @@
+ #include "host_interface.h"
+ #include "wilc_wlan.h"
+ #include <linux/wireless.h>
++#include <linux/completion.h>
+ 
+ #define FLOW_CONTROL_LOWER_THRESHOLD	128
+ #define FLOW_CONTROL_UPPER_THRESHOLD	256
+@@ -178,7 +179,7 @@ struct wilc {
+ 
+ 	struct semaphore cfg_event;
+ 	struct semaphore sync_event;
+-	struct semaphore txq_event;
++	struct completion txq_event;
+ 	struct completion txq_thread_started;
+ 
+ 	struct task_struct *txq_thread;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 11e16d5..1a57135 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1,3 +1,4 @@
++#include <linux/completion.h>
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
+ #include "wilc_wfi_netdevice.h"
+@@ -89,7 +90,7 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
+ 
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 
+-	up(&wilc->txq_event);
++	complete(&wilc->txq_event);
+ }
+ 
+ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+@@ -119,7 +120,7 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 	up(&wilc->txq_add_to_head_cs);
+-	up(&wilc->txq_event);
++	complete(&wilc->txq_event);
+ 
+ 	return 0;
+ }
+@@ -287,7 +288,8 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
+ 
+ 	while (dropped > 0) {
+-		wilc_lock_timeout(wilc, &wilc->txq_event, 1);
++		wait_for_completion_timeout(&wilc->txq_event,
++						msecs_to_jiffies(1));
+ 		dropped--;
+ 	}
+ 
 -- 
-Kalle Valo
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
