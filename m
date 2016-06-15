@@ -1,42 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:43194 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932128AbcFBO46 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 10:56:58 -0400
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:59333 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753076AbcFOVKw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2016 17:10:52 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: use s8 instead of char
+References: <20160615210318.4130648-1-arnd@arndb.de>
+Date: Wed, 15 Jun 2016 17:10:51 -0400
+In-Reply-To: <20160615210318.4130648-1-arnd@arndb.de> (Arnd Bergmann's message
+	of "Wed, 15 Jun 2016 23:03:18 +0200")
+Message-ID: <wrfjbn32taxw.fsf@redhat.com> (sfid-20160615_231116_712893_BD2E6EFB)
 MIME-Version: 1.0
-Subject: Re: [1/5] ath10k: fix operating irq mode for ahb device
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160527144559.4053-1-rmanohar@qti.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
-	<rmanohar@codeaurora.org>
-Message-ID: <cb83c96b3c154a438b0c7e90372d2984@euamsexm01a.eu.qualcomm.com> (sfid-20160602_165701_534926_31ADF67B)
-Date: Thu, 2 Jun 2016 16:56:51 +0200
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> Earlier when operating irq mode is legacy, interrupts are disabled
-> and re-enabled based on num_msi_intrs. commit cfe9011a05a8 ("ath10k:
-> remove MSI range support") replaced num_msi_intrs by oper_irq_mode.
-> Since oper_irq_mode is not initialized for ahb devices (i.e qca4019),
-> device boot up is failed during probe.
-> 
-> Fixes: cfe9011a05a8 ("ath10k: remove MSI range support")
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Arnd Bergmann <arnd@arndb.de> writes:
+> Compiling the rtlwifi drivers for ARM with gcc -Wextra warns about lots of
+> incorrect code that results from 'char' being unsigned here, e.g.
+>
+> realtek/rtlwifi/rc.c:113:18: error: comparison is always true due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8188ee/dm.c:1070:22: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192ce/trx.c:54:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192cu/mac.c:601:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192de/trx.c:53:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192ee/phy.c:1268:12: error: comparison is always true due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192se/rf.c:150:20: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8723be/dm.c:877:29: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8723be/phy.c:386:16: error: comparison is always true due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8821ae/dm.c:1514:38: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8821ae/phy.c:1558:11: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8821ae/phy.c:386:24: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8821ae/trx.c:55:12: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/stats.c:31:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+>
+> This patch changes all uses of 'char' in this driver that refer to
+> 8-bit integers to use 's8' instead, which is signed on all architectures.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  6 +-
+>  .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       |  2 +-
+>  .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  4 +-
+>  drivers/net/wireless/realtek/rtlwifi/rc.c          |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8188ee/dm.c    |  4 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.c   |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8188ee/trx.h   |  4 +-
+>  .../wireless/realtek/rtlwifi/rtl8192c/dm_common.h  |  2 +-
+>  .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c |  4 +-
+>  .../wireless/realtek/rtlwifi/rtl8192c/phy_common.h |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192ce/phy.h   |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192ce/trx.c   |  6 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192ce/trx.h   |  4 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.c   |  6 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192cu/mac.h   |  4 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192de/phy.c   |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192de/phy.h   |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192de/trx.c   |  6 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192de/trx.h   |  4 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192ee/phy.c   | 10 ++--
+>  .../net/wireless/realtek/rtlwifi/rtl8192ee/phy.h   |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.h   |  4 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8192se/rf.c    |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8723ae/trx.h   |  4 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8723be/dm.c    |  4 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   |  4 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8723be/trx.c   |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8723be/trx.h   |  8 +--
+>  .../net/wireless/realtek/rtlwifi/rtl8821ae/dm.c    |  4 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.c   | 48 +++++++--------
+>  .../net/wireless/realtek/rtlwifi/rtl8821ae/phy.h   |  2 +-
+>  .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.c   | 12 ++--
+>  .../net/wireless/realtek/rtlwifi/rtl8821ae/trx.h   | 10 ++--
+>  drivers/net/wireless/realtek/rtlwifi/stats.c       |  6 +-
+>  drivers/net/wireless/realtek/rtlwifi/stats.h       |  4 +-
+>  drivers/net/wireless/realtek/rtlwifi/wifi.h        | 68
+> +++++++++++----------
 
-Thanks, 5 patches applied to ath.git:
+Arnd,
 
-2e550b6d277b ath10k: fix operating irq mode for ahb device
-10f8ec64a2a6 ath10k: remove unused phy_mode_to_band
-b855de0f5792 ath10k: update module description
-64e001f41676 ath10k: add new ATH10K_FW_FEATURE_BTCOEX_PARAM
-39136248cf8d ath10k: add pdev param support to enable/disable btcoex
+rtlwifi and rtl8xxxu are two distinct drivers managed by different
+people. I'd be really nice if you could split this into a per driver
+patch.
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9138581/
+That said, the use of char in rtl8xxxu is all as a flag indicator, so I
+don't think the s/char/s8/ conversion is justified. I used char rather
+than ugly bool to reduce the size of the struct.
 
+Cheers,
+Jes
