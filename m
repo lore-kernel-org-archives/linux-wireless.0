@@ -1,99 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vpn.innerrange.com.au ([203.122.143.146]:27483 "EHLO
-	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752665AbcFPXhm (ORCPT
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:36016 "EHLO
+	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752574AbcFOFbA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 19:37:42 -0400
-From: Craig McQueen <craig.mcqueen@innerrange.com>
-To: Craig McQueen <craig.mcqueen@innerrange.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 17 Jun 2016 09:37:29 +1000
-Subject: RE: rt2800usb firmware rt2870.bin 0.36 not scanning
-Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D2A096F2E@IR-CENTRAL.corp.innerrange.com> (sfid-20160617_013746_111423_0205D3F7)
-References: <f2d6e3de-826a-c7b6-ac29-16b83be758e8@gmail.com>
- <5500469A22567C4BAF673A6E86AFA3A4022D2A096849@IR-CENTRAL.corp.innerrange.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Wed, 15 Jun 2016 01:31:00 -0400
+Received: by mail-pf0-f179.google.com with SMTP id t190so5084095pfb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:30:59 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH v3 2/5] staging: wilc1000: Replace semaphore txq_add_to_head_cs with mutex
+Date: Wed, 15 Jun 2016 11:00:35 +0530
+Message-Id: <1465968638-22129-3-git-send-email-binoy.jayan@linaro.org> (sfid-20160615_073252_293311_4F55038C)
+In-Reply-To: <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+ <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SSB3cm90ZToNCj4gSSB3cm90ZToNCj4gPiBYb3NlIFZhenF1ZXogUGVyZXogd3JvdGU6DQo+ID4g
-PiBDcmFpZyBNY1F1ZWVuIHdyb3RlOg0KPiA+ID4NCj4gPiA+ID4gSSBoYXZlIGEgRC1MaW5rIERX
-QS0xNDAgVVNCIFdpLUZpIGRldmljZSB3aGljaCBpcyBydDI4MDAgYmFzZWQNCj4gPiA+ID4gKDUz
-OTIgY2hpcHNldCkuIEknbSB0cnlpbmcgdG8gdXNlIGl0IG9uIGEgQmVhZ2xlQm9uZSBCbGFjayBi
-YXNlZA0KPiA+ID4gPiBzeXN0ZW0gd2l0aCAzLjE0Lngga2VybmVsIGJ1aWx0IHdpdGggWW9jdG8u
-IFdlJ3JlIHVzaW5nIENvbm5NYW4NCj4gPiA+ID4gMS4zMCBhdCB0aGUNCj4gPiBtb21lbnQuDQo+
-ID4gPg0KPiA+ID4gVHJ5IGl0IHdpdGggYSBfZGVza3RvcCB4ODZfNjQgZGlzdHJpYnV0aW9uXyAs
-IHdpdGggYSAqcmVjZW50IGtlcm5lbCoNCj4gPiA+IGFzDQo+ID4gPiBGZWRvcmE6IChXT1JLIGlz
-IGdub21lKQ0KPiA+ID4gaHR0cHM6Ly9hbHQuZmVkb3JhcHJvamVjdC5vcmcvcHViL2FsdC9saXZl
-LXJlc3BpbnMvDQo+ID4NCj4gPiBIbW0sIHRoYXQgaXMgbm9uLXRyaXZpYWwgYnV0IEkgbWF5IHRy
-eSBpdC4NCj4gPg0KPiA+IEZvciBub3csIEknbGwgYWxzbyB0cnkgYSA0LjQuNiBrZXJuZWwgcnVu
-bmluZyBvbiBhIEJlYWdsZUJvbmUgQmxhY2sNCj4gPiAod2l0aCBhIFVTQiBodWIgdG8gd29yayBh
-cm91bmQgYW5vdGhlciBpc3N1ZSB3aXRoIHRoZSBydDI4MDB1c2IgZHJpdmVyDQo+ID4gY3Jhc2hp
-bmcgYXMgZGVzY3JpYmVkIGluIGFub3RoZXIgZS1tYWlsKS4NCj4gPg0KPiA+ID4gPiBXZSd2ZSBi
-ZWVuIGZpbmRpbmcgc29tZSBpbnN0YWJpbGl0aWVzIHdpdGggaXQgcGVyaW9kaWNhbGx5DQo+ID4g
-PiA+IGRpc2Nvbm5lY3RpbmcgZnJvbSBzb21lIG5ldHdvcmtzLiBTbyB3ZSB0cmllZCB1cGdyYWRp
-bmcgdGhlDQo+ID4gPiA+IGZpcm13YXJlIGZpbGUgcnQyODcwLmJpbiBmcm9tIHZlcnNpb24gMC4y
-OSB0byAwLjM2LiBUaGF0IHNlZW1zIHRvDQo+ID4gPiA+IGJlIG1vcmUgc3RhYmxlIHdpdGggdGhl
-IG5ldHdvcmsuIEhvd2V2ZXIsIHdlJ3JlIGZpbmRpbmcgdGhhdCBpdA0KPiA+ID4gPiBpbml0aWFs
-bHkgZG9lc24ndCBjb25uZWN0LCB1bnRpbCB0aGUgV2ktRmkgaGFzIGJlZW4gZGlzYWJsZWQgYW5k
-IHRoZW4gcmUtDQo+IGVuYWJsZWQuICcNCj4gPiA+IHNjYW4gd2lmaScNCj4gPiA+ID4gYW5kICdp
-d2xpc3Qgc2NhbicgZG9uJ3QgcmV0dXJuIGFueXRoaW5nIHVudGlsIFdpLUZpIGhhcyBiZWVuDQo+
-ID4gPiA+IGRpc2FibGVkIGFuZCB0aGVuIHJlLWVuYWJsZWQuDQo+ID4gPg0KPiA+ID4gRG9uJ3Qg
-dXNlIGFueSB3cmFwcGVyKE5NLCBDb25uTWFuLCB3aWNkLCAuLi4pLCB1c3VhbGx5IGFyZSBidWdn
-eS4NCj4gPiA+IFlvdSBzaG91bGQgdXNlIHJhdyBjb21tYW5kcyAiaXciIGFuZCAid3BhX3N1cHBs
-aWNhbnQiLiBIaW50czoNCj4gPiA+IGh0dHBzOi8vd2lyZWxlc3Mud2lraS5rZXJuZWwub3JnL2Vu
-L3VzZXJzL2RvY3VtZW50YXRpb24vaXcgYW5kDQo+ID4gPiB3cGFfc3VwcGxpY2FudCBhbHdheXMg
-cnVubmluZyB3aXRoICItRG5sODAyMTEiDQo+ID4NCj4gPiBPa2F5LCBJJ3ZlIHN0cmlwcGVkIGRv
-d24gdGhlIHN5c3RlbSBzbyBDb25uTWFuLCB1ZGV2IHJ1bGVzIGFyZW4ndA0KPiBydW5uaW5nLg0K
-PiA+DQo+ID4gT24gYWxsIHN5c3RlbXMsIGFmdGVyIHBsdWdnaW5nIGluIHRoZSBkZXZpY2UsIEkg
-aGF2ZSB0byBpc3N1ZToNCj4gPg0KPiA+ICAgICBpcCBsaW5rIHNldCB3bGFuMCB1cA0KPiA+DQo+
-ID4gQWZ0ZXIgdGhpcywgSSB0cnkgdG8gZG8gYSBzY2FuOg0KPiA+DQo+ID4gICAgIGl3IGRldiB3
-bGFuMCBzY2FuDQo+ID4NCj4gPiBPbiBrZXJuZWwgNC40LjYsIHdpdGggZmlybXdhcmUgMC4zNiwg
-aXQgd29ya3MgZmluZSAobGlzdHMgQVBzIGl0DQo+ID4gZmluZHMpLiBPbiBrZXJuZWwgMy4xNC54
-LCB3aXRoIGZpcm13YXJlIDAuMjksIGl0IHdvcmtzIGZpbmUuIEJ1dCBvbg0KPiA+IGtlcm5lbCAz
-LjE0LngsIHdpdGggZmlybXdhcmUgMC4zNiwgaXQgcmV0dXJucyBub3RoaW5nLiBCdXQgdGhlbiwg
-aWYgSSBkbyB0aGlzOg0KPiA+DQo+ID4gICAgIGlwIGxpbmsgc2V0IHdsYW4wIGRvd24NCj4gPiAg
-ICAgaXAgbGluayBzZXQgd2xhbjAgdXANCj4gPiAgICAgaXcgZGV2IHdsYW4wIHNjYW4NCj4gPg0K
-PiA+IFRoZW4gaXQgd29ya3MgZmluZS4NCj4gPg0KPiA+IFNvLCB0aGUgcXVlc3Rpb24gaXMsIHdo
-eSBkb2VzIGZpcm13YXJlIDAuMzYgd2l0aCBrZXJuZWwgMy4xNC54IG5vdA0KPiA+IHdvcmsgdW50
-aWwgSSd2ZSBtYWRlIHRoZSBpbnRlcmZhY2UgZ28gdXAsIHRoZW4gZG93biwgYW5kIHRoZW4gdXAg
-YWdhaW4/DQo+IA0KPiBJJ3ZlIG1hbmFnZWQgdG8gYnVpbGQsIHVzaW5nIFlvY3RvLCBrZXJuZWwg
-NC40LjEyIGZvciBCZWFnbGVCb25lLiBXaGVuIEkgcnVuDQo+IGl0LCBpdCBoYXMgdGhlIHNhbWUg
-cHJvYmxlbS4gVGhhdCdzIGRpZmZlcmVudCBmcm9tIHRoZSBVYnVudHUgMTYuMDQgZm9yDQo+IEJl
-YWdsZUJvbmUgdXNpbmcgNC40LjYga2VybmVsLg0KPiANCj4gV2l0aCBteSBZb2N0byBidWlsZCwg
-aXQgaGFkIGEgZGlmZmVyZW50IHZlcnNpb24gb2YgdGhlICdpcCcgYW5kICdpdycgY29tbWFuZHMu
-DQo+IFNvIEkgdHJpZWQgY29weWluZyB0aGUgVWJ1bnR1IHZlcnNpb25zLCBidXQgdGhhdCBkaWRu
-J3QgbWFrZSBhIGRpZmZlcmVuY2UuIEkNCj4gdHJpZWQgdXNpbmcgdGhlIFlvY3RvIGJ1aWx0IDQu
-NC4xMiBrZXJuZWwgd2l0aCB0aGUgVWJ1bnR1IHJvb3QgZmlsZXN5c3RlbSwgYnV0DQo+IGl0IGhh
-bHRlZCBkdXJpbmcgdGhlIGJvb3QgcHJvY2VzcyAoZG9uJ3Qga25vdyB3aHkpLiBNeSBiZXN0IGd1
-ZXNzIGlzIHRoYXQNCj4gdGhlcmUncyBzb21lIGtlcm5lbCBjb25maWcgZGlmZmVyZW5jZSB0aGF0
-IG1ha2VzIGEgZGlmZmVyZW5jZSwgYnV0IHRoZXJlIGFyZQ0KPiBtYW55IGRpZmZlcmVuY2VzLCBz
-byBJJ20gbm90IHN1cmUgd2hpY2ggb25lIGl0IG1pZ2h0IGJlLg0KPiANCj4gSSdtIG5vdCBzdXJl
-IGF0IHRoaXMgcG9pbnQgaG93IHRvIG5hcnJvdyBpdCBkb3duIHRvIHRoZSByb290IGNhdXNlLiBB
-bnkNCj4gYWR2aWNlPw0KPiANCj4gSSB3b25kZXIgaWYgbWF5YmUgdGhlcmUncyBhIHJhY2UgY29u
-ZGl0aW9uIGluIHRoZSBydDI4MDB1c2IgZHJpdmVyIGJldHdlZW4NCj4gbG9hZGluZyB0aGUgcnQy
-ODcwLmJpbiBmaXJtd2FyZSBhbmQgZG9pbmcgdGhlIGludGVyZmFjZS11cCBpbml0aWFsaXNhdGlv
-bi4NCj4gTm9ybWFsbHkgdGhlIGZpcm13YXJlIGxvYWRzIGF0IHRoZSBwb2ludCBvZiBkb2luZyB0
-aGUgJ2l3IGxpbmsgc2V0IHdsYW4wIHVwJw0KPiBjb21tYW5kLiBJcyB0aGVyZSBhIHdheSB0byBm
-b3JjZSB0aGUgZmlybXdhcmUgdG8gbG9hZCBiZWZvcmUgdGhhdA0KPiBjb21tYW5kPw0KDQpJJ3Zl
-IGdvdCB0d28gcnQyODAwIGRldmljZXM6DQoNCiogRC1MaW5rIERXQS0xNDAgd2l0aCBSVCBjaGlw
-c2V0IDUzOTIsIHJldiAwMjIzLCBhbmQgUkYgY2hpcHNldCA1MzcyDQoqIEVkdXAgRVAtTjg1Mzcg
-d2l0aCBSVCBjaGlwc2V0IDUzOTAsIHJldiAwNTAyLCBhbmQgUkYgY2hpcHNldCA1MzcwDQoNCkkn
-dmUgYWxzbyBmb3VuZCB0aGF0IHdpdGggdGhlIFlvY3RvLWJ1aWx0IDQuNC4xMiBrZXJuZWwsIHRo
-aXMgbm8tc2NhbiBpc3N1ZSBvbmx5IGhhcHBlbnMgdG8gdGhlIEVkdXAgd2l0aCB0aGUgNTM5MCBj
-aGlwc2V0LiBUaGUgRC1MaW5rIGlzIGZpbmUuDQoNCldpdGggdGhlIFVidW50dSA0LjQuNiBrZXJu
-ZWwsIGJvdGggZGV2aWNlcyB3b3JrIGZpbmUsIHdpdGhvdXQgdGhpcyBuby1zY2FuIHByb2JsZW0u
-DQoNCkknbSBoYXZpbmcgdHJvdWJsZSBuYXJyb3dpbmcgaXQgZG93biBmdXJ0aGVyLCBzaW5jZSB0
-aGVzZSB2YXJ5aW5nIGNpcmN1bXN0YW5jZXMgZG9uJ3Qgb2J2aW91c2x5IHBvaW50IHRvd2FyZHMg
-YSByb290IGNhdXNlLiBTb21laG93IGl0IHNlZW1zIHRvIGJlIGRlcGVuZGVudCBvbiBhIGNvbWJp
-bmF0aW9uIG9mIGtlcm5lbCBjb25maWd1cmF0aW9uLCB0aGUgZGV2aWNlJ3MgY2hpcHNldCwgYW5k
-IHdoaWNoIGZpcm13YXJlIGlzIGxvYWRlZCBvbiB0aGUgZGV2aWNlLiBVbmxlc3MgaXQncyBqdXN0
-IGEgbWFyZ2luYWwgdGltaW5nIGlzc3VlIGR1ZSB0byBzb21lIHJhY2UgY29uZGl0aW9uLiBCdXQg
-YXQgdGhpcyBwb2ludCBJJ20gbm90IHN1cmUgd2hlcmUgdG8gbG9vay4NCg0KQW55IGFkdmljZSB3
-b3VsZCBiZSBtdWNoIGFwcHJlY2lhdGVkOyBJJ20gbm90IHN1cmUgd2hlcmUgdG8gbG9vayBuZXh0
-IHNpbmNlIEknbSBub3QgZmFtaWxpYXIgd2l0aCB0aGUgVVNCIGFuZCBXaS1GaSBzeXN0ZW1zIG9m
-IHRoZSBrZXJuZWwuDQoNCldoZXJlIG1pZ2h0IEkgZmluZCBydDI4MDAgZXhwZXJ0cy9tYWludGFp
-bmVycyB0aGVzZSBkYXlzIHdobyBtaWdodCBiZSBhYmxlIHRvIGdpdmUgc29tZSBhZHZpY2Ugb24g
-dGhpcz8NCg0KVGhhbmtzLA0KQ3JhaWcgTWNRdWVlbg0KDQo=
+The semaphore 'txq_add_to_head_cs' is a simple mutex, so it should be
+written as one. Semaphores are going away in the future. Also, removing
+the timeout scenario as the error handling code does not propagate the
+timeout properly.
+
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/staging/wilc1000/linux_wlan.c         |  4 ++--
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  3 ++-
+ drivers/staging/wilc1000/wilc_wlan.c          | 11 ++++-------
+ 3 files changed, 8 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 90f906d..a933551 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -20,7 +20,7 @@
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/skbuff.h>
+-
++#include <linux/mutex.h>
+ #include <linux/semaphore.h>
+ #include <linux/completion.h>
+ 
+@@ -679,7 +679,7 @@ static int wlan_init_locks(struct net_device *dev)
+ 	mutex_init(&wl->rxq_cs);
+ 
+ 	spin_lock_init(&wl->txq_spinlock);
+-	sema_init(&wl->txq_add_to_head_cs, 1);
++	mutex_init(&wl->txq_add_to_head_cs);
+ 
+ 	init_completion(&wl->txq_event);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 12d7c7b..239cd43 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -43,6 +43,7 @@
+ #include "wilc_wlan.h"
+ #include <linux/wireless.h>
+ #include <linux/completion.h>
++#include <linux/mutex.h>
+ 
+ #define FLOW_CONTROL_LOWER_THRESHOLD	128
+ #define FLOW_CONTROL_UPPER_THRESHOLD	256
+@@ -171,7 +172,7 @@ struct wilc {
+ 	struct wilc_vif *vif[NUM_CONCURRENT_IFC];
+ 	u8 open_ifcs;
+ 
+-	struct semaphore txq_add_to_head_cs;
++	struct mutex txq_add_to_head_cs;
+ 	spinlock_t txq_spinlock;
+ 
+ 	struct mutex rxq_cs;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 1a57135..9afbe8d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -99,9 +99,7 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 	unsigned long flags;
+ 	struct wilc *wilc = vif->wilc;
+ 
+-	if (wilc_lock_timeout(wilc, &wilc->txq_add_to_head_cs,
+-				    CFG_PKTS_TIMEOUT))
+-		return -1;
++	mutex_lock(&wilc->txq_add_to_head_cs);
+ 
+ 	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+ 
+@@ -119,7 +117,7 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 	wilc->txq_entries += 1;
+ 
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+-	up(&wilc->txq_add_to_head_cs);
++	mutex_unlock(&wilc->txq_add_to_head_cs);
+ 	complete(&wilc->txq_event);
+ 
+ 	return 0;
+@@ -573,8 +571,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 		if (wilc->quit)
+ 			break;
+ 
+-		wilc_lock_timeout(wilc, &wilc->txq_add_to_head_cs,
+-					CFG_PKTS_TIMEOUT);
++		mutex_lock(&wilc->txq_add_to_head_cs);
+ 		wilc_wlan_txq_filter_dup_tcp_ack(dev);
+ 		tqe = wilc_wlan_txq_get_first(wilc);
+ 		i = 0;
+@@ -755,7 +752,7 @@ _end_:
+ 		if (ret != 1)
+ 			break;
+ 	} while (0);
+-	up(&wilc->txq_add_to_head_cs);
++	mutex_unlock(&wilc->txq_add_to_head_cs);
+ 
+ 	wilc->txq_exit = 1;
+ 	*txq_count = wilc->txq_entries;
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
