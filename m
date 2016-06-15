@@ -1,111 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:41339 "EHLO lists.s-osg.org"
+Received: from smtp.ispras.ru ([83.149.199.79]:43584 "EHLO smtp.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752681AbcFFRDJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2016 13:03:09 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Javier Martinez Canillas <javier@osg.samsung.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl file
-Date: Mon,  6 Jun 2016 13:02:37 -0400
-Message-Id: <1465232558-31678-3-git-send-email-javier@osg.samsung.com> (sfid-20160606_190352_264434_7B217B43)
-In-Reply-To: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
-References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
+	id S932698AbcFOMpC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2016 08:45:02 -0400
+From: Pavel Andrianov <andrianov@ispras.ru>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Pavel Andrianov <andrianov@ispras.ru>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ldv-project@linuxtesting.org, vaishali.thakkar@oracle.com
+Subject: [PATCH] libertas: Add spinlock to avoid race condition
+Date: Wed, 15 Jun 2016 15:34:03 +0400
+Message-Id: <1465990443-19738-1-git-send-email-andrianov@ispras.ru> (sfid-20160615_144527_260422_EB5C6078)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+lbs_mac_event_disconnected may free priv->currenttxskb
+while lbs_hard_start_xmit accesses to it.
+The patch adds a spinlock for mutual exclusion.
 
-Most cfg80211 operations are just a wrappers to functions defined in the
-sta_ioctl.c file, so for consistency move the .get_tx_power logic there.
+Tested on OLPC XO-1 (usb8388) and XO-1.5 (sd8686) with v4.7-rc3.
 
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-[javier: update the subject line and commit message]
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+Confirmed that lbs_mac_event_disconnected is being called on the
+station when hostapd on access point is given SIGHUP.
 
+Signed-off-by: Pavel <andrianov@ispras.ru>
+Tested-by: James Cameron <quozl@laptop.org>
 ---
+ drivers/net/wireless/marvell/libertas/cmdresp.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
- drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 14 +++-----------
- drivers/net/wireless/marvell/mwifiex/main.h      |  2 ++
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 18 ++++++++++++++++++
- 3 files changed, 23 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index b17f3d09a2c7..ff3f63ed95e1 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -385,18 +385,10 @@ mwifiex_cfg80211_get_tx_power(struct wiphy *wiphy,
- 			      int *dbm)
+diff --git a/drivers/net/wireless/marvell/libertas/cmdresp.c b/drivers/net/wireless/marvell/libertas/cmdresp.c
+index c95bf6d..c67ae07 100644
+--- a/drivers/net/wireless/marvell/libertas/cmdresp.c
++++ b/drivers/net/wireless/marvell/libertas/cmdresp.c
+@@ -27,6 +27,8 @@
+ void lbs_mac_event_disconnected(struct lbs_private *priv,
+ 				bool locally_generated)
  {
- 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
--	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
--							MWIFIEX_BSS_ROLE_ANY);
--	int ret = mwifiex_send_cmd(priv, HostCmd_CMD_RF_TX_PWR,
--				   HostCmd_ACT_GEN_GET, 0, NULL, true);
--
--	if (ret < 0)
--		return ret;
--
--	/* tx_power_level is set in HostCmd_CMD_RF_TX_PWR command handler */
--	*dbm = priv->tx_power_level;
-+	struct mwifiex_private *priv;
- 
--	return 0;
-+	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
-+	return mwifiex_get_tx_power(priv, dbm);
- }
- 
- /*
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 0207af00be42..79c28cfb7780 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1464,6 +1464,8 @@ int mwifiex_drv_get_driver_version(struct mwifiex_adapter *adapter,
- int mwifiex_set_tx_power(struct mwifiex_private *priv,
- 			 struct mwifiex_power_cfg *power_cfg);
- 
-+int mwifiex_get_tx_power(struct mwifiex_private *priv, int *dbm);
++	unsigned long flags;
 +
- int mwifiex_main_process(struct mwifiex_adapter *);
+ 	if (priv->connect_status != LBS_CONNECTED)
+ 		return;
  
- int mwifiex_queue_tx_pkt(struct mwifiex_private *priv, struct sk_buff *skb);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 8e0862657122..70ff9b805b5b 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -775,6 +775,24 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
- }
+@@ -46,9 +48,11 @@ void lbs_mac_event_disconnected(struct lbs_private *priv,
+ 	netif_carrier_off(priv->dev);
  
- /*
-+ * IOCTL request handler to get tx power configuration.
-+ *
-+ * This function prepares the correct firmware command and
-+ * issues it.
-+ */
-+int mwifiex_get_tx_power(struct mwifiex_private *priv, int *dbm)
-+{
-+	int ret;
-+
-+	ret = mwifiex_send_cmd(priv, HostCmd_CMD_TXPWR_CFG,
-+			       HostCmd_ACT_GEN_GET, 0, NULL, true);
-+
-+	*dbm = priv->tx_power_level;
-+
-+	return ret;
-+}
-+
-+/*
-  * IOCTL request handler to get power save mode.
-  *
-  * This function prepares the correct firmware command and
+ 	/* Free Tx and Rx packets */
++	spin_lock_irqsave(&priv->driver_lock, flags);
+ 	kfree_skb(priv->currenttxskb);
+ 	priv->currenttxskb = NULL;
+ 	priv->tx_pending_len = 0;
++	spin_unlock_irqrestore(&priv->driver_lock, flags);
+ 
+ 	priv->connect_status = LBS_DISCONNECTED;
+ 
 -- 
-2.5.5
+1.7.11.7
 
