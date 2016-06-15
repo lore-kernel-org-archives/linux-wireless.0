@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41272 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752698AbcF2QCM (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:62638 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753614AbcFOVae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 12:02:12 -0400
-Content-Type: text/plain; charset="utf-8"
+	Wed, 15 Jun 2016 17:30:34 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: use s8 instead of char
+Date: Wed, 15 Jun 2016 23:25:13 +0200
+Message-ID: <5245411.kmNEkqpVVS@wuerfel> (sfid-20160615_233051_050950_37E9C5ED)
+In-Reply-To: <wrfjbn32taxw.fsf@redhat.com>
+References: <20160615210318.4130648-1-arnd@arndb.de> <wrfjbn32taxw.fsf@redhat.com>
 MIME-Version: 1.0
-Subject: Re: brcmfmac: add missing break when deleting P2P_DEVICE
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1466294168-8890-1-git-send-email-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Message-Id: <20160629160212.42D5461385@smtp.codeaurora.org> (sfid-20160629_180239_499919_5F708D29)
-Date: Wed, 29 Jun 2016 16:02:12 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> We obviously don't want to fall through in that switch. With this change
-> 1) We wait for event (triggered by p2p_disc) as expected
-> 2) We remove interface manually on timeout
-> 3) We return 0 on success instead of -ENOTSUPP
+On Wednesday, June 15, 2016 5:10:51 PM CEST Jes Sorensen wrote:
 > 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> Arnd,
+> 
+> rtlwifi and rtl8xxxu are two distinct drivers managed by different
+> people. I'd be really nice if you could split this into a per driver
+> patch.
+> 
+> That said, the use of char in rtl8xxxu is all as a flag indicator, so I
+> don't think the s/char/s8/ conversion is justified. I used char rather
+> than ugly bool to reduce the size of the struct.
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+Makes sense, I'll resend without that change. If anything, the flag
+should become u8, not s8 anyway.
 
-20856adf2280 brcmfmac: add missing break when deleting P2P_DEVICE
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9185903/
+	Arnd
 
