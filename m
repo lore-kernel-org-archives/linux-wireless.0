@@ -1,46 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59075 "EHLO sipsolutions.net"
+Received: from idris.smile.fr ([91.216.209.19]:59507 "EHLO idris.smile.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751767AbcFUUmw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 16:42:52 -0400
-Message-ID: <1466538049.18972.5.camel@sipsolutions.net> (sfid-20160621_224258_195563_D5AF4D21)
-Subject: Re: [PATCH] mac80211: Encrypt "Group addressed privacy" action
- frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>, Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 21 Jun 2016 21:40:49 +0200
-In-Reply-To: <20160621170120.GA24882@w1.fi> (sfid-20160621_190131_756060_1D067478)
-References: <1465969112-2814-1-git-send-email-masashi.honma@gmail.com>
- <20160618091116.GA2972@w1.fi>
- <57673E10.7070706@gmail.com>
- <20160620212529.GA19076@w1.fi>
- <5768DBB6.2060501@gmail.com>
-	 <20160621170120.GA24882@w1.fi> (sfid-20160621_190131_756060_1D067478)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752120AbcFOHLY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 15 Jun 2016 03:11:24 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Wed, 15 Jun 2016 09:11:21 +0200
+From: Vincent CESSON <vincent.cesson@smile.fr>
+To: Raymond Hayes <hayesr@google.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	<linux-wireless@vger.kernel.org>, Shengzhen Li <szli@marvell.com>
+Subject: Re: =?UTF-8?Q?mwifiex+wpa=5Fsupplicant=20cannot=20set=20up=20WPA/?=
+ =?UTF-8?Q?WPA=32=20ADHOC?=
+In-Reply-To: <CAKVVYBmb1X0OFz9kanTcGKxHTYDJt8u_ZusFEdPWk4Mu3FMBBQ@mail.gmail.com>
+References: <4eed6159efdc3f86e4f549bb31ce6a74@smile.fr>
+ <CAKVVYBk2Rf6RMPW1uySq4M7LeFCRHBGipYdiOqwQSHxFNmst=A@mail.gmail.com>
+ <053ed5ba9d69bc5e6f36ed7e95526663@smile.fr>
+ <4fdb1514a02744ad9b8ac11b96e57130@SC-EXCH04.marvell.com>
+ <404feff5a5bca118ba53b69301700e2f@smile.fr>
+ <db092693c63a4a06ada95537e22d5abf@SC-EXCH04.marvell.com>
+ <2259a8e8239c9497571d30fa86e7f84c@smile.fr>
+ <CAKVVYBmb1X0OFz9kanTcGKxHTYDJt8u_ZusFEdPWk4Mu3FMBBQ@mail.gmail.com>
+Message-ID: <a11a109dbfbcd5c2fd952563de1a4c8c@smile.fr> (sfid-20160615_091127_635130_97E7D07E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Raymond,
 
-> We actually cover (2) for some cases by "accident" since
-> ieee80211_rx_h_decrypt() assigns rx->key to rx->sta->gtk[i] if one is
-> available. I'm not completely sure this is correct since it applies
-> to management frame as well, but that's the way commit
-> 897bed8b4320774e56f282cdc1cceb4d77442797 ('mac80211: clean up RX key
-> checks') implemented it (Johannes: Could you please take a look
-> whether that gtk[] case was really supposed to apply for non-Data
-> frames?).
+Who is trying to mark the peer authorized? Should I look into mwifiex 
+driver? cfg80211.ko? libnl? wpa_supplicant? I am a bit lost among all 
+these elements.
+
+Vincent
+
+
+Le 2016-06-14 02:30, Raymond Hayes a écrit :
+> From the RSN log, the dual 4-way handshakes succeeded, but the GTK was
+> not installed:
 > 
-
-Hm, yeah, that's kinda questionable.
-
-AFAICT we still do the right thing since ieee80211_drop_unencrypted()
-contains a check for ieee80211_is_data() and we return in this if
-branch, so we never get to the TAINTED check or the actual decrypt.
-
-We could try to just drop unencrypted data frames (that aren't control
-port protocol) right here, but it might wreak havoc with the reorder
-buffer in case it (erroneously) happens.
-
-johannes
+> nl80211: set_key failed; err=-22 Invalid argument)
+> 
+> and it looks like there was a problem marking the peer authorized:
+> 
+> AUTH: 48:45:20:3b:31:75 authorizing port
+> Could not set station 48:45:20:3b:31:75 flags for kernel driver 
+> (errno=11)
+> 
+> Ray
+> 
+> On Mon, Jun 13, 2016 at 7:42 AM, Vincent CESSON 
+> <vincent.cesson@smile.fr> wrote:
+>> Hi Amitkumar,
+>> 
+>> Here are the wpa_supplicant logs (with CONFIG_IBSS_RSN=y enabled) 
+>> from the
+>> two devices. Beside wpa_supplicant, I manually set IPs 192.168.1.xy 
+>> with
+>> command "ifconfig mlan0 192.168.1.xy" and then I try to ping each 
+>> other,
+>> without success.
+>> 
+>> Vincent
+>> 
+>> 
+>> 
+>> Le 2016-06-13 15:40, Amitkumar Karwar a écrit :
+>>> 
+>>> Hi Vincent,
+>>> 
+>>>> From: Vincent CESSON [mailto:vincent.cesson@smile.fr]
+>>>> Sent: Monday, June 13, 2016 7:09 PM
+>>>> To: Amitkumar Karwar
+>>>> Cc: Raymond Hayes; linux-wireless@vger.kernel.org
+>>>> Subject: RE: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
+>>>> 
+>>>> About the strange behaviour with the two devices connecting despite 
+>>>> the
+>>>> bad passwords, I made a little mistake: on the device 2, 
+>>>> wpa_supplicant
+>>>> was not built with option CONFIG_IBSS_RSN=y. But still, device 1 
+>>>> should
+>>>> not accept device 2...
+>>>> 
+>>>> Note that with option CONFIG_IBSS_RSN=y enabled on both devices, 
+>>>> WPA-PSK
+>>>> connection does not work, even with the right password...
+>>>> 
+>>> 
+>>> I see. Please share the wpa_supplicant logs with CONFIG_IBSS_RSN=y
+>>> enabled for analysis.
+>>> 
+>>> Regards,
+>>> Amitkumar
