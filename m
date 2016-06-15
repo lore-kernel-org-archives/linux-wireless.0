@@ -1,49 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sitav-80046.hsr.ch ([152.96.80.46]:58674 "EHLO
-	mail.strongswan.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753132AbcFOMhR (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33684 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750717AbcFOFj2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2016 08:37:17 -0400
-Message-ID: <1465994233.3807.18.camel@strongswan.org> (sfid-20160615_143721_901756_42AFE6A3)
-Subject: Re: [PATCH] mac80211_hwsim: Allow wmediumd to attach to radios
- created in its netns
-From: Martin Willi <martin@strongswan.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Wed, 15 Jun 2016 14:37:13 +0200
-In-Reply-To: <1465978217.2994.4.camel@sipsolutions.net>
-References: <1463214884-5983-1-git-send-email-martin@strongswan.org>
-	 <1465978217.2994.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 15 Jun 2016 01:39:28 -0400
+Received: by mail-pf0-f195.google.com with SMTP id c74so959519pfb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:39:28 -0700 (PDT)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH] mac80211: Encrypt "Group addressed privacy" action frames
+Date: Wed, 15 Jun 2016 14:38:32 +0900
+Message-Id: <1465969112-2814-1-git-send-email-masashi.honma@gmail.com> (sfid-20160615_073935_444521_DBDDAE65)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> >  printk(KERN_INFO "mac80211_hwsim: wmediumd released netlink"
-> >         " socket, switching to perfect channel medium\n");
+Previously, the action frames to group address was not encrypted. But
+[1] "Table 8-38 Category values" indicates "Mesh" and "Multihop" category
+action frames should be encrypted (Group addressed privacy == yes). And the
+encyption key should be MGTK ([1] 10.13 Group addressed robust management frame
+procedures). So this patch modifies the code to make it suitable for spec.
 
-> I wonder if we can do something better about them? Or perhaps if we
-> should remove them, so other namespaces won't mess up the kernel log
+[1] IEEE Std 802.11-2012
 
-This is in fact not very nice, but not specific to hwsim. Any namespace
-can mess up the kernel log from different (networking) subsystems. This
-has been discussed some time ago [1], but AFAIK there is no real
-solution so far.
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ net/mac80211/tx.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-For this patch I think we have the following options:
- * Keep the printk() messages as proposed
- * Remove those callable from non-initial namespaces completely
- * Suppress them when called from non-initial namespaces
- * Include the associated "netgroup" in the message
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 2030443..80afc47 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -578,6 +578,21 @@ ieee80211_tx_h_check_control_port_protocol(struct ieee80211_tx_data *tx)
+ 	return TX_CONTINUE;
+ }
+ 
++static bool debug_noinline
++ieee80211_is_group_privacy_action(struct ieee80211_hdr *hdr)
++{
++	struct ieee80211_mgmt *mgmt;
++
++	if (!ieee80211_is_action(hdr->frame_control) ||
++	    !is_multicast_ether_addr(hdr->addr1))
++		return false;
++
++	mgmt = (struct ieee80211_mgmt *)hdr;
++
++	return mgmt->u.action.category == WLAN_CATEGORY_MESH_ACTION ||
++		mgmt->u.action.category == WLAN_CATEGORY_MULTIHOP_ACTION;
++}
++
+ static ieee80211_tx_result debug_noinline
+ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ {
+@@ -590,6 +605,9 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 	else if (tx->sta &&
+ 		 (key = rcu_dereference(tx->sta->ptk[tx->sta->ptk_idx])))
+ 		tx->key = key;
++	else if (ieee80211_is_group_privacy_action(hdr) &&
++		 (key = rcu_dereference(tx->sdata->default_multicast_key)))
++		tx->key = key;
+ 	else if (ieee80211_is_mgmt(hdr->frame_control) &&
+ 		 is_multicast_ether_addr(hdr->addr1) &&
+ 		 ieee80211_is_robust_mgmt_frame(tx->skb) &&
+@@ -620,6 +638,8 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 		case WLAN_CIPHER_SUITE_CCMP_256:
+ 		case WLAN_CIPHER_SUITE_GCMP:
+ 		case WLAN_CIPHER_SUITE_GCMP_256:
++			if (ieee80211_is_group_privacy_action(hdr))
++				break;
+ 			if (!ieee80211_is_data_present(hdr->frame_control) &&
+ 			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
+ 					       tx->skb))
+-- 
+2.5.0
 
-I personally would prefer the first option, as this problem is not
-specific to hwsim or mac80211, but many subsystems. So we certainly can
-add some work-around, but there is not much to gain if other modules
-don't.
-
-Regards
-Martin
-
-
-[1]https://lwn.net/Articles/527342/
