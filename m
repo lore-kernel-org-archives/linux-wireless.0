@@ -1,75 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:35918 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751419AbcF1Onj convert rfc822-to-8bit (ORCPT
+Received: from zimbra.real-time.com ([63.170.91.9]:45351 "EHLO
+	zimbra.real-time.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932182AbcFOArR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 10:43:39 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"David S . Miller" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Hahn, Maital" <maitalm@ti.com>
-Subject: RE: [PATCH 2/4] mac80211/cfg: mesh: fix healing time when a mesh
- peer is disconnecting
-Date: Tue, 28 Jun 2016 14:43:00 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101391D51E6@DFRE01.ent.ti.com> (sfid-20160628_164409_829642_A4EC98D0)
-References: <20160628111307.8784-1-yanivma@ti.com>
- <20160628111307.8784-2-yanivma@ti.com>
- <20160628111307.8784-3-yanivma@ti.com> <20160628122747.GA7757@localhost>
-In-Reply-To: <20160628122747.GA7757@localhost>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 14 Jun 2016 20:47:17 -0400
+Date: Wed, 15 Jun 2016 10:46:55 +1000
+From: James Cameron <quozl@laptop.org>
+To: Pavel Andrianov <andrianov@ispras.ru>
+Cc: Dan Williams <dcbw@redhat.com>, Kalle Valo <kvalo@codeaurora.org>,
+	libertas-dev@lists.infradead.org, LDV list <ldv-project@ispras.ru>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, vaishali.thakkar@oracle.com
+Subject: Re: [ldv-project] [net] libertas: potential race condition
+Message-ID: <20160615004655.GE5852@us.netrek.org> (sfid-20160615_024734_898933_96F316B2)
+References: <57569424.9040906@ispras.ru>
+ <1465310395.29158.2.camel@redhat.com>
+ <20160607225114.GA21437@us.netrek.org>
+ <5760039B.4050902@ispras.ru>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5760039B.4050902@ispras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 28, 2016 at 15:27:47, Bob Copeland wrote:
-> linux- wireless@vger.kernel.org; netdev@vger.kernel.org; Hahn, Maital
-> Subject: Re: [PATCH 2/4] mac80211/cfg: mesh: fix healing time when a 
-> mesh peer is disconnecting
-> 
-> On Tue, Jun 28, 2016 at 02:13:05PM +0300, Yaniv Machani wrote:
-> > From: Maital Hahn <maitalm@ti.com>
+On Tue, Jun 14, 2016 at 05:16:11PM +0400, Pavel Andrianov wrote:
+> 08.06.2016 02:51, James Cameron пишет:
+> >On Tue, Jun 07, 2016 at 09:39:55AM -0500, Dan Williams wrote:
+> >>On Tue, 2016-06-07 at 13:30 +0400, Pavel Andrianov wrote:
+> >>>Hi!
+> >>>
+> >>>There is a potential race condition in
+> >>>drivers/net/wireless/libertas/libertas.ko.
+> >>>In the function lbs_hard_start_xmit(..), line 159, a socket buffer
+> >>>is
+> >>>written to priv->current_skb with a spin_lock protection.
+> >>>In the function lbs_mac_event_disconnected(..), lines 50-51, the
+> >>>field
+> >>>current_skb is cleaned. There is no protection used. The
+> >>>corresponding
+> >>>handlers are activated at the same time in lbs_start_card(..) and
+> >>>then
+> >>>may be executed simultaneously. Note, there are two structures
+> >>>lbs_netdev_ops and mesh_netdev_ops, which have the target handler
+> >>>lbs_hard_start_xmit.
+> >>>Is it a real race or I have missed something?
+> >>Yeah, it looks like it should be grabbing priv->driver_lock before
+> >>clearing priv->currenttxskb in lbs_mac_event_disconnected().  Care to
+> >>submit a patch after testing?  Do you have any of that hardware?
+> >I've hardware, with serial console.
 > >
-> > Once receiving a CLOSE action frame from the disconnecting peer, 
-> > flush all entries in the path table which has this peer as the next hop.
+> >Can test any patch, on USB (8388) or SDIO (8686).
+> >
+> Hi!
 > 
-> Please address the user-visible behavior in your commit messages.
-> Does it crash?  Does it send frames to an invalid peer?  Do frames get dropped?
+> I've prepare the patch for this issue. Could you test it?
 > 
+> Thank you.
 
-Hi Bob,
-It was a crash, apparently already fixed by your patches some time ago.
-I'll remove that part and resend the 2nd part (with some more 'why', and less typos..)
+Tested on OLPC XO-1 (usb8388) and XO-1.5 (sd8686) with v4.7-rc3.
 
-> > In addition, upon receiving a packet, if next hop is not found, 
-> > trigger PERQ immidiatly, instead of just putting it in the queue.
-> 
-> "PREQ"
-> 
-> Please split this into a separate patch that we can review separately 
-> (and also give the "why" in the commit log).
-> 
-> > @@ -1011,6 +1011,7 @@ static void sta_apply_mesh_params(struct
-> ieee80211_local *local,
-> >  			if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
-> >  				changed =
-> mesh_plink_dec_estab_count(sdata);
-> >  			sta->mesh->plink_state = params->plink_state;
-> > +			mesh_path_flush_by_nexthop(sta);
-> 
-> This isn't necessary, caller should already be doing
-> mesh_path_flush_by_nexthop() in every case I could see.  Besides it 
-> cannot be done under plink lock.
-> 
+Confirmed that lbs_mac_event_disconnected is being called on the
+station when hostapd on access point is given SIGHUP.
 
-I believe this was fixed in your patch "mac80211: mesh: flush paths outside of plink lock"
-There is probably no need in that on the latest as well.
+Longer duration test was;
 
-Thanks,
-Yaniv
- 
+- SSH to station and run "top -d 0.2",
 
+- send SIGHUP every six seconds, for 300 cycles,
 
+You may add my;
+
+Tested-by: James Cameron <quozl@laptop.org>
+
+-- 
+James Cameron
+http://quozl.netrek.org/
