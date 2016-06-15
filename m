@@ -1,80 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13478 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753682AbcFUFrB (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:33732 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752087AbcFOFaz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 01:47:01 -0400
-From: <akolli@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <akolli@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	Anilkumar Kolli <akolli@qti.qualcomm.com>
-Subject: [PATCH 1/2] ath10k: remove unused member in ath10k_hw_regs
-Date: Tue, 21 Jun 2016 11:18:07 +0530
-Message-ID: <1466488088-20961-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20160621_074722_783677_A06E37CA)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 15 Jun 2016 01:30:55 -0400
+Received: by mail-pf0-f173.google.com with SMTP id i123so1314220pfg.0
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:30:55 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH v3 1/5] staging: wilc1000: Replace semaphore txq_event with completion
+Date: Wed, 15 Jun 2016 11:00:34 +0530
+Message-Id: <1465968638-22129-2-git-send-email-binoy.jayan@linaro.org> (sfid-20160615_073301_408661_60573A87)
+In-Reply-To: <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+ <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+The semaphore 'txq_event' is used as completion, so convert it
+to a struct completion type.
 
-rtc_state_cold_reset_mask is unused in ath10k_hw_regs.
-instead fixed delays are used.
-
-Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/ath/ath10k/hw.c |    3 ---
- drivers/net/wireless/ath/ath10k/hw.h |    2 --
- 2 files changed, 5 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c         | 8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 3 ++-
+ drivers/staging/wilc1000/wilc_wlan.c          | 8 +++++---
+ 3 files changed, 11 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index f544d48518c3..433e064c7718 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -19,7 +19,6 @@
- #include "hw.h"
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4f93c11..90f906d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -316,7 +316,7 @@ static int linux_wlan_txq_task(void *vp)
  
- const struct ath10k_hw_regs qca988x_regs = {
--	.rtc_state_cold_reset_mask	= 0x00000400,
- 	.rtc_soc_base_address		= 0x00004000,
- 	.rtc_wmac_base_address		= 0x00005000,
- 	.soc_core_base_address		= 0x00009000,
-@@ -46,7 +45,6 @@ const struct ath10k_hw_regs qca988x_regs = {
- };
+ 	complete(&wl->txq_thread_started);
+ 	while (1) {
+-		down(&wl->txq_event);
++		wait_for_completion(&wl->txq_event);
  
- const struct ath10k_hw_regs qca6174_regs = {
--	.rtc_state_cold_reset_mask		= 0x00002000,
- 	.rtc_soc_base_address			= 0x00000800,
- 	.rtc_wmac_base_address			= 0x00001000,
- 	.soc_core_base_address			= 0x0003a000,
-@@ -73,7 +71,6 @@ const struct ath10k_hw_regs qca6174_regs = {
- };
+ 		if (wl->close) {
+ 			complete(&wl->txq_thread_started);
+@@ -650,7 +650,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 			mutex_unlock(&wl->hif_cs);
+ 		}
+ 		if (&wl->txq_event)
+-			up(&wl->txq_event);
++			wait_for_completion(&wl->txq_event);
  
- const struct ath10k_hw_regs qca99x0_regs = {
--	.rtc_state_cold_reset_mask		= 0x00000400,
- 	.rtc_soc_base_address			= 0x00080000,
- 	.rtc_wmac_base_address			= 0x00000000,
- 	.soc_core_base_address			= 0x00082000,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index f41c91ccb56a..549f99bdfb86 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -208,7 +208,6 @@ enum ath10k_hw_rev {
- };
+ 		wlan_deinitialize_threads(dev);
+ 		deinit_irq(dev);
+@@ -681,7 +681,7 @@ static int wlan_init_locks(struct net_device *dev)
+ 	spin_lock_init(&wl->txq_spinlock);
+ 	sema_init(&wl->txq_add_to_head_cs, 1);
  
- struct ath10k_hw_regs {
--	u32 rtc_state_cold_reset_mask;
- 	u32 rtc_soc_base_address;
- 	u32 rtc_wmac_base_address;
- 	u32 soc_core_base_address;
-@@ -495,7 +494,6 @@ enum ath10k_hw_4addr_pad {
- /* as of IP3.7.1 */
- #define RTC_STATE_V_ON				ar->hw_values->rtc_state_val_on
+-	sema_init(&wl->txq_event, 0);
++	init_completion(&wl->txq_event);
  
--#define RTC_STATE_COLD_RESET_MASK		ar->regs->rtc_state_cold_reset_mask
- #define RTC_STATE_V_LSB				0
- #define RTC_STATE_V_MASK			0x00000007
- #define RTC_STATE_ADDRESS			0x0000
+ 	sema_init(&wl->cfg_event, 0);
+ 	sema_init(&wl->sync_event, 0);
+@@ -738,7 +738,7 @@ static void wlan_deinitialize_threads(struct net_device *dev)
+ 	wl->close = 1;
+ 
+ 	if (&wl->txq_event)
+-		up(&wl->txq_event);
++		complete(&wl->txq_event);
+ 
+ 	if (wl->txq_thread) {
+ 		kthread_stop(wl->txq_thread);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 3a561df6..12d7c7b 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -42,6 +42,7 @@
+ #include "host_interface.h"
+ #include "wilc_wlan.h"
+ #include <linux/wireless.h>
++#include <linux/completion.h>
+ 
+ #define FLOW_CONTROL_LOWER_THRESHOLD	128
+ #define FLOW_CONTROL_UPPER_THRESHOLD	256
+@@ -178,7 +179,7 @@ struct wilc {
+ 
+ 	struct semaphore cfg_event;
+ 	struct semaphore sync_event;
+-	struct semaphore txq_event;
++	struct completion txq_event;
+ 	struct completion txq_thread_started;
+ 
+ 	struct task_struct *txq_thread;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 11e16d5..1a57135 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1,3 +1,4 @@
++#include <linux/completion.h>
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
+ #include "wilc_wfi_netdevice.h"
+@@ -89,7 +90,7 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
+ 
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 
+-	up(&wilc->txq_event);
++	complete(&wilc->txq_event);
+ }
+ 
+ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+@@ -119,7 +120,7 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
+ 
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+ 	up(&wilc->txq_add_to_head_cs);
+-	up(&wilc->txq_event);
++	complete(&wilc->txq_event);
+ 
+ 	return 0;
+ }
+@@ -287,7 +288,8 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
+ 
+ 	while (dropped > 0) {
+-		wilc_lock_timeout(wilc, &wilc->txq_event, 1);
++		wait_for_completion_timeout(&wilc->txq_event,
++						msecs_to_jiffies(1));
+ 		dropped--;
+ 	}
+ 
 -- 
-1.7.9.5
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
