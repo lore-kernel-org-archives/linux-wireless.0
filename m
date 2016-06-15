@@ -1,38 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:35163 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041AbcFKGQG (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:34207 "EHLO
+	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750745AbcFOFYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 11 Jun 2016 02:16:06 -0400
-Date: Fri, 10 Jun 2016 23:16:04 -0700 (PDT)
-Message-Id: <20160610.231604.604019579709781335.davem@davemloft.net> (sfid-20160611_081613_425699_A9B2C9E4)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2016-06-09
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1465477466-23756-1-git-send-email-johannes@sipsolutions.net>
-References: <1465477466-23756-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=euc-kr
+	Wed, 15 Jun 2016 01:24:44 -0400
+Received: by mail-pf0-f169.google.com with SMTP id 62so5029040pfd.1
+        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:24:44 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH v2 0/5] *** staging: wilc1000: Replace semaphores with mutexes or completions ***
+Date: Wed, 15 Jun 2016 10:54:26 +0530
+Message-Id: <1465968271-21540-1-git-send-email-binoy.jayan@linaro.org> (sfid-20160615_072520_843646_74724D83)
+In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu,  9 Jun 2016 15:04:25 +0200
+These are a set of patches [v2] which removes semaphores from:
 
-> Here's my first set of changes for -next. The only exciting part are the
-> changes from Micha©© to integrate FQ/codel into mac80211's software queues
-> to improve cross-station latency and finally solve much of the latency
-> issues so many people have spent so much time talking about, but never
-> actually working on fixing until he did :)
-> 
-> Can I ask you to pull net into net-next, preferably before merging this?
-> I have a patch that is unsafe without a fix that I submitted through
-> mac80211 previously (last time, not the pull request a few minutes ago),
-> and I'd prefer not to have that in our -next trees without the fix. If
-> you merge net into net-next before this pull request I can fast-forward
-> mac80211-next to this merge later.
-> 
-> Let me know if there's any problem.
+drivers/staging/wilc1000
 
-Looks good, pulled, thanks!
+These are part of a bigger effort to eliminate all semaphores
+from the linux kernel.
+
+They build correctly (individually and as a whole).
+
+NB: The changes are untested
+
+Changes w.r.t. review comments on v1
+
+1. Whitespace removed in patch 3
+2. Removed semaphore 'close_exit_sync'
+3. To rework on patch 6 and send in a seperate patch series
+
+Binoy Jayan (5):
+  staging: wilc1000: Replace semaphore txq_event with completion
+  staging: wilc1000: Replace semaphore txq_add_to_head_cs with mutex
+  staging: wilc1000: Replace semaphore cfg_event with completion
+  staging: wilc1000: Replace semaphore sync_event with completion
+  staging: wilc1000: Remove semaphore close_exit_sync
+
+ drivers/staging/wilc1000/linux_wlan.c         | 31 ++++++++++--------------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 10 ++++----
+ drivers/staging/wilc1000/wilc_wlan.c          | 34 +++++++++++++--------------
+ 3 files changed, 35 insertions(+), 40 deletions(-)
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
