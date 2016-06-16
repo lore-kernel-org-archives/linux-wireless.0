@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37158 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434AbcFVTHQ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47262 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbcFPMxL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2016 15:07:16 -0400
-Received: by mail-wm0-f51.google.com with SMTP id a66so18977406wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2016 12:07:15 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: Add USB ID for Cisco Linksys AE1200
-To: Ismael Luceno <ismael@iodev.co.uk>
-References: <20160621001841.5383-1-ismael@iodev.co.uk>
- <57698F43.3050303@broadcom.com> <20160622183622.uo5avhsjzmnn6jgf@pirotess>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <576AE1DC.7050203@broadcom.com> (sfid-20160622_210721_651773_CCD52336)
-Date: Wed, 22 Jun 2016 21:07:08 +0200
+	Thu, 16 Jun 2016 08:53:11 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Enable beacon loss detection support for 10.4
+Date: Thu, 16 Jun 2016 18:24:44 +0530
+Message-ID: <1466081684-8074-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160616_145315_237467_1D228F20)
 MIME-Version: 1.0
-In-Reply-To: <20160622183622.uo5avhsjzmnn6jgf@pirotess>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-06-16 20:36, Ismael Luceno wrote:
-> On 21/Jun/2016 21:02, Arend van Spriel wrote:
->> On 21-06-16 02:18, Ismael Luceno wrote:
->>> Signed-off-by: Ismael Luceno <ismael@iodev.co.uk>
->>
->> A bit more description would be nice. I am actually wondering why you
->> would be adding this. If I am not mistaken the AE1200 can not be handled
->> by brcmfmac. Otherwise I am interested in a kernel log showing the
->> device probe sequence with brcmfmac loaded with parameter debug=0x1416.
-> 
-> Log attached.
-> 
-> I was surprised it works without any tweaking.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Nice. What kernel version are you running on. Can you also dump a
-debugfs file, ie. /sys/kernel/debug/brcmfmac/*/revinfo. I want to know
-what chip id and revision is reported. I have tried an AE1200 in the
-past, but it had a chip revision that had insufficient memory to run
-fullmac firmware. Is there FCC registration number on it?
+Enable beacon loss detection support for 10.4 by handling
+roam event. With this change QCA99X0 station is able to
+detect beacon loss when the AP is powered off
 
-Regards,
-Arend
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-> There's quite a lot of unhelpful noise about those adapters, but not
-> much actual information, I couldn't find anything about those that
-> supposedly don't work, so I have no idea if it's just a different
-> firmware version or what did change (if anything).
-> 
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6279ab4..4dd35f1 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5257,6 +5257,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_10_4_PEER_STA_KICKOUT_EVENTID:
+ 		ath10k_wmi_event_peer_sta_kickout(ar, skb);
+ 		break;
++	case WMI_10_4_ROAM_EVENTID:
++		ath10k_wmi_event_roam(ar, skb);
++		break;
+ 	case WMI_10_4_HOST_SWBA_EVENTID:
+ 		ath10k_wmi_event_host_swba(ar, skb);
+ 		break;
+@@ -7903,6 +7906,7 @@ static const struct wmi_ops wmi_10_4_ops = {
+ 	.pull_phyerr = ath10k_wmi_10_4_op_pull_phyerr_ev,
+ 	.pull_svc_rdy = ath10k_wmi_main_op_pull_svc_rdy_ev,
+ 	.pull_rdy = ath10k_wmi_op_pull_rdy_ev,
++	.pull_roam_ev = ath10k_wmi_op_pull_roam_ev,
+ 	.get_txbf_conf_scheme = ath10k_wmi_10_4_txbf_conf_scheme,
+ 
+ 	.gen_pdev_suspend = ath10k_wmi_op_gen_pdev_suspend,
+-- 
+1.9.1
+
