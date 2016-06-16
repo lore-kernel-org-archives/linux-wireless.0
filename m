@@ -1,58 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:32818 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751429AbcFOFau (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:59788 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751323AbcFPJAi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2016 01:30:50 -0400
-Received: by mail-pa0-f53.google.com with SMTP id b13so3952145pat.0
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:30:50 -0700 (PDT)
-From: Binoy Jayan <binoy.jayan@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
-Subject: [PATCH v3 0/5] *** staging: wilc1000: Replace semaphores with mutexes or completions ***
-Date: Wed, 15 Jun 2016 11:00:33 +0530
-Message-Id: <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org> (sfid-20160615_073310_604281_5A39104A)
-In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
-References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+	Thu, 16 Jun 2016 05:00:38 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Wei-Ning Huang <wnhuang@chromium.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] mwifiex: fix link error against sdio
+Date: Thu, 16 Jun 2016 11:01:10 +0200
+Message-Id: <20160616090206.932870-1-arnd@arndb.de> (sfid-20160616_110055_537650_B9EB0D8B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These are a set of patches [v3] which removes semaphores from:
+Calling sdio_claim_host() from the interface independent part of
+the mwifiex driver is not only a layering violation, but also causes
+a link error if MMC support is disabled, or if CONFIG_MMC=m
+and CONFIG_MWIFIEX=y:
 
-drivers/staging/wilc1000
+drivers/net/built-in.o: In function `mwifiex_fw_dpc':
+:(.text+0xff138): undefined reference to `sdio_claim_host'
+:(.text+0xff158): undefined reference to `sdio_release_host'
 
-These are part of a bigger effort to eliminate all semaphores
-from the linux kernel.
+The right way to do this is to have the sdio specific code in the
+sdio driver front-end, and we already have a callback pointer that
+we can use for this after exporting the generic fw download
+function from the core driver.
 
-They build correctly (individually and as a whole).
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 65c71efe1c59 ("mwifiex: fix racing condition when downloading firmware")
+---
+ drivers/net/wireless/marvell/mwifiex/init.c |  1 +
+ drivers/net/wireless/marvell/mwifiex/main.c |  6 ------
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 14 ++++++++++++++
+ 3 files changed, 15 insertions(+), 6 deletions(-)
 
-NB: The changes are untested
-
-Changes w.r.t. review comments on v1
-
-1. Whitespace removed in patch 3
-2. Removed semaphore 'close_exit_sync'
-3. To rework on patch 6 and send in a seperate patch series
-
-Binoy Jayan (5):
-  staging: wilc1000: Replace semaphore txq_event with completion
-  staging: wilc1000: Replace semaphore txq_add_to_head_cs with mutex
-  staging: wilc1000: Replace semaphore cfg_event with completion
-  staging: wilc1000: Replace semaphore sync_event with completion
-  staging: wilc1000: Remove semaphore close_exit_sync
-
- drivers/staging/wilc1000/linux_wlan.c         | 31 ++++++++++--------------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 10 ++++----
- drivers/staging/wilc1000/wilc_wlan.c          | 34 +++++++++++++--------------
- 3 files changed, 35 insertions(+), 40 deletions(-)
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 78c532f0d286..a6d86d4ccd22 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -788,3 +788,4 @@ poll_fw:
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(mwifiex_dnld_fw);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 2b65334235ca..0e280f879b58 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -21,7 +21,6 @@
+ #include "wmm.h"
+ #include "cfg80211.h"
+ #include "11n.h"
+-#include "sdio.h"
+ 
+ #define VERSION	"1.0"
+ 
+@@ -515,7 +514,6 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	struct semaphore *sem = adapter->card_sem;
+ 	bool init_failed = false;
+ 	struct wireless_dev *wdev;
+-	struct sdio_mmc_card *card = adapter->card;
+ 
+ 	if (!firmware) {
+ 		mwifiex_dbg(adapter, ERROR,
+@@ -531,11 +529,7 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+ 	if (adapter->if_ops.dnld_fw) {
+ 		ret = adapter->if_ops.dnld_fw(adapter, &fw);
+ 	} else {
+-		if (adapter->iface_type == MWIFIEX_SDIO)
+-			sdio_claim_host(card->func);
+ 		ret = mwifiex_dnld_fw(adapter, &fw);
+-		if (adapter->iface_type == MWIFIEX_SDIO)
+-			sdio_release_host(card->func);
+ 	}
+ 
+ 	if (ret == -1)
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 674465e0d837..5f8a07e38d64 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -544,6 +544,19 @@ static int mwifiex_pm_wakeup_card_complete(struct mwifiex_adapter *adapter)
+ 	return mwifiex_write_reg(adapter, CONFIGURATION_REG, 0);
+ }
+ 
++static int mwifiex_sdio_dnld_fw(struct mwifiex_adapter *adapter,
++			struct mwifiex_fw_image *fw)
++{
++	struct sdio_mmc_card *card = adapter->card;
++	int ret;
++
++	sdio_claim_host(card->func);
++	ret = mwifiex_dnld_fw(adapter, fw);
++	sdio_release_host(card->func);
++
++	return ret;
++}
++
+ /*
+  * This function is used to initialize IO ports for the
+  * chipsets supporting SDIO new mode eg SD8897.
+@@ -2732,6 +2745,7 @@ static struct mwifiex_if_ops sdio_ops = {
+ 	.cleanup_mpa_buf = mwifiex_cleanup_mpa_buf,
+ 	.cmdrsp_complete = mwifiex_sdio_cmdrsp_complete,
+ 	.event_complete = mwifiex_sdio_event_complete,
++	.dnld_fw = mwifiex_sdio_dnld_fw,
+ 	.card_reset = mwifiex_sdio_card_reset,
+ 	.reg_dump = mwifiex_sdio_reg_dump,
+ 	.device_dump = mwifiex_sdio_device_dump,
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.9.0
 
