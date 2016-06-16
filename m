@@ -1,132 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33546 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400AbcFHKvX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59557 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752079AbcFPP0x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 06:51:23 -0400
-From: Prasun Maiti <prasunmaiti87@gmail.com>
-To: Linux Kernel <linux-kernel@vger.kernel.org>,
-	Rusty Russell <rusty@rustcorp.com.au>
-Cc: Linux Next <linux-next@vger.kernel.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel <prasunmaii87@gmail.com>
-Subject: [PATCH] Add .set_antenna callback in ath6kl driver to remove wireless core warns
-Date: Wed,  8 Jun 2016 16:21:07 +0530
-Message-Id: <1465383067-19612-1-git-send-email-prasunmaiti87@gmail.com> (sfid-20160608_125142_859642_18A34AE1)
+	Thu, 16 Jun 2016 11:26:53 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: brcmfmac: include required headers in cfg80211.h
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1465280428-5782-1-git-send-email-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Message-Id: <20160616152652.ED17F61418@smtp.codeaurora.org> (sfid-20160616_172716_973519_8243D809)
+Date: Thu, 16 Jun 2016 15:26:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since add more warnings for inconsistent ops in cfg80211, the wireless
-core warns if a driver implements a cfg80211 callback but doesn't
-implements the inverse operation. The ath6kl driver implements a cfg80211
-.get_antenna operation handler but doesn't have the inverse .set_antenna
-callback. So, it makes warning.
+Rafał Miłecki wrote:
+> Without this including cfg80211.h in a wrong order could result in:
+> 
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:122:24: error: array type has incomplete element type
+>   struct brcmf_wsec_key key[BRCMF_MAX_DEFAULT_KEYS];
+>                         ^
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:291:24: error: field ‘p2p’ has incomplete type
+>   struct brcmf_p2p_info p2p;
+>                         ^
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:297:27: error: field ‘pmk_list’ has incomplete type
+>   struct brcmf_pmk_list_le pmk_list;
+>                            ^
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h:317:28: error: field ‘assoclist’ has incomplete type
+>   struct brcmf_assoclist_le assoclist;
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-To remove this warning, add .set_antenna callback in ath6kl driver and
-also send a cmd to firmware with it's values.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.c      | 18 ++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |  6 ++++++
- 3 files changed, 48 insertions(+)
+29477269a27d brcmfmac: include required headers in cfg80211.h
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 4e11ba0..0d51228 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3231,6 +3231,29 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 					wait, buf, len, no_cck);
- }
- 
-+static int ath6kl_set_antenna(struct wiphy *wiphy,
-+				u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath6kl *ar = wiphy_priv(wiphy);
-+	struct ath6kl_vif *vif = NULL;
-+
-+	vif = ath6kl_vif_first(ar);
-+	if (!vif)
-+		return -EIO;
-+
-+	if (!ath6kl_cfg80211_ready(vif))
-+		return -EIO;
-+
-+	if (!tx_ant || !rx_ant)
-+		return -EINVAL;
-+
-+	ar->hw.tx_ant = tx_ant;
-+	ar->hw.rx_ant = rx_ant;
-+
-+	return ath6kl_wmi_set_antenna(ar->wmi, vif->fw_vif_idx,
-+			tx_ant, rx_ant);
-+}
-+
- static int ath6kl_get_antenna(struct wiphy *wiphy,
- 			      u32 *tx_ant, u32 *rx_ant)
- {
-@@ -3456,6 +3479,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
- 	.cancel_remain_on_channel = ath6kl_cancel_remain_on_channel,
- 	.mgmt_tx = ath6kl_mgmt_tx,
- 	.mgmt_frame_register = ath6kl_mgmt_frame_register,
-+	.set_antenna = ath6kl_set_antenna,
- 	.get_antenna = ath6kl_get_antenna,
- 	.sched_scan_start = ath6kl_cfg80211_sscan_start,
- 	.sched_scan_stop = ath6kl_cfg80211_sscan_stop,
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 631c3a0..300ccc6 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1605,6 +1605,24 @@ static int ath6kl_wmi_txe_notify_event_rx(struct wmi *wmi, u8 *datap, int len,
- 	return 0;
- }
- 
-+int ath6kl_wmi_set_antenna(struct wmi *wmi, u8 idx,
-+			      u32 tx_ant, u32 rx_ant)
-+{
-+	struct sk_buff *skb;
-+	struct wmi_txe_notify_cmd *cmd;
-+
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_set_antenna_cmd *) skb->data;
-+	cmd->tx_ant = cpu_to_le32(tx_ant);
-+	cmd->rx_ant = cpu_to_le32(rx_ant);
-+
-+	return ath6kl_wmi_cmd_send(wmi, idx, skb, WMI_SET_ANTENNA_CMDID,
-+			NO_SYNC_WMIFLAG);
-+}
-+
- int ath6kl_wmi_set_txe_notify(struct wmi *wmi, u8 idx,
- 			      u32 rate, u32 pkts, u32 intvl)
- {
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 3af464a..f2e65b3 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -642,6 +642,7 @@ enum wmi_cmd_id {
- 	WMI_SET_RECOVERY_TEST_PARAMETER_CMDID, /*0xf094*/
- 
- 	WMI_ENABLE_SCHED_SCAN_CMDID,
-+	WMI_SET_ANTENNA_CMDID,
- };
- 
- enum wmi_mgmt_frame_type {
-@@ -2312,6 +2313,11 @@ struct wmi_ap_set_apsd_cmd {
- 	u8 enable;
- } __packed;
- 
-+struct wmi_set_antenna_cmd {
-+	__le32 tx_ant;
-+	__le32 rx_ant;
-+} __packed;
-+
- enum wmi_ap_apsd_buffered_traffic_flags {
- 	WMI_AP_APSD_NO_DELIVERY_FRAMES =  0x1,
- };
 -- 
-1.9.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9159889/
 
