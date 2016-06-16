@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([198.47.19.12]:55737 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752092AbcF1LPz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 07:15:55 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Maital Hahn <maitalm@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH] mac80211: util: mesh is not connected properly after recovery
-Date: Tue, 28 Jun 2016 14:15:44 +0300
-Message-ID: <20160628111546.8932-1-yanivma@ti.com> (sfid-20160628_131601_473351_BCD4C4D1)
+Received: from smtp.codeaurora.org ([198.145.29.96]:57814 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754443AbcFPPNw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jun 2016 11:13:52 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: rtlwifi: fix error handling in *_read_adapter_info()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1464622792-1749047-1-git-send-email-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Taehee Yoo <ap420073@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20160616151351.4AD026141C@smtp.codeaurora.org> (sfid-20160616_171457_137185_88351E61)
+Date: Thu, 16 Jun 2016 15:13:51 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Maital Hahn <maitalm@ti.com>
+Arnd Bergmann <arnd@arndb.de> wrote:
+> There are nine copies of the _rtl88ee_read_adapter_info() function,
+> and most but not all of them cause a build warning in some configurations:
+> 
+> rtl8192de/hw.c: In function '_rtl92de_read_adapter_info':
+> rtl8192de/hw.c:1767:12: error: 'hwinfo' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> rtl8723ae/hw.c: In function '_rtl8723e_read_adapter_info.constprop':
+> rtlwifi/rtl8723ae/hw.c:1654:12: error: 'hwinfo' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> 
+> The problem is that when rtlefuse->epromtype is something other than
+> EEPROM_BOOT_EFUSE, the rest of the function uses undefined data, resulting
+> in random behavior later.
+> 
+> Apparently, in some drivers, the problem was already found and fixed
+> but the fix did not make it into the others.
+> 
+> This picks one approach to deal with the problem and applies identical
+> code to all 9 files, to simplify the later consolidation of those.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-In the reconfigure process for mesh interface, moved the reconfiguration
-of the mesh peers to be done only after restarting the beacons,
-the same as it is done for AP.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Signed-off-by: Maital Hahn <maitalm@ti.com>
-Acked-by: Yaniv Machani <yanivma@ti.com>
----
- net/mac80211/util.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+5345ea6a4bfb rtlwifi: fix error handling in *_read_adapter_info()
 
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 5375a82..2431684 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1910,6 +1910,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 			ieee80211_reconfig_stations(sdata);
- 			/* fall through */
- 		case NL80211_IFTYPE_AP: /* AP stations are handled later */
-+		case NL80211_IFTYPE_MESH_POINT: /* MP peers are handled later */
- 			for (i = 0; i < IEEE80211_NUM_ACS; i++)
- 				drv_conf_tx(local, sdata, i,
- 					    &sdata->tx_conf[i]);
-@@ -2013,7 +2014,8 @@ int ieee80211_reconfig(struct ieee80211_local *local)
- 		if (!sta->uploaded)
- 			continue;
- 
--		if (sta->sdata->vif.type != NL80211_IFTYPE_AP)
-+		if ((sta->sdata->vif.type != NL80211_IFTYPE_AP) &&
-+		    (sta->sdata->vif.type != NL80211_IFTYPE_MESH_POINT))
- 			continue;
- 
- 		for (state = IEEE80211_STA_NOTEXIST;
 -- 
-2.9.0
+Sent by pwcli
+https://patchwork.kernel.org/patch/9141721/
 
