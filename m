@@ -1,53 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40430 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752756AbcF2P6j (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 11:58:39 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:50026 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754303AbcFPQHd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jun 2016 12:07:33 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: "'Arnd Bergmann'" <arnd@arndb.de>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: use s8 instead of char
+References: <20160615210318.4130648-1-arnd@arndb.de>
+	<wrfjbn32taxw.fsf@redhat.com> <5245411.kmNEkqpVVS@wuerfel>
+	<063D6719AE5E284EB5DD2968C1650D6D5F4DA915@AcuExch.aculab.com>
+Date: Thu, 16 Jun 2016 12:07:31 -0400
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D5F4DA915@AcuExch.aculab.com>
+	(David Laight's message of "Thu, 16 Jun 2016 16:02:38 +0000")
+Message-ID: <wrfjvb19qfr0.fsf@redhat.com> (sfid-20160616_180756_014659_51C34A94)
 MIME-Version: 1.0
-Subject: Re: [REBASED] brcmfmac: fix lockup when removing P2P interface after
- event timeout
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1466159371-19968-1-git-send-email-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Message-Id: <20160629155757.4250E61372@smtp.codeaurora.org> (sfid-20160629_175912_869437_BC77AC57)
-Date: Wed, 29 Jun 2016 15:57:57 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> Removing P2P interface is handled by sending a proper request to the
-> firmware. On success firmware triggers an event and driver's handler
-> removes a matching interface.
-> 
-> However on event timeout we remove interface directly from the cfg80211
-> callback. Current code doesn't handle this case correctly as it always
-> assumes rtnl to be unlocked.
-> 
-> Fix it by adding an extra rtnl_locked parameter to functions and calling
-> unregister_netdevice when needed.
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+David Laight <David.Laight@ACULAB.COM> writes:
+> From: Arnd Bergmann
+>> On Wednesday, June 15, 2016 5:10:51 PM CEST Jes Sorensen wrote:
+>> >
+>> > Arnd,
+>> >
+>> > rtlwifi and rtl8xxxu are two distinct drivers managed by different
+>> > people. I'd be really nice if you could split this into a per driver
+>> > patch.
+>> >
+>> > That said, the use of char in rtl8xxxu is all as a flag indicator, so I
+>> > don't think the s/char/s8/ conversion is justified. I used char rather
+>> > than ugly bool to reduce the size of the struct.
+>> 
+>> Makes sense, I'll resend without that change. If anything, the flag
+>> should become u8, not s8 anyway.
+>
+> Does bool:8 work ?
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+Maybe, but bool is such an ugly datatype, so I'd rather use the other
+ones.
 
-b50ddfa8530e brcmfmac: fix lockup when removing P2P interface after event timeout
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9183337/
-
+Jes
