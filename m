@@ -1,105 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42241 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbcFUKgE (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44629 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753978AbcFPNY5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 06:36:04 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2016-06-21
-Date: Tue, 21 Jun 2016 13:27:16 +0300
-Message-ID: <87eg7qn8fv.fsf@kamboji.qca.qualcomm.com> (sfid-20160621_124018_747020_D4B6C7DB)
+	Thu, 16 Jun 2016 09:24:57 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u5GDHP8S017196
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:24:56 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 23gj5fs041-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:24:56 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/6] mwifiex: factor out mwifiex_cancel_scan
+Date: Thu, 16 Jun 2016 18:52:22 +0530
+Message-ID: <1466083346-18607-2-git-send-email-akarwar@marvell.com> (sfid-20160616_152501_368992_0FC6F7AE)
+In-Reply-To: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
+References: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Xinming Hu <huxm@marvell.com>
 
-here is a pull request for 4.7, really small fixes this time, some of
-them fix important regressions. Please let me know if there are any
-problems.
+This patch creates common function mwifiex_cancel_scan to remove
+duplication of code.
 
-Kalle
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 40 ++-------------------------
+ drivers/net/wireless/marvell/mwifiex/main.h   |  1 +
+ drivers/net/wireless/marvell/mwifiex/scan.c   | 26 +++++++++++++++++
+ 3 files changed, 29 insertions(+), 38 deletions(-)
 
-The following changes since commit 182fd9eecb287e696c82b30d06c6150d80a49c5b:
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 6bc2011..c29f26d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -1020,8 +1020,6 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ {
+ 	struct cmd_ctrl_node *cmd_node = NULL, *tmp_node;
+ 	unsigned long flags, cmd_flags;
+-	struct mwifiex_private *priv;
+-	int i;
+ 
+ 	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
+ 	/* Cancel current cmd */
+@@ -1046,23 +1044,7 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
+ 	spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
+ 
+-	mwifiex_cancel_pending_scan_cmd(adapter);
+-
+-	if (adapter->scan_processing) {
+-		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
+-		adapter->scan_processing = false;
+-		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
+-		for (i = 0; i < adapter->priv_num; i++) {
+-			priv = adapter->priv[i];
+-			if (!priv)
+-				continue;
+-			if (priv->scan_request) {
+-				mwifiex_dbg(adapter, WARN, "info: aborting scan\n");
+-				cfg80211_scan_done(priv->scan_request, 1);
+-				priv->scan_request = NULL;
+-			}
+-		}
+-	}
++	mwifiex_cancel_scan(adapter);
+ }
+ 
+ /*
+@@ -1080,8 +1062,6 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ {
+ 	struct cmd_ctrl_node *cmd_node = NULL;
+ 	unsigned long cmd_flags;
+-	struct mwifiex_private *priv;
+-	int i;
+ 
+ 	if ((adapter->curr_cmd) &&
+ 	    (adapter->curr_cmd->wait_q_enabled)) {
+@@ -1101,23 +1081,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 	}
+ 
+-	mwifiex_cancel_pending_scan_cmd(adapter);
+-
+-	if (adapter->scan_processing) {
+-		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
+-		adapter->scan_processing = false;
+-		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
+-		for (i = 0; i < adapter->priv_num; i++) {
+-			priv = adapter->priv[i];
+-			if (!priv)
+-				continue;
+-			if (priv->scan_request) {
+-				mwifiex_dbg(adapter, WARN, "info: aborting scan\n");
+-				cfg80211_scan_done(priv->scan_request, 1);
+-				priv->scan_request = NULL;
+-			}
+-		}
+-	}
++	mwifiex_cancel_scan(adapter);
+ }
+ 
+ /*
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 39bb5bc..9f6bb40 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1056,6 +1056,7 @@ int mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_pending_scan_cmd(struct mwifiex_adapter *adapter);
++void mwifiex_cancel_scan(struct mwifiex_adapter *adapter);
+ 
+ void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
+ 			      struct cmd_ctrl_node *cmd_node);
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index bc5e52c..e331122 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -2001,6 +2001,32 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+ 	return;
+ }
+ 
++void mwifiex_cancel_scan(struct mwifiex_adapter *adapter)
++{
++	struct mwifiex_private *priv;
++	unsigned long cmd_flags;
++	int i;
++
++	mwifiex_cancel_pending_scan_cmd(adapter);
++
++	if (adapter->scan_processing) {
++		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
++		adapter->scan_processing = false;
++		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
++		for (i = 0; i < adapter->priv_num; i++) {
++			priv = adapter->priv[i];
++			if (!priv)
++				continue;
++			if (priv->scan_request) {
++				mwifiex_dbg(adapter, INFO,
++					    "info: aborting scan\n");
++				cfg80211_scan_done(priv->scan_request, 1);
++				priv->scan_request = NULL;
++			}
++		}
++	}
++}
++
+ /*
+  * This function handles the command response of scan.
+  *
+-- 
+1.9.1
 
-  MAINTAINERS: Add file patterns for wireless device tree bindings (2016-06-04 17:24:02 +0300)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-06-21
-
-for you to fetch changes up to 034fdd4a17ff089c2428ece18efa65c5396810d2:
-
-  Merge ath-current from ath.git (2016-06-16 17:55:19 +0300)
-
-----------------------------------------------------------------
-
-wireless-drivers fixes for 4.7
-
-iwlwifi
-
-* fix the scan timeout for long scans
-* fix an RCU splat caused when updating the TKIP key
-* fix a potential NULL-derefence introduced recently
-* fix a IGTK key bug that has existed since the MVM driver was introduced
-* fix some fw capabilities checks that got accidentally inverted
-
-rtl8xxxu
-
-* fix typo on variable name
-
-ath10k
-
-* fix deadlock when peer cannot be created
-* fix crash related to printing features
-* fix deadlock while processing rx_in_ord_ind
-
-ath9k
-
-* fix GPIO mask regression for AR9462 and AR9565
-
-----------------------------------------------------------------
-Ayala Beker (1):
-      iwlwifi: mvm: set the encryption type of an IGTK key
-
-Ben Greear (2):
-      ath10k: fix deadlock when peer cannot be created
-      ath10k: fix crash related to printing features
-
-Colin Ian King (1):
-      rtl8xxxu: fix typo on variable name, compare against correct variable
-
-Emmanuel Grumbach (1):
-      iwlwifi: mvm: fix RCU splat in TKIP's update_key
-
-Johannes Berg (1):
-      iwlwifi: mvm: fix a few firmware capability checks
-
-Kalle Valo (2):
-      Merge tag 'iwlwifi-for-kalle-2016-06-10' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-      Merge ath-current from ath.git
-
-Luca Coelho (2):
-      iwlwifi: mvm: increase scan timeout to 20 seconds
-      iwlwifi: mvm: fix potential NULL-dereference in iwl_mvm_reorder()
-
-Miaoqing Pan (1):
-      ath9k: fix GPIO mask for AR9462 and AR9565
-
-Rajkumar Manoharan (1):
-      ath10k: fix deadlock while processing rx_in_ord_ind
-
- drivers/net/wireless/ath/ath10k/core.c             |    2 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c           |    1 -
- drivers/net/wireless/ath/ath10k/mac.c              |    2 +-
- drivers/net/wireless/ath/ath9k/reg.h               |    8 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |    8 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |    4 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |    2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |   16 +++++++++++++++-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c |    2 +-
- 9 files changed, 30 insertions(+), 15 deletions(-)
