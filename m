@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:35334 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751118AbcFJHtx convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:59640 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753864AbcFPPkC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 03:49:53 -0400
-Received: by mail-wm0-f53.google.com with SMTP id v199so137251376wmv.0
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 00:49:52 -0700 (PDT)
+	Thu, 16 Jun 2016 11:40:02 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: John S Gruber <johnsgruber@gmail.com>
+CC: Miaoqing Pan <miaoqing@codeaurora.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: ATH9K warnings from commit b2d70d494
+Date: Thu, 16 Jun 2016 15:39:43 +0000
+Message-ID: <8737odw3b5.fsf@kamboji.qca.qualcomm.com> (sfid-20160616_174007_645410_C0CB34D1)
+References: <CAPotdmQA6qwbUD9g7BLc_ad3VZ57y4FX_6UJ3ibMovC7Kaa4TA@mail.gmail.com>
+	<87ziqlpeue.fsf@qca.qualcomm.com>
+	<CAPotdmTXsNC0AeqqKEa0_WQUA-4tuS8sMJtU5VRxZcWSM4iVgQ@mail.gmail.com>
+In-Reply-To: <CAPotdmTXsNC0AeqqKEa0_WQUA-4tuS8sMJtU5VRxZcWSM4iVgQ@mail.gmail.com>	(John S.
+ Gruber's message of "Thu, 16 Jun 2016 15:11:10 +0000")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <5759FFAF.4040609@candelatech.com>
-References: <5759FFAF.4040609@candelatech.com>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 10 Jun 2016 09:49:50 +0200
-Message-ID: <CA+BoTQkSE5c=v08r=XsHgX27+pLMPSt2daP3Rh6tEw6fdtj6wg@mail.gmail.com> (sfid-20160610_094957_150639_2B75E45C)
-Subject: Re: Any reason to allow MGT TID to be paused by power-save?
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 June 2016 at 01:45, Ben Greear <greearb@candelatech.com> wrote:
-> I'm trying to track down a tricky problem with a Mac book and power save
-> with my ath10k firmware.
+John S Gruber <johnsgruber@gmail.com> writes:
+
+> It's an AR9462
 >
-> At least part of the issue is that when the Mac sleeps, it goes into
-> power-save
-> state as far as AP is concerned, and then it simply turns itself off.  When
-> it wakes
-> up a short time later, it then tries to scan and re-associate.  But, if
-> hostapd
-> hasn't timed out the station (due to longer idle timer), then STA still is
-> treated
-> as being in power-save in the firmware.  It appears that this causes
-> mgt-frames (probe responses)
-> not be sent back out of the firmware, so Mac gives up fairly quickly.
+> Here's the wifi adapter:
 >
-> I fixed at least some of this by forcing a power-save wake on
-> receipt of probe requests and auth requests, but some issues remain
-> for one reason or another.
+> 03:00.0 Network controller: Qualcomm Atheros AR9462 Wireless Network Adapter
+> (rev 01)
+> Subsystem: Lite-On Communications Inc Device 6621
+> Flags: bus master, fast devsel, latency 0, IRQ 19
+> Memory at f7c00000 (64-bit, non-prefetchable) [size=512K]
+> Expansion ROM at f7c80000 [disabled] [size=64K]
+> Capabilities: [40] Power Management version 2
+> Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
+> Capabilities: [70] Express Endpoint, MSI 00
+> Capabilities: [100] Advanced Error Reporting
+> Capabilities: [140] Virtual Channel
+> Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
+> Kernel driver in use: ath9k
 >
-> One thing that came to mind:  Is it *ever* a good idea to pause a mgt-tid
-> due to
-> power-save?
+> The warnings go away with the patch you identified and wifi and bluetooth are
+> working.
 
-The spec defines some mgmt frames as bufferable (IEEE 802.11-2012
-8.2.4.1.7). See ieee80211_is_bufferable_mmpdu() in
-include/linux/ieee80211.h.
+Great, thanks for testing. The patch will go to 4.7-rc release in a week
+or two.
 
-Action, deauth and disassoc are bufferable. It makes sense anyway.
-
-E.g. On DFS channel you may opt for CSA action frame (instead of CSA
-IE in beacons) in which case you do want to buffer frames to clients
-that are asleep to give them a chance to notice it, wake up and get
-it.
-
-
-Michał
+-- 
+Kalle Valo
