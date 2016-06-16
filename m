@@ -1,41 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60031 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752048AbcFNO0i (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42159 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753840AbcFPQHQ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2016 10:26:38 -0400
-Content-Type: text/plain; charset="utf-8"
+	Thu, 16 Jun 2016 12:07:16 -0400
+From: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+To: Arthur Jagiella <jagiella@vitracom.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: RE: [PATCH] ath10k: Fix a typo in spectral code commments
+Date: Thu, 16 Jun 2016 16:06:52 +0000
+Message-ID: <eb4c30ff7ff54ea2b63a950acecdd51a@aphydexm01b.ap.qualcomm.com> (sfid-20160616_180729_980828_BB2C374D)
+References: <1465882434-594-1-git-send-email-mohammed@qca.qualcomm.com>
+ <575FC1E5.90108@vitracom.de>
+In-Reply-To: <575FC1E5.90108@vitracom.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: iwlegacy: avoid warning about missing braces
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1463644741-529379-1-git-send-email-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Johannes Berg <johannes.berg@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <20160614142637.553336130F@smtp.codeaurora.org> (sfid-20160614_162700_009891_E1549158)
-Date: Tue, 14 Jun 2016 14:26:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
-> gcc-6 warns about code in il3945_hw_txq_ctx_free() being
-> somewhat ambiguous:
-> 
-> drivers/net/wireless/intel/iwlegacy/3945.c:1022:5: warning: suggest explicit braces to avoid ambiguous 'else' [-Wparentheses]
-> 
-> This adds a set of curly braces to avoid the warning.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
++ linux wireless, ath10k
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+Thanks, initially I could not get what you meant :(
 
-2cce76c3fab4 iwlegacy: avoid warning about missing braces
+-----Original Message-----
+From: Arthur Jagiella [mailto:jagiella@vitracom.de] 
+Sent: Tuesday, June 14, 2016 2:06 PM
+To: Shajakhan, Mohammed Shafi (Mohammed Shafi) <mohammed@qti.qualcomm.com>
+Subject: Re: [PATCH] ath10k: Fix a typo in spectral code commments
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9124661/
+smaples?
+
+
+
+Am 14.06.2016 um 07:33 schrieb Mohammed Shafi Shajakhan:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> Found this obvious typo while going through the spectral code design 
+> in ath10k
+>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/spectral.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/spectral.c 
+> b/drivers/net/wireless/ath/ath10k/spectral.c
+> index 4671cfb..4510906 100644
+> --- a/drivers/net/wireless/ath/ath10k/spectral.c
+> +++ b/drivers/net/wireless/ath/ath10k/spectral.c
+> @@ -101,7 +101,7 @@ int ath10k_spectral_process_fft(struct ath10k *ar,
+>   		break;
+>   	case 80:
+>   		/* TODO: As experiments with an analogue sender and various
+> -		 * configuaritions (fft-sizes of 64/128/256 and 20/40/80 Mhz)
+> +		 * configurations (fft-sizes of 64/128/256 and 20/40/80 Mhz)
+>   		 * show, the particular configuration of 80 MHz/64 bins does
+>   		 * not match with the other smaples at all. Until the reason
+>   		 * for that is found, don't report these samples.
+
+--
+Arthur Jagiella
+Praktikant
+Forschung und Entwicklung
+Vitracom AG
+
+Erbprinzenstr. 4-12, A
+D-76133 Karlsruhe
+
+Email: jagiella@vitracom.de
+Internet: www.vitracom.de
+
+
+
+------------------------------------------------
+HRB Mannheim 111263
+UST-ID: DE 247872702
+Vorstand: Axel Stephan,
+           Ralph Majer
+Aufsichtsrat: Paul A. Stodden (Vors.)
+               Christian Eckart, Sacha Grau
+------------------------------------------------
 
