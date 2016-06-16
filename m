@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59051 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751623AbcFYT5y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 15:57:54 -0400
-Message-ID: <1466884668.3492.0.camel@sipsolutions.net> (sfid-20160625_221249_046283_7167D279)
-Subject: Re: [PATCH] mac80211_hwsim: Added vendor echo command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>, Erik Stromdahl <erik.stromdahl@gmail.com>
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Sat, 25 Jun 2016 21:57:48 +0200
-In-Reply-To: <20160625183209.GA3992@w1.fi>
-References: <1466756034-5485-1-git-send-email-erik.stromdahl@gmail.com>
- <20160624204759.GA15514@w1.fi>
- <576EAC61.1050900@gmail.com>
-	 <20160625183209.GA3992@w1.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:35020 "EHLO
+	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751620AbcFPQAJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jun 2016 12:00:09 -0400
+Received: by mail-qk0-f176.google.com with SMTP id c73so57630628qkg.2
+        for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 09:00:08 -0700 (PDT)
+Date: Thu, 16 Jun 2016 11:59:59 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Cc: ath10k@lists.infradead.org, mohammed@codeaurora.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Fix a typo in spectral code commments
+Message-ID: <20160616155958.GA24359@localhost> (sfid-20160616_180013_557310_2EECF713)
+References: <1465882434-594-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1465882434-594-1-git-send-email-mohammed@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-06-25 at 21:32 +0300, Jouni Malinen wrote:
-> 
-> All you need to do is to prepare a hostap.git contribution that
-> requests a new subcommand/attribute to be assigned and once that gets
-> applied to the hostap.git master branch, the values have been
-> assigned and can be used for whatever purpose they were assigned,
-> e.g., in mac80211_hwsim.
+On Tue, Jun 14, 2016 at 11:03:54AM +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 > 
+> Found this obvious typo while going through the spectral
+> code design in ath10k
 
-Assuming, of course, that there's actually a point in the original
-patch. I haven't quite figured out any reason to actually have this
-facility.
+>  		/* TODO: As experiments with an analogue sender and various
+> -		 * configuaritions (fft-sizes of 64/128/256 and 20/40/80 Mhz)
+> +		 * configurations (fft-sizes of 64/128/256 and 20/40/80 Mhz)
+>  		 * show, the particular configuration of 80 MHz/64 bins does
+>  		 * not match with the other smaples at all. Until the reason
+>  		 * for that is found, don't report these samples.
 
-johannes
+Also "smaples" :)
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
