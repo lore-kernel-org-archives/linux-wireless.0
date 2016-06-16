@@ -1,51 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39306 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751757AbcF3KZY convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54449 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754120AbcFPOtf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 06:25:24 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
-	"Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
- QCA99X0 and later
-Date: Thu, 30 Jun 2016 10:25:16 +0000
-Message-ID: <8760sr6kj8.fsf@kamboji.qca.qualcomm.com> (sfid-20160630_122533_350358_5E575614)
-References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
-	<1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
-	<576C1861.7020402@candelatech.com>
-	<20160625185350.GA25330@atheros-ThinkPad-T61>
-	<576F2165.3010109@candelatech.com>
-In-Reply-To: <576F2165.3010109@candelatech.com> (Ben Greear's message of "Sat,
-	25 Jun 2016 17:27:17 -0700")
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 16 Jun 2016 10:49:35 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [4/4] rtl8xxxu: fix typo on variable name,
+ compare against correct variable
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1465497530-18510-5-git-send-email-Jes.Sorensen@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
+	Colin Ian King <colin.king@canonical.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Message-Id: <20160616144935.36B2A613DE@smtp.codeaurora.org> (sfid-20160616_164939_053880_B39BFA7B)
+Date: Thu, 16 Jun 2016 14:49:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> path_b_ok is being assigned but immediately after path_a_ok is being
+> compared to the value 0x03.  This appears to be a typo on the
+> variable name, compare path_b_ok instead.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> Is there a better way than posting to the ath10k mailing list?  There are quite
-> a few more of my patches that are stuck in pending or ignored state.  If you
-> could review some of them and add them to your testing trees then it might help
-> them go upstream.
+Thanks, 1 patch applied to wireless-drivers.git:
 
-Yes, as you seem to test with your custom ath10k and custom firmware
-review and testing feedback from others is more than welcome. That way I
-can have more confidence that the patch really works with the mainline
-version.
-
-The problem with your patches is that you dump more responsibility on
-me. I have no idea if they work with the mainline kernel, or if they
-break something, so I need to personally test the patch and that takes
-time. Basically I have a rule if that I need to use more than two
-minutes on a patch it goes to the Deferred queue and I'll go through
-that less often than the normal patch queue.
+c70410cb91de rtl8xxxu: fix typo on variable name, compare against correct variable
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/9167725/
+
