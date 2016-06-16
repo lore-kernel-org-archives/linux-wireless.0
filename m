@@ -1,113 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59711 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751361AbcFINEi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 09:04:38 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2016-06-09
-Date: Thu,  9 Jun 2016 15:04:25 +0200
-Message-Id: <1465477466-23756-1-git-send-email-johannes@sipsolutions.net> (sfid-20160609_150445_572799_09ED3B0E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.kundenserver.de ([212.227.17.24]:62103 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754312AbcFPNwN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 16 Jun 2016 09:52:13 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: netdev@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/8] wireless: ipw2200: fix old-style declaration
+Date: Thu, 16 Jun 2016 15:52:10 +0200
+Message-Id: <20160616135245.3198419-3-arnd@arndb.de> (sfid-20160616_155219_554423_2AA103E4)
+In-Reply-To: <20160616135245.3198419-1-arnd@arndb.de>
+References: <20160616135020.3154461-1-arnd@arndb.de>
+ <20160616135245.3198419-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Modern C standards expect the 'inline' keyword to come before the return
+type in a declaration, and we get a warning for this with "make W=1":
 
-Here's my first set of changes for -next. The only exciting part are the
-changes from Michał to integrate FQ/codel into mac80211's software queues
-to improve cross-station latency and finally solve much of the latency
-issues so many people have spent so much time talking about, but never
-actually working on fixing until he did :)
+drivers/net/wireless/intel/ipw2x00/ipw2200.c:4096:1: error: 'inline' is not at beginning of declaration [-Werror=old-style-declaration]
 
-Can I ask you to pull net into net-next, preferably before merging this?
-I have a patch that is unsafe without a fix that I submitted through
-mac80211 previously (last time, not the pull request a few minutes ago),
-and I'd prefer not to have that in our -next trees without the fix. If
-you merge net into net-next before this pull request I can fast-forward
-mac80211-next to this merge later.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Let me know if there's any problem.
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index 5adb7cefb2fe..bfd68612a535 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -4093,7 +4093,7 @@ static const char *ipw_get_status_code(u16 status)
+ 	return "Unknown status value.";
+ }
+ 
+-static void inline average_init(struct average *avg)
++static inline void average_init(struct average *avg)
+ {
+ 	memset(avg, 0, sizeof(*avg));
+ }
+-- 
+2.9.0
 
-Thanks,
-johannes
-
-
-
-The following changes since commit 07b75260ebc2c789724c594d7eaf0194fa47b3be:
-
-  Merge branch 'upstream' of git://git.linux-mips.org/pub/scm/ralf/upstream-linus (2016-05-19 10:02:26 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-06-09
-
-for you to fetch changes up to 5caa328e3811b7cfa33fd02c93280ffa622deb0e:
-
-  mac80211: implement codel on fair queuing flows (2016-06-09 11:45:10 +0200)
-
-----------------------------------------------------------------
-For the next cycle, we have the following:
- * the biggest change is Michał's work on integrating FQ/codel
-   with the mac80211 internal software queues
- * cfg80211 connect result gets clarified for the
-   "no connection at all" case
- * advertisement of per-interface type capabilities, in case
-   they differ (which makes a lot of sense for some capabilities)
- * most of the nl80211 & hwsim unprivileged namespace operation
-   changes
- * human-readable VHT capabilities in debugfs
- * some other cleanups, like spelling
-
-----------------------------------------------------------------
-Ben Greear (1):
-      mac80211: add vht cap decode to debugfs
-
-Johannes Berg (2):
-      wext: reformat struct/union declarations
-      nl80211: clarify nl80211_set_reg() success path
-
-Jouni Malinen (1):
-      cfg80211: Allow cfg80211_connect_result() errors to be distinguished
-
-Kanchanapally, Vidyullatha (1):
-      cfg80211: Advertise extended capabilities per interface type to userspace
-
-Kirtika Ruchandani (2):
-      nl80211: Fix spelling
-      nl80211: Fix checkpatch warnings about blank lines
-
-Martin Willi (2):
-      nl80211: Allow privileged operations from user namespaces
-      mac80211_hwsim: Allow managing radios from non-initial namespaces
-
-Michal Kazior (4):
-      mac80211: skip netdev queue control with software queuing
-      mac80211: implement fair queueing per txq
-      mac80211: add debug knobs for fair queuing
-      mac80211: implement codel on fair queuing flows
-
- Documentation/DocBook/80211.tmpl      |   1 +
- drivers/net/wireless/mac80211_hwsim.c |  97 ++++++++++-
- include/net/cfg80211.h                |  81 ++++++++--
- include/net/mac80211.h                |  18 ++-
- include/uapi/linux/nl80211.h          |  14 +-
- include/uapi/linux/wireless.h         |  63 +++-----
- net/mac80211/agg-tx.c                 |   8 +-
- net/mac80211/debugfs.c                | 173 ++++++++++++++++++++
- net/mac80211/debugfs_sta.c            |  78 ++++++++-
- net/mac80211/ieee80211_i.h            |  31 +++-
- net/mac80211/iface.c                  |  26 ++-
- net/mac80211/main.c                   |  10 +-
- net/mac80211/rx.c                     |   2 +-
- net/mac80211/sta_info.c               |  14 +-
- net/mac80211/tx.c                     | 292 +++++++++++++++++++++++++++++-----
- net/mac80211/util.c                   |  34 +---
- net/wireless/core.c                   |  30 ++++
- net/wireless/core.h                   |   4 +-
- net/wireless/nl80211.c                | 232 ++++++++++++++++-----------
- net/wireless/nl80211.h                |   2 +-
- net/wireless/sme.c                    |   8 +-
- 21 files changed, 955 insertions(+), 263 deletions(-)
