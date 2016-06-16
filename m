@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0002.hostedemail.com ([216.40.44.2]:36117 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751547AbcFWTZF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59270 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754388AbcFPPYF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 15:25:05 -0400
-Message-ID: <1466709897.1847.24.camel@perches.com> (sfid-20160623_212534_710416_9DE85336)
-Subject: Re: [PATCH] staging: wilc1000: arrays can't be NULL
-From: Joe Perches <joe@perches.com>
-To: Luis de Bethencourt <luisbg@osg.samsung.com>,
-	linux-kernel@vger.kernel.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org
-Date: Thu, 23 Jun 2016 12:24:57 -0700
-In-Reply-To: <1466704629-26084-1-git-send-email-luisbg@osg.samsung.com>
-References: <1466704629-26084-1-git-send-email-luisbg@osg.samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Thu, 16 Jun 2016 11:24:05 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: brcmfmac: drop unused pm_block vif attribute
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1465247047-19412-1-git-send-email-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Message-Id: <20160616152405.42FED61372@smtp.codeaurora.org> (sfid-20160616_172430_870417_CAC85BC3)
+Date: Thu, 16 Jun 2016 15:24:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-06-23 at 18:57 +0100, Luis de Bethencourt wrote:
-> hif_drv->usr_scan_req.net.net_info[i] contains found_net_info structs
-> which have the following element:
-> u8 bssid[6];
-[]
-> I am aware this patch gives a few checkpatch.pl warnings about lines being
-> over 80 characters. Fixing that would be a completely different issue, and
-> a lengthy one since the file has loads of them.
+Rafał Miłecki wrote:
+> This attribute was added 3 years ago by
+> commit 3eacf866559c ("brcmfmac: introduce brcmf_cfg80211_vif structure")
+> but it remains unused since then. It seems we can safely drop it.
 > 
-> Hopefully somebody else picks that up. Maybe I should send a hit to the
-> kernelnewbies mailing list :)
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Or not.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-really_long_identifiers™ makes using 80 columns silly.
+26072330df2e brcmfmac: drop unused pm_block vif attribute
 
-The hungarian could probably be converted though.
-
-A log of the memcpy and memcpy uses could probably be
-converted to ether_addr_<foo> too.
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9159139/
 
