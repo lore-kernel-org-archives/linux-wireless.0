@@ -1,72 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34726 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751116AbcFANA6 convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:54106 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754407AbcFPNvP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 09:00:58 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-CC: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2] ath10k: Fix 10.4 extended peer stats update
-Date: Wed, 1 Jun 2016 13:00:40 +0000
-Message-ID: <877fe92he0.fsf@kamboji.qca.qualcomm.com> (sfid-20160601_150102_888965_FFEE70BD)
-References: <1464339926-12136-1-git-send-email-mohammed@qca.qualcomm.com>
-	<87vb1ucten.fsf@qca.qualcomm.com>
-	<20160531133700.GB3146@atheros-ThinkPad-T61>
-	<87r3cicaxi.fsf@qca.qualcomm.com>
-	<20160601090805.GA7773@atheros-ThinkPad-T61>
-In-Reply-To: <20160601090805.GA7773@atheros-ThinkPad-T61> (Mohammed Shafi
-	Shajakhan's message of "Wed, 1 Jun 2016 14:38:05 +0530")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 16 Jun 2016 09:51:15 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: netdev@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+	Ondrej Zary <linux@rainbow-software.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/8] wireless: airo: rename 'register' variable
+Date: Thu, 16 Jun 2016 15:52:08 +0200
+Message-Id: <20160616135245.3198419-1-arnd@arndb.de> (sfid-20160616_155142_691265_FFB08059)
+In-Reply-To: <20160616135020.3154461-1-arnd@arndb.de>
+References: <20160616135020.3154461-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
+'register' is a keyword in C and cannot be used in place of a
+variable name, as shown by this -Wextra warning:
 
-> Hello,
->
-> On Tue, May 31, 2016 at 06:57:52PM +0000, Valo, Kalle wrote:
->> Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
->> 
->> >> > +void ath10k_sta_update_rx_duration(struct ath10k *ar,
->> >> > +				   struct ath10k_fw_stats *stats)
->> >> > +{
->> >> > +	struct ath10k_fw_file *fw_file = &ar->normal_mode_fw.fw_file;
->> >> > +
->> >> > +	if (fw_file->wmi_op_version < ATH10K_FW_WMI_OP_VERSION_10_4)
->> >> > +		ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
->> >> > +	else
->> >> > +		ath10k_sta_update_extd_stats_rx_duration(ar,
->> >> > +							 &stats->peers_extd);
->> >> > +}
->> >> 
->> >> _Ideally_ wmi_op_version should be used only in ath10k_wmi_attach() and
->> >> nowhere else. Isn't there any other way to detect this scenario? For
->> >> example, what if you store stats_id to struct ath10k_fw_stats and do
->> >> something like this:
->> >> 
->> >> if (stats->stats_id & WMI_10_4_STAT_PEER_EXTD)
->> >> 	ath10k_sta_update_extd_stats_rx_duration(ar,
->> >> 						 &stats->peers_extd);
->> >> else
->> >> 	ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
->> >> 
->> >> Would that work?
->> >
->> > [shafi] I am also thinking to re-use (ar->fw_stats_req_mask & WMI_10_4_STAT_PEER_EXTD)
->> > it might work, but will it conflict vdev stats WMI_STAT_VDEV (though its not currently
->> > supported for 10.2 )
->> 
->> Can you describe more how they conflict?
->
-> [shafi] 'WMI_STAT_VDEV' and 'WMI_10_4_STAT_PEER_EXTD' are having the same value
-> BIT(3), though as of now we are only 'WMI_10_4_STAT_PEER_EXTD' for 10.4
+drivers/net/wireless/cisco/airo.c:1105:29: error: 'register' is not at beginning of declaration [-Werror=old-style-declaration]
 
-Ah. But that's easy to solve, for example you could use a bool instead.
+This replaces the 'register' keyword with a 'reg' identifier in
+the declaration, which matches the definition and has the intended
+meaning.
 
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/cisco/airo.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/cisco/airo.c b/drivers/net/wireless/cisco/airo.c
+index b6c9d5feef1f..6bdb6f6bdfe8 100644
+--- a/drivers/net/wireless/cisco/airo.c
++++ b/drivers/net/wireless/cisco/airo.c
+@@ -1102,8 +1102,8 @@ static const char version[] = "airo.c 0.6 (Ben Reed & Javier Achirica)";
+ struct airo_info;
+ 
+ static int get_dec_u16( char *buffer, int *start, int limit );
+-static void OUT4500( struct airo_info *, u16 register, u16 value );
+-static unsigned short IN4500( struct airo_info *, u16 register );
++static void OUT4500( struct airo_info *, u16 reg, u16 value );
++static unsigned short IN4500( struct airo_info *, u16 reg );
+ static u16 setup_card(struct airo_info*, u8 *mac, int lock);
+ static int enable_MAC(struct airo_info *ai, int lock);
+ static void disable_MAC(struct airo_info *ai, int lock);
 -- 
-Kalle Valo
+2.9.0
+
