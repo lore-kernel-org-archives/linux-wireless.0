@@ -1,41 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60071 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:59025 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751261AbcFNO1O (ORCPT
+	with ESMTP id S1755008AbcFPPWr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2016 10:27:14 -0400
+	Thu, 16 Jun 2016 11:22:47 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: brcmfmac: use kmemdup
+Subject: Re: libertas: Remove create_workqueue
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1463666357-16719-1-git-send-email-falakreyaz@gmail.com>
-To: Muhammad Falak R Wani <falakreyaz@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+In-Reply-To: <20160604135901.GA29897@Karyakshetra>
+To: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+Cc: Andreas Kemnade <andreas@kemnade.info>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
+	"Andrew F. Davis" <afd@ti.com>,
+	Jonathan Cameron <jic23@kernel.org>,
+	Mark Brown <broonie@kernel.org>, Tejun Heo <tj@kernel.org>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
 	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20160614142709.29C84613EB@smtp.codeaurora.org> (sfid-20160614_162746_991212_F8C14BFF)
-Date: Tue, 14 Jun 2016 14:27:09 +0000 (UTC)
+Message-Id: <20160616152246.B3B6E61457@smtp.codeaurora.org> (sfid-20160616_172312_185158_89D59CA2)
+Date: Thu, 16 Jun 2016 15:22:46 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Muhammad Falak R Wani <falakreyaz@gmail.com> wrote:
-> Use kmemdup when some other buffer is immediately copied into allocated
-> region. It replaces call to allocation followed by memcpy, by a single
-> call to kmemdup.
+Bhaktipriya Shridhar <bhaktipriya96@gmail.com> wrote:
+> alloc_workqueue replaces deprecated create_workqueue().
 > 
-> Signed-off-by: Muhammad Falak R Wani <falakreyaz@gmail.com>
-> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> In if_sdio.c, the workqueue card->workqueue has workitem
+> &card->packet_worker, which is mapped to if_sdio_host_to_card_worker.
+> The workitem is involved in sending packets to firmware.
+> Forward progress under memory pressure is a requirement here.
+> 
+> In if_spi.c, the workqueue card->workqueue has workitem
+> &card->packet_worker, which is mapped to if_spi_host_to_card_worker.
+> The workitem is involved in sending command packets from the host.
+> Forward progress under memory pressure is a requirement here.
+> 
+> Dedicated workqueues have been used in both cases since the workitems
+> on the workqueues are involved in normal device operation with
+> WQ_MEM_RECLAIM set to gurantee forward progress under memory pressure.
+> Since there are only a fixed number of work items, explicit concurrency
+> limit is unnecessary.
+> 
+> flush_workqueue is unnecessary since destroy_workqueue() itself calls
+> drain_workqueue() which flushes repeatedly till the workqueue
+> becomes empty. Hence the calls to flush_workqueue() before
+> destroy_workqueue() have been dropped.
+> 
+> Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+> Acked-by: Tejun Heo <tj@kernel.org>
 
 Thanks, 1 patch applied to wireless-drivers-next.git:
 
-d464fd8b48f3 brcmfmac: use kmemdup
+f9f905b00b87 libertas: Remove create_workqueue
 
 -- 
 Sent by pwcli
-https://patchwork.kernel.org/patch/9127677/
+https://patchwork.kernel.org/patch/9154703/
 
