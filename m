@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:29895 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753861AbcFPN0J (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34346 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752512AbcFPQEq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 09:26:09 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u5GDHMU2017193
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:26:03 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 23gj5fs06y-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 16 Jun 2016 06:26:03 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 3/6] mwifiex: cancel pending scan during disconnect
-Date: Thu, 16 Jun 2016 18:52:23 +0530
-Message-ID: <1466083346-18607-3-git-send-email-akarwar@marvell.com> (sfid-20160616_152612_446677_8D94D21B)
-In-Reply-To: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
-References: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
+	Thu, 16 Jun 2016 12:04:46 -0400
+Date: Thu, 16 Jun 2016 21:34:31 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: Fix a typo in spectral code commments
+Message-ID: <20160616160430.GA10584@atheros-ThinkPad-T61> (sfid-20160616_180456_739854_461B5839)
+References: <1465882434-594-1-git-send-email-mohammed@qca.qualcomm.com>
+ <20160616155958.GA24359@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160616155958.GA24359@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Thu, Jun 16, 2016 at 11:59:59AM -0400, Bob Copeland wrote:
+> On Tue, Jun 14, 2016 at 11:03:54AM +0530, Mohammed Shafi Shajakhan wrote:
+> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> > 
+> > Found this obvious typo while going through the spectral
+> > code design in ath10k
+> 
+> >  		/* TODO: As experiments with an analogue sender and various
+> > -		 * configuaritions (fft-sizes of 64/128/256 and 20/40/80 Mhz)
+> > +		 * configurations (fft-sizes of 64/128/256 and 20/40/80 Mhz)
+> >  		 * show, the particular configuration of 80 MHz/64 bins does
+> >  		 * not match with the other smaples at all. Until the reason
+> >  		 * for that is found, don't report these samples.
+> 
+> Also "smaples" :)
 
-It is obeserved that sometimes scan operation will block the disconnect
-during system suspend. It's ok to cancel ongoing scan in this case. It
-reduces unnecessary system suspend delay.
+[shafi]  goodness me will that as well !
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 313115e..cd50425 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1695,6 +1695,9 @@ static int mwifiex_cfg80211_change_beacon(struct wiphy *wiphy,
- 					  struct cfg80211_beacon_data *data)
- {
- 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+
-+	mwifiex_cancel_scan(adapter);
- 
- 	if (GET_BSS_ROLE(priv) != MWIFIEX_BSS_ROLE_UAP) {
- 		mwifiex_dbg(priv->adapter, ERROR,
--- 
-1.9.1
-
+> 
+> -- 
+> Bob Copeland %% http://bobcopeland.com/
