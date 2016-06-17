@@ -1,54 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33485 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751626AbcFYSiQ (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:32777 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753409AbcFQFdW convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 14:38:16 -0400
-Received: by mail-oi0-f66.google.com with SMTP id w141so24017370oia.0
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 11:38:15 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Andrianov <andrianov@ispras.ru>
-Subject: [PATCH 2/6] rtlwifi: rtl8188ee: Fix potential race condition
-Date: Sat, 25 Jun 2016 13:37:43 -0500
-Message-Id: <1466879867-2499-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_203824_538769_435263BE)
-In-Reply-To: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
+	Fri, 17 Jun 2016 01:33:22 -0400
+MIME-Version: 1.0
+In-Reply-To: <87lh24v1n6.fsf@kamboji.qca.qualcomm.com>
+References: <1464378815-23282-1-git-send-email-zajec5@gmail.com>
+ <877fdpw4no.fsf@kamboji.qca.qualcomm.com> <CACna6rzXzj4DJNA6855Qy6QnxETnYEPmqtw3Bcx8WWCtYwYvuw@mail.gmail.com>
+ <87lh24v1n6.fsf@kamboji.qca.qualcomm.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Fri, 17 Jun 2016 07:33:20 +0200
+Message-ID: <CACna6rym3y0sqAUptgnt-mUiBidFGzVAzw4XcYr95q6MD2r5yw@mail.gmail.com> (sfid-20160617_073345_456067_20A6DCA3)
+Subject: Re: [PATCH 4.7 FIX] brcmfmac: fix lockup when removing P2P interface
+ after event timeout
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flag rfchange_inprogress in struct rtl_ps_ctl is protected by a spinlock
-in most routines but not in rtl88e_dm_watchdog(), which could
-lead to a race condition. The necessary locking to prevent this condition
-is added.
+On 17 June 2016 at 07:13, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Rafał Miłecki <zajec5@gmail.com> writes:
+>
+>> On 16 June 2016 at 17:10, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Rafał Miłecki <zajec5@gmail.com> writes:
+>>>
+>>>> Removing P2P interface is handled by sending a proper request to the
+>>>> firmware. On success firmware triggers an event and driver's handler
+>>>> removes a matching interface.
+>>>>
+>>>> However on event timeout we remove interface directly from the cfg80211
+>>>> callback. Current code doesn't handle this case correctly as it always
+>>>> assumes rtnl to be unlocked.
+>>>>
+>>>> Fix it by adding an extra rtnl_locked parameter to functions and calling
+>>>> unregister_netdevice when needed.
+>>>>
+>>>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>>>
+>>> Failed to apply, please rebase:
+>>>
+>>> Applying: brcmfmac: fix lockup when removing P2P interface after event timeout
+>>> Using index info to reconstruct a base tree...
+>>> Falling back to patching base and 3-way merge...
+>>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+>>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+>>> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+>>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+>>> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>>> Failed to merge in the changes.
+>>> Patch failed at 0001 brcmfmac: fix lockup when removing P2P interface after event timeout
+>>
+>> What tree did you try it on?
+>>
+>> I just went into a dir where I have cloned:
+>> git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git
+>>
+>> My HEAD commit is:
+>> 034fdd4 Merge ath-current from ath.git
+>>
+>> And I can apply this patch cleanly doing:
+>> curl https://patchwork.kernel.org/patch/9138925/mbox/ | git am
+>
+> I was trying to apply this to wireless-drivers-next. I didn't get a
+> confirmation from Arend and I didn't consider the fix important enough
+> for 4.7. But of course I can reconsider if needed.
 
-Reported-by: Pavel Andrianov <andrianov@ispras.ru>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pavel Andrianov <andrianov@ispras.ru>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c | 2 ++
- 1 file changed, 2 insertions(+)
+I think I agree it won't hurt to get it into -next. Noone earlier
+reported this bug and it seems to be there for a long time. Also
+applying it to -next will allow avoiding merge conflicts and immediate
+development work on -next.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-index db9a782..7f2650d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-@@ -1790,6 +1790,7 @@ void rtl88e_dm_watchdog(struct ieee80211_hw *hw)
- 	if (ppsc->p2p_ps_info.p2p_ps_mode)
- 		fw_ps_awake = false;
- 
-+	spin_lock(&rtlpriv->locks.rf_ps_lock);
- 	if ((ppsc->rfpwr_state == ERFON) &&
- 	    ((!fw_current_inpsmode) && fw_ps_awake) &&
- 	    (!ppsc->rfchange_inprogress)) {
-@@ -1802,4 +1803,5 @@ void rtl88e_dm_watchdog(struct ieee80211_hw *hw)
- 		rtl88e_dm_check_edca_turbo(hw);
- 		rtl88e_dm_antenna_diversity(hw);
- 	}
-+	spin_unlock(&rtlpriv->locks.rf_ps_lock);
- }
+I'll resend this patch rebased on -next soon.
+
 -- 
-2.1.4
-
+Rafał
