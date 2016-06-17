@@ -1,50 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42917 "EHLO sipsolutions.net"
+Received: from m12-16.163.com ([220.181.12.16]:53764 "EHLO m12-16.163.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751589AbcFWLSJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 07:18:09 -0400
-Message-ID: <1466680680.11061.2.camel@sipsolutions.net> (sfid-20160623_131835_413500_A1C65272)
-Subject: Re: [PATCH] wlcore: time sync : add support for 64 bit clock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>, Guy Mishol <guym@ti.com>,
-	Eliad Peller <eliad@wizery.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Thu, 23 Jun 2016 13:18:00 +0200
-In-Reply-To: <20160623111332.23326-1-yanivma@ti.com> (sfid-20160623_131215_419855_E4550AFE)
-References: <20160623111332.23326-1-yanivma@ti.com>
-	 (sfid-20160623_131215_419855_E4550AFE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S933120AbcFQRfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2016 13:35:13 -0400
+From: weiyj_lk@163.com
+To: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH] staging: wilc1000: fix return value check in wlan_initialize_threads()
+Date: Fri, 17 Jun 2016 17:34:17 +0000
+Message-Id: <1466184857-21605-1-git-send-email-weiyj_lk@163.com> (sfid-20160617_193524_856267_6A1C7B57)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-06-23 at 14:12 +0300, Yaniv Machani wrote:
-> Changed the configuration to support 64bit instead of 32bit
-> this in order to offload the driver from handling a wraparound.
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-[...]
+In case of error, the function kthread_run() returns ERR_PTR()
+and never returns NULL. The NULL test in the return value check
+should be replaced with IS_ERR().
 
-Since you Cc'ed me, and presumably want me to review it, I'll say that
-this looks like a terrible idea:
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-> @@ -74,10 +74,16 @@ struct wl18xx_event_mailbox {
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4f93c11..b622510 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -717,10 +717,10 @@ static int wlan_initialize_threads(struct net_device *dev)
+ 
+ 	wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
+ 				     "K_TXQ_TASK");
+-	if (!wilc->txq_thread) {
++	if (IS_ERR(wilc->txq_thread)) {
+ 		netdev_err(dev, "couldn't create TXQ thread\n");
+ 		wilc->close = 0;
+-		return -ENOBUFS;
++		return PTR_ERR(wilc->txq_thread);
+ 	}
+ 	wait_for_completion(&wilc->txq_thread_started);
+ 
 
-This struct is evidently used for firmware/host communication.
 
->  	__le16 bss_loss_bitmap;
->  
->  	/* bitmap of stations (by HLID) which exceeded max tx
-> retries */
-> -	__le32 tx_retry_exceeded_bitmap;
-> +	__le16 tx_retry_exceeded_bitmap;
-> +
-> +	/* time sync high msb*/
-> +	u16 time_sync_tsf_high_msb;
 
-So first of all, just using u16 instead of __le16 seems wrong.
 
-Additionally, this looks like it changes the firmware API, so that
-older firmware images will no longer work?
 
-johannes
