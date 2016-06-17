@@ -1,53 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59669 "EHLO sipsolutions.net"
+Received: from mail2.tohojo.dk ([77.235.48.147]:43329 "EHLO mail2.tohojo.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751744AbcFIMsH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 08:48:07 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-06-09
-Date: Thu,  9 Jun 2016 14:47:57 +0200
-Message-Id: <1465476478-23080-1-git-send-email-johannes@sipsolutions.net> (sfid-20160609_144817_134684_45B12F9C)
+	id S1752038AbcFQNnc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 17 Jun 2016 09:43:32 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org,
+	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+	Tim Shepard <shep@alum.mit.edu>
+Subject: Re: [PATCH 1/2] ath9k: use mac80211 intermediate software queues
+References: <20160617090929.31606-1-toke@toke.dk>
+	<20160617090929.31606-2-toke@toke.dk>
+	<30beabff-a8c6-5431-be09-8f2f83ffc974@nbd.name>
+Date: Fri, 17 Jun 2016 15:43:27 +0200
+In-Reply-To: <30beabff-a8c6-5431-be09-8f2f83ffc974@nbd.name> (Felix Fietkau's
+	message of "Fri, 17 Jun 2016 15:28:26 +0200")
+Message-ID: <87d1ng3p8g.fsf@toke.dk> (sfid-20160617_154336_635102_F1A2A710)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Felix Fietkau <nbd@nbd.name> writes:
 
-Here are two more fixes for the current cycle, please pull.
+> On 2016-06-17 11:09, Toke Høiland-Jørgensen wrote:
+>> This patch leaves the code for ath9k's internal per-node per-tid
+>> queues in place and just modifies the driver to also pull from
+>> the new mac80211 intermediate software queues, and implements
+>> the .wake_tx_queue method, which will cause mac80211 to deliver
+>> packets to be sent via the new intermediate queue.
+>> 
+>> Signed-off-by: Tim Shepard <shep@alum.mit.edu>
+>> 
+>> Reworked to not require the global variable renaming in ath9k.
+>> 
+>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+>> ---
+>>  drivers/net/wireless/ath/ath9k/ath9k.h     |  16 +++-
+>>  drivers/net/wireless/ath/ath9k/debug_sta.c |   7 +-
+>>  drivers/net/wireless/ath/ath9k/init.c      |   1 +
+>>  drivers/net/wireless/ath/ath9k/main.c      |   1 +
+>>  drivers/net/wireless/ath/ath9k/xmit.c      | 119 +++++++++++++++++++++++++----
+>>  5 files changed, 125 insertions(+), 19 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+>> index 93b3793..caeae10 100644
+>> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
+>> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+>> @@ -145,8 +145,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
+>>  #define BAW_WITHIN(_start, _bawsz, _seqno) \
+>>  	((((_seqno) - (_start)) & 4095) < (_bawsz))
+>>  
+>> -#define ATH_AN_2_TID(_an, _tidno)  (&(_an)->tid[(_tidno)])
+>> -
+>>  #define IS_HT_RATE(rate)   (rate & 0x80)
+>>  #define IS_CCK_RATE(rate)  ((rate >= 0x18) && (rate <= 0x1e))
+>>  #define IS_OFDM_RATE(rate) ((rate >= 0x8) && (rate <= 0xf))
+>> @@ -232,8 +230,10 @@ struct ath_buf {
+>>  
+>>  struct ath_atx_tid {
+>>  	struct list_head list;
+>> +	struct sk_buff_head i_q;
+> Do we really need a third queue here? Instead of adding yet another
+> layer of queueing here, I think we should even get rid of buf_q.
 
-Let me know if there's any problem.
+This is definitely something that needs to be improved. One other
+sticking point related to this: in the current version of this patch
+ath_tid_has_buffered() gains a side effect of pulling from the mac80211
+txq, which is obviously not so nice.
 
-Thanks,
-johannes
+The obvious way to get rid of this is to export a txq_has_buffered()
+function at the mac80211 layer. But avoiding that may be possible; the
+sticking point is what to do with the code paths that do not dequeue
+packets, but check ath_tid_has_buffered() to decide whether to schedule
+the queue and/or to tell ieee80211_sta_set_buffered() about it (these
+are for instance ath_tx_aggr_sleep/wakeup(). Can those just be removed
+(i.e. don't call into ieee80211, and always schedule the txq on wakeup?
+I'm not familiar enough with the intermediate queues to make that
+call...
 
 
+> Channel context based queue handling can be dealt with by
+> stopping/starting relevant queues on channel context changes.
 
-The following changes since commit 6fe04128f158c5ad27e7504bfdf1b12e63331bc9:
+Noted.
 
-  mac80211: fix fast_tx header alignment (2016-05-31 12:14:04 +0200)
+> buf_q becomes unnecessary when you remove all code in the drv_tx
+> codepath that moves frames to the intermediate queue.
+>
+> Any frame that was pulled from the intermediate queue and prepared for
+> tx, but which can't be sent right now can simply be queued to retry_q.
 
-are available in the git repository at:
+Right.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-06-09
+> This will also help with getting the diffstat insertion/deletion ratio
+> under control ;)
 
-for you to fetch changes up to 3d5fdff46c4b2b9534fa2f9fc78e90a48e0ff724:
+Yes, that would be good ;)
 
-  wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel (2016-06-09 09:56:11 +0200)
+>>  	struct sk_buff_head buf_q;
+>>  	struct sk_buff_head retry_q;
+>> +	struct ieee80211_txq *swq;
+> No need for this pointer, you can use container_of.
 
-----------------------------------------------------------------
-Two more fixes for now:
- * a fix for a long-standing iwpriv 32/64 compat issue
- * two fairly recently introduced (4.6) warning asking for
-   symmetric operations are erroneous and I remove them
+Ah, cool, thanks!
 
-----------------------------------------------------------------
-Johannes Berg (1):
-      cfg80211: remove get/set antenna and tx power warnings
-
-Prasun Maiti (1):
-      wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel
-
- net/wireless/core.c      |  2 --
- net/wireless/wext-core.c | 25 +++++++++++++++++++++++--
- 2 files changed, 23 insertions(+), 4 deletions(-)
+-Toke
