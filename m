@@ -1,61 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12668 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751784AbcF0Itc (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:34855 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751807AbcFQTAU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 04:49:32 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	Cathy Luo <cluo@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/3] mwifiex: clear scan_aborting flag
-Date: Mon, 27 Jun 2016 14:16:28 +0530
-Message-ID: <1467017189-26917-2-git-send-email-akarwar@marvell.com> (sfid-20160627_104935_942631_9D37ED7F)
-In-Reply-To: <1467017189-26917-1-git-send-email-akarwar@marvell.com>
-References: <1467017189-26917-1-git-send-email-akarwar@marvell.com>
+	Fri, 17 Jun 2016 15:00:20 -0400
+Received: by mail-wm0-f43.google.com with SMTP id v199so533351wmv.0
+        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2016 12:00:19 -0700 (PDT)
+Subject: Re: [PATCH RFC] brcmfmac: support deleting MBSS AP interfaces
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <1464791845-23944-1-git-send-email-zajec5@gmail.com>
+ <574F30D8.5000300@broadcom.com>
+ <CACna6rzcfYu=3qoMsTCShHUWbpz-0-uWgogVLWJwiNv228PhPQ@mail.gmail.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <576448C0.4080102@broadcom.com> (sfid-20160617_210042_417895_0302E328)
+Date: Fri, 17 Jun 2016 21:00:16 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACna6rzcfYu=3qoMsTCShHUWbpz-0-uWgogVLWJwiNv228PhPQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The flag should be cleaned along with other scan operation variables.
-This was missing at some places.
+On 17-06-16 14:30, Rafał Miłecki wrote:
+> On 1 June 2016 at 21:00, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+>> On 01-06-16 16:36, Rafał Miłecki wrote:
+>>> We already support adding extra (AP) interfaces so it also makes an
+>>> obvious sense to allow deleting them.
+>>>
+>>> Adding a new interface is implemented by sending request to firmware for
+>>> creating a new BSS and waiting for a proper event. Ideally deleting
+>>> interface should be handled in a similar way. There should be a request
+>>> to firmware for deleting BSS and firmware should respond with an event.
+>>>
+>>> Unfortunately it doesn't seem to work with recent firmwares. They never
+>>> seem to delete BSS and never send BRCMF_E_IF_DEL. As a workaround this
+>>> patch deletes Linux interface while keeping a track of BSSes present in
+>>> a firmware. If there is request for adding a new interface this code is
+>>> capable of reusing existing BSS-es.
+>>
+>> It is not so much an issue of recent firmware. Actually, on recent
+>> firmware 7.x.y.z and higher there are other command to create *and*
+>> delete additional interfaces. On the other hand we aim to support a
+>> large number of devices going back to bcm4329 so we have to come up with
+>> a scheme to use the new commands or fallback to old api. Let's hope we
+>> can reuse much of this effort you put in.
+> 
+> You gave me a complex puzzle there :D It took me a while to find out
+> what API you meant.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/scan.c | 3 +++
- 1 file changed, 3 insertions(+)
+Actually, the puzzle was supposed to be for me, but I like your
+curiosity and persistence in digging up the (partial) info.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index e331122..96d0d86 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -1960,6 +1960,7 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- 				    "info: notifying scan done\n");
- 			cfg80211_scan_done(priv->scan_request, 0);
- 			priv->scan_request = NULL;
-+			priv->scan_aborting = false;
- 		} else {
- 			priv->scan_aborting = false;
- 			mwifiex_dbg(adapter, INFO,
-@@ -1981,6 +1982,7 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
- 					    "info: aborting scan\n");
- 				cfg80211_scan_done(priv->scan_request, 1);
- 				priv->scan_request = NULL;
-+				priv->scan_aborting = false;
- 			} else {
- 				priv->scan_aborting = false;
- 				mwifiex_dbg(adapter, INFO,
-@@ -2022,6 +2024,7 @@ void mwifiex_cancel_scan(struct mwifiex_adapter *adapter)
- 					    "info: aborting scan\n");
- 				cfg80211_scan_done(priv->scan_request, 1);
- 				priv->scan_request = NULL;
-+				priv->scan_aborting = false;
- 			}
- 		}
- 	}
--- 
-1.9.1
+> Finally I found an interesting wlioctl.h in SDK 9.10.178.27 that gave
+> me some clue. I got this SDK from ASUS RT-AC1200G+ open souce tarball.
+> There are 2 interesting structs:
+> 
+> typedef struct wl_interface_create {
+>         uint16 ver; /* version of this struct */
+>         uint32  flags; /* flags that defines the operation */
+>         struct ether_addr   mac_addr; /* Optional Mac address */
+>         uint32  wlc_index; /* Optional wlc index */
+> } wl_interface_create_t;
+> 
+> typedef struct wl_interface_info {
+>         uint16 ver; /* version of this struct */
+>         struct ether_addr    mac_addr; /* MAC address of the interface */
+>         char ifname[BCM_MSG_IFNAME_MAX]; /* name of interface */
+>         uint8 bsscfgidx; /* source bsscfg index */
+> } wl_interface_info_t;
+> 
+> I couldn't find any corresponding WLC_* in wlioctl_defs.h, so I guess
+> I should use WLC_SET_VAR (or WLC_SET_VAR as you prefer) with some
 
+(huh)? anyway the api indeed uses what we call an iovar, ie.
+string-based ioctl.
+
+> string. Any tip what would it be? Something like
+> "wl_interface_create"? Can you reveal such a small secret?
+
+It is "interface_create" and "interface_remove".
+
+Regards,
+Arend
