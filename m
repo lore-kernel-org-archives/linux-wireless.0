@@ -1,231 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:61622 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932228AbcF3PEq (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36549 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754901AbcFQUpD convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 11:04:46 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u5UF1uJO003104
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 08:03:56 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0a-0016f401.pphosted.com with ESMTP id 23sqakucgy-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 08:03:55 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/2] mwifiex: add hostcmd wext ioctl support
-Date: Thu, 30 Jun 2016 20:31:14 +0530
-Message-ID: <1467298875-3581-2-git-send-email-akarwar@marvell.com> (sfid-20160630_170526_223383_C624B7B1)
-In-Reply-To: <1467298875-3581-1-git-send-email-akarwar@marvell.com>
-References: <1467298875-3581-1-git-send-email-akarwar@marvell.com>
+	Fri, 17 Jun 2016 16:45:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <576448C0.4080102@broadcom.com>
+References: <1464791845-23944-1-git-send-email-zajec5@gmail.com>
+ <574F30D8.5000300@broadcom.com> <CACna6rzcfYu=3qoMsTCShHUWbpz-0-uWgogVLWJwiNv228PhPQ@mail.gmail.com>
+ <576448C0.4080102@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Fri, 17 Jun 2016 22:44:55 +0200
+Message-ID: <CACna6ryebj3iv=TJs2cXgR2uDRrTaBzbvvhx8MSLKy2A8yBQTA@mail.gmail.com> (sfid-20160617_224527_274534_1D00C5FD)
+Subject: Re: [PATCH RFC] brcmfmac: support deleting MBSS AP interfaces
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 17 June 2016 at 21:00, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> On 17-06-16 14:30, Rafał Miłecki wrote:
+>> On 1 June 2016 at 21:00, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>> On 01-06-16 16:36, Rafał Miłecki wrote:
+>>>> We already support adding extra (AP) interfaces so it also makes an
+>>>> obvious sense to allow deleting them.
+>>>>
+>>>> Adding a new interface is implemented by sending request to firmware for
+>>>> creating a new BSS and waiting for a proper event. Ideally deleting
+>>>> interface should be handled in a similar way. There should be a request
+>>>> to firmware for deleting BSS and firmware should respond with an event.
+>>>>
+>>>> Unfortunately it doesn't seem to work with recent firmwares. They never
+>>>> seem to delete BSS and never send BRCMF_E_IF_DEL. As a workaround this
+>>>> patch deletes Linux interface while keeping a track of BSSes present in
+>>>> a firmware. If there is request for adding a new interface this code is
+>>>> capable of reusing existing BSS-es.
+>>>
+>>> It is not so much an issue of recent firmware. Actually, on recent
+>>> firmware 7.x.y.z and higher there are other command to create *and*
+>>> delete additional interfaces. On the other hand we aim to support a
+>>> large number of devices going back to bcm4329 so we have to come up with
+>>> a scheme to use the new commands or fallback to old api. Let's hope we
+>>> can reuse much of this effort you put in.
+>>
+>> You gave me a complex puzzle there :D It took me a while to find out
+>> what API you meant.
+>
+> Actually, the puzzle was supposed to be for me, but I like your
+> curiosity and persistence in digging up the (partial) info.
+>
+>> Finally I found an interesting wlioctl.h in SDK 9.10.178.27 that gave
+>> me some clue. I got this SDK from ASUS RT-AC1200G+ open souce tarball.
+>> There are 2 interesting structs:
+>>
+>> typedef struct wl_interface_create {
+>>         uint16 ver; /* version of this struct */
+>>         uint32  flags; /* flags that defines the operation */
+>>         struct ether_addr   mac_addr; /* Optional Mac address */
+>>         uint32  wlc_index; /* Optional wlc index */
+>> } wl_interface_create_t;
+>>
+>> typedef struct wl_interface_info {
+>>         uint16 ver; /* version of this struct */
+>>         struct ether_addr    mac_addr; /* MAC address of the interface */
+>>         char ifname[BCM_MSG_IFNAME_MAX]; /* name of interface */
+>>         uint8 bsscfgidx; /* source bsscfg index */
+>> } wl_interface_info_t;
+>>
+>> I couldn't find any corresponding WLC_* in wlioctl_defs.h, so I guess
+>> I should use WLC_SET_VAR (or WLC_SET_VAR as you prefer) with some
+>
+> (huh)? anyway the api indeed uses what we call an iovar, ie.
+> string-based ioctl.
 
-This patch adds ndo_ioctl support to mwifiex netdev handlers.
-This will be used to download hostcmds to firmware from userspace.
-This is needed for manufacturing mode support in mwifiex. ndo_ioctl
-is allowed only when mfg mode is enabled via module load parameters.
+That's what I meant, sorry for wrong naming :)
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 59 +++++++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/main.c   | 38 +++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/main.h   |  9 +++-
- 3 files changed, 105 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index c29f26d..fcfe556 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -818,6 +818,8 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 			hostcmd = adapter->curr_cmd->data_buf;
- 			hostcmd->len = size;
- 			memcpy(hostcmd->cmd, resp, size);
-+			adapter->hostcmd_resp_data.len = size;
-+			memcpy(adapter->hostcmd_resp_data.cmd, resp, size);
- 		}
- 	}
- 	orig_cmdresp_no = le16_to_cpu(resp->command);
-@@ -1200,6 +1202,63 @@ mwifiex_process_hs_config(struct mwifiex_adapter *adapter)
- 				   false);
- }
- EXPORT_SYMBOL_GPL(mwifiex_process_hs_config);
-+/* This function get hostcmd data from userspace and construct a cmd
-+   * to be download to FW.
-+  */
-+int mwifiex_process_host_command(struct mwifiex_private *priv,
-+				 struct iwreq *wrq)
-+{
-+	struct mwifiex_ds_misc_cmd *hostcmd_buf;
-+	struct host_cmd_ds_command *cmd;
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	int ret;
-+
-+	hostcmd_buf = kzalloc(sizeof(*hostcmd_buf), GFP_KERNEL);
-+	if (!hostcmd_buf)
-+		return -ENOMEM;
-+
-+	cmd = (void *)hostcmd_buf->cmd;
-+
-+	if (copy_from_user(cmd, wrq->u.data.pointer,
-+			   sizeof(cmd->command) + sizeof(cmd->size))) {
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	hostcmd_buf->len = le16_to_cpu(cmd->size);
-+	if (hostcmd_buf->len > MWIFIEX_SIZE_OF_CMD_BUFFER) {
-+		ret = -EINVAL;
-+		goto done;
-+	}
-+
-+	if (copy_from_user(cmd, wrq->u.data.pointer, hostcmd_buf->len)) {
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	if (mwifiex_send_cmd(priv, 0, 0, 0, hostcmd_buf, true)) {
-+		dev_err(priv->adapter->dev, "Failed to process hostcmd\n");
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	if (adapter->hostcmd_resp_data.len > hostcmd_buf->len) {
-+		ret = -EFBIG;
-+		goto done;
-+	}
-+
-+	if (copy_to_user(wrq->u.data.pointer, adapter->hostcmd_resp_data.cmd,
-+			 adapter->hostcmd_resp_data.len)) {
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+	wrq->u.data.length = adapter->hostcmd_resp_data.len;
-+
-+	ret = 0;
-+done:
-+	kfree(hostcmd_buf);
-+	return ret;
-+}
- 
- /*
-  * This function handles the command response of a sleep confirm command.
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 0e280f8..8b06d1d 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1211,17 +1211,54 @@ mwifiex_netdev_select_wmm_queue(struct net_device *dev, struct sk_buff *skb,
- 	return mwifiex_1d_to_wmm_queue[skb->priority];
- }
- 
-+static int mwifiex_do_ioctl(struct net_device *dev, struct ifreq *req, int cmd)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	struct iwreq *wrq = (struct iwreq *)req;
-+	int ret;
-+
-+	if (!priv->adapter->mfg_mode)
-+		return -EINVAL;
-+
-+	dev_dbg(priv->adapter->dev, "ioctl cmd = 0x%x\n", cmd);
-+
-+	switch (cmd) {
-+	case MWIFIEX_HOSTCMD_IOCTL:
-+		ret = mwifiex_process_host_command(priv, wrq);
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
- /* Network device handlers */
- static const struct net_device_ops mwifiex_netdev_ops = {
- 	.ndo_open = mwifiex_open,
- 	.ndo_stop = mwifiex_close,
- 	.ndo_start_xmit = mwifiex_hard_start_xmit,
- 	.ndo_set_mac_address = mwifiex_set_mac_address,
-+	.ndo_do_ioctl = mwifiex_do_ioctl,
- 	.ndo_validate_addr = eth_validate_addr,
- 	.ndo_tx_timeout = mwifiex_tx_timeout,
- 	.ndo_get_stats = mwifiex_get_stats,
- 	.ndo_set_rx_mode = mwifiex_set_multicast_list,
- 	.ndo_select_queue = mwifiex_netdev_select_wmm_queue,
-+	};
-+
-+static const struct iw_priv_args mwifiex_iwpriv_args[] = {
-+	{       MWIFIEX_HOSTCMD_IOCTL,
-+		IW_PRIV_TYPE_BYTE | 2047,
-+		IW_PRIV_TYPE_BYTE | 2047,
-+		"hostcmd"
-+	},
-+};
-+
-+static struct iw_handler_def mwifiex_iwpriv_handler_def = {
-+	.num_private_args = ARRAY_SIZE(mwifiex_iwpriv_args),
-+	.private_args = (struct iw_priv_args *)mwifiex_iwpriv_args,
- };
- 
- /*
-@@ -1249,6 +1286,7 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
- {
- 	dev->netdev_ops = &mwifiex_netdev_ops;
- 	dev->destructor = free_netdev;
-+	dev->wireless_handlers = &mwifiex_iwpriv_handler_def;
- 	/* Initialize private structure */
- 	priv->current_key_index = 0;
- 	priv->media_connected = false;
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 9f6bb40..23532cf 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -48,6 +48,8 @@
- #include <linux/pm_runtime.h>
- #include <linux/slab.h>
- #include <linux/of_irq.h>
-+#include <linux/wireless.h>
-+#include <net/iw_handler.h>
- 
- #include "decl.h"
- #include "ioctl.h"
-@@ -157,6 +159,9 @@ enum {
- /* Threshold for tx_timeout_cnt before we trigger a card reset */
- #define TX_TIMEOUT_THRESHOLD	6
- 
-+/* IOCTL number used for hostcmd process*/
-+#define MWIFIEX_HOSTCMD_IOCTL (SIOCIWFIRSTPRIV + 17)
-+
- #define MWIFIEX_DRV_INFO_SIZE_MAX 0x40000
- 
- /* Address alignment */
-@@ -892,6 +897,7 @@ struct mwifiex_adapter {
- 	u8 event_received;
- 	u8 data_received;
- 	u16 seq_num;
-+	struct mwifiex_ds_misc_cmd hostcmd_resp_data;
- 	struct cmd_ctrl_node *cmd_pool;
- 	struct cmd_ctrl_node *curr_cmd;
- 	/* spin lock for command */
-@@ -1553,7 +1559,8 @@ bool mwifiex_is_bss_in_11ac_mode(struct mwifiex_private *priv);
- u8 mwifiex_get_center_freq_index(struct mwifiex_private *priv, u8 band,
- 				 u32 pri_chan, u8 chan_bw);
- int mwifiex_init_channel_scan_gap(struct mwifiex_adapter *adapter);
--
-+int mwifiex_process_host_command(struct mwifiex_private *priv,
-+				 struct iwreq *wrq);
- int mwifiex_tdls_check_tx(struct mwifiex_private *priv, struct sk_buff *skb);
- void mwifiex_flush_auto_tdls_list(struct mwifiex_private *priv);
- void mwifiex_auto_tdls_update_peer_status(struct mwifiex_private *priv,
+>> string. Any tip what would it be? Something like
+>> "wl_interface_create"? Can you reveal such a small secret?
+>
+> It is "interface_create" and "interface_remove".
+
+It (almost) works, thanks! I just hit some bug in brcmfmac in handling
+events. It can be exposed by deleting 2 interfaces quickly, one by
+one, it seems. I'll debug this.
+
 -- 
-1.9.1
-
+Rafał
