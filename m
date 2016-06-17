@@ -1,44 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58272 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751186AbcFNOJ6 convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34295 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752337AbcFQMas convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2016 10:09:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: iwlwifi 2016-06-10
-References: <1465562195.29614.5.camel@coelho.fi>
-Date: Tue, 14 Jun 2016 17:09:52 +0300
-In-Reply-To: <1465562195.29614.5.camel@coelho.fi> (Luca Coelho's message of
-	"Fri, 10 Jun 2016 15:36:35 +0300")
-Message-ID: <87fusf3lqn.fsf@kamboji.qca.qualcomm.com> (sfid-20160614_161008_018300_C22DAA34)
+	Fri, 17 Jun 2016 08:30:48 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <574F30D8.5000300@broadcom.com>
+References: <1464791845-23944-1-git-send-email-zajec5@gmail.com> <574F30D8.5000300@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Fri, 17 Jun 2016 14:30:47 +0200
+Message-ID: <CACna6rzcfYu=3qoMsTCShHUWbpz-0-uWgogVLWJwiNv228PhPQ@mail.gmail.com> (sfid-20160617_143111_874501_ED94DADD)
+Subject: Re: [PATCH RFC] brcmfmac: support deleting MBSS AP interfaces
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+On 1 June 2016 at 21:00, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> On 01-06-16 16:36, Rafał Miłecki wrote:
+>> We already support adding extra (AP) interfaces so it also makes an
+>> obvious sense to allow deleting them.
+>>
+>> Adding a new interface is implemented by sending request to firmware for
+>> creating a new BSS and waiting for a proper event. Ideally deleting
+>> interface should be handled in a similar way. There should be a request
+>> to firmware for deleting BSS and firmware should respond with an event.
+>>
+>> Unfortunately it doesn't seem to work with recent firmwares. They never
+>> seem to delete BSS and never send BRCMF_E_IF_DEL. As a workaround this
+>> patch deletes Linux interface while keeping a track of BSSes present in
+>> a firmware. If there is request for adding a new interface this code is
+>> capable of reusing existing BSS-es.
+>
+> It is not so much an issue of recent firmware. Actually, on recent
+> firmware 7.x.y.z and higher there are other command to create *and*
+> delete additional interfaces. On the other hand we aim to support a
+> large number of devices going back to bcm4329 so we have to come up with
+> a scheme to use the new commands or fallback to old api. Let's hope we
+> can reuse much of this effort you put in.
 
-> Here are some fixes intended for 4.7.  Nothing really big, just some
-> fixes for bugs introduced in recent patches and a long-standing bug
-> with IGTK keys, which apparently had never worked properly before.  A
-> few more details in the tag message.
->
-> Let me know if everything's fine (or not). :)
->
-> Luca.
->
->
-> The following changes since commit 182fd9eecb287e696c82b30d06c6150d80a49c5b:
->
->   MAINTAINERS: Add file patterns for wireless device tree bindings (2016-06-04 17:24:02 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2016-06-10
+You gave me a complex puzzle there :D It took me a while to find out
+what API you meant.
 
-Pulled, thanks.
+Finally I found an interesting wlioctl.h in SDK 9.10.178.27 that gave
+me some clue. I got this SDK from ASUS RT-AC1200G+ open souce tarball.
+There are 2 interesting structs:
 
--- 
-Kalle Valo
+typedef struct wl_interface_create {
+        uint16 ver; /* version of this struct */
+        uint32  flags; /* flags that defines the operation */
+        struct ether_addr   mac_addr; /* Optional Mac address */
+        uint32  wlc_index; /* Optional wlc index */
+} wl_interface_create_t;
+
+typedef struct wl_interface_info {
+        uint16 ver; /* version of this struct */
+        struct ether_addr    mac_addr; /* MAC address of the interface */
+        char ifname[BCM_MSG_IFNAME_MAX]; /* name of interface */
+        uint8 bsscfgidx; /* source bsscfg index */
+} wl_interface_info_t;
+
+I couldn't find any corresponding WLC_* in wlioctl_defs.h, so I guess
+I should use WLC_SET_VAR (or WLC_SET_VAR as you prefer) with some
+string. Any tip what would it be? Something like
+"wl_interface_create"? Can you reveal such a small secret?
+
+Also can you share any tip on removing interface? I don't see any
+struct for that. Is that handled by some special value in
+"wl_interface_create_t" or by separated string used with WLC_SET_VAR?
