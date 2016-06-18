@@ -1,258 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33863 "EHLO
-	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197AbcFAFv0 (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:34850 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751046AbcFRV6w convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 01:51:26 -0400
-Received: by mail-lf0-f67.google.com with SMTP id 65so805021lfq.1
-        for <linux-wireless@vger.kernel.org>; Tue, 31 May 2016 22:51:25 -0700 (PDT)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH V3 iw] add "channels" PHY command listing frequencies with more details
-Date: Wed,  1 Jun 2016 07:51:14 +0200
-Message-Id: <1464760274-15530-1-git-send-email-zajec5@gmail.com> (sfid-20160601_075130_805124_27F17593)
-In-Reply-To: <1464712100-4489-1-git-send-email-zajec5@gmail.com>
-References: <1464712100-4489-1-git-send-email-zajec5@gmail.com>
+	Sat, 18 Jun 2016 17:58:52 -0400
 MIME-Version: 1.0
+In-Reply-To: <5765A06C.3040005@broadcom.com>
+References: <1466273932-11554-1-git-send-email-zajec5@gmail.com> <5765A06C.3040005@broadcom.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Sat, 18 Jun 2016 23:58:50 +0200
+Message-ID: <CACna6rydCmKhyxsyOPrCsT_KbQLQPAg2doCcovVdvedBcRT+=w@mail.gmail.com> (sfid-20160618_235929_194126_FDA9A41F)
+Subject: Re: [PATCH RFC 1/2] brcmfmac: remove interface before notifying listener
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<linux-wireless@vger.kernel.org>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list.pdl@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Channels (frequencies) are getting more details that users may want to
-know about. E.g. it's important to know which frequencies allow using
-40/80/160 MHz channels to setup AP properly.
+On 18 June 2016 at 21:26, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+> On 18-06-16 20:18, Rafał Miłecki wrote:
+>> So far when receiving event about in-firmware-interface removal we were
+>> notifying our listener and afterwards we were removing Linux interface.
+>>
+>
+> [snip]
+>
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+>> index 9da7a4c..5fd1886 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+>> @@ -18,6 +18,7 @@
+>>  #include "brcmu_wifi.h"
+>>  #include "brcmu_utils.h"
+>>
+>> +#include "cfg80211.h"
+>>  #include "core.h"
+>>  #include "debug.h"
+>>  #include "tracepoint.h"
+>> @@ -180,10 +181,16 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+>>       if (ifp && ifevent->action == BRCMF_E_IF_CHANGE)
+>>               brcmf_fws_reset_interface(ifp);
+>>
+>> -     err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
+>
+> The reason for doing this first is because we are passing the ifp, which
+> is netdev_priv(ifp->ndev). In brcmf_remove_interface() we only
+> unregister the netdev, which will end up (after scheduling) in
+> brcmf_free_netdev() thus freeing the ifp. By moving the event handler
+> function ifp may be stale already.
 
-We list channels in "info" command output but it's already quite big and
-it was agreed to introduce new command rather than expand the old one.
+Good catch. What about making brcmf_fweh_call_event_handler work
+without ifp? Would that be OK then?
 
-This patch adds "channels" command printing what was already available
-in the "info" plus details about supported channel widths. It also
-removes DFS info from the "info" output.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Make width_40, width_80 & width_160 variables static. This is needed
-    to keep their values across separated handler calls.
-V3: Introduce struct channels_ctx to avoid multiple static variables in
-    a print_channels_handler.
----
- info.c |  30 -------------
- phy.c  | 152 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 152 insertions(+), 30 deletions(-)
+>> +     if (ifp && ifevent->action == BRCMF_E_IF_DEL) {
+>> +             bool rtnl_locked = brcmf_cfg80211_vif_event_armed(drvr->config);
+>> +
+>> +             brcmf_remove_interface(ifp, rtnl_locked);
+>
+> I guess rtnl_locked here means "rtnl_is_locked() by brcmfmac". It
+> actually does not matter who is holding the rtnl_lock. At least when it
+> is brcmfmac it is still a different task, ie. hostapd, iw, etc. Also
+> when brcmf_cfg80211_vif_event_armed() return false there may still be
+> some task holding the rtnl_lock.
 
-diff --git a/info.c b/info.c
-index 32de0af..b375123 100644
---- a/info.c
-+++ b/info.c
-@@ -47,20 +47,6 @@ static char *cipher_name(__u32 c)
- 	}
- }
- 
--static char *dfs_state_name(enum nl80211_dfs_state state)
--{
--	switch (state) {
--	case NL80211_DFS_USABLE:
--		return "usable";
--	case NL80211_DFS_AVAILABLE:
--		return "available";
--	case NL80211_DFS_UNAVAILABLE:
--		return "unavailable";
--	default:
--		return "unknown";
--	}
--}
--
- static int ext_feature_isset(const unsigned char *ext_features, int ext_features_len,
- 			     enum nl80211_ext_feature_index ftidx)
- {
-@@ -198,22 +184,6 @@ next:
- 					if (open)
- 						printf(")");
- 					printf("\n");
--
--					if (!tb_freq[NL80211_FREQUENCY_ATTR_DISABLED] && tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
--						enum nl80211_dfs_state state = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]);
--						unsigned long time;
--
--						printf("\t\t\t  DFS state: %s", dfs_state_name(state));
--						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]) {
--							time = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]);
--							printf(" (for %lu sec)", time/1000);
--						}
--						printf("\n");
--						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME])
--							printf("\t\t\t  DFS CAC time: %u ms\n",
--							       nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME]));
--					}
--
- 				}
- 			}
- 
-diff --git a/phy.c b/phy.c
-index 13e8260..c57a71f 100644
---- a/phy.c
-+++ b/phy.c
-@@ -14,6 +14,158 @@
- #include "nl80211.h"
- #include "iw.h"
- 
-+struct channels_ctx {
-+	int last_band;
-+	bool width_40;
-+	bool width_80;
-+	bool width_160;
-+};
-+
-+static char *dfs_state_name(enum nl80211_dfs_state state)
-+{
-+	switch (state) {
-+	case NL80211_DFS_USABLE:
-+		return "usable";
-+	case NL80211_DFS_AVAILABLE:
-+		return "available";
-+	case NL80211_DFS_UNAVAILABLE:
-+		return "unavailable";
-+	default:
-+		return "unknown";
-+	}
-+}
-+
-+static int print_channels_handler(struct nl_msg *msg, void *arg)
-+{
-+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
-+	struct channels_ctx *ctx = arg;
-+	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
-+	struct nlattr *tb_band[NL80211_BAND_ATTR_MAX + 1];
-+	struct nlattr *tb_freq[NL80211_FREQUENCY_ATTR_MAX + 1];
-+	struct nlattr *nl_band;
-+	struct nlattr *nl_freq;
-+	int rem_band, rem_freq;
-+
-+	nla_parse(tb_msg, NL80211_ATTR_MAX, genlmsg_attrdata(gnlh, 0), genlmsg_attrlen(gnlh, 0), NULL);
-+
-+	if (tb_msg[NL80211_ATTR_WIPHY_BANDS]) {
-+		nla_for_each_nested(nl_band, tb_msg[NL80211_ATTR_WIPHY_BANDS], rem_band) {
-+			if (ctx->last_band != nl_band->nla_type) {
-+				printf("Band %d:\n", nl_band->nla_type + 1);
-+				ctx->width_40 = false;
-+				ctx->width_80 = false;
-+				ctx->width_160 = false;
-+				ctx->last_band = nl_band->nla_type;
-+			}
-+
-+			nla_parse(tb_band, NL80211_BAND_ATTR_MAX, nla_data(nl_band), nla_len(nl_band), NULL);
-+
-+			if (tb_band[NL80211_BAND_ATTR_HT_CAPA]) {
-+				__u16 cap = nla_get_u16(tb_band[NL80211_BAND_ATTR_HT_CAPA]);
-+
-+				if (cap & BIT(1))
-+					ctx->width_40 = true;
-+			}
-+
-+			if (tb_band[NL80211_BAND_ATTR_VHT_CAPA]) {
-+				__u32 capa;
-+
-+				ctx->width_80 = true;
-+
-+				capa = nla_get_u32(tb_band[NL80211_BAND_ATTR_VHT_CAPA]);
-+				switch ((capa >> 2) & 3) {
-+				case 2:
-+					/* width_80p80 = true; */
-+					/* fall through */
-+				case 1:
-+					ctx->width_160 = true;
-+				break;
-+				}
-+			}
-+
-+			if (tb_band[NL80211_BAND_ATTR_FREQS]) {
-+				nla_for_each_nested(nl_freq, tb_band[NL80211_BAND_ATTR_FREQS], rem_freq) {
-+					uint32_t freq;
-+
-+					nla_parse(tb_freq, NL80211_FREQUENCY_ATTR_MAX, nla_data(nl_freq), nla_len(nl_freq), NULL);
-+
-+					if (!tb_freq[NL80211_FREQUENCY_ATTR_FREQ])
-+						continue;
-+					freq = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_FREQ]);
-+					printf("\t* %d MHz [%d] ", freq, ieee80211_frequency_to_channel(freq));
-+
-+					if (tb_freq[NL80211_FREQUENCY_ATTR_DISABLED]) {
-+						printf("(disabled)\n");
-+						continue;
-+					}
-+					printf("\n");
-+
-+					if (tb_freq[NL80211_FREQUENCY_ATTR_MAX_TX_POWER])
-+						printf("\t  Maximum TX power: %.1f dBm\n", 0.01 * nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_MAX_TX_POWER]));
-+
-+					/* If both flags are set assume an new kernel */
-+					if (tb_freq[NL80211_FREQUENCY_ATTR_NO_IR] && tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]) {
-+						printf("\t  No IR\n");
-+					} else if (tb_freq[NL80211_FREQUENCY_ATTR_PASSIVE_SCAN]) {
-+						printf("\t  Passive scan\n");
-+					} else if (tb_freq[__NL80211_FREQUENCY_ATTR_NO_IBSS]){
-+						printf("\t  No IBSS\n");
-+					}
-+
-+					if (tb_freq[NL80211_FREQUENCY_ATTR_RADAR])
-+						printf("\t  Radar detection\n");
-+
-+					printf("\t  Channel widths:");
-+					if (!tb_freq[NL80211_FREQUENCY_ATTR_NO_20MHZ])
-+						printf(" 20MHz");
-+					if (ctx->width_40 && !tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40_MINUS])
-+						printf(" HT40-");
-+					if (ctx->width_40 && !tb_freq[NL80211_FREQUENCY_ATTR_NO_HT40_PLUS])
-+						printf(" HT40+");
-+					if (ctx->width_80 && !tb_freq[NL80211_FREQUENCY_ATTR_NO_80MHZ])
-+						printf(" VHT80");
-+					if (ctx->width_160 && !tb_freq[NL80211_FREQUENCY_ATTR_NO_160MHZ])
-+						printf(" VHT160");
-+					printf("\n");
-+
-+					if (!tb_freq[NL80211_FREQUENCY_ATTR_DISABLED] && tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]) {
-+						enum nl80211_dfs_state state = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_STATE]);
-+						unsigned long time;
-+
-+						printf("\t  DFS state: %s", dfs_state_name(state));
-+						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]) {
-+							time = nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_TIME]);
-+							printf(" (for %lu sec)", time / 1000);
-+						}
-+						printf("\n");
-+						if (tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME])
-+							printf("\t  DFS CAC time: %u ms\n",
-+							       nla_get_u32(tb_freq[NL80211_FREQUENCY_ATTR_DFS_CAC_TIME]));
-+					}
-+				}
-+			}
-+		}
-+	}
-+
-+	return NL_SKIP;
-+}
-+
-+static int handle_channels(struct nl80211_state *state, struct nl_msg *msg,
-+			   int argc, char **argv, enum id_input id)
-+{
-+	static struct channels_ctx ctx = {
-+		.last_band = -1,
-+	};
-+
-+	nla_put_flag(msg, NL80211_ATTR_SPLIT_WIPHY_DUMP);
-+	nlmsg_hdr(msg)->nlmsg_flags |= NLM_F_DUMP;
-+
-+	register_handler(print_channels_handler, &ctx);
-+
-+	return 0;
-+}
-+TOPLEVEL(channels, NULL, NL80211_CMD_GET_WIPHY, 0, CIB_PHY, handle_channels, "Show available channels.");
-+
- static int handle_name(struct nl80211_state *state,
- 		       struct nl_msg *msg,
- 		       int argc, char **argv,
+It does matter who holds the lock.
+
+If it's e.g. some other driver (ath, intel, ralink, whatever) we still
+should call unregister_netdevice. It'll just wait until rtnl lock gets
+released.
+
+If it's brcmfmac holding the lock, we can't expect it to be released
+as brcmfmac waits for completion event.
+
 -- 
-1.8.4.5
-
+Rafał
