@@ -1,45 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:38279 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbcFMFj6 convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:37774 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750899AbcFRTca (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 01:39:58 -0400
-Received: by mail-wm0-f46.google.com with SMTP id m124so63187511wme.1
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2016 22:39:58 -0700 (PDT)
+	Sat, 18 Jun 2016 15:32:30 -0400
+Received: by mail-wm0-f49.google.com with SMTP id a66so28447560wme.0
+        for <linux-wireless@vger.kernel.org>; Sat, 18 Jun 2016 12:32:30 -0700 (PDT)
+Subject: Re: [PATCH RFC 2/2] brcmfmac: support removing AP interfaces with
+ "interface_remove"
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1466273932-11554-1-git-send-email-zajec5@gmail.com>
+ <1466273932-11554-2-git-send-email-zajec5@gmail.com>
+Cc: Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<linux-wireless@vger.kernel.org>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list.pdl@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5765A1CB.9060700@broadcom.com> (sfid-20160618_213310_982873_7A9927A2)
+Date: Sat, 18 Jun 2016 21:32:27 +0200
 MIME-Version: 1.0
-In-Reply-To: <1465563164-783-1-git-send-email-me@bobcopeland.com>
-References: <1465563164-783-1-git-send-email-me@bobcopeland.com>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Mon, 13 Jun 2016 07:39:56 +0200
-Message-ID: <CA+BoTQkg+uea_YzUgrVBPhA8uRxNpd29Kd1y1tvt0a-JyOSLQw@mail.gmail.com> (sfid-20160613_074004_402825_22006851)
-Subject: Re: [PATCH] ath10k: fix potential null dereference bugs
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1466273932-11554-2-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 June 2016 at 14:52, Bob Copeland <me@bobcopeland.com> wrote:
-> Smatch warns about a number of cases in ath10k where a pointer is
-> null-checked after it has already been dereferenced, in code involving
-> ath10k private virtual interface pointers.
->
-> Fix these by making the dereference happen later.
->
-> Addresses the following smatch warnings:
->
-> drivers/net/wireless/ath/ath10k/mac.c:3651 ath10k_mac_txq_init() warn: variable dereferenced before check 'txq' (see line 3649)
-> drivers/net/wireless/ath/ath10k/mac.c:3664 ath10k_mac_txq_unref() warn: variable dereferenced before check 'txq' (see line 3659)
-> drivers/net/wireless/ath/ath10k/htt_tx.c:70 __ath10k_htt_tx_txq_recalc() warn: variable dereferenced before check 'txq->sta' (see line 52)
-> drivers/net/wireless/ath/ath10k/htt_tx.c:740 ath10k_htt_tx_get_vdev_id() warn: variable dereferenced before check 'cb->vif' (see line 736)
-> drivers/net/wireless/ath/ath10k/txrx.c:86 ath10k_txrx_tx_unref() warn: variable dereferenced before check 'txq' (see line 84)
-> drivers/net/wireless/ath/ath10k/wmi.c:1837 ath10k_wmi_op_gen_mgmt_tx() warn: variable dereferenced before check 'cb->vif' (see line 1825)
+On 18-06-16 20:18, Rafał Miłecki wrote:
+> New firmwares (e.g. 10.10.69.36 for BCM4366) support "interface_remove"
+> for removing interfaces. Try to use this method on cfg80211 request. In
+> case of older firmwares (e.g. 7.35.177.56 for BCM43602 as I tested) this
+> will just result in firmware rejecting command and this won't change any
+> behavior.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+>  .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 37 +++++++++++++++++++++-
+>  1 file changed, 36 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 502b0a0..aff76c2 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -785,12 +785,46 @@ s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
+>  	return err;
+>  }
+>  
+> +static int brcmf_cfg80211_del_ap_iface(struct wiphy *wiphy,
+> +				       struct wireless_dev *wdev)
+> +{
+> +	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
+> +	struct net_device *ndev = wdev->netdev;
+> +	struct brcmf_if *ifp = netdev_priv(ndev);
+> +	int ret;
+> +	int err;
+> +
+> +	brcmf_cfg80211_arm_vif_event(cfg, ifp->vif);
+> +
+> +	err = brcmf_fil_bsscfg_data_set(ifp, "interface_remove", NULL, 0);
+> +	if (err) {
+> +		brcmf_err("interface_remove failed %d\n", err);
+> +		goto err_unarm;
+> +	}
+> +
+> +	/* wait for firmware event */
+> +	ret = brcmf_cfg80211_wait_vif_event(cfg, BRCMF_E_IF_DEL,
+> +					    BRCMF_VIF_EVENT_TIMEOUT);
+> +	if (!ret) {
+> +		brcmf_err("timeout occurred\n");
+> +		err = -EIO;
+> +		goto err_unarm;
+> +	}
+> +
+> +err_unarm:
+> +	brcmf_cfg80211_arm_vif_event(cfg, NULL);
+> +	return err;
+> +}
+> +
+>  static
+>  int brcmf_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
+>  {
+>  	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
+>  	struct net_device *ndev = wdev->netdev;
+>  
+> +	if (ndev == cfg_to_ndev(cfg))
 
-FWIW all of these are false positives. I think this was already
-pointed out some time ago. The drv_priv stuff is merely an offset (see
-how ieee80211_vif and ieee80211_sta are defined) and the according
-structure is always checked beforehand.
+ndev can be NULL, ie. for IFTYPE_P2P_DEVICE.
 
+Regards,
+Arend
 
-Michał
+> +		return -ENOTSUPP;
+> +
+>  	/* vif event pending in firmware */
+>  	if (brcmf_cfg80211_vif_event_armed(cfg))
+>  		return -EBUSY;
+> @@ -807,12 +841,13 @@ int brcmf_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
+>  	switch (wdev->iftype) {
+>  	case NL80211_IFTYPE_ADHOC:
+>  	case NL80211_IFTYPE_STATION:
+> -	case NL80211_IFTYPE_AP:
+>  	case NL80211_IFTYPE_AP_VLAN:
+>  	case NL80211_IFTYPE_WDS:
+>  	case NL80211_IFTYPE_MONITOR:
+>  	case NL80211_IFTYPE_MESH_POINT:
+>  		return -EOPNOTSUPP;
+> +	case NL80211_IFTYPE_AP:
+> +		return brcmf_cfg80211_del_ap_iface(wiphy, wdev);
+>  	case NL80211_IFTYPE_P2P_CLIENT:
+>  	case NL80211_IFTYPE_P2P_GO:
+>  	case NL80211_IFTYPE_P2P_DEVICE:
+> 
