@@ -1,68 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:49439 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751671AbcFVNDg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2016 09:03:36 -0400
-Subject: Re: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl
- file
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
- <1465232558-31678-3-git-send-email-javier@osg.samsung.com>
- <87wplxdsln.fsf@kamboji.qca.qualcomm.com>
- <12ccd90e-e3eb-ecac-b23f-8124b0db32ad@osg.samsung.com>
- <2b5e5833ecc74a2b9cd822e8455cd0af@SC-EXCH04.marvell.com>
- <8dc6e64a-3429-4bed-e5c9-da6880eb9505@osg.samsung.com>
- <87shwkes65.fsf@kamboji.qca.qualcomm.com>
- <aeeb25f2-3253-0931-1e84-edc4590208b3@osg.samsung.com>
- <87vb11iw7q.fsf@purkki.adurom.net>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-Message-ID: <92112c3f-0016-87f4-c071-42485772e1fa@osg.samsung.com> (sfid-20160622_150435_564623_5CFCE755)
-Date: Wed, 22 Jun 2016 08:57:07 -0400
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34467 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062AbcFRWnA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2016 18:43:00 -0400
 MIME-Version: 1.0
-In-Reply-To: <87vb11iw7q.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CACna6rydCmKhyxsyOPrCsT_KbQLQPAg2doCcovVdvedBcRT+=w@mail.gmail.com>
+References: <1466273932-11554-1-git-send-email-zajec5@gmail.com>
+ <5765A06C.3040005@broadcom.com> <CACna6rydCmKhyxsyOPrCsT_KbQLQPAg2doCcovVdvedBcRT+=w@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Sun, 19 Jun 2016 00:42:58 +0200
+Message-ID: <CACna6rwwb3DNAcps6UyeRFvNTfhzh9ZiTTccPurhCzTn1SxcwQ@mail.gmail.com> (sfid-20160619_004324_685639_7B9C5624)
+Subject: Re: [PATCH RFC 1/2] brcmfmac: remove interface before notifying listener
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<linux-wireless@vger.kernel.org>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list.pdl@broadcom.com>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	open list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle,
-
-On 06/22/2016 02:17 AM, Kalle Valo wrote:
-> Javier Martinez Canillas <javier@osg.samsung.com> writes:
-> 
->>>> Patch 3/3 applies cleanly even after dropping patch 2/3.
->>>> Is that Ok for you or do you want me to re-resend a v3
->>>> with only patches 1/3 and 3/3?
->>>
->>> I can drop patch 2, no need to resend. Thanks.
+On 18 June 2016 at 23:58, Rafał Miłecki <zajec5@gmail.com> wrote:
+> On 18 June 2016 at 21:26, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+>> On 18-06-16 20:18, Rafał Miłecki wrote:
+>>> So far when receiving event about in-firmware-interface removal we were
+>>> notifying our listener and afterwards we were removing Linux interface.
 >>>
 >>
->> I saw that you sent your pull request for v4.8 but the
->> patches from this series were not included:
+>> [snip]
 >>
->> https://lkml.org/lkml/2016/6/21/400
-> 
-> I had forgotten to change the state of patches 1 and 3 from 'Changes
-> Requested' back to 'New' and that's why I missed them. I did that now so
-> they are back in my queue:
-> 
-> https://patchwork.kernel.org/patch/9158855/
-> https://patchwork.kernel.org/patch/9158851/
-> 
-> Thanks for checking.
-> 
+>>>
+>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+>>> index 9da7a4c..5fd1886 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+>>> @@ -18,6 +18,7 @@
+>>>  #include "brcmu_wifi.h"
+>>>  #include "brcmu_utils.h"
+>>>
+>>> +#include "cfg80211.h"
+>>>  #include "core.h"
+>>>  #include "debug.h"
+>>>  #include "tracepoint.h"
+>>> @@ -180,10 +181,16 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+>>>       if (ifp && ifevent->action == BRCMF_E_IF_CHANGE)
+>>>               brcmf_fws_reset_interface(ifp);
+>>>
+>>> -     err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
+>>
+>> The reason for doing this first is because we are passing the ifp, which
+>> is netdev_priv(ifp->ndev). In brcmf_remove_interface() we only
+>> unregister the netdev, which will end up (after scheduling) in
+>> brcmf_free_netdev() thus freeing the ifp. By moving the event handler
+>> function ifp may be stale already.
+>
+> Good catch. What about making brcmf_fweh_call_event_handler work
+> without ifp? Would that be OK then?
 
-Ok, thanks for the information.
-
-Best regards,
--- 
-Javier Martinez Canillas
-Open Source Group
-Samsung Research America
+Maybe I have even better idea. What about handling Linux interface
+removal in the code waiting for BRCMF_E_IF_DEL? We already do
+something like that in case of BRCMF_E_IF_ADD (it is brcmf_ap_add_vif
+that calls brcmf_net_attach).
