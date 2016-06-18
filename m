@@ -1,165 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:35566 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752159AbcF1LLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 07:11:08 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S . Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-CC: Maital Hahn <maitalm@ti.com>
-Subject: [PATCH 2/4] mac80211/cfg: mesh: fix healing time when a mesh peer is disconnecting
-Date: Tue, 28 Jun 2016 14:13:05 +0300
-Message-ID: <20160628111307.8784-3-yanivma@ti.com> (sfid-20160628_131230_769604_71902D12)
-In-Reply-To: <20160628111307.8784-2-yanivma@ti.com>
-References: <20160628111307.8784-1-yanivma@ti.com>
- <20160628111307.8784-2-yanivma@ti.com>
+Received: from mail.w1.fi ([212.71.239.96]:50995 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750918AbcFRJRV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 18 Jun 2016 05:17:21 -0400
+Date: Sat, 18 Jun 2016 12:11:16 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Encrypt "Group addressed privacy" action frames
+Message-ID: <20160618091116.GA2972@w1.fi> (sfid-20160618_111743_549776_1F9726FA)
+References: <1465969112-2814-1-git-send-email-masashi.honma@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1465969112-2814-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Maital Hahn <maitalm@ti.com>
+On Wed, Jun 15, 2016 at 02:38:32PM +0900, Masashi Honma wrote:
+> Previously, the action frames to group address was not encrypted. But
+> [1] "Table 8-38 Category values" indicates "Mesh" and "Multihop" category
+> action frames should be encrypted (Group addressed privacy == yes). And the
+> encyption key should be MGTK ([1] 10.13 Group addressed robust management frame
+> procedures). So this patch modifies the code to make it suitable for spec.
 
-Once receiving a CLOSE action frame from the disconnecting peer,
-flush all entries in the path table which has this peer as the
-next hop.
+>  net/mac80211/tx.c | 20 ++++++++++++++++++++
+>  1 file changed, 20 insertions(+)
 
-In addition, upon receiving a packet, if next hop is not found,
-trigger PERQ immidiatly, instead of just putting it in the queue.
+What about RX side? Shouldn't there be a matching change there to
+enforce use of group addressed privacy for the specific Action
+categories? This will make devices using fixed implementation not
+interoperate with devices using older version, I'd assume, but it looks
+like the current use of mesh with RSN is pretty hopelessly broken as far
+as no PMF case is concerned at least when using the wpa_supplicant
+implementation (sets IGTK incorrectly and ends up using BIP even when
+PMF was not enabled), so there does not seem to be any convenient way of
+addressing this apart from requiring all devices in the MBSS to get
+updated to the fixed versions.
 
-Signed-off-by: Maital Hahn <maitalm@ti.com>
-Acked-by: Yaniv Machani <yanivma@ti.com>
----
- net/mac80211/cfg.c       |  1 +
- net/mac80211/mesh.c      |  3 ++-
- net/mac80211/mesh_hwmp.c | 42 +++++++++++++++++++++++++-----------------
- 3 files changed, 28 insertions(+), 18 deletions(-)
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> +static bool debug_noinline
+> +ieee80211_is_group_privacy_action(struct ieee80211_hdr *hdr)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0c12e40..f876ef7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -1011,6 +1011,7 @@ static void sta_apply_mesh_params(struct ieee80211_local *local,
- 			if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
- 				changed = mesh_plink_dec_estab_count(sdata);
- 			sta->mesh->plink_state = params->plink_state;
-+			mesh_path_flush_by_nexthop(sta);
- 
- 			ieee80211_mps_sta_status_update(sta);
- 			changed |= ieee80211_mps_set_sta_local_pm(sta,
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 9214bc1..1f5be54 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -159,7 +159,8 @@ void mesh_sta_cleanup(struct sta_info *sta)
- 	if (!sdata->u.mesh.user_mpm) {
- 		changed |= mesh_plink_deactivate(sta);
- 		del_timer_sync(&sta->mesh->plink_timer);
--	}
-+	} else
-+		mesh_path_flush_by_nexthop(sta);
- 
- 	/* make sure no readers can access nexthop sta from here on */
- 	mesh_path_flush_by_nexthop(sta);
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 8f9c3bd..9783d49 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -19,7 +19,7 @@
- 
- #define MAX_PREQ_QUEUE_LEN	64
- 
--static void mesh_queue_preq(struct mesh_path *, u8);
-+static void mesh_queue_preq(struct mesh_path *, u8, bool);
- 
- static inline u32 u32_field_get(const u8 *preq_elem, int offset, bool ae)
- {
-@@ -830,7 +830,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 		mhwmp_dbg(sdata,
- 			  "time to refresh root mpath %pM\n",
- 			  orig_addr);
--		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
-+		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH,
-+				false);
- 		mpath->last_preq_to_root = jiffies;
- 	}
- 
-@@ -925,7 +926,7 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
-  * Locking: the function must be called from within a rcu read lock block.
-  *
-  */
--static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
-+static void mesh_queue_preq(struct mesh_path *mpath, u8 flags, bool immediate)
- {
- 	struct ieee80211_sub_if_data *sdata = mpath->sdata;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-@@ -964,18 +965,24 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
- 	++ifmsh->preq_queue_len;
- 	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
- 
--	if (time_after(jiffies, ifmsh->last_preq + min_preq_int_jiff(sdata)))
-+	if (immediate) {
- 		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-+	} else {
-+		if (time_after(jiffies,
-+			       ifmsh->last_preq + min_preq_int_jiff(sdata))) {
-+			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- 
--	else if (time_before(jiffies, ifmsh->last_preq)) {
--		/* avoid long wait if did not send preqs for a long time
--		 * and jiffies wrapped around
--		 */
--		ifmsh->last_preq = jiffies - min_preq_int_jiff(sdata) - 1;
--		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
--	} else
--		mod_timer(&ifmsh->mesh_path_timer, ifmsh->last_preq +
--						min_preq_int_jiff(sdata));
-+		} else if (time_before(jiffies, ifmsh->last_preq)) {
-+			/* avoid long wait if did not send preqs for a long time
-+			 * and jiffies wrapped around
-+			 */
-+			ifmsh->last_preq = jiffies -
-+					   min_preq_int_jiff(sdata) - 1;
-+			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-+		} else
-+			mod_timer(&ifmsh->mesh_path_timer, ifmsh->last_preq +
-+				  min_preq_int_jiff(sdata));
-+	}
- }
- 
- /**
-@@ -1110,7 +1117,7 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (!(mpath->flags & MESH_PATH_RESOLVING))
--		mesh_queue_preq(mpath, PREQ_Q_F_START);
-+		mesh_queue_preq(mpath, PREQ_Q_F_START, true);
- 
- 	if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
- 		skb_to_free = skb_dequeue(&mpath->frame_queue);
-@@ -1157,8 +1164,9 @@ int mesh_nexthop_lookup(struct ieee80211_sub_if_data *sdata,
- 		       msecs_to_jiffies(sdata->u.mesh.mshcfg.path_refresh_time)) &&
- 	    ether_addr_equal(sdata->vif.addr, hdr->addr4) &&
- 	    !(mpath->flags & MESH_PATH_RESOLVING) &&
--	    !(mpath->flags & MESH_PATH_FIXED))
--		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
-+	    !(mpath->flags & MESH_PATH_FIXED)) {
-+	    mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH, false);
-+	}
- 
- 	next_hop = rcu_dereference(mpath->next_hop);
- 	if (next_hop) {
-@@ -1192,7 +1200,7 @@ void mesh_path_timer(unsigned long data)
- 		mpath->discovery_timeout *= 2;
- 		mpath->flags &= ~MESH_PATH_REQ_QUEUED;
- 		spin_unlock_bh(&mpath->state_lock);
--		mesh_queue_preq(mpath, 0);
-+		mesh_queue_preq(mpath, 0, false);
- 	} else {
- 		mpath->flags &= ~(MESH_PATH_RESOLVING |
- 				  MESH_PATH_RESOLVED |
+And this helper should likely be in some more generic location so that
+it could be shared for TX and RX..
+
 -- 
-2.9.0
-
+Jouni Malinen                                            PGP id EFC895FA
