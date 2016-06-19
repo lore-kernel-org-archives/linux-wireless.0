@@ -1,118 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62784 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbcFCPnt (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:51153 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751501AbcFSUvG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 11:43:49 -0400
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH 2/2] ath10k: Fix cycle counter wraparound handling for QCA4019
-Date: Fri, 3 Jun 2016 21:13:16 +0530
-Message-ID: <1464968596-19834-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160603_174352_443899_8D4D00F9)
-In-Reply-To: <1464968596-19834-1-git-send-email-vthiagar@qti.qualcomm.com>
-References: <1464968596-19834-1-git-send-email-vthiagar@qti.qualcomm.com>
+	Sun, 19 Jun 2016 16:51:06 -0400
+Date: Sun, 19 Jun 2016 23:51:02 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mac80211: Fix mesh estab_plinks counting in STA removal case
+Message-ID: <20160619205102.GA28350@w1.fi> (sfid-20160619_225123_992080_36E25CE2)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In QCA4019, cycle counter wraparound is not tied to rx
-clear counter. Each counter would wraparound individually
-and after wraparound the respective counter will be reset
-to 0x7fffffff while other counter still running unaffected.
-Define a new wraparound type for this behaviour and handle
-it separately so that rx clear counter wraparound is also
-handled just like cycle counter. With this type of
-wraparound we can accurately compute and report channel
-active/busy time when any of the counter overflows.
+If a user space program (e.g., wpa_supplicant) deletes a STA entry that
+is currently in NL80211_PLINK_ESTAB state, the number of established
+plinks counter was not decremented and this could result in rejecting
+new plink establishment before really hitting the real maximum plink
+limit. For !user_mpm case, this decrementation is handled by
+mesh_plink_deactive().
 
-Fixes: ee9ca147c59 ("ath10k: Fix survey reporting with QCA4019")
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Fix this by decrementing estab_plinks on STA deletion
+(mesh_sta_cleanup() gets called from there) so that the counter has a
+correct value and the Beacon frame advertisement in Mesh Configuration
+element shows the proper value for capability to accept additional
+peers.
+
+Signed-off-by: Jouni Malinen <j@w1.fi>
 ---
- drivers/net/wireless/ath/ath10k/core.c |  2 +-
- drivers/net/wireless/ath/ath10k/hw.c   | 24 ++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/hw.h   |  9 +++++++++
- 3 files changed, 30 insertions(+), 5 deletions(-)
+ net/mac80211/mesh.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 8f66653..5ede9a4 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -224,7 +224,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.name = "qca4019 hw1.0",
- 		.patch_load_addr = QCA4019_HW_1_0_PATCH_LOAD_ADDR,
- 		.uart_pin = 7,
--		.cc_wraparound_type = ATH10K_HW_CC_WRAP_SHIFTED_ALL,
-+		.cc_wraparound_type = ATH10K_HW_CC_WRAP_SHIFTED_EACH,
- 		.otp_exe_param = 0x0010000,
- 		.continuous_frag_desc = true,
- 		.channel_counters_freq_hz = 125000,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index 31ec164..bd86e7a 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -179,19 +179,35 @@ void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
- 				u32 cc, u32 rcc, u32 cc_prev, u32 rcc_prev)
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 21b1fdf..6a1603b 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -148,14 +148,17 @@ u32 mesh_accept_plinks_update(struct ieee80211_sub_if_data *sdata)
+ void mesh_sta_cleanup(struct sta_info *sta)
  {
- 	u32 cc_fix = 0;
-+	u32 rcc_fix = 0;
- 	enum ath10k_hw_cc_wraparound_type wraparound_type;
+ 	struct ieee80211_sub_if_data *sdata = sta->sdata;
+-	u32 changed;
++	u32 changed = 0;
  
- 	survey->filled |= SURVEY_INFO_TIME |
- 			  SURVEY_INFO_TIME_BUSY;
- 
- 	wraparound_type = ar->hw_params.cc_wraparound_type;
--	if (wraparound_type == ATH10K_HW_CC_WRAP_SHIFTED_ALL && cc < cc_prev) {
--		cc_fix = 0x7fffffff;
--		survey->filled &= ~SURVEY_INFO_TIME_BUSY;
-+
-+	if (cc < cc_prev || rcc < rcc_prev) {
-+		switch (wraparound_type) {
-+		case ATH10K_HW_CC_WRAP_SHIFTED_ALL:
-+			if (cc < cc_prev) {
-+				cc_fix = 0x7fffffff;
-+				survey->filled &= ~SURVEY_INFO_TIME_BUSY;
-+			}
-+			break;
-+		case ATH10K_HW_CC_WRAP_SHIFTED_EACH:
-+			if (cc < cc_prev)
-+				cc_fix = 0x7fffffff;
-+			else
-+				rcc_fix = 0x7fffffff;
-+			break;
-+		case ATH10K_HW_CC_WRAP_DISABLED:
-+			break;
-+		}
- 	}
- 
- 	cc -= cc_prev - cc_fix;
--	rcc -= rcc_prev;
-+	rcc -= rcc_prev - rcc_fix;
- 
- 	survey->time = CCNT_TO_MSEC(ar, cc);
- 	survey->time_busy = CCNT_TO_MSEC(ar, rcc);
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 64e45b2..7657c60 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -340,6 +340,15 @@ enum ath10k_hw_cc_wraparound_type {
- 	 * by 2 so they never wraparound themselves.
+ 	/*
+ 	 * maybe userspace handles peer allocation and peering, but in either
+ 	 * case the beacon is still generated by the kernel and we might need
+ 	 * an update.
  	 */
- 	ATH10K_HW_CC_WRAP_SHIFTED_ALL = 1,
-+
-+	/* Each hw counter wrapsaround independently. When the
-+	 * counter overflows the repestive counter is right shifted
-+	 * by 1, i.e reset to 0x7fffffff, and other counters will be
-+	 * running unaffected. In this type of wraparound, it should
-+	 * be possible to report accurate Rx busy time unlike the
-+	 * first type.
-+	 */
-+	ATH10K_HW_CC_WRAP_SHIFTED_EACH = 2,
- };
- 
- /* Target specific defines for MAIN firmware */
+-	changed = mesh_accept_plinks_update(sdata);
++	if (sdata->u.mesh.user_mpm &&
++	    sta->mesh->plink_state == NL80211_PLINK_ESTAB)
++		changed |= mesh_plink_dec_estab_count(sdata);
++	changed |= mesh_accept_plinks_update(sdata);
+ 	if (!sdata->u.mesh.user_mpm) {
+ 		changed |= mesh_plink_deactivate(sta);
+ 		del_timer_sync(&sta->mesh->plink_timer);
 -- 
 1.9.1
 
+
+-- 
+Jouni Malinen                                            PGP id EFC895FA
