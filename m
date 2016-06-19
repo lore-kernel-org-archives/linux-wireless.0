@@ -1,129 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:32811 "EHLO
-	mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733AbcFFBQr (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:34094 "EHLO
+	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751167AbcFSQjj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2016 21:16:47 -0400
-Received: by mail-qt0-f182.google.com with SMTP id 23so10281620qtq.0
-        for <linux-wireless@vger.kernel.org>; Sun, 05 Jun 2016 18:16:46 -0700 (PDT)
+	Sun, 19 Jun 2016 12:39:39 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH V2 RFC 1/2] brcmfmac: delete interface directly in code that sent fw request
+Date: Sun, 19 Jun 2016 18:23:24 +0200
+Message-Id: <1466353420-30998-1-git-send-email-zajec5@gmail.com> (sfid-20160619_183943_148193_7333077D)
+In-Reply-To: <1466273932-11554-1-git-send-email-zajec5@gmail.com>
+References: <1466273932-11554-1-git-send-email-zajec5@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1464933580.11694.44.camel@coelho.fi>
-References: <20160529214059.GA15677@localhost> <CAAA5faFNa1sQrj6Yfq+hrXfUOi0Lek4qL8Zzpdv27-4+Z4n6mQ@mail.gmail.com>
- <20160601125453.GB12977@localhost> <1464787139.2554.74.camel@intel.com>
- <CAAA5faFaPow=Rw-1btgag9wRV-ub8=np2FgpRsoF99MPyb7row@mail.gmail.com>
- <1464841636.11694.10.camel@intel.com> <CAAA5faGpjybA63PMp5pzGOxbw8Zjy+vK1HwnQA4-jGGk8XWJvA@mail.gmail.com>
- <1464855365.11694.35.camel@coelho.fi> <CAAA5faEJuydHyOgoB=R3HrucRLr4mhbwJPp=29SzmaJOzw9Gdw@mail.gmail.com>
- <1464933580.11694.44.camel@coelho.fi>
-From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-Date: Sun, 5 Jun 2016 19:09:06 -0600
-Message-ID: <CAAA5faGOfkWczCBXF5ZuD-Q7RpoYPGP9L-71mJ0XZfFGF+fEXQ@mail.gmail.com> (sfid-20160606_031655_204333_04CA1E57)
-Subject: Re: wireless-testing on 4.7
-To: Luca Coelho <luca@coelho.fi>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"me@bobcopeland.com" <me@bobcopeland.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 2, 2016 at 11:59 PM, Luca Coelho <luca@coelho.fi> wrote:
-> On Thu, 2016-06-02 at 23:09 -0600, Reinoud Koornstra wrote:
->> On Thu, Jun 2, 2016 at 2:16 AM, Luca Coelho <luca@coelho.fi> wrote:
->> > This shows that you have iwlwifi-7260-16.ucode in your file system.
->> >  But here we are reading it much later.  So it's possible that the
->> > kernel cannot access the firmware at a very early stage (because
->> > the
->> > filesystem that contains it is not mounted yet) when you use in-
->> > kernel.
->> >
->> > So, first of all, please make sure they're built as modules.  We
->> > can
->> > continue from there then.
->>
->> Your suggestion worked. When it's compiled as module, the
->> iwlwifi-7260-16.ucode loads fine.
->> No problems detected so far.
->
-> Great! :)
+So far when receiving event about in-firmware-interface removal our
+event worker was notifying listener and afterwards it was removing Linux
+interface.
 
-It is. :)
-I git pulled again and build it again.
-This time with gcc 6.1.0
-I couldn't find warning specific to iwlwifi with gcc 6, so that's great.
-Didn't find anything worrysome yet, in addition I am running the cake
-qdisc as well from Dave Taht.
-objdump --full-contents --section=.comment vmlinux
+First of all it was resulting in slightly unexpected order. The listener
+(del_virtual_intf callback) was (usually) returning with success before
+we even called unregister_netdev(ice).
 
-vmlinux:     file format elf64-x86-64
+Please note this couldn't be simply fixed by changing order of calls in
+brcmf_fweh_handle_if_event as unregistering interface earlier could free
+struct brcmf_if.
 
-Contents of section .comment:
-0000 4743433a 2028474e 55292036 2e312e30  GCC: (GNU) 6.1.0
-0010 00
+Another problem of current implementation are possible lockups. Focus on
+the time slot between calling event handler and removing Linux
+interface. During that time original caller may leave (unlocking rtnl
+semaphore) *and* another call to the same code may be done (locking it
+again). If that happens our event handler will stuck at removing Linux
+interface, it won't handle another event and will block process holding
+rtnl lock.
 
-reinoud@router-dev:~/Downloads/wireless-testing$ objdump
---full-contents --section=.comment
-/lib/modules/4.7.0-rc1-wt+/kernel/drivers/net/wireless/intel/iwlwifi/iwlwifi.ko
+This can be simply solved by unregistering interface in a proper
+callback, right after receiving confirmation event from firmware. This
+only required modifying worker to don't unregister on its own if there
+is someone waiting for the event.
 
-/lib/modules/4.7.0-rc1-wt+/kernel/drivers/net/wireless/intel/iwlwifi/iwlwifi.ko:
-    file format elf64-x86-64
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+V2: Modification of brcmf_fweh_handle_if_event done in V1 was a wrong
+    idea as it could result in use-after-free regarding struct brcmf_if.
+    Thanks Arend for noticing that!
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 10 ++++++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c  |  3 +--
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-Contents of section .comment:
-0000 00474343 3a202847 4e552920 362e312e  .GCC: (GNU) 6.1.
-0010 30000047 43433a20 28474e55 2920362e  0..GCC: (GNU) 6.
-[SNIP]
-0180 28474e55 2920362e 312e3000           (GNU) 6.1.0.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index 9da7a4c..79c081f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -18,6 +18,7 @@
+ #include "brcmu_wifi.h"
+ #include "brcmu_utils.h"
+ 
++#include "cfg80211.h"
+ #include "core.h"
+ #include "debug.h"
+ #include "tracepoint.h"
+@@ -182,8 +183,13 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
+ 
+ 	err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
+ 
+-	if (ifp && ifevent->action == BRCMF_E_IF_DEL)
+-		brcmf_remove_interface(ifp, false);
++	if (ifp && ifevent->action == BRCMF_E_IF_DEL) {
++		bool armed = brcmf_cfg80211_vif_event_armed(drvr->config);
++
++		/* Default handling in case no-one waits for this event */
++		if (!armed)
++			brcmf_remove_interface(ifp, false);
++	}
+ }
+ 
+ /**
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index f6241fd..66f942f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2288,8 +2288,7 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 		else
+ 			err = 0;
+ 	}
+-	if (err)
+-		brcmf_remove_interface(vif->ifp, true);
++	brcmf_remove_interface(vif->ifp, true);
+ 
+ 	brcmf_cfg80211_arm_vif_event(cfg, NULL);
+ 	if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
+-- 
+1.8.4.5
 
-
->
->
->> It does make me think whether this is desired behavior though that
->> due
->> to the later reading we cannot have iwlwifi build in the kernel.
->
-> It should work, but then you have to make sure the firmware is
-> available at very early stages of boot.  If you add it to the proper
-> place in your initrd, the kernel should find it when the driver
-> requests it.
->
-> I didn't want to go into the details of this, because in most cases the
-> best option is to have the driver as a module.  If you really need it
-> in-kernel, then you need to make sure all the needed pieces are
-> available very early as well.
-
-Ah, thanks, I'll study this as how to have it inside initrd at the right place.
-Any pointers would be great.
-
-Btw, I did build gcc 6.1.0 like this, if you have hints or ways I
-should build it differently I would like to know.
-
-reinoud@router-dev:~/Downloads/wireless-testing$ gcc -v
-Using built-in specs.
-COLLECT_GCC=gcc
-COLLECT_LTO_WRAPPER=/home/reinoud/GCC/libexec/gcc/x86_64-linux-gnu/6.1.0/lto-wrapper
-Target: x86_64-linux-gnu
-Configured with: ../gcc-6.1.0/configure -v
---enable-languages=c,c++,go,fortran,objc,obj-c++
---prefix=/home/reinoud/GCC --enable-shared --enable-linker-build-id
---without-included-gettext --enable-threads=posix --enable-nls
---with-sysroot=/ --enab
-le-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes
---with-default-libstdcxx-abi=new --enable-gnu-unique-object
---disable-vtable-verify --enable-libmpx --enable-plugin
---with-system-zlib --disable-browser-plugin --with-arch-direct
-ory=amd64 --enable-objc-gc --enable-multiarch --disable-werror
---with-abi=m64 --enable-checking=release --build=x86_64-linux-gnu
---host=x86_64-linux-gnu --target=x86_64-linux-gnu
-Thread model: posix
-gcc version 6.1.0 (GCC)
-
-The --with-tune=skylake didn't work as it didn't know it. unfortunately.
-
->
-> --
-> Cheers,
-> Luca.
-
-Thanks,
-
-Reinoud.
