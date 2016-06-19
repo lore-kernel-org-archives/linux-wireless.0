@@ -1,59 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:55917 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751698AbcFJIzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 04:55:41 -0400
-Subject: Re: ath10k/QCA9980 - Issues introduced in wireless testing 2016-05
-To: Michal Kazior <michal.kazior@tieto.com>, "A. Benz" <ash.benz@bk.ru>
-References: <ff65514a-47a3-2f32-658c-a2177401aa9a@bk.ru>
- <CA+BoTQmJ+JruxZ9WsG8Dnz=cwNY+e3Dy=g74-brS+0OE_5iu0Q@mail.gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <d836933e-ddbb-d10c-0715-6bce4396fd41@nbd.name> (sfid-20160610_105546_893838_A975E606)
-Date: Fri, 10 Jun 2016 10:55:36 +0200
+Received: from devils.ext.ti.com ([198.47.26.153]:43861 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750842AbcFSOHS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jun 2016 10:07:18 -0400
+Received: from dlelxv90.itg.ti.com ([172.17.2.17])
+	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id u5JE6eBM023065
+	for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2016 09:06:41 -0500
+Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
+	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id u5JE7H6p030472
+	for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2016 09:07:17 -0500
+From: Guy Mishol <guym@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Guy Mishol <guym@ti.com>
+Subject: [PATCH] wlcore: reconfigure sta rates on authorization
+Date: Sun, 19 Jun 2016 17:08:58 +0300
+Message-ID: <1466345338-31972-1-git-send-email-guym@ti.com> (sfid-20160619_160725_130111_40FDF07B)
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQmJ+JruxZ9WsG8Dnz=cwNY+e3Dy=g74-brS+0OE_5iu0Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-06-10 10:50, Michal Kazior wrote:
-> On 9 June 2016 at 09:46, A. Benz <ash.benz@bk.ru> wrote:
->> Dear All,
->>
->> I am using LEDE on my IPQ806x (QCA9980) system (Archer C2600).
->> With compat-wireless-2016-05-12, I observed traces attached below.
->> The router is unstable and eventually reboots by itself (randomly).
->>
->> Upon reverting to compat-wireless-2016-01, the issue disappears. Nothing
->> else is changed (software-wise or hardware).
->> This was confirmed with other users.
->>
->> A new compile with the fixes below:
->> https://git.lede-project.org/?p=lede/nbd/staging.git;a=commit;h=858e26f3c0fc11231f25497cbb2ddca1e5f101e0
->>
->> Did not solve the problem.
->>
->> Please let me know if I need to provide any further information.
->>
->> ------------[ cut here ]------------
->> WARNING: CPU: 0 PID: 558 at
->> compat-wireless-2016-05-12/net/mac80211/rx.c:4068
->> ieee80211_rx_napi+0x8c/0x8a4 [mac80211]()
-> 
-> Can you post what is at rx.c line 4068 (and +/- 3 lines), please?
-It's early in ieee80211_rx_napi:
+Since stations can now be added before association
+(NL80211_FEATURE_FULL_AP_CLIENT_STATE support),
+no supported rates are set when the station is added
+to the fw, resulting in fw recovery.
 
-    sband = local->hw.wiphy->bands[status->band];
-    if (WARN_ON(!sband))
-        goto drop;
+Fix it by first configuring the AP basic rates as
+the station configured rates (when the station is
+first added to the driver), and after the station
+was authorized re-configure it, now with the actual
+supported rates.
 
-I could not easily find a scenario under which status->band would not be
-set properly by the driver, so my guess is there is some nasty memory
-corruption going on.
+Signed-off-by: Guy Mishol <guym@ti.com>
+---
+ drivers/net/wireless/ti/wlcore/cmd.c  | 7 +++++++
+ drivers/net/wireless/ti/wlcore/main.c | 5 +++++
+ 2 files changed, 12 insertions(+)
 
-FWIW, I've received several reports like this from different people on
-different devices. They're also confirming that reverting to the
-snapshot from January makes things stable again.
+diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
+index 3315356..5f360ce 100644
+--- a/drivers/net/wireless/ti/wlcore/cmd.c
++++ b/drivers/net/wireless/ti/wlcore/cmd.c
+@@ -1566,6 +1566,13 @@ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 		cpu_to_le32(wl1271_tx_enabled_rates_get(wl, sta_rates,
+ 							wlvif->band));
+ 
++	if (!cmd->supported_rates) {
++		wl1271_debug(DEBUG_CMD,
++			     "peer has no supported rates yet, configuring basic rates: 0x%x",
++			     wlvif->basic_rate_set);
++		cmd->supported_rates = cpu_to_le32(wlvif->basic_rate_set);
++	}
++
+ 	wl1271_debug(DEBUG_CMD, "new peer rates=0x%x queues=0x%x",
+ 		     cmd->supported_rates, sta->uapsd_queues);
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 10fd24c..a53033d 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5091,6 +5091,11 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
+ 		if (ret < 0)
+ 			return ret;
+ 
++		/* reconfigure rates */
++		ret = wl12xx_cmd_add_peer(wl, wlvif, sta, wl_sta->hlid);
++		if (ret < 0)
++			return ret;
++
+ 		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true,
+ 						     wl_sta->hlid);
+ 		if (ret)
+-- 
+2.6.4
 
-- Felix
