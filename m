@@ -1,47 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:27041 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751209AbcFWEr2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 00:47:28 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: Re: WARNING: CPU: 1 PID: 103 at
- drivers/net/wireless/ath/ath9k/hw.c:2778
-Date: Thu, 23 Jun 2016 04:47:12 +0000
-Message-ID: <87eg7ofr5c.fsf@kamboji.qca.qualcomm.com> (sfid-20160623_064733_285634_548A6F28)
-References: <20160622162151.GD1718@lahna.fi.intel.com>
-In-Reply-To: <20160622162151.GD1718@lahna.fi.intel.com> (Mika Westerberg's
-	message of "Wed, 22 Jun 2016 19:21:51 +0300")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from www.xplot.org ([23.30.144.12]:59810 "EHLO www.xplot.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750742AbcFSNkF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 19 Jun 2016 09:40:05 -0400
+From: Tim Shepard <shep@alum.mit.edu>
+To: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+cc: linux-wireless@vger.kernel.org,
+	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+	Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] ath9k: Switch to using mac80211 intermediate software queues. 
+In-reply-to: Your message of Sun, 19 Jun 2016 10:52:16 +0200.
+             <87k2hlsgqn.fsf@toke.dk>
+Date: Sun, 19 Jun 2016 09:39:12 -0400
+Message-Id: <E1bEcwS-0006jR-00@www.xplot.org> (sfid-20160619_154022_671569_056D19E8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mika Westerberg <mika.westerberg@linux.intel.com> writes:
 
-> After upgrading from v4.6 to v4.7-rc3 I'm starting to see following
-> warnings constantly being printed by ath driver:
->
-> [    6.761789] ath: phy0: ASPM enabled: 0x43
-> [    6.761794] ath: EEPROM regdomain: 0x6a
-> [    6.761796] ath: EEPROM indicates we should expect a direct regpair map
-> [    6.761799] ath: Country alpha2 being used: 00
-> [    6.761800] ath: Regpair used: 0x6a
-> [    6.773482] ieee80211 phy0: Selected rate control algorithm 'minstrel_ht'
-> [    6.774048] ieee80211 phy0: Atheros AR9462 Rev:3 mem=0xffffc90000b00000, irq=19
-> [    6.774054] ------------[ cut here ]------------
-> [    6.774070] WARNING: CPU: 1 PID: 103 at drivers/net/wireless/ath/ath9k/hw.c:2778 ath9k_hw_gpio_get+0x161/0x1b0 [ath9k_hw]
 
-Should be fixed by this:
+> 
+> You're right that it doesn't check the max. However, this is less of a
+> problem now that there is no intermediate queueing in the driver; and
+> indeed the utility of haven the qlen_* tunables is somewhat questionable
+> with the patch applied: The only thing this is going to control is the
+> size of the retry queue, and possible limit the size of the retry queue.
+> [....]
 
-ath9k: fix GPIO mask for AR9462 and AR9565
+The driver queues things up for the hardware to DMA and transmit.
+Something has to limit the amount of packets handed over to the
+hardware.  (We lack access to hardware documentation (grrrr!) but it
+appears to me that the hardware has a hard limit on how many packets
+can be handed to it.)
 
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=e024111f6946f45cf1559a8c6fd48d2d0f696d07
+> > The second more mysterious bug which I'm still struggling to
+> > understand is why doesn't large values in these ath9k/qlen_* (or more
+> > accurately, given the first bug above, the failure to check these qlen
+> > limit values at all) allow for increased hardware queue bloat (with
+> > observable delay).
+> 
+> Because there's a second limit in play (which has always been there): in
+> ath_tx_sched_aggr() there is this check:
+> 
+> 	if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
+> 	    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH)) {
+> 		__skb_queue_tail(&tid->retry_q, bf->bf_mpdu);
+> 		*stop = true;
+> 		return false;
+> 	}
+> 
+> The two constants are 2 and 8 respectively. This means that, with
+> aggregation enabled, no more than two full aggregates will be queued up.
+> The size of the aggregates is dynamically computed from the current
+> rate: they are limited a maximum of four milliseconds of (estimated)
+> airtime (for the BE queue; the others have different limits).
+> 
+> So in a sense there's already a dynamic limit on the hardware queues.
+> Now, whether four milliseconds is the right maximum aggregate size might
+> be worth discussing. It is the maximum allowed by the standard. Dave and
+> I have been 
 
-Please let me know if it doesn't.
+Ah that may be the clue that I lacked.  There's got to be a dependency
+on processor speed (how quickly the system and driver can get another
+packet hooked up for transmission after completions) but perhaps with
+aggregates being so large in time, with full aggregates even the
+slowest processors are fast enough to avoid starvation.
 
--- 
-Kalle Valo
+If there's no aggregation, a limit of some sort is needed (probably to
+prevent malfunction of the hardware/driver, but in any case to limit
+excess latency).  And this limit will depend on processor speed (and
+will need to be autotuned at runtime).
+
+
+			-Tim Shepard
+			 shep@alum.mit.edu
+
