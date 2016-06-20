@@ -1,53 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:35072 "EHLO
-	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751729AbcFWBaL (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:34424 "EHLO
+	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752576AbcFTGT6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2016 21:30:11 -0400
-MIME-Version: 1.0
-In-Reply-To: <1466599154-4782-1-git-send-email-luisbg@osg.samsung.com>
-References: <1466599154-4782-1-git-send-email-luisbg@osg.samsung.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 23 Jun 2016 11:29:45 +1000
-Message-ID: <CAGRGNgUoptASqK7jD-K-=zp7eYbJDq+2+u7mj_MabaGtOb9=kQ@mail.gmail.com> (sfid-20160623_033059_783352_309C898C)
-Subject: Re: [PATCH] staging: wilc1000: fix error handling in wilc_debugfs_init()
-To: Luis de Bethencourt <luisbg@osg.samsung.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 20 Jun 2016 02:19:58 -0400
+Received: by mail-pf0-f172.google.com with SMTP id h14so35641813pfe.1
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2016 23:19:57 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org
+Subject: [PATCH 6/6] wcn36xx: Fix up wcn36xx_smd_update_scan_params()
+Date: Sun, 19 Jun 2016 23:19:48 -0700
+Message-Id: <1466403588-7041-6-git-send-email-bjorn.andersson@linaro.org> (sfid-20160620_082025_552741_230CE99C)
+In-Reply-To: <1466403588-7041-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1466403588-7041-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Fix up the wcn36xx_smd_update_scan_params() to work with non-ancient
+versions of the firmware and support actually specifying the list of
+channels.
 
-On Wed, Jun 22, 2016 at 10:39 PM, Luis de Bethencourt
-<luisbg@osg.samsung.com> wrote:
-> The common format to check if a function returned an error pointer is to
-> use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
->
-> Also, if there was an error returning -EINVAL instead of -1 is more
-> appropriate.
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/hal.h |  4 ++--
+ drivers/net/wireless/ath/wcn36xx/smd.c | 15 +++++++++------
+ drivers/net/wireless/ath/wcn36xx/smd.h |  2 +-
+ 3 files changed, 12 insertions(+), 9 deletions(-)
 
-These two changes could be argued to be separate changes deserving of
-their own patches.
-
-> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
-
-However if everyone else is ok with that, this is:
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index 658bfb8baabe..4f87ef1e1eb8 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -4123,7 +4123,7 @@ struct wcn36xx_hal_update_scan_params_req {
+ 
+ /* Update scan params - sent from host to PNO to be used during PNO
+  * scanningx */
+-struct update_scan_params_req_ex {
++struct wcn36xx_hal_update_scan_params_req_ex {
+ 
+ 	struct wcn36xx_hal_msg_header header;
+ 
+@@ -4151,7 +4151,7 @@ struct update_scan_params_req_ex {
+ 
+ 	/* Cb State */
+ 	enum phy_chan_bond_state state;
+-};
++} __packed;
+ 
+ /* Update scan params - sent from host to PNO to be used during PNO
+  * scanningx */
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index f9b2785cc277..994eba6cbaa8 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -675,22 +675,25 @@ static int wcn36xx_smd_update_scan_params_rsp(void *buf, size_t len)
+ 	return 0;
+ }
+ 
+-int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn)
++int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn,
++				   u8 *channels, size_t channel_count)
+ {
+-	struct wcn36xx_hal_update_scan_params_req msg_body;
++	struct wcn36xx_hal_update_scan_params_req_ex msg_body;
+ 	int ret = 0;
+ 
+ 	mutex_lock(&wcn->hal_mutex);
+ 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_UPDATE_SCAN_PARAM_REQ);
+ 
+-	msg_body.dot11d_enabled	= 0;
+-	msg_body.dot11d_resolved = 0;
+-	msg_body.channel_count = 26;
++	msg_body.dot11d_enabled	= false;
++	msg_body.dot11d_resolved = true;
++
++	msg_body.channel_count = channel_count;
++	memcpy(msg_body.channels, channels, channel_count);
+ 	msg_body.active_min_ch_time = 60;
+ 	msg_body.active_max_ch_time = 120;
+ 	msg_body.passive_min_ch_time = 60;
+ 	msg_body.passive_max_ch_time = 110;
+-	msg_body.state = 0;
++	msg_body.state = PHY_SINGLE_CHANNEL_CENTERED;
+ 
+ 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
+ 
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+index 493f6191a173..40d829563c2b 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.h
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -64,7 +64,7 @@ int wcn36xx_smd_start_scan(struct wcn36xx *wcn);
+ int wcn36xx_smd_end_scan(struct wcn36xx *wcn);
+ int wcn36xx_smd_finish_scan(struct wcn36xx *wcn,
+ 			    enum wcn36xx_hal_sys_mode mode);
+-int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn);
++int wcn36xx_smd_update_scan_params(struct wcn36xx *wcn, u8 *channels, size_t channel_count);
+ int wcn36xx_smd_add_sta_self(struct wcn36xx *wcn, struct ieee80211_vif *vif);
+ int wcn36xx_smd_delete_sta_self(struct wcn36xx *wcn, u8 *addr);
+ int wcn36xx_smd_delete_sta(struct wcn36xx *wcn, u8 sta_index);
 -- 
-Julian Calaby
+2.5.0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
