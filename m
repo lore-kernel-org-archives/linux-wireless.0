@@ -1,49 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34628 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357AbcFYSiL (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:35648 "EHLO
+	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752235AbcFTGTx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 14:38:11 -0400
-Received: by mail-oi0-f65.google.com with SMTP id s17so23970404oih.1
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 11:38:11 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Andrianov <andrianov@ispras.ru>
-Subject: [PATCH 0/6] rtlwifi: Miscellaneous fixes and cleanups
-Date: Sat, 25 Jun 2016 13:37:41 -0500
-Message-Id: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_203823_372421_426D445B)
+	Mon, 20 Jun 2016 02:19:53 -0400
+Received: by mail-pf0-f170.google.com with SMTP id c2so50915889pfa.2
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2016 23:19:53 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Subject: [PATCH 2/6] wcn36xx: Change indication list lock to spinlock
+Date: Sun, 19 Jun 2016 23:19:44 -0700
+Message-Id: <1466403588-7041-2-git-send-email-bjorn.andersson@linaro.org> (sfid-20160620_082003_043353_F26D47B1)
+In-Reply-To: <1466403588-7041-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1466403588-7041-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This set of patches removes an unused paramter from routine rtl_ps_set_rf_state()
-in rtlwifi. The routine is also no longer exported. In addition, a potential
-race condition in 5 of the drivers is fixed.
+From: Bjorn Andersson <bjorn.andersson@sonymobile.com>
 
-This material is suitable for kernel 4.8. To my knowledge, the race condition
-has not been shown to occur, thus these patches are not backported to stable
-kernels.
+In preparation for handling incoming messages from IRQ context, change
+the indication list lock to a spinlock
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 12 ++++++------
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-Larry Finger (6):
-  rtlwifi: Remove unused parameter from rtl_ps_set_rf_state()
-  rtlwifi: rtl8188ee: Fix potential race condition
-  rtlwifi: rtl8192ee: Fix potential race condition
-  rtlwifi: rtl8723be: Fix potential race condition
-  rtlwifi: rtl8723ae: Fix potential race condition
-  rtlwifi: rtl8821ae: Fix potential race condition
-
- drivers/net/wireless/realtek/rtlwifi/ps.c          | 25 ++++++++--------------
- drivers/net/wireless/realtek/rtlwifi/ps.h          |  3 ---
- .../net/wireless/realtek/rtlwifi/rtl8188ee/dm.c    |  2 ++
- .../net/wireless/realtek/rtlwifi/rtl8192ee/dm.c    |  2 ++
- .../net/wireless/realtek/rtlwifi/rtl8723ae/dm.c    |  2 ++
- .../net/wireless/realtek/rtlwifi/rtl8723be/dm.c    |  2 ++
- .../net/wireless/realtek/rtlwifi/rtl8821ae/dm.c    |  2 ++
- 7 files changed, 19 insertions(+), 19 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 1a9580d72077..b2108076f5c0 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2243,10 +2243,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
+ 		msg_ind->msg_len = len;
+ 		memcpy(msg_ind->msg, buf, len);
+ 
+-		mutex_lock(&wcn->hal_ind_mutex);
++		spin_lock(&wcn->hal_ind_lock);
+ 		list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
+ 		queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
+-		mutex_unlock(&wcn->hal_ind_mutex);
++		spin_unlock(&wcn->hal_ind_lock);
+ 		wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
+ 		break;
+ 	default:
+@@ -2260,8 +2260,9 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 		container_of(work, struct wcn36xx, hal_ind_work);
+ 	struct wcn36xx_hal_msg_header *msg_header;
+ 	struct wcn36xx_hal_ind_msg *hal_ind_msg;
++	unsigned long flags;
+ 
+-	mutex_lock(&wcn->hal_ind_mutex);
++	spin_lock_irqsave(&wcn->hal_ind_lock, flags);
+ 
+ 	hal_ind_msg = list_first_entry(&wcn->hal_ind_queue,
+ 				       struct wcn36xx_hal_ind_msg,
+@@ -2293,8 +2294,8 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 			      msg_header->msg_type);
+ 	}
+ 	list_del(wcn->hal_ind_queue.next);
++	spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
+ 	kfree(hal_ind_msg);
+-	mutex_unlock(&wcn->hal_ind_mutex);
+ }
+ int wcn36xx_smd_open(struct wcn36xx *wcn)
+ {
+@@ -2307,7 +2308,7 @@ int wcn36xx_smd_open(struct wcn36xx *wcn)
+ 	}
+ 	INIT_WORK(&wcn->hal_ind_work, wcn36xx_ind_smd_work);
+ 	INIT_LIST_HEAD(&wcn->hal_ind_queue);
+-	mutex_init(&wcn->hal_ind_mutex);
++	spin_lock_init(&wcn->hal_ind_lock);
+ 
+ 	ret = wcn->ctrl_ops->open(wcn, wcn36xx_smd_rsp_process);
+ 	if (ret) {
+@@ -2327,5 +2328,4 @@ void wcn36xx_smd_close(struct wcn36xx *wcn)
+ {
+ 	wcn->ctrl_ops->close();
+ 	destroy_workqueue(wcn->hal_ind_wq);
+-	mutex_destroy(&wcn->hal_ind_mutex);
+ }
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 7433d67a5929..f6d8d14f13d1 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -215,7 +215,7 @@ struct wcn36xx {
+ 	struct completion	hal_rsp_compl;
+ 	struct workqueue_struct	*hal_ind_wq;
+ 	struct work_struct	hal_ind_work;
+-	struct mutex		hal_ind_mutex;
++	spinlock_t		hal_ind_lock;
+ 	struct list_head	hal_ind_queue;
+ 
+ 	/* DXE channels */
 -- 
-2.1.4
+2.5.0
 
