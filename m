@@ -1,77 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:51432 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750744AbcFUKHe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 06:07:34 -0400
-Date: Tue, 21 Jun 2016 12:41:46 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	ath9k-devel@lists.ath9k.org, Ben Greear <greearb@candelatech.com>
-Subject: Re: [PATCH] ath9k: Support 4.9Ghz channels on AR9580 adapter.
-Message-ID: <20160621094146.GA3196@w1.fi> (sfid-20160621_120742_285223_30B1B506)
-References: <CAGRGNgWOScCrLPyqRNus2319BPOehv3awQChoHw=RRMcSDUqzQ@mail.gmail.com>
- <1466470940-25229-1-git-send-email-julian.calaby@gmail.com>
+Received: from bear.ext.ti.com ([198.47.19.11]:45802 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751828AbcFTWVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2016 18:21:54 -0400
+Subject: [PATCH] leds: Add no-op gpio_led_register_device when LED subsystem
+ is disabled
+To: Jacek Anaszewski <j.anaszewski@samsung.com>
+References: <20160613200211.14790-1-afd@ti.com>
+ <20160613200211.14790-13-afd@ti.com> <5760FA52.7010806@samsung.com>
+ <57647DBD.2010406@ti.com> <57679E38.3080901@samsung.com>
+CC: Russell King <linux@armlinux.org.uk>,
+	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Sebastian Reichel <sre@kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>, <linux-pwm@vger.kernel.org>,
+	<lguest@lists.ozlabs.org>, <linux-wireless@vger.kernel.org>,
+	<linux-mmc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-gpio@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-leds@vger.kernel.org>,
+	<linux-media@vger.kernel.org>
+From: "Andrew F. Davis" <afd@ti.com>
+Message-ID: <57686A94.2010704@ti.com> (sfid-20160621_002244_001809_68016211)
+Date: Mon, 20 Jun 2016 17:13:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466470940-25229-1-git-send-email-julian.calaby@gmail.com>
+In-Reply-To: <57679E38.3080901@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2016 at 11:02:20AM +1000, Julian Calaby wrote:
-> I've only done this work as I hate to see people's efforts go to
-> waste and I feel that there's enough roadblocks in the way of
-> actually using this functionality that casual idiots won't be able
-> to.
+Some systems use 'gpio_led_register_device' to make an in-memory copy of
+their LED device table so the original can be removed as .init.rodata.
+When the LED subsystem is not enabled source in the led directory is not
+built and so this function may be undefined. Fix this here.
 
-Are these really ready to go to the upstream kernel in this state and
-without the other changes that would be needed to operate correctly?
-What is the use case for these and how have these been tested?
+Signed-off-by: Andrew F. Davis <afd@ti.com>
+---
+ include/linux/leds.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-> This is compile tested only as I cannot test this for real as I lack
-> both the hardware and license required.
+diff --git a/include/linux/leds.h b/include/linux/leds.h
+index d2b1306..a4a3da6 100644
+--- a/include/linux/leds.h
++++ b/include/linux/leds.h
+@@ -386,8 +386,16 @@ struct gpio_led_platform_data {
+                                        unsigned long *delay_off);
+ };
 
-I don't think this is sufficient when touching this type of area. I
-would not apply these without proper testing and full set of
-functionality being available. I see no point in ath9k defining
-additional channels if all those new channels can cause is harm and not
-correct functionality. This channel list addition looks like the easiest
-part to handle compared to the other patches needed for 4.9 GHz and this
-would be the last patch on my list to get accepted..
++#ifdef CONFIG_NEW_LEDS
+ struct platform_device *gpio_led_register_device(
+                int id, const struct gpio_led_platform_data *pdata);
++#else
++static inline struct platform_device *gpio_led_register_device(
++               int id, const struct gpio_led_platform_data *pdata)
++{
++       return 0;
++}
++#endif
 
-
-> diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
-> +#ifdef ATH9K_49_GHZ_CHAN
-> +	/* 4.9Ghz channels, public safety channels, license is required in US
-> +	 * and most other regulatory domains!
-> +	 */
-> +	CHAN5G(4915, 38), /* Channel 183 */
-> +	CHAN5G(4920, 39), /* Channel 184 */
-> +	CHAN5G(4925, 40), /* Channel 185 */
-> +	CHAN5G(4935, 41), /* Channel 187 */
-> +	CHAN5G(4940, 42), /* Channel 188 */
-> +	CHAN5G(4945, 43), /* Channel 189 */
-> +	CHAN5G(4960, 44), /* Channel 192 */
-> +	CHAN5G(4970, 45), /* Channel 194 */
-> +	CHAN5G(4980, 46), /* Channel 196 */
-
-Where are these channels defined and are these really correct
-frequencies for them? Please note that many of the 4.9 GHz channels have
-channel starting frequencies like 4.9375 GHz and 4.0025 GHz, i.e.,
-fractional MHz.. While US public safety may not have all those cases,
-even there are some 0.5 MHz cases. In addition, those channel numbers
-sound more like some of the channels defined in Japan rather than US
-public safety operating class. In addition, some of these channels seem
-to be outside the US public safety range.
-
-Is this trying to add 4.9 GHz channels in general for multiple different
-use cases? And if so, what are those use cases? Or is this only for some
-public safety cases? And if so, for which regulatory domains?
-
-To be frank, I really don't see how this would be even close to a state
-that should be accepted into the upstream tree.
-
+ enum cpu_led_event {
+        CPU_LED_IDLE_START,     /* CPU enters idle */
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+2.9.0
