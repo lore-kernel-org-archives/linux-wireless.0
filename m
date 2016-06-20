@@ -1,107 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35231 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752233AbcFUPZu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 11:25:50 -0400
-Received: by mail-pf0-f193.google.com with SMTP id t190so1591333pfb.2
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2016 08:25:49 -0700 (PDT)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: j@w1.fi
-Cc: linux-wireless@vger.kernel.org,
-	Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH v2] mac80211: Encrypt "Group addressed privacy" action frames
-Date: Tue, 21 Jun 2016 15:23:39 +0900
-Message-Id: <1466490219-2891-1-git-send-email-masashi.honma@gmail.com> (sfid-20160621_172910_206663_2319B327)
-In-Reply-To: <20160620212529.GA19076@w1.fi>
-References: <20160620212529.GA19076@w1.fi>
+Received: from comal.ext.ti.com ([198.47.26.152]:40472 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751938AbcFTNAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2016 09:00:03 -0400
+From: Maxim Altshul <maxim.altshul@ti.com>
+To: <johannes@sipsolutions.net>, <kvalo@codeaurora.org>
+CC: <eliad@wizery.com>, <yanivma@ti.com>, <guym@ti.com>,
+	<arik@wizery.com>, <linux-wireless@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <davem@davemloft.net>,
+	Maxim Altshul <maxim.altshul@ti.com>
+Subject: [PATCH 0/3] *** Mesh Path Selection Metric Calculation ***
+Date: Mon, 20 Jun 2016 16:00:19 +0300
+Message-ID: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com> (sfid-20160620_150124_024285_D9A1D09E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, the action frames to group address was not encrypted. But
-[1] "Table 8-38 Category values" indicates "Mesh" and "Multihop" category
-action frames should be encrypted (Group addressed privacy == yes). And the
-encyption key should be MGTK ([1] 10.13 Group addressed robust management frame
-procedures). So this patch modifies the code to make it suitable for spec.
+Hi All,
+This patch series focuses on metric calculation that
+occurs during the path selection phase of a mesh network.
 
-[1] IEEE Std 802.11-2012
+During the path selection phase, the mesh hwmp module
+performs metric calculations, that take as parameters
+the last TX rate that was used for a specific link,
+and the packet error rate.
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- include/linux/ieee80211.h | 20 ++++++++++++++++++++
- net/mac80211/tx.c         |  7 +++++--
- 2 files changed, 25 insertions(+), 2 deletions(-)
+These parameters should be reported by the FW to the driver
+constantly for the mechanism to work properly.
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b118744..3ff7d3f 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -19,6 +19,7 @@
- 
- #include <linux/types.h>
- #include <linux/if_ether.h>
-+#include <linux/etherdevice.h>
- #include <asm/byteorder.h>
- #include <asm/unaligned.h>
- 
-@@ -2487,6 +2488,25 @@ static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
- }
- 
- /**
-+ * ieee80211_is_group_privacy_action - check if frame is a group addressed
-+ * privacy action frame
-+ * @hdr: the frame
-+ */
-+static inline bool ieee80211_is_group_privacy_action(struct ieee80211_hdr *hdr)
-+{
-+	struct ieee80211_mgmt *mgmt;
-+
-+	if (!ieee80211_is_action(hdr->frame_control) ||
-+	    !is_multicast_ether_addr(hdr->addr1))
-+		return false;
-+
-+	mgmt = (struct ieee80211_mgmt *)hdr;
-+
-+	return mgmt->u.action.category == WLAN_CATEGORY_MESH_ACTION ||
-+		mgmt->u.action.category == WLAN_CATEGORY_MULTIHOP_ACTION;
-+}
-+
-+/**
-  * ieee80211_tu_to_usec - convert time units (TU) to microseconds
-  * @tu: the TUs
-  */
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2030443..5ad205e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -590,6 +590,9 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 	else if (tx->sta &&
- 		 (key = rcu_dereference(tx->sta->ptk[tx->sta->ptk_idx])))
- 		tx->key = key;
-+	else if (ieee80211_is_group_privacy_action(hdr) &&
-+		 (key = rcu_dereference(tx->sdata->default_multicast_key)))
-+		tx->key = key;
- 	else if (ieee80211_is_mgmt(hdr->frame_control) &&
- 		 is_multicast_ether_addr(hdr->addr1) &&
- 		 ieee80211_is_robust_mgmt_frame(tx->skb) &&
-@@ -608,7 +611,6 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 		bool skip_hw = false;
- 
- 		/* TODO: add threshold stuff again */
--
- 		switch (tx->key->conf.cipher) {
- 		case WLAN_CIPHER_SUITE_WEP40:
- 		case WLAN_CIPHER_SUITE_WEP104:
-@@ -622,7 +624,8 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 		case WLAN_CIPHER_SUITE_GCMP_256:
- 			if (!ieee80211_is_data_present(hdr->frame_control) &&
- 			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
--					       tx->skb))
-+					       tx->skb) &&
-+			    !ieee80211_is_group_privacy_action(hdr))
- 				tx->key = NULL;
- 			else
- 				skip_hw = (tx->key->conf.flags &
+In case that a vendor offloads the rate control mechanism
+to the FW, these parameters will be rarely updated,
+or updated incorrectly.
+
+This situation causes the mesh hwmp module to calculate incorrect
+metrics and as a consequence, not to choose the best paths possible.
+
+
+This patch series is divided to three patches and does the following:
+
+1. Modifies mesh hwmp module and allows vendors that offload the
+rate control mechanism to their FW, to report last TX rates and PER
+to the mesh hwmp module by using an existing op called
+get_expected_throughput.
+In case that a vendor does not implement the op, all previous
+functionality still applies.
+
+2. Implements the opcode and the mechanism that reports the rates
+in TI driver.
+
+Maxim Altshul (3):
+  wlcore/wl18xx: Add functionality to accept TX rate per link
+  wlcore: Add support for get_expected_throughput opcode
+  mac80211: mesh: Add support for HW RC implementation
+
+ drivers/net/wireless/ti/wl18xx/main.c     |  4 ++++
+ drivers/net/wireless/ti/wl18xx/tx.c       | 22 ++++++++++++++++++----
+ drivers/net/wireless/ti/wl18xx/wl18xx.h   |  6 +++++-
+ drivers/net/wireless/ti/wlcore/main.c     | 16 ++++++++++++++++
+ drivers/net/wireless/ti/wlcore/rx.c       |  7 +++++++
+ drivers/net/wireless/ti/wlcore/wlcore_i.h | 13 +++++++++++++
+ net/mac80211/mesh_hwmp.c                  | 23 +++++++++++++++--------
+ 7 files changed, 78 insertions(+), 13 deletions(-)
+
 -- 
-2.5.0
+2.7.2
 
