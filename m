@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:50241 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751438AbcF2Tjb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 15:39:31 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Hans de Goede <hdegoede@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
+Received: from mail-by2on0061.outbound.protection.outlook.com ([207.46.100.61]:11680
+	"EHLO na01-by2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754484AbcFTV7E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2016 17:59:04 -0400
+Subject: Re: [PATCH] qtnfmac: announcement of new FullMAC driver for Quantenna
+ chipsets
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1464288752-6625-1-git-send-email-avinashp@quantenna.com>
+ <CAOiHx==C56Pj768bRX16VOaxj0Qf_oh5KXfhFJakT2zi-SokQQ@mail.gmail.com>
+ <0f6a9c71-f6d5-235f-2883-114c22ebebff@quantenna.com>
+ <87inxjlsnc.fsf@kamboji.qca.qualcomm.com>
+CC: Jonas Gorski <jogo@openwrt.org>,
+	Avinash Patil <avinashp@quantenna.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
-Date: Wed, 29 Jun 2016 21:33:59 +0200
-Message-ID: <6402170.5s0abZDqlD@wuerfel> (sfid-20160629_213935_057041_94F497A5)
-In-Reply-To: <f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> <ea10ff70-26e6-e151-5cea-c54bd12a054c@redhat.com> <f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
+	<dlebed@quantenna.com>, <smaksimenko@quantenna.com>,
+	<smatyukevich@quantenna.com>, <imitsyanko@quantenna.com>,
+	<btherthala@quantenna.com>, <hwang@quantenna.com>,
+	<krath@quantenna.com>
+From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Message-ID: <32fe6931-0952-4fad-cb5c-cc994ceb8e19@quantenna.com> (sfid-20160620_235935_172515_0ABD9B46)
+Date: Tue, 21 Jun 2016 00:22:36 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <87inxjlsnc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, June 29, 2016 8:51:44 PM CEST Arend Van Spriel wrote:
-> > Typical wifi devices will have some sort of non volatile storage
-> > on board to not only store the ethernet(mac) address, but also
-> > to contain e.g. info about the antenna gain so that the firmware
-> > and/or the driver can take the antenna gain into account and ensure
-> > that they never exceed the maximum allowed broadcast strength.
-> > 
-> > However on some embedded devices there is no non-volatile storage
-> > for the wifi (for cost reasons) and instead this configuration info
-> > (which is board / pcb specific) is loaded in the form of a
-> > file which contains the contents which would normally be in the
-> > non-volatile storage.
-> > 
-> > Since we are dealing with a per-board config-file here, which is
-> > loaded from the os filesystem we really need to specify a basename
-> > here as the list of possible boards is endless, so we cannot
-> > have a lookup table in the driver.
-> 
-> As Jonas mentioned the general principle of device tree is to be
-> agnostic with regards to OS and/or driver as you undoubtedly know. His
-> proposal seems like a usable solution for your problem while complying
-> to the device tree principle. So instead of overriding the default
-> brcmfmac should modify it when dt specifies the "module" property, ie:
-> 
-> no "module" in DT:      nvram filename = brcm/brcmfmac43362-sdio.txt
-> "module=ap6210" in DT:  nvram filename = brcm/brcmfmac43362-ap6210.txt
-> 
-> By the way, the example in the bindings file does not seem to specify a
-> basename, but path+basename+fileext.
+On 06/08/2016 04:25 PM, Kalle Valo wrote:
+> Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> writes:
+>
+>> On 05/29/2016 02:35 PM, Jonas Gorski wrote:
+>>> Hi,
+>>>
+>>> On 26 May 2016 at 20:52, Avinash Patil <avinashp@quantenna.com> wrote:
+>>>> This patch adds support for new FullMAC WiFi driver for Quantenna
+>>>> QSR10G chipsets.
+>>>>
+>>>> QSR10G is Quantenna's 8x8, 160M, 11ac offering.
+>>>> QSR10G supports 2 simultaneous WMACs- one 5G and one 2G. 5G WMAC
+>>>> supports 160M, 8x8 configuration.
+>>>> FW supports 8 concurrent virtual interfaces on each WMAC.
+>>>>
+>>>> Patch introduces 2 new drivers- qtnfmac.ko for interfacing with
+>>>> kernel/cfg80211 and qtnfmac_pcie.ko for PCIe bus interface.
+>>> Nice to see this one, will you also provide a pearl-linux.lzma.img as
+>>> required for the firmware? What about cards in embedded devices, might
+>>> they require a uboot as well? Since requesting uboot seems to be
+>>> specifically supported by the card/firmware interface.
+>> Hi Jonas,
+>> we will provide firmware, but we're not sure at which point it should
+>> be done: addressing any review comments for driver may affect firmware
+>> itself, probably the best time to provide firmware would be after new
+>> driver is accepted and merged?
+> I would prefer to see the firmware images publically available before
+> the driver gets applied. What if you send the firmware patches as RFC
+> only to linux-wireless? That way linux-firmware.git maintainers won't
+> apply them, hopefully. And mention in the commit log that this is just
+> for testing purposes, not to be applied.
+>
 
-What is the size of this nvram file? As it's board specific, I wonder
-if we can simply include it inside of the DT verbatim. I remember
-doing that (in the pre-dtb days, on real open firmware) for the "spidernet"
-ethernet driver.
+Kalle, sure, we will send firmware binary as an RFC to linux-wireless 
+while patch itself is in review.
 
-	Arnd
+
