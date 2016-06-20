@@ -1,70 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36180 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753926AbcFPLvI convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:33809 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751831AbcFTGTv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 07:51:08 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Wei-Ning Huang <wnhuang@google.com>
-Cc: linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [wireless-drivers-next:master 13/19] main.c:undefined reference to `sdio_claim_host'
-References: <201606151546.PqypdveZ%fengguang.wu@intel.com>
-	<CABicQ-U4HEpkShO+P2RMFsDAt3Fda5YZ6nmxR0rmh7NhrEheZA@mail.gmail.com>
-Date: Thu, 16 Jun 2016 14:51:02 +0300
-In-Reply-To: <CABicQ-U4HEpkShO+P2RMFsDAt3Fda5YZ6nmxR0rmh7NhrEheZA@mail.gmail.com>
-	(Wei-Ning Huang's message of "Wed, 15 Jun 2016 15:20:05 +0800")
-Message-ID: <8760t9z715.fsf@kamboji.qca.qualcomm.com> (sfid-20160616_135113_342709_F330C050)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Mon, 20 Jun 2016 02:19:51 -0400
+Received: by mail-pa0-f53.google.com with SMTP id bz2so47754494pad.1
+        for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2016 23:19:51 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Subject: [PATCH 1/6] wcn36xx: Fold indication payload into message header
+Date: Sun, 19 Jun 2016 23:19:43 -0700
+Message-Id: <1466403588-7041-1-git-send-email-bjorn.andersson@linaro.org> (sfid-20160620_082120_751734_8E39285D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Wei-Ning Huang <wnhuang@google.com> writes:
+From: Bjorn Andersson <bjorn.andersson@sonymobile.com>
 
-> Hi Kalle,
+Merge the two allocation instead of separately allocating room for the
+indication payload.
 
-Please send mails to the list, not to me privately
+Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 15 ++++++---------
+ drivers/net/wireless/ath/wcn36xx/smd.h |  2 +-
+ 2 files changed, 7 insertions(+), 10 deletions(-)
 
-> This patch is replaced by a new version: https://patchwork.kernel.org/patch/
-> 9138245/
-> and should build fine.
-
-[...]
-
->     tree:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/
->     wireless-drivers-next.git master
->     head:   c62d50a4062e586855a68c3acfbc2a2c299270cd
->     commit: 65c71efe1c59c111a7b9e6d9540f111663b975b2 [13/19] mwifiex: fix
->     racing condition when downloading firmware
->     config: x86_64-randconfig-s1-06151332 (attached as .config)
->     compiler: gcc-6 (Debian 6.1.1-1) 6.1.1 20160430
->     reproduce:
->             git checkout 65c71efe1c59c111a7b9e6d9540f111663b975b2
->             # save the attached .config to linux build tree
->             make ARCH=x86_64
->
->     All errors (new ones prefixed by >>):
->
->        drivers/built-in.o: In function `mwifiex_fw_dpc':
->     >> main.c:(.text+0x496d83): undefined reference to `sdio_claim_host'
->     >> main.c:(.text+0x496da8): undefined reference to `sdio_release_host'
-
-So I accidentally commited v1 when there was v2 available? It would have
-been a very good idea to send a _public_ reply to v1 that I should drop
-it, that avoids mistakes like this.
-
-v1: https://patchwork.kernel.org/patch/9123771/
-
-v2: https://patchwork.kernel.org/patch/9138245/
-
-There was no changelog (always add that!), what changed in v2?
-
-I see that Arnd already sent a fix for this patch. Is that enough or do
-we need more?
-
-mwifiex: fix link error against sdio
-
-https://patchwork.kernel.org/patch/9180095/
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index e8b630c4f11e..1a9580d72077 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2229,14 +2229,8 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
+ 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
+ 	case WCN36XX_HAL_MISSED_BEACON_IND:
+ 	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
+-		msg_ind = kmalloc(sizeof(*msg_ind), GFP_KERNEL);
+-		if (!msg_ind)
+-			goto nomem;
+-		msg_ind->msg_len = len;
+-		msg_ind->msg = kmemdup(buf, len, GFP_KERNEL);
+-		if (!msg_ind->msg) {
+-			kfree(msg_ind);
+-nomem:
++		msg_ind = kmalloc(sizeof(*msg_ind) + len, GFP_KERNEL);
++		if (!msg_ind) {
+ 			/*
+ 			 * FIXME: Do something smarter then just
+ 			 * printing an error.
+@@ -2245,6 +2239,10 @@ nomem:
+ 				    msg_header->msg_type);
+ 			break;
+ 		}
++
++		msg_ind->msg_len = len;
++		memcpy(msg_ind->msg, buf, len);
++
+ 		mutex_lock(&wcn->hal_ind_mutex);
+ 		list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
+ 		queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
+@@ -2295,7 +2293,6 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 			      msg_header->msg_type);
+ 	}
+ 	list_del(wcn->hal_ind_queue.next);
+-	kfree(hal_ind_msg->msg);
+ 	kfree(hal_ind_msg);
+ 	mutex_unlock(&wcn->hal_ind_mutex);
+ }
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.h b/drivers/net/wireless/ath/wcn36xx/smd.h
+index d93e3fd73831..c4375ce1019a 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.h
++++ b/drivers/net/wireless/ath/wcn36xx/smd.h
+@@ -46,8 +46,8 @@ struct wcn36xx_fw_msg_status_rsp {
+ 
+ struct wcn36xx_hal_ind_msg {
+ 	struct list_head list;
+-	u8 *msg;
+ 	size_t msg_len;
++	u8 msg[];
+ };
+ 
+ struct wcn36xx;
 -- 
-Kalle Valo
+2.5.0
+
