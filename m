@@ -1,45 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45941 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932584AbcFGNKK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2016 09:10:10 -0400
-From: Benjamin Berg <benjamin@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@nbd.name>,
-	ath9k-devel@lists.ath9k.org,
-	Benjamin Berg <benjamin.berg@open-mesh.com>
-Subject: [PATCH 5/6] ath9k: Use defined constants consistently.
-Date: Tue,  7 Jun 2016 15:10:00 +0200
-Message-Id: <1465305001-26067-5-git-send-email-benjamin@sipsolutions.net> (sfid-20160607_151015_836558_B526B29A)
-In-Reply-To: <1465305001-26067-1-git-send-email-benjamin@sipsolutions.net>
-References: <1465305001-26067-1-git-send-email-benjamin@sipsolutions.net>
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:55772 "EHLO
+	mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752822AbcFTHzJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2016 03:55:09 -0400
+Message-id: <57679E38.3080901@samsung.com> (sfid-20160620_095536_544036_A2C2E230)
+Date: Mon, 20 Jun 2016 09:41:44 +0200
+From: Jacek Anaszewski <j.anaszewski@samsung.com>
+MIME-version: 1.0
+To: "Andrew F. Davis" <afd@ti.com>
+Cc: Russell King <linux@armlinux.org.uk>,
+	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Sebastian Reichel <sre@kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>, linux-pwm@vger.kernel.org,
+	lguest@lists.ozlabs.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-leds@vger.kernel.org,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH 12/12] leds: Only descend into leds directory when
+ CONFIG_NEW_LEDS is set
+References: <20160613200211.14790-1-afd@ti.com>
+ <20160613200211.14790-13-afd@ti.com> <5760FA52.7010806@samsung.com>
+ <57647DBD.2010406@ti.com>
+In-reply-to: <57647DBD.2010406@ti.com>
+Content-type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benjamin Berg <benjamin.berg@open-mesh.com>
+On 06/18/2016 12:46 AM, Andrew F. Davis wrote:
+> On 06/15/2016 01:48 AM, Jacek Anaszewski wrote:
+>> Hi Andrew,
+>>
+>> Thanks for the patch.
+>>
+>> Please address the issue [1] raised by test bot and resubmit.
+>>
+>> Thanks,
+>> Jacek Anaszewski
+>>
+>> [1] https://lkml.org/lkml/2016/6/13/1091
+>>
+>
+> It looks like some systems use 'gpio_led_register_device' to make an
+> in-memory copy of their LED device table so the original can be removed
+> as .init.rodata. This doesn't necessarily depend on the LED subsystem
+> but it kind of seems useless when the rest of the subsystem is disabled.
+>
+> One solution could be to use a dummy 'gpio_led_register_device' when the
+> subsystem is not enabled.
 
-Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
----
- drivers/net/wireless/ath/ath9k/main.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+It sounds good. Please add a no-op version of gpio_led_register_device()
+to include/leds.h, in a separate patch.
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index f2ebc85..6a81298 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1785,9 +1785,10 @@ static void ath9k_bss_info_changed(struct ieee80211_hw *hw,
- 	if ((avp->chanctx == sc->cur_chan) &&
- 	    (changed & BSS_CHANGED_ERP_SLOT)) {
- 		if (bss_conf->use_short_slot)
--			slottime = 9;
-+			slottime = ATH9K_SLOT_TIME_9;
- 		else
--			slottime = 20;
-+			slottime = ATH9K_SLOT_TIME_20;
-+
- 		if (vif->type == NL80211_IFTYPE_AP) {
- 			/*
- 			 * Defer update, so that connected stations can adjust
--- 
-2.8.1
+Thanks,
+Jacek Anaszewski
+
+> Another is just to remove the five or so uses
+> of 'gpio_led_register_device' and have those systems register LED device
+> tables like other systems do.
+>
+> If nether of these are acceptable then this patch can be dropped from
+> this series for now.
+>
+> Thanks,
+> Andrew
+>
+>> On 06/13/2016 10:02 PM, Andrew F. Davis wrote:
+>>> When CONFIG_NEW_LEDS is not set make will still descend into the leds
+>>> directory but nothing will be built. This produces unneeded build
+>>> artifacts and messages in addition to slowing the build. Fix this here.
+>>>
+>>> Signed-off-by: Andrew F. Davis <afd@ti.com>
+>>> ---
+>>>    drivers/Makefile | 2 +-
+>>>    1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/Makefile b/drivers/Makefile
+>>> index 567e32c..fa514d5 100644
+>>> --- a/drivers/Makefile
+>>> +++ b/drivers/Makefile
+>>> @@ -127,7 +127,7 @@ obj-$(CONFIG_CPU_FREQ)        += cpufreq/
+>>>    obj-$(CONFIG_CPU_IDLE)        += cpuidle/
+>>>    obj-$(CONFIG_MMC)        += mmc/
+>>>    obj-$(CONFIG_MEMSTICK)        += memstick/
+>>> -obj-y                += leds/
+>>> +obj-$(CONFIG_NEW_LEDS)        += leds/
+>>>    obj-$(CONFIG_INFINIBAND)    += infiniband/
+>>>    obj-$(CONFIG_SGI_SN)        += sn/
+>>>    obj-y                += firmware/
+>>>
+>>
+>>
+>
+>
 
