@@ -1,60 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34557 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbcFYTxs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 15:53:48 -0400
-Received: by mail-oi0-f65.google.com with SMTP id s17so24168160oih.1
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 12:53:47 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 00/10] rtlwifi: Various clean-ups for the hwinfo routines
-Date: Sat, 25 Jun 2016 14:53:31 -0500
-Message-Id: <1466884421-722-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_215352_123492_D7CF3299)
+Received: from ozlabs.org ([103.22.144.67]:47382 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753538AbcFUDTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2016 23:19:38 -0400
+From: Rusty Russell <rusty@rustcorp.com.au>
+To: "Andrew F. Davis" <afd@ti.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Sebastian Reichel <sre@kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	Jacek Anaszewski <j.anaszewski@samsung.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>
+Cc: linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linux-leds@vger.kernel.org, lguest@lists.ozlabs.org,
+	linuxppc-dev@lists.ozlabs.org, linux-media@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-pwm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Andrew F . Davis" <afd@ti.com>
+Subject: Re: [PATCH 10/12] lguest: Only descend into lguest directory when CONFIG_LGUEST is set
+In-Reply-To: <20160613200211.14790-11-afd@ti.com>
+References: <20160613200211.14790-1-afd@ti.com> <20160613200211.14790-11-afd@ti.com>
+Date: Tue, 21 Jun 2016 06:14:30 +0930
+Message-ID: <87a8iflhe9.fsf@rustcorp.com.au> (sfid-20160621_051958_646019_974735CB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The rtlwifi family of drivers use similar routines to extract hardware
-information from EFUSE. This set of patches create a common routine to
-extract this data, and converts most of the drivers to use this routine.
+"Andrew F. Davis" <afd@ti.com> writes:
+> When CONFIG_LGUEST is not set make will still descend into the lguest
+> directory but nothing will be built. This produces unneeded build
+> artifacts and messages in addition to slowing the build. Fix this here.
+>
+> Signed-off-by: Andrew F. Davis <afd@ti.com>
+> ---
+>  drivers/Makefile | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-In addition, a complicated set of if ... else if ... else statements are
-present in rtl8723ae. These are converted into switch statements that
-are much easier to read.
+Applied,
 
-The changes in the hwinfo routines was suggested by Arnd Bergmann.
+Thanks!
+Rusty.
 
-All of this material is intended for kernel 4.8.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-
-
-Larry Finger (10):
-  rtlwifi: Create common routine to get hardware info
-  rtlwifi: rtl8192ce: Convert driver to use common hardware info routine
-  rtlwifi: rtl8192cu: Convert driver to use common hardware info routine
-  rtlwifi: rtl8188ee: Convert driver to use common hardware info routine
-  rtlwifi: rtl8192ee: Convert driver to use common hardware info routine
-  rtlwifi: rtl8723ee: Convert driver to use common hardware info routine
-  rtlwifi: rtl8723be: Convert driver to use common hardware info routine
-  rtlwifi: rtl8821ae: Convert driver to use common hardware info routine
-  rtlwifi: rtl8192de: Convert driver to use common hardware info routine
-  rtlwifi: rtl8723ae: Clean up the hardware info routine
-
- drivers/net/wireless/realtek/rtlwifi/efuse.c       |  78 ++++++
- drivers/net/wireless/realtek/rtlwifi/efuse.h       |   2 +
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |  76 +-----
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    |  83 +-----
- .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    |  61 ++---
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |  77 ++----
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |  73 +-----
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    | 286 +++++++++------------
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |  74 +-----
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |  84 +-----
- 10 files changed, 288 insertions(+), 606 deletions(-)
-
--- 
-2.1.4
-
+>
+> diff --git a/drivers/Makefile b/drivers/Makefile
+> index 19305e0..b178e2f 100644
+> --- a/drivers/Makefile
+> +++ b/drivers/Makefile
+> @@ -122,7 +122,7 @@ obj-$(CONFIG_ACCESSIBILITY)	+= accessibility/
+>  obj-$(CONFIG_ISDN)		+= isdn/
+>  obj-$(CONFIG_EDAC)		+= edac/
+>  obj-$(CONFIG_EISA)		+= eisa/
+> -obj-y				+= lguest/
+> +obj-$(CONFIG_LGUEST)		+= lguest/
+>  obj-$(CONFIG_CPU_FREQ)		+= cpufreq/
+>  obj-$(CONFIG_CPU_IDLE)		+= cpuidle/
+>  obj-y				+= mmc/
+> -- 
+> 2.8.3
