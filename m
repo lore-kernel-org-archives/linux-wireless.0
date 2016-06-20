@@ -1,97 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33884 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751895AbcF3JBP (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35070 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752049AbcFTXVU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 05:01:15 -0400
-Received: by mail-pf0-f194.google.com with SMTP id 66so6855094pfy.1
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 02:01:15 -0700 (PDT)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com,
-	Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH] cfg80211: Add mesh peer AID setting API
-Date: Thu, 30 Jun 2016 18:00:58 +0900
-Message-Id: <1467277258-2331-1-git-send-email-masashi.honma@gmail.com> (sfid-20160630_110121_286142_AEC5CA34)
+	Mon, 20 Jun 2016 19:21:20 -0400
+To: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Ben Greear <greearb@candelatech.com>
+Subject: Bug with: ath10k: enable parsing per station rx duration for 10.4?
+Message-ID: <5768770C.5050305@candelatech.com> (sfid-20160621_012123_706338_870124FB)
+Date: Mon, 20 Jun 2016 16:06:52 -0700
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, mesh peer AID is not reported to kernel when local mesh
-STA is created without iw command. The mesh peer AID is needed by
-mesh peer power management functionality to identify a AID in a TIM
-element.
+I'm working on bringing up my hacked up version of 4.7 ath10k and 10.4 firmware, and I think
+I may have found a regression.
 
-This patch creates mesh peer AID setting API.
+My 10.4.3-ish firmware source has a bunch of:
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- include/net/cfg80211.h       | 1 +
- include/uapi/linux/nl80211.h | 5 +++++
- net/mac80211/cfg.c           | 1 +
- net/wireless/nl80211.c       | 3 +++
- 4 files changed, 10 insertions(+)
+if (stats_id == WMI_REQUEST_PEER_STAT)
+logic in it.  In other words, it is not using that id as a bitfield.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 7bbb00d..2fa5896 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -805,6 +805,7 @@ struct station_parameters {
- 	u32 sta_modify_mask;
- 	int listen_interval;
- 	u16 aid;
-+	u16 mesh_aid;
- 	u8 supported_rates_len;
- 	u8 plink_action;
- 	u8 plink_state;
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 53c8278..f8c454e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1829,6 +1829,9 @@ enum nl80211_commands {
-  *	%NL80211_ATTR_EXT_CAPA_MASK, to specify the extended capabilities per
-  *	interface type.
-  *
-+ * @NL80211_ATTR_MESH_PEER_AID: Association ID for the mesh peer (u16). This is
-+ *	used to pull the stored data for mesh peer in power save state.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2213,6 +2216,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_IFTYPE_EXT_CAPA,
- 
-+	NL80211_ATTR_MESH_PEER_AID,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 0c12e40..08802f7 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -997,6 +997,7 @@ static void sta_apply_mesh_params(struct ieee80211_local *local,
- 			if (sta->mesh->plink_state != NL80211_PLINK_ESTAB)
- 				changed = mesh_plink_inc_estab_count(sdata);
- 			sta->mesh->plink_state = params->plink_state;
-+			sta->mesh->aid = params->mesh_aid;
- 
- 			ieee80211_mps_sta_status_update(sta);
- 			changed |= ieee80211_mps_set_sta_local_pm(sta,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index c503e96..f41fb61 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -4410,6 +4410,9 @@ static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
- 			nla_get_u8(info->attrs[NL80211_ATTR_STA_PLINK_STATE]);
- 		if (params.plink_state >= NUM_NL80211_PLINK_STATES)
- 			return -EINVAL;
-+		if (info->attrs[NL80211_ATTR_MESH_PEER_AID])
-+			params.mesh_aid = nla_get_u16(
-+				info->attrs[NL80211_ATTR_MESH_PEER_AID]);
- 		params.sta_modify_mask |= STATION_PARAM_APPLY_PLINK_STATE;
- 	}
- 
+Now, I can fix the firmware, but I am guessing that at least some stock
+10.4 firmware has this same issue, and of course any older firmware
+that does not have this change will still be broken.
+
+So, do you want to back out this patch below, at least the part where it sends
+in 0x9 as the stats_id?
+
+Or, is all available upstream 10.4 firmware OK with this and I should just fix mine?
+
+Or possibly, this is all my fault and I somehow screwed up when rebasing....
+
+Thanks,
+Ben
+
+
+Author: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>  2016-03-16 05:43:34
+Committer: Kalle Valo <kvalo@qca.qualcomm.com>  2016-04-04 07:02:47
+Parent: 47771902a9beb23859805721f1d98d03dee5da7c (ath10k: introduce Extended Resource Config support for 10.4)
+Child:  59465fe46ef1c2caf2c1beca828c4f29d28b98ca (ath10k: speedup htt rx descriptor processing for tx completion)
+Branches: master, master.stgit, remotes/origin/master, remotes/origin/master.stgit
+Follows: v4.5-rc5
+Precedes: v4.7-rc1
+
+     ath10k: enable parsing per station rx duration for 10.4
+
+     Rx duration support for per station is part of extended peer
+     stats, enable provision to parse the same and provide backward
+     compatibility based on the 'stats_id' event
+
+     Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+     Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+....
+
+@@ -1615,7 +1615,8 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+  		ar->num_active_peers = TARGET_10_4_ACTIVE_PEERS;
+  		ar->max_num_vdevs = TARGET_10_4_NUM_VDEVS;
+  		ar->num_tids = TARGET_10_4_TGT_NUM_TIDS;
+-		ar->fw_stats_req_mask = WMI_STAT_PEER;
++		ar->fw_stats_req_mask = WMI_10_4_STAT_PEER |
++					WMI_10_4_STAT_PEER_EXTD;
+  		ar->max_spatial_stream = ar->hw_params.max_spatial_stream;
+
+  		if (test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL,
+
+
 -- 
-2.5.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
