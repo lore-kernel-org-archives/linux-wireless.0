@@ -1,38 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35545 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbcFWO5i (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:33025 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754273AbcFTUlL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 10:57:38 -0400
-Received: by mail-wm0-f66.google.com with SMTP id a66so11659010wme.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 07:57:37 -0700 (PDT)
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: nbd@nbd.name
-Subject: ath9k: extend and improve handling of ath9k_platform_data
-Date: Thu, 23 Jun 2016 16:57:08 +0200
-Message-Id: <20160623145714.20576-1-martin.blumenstingl@googlemail.com> (sfid-20160623_165741_522744_EF98A711)
+	Mon, 20 Jun 2016 16:41:11 -0400
+Subject: Re: ath9k: Support 4.9Ghz channels on AR9580 adapter.
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+References: <300e3070916441609ff73ea8e06ddb77@euamsexm01a.eu.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <576854E5.5030206@candelatech.com> (sfid-20160620_224131_439949_979E2C1C)
+Date: Mon, 20 Jun 2016 13:41:09 -0700
+MIME-Version: 1.0
+In-Reply-To: <300e3070916441609ff73ea8e06ddb77@euamsexm01a.eu.qualcomm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series improves handling of ath9k_platform_data inside ath9k. A
-quick summary of the changes is:
-- led_active_high can now be configured via ath9k_platform_data:
-  This change is based on a patch originally written by Vittorio
-  Gambaletta which is part of OpenWrt's ath9k patches.
-- small code cleanups which include removal of unused variables,
-  return values duplicate code (no functional changes)
-- ath9k_hw_init_macaddr will not change common->macaddr anymore
-  to make it independent of whether it's called before or after
-  ath9k_platform_data initialization in init.c
-- initialization based on ath9k_platform_data in init.c is now
-  easier to understand (no functional changes)
+On 06/20/2016 01:34 PM, Kalle Valo wrote:
+> Ben Greear <greearb@candelatech.com> wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> NOTE:  These channels must not be used in most regulatory
+>> domains unless you have a license from the FCC or similar!
+>>
+>> A proper regulatory database is also required to actually use
+>> these channels.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>
+> I feel that the license is a problem and this doesn't belong to the kernel.
+> The patch has been dropped.
 
-Patch 6 from this series supersedes the following patch by Eduardo
-Abinader: "ath9k: return false when reading wrong eeprom offset" [0]
+It's not a lot different from having to be in normal FCC regulations w/regard to
+DFS channels, tx power, and such, but maybe having driver support is considered to make it
+too easy for users to hack around restrictions?
 
+Another part of this is that Cisco APs, at least, use fractional center
+frequencies (4942.5, for instance) when using 5Mhz bandwidths on 4.9Ghz
+channels, and that requires more patches that I don't think I even bothered
+to post.
 
-[0] https://patchwork.kernel.org/patch/9181371/
+I'll keep this in my trees, someone needing it can just clone it and/or borrow
+patches as needed.
 
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
