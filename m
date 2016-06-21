@@ -1,73 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44346 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752033AbcFBPVn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 11:21:43 -0400
-Message-ID: <57504F05.3040200@candelatech.com> (sfid-20160602_172146_479483_A759A6DF)
-Date: Thu, 02 Jun 2016 08:21:41 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mike@fireburn.co.uk" <mike@fireburn.co.uk>
-Subject: Re: Bug 119151 - [regression] ath10k no longer authenitcates and
- freezes system
-References: <8760trzoiw.fsf@kamboji.qca.qualcomm.com> <871t4fzn1x.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <871t4fzn1x.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:59075 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751767AbcFUUmw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2016 16:42:52 -0400
+Message-ID: <1466538049.18972.5.camel@sipsolutions.net> (sfid-20160621_224258_195563_D5AF4D21)
+Subject: Re: [PATCH] mac80211: Encrypt "Group addressed privacy" action
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <j@w1.fi>, Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 21 Jun 2016 21:40:49 +0200
+In-Reply-To: <20160621170120.GA24882@w1.fi> (sfid-20160621_190131_756060_1D067478)
+References: <1465969112-2814-1-git-send-email-masashi.honma@gmail.com>
+ <20160618091116.GA2972@w1.fi>
+ <57673E10.7070706@gmail.com>
+ <20160620212529.GA19076@w1.fi>
+ <5768DBB6.2060501@gmail.com>
+	 <20160621170120.GA24882@w1.fi> (sfid-20160621_190131_756060_1D067478)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/02/2016 07:24 AM, Valo, Kalle wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->
->> there's a regression in ath10k:
->>
->> https://bugzilla.kernel.org/show_bug.cgi?id=119151
->>
->> Reporter bisected it to this:
->>
->> 5c86d97bcc1d42ce7f75685a61be4dad34ee8183 is the first bad commit
->> commit 5c86d97bcc1d42ce7f75685a61be4dad34ee8183
->> Author: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
->> Date:   Tue Mar 22 17:22:19 2016 +0530
->>
->> ath10k: combine txrx and replenish task
->>
->> Since tx completion and rx indication processing are moved out
->> of txrx tasklet and rx ring lock contention also removed from txrx
->> for rx_ind messages, it would be efficient to combine both replenish
->> and txrx tasks. Refill threshold is adjusted for both AP135 and AP148
->> (low and high end systems). With this adjustment in AP135, TCP DL is
->> improved from 603 Mbps to 620 Mbps and UDP DL is improved from 758 Mbps
->> to 803 Mbps. Also no watchdog are observed on UDP BiDi.
->>
->> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
->> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
->
-> Adding Mike, the bug reporter.
 
+> We actually cover (2) for some cases by "accident" since
+> ieee80211_rx_h_decrypt() assigns rx->key to rx->sta->gtk[i] if one is
+> available. I'm not completely sure this is correct since it applies
+> to management frame as well, but that's the way commit
+> 897bed8b4320774e56f282cdc1cceb4d77442797 ('mac80211: clean up RX key
+> checks') implemented it (Johannes: Could you please take a look
+> whether that gtk[] case was really supposed to apply for non-Data
+> frames?).
+> 
 
-I found a lot of problems with this code as well, and the 5 patches
-starting from the URL below fixed the issues for me.
+Hm, yeah, that's kinda questionable.
 
-They are stuck as 'NA' in patchwork, but I don't know why.
+AFAICT we still do the right thing since ieee80211_drop_unencrypted()
+contains a check for ieee80211_is_data() and we return in this if
+branch, so we never get to the TAINTED check or the actual decrypt.
 
-http://lists.infradead.org/pipermail/ath10k/2016-April/007218.html
+We could try to just drop unencrypted data frames (that aren't control
+port protocol) right here, but it might wreak havoc with the reorder
+buffer in case it (erroneously) happens.
 
-You probably need this patch as well, or ath10k will crash when you
-enable the debug-mask:
-
-http://permalink.gmane.org/gmane.linux.kernel.wireless.general/151890
-
-It is also 'NA' in patchwork.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+johannes
