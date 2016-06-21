@@ -1,60 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53386 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751168AbcFINWR convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 09:22:17 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Heinrich Schuchardt <xypron.glpk@gmx.de>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 1/1] mwifiex: illegal assignment
-Date: Thu, 9 Jun 2016 13:22:09 +0000
-Message-ID: <66189faafe0e477da81a03677d56ef69@SC-EXCH04.marvell.com> (sfid-20160609_152241_293555_952B54A7)
-References: <1463526118-11822-1-git-send-email-xypron.glpk@gmx.de>
-In-Reply-To: <1463526118-11822-1-git-send-email-xypron.glpk@gmx.de>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from iodev.co.uk ([82.211.30.53]:56826 "EHLO iodev.co.uk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754547AbcFUBNt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 20 Jun 2016 21:13:49 -0400
+From: Ismael Luceno <ismael@iodev.co.uk>
+To: linux-wireless@vger.kernel.org
+Cc: brcm80211-dev-list@broadcom.com, Ismael Luceno <ismael@iodev.co.uk>
+Subject: [PATCH] brcmfmac: Add USB ID for Cisco Linksys AE1200
+Date: Mon, 20 Jun 2016 21:18:41 -0300
+Message-Id: <20160621001841.5383-1-ismael@iodev.co.uk> (sfid-20160621_031354_040437_757E0658)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Heinrich Schuchardt [mailto:xypron.glpk@gmx.de]
-> Sent: Wednesday, May 18, 2016 4:32 AM
-> To: Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo
-> Cc: Xinming Hu; Cathy Luo; linux-wireless@vger.kernel.org;
-> netdev@vger.kernel.org; linux-kernel@vger.kernel.org; Heinrich
-> Schuchardt
-> Subject: [PATCH 1/1] mwifiex: illegal assignment
-> 
-> Variable adapter is incorrectly initialized.
-> 
-> Fixes: bf00dc22bc7a ("mwifiex: AMSDU Rx frame handling in AP mode")
-> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
-> ---
->  drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> index 666e91a..bf5660e 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-> @@ -272,7 +272,7 @@ int mwifiex_handle_uap_rx_forward(struct
-> mwifiex_private *priv,  int mwifiex_uap_recv_packet(struct
-> mwifiex_private *priv,
->  			    struct sk_buff *skb)
->  {
-> -	struct mwifiex_adapter *adapter = adapter;
-> +	struct mwifiex_adapter *adapter = priv->adapter;
->  	struct mwifiex_sta_node *src_node;
->  	struct ethhdr *p_ethhdr;
->  	struct sk_buff *skb_uap;
-> --
-> 2.1.4
+Signed-off-by: Ismael Luceno <ismael@iodev.co.uk>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 4 ++++
+ drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 3 +++
+ 2 files changed, 7 insertions(+)
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+index 98b15a9..455fc69 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
+@@ -1462,11 +1462,15 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
+ #define BRCMF_USB_DEVICE(dev_id)	\
+ 	{ USB_DEVICE(BRCM_USB_VENDOR_ID_BROADCOM, dev_id) }
+ 
++#define LINKSYS_USB_DEVICE(dev_id)	\
++	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LINKSYS, dev_id) }
++
+ static struct usb_device_id brcmf_usb_devid_table[] = {
+ 	BRCMF_USB_DEVICE(BRCM_USB_43143_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
+ 	BRCMF_USB_DEVICE(BRCM_USB_43569_DEVICE_ID),
++	LINKSYS_USB_DEVICE(BRCM_USB_43235_LINKSYS_DEVICE_ID),
+ 	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LG, BRCM_USB_43242_LG_DEVICE_ID) },
+ 	/* special entry for device with firmware loaded and running */
+ 	BRCMF_USB_DEVICE(BRCM_USB_BCMFW_DEVICE_ID),
+diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+index 699f2c2..6666513 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
++++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
+@@ -22,6 +22,7 @@
+ 
+ #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
+ #define BRCM_USB_VENDOR_ID_LG		0x043e
++#define BRCM_USB_VENDOR_ID_LINKSYS	0x13b1
+ #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
+ 
+ /* Chipcommon Core Chip IDs */
+@@ -56,6 +57,8 @@
+ 
+ /* USB Device IDs */
+ #define BRCM_USB_43143_DEVICE_ID	0xbd1e
++#define BRCM_USB_43235_LINKSYS_DEVICE_ID \
++					0x0039
+ #define BRCM_USB_43236_DEVICE_ID	0xbd17
+ #define BRCM_USB_43242_DEVICE_ID	0xbd1f
+ #define BRCM_USB_43242_LG_DEVICE_ID	0x3101
+-- 
+2.9.0
 
-Regards,
-Amitkumar
