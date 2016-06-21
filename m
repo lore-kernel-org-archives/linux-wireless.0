@@ -1,100 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:37213 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752852AbcFCQwk convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f179.google.com ([209.85.214.179]:33253 "EHLO
+	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753368AbcFUBF2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 12:52:40 -0400
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
-Date: Fri,  3 Jun 2016 18:51:44 +0200
-Message-Id: <20160603165144.17356-6-toke@toke.dk> (sfid-20160603_185247_292818_F6968724)
-In-Reply-To: <20160603165144.17356-1-toke@toke.dk>
-References: <20160603165144.17356-1-toke@toke.dk>
+	Mon, 20 Jun 2016 21:05:28 -0400
+Received: by mail-ob0-f179.google.com with SMTP id xn17so1792764obc.0
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2016 18:04:44 -0700 (PDT)
+Date: Mon, 20 Jun 2016 19:36:30 -0500
+From: David Gilman <dgilman@gilslotd.com>
+To: Lennert Buytenhek <buytenh@wantstofly.org>
+Cc: linux-wireless@vger.kernel.org,
+	Yogesh Ashok Powar <yogeshp@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: Troubleshooting mwl8k driver issue
+Message-ID: <20160621003630.GA39401@dar.local> (sfid-20160621_030534_500658_01499E18)
+References: <20160604035452.GA5925@dar.local>
+ <20160606065146.GK8402@wantstofly.org>
+ <20160610040247.GA16190@dar.local>
+ <20160617194303.GA33130@dar.local>
+ <20160618084828.GN20238@wantstofly.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160618084828.GN20238@wantstofly.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds RX airtime to the airtime deficit used in the scheduler. This
-is not a definite win, but I have only done very limited testing where
-it has been included. Feel free to skip this patch when testing.
+On Sat, Jun 18, 2016 at 11:48:28AM +0300, Lennert Buytenhek wrote:
+> Nothing in here seems particularly bad.  So whatever the problem is,
+> I don't think it can be diagnosed from these messages alone.
+> 
+> I went back to the email thread, and it seems that the problem is that
+> you're trying to run the card in AP mode but no traffic is making it
+> through?  Is AP association working at all, or is that failing too?
 
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
- drivers/net/wireless/ath/ath9k/recv.c | 51 ++++++++++++++++++++++++++++++++++-
- 1 file changed, 50 insertions(+), 1 deletion(-)
+The mwl8k is in AP mode and it gets associated just fine.  It'll work
+for five or so minutes and then you'll get the disconnect and the log
+messages in the earlier emails.  And it only happens with one of my
+wireless devices - the other one will browse all day with a stable
+connection to the mwl8k router.
 
-diff --git a/drivers/net/wireless/ath/ath9k/recv.c b/drivers/net/wireless/ath/ath9k/recv.c
-index 7eb8980..23d6ebe 100644
---- a/drivers/net/wireless/ath/ath9k/recv.c
-+++ b/drivers/net/wireless/ath/ath9k/recv.c
-@@ -991,6 +991,55 @@ static void ath9k_apply_ampdu_details(struct ath_softc *sc,
- 	}
- }
- 
-+static void ath_rx_count_airtime(struct ath_softc *sc,
-+				 struct ath_rx_status *rs,
-+				 struct sk_buff *skb)
-+{
-+	struct ath_node *an;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ieee80211_sta *sta;
-+	struct ieee80211_rx_status *rxs;
-+	const struct ieee80211_rate *rate;
-+	bool is_sgi, is_40, is_sp;
-+	int phy;
-+	u32 airtime = 0;
-+
-+	if (!ieee80211_is_data(hdr->frame_control))
-+		return;
-+
-+	rcu_read_lock();
-+
-+	sta = ieee80211_find_sta_by_ifaddr(sc->hw, hdr->addr2, NULL);
-+	if (!sta)
-+		goto exit;
-+	an = (struct ath_node *) sta->drv_priv;
-+	rxs = IEEE80211_SKB_RXCB(skb);
-+
-+	is_sgi = !!(rxs->flag & RX_FLAG_SHORT_GI);
-+	is_40 = !!(rxs->flag & RX_FLAG_40MHZ);
-+	is_sp = !!(rxs->flag & RX_FLAG_SHORTPRE);
-+
-+	if (!!(rxs->flag & RX_FLAG_HT)) {
-+		/* MCS rates */
-+
-+		airtime += ath_pkt_duration(sc, rxs->rate_idx, rs->rs_datalen,
-+					is_40, is_sgi, is_sp);
-+	} else {
-+
-+		phy = IS_CCK_RATE(rs->rs_rate) ? WLAN_RC_PHY_CCK : WLAN_RC_PHY_OFDM;
-+		rate = &common->sbands[rxs->band].bitrates[rxs->rate_idx];
-+		airtime += ath9k_hw_computetxtime(ah, phy, rate->bitrate * 100,
-+						rs->rs_datalen, rxs->rate_idx, is_sp);
-+	}
-+
-+	an->airtime_deficit -= airtime;
-+	ath_debug_airtime(sc, an, airtime, 0);
-+exit:
-+	rcu_read_unlock();
-+}
-+
- int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- {
- 	struct ath_rxbuf *bf;
-@@ -1137,7 +1186,7 @@ int ath_rx_tasklet(struct ath_softc *sc, int flush, bool hp)
- 		ath9k_antenna_check(sc, &rs);
- 		ath9k_apply_ampdu_details(sc, &rs, rxs);
- 		ath_debug_rate_stats(sc, &rs, skb);
--		ath_debug_rx_airtime(sc, &rs, skb);
-+		ath_rx_count_airtime(sc, &rs, skb);
- 
- 		hdr = (struct ieee80211_hdr *)skb->data;
- 		if (ieee80211_is_ack(hdr->frame_control))
+Back in the OpenWRT issue a few more people have stuck their heads in
+to say they're also seeing the same issue.
+
+https://dev.openwrt.org/ticket/21284
+
 -- 
-2.7.4
+David Gilman  :DG<
+http://gilslotd.com
