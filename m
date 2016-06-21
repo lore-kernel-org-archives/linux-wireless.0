@@ -1,132 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:33485 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751001AbcFWR5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 13:57:16 -0400
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org,
-	Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: [PATCH] staging: wilc1000: arrays can't be NULL
-Date: Thu, 23 Jun 2016 18:57:09 +0100
-Message-Id: <1466704629-26084-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160623_195735_317913_579F9503)
+Received: from smtp.codeaurora.org ([198.145.29.96]:42241 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501AbcFUKgE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2016 06:36:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2016-06-21
+Date: Tue, 21 Jun 2016 13:27:16 +0300
+Message-ID: <87eg7qn8fv.fsf@kamboji.qca.qualcomm.com> (sfid-20160621_124018_747020_D4B6C7DB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-hif_drv->usr_scan_req.net.net_info[i] contains found_net_info structs
-which have the following element:
-u8 bssid[6];
+Hi Dave,
 
-pstrNetworkInfo, of type network_info, also contains an u8 array named
-bssid.
+here is a pull request for 4.7, really small fixes this time, some of
+them fix important regressions. Please let me know if there are any
+problems.
 
-request->ssids is an array of cfg80211_ssid structs. Making ssid:
-u8 ssid[IEEE80211_MAX_SSID_LEN];
+Kalle
 
-In these 3 cases the arrays are being checked against NULL, which can't
-happen. Removing the checks since they will always be true.
+The following changes since commit 182fd9eecb287e696c82b30d06c6150d80a49c5b:
 
-Found with smatch:
-drivers/staging/wilc1000/host_interface.c:1234 Handle_RcvdNtwrkInfo() warn: this array is probably non-NULL. 'hif_drv->usr_scan_req.net_info[i].bssid'
-drivers/staging/wilc1000/host_interface.c:1235 Handle_RcvdNtwrkInfo() warn: this array is probably non-NULL. 'pstrNetworkInfo->bssid'
-drivers/staging/wilc1000/host_interface.c:1253 Handle_RcvdNtwrkInfo() warn: this array is probably non-NULL. 'hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].bssid'
-drivers/staging/wilc1000/host_interface.c:1254 Handle_RcvdNtwrkInfo() warn: this array is probably non-NULL. 'pstrNetworkInfo->bssid'
+  MAINTAINERS: Add file patterns for wireless device tree bindings (2016-06-04 17:24:02 +0300)
 
-Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
----
-Hi,
+are available in the git repository at:
 
-I am aware this patch gives a few checkpatch.pl warnings about lines being
-over 80 characters. Fixing that would be a completely different issue, and
-a lengthy one since the file has loads of them.
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-06-21
 
-Hopefully somebody else picks that up. Maybe I should send a hit to the
-kernelnewbies mailing list :)
+for you to fetch changes up to 034fdd4a17ff089c2428ece18efa65c5396810d2:
 
-Thanks,
-Luis
+  Merge ath-current from ath.git (2016-06-16 17:55:19 +0300)
 
+----------------------------------------------------------------
 
- drivers/staging/wilc1000/host_interface.c         | 38 ++++++++++-------------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  3 +-
- 2 files changed, 17 insertions(+), 24 deletions(-)
+wireless-drivers fixes for 4.7
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9535842..7d5745a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1231,17 +1231,14 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
- 		}
- 
- 		for (i = 0; i < hif_drv->usr_scan_req.rcvd_ch_cnt; i++) {
--			if ((hif_drv->usr_scan_req.net_info[i].bssid) &&
--			    (pstrNetworkInfo->bssid)) {
--				if (memcmp(hif_drv->usr_scan_req.net_info[i].bssid,
--					   pstrNetworkInfo->bssid, 6) == 0) {
--					if (pstrNetworkInfo->rssi <= hif_drv->usr_scan_req.net_info[i].rssi) {
--						goto done;
--					} else {
--						hif_drv->usr_scan_req.net_info[i].rssi = pstrNetworkInfo->rssi;
--						bNewNtwrkFound = false;
--						break;
--					}
-+			if (memcmp(hif_drv->usr_scan_req.net_info[i].bssid,
-+				   pstrNetworkInfo->bssid, 6) == 0) {
-+				if (pstrNetworkInfo->rssi <= hif_drv->usr_scan_req.net_info[i].rssi) {
-+					goto done;
-+				} else {
-+					hif_drv->usr_scan_req.net_info[i].rssi = pstrNetworkInfo->rssi;
-+					bNewNtwrkFound = false;
-+					break;
- 				}
- 			}
- 		}
-@@ -1250,20 +1247,17 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
- 			if (hif_drv->usr_scan_req.rcvd_ch_cnt < MAX_NUM_SCANNED_NETWORKS) {
- 				hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].rssi = pstrNetworkInfo->rssi;
- 
--				if (hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].bssid &&
--				    pstrNetworkInfo->bssid) {
--					memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].bssid,
--					       pstrNetworkInfo->bssid, 6);
-+				memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].bssid,
-+				       pstrNetworkInfo->bssid, 6);
- 
--					hif_drv->usr_scan_req.rcvd_ch_cnt++;
-+				hif_drv->usr_scan_req.rcvd_ch_cnt++;
- 
--					pstrNetworkInfo->new_network = true;
--					pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
-+				pstrNetworkInfo->new_network = true;
-+				pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
- 
--					hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
--									  hif_drv->usr_scan_req.arg,
--									  pJoinParams);
--				}
-+				hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
-+								  hif_drv->usr_scan_req.arg,
-+								  pJoinParams);
- 			}
- 		} else {
- 			pstrNetworkInfo->new_network = false;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 51aff4f..3ddfa4a 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -625,8 +625,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 
- 
- 			for (i = 0; i < request->n_ssids; i++) {
--				if (request->ssids[i].ssid &&
--				    request->ssids[i].ssid_len != 0) {
-+				if (request->ssids[i].ssid_len != 0) {
- 					strHiddenNetwork.net_info[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
- 					memcpy(strHiddenNetwork.net_info[i].ssid, request->ssids[i].ssid, request->ssids[i].ssid_len);
- 					strHiddenNetwork.net_info[i].ssid_len = request->ssids[i].ssid_len;
--- 
-2.5.1
+iwlwifi
 
+* fix the scan timeout for long scans
+* fix an RCU splat caused when updating the TKIP key
+* fix a potential NULL-derefence introduced recently
+* fix a IGTK key bug that has existed since the MVM driver was introduced
+* fix some fw capabilities checks that got accidentally inverted
+
+rtl8xxxu
+
+* fix typo on variable name
+
+ath10k
+
+* fix deadlock when peer cannot be created
+* fix crash related to printing features
+* fix deadlock while processing rx_in_ord_ind
+
+ath9k
+
+* fix GPIO mask regression for AR9462 and AR9565
+
+----------------------------------------------------------------
+Ayala Beker (1):
+      iwlwifi: mvm: set the encryption type of an IGTK key
+
+Ben Greear (2):
+      ath10k: fix deadlock when peer cannot be created
+      ath10k: fix crash related to printing features
+
+Colin Ian King (1):
+      rtl8xxxu: fix typo on variable name, compare against correct variable
+
+Emmanuel Grumbach (1):
+      iwlwifi: mvm: fix RCU splat in TKIP's update_key
+
+Johannes Berg (1):
+      iwlwifi: mvm: fix a few firmware capability checks
+
+Kalle Valo (2):
+      Merge tag 'iwlwifi-for-kalle-2016-06-10' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+      Merge ath-current from ath.git
+
+Luca Coelho (2):
+      iwlwifi: mvm: increase scan timeout to 20 seconds
+      iwlwifi: mvm: fix potential NULL-dereference in iwl_mvm_reorder()
+
+Miaoqing Pan (1):
+      ath9k: fix GPIO mask for AR9462 and AR9565
+
+Rajkumar Manoharan (1):
+      ath10k: fix deadlock while processing rx_in_ord_ind
+
+ drivers/net/wireless/ath/ath10k/core.c             |    2 +-
+ drivers/net/wireless/ath/ath10k/htt_rx.c           |    1 -
+ drivers/net/wireless/ath/ath10k/mac.c              |    2 +-
+ drivers/net/wireless/ath/ath9k/reg.h               |    8 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |    8 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |    4 +++-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |    2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |   16 +++++++++++++++-
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c |    2 +-
+ 9 files changed, 30 insertions(+), 15 deletions(-)
