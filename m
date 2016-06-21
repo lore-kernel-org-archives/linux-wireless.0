@@ -1,131 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33431 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750943AbcFVKzg (ORCPT
+Received: from mailout1.w1.samsung.com ([210.118.77.11]:16501 "EHLO
+	mailout1.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506AbcFUNLI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2016 06:55:36 -0400
-Received: by mail-pa0-f65.google.com with SMTP id ts6so3740931pac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2016 03:55:35 -0700 (PDT)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: j@w1.fi, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH v3] mac80211: Encrypt "Group addressed privacy" action frames
-Date: Wed, 22 Jun 2016 19:55:20 +0900
-Message-Id: <1466592920-2716-1-git-send-email-masashi.honma@gmail.com> (sfid-20160622_125539_033704_B9B7A968)
-In-Reply-To: <20160621170120.GA24882@w1.fi>
-References: <20160621170120.GA24882@w1.fi>
+	Tue, 21 Jun 2016 09:11:08 -0400
+Message-id: <57693CE5.7050904@samsung.com> (sfid-20160621_151115_412732_81D20F27)
+Date: Tue, 21 Jun 2016 15:11:01 +0200
+From: Jacek Anaszewski <j.anaszewski@samsung.com>
+MIME-version: 1.0
+To: "Andrew F. Davis" <afd@ti.com>
+Cc: Russell King <linux@armlinux.org.uk>,
+	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Sebastian Reichel <sre@kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>, linux-pwm@vger.kernel.org,
+	lguest@lists.ozlabs.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-leds@vger.kernel.org,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH] leds: Add no-op gpio_led_register_device when LED
+ subsystem is disabled
+References: <20160613200211.14790-1-afd@ti.com>
+ <20160613200211.14790-13-afd@ti.com> <5760FA52.7010806@samsung.com>
+ <57647DBD.2010406@ti.com> <57679E38.3080901@samsung.com>
+ <57686A94.2010704@ti.com> <5768E815.5080706@samsung.com>
+ <5769297A.4050608@ti.com>
+In-reply-to: <5769297A.4050608@ti.com>
+Content-type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, the action frames to group address was not encrypted. But
-[1] "Table 8-38 Category values" indicates "Mesh" and "Multihop" category
-action frames should be encrypted (Group addressed privacy == yes). And the
-encyption key should be MGTK ([1] 10.13 Group addressed robust management frame
-procedures). So this patch modifies the code to make it suitable for spec.
+On 06/21/2016 01:48 PM, Andrew F. Davis wrote:
+> On 06/21/2016 02:09 AM, Jacek Anaszewski wrote:
+>> Hi Andrew,
+>>
+>> This patch doesn't apply, please rebase onto recent LED tree.
+>>
+>> On 06/21/2016 12:13 AM, Andrew F. Davis wrote:
+>>> Some systems use 'gpio_led_register_device' to make an in-memory copy of
+>>> their LED device table so the original can be removed as .init.rodata.
+>>> When the LED subsystem is not enabled source in the led directory is not
+>>> built and so this function may be undefined. Fix this here.
+>>>
+>>> Signed-off-by: Andrew F. Davis <afd@ti.com>
+>>> ---
+>>>    include/linux/leds.h | 8 ++++++++
+>>>    1 file changed, 8 insertions(+)
+>>>
+>>> diff --git a/include/linux/leds.h b/include/linux/leds.h
+>>> index d2b1306..a4a3da6 100644
+>>> --- a/include/linux/leds.h
+>>> +++ b/include/linux/leds.h
+>>> @@ -386,8 +386,16 @@ struct gpio_led_platform_data {
+>>>                                           unsigned long *delay_off);
+>>
+>> Currently there is some stuff here, and in fact it has been for
+>> a long time.
+>>
+>> Patch "[PATCH 12/12] leds: Only descend into leds directory when
+>> CONFIG_NEW_LEDS is set" also doesn't apply.
+>> What repository are you using?
+>>
+>
+> v4.7-rc4, it may not apply due to the surrounding lines being changed in
+> the other patches which may not be applied to your tree. It is a single
+> line change per patch so hopefully the merge conflict resolutions will
+> be trivial.
+>
+> A better solution could have been getting an ack from each maintainer
+> and having someone pull the whole series into one tree, but parts have
+> already been picked so it may be a little late for that.
 
-[1] IEEE Std 802.11-2012
+OK, I resolved the issues and applied, thanks.
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- include/linux/ieee80211.h | 32 ++++++++++++++++++++++++++++++++
- net/mac80211/rx.c         |  7 ++++++-
- net/mac80211/tx.c         |  6 +++++-
- 3 files changed, 43 insertions(+), 2 deletions(-)
+>>>    };
+>>>
+>>> +#ifdef CONFIG_NEW_LEDS
+>>>    struct platform_device *gpio_led_register_device(
+>>>                   int id, const struct gpio_led_platform_data *pdata);
+>>> +#else
+>>> +static inline struct platform_device *gpio_led_register_device(
+>>> +               int id, const struct gpio_led_platform_data *pdata)
+>>> +{
+>>> +       return 0;
+>>> +}
+>>> +#endif
+>>>
+>>>    enum cpu_led_event {
+>>>           CPU_LED_IDLE_START,     /* CPU enters idle */
+>>>
+>>
+>>
+>
+>
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index b118744..7c0771a 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -19,6 +19,7 @@
- 
- #include <linux/types.h>
- #include <linux/if_ether.h>
-+#include <linux/etherdevice.h>
- #include <asm/byteorder.h>
- #include <asm/unaligned.h>
- 
-@@ -2487,6 +2488,37 @@ static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
- }
- 
- /**
-+ * _ieee80211_is_group_privacy_action - check if frame is a group addressed
-+ * privacy action frame
-+ * @hdr: the frame
-+ */
-+static inline bool _ieee80211_is_group_privacy_action(struct ieee80211_hdr *hdr)
-+{
-+	struct ieee80211_mgmt *mgmt;
-+
-+	if (!ieee80211_is_action(hdr->frame_control) ||
-+	    !is_multicast_ether_addr(hdr->addr1))
-+		return false;
-+
-+	mgmt = (struct ieee80211_mgmt *)hdr;
-+
-+	return mgmt->u.action.category == WLAN_CATEGORY_MESH_ACTION ||
-+		mgmt->u.action.category == WLAN_CATEGORY_MULTIHOP_ACTION;
-+}
-+
-+/**
-+ * ieee80211_is_group_privacy_action - check if frame is a group addressed
-+ * privacy action frame
-+ * @skb: the skb containing the frame, length will be checked
-+ */
-+static inline bool ieee80211_is_group_privacy_action(struct sk_buff *skb)
-+{
-+	if (skb->len < IEEE80211_MIN_ACTION_SIZE)
-+		return false;
-+	return _ieee80211_is_group_privacy_action((void *)skb->data);
-+}
-+
-+/**
-  * ieee80211_tu_to_usec - convert time units (TU) to microseconds
-  * @tu: the TUs
-  */
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 5e65e83..2300c0f 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1624,8 +1624,13 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
- 		if (mmie_keyidx < NUM_DEFAULT_KEYS ||
- 		    mmie_keyidx >= NUM_DEFAULT_KEYS + NUM_DEFAULT_MGMT_KEYS)
- 			return RX_DROP_MONITOR; /* unexpected BIP keyidx */
--		if (rx->sta)
-+		if (rx->sta) {
-+			if (ieee80211_is_group_privacy_action(skb) &&
-+			    test_sta_flag(rx->sta, WLAN_STA_MFP))
-+				return RX_DROP_MONITOR;
-+
- 			rx->key = rcu_dereference(rx->sta->gtk[mmie_keyidx]);
-+		}
- 		if (!rx->key)
- 			rx->key = rcu_dereference(rx->sdata->keys[mmie_keyidx]);
- 	} else if (!ieee80211_has_protected(fc)) {
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 2030443..e194df6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -590,6 +590,9 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 	else if (tx->sta &&
- 		 (key = rcu_dereference(tx->sta->ptk[tx->sta->ptk_idx])))
- 		tx->key = key;
-+	else if (ieee80211_is_group_privacy_action(tx->skb) &&
-+		(key = rcu_dereference(tx->sdata->default_multicast_key)))
-+		tx->key = key;
- 	else if (ieee80211_is_mgmt(hdr->frame_control) &&
- 		 is_multicast_ether_addr(hdr->addr1) &&
- 		 ieee80211_is_robust_mgmt_frame(tx->skb) &&
-@@ -622,7 +625,8 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
- 		case WLAN_CIPHER_SUITE_GCMP_256:
- 			if (!ieee80211_is_data_present(hdr->frame_control) &&
- 			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
--					       tx->skb))
-+					       tx->skb) &&
-+			    !ieee80211_is_group_privacy_action(tx->skb))
- 				tx->key = NULL;
- 			else
- 				skip_hw = (tx->key->conf.flags &
+
 -- 
-2.5.0
-
+Best regards,
+Jacek Anaszewski
