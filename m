@@ -1,112 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59336 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1426641AbcFIFHJ (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35231 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233AbcFUPZu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 01:07:09 -0400
-Date: Thu, 9 Jun 2016 10:36:58 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Sven Eckelmann <sven.eckelmann@open-mesh.com>
-Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	marek.lindner@open-mesh.com
-Subject: Re: [PATCH 0/2] ath10k: Add support for QCA9887
-Message-ID: <20160609050657.GA31330@atheros-ThinkPad-T61> (sfid-20160609_070723_459522_78363082)
-References: <1568876.Six5hABE57@bentobox>
- <2262792.6VVL0Htyzj@bentobox>
- <20160607145002.GB11250@atheros-ThinkPad-T61>
- <2104766.hdzL6bzVNd@bentobox>
- <20160607171110.GA13293@atheros-ThinkPad-T61>
- <20160608124308.GB29340@atheros-ThinkPad-T61>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160608124308.GB29340@atheros-ThinkPad-T61>
+	Tue, 21 Jun 2016 11:25:50 -0400
+Received: by mail-pf0-f193.google.com with SMTP id t190so1591333pfb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2016 08:25:49 -0700 (PDT)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: j@w1.fi
+Cc: linux-wireless@vger.kernel.org,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH v2] mac80211: Encrypt "Group addressed privacy" action frames
+Date: Tue, 21 Jun 2016 15:23:39 +0900
+Message-Id: <1466490219-2891-1-git-send-email-masashi.honma@gmail.com> (sfid-20160621_172910_206663_2319B327)
+In-Reply-To: <20160620212529.GA19076@w1.fi>
+References: <20160620212529.GA19076@w1.fi>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sven,
+Previously, the action frames to group address was not encrypted. But
+[1] "Table 8-38 Category values" indicates "Mesh" and "Multihop" category
+action frames should be encrypted (Group addressed privacy == yes). And the
+encyption key should be MGTK ([1] 10.13 Group addressed robust management frame
+procedures). So this patch modifies the code to make it suitable for spec.
 
-i have something like this as of now(generically
-disabling TX-STBC for streams <= 1 just like ath9k
-does
+[1] IEEE Std 802.11-2012
 
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4194,6 +4194,9 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
- 			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2);
- 	}
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ include/linux/ieee80211.h | 20 ++++++++++++++++++++
+ net/mac80211/tx.c         |  7 +++++--
+ 2 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index b118744..3ff7d3f 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -19,6 +19,7 @@
  
-+	if (ar->cfg_tx_chainmask <= 1)
-+		vht_cap.cap &= ~IEEE80211_VHT_CAP_TXSTBC;
+ #include <linux/types.h>
+ #include <linux/if_ether.h>
++#include <linux/etherdevice.h>
+ #include <asm/byteorder.h>
+ #include <asm/unaligned.h>
+ 
+@@ -2487,6 +2488,25 @@ static inline bool ieee80211_is_public_action(struct ieee80211_hdr *hdr,
+ }
+ 
+ /**
++ * ieee80211_is_group_privacy_action - check if frame is a group addressed
++ * privacy action frame
++ * @hdr: the frame
++ */
++static inline bool ieee80211_is_group_privacy_action(struct ieee80211_hdr *hdr)
++{
++	struct ieee80211_mgmt *mgmt;
 +
- 	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
- 	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
++	if (!ieee80211_is_action(hdr->frame_control) ||
++	    !is_multicast_ether_addr(hdr->addr1))
++		return false;
++
++	mgmt = (struct ieee80211_mgmt *)hdr;
++
++	return mgmt->u.action.category == WLAN_CATEGORY_MESH_ACTION ||
++		mgmt->u.action.category == WLAN_CATEGORY_MULTIHOP_ACTION;
++}
++
++/**
+  * ieee80211_tu_to_usec - convert time units (TU) to microseconds
+  * @tu: the TUs
+  */
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 2030443..5ad205e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -590,6 +590,9 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 	else if (tx->sta &&
+ 		 (key = rcu_dereference(tx->sta->ptk[tx->sta->ptk_idx])))
+ 		tx->key = key;
++	else if (ieee80211_is_group_privacy_action(hdr) &&
++		 (key = rcu_dereference(tx->sdata->default_multicast_key)))
++		tx->key = key;
+ 	else if (ieee80211_is_mgmt(hdr->frame_control) &&
+ 		 is_multicast_ether_addr(hdr->addr1) &&
+ 		 ieee80211_is_robust_mgmt_frame(tx->skb) &&
+@@ -608,7 +611,6 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 		bool skip_hw = false;
  
-@@ -4231,7 +4234,7 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
- 		ht_cap.cap |= smps;
- 	}
- 
--	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC)
-+	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC && (ar->cfg_tx_chainmask > 1))
- 		ht_cap.cap |= IEEE80211_HT_CAP_TX_STBC;
- 
- 	if (ar->ht_cap_info & WMI_HT_CAP_RX_STBC) {
+ 		/* TODO: add threshold stuff again */
+-
+ 		switch (tx->key->conf.cipher) {
+ 		case WLAN_CIPHER_SUITE_WEP40:
+ 		case WLAN_CIPHER_SUITE_WEP104:
+@@ -622,7 +624,8 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+ 		case WLAN_CIPHER_SUITE_GCMP_256:
+ 			if (!ieee80211_is_data_present(hdr->frame_control) &&
+ 			    !ieee80211_use_mfp(hdr->frame_control, tx->sta,
+-					       tx->skb))
++					       tx->skb) &&
++			    !ieee80211_is_group_privacy_action(hdr))
+ 				tx->key = NULL;
+ 			else
+ 				skip_hw = (tx->key->conf.flags &
 -- 
+2.5.0
 
-regards,
-shafi
-
-On Wed, Jun 08, 2016 at 06:13:08PM +0530, Mohammed Shafi Shajakhan wrote:
-> On Tue, Jun 07, 2016 at 10:41:48PM +0530, Mohammed Shafi Shajakhan wrote:
-> > Hi Sven,
-> > 
-> > On Tue, Jun 07, 2016 at 06:54:54PM +0200, Sven Eckelmann wrote:
-> > > On Tuesday 07 June 2016 20:20:02 Mohammed Shafi Shajakhan wrote:
-> > > [...]
-> > > > [shafi] it would be helpful if you can share your basic test results (if its
-> > > > possible to share). Have you tried to bring up the card in 5ghz (or) 2ghz.
-> > > > Or both of them were tried ?
-> > > 
-> > > * 5GHz-only (I have no 2.4GHz capable card)
-> > > * card is able to scan
-> > > * card is able to create an AP
-> > > * data can be transferred via AP and client (bidirectional connection)
-> > > * performance was more like 15 Mibit/s for 1x1 HT20 11n devices instead of
-> > >   something like 35-40 Mibit/s
-> > 
-> > [shafi] sure thanks a lot, this is a good start, i will keep you posted
-> > with my findings and results.
-> 
-> [shafi] request if you can disable TX-STBC for both HT and VHT, it helped
-> me though. Will keep you posted with more updates.
-> 
-> > 
-> > > 
-> > > I cannot give you any more detailed, current performance test results because
-> > > they were done months ago and are most likely not relevant to describe the
-> > > current state. Please ask Kalle if you want to know why the old tests were
-> > > done many, many months ago.
-> > 
-> > [shafi] sure, hopefully we can get this sorted out. Thank you for the patches
-> > and support.
-> > 
-> > > 
-> > > Please ask Marek when you want to have tests done with the current
-> > > mac8011+ath10k.
-> > 
-> > [shafi] thanks
-> > 
-> > > 
-> > > Kind regards,
-> > > 	Sven
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
