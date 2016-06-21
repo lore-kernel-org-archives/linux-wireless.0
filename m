@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:42922 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753452AbcFEVmr (ORCPT
+Received: from mail-it0-f67.google.com ([209.85.214.67]:33590 "EHLO
+	mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986AbcFUWaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2016 17:42:47 -0400
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	stable@vger.kernel.org, linux-wireless@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Subject: [PATCH 4.4 32/99] ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
-Date: Sun,  5 Jun 2016 14:41:05 -0700
-Message-Id: <20160605213906.184537257@linuxfoundation.org> (sfid-20160606_005514_835959_9E2AC788)
-In-Reply-To: <20160605213902.974592018@linuxfoundation.org>
-References: <20160605213902.974592018@linuxfoundation.org>
+	Tue, 21 Jun 2016 18:30:13 -0400
+Received: by mail-it0-f67.google.com with SMTP id y93so3334477ita.0
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2016 15:29:55 -0700 (PDT)
+Date: Tue, 21 Jun 2016 18:29:53 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Fix mesh estab_plinks counting in STA removal
+ case
+Message-ID: <20160621222953.GB7271@localhost> (sfid-20160622_003043_190487_6941DC35)
+References: <20160619205102.GA28350@w1.fi>
+ <1466536150.18972.1.camel@sipsolutions.net>
+ <20160621222602.GA7271@localhost>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160621222602.GA7271@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-4.4-stable review patch.  If anyone has any objections, please let me know.
+On Tue, Jun 21, 2016 at 06:26:02PM -0400, Bob Copeland wrote:
+> Looks further buggy, so perhaps this untested patch would work, i.e.
+                                       ^^^^^^^^ (still)
 
-------------------
+> @@ -370,13 +372,19 @@ u32 mesh_plink_deactivate(struct sta_info *sta)
+>  
+>  	spin_lock_bh(&sta->mesh->plink_lock);
+>  	changed = __mesh_plink_deactivate(sta);
+> -	sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
+> -	mesh_plink_frame_tx(sdata, sta, WLAN_SP_MESH_PEERING_CLOSE,
+> -			    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
+> -			    sta->mesh->reason);
+> +
+> +	if (sdata->u.mesh.user_mpm) {
 
-From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
+should be !sdata->u.mesh.user_mpm :)
 
-commit 0f9edcdd88a993914fa1d1dc369b35dc503979db upstream.
+> +		sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
+> +		mesh_plink_frame_tx(sdata, sta, WLAN_SP_MESH_PEERING_CLOSE,
+> +				    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
+> +				    sta->mesh->reason);
+> +	}
+>  	spin_unlock_bh(&sta->mesh->plink_lock);
+>  	mesh_path_flush_by_nexthop(sta);
+>  
+> +	/* make sure no readers can access nexthop sta from here on */
+> +	synchronize_net();
+> +
+>  	return changed;
+>  }
+>  
+> -- 
+> 2.9.0
+> 
 
-The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
-(active high instead of active low).
-
-The same PCI Subsystem ID is used by both cards, which are based on
-the same Atheros MB92 design.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/net/wireless/ath/ath9k/pci.c |   10 ++++++++++
- 1 file changed, 10 insertions(+)
-
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pc
- 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
-+
-+#ifdef CONFIG_ATH9K_PCOEM
-+	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0029,
-+			 PCI_VENDOR_ID_ATHEROS,
-+			 0x2096),
-+	  .driver_data = ATH9K_PCI_LED_ACT_HI },
-+#endif
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
- 
- #ifdef CONFIG_ATH9K_PCOEM
-
-
+-- 
+Bob Copeland %% http://bobcopeland.com/
