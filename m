@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:36152 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698AbcFJJKp convert rfc822-to-8bit (ORCPT
+Received: from bear.ext.ti.com ([198.47.19.11]:45596 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751109AbcFUM3f convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 05:10:45 -0400
-Received: by mail-wm0-f43.google.com with SMTP id n184so257987754wmn.1
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 02:10:44 -0700 (PDT)
+	Tue, 21 Jun 2016 08:29:35 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: Bob Copeland <me@bobcopeland.com>,
+	"Altshul, Maxim" <maxim.altshul@ti.com>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"eliad@wizery.com" <eliad@wizery.com>, "Mishol, Guy" <guym@ti.com>,
+	"arik@wizery.com" <arik@wizery.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"davem@davemloft.net" <davem@davemloft.net>
+Subject: RE: [PATCH 0/3] *** Mesh Path Selection Metric Calculation ***
+Date: Tue, 21 Jun 2016 12:23:48 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101391CC2B1@DFRE01.ent.ti.com> (sfid-20160621_142939_561469_21FE6CCB)
+References: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com>
+ <20160621121905.GA4210@localhost>
+In-Reply-To: <20160621121905.GA4210@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <d836933e-ddbb-d10c-0715-6bce4396fd41@nbd.name>
-References: <ff65514a-47a3-2f32-658c-a2177401aa9a@bk.ru> <CA+BoTQmJ+JruxZ9WsG8Dnz=cwNY+e3Dy=g74-brS+0OE_5iu0Q@mail.gmail.com>
- <d836933e-ddbb-d10c-0715-6bce4396fd41@nbd.name>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 10 Jun 2016 11:10:43 +0200
-Message-ID: <CA+BoTQ=xWetiO9GK_staz=M=rAT4_tA5khedqn206mjyRHsmQg@mail.gmail.com> (sfid-20160610_111051_322091_FF8AB05C)
-Subject: Re: ath10k/QCA9980 - Issues introduced in wireless testing 2016-05
-To: Felix Fietkau <nbd@nbd.name>
-Cc: "A. Benz" <ash.benz@bk.ru>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 June 2016 at 10:55, Felix Fietkau <nbd@nbd.name> wrote:
-> On 2016-06-10 10:50, Michal Kazior wrote:
->> On 9 June 2016 at 09:46, A. Benz <ash.benz@bk.ru> wrote:
->>> Dear All,
->>>
->>> I am using LEDE on my IPQ806x (QCA9980) system (Archer C2600).
->>> With compat-wireless-2016-05-12, I observed traces attached below.
->>> The router is unstable and eventually reboots by itself (randomly).
->>>
->>> Upon reverting to compat-wireless-2016-01, the issue disappears. Nothing
->>> else is changed (software-wise or hardware).
->>> This was confirmed with other users.
->>>
->>> A new compile with the fixes below:
->>> https://git.lede-project.org/?p=lede/nbd/staging.git;a=commit;h=858e26f3c0fc11231f25497cbb2ddca1e5f101e0
->>>
->>> Did not solve the problem.
->>>
->>> Please let me know if I need to provide any further information.
->>>
->>> ------------[ cut here ]------------
->>> WARNING: CPU: 0 PID: 558 at
->>> compat-wireless-2016-05-12/net/mac80211/rx.c:4068
->>> ieee80211_rx_napi+0x8c/0x8a4 [mac80211]()
->>
->> Can you post what is at rx.c line 4068 (and +/- 3 lines), please?
-> It's early in ieee80211_rx_napi:
->
->     sband = local->hw.wiphy->bands[status->band];
->     if (WARN_ON(!sband))
->         goto drop;
+Yes,
+TI driver have added support in our latest release (TI git).
+http://software-dl.ti.com/ecs/WiLink8/R8_7/exports/release_notes_R8_7.html
 
-Thanks.
+Patches will be shared with mainline in the near future.
 
+Thanks,
+Yaniv Machani
 
-> I could not easily find a scenario under which status->band would not be
-> set properly by the driver, so my guess is there is some nasty memory
-> corruption going on.
+-----Original Message-----
+From: Bob Copeland [mailto:me@bobcopeland.com] 
+Sent: Tuesday, June 21, 2016 15:19
+To: Altshul, Maxim
+Cc: johannes@sipsolutions.net; kvalo@codeaurora.org; eliad@wizery.com; Machani, Yaniv; Mishol, Guy; arik@wizery.com; linux-wireless@vger.kernel.org; netdev@vger.kernel.org; davem@davemloft.net
+Subject: Re: [PATCH 0/3] *** Mesh Path Selection Metric Calculation ***
 
-Hmm.. could it be related to ath10k not fulfilling (some) NAPI's
-locking requirements and thus ending up with, e.g. linked-list mayhem?
+On Mon, Jun 20, 2016 at 04:00:19PM +0300, Maxim Altshul wrote:
+> 2. Implements the opcode and the mechanism that reports the rates in 
+> TI driver.
 
+Does this mean TI driver will support mesh at some point?
 
-Michał
+--
+Bob Copeland %% http://bobcopeland.com/
