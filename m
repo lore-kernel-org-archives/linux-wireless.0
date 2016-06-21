@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40678 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972AbcFDPXp (ORCPT
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:35100 "EHLO
+	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751871AbcFUOtz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 11:23:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jonas Gorski <jogo@openwrt.org>
-Cc: Avinash Patil <avinashp@quantenna.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	dlebed@quantenna.com, smaksimenko@quantenna.com,
-	smatyukevich@quantenna.com, imitsyanko@quantenna.com,
-	btherthala@quantenna.com, hwang@quantenna.com, krath@quantenna.com
-Subject: Re: [PATCH] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
-References: <1464288752-6625-1-git-send-email-avinashp@quantenna.com>
-	<CAOiHx==C56Pj768bRX16VOaxj0Qf_oh5KXfhFJakT2zi-SokQQ@mail.gmail.com>
-Date: Sat, 04 Jun 2016 18:23:38 +0300
-In-Reply-To: <CAOiHx==C56Pj768bRX16VOaxj0Qf_oh5KXfhFJakT2zi-SokQQ@mail.gmail.com>
-	(Jonas Gorski's message of "Sun, 29 May 2016 13:35:20 +0200")
-Message-ID: <87wpm5rn9h.fsf@kamboji.qca.qualcomm.com> (sfid-20160604_172349_055906_B0CF8955)
+	Tue, 21 Jun 2016 10:49:55 -0400
+Received: by mail-lf0-f43.google.com with SMTP id l188so27006147lfe.2
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2016 07:49:54 -0700 (PDT)
+Subject: Re: [PATCH 1/2] ath10k: remove unused <linux/semaphore.h>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>, kvalo@qca.qualcomm.com
+References: <20160621114539.15313-1-chaehyun.lim@gmail.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <bf7b2008-b333-2d79-a952-fda895da8479@cogentembedded.com> (sfid-20160621_164958_870444_7FE4A5CB)
+Date: Tue, 21 Jun 2016 16:46:00 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160621114539.15313-1-chaehyun.lim@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jonas Gorski <jogo@openwrt.org> writes:
+Hello.
 
-> On 26 May 2016 at 20:52, Avinash Patil <avinashp@quantenna.com> wrote:
+On 6/21/2016 2:45 PM, Chaehyun Lim wrote:
+
+> <linux/semaphore.h> is not used anymore, so just remove it.
+
+    s/it/#include/?
+
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+[...]
+
+> diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
+> index cc82718..0c55cd9 100644
+> --- a/drivers/net/wireless/ath/ath10k/htc.h
+> +++ b/drivers/net/wireless/ath/ath10k/htc.h
+> @@ -22,7 +22,6 @@
+>  #include <linux/list.h>
+>  #include <linux/bug.h>
+>  #include <linux/skbuff.h>
+> -#include <linux/semaphore.h>
+>  #include <linux/timer.h>
 >
->> This email, including its contents and any attachment(s), may contain
->> confidential information of Quantenna Communications, Inc. and is
->> solely for the intended recipient(s). If you may have received this
->> in error, please contact the sender and permanently delete this
->> email, its contents and any attachment(s).
->
-> You will need to remove this footer to be taken seriously, as
-> confidential information would be not GPL compatible, and "may
-> contain" means it is too risky to accept that.
+>  struct ath10k;
 
-Yeah, I'm not going to take (or even look) patches with such
-disclaimers. So please resend so that we can start the review.
+MBR, Sergei
 
--- 
-Kalle Valo
