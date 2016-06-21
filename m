@@ -1,109 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:41331 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752495AbcFFRDD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2016 13:03:03 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-	Javier Martinez Canillas <javier@osg.samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH v2 1/3] mwifiex: add a cfg80211 .get_tx_power operation callback
-Date: Mon,  6 Jun 2016 13:02:36 -0400
-Message-Id: <1465232558-31678-2-git-send-email-javier@osg.samsung.com> (sfid-20160606_190407_656518_B7B909E5)
-In-Reply-To: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
-References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13478 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753682AbcFUFrB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2016 01:47:01 -0400
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <akolli@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	Anilkumar Kolli <akolli@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: remove unused member in ath10k_hw_regs
+Date: Tue, 21 Jun 2016 11:18:07 +0530
+Message-ID: <1466488088-20961-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20160621_074722_783677_A06E37CA)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mwifiex driver implements a cfg80211 .set_tx_power operation handler
-but doesn't have the inverse .get_tx_power callback.
+From: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-This not only has the effect that the Tx power can't be reported to user
-space tools such as iwconfig and iwlist but also that the wireless core
-prints a warning when a new wiphy is created due an cfg80211 operation
-being implemented without its counterpart.
+rtc_state_cold_reset_mask is unused in ath10k_hw_regs.
+instead fixed delays are used.
 
-After this patch, the Tx power is properly reported to user-space tools:
-
-$ iwlist mlan0 txpower
-mlan0     unknown transmit-power information.
-
-          Current Tx-Power=13 dBm       (19 mW)
-
-and also the following warning isn't shown anymore on the driver probe:
-
-WARNING: CPU: 3 PID: 127 at net/wireless/core.c:366 wiphy_new_nm+0x66c/0x6ac
-Modules linked in: mwifiex_sdio mwifiex
-CPU: 3 PID: 127 Comm: kworker/3:1 Tainted: G        W       4.7.0-rc1-next-20160531-00006-g569df5b983f3
-Hardware name: SAMSUNG EXYNOS (Flattened Device Tree)
-Workqueue: events request_firmware_work_func
-[<c010e1ac>] (unwind_backtrace) from [<c010af38>] (show_stack+0x10/0x14)
-[<c010af38>] (show_stack) from [<c0323b9c>] (dump_stack+0x88/0x9c)
-[<c0323b9c>] (dump_stack) from [<c011a828>] (__warn+0xe8/0x100)
-[<c011a828>] (__warn) from [<c011a8f0>] (warn_slowpath_null+0x20/0x28)
-[<c011a8f0>] (warn_slowpath_null) from [<c06a42d4>] (wiphy_new_nm+0x66c/0x6ac)
-[<c06a42d4>] (wiphy_new_nm) from [<bf1c24cc>] (mwifiex_register_cfg80211+0x28/0x3f0 [mwifiex])
-[<bf1c24cc>] (mwifiex_register_cfg80211 [mwifiex]) from [<bf1a0018>] (mwifiex_fw_dpc+0x2b0/0x474 [mwifiex])
-[<bf1a0018>] (mwifiex_fw_dpc [mwifiex]) from [<c040eb74>] (request_firmware_work_func+0x30/0x58)
-[<c040eb74>] (request_firmware_work_func) from [<c012fe90>] (process_one_work+0x124/0x338)
-[<c012fe90>] (process_one_work) from [<c01300dc>] (worker_thread+0x38/0x4d4)
-[<c01300dc>] (worker_thread) from [<c01353b8>] (kthread+0xdc/0xf4)
-[<c01353b8>] (kthread) from [<c0107978>] (ret_from_fork+0x14/0x3c)
-
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
 ---
+ drivers/net/wireless/ath/ath10k/hw.c |    3 ---
+ drivers/net/wireless/ath/ath10k/hw.h |    2 --
+ 2 files changed, 5 deletions(-)
 
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index ff948a922222..b17f3d09a2c7 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -377,6 +377,29 @@ mwifiex_cfg80211_set_tx_power(struct wiphy *wiphy,
- }
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index f544d48518c3..433e064c7718 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -19,7 +19,6 @@
+ #include "hw.h"
  
- /*
-+ * CFG802.11 operation handler to get Tx power.
-+ */
-+static int
-+mwifiex_cfg80211_get_tx_power(struct wiphy *wiphy,
-+			      struct wireless_dev *wdev,
-+			      int *dbm)
-+{
-+	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
-+	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
-+							MWIFIEX_BSS_ROLE_ANY);
-+	int ret = mwifiex_send_cmd(priv, HostCmd_CMD_RF_TX_PWR,
-+				   HostCmd_ACT_GEN_GET, 0, NULL, true);
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	/* tx_power_level is set in HostCmd_CMD_RF_TX_PWR command handler */
-+	*dbm = priv->tx_power_level;
-+
-+	return 0;
-+}
-+
-+/*
-  * CFG802.11 operation handler to set Power Save option.
-  *
-  * The timeout value, if provided, is currently ignored.
-@@ -3940,6 +3963,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.set_default_key = mwifiex_cfg80211_set_default_key,
- 	.set_power_mgmt = mwifiex_cfg80211_set_power_mgmt,
- 	.set_tx_power = mwifiex_cfg80211_set_tx_power,
-+	.get_tx_power = mwifiex_cfg80211_get_tx_power,
- 	.set_bitrate_mask = mwifiex_cfg80211_set_bitrate_mask,
- 	.start_ap = mwifiex_cfg80211_start_ap,
- 	.stop_ap = mwifiex_cfg80211_stop_ap,
+ const struct ath10k_hw_regs qca988x_regs = {
+-	.rtc_state_cold_reset_mask	= 0x00000400,
+ 	.rtc_soc_base_address		= 0x00004000,
+ 	.rtc_wmac_base_address		= 0x00005000,
+ 	.soc_core_base_address		= 0x00009000,
+@@ -46,7 +45,6 @@ const struct ath10k_hw_regs qca988x_regs = {
+ };
+ 
+ const struct ath10k_hw_regs qca6174_regs = {
+-	.rtc_state_cold_reset_mask		= 0x00002000,
+ 	.rtc_soc_base_address			= 0x00000800,
+ 	.rtc_wmac_base_address			= 0x00001000,
+ 	.soc_core_base_address			= 0x0003a000,
+@@ -73,7 +71,6 @@ const struct ath10k_hw_regs qca6174_regs = {
+ };
+ 
+ const struct ath10k_hw_regs qca99x0_regs = {
+-	.rtc_state_cold_reset_mask		= 0x00000400,
+ 	.rtc_soc_base_address			= 0x00080000,
+ 	.rtc_wmac_base_address			= 0x00000000,
+ 	.soc_core_base_address			= 0x00082000,
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index f41c91ccb56a..549f99bdfb86 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -208,7 +208,6 @@ enum ath10k_hw_rev {
+ };
+ 
+ struct ath10k_hw_regs {
+-	u32 rtc_state_cold_reset_mask;
+ 	u32 rtc_soc_base_address;
+ 	u32 rtc_wmac_base_address;
+ 	u32 soc_core_base_address;
+@@ -495,7 +494,6 @@ enum ath10k_hw_4addr_pad {
+ /* as of IP3.7.1 */
+ #define RTC_STATE_V_ON				ar->hw_values->rtc_state_val_on
+ 
+-#define RTC_STATE_COLD_RESET_MASK		ar->regs->rtc_state_cold_reset_mask
+ #define RTC_STATE_V_LSB				0
+ #define RTC_STATE_V_MASK			0x00000007
+ #define RTC_STATE_ADDRESS			0x0000
 -- 
-2.5.5
+1.7.9.5
 
