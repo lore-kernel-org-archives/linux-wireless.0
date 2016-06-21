@@ -1,69 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34815 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813AbcFCQUW (ORCPT
+Received: from mail-io0-f171.google.com ([209.85.223.171]:34877 "EHLO
+	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750835AbcFUMTW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 12:20:22 -0400
-Subject: Re: [PATCH 2/2] ath10k: remove 10.1 firmware support
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@codeaurora.org>
-References: <20160603153328.11947-1-rmanohar@qti.qualcomm.com>
- <20160603153328.11947-2-rmanohar@qti.qualcomm.com>
- <5751A6D5.7080901@candelatech.com>
- <743182bcbd1efbdb576bcc51b0215300@codeaurora.org>
- <87shwuuuct.fsf@kamboji.qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <5751AE44.8050607@candelatech.com> (sfid-20160603_182025_341734_D5A8B483)
-Date: Fri, 3 Jun 2016 09:20:20 -0700
+	Tue, 21 Jun 2016 08:19:22 -0400
+Received: by mail-io0-f171.google.com with SMTP id f30so13876270ioj.2
+        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2016 05:19:22 -0700 (PDT)
+Date: Tue, 21 Jun 2016 08:19:05 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Maxim Altshul <maxim.altshul@ti.com>
+Cc: johannes@sipsolutions.net, kvalo@codeaurora.org, eliad@wizery.com,
+	yanivma@ti.com, guym@ti.com, arik@wizery.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	davem@davemloft.net
+Subject: Re: [PATCH 0/3] *** Mesh Path Selection Metric Calculation ***
+Message-ID: <20160621121905.GA4210@localhost> (sfid-20160621_141926_215199_E9DBDE7C)
+References: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <87shwuuuct.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/03/2016 09:09 AM, Valo, Kalle wrote:
-> Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
->
->> On 2016-06-03 21:18, Ben Greear wrote:
->>> On 06/03/2016 08:33 AM, Rajkumar Manoharan wrote:
->>>> Earlier qca9888 device was brought up using 10.1 firmware and then
->>>> later all firmware fixes and new features are migrated to 10.2/10.2.x
->>>> firmware branch. As all of 10.1 funtionalities are supported in 10.2
->>>> based firmware, removing 10.1 firmware support for qca9888 device.
->>>
->>> Oh please do not do this.  My 10.1 firmware works very nicely,
->>> and out-performs 10.2 in my testing.  Lots of people use my firmware
->>> when they need IBSS support or other features not found in
->>> official firmware, so it is not just me that will have
->>> problems if you remove this support.
->>>
->> Aah.. I thought CT firmware is 10.2 based. Since most of firmware bug
->> fixes and enhancements are integrated into 10.2 based firmware, we
->> thought of get rid of 10.1 firmware to reduce code size. Moreover
->> existing 10.1 official firmware has known issues.
->
-> Yeah, we really want to reduce the amount firmware branches to support
-> in ath10k.
->
->> Is it possible to upgrade CT firmware to 10.2 WMI/HTT interfaces?
->
-> That's a good idea. That shouldn't be too hard, right? I don't think HTT needs
-> any changes, but for WMI few commands and ids need to be changed.
+On Mon, Jun 20, 2016 at 04:00:19PM +0300, Maxim Altshul wrote:
+> 2. Implements the opcode and the mechanism that reports the rates
+> in TI driver.
 
-I was thinking the 10.2 mgt-over-htt API would be trouble-some to make work on
-10.1 firmware.  I have my own way to do mgt-over-htt in 10.1, but API
-is different and I would need a small driver patch upstream
-to make that work.  I'm not sure what other changes would be needed, but
-if it is just conditionally compiling some WMI defines, that should be
-doable.
-
-Thanks,
-Ben
+Does this mean TI driver will support mesh at some point?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Bob Copeland %% http://bobcopeland.com/
