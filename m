@@ -1,55 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-16.163.com ([220.181.12.16]:53764 "EHLO m12-16.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933120AbcFQRfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 13:35:13 -0400
-From: weiyj_lk@163.com
-To: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH] staging: wilc1000: fix return value check in wlan_initialize_threads()
-Date: Fri, 17 Jun 2016 17:34:17 +0000
-Message-Id: <1466184857-21605-1-git-send-email-weiyj_lk@163.com> (sfid-20160617_193524_856267_6A1C7B57)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Received: from mailout3.w1.samsung.com ([210.118.77.13]:16902 "EHLO
+	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752024AbcFUHLp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2016 03:11:45 -0400
+Message-id: <5768E815.5080706@samsung.com> (sfid-20160621_091241_198022_876EF796)
+Date: Tue, 21 Jun 2016 09:09:09 +0200
+From: Jacek Anaszewski <j.anaszewski@samsung.com>
+MIME-version: 1.0
+To: "Andrew F. Davis" <afd@ti.com>
+Cc: Russell King <linux@armlinux.org.uk>,
+	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Sebastian Reichel <sre@kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>, linux-pwm@vger.kernel.org,
+	lguest@lists.ozlabs.org, linux-wireless@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-leds@vger.kernel.org,
+	linux-media@vger.kernel.org
+Subject: Re: [PATCH] leds: Add no-op gpio_led_register_device when LED
+ subsystem is disabled
+References: <20160613200211.14790-1-afd@ti.com>
+ <20160613200211.14790-13-afd@ti.com> <5760FA52.7010806@samsung.com>
+ <57647DBD.2010406@ti.com> <57679E38.3080901@samsung.com>
+ <57686A94.2010704@ti.com>
+In-reply-to: <57686A94.2010704@ti.com>
+Content-type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Hi Andrew,
 
-In case of error, the function kthread_run() returns ERR_PTR()
-and never returns NULL. The NULL test in the return value check
-should be replaced with IS_ERR().
+This patch doesn't apply, please rebase onto recent LED tree.
 
-Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
----
- drivers/staging/wilc1000/linux_wlan.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On 06/21/2016 12:13 AM, Andrew F. Davis wrote:
+> Some systems use 'gpio_led_register_device' to make an in-memory copy of
+> their LED device table so the original can be removed as .init.rodata.
+> When the LED subsystem is not enabled source in the led directory is not
+> built and so this function may be undefined. Fix this here.
+>
+> Signed-off-by: Andrew F. Davis <afd@ti.com>
+> ---
+>   include/linux/leds.h | 8 ++++++++
+>   1 file changed, 8 insertions(+)
+>
+> diff --git a/include/linux/leds.h b/include/linux/leds.h
+> index d2b1306..a4a3da6 100644
+> --- a/include/linux/leds.h
+> +++ b/include/linux/leds.h
+> @@ -386,8 +386,16 @@ struct gpio_led_platform_data {
+>                                          unsigned long *delay_off);
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 4f93c11..b622510 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -717,10 +717,10 @@ static int wlan_initialize_threads(struct net_device *dev)
- 
- 	wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
- 				     "K_TXQ_TASK");
--	if (!wilc->txq_thread) {
-+	if (IS_ERR(wilc->txq_thread)) {
- 		netdev_err(dev, "couldn't create TXQ thread\n");
- 		wilc->close = 0;
--		return -ENOBUFS;
-+		return PTR_ERR(wilc->txq_thread);
- 	}
- 	wait_for_completion(&wilc->txq_thread_started);
- 
+Currently there is some stuff here, and in fact it has been for
+a long time.
+
+Patch "[PATCH 12/12] leds: Only descend into leds directory when
+CONFIG_NEW_LEDS is set" also doesn't apply.
+What repository are you using?
+
+>   };
+>
+> +#ifdef CONFIG_NEW_LEDS
+>   struct platform_device *gpio_led_register_device(
+>                  int id, const struct gpio_led_platform_data *pdata);
+> +#else
+> +static inline struct platform_device *gpio_led_register_device(
+> +               int id, const struct gpio_led_platform_data *pdata)
+> +{
+> +       return 0;
+> +}
+> +#endif
+>
+>   enum cpu_led_event {
+>          CPU_LED_IDLE_START,     /* CPU enters idle */
+>
 
 
-
-
-
+-- 
+Best regards,
+Jacek Anaszewski
