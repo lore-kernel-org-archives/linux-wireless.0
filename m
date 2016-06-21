@@ -1,87 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:59982 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbcFUQFw (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:51494 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752538AbcFUQmL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 12:05:52 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Binoy Jayan <binoy.jayan@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] staging: wilc1000: Replace kthread with workqueue for host interface
-Date: Tue, 21 Jun 2016 18:07:41 +0200
-Message-ID: <7461266.G5R58nnEKu@wuerfel> (sfid-20160621_180617_191920_BCA35E87)
-In-Reply-To: <1466417419-13568-3-git-send-email-binoy.jayan@linaro.org>
-References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org> <1466417419-13568-1-git-send-email-binoy.jayan@linaro.org> <1466417419-13568-3-git-send-email-binoy.jayan@linaro.org>
+	Tue, 21 Jun 2016 12:42:11 -0400
+Date: Tue, 21 Jun 2016 19:42:07 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] mac80211: Encrypt "Group addressed privacy" action
+ frames
+Message-ID: <20160621164207.GA7323@w1.fi> (sfid-20160621_184214_800459_B912B04F)
+References: <20160620212529.GA19076@w1.fi>
+ <1466490219-2891-1-git-send-email-masashi.honma@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466490219-2891-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, June 20, 2016 3:40:19 PM CEST Binoy Jayan wrote:
-> Deconstruct the kthread / message_queue logic, replacing it with
-> create_singlethread_workqueue() / queue_work() setup, by adding a
-> 'struct work_struct' to 'struct host_if_msg'. The current kthread
-> hostIFthread() is converted to a work queue helper with the name
-> 'host_if_work'.
-> 
-> Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
-> Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+On Tue, Jun 21, 2016 at 03:23:39PM +0900, Masashi Honma wrote:
 
-Hi Binoy,
+> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> +static inline bool ieee80211_is_group_privacy_action(struct ieee80211_hdr *hdr)
 
-You made a mistake here in adding the 'Reviewed-by:' tag before I replied with
-that tag. I did a review of an earlier version and you addressed the comments
-that I had for that, but you can only add the tag after I send that reply.
+This is somewhat problematic since no indication of the frame length is
+passed in here and we are reading beyond the frame header below.. Maybe
+this should use the same style as ieee80211_is_robust_mgmt_frame()
+instead, i.e., use skb as the argument and define
+_ieee80211_is_group_privacy_action() to take in struct ieee80211_hdr *.
 
-That said, the patch looks very good to me, and I see no remaining
-problems that would prevent it from getting merged (after Atmel have tested
-it), just a couple of things that would make it easier to review:
+> +	return mgmt->u.action.category == WLAN_CATEGORY_MESH_ACTION ||
+> +		mgmt->u.action.category == WLAN_CATEGORY_MULTIHOP_ACTION;
 
-> +static int wilc_enqueue_cmd(struct host_if_msg *msg);
-> +static void host_if_work(struct work_struct *work);
+These read the buffer at offset 24, i.e., just after the header. This
+should do same as ieee80211_is_robust_mgmt_frame(), i.e., return false
+if skb->len < 25.
 
-A small comment on coding style: we try to avoid forward declaration for local
-functions. Instead, you can reorder the code to have the callee first. This
-is the order which most readers will expect, and having no forward declarations
-in the code makes it more likely that there are no recursions that would
-be problematic for stack overflow.
-
->  /*!
->   *  @author		syounan
-> @@ -336,95 +276,19 @@ static int wilc_mq_destroy(struct message_queue *mq)
->   *  @note		copied from FLO glue implementatuion
->   *  @version		1.0
->   */
-> -static int wilc_mq_send(struct message_queue *mq,
-> -		 const void *send_buf, u32 send_buf_size)
-> +static int wilc_enqueue_cmd(struct host_if_msg *msg)
-
-I think this API change can be done as a separate patch: the mq and send_buf_size
-arguments are both constant for all callers, so you can have one patch just
-removes them and renames the function, to make the patch that does the
-tricky rework smaller.
-
-
-> -		}
-> +	if (msg->id == HOST_IF_MSG_CONNECT &&
-> +	    msg->vif->hif_drv->usr_scan_req.scan_result) {
-> +		wilc_enqueue_cmd(msg);
-> +		usleep_range(2 * 1000, 2 * 1000);
-> +		goto end;
-> +	}
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> @@ -608,7 +611,6 @@ ieee80211_tx_h_select_key(struct ieee80211_tx_data *tx)
+>  		bool skip_hw = false;
 >  
-> -		switch (msg.id) {
-> -		case HOST_IF_MSG_SCAN:
+>  		/* TODO: add threshold stuff again */
+> -
+>  		switch (tx->key->conf.cipher) {
+>  		case WLAN_CIPHER_SUITE_WEP40:
+>  		case WLAN_CIPHER_SUITE_WEP104:
 
-A similar trick could apply here: we can leave the switch()
-indented at the original level by putting it in an 'else'
-clause. This again makes the patch shorter and easier to
-review, and the optional reformatting can be done as a follow-up.
-
-	Arnd
+This looks completely separate item and I don't see why we would even
+delete that empty line.. In any case, it should probably not be in this
+patch.
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
