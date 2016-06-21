@@ -1,78 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:48174 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423513AbcFMVBN (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43260 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175AbcFUOQc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 17:01:13 -0400
-Date: Mon, 13 Jun 2016 23:01:09 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: =?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
-	<jprvita@endlessm.com>
-Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED
- trigger
-Message-ID: <20160613210109.GA9303@amd> (sfid-20160613_230137_580877_FAB6CF70)
-References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
- <1462199948-6424-2-git-send-email-jprvita@endlessm.com>
- <20160504072936.GB17045@amd>
- <1463045572.13313.21.camel@sipsolutions.net>
- <20160519071639.GB17077@amd>
- <1465476194.3442.21.camel@sipsolutions.net>
- <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com>
- <20160613190048.GA17101@amd>
- <CA+A7VXXOfN1Td2T6uiunWZMS4gvS5sHDzPiDp9VEdx+OPJpSmA@mail.gmail.com>
+	Tue, 21 Jun 2016 10:16:32 -0400
+Message-ID: <57694AD4.3020101@candelatech.com> (sfid-20160621_161657_303813_464EDC4F)
+Date: Tue, 21 Jun 2016 07:10:28 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <CA+A7VXXOfN1Td2T6uiunWZMS4gvS5sHDzPiDp9VEdx+OPJpSmA@mail.gmail.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+CC: ath10k <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: Re: Bug with: ath10k: enable parsing per station rx duration for
+ 10.4?
+References: <5768770C.5050305@candelatech.com> <20160621051829.GA20604@atheros-ThinkPad-T61>
+In-Reply-To: <20160621051829.GA20604@atheros-ThinkPad-T61>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon 2016-06-13 15:59:35, João Paulo Rechi Vita wrote:
-> On 13 June 2016 at 15:00, Pavel Machek <pavel@ucw.cz> wrote:
-> > Hi!
-> >
-> >> > João, that means you should send a patch to add the ::rfkill suffix.
-> >> >
-> >>
-> >> IMO "airplane" (or maybe "airplane-mode") is a better suffix, as it
-> >> reflects the label on the machine's chassis. I'll name it
-> >> "asus-wireless::airplane" and send this through platform-drivers-x86,
-> >> as this is now contained in the platform-drivers-x86 subsystem. Thanks
-> >> Johannes for your patience and help designing and reviewing the rfkill
-> >> changes, even if not all of them made it through in the end. And
-> >> thanks everyone else involved for the feedback.
-> >
-> > Actually, I'd do '::rfkill', for consistency with other places in
-> > /sys.
-> >
-> > /sys/devices/platform/thinkpad_acpi/rfkill/rfkill1/name
-> > /sys/class/rfkill
-> > /sys/module/rfkill
-> >
-> 
-> If we use "rfkill" as a suffix, how do you expect userspace to be able
-> to differentiate between a LED that indicates airplane-mode (LED ON
-> when all radios are OFF) and a LED that indicates the state of a
-> specific radio like WiFi or Bluetooth (LED ON when that specific radio
-> is ON)? If we're going this route we should provide meaningful
-> information here.
 
-'::airplane' has same problem, no?
 
-If you want to distinguish that, maybe you can do '::rfkill' for
-everything vs '::rfkill-wifi' for wifi-only and '::rfkill-bt' for
-bluetooth...
+On 06/20/2016 10:18 PM, Mohammed Shafi Shajakhan wrote:
+> Hi Ben,
+>
+> thanks for reporting ...
+>
+> On Mon, Jun 20, 2016 at 04:06:52PM -0700, Ben Greear wrote:
+>> I'm working on bringing up my hacked up version of 4.7 ath10k and 10.4 firmware, and I think
+>> I may have found a regression.
+>
+> [shafi] let me know what is the issue.. some steps to recreate the issue.
 
-Best regards,
-									Pavel
+ethtool -S wlan0
+or similar should reproduce it.
+
+You would see stats timeout messages in dmesg, and with a bit more debugging,
+you notice that the driver is basically busy-spinning trying to get stats over
+WMI and/or it is giving errors because skb pull fails because there actually is
+not extd stats struct.
+
+>>
+>> My 10.4.3-ish firmware source has a bunch of:
+>>
+>> if (stats_id == WMI_REQUEST_PEER_STAT)
+>> logic in it.  In other words, it is not using that id as a bitfield.
+>
+> [shafi] will check this.
+
+I fixed my firmware to treat it as a bitfield, and to specifically un-set the EXTD stats
+bit, and now it works with my 4.7.  Firmware fix should be backwards compatible.
+
+
+>> Now, I can fix the firmware, but I am guessing that at least some stock
+>> 10.4 firmware has this same issue, and of course any older firmware
+>> that does not have this change will still be broken.
+>>
+>> So, do you want to back out this patch below, at least the part where it sends
+>> in 0x9 as the stats_id?
+>
+> [shafi] request if you can check this please, there was some misunderstanding
+> in the design when this feature got enabled in 10.4, we fixed it in
+> https://patchwork.kernel.org/patch/9149357/
+
+That might have fixed it, but it is not in 4.7, so I didn't have it
+in my tree when testing yesterday.
+
+Thanks,
+Ben
+
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
