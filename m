@@ -1,71 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41475 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbcFDPp2 (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:51432 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750744AbcFUKHe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 11:45:28 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2016-06-04
-Date: Sat, 04 Jun 2016 18:45:21 +0300
-Message-ID: <87shwtrm9a.fsf@kamboji.qca.qualcomm.com> (sfid-20160604_174557_177032_E5041270)
+	Tue, 21 Jun 2016 06:07:34 -0400
+Date: Tue, 21 Jun 2016 12:41:46 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	ath9k-devel@lists.ath9k.org, Ben Greear <greearb@candelatech.com>
+Subject: Re: [PATCH] ath9k: Support 4.9Ghz channels on AR9580 adapter.
+Message-ID: <20160621094146.GA3196@w1.fi> (sfid-20160621_120742_285223_30B1B506)
+References: <CAGRGNgWOScCrLPyqRNus2319BPOehv3awQChoHw=RRMcSDUqzQ@mail.gmail.com>
+ <1466470940-25229-1-git-send-email-julian.calaby@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466470940-25229-1-git-send-email-julian.calaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Tue, Jun 21, 2016 at 11:02:20AM +1000, Julian Calaby wrote:
+> I've only done this work as I hate to see people's efforts go to
+> waste and I feel that there's enough roadblocks in the way of
+> actually using this functionality that casual idiots won't be able
+> to.
 
-few fixes for 4.7. Please let me know if you have any issues.
+Are these really ready to go to the upstream kernel in this state and
+without the other changes that would be needed to operate correctly?
+What is the use case for these and how have these been tested?
 
-Kalle
+> This is compile tested only as I cannot test this for real as I lack
+> both the hardware and license required.
 
-The following changes since commit b7e7ad611e24b95b0db2998428ce78370415c086:
+I don't think this is sufficient when touching this type of area. I
+would not apply these without proper testing and full set of
+functionality being available. I see no point in ath9k defining
+additional channels if all those new channels can cause is harm and not
+correct functionality. This channel list addition looks like the easiest
+part to handle compared to the other patches needed for 4.9 GHz and this
+would be the last patch on my list to get accepted..
 
-  Merge branch 'qed-fixes' (2016-05-26 12:27:33 -0700)
 
-are available in the git repository at:
+> diff --git a/drivers/net/wireless/ath/ath9k/common-init.c b/drivers/net/wireless/ath/ath9k/common-init.c
+> +#ifdef ATH9K_49_GHZ_CHAN
+> +	/* 4.9Ghz channels, public safety channels, license is required in US
+> +	 * and most other regulatory domains!
+> +	 */
+> +	CHAN5G(4915, 38), /* Channel 183 */
+> +	CHAN5G(4920, 39), /* Channel 184 */
+> +	CHAN5G(4925, 40), /* Channel 185 */
+> +	CHAN5G(4935, 41), /* Channel 187 */
+> +	CHAN5G(4940, 42), /* Channel 188 */
+> +	CHAN5G(4945, 43), /* Channel 189 */
+> +	CHAN5G(4960, 44), /* Channel 192 */
+> +	CHAN5G(4970, 45), /* Channel 194 */
+> +	CHAN5G(4980, 46), /* Channel 196 */
 
+Where are these channels defined and are these really correct
+frequencies for them? Please note that many of the 4.9 GHz channels have
+channel starting frequencies like 4.9375 GHz and 4.0025 GHz, i.e.,
+fractional MHz.. While US public safety may not have all those cases,
+even there are some 0.5 MHz cases. In addition, those channel numbers
+sound more like some of the channels defined in Japan rather than US
+public safety operating class. In addition, some of these channels seem
+to be outside the US public safety range.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-06-04
+Is this trying to add 4.9 GHz channels in general for multiple different
+use cases? And if so, what are those use cases? Or is this only for some
+public safety cases? And if so, for which regulatory domains?
 
-for you to fetch changes up to 182fd9eecb287e696c82b30d06c6150d80a49c5b:
+To be frank, I really don't see how this would be even close to a state
+that should be accepted into the upstream tree.
 
-  MAINTAINERS: Add file patterns for wireless device tree bindings (2016-06-04 17:24:02 +0300)
-
-----------------------------------------------------------------
-wireless-drivers fixes for 4.7
-
-brcmfmac
-
-* add fallback RSSI report for devices that do not report per-chain values
-* fix a null pointer derefence regression on PCIe full dongle devices
-
-rtlwifi
-
-* fix scheduling while atomic regression from commit 49f86ec21c01
-
-MAINTAINERS
-
-* add file patterns for wireless device tree bindings
-
-----------------------------------------------------------------
-Franky Lin (1):
-      brcmfmac: add eth_type_trans back for PCIe full dongle
-
-Geert Uytterhoeven (1):
-      MAINTAINERS: Add file patterns for wireless device tree bindings
-
-Jaap Jan Meijer (1):
-      brcmfmac: add fallback for devices that do not report per-chain values
-
-Larry Finger (1):
-      rtlwifi: Fix scheduling while atomic error from commit 49f86ec21c01
-
- MAINTAINERS                                        |    1 +
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   16 ++++++++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |    2 ++
- drivers/net/wireless/realtek/rtlwifi/core.c        |    6 +++---
- 4 files changed, 22 insertions(+), 3 deletions(-)
+-- 
+Jouni Malinen                                            PGP id EFC895FA
