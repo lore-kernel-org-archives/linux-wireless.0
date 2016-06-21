@@ -1,98 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35037 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbcFWQSx (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34657 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750931AbcFUKSN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 12:18:53 -0400
-Received: by mail-wm0-f68.google.com with SMTP id a66so12242249wme.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 09:18:52 -0700 (PDT)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, nbd@nbd.name
-Subject: Re: [PATCH 2/2] Documentation: dt: net: add ath9k wireless device binding
-Date: Thu, 23 Jun 2016 18:18:48 +0200
-Message-ID: <2559605.knVHY96dYe@debian64> (sfid-20160623_181857_020951_2A1E8B80)
-In-Reply-To: <20160623151328.24061-3-martin.blumenstingl@googlemail.com>
-References: <20160623151328.24061-1-martin.blumenstingl@googlemail.com> <20160623151328.24061-3-martin.blumenstingl@googlemail.com>
+	Tue, 21 Jun 2016 06:18:13 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Prasun Maiti <prasunmaiti87@gmail.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+CC: Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: RE: [Query] mwifiex: few observations to reduce number of endian
+ conversions
+Date: Tue, 21 Jun 2016 10:17:42 +0000
+Message-ID: <ee79492a163d4b9baef75e28c7a93791@SC-EXCH04.marvell.com> (sfid-20160621_121857_946061_B5A171E5)
+References: <CAEO8o4=aLbrwHka8X2h-YUCeuKoWzU0q7JWLuuaYsRW=69q_DQ@mail.gmail.com>
+In-Reply-To: <CAEO8o4=aLbrwHka8X2h-YUCeuKoWzU0q7JWLuuaYsRW=69q_DQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday, June 23, 2016 05:13:28 PM Martin Blumenstingl wrote:
-> Add documentation how devicetree can be used to configure ath9k based
-> devices.
-> 
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-
-You need to CC' the devicetree maintainers:
-Mark Rutland <mark.rutland@arm.com>
-Rob Herring <robh+dt@kernel.org>
-devicetree@vger.kernel.org
-
-for all patches which touch Documentation/devicetree/... .
-
-Also, I know (from experience) that they would prefer it, if you put
-the device tree binding patch at the top of the series (i.e. make it:
-[PATCH 1/2] dt-bindings...). ;-)
-
-> ---
->  .../devicetree/bindings/net/wireless/ath,ath9k.txt | 40 ++++++++++++++++++++++
->  1 file changed, 40 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/ath,ath9k.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/ath,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/ath,ath9k.txt
-> new file mode 100644
-> index 0000000..d6f5471
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/ath,ath9k.txt
-> @@ -0,0 +1,40 @@
-> +* Atheros ath9k wireless devices
-> +
-> +This node provides properties for configuring the ath9k wireless device. The
-> +node is expected to be specified as a child node of the PCI controller to
-> +which the wireless chip is connected.
-> +
-> +Required properties:
-> +- compatible: Should be "ath,ath9k"
-Documentation/devicetree/bindings/vendor-prefixes.txt has an entry for
-Qualcomm Atheros, Inc. => qca. I would use that instead, given that this
-is a new binding, so there's '"no"' legacy code to worry about.
-
-> +
-> +Optional properties:
-> +- reg: Address and length of the register set for the device.
-> +- ath,gpio-mask: The GPIO mask
-> +- ath,gpio-val: The GPIO value
-> +- ath,led-pin: The GPIO number to which the LED is connected
-> +- ath,led-active-high: The LED is active when the GPIO is HIGH
-> +- ath,clk-25mhz: Defines that at 25MHz clock is used
-> +- ath,eeprom-name: The name of the file which contains the EEPROM data (which
-> +			will be loaded via request_firmware)
-> +- ath,check-eeprom-endianness: Allow checking the EEPROM endianness and
-> +				swapping of the EEPROM data if required
-> +- ath,disable-2ghz: Disables the 2.4GHz band, even if enabled in the EEPROM
-> +- ath,disable-5ghz: Disables the 5GHz band, even if enabled in the EEPROM
-> +
-> +In this example, the node is defined as child node of the PCI controller.
-> +
-> +pci {
-> +	pcie@0 {
-> +		reg = <0 0 0 0 0>;
-> +		#interrupt-cells = <1>;
-> +		#size-cells = <2>;
-> +		#address-cells = <3>;
-> +		device_type = "pci";
-> +
-> +		ath9k@0,0 {
-			compatible = "qca,ath9k"; ?
-
-> +			reg = <0 0 0 0 0>;
-> +			device_type = "pci";
-> +			ath,disable-5ghz;
-> +		};
-> +	};
-> +};
-> 
-
+SGkgUHJhc3VuLA0KDQo+IEZyb206IFByYXN1biBNYWl0aSBbbWFpbHRvOnByYXN1bm1haXRpODdA
+Z21haWwuY29tXQ0KPiBTZW50OiBGcmlkYXksIEp1bmUgMTcsIDIwMTYgNjo0MiBQTQ0KPiBUbzog
+QW1pdGt1bWFyIEthcndhcjsgTmlzaGFudCBTYXJtdWthZGFtDQo+IENjOiBMaW51eCBLZXJuZWw7
+IExpbnV4IE5leHQ7IFdpRmkgTWFpbGluZyBMaXN0OyBKb2hhbm5lcyBCZXJnDQo+IFN1YmplY3Q6
+IFtRdWVyeV0gbXdpZmlleDogZmV3IG9ic2VydmF0aW9ucyB0byByZWR1Y2UgbnVtYmVyIG9mIGVu
+ZGlhbg0KPiBjb252ZXJzaW9ucw0KPiANCj4gSGkgQW1pdGt1bWFyLA0KPiANCj4gSSBoYXZlIHR3
+byBvYnNlcnZhdGlvbnM6DQo+IA0KPiAxLiBJIGhhdmUgZm91bmQgdGhhdCBpbiB0aGUgY29tbWFu
+ZCByZXNwb25zZSBwYXRoIGZvciBob3N0IGNvbW1hbmQNCj4gIkhvc3RDbWRfQ01EXzgwMl8xMV9F
+RVBST01fQUNDRVNTIiwgYSAiMCIgdmFsdWUgaGFzIGJlZW4gZW5kaWFuDQo+IGNvbnZlcnRlZC4g
+SXQgY2FuIG9ubHkgYmUgYSBzYWZlIGZ1dHVyaXN0aWMgYXBwcm9hY2ggZm9yIGFueSBub24temVy
+bw0KPiB2YWx1ZSB0aGVyZSBob3dldmVyISBPdGhlcndpc2UsIHRoZSBlbmRpYW4gY29udmVyc2lv
+biBjYW4gYmUgcmVtb3ZlZC4NCj4gDQo+IDIuIEZvciBtdWx0aXBsZSBIb3N0IENvbW1hbmRzIChl
+LmcgSG9zdENtZF9DTURfODAyXzExX0VFUFJPTV9BQ0NFU1MNCj4gZXRjLikgImNwdV90b19sZVgi
+LWNvbnZlcnRlZCB2YWx1ZXMgYXJlIHNhdmVkIHRvIGRyaXZlci4gU28gImxlWF90b19jcHUiDQo+
+IGNvbnZlcnNpb24gaXMgcmVxdWlyZWQgdG9vIG1hbnkgdGltZXMgYWZ0ZXJ3YXJkcyBpbiBkcml2
+ZXIuDQo+IE9uIHRoZSBjb250cmFyeSwgd2UgY2FuIHNhdmUgdGhlIHZhbHVlcyB0byBkcml2ZXIg
+d2l0aG91dCBhbnkNCj4gY29udmVyc2lvbiwgYW5kIG9ubHkgY29tbWFuZCBidWZmZXIocykgYXJl
+IHByZXBhcmVkIHdpdGggZW5kaWFuDQo+IGNvbnZlcnRlZCB2YWx1ZXMuIEluIHRoaXMgd2F5IHdl
+IGNhbiBnYWluIHNvbWUgZWZmaWNpZW5jeSBbY29kZSBzaXplIC8NCj4gdGltZV0gYnkgcmVkdWNp
+bmcgdGhlIG51bWJlciBvZiBlbmRpYW4gY29udmVyc2lvbiBjb25zaWRlcmFibHkuDQo+IA0KDQpJ
+IGFncmVlIHdpdGggeW91ciBvYnNlcnZhdGlvbnMuIFdlJ2xsIHByZXBhcmUgYSBjbGVhbnVwIHBh
+dGNoIHRvIGFkZHJlc3MgdGhpcy4NCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0K
