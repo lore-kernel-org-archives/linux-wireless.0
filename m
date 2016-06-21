@@ -1,51 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:62788 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811AbcFDUZf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 16:25:35 -0400
-Subject: Re: ath9k_htc firmware
-To: bruce m beach <brucembeach@gmail.com>
-References: <CAArymCnfQaa29D2EXGzwOrp0yvXES+Qq1X-HbSUxC6gig8pH_A@mail.gmail.com>
- <57526D1D.9000305@gmx.net>
- <CAArymCm7SgKyK_cy+MucMb5-8nDZshiOCu-mPVyKR6WnNCm5Lg@mail.gmail.com>
-Cc: ath9k-devel@lists.ath9k.org, ath9k_htc_fw@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: Oleksij Rempel <fishor@gmx.net>
-Message-ID: <5753391F.7030200@gmx.net> (sfid-20160604_222539_254694_05A689B2)
-Date: Sat, 4 Jun 2016 22:25:03 +0200
+Received: from mail-ob0-f181.google.com ([209.85.214.181]:35061 "EHLO
+	mail-ob0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751938AbcFUFxm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2016 01:53:42 -0400
+Received: by mail-ob0-f181.google.com with SMTP id c3so8005518obc.2
+        for <linux-wireless@vger.kernel.org>; Mon, 20 Jun 2016 22:53:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAArymCm7SgKyK_cy+MucMb5-8nDZshiOCu-mPVyKR6WnNCm5Lg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160621001841.5383-1-ismael@iodev.co.uk>
+References: <20160621001841.5383-1-ismael@iodev.co.uk>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 21 Jun 2016 07:45:50 +0200
+Message-ID: <CACna6ry-0ZO_JRm976APtRoPXqgMYEh4UrLK+SH0vVV21dX+wQ@mail.gmail.com> (sfid-20160621_075356_770841_522EF848)
+Subject: Re: [PATCH] brcmfmac: Add USB ID for Cisco Linksys AE1200
+To: Ismael Luceno <ismael@iodev.co.uk>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am 04.06.2016 um 21:44 schrieb bruce m beach:
->>> I'm looking for some kind of simple request in the ath9k_htc driver, through
->>> the usb ep0, like a memory read on the card, where a urb is sent with
->>> the resulting chain of events. The simpler the better. The simplest.
-> 
->> For EP0 on drivers site:
->> static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
->> {
->> int transfer, err;
->> const void *data = hif_dev->fw_data;
->> size_t len = hif_dev->fw_size;
->> u32 addr = AR9271_FIRMWARE;
->> u8 *buf = kzalloc(4096, GFP_KERNEL);
->> u32 firm_offset;
->> ...
-> 
->   What about the code for setting and resetting leds ???
-> 
-> Bruce
-> 
+On 21 June 2016 at 02:18, Ismael Luceno <ismael@iodev.co.uk> wrote:
+> @@ -56,6 +57,8 @@
+>
+>  /* USB Device IDs */
+>  #define BRCM_USB_43143_DEVICE_ID       0xbd1e
+> +#define BRCM_USB_43235_LINKSYS_DEVICE_ID \
+> +                                       0x0039
 
+I guess you wanted to have number aligned to the column of other ones?
+I'm not sure if that improves readability at all.
 
-It is EP3/EP4 and it is not working without firmware.
-Here is one example how you can add new command to firmware:
-https://github.com/olerem/open-ath9k-htc-firmware/commit/c73c159303e30a28e2d3dc05ba0d2d15504e5fad
-
-
-And for kernel driver:
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=8badb50cfab6d433622dbfd5a90b6adf27333107
-
+-- 
+Rafał
