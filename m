@@ -1,75 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:37371 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752596AbcFJJUR convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49930 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932413AbcFUAQW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 05:20:17 -0400
-Received: by mail-wm0-f49.google.com with SMTP id k204so93565243wmk.0
-        for <linux-wireless@vger.kernel.org>; Fri, 10 Jun 2016 02:20:16 -0700 (PDT)
+	Mon, 20 Jun 2016 20:16:22 -0400
+Message-ID: <576885F6.3010409@codeaurora.org> (sfid-20160621_021625_728300_9CE3FB55)
+Date: Mon, 20 Jun 2016 17:10:30 -0700
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <877fdxl8cu.fsf@toke.dk>
-References: <20160603165144.17356-1-toke@toke.dk> <20160603165144.17356-6-toke@toke.dk>
- <CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
- <8737orucq4.fsf@toke.dk> <CAJ-VmokvcPUxfROkTtCCO_RCR0BSeDxNSczj4Y_ti5KyDbThMQ@mail.gmail.com>
- <CAJ-Vmoka=_Wv==f61ZWJe8P_KoL6jyHhpyPDah3QCn3AZbcmsA@mail.gmail.com>
- <87k2i1ml43.fsf@toke.dk> <87wpm1b6bu.fsf@toke.dk> <CA+BoTQ=2GNSW7uSw9acPxO6C22itbWtahmuNj2cT5_09QkNr-A@mail.gmail.com>
- <87inxhl90y.fsf@toke.dk> <CA+BoTQ=9X8621AbG+S3MqYFpeySsYSr3iiwCTHf3VpQAkXAHiQ@mail.gmail.com>
- <877fdxl8cu.fsf@toke.dk>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Fri, 10 Jun 2016 11:20:14 +0200
-Message-ID: <CA+BoTQmX0ULwRzHNjm83-_GbAQDMXgSsQgvBvm=4Bq3ozLOwjA@mail.gmail.com> (sfid-20160610_112024_672377_18A3C300)
-Subject: Re: [Make-wifi-fast] [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: Adrian Chadd <adrian@freebsd.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Maxim Altshul <maxim.altshul@ti.com>, johannes@sipsolutions.net,
+	kvalo@codeaurora.org
+CC: eliad@wizery.com, yanivma@ti.com, guym@ti.com, arik@wizery.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	davem@davemloft.net
+Subject: Re: [PATCH 0/3] *** Mesh Path Selection Metric Calculation ***
+References: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com>
+In-Reply-To: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com>
+Content-Type: text/plain; charset=euc-kr
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10 June 2016 at 11:08, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
+where is 2/3 ?
+On 06/20/2016 06:00 AM, Maxim Altshul wrote:
+> Hi All,
+> This patch series focuses on metric calculation that
+> occurs during the path selection phase of a mesh network.
 >
->> For A-MPDU all MPDU rx status (except last one) should share the same
->> timestamp. Last one has a different one so all you need is to
->> distinguish first and last MPDU. Non A-MPDU obviously are special case
->> (status bits are pricky).
+> During the path selection phase, the mesh hwmp module
+> performs metric calculations, that take as parameters
+> the last TX rate that was used for a specific link,
+> and the packet error rate.
 >
-> Right. So comparing the rs_stamp between first and last MPDU should give
-> the duration of the entire thing?
-
-Depends on how you define your "thing" :) I no, I don't know what
-you'll actually measure. It should be reasonable either way.
-
-
-> This would require keeping state
-> between subsequent calls to the RX handler. Also, what happens if the
-> last MPDU is lost?
-
-No idea. If that's possible, then track last MPDU within PPDU, so you
-can at least fallback to _something_ when you detect a new first
-(A-)MPDU?
-
-Or maybe it's impossible (i.e. not worth worrying) and HW always
-reports last MPDU as far as status bits are concerned (regardless of
-it being _actual_ last MPDU, i.e. it just says "ok, I'm done with this
-PPDU").
-
-
->>> Is the entire A-MPDU received before the RX handler is called for the
->>> first frame?
->>
->> No idea. Maybe it is as there's distinction between "more" and
->> "moreaggr".
+> These parameters should be reported by the FW to the driver
+> constantly for the mechanism to work properly.
 >
-> Hmm. If it is, comparing the stamp of the first MPDU to the current time
-> (when handling it) should give the needed duration? Will try doing that
-> and see what the result is.
+> In case that a vendor offloads the rate control mechanism
+> to the FW, these parameters will be rarely updated,
+> or updated incorrectly.
+>
+> This situation causes the mesh hwmp module to calculate incorrect
+> metrics and as a consequence, not to choose the best paths possible.
+>
+>
+> This patch series is divided to three patches and does the following:
+>
+> 1. Modifies mesh hwmp module and allows vendors that offload the
+> rate control mechanism to their FW, to report last TX rates and PER
+> to the mesh hwmp module by using an existing op called
+> get_expected_throughput.
+> In case that a vendor does not implement the op, all previous
+> functionality still applies.
+>
+> 2. Implements the opcode and the mechanism that reports the rates
+> in TI driver.
+>
+> Maxim Altshul (3):
+>   wlcore/wl18xx: Add functionality to accept TX rate per link
+>   wlcore: Add support for get_expected_throughput opcode
+>   mac80211: mesh: Add support for HW RC implementation
+>
+>  drivers/net/wireless/ti/wl18xx/main.c     |  4 ++++
+>  drivers/net/wireless/ti/wl18xx/tx.c       | 22 ++++++++++++++++++----
+>  drivers/net/wireless/ti/wl18xx/wl18xx.h   |  6 +++++-
+>  drivers/net/wireless/ti/wlcore/main.c     | 16 ++++++++++++++++
+>  drivers/net/wireless/ti/wlcore/rx.c       |  7 +++++++
+>  drivers/net/wireless/ti/wlcore/wlcore_i.h | 13 +++++++++++++
+>  net/mac80211/mesh_hwmp.c                  | 23 +++++++++++++++--------
+>  7 files changed, 78 insertions(+), 13 deletions(-)
+>
 
-I'd say it's a little racy/inaccurate (and perhaps unreliable) to
-compare any kind of global timer and compare it against your rx-status
-descriptors.
-
-
-Michał
