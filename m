@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53555 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197AbcFAGyI convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:36327 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751224AbcFUKwM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 02:54:08 -0400
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
-	ath9k-devel <ath9k-devel@qualcomm.com>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: ath9k gpio request
-Date: Wed, 1 Jun 2016 06:54:01 +0000
-Message-ID: <1464764036580.70506@qti.qualcomm.com> (sfid-20160601_085429_177515_B10927CA)
-References: <20160530132225.4d297678@canb.auug.org.au>
-	<574C4851.9090201@gmail.com>
- <87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com>,<574D3EAA.3060102@gmail.com>
-In-Reply-To: <574D3EAA.3060102@gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+	Tue, 21 Jun 2016 06:52:12 -0400
 MIME-Version: 1.0
+In-Reply-To: <ee79492a163d4b9baef75e28c7a93791@SC-EXCH04.marvell.com>
+References: <CAEO8o4=aLbrwHka8X2h-YUCeuKoWzU0q7JWLuuaYsRW=69q_DQ@mail.gmail.com>
+ <ee79492a163d4b9baef75e28c7a93791@SC-EXCH04.marvell.com>
+From: Prasun Maiti <prasunmaiti87@gmail.com>
+Date: Tue, 21 Jun 2016 16:15:06 +0530
+Message-ID: <CAEO8o4ncA+_e61b0g+TyxCZHGaKqXQKZkwDR4CCfH_mhMYLkGQ@mail.gmail.com> (sfid-20160621_125219_124047_6279EFE6)
+Subject: Re: [Query] mwifiex: few observations to reduce number of endian conversions
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-which chip ?  And what's the GPIO number ?
+Hi Amitkumar,
 
+
+On Tue, Jun 21, 2016 at 3:47 PM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+
+> I agree with your observations. We'll prepare a cleanup patch to address this.
+>
+> Regards,
+> Amitkumar
+
+I have already made some changes. I will send you a patch for this.
+
+-- 
 Thanks,
-Miaoqing
-
-________________________________________
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Sent: Tuesday, May 31, 2016 3:35 PM
-To: Kalle Valo
-Cc: Stephen Rothwell; ath9k-devel; linux-next@vger.kernel.org; linux-kernel@vger.kernel.org; linux-wireless@vger.kernel.org; ath9k-devel@lists.ath9k.org; netdev@vger.kernel.org; Miaoqing Pan
-Subject: Re: ath9k gpio request
-
-On Tuesday 31 May 2016 01:01 PM, Kalle Valo wrote:
-> (Changing subject to a more descriptive one, was "Re: linux-next: Tree
-> for May 30")
->
-> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
->
->> Hi All,
->> I have just built and booted with next-20160530 and my dmesg is full
->> of warnings from ath9k. Last kernel tested was v4.6 and there was no
->> problem with that.
->>
-
-<snip>
-
-
-> The traces look incomplete to me, is there anything more before the
-> "Call Trace:" line? Full unedited logs are usually the best.
-
-sure, its attached. those two warnings are recursively going on and
-there is nothing else left in dmesg to see what started it.
-
-Regards
-Sudip
+Prasun
