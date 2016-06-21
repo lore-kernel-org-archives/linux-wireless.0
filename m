@@ -1,92 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.14]:54053 "EHLO mout.web.de"
+Received: from lists.s-osg.org ([54.187.51.154]:32842 "EHLO lists.s-osg.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750740AbcFDUDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 16:03:13 -0400
-Subject: Re: [PATCH] rtlwifi: Change long delays to sleeps
+	id S1752488AbcFUOrK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2016 10:47:10 -0400
+Subject: Re: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl
+ file
 To: Kalle Valo <kvalo@codeaurora.org>
-References: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
- <57530495.50302@web.de> <87fusssxqn.fsf@kamboji.qca.qualcomm.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-From: Jan Kiszka <jan.kiszka@web.de>
-Message-ID: <575333EB.1060101@web.de> (sfid-20160604_220317_385956_F9AF9369)
-Date: Sat, 4 Jun 2016 22:02:51 +0200
+References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
+ <1465232558-31678-3-git-send-email-javier@osg.samsung.com>
+ <87wplxdsln.fsf@kamboji.qca.qualcomm.com>
+ <12ccd90e-e3eb-ecac-b23f-8124b0db32ad@osg.samsung.com>
+ <2b5e5833ecc74a2b9cd822e8455cd0af@SC-EXCH04.marvell.com>
+ <8dc6e64a-3429-4bed-e5c9-da6880eb9505@osg.samsung.com>
+ <87shwkes65.fsf@kamboji.qca.qualcomm.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+Message-ID: <aeeb25f2-3253-0931-1e84-edc4590208b3@osg.samsung.com> (sfid-20160621_164741_309363_A2BA71F5)
+Date: Tue, 21 Jun 2016 10:47:01 -0400
 MIME-Version: 1.0
-In-Reply-To: <87fusssxqn.fsf@kamboji.qca.qualcomm.com>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="WCFEgWEdhRMKoUtf3IA1a5bAtHd55m729"
+In-Reply-To: <87shwkes65.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---WCFEgWEdhRMKoUtf3IA1a5bAtHd55m729
-Content-Type: multipart/mixed; boundary="SJCbkLx6VuddDrprM5aWcrKxVsxLdncTu"
-From: Jan Kiszka <jan.kiszka@web.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>, devel@driverdev.osuosl.org,
- linux-wireless@vger.kernel.org,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Message-ID: <575333EB.1060101@web.de>
-Subject: Re: [PATCH] rtlwifi: Change long delays to sleeps
-References: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
- <57530495.50302@web.de> <87fusssxqn.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87fusssxqn.fsf@kamboji.qca.qualcomm.com>
+Hello Kalle,
 
---SJCbkLx6VuddDrprM5aWcrKxVsxLdncTu
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: quoted-printable
-
-On 2016-06-04 18:52, Kalle Valo wrote:
-> Jan Kiszka <jan.kiszka@web.de> writes:
->=20
->> On 2016-02-15 23:12, Larry Finger wrote:
->>> Routine rtl_addr_delay() uses delay statements in code that can
->>> sleep. To improve system responsiveness, the various delay statements=
-
->>> are changed.
->>>
->>> In addition, routines rtl_rfreg_delay() and rtl_bb_delay() are
->>> rewritten to use the code in rtl_addr_delay() for most of their
->>> input values.
->>>
->>> Suggested-by: Byeoungwook Kim <quddnr145@gmail.com>
->>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->=20
-> [...]
->=20
->> This breaks spectacularly when turning on a little bit of correctness
->> checking:
+On 06/10/2016 03:54 PM, Kalle Valo wrote:
+> Javier Martinez Canillas <javier@osg.samsung.com> writes:
+> 
+>>> This patch (2/3) is only for code rearrangement and adds an
+>>> unnecessary wrapper function. We can simply drop the patch.
 >>
->> BUG: scheduling while atomic: wpa_supplicant/1116/0x00000002
->=20
-> This should fix it:
->=20
-> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git=
-/commit/?id=3Dde26859dcf363d520cc44e59f6dcaf20ebe0aadf
->=20
+>> Agreed.
+>>
+>> Kalle,
+>>
+>> Patch 3/3 applies cleanly even after dropping patch 2/3.
+>> Is that Ok for you or do you want me to re-resend a v3
+>> with only patches 1/3 and 3/3?
+> 
+> I can drop patch 2, no need to resend. Thanks.
+> 
 
-Probably, will test later. But you should really work on making all
-these task-context-only. Threaded IRQs?
+I saw that you sent your pull request for v4.8 but the
+patches from this series were not included:
 
-Jan
+https://lkml.org/lkml/2016/6/21/400
 
-
---SJCbkLx6VuddDrprM5aWcrKxVsxLdncTu--
-
---WCFEgWEdhRMKoUtf3IA1a5bAtHd55m729
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAldTM+sACgkQitSsb3rl5xS13gCghEWxFzlOLXs+fIf7EQRLGpVu
-7VEAnAsYE+V9V8nziVl7hwi3ge7UZEpF
-=OAtT
------END PGP SIGNATURE-----
-
---WCFEgWEdhRMKoUtf3IA1a5bAtHd55m729--
+Best regards,
+-- 
+Javier Martinez Canillas
+Open Source Group
+Samsung Research America
