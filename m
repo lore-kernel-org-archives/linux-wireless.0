@@ -1,59 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:64379 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424006AbcFMOYd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 10:24:33 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Binoy Jayan <binoy.jayan@linaro.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/7] staging: wilc1000: Replace semaphore cfg_event with completion
-Date: Mon, 13 Jun 2016 15:25:03 +0200
-Message-ID: <6370742.CzW4YYN43W@wuerfel> (sfid-20160613_162452_560393_10086132)
-In-Reply-To: <1465814259-3009-4-git-send-email-binoy.jayan@linaro.org>
-References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org> <1465814259-3009-4-git-send-email-binoy.jayan@linaro.org>
+Received: from arroyo.ext.ti.com ([198.47.19.12]:38314 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751434AbcFUMBc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2016 08:01:32 -0400
+Subject: Re: [PATCH] leds: Add no-op gpio_led_register_device when LED
+ subsystem is disabled
+To: Jacek Anaszewski <j.anaszewski@samsung.com>
+References: <20160613200211.14790-1-afd@ti.com>
+ <20160613200211.14790-13-afd@ti.com> <5760FA52.7010806@samsung.com>
+ <57647DBD.2010406@ti.com> <57679E38.3080901@samsung.com>
+ <57686A94.2010704@ti.com> <5768E815.5080706@samsung.com>
+CC: Russell King <linux@armlinux.org.uk>,
+	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Sebastian Reichel <sre@kernel.org>,
+	Wolfram Sang <wsa@the-dreams.de>,
+	Richard Purdie <rpurdie@rpsys.net>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Ingo Molnar <mingo@kernel.org>, <linux-pwm@vger.kernel.org>,
+	<lguest@lists.ozlabs.org>, <linux-wireless@vger.kernel.org>,
+	<linux-mmc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-gpio@vger.kernel.org>, <linux-i2c@vger.kernel.org>,
+	<linuxppc-dev@lists.ozlabs.org>, <linux-leds@vger.kernel.org>,
+	<linux-media@vger.kernel.org>
+From: "Andrew F. Davis" <afd@ti.com>
+Message-ID: <5769297A.4050608@ti.com> (sfid-20160621_140138_256941_8C7AD5D3)
+Date: Tue, 21 Jun 2016 06:48:10 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <5768E815.5080706@samsung.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, June 13, 2016 4:07:35 PM CEST Binoy Jayan wrote:
-> The semaphore 'cfg_event' is used as completion, so convert
-> it to a struct completion type.
+On 06/21/2016 02:09 AM, Jacek Anaszewski wrote:
+> Hi Andrew,
 > 
-> Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
-
-The change looks good, but
-
-
->                         netdev_dbg(vif->ndev, "Set Timed Out\n");
->                         ret_size = 0;
->                 }
-> +
->                 wilc->cfg_frame_in_use = 0;
->                 wilc->cfg_frame_offset = 0;
->                 wilc->cfg_seq_no += 1;
-> @@ -1246,6 +1247,7 @@ int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit,
->  {
->         u32 offset;
->         int ret_size;
-> +
->         struct wilc *wilc = vif->wilc;
->  
->         if (wilc->cfg_frame_in_use)
+> This patch doesn't apply, please rebase onto recent LED tree.
+> 
+> On 06/21/2016 12:13 AM, Andrew F. Davis wrote:
+>> Some systems use 'gpio_led_register_device' to make an in-memory copy of
+>> their LED device table so the original can be removed as .init.rodata.
+>> When the LED subsystem is not enabled source in the led directory is not
+>> built and so this function may be undefined. Fix this here.
+>>
+>> Signed-off-by: Andrew F. Davis <afd@ti.com>
+>> ---
+>>   include/linux/leds.h | 8 ++++++++
+>>   1 file changed, 8 insertions(+)
+>>
+>> diff --git a/include/linux/leds.h b/include/linux/leds.h
+>> index d2b1306..a4a3da6 100644
+>> --- a/include/linux/leds.h
+>> +++ b/include/linux/leds.h
+>> @@ -386,8 +386,16 @@ struct gpio_led_platform_data {
+>>                                          unsigned long *delay_off);
+> 
+> Currently there is some stuff here, and in fact it has been for
+> a long time.
+> 
+> Patch "[PATCH 12/12] leds: Only descend into leds directory when
+> CONFIG_NEW_LEDS is set" also doesn't apply.
+> What repository are you using?
 > 
 
-These two extra newlines seem unrelated to the other changes and probably
-slipped in by accident. The first one is actually ok according to
-normal coding style, while the second one looks misplaced.
+v4.7-rc4, it may not apply due to the surrounding lines being changed in
+the other patches which may not be applied to your tree. It is a single
+line change per patch so hopefully the merge conflict resolutions will
+be trivial.
 
-In general, it's better not to touch whitespace when doing other changes,
-except when you are fixing the same code you modify anyway.
+A better solution could have been getting an ack from each maintainer
+and having someone pull the whole series into one tree, but parts have
+already been picked so it may be a little late for that.
 
-	Arnd
+>>   };
+>>
+>> +#ifdef CONFIG_NEW_LEDS
+>>   struct platform_device *gpio_led_register_device(
+>>                  int id, const struct gpio_led_platform_data *pdata);
+>> +#else
+>> +static inline struct platform_device *gpio_led_register_device(
+>> +               int id, const struct gpio_led_platform_data *pdata)
+>> +{
+>> +       return 0;
+>> +}
+>> +#endif
+>>
+>>   enum cpu_led_event {
+>>          CPU_LED_IDLE_START,     /* CPU enters idle */
+>>
+> 
+> 
