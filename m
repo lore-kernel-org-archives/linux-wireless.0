@@ -1,190 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13194 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601AbcF0JBY (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:51498 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752147AbcFURBZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 05:01:24 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCHV2 1/3] ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
-Date: Mon, 27 Jun 2016 14:36:44 +0530
-Message-ID: <1467018404-24460-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_110127_693672_B01B5F14)
+	Tue, 21 Jun 2016 13:01:25 -0400
+Date: Tue, 21 Jun 2016 20:01:20 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: Encrypt "Group addressed privacy" action frames
+Message-ID: <20160621170120.GA24882@w1.fi> (sfid-20160621_190131_756060_1D067478)
+References: <1465969112-2814-1-git-send-email-masashi.honma@gmail.com>
+ <20160618091116.GA2972@w1.fi>
+ <57673E10.7070706@gmail.com>
+ <20160620212529.GA19076@w1.fi>
+ <5768DBB6.2060501@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5768DBB6.2060501@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+On Tue, Jun 21, 2016 at 03:16:22PM +0900, Masashi Honma wrote:
+> On 2016年06月21日 06:25, Jouni Malinen wrote:
+> > What about RX side?
+> 
+> Previously, MGTK and IGTK was identical key.
+> Now new wpa_supplicant can provide correct IGTK.
 
-Preparation to make use of firmware_swap_code_seg_info for
-UTF binary.
+> I have tested with new IGTK, RX side can work without
+> modification.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    6 +++---
- drivers/net/wireless/ath/ath10k/core.h |    6 ++----
- drivers/net/wireless/ath/ath10k/swap.c |   26 ++++++++++++++------------
- drivers/net/wireless/ath/ath10k/swap.h |   11 ++++++++---
- 4 files changed, 27 insertions(+), 22 deletions(-)
+Please keep in mind that "working" here means two things:
+(1) being able decrypt the frame,
+(2) being able to reject the frame if it was not properly protected. It
+is that (2) that is unlikely to be covered here..
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index dfb3db0..0a1946b 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -723,7 +723,7 @@ static int ath10k_download_fw(struct ath10k *ar)
- 	data = ar->running_fw->fw_file.firmware_data;
- 	data_len = ar->running_fw->fw_file.firmware_len;
- 
--	ret = ath10k_swap_code_seg_configure(ar);
-+	ret = ath10k_swap_code_seg_configure(ar, &ar->running_fw->fw_file);
- 	if (ret) {
- 		ath10k_err(ar, "failed to configure fw code swap: %d\n",
- 			   ret);
-@@ -765,7 +765,7 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
- 	if (!IS_ERR(ar->pre_cal_file))
- 		release_firmware(ar->pre_cal_file);
- 
--	ath10k_swap_code_seg_release(ar);
-+	ath10k_swap_code_seg_release(ar, &ar->normal_mode_fw.fw_file);
- 
- 	ar->normal_mode_fw.fw_file.otp_data = NULL;
- 	ar->normal_mode_fw.fw_file.otp_len = 0;
-@@ -2009,7 +2009,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
- 		goto err_free_firmware_files;
- 	}
- 
--	ret = ath10k_swap_code_seg_init(ar);
-+	ret = ath10k_swap_code_seg_init(ar, &ar->normal_mode_fw.fw_file);
- 	if (ret) {
- 		ath10k_err(ar, "failed to initialize code swap segment: %d\n",
- 			   ret);
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 3da18c9..e69e7e7 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -654,6 +654,8 @@ struct ath10k_fw_file {
- 
- 	const void *codeswap_data;
- 	size_t codeswap_len;
-+	/* FIXME: add a comment */
-+	struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
- };
- 
- struct ath10k_fw_components {
-@@ -765,10 +767,6 @@ struct ath10k {
- 	const struct firmware *cal_file;
- 
- 	struct {
--		struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
--	} swap;
--
--	struct {
- 		u32 vendor;
- 		u32 device;
- 		u32 subsystem_vendor;
-diff --git a/drivers/net/wireless/ath/ath10k/swap.c b/drivers/net/wireless/ath/ath10k/swap.c
-index 0c5f586..c904a41 100644
---- a/drivers/net/wireless/ath/ath10k/swap.c
-+++ b/drivers/net/wireless/ath/ath10k/swap.c
-@@ -134,17 +134,18 @@ ath10k_swap_code_seg_alloc(struct ath10k *ar, size_t swap_bin_len)
- 	return seg_info;
- }
- 
--int ath10k_swap_code_seg_configure(struct ath10k *ar)
-+int ath10k_swap_code_seg_configure(struct ath10k *ar,
-+				   const struct ath10k_fw_file *fw_file)
- {
- 	int ret;
- 	struct ath10k_swap_code_seg_info *seg_info = NULL;
- 
--	if (!ar->swap.firmware_swap_code_seg_info)
-+	if (fw_file->firmware_swap_code_seg_info)
- 		return 0;
- 
- 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot found firmware code swap binary\n");
- 
--	seg_info = ar->swap.firmware_swap_code_seg_info;
-+	seg_info = fw_file->firmware_swap_code_seg_info;
- 
- 	ret = ath10k_bmi_write_memory(ar, seg_info->target_addr,
- 				      &seg_info->seg_hw_info,
-@@ -158,28 +159,29 @@ int ath10k_swap_code_seg_configure(struct ath10k *ar)
- 	return 0;
- }
- 
--void ath10k_swap_code_seg_release(struct ath10k *ar)
-+void ath10k_swap_code_seg_release(struct ath10k *ar,
-+				  struct ath10k_fw_file *fw_file)
- {
--	ath10k_swap_code_seg_free(ar, ar->swap.firmware_swap_code_seg_info);
-+	ath10k_swap_code_seg_free(ar, fw_file->firmware_swap_code_seg_info);
- 
- 	/* FIXME: these two assignments look to bein wrong place! Shouldn't
- 	 * they be in ath10k_core_free_firmware_files() like the rest?
- 	 */
--	ar->normal_mode_fw.fw_file.codeswap_data = NULL;
--	ar->normal_mode_fw.fw_file.codeswap_len = 0;
-+	fw_file->codeswap_data = NULL;
-+	fw_file->codeswap_len = 0;
- 
--	ar->swap.firmware_swap_code_seg_info = NULL;
-+	fw_file->firmware_swap_code_seg_info = NULL;
- }
- 
--int ath10k_swap_code_seg_init(struct ath10k *ar)
-+int ath10k_swap_code_seg_init(struct ath10k *ar, struct ath10k_fw_file *fw_file)
- {
- 	int ret;
- 	struct ath10k_swap_code_seg_info *seg_info;
- 	const void *codeswap_data;
- 	size_t codeswap_len;
- 
--	codeswap_data = ar->normal_mode_fw.fw_file.codeswap_data;
--	codeswap_len = ar->normal_mode_fw.fw_file.codeswap_len;
-+	codeswap_data = fw_file->codeswap_data;
-+	codeswap_len = fw_file->codeswap_len;
- 
- 	if (!codeswap_len || !codeswap_data)
- 		return 0;
-@@ -200,7 +202,7 @@ int ath10k_swap_code_seg_init(struct ath10k *ar)
- 		return ret;
- 	}
- 
--	ar->swap.firmware_swap_code_seg_info = seg_info;
-+	fw_file->firmware_swap_code_seg_info = seg_info;
- 
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/swap.h b/drivers/net/wireless/ath/ath10k/swap.h
-index 36991c7..f5dc047 100644
---- a/drivers/net/wireless/ath/ath10k/swap.h
-+++ b/drivers/net/wireless/ath/ath10k/swap.h
-@@ -23,6 +23,8 @@
- /* Currently only one swap segment is supported */
- #define ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED	1
- 
-+struct ath10k_fw_file;
-+
- struct ath10k_swap_code_seg_tlv {
- 	__le32 address;
- 	__le32 length;
-@@ -58,8 +60,11 @@ struct ath10k_swap_code_seg_info {
- 	dma_addr_t paddr[ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED];
- };
- 
--int ath10k_swap_code_seg_configure(struct ath10k *ar);
--void ath10k_swap_code_seg_release(struct ath10k *ar);
--int ath10k_swap_code_seg_init(struct ath10k *ar);
-+int ath10k_swap_code_seg_configure(struct ath10k *ar,
-+				   const struct ath10k_fw_file *fw_file);
-+void ath10k_swap_code_seg_release(struct ath10k *ar,
-+				  struct ath10k_fw_file *fw_file);
-+int ath10k_swap_code_seg_init(struct ath10k *ar,
-+			      struct ath10k_fw_file *fw_file);
- 
- #endif
+We actually cover (2) for some cases by "accident" since
+ieee80211_rx_h_decrypt() assigns rx->key to rx->sta->gtk[i] if one is
+available. I'm not completely sure this is correct since it applies to
+management frame as well, but that's the way commit
+897bed8b4320774e56f282cdc1cceb4d77442797 ('mac80211: clean up RX key
+checks') implemented it (Johannes: Could you please take a look whether
+that gtk[] case was really supposed to apply for non-Data frames?).
+Interestingly, even on the TX side, we had code that picked tx->key for
+these group addressed Action frames, but that got then cleared later..
+
+That said, if rx->sta->gtk[i] is not set for any value of i, we would
+not enforce encryption of "group addressed privacy" Action frames as far
+as I can tell. This may be a pretty small window since RX MGTK is
+supposed to get set immediately for each peer. However, I would not be
+surprised if there were indeed a window between adding the STA entry and
+marking it authorized and configuring the RX MGTK. And even if this is
+not possible, this should really be commented somewhere so that there is
+less of a change of accidentally optimizing or cleaning up something
+that is needed for this to be protected..
+
+And when operating with PMF enabled, this is clearly broken, i.e., the
+RX path accepts BIP protected version of the broadcast Mesh Action frame
+while that frame needs to be rejected since it was not encrypted with
+CCMP/GCMP.
+
+To cover all these RX cases properly, I'd expect there to be RX path
+changes that use ieee80211_is_group_privacy_action() and reject some
+cases.. This should like be there in the !ieee80211_has_protected(fc)
+case in ieee80211_rx_h_decrypt() before selecting the key and if
+ieee80211_is_group_privacy_action() returns true, return RX_DROP_MONITOR
+would be needed.
+
 -- 
-1.7.9.5
-
+Jouni Malinen                                            PGP id EFC895FA
