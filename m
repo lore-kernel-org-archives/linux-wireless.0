@@ -1,43 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20096 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751700AbcFBOvE (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35593 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751865AbcFUAGW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 10:51:04 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 20 Jun 2016 20:06:22 -0400
+Subject: Re: ath9k: Support 4.9Ghz channels on AR9580 adapter.
+To: Julian Calaby <julian.calaby@gmail.com>
+References: <300e3070916441609ff73ea8e06ddb77@euamsexm01a.eu.qualcomm.com>
+ <576854E5.5030206@candelatech.com>
+ <CAGRGNgWOScCrLPyqRNus2319BPOehv3awQChoHw=RRMcSDUqzQ@mail.gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <5768838D.8000201@candelatech.com> (sfid-20160621_020636_550944_332D9C4B)
+Date: Mon, 20 Jun 2016 17:00:13 -0700
 MIME-Version: 1.0
-Subject: Re: ath10k: fix diag_read to collect data for larger memory
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1464187154-26687-1-git-send-email-arnagara@qti.qualcomm.com>
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-	<arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <8d461713b1d345ebb4e04fb5f6ba44be@euamsexm01a.eu.qualcomm.com> (sfid-20160602_165109_774438_30128195)
-Date: Thu, 2 Jun 2016 16:50:56 +0200
+In-Reply-To: <CAGRGNgWOScCrLPyqRNus2319BPOehv3awQChoHw=RRMcSDUqzQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
-> diag_read uses dma_alloc_coherent to allocate memory requested by the
-> caller. If this memory requested is larger, more than DIAG_TRANSFER_LIMIT
-> (2K), then it is likely that we may not get the requested memory and we
-> would fail.
-> 
-> To solve this, request dma_alloc_coherent for only DIAG_TRANSFER_LIMIT, and
-> reuse this buffer multiple times as needed to copy the data requested in
-> smaller chunks of size not more than DIAG_TRANSFER_LIMIT. Previously we
-> were reading into the caller's only after getting the complete requested
-> data.
-> 
-> Fixes: 68c03249f388 ('ath10k: convert pci_alloc_consistent() to dma_alloc_coherent()')
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+On 06/20/2016 04:53 PM, Julian Calaby wrote:
+> Hi Ben,
+>
+> On Tue, Jun 21, 2016 at 6:41 AM, Ben Greear <greearb@candelatech.com> wrote:
+>> On 06/20/2016 01:34 PM, Kalle Valo wrote:
+>>>
+>>> Ben Greear <greearb@candelatech.com> wrote:
+>>>>
+>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>
+>>>> NOTE:  These channels must not be used in most regulatory
+>>>> domains unless you have a license from the FCC or similar!
+>>>>
+>>>> A proper regulatory database is also required to actually use
+>>>> these channels.
+>>>>
+>>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>>
+>>>
+>>> I feel that the license is a problem and this doesn't belong to the
+>>> kernel.
+>>> The patch has been dropped.
+>>
+>>
+>> It's not a lot different from having to be in normal FCC regulations
+>> w/regard to
+>> DFS channels, tx power, and such, but maybe having driver support is
+>> considered to make it
+>> too easy for users to hack around restrictions?
+>
+> Maybe hide this behind CFG80211_CERTIFICATION_ONUS or equivalent?
+> (Maybe a new symbol CFG80211_LICENSE_REQUIRED with big scary
+> feds-will-come-knocking warnings in the help text?)
 
-Thanks, 1 patch applied to ath.git:
+That would be fine with me.  As I said though, there are more patches
+than this one needed for full features and interoperability.
+The person that sent me the mac80211/wireless patches,
+and hostapd for that matter, may be able to put something together for upstream,
+but I am not sure if they will have time.
 
-1e56d5127d5c ath10k: fix diag_read to collect data for larger memory
+I don't currently feel motivated enough to try to clean it all up and
+try to push it upstream myself.
+
+Thanks,
+Ben
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9135561/
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
