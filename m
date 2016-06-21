@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f53.google.com ([209.85.214.53]:34825 "EHLO
-	mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751184AbcF2Eno (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 00:43:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160628111307.8784-1-yanivma@ti.com>
-References: <20160628111307.8784-1-yanivma@ti.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 29 Jun 2016 14:43:19 +1000
-Message-ID: <CAGRGNgWgo=TtHkP9qWD=45bSAbEtSsrRCt35AzuPcmjfW4yb5A@mail.gmail.com> (sfid-20160629_064408_956785_A56E54DD)
-Subject: Re: [PATCH 0/4] Mesh mpm fixes and enhancements
-To: Yaniv Machani <yanivma@ti.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S . Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56502 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751911AbcFULNN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 21 Jun 2016 07:13:13 -0400
+Message-ID: <1466502087.3170.17.camel@sipsolutions.net> (sfid-20160621_131325_530385_22EA0382)
+Subject: Re: [PATCH] iw: support and enable separate build dir
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Maxin B. John" <maxin.john@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	"Maxin B. John" <maxin.john@intel.com>
+Date: Tue, 21 Jun 2016 11:41:27 +0200
+In-Reply-To: <CAMhs6Yw-ScHvfjsxKGG-teXAYtebsrOEmRzt9-VBepoeNkpjWg@mail.gmail.com> (sfid-20160610_125900_263648_E37B4F59)
+References: <1464770416-17514-1-git-send-email-maxin.john@gmail.com>
+	 <1465460710.3442.4.camel@sipsolutions.net>
+	 <CAMhs6Yw-ScHvfjsxKGG-teXAYtebsrOEmRzt9-VBepoeNkpjWg@mail.gmail.com>
+	 (sfid-20160610_125900_263648_E37B4F59)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Yaniv,
+On Fri, 2016-06-10 at 13:58 +0300, Maxin B. John wrote:
+> Hi Johannes,
+> 
+> On Thu, Jun 9, 2016 at 11:25 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Wed, 2016-06-01 at 11:40 +0300, maxin.john@gmail.com wrote:
+> > > From: "Maxin B. John" <maxin.john@intel.com>
+> > > 
+> > > Support separation of SRCDIR and OBJDIR
+> > > 
+> > Doesn't seem to work:
+> > 
+> > $ mkdir /tmp/obj
+> > $ make clean
+> > $ make OBJDIR=/tmp/obj
+> > [...]
+> >  GEN  version.c
+> >  CC   version.o
+> > cc: error: version.c: No such file or directory
+> > cc: fatal error: no input files
+> > compilation terminated.
+> > Makefile:104: recipe for target 'version.o' failed
+> > make: *** [version.o] Error 1
+> > $ ls *.o
+> > event.o  genl.o  ibss.o  info.o  interface.o  iw.o  mesh.o  mpath.o
+> > mpp.o  ocb.o  phy.o  reg.o  scan.o  station.o  survey.o  util.o
+> > 
+> > (object files are in the wrong place too)
+> 
+> I was following the below listed steps to verify this patch:
+> 
+> # mkdir build
+> # cd build
+> #  make -f <path>/iw/Makefile
+> 
 
-On Tue, Jun 28, 2016 at 9:13 PM, Yaniv Machani <yanivma@ti.com> wrote:
-> This patch set is addressing some issues found in the current 802.11s implementation,
-> specifically when using hostap mpm.
-> It's aligning the beacon format and handling some corner cases.
->
-> Maital Hahn (2):
->   mac80211: mesh: flush stations before beacons are stopped
->   mac80211/cfg: mesh: fix healing time when a mesh peer is disconnecting
->
-> Meirav Kama (2):
->   mac80211: mesh: fixed HT ies in beacon template
->   mac80211: sta_info: max_peers reached falsely
+Oh. Any chance you could make both work, since the "make O=..." is
+something kernel people are used to/familiar with?
 
-Patches that you send must be signed off by you, not ack'd by you.
-
-I.e.
-
-From: Random Developer <random.developer@company.com>
-
-.....
-
-Signed-off-by: Random Developer <random.developer@company.com>
-Signed-off-by: Patch Sender <patch.sender@company.com>
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+johannes
