@@ -1,295 +1,350 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44117 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835AbcFUK4P convert rfc822-to-8bit (ORCPT
+Received: from bear.ext.ti.com ([198.47.19.11]:44892 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750978AbcFUMCS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 06:56:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers-next 2016-06-21
-Date: Tue, 21 Jun 2016 13:47:45 +0300
-Message-ID: <87a8ien7hq.fsf@kamboji.qca.qualcomm.com> (sfid-20160621_125725_893516_946F0A0B)
+	Tue, 21 Jun 2016 08:02:18 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>,
+	Mark Brown <broonie@kernel.org>
+Subject: [PATCHv3] wlcore: spi: add wl18xx support
+Date: Tue, 21 Jun 2016 12:02:06 +0000
+Message-ID: <8665E2433BC68541A24DFFCA87B70F5B36138299@DFRE01.ent.ti.com> (sfid-20160621_140248_255927_BDC77121)
+References: <1466510145-15751-1-git-send-email-eyalr@ti.com>
+In-Reply-To: <1466510145-15751-1-git-send-email-eyalr@ti.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Add support for using with both wl12xx and wl18xx.
 
-I hope it's ok to send two pull requests the same day, both for net and
-net-next? This is targeted to 4.8 so it is for net-next.
+- all wilink family needs special init command for entering wspi mode.
+  extra clock cycles should be sent after the spi init command while the
+  cs pin is high.
+- Use inverted chip select for sending a dummy 4 bytes command that
+  completes the init stage and puts the wilink chip into wspi mode.
 
-Even though is this the first pull request for 4.8 we actually remove
-more code than add, thanks to Guenter Roeck's on removing unused "phy_a"
-support from b43. Otherwise there's not really anything standing out,
-adding new chipset support to brcmfmac and ath10k, lots of fixes and the
-usual.
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
+---
+v1->v2:update device tree bindings configuration
+v2->v3:revert from manual gpio manipulation. use inverted chip select instead
+for sending the extra init cycle, which achieves the same hardware purpose.
+update device tree bindings docucmentation accordingly
 
-Please let me know if there any issues.
+ .../bindings/net/wireless/ti,wlcore,spi.txt        |  47 ++++++--
+ drivers/net/wireless/ti/wlcore/spi.c               | 124 +++++++++++++++++----
+ 2 files changed, 145 insertions(+), 26 deletions(-)
 
-Kalle
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+index 9180724..35467cf 100644
+--- a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+@@ -1,19 +1,30 @@
+-* Texas Instruments wl1271 wireless lan controller
++* Texas Instruments wl12xx/wl18xx wireless lan controller
+ 
+-The wl1271 chip can be connected via SPI or via SDIO. This
++The wl12xx/wl18xx chips can be connected via SPI or via SDIO. This
+ document describes the binding for the SPI connected chip.
+ 
+ Required properties:
+-- compatible :          Should be "ti,wl1271"
++- compatible :          Should be one of the following:
++    * "ti,wl1271"
++    * "ti,wl1273"
++    * "ti,wl1281"
++    * "ti,wl1283"
++    * "ti,wl1801"
++    * "ti,wl1805"
++    * "ti,wl1807"
++    * "ti,wl1831"
++    * "ti,wl1835"
++    * "ti,wl1837"
+ - reg :                 Chip select address of device
+ - spi-max-frequency :   Maximum SPI clocking speed of device in Hz
+-- ref-clock-frequency : Reference clock frequency
+ - interrupt-parent, interrupts :
+                         Should contain parameters for 1 interrupt line.
+                         Interrupt parameters: parent, line number, type.
+-- vwlan-supply :        Point the node of the regulator that powers/enable the wl1271 chip
++- vwlan-supply :        Point the node of the regulator that powers/enable the
++                        wl12xx/wl18xx chip
+ 
+ Optional properties:
++- ref-clock-frequency : Reference clock frequency (should be set for wl12xx)
+ - clock-xtal :          boolean, clock is generated from XTAL
+ 
+ - Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
+@@ -21,10 +32,15 @@ Optional properties:
+ 
+ Examples:
+ 
++For wl12xx family:
+ &spi1 {
+-	wl1271@1 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi1_pins>;
++	#address-cells = <1>;
++	#size-cells = <0>;
++	wlcore: wlcore@0 {
+ 		compatible = "ti,wl1271";
+-
+ 		reg = <1>;
+ 		spi-max-frequency = <48000000>;
+ 		clock-xtal;
+@@ -34,3 +50,20 @@ Examples:
+ 		vwlan-supply = <&vwlan_fixed>;
+ 	};
+ };
++
++For wl18xx family:
++&spi0	{
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi0_pins>;
++	#address-cells = <1>;
++	#size-cells = <0>;
++	wlcore: wlcore@0 {
++		compatible = "ti,wl1835";
++		vwlan-supply = <&wlan_en_reg>;
++		spi-max-frequency = <48000000>;
++		reg = <0>;
++		interrupt-parent = <&gpio0>;
++		interrupts = <27 IRQ_TYPE_EDGE_RISING>;
++	};
++};
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index 020ac1a..bd1253d 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -70,16 +70,30 @@
+ #define WSPI_MAX_CHUNK_SIZE    4092
+ 
+ /*
+- * only support SPI for 12xx - this code should be reworked when 18xx
+- * support is introduced
++ * wl18xx driver aggregation buffer size is (13 * PAGE_SIZE) compared to
++ * (4 * PAGE_SIZE) for wl12xx, so use the larger buffer needed for wl18xx
+  */
+-#define SPI_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
++#define SPI_AGGR_BUFFER_SIZE (13 * PAGE_SIZE)
+ 
+ /* Maximum number of SPI write chunks */
+ #define WSPI_MAX_NUM_OF_CHUNKS \
+ 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
+ 
+ 
++struct wilink_familiy_data {
++	char name[8];
++};
++
++const struct wilink_familiy_data *wilink_data;
++
++static const struct wilink_familiy_data wl18xx_data = {
++	.name = "wl18xx",
++};
++
++static const struct wilink_familiy_data wl12xx_data = {
++	.name = "wl12xx",
++};
++
+ struct wl12xx_spi_glue {
+ 	struct device *dev;
+ 	struct platform_device *core;
+@@ -119,6 +133,7 @@ static void wl12xx_spi_init(struct device *child)
+ 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
+ 	struct spi_transfer t;
+ 	struct spi_message m;
++	struct spi_device *spi = to_spi_device(glue->dev);
+ 	u8 *cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
+ 
+ 	if (!cmd) {
+@@ -151,6 +166,7 @@ static void wl12xx_spi_init(struct device *child)
+ 		cmd[6] |= WSPI_INIT_CMD_EN_FIXEDBUSY;
+ 
+ 	cmd[7] = crc7_be(0, cmd+2, WSPI_INIT_CMD_CRC_LEN) | WSPI_INIT_CMD_END;
++
+ 	/*
+ 	 * The above is the logical order; it must actually be stored
+ 	 * in the buffer byte-swapped.
+@@ -163,6 +179,28 @@ static void wl12xx_spi_init(struct device *child)
+ 	spi_message_add_tail(&t, &m);
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
++
++	/* Send extra clocks with inverted CS (high). this is required
++	 * by the wilink family in order to successfully enter WSPI mode.
++	 */
++	spi->mode ^= SPI_CS_HIGH;
++	memset(&m, 0, sizeof(m));
++	spi_message_init(&m);
++
++	cmd[0] = 0xff;
++	cmd[1] = 0xff;
++	cmd[2] = 0xff;
++	cmd[3] = 0xff;
++	__swab32s((u32 *)cmd);
++
++	t.tx_buf = cmd;
++	t.len = 4;
++	spi_message_add_tail(&t, &m);
++
++	spi_sync(to_spi_device(glue->dev), &m);
++
++	/* Restore chip select configration to normal */
++	spi->mode ^= SPI_CS_HIGH;
+ 	kfree(cmd);
+ }
+ 
+@@ -270,22 +308,25 @@ static int __must_check wl12xx_spi_raw_read(struct device *child, int addr,
+ 	return 0;
+ }
+ 
+-static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+-					     void *buf, size_t len, bool fixed)
++static int __wl12xx_spi_raw_write(struct device *child, int addr,
++				  void *buf, size_t len, bool fixed)
+ {
+ 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
+-	/* SPI write buffers - 2 for each chunk */
+-	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
++	struct spi_transfer *t;
+ 	struct spi_message m;
+ 	u32 commands[WSPI_MAX_NUM_OF_CHUNKS]; /* 1 command per chunk */
+ 	u32 *cmd;
+ 	u32 chunk_len;
+ 	int i;
+ 
++	/* SPI write buffers - 2 for each chunk */
++	t = kzalloc(sizeof(*t) * 2 * WSPI_MAX_NUM_OF_CHUNKS, GFP_KERNEL);
++	if (!t)
++		return -ENOMEM;
++
+ 	WARN_ON(len > SPI_AGGR_BUFFER_SIZE);
+ 
+ 	spi_message_init(&m);
+-	memset(t, 0, sizeof(t));
+ 
+ 	cmd = &commands[0];
+ 	i = 0;
+@@ -318,9 +359,26 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
+ 
++	kfree(t);
+ 	return 0;
+ }
+ 
++static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
++					     void *buf, size_t len, bool fixed)
++{
++	int ret;
++
++	/* The ELP wakeup write may fail the first time due to internal
++	 * hardware latency. It is safer to send the wakeup command twice to
++	 * avoid unexpected failures.
++	 */
++	if (addr == HW_ACCESS_ELP_CTRL_REG)
++		ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
++	ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
++
++	return ret;
++}
++
+ /**
+  * wl12xx_spi_set_power - power on/off the wl12xx unit
+  * @child: wl12xx device handle.
+@@ -349,17 +407,38 @@ static int wl12xx_spi_set_power(struct device *child, bool enable)
+ 	return ret;
+ }
+ 
++/**
++ * wl12xx_spi_set_block_size
++ *
++ * This function is not needed for spi mode, but need to be present.
++ * Without it defined the wlcore fallback to use the wrong packet
++ * allignment on tx.
++ */
++static void wl12xx_spi_set_block_size(struct device *child,
++				      unsigned int blksz)
++{
++}
++
+ static struct wl1271_if_operations spi_ops = {
+ 	.read		= wl12xx_spi_raw_read,
+ 	.write		= wl12xx_spi_raw_write,
+ 	.reset		= wl12xx_spi_reset,
+ 	.init		= wl12xx_spi_init,
+ 	.power		= wl12xx_spi_set_power,
+-	.set_block_size = NULL,
++	.set_block_size = wl12xx_spi_set_block_size,
+ };
+ 
+ static const struct of_device_id wlcore_spi_of_match_table[] = {
+-	{ .compatible = "ti,wl1271" },
++	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1831", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1835", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1837", .data = &wl18xx_data},
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, wlcore_spi_of_match_table);
+@@ -375,18 +454,24 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
+ 			   struct wlcore_platdev_data *pdev_data)
+ {
+ 	struct device_node *dt_node = spi->dev.of_node;
+-	int ret;
++	const struct of_device_id *of_id;
++
++	of_id = of_match_node(wlcore_spi_of_match_table, dt_node);
++	if (!of_id)
++		return -ENODEV;
++
++	wilink_data = of_id->data;
++	dev_info(&spi->dev, "selected chip familiy is %s\n",
++		 wilink_data->name);
+ 
+ 	if (of_find_property(dt_node, "clock-xtal", NULL))
+ 		pdev_data->ref_clock_xtal = true;
+ 
+-	ret = of_property_read_u32(dt_node, "ref-clock-frequency",
+-				   &pdev_data->ref_clock_freq);
+-	if (IS_ERR_VALUE(ret)) {
+-		dev_err(glue->dev,
+-			"can't get reference clock frequency (%d)\n", ret);
+-		return ret;
+-	}
++	/* optional clock frequency params */
++	of_property_read_u32(dt_node, "ref-clock-frequency",
++			     &pdev_data->ref_clock_freq);
++	of_property_read_u32(dt_node, "tcxo-clock-frequency",
++			     &pdev_data->tcxo_clock_freq);
+ 
+ 	return 0;
+ }
+@@ -437,7 +522,8 @@ static int wl1271_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
+ 
+-	glue->core = platform_device_alloc("wl12xx", PLATFORM_DEVID_AUTO);
++	glue->core = platform_device_alloc(wilink_data->name,
++					   PLATFORM_DEVID_AUTO);
+ 	if (!glue->core) {
+ 		dev_err(glue->dev, "can't allocate platform_device\n");
+ 		return -ENOMEM;
+-- 
+2.7.4
 
-The following changes since commit 76f21b99004ef1f16be6184678f660eab911b8b8:
-
-  net: Add docbook description for 'mtu' arg to skb_gso_validate_mtu() (2016-06-03 22:56:28 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git tags/wireless-drivers-next-for-davem-2016-06-21
-
-for you to fetch changes up to 1bb57c8a5e33bcbec031ce0c629968922d5af89d:
-
-  Merge ath-next from ath.git (2016-06-19 11:19:30 +0300)
-
-----------------------------------------------------------------
-
-wireless-drivers patches for 4.8
-
-Major changes:
-
-ath10k
-
-* enable btcoex support without restarting firmware
-* enable ipq4019 support using AHB bus
-* add QCA9887 chipset support
-* retrieve calibration data from EEPROM, currently only for QCA9887
-
-wil6210
-
-* add pm_notify handling
-
-brcmfmac
-
-* add support for the PCIE devices 43525 and 43465
-
-----------------------------------------------------------------
-Adrian Chadd (1):
-      b43: don't unconditionally fall back to CCK if the rate is 6MB OFDM.
-
-Amitkumar Karwar (1):
-      mwifiex: inform disconnection initiator correctly.
-
-Arend van Spriel (1):
-      brcm80211: update maintainers email addresses
-
-Arnd Bergmann (4):
-      iwlegacy: avoid warning about missing braces
-      wl3501_cs: avoid bogus gcc-6 warning
-      rtlwifi: fix error handling in *_read_adapter_info()
-      mwifiex: fix link error against sdio
-
-Ashok Raj Nagarajan (1):
-      ath10k: fix diag_read to collect data for larger memory
-
-Bhaktipriya Shridhar (1):
-      libertas: Remove create_workqueue
-
-Bob Copeland (1):
-      ath5k: fix misplaced default label in sifs switch
-
-Christian Daudt (2):
-      brcmfmac: Fix kernel oops in failed chip_attach
-      brcmfmac: Fix 'did not remove int handler' warning
-
-Eduardo Abinader (3):
-      ath9k: Remove empty test condition
-      ath9k: allow tx99 for ar9002 based cards
-      ath9k: Proper TX99 interrupt ref count
-
-Guenter Roeck (3):
-      libertas_tf: Drop unused variable and define
-      b43: Remove unused phy_a code
-      b43: Completely remove support for phy_a
-
-Hante Meuleman (2):
-      brcmfmac: fix skb priority handling
-      brcmfmac: add support for the PCIE devices 43525 and 43465
-
-Heinrich Schuchardt (7):
-      ath6kl: simplify logical condition
-      rsi: eliminate superfluous NULL check
-      mwifiex: illegal assignment
-      rtlwifi: rtl8723be: avoid undefined behavior
-      mwiflex: avoid possible null pointer dereference
-      rtlwifi: rtl8192ee: simplify coding
-      brcm80211: simplify assignment
-
-Javier Martinez Canillas (8):
-      mwifiex: only call mwifiex_sdio_probe_of() if dev has an OF node
-      mwifiex: propagate sdio_enable_func() errno code in mwifiex_sdio_probe()
-      mwifiex: propagate mwifiex_add_card() errno code in mwifiex_sdio_probe()
-      mwifiex: consolidate mwifiex_sdio_probe() error paths
-      mwifiex: use dev_err() instead of pr_err() in mwifiex_sdio_probe()
-      mwifiex: check if mwifiex_sdio_probe_of() fails and return error
-      mwifiex: don't print an error if an optional DT property is missing
-      mwifiex: use better message and error code when OF node doesn't match
-
-Julia Lawall (2):
-      ath6kl: fix typo
-      mwifiex: fix typo
-
-Kalle Valo (1):
-      Merge ath-next from ath.git
-
-Lauri Kasanen (1):
-      carl9170: Clarify kconfig text
-
-Lior David (1):
-      wil6210: abort P2P search when stopping P2P device
-
-Lucas Stach (1):
-      b43: only hardcode LED behavior if SPROM doesn't encode any
-
-Mathias Krause (1):
-      mwifiex: remove misleading GFP_DMA flag in buffer allocations
-
-Maya Erez (7):
-      wil6210: fix race conditions between TX send and completion
-      wil6210: guarantee safe access to rx descriptors shared memory
-      wil6210: protect wil_vring_fini_tx in parallel to tx completions
-      wil6210: fix dma mapping error cleanup in __wil_tx_vring_tso
-      wil6210: add pm_notify handling
-      wil6210: align wil log functions to wil_dbg_ratelimited implementation
-      wil6210: fix chan check in wil_p2p_listen
-
-Michal Kazior (1):
-      ath10k: improve tx scheduling
-
-Mohammed Shafi Shajakhan (5):
-      ath10k: reduce warning messages during rx without proper channel context
-      ath10k: fix legacy rate packet debug messages
-      ath10k: fix error while writing 'simulate_fw_crash' debugfs
-      ath10k: remove duplicate and unused rx rate flags
-      ath10k: fix CCK h/w rates for QCA99X0 and newer chipsets
-
-Muhammad Falak R Wani (1):
-      brcmfmac: use kmemdup
-
-Rafał Miłecki (8):
-      brcmfmac: rework function picking free BSS index
-      brcmutil: add field storing control channel to the struct brcmu_chan
-      brcmfmac: support get_channel cfg80211 callback
-      brcmfmac: print errors if creating interface fails
-      brcmfmac: fix setting AP channel with new firmwares
-      brcmfmac: don't remove interface on link down firmware event
-      brcmfmac: drop unused pm_block vif attribute
-      brcmfmac: include required headers in cfg80211.h
-
-Raja Mani (1):
-      ath10k: enable ipq4019 device probe in ahb module
-
-Rajkumar Manoharan (5):
-      ath10k: fix operating irq mode for ahb device
-      ath10k: remove unused phy_mode_to_band
-      ath10k: update module description
-      ath10k: add new ATH10K_FW_FEATURE_BTCOEX_PARAM
-      ath10k: add pdev param support to enable/disable btcoex
-
-Sven Eckelmann (2):
-      ath10k: add QCA9887 chipset support
-      ath10k: add board data download from target
-
-Vasanthakumar Thiagarajan (7):
-      ath10k: move rx_location_info out of struct rx_pkt_end
-      ath10k: clean up growing hw checks during safe and full reset
-      ath10k: define rx_ppdu_end for QCA9984
-      ath10k: enable support for QCA9984
-      ath10k: fix some of the macro definitions of HTT_RX_IND message
-      ath10k: define an enum to enable cycle counter wraparound logic
-      ath10k: fix cycle counter wraparound handling for QCA4019
-
-Wei-Ning Huang (1):
-      mwifiex: fix racing condition when downloading firmware
-
-Wright Feng (3):
-      brcmfmac: revise SDIO error message in brcmf_sdio_drivestrengthinit
-      brcmfmac: use ndev->needed_headroom to reserve additional header space
-      brcmfmac: change rx_seq check log from error print to debug print
-
- MAINTAINERS                                        |    9 +-
- drivers/net/wireless/ath/ath10k/ahb.c              |   11 +-
- drivers/net/wireless/ath/ath10k/core.c             |  105 +++-
- drivers/net/wireless/ath/ath10k/core.h             |   24 +-
- drivers/net/wireless/ath/ath10k/debug.c            |   32 +-
- drivers/net/wireless/ath/ath10k/hif.h              |   14 +
- drivers/net/wireless/ath/ath10k/htt.h              |    6 +-
- drivers/net/wireless/ath/ath10k/htt_rx.c           |   36 +-
- drivers/net/wireless/ath/ath10k/hw.c               |   26 +-
- drivers/net/wireless/ath/ath10k/hw.h               |   73 +++
- drivers/net/wireless/ath/ath10k/mac.c              |   59 +-
- drivers/net/wireless/ath/ath10k/pci.c              |  245 +++++++-
- drivers/net/wireless/ath/ath10k/pci.h              |    6 +
- drivers/net/wireless/ath/ath10k/rx_desc.h          |   87 +--
- drivers/net/wireless/ath/ath10k/targaddrs.h        |    3 +
- drivers/net/wireless/ath/ath10k/txrx.c             |    3 +
- drivers/net/wireless/ath/ath10k/wmi.c              |    4 +
- drivers/net/wireless/ath/ath10k/wmi.h              |    4 +
- drivers/net/wireless/ath/ath5k/pcu.c               |    2 +-
- drivers/net/wireless/ath/ath6kl/core.h             |    2 +-
- drivers/net/wireless/ath/ath6kl/wmi.c              |    3 +-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     |    3 +-
- drivers/net/wireless/ath/ath9k/tx99.c              |    3 +-
- drivers/net/wireless/ath/carl9170/Kconfig          |    8 +-
- drivers/net/wireless/ath/wil6210/cfg80211.c        |   16 +
- drivers/net/wireless/ath/wil6210/debug.c           |   46 +-
- drivers/net/wireless/ath/wil6210/p2p.c             |    6 +-
- drivers/net/wireless/ath/wil6210/pcie_bus.c        |   68 ++-
- drivers/net/wireless/ath/wil6210/pm.c              |   25 +-
- drivers/net/wireless/ath/wil6210/txrx.c            |   42 +-
- drivers/net/wireless/ath/wil6210/wil6210.h         |    6 +
- drivers/net/wireless/ath/wil6210/wil_platform.h    |    4 +-
- drivers/net/wireless/broadcom/b43/Makefile         |    2 +-
- drivers/net/wireless/broadcom/b43/leds.c           |    8 +-
- drivers/net/wireless/broadcom/b43/main.c           |   31 +-
- drivers/net/wireless/broadcom/b43/phy_a.c          |  595 --------------------
- drivers/net/wireless/broadcom/b43/phy_a.h          |   22 -
- drivers/net/wireless/broadcom/b43/phy_common.h     |    3 -
- drivers/net/wireless/broadcom/b43/phy_g.c          |   25 +-
- drivers/net/wireless/broadcom/b43/wa.c             |  283 +---------
- drivers/net/wireless/broadcom/b43/xmit.c           |   30 +-
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |   47 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  164 ++++--
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |    8 +-
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    |    2 +
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |   26 +-
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |    1 -
- .../broadcom/brcm80211/brcmfmac/fwsignal.c         |    2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |   17 +-
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |    6 +-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |    5 +-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |    3 +-
- .../broadcom/brcm80211/brcmsmac/phy/phy_n.c        |    2 +-
- .../net/wireless/broadcom/brcm80211/brcmutil/d11.c |   18 +-
- .../broadcom/brcm80211/include/brcm_hw_ids.h       |    2 +
- .../broadcom/brcm80211/include/brcmu_d11.h         |   22 +
- drivers/net/wireless/intel/iwlegacy/3945.c         |    3 +-
- drivers/net/wireless/marvell/libertas/if_sdio.c    |    3 +-
- drivers/net/wireless/marvell/libertas/if_spi.c     |    4 +-
- drivers/net/wireless/marvell/libertas_tf/main.c    |    7 -
- drivers/net/wireless/marvell/mwifiex/11n_aggr.c    |    2 +-
- drivers/net/wireless/marvell/mwifiex/init.c        |    1 +
- drivers/net/wireless/marvell/mwifiex/join.c        |    2 +-
- drivers/net/wireless/marvell/mwifiex/main.c        |    6 +-
- drivers/net/wireless/marvell/mwifiex/main.h        |    3 +-
- drivers/net/wireless/marvell/mwifiex/pcie.c        |    9 +-
- drivers/net/wireless/marvell/mwifiex/sdio.c        |   64 ++-
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |    5 +-
- drivers/net/wireless/marvell/mwifiex/sta_event.c   |   12 +-
- drivers/net/wireless/marvell/mwifiex/uap_txrx.c    |    2 +-
- .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |   12 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    |   17 +-
- .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    |   16 +-
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |   16 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |   12 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/phy.c   |   13 +-
- .../net/wireless/realtek/rtlwifi/rtl8192se/hw.c    |   20 +-
- .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    |   13 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |   16 +-
- .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   |    2 +-
- .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |   15 +-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c            |    2 +-
- drivers/net/wireless/wl3501_cs.c                   |   31 +-
- 83 files changed, 1256 insertions(+), 1357 deletions(-)
- delete mode 100644 drivers/net/wireless/broadcom/b43/phy_a.c
