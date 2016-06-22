@@ -1,68 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:47382 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753538AbcFUDTi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 23:19:38 -0400
-From: Rusty Russell <rusty@rustcorp.com.au>
-To: "Andrew F. Davis" <afd@ti.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Miguel Ojeda Sandonis <miguel.ojeda.sandonis@gmail.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Sebastian Reichel <sre@kernel.org>,
-	Wolfram Sang <wsa@the-dreams.de>,
-	Richard Purdie <rpurdie@rpsys.net>,
-	Jacek Anaszewski <j.anaszewski@samsung.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Ingo Molnar <mingo@kernel.org>
-Cc: linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
-	linux-leds@vger.kernel.org, lguest@lists.ozlabs.org,
-	linuxppc-dev@lists.ozlabs.org, linux-media@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-pwm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Andrew F . Davis" <afd@ti.com>
-Subject: Re: [PATCH 10/12] lguest: Only descend into lguest directory when CONFIG_LGUEST is set
-In-Reply-To: <20160613200211.14790-11-afd@ti.com>
-References: <20160613200211.14790-1-afd@ti.com> <20160613200211.14790-11-afd@ti.com>
-Date: Tue, 21 Jun 2016 06:14:30 +0930
-Message-ID: <87a8iflhe9.fsf@rustcorp.com.au> (sfid-20160621_051958_646019_974735CB)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34332 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbcFVMZf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2016 08:25:35 -0400
+Received: by mail-pf0-f195.google.com with SMTP id 66so4002589pfy.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2016 05:25:03 -0700 (PDT)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH] mac80211: Use macro instead of number
+Date: Wed, 22 Jun 2016 20:23:03 +0900
+Message-Id: <1466594583-23663-1-git-send-email-masashi.honma@gmail.com> (sfid-20160622_142622_775844_A920D1DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Andrew F. Davis" <afd@ti.com> writes:
-> When CONFIG_LGUEST is not set make will still descend into the lguest
-> directory but nothing will be built. This produces unneeded build
-> artifacts and messages in addition to slowing the build. Fix this here.
->
-> Signed-off-by: Andrew F. Davis <afd@ti.com>
-> ---
->  drivers/Makefile | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Use IEEE80211_MIN_ACTION_SIZE macro for robust management frame check.
 
-Applied,
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ include/linux/ieee80211.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks!
-Rusty.
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index 7c0771a..8326a91 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -2465,7 +2465,7 @@ static inline bool _ieee80211_is_robust_mgmt_frame(struct ieee80211_hdr *hdr)
+  */
+ static inline bool ieee80211_is_robust_mgmt_frame(struct sk_buff *skb)
+ {
+-	if (skb->len < 25)
++	if (skb->len < IEEE80211_MIN_ACTION_SIZE)
+ 		return false;
+ 	return _ieee80211_is_robust_mgmt_frame((void *)skb->data);
+ }
+-- 
+2.5.0
 
->
-> diff --git a/drivers/Makefile b/drivers/Makefile
-> index 19305e0..b178e2f 100644
-> --- a/drivers/Makefile
-> +++ b/drivers/Makefile
-> @@ -122,7 +122,7 @@ obj-$(CONFIG_ACCESSIBILITY)	+= accessibility/
->  obj-$(CONFIG_ISDN)		+= isdn/
->  obj-$(CONFIG_EDAC)		+= edac/
->  obj-$(CONFIG_EISA)		+= eisa/
-> -obj-y				+= lguest/
-> +obj-$(CONFIG_LGUEST)		+= lguest/
->  obj-$(CONFIG_CPU_FREQ)		+= cpufreq/
->  obj-$(CONFIG_CPU_IDLE)		+= cpuidle/
->  obj-y				+= mmc/
-> -- 
-> 2.8.3
