@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:36944 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752677AbcFTV5K convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52129 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750770AbcFVJBt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 17:57:10 -0400
+	Wed, 22 Jun 2016 05:01:49 -0400
 From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 01/21] ath10k: Fix crash related to printing features.
-Date: Mon, 20 Jun 2016 21:56:38 +0000
-Message-ID: <874m8no76y.fsf@kamboji.qca.qualcomm.com> (sfid-20160620_235713_469429_39EC5419)
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-	<1462986153-16318-2-git-send-email-greearb@candelatech.com>
-	<576856E6.2030003@candelatech.com>
-In-Reply-To: <576856E6.2030003@candelatech.com> (Ben Greear's message of "Mon,
-	20 Jun 2016 13:49:42 -0700")
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>
+Subject: Re: [PATCH V2 2/2] ath6kl: replace semaphore with mutex
+Date: Wed, 22 Jun 2016 08:59:59 +0000
+Message-ID: <87h9cliooi.fsf@kamboji.qca.qualcomm.com> (sfid-20160622_110217_739745_F23F3388)
+References: <20160621232210.5801-1-chaehyun.lim@gmail.com>
+In-Reply-To: <20160621232210.5801-1-chaehyun.lim@gmail.com> (Chaehyun Lim's
+	message of "Wed, 22 Jun 2016 08:22:10 +0900")
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+(Adding ath6k list)
 
-> On 05/11/2016 10:02 AM, greearb@candelatech.com wrote:
->> From: Ben Greear <greearb@candelatech.com>
->>
->> This looks like a regression from
->> c4cdf753 (move fw_features to struct ath10k_fw_file)
+Chaehyun Lim <chaehyun.lim@gmail.com> writes:
+
+> It replaces struct semaphore sem with struct mutex mutex
 >
-> Just FYI, this patch does not appear to be in 4.7-rc4 as of today, and
-> so kernel crashes on startup when loading ath10k, at least when
-> DBG_BOOT logging is enabled....
+> Reported-by: kbuild test robot <lkp@intel.com>
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+> V2: fix build failure reported by kbuild test robot
 
-The fix is wireless-drivers.git now, I'm planning to send a pull request
-to Dave tomorrow.
+I don't think Reported-by is correct, it should be only used when
+reporting the original issue
+
+Have you tested this on a real device? I'm reluctant to apply this big
+locking change without some level of testing.
 
 -- 
 Kalle Valo
