@@ -1,56 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56612 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753364AbcFJMkI (ORCPT
+Received: from smtp.riverbed.com ([208.70.196.45]:31662 "EHLO
+	smtp1.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751302AbcFVNeo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 08:40:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Ayala Beker <ayala.beker@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 10 Jun 2016 15:39:56 +0300
-Message-Id: <1465562397-1402-4-git-send-email-luca@coelho.fi> (sfid-20160610_144056_537948_FAD52661)
-In-Reply-To: <1465562397-1402-1-git-send-email-luca@coelho.fi>
-References: <1465562195.29614.5.camel@coelho.fi>
- <1465562397-1402-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 4/5] iwlwifi: mvm: set the encryption type of an IGTK key
+	Wed, 22 Jun 2016 09:34:44 -0400
+To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Cc: kvalo@qca.qualcomm.com
+From: Eduardo Abinader <eduardo.abinader@riverbed.com>
+Subject: [PATCH] ath10k: remove extra space on ath10k_update_channel_list
+Message-ID: <576A93E2.9050901@riverbed.com> (sfid-20160622_153503_086840_28D4CA13)
+Date: Wed, 22 Jun 2016 15:34:26 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+just to comply to coding style.
 
-The FW expect the driver to set the encryption algorithm type when
-installing the IGTK key in the HW.
-Currently when installing CMAC IGTK key we don't set the algorithm type
-and as a result the FW fails to calculate the MIC of multicast management
-frames.
-Fix it.
-
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 0454bfe..b23ab4a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1961,6 +1961,14 @@ static int iwl_mvm_send_sta_igtk(struct iwl_mvm *mvm,
- 		struct ieee80211_key_seq seq;
- 		const u8 *pn;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index d4b7a16..d5f8e95 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -2939,7 +2939,7 @@ static int ath10k_update_channel_list(struct ath10k *ar)
+ 			if (channel->flags & IEEE80211_CHAN_DISABLED)
+ 				continue;
  
-+		switch (keyconf->cipher) {
-+		case WLAN_CIPHER_SUITE_AES_CMAC:
-+			igtk_cmd.ctrl_flags |= cpu_to_le32(STA_KEY_FLG_CCM);
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+
- 		memcpy(igtk_cmd.IGTK, keyconf->key, keyconf->keylen);
- 		ieee80211_get_key_rx_seq(keyconf, 0, &seq);
- 		pn = seq.aes_cmac.pn;
+-			ch->allow_ht   = true;
++			ch->allow_ht = true;
+ 
+ 			/* FIXME: when should we really allow VHT? */
+ 			ch->allow_vht = true;
 -- 
-2.8.1
-
+2.5.0
