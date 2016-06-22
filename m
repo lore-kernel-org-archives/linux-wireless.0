@@ -1,66 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55728 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751828AbcFCF7o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 01:59:44 -0400
-Message-ID: <1464933580.11694.44.camel@coelho.fi> (sfid-20160603_075952_637763_ED43C617)
-From: Luca Coelho <luca@coelho.fi>
-To: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"me@bobcopeland.com" <me@bobcopeland.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Date: Fri, 03 Jun 2016 08:59:40 +0300
-In-Reply-To: <CAAA5faEJuydHyOgoB=R3HrucRLr4mhbwJPp=29SzmaJOzw9Gdw@mail.gmail.com>
-References: <20160529214059.GA15677@localhost>
-	 <CAAA5faFNa1sQrj6Yfq+hrXfUOi0Lek4qL8Zzpdv27-4+Z4n6mQ@mail.gmail.com>
- <20160601125453.GB12977@localhost> <1464787139.2554.74.camel@intel.com>
- <CAAA5faFaPow=Rw-1btgag9wRV-ub8=np2FgpRsoF99MPyb7row@mail.gmail.com>
- <1464841636.11694.10.camel@intel.com>
-	 <CAAA5faGpjybA63PMp5pzGOxbw8Zjy+vK1HwnQA4-jGGk8XWJvA@mail.gmail.com>
- <1464855365.11694.35.camel@coelho.fi>
-	 <CAAA5faEJuydHyOgoB=R3HrucRLr4mhbwJPp=29SzmaJOzw9Gdw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: wireless-testing on 4.7
+Received: from lists.s-osg.org ([54.187.51.154]:49439 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751671AbcFVNDg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 22 Jun 2016 09:03:36 -0400
+Subject: Re: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl
+ file
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
+ <1465232558-31678-3-git-send-email-javier@osg.samsung.com>
+ <87wplxdsln.fsf@kamboji.qca.qualcomm.com>
+ <12ccd90e-e3eb-ecac-b23f-8124b0db32ad@osg.samsung.com>
+ <2b5e5833ecc74a2b9cd822e8455cd0af@SC-EXCH04.marvell.com>
+ <8dc6e64a-3429-4bed-e5c9-da6880eb9505@osg.samsung.com>
+ <87shwkes65.fsf@kamboji.qca.qualcomm.com>
+ <aeeb25f2-3253-0931-1e84-edc4590208b3@osg.samsung.com>
+ <87vb11iw7q.fsf@purkki.adurom.net>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+Message-ID: <92112c3f-0016-87f4-c071-42485772e1fa@osg.samsung.com> (sfid-20160622_150435_564623_5CFCE755)
+Date: Wed, 22 Jun 2016 08:57:07 -0400
+MIME-Version: 1.0
+In-Reply-To: <87vb11iw7q.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-06-02 at 23:09 -0600, Reinoud Koornstra wrote:
-> On Thu, Jun 2, 2016 at 2:16 AM, Luca Coelho <luca@coelho.fi> wrote:
-> > This shows that you have iwlwifi-7260-16.ucode in your file system.
-> >  But here we are reading it much later.  So it's possible that the
-> > kernel cannot access the firmware at a very early stage (because
-> > the
-> > filesystem that contains it is not mounted yet) when you use in-
-> > kernel.
-> > 
-> > So, first of all, please make sure they're built as modules.  We
-> > can
-> > continue from there then.
+Hello Kalle,
+
+On 06/22/2016 02:17 AM, Kalle Valo wrote:
+> Javier Martinez Canillas <javier@osg.samsung.com> writes:
 > 
-> Your suggestion worked. When it's compiled as module, the
-> iwlwifi-7260-16.ucode loads fine.
-> No problems detected so far.
+>>>> Patch 3/3 applies cleanly even after dropping patch 2/3.
+>>>> Is that Ok for you or do you want me to re-resend a v3
+>>>> with only patches 1/3 and 3/3?
+>>>
+>>> I can drop patch 2, no need to resend. Thanks.
+>>>
+>>
+>> I saw that you sent your pull request for v4.8 but the
+>> patches from this series were not included:
+>>
+>> https://lkml.org/lkml/2016/6/21/400
+> 
+> I had forgotten to change the state of patches 1 and 3 from 'Changes
+> Requested' back to 'New' and that's why I missed them. I did that now so
+> they are back in my queue:
+> 
+> https://patchwork.kernel.org/patch/9158855/
+> https://patchwork.kernel.org/patch/9158851/
+> 
+> Thanks for checking.
+> 
 
-Great! :)
+Ok, thanks for the information.
 
-
-> It does make me think whether this is desired behavior though that
-> due
-> to the later reading we cannot have iwlwifi build in the kernel.
-
-It should work, but then you have to make sure the firmware is
-available at very early stages of boot.  If you add it to the proper
-place in your initrd, the kernel should find it when the driver
-requests it.
-
-I didn't want to go into the details of this, because in most cases the
-best option is to have the driver as a module.  If you really need it
-in-kernel, then you need to make sure all the needed pieces are
-available very early as well.
-
---
-Cheers,
-Luca.
+Best regards,
+-- 
+Javier Martinez Canillas
+Open Source Group
+Samsung Research America
