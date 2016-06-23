@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56636 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:33707 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752741AbcF2OGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 10:06:41 -0400
-From: Hans de Goede <hdegoede@redhat.com>
-To: "John W . Linville" <linville@tuxdriver.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
-Subject: [PATCH 2/4] ARM: dts: sun7i-a20-cubietruck: Set brcm,nvram_file_name
-Date: Wed, 29 Jun 2016 16:04:32 +0200
-Message-Id: <1467209074-15634-2-git-send-email-hdegoede@redhat.com> (sfid-20160629_160742_303891_7D2AEE13)
-In-Reply-To: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+	id S1751564AbcFWSf5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2016 14:35:57 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 4/4] rtl8xxxu: Mark 0x2001:0x3308 as tested
+Date: Thu, 23 Jun 2016 14:35:55 -0400
+Message-Id: <1466706955-10339-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160623_203604_450960_095998EE)
+In-Reply-To: <1466706955-10339-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1466706955-10339-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The cubietruck uses an ap6210 sdio wifi module, set brcm,nvram_file_name
-to brcmfmac43362-ap6210.txt so that we can ship the ap6210 specific
-nvram file in linunx-firmware to get the wifi to work out of the box
-without users needing to download and install the nvram file themselves.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Note a downside of this patch is that users who have already manually
-installed the nvram file will need to rename it.
+D-Link DWA-121 is reported as working.
 
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Reported-by: Stefano Bravi <stefanobravi69@libero.it>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- arch/arm/boot/dts/sun7i-a20-cubietruck.dts | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-index 83f39b0..fda1da4 100644
---- a/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-+++ b/arch/arm/boot/dts/sun7i-a20-cubietruck.dts
-@@ -199,6 +199,7 @@
- 	brcmf: bcrmf@1 {
- 		reg = <1>;
- 		compatible = "brcm,bcm4329-fmac";
-+		brcm,nvram_file_name = "brcm/brcmfmac43362-ap6210.txt";
- 		interrupt-parent = <&pio>;
- 		interrupts = <7 10 IRQ_TYPE_LEVEL_LOW>; /* PH10 / EINT10 */
- 		interrupt-names = "host-wake";
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 90d21c3..dfe61e4 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5856,6 +5856,10 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+ 		if (id->idProduct == 0x648b)
+ 			untested = 0;
+ 		break;
++	case 0x2001:
++		if (id->idProduct == 0x3308)
++			untested = 0;
++		break;
+ 	default:
+ 		break;
+ 	}
+@@ -6028,6 +6032,9 @@ static struct usb_device_id dev_table[] = {
+ /* Tested by Jocelyn Mayer */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x20f4, 0x648b, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
++/* Tested by Stefano Bravi */
++{USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x3308, 0xff, 0xff, 0xff),
++	.driver_info = (unsigned long)&rtl8192cu_fops},
+ /* Currently untested 8188 series devices */
+ {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8191, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+@@ -6075,8 +6082,6 @@ static struct usb_device_id dev_table[] = {
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(0x13d3, 0x3357, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+-{USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x3308, 0xff, 0xff, 0xff),
+-	.driver_info = (unsigned long)&rtl8192cu_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x330b, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(0x2019, 0x4902, 0xff, 0xff, 0xff),
 -- 
 2.7.4
 
