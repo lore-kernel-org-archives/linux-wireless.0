@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56604 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752020AbcFJMkG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 08:40:06 -0400
-From: Luca Coelho <luca@coelho.fi>
+Received: from mx1.redhat.com ([209.132.183.28]:46624 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751445AbcFWSf5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2016 14:35:57 -0400
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 10 Jun 2016 15:39:53 +0300
-Message-Id: <1465562397-1402-1-git-send-email-luca@coelho.fi> (sfid-20160610_144054_441787_E681D917)
-In-Reply-To: <1465562195.29614.5.camel@coelho.fi>
-References: <1465562195.29614.5.camel@coelho.fi>
-Subject: [PATCH 1/5] iwlwifi: mvm: increase scan timeout to 20 seconds
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 2/4] rtl8xxxu: Reduce console noise when removing the kernel module
+Date: Thu, 23 Jun 2016 14:35:53 -0400
+Message-Id: <1466706955-10339-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160623_203609_023050_FF8CC148)
+In-Reply-To: <1466706955-10339-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1466706955-10339-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-The 16 seconds timeout we were using turned out to be too short.
-Recalculations by system show that the total time in both bands should
-be < 18.5 seconds, even in the slowest cases (e.g. DCM P2P with
-DTIM=2).  Rounding it up to 20 seconds for a bit more safety.
+USB urbs will return with a status != 0 when rmmod'ing the driver. No
+need to fill the log with messages from rtl8xxxu_int_complete()
 
-Fixes: 728e825f81b1 ("iwlwifi: mvm: add a scan timeout for regular scans")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index 6f609dd..e78fc56 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -1222,7 +1222,7 @@ static int iwl_mvm_check_running_scans(struct iwl_mvm *mvm, int type)
- 	return -EIO;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 9f6dbb4..cfa5528 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5267,7 +5267,7 @@ static void rtl8xxxu_int_complete(struct urb *urb)
+ 		if (ret)
+ 			usb_unanchor_urb(urb);
+ 	} else {
+-		dev_info(dev, "%s: Error %i\n", __func__, urb->status);
++		dev_dbg(dev, "%s: Error %i\n", __func__, urb->status);
+ 	}
  }
  
--#define SCAN_TIMEOUT (16 * HZ)
-+#define SCAN_TIMEOUT (20 * HZ)
- 
- void iwl_mvm_scan_timeout(unsigned long data)
- {
 -- 
-2.8.1
+2.7.4
 
