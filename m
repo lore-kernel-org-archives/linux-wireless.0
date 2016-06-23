@@ -1,25 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vpn.innerrange.com.au ([203.122.143.146]:41588 "EHLO
-	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750787AbcFCG2O convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33598 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750960AbcFWO5l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 02:28:14 -0400
-From: Craig McQueen <craig.mcqueen@innerrange.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 3 Jun 2016 16:28:06 +1000
-Subject: rt2800usb firmware rt2870.bin 0.36 not scanning
-Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D2A096260@IR-CENTRAL.corp.innerrange.com> (sfid-20160603_083536_474548_51F5A9F1)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 23 Jun 2016 10:57:41 -0400
+Received: by mail-wm0-f67.google.com with SMTP id r201so11649419wme.0
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 07:57:41 -0700 (PDT)
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Cc: nbd@nbd.name,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH 3/6] ath9k: ath9k_hw_init_macaddr should not overwrite valid MAC addresses
+Date: Thu, 23 Jun 2016 16:57:11 +0200
+Message-Id: <20160623145714.20576-4-martin.blumenstingl@googlemail.com> (sfid-20160623_165745_355676_556375BC)
+In-Reply-To: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
+References: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have a D-Link DWA-140 USB Wi-Fi device which is rt2800 based (5392 chipset). I'm trying to use it on a BeagleBone Black based system with 3.14.x kernel built with Yocto. We're using ConnMan 1.30 at the moment.
+Currently setting the MAC address via ath9k_platform_data works only due
+to the order in which init.c sets common->macaddr, which is done after
+ath9k_hw_init_macaddr was executed. It would be better if the latter
+was independent of the order in which it's being called.
 
-We've been finding some instabilities with it periodically disconnecting from some networks. So we tried upgrading the firmware file rt2870.bin from version 0.29 to 0.36. That seems to be more stable with the network. However, we're finding that it initially doesn't connect, until the Wi-Fi has been disabled and then re-enabled. 'connmanctl scan wifi' and 'iwlist scan' don't return anything until Wi-Fi has been disabled and then re-enabled.
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-Have there been any Linux driver changes needed to support this 0.36 firmware? Does anyone have any pointers on where to look to understand this behaviour between 0.29 and 0.36 firmware?
-
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4f98ca0..4dd3aca 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -478,21 +478,25 @@ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
+ 	u16 eeval;
+ 	static const u32 EEP_MAC[] = { EEP_MAC_LSW, EEP_MAC_MID, EEP_MAC_MSW };
+ 
++	/* MAC address may already be loaded via ath9k_platform_data */
++	if (is_valid_ether_addr(common->macaddr))
++		return 0;
++
+ 	for (i = 0; i < 3; i++) {
+ 		eeval = ah->eep_ops->get_eeprom(ah, EEP_MAC[i]);
+ 		common->macaddr[2 * i] = eeval >> 8;
+ 		common->macaddr[2 * i + 1] = eeval & 0xff;
+ 	}
+-	if (!is_valid_ether_addr(common->macaddr)) {
+-		ath_err(common,
+-			"eeprom contains invalid mac address: %pM\n",
+-			common->macaddr);
+ 
+-		random_ether_addr(common->macaddr);
+-		ath_err(common,
+-			"random mac address will be used: %pM\n",
+-			common->macaddr);
+-	}
++	if (is_valid_ether_addr(common->macaddr))
++		return 0;
++
++	ath_err(common, "eeprom contains invalid mac address: %pM\n",
++		common->macaddr);
++
++	random_ether_addr(common->macaddr);
++	ath_err(common, "random mac address will be used: %pM\n",
++		common->macaddr);
+ 
+ 	return 0;
+ }
 -- 
-Craig McQueen
+2.9.0
 
