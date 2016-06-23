@@ -1,86 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59771 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751813AbcFBPeV (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44415 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750919AbcFWQin (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 11:34:21 -0400
-Date: Thu, 2 Jun 2016 21:04:08 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"mike@fireburn.co.uk" <mike@fireburn.co.uk>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
-Subject: Re: Bug 119151 - [regression] ath10k no longer authenitcates and
- freezes system
-Message-ID: <20160602153408.GA5110@atheros-ThinkPad-T61> (sfid-20160602_173424_353404_12168A92)
-References: <8760trzoiw.fsf@kamboji.qca.qualcomm.com>
- <871t4fzn1x.fsf@kamboji.qca.qualcomm.com>
- <57504F05.3040200@candelatech.com>
+	Thu, 23 Jun 2016 12:38:43 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for QCA99X0 and later
+Date: Thu, 23 Jun 2016 22:10:01 +0530
+Message-ID: <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160623_183847_161753_26817A82)
+In-Reply-To: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57504F05.3040200@candelatech.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 02, 2016 at 08:21:41AM -0700, Ben Greear wrote:
-> On 06/02/2016 07:24 AM, Valo, Kalle wrote:
-> >Kalle Valo <kvalo@qca.qualcomm.com> writes:
-> >
-> >>there's a regression in ath10k:
-> >>
-> >>https://bugzilla.kernel.org/show_bug.cgi?id=119151
-> >>
-> >>Reporter bisected it to this:
-> >>
-> >>5c86d97bcc1d42ce7f75685a61be4dad34ee8183 is the first bad commit
-> >>commit 5c86d97bcc1d42ce7f75685a61be4dad34ee8183
-> >>Author: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> >>Date:   Tue Mar 22 17:22:19 2016 +0530
-> >>
-> >>ath10k: combine txrx and replenish task
-> >>
-> >>Since tx completion and rx indication processing are moved out
-> >>of txrx tasklet and rx ring lock contention also removed from txrx
-> >>for rx_ind messages, it would be efficient to combine both replenish
-> >>and txrx tasks. Refill threshold is adjusted for both AP135 and AP148
-> >>(low and high end systems). With this adjustment in AP135, TCP DL is
-> >>improved from 603 Mbps to 620 Mbps and UDP DL is improved from 758 Mbps
-> >>to 803 Mbps. Also no watchdog are observed on UDP BiDi.
-> >>
-> >>Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> >>Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-> >
-> >Adding Mike, the bug reporter.
-> 
-> 
-> I found a lot of problems with this code as well, and the 5 patches
-> starting from the URL below fixed the issues for me.
-> 
-> They are stuck as 'NA' in patchwork, but I don't know why.
-> 
-> http://lists.infradead.org/pipermail/ath10k/2016-April/007218.html
-> 
-> You probably need this patch as well, or ath10k will crash when you
-> enable the debug-mask:
-> 
-> http://permalink.gmane.org/gmane.linux.kernel.wireless.general/151890
-> 
-> It is also 'NA' in patchwork.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-[shafi] i think this is already in the pending branch
-https://patchwork.kernel.org/patch/9073471/
+For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
+NULL func status (always acked/successs !!) when hostapd does a
+PROBE_CLIENT via nullfunc frames when the station is powered off
+abruptly (inactive timer probes client via null func after the inactive
+time reaches beyond the threshold). Fix this by disabling the workaround
+(getting the ACK status of NULL func frames by sending via HTT mgmt-tx
+ path) introduced by the change ("ath10k: fix beacon loss handling ")
+for QCA99X0 and later chipsets. The normal tx path provides the proper
+ACK status for NULL data frames. As of now disable this workaround for
+chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
+completely get rid of this workaround for all the chipsets
 
-> 
-> Thanks,
-> Ben
-> 
-> -- 
-> Ben Greear <greearb@candelatech.com>
-> Candela Technologies Inc  http://www.candelatech.com
-> 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 3 +++
+ drivers/net/wireless/ath/ath10k/core.h | 6 ++++++
+ drivers/net/wireless/ath/ath10k/mac.c  | 1 +
+ 3 files changed, 10 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 689d6ce..9978e4a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
+ 			.board_size = QCA99X0_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
++			.disable_null_func_workaround = true,
+ 		},
+ 	},
+ 	{
+@@ -204,6 +205,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board = QCA9984_HW_1_0_BOARD_DATA_FILE,
+ 			.board_size = QCA99X0_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
++			.disable_null_func_workaround = true,
+ 		},
+ 	},
+ 	{
+@@ -262,6 +264,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
+ 			.board_size = QCA4019_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
++			.disable_null_func_workaround = true,
+ 		},
+ 	},
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 3da18c9..e8c728c 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -750,6 +750,12 @@ struct ath10k {
+ 			const char *board;
+ 			size_t board_size;
+ 			size_t board_ext_size;
++			/* Workaround of sending NULL data frames via
++			 * HTT mgmt TX and getting the proper ACK status does
++			 * not works for chipsets QCA99X0 and later, while
++			 * Tx data path reports the ACK status properly.
++			 */
++			bool disable_null_func_workaround;
+ 		} fw;
+ 	} hw_params;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index d4b7a16..f1e9672 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3236,6 +3236,7 @@ ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
+ 	 * mode though because AP don't sleep.
+ 	 */
+ 	if (ar->htt.target_version_major < 3 &&
++	    !ar->hw_params.fw.disable_null_func_workaround &&
+ 	    (ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc)) &&
+ 	    !test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
+ 		      ar->running_fw->fw_file.fw_features))
+-- 
+1.9.1
+
