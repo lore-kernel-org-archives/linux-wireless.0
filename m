@@ -1,208 +1,532 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40474 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752222AbcFTNAD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 09:00:03 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <johannes@sipsolutions.net>, <kvalo@codeaurora.org>
-CC: <eliad@wizery.com>, <yanivma@ti.com>, <guym@ti.com>,
-	<arik@wizery.com>, <linux-wireless@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <davem@davemloft.net>,
-	Maxim Altshul <maxim.altshul@ti.com>
-Subject: [PATCH 1/3] wlcore/wl18xx: Add functionality to accept TX rate per link
-Date: Mon, 20 Jun 2016 16:00:20 +0300
-Message-ID: <1466427622-5953-2-git-send-email-maxim.altshul@ti.com> (sfid-20160620_150149_033031_AFB2CE28)
-In-Reply-To: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com>
-References: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:35789 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751379AbcFWFm6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2016 01:42:58 -0400
+Received: by mail-pf0-f173.google.com with SMTP id c2so25109399pfa.2
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2016 22:42:57 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH v4 2/3] staging: wilc1000: Replace kthread with workqueue for host interface
+Date: Thu, 23 Jun 2016 11:11:51 +0530
+Message-Id: <1466660512-14935-3-git-send-email-binoy.jayan@linaro.org> (sfid-20160623_074318_287914_33966963)
+In-Reply-To: <1466660512-14935-1-git-send-email-binoy.jayan@linaro.org>
+References: <1466417419-13568-1-git-send-email-binoy.jayan@linaro.org>
+ <1466660512-14935-1-git-send-email-binoy.jayan@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-FW will provide a TX rate per link for each FW status,
-and wlcore will be able to store the information for
-the use of the mesh hwmp module.
+Deconstruct the kthread / message_queue logic, replacing it with
+create_singlethread_workqueue() / queue_work() setup, by adding a
+'struct work_struct' to 'struct host_if_msg'. The current kthread
+hostIFthread() is converted to a work queue helper with the name
+'host_if_work'.
 
-This is used mainly in mesh.
-Rates are reported when a mesh interface is up.
-
-Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
 ---
- drivers/net/wireless/ti/wl18xx/main.c     |  4 ++++
- drivers/net/wireless/ti/wl18xx/tx.c       | 22 ++++++++++++++++++----
- drivers/net/wireless/ti/wl18xx/wl18xx.h   |  6 +++++-
- drivers/net/wireless/ti/wlcore/main.c     |  1 +
- drivers/net/wireless/ti/wlcore/rx.c       |  7 +++++++
- drivers/net/wireless/ti/wlcore/wlcore_i.h | 13 +++++++++++++
- 6 files changed, 48 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/TODO             |   5 +
+ drivers/staging/wilc1000/host_interface.c | 282 ++++++++----------------------
+ 2 files changed, 75 insertions(+), 212 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 6e89e13..a7913ec 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1214,6 +1214,10 @@ static void wl18xx_convert_fw_status(struct wl1271 *wl, void *raw_fw_status,
- 			int_fw_status->counters.tx_voice_released_blks;
- 	fw_status->counters.tx_last_rate =
- 			int_fw_status->counters.tx_last_rate;
-+	fw_status->counters.tx_last_rate_mbps =
-+			int_fw_status->counters.tx_last_rate_mbps;
-+	fw_status->counters.hlid =
-+			int_fw_status->counters.hlid;
- 
- 	fw_status->log_start_addr = le32_to_cpu(int_fw_status->log_start_addr);
- 
-diff --git a/drivers/net/wireless/ti/wl18xx/tx.c b/drivers/net/wireless/ti/wl18xx/tx.c
-index 3406ffb..d198827 100644
---- a/drivers/net/wireless/ti/wl18xx/tx.c
-+++ b/drivers/net/wireless/ti/wl18xx/tx.c
-@@ -30,9 +30,9 @@
- 
- static
- void wl18xx_get_last_tx_rate(struct wl1271 *wl, struct ieee80211_vif *vif,
--			     u8 band, struct ieee80211_tx_rate *rate)
-+			     u8 band, struct ieee80211_tx_rate *rate, u8 hlid)
- {
--	u8 fw_rate = wl->fw_status->counters.tx_last_rate;
-+	u8 fw_rate = wl->links[hlid].fw_rate_idx;
- 
- 	if (fw_rate > CONF_HW_RATE_INDEX_MAX) {
- 		wl1271_error("last Tx rate invalid: %d", fw_rate);
-@@ -79,6 +79,7 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
- 	struct sk_buff *skb;
- 	int id = tx_stat_byte & WL18XX_TX_STATUS_DESC_ID_MASK;
- 	bool tx_success;
-+	struct wl1271_tx_hw_descr *tx_desc;
- 
- 	/* check for id legality */
- 	if (unlikely(id >= wl->num_tx_desc || wl->tx_frames[id] == NULL)) {
-@@ -91,6 +92,7 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
- 
- 	skb = wl->tx_frames[id];
- 	info = IEEE80211_SKB_CB(skb);
-+	tx_desc = (struct wl1271_tx_hw_descr *)skb->data;
- 
- 	if (wl12xx_is_dummy_packet(wl, skb)) {
- 		wl1271_free_tx_id(wl, id);
-@@ -105,7 +107,9 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
- 	 * the info->status structures
- 	 */
- 	wl18xx_get_last_tx_rate(wl, info->control.vif,
--				info->band, &info->status.rates[0]);
-+				info->band,
-+				&info->status.rates[0],
-+				tx_desc->hlid);
- 
- 	info->status.rates[0].count = 1; /* no data about retries */
- 	info->status.ack_signal = -1;
-@@ -144,12 +148,22 @@ void wl18xx_tx_immediate_complete(struct wl1271 *wl)
- 	struct wl18xx_fw_status_priv *status_priv =
- 		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
- 	struct wl18xx_priv *priv = wl->priv;
--	u8 i;
-+	u8 i, hlid;
- 
- 	/* nothing to do here */
- 	if (priv->last_fw_rls_idx == status_priv->fw_release_idx)
- 		return;
- 
-+	/* update rates per link */
-+	hlid = wl->fw_status->counters.hlid;
-+
-+	if (hlid < WLCORE_MAX_LINKS) {
-+		wl->links[hlid].fw_rate_idx =
-+				wl->fw_status->counters.tx_last_rate;
-+		wl->links[hlid].fw_rate_mbps =
-+				wl->fw_status->counters.tx_last_rate_mbps;
-+	}
-+
- 	/* freed Tx descriptors */
- 	wl1271_debug(DEBUG_TX, "last released desc = %d, current idx = %d",
- 		     priv->last_fw_rls_idx, status_priv->fw_release_idx);
-diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-index d65cc6d..5371cbd 100644
---- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
-+++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
-@@ -125,7 +125,11 @@ struct wl18xx_fw_packet_counters {
- 	/* Tx rate of the last transmitted packet */
- 	u8 tx_last_rate;
- 
--	u8 padding[2];
-+	/* Tx rate or Tx rate estimate pre-calculated by fw in mbps units */
-+	u8 tx_last_rate_mbps;
-+
-+	/* hlid for which the rates were reported */
-+	u8 hlid;
- } __packed;
- 
- /* FW status registers */
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 926d9b4..39dec7d 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5091,6 +5091,7 @@ static int wl12xx_sta_add(struct wl1271 *wl,
- 		return ret;
- 
- 	wl_sta = (struct wl1271_station *)sta->drv_priv;
-+	wl_sta->wl = wl;
- 	hlid = wl_sta->hlid;
- 
- 	ret = wl12xx_cmd_add_peer(wl, wlvif, sta, hlid);
-diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
-index 438f271..c87d1d4 100644
---- a/drivers/net/wireless/ti/wlcore/rx.c
-+++ b/drivers/net/wireless/ti/wlcore/rx.c
-@@ -228,6 +228,13 @@ int wlcore_rx(struct wl1271 *wl, struct wl_fw_status *status)
- 	enum wl_rx_buf_align rx_align;
- 	int ret = 0;
- 
-+	/* update rates per link */
-+	hlid = status->counters.hlid;
-+
-+	if (hlid < WLCORE_MAX_LINKS)
-+		wl->links[hlid].fw_rate_mbps =
-+				status->counters.tx_last_rate_mbps;
-+
- 	while (drv_rx_counter != fw_rx_counter) {
- 		buf_size = 0;
- 		rx_counter = drv_rx_counter;
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index cb72b2b..3875190 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -174,6 +174,12 @@ struct wl_fw_status {
- 
- 		/* Tx rate of the last transmitted packet */
- 		u8 tx_last_rate;
-+
-+		/* Tx rate or Tx rate estimate pre calculated by fw in mbps */
-+		u8 tx_last_rate_mbps;
-+
-+		/* hlid for which the rates were reported */
-+		u8 hlid;
- 	} counters;
- 
- 	u32 log_start_addr;
-@@ -278,6 +284,12 @@ struct wl1271_link {
- 	/* bitmap of TIDs where RX BA sessions are active for this link */
- 	u8 ba_bitmap;
- 
-+	/* the last fw rate index we used for this link */
-+	u8 fw_rate_idx;
-+
-+	/* the last fw rate [Mbps] we used for this link */
-+	u8 fw_rate_mbps;
-+
- 	/* The wlvif this link belongs to. Might be null for global links */
- 	struct wl12xx_vif *wlvif;
- 
-@@ -340,6 +352,7 @@ struct wl1271_station {
- 	 * Used in both AP and STA mode.
- 	 */
- 	u64 total_freed_pkts;
-+	struct wl1271 *wl;
+diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
+index 95199d8..ec93b2e 100644
+--- a/drivers/staging/wilc1000/TODO
++++ b/drivers/staging/wilc1000/TODO
+@@ -4,6 +4,11 @@ TODO:
+ - remove custom debug and tracing functions
+ - rework comments and function headers(also coding style)
+ - replace all semaphores with mutexes or completions
++- Move handling for each individual members of 'union message_body' out
++  into a separate 'struct work_struct' and completely remove the multiplexer
++  that is currently part of host_if_work(), allowing movement of the
++  implementation of each message handler into the callsite of the function
++  that currently queues the 'host_if_msg'.
+ - make spi and sdio components coexist in one build
+ - turn compile-time platform configuration (BEAGLE_BOARD,
+   PANDA_BOARD, PLAT_WMS8304, PLAT_RKXXXX, CUSTOMER_PLATFORM, ...)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2d250c6..242c3d7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4,6 +4,7 @@
+ #include <linux/delay.h>
+ #include <linux/completion.h>
+ #include <linux/list.h>
++#include <linux/workqueue.h>
+ #include "host_interface.h"
+ #include <linux/spinlock.h>
+ #include <linux/errno.h>
+@@ -211,6 +212,7 @@ struct host_if_msg {
+ 	u16 id;
+ 	union message_body body;
+ 	struct wilc_vif *vif;
++	struct work_struct work;
  };
  
- struct wl12xx_vif {
+ struct join_bss_param {
+@@ -245,7 +247,7 @@ struct join_bss_param {
+ static struct host_if_drv *terminated_handle;
+ bool wilc_optaining_ip;
+ static u8 P2P_LISTEN_STATE;
+-static struct task_struct *hif_thread_handler;
++static struct workqueue_struct *hif_workqueue;
+ static struct message_queue hif_msg_q;
+ static struct completion hif_thread_comp;
+ static struct completion hif_driver_comp;
+@@ -280,55 +282,7 @@ static struct wilc_vif *join_req_vif;
+ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo);
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+ static s32 Handle_ScanDone(struct wilc_vif *vif, enum scan_event enuEvent);
+-static int wilc_mq_create(struct message_queue *mq);
+-static int wilc_mq_send(struct message_queue *mq,
+-		 const void *send_buf, u32 send_buf_size);
+-static int wilc_mq_recv(struct message_queue *mq,
+-		 void *recv_buf, u32 recv_buf_size, u32 *recv_len);
+-static int wilc_mq_destroy(struct message_queue *mq);
+-
+-/*!
+- *  @author		syounan
+- *  @date		1 Sep 2010
+- *  @note		copied from FLO glue implementatuion
+- *  @version		1.0
+- */
+-static int wilc_mq_create(struct message_queue *mq)
+-{
+-	spin_lock_init(&mq->lock);
+-	sema_init(&mq->sem, 0);
+-	INIT_LIST_HEAD(&mq->msg_list);
+-	mq->recv_count = 0;
+-	mq->exiting = false;
+-	return 0;
+-}
+-
+-/*!
+- *  @author		syounan
+- *  @date		1 Sep 2010
+- *  @note		copied from FLO glue implementatuion
+- *  @version		1.0
+- */
+-static int wilc_mq_destroy(struct message_queue *mq)
+-{
+-	struct message *msg;
+-
+-	mq->exiting = true;
+-
+-	/* Release any waiting receiver thread. */
+-	while (mq->recv_count > 0) {
+-		up(&mq->sem);
+-		mq->recv_count--;
+-	}
+-
+-	while (!list_empty(&mq->msg_list)) {
+-		msg = list_first_entry(&mq->msg_list, struct message, list);
+-		list_del(&msg->list);
+-		kfree(msg->buf);
+-	}
+-
+-	return 0;
+-}
++static void host_if_work(struct work_struct *work);
+ 
+ /*!
+  *  @author		syounan
+@@ -339,92 +293,17 @@ static int wilc_mq_destroy(struct message_queue *mq)
+ static int wilc_mq_send(struct message_queue *mq,
+ 			const void *send_buf, u32 send_buf_size)
+ {
+-	unsigned long flags;
+-	struct message *new_msg = NULL;
++	struct host_if_msg *new_msg;
+ 
+-	if (!mq || (send_buf_size == 0) || !send_buf)
+-		return -EINVAL;
+-
+-	if (mq->exiting)
+-		return -EFAULT;
+-
+-	/* construct a new message */
+-	new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
++	new_msg = kmemdup(send_buf, sizeof(*new_msg), GFP_ATOMIC);
+ 	if (!new_msg)
+ 		return -ENOMEM;
+ 
+-	new_msg->len = send_buf_size;
+-	INIT_LIST_HEAD(&new_msg->list);
+-	new_msg->buf = kmemdup(send_buf, send_buf_size, GFP_ATOMIC);
+-	if (!new_msg->buf) {
+-		kfree(new_msg);
+-		return -ENOMEM;
+-	}
+-
+-	spin_lock_irqsave(&mq->lock, flags);
+-
+-	/* add it to the message queue */
+-	list_add_tail(&new_msg->list, &mq->msg_list);
+-
+-	spin_unlock_irqrestore(&mq->lock, flags);
+-
+-	up(&mq->sem);
+-
++	INIT_WORK(&new_msg->work, host_if_work);
++	queue_work(hif_workqueue, &new_msg->work);
+ 	return 0;
+ }
+ 
+-/*!
+- *  @author		syounan
+- *  @date		1 Sep 2010
+- *  @note		copied from FLO glue implementatuion
+- *  @version		1.0
+- */
+-static int wilc_mq_recv(struct message_queue *mq,
+-		 void *recv_buf, u32 recv_buf_size, u32 *recv_len)
+-{
+-	struct message *msg;
+-	unsigned long flags;
+-
+-	if (!mq || (recv_buf_size == 0) || !recv_buf || !recv_len)
+-		return -EINVAL;
+-
+-	if (mq->exiting)
+-		return -EFAULT;
+-
+-	spin_lock_irqsave(&mq->lock, flags);
+-	mq->recv_count++;
+-	spin_unlock_irqrestore(&mq->lock, flags);
+-
+-	down(&mq->sem);
+-	spin_lock_irqsave(&mq->lock, flags);
+-
+-	if (list_empty(&mq->msg_list)) {
+-		spin_unlock_irqrestore(&mq->lock, flags);
+-		up(&mq->sem);
+-		return -EFAULT;
+-	}
+-	/* check buffer size */
+-	msg = list_first_entry(&mq->msg_list, struct message, list);
+-	if (recv_buf_size < msg->len) {
+-		spin_unlock_irqrestore(&mq->lock, flags);
+-		up(&mq->sem);
+-		return -EOVERFLOW;
+-	}
+-
+-	/* consume the message */
+-	mq->recv_count--;
+-	memcpy(recv_buf, msg->buf, msg->len);
+-	*recv_len = msg->len;
+-
+-	list_del(&msg->list);
+-
+-	kfree(msg->buf);
+-	kfree(msg);
+-
+-	spin_unlock_irqrestore(&mq->lock, flags);
+-
+-	return 0;
+-}
+ 
+ /* The u8IfIdx starts from 0 to NUM_CONCURRENT_IFC -1, but 0 index used as
+  * special purpose in wilc device, so we add 1 to the index to starts from 1.
+@@ -2625,187 +2504,172 @@ static void handle_get_tx_pwr(struct wilc_vif *vif, u8 *tx_pwr)
+ 	complete(&hif_wait_response);
+ }
+ 
+-static int hostIFthread(void *pvArg)
++static void host_if_work(struct work_struct *work)
+ {
+-	u32 u32Ret;
+-	struct host_if_msg msg;
+-	struct wilc *wilc = pvArg;
+-	struct wilc_vif *vif;
+-
+-	memset(&msg, 0, sizeof(struct host_if_msg));
++	struct host_if_msg *msg;
++	struct wilc *wilc;
+ 
+-	while (1) {
+-		wilc_mq_recv(&hif_msg_q, &msg, sizeof(struct host_if_msg), &u32Ret);
+-		vif = msg.vif;
+-		if (msg.id == HOST_IF_MSG_EXIT)
+-			break;
++	msg = container_of(work, struct host_if_msg, work);
++	wilc = msg->vif->wilc;
+ 
+-		if ((!wilc_initialized)) {
+-			usleep_range(200 * 1000, 200 * 1000);
+-			wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-			continue;
+-		}
+-
+-		if (msg.id == HOST_IF_MSG_CONNECT &&
+-		    vif->hif_drv->usr_scan_req.scan_result) {
+-			wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-			usleep_range(2 * 1000, 2 * 1000);
+-			continue;
+-		}
++	if (msg->id == HOST_IF_MSG_CONNECT &&
++	    msg->vif->hif_drv->usr_scan_req.scan_result) {
++		wilc_mq_send(&hif_msg_q, msg, sizeof(struct host_if_msg));
++		usleep_range(2 * 1000, 2 * 1000);
++	} else {
+ 
+-		switch (msg.id) {
++		switch (msg->id) {
+ 		case HOST_IF_MSG_SCAN:
+-			handle_scan(msg.vif, &msg.body.scan_info);
++			handle_scan(msg->vif, &msg->body.scan_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_CONNECT:
+-			Handle_Connect(msg.vif, &msg.body.con_info);
++			Handle_Connect(msg->vif, &msg->body.con_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_RCVD_NTWRK_INFO:
+-			Handle_RcvdNtwrkInfo(msg.vif, &msg.body.net_info);
++			Handle_RcvdNtwrkInfo(msg->vif, &msg->body.net_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_RCVD_GNRL_ASYNC_INFO:
+-			Handle_RcvdGnrlAsyncInfo(vif,
+-						 &msg.body.async_info);
++			Handle_RcvdGnrlAsyncInfo(msg->vif,
++						 &msg->body.async_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_KEY:
+-			Handle_Key(msg.vif, &msg.body.key_info);
++			Handle_Key(msg->vif, &msg->body.key_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_CFG_PARAMS:
+-			handle_cfg_param(msg.vif, &msg.body.cfg_info);
++			handle_cfg_param(msg->vif, &msg->body.cfg_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_CHANNEL:
+-			handle_set_channel(msg.vif, &msg.body.channel_info);
++			handle_set_channel(msg->vif, &msg->body.channel_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_DISCONNECT:
+-			Handle_Disconnect(msg.vif);
++			Handle_Disconnect(msg->vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_RCVD_SCAN_COMPLETE:
+-			del_timer(&vif->hif_drv->scan_timer);
++			del_timer(&msg->vif->hif_drv->scan_timer);
+ 
+ 			if (!wilc_wlan_get_num_conn_ifcs(wilc))
+ 				wilc_chip_sleep_manually(wilc);
+ 
+-			Handle_ScanDone(msg.vif, SCAN_EVENT_DONE);
++			Handle_ScanDone(msg->vif, SCAN_EVENT_DONE);
+ 
+-			if (vif->hif_drv->remain_on_ch_pending)
+-				Handle_RemainOnChan(msg.vif,
+-						    &msg.body.remain_on_ch);
++			if (msg->vif->hif_drv->remain_on_ch_pending)
++				Handle_RemainOnChan(msg->vif,
++						    &msg->body.remain_on_ch);
+ 
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_RSSI:
+-			Handle_GetRssi(msg.vif);
++			Handle_GetRssi(msg->vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_STATISTICS:
+-			Handle_GetStatistics(msg.vif,
+-					     (struct rf_info *)msg.body.data);
++			Handle_GetStatistics(msg->vif,
++					     (struct rf_info *)msg->body.data);
+ 			break;
+ 
+ 		case HOST_IF_MSG_ADD_BEACON:
+-			Handle_AddBeacon(msg.vif, &msg.body.beacon_info);
++			Handle_AddBeacon(msg->vif, &msg->body.beacon_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_DEL_BEACON:
+-			Handle_DelBeacon(msg.vif);
++			Handle_DelBeacon(msg->vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_ADD_STATION:
+-			Handle_AddStation(msg.vif, &msg.body.add_sta_info);
++			Handle_AddStation(msg->vif, &msg->body.add_sta_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_DEL_STATION:
+-			Handle_DelStation(msg.vif, &msg.body.del_sta_info);
++			Handle_DelStation(msg->vif, &msg->body.del_sta_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_EDIT_STATION:
+-			Handle_EditStation(msg.vif, &msg.body.edit_sta_info);
++			Handle_EditStation(msg->vif, &msg->body.edit_sta_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_INACTIVETIME:
+-			Handle_Get_InActiveTime(msg.vif, &msg.body.mac_info);
++			Handle_Get_InActiveTime(msg->vif, &msg->body.mac_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SCAN_TIMER_FIRED:
+ 
+-			Handle_ScanDone(msg.vif, SCAN_EVENT_ABORTED);
++			Handle_ScanDone(msg->vif, SCAN_EVENT_ABORTED);
+ 			break;
+ 
+ 		case HOST_IF_MSG_CONNECT_TIMER_FIRED:
+-			Handle_ConnectTimeout(msg.vif);
++			Handle_ConnectTimeout(msg->vif);
+ 			break;
+ 
+ 		case HOST_IF_MSG_POWER_MGMT:
+-			Handle_PowerManagement(msg.vif,
+-					       &msg.body.pwr_mgmt_info);
++			Handle_PowerManagement(msg->vif,
++					       &msg->body.pwr_mgmt_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_WFIDRV_HANDLER:
+-			handle_set_wfi_drv_handler(msg.vif, &msg.body.drv);
++			handle_set_wfi_drv_handler(msg->vif, &msg->body.drv);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_OPERATION_MODE:
+-			handle_set_operation_mode(msg.vif, &msg.body.mode);
++			handle_set_operation_mode(msg->vif, &msg->body.mode);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_IPADDRESS:
+-			handle_set_ip_address(vif,
+-					      msg.body.ip_info.ip_addr,
+-					      msg.body.ip_info.idx);
++			handle_set_ip_address(msg->vif,
++					      msg->body.ip_info.ip_addr,
++					      msg->body.ip_info.idx);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_IPADDRESS:
+-			handle_get_ip_address(vif, msg.body.ip_info.idx);
++			handle_get_ip_address(msg->vif, msg->body.ip_info.idx);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_MAC_ADDRESS:
+-			handle_get_mac_address(msg.vif,
+-					       &msg.body.get_mac_info);
++			handle_get_mac_address(msg->vif,
++					       &msg->body.get_mac_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_REMAIN_ON_CHAN:
+-			Handle_RemainOnChan(msg.vif, &msg.body.remain_on_ch);
++			Handle_RemainOnChan(msg->vif, &msg->body.remain_on_ch);
+ 			break;
+ 
+ 		case HOST_IF_MSG_REGISTER_FRAME:
+-			Handle_RegisterFrame(msg.vif, &msg.body.reg_frame);
++			Handle_RegisterFrame(msg->vif, &msg->body.reg_frame);
+ 			break;
+ 
+ 		case HOST_IF_MSG_LISTEN_TIMER_FIRED:
+-			Handle_ListenStateExpired(msg.vif, &msg.body.remain_on_ch);
++			Handle_ListenStateExpired(msg->vif, &msg->body.remain_on_ch);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_MULTICAST_FILTER:
+-			Handle_SetMulticastFilter(msg.vif, &msg.body.multicast_info);
++			Handle_SetMulticastFilter(msg->vif, &msg->body.multicast_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_DEL_ALL_STA:
+-			Handle_DelAllSta(msg.vif, &msg.body.del_all_sta_info);
++			Handle_DelAllSta(msg->vif, &msg->body.del_all_sta_info);
+ 			break;
+ 
+ 		case HOST_IF_MSG_SET_TX_POWER:
+-			handle_set_tx_pwr(msg.vif, msg.body.tx_power.tx_pwr);
++			handle_set_tx_pwr(msg->vif, msg->body.tx_power.tx_pwr);
+ 			break;
+ 
+ 		case HOST_IF_MSG_GET_TX_POWER:
+-			handle_get_tx_pwr(msg.vif, &msg.body.tx_power.tx_pwr);
++			handle_get_tx_pwr(msg->vif, &msg->body.tx_power.tx_pwr);
+ 			break;
+ 		default:
+-			netdev_err(vif->ndev, "[Host Interface] undefined\n");
++			netdev_err(msg->vif->ndev, "[Host Interface] undefined\n");
+ 			break;
+ 		}
+ 	}
+-
++	kfree(msg);
+ 	complete(&hif_thread_comp);
+-	return 0;
+ }
+ 
+ static void TimerCB_Scan(unsigned long arg)
+@@ -3532,21 +3396,17 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	init_completion(&hif_drv->comp_inactive_time);
+ 
+ 	if (clients_count == 0)	{
+-		result = wilc_mq_create(&hif_msg_q);
+-
+ 		if (result < 0) {
+ 			netdev_err(vif->ndev, "Failed to creat MQ\n");
+ 			goto _fail_;
+ 		}
+-
+-		hif_thread_handler = kthread_run(hostIFthread, wilc,
+-						 "WILC_kthread");
+-
+-		if (IS_ERR(hif_thread_handler)) {
+-			netdev_err(vif->ndev, "Failed to creat Thread\n");
+-			result = -EFAULT;
++		hif_workqueue = create_singlethread_workqueue("WILC_wq");
++		if (!hif_workqueue) {
++			netdev_err(vif->ndev, "Failed to create workqueue\n");
++			result = -ENOMEM;
+ 			goto _fail_mq_;
+ 		}
++
+ 		setup_timer(&periodic_rssi, GetPeriodicRSSI,
+ 			    (unsigned long)vif);
+ 		mod_timer(&periodic_rssi, jiffies + msecs_to_jiffies(5000));
+@@ -3572,10 +3432,8 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	clients_count++;
+ 
+-	return result;
+-
+ _fail_mq_:
+-	wilc_mq_destroy(&hif_msg_q);
++	destroy_workqueue(hif_workqueue);
+ _fail_:
+ 	return result;
+ }
+@@ -3625,7 +3483,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 		else
+ 			wait_for_completion(&hif_thread_comp);
+ 
+-		wilc_mq_destroy(&hif_msg_q);
++		destroy_workqueue(hif_workqueue);
+ 	}
+ 
+ 	kfree(hif_drv);
 -- 
-2.7.2
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
