@@ -1,57 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22435 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932609AbcFGPTY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2016 11:19:24 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: David Binderman <linuxdev.baldrick@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"dcb314@hotmail.com" <dcb314@hotmail.com>,
-	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>
-Subject: Re: linux-4.7-rc2/drivers/net/wireless/ath/ath6kl/wmi.c:2547]:
- (style) Redundant condition
-Date: Tue, 7 Jun 2016 15:19:16 +0000
-Message-ID: <87inxlni19.fsf@kamboji.qca.qualcomm.com> (sfid-20160607_172001_433616_914D6297)
-References: <CAMzoamY2uhXDsLsE2o8mCF923XXWoGp3oF_AMmVnDY=EuachZA@mail.gmail.com>
-In-Reply-To: <CAMzoamY2uhXDsLsE2o8mCF923XXWoGp3oF_AMmVnDY=EuachZA@mail.gmail.com>	(David
- Binderman's message of "Tue, 7 Jun 2016 16:13:48 +0100")
-Content-Type: text/plain; charset="us-ascii"
+Received: from lists.s-osg.org ([54.187.51.154]:58528 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751109AbcFWL0Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2016 07:26:25 -0400
+Message-ID: <576BC73B.9070503@osg.samsung.com> (sfid-20160623_132643_083108_D2B946F6)
+Date: Thu, 23 Jun 2016 12:25:47 +0100
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
 MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH] staging: wilc1000: fix error handling in wilc_debugfs_init()
+References: <1466599154-4782-1-git-send-email-luisbg@osg.samsung.com> <CAGRGNgUoptASqK7jD-K-=zp7eYbJDq+2+u7mj_MabaGtOb9=kQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgUoptASqK7jD-K-=zp7eYbJDq+2+u7mj_MabaGtOb9=kQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-David Binderman <linuxdev.baldrick@gmail.com> writes:
+On 23/06/16 02:29, Julian Calaby wrote:
+> Hi All,
+> 
+> On Wed, Jun 22, 2016 at 10:39 PM, Luis de Bethencourt
+> <luisbg@osg.samsung.com> wrote:
+>> The common format to check if a function returned an error pointer is to
+>> use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
+>>
+>> Also, if there was an error returning -EINVAL instead of -1 is more
+>> appropriate.
+> 
+> These two changes could be argued to be separate changes deserving of
+> their own patches.
+> 
+>> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+> 
+> However if everyone else is ok with that, this is:
+> 
+> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+> 
+> Thanks,
+> 
 
-> Hello there,
->
-> linux-4.7-rc2/drivers/net/wireless/ath/ath6kl/wmi.c:2547]: (style)
-> Redundant condition: If 'EXPR <= 7', the comparison 'EXPR < 8' is
-> always true.
->
-> Source code is
->
->     if (!((params->user_pri < 8) &&
->           (params->user_pri <= 0x7) &&
->
-> This might be a possible cut'n'paste error.
+Hi Julian,
 
-This should be recently fixed:
+If you don't mind I will resend as two separate patches and include your
+Reviewed-by in both.
 
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=ath-next&id=93b4a09f0f3068e3190548393f39262e5295960e
-
-> Also in the same file
->
-> [drivers/net/wireless/ath/ath6kl/wmi.c:1220]: (style) Variable 'rate'
-> is assigned a value that is never used.
-> [drivers/net/wireless/ath/ath6kl/wmi.c:1484]: (style) Variable
-> 'new_threshold' is assigned a value that is never used.
-> [drivers/net/wireless/ath/ath6kl/wmi.c:3521]: (style) Variable 'ret'
-> is assigned a value that is never used.
-
-I guess these are still valid.
-
--- 
-Kalle Valo
+Thanks for the review,
+Luis
