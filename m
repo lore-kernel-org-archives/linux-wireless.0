@@ -1,42 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25409 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030184AbcFBP0Y convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35545 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799AbcFWO5i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 11:26:24 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mike@fireburn.co.uk" <mike@fireburn.co.uk>
-Subject: Re: Bug 119151 - [regression] ath10k no longer authenitcates and
- freezes system
-Date: Thu, 2 Jun 2016 15:26:15 +0000
-Message-ID: <87k2i7y5m2.fsf@kamboji.qca.qualcomm.com> (sfid-20160602_172743_359664_C6A0E9E4)
-References: <8760trzoiw.fsf@kamboji.qca.qualcomm.com>
-	<871t4fzn1x.fsf@kamboji.qca.qualcomm.com>	<57504F05.3040200@candelatech.com>
-In-Reply-To: <57504F05.3040200@candelatech.com> (Ben Greear's message of "Thu,
-	2 Jun 2016 08:21:41 -0700")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Thu, 23 Jun 2016 10:57:38 -0400
+Received: by mail-wm0-f66.google.com with SMTP id a66so11659010wme.2
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 07:57:37 -0700 (PDT)
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Cc: nbd@nbd.name
+Subject: ath9k: extend and improve handling of ath9k_platform_data
+Date: Thu, 23 Jun 2016 16:57:08 +0200
+Message-Id: <20160623145714.20576-1-martin.blumenstingl@googlemail.com> (sfid-20160623_165741_522744_EF98A711)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+This series improves handling of ath9k_platform_data inside ath9k. A
+quick summary of the changes is:
+- led_active_high can now be configured via ath9k_platform_data:
+  This change is based on a patch originally written by Vittorio
+  Gambaletta which is part of OpenWrt's ath9k patches.
+- small code cleanups which include removal of unused variables,
+  return values duplicate code (no functional changes)
+- ath9k_hw_init_macaddr will not change common->macaddr anymore
+  to make it independent of whether it's called before or after
+  ath9k_platform_data initialization in init.c
+- initialization based on ath9k_platform_data in init.c is now
+  easier to understand (no functional changes)
 
-> I found a lot of problems with this code as well, and the 5 patches
-> starting from the URL below fixed the issues for me.
->
-> They are stuck as 'NA' in patchwork, but I don't know why.
->
-> http://lists.infradead.org/pipermail/ath10k/2016-April/007218.html
+Patch 6 from this series supersedes the following patch by Eduardo
+Abinader: "ath9k: return false when reading wrong eeprom offset" [0]
 
-ath10k has a separate patchwork instance, did you look at the correct
-one? I have quite a lot of patches from you in deferred state because of
-the patch bomb, but I'm hoping to go through them soon.
 
-https://patchwork.kernel.org/project/ath10k/list/?state=10&delegate=25621&order=date
+[0] https://patchwork.kernel.org/patch/9181371/
 
--- 
-Kalle Valo
+
