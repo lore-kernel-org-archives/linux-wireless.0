@@ -1,85 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35777 "EHLO
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36072 "EHLO
 	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750979AbcFXIOv (ORCPT
+	with ESMTP id S1750950AbcFWO5l (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 24 Jun 2016 04:14:51 -0400
-From: Erik Stromdahl <erik.stromdahl@gmail.com>
-To: johannes@sipsolutions.net, johannes.berg@intel.com,
-	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Cc: Erik Stromdahl <erik.stromdahl@gmail.com>
-Subject: [PATCH] mac80211_hwsim: Added vendor echo command
-Date: Fri, 24 Jun 2016 10:13:54 +0200
-Message-Id: <1466756034-5485-1-git-send-email-erik.stromdahl@gmail.com> (sfid-20160624_101501_108220_9410D57D)
+	Thu, 23 Jun 2016 10:57:41 -0400
+Received: by mail-wm0-f66.google.com with SMTP id c82so11661088wme.3
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 07:57:40 -0700 (PDT)
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Cc: nbd@nbd.name,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH 2/6] ath9k: remove variable which is set but never read
+Date: Thu, 23 Jun 2016 16:57:10 +0200
+Message-Id: <20160623145714.20576-3-martin.blumenstingl@googlemail.com> (sfid-20160623_165750_300425_F502EC10)
+In-Reply-To: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
+References: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The purpose of the echo command is to provide a test
-facility for user space programs.
+No functional changes - this only removes a variable which is set but
+never read.
 
-Signed-off-by: Erik Stromdahl <erik.stromdahl@gmail.com>
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c |   27 +++++++++++++++++++++++++--
- 1 file changed, 25 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/hw.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index 4dd5adc..2e17bf1 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -332,14 +332,16 @@ static const struct ieee80211_rate hwsim_rates[] = {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8b2895f..4f98ca0 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -474,15 +474,12 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
+ static int ath9k_hw_init_macaddr(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+-	u32 sum;
+ 	int i;
+ 	u16 eeval;
+ 	static const u32 EEP_MAC[] = { EEP_MAC_LSW, EEP_MAC_MID, EEP_MAC_MSW };
  
- #define OUI_QCA 0x001374
- #define QCA_NL80211_SUBCMD_TEST 1
-+#define QCA_NL80211_SUBCMD_ECHO 2
- enum qca_nl80211_vendor_subcmds {
- 	QCA_WLAN_VENDOR_ATTR_TEST = 8,
--	QCA_WLAN_VENDOR_ATTR_MAX = QCA_WLAN_VENDOR_ATTR_TEST
-+	QCA_WLAN_VENDOR_ATTR_ECHO,
-+	QCA_WLAN_VENDOR_ATTR_MAX = QCA_WLAN_VENDOR_ATTR_ECHO
- };
- 
- static const struct nla_policy
- hwsim_vendor_test_policy[QCA_WLAN_VENDOR_ATTR_MAX + 1] = {
--	[QCA_WLAN_VENDOR_ATTR_MAX] = { .type = NLA_U32 },
-+	[QCA_WLAN_VENDOR_ATTR_TEST] = { .type = NLA_U32 },
- };
- 
- static int mac80211_hwsim_vendor_cmd_test(struct wiphy *wiphy,
-@@ -393,12 +395,33 @@ static int mac80211_hwsim_vendor_cmd_test(struct wiphy *wiphy,
- 	return cfg80211_vendor_cmd_reply(skb);
- }
- 
-+static int mac80211_hwsim_vendor_cmd_echo(struct wiphy *wiphy,
-+					  struct wireless_dev *wdev,
-+					  const void *data, int data_len)
-+{
-+	struct sk_buff *skb;
-+
-+	skb = cfg80211_vendor_cmd_alloc_reply_skb(wiphy, data_len);
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	nla_put(skb, QCA_WLAN_VENDOR_ATTR_ECHO, data_len, data);
-+
-+	return cfg80211_vendor_cmd_reply(skb);
-+}
-+
- static struct wiphy_vendor_command mac80211_hwsim_vendor_commands[] = {
- 	{
- 		.info = { .vendor_id = OUI_QCA,
- 			  .subcmd = QCA_NL80211_SUBCMD_TEST },
- 		.flags = WIPHY_VENDOR_CMD_NEED_NETDEV,
- 		.doit = mac80211_hwsim_vendor_cmd_test,
-+	},
-+	{
-+		.info = { .vendor_id = OUI_QCA,
-+			  .subcmd = QCA_NL80211_SUBCMD_ECHO },
-+		.flags = WIPHY_VENDOR_CMD_NEED_NETDEV,
-+		.doit = mac80211_hwsim_vendor_cmd_echo,
+-	sum = 0;
+ 	for (i = 0; i < 3; i++) {
+ 		eeval = ah->eep_ops->get_eeprom(ah, EEP_MAC[i]);
+-		sum += eeval;
+ 		common->macaddr[2 * i] = eeval >> 8;
+ 		common->macaddr[2 * i + 1] = eeval & 0xff;
  	}
- };
- 
 -- 
-1.7.9.5
+2.9.0
 
