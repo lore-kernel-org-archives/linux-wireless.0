@@ -1,95 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:46095 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751393AbcFIOdi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 10:33:38 -0400
-From: Kamal Mostafa <kamal@canonical.com>
-To: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	ath9k-devel@lists.ath9k.org,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Kamal Mostafa <kamal@canonical.com>,
-	kernel-team@lists.ubuntu.com
-Subject: [4.2.y-ckt stable] Patch "ath9k: Add a module parameter to invert LED polarity." has been added to the 4.2.y-ckt tree
-Date: Thu,  9 Jun 2016 07:33:32 -0700
-Message-Id: <1465482812-19874-1-git-send-email-kamal@canonical.com> (sfid-20160609_163342_001513_AD918419)
+Received: from lists.s-osg.org ([54.187.51.154]:33485 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751001AbcFWR5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2016 13:57:16 -0400
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org,
+	Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH] staging: wilc1000: arrays can't be NULL
+Date: Thu, 23 Jun 2016 18:57:09 +0100
+Message-Id: <1466704629-26084-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160623_195735_317913_579F9503)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a note to let you know that I have just added a patch titled
+hif_drv->usr_scan_req.net.net_info[i] contains found_net_info structs
+which have the following element:
+u8 bssid[6];
 
-    ath9k: Add a module parameter to invert LED polarity.
+pstrNetworkInfo, of type network_info, also contains an u8 array named
+bssid.
 
-to the linux-4.2.y-queue branch of the 4.2.y-ckt extended stable tree 
-which can be found at:
+request->ssids is an array of cfg80211_ssid structs. Making ssid:
+u8 ssid[IEEE80211_MAX_SSID_LEN];
 
-    https://git.launchpad.net/~canonical-kernel/linux/+git/linux-stable-ckt/log/?h=linux-4.2.y-queue
+In these 3 cases the arrays are being checked against NULL, which can't
+happen. Removing the checks since they will always be true.
 
-This patch is scheduled to be released in version 4.2.8-ckt12.
+Found with smatch:
+drivers/staging/wilc1000/host_interface.c:1234 Handle_RcvdNtwrkInfo() warn: this array is probably non-NULL. 'hif_drv->usr_scan_req.net_info[i].bssid'
+drivers/staging/wilc1000/host_interface.c:1235 Handle_RcvdNtwrkInfo() warn: this array is probably non-NULL. 'pstrNetworkInfo->bssid'
+drivers/staging/wilc1000/host_interface.c:1253 Handle_RcvdNtwrkInfo() warn: this array is probably non-NULL. 'hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].bssid'
+drivers/staging/wilc1000/host_interface.c:1254 Handle_RcvdNtwrkInfo() warn: this array is probably non-NULL. 'pstrNetworkInfo->bssid'
 
-If you, or anyone else, feels it should not be added to this tree, please 
-reply to this email.
-
-For more information about the 4.2.y-ckt tree, see
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
-
-Thanks.
--Kamal
-
----8<------------------------------------------------------------
-
->From 3ed74d9334a27b8c8bac6c721c3f484a9a2694a8 Mon Sep 17 00:00:00 2001
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Date: Mon, 11 Apr 2016 04:48:54 +0200
-Subject: ath9k: Add a module parameter to invert LED polarity.
-
-commit cd84042ce9040ad038e958bc67a46fcfc015c736 upstream.
-
-The LED can be active high instead of active low on some hardware.
-
-Add the led_active_high module parameter. It defaults to -1 to obey
-platform data as before.
-
-Setting the parameter to 1 or 0 will force the LED respectively
-active high or active low.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Kamal Mostafa <kamal@canonical.com>
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+Hi,
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index fc6dc52..6a571d8 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -49,6 +49,10 @@ int ath9k_led_blink;
- module_param_named(blink, ath9k_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+I am aware this patch gives a few checkpatch.pl warnings about lines being
+over 80 characters. Fixing that would be a completely different issue, and
+a lengthy one since the file has loads of them.
 
-+static int ath9k_led_active_high = -1;
-+module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
-+MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
-+
- static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-@@ -600,6 +604,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		return ret;
+Hopefully somebody else picks that up. Maybe I should send a hit to the
+kernelnewbies mailing list :)
 
-+	if (ath9k_led_active_high != -1)
-+		ah->config.led_active_high = ath9k_led_active_high == 1;
-+
- 	/*
- 	 * Enable WLAN/BT RX Antenna diversity only when:
- 	 *
---
-2.7.4
+Thanks,
+Luis
+
+
+ drivers/staging/wilc1000/host_interface.c         | 38 ++++++++++-------------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  3 +-
+ 2 files changed, 17 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 9535842..7d5745a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1231,17 +1231,14 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
+ 		}
+ 
+ 		for (i = 0; i < hif_drv->usr_scan_req.rcvd_ch_cnt; i++) {
+-			if ((hif_drv->usr_scan_req.net_info[i].bssid) &&
+-			    (pstrNetworkInfo->bssid)) {
+-				if (memcmp(hif_drv->usr_scan_req.net_info[i].bssid,
+-					   pstrNetworkInfo->bssid, 6) == 0) {
+-					if (pstrNetworkInfo->rssi <= hif_drv->usr_scan_req.net_info[i].rssi) {
+-						goto done;
+-					} else {
+-						hif_drv->usr_scan_req.net_info[i].rssi = pstrNetworkInfo->rssi;
+-						bNewNtwrkFound = false;
+-						break;
+-					}
++			if (memcmp(hif_drv->usr_scan_req.net_info[i].bssid,
++				   pstrNetworkInfo->bssid, 6) == 0) {
++				if (pstrNetworkInfo->rssi <= hif_drv->usr_scan_req.net_info[i].rssi) {
++					goto done;
++				} else {
++					hif_drv->usr_scan_req.net_info[i].rssi = pstrNetworkInfo->rssi;
++					bNewNtwrkFound = false;
++					break;
+ 				}
+ 			}
+ 		}
+@@ -1250,20 +1247,17 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
+ 			if (hif_drv->usr_scan_req.rcvd_ch_cnt < MAX_NUM_SCANNED_NETWORKS) {
+ 				hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].rssi = pstrNetworkInfo->rssi;
+ 
+-				if (hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].bssid &&
+-				    pstrNetworkInfo->bssid) {
+-					memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].bssid,
+-					       pstrNetworkInfo->bssid, 6);
++				memcpy(hif_drv->usr_scan_req.net_info[hif_drv->usr_scan_req.rcvd_ch_cnt].bssid,
++				       pstrNetworkInfo->bssid, 6);
+ 
+-					hif_drv->usr_scan_req.rcvd_ch_cnt++;
++				hif_drv->usr_scan_req.rcvd_ch_cnt++;
+ 
+-					pstrNetworkInfo->new_network = true;
+-					pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
++				pstrNetworkInfo->new_network = true;
++				pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
+ 
+-					hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
+-									  hif_drv->usr_scan_req.arg,
+-									  pJoinParams);
+-				}
++				hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
++								  hif_drv->usr_scan_req.arg,
++								  pJoinParams);
+ 			}
+ 		} else {
+ 			pstrNetworkInfo->new_network = false;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 51aff4f..3ddfa4a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -625,8 +625,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 
+ 
+ 			for (i = 0; i < request->n_ssids; i++) {
+-				if (request->ssids[i].ssid &&
+-				    request->ssids[i].ssid_len != 0) {
++				if (request->ssids[i].ssid_len != 0) {
+ 					strHiddenNetwork.net_info[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
+ 					memcpy(strHiddenNetwork.net_info[i].ssid, request->ssids[i].ssid, request->ssids[i].ssid_len);
+ 					strHiddenNetwork.net_info[i].ssid_len = request->ssids[i].ssid_len;
+-- 
+2.5.1
 
