@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40186 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752913AbcF2Pya (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 11:54:30 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/6] mwifiex: Fix an issue spotted by KASAN
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
-	Ganapathi Bhat <gbhat@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160629155429.81E2461388@smtp.codeaurora.org> (sfid-20160629_175433_443125_BDED0102)
-Date: Wed, 29 Jun 2016 15:54:29 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:42917 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751589AbcFWLSJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2016 07:18:09 -0400
+Message-ID: <1466680680.11061.2.camel@sipsolutions.net> (sfid-20160623_131835_413500_A1C65272)
+Subject: Re: [PATCH] wlcore: time sync : add support for 64 bit clock
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, Guy Mishol <guym@ti.com>,
+	Eliad Peller <eliad@wizery.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Thu, 23 Jun 2016 13:18:00 +0200
+In-Reply-To: <20160623111332.23326-1-yanivma@ti.com> (sfid-20160623_131215_419855_E4550AFE)
+References: <20160623111332.23326-1-yanivma@ti.com>
+	 (sfid-20160623_131215_419855_E4550AFE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Ganapathi Bhat <gbhat@marvell.com>
-> 
-> When an association command is sent to firmware but the process is
-> killed before the command response arrives, driver will try to
-> access bss_desc which is already freed. This issue is fixed by
-> checking return value of bss_start.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+On Thu, 2016-06-23 at 14:12 +0300, Yaniv Machani wrote:
+> Changed the configuration to support 64bit instead of 32bit
+> this in order to offload the driver from handling a wraparound.
 
-Thanks, 6 patches applied to wireless-drivers-next.git:
+[...]
 
-4699fc3f2dcb mwifiex: Fix an issue spotted by KASAN
-a9c790ba23eb mwifiex: factor out mwifiex_cancel_scan
-dec277f781ce mwifiex: cancel pending scan during disconnect
-437322ea2a36 mwifiex: fix system hang problem after resume
-568fb26ec8be mwifiex: fix AP unable to start in VHT40 problem
-7311ea850079 mwifiex: fix AP start problem for newly added interface
+Since you Cc'ed me, and presumably want me to review it, I'll say that
+this looks like a terrible idea:
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9180805/
+> @@ -74,10 +74,16 @@ struct wl18xx_event_mailbox {
 
+This struct is evidently used for firmware/host communication.
+
+>  	__le16 bss_loss_bitmap;
+>  
+>  	/* bitmap of stations (by HLID) which exceeded max tx
+> retries */
+> -	__le32 tx_retry_exceeded_bitmap;
+> +	__le16 tx_retry_exceeded_bitmap;
+> +
+> +	/* time sync high msb*/
+> +	u16 time_sync_tsf_high_msb;
+
+So first of all, just using u16 instead of __le16 seems wrong.
+
+Additionally, this looks like it changes the firmware API, so that
+older firmware images will no longer work?
+
+johannes
