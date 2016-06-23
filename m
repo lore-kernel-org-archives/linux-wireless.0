@@ -1,52 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36072 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750950AbcFWO5l (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35700 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751308AbcFWO5p (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 10:57:41 -0400
-Received: by mail-wm0-f66.google.com with SMTP id c82so11661088wme.3
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 07:57:40 -0700 (PDT)
+	Thu, 23 Jun 2016 10:57:45 -0400
+Received: by mail-wm0-f65.google.com with SMTP id a66so11659980wme.2
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 07:57:44 -0700 (PDT)
 From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
 	ath9k-devel@lists.ath9k.org
 Cc: nbd@nbd.name,
 	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 2/6] ath9k: remove variable which is set but never read
-Date: Thu, 23 Jun 2016 16:57:10 +0200
-Message-Id: <20160623145714.20576-3-martin.blumenstingl@googlemail.com> (sfid-20160623_165750_300425_F502EC10)
+Subject: [PATCH 6/6] ath9k: simplify the code-paths when not using the built-in EEPROM
+Date: Thu, 23 Jun 2016 16:57:14 +0200
+Message-Id: <20160623145714.20576-7-martin.blumenstingl@googlemail.com> (sfid-20160623_165748_910586_FFB19F16)
 In-Reply-To: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
 References: <20160623145714.20576-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-No functional changes - this only removes a variable which is set but
-never read.
+There were two paths in the code for "external" eeprom sources. The code
+in eeprom.c only handled the cases where the eeprom data was loaded via
+request_firmware. ahb.c and pci.c on the other hand had some duplicate
+code which was only used when the eeprom data was passed via
+ath9k_platform_data.
+With this change all eeprom data handling is now unified in eeprom.c.
 
 Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c | 3 ---
- 1 file changed, 3 deletions(-)
+This supersedes the following patch by Eduardo Abinader
+<eduardo.abinader@riverbed.com>:
+"ath9k: return false when reading wrong eeprom offset"
+https://patchwork.kernel.org/patch/9181371/
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 8b2895f..4f98ca0 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -474,15 +474,12 @@ static void ath9k_hw_init_defaults(struct ath_hw *ah)
- static int ath9k_hw_init_macaddr(struct ath_hw *ah)
+ drivers/net/wireless/ath/ath9k/ahb.c    | 18 +++------------
+ drivers/net/wireless/ath/ath9k/eeprom.c | 19 +++++++++------
+ drivers/net/wireless/ath/ath9k/pci.c    | 41 +++++++++++----------------------
+ 3 files changed, 28 insertions(+), 50 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
+index bd4a1a6..bea6186 100644
+--- a/drivers/net/wireless/ath/ath9k/ahb.c
++++ b/drivers/net/wireless/ath/ath9k/ahb.c
+@@ -18,7 +18,6 @@
+ 
+ #include <linux/nl80211.h>
+ #include <linux/platform_device.h>
+-#include <linux/ath9k_platform.h>
+ #include <linux/module.h>
+ #include "ath9k.h"
+ 
+@@ -58,20 +57,9 @@ static void ath_ahb_read_cachesize(struct ath_common *common, int *csz)
+ 
+ static bool ath_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
+ {
+-	struct ath_softc *sc = (struct ath_softc *)common->priv;
+-	struct platform_device *pdev = to_platform_device(sc->dev);
+-	struct ath9k_platform_data *pdata;
+-
+-	pdata = dev_get_platdata(&pdev->dev);
+-	if (off >= (ARRAY_SIZE(pdata->eeprom_data))) {
+-		ath_err(common,
+-			"%s: flash read failed, offset %08x is out of range\n",
+-			__func__, off);
+-		return false;
+-	}
+-
+-	*data = pdata->eeprom_data[off];
+-	return true;
++	ath_err(common, "%s: eeprom data has to be provided externally\n",
++		__func__);
++	return false;
+ }
+ 
+ static struct ath_bus_ops ath_ahb_bus_ops  = {
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index a794157..ba1c8ba 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -15,6 +15,7 @@
+  */
+ 
+ #include "hw.h"
++#include <linux/ath9k_platform.h>
+ 
+ void ath9k_hw_analog_shift_regwrite(struct ath_hw *ah, u32 reg, u32 val)
+ {
+@@ -108,26 +109,30 @@ void ath9k_hw_usb_gen_fill_eeprom(struct ath_hw *ah, u16 *eep_data,
+ 	}
+ }
+ 
+-static bool ath9k_hw_nvram_read_blob(struct ath_hw *ah, u32 off,
++static bool ath9k_hw_nvram_read_blob(u16 *blob, size_t blob_size, u32 offset,
+ 				     u16 *data)
+ {
+-	u16 *blob_data;
+-
+-	if (off * sizeof(u16) > ah->eeprom_blob->size)
++	if (offset * sizeof(u16) > blob_size)
+ 		return false;
+ 
+-	blob_data = (u16 *)ah->eeprom_blob->data;
+-	*data =  blob_data[off];
++	*data =  blob[offset];
+ 	return true;
+ }
+ 
+ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
  {
  	struct ath_common *common = ath9k_hw_common(ah);
--	u32 sum;
- 	int i;
- 	u16 eeval;
- 	static const u32 EEP_MAC[] = { EEP_MAC_LSW, EEP_MAC_MID, EEP_MAC_MSW };
++	struct ath9k_platform_data *pdata = ah->dev->platform_data;
+ 	bool ret;
  
--	sum = 0;
- 	for (i = 0; i < 3; i++) {
- 		eeval = ah->eep_ops->get_eeprom(ah, EEP_MAC[i]);
--		sum += eeval;
- 		common->macaddr[2 * i] = eeval >> 8;
- 		common->macaddr[2 * i + 1] = eeval & 0xff;
+ 	if (ah->eeprom_blob)
+-		ret = ath9k_hw_nvram_read_blob(ah, off, data);
++		ret = ath9k_hw_nvram_read_blob((u16 *) ah->eeprom_blob->data,
++					       ah->eeprom_blob->size, off,
++					       data);
++	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
++		ret = ath9k_hw_nvram_read_blob(pdata->eeprom_data,
++					       ARRAY_SIZE(pdata->eeprom_data),
++					       off, data);
+ 	else
+ 		ret = common->bus_ops->eeprom_read(common, off, data);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
+index 7cdaf40..0dd454a 100644
+--- a/drivers/net/wireless/ath/ath9k/pci.c
++++ b/drivers/net/wireless/ath/ath9k/pci.c
+@@ -19,7 +19,6 @@
+ #include <linux/nl80211.h>
+ #include <linux/pci.h>
+ #include <linux/pci-aspm.h>
+-#include <linux/ath9k_platform.h>
+ #include <linux/module.h>
+ #include "ath9k.h"
+ 
+@@ -786,35 +785,21 @@ static void ath_pci_read_cachesize(struct ath_common *common, int *csz)
+ 
+ static bool ath_pci_eeprom_read(struct ath_common *common, u32 off, u16 *data)
+ {
+-	struct ath_softc *sc = (struct ath_softc *) common->priv;
+-	struct ath9k_platform_data *pdata = sc->dev->platform_data;
+-
+-	if (pdata && !pdata->use_eeprom) {
+-		if (off >= (ARRAY_SIZE(pdata->eeprom_data))) {
+-			ath_err(common,
+-				"%s: eeprom read failed, offset %08x is out of range\n",
+-				__func__, off);
+-		}
+-
+-		*data = pdata->eeprom_data[off];
+-	} else {
+-		struct ath_hw *ah = (struct ath_hw *) common->ah;
+-
+-		common->ops->read(ah, AR5416_EEPROM_OFFSET +
+-				      (off << AR5416_EEPROM_S));
+-
+-		if (!ath9k_hw_wait(ah,
+-				   AR_EEPROM_STATUS_DATA,
+-				   AR_EEPROM_STATUS_DATA_BUSY |
+-				   AR_EEPROM_STATUS_DATA_PROT_ACCESS, 0,
+-				   AH_WAIT_TIMEOUT)) {
+-			return false;
+-		}
+-
+-		*data = MS(common->ops->read(ah, AR_EEPROM_STATUS_DATA),
+-			   AR_EEPROM_STATUS_DATA_VAL);
++	struct ath_hw *ah = (struct ath_hw *) common->ah;
++
++	common->ops->read(ah, AR5416_EEPROM_OFFSET + (off << AR5416_EEPROM_S));
++
++	if (!ath9k_hw_wait(ah,
++				AR_EEPROM_STATUS_DATA,
++				AR_EEPROM_STATUS_DATA_BUSY |
++				AR_EEPROM_STATUS_DATA_PROT_ACCESS, 0,
++				AH_WAIT_TIMEOUT)) {
++		return false;
  	}
+ 
++	*data = MS(common->ops->read(ah, AR_EEPROM_STATUS_DATA),
++			AR_EEPROM_STATUS_DATA_VAL);
++
+ 	return true;
+ }
+ 
 -- 
 2.9.0
 
