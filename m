@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:36696 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752766AbcFBJsp (ORCPT
+Received: from smtprelay0002.hostedemail.com ([216.40.44.2]:36117 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751547AbcFWTZF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 05:48:45 -0400
-Received: by mail-wm0-f49.google.com with SMTP id n184so71107276wmn.1
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2016 02:48:44 -0700 (PDT)
-Date: Thu, 2 Jun 2016 10:48:42 +0100
-From: Matt Fleming <matt@codeblueprint.co.uk>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: x86@kernel.org, linux-kernel@vger.kernel.org,
-	Chris Milsted <cmilsted@redhat.com>,
-	Matthew Garrett <mjg59@srcf.ucam.org>,
-	Andi Kleen <ak@linux.intel.com>, Michael Buesch <m@bues.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Konstantin Simanov <k.simanov@stlk.ru>,
-	Bryan Paradis <bryan.paradis@gmail.com>,
-	Andrew Worsley <amworsley@gmail.com>,
-	Chris Bainbridge <chris.bainbridge@gmail.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, zajec5@gmail.com
-Subject: Re: [PATCH] x86: Add early quirk to reset Apple AirPort card
-Message-ID: <20160602094842.GF2658@codeblueprint.co.uk> (sfid-20160602_114905_441344_D513B031)
-References: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <82c2548dffc6cfbc484b9111b1073f407c946061.1464477483.git.lukas@wunner.de>
+	Thu, 23 Jun 2016 15:25:05 -0400
+Message-ID: <1466709897.1847.24.camel@perches.com> (sfid-20160623_212534_710416_9DE85336)
+Subject: Re: [PATCH] staging: wilc1000: arrays can't be NULL
+From: Joe Perches <joe@perches.com>
+To: Luis de Bethencourt <luisbg@osg.samsung.com>,
+	linux-kernel@vger.kernel.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Date: Thu, 23 Jun 2016 12:24:57 -0700
+In-Reply-To: <1466704629-26084-1-git-send-email-luisbg@osg.samsung.com>
+References: <1466704629-26084-1-git-send-email-luisbg@osg.samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 29 May, at 01:35:28AM, Lukas Wunner wrote:
-> The EFI firmware on Macs contains a full-fledged network stack for
-> downloading OS X images from osrecovery.apple.com. Unfortunately
-> on Macs introduced 2011 and 2012, EFI brings up the Broadcom 4331
-> wireless card on every boot and leaves it enabled even after
-> ExitBootServices has been called. The card continues to assert its IRQ
-> line, causing spurious interrupts if the IRQ is shared. It also corrupts
-> memory by DMAing received packets, allowing for remote code execution
-> over the air. This only stops when a driver is loaded for the wireless
-> card, which may be never if the driver is not installed or blacklisted.
+On Thu, 2016-06-23 at 18:57 +0100, Luis de Bethencourt wrote:
+> hif_drv->usr_scan_req.net.net_info[i] contains found_net_info structs
+> which have the following element:
+> u8 bssid[6];
+[]
+> I am aware this patch gives a few checkpatch.pl warnings about lines being
+> over 80 characters. Fixing that would be a completely different issue, and
+> a lengthy one since the file has loads of them.
+> 
+> Hopefully somebody else picks that up. Maybe I should send a hit to the
+> kernelnewbies mailing list :)
 
-[... Snip a very thorough changelog ...]
+Or not.
 
-This patch looks fine to me from an EFI perspective.
+really_long_identifiers™ makes using 80 columns silly.
 
-Acked-by: Matt Fleming <matt@codeblueprint.co.uk>
+The hungarian could probably be converted though.
+
+A log of the memcpy and memcpy uses could probably be
+converted to ether_addr_<foo> too.
+
