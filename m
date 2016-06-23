@@ -1,120 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:36647 "EHLO
-	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750744AbcFAVPZ (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36141 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751832AbcFWRpx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 17:15:25 -0400
-Received: by mail-pf0-f181.google.com with SMTP id f144so22173683pfa.3
-        for <linux-wireless@vger.kernel.org>; Wed, 01 Jun 2016 14:15:25 -0700 (PDT)
-Subject: Re: [PATCH for-4.7] brcmfmac: add eth_type_trans back for PCIe full
- dongle
-To: Arend van Spriel <arend@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1464815616-21551-1-git-send-email-arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Franky Lin <franky.lin@broadcom.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <588e80a9-52c6-4baf-2343-66d2388bd509@broadcom.com> (sfid-20160601_231533_593143_BE5AE26A)
-Date: Wed, 1 Jun 2016 23:15:17 +0200
-MIME-Version: 1.0
-In-Reply-To: <1464815616-21551-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+	Thu, 23 Jun 2016 13:45:53 -0400
+Received: by mail-wm0-f65.google.com with SMTP id c82so12822565wme.3
+        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 10:45:52 -0700 (PDT)
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Cc: nbd@nbd.name, chunkeey@googlemail.com, mark.rutland@arm.com,
+	robh+dt@kernel.org,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH RFC v2 2/2] ath9k: parse the device configuration from an OF node
+Date: Thu, 23 Jun 2016 19:45:36 +0200
+Message-Id: <20160623174536.5967-3-martin.blumenstingl@googlemail.com> (sfid-20160623_194557_464153_79F2EF92)
+In-Reply-To: <20160623174536.5967-1-martin.blumenstingl@googlemail.com>
+References: <20160623174536.5967-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1-6-2016 23:13, Arend van Spriel wrote:
-> From: Franky Lin <franky.lin@broadcom.com>
-> 
-> A regression was introduced in commit 9c349892ccc9 ("brcmfmac: revise
-> handling events in receive path") which moves eth_type_trans() call
-> to brcmf_rx_frame(). Msgbuf layer doesn't use brcmf_rx_frame() but invokes
-> brcmf_netif_rx() directly. In such case the Ethernet header was not
-> stripped out resulting in null pointer dereference in the networking
-> stack.
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
-> IP: [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
-> PGD 0
-> Oops: 0000 [#1] PREEMPT SMP
-> Modules linked in: fuse ipt_MASQUERADE nf_nat_masquerade_ipv4
-> iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype
-> [...]
-> rtsx_pci scsi_mod usbcore usb_common i8042 serio nvme nvme_core
-> CPU: 7 PID: 1340 Comm: irq/136-brcmf_p Not tainted 4.7.0-rc1-mainline #1
-> Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 01.02.00 04/07/2016
-> task: ffff8804a0c5bd00 ti: ffff88049e124000 task.ti: ffff88049e124000
-> RIP: 0010:[<ffffffff814c3ce6>] [<ffffffff814c3ce6>]
-> enqueue_to_backlog+0x56/0x260
-> RSP: 0018:ffff88049e127ca0 EFLAGS: 00010046
-> RAX: 0000000000000000 RBX: ffff8804bddd7c40 RCX: 000000000000002f
-> RDX: 0000000000000000 RSI: 0000000000000007 RDI: ffff8804bddd7d4c
-> RBP: ffff88049e127ce8 R08: 0000000000000000 R09: 0000000000000000
-> R10: ffff8804bddd12c0 R11: 000000000000149e R12: 0000000000017c40
-> R13: ffff88049e127d08 R14: ffff8804a9bd6d00 R15: ffff8804bddd7d4c
-> FS: 0000000000000000(0000) GS:ffff8804bddc0000(0000) knlGS:0000000000000000
-> CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000000000000048 CR3: 0000000001806000 CR4: 00000000003406e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> Stack:
-> ffff8804bdddad00 ffff8804ad089e00 0000000000000000 0000000000000282
-> 0000000000000000 ffff8804a9bd6d00 ffff8804a1b27e00 ffff8804a9bd6d00
-> ffff88002ee88000 ffff88049e127d28 ffffffff814c3f3b ffffffff81311fc3
-> Call Trace:
-> [<ffffffff814c3f3b>] netif_rx_internal+0x4b/0x170
-> [<ffffffff81311fc3>] ? swiotlb_tbl_unmap_single+0xf3/0x120
-> [<ffffffff814c5467>] netif_rx_ni+0x27/0xc0
-> [<ffffffffa08519e9>] brcmf_netif_rx+0x49/0x70 [brcmfmac]
-> [<ffffffffa08564d4>] brcmf_msgbuf_process_rx+0x2b4/0x570 [brcmfmac]
-> [<ffffffff81020017>] ? __xen_set_pgd_hyper+0x57/0xd0
-> [<ffffffff810d60b0>] ? irq_forced_thread_fn+0x70/0x70
-> [<ffffffffa0857381>] brcmf_proto_msgbuf_rx_trigger+0x31/0xe0 [brcmfmac]
-> [<ffffffffa0861e8f>] brcmf_pcie_isr_thread+0x7f/0x110 [brcmfmac]
-> [<ffffffff810d60d0>] irq_thread_fn+0x20/0x50
-> [<ffffffff810d63ad>] irq_thread+0x12d/0x1c0
-> [<ffffffff815d07d5>] ? __schedule+0x2f5/0x7a0
-> [<ffffffff810d61d0>] ? wake_threads_waitq+0x30/0x30
-> [<ffffffff810d6280>] ? irq_thread_dtor+0xb0/0xb0
-> [<ffffffff81098ea8>] kthread+0xd8/0xf0
-> [<ffffffff815d4b7f>] ret_from_fork+0x1f/0x40
-> [<ffffffff81098dd0>] ? kthread_worker_fn+0x170/0x170
-> Code: 1c f5 60 9a 8e 81 9c 58 0f 1f 44 00 00 48 89 45 d0 fa 66 0f 1f
-> 44 00 00 4c 8d bb 0c 01 00 00 4c 89 ff e8 5e 08 11 00 49 8b 56 20 <48>
-> 8b 52 48 83 e2 01 74 10 8b 8b 08 01 00 00 8b 15 59 c5 42 00
-> RIP [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
-> RSP <ffff88049e127ca0>
-> CR2: 0000000000000048
-> 
-> Reported-by: Grey Christoforo <grey@christoforo.net>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-> [arend@broadcom.com: rephrased the commit message]
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> 
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+This makes it possible to configure ath9k based devices using
+devicetree. That makes some out-of-tree "convert devicetree to
+ath9k_platform_data glue"-code obsolete.
 
-signing once, signing twice, .... sorry about that!
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+changes in v1 -> v2:
+- use vendor prefix "qca" instead of "ath"
+- use of_device_is_available instead of simply checking if "np" is NULL
+- removed code which read some properties twice
 
-Regards,
-Arend
+ drivers/net/wireless/ath/ath9k/init.c | 61 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
 
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-> index 68f1ce0..2b9a2bc 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-> @@ -1157,6 +1157,8 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
->  		brcmu_pkt_buf_free_skb(skb);
->  		return;
->  	}
-> +
-> +	skb->protocol = eth_type_trans(skb, ifp->ndev);
->  	brcmf_netif_rx(ifp, skb);
->  }
->  
-> 
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index a0f4a52..2b5e3db 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -20,6 +20,8 @@
+ #include <linux/slab.h>
+ #include <linux/ath9k_platform.h>
+ #include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_net.h>
+ #include <linux/relay.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+@@ -555,6 +557,61 @@ static int ath9k_init_platform(struct ath_softc *sc)
+ 	return 0;
+ }
+ 
++static int ath9k_of_init(struct ath_softc *sc)
++{
++	struct device_node *np = sc->dev->of_node;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	const char *mac, *eeprom_name;
++	int led_pin, ret;
++	u32 gpio_data;
++
++	if (!of_device_is_available(np))
++		return 0;
++
++	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
++
++	if (!of_property_read_u32(np, "qca,led-pin", &led_pin))
++		ah->led_pin = led_pin;
++
++	if (!of_property_read_u32(np, "qca,gpio-mask", &gpio_data))
++		ah->gpio_mask = gpio_data;
++
++	if (!of_property_read_u32(np, "qca,gpio-val", &gpio_data))
++		ah->gpio_val = gpio_data;
++
++	if (of_property_read_bool(np, "qca,clk-25mhz"))
++		ah->is_clk_25mhz = true;
++
++	if (of_property_read_bool(np, "qca,led-active-high"))
++		ah->config.led_active_high = true;
++
++	if (of_property_read_bool(np, "qca,disable-2ghz"))
++		ah->disable_2ghz = true;
++
++	if (of_property_read_bool(np, "qca,disable-5ghz"))
++		ah->disable_5ghz = true;
++
++	if (of_property_read_bool(np, "qca,check-eeprom-endianness"))
++		ah->ah_flags &= ~AH_NO_EEP_SWAP;
++	else
++		ah->ah_flags |= AH_NO_EEP_SWAP;
++
++	if (!of_property_read_string(np, "qca,eeprom-name", &eeprom_name)) {
++		ret = ath9k_eeprom_request(sc, eeprom_name);
++		if (ret)
++			return ret;
++	}
++
++	mac = of_get_mac_address(np);
++	if (mac)
++		ether_addr_copy(common->macaddr, mac);
++
++	ah->ah_flags &= ~AH_USE_EEPROM;
++
++	return 0;
++}
++
+ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 			    const struct ath_bus_ops *bus_ops)
+ {
+@@ -611,6 +668,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		return ret;
+ 
++	ret = ath9k_of_init(sc);
++	if (ret)
++		return ret;
++
+ 	if (ath9k_led_active_high != -1)
+ 		ah->config.led_active_high = ath9k_led_active_high == 1;
+ 
+-- 
+2.9.0
+
