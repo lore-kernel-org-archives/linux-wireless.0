@@ -1,61 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:33590 "EHLO
-	mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751986AbcFUWaN (ORCPT
+Received: from mail-it0-f49.google.com ([209.85.214.49]:38589 "EHLO
+	mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750809AbcFWBdh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 18:30:13 -0400
-Received: by mail-it0-f67.google.com with SMTP id y93so3334477ita.0
-        for <linux-wireless@vger.kernel.org>; Tue, 21 Jun 2016 15:29:55 -0700 (PDT)
-Date: Tue, 21 Jun 2016 18:29:53 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mac80211: Fix mesh estab_plinks counting in STA removal
- case
-Message-ID: <20160621222953.GB7271@localhost> (sfid-20160622_003043_190487_6941DC35)
-References: <20160619205102.GA28350@w1.fi>
- <1466536150.18972.1.camel@sipsolutions.net>
- <20160621222602.GA7271@localhost>
+	Wed, 22 Jun 2016 21:33:37 -0400
+Received: by mail-it0-f49.google.com with SMTP id h190so53873349ith.1
+        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2016 18:33:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160621222602.GA7271@localhost>
+In-Reply-To: <1466184857-21605-1-git-send-email-weiyj_lk@163.com>
+References: <1466184857-21605-1-git-send-email-weiyj_lk@163.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 23 Jun 2016 11:33:17 +1000
+Message-ID: <CAGRGNgVFOY5kM8Z4VeyXZA_-rTn1Pk7-PW3XVhkOMhS6Gm3kWQ@mail.gmail.com> (sfid-20160623_033350_478822_1F9C2111)
+Subject: Re: [PATCH] staging: wilc1000: fix return value check in wlan_initialize_threads()
+To: weiyj_lk@163.com
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 21, 2016 at 06:26:02PM -0400, Bob Copeland wrote:
-> Looks further buggy, so perhaps this untested patch would work, i.e.
-                                       ^^^^^^^^ (still)
+Hi All,
 
-> @@ -370,13 +372,19 @@ u32 mesh_plink_deactivate(struct sta_info *sta)
->  
->  	spin_lock_bh(&sta->mesh->plink_lock);
->  	changed = __mesh_plink_deactivate(sta);
-> -	sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
-> -	mesh_plink_frame_tx(sdata, sta, WLAN_SP_MESH_PEERING_CLOSE,
-> -			    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
-> -			    sta->mesh->reason);
-> +
-> +	if (sdata->u.mesh.user_mpm) {
+On Sat, Jun 18, 2016 at 3:34 AM,  <weiyj_lk@163.com> wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+>
+> In case of error, the function kthread_run() returns ERR_PTR()
+> and never returns NULL. The NULL test in the return value check
+> should be replaced with IS_ERR().
+>
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-should be !sdata->u.mesh.user_mpm :)
+The return value of wlan_initialize_threads() is only checked to be
+non-zero, so this looks right to me.
 
-> +		sta->mesh->reason = WLAN_REASON_MESH_PEER_CANCELED;
-> +		mesh_plink_frame_tx(sdata, sta, WLAN_SP_MESH_PEERING_CLOSE,
-> +				    sta->sta.addr, sta->mesh->llid, sta->mesh->plid,
-> +				    sta->mesh->reason);
-> +	}
->  	spin_unlock_bh(&sta->mesh->plink_lock);
->  	mesh_path_flush_by_nexthop(sta);
->  
-> +	/* make sure no readers can access nexthop sta from here on */
-> +	synchronize_net();
-> +
->  	return changed;
->  }
->  
-> -- 
-> 2.9.0
-> 
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+Thanks,
 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
