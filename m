@@ -1,71 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:33411 "EHLO
-	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750840AbcFQE7o convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 00:59:44 -0400
-MIME-Version: 1.0
-In-Reply-To: <877fdpw4no.fsf@kamboji.qca.qualcomm.com>
-References: <1464378815-23282-1-git-send-email-zajec5@gmail.com> <877fdpw4no.fsf@kamboji.qca.qualcomm.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Fri, 17 Jun 2016 06:59:42 +0200
-Message-ID: <CACna6rzXzj4DJNA6855Qy6QnxETnYEPmqtw3Bcx8WWCtYwYvuw@mail.gmail.com> (sfid-20160617_070022_103830_6A6956CE)
-Subject: Re: [PATCH 4.7 FIX] brcmfmac: fix lockup when removing P2P interface
- after event timeout
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from lists.s-osg.org ([54.187.51.154]:59003 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751037AbcFWMhA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2016 08:37:00 -0400
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, julian.calaby@gmail.com,
+	Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH v2 2/2] staging: wilc1000: fix error values in wilc_debugfs_init()
+Date: Thu, 23 Jun 2016 13:36:18 +0100
+Message-Id: <1466685378-15597-2-git-send-email-luisbg@osg.samsung.com> (sfid-20160623_143759_393921_9D9F822C)
+In-Reply-To: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com>
+References: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 16 June 2016 at 17:10, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
->
->> Removing P2P interface is handled by sending a proper request to the
->> firmware. On success firmware triggers an event and driver's handler
->> removes a matching interface.
->>
->> However on event timeout we remove interface directly from the cfg80211
->> callback. Current code doesn't handle this case correctly as it always
->> assumes rtnl to be unlocked.
->>
->> Fix it by adding an extra rtnl_locked parameter to functions and calling
->> unregister_netdevice when needed.
->>
->> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->
-> Failed to apply, please rebase:
->
-> Applying: brcmfmac: fix lockup when removing P2P interface after event timeout
-> Using index info to reconstruct a base tree...
-> Falling back to patching base and 3-way merge...
-> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> Failed to merge in the changes.
-> Patch failed at 0001 brcmfmac: fix lockup when removing P2P interface after event timeout
+If there was an error, returning -EINVAL is more appropriate than -1.
 
-What tree did you try it on?
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_debugfs.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I just went into a dir where I have cloned:
-git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git
-
-My HEAD commit is:
-034fdd4 Merge ath-current from ath.git
-
-And I can apply this patch cleanly doing:
-curl https://patchwork.kernel.org/patch/9138925/mbox/ | git am
-
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index 48797dc..6252931 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -115,7 +115,7 @@ static int __init wilc_debugfs_init(void)
+ 
+ 	if (!wilc_dir) {
+ 		printk("ERR, debugfs create dir\n");
+-		return -1;
++		return -EINVAL;
+ 	}
+ 
+ 	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+@@ -129,7 +129,7 @@ static int __init wilc_debugfs_init(void)
+ 		if (!debugfs_files) {
+ 			printk("ERR fail to create the debugfs file, %s\n", info->name);
+ 			debugfs_remove_recursive(wilc_dir);
+-			return -1;
++			return -EINVAL;
+ 		}
+ 	}
+ 	return 0;
 -- 
-Rafał
+2.6.4
+
