@@ -1,97 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:48958 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758183AbcFHRH4 (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.73]:51382 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646AbcFWJas (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 13:07:56 -0400
-From: Maya Erez <qca_merez@qualcomm.com>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qualcomm.com,
-	Maya Erez <qca_merez@qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 2/2] wil6210: abort P2P search when stopping P2P device
-Date: Wed,  8 Jun 2016 20:07:48 +0300
-Message-Id: <1465405668-15881-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160608_190800_355164_82E268D4)
-In-Reply-To: <1465405668-15881-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1465405668-15881-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Thu, 23 Jun 2016 05:30:48 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Binoy Jayan <binoy.jayan@linaro.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 0/3] *** staging: wilc1000: Replace semaphores ***
+Date: Thu, 23 Jun 2016 11:32:52 +0200
+Message-ID: <4095728.J0WkMDCCsE@wuerfel> (sfid-20160623_113109_613917_8A8E9929)
+In-Reply-To: <1466660512-14935-1-git-send-email-binoy.jayan@linaro.org>
+References: <1466417419-13568-1-git-send-email-binoy.jayan@linaro.org> <1466660512-14935-1-git-send-email-binoy.jayan@linaro.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+On Thursday, June 23, 2016 11:11:49 AM CEST Binoy Jayan wrote:
+> 
+> Thank you Arnd for patiently reviewing this patch series multiple times and
+> apologies to everyone for spamming you inboxes with a patch (v3) that does
+> not even build. It was due to an uncommited change in my git repo before
+> generating the patch. It is corrected in v4.
+> 
+> This patchset [v4] is part of the second patch series for 'wilc1000'.
+> The original patch series consisted 7 patches of which only the first 5
+> are good. The patch 6 and 7 are being worked on in this series
+> in a different way.
+> 
+> This patch series removes the semaphore 'sem' in 'wilc1000' and also
+> restructures the implementation of kthread / message_queue logic with
+> a create_singlethread_workqueue() / queue_work() setup.
+> 
+> These are part of a bigger effort to eliminate all semaphores
+> from the linux kernel.
+> 
+> They build correctly (individually and as a whole).
+> 
+> NB: The changes are untested
 
-The nl80211 layer expects P2P search operation to be aborted
-if needed when stopping P2P device. If the P2P search operation
-is still running after returning from stop_p2p_device
-it causes a WARN_ON and possibly a kernel crash.
-Fix this by aborting the P2P search in wil_cfg80211_stop_p2p_device
-and preventing P2P search from being started on a stopped P2P
-device.
-Note, the fix does not cover the case where a regular scan
-is started on the P2P device. It will be completed in the
-future when support is added for aborting a scan operation.
+Very nice work!
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 16 ++++++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h  |  1 +
- 2 files changed, 17 insertions(+)
+Whole series
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 5769811..62bf933 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -378,6 +378,10 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
- 	/* social scan on P2P_DEVICE is handled as p2p search */
- 	if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
- 	    wil_p2p_is_social_scan(request)) {
-+		if (!wil->p2p.p2p_dev_started) {
-+			wil_err(wil, "P2P search requested on stopped P2P device\n");
-+			return -EIO;
-+		}
- 		wil->scan_request = request;
- 		wil->radio_wdev = wdev;
- 		rc = wil_p2p_search(wil, request);
-@@ -1351,6 +1355,7 @@ static int wil_cfg80211_start_p2p_device(struct wiphy *wiphy,
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
- 
- 	wil_dbg_misc(wil, "%s: entered\n", __func__);
-+	wil->p2p.p2p_dev_started = 1;
- 	return 0;
- }
- 
-@@ -1358,8 +1363,19 @@ static void wil_cfg80211_stop_p2p_device(struct wiphy *wiphy,
- 					 struct wireless_dev *wdev)
- {
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	u8 started;
- 
- 	wil_dbg_misc(wil, "%s: entered\n", __func__);
-+	mutex_lock(&wil->mutex);
-+	started = wil_p2p_stop_discovery(wil);
-+	if (started && wil->scan_request) {
-+		cfg80211_scan_done(wil->scan_request, 1);
-+		wil->scan_request = NULL;
-+		wil->radio_wdev = wil->wdev;
-+	}
-+	mutex_unlock(&wil->mutex);
-+
-+	wil->p2p.p2p_dev_started = 0;
- }
- 
- static struct cfg80211_ops wil_cfg80211_ops = {
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index 1feaf5a..ecab4af 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -458,6 +458,7 @@ struct wil_tid_crypto_rx {
- struct wil_p2p_info {
- 	struct ieee80211_channel listen_chan;
- 	u8 discovery_started;
-+	u8 p2p_dev_started;
- 	u64 cookie;
- 	struct timer_list discovery_timer; /* listen/search duration */
- 	struct work_struct discovery_expired_work; /* listen/search expire */
--- 
-1.8.5.2
-
+	ARnd
