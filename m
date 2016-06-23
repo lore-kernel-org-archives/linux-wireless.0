@@ -1,54 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35500 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753775AbcFAEPd (ORCPT
+Received: from vpn.innerrange.com.au ([203.122.143.146]:4490 "EHLO
+	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750950AbcFWFoq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 00:15:33 -0400
+	Thu, 23 Jun 2016 01:44:46 -0400
+From: Craig McQueen <craig.mcqueen@innerrange.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 23 Jun 2016 15:44:23 +1000
+Subject: rt2800usb maintainer/expert?
+Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D2BB5ED27@IR-CENTRAL.corp.innerrange.com> (sfid-20160623_074449_407233_BD2516FF)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1464358702-19083-3-git-send-email-javier@osg.samsung.com>
-References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com> <1464358702-19083-3-git-send-email-javier@osg.samsung.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 1 Jun 2016 14:15:12 +1000
-Message-ID: <CAGRGNgW_Re_bHnhkLW1wUGANOheoizm-zNK996nJQqBZJ=XY4w@mail.gmail.com> (sfid-20160601_061551_035661_DC241B24)
-Subject: Re: [PATCH 2/8] mwifiex: propagate sdio_enable_func() errno code in mwifiex_sdio_probe()
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Who would be the current active maintainer for rt2800usb driver?
 
-On Sat, May 28, 2016 at 12:18 AM, Javier Martinez Canillas
-<javier@osg.samsung.com> wrote:
-> If the sdio_enable_func() function fails on .probe, the -EIO errno code
-> is always returned but that could make more difficult to debug and find
-> the cause of why the function actually failed.
->
-> Since the driver/device core prints the value returned by .probe in its
-> error message propagate what was returned by sdio_enable_func() at fail.
->
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+Are there any experts around for this driver?
 
-This looks sensible to me.
+Does Ralink/MediaTek provide support for this driver?
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-
-Thanks,
+It seems that not much has happened with these drivers since the initial development on the rt2x00.serialmonkey.com web site. I'm interested to talk to an expert with the problems I'm seeing, but not sure who is the expert these days.
 
 -- 
-Julian Calaby
+Craig McQueen
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
