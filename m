@@ -1,93 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:33460 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236AbcFDTa5 (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:46027 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751540AbcFXOR5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 15:30:57 -0400
-Subject: Patch "ath9k: Add a module parameter to invert LED polarity." has been added to the 4.6-stable tree
-To: linux-wireless@vittgam.net, ath9k-devel@lists.ath9k.org,
-	ath9k-devel@qca.qualcomm.com, gregkh@linuxfoundation.org,
-	kvalo@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	linuxbugs@vittgam.net
-Cc: <stable@vger.kernel.org>, <stable-commits@vger.kernel.org>
-From: <gregkh@linuxfoundation.org>
-Date: Sat, 04 Jun 2016 12:30:54 -0700
-Message-ID: <1465068654118110@kroah.com> (sfid-20160604_213112_795044_EB344740)
+	Fri, 24 Jun 2016 10:17:57 -0400
+Subject: Re: [ldv-project] [net] rtl8188ee: a potential race condition
+To: Pavel Andrianov <andrianov@ispras.ru>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+References: <575A788C.5020509@ispras.ru>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+From: Vaishali Thakkar <vaishali.thakkar@oracle.com>
+Message-ID: <576D40F1.9040009@oracle.com> (sfid-20160624_161821_203886_67D39149)
+Date: Fri, 24 Jun 2016 19:47:21 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+In-Reply-To: <575A788C.5020509@ispras.ru>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-This is a note to let you know that I've just added the patch titled
 
-    ath9k: Add a module parameter to invert LED polarity.
+On Friday 10 June 2016 01:51 PM, Pavel Andrianov wrote:
+> Hi!
+> 
+> There is a potential data race in drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rtl8188ee.ko.
+> 
+> In the function rtl88ee_gpio_radio_on_off_checking the flag ppsc->rfchange_inprogress is set with a spinlock protection. In the function rtl_ps_set_rf_state the flag is read also under a spinlock. But the function rtl88e_dm_watchdog read it without any locks. As a result rtl88e_dm_watchdog may execute the succeeding code while changing (with the flag rfchange_inprogress == true). I do not exactly determine the consequences, but likely they are not good if there exists such check. Could anybody more confident confirm this?
+> 
+> The function rtl_ps_set_rf_state is always called with its parameter [protect_or_not == false]. Is this flag really necessary, if the value 'true' is never used? The function is also set the flag ppsc->rfchange_inprogress and may affect the rtl88e_dm_watchdog as in the previous case.
 
-to the 4.6-stable tree which can be found at:
-    http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
+I think the patch was sent sometime ago for removing the parameter. But I am not sure why it's not applied.
+May be Larry can have better idea about this.
 
-The filename of the patch is:
-     ath9k-add-a-module-parameter-to-invert-led-polarity.patch
-and it can be found in the queue-4.6 subdirectory.
+Here, is link to the patch: http://linux-wireless.vger.kernel.narkive.com/mu4t9xxr/patch-3-4-rtlwifi-rtl8192cu-remove-unused-parameter
 
-If you, or anyone else, feels it should not be added to the stable tree,
-please let <stable@vger.kernel.org> know about it.
-
-
->From cd84042ce9040ad038e958bc67a46fcfc015c736 Mon Sep 17 00:00:00 2001
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Date: Mon, 11 Apr 2016 04:48:54 +0200
-Subject: ath9k: Add a module parameter to invert LED polarity.
-
-From: Vittorio Gambaletta (VittGam) <linux-wireless@vittgam.net>
-
-commit cd84042ce9040ad038e958bc67a46fcfc015c736 upstream.
-
-The LED can be active high instead of active low on some hardware.
-
-Add the led_active_high module parameter. It defaults to -1 to obey
-platform data as before.
-
-Setting the parameter to 1 or 0 will force the LED respectively
-active high or active low.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/net/wireless/ath/ath9k/init.c |    7 +++++++
- 1 file changed, 7 insertions(+)
-
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -49,6 +49,10 @@ int ath9k_led_blink;
- module_param_named(blink, ath9k_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
-+static int ath9k_led_active_high = -1;
-+module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
-+MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
-+
- static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-@@ -600,6 +604,9 @@ static int ath9k_init_softc(u16 devid, s
- 	if (ret)
- 		return ret;
- 
-+	if (ath9k_led_active_high != -1)
-+		ah->config.led_active_high = ath9k_led_active_high == 1;
-+
- 	/*
- 	 * Enable WLAN/BT RX Antenna diversity only when:
- 	 *
-
-
-Patches currently in stable-queue which might be from linux-wireless@vittgam.net are
-
-queue-4.6/ath9k-add-a-module-parameter-to-invert-led-polarity.patch
-queue-4.6/ath9k-fix-led-polarity-for-some-mini-pci-ar9220-mb92-cards.patch
+-- 
+Vaishali
