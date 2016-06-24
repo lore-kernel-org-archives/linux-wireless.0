@@ -1,79 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33123 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751054AbcFWPNj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 11:13:39 -0400
-Received: by mail-wm0-f68.google.com with SMTP id r201so11767327wme.0
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 08:13:38 -0700 (PDT)
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: nbd@nbd.name,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 2/2] Documentation: dt: net: add ath9k wireless device binding
-Date: Thu, 23 Jun 2016 17:13:28 +0200
-Message-Id: <20160623151328.24061-3-martin.blumenstingl@googlemail.com> (sfid-20160623_171343_465804_87387785)
-In-Reply-To: <20160623151328.24061-1-martin.blumenstingl@googlemail.com>
-References: <20160623151328.24061-1-martin.blumenstingl@googlemail.com>
+Received: from lists.s-osg.org ([54.187.51.154]:37428 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751604AbcFXAXO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 23 Jun 2016 20:23:14 -0400
+Message-ID: <576C7D6C.9070806@osg.samsung.com> (sfid-20160624_022347_944671_822478E1)
+Date: Fri, 24 Jun 2016 01:23:08 +0100
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Joe Perches <joe@perches.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Subject: Re: [PATCH] staging: wilc1000: arrays can't be NULL
+References: <1466704629-26084-1-git-send-email-luisbg@osg.samsung.com> <1466709897.1847.24.camel@perches.com> <CAGRGNgVtQhFvn_LUjt-v8Kp+qHuxUaNAriS3UROAQfg725bQiQ@mail.gmail.com> <576C75BC.2030300@osg.samsung.com> <CAGRGNgWsih2VR5S56b4F_tji6KfU+_yUaTUQn_d0WEQ+7Ff_qw@mail.gmail.com>
+In-Reply-To: <CAGRGNgWsih2VR5S56b4F_tji6KfU+_yUaTUQn_d0WEQ+7Ff_qw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation how devicetree can be used to configure ath9k based
-devices.
+On 24/06/16 00:54, Julian Calaby wrote:
+> Hi Luis,
+> 
+> On Fri, Jun 24, 2016 at 9:50 AM, Luis de Bethencourt
+> <luisbg@osg.samsung.com> wrote:
+>> On 24/06/16 00:15, Julian Calaby wrote:
+>>> Hi Joe,
+>>>
+>>> On Fri, Jun 24, 2016 at 5:24 AM, Joe Perches <joe@perches.com> wrote:
+>>>> On Thu, 2016-06-23 at 18:57 +0100, Luis de Bethencourt wrote:
+>>>>> hif_drv->usr_scan_req.net.net_info[i] contains found_net_info structs
+>>>>> which have the following element:
+>>>>> u8 bssid[6];
+>>>> []
+>>>>> I am aware this patch gives a few checkpatch.pl warnings about lines being
+>>>>> over 80 characters. Fixing that would be a completely different issue, and
+>>>>> a lengthy one since the file has loads of them.
+>>>>>
+>>>>> Hopefully somebody else picks that up. Maybe I should send a hit to the
+>>>>> kernelnewbies mailing list :)
+>>>>
+>>>> Or not.
+>>>>
+>>>> really_long_identifiers™ makes using 80 columns silly.
+>>>>
+>>>> The hungarian could probably be converted though.
+>>>
+>>> The main developers of this driver are slowly working through the
+>>> driver's style issues, which is part of the reason why it's in
+>>> staging.
+>>>
+>>> Thanks,
+>>>
+>>
+>> I understand Julian,
+>>
+>> All the maintainers listed in the MAINTAINERS file are in CC. I will wait for
+>> them to OK the suggestion of sending a patch fixing the Hungarian Notation.
+> 
+> I was letting you know that this work is going to happen, not
+> dissuading you from doing it.
+> 
+>> Didn't mean to step on your toes. I just wanted to help.
+> 
+> No toes were stepped on. As I said, this was not a "don't do that"
+> message, this was an "it's going to happen eventually" message.
+> 
+>> Code in staging is cared for by a lot of people :)
+> 
+> Indeed it is.
+> 
+> Thanks,
+> 
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- .../devicetree/bindings/net/wireless/ath,ath9k.txt | 40 ++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/ath,ath9k.txt
+Gotcha.
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ath,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/ath,ath9k.txt
-new file mode 100644
-index 0000000..d6f5471
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/ath,ath9k.txt
-@@ -0,0 +1,40 @@
-+* Atheros ath9k wireless devices
-+
-+This node provides properties for configuring the ath9k wireless device. The
-+node is expected to be specified as a child node of the PCI controller to
-+which the wireless chip is connected.
-+
-+Required properties:
-+- compatible: Should be "ath,ath9k"
-+
-+Optional properties:
-+- reg: Address and length of the register set for the device.
-+- ath,gpio-mask: The GPIO mask
-+- ath,gpio-val: The GPIO value
-+- ath,led-pin: The GPIO number to which the LED is connected
-+- ath,led-active-high: The LED is active when the GPIO is HIGH
-+- ath,clk-25mhz: Defines that at 25MHz clock is used
-+- ath,eeprom-name: The name of the file which contains the EEPROM data (which
-+			will be loaded via request_firmware)
-+- ath,check-eeprom-endianness: Allow checking the EEPROM endianness and
-+				swapping of the EEPROM data if required
-+- ath,disable-2ghz: Disables the 2.4GHz band, even if enabled in the EEPROM
-+- ath,disable-5ghz: Disables the 5GHz band, even if enabled in the EEPROM
-+
-+In this example, the node is defined as child node of the PCI controller.
-+
-+pci {
-+	pcie@0 {
-+		reg = <0 0 0 0 0>;
-+		#interrupt-cells = <1>;
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		device_type = "pci";
-+
-+		ath9k@0,0 {
-+			reg = <0 0 0 0 0>;
-+			device_type = "pci";
-+			ath,disable-5ghz;
-+		};
-+	};
-+};
--- 
-2.9.0
+I will send the Hungarian Notation change tomorrow. Since it is some small help.
 
+I will let the memcpy/memcp to ether_addr_* change for the maintainers. I believe
+it will happen soon.
+
+Thanks for your input.
+
+Luis
