@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47774 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228AbcFRNgx (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:52065 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751286AbcFXUsE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2016 09:36:53 -0400
-Content-Type: text/plain; charset="utf-8"
+	Fri, 24 Jun 2016 16:48:04 -0400
+Date: Fri, 24 Jun 2016 23:47:59 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Erik Stromdahl <erik.stromdahl@gmail.com>
+Cc: johannes@sipsolutions.net, johannes.berg@intel.com,
+	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] mac80211_hwsim: Added vendor echo command
+Message-ID: <20160624204759.GA15514@w1.fi> (sfid-20160624_224809_308178_CCC3DFE1)
+References: <1466756034-5485-1-git-send-email-erik.stromdahl@gmail.com>
 MIME-Version: 1.0
-Subject: Re: mwifiex: fix link error against sdio
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160616090206.932870-1-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <20160618133652.BF4046144A@smtp.codeaurora.org> (sfid-20160618_153742_017215_77557B8A)
-Date: Sat, 18 Jun 2016 13:36:52 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466756034-5485-1-git-send-email-erik.stromdahl@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
-> Calling sdio_claim_host() from the interface independent part of
-> the mwifiex driver is not only a layering violation, but also causes
-> a link error if MMC support is disabled, or if CONFIG_MMC=m
-> and CONFIG_MWIFIEX=y:
-> 
-> drivers/net/built-in.o: In function `mwifiex_fw_dpc':
-> :(.text+0xff138): undefined reference to `sdio_claim_host'
-> :(.text+0xff158): undefined reference to `sdio_release_host'
-> 
-> The right way to do this is to have the sdio specific code in the
-> sdio driver front-end, and we already have a callback pointer that
-> we can use for this after exporting the generic fw download
-> function from the core driver.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 65c71efe1c59 ("mwifiex: fix racing condition when downloading firmware")
+On Fri, Jun 24, 2016 at 10:13:54AM +0200, Erik Stromdahl wrote:
+> The purpose of the echo command is to provide a test
+> facility for user space programs.
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+> diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+> @@ -332,14 +332,16 @@ static const struct ieee80211_rate hwsim_rates[] = {
+>  #define QCA_NL80211_SUBCMD_TEST 1
+> +#define QCA_NL80211_SUBCMD_ECHO 2
 
-2095b1426c9c mwifiex: fix link error against sdio
+NAK. That QCA vendor specific value has not been assigned nor have I
+even seen a request to assign such a value.
 
+>  enum qca_nl80211_vendor_subcmds {
+>  	QCA_WLAN_VENDOR_ATTR_TEST = 8,
+> -	QCA_WLAN_VENDOR_ATTR_MAX = QCA_WLAN_VENDOR_ATTR_TEST
+> +	QCA_WLAN_VENDOR_ATTR_ECHO,
+
+And this vendor attribute value has already been assigned for another
+purpose.
+
+It is no acceptable to pick arbitrary values of identifiers without
+proper request to the owner of the OUI that is used to assign the
+values.
+
+As far as the QCA vendor specific identifiers are concerned, their
+assignment process is described here:
+http://w1.fi/cgit/hostap/plain/src/common/qca-vendor.h
+
+Please do not submit kernel changes that use any unassigned vendor
+identifier or even worse, a value that have already been assigned for a
+completely different purpose.
+ 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9180095/
-
+Jouni Malinen                                            PGP id EFC895FA
