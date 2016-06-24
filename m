@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34469 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932191AbcFBQJf (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36804 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751210AbcFXMfB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 12:09:35 -0400
-Message-ID: <57501AE4.7080104@gmail.com> (sfid-20160602_181021_627705_D4AAD352)
-Date: Thu, 02 Jun 2016 17:09:16 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-MIME-Version: 1.0
-To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: Stephen Rothwell <sfr@canb.auug.org.au>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-next@vger.kernel.org" <linux-next@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: Re: ath9k gpio request
-References: <20160530132225.4d297678@canb.auug.org.au>	<574C4851.9090201@gmail.com> <87fusy3cqx.fsf_-_@kamboji.qca.qualcomm.com>,<574D3EAA.3060102@gmail.com> <1464764036580.70506@qti.qualcomm.com> <574EC331.1080901@gmail.com>,<574ED297.4080004@gmail.com> <1464854569880.79341@qti.qualcomm.com>
-In-Reply-To: <1464854569880.79341@qti.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Fri, 24 Jun 2016 08:35:01 -0400
+Received: by mail-wm0-f65.google.com with SMTP id c82so4612316wme.3
+        for <linux-wireless@vger.kernel.org>; Fri, 24 Jun 2016 05:35:00 -0700 (PDT)
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+Cc: nbd@nbd.name, chunkeey@googlemail.com, mark.rutland@arm.com,
+	robh+dt@kernel.org, arend.vanspriel@broadcom.com,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v3 2/3] ath9k: add a helper to get the string representation of ath_bus_type
+Date: Fri, 24 Jun 2016 14:34:29 +0200
+Message-Id: <20160624123430.4097-3-martin.blumenstingl@googlemail.com> (sfid-20160624_143509_469375_F0C90486)
+In-Reply-To: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 02 June 2016 01:32 PM, Pan, Miaoqing wrote:
-> Seems there are something wrong in the datasheet,  try
->
-> --- a/drivers/net/wireless/ath/ath9k/reg.h
-> +++ b/drivers/net/wireless/ath/ath9k/reg.h
-> @@ -1122,8 +1122,8 @@ enum {
->   #define AR9300_NUM_GPIO                          16
->   #define AR9330_NUM_GPIO                                 16
->   #define AR9340_NUM_GPIO                                 23
-> -#define AR9462_NUM_GPIO                                 10
-> -#define AR9485_NUM_GPIO                                 12
-> +#define AR9462_NUM_GPIO                                 14
-> +#define AR9485_NUM_GPIO                                 11
->   #define AR9531_NUM_GPIO                                 18
->   #define AR9550_NUM_GPIO                                 24
->   #define AR9561_NUM_GPIO                                 23
-> @@ -1139,8 +1139,8 @@ enum {
->   #define AR9300_GPIO_MASK                        0x0000F4FF
->   #define AR9330_GPIO_MASK                        0x0000F4FF
->   #define AR9340_GPIO_MASK                        0x0000000F
-> -#define AR9462_GPIO_MASK                        0x000003FF
-> -#define AR9485_GPIO_MASK                        0x00000FFF
-> +#define AR9462_GPIO_MASK                        0x00003FFF
-> +#define AR9485_GPIO_MASK                        0x000007FF
->   #define AR9531_GPIO_MASK                        0x0000000F
->   #define AR9550_GPIO_MASK                        0x0000000F
->   #define AR9561_GPIO_MASK                        0x0000000F
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+this is a new patch which didn't exist in v2 yet, it prepares the new
+function ath_bus_type_to_string which will be used in patch #3
 
-solves the problem.
+ drivers/net/wireless/ath/ath.h  |  2 ++
+ drivers/net/wireless/ath/main.c | 15 +++++++++++++++
+ 2 files changed, 17 insertions(+)
 
-Tested-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+index da7a7c8..be0d292 100644
+--- a/drivers/net/wireless/ath/ath.h
++++ b/drivers/net/wireless/ath/ath.h
+@@ -327,4 +327,6 @@ static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
+ }
+ #endif
+ 
++const char *ath_bus_type_to_string(enum ath_bus_type bustype);
++
+ #endif /* ATH_H */
+diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
+index 338d723..90427cb 100644
+--- a/drivers/net/wireless/ath/main.c
++++ b/drivers/net/wireless/ath/main.c
+@@ -90,3 +90,18 @@ void ath_printk(const char *level, const struct ath_common* common,
+ 	va_end(args);
+ }
+ EXPORT_SYMBOL(ath_printk);
++
++const char *ath_bus_type_to_string(enum ath_bus_type bustype)
++{
++	switch (bustype) {
++	case ATH_PCI:
++		return "pci";
++	case ATH_AHB:
++		return "ahb";
++	case ATH_USB:
++		return "usb";
++	default:
++		return "unknown";
++	}
++}
++EXPORT_SYMBOL(ath_bus_type_to_string);
+-- 
+2.9.0
 
-Regards
-Sudip
