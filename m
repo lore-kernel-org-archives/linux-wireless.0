@@ -1,111 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60023 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751810AbcF2JsI (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35669 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750988AbcFXOqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 05:48:08 -0400
-Date: Wed, 29 Jun 2016 15:17:54 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
- QCA99X0 and later
-Message-ID: <20160629094754.GA8867@atheros-ThinkPad-T61> (sfid-20160629_114816_778661_61B8CBB6)
-References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
- <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
- <CA+BoTQnUvF2Zy7_WuEi0V+KjByRghVmoeR6yrs6hu6ag=KmBqQ@mail.gmail.com>
- <20160627143600.GA5292@atheros-ThinkPad-T61>
- <CA+BoTQn+HeishCMf4hjpWjLBmvFG2r0gosBv77RTyk7+uOAvPA@mail.gmail.com>
+	Fri, 24 Jun 2016 10:46:14 -0400
+Subject: Re: [ldv-project] [net] rtl8188ee: a potential race condition
+To: Vaishali Thakkar <vaishali.thakkar@oracle.com>,
+	Pavel Andrianov <andrianov@ispras.ru>
+References: <575A788C.5020509@ispras.ru> <576D40F1.9040009@oracle.com>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <576D47B3.60808@lwfinger.net> (sfid-20160624_164630_227151_C8B54804)
+Date: Fri, 24 Jun 2016 09:46:11 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+BoTQn+HeishCMf4hjpWjLBmvFG2r0gosBv77RTyk7+uOAvPA@mail.gmail.com>
+In-Reply-To: <576D40F1.9040009@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Michal/ Kalle,
-
-On Tue, Jun 28, 2016 at 08:48:38AM +0200, Michal Kazior wrote:
-> On 27 June 2016 at 16:36, Mohammed Shafi Shajakhan
-> <mohammed@codeaurora.org> wrote:
-> > Hi Michal,
-> >
-> > thanks for the review ..
-> >
-> > On Mon, Jun 27, 2016 at 11:27:27AM +0200, Michal Kazior wrote:
-> >> On 23 June 2016 at 18:40, Mohammed Shafi Shajakhan
-> >> <mohammed@qti.qualcomm.com> wrote:
-> >> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> >> >
-> >> > For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
-> >> > NULL func status (always acked/successs !!) when hostapd does a
-> >> > PROBE_CLIENT via nullfunc frames when the station is powered off
-> >> > abruptly (inactive timer probes client via null func after the inactive
-> >> > time reaches beyond the threshold). Fix this by disabling the workaround
-> >> > (getting the ACK status of NULL func frames by sending via HTT mgmt-tx
-> >> >  path) introduced by the change ("ath10k: fix beacon loss handling ")
-> >> > for QCA99X0 and later chipsets. The normal tx path provides the proper
-> >> > ACK status for NULL data frames. As of now disable this workaround for
-> >> > chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
-> >> > completely get rid of this workaround for all the chipsets
-> >> >
-> >> > Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
-> >> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> >> > ---
-> >> >  drivers/net/wireless/ath/ath10k/core.c | 3 +++
-> >> >  drivers/net/wireless/ath/ath10k/core.h | 6 ++++++
-> >> >  drivers/net/wireless/ath/ath10k/mac.c  | 1 +
-> >> >  3 files changed, 10 insertions(+)
-> >> >
-> >> > diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-> >> > index 689d6ce..9978e4a 100644
-> >> > --- a/drivers/net/wireless/ath/ath10k/core.c
-> >> > +++ b/drivers/net/wireless/ath/ath10k/core.c
-> >> > @@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
-> >> >                         .board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
-> >> >                         .board_size = QCA99X0_BOARD_DATA_SZ,
-> >> >                         .board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
-> >> > +                       .disable_null_func_workaround = true,
-> >>
-> >> Tx completion (bugs) are firmware specific, not hardware. This should
-> >> be expressed via features bits in ath10k FW API, no?
-> >>
-> >>
-> > [shafi] Are you suggesting me to introduce something like
-> > "ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT" ? Kalle any suggestions ?
-> >
-> > Also how about getting this workaround completely if Ben had fixed this in his tree,
-> > will this affect older 10.2.4 ?
-> 
-> There's still 636.
-> 
-> We could probably get rid of this as long as:
->  - ath10k can express the need to use Probe Requests for AP probing
-> (in client mode) and beacon loss handling purposes instead of NullFunc
-> to mac80211
->  - everyone uses hostapd with disassoc_low_ack=1 with affected
-> firmware revisions
->  - supplicant uses disassoc_low_ack=1 for p2p go
->  - I have no idea about mesh/ibss but they might require some work as well
-> 
-> Otherwise you'll introduce regressions.
+On 06/24/2016 09:17 AM, Vaishali Thakkar wrote:
 >
+>
+> On Friday 10 June 2016 01:51 PM, Pavel Andrianov wrote:
+>> Hi!
+>>
+>> There is a potential data race in drivers/net/wireless/realtek/rtlwifi/rtl8188ee/rtl8188ee.ko.
+>>
+>> In the function rtl88ee_gpio_radio_on_off_checking the flag ppsc->rfchange_inprogress is set with a spinlock protection. In the function rtl_ps_set_rf_state the flag is read also under a spinlock. But the function rtl88e_dm_watchdog read it without any locks. As a result rtl88e_dm_watchdog may execute the succeeding code while changing (with the flag rfchange_inprogress == true). I do not exactly determine the consequences, but likely they are not good if there exists such check. Could anybody more confident confirm this?
+>>
+>> The function rtl_ps_set_rf_state is always called with its parameter [protect_or_not == false]. Is this flag really necessary, if the value 'true' is never used? The function is also set the flag ppsc->rfchange_inprogress and may affect the rtl88e_dm_watchdog as in the previous case.
+>
+> I think the patch was sent sometime ago for removing the parameter. But I am not sure why it's not applied.
+> May be Larry can have better idea about this.
+>
+> Here, is link to the patch: http://linux-wireless.vger.kernel.narkive.com/mu4t9xxr/patch-3-4-rtlwifi-rtl8192cu-remove-unused-parameter
 
-[shafi] sure then we will disable this for 10.4 (QCA99X0 and later)
+The patch for rtl8192cu was applied as commit 4b9d8d67b44a on Jun 20 2011, but 
+the unused parameter was reintroduced as part of an update of the power-save 
+code with commit d3feae41a347 on Sep 22 2014. My recollection is that Realtek 
+envisioned a driver that needed this parameter to be true. As none has yet been 
+introduced, I will prepare a patch to remove it again.
 
-*firmware feature requires a new firmware updated this feature, so the bug
-will be present for all the older firmware, please correct me if my
-understanding is wrong
+I am also testing a patch to remove the race condition in rtl8188ee.
 
-*We discussed wmi_op_version is not the way to go (in the sense just disable it
-for 10.4 alone)
-
-Let me know if there is any other suggestion (the existing change though bit
-cleanly is very explicit regarding the chipsets that this workaround is not
-needed), thank you !
-
-regards,
-shafi
+Larry
 
