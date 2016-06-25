@@ -1,78 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50057 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161190AbcFCVh4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 17:37:56 -0400
-From: Sasha Levin <sasha.levin@oracle.com>
-To: stable@vger.kernel.org, stable-commits@vger.kernel.org
-Cc: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>,
-	<linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<ath9k-devel@venema.h4ckr.net>,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Sasha Levin <sasha.levin@oracle.com>
-Subject: [added to the 4.1 stable tree] ath9k: Add a module parameter to invert LED polarity.
-Date: Fri,  3 Jun 2016 17:35:23 -0400
-Message-Id: <1464989831-16666-28-git-send-email-sasha.levin@oracle.com> (sfid-20160603_233808_072768_881382B9)
-In-Reply-To: <1464989831-16666-1-git-send-email-sasha.levin@oracle.com>
-References: <1464989831-16666-1-git-send-email-sasha.levin@oracle.com>
+Received: from lists.s-osg.org ([54.187.51.154]:54103 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751480AbcFYVnk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jun 2016 17:43:40 -0400
+Message-ID: <576EFB05.1060902@osg.samsung.com> (sfid-20160625_234400_814335_7E87F7CB)
+Date: Sat, 25 Jun 2016 22:43:33 +0100
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+MIME-Version: 1.0
+To: Greg KH <gregkh@linuxfoundation.org>
+CC: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, chris.park@atmel.com,
+	austin.shin@atmel.com, johnny.kim@atmel.com,
+	julian.calaby@gmail.com, tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH v2 1/2] staging: wilc1000: fix error handling in wilc_debugfs_init()
+References: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com> <20160625213606.GA15125@kroah.com>
+In-Reply-To: <20160625213606.GA15125@kroah.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
+On 25/06/16 22:36, Greg KH wrote:
+> On Thu, Jun 23, 2016 at 01:36:17PM +0100, Luis de Bethencourt wrote:
+>> The common format to check if a function returned an error pointer is to
+>> use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
+>>
+>> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+>> ---
+>>  drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+>> index fcbc95d..48797dc 100644
+>> --- a/drivers/staging/wilc1000/wilc_debugfs.c
+>> +++ b/drivers/staging/wilc1000/wilc_debugfs.c
+>> @@ -107,7 +107,7 @@ static int __init wilc_debugfs_init(void)
+>>  	struct wilc_debugfs_info_t *info;
+>>  
+>>  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+>> -	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
+>> +	if (PTR_ERR(wilc_dir) == -ENODEV) {
+>>  		/* it's not error. the debugfs is just not being enabled. */
+>>  		printk("ERR, kernel has built without debugfs support\n");
+>>  		return 0;
+> 
+> No, the best way to do this is to just ignore the return value, you
+> don't care about it.  It can be passed back into any debugfs calls just
+> fine.
+> 
+> So don't check the value and all is good, debugfs was written in a way
+> to make it _easy_ to use, no need for fancy error checking at all with
+> it.
+> 
+> thanks,
+> 
+> greg k-h
+> 
 
-This patch has been added to the 4.1 stable tree. If you have any
-objections, please let us know.
+Thanks for the review Greg.
 
-===============
+Just to make sure. You are proposing I just drop the 3 if checks? [0]
 
-[ Upstream commit cd84042ce9040ad038e958bc67a46fcfc015c736 ]
+If that's what you mean I will send a patch as soon as you confirm :)
 
-The LED can be active high instead of active low on some hardware.
+Happy hacking,
+Luis
 
-Add the led_active_high module parameter. It defaults to -1 to obey
-platform data as before.
 
-Setting the parameter to 1 or 0 will force the LED respectively
-active high or active low.
 
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Sasha Levin <sasha.levin@oracle.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+[0] Making the function look like this:
+static int __init wilc_debugfs_init(void)
+{
+        int i;
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 46a389c..b7b0254 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -49,6 +49,10 @@ int ath9k_led_blink;
- module_param_named(blink, ath9k_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
-+static int ath9k_led_active_high = -1;
-+module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
-+MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
-+
- static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-@@ -600,6 +604,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		return ret;
- 
-+	if (ath9k_led_active_high != -1)
-+		ah->config.led_active_high = ath9k_led_active_high == 1;
-+
- 	/*
- 	 * Enable WLAN/BT RX Antenna diversity only when:
- 	 *
--- 
-2.5.0
+        struct dentry *debugfs_files;
+        struct wilc_debugfs_info_t *info;
+
+        wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+        for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+                info = &debugfs_info[i];
+                debugfs_files = debugfs_create_file(info->name,
+                                                    info->perm,
+                                                    wilc_dir,
+                                                    &info->data,
+                                                    &info->fops);
+        }
+        return 0;
+}
 
