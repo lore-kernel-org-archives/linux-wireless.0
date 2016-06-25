@@ -1,151 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:35806 "EHLO
-	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751860AbcF0PxK (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33378 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbcFYTx4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 11:53:10 -0400
-Received: by mail-oi0-f68.google.com with SMTP id d132so31323896oig.2
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 08:53:10 -0700 (PDT)
+	Sat, 25 Jun 2016 15:53:56 -0400
+Received: by mail-oi0-f65.google.com with SMTP id w141so24214448oia.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 12:53:55 -0700 (PDT)
 From: Larry Finger <Larry.Finger@lwfinger.net>
 To: kvalo@codeaurora.org
 Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 02/10] rtlwifi: rtl8192ce: Convert driver to use common hardware info routine
-Date: Mon, 27 Jun 2016 10:52:30 -0500
-Message-Id: <1467042758-25742-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160627_175316_778317_0E6384DD)
-In-Reply-To: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 10/10] rtlwifi: rtl8723ae: Clean up the hardware info routine
+Date: Sat, 25 Jun 2016 14:53:41 -0500
+Message-Id: <1466884421-722-11-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_215359_661104_39926833)
+In-Reply-To: <1466884421-722-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1466884421-722-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for RTL8192CE chips is converted to use the common routine
-for getting the hardware information.
+This driver contains some complicated if ... else if ... else constructions.
+These are replaced by switch statements to improve readability.
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
 Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnd Bergmann <arnd@arndb.de>
 ---
-V2 - Fixes bug found after V1 was submitted.
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    | 210 +++++++++++----------
+ 1 file changed, 107 insertions(+), 103 deletions(-)
 
-This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
-	submitted by Joe Perches.
----
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    | 83 ++++------------------
- 1 file changed, 12 insertions(+), 71 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-index 809a021..2446079 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-@@ -1680,65 +1680,18 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
--	u16 i, usvalue;
--	u8 hwinfo[HWSET_MAX_SIZE];
--	u16 eeprom_id;
--
--	switch (rtlefuse->epromtype) {
--	case EEPROM_BOOT_EFUSE:
--		rtl_efuse_shadow_map_update(hw);
--		break;
--
--	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
--		return;
--
--	default:
--		dev_warn(dev, "no efuse data\n");
--		return;
--	}
--
--	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
--
--	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP",
--		      hwinfo, HWSET_MAX_SIZE);
--
--	eeprom_id = *((u16 *)&hwinfo[0]);
--	if (eeprom_id != RTL8190_EEPROM_ID) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
--		rtlefuse->autoload_failflag = true;
--	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
--		rtlefuse->autoload_failflag = false;
--	}
--
--	if (rtlefuse->autoload_failflag)
-+	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
-+			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
-+			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
-+			COUNTRY_CODE_WORLD_WIDE_13};
-+	u8 *hwinfo;
-+
-+	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
-+	if (!hwinfo)
- 		return;
- 
--	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
--	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
--	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
--	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROMId = 0x%4x\n", eeprom_id);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
--
--	for (i = 0; i < 6; i += 2) {
--		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
--		*((u16 *) (&rtlefuse->dev_addr[i])) = usvalue;
--	}
--
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "%pM\n", rtlefuse->dev_addr);
-+	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
-+		goto exit;
- 
- 	_rtl92ce_read_txpower_info_from_hwpg(hw,
- 					     rtlefuse->autoload_failflag,
-@@ -1747,18 +1700,6 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
- 	rtl8192ce_read_bt_coexist_info_from_hwpg(hw,
- 						 rtlefuse->autoload_failflag,
- 						 hwinfo);
--
--	rtlefuse->eeprom_channelplan = *&hwinfo[EEPROM_CHANNELPLAN];
--	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
--	rtlefuse->txpwr_fromeprom = true;
--	rtlefuse->eeprom_oemid = *&hwinfo[EEPROM_CUSTOMER_ID];
--
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
--
--	/* set channel paln to world wide 13 */
--	rtlefuse->channel_plan = COUNTRY_CODE_WORLD_WIDE_13;
--
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index 112443b..3e562f3 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -1656,113 +1656,117 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
  	if (rtlhal->oem_id == RT_CID_DEFAULT) {
  		switch (rtlefuse->eeprom_oemid) {
  		case EEPROM_CID_DEFAULT:
-@@ -1782,10 +1723,10 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
- 		default:
- 			rtlhal->oem_id = RT_CID_DEFAULT;
+-			if (rtlefuse->eeprom_did == 0x8176) {
+-				if (CHK_SVID_SMID(0x10EC, 0x6151) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6152) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6154) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6155) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6177) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6178) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6179) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6180) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7151) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7152) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7154) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7155) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7177) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7178) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7179) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7180) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8151) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8152) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8154) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8155) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8181) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8182) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8184) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8185) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9151) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9152) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9154) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9155) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9181) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9182) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9184) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9185))
+-					rtlhal->oem_id = RT_CID_TOSHIBA;
+-				else if (rtlefuse->eeprom_svid == 0x1025)
++			rtlhal->oem_id = RT_CID_DEFAULT;
++			switch (rtlefuse->eeprom_did) {
++			case 0x8176:
++				switch (rtlefuse->eeprom_svid) {
++				case 0x10EC:
++					switch (rtlefuse->eeprom_smid) {
++					case 0x6151 ... 0x6152:
++					case 0x6154 ... 0x6155:
++					case 0x6177 ... 0x6180:
++					case 0x7151 ... 0x7152:
++					case 0x7154 ... 0x7155:
++					case 0x7177 ... 0x7180:
++					case 0x8151 ... 0x8152:
++					case 0x8154 ... 0x8155:
++					case 0x8181 ... 0x8182:
++					case 0x8184 ... 0x8185:
++					case 0x9151 ... 0x9152:
++					case 0x9154 ... 0x9155:
++					case 0x9181 ... 0x9182:
++					case 0x9184 ... 0x9185:
++						rtlhal->oem_id = RT_CID_TOSHIBA;
++						break;
++					case 0x6191 ... 0x6193:
++					case 0x7191 ... 0x7193:
++					case 0x8191 ... 0x8193:
++					case 0x9191 ... 0x9193:
++						rtlhal->oem_id = RT_CID_819X_SAMSUNG;
++						break;
++					case 0x8197:
++					case 0x9196:
++						rtlhal->oem_id = RT_CID_819X_CLEVO;
++						break;
++					case 0x8203:
++						rtlhal->oem_id = RT_CID_819X_PRONETS;
++						break;
++					case 0x8195:
++					case 0x9195:
++					case 0x7194:
++					case 0x8200 ... 0x8202:
++					case 0x9200:
++						rtlhal->oem_id = RT_CID_819X_LENOVO;
++						break;
++					}
++				case 0x1025:
+ 					rtlhal->oem_id = RT_CID_819X_ACER;
+-				else if (CHK_SVID_SMID(0x10EC, 0x6191) ||
+-					 CHK_SVID_SMID(0x10EC, 0x6192) ||
+-					 CHK_SVID_SMID(0x10EC, 0x6193) ||
+-					 CHK_SVID_SMID(0x10EC, 0x7191) ||
+-					 CHK_SVID_SMID(0x10EC, 0x7192) ||
+-					 CHK_SVID_SMID(0x10EC, 0x7193) ||
+-					 CHK_SVID_SMID(0x10EC, 0x8191) ||
+-					 CHK_SVID_SMID(0x10EC, 0x8192) ||
+-					 CHK_SVID_SMID(0x10EC, 0x8193) ||
+-					 CHK_SVID_SMID(0x10EC, 0x9191) ||
+-					 CHK_SVID_SMID(0x10EC, 0x9192) ||
+-					 CHK_SVID_SMID(0x10EC, 0x9193))
+-					rtlhal->oem_id = RT_CID_819X_SAMSUNG;
+-				else if (CHK_SVID_SMID(0x10EC, 0x8195) ||
+-					 CHK_SVID_SMID(0x10EC, 0x9195) ||
+-					 CHK_SVID_SMID(0x10EC, 0x7194) ||
+-					 CHK_SVID_SMID(0x10EC, 0x8200) ||
+-					 CHK_SVID_SMID(0x10EC, 0x8201) ||
+-					 CHK_SVID_SMID(0x10EC, 0x8202) ||
+-					 CHK_SVID_SMID(0x10EC, 0x9200))
+-					rtlhal->oem_id = RT_CID_819X_LENOVO;
+-				else if (CHK_SVID_SMID(0x10EC, 0x8197) ||
+-					 CHK_SVID_SMID(0x10EC, 0x9196))
+-					rtlhal->oem_id = RT_CID_819X_CLEVO;
+-				else if (CHK_SVID_SMID(0x1028, 0x8194) ||
+-					 CHK_SVID_SMID(0x1028, 0x8198) ||
+-					 CHK_SVID_SMID(0x1028, 0x9197) ||
+-					 CHK_SVID_SMID(0x1028, 0x9198))
+-					rtlhal->oem_id = RT_CID_819X_DELL;
+-				else if (CHK_SVID_SMID(0x103C, 0x1629))
+-					rtlhal->oem_id = RT_CID_819X_HP;
+-				else if (CHK_SVID_SMID(0x1A32, 0x2315))
+-					rtlhal->oem_id = RT_CID_819X_QMI;
+-				else if (CHK_SVID_SMID(0x10EC, 0x8203))
+-					rtlhal->oem_id = RT_CID_819X_PRONETS;
+-				else if (CHK_SVID_SMID(0x1043, 0x84B5))
+-					rtlhal->oem_id =
+-						 RT_CID_819X_EDIMAX_ASUS;
+-				else
+-					rtlhal->oem_id = RT_CID_DEFAULT;
+-			} else if (rtlefuse->eeprom_did == 0x8178) {
+-				if (CHK_SVID_SMID(0x10EC, 0x6181) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6182) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6184) ||
+-				    CHK_SVID_SMID(0x10EC, 0x6185) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7181) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7182) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7184) ||
+-				    CHK_SVID_SMID(0x10EC, 0x7185) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8181) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8182) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8184) ||
+-				    CHK_SVID_SMID(0x10EC, 0x8185) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9181) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9182) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9184) ||
+-				    CHK_SVID_SMID(0x10EC, 0x9185))
+-					rtlhal->oem_id = RT_CID_TOSHIBA;
+-				else if (rtlefuse->eeprom_svid == 0x1025)
++					break;
++				case 0x1028:
++					switch (rtlefuse->eeprom_smid) {
++					case 0x8194:
++					case 0x8198:
++					case 0x9197 ... 0x9198:
++						rtlhal->oem_id =
++							RT_CID_819X_DELL;
++						break;
++					}
++					break;
++				case 0x103C:
++					switch (rtlefuse->eeprom_smid) {
++					case 0x1629:
++						rtlhal->oem_id = RT_CID_819X_HP;
++					}
++					break;
++				case 0x1A32:
++					switch (rtlefuse->eeprom_smid) {
++					case 0x2315:
++						rtlhal->oem_id =
++							RT_CID_819X_QMI;
++						break;
++					}
++					break;
++				case 0x1043:
++					switch (rtlefuse->eeprom_smid) {
++					case 0x84B5:
++						rtlhal->oem_id =
++							RT_CID_819X_EDIMAX_ASUS;
++					}
++					break;
++				}
++			case 0x8178:
++				switch (rtlefuse->eeprom_svid) {
++				case 0x10ec:
++					switch (rtlefuse->eeprom_smid) {
++					case 0x6181 ... 0x6182:
++					case 0x6184 ... 0x6185:
++					case 0x7181 ... 0x7182:
++					case 0x7184 ... 0x7185:
++					case 0x8181 ... 0x8182:
++					case 0x8184 ... 0x8185:
++					case 0x9181 ... 0x9182:
++					case 0x9184 ... 0x9185:
++						rtlhal->oem_id = RT_CID_TOSHIBA;
++						break;
++					case 0x8186:
++						rtlhal->oem_id =
++							RT_CID_819X_PRONETS;
++						break;
++					}
++					break;
++				case 0x1025:
+ 					rtlhal->oem_id = RT_CID_819X_ACER;
+-				else if (CHK_SVID_SMID(0x10EC, 0x8186))
+-					rtlhal->oem_id = RT_CID_819X_PRONETS;
+-				else if (CHK_SVID_SMID(0x1043, 0x8486))
+-					rtlhal->oem_id =
++					break;
++				case 0x1043:
++					switch (rtlefuse->eeprom_smid) {
++					case 0x8486:
++						rtlhal->oem_id =
+ 						     RT_CID_819X_EDIMAX_ASUS;
+-				else
+-					rtlhal->oem_id = RT_CID_DEFAULT;
+-			} else {
+-				rtlhal->oem_id = RT_CID_DEFAULT;
++					}
++					break;
++				}
++				break;
+ 			}
+-			break;
+ 		case EEPROM_CID_TOSHIBA:
+ 			rtlhal->oem_id = RT_CID_TOSHIBA;
  			break;
--
- 		}
- 	}
--
-+exit:
-+	kfree(hwinfo);
- }
- 
- static void _rtl92ce_hal_customized_behavior(struct ieee80211_hw *hw)
 -- 
 2.1.4
 
