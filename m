@@ -1,80 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58622 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752176AbcFQFNZ convert rfc822-to-8bit (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:51112 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbcFYVgF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 01:13:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 4.7 FIX] brcmfmac: fix lockup when removing P2P interface after event timeout
-References: <1464378815-23282-1-git-send-email-zajec5@gmail.com>
-	<877fdpw4no.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rzXzj4DJNA6855Qy6QnxETnYEPmqtw3Bcx8WWCtYwYvuw@mail.gmail.com>
-Date: Fri, 17 Jun 2016 08:13:17 +0300
-In-Reply-To: <CACna6rzXzj4DJNA6855Qy6QnxETnYEPmqtw3Bcx8WWCtYwYvuw@mail.gmail.com>
-	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Fri, 17 Jun 2016
- 06:59:42 +0200")
-Message-ID: <87lh24v1n6.fsf@kamboji.qca.qualcomm.com> (sfid-20160617_071350_717343_AC0A2F22)
+	Sat, 25 Jun 2016 17:36:05 -0400
+Date: Sat, 25 Jun 2016 14:36:06 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Luis de Bethencourt <luisbg@osg.samsung.com>
+Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, chris.park@atmel.com,
+	austin.shin@atmel.com, johnny.kim@atmel.com,
+	julian.calaby@gmail.com, tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH v2 1/2] staging: wilc1000: fix error handling in
+ wilc_debugfs_init()
+Message-ID: <20160625213606.GA15125@kroah.com> (sfid-20160625_233642_263478_7EA09400)
+References: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+On Thu, Jun 23, 2016 at 01:36:17PM +0100, Luis de Bethencourt wrote:
+> The common format to check if a function returned an error pointer is to
+> use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
+> 
+> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+> ---
+>  drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+> index fcbc95d..48797dc 100644
+> --- a/drivers/staging/wilc1000/wilc_debugfs.c
+> +++ b/drivers/staging/wilc1000/wilc_debugfs.c
+> @@ -107,7 +107,7 @@ static int __init wilc_debugfs_init(void)
+>  	struct wilc_debugfs_info_t *info;
+>  
+>  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+> -	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
+> +	if (PTR_ERR(wilc_dir) == -ENODEV) {
+>  		/* it's not error. the debugfs is just not being enabled. */
+>  		printk("ERR, kernel has built without debugfs support\n");
+>  		return 0;
 
-> On 16 June 2016 at 17:10, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Rafał Miłecki <zajec5@gmail.com> writes:
->>
->>> Removing P2P interface is handled by sending a proper request to the
->>> firmware. On success firmware triggers an event and driver's handler
->>> removes a matching interface.
->>>
->>> However on event timeout we remove interface directly from the cfg80211
->>> callback. Current code doesn't handle this case correctly as it always
->>> assumes rtnl to be unlocked.
->>>
->>> Fix it by adding an extra rtnl_locked parameter to functions and calling
->>> unregister_netdevice when needed.
->>>
->>> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
->>
->> Failed to apply, please rebase:
->>
->> Applying: brcmfmac: fix lockup when removing P2P interface after event timeout
->> Using index info to reconstruct a base tree...
->> Falling back to patching base and 3-way merge...
->> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
->> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
->> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
->> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
->> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> Failed to merge in the changes.
->> Patch failed at 0001 brcmfmac: fix lockup when removing P2P interface after event timeout
->
-> What tree did you try it on?
->
-> I just went into a dir where I have cloned:
-> git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git
->
-> My HEAD commit is:
-> 034fdd4 Merge ath-current from ath.git
->
-> And I can apply this patch cleanly doing:
-> curl https://patchwork.kernel.org/patch/9138925/mbox/ | git am
+No, the best way to do this is to just ignore the return value, you
+don't care about it.  It can be passed back into any debugfs calls just
+fine.
 
-I was trying to apply this to wireless-drivers-next. I didn't get a
-confirmation from Arend and I didn't consider the fix important enough
-for 4.7. But of course I can reconsider if needed.
+So don't check the value and all is good, debugfs was written in a way
+to make it _easy_ to use, no need for fancy error checking at all with
+it.
 
--- 
-Kalle Valo
+thanks,
+
+greg k-h
