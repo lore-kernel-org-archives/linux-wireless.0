@@ -1,102 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51805 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325AbcFCIS2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 04:18:28 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [V2,
- for-4.7] brcmfmac: add eth_type_trans back for PCIe full dongle
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1464858027-107357-1-git-send-email-arend@broadcom.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org,
-	Franky Lin <franky.lin@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Message-Id: <20160603081827.E024161385@smtp.codeaurora.org> (sfid-20160603_101836_072404_64A4877E)
-Date: Fri,  3 Jun 2016 08:18:27 +0000 (UTC)
+Received: from lists.s-osg.org ([54.187.51.154]:54207 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751188AbcFYWAo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jun 2016 18:00:44 -0400
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org,
+	davem@davemloft.net, mchehab@kernel.org,
+	linux-wireless@vger.kernel.org, glen.lee@atmel.com,
+	Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [RFC PATCH v2] MAINTAINERS: remove unreachable people that have left Atmel
+Date: Sat, 25 Jun 2016 23:00:36 +0100
+Message-Id: <1466892036-10619-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160626_000113_281426_D06515BF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> wrote:
-> From: Franky Lin <franky.lin@broadcom.com>
-> 
-> A regression was introduced in commit 9c349892ccc9 ("brcmfmac: revise
-> handling events in receive path") which moves eth_type_trans() call
-> to brcmf_rx_frame(). Msgbuf layer doesn't use brcmf_rx_frame() but invokes
-> brcmf_netif_rx() directly. In such case the Ethernet header was not
-> stripped out resulting in null pointer dereference in the networking
-> stack.
-> 
-> BUG: unable to handle kernel NULL pointer dereference at 0000000000000048
-> IP: [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
-> PGD 0
-> Oops: 0000 [#1] PREEMPT SMP
-> Modules linked in: fuse ipt_MASQUERADE nf_nat_masquerade_ipv4
-> iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 xt_addrtype
-> [...]
-> rtsx_pci scsi_mod usbcore usb_common i8042 serio nvme nvme_core
-> CPU: 7 PID: 1340 Comm: irq/136-brcmf_p Not tainted 4.7.0-rc1-mainline #1
-> Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 01.02.00 04/07/2016
-> task: ffff8804a0c5bd00 ti: ffff88049e124000 task.ti: ffff88049e124000
-> RIP: 0010:[<ffffffff814c3ce6>] [<ffffffff814c3ce6>]
-> enqueue_to_backlog+0x56/0x260
-> RSP: 0018:ffff88049e127ca0 EFLAGS: 00010046
-> RAX: 0000000000000000 RBX: ffff8804bddd7c40 RCX: 000000000000002f
-> RDX: 0000000000000000 RSI: 0000000000000007 RDI: ffff8804bddd7d4c
-> RBP: ffff88049e127ce8 R08: 0000000000000000 R09: 0000000000000000
-> R10: ffff8804bddd12c0 R11: 000000000000149e R12: 0000000000017c40
-> R13: ffff88049e127d08 R14: ffff8804a9bd6d00 R15: ffff8804bddd7d4c
-> FS: 0000000000000000(0000) GS:ffff8804bddc0000(0000) knlGS:0000000000000000
-> CS: 0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: 0000000000000048 CR3: 0000000001806000 CR4: 00000000003406e0
-> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-> DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-> Stack:
-> ffff8804bdddad00 ffff8804ad089e00 0000000000000000 0000000000000282
-> 0000000000000000 ffff8804a9bd6d00 ffff8804a1b27e00 ffff8804a9bd6d00
-> ffff88002ee88000 ffff88049e127d28 ffffffff814c3f3b ffffffff81311fc3
-> Call Trace:
-> [<ffffffff814c3f3b>] netif_rx_internal+0x4b/0x170
-> [<ffffffff81311fc3>] ? swiotlb_tbl_unmap_single+0xf3/0x120
-> [<ffffffff814c5467>] netif_rx_ni+0x27/0xc0
-> [<ffffffffa08519e9>] brcmf_netif_rx+0x49/0x70 [brcmfmac]
-> [<ffffffffa08564d4>] brcmf_msgbuf_process_rx+0x2b4/0x570 [brcmfmac]
-> [<ffffffff81020017>] ? __xen_set_pgd_hyper+0x57/0xd0
-> [<ffffffff810d60b0>] ? irq_forced_thread_fn+0x70/0x70
-> [<ffffffffa0857381>] brcmf_proto_msgbuf_rx_trigger+0x31/0xe0 [brcmfmac]
-> [<ffffffffa0861e8f>] brcmf_pcie_isr_thread+0x7f/0x110 [brcmfmac]
-> [<ffffffff810d60d0>] irq_thread_fn+0x20/0x50
-> [<ffffffff810d63ad>] irq_thread+0x12d/0x1c0
-> [<ffffffff815d07d5>] ? __schedule+0x2f5/0x7a0
-> [<ffffffff810d61d0>] ? wake_threads_waitq+0x30/0x30
-> [<ffffffff810d6280>] ? irq_thread_dtor+0xb0/0xb0
-> [<ffffffff81098ea8>] kthread+0xd8/0xf0
-> [<ffffffff815d4b7f>] ret_from_fork+0x1f/0x40
-> [<ffffffff81098dd0>] ? kthread_worker_fn+0x170/0x170
-> Code: 1c f5 60 9a 8e 81 9c 58 0f 1f 44 00 00 48 89 45 d0 fa 66 0f 1f
-> 44 00 00 4c 8d bb 0c 01 00 00 4c 89 ff e8 5e 08 11 00 49 8b 56 20 <48>
-> 8b 52 48 83 e2 01 74 10 8b 8b 08 01 00 00 8b 15 59 c5 42 00
-> RIP [<ffffffff814c3ce6>] enqueue_to_backlog+0x56/0x260
-> RSP <ffff88049e127ca0>
-> CR2: 0000000000000048
-> 
-> Fixes: 9c349892ccc9 ("brcmfmac: revise handling events in receive path")
-> Reported-by: Rafal Milecki <zajec5@gmail.com>
-> Reported-by: Grey Christoforo <grey@christoforo.net>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Signed-off-by: Franky Lin <franky.lin@broadcom.com>
-> [arend@broadcom.com: rephrased the commit message]
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+When sending an email regarding a patch to wilc1000, you get the following
+automatic replies:
+"Sung_hoon Cho is no longer with Atmel Corporation."
+"Kang_hee Park is no longer with Atmel Corporation."
+"Dong_ho Shin is no longer with Atmel Corporation."
+"Bo_moon Kim is no longer with Atmel Corporation."
+"Min_su Kim is no longer with Atmel Corporation."
+"Jun_hyuk Lee is no longer with Atmel Corporation."
 
-Thanks, 1 patch applied to wireless-drivers.git:
+Removing these email addresses that don't reach the addressee anymore.
 
-31143e2933d1 brcmfmac: add eth_type_trans back for PCIe full dongle
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+---
 
+Hi,
+
+Just got the same automatic reply from Glen Lee's address.
+
+This is unfortunate since it means this driver has no maintainer listed.
+What do people suggest to do in this case?
+
+I can't find an alternative email address for any of them.
+
+Thanks,
+Luis
+
+ MAINTAINERS | 6 ------
+ 1 file changed, 6 deletions(-)
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index fe8ac28..2c713fc 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11080,12 +11080,6 @@ S:	Odd Fixes
+ F:	drivers/staging/vt665?/
+ 
+ STAGING - WILC1000 WIFI DRIVER
+-M:	Johnny Kim <johnny.kim@atmel.com>
+-M:	Austin Shin <austin.shin@atmel.com>
+-M:	Chris Park <chris.park@atmel.com>
+-M:	Tony Cho <tony.cho@atmel.com>
+-M:	Glen Lee <glen.lee@atmel.com>
+-M:	Leo Kim <leo.kim@atmel.com>
+ L:	linux-wireless@vger.kernel.org
+ S:	Supported
+ F:	drivers/staging/wilc1000/
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9149583/
+2.5.1
 
