@@ -1,95 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:34855 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751807AbcFQTAU (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33502 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751674AbcFYSiS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 15:00:20 -0400
-Received: by mail-wm0-f43.google.com with SMTP id v199so533351wmv.0
-        for <linux-wireless@vger.kernel.org>; Fri, 17 Jun 2016 12:00:19 -0700 (PDT)
-Subject: Re: [PATCH RFC] brcmfmac: support deleting MBSS AP interfaces
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <1464791845-23944-1-git-send-email-zajec5@gmail.com>
- <574F30D8.5000300@broadcom.com>
- <CACna6rzcfYu=3qoMsTCShHUWbpz-0-uWgogVLWJwiNv228PhPQ@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<brcm80211-dev-list@broadcom.com>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <576448C0.4080102@broadcom.com> (sfid-20160617_210042_417895_0302E328)
-Date: Fri, 17 Jun 2016 21:00:16 +0200
-MIME-Version: 1.0
-In-Reply-To: <CACna6rzcfYu=3qoMsTCShHUWbpz-0-uWgogVLWJwiNv228PhPQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Sat, 25 Jun 2016 14:38:18 -0400
+Received: by mail-oi0-f67.google.com with SMTP id w141so24017474oia.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 11:38:18 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Andrianov <andrianov@ispras.ru>
+Subject: [PATCH 5/6] rtlwifi: rtl8723ae: Fix potential race condition
+Date: Sat, 25 Jun 2016 13:37:46 -0500
+Message-Id: <1466879867-2499-6-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_203827_921736_E720948C)
+In-Reply-To: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17-06-16 14:30, Rafał Miłecki wrote:
-> On 1 June 2016 at 21:00, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
->> On 01-06-16 16:36, Rafał Miłecki wrote:
->>> We already support adding extra (AP) interfaces so it also makes an
->>> obvious sense to allow deleting them.
->>>
->>> Adding a new interface is implemented by sending request to firmware for
->>> creating a new BSS and waiting for a proper event. Ideally deleting
->>> interface should be handled in a similar way. There should be a request
->>> to firmware for deleting BSS and firmware should respond with an event.
->>>
->>> Unfortunately it doesn't seem to work with recent firmwares. They never
->>> seem to delete BSS and never send BRCMF_E_IF_DEL. As a workaround this
->>> patch deletes Linux interface while keeping a track of BSSes present in
->>> a firmware. If there is request for adding a new interface this code is
->>> capable of reusing existing BSS-es.
->>
->> It is not so much an issue of recent firmware. Actually, on recent
->> firmware 7.x.y.z and higher there are other command to create *and*
->> delete additional interfaces. On the other hand we aim to support a
->> large number of devices going back to bcm4329 so we have to come up with
->> a scheme to use the new commands or fallback to old api. Let's hope we
->> can reuse much of this effort you put in.
-> 
-> You gave me a complex puzzle there :D It took me a while to find out
-> what API you meant.
+Flag rfchange_inprogress in struct rtl_ps_ctl is protected by a spinlock
+in most routines but not in rtl8723e_dm_watchdog(), which could
+lead to a race condition. The necessary locking to prevent this condition
+is added.
 
-Actually, the puzzle was supposed to be for me, but I like your
-curiosity and persistence in digging up the (partial) info.
+Reported-by: Pavel Andrianov <andrianov@ispras.ru>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pavel Andrianov <andrianov@ispras.ru>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> Finally I found an interesting wlioctl.h in SDK 9.10.178.27 that gave
-> me some clue. I got this SDK from ASUS RT-AC1200G+ open souce tarball.
-> There are 2 interesting structs:
-> 
-> typedef struct wl_interface_create {
->         uint16 ver; /* version of this struct */
->         uint32  flags; /* flags that defines the operation */
->         struct ether_addr   mac_addr; /* Optional Mac address */
->         uint32  wlc_index; /* Optional wlc index */
-> } wl_interface_create_t;
-> 
-> typedef struct wl_interface_info {
->         uint16 ver; /* version of this struct */
->         struct ether_addr    mac_addr; /* MAC address of the interface */
->         char ifname[BCM_MSG_IFNAME_MAX]; /* name of interface */
->         uint8 bsscfgidx; /* source bsscfg index */
-> } wl_interface_info_t;
-> 
-> I couldn't find any corresponding WLC_* in wlioctl_defs.h, so I guess
-> I should use WLC_SET_VAR (or WLC_SET_VAR as you prefer) with some
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
+index 4c1c96c..3900e10 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/dm.c
+@@ -816,6 +816,7 @@ void rtl8723e_dm_watchdog(struct ieee80211_hw *hw)
+ 	if (ppsc->p2p_ps_info.p2p_ps_mode)
+ 		fw_ps_awake = false;
+ 
++	spin_lock(&rtlpriv->locks.rf_ps_lock);
+ 	if ((ppsc->rfpwr_state == ERFON) &&
+ 	    ((!fw_current_inpsmode) && fw_ps_awake) &&
+ 	    (!ppsc->rfchange_inprogress)) {
+@@ -829,6 +830,7 @@ void rtl8723e_dm_watchdog(struct ieee80211_hw *hw)
+ 		rtl8723e_dm_bt_coexist(hw);
+ 		rtl8723e_dm_check_edca_turbo(hw);
+ 	}
++	spin_unlock(&rtlpriv->locks.rf_ps_lock);
+ 	if (rtlpriv->btcoexist.init_set)
+ 		rtl_write_byte(rtlpriv, 0x76e, 0xc);
+ }
+-- 
+2.1.4
 
-(huh)? anyway the api indeed uses what we call an iovar, ie.
-string-based ioctl.
-
-> string. Any tip what would it be? Something like
-> "wl_interface_create"? Can you reveal such a small secret?
-
-It is "interface_create" and "interface_remove".
-
-Regards,
-Arend
