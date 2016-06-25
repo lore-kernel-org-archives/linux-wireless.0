@@ -1,90 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:34677 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750776AbcFSNu3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2016 09:50:29 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Tim Shepard <shep@alum.mit.edu>
-Cc: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-	Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] ath9k: Switch to using mac80211 intermediate software
-	queues.
-References: <E1bEcwS-0006jR-00@www.xplot.org>
-Date: Sun, 19 Jun 2016 15:50:23 +0200
-In-Reply-To: <E1bEcwS-0006jR-00@www.xplot.org> (Tim Shepard's message of "Sun,
-	19 Jun 2016 09:39:12 -0400")
-Message-ID: <87twgpqodc.fsf@toke.dk> (sfid-20160619_155033_954274_AEE5BFB1)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33485 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626AbcFYSiQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jun 2016 14:38:16 -0400
+Received: by mail-oi0-f66.google.com with SMTP id w141so24017370oia.0
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 11:38:15 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Andrianov <andrianov@ispras.ru>
+Subject: [PATCH 2/6] rtlwifi: rtl8188ee: Fix potential race condition
+Date: Sat, 25 Jun 2016 13:37:43 -0500
+Message-Id: <1466879867-2499-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_203824_538769_435263BE)
+In-Reply-To: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tim Shepard <shep@alum.mit.edu> writes:
+Flag rfchange_inprogress in struct rtl_ps_ctl is protected by a spinlock
+in most routines but not in rtl88e_dm_watchdog(), which could
+lead to a race condition. The necessary locking to prevent this condition
+is added.
 
->> 
->> You're right that it doesn't check the max. However, this is less of a
->> problem now that there is no intermediate queueing in the driver; and
->> indeed the utility of haven the qlen_* tunables is somewhat questionable
->> with the patch applied: The only thing this is going to control is the
->> size of the retry queue, and possible limit the size of the retry queue.
->> [....]
->
-> The driver queues things up for the hardware to DMA and transmit.
-> Something has to limit the amount of packets handed over to the
-> hardware.  (We lack access to hardware documentation (grrrr!) but it
-> appears to me that the hardware has a hard limit on how many packets
-> can be handed to it.)
+Reported-by: Pavel Andrianov <andrianov@ispras.ru>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pavel Andrianov <andrianov@ispras.ru>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-There's a ring buffer eight entries long that the aggregates (or
-packets) are put on when actually being handed to the hardware.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
+index db9a782..7f2650d 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
+@@ -1790,6 +1790,7 @@ void rtl88e_dm_watchdog(struct ieee80211_hw *hw)
+ 	if (ppsc->p2p_ps_info.p2p_ps_mode)
+ 		fw_ps_awake = false;
+ 
++	spin_lock(&rtlpriv->locks.rf_ps_lock);
+ 	if ((ppsc->rfpwr_state == ERFON) &&
+ 	    ((!fw_current_inpsmode) && fw_ps_awake) &&
+ 	    (!ppsc->rfchange_inprogress)) {
+@@ -1802,4 +1803,5 @@ void rtl88e_dm_watchdog(struct ieee80211_hw *hw)
+ 		rtl88e_dm_check_edca_turbo(hw);
+ 		rtl88e_dm_antenna_diversity(hw);
+ 	}
++	spin_unlock(&rtlpriv->locks.rf_ps_lock);
+ }
+-- 
+2.1.4
 
-This is in ath_txq->txq_fifo.
-
->> Because there's a second limit in play (which has always been there): in
->> ath_tx_sched_aggr() there is this check:
->> 
->> 	if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
->> 	    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH)) {
->> 		__skb_queue_tail(&tid->retry_q, bf->bf_mpdu);
->> 		*stop = true;
->> 		return false;
->> 	}
->> 
->> The two constants are 2 and 8 respectively. This means that, with
->> aggregation enabled, no more than two full aggregates will be queued up.
->> The size of the aggregates is dynamically computed from the current
->> rate: they are limited a maximum of four milliseconds of (estimated)
->> airtime (for the BE queue; the others have different limits).
->> 
->> So in a sense there's already a dynamic limit on the hardware queues.
->> Now, whether four milliseconds is the right maximum aggregate size might
->> be worth discussing. It is the maximum allowed by the standard. Dave and
->> I have been 
->
-> Ah that may be the clue that I lacked.  There's got to be a dependency
-> on processor speed (how quickly the system and driver can get another
-> packet hooked up for transmission after completions) but perhaps with
-> aggregates being so large in time, with full aggregates even the
-> slowest processors are fast enough to avoid starvation.
->
-> If there's no aggregation, a limit of some sort is needed (probably to
-> prevent malfunction of the hardware/driver, but in any case to limit
-> excess latency).  And this limit will depend on processor speed (and
-> will need to be autotuned at runtime).
-
-ATH_NON_AGGR_MIN_QDEPTH is 8 -- so yeah, the limit is higher if there is
-no aggregation.
-
-These are hard-coded values, so presumably they are large enough to keep
-the hardware busy on most platforms (or someone would have noticed and
-changed them?). So I doubt there is much to be gained to add a mechanism
-to dynamically tune them (between 0 and 2?).
-
-The exception being in case pulling from the mac80211 queue is too slow
-to keep the hardware busy at the current settings. I see no problems
-with this on my hardware, but that's an x86 box. I would probably hold
-off on the dynamic tuning until having proven that there's actually a
-bottleneck, though... ;)
-
--Toke
