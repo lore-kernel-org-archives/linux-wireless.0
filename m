@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eng.riverbed.com ([208.70.196.45]:15628 "EHLO
-	smtp1.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752655AbcFPQ64 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34669 "EHLO
+	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbcFYSiR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 12:58:56 -0400
-To: ath9k-devel@lists.ath9k.org
-Cc: linux-wireless@vger.kernel.org, kvalo@qca.qualcomm.com
-From: Eduardo Abinader <eduardo.abinader@riverbed.com>
-Subject: [PATCH] ath9k: return false when reading wrong eeprom offset
-Message-ID: <5762DAC7.8090904@riverbed.com> (sfid-20160616_185900_367769_0D82CA47)
-Date: Thu, 16 Jun 2016 18:58:47 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Sat, 25 Jun 2016 14:38:17 -0400
+Received: by mail-oi0-f68.google.com with SMTP id s17so23970698oih.1
+        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 11:38:17 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Andrianov <andrianov@ispras.ru>
+Subject: [PATCH 4/6] rtlwifi: rtl8723be: Fix potential race condition
+Date: Sat, 25 Jun 2016 13:37:45 -0500
+Message-Id: <1466879867-2499-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_203830_531075_36271F33)
+In-Reply-To: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just setting the proper return for reading beyond the eeprom data.
+Flag rfchange_inprogress in struct rtl_ps_ctl is protected by a spinlock
+in most routines but not in rtl8723be_dm_watchdog(), which could
+lead to a race condition. The necessary locking to prevent this condition
+is added.
 
-Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
+Reported-by: Pavel Andrianov <andrianov@ispras.ru>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Pavel Andrianov <andrianov@ispras.ru>
 ---
- drivers/net/wireless/ath/ath9k/pci.c | 2 ++
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index 7cdaf40..aa04b13 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -794,6 +794,8 @@ static bool ath_pci_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- 			ath_err(common,
- 				"%s: eeprom read failed, offset %08x is out of range\n",
- 				__func__, off);
-+
-+			return false;
- 		}
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
+index 3a81cdb..9a4715ab 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/dm.c
+@@ -1279,6 +1279,7 @@ void rtl8723be_dm_watchdog(struct ieee80211_hw *hw)
+ 	if (ppsc->p2p_ps_info.p2p_ps_mode)
+ 		fw_ps_awake = false;
  
- 		*data = pdata->eeprom_data[off];
++	spin_lock(&rtlpriv->locks.rf_ps_lock);
+ 	if ((ppsc->rfpwr_state == ERFON) &&
+ 		((!fw_current_inpsmode) && fw_ps_awake) &&
+ 		(!ppsc->rfchange_inprogress)) {
+@@ -1294,5 +1295,6 @@ void rtl8723be_dm_watchdog(struct ieee80211_hw *hw)
+ 		rtl8723be_dm_check_txpower_tracking(hw);
+ 		rtl8723be_dm_dynamic_txpower(hw);
+ 	}
++	spin_unlock(&rtlpriv->locks.rf_ps_lock);
+ 	rtlpriv->dm.dbginfo.num_qry_beacon_pkt = 0;
+ }
 -- 
-2.5.0
+2.1.4
+
