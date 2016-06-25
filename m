@@ -1,32 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vpn.innerrange.com.au ([203.122.143.146]:55044 "EHLO
-	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750925AbcFWG0L (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:57807 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752060AbcFZOnk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 02:26:11 -0400
-From: Craig McQueen <craig.mcqueen@innerrange.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 23 Jun 2016 16:26:06 +1000
-Subject: RE: rt2800usb maintainer/expert?
-Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D2BB5ED4D@IR-CENTRAL.corp.innerrange.com> (sfid-20160623_082614_825636_583DB4BF)
-References: <5500469A22567C4BAF673A6E86AFA3A4022D2BB5ED27@IR-CENTRAL.corp.innerrange.com>
- <CACna6ryKgMTYbbGRNw4zPDTvz8W3mKENza+vnhE=tSRYRtZ4kA@mail.gmail.com>
-In-Reply-To: <CACna6ryKgMTYbbGRNw4zPDTvz8W3mKENza+vnhE=tSRYRtZ4kA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Sun, 26 Jun 2016 10:43:40 -0400
+Date: Sat, 25 Jun 2016 15:17:45 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Luis de Bethencourt <luisbg@osg.samsung.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org,
+	davem@davemloft.net, mchehab@kernel.org,
+	linux-wireless@vger.kernel.org, glen.lee@atmel.com
+Subject: Re: [RFC PATCH v2] MAINTAINERS: remove unreachable people that have
+ left Atmel
+Message-ID: <20160625221744.GB11632@kroah.com> (sfid-20160626_164451_627052_27A71C4E)
+References: <1466892036-10619-1-git-send-email-luisbg@osg.samsung.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1466892036-10619-1-git-send-email-luisbg@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-UmFmYcWCIE1pxYJlY2tpIHdyb3RlOg0KPiBPbiAyMyBKdW5lIDIwMTYgYXQgMDc6NDQsIENyYWln
-IE1jUXVlZW4gPGNyYWlnLm1jcXVlZW5AaW5uZXJyYW5nZS5jb20+DQo+IHdyb3RlOg0KPiA+IEkn
-bSBpbnRlcmVzdGVkIHRvIHRhbGsgdG8gYW4gZXhwZXJ0IHdpdGggdGhlIHByb2JsZW1zIEknbSBz
-ZWVpbmcsIGJ1dCBub3QNCj4gc3VyZSB3aG8gaXMgdGhlIGV4cGVydCB0aGVzZSBkYXlzLg0KPiAN
-Cj4gQW5kIHRoYXQgaGFzIHRvIGJlIGRvbmUgaW4gcHJpdmF0ZSwgYmVjYXVzZS4uLj8NCg0KTm90
-IGF0IGFsbDsgaXQgd291bGQgYmUgZ3JlYXQgdG8gaGF2ZSBzb21lIGhlbHAgb24gdGhpcyBtYWls
-aW5nIGxpc3QuIEknbSBzdHJ1Z2dsaW5nIHRvIHJlc29sdmUgYSBydDI4MDB1c2IgZHJpdmVyIGlz
-c3VlLCBhbmQgSSd2ZSBhc2tlZCBhIGZldyBxdWVzdGlvbnMgYWJvdXQgaXQgb24gdGhpcyBsaXN0
-LiBBbnkgaGVscCB3b3VsZCBiZSBncmVhdGx5IGFwcHJlY2lhdGVkLCBzaW5jZSBJJ20gc3RydWdn
-bGluZyB3aXRoIHRoaXMgY29tcGxleCBhcmVhIG9mIHRoZSBrZXJuZWwgY29kZSAoSSdtIGNvbWZv
-cnRhYmxlIHdyaXRpbmcgTGludXggZHJpdmVycywgYnV0IGRlYnVnZ2luZyBXaS1GaSBhbmQgVVNC
-IGlzc3VlcyBpcyBuZXcgdG8gbWUuKQ0KDQpSZWdhcmRzLA0KQ3JhaWcNCg0K
+On Sat, Jun 25, 2016 at 11:00:36PM +0100, Luis de Bethencourt wrote:
+> When sending an email regarding a patch to wilc1000, you get the following
+> automatic replies:
+> "Sung_hoon Cho is no longer with Atmel Corporation."
+> "Kang_hee Park is no longer with Atmel Corporation."
+> "Dong_ho Shin is no longer with Atmel Corporation."
+> "Bo_moon Kim is no longer with Atmel Corporation."
+> "Min_su Kim is no longer with Atmel Corporation."
+> "Jun_hyuk Lee is no longer with Atmel Corporation."
+> 
+> Removing these email addresses that don't reach the addressee anymore.
+> 
+> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+> ---
+> 
+> Hi,
+> 
+> Just got the same automatic reply from Glen Lee's address.
+> 
+> This is unfortunate since it means this driver has no maintainer listed.
+> What do people suggest to do in this case?
+
+Let's delete the whole entry please.
+
+And, if no one steps up from Atmel, we might just have to delete the
+driver as well :(
+
+thanks,
+
+greg k-h
