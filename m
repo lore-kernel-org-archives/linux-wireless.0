@@ -1,56 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:35464 "EHLO
-	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752305AbcF1OMQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 10:12:16 -0400
-Received: by mail-io0-f176.google.com with SMTP id f30so17697730ioj.2
-        for <linux-wireless@vger.kernel.org>; Tue, 28 Jun 2016 07:12:11 -0700 (PDT)
-Date: Tue, 28 Jun 2016 10:06:26 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Yaniv Machani <yanivma@ti.com>
-Cc: linux-kernel@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S . Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Meirav Kama <meiravk@ti.com>
-Subject: Re: [PATCH 3/4] mac80211: mesh: fixed HT ies in beacon template
-Message-ID: <20160628140625.GC9984@localhost> (sfid-20160628_161238_775596_AB6EC190)
-References: <20160628111307.8784-1-yanivma@ti.com>
- <20160628111307.8784-2-yanivma@ti.com>
- <20160628111307.8784-3-yanivma@ti.com>
- <20160628111307.8784-4-yanivma@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160628111307.8784-4-yanivma@ti.com>
+Received: from lists.s-osg.org ([54.187.51.154]:54163 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751209AbcFYVxm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 25 Jun 2016 17:53:42 -0400
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, akpm@linux-foundation.org,
+	davem@davemloft.net, mchehab@kernel.org,
+	linux-wireless@vger.kernel.org, glen.lee@atmel.com,
+	Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH] MAINTAINERS: remove unreachable people that have left Atmel
+Date: Sat, 25 Jun 2016 22:53:35 +0100
+Message-Id: <1466891615-9134-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160625_235402_004362_AB5C276C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 28, 2016 at 02:13:06PM +0300, Yaniv Machani wrote:
-> From: Meirav Kama <meiravk@ti.com>
-> 
-> There are several values in HT info elements of mesh beacon (built by the
-> mac80211) that are incorrect.
+When sending an email regarding a patch to wilc1000, you get the following
+automatic replies:
+"Sung_hoon Cho is no longer with Atmel Corporation."
+"Kang_hee Park is no longer with Atmel Corporation."
+"Dong_ho Shin is no longer with Atmel Corporation."
+"Bo_moon Kim is no longer with Atmel Corporation."
+"Min_su Kim is no longer with Atmel Corporation."
 
-Would be good to enumerate the problems here.
+Removing these email addresses that don't reach the addressees anymore.
 
-> To fix them:
-> 1. mac80211 will check configuration from cfg and will build accordingly.
-> 2. changes made in mesh default values.
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+---
+ MAINTAINERS | 5 -----
+ 1 file changed, 5 deletions(-)
 
-What is wrong with the defaults?
-
->  	sband = local->hw.wiphy->bands[band];
->  	if (!sband->ht_cap.ht_supported ||
-> @@ -431,11 +433,40 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
->  	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
->  		return 0;
->  
-> +    /* determine capability flags */
-> +	cap = sband->ht_cap.cap;
-
-There is some weird whitespace here (space instead of tabs for the
-comment).
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index fe8ac28..88a898e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -11080,12 +11080,7 @@ S:	Odd Fixes
+ F:	drivers/staging/vt665?/
+ 
+ STAGING - WILC1000 WIFI DRIVER
+-M:	Johnny Kim <johnny.kim@atmel.com>
+-M:	Austin Shin <austin.shin@atmel.com>
+-M:	Chris Park <chris.park@atmel.com>
+-M:	Tony Cho <tony.cho@atmel.com>
+ M:	Glen Lee <glen.lee@atmel.com>
+-M:	Leo Kim <leo.kim@atmel.com>
+ L:	linux-wireless@vger.kernel.org
+ S:	Supported
+ F:	drivers/staging/wilc1000/
 -- 
-Bob Copeland %% http://bobcopeland.com/
+2.5.1
+
