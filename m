@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60227 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789AbcFNO3U (ORCPT
+Received: from smtprelay0197.hostedemail.com ([216.40.44.197]:41280 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751347AbcFYXcV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2016 10:29:20 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: remove misleading GFP_DMA flag in buffer allocations
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1463838211-31888-1-git-send-email-minipli@googlemail.com>
-To: Mathias Krause <minipli@googlemail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	linux-wireless@vger.kernel.org,
-	Dennis Wassenberg <dennis.wassenberg@secunet.com>,
-	Mathias Krause <minipli@googlemail.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Brad Spengler <spender@grsecurity.net>,
-	PaX Team <pageexec@freemail.hu>
-Message-Id: <20160614142914.E8C7961360@smtp.codeaurora.org> (sfid-20160614_162923_949467_132F0CBF)
-Date: Tue, 14 Jun 2016 14:29:14 +0000 (UTC)
+	Sat, 25 Jun 2016 19:32:21 -0400
+Message-ID: <1466897538.1847.72.camel@perches.com> (sfid-20160626_013224_215720_D000B9AF)
+Subject: Re: [PATCH 10/10] rtlwifi: rtl8723ae: Clean up the hardware info
+ routine
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>, kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Date: Sat, 25 Jun 2016 16:32:18 -0700
+In-Reply-To: <1466884421-722-11-git-send-email-Larry.Finger@lwfinger.net>
+References: <1466884421-722-1-git-send-email-Larry.Finger@lwfinger.net>
+	 <1466884421-722-11-git-send-email-Larry.Finger@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mathias Krause <minipli@googlemail.com> wrote:
-> The GFP_DMA flag is obviously misunderstood in the mwifiex driver. It's
-> meant for legacy ISA DMA memory mappings only -- the lower 16MB on x86.
-> That doesn't apply to PCIe or SDIO devices, I guess.
-> 
-> Remove the GFP_DMA flag to reduce the need to place the socket buffer
-> allocation into the low mem DMA area, which might already be in use by
-> other drivers.
-> 
-> This misuse was flagged by the PaX USERCOPY feature by chance, as it
-> detected the user copy operation from a DMA buffer in the recvfrom()
-> syscall path.
-> 
-> Signed-off-by: Mathias Krause <minipli@googlemail.com>
-> Tested-by: Dennis Wassenberg <dennis.wassenberg@secunet.com>
-> Cc: Amitkumar Karwar <akarwar@marvell.com>
-> Cc: Nishant Sarmukadam <nishants@marvell.com>
-> Cc: Xinming Hu <huxm@marvell.com>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Brad Spengler <spender@grsecurity.net>
-> Cc: PaX Team <pageexec@freemail.hu>
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+On Sat, 2016-06-25 at 14:53 -0500, Larry Finger wrote:
+> This driver contains some complicated if ... else if ... else constructions.
+> These are replaced by switch statements to improve readability.
+[]
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+[]
+> @@ -1656,113 +1656,117 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
+>  	if (rtlhal->oem_id == RT_CID_DEFAULT) {
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+It'd look nicer too if this were changed to
 
-5c87a55adbd5 mwifiex: remove misleading GFP_DMA flag in buffer allocations
+	if (rtlhal->oem_id != RT_CID_DEFAULT)
+		return;
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9130575/
+[]
+>  		switch (rtlefuse->eeprom_oemid) {
+[]
+> +				case 0x1028:
+> +					switch (rtlefuse->eeprom_smid) {
+> +					case 0x8194:
+> +					case 0x8198:
+> +					case 0x9197 ... 0x9198:
+> +						rtlhal->oem_id =
+> +							RT_CID_819X_DELL;
+
+So these could be unindented and on a single line
 
