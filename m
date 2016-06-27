@@ -1,44 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36314 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751671AbcFNNv3 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:12668 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751784AbcF0Itc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 14 Jun 2016 09:51:29 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: fix potential null dereference bugs
-Date: Tue, 14 Jun 2016 13:51:24 +0000
-Message-ID: <87shwf3mlh.fsf@kamboji.qca.qualcomm.com> (sfid-20160614_155133_246864_3FC2C332)
-References: <1465563164-783-1-git-send-email-me@bobcopeland.com>
-	<CA+BoTQkg+uea_YzUgrVBPhA8uRxNpd29Kd1y1tvt0a-JyOSLQw@mail.gmail.com>
-	<1465808939.2434.1.camel@sipsolutions.net>	<20160613130507.GA11074@localhost>
-	<1465823880.10050.3.camel@sipsolutions.net>
-In-Reply-To: <1465823880.10050.3.camel@sipsolutions.net> (Johannes Berg's
-	message of "Mon, 13 Jun 2016 15:18:00 +0200")
-Content-Type: text/plain; charset="utf-8"
+	Mon, 27 Jun 2016 04:49:32 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Wei-Ning Huang <wnhuang@chromium.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/3] mwifiex: clear scan_aborting flag
+Date: Mon, 27 Jun 2016 14:16:28 +0530
+Message-ID: <1467017189-26917-2-git-send-email-akarwar@marvell.com> (sfid-20160627_104935_942631_9D37ED7F)
+In-Reply-To: <1467017189-26917-1-git-send-email-akarwar@marvell.com>
+References: <1467017189-26917-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sm9oYW5uZXMgQmVyZyA8am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldD4gd3JpdGVzOg0KDQo+IE9u
-IE1vbiwgMjAxNi0wNi0xMyBhdCAwOTowNSAtMDQwMCwgQm9iIENvcGVsYW5kIHdyb3RlOg0KPj7C
-oA0KPj4gU28gSSBkaWQganVzdCBnbyBhbmQgY2hlY2sgdGhlIGdlbmVyYXRlZCBjb2RlIGZvciBl
-YWNoIG9mIHRoZXNlIGNhc2VzDQo+PiBhbmQgZ2NjIGRpZG4ndCBlbGlkZSB0aGUgc3Vic2VxdWVu
-dCBpZi10ZXN0LCBhdCBsZWFzdCBvbiB4ODYtNjQgYW5kDQo+PiBteSBjb21waWxlciAvIGJ1aWxk
-IGNvbmZpZy7CoMKgR2l2ZW4gaHR0cDovL2x3bi5uZXQvQXJ0aWNsZXMvMzQyMzMwLCBpdA0KPj4g
-c2VlbXMgcG9zc2libGUsIHRob3VnaC4NCj4NCj4gSXQncyBub3QgY2xlYXIgdGhhdCdzIHRoZSBz
-YW1lIHNpdHVhdGlvbiwgc2luY2UgdHVuLT5zayBpcyB2ZXJ5IGxpa2VseQ0KPiB0byBoYXZlIGJl
-ZW4gYW4gYWN0dWFsIHBvaW50ZXIsIG5vdCBhbiBlbWJlZGRlZCB0aGluZyBsaWtlIGRydl9wcml2
-Lg0KPg0KPiBIb3dldmVyLCB3aXRoIGFsbCB0aGlzLCBJIHRoaW5rIEknZCBzaW1wbHkgbm90IHRh
-a2UgYW55IGNoYW5jZXMgLSB0aGUNCj4gcGF0Y2ggaXNuJ3QgZXhhY3RseSBpbnZhc2l2ZSBhbmQg
-aW4gc29tZSBjYXNlcyAoZm9yIGV4YW1wbGUgdGhlIGZpcnN0DQo+IGh1bmsgb2YgdGhlIHBhdGNo
-KSB3aWxsIGV2ZW4gaW1wcm92ZSB0aGUgY29kZSB0byB0aGUgcG9pbnQgd2hlcmUgdGhlDQo+IGNv
-bXBpbGVyIGNvdWxkIHdhcm4gYWJvdXQgdW5pbml0aWFsaXplZCB1c2FnZSBvZiB0aGUgcG9pbnRl
-ciB3aGVuIHRoZQ0KPiBjb2RlIGdldHMgbW9kaWZpZWQgdG8gdXNlIGl0IGluIGNhc2Ugb2YgIXR4
-cS0+c3RhLg0KPg0KPiBJJ2QgdGFrZSBpdCwgYnV0IEkgZ3Vlc3MgaXQncyBLYWxsZSdzIGRlY2lz
-aW9uIDopDQoNClllYWgsIEknbSBsZWFuaW5nIHRvd2FyZHMgSm9oYW5uZXMuIFRoZXNlIGFyZSBu
-b3QgcmVhbGx5IGludmFzaXZlLg0KDQotLSANCkthbGxlIFZhbG8=
+The flag should be cleaned along with other scan operation variables.
+This was missing at some places.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index e331122..96d0d86 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1960,6 +1960,7 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+ 				    "info: notifying scan done\n");
+ 			cfg80211_scan_done(priv->scan_request, 0);
+ 			priv->scan_request = NULL;
++			priv->scan_aborting = false;
+ 		} else {
+ 			priv->scan_aborting = false;
+ 			mwifiex_dbg(adapter, INFO,
+@@ -1981,6 +1982,7 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+ 					    "info: aborting scan\n");
+ 				cfg80211_scan_done(priv->scan_request, 1);
+ 				priv->scan_request = NULL;
++				priv->scan_aborting = false;
+ 			} else {
+ 				priv->scan_aborting = false;
+ 				mwifiex_dbg(adapter, INFO,
+@@ -2022,6 +2024,7 @@ void mwifiex_cancel_scan(struct mwifiex_adapter *adapter)
+ 					    "info: aborting scan\n");
+ 				cfg80211_scan_done(priv->scan_request, 1);
+ 				priv->scan_request = NULL;
++				priv->scan_aborting = false;
+ 			}
+ 		}
+ 	}
+-- 
+1.9.1
+
