@@ -1,179 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18726 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751810AbcF3Ktm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 06:49:42 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: Fix 10.4 extended peer stats update
-Date: Thu, 30 Jun 2016 10:49:02 +0000
-Message-ID: <87r3bf54v6.fsf@kamboji.qca.qualcomm.com> (sfid-20160630_124947_144782_36B8DAEB)
-References: <1464851602-12969-1-git-send-email-mohammed@qca.qualcomm.com>
-	<87vb0r5529.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87vb0r5529.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Thu, 30 Jun 2016 13:44:46 +0300")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:54831 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751872AbcF0QcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:12 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 06/12] rtl8xxxu: Allocate larger RX skbs when aggregation is enabled
+Date: Mon, 27 Jun 2016 12:32:04 -0400
+Message-Id: <1467045130-18874-7-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183221_304007_15D067E1)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@qca.qualcomm.com> writes:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
->> @@ -261,6 +263,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->>  			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
->>  			.board_size = QCA4019_BOARD_DATA_SZ,
->>  			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
->> +			.extd_peer_stats = true,
->>  		},
->>  	},
->>  };
->
-> This is not a hardware feature so hw_params is not really the right
-> place to handle this. In the pending branch I tried to solve this a bit
-> differently:
->
-> https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=ecf4daadc7677518ec7185dbddab959ac6e2db96
->
-> I added a bool "extended" to struct ath10k_fw_stats which is used to
-> detect if extended stats are used. Would that work? Please note that I
-> have only compile tested the patch.
+This adds support for allocating larger skbs for devices which
+indicate they support it.
 
-Here's a diff of what I did:
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      |  2 ++
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 13 +++++++++----
+ 2 files changed, 11 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 58932c09efc5..b734345ab598 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -180,7 +180,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
- 			.board_size = QCA99X0_BOARD_DATA_SZ,
- 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
--			.extd_peer_stats = true,
- 		},
- 	},
- 	{
-@@ -203,7 +202,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board = QCA9984_HW_1_0_BOARD_DATA_FILE,
- 			.board_size = QCA99X0_BOARD_DATA_SZ,
- 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
--			.extd_peer_stats = true,
- 		},
- 	},
- 	{
-@@ -261,7 +259,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
- 			.board_size = QCA4019_BOARD_DATA_SZ,
- 			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
--			.extd_peer_stats = true,
- 		},
- 	},
- };
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 73a0b1ae1559..3707d8a707a2 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -263,6 +263,7 @@ struct ath10k_fw_stats_pdev {
- };
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index e8158c0..f06e3aa 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1247,6 +1247,7 @@ struct rtl8xxxu_priv {
+ 	u32 ep_tx_normal_queue:1;
+ 	u32 ep_tx_low_queue:1;
+ 	u32 has_xtalk:1;
++	u32 rx_buf_aggregation:1;
+ 	u8 xtalk;
+ 	unsigned int pipe_interrupt;
+ 	unsigned int pipe_in;
+@@ -1330,6 +1331,7 @@ struct rtl8xxxu_fileops {
+ 	void (*report_connect) (struct rtl8xxxu_priv *priv,
+ 				u8 macid, bool connect);
+ 	int writeN_block_size;
++	int rx_agg_buf_size;
+ 	char tx_desc_size;
+ 	char rx_desc_size;
+ 	char has_s0s1;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 01a4f89..393ae3b3 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -64,8 +64,6 @@ module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, 0600);
+ MODULE_PARM_DESC(ht40_2g, "Enable HT40 support on the 2.4GHz band");
  
- struct ath10k_fw_stats {
-+	bool extended;
- 	struct list_head pdevs;
- 	struct list_head vdevs;
- 	struct list_head peers;
-@@ -754,7 +755,6 @@ struct ath10k {
- 			const char *board;
- 			size_t board_size;
- 			size_t board_ext_size;
--			bool extd_peer_stats;
- 		} fw;
- 	} hw_params;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 001c0a144614..355e1ae665f9 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -327,6 +327,7 @@ static void ath10k_debug_fw_stats_reset(struct ath10k *ar)
+ #define USB_VENDOR_ID_REALTEK		0x0bda
+-/* Minimum IEEE80211_MAX_FRAME_LEN */
+-#define RTL_RX_BUFFER_SIZE		IEEE80211_MAX_FRAME_LEN
+ #define RTL8XXXU_RX_URBS		32
+ #define RTL8XXXU_RX_URB_PENDING_WATER	8
+ #define RTL8XXXU_TX_URBS		64
+@@ -5271,12 +5269,19 @@ cleanup:
+ static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
+ 				  struct rtl8xxxu_rx_urb *rx_urb)
  {
- 	spin_lock_bh(&ar->data_lock);
- 	ar->debug.fw_stats_done = false;
-+	ar->debug.fw_stats.extended = false;
- 	ath10k_fw_stats_pdevs_free(&ar->debug.fw_stats.pdevs);
- 	ath10k_fw_stats_vdevs_free(&ar->debug.fw_stats.vdevs);
- 	ath10k_fw_stats_peers_free(&ar->debug.fw_stats.peers);
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index af3d49af9eab..0da8a57e0ba7 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -19,14 +19,14 @@
- #include "debug.h"
++	struct rtl8xxxu_fileops *fops = priv->fops;
+ 	struct sk_buff *skb;
+ 	int skb_size;
+ 	int ret, rx_desc_sz;
  
- static void ath10k_sta_update_extd_stats_rx_duration(struct ath10k *ar,
--						     struct list_head *head)
-+						     struct ath10k_fw_stats *stats)
- {
--	struct ieee80211_sta *sta;
- 	struct ath10k_fw_extd_stats_peer *peer;
-+	struct ieee80211_sta *sta;
- 	struct ath10k_sta *arsta;
- 
- 	rcu_read_lock();
--	list_for_each_entry(peer, head, list) {
-+	list_for_each_entry(peer, &stats->peers_extd, list) {
- 		sta = ieee80211_find_sta_by_ifaddr(ar->hw, peer->peer_macaddr,
- 						   NULL);
- 		if (!sta)
-@@ -38,13 +38,14 @@ static void ath10k_sta_update_extd_stats_rx_duration(struct ath10k *ar,
- }
- 
- static void ath10k_sta_update_stats_rx_duration(struct ath10k *ar,
--						struct list_head *head)
--{	struct ieee80211_sta *sta;
-+						struct ath10k_fw_stats *stats)
-+{
- 	struct ath10k_fw_stats_peer *peer;
-+	struct ieee80211_sta *sta;
- 	struct ath10k_sta *arsta;
- 
- 	rcu_read_lock();
--	list_for_each_entry(peer, head, list) {
-+	list_for_each_entry(peer, &stats->peers, list) {
- 		sta = ieee80211_find_sta_by_ifaddr(ar->hw, peer->peer_macaddr,
- 						   NULL);
- 		if (!sta)
-@@ -58,11 +59,10 @@ static void ath10k_sta_update_stats_rx_duration(struct ath10k *ar,
- void ath10k_sta_update_rx_duration(struct ath10k *ar,
- 				   struct ath10k_fw_stats *stats)
- {
--	if (ar->hw_params.fw.extd_peer_stats)
--		ath10k_sta_update_stats_rx_duration(ar, &stats->peers);
-+	if (stats->extended)
-+		ath10k_sta_update_extd_stats_rx_duration(ar, stats);
- 	else
--		ath10k_sta_update_extd_stats_rx_duration(ar,
--							 &stats->peers_extd);
-+		ath10k_sta_update_stats_rx_duration(ar, stats);
- }
- 
- static ssize_t ath10k_dbg_sta_read_aggr_mode(struct file *file,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 5f2d423b1c33..16bd79716a6c 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3008,6 +3008,8 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
- 	if ((stats_id & WMI_10_4_STAT_PEER_EXTD) == 0)
- 		return 0;
- 
-+	stats->extended = true;
+-	rx_desc_sz = priv->fops->rx_desc_size;
+-	skb_size = rx_desc_sz + RTL_RX_BUFFER_SIZE;
++	rx_desc_sz = fops->rx_desc_size;
 +
- 	for (i = 0; i < num_peer_stats; i++) {
- 		const struct wmi_10_4_peer_extd_stats *src;
- 		struct ath10k_fw_extd_stats_peer *dst;
-
-
++	if (priv->rx_buf_aggregation && fops->rx_agg_buf_size)
++		skb_size = fops->rx_agg_buf_size;
++	else
++		skb_size = IEEE80211_MAX_FRAME_LEN;
++	skb_size += rx_desc_sz;
++
+ 	skb = __netdev_alloc_skb(NULL, skb_size, GFP_KERNEL);
+ 	if (!skb)
+ 		return -ENOMEM;
 -- 
-Kalle Valo
+2.7.4
+
