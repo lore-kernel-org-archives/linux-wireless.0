@@ -1,60 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:42351 "EHLO mail.ispras.ru"
+Received: from mx1.redhat.com ([209.132.183.28]:38541 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750995AbcFGP6V (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 7 Jun 2016 11:58:21 -0400
-Message-ID: <5756E01F.6080107@ispras.ru> (sfid-20160607_175846_905086_4F771A62)
-Date: Tue, 07 Jun 2016 18:54:23 +0400
-From: Pavel Andrianov <andrianov@ispras.ru>
-MIME-Version: 1.0
-To: Dan Williams <dcbw@redhat.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	libertas-dev@lists.infradead.org, ldv-project@linuxtesting.org,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, vaishali.thakkar@oracle.com
-Subject: Re: [ldv-project] [net] libertas: potential race condition
-References: <57569424.9040906@ispras.ru> <1465310395.29158.2.camel@redhat.com>
-In-Reply-To: <1465310395.29158.2.camel@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	id S1752012AbcF0QcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:17 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 10/12] rtl8xxxu: Make DMA aggregation optional by setting a module parameter
+Date: Mon, 27 Jun 2016 12:32:08 -0400
+Message-Id: <1467045130-18874-11-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_184249_116315_A81F55D1)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-07.06.2016 18:39, Dan Williams пишет:
-> On Tue, 2016-06-07 at 13:30 +0400, Pavel Andrianov wrote:
->> Hi!
->>
->> There is a potential race condition in
->> drivers/net/wireless/libertas/libertas.ko.
->> In the function lbs_hard_start_xmit(..), line 159, a socket buffer
->> is
->> written to priv->current_skb with a spin_lock protection.
->> In the function lbs_mac_event_disconnected(..), lines 50-51, the
->> field
->> current_skb is cleaned. There is no protection used. The
->> corresponding
->> handlers are activated at the same time in lbs_start_card(..) and
->> then
->> may be executed simultaneously. Note, there are two structures
->> lbs_netdev_ops and mesh_netdev_ops, which have the target handler
->> lbs_hard_start_xmit.
->> Is it a real race or I have missed something?
-> Yeah, it looks like it should be grabbing priv->driver_lock before
-> clearing priv->currenttxskb in lbs_mac_event_disconnected().  Care to
-> submit a patch after testing?  Do you have any of that hardware?
->
-> Dan
-I have no that hardware and I have some doubts about the simple fix, 
-you've suggested. For instance, in lbs_hard_start_xmit the lock is 
-acquired twice and the priv->tx_pending_len can be modified also by 
-lbs_mac_event_disconnected (even if spin_lock will be added to 
-lbs_mac_event_disconnected). Moreover, the function lbs_send_tx_feedback 
-also cleaned priv->currenttxskb, but it happens also without any 
-protection. Thus, the fix has to be more complicated, and I have no 
-ideas about it.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
+Let the default to off until we have more data on the right default
+tuning values.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index e488406..b392a92 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -44,6 +44,7 @@
+ 
+ int rtl8xxxu_debug = RTL8XXXU_DEBUG_EFUSE;
+ static bool rtl8xxxu_ht40_2g;
++static bool rtl8xxxu_dma_aggregation;
+ 
+ MODULE_AUTHOR("Jes Sorensen <Jes.Sorensen@redhat.com>");
+ MODULE_DESCRIPTION("RTL8XXXu USB mac80211 Wireless LAN Driver");
+@@ -62,6 +63,8 @@ module_param_named(debug, rtl8xxxu_debug, int, 0600);
+ MODULE_PARM_DESC(debug, "Set debug mask");
+ module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, 0600);
+ MODULE_PARM_DESC(ht40_2g, "Enable HT40 support on the 2.4GHz band");
++module_param_named(dma_aggregation, rtl8xxxu_dma_aggregation, bool, 0600);
++MODULE_PARM_DESC(dma_aggregation, "Enable DMA packet aggregation");
+ 
+ #define USB_VENDOR_ID_REALTEK		0x0bda
+ #define RTL8XXXU_RX_URBS		32
+@@ -4411,14 +4414,18 @@ void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
+ 
+ 	usb_spec = rtl8xxxu_read8(priv, REG_USB_SPECIAL_OPTION);
+ 	usb_spec &= ~USB_SPEC_USB_AGG_ENABLE;
++	rtl8xxxu_write8(priv, REG_USB_SPECIAL_OPTION, usb_spec);
+ 
+ 	agg_ctrl = rtl8xxxu_read8(priv, REG_TRXDMA_CTRL);
+ 	agg_ctrl &= ~TRXDMA_CTRL_RXDMA_AGG_EN;
+ 
+-	agg_ctrl |= TRXDMA_CTRL_RXDMA_AGG_EN;
++	if (!rtl8xxxu_dma_aggregation) {
++		rtl8xxxu_write8(priv, REG_TRXDMA_CTRL, agg_ctrl);
++		return;
++	}
+ 
++	agg_ctrl |= TRXDMA_CTRL_RXDMA_AGG_EN;
+ 	rtl8xxxu_write8(priv, REG_TRXDMA_CTRL, agg_ctrl);
+-	rtl8xxxu_write8(priv, REG_USB_SPECIAL_OPTION, usb_spec);
+ 
+ 	/*
+ 	 * The number of packets we can take looks to be buffer size / 512
 -- 
-Pavel Andrianov
-Linux Verification Center, ISPRAS
-web: http://linuxtesting.org
-e-mail: andrianov@ispras.ru
+2.7.4
 
