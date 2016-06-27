@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hmm.wantstofly.org ([138.201.34.84]:50516 "EHLO
-	mail.wantstofly.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864AbcFRIsa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2016 04:48:30 -0400
-Date: Sat, 18 Jun 2016 11:48:28 +0300
-From: Lennert Buytenhek <buytenh@wantstofly.org>
-To: David Gilman <dgilman@gilslotd.com>
-Cc: linux-wireless@vger.kernel.org,
-	Yogesh Ashok Powar <yogeshp@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: Troubleshooting mwl8k driver issue
-Message-ID: <20160618084828.GN20238@wantstofly.org> (sfid-20160618_104836_933959_8A244952)
-References: <20160604035452.GA5925@dar.local>
- <20160606065146.GK8402@wantstofly.org>
- <20160610040247.GA16190@dar.local>
- <20160617194303.GA33130@dar.local>
+Received: from nbd.name ([46.4.11.11]:59607 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751601AbcF0K0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 06:26:44 -0400
+Subject: Re: [PATCH v3 2/3] ath9k: add a helper to get the string
+ representation of ath_bus_type
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
+ <20160624123430.4097-3-martin.blumenstingl@googlemail.com>
+Cc: chunkeey@googlemail.com, mark.rutland@arm.com, robh+dt@kernel.org,
+	arend.vanspriel@broadcom.com
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <a19c21f6-40b9-98e9-30dc-c21fb2143534@nbd.name> (sfid-20160627_122656_288940_5F0426A2)
+Date: Mon, 27 Jun 2016 12:26:36 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160617194303.GA33130@dar.local>
+In-Reply-To: <20160624123430.4097-3-martin.blumenstingl@googlemail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jun 17, 2016 at 02:43:03PM -0500, David Gilman wrote:
+On 2016-06-24 14:34, Martin Blumenstingl wrote:
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> ---
+> this is a new patch which didn't exist in v2 yet, it prepares the new
+> function ath_bus_type_to_string which will be used in patch #3
+> 
+>  drivers/net/wireless/ath/ath.h  |  2 ++
+>  drivers/net/wireless/ath/main.c | 15 +++++++++++++++
+>  2 files changed, 17 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+> index da7a7c8..be0d292 100644
+> --- a/drivers/net/wireless/ath/ath.h
+> +++ b/drivers/net/wireless/ath/ath.h
+> @@ -327,4 +327,6 @@ static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
+>  }
+>  #endif
+>  
+> +const char *ath_bus_type_to_string(enum ath_bus_type bustype);
+> +
+>  #endif /* ATH_H */
+> diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
+> index 338d723..90427cb 100644
+> --- a/drivers/net/wireless/ath/main.c
+> +++ b/drivers/net/wireless/ath/main.c
+> @@ -90,3 +90,18 @@ void ath_printk(const char *level, const struct ath_common* common,
+>  	va_end(args);
+>  }
+>  EXPORT_SYMBOL(ath_printk);
+> +
+> +const char *ath_bus_type_to_string(enum ath_bus_type bustype)
+> +{
+> +	switch (bustype) {
+> +	case ATH_PCI:
+> +		return "pci";
+> +	case ATH_AHB:
+> +		return "ahb";
+> +	case ATH_USB:
+> +		return "usb";
+> +	default:
+> +		return "unknown";
+> +	}
+> +}
+> +EXPORT_SYMBOL(ath_bus_type_to_string);
+Why not simply add a const char* array with ath_bus_type as index?
 
-> > As an aside I semi-bricked my router and I'm currently unable to flash
-> > new images
-> 
-> I've got my hardware and toolchain back up and running.  Here's the
-> output from the unpatched `iw event -t':
-> 
-> 1466191960.919661: wlan1: del station fc:c2:de:ac:b1:72
-> 1466191966.842698: wlan1 (phy #1): mgmt TX status (cookie 2b): acked
-> 1466192016.283846: wlan1 (phy #1): mgmt TX status (cookie 2c): acked
-> 1466192016.284036: wlan1 (phy #1): mgmt TX status (cookie 2d): acked
-> 1466192016.285194: wlan1 (phy #1): mgmt TX status (cookie 2e): acked
-> 1466192016.313091: wlan1 (phy #1): mgmt TX status (cookie 2f): acked
-> 1466192016.369315: wlan1 (phy #1): mgmt TX status (cookie 30): acked
-> 1466192016.390064: wlan1 (phy #1): mgmt TX status (cookie 31): acked
-> 1466192016.392064: wlan1: new station fc:c2:de:ac:b1:72
-> 
-> And the corresponding syslog output:
-> 
-> Fri Jun 17 19:32:40 2016 kern.debug kernel: [ 3027.270339] ieee80211 phy1: Deleted BA stream index 0
-> Fri Jun 17 19:32:40 2016 kern.debug kernel: [ 3027.270367] ieee80211 phy1: Remove stream for fc:c2:de:ac:b1:72 0
-> Fri Jun 17 19:32:43 2016 daemon.info hostapd: wlan1: STA fc:c2:de:ac:b1:72 IEEE 802.11: deauthenticated due to local deauth request
-> Fri Jun 17 19:33:36 2016 daemon.info hostapd: wlan1: STA fc:c2:de:ac:b1:72 IEEE 802.11: authenticated
-> Fri Jun 17 19:33:36 2016 daemon.info hostapd: wlan1: STA fc:c2:de:ac:b1:72 IEEE 802.11: associated (aid 1)
-> Fri Jun 17 19:33:36 2016 daemon.info hostapd: wlan1: STA fc:c2:de:ac:b1:72 WPA: pairwise key handshake completed (RSN)
-> Fri Jun 17 19:33:37 2016 daemon.info dnsmasq-dhcp[2668]: DHCPREQUEST(br-lan) 192.168.1.138 fc:c2:de:ac:b1:72
-> Fri Jun 17 19:33:37 2016 daemon.info dnsmasq-dhcp[2668]: DHCPACK(br-lan) 192.168.1.138 fc:c2:de:ac:b1:72 android-63ebbc936f7b53af
-> 
-> So where to go from here?
-
-Nothing in here seems particularly bad.  So whatever the problem is,
-I don't think it can be diagnosed from these messages alone.
-
-I went back to the email thread, and it seems that the problem is that
-you're trying to run the card in AP mode but no traffic is making it
-through?  Is AP association working at all, or is that failing too?
+- Felix
