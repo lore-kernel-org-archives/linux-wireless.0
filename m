@@ -1,40 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:36543 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014AbcF3IlR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 04:41:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <9f524718509042ac904b2db09081048e@SC-EXCH04.marvell.com>
-References: <10cf2879532349d29143ecbac3b459b7@SC-EXCH04.marvell.com>
- <1467275483-24091-1-git-send-email-prasunmaiti87@gmail.com> <9f524718509042ac904b2db09081048e@SC-EXCH04.marvell.com>
-From: Prasun Maiti <prasunmaiti87@gmail.com>
-Date: Thu, 30 Jun 2016 14:11:16 +0530
-Message-ID: <CAEO8o4nXQppOgwc-Mk+NZZpd4x_qS=sds6SbXO+7CJuGLFxGkw@mail.gmail.com> (sfid-20160630_104216_966430_4F7153D3)
-Subject: Re: [PATCH v2] mwifiex: Fix endianness for event TLV type TLV_BTCOEX_WL_SCANTIME
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux Next <linux-next@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:60770 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751940AbcF0QcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:12 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 12/12] rtl8xxxu: gen1: Add module parameters to adjust DMA aggregation parameters
+Date: Mon, 27 Jun 2016 12:32:10 -0400
+Message-Id: <1467045130-18874-13-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183230_256844_4D7A4EA4)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 30, 2016 at 2:07 PM, Amitkumar Karwar <akarwar@marvell.com> wrote:
-> Hi Prasun,
-> Updated change looks fine to me.
->
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
->
-> Regards,
-> Amitkumar
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Hi AmitKumar,
+This allows the user to specify DMA aggregation timout and block
+count. Blocks are presumably always 512 bytes, so the minimum block
+count is 6 for 802.11 packets.
 
-Thanks for your verification.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 28 ++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 609c216..ca4c40d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -45,6 +45,8 @@
+ int rtl8xxxu_debug = RTL8XXXU_DEBUG_EFUSE;
+ static bool rtl8xxxu_ht40_2g;
+ static bool rtl8xxxu_dma_aggregation;
++static int rtl8xxxu_dma_agg_timeout = -1;
++static int rtl8xxxu_dma_agg_pages = -1;
+ 
+ MODULE_AUTHOR("Jes Sorensen <Jes.Sorensen@redhat.com>");
+ MODULE_DESCRIPTION("RTL8XXXu USB mac80211 Wireless LAN Driver");
+@@ -65,6 +67,10 @@ module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, 0600);
+ MODULE_PARM_DESC(ht40_2g, "Enable HT40 support on the 2.4GHz band");
+ module_param_named(dma_aggregation, rtl8xxxu_dma_aggregation, bool, 0600);
+ MODULE_PARM_DESC(dma_aggregation, "Enable DMA packet aggregation");
++module_param_named(dma_agg_timeout, rtl8xxxu_dma_agg_timeout, int, 0600);
++MODULE_PARM_DESC(dma_agg_timeout, "Set DMA aggregation timeout (range 1-127)");
++module_param_named(dma_agg_pages, rtl8xxxu_dma_agg_pages, int, 0600);
++MODULE_PARM_DESC(dma_agg_pages, "Set DMA aggregation pages (range 1-127, 0 to disable)");
+ 
+ #define USB_VENDOR_ID_REALTEK		0x0bda
+ #define RTL8XXXU_RX_URBS		32
+@@ -4441,6 +4447,18 @@ void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
+ 	 */
+ 
+ 	page_thresh = (priv->fops->rx_agg_buf_size / 512);
++	if (rtl8xxxu_dma_agg_pages >= 0) {
++		if (rtl8xxxu_dma_agg_pages <= page_thresh)
++			timeout = page_thresh;
++		else if (rtl8xxxu_dma_agg_pages <= 6)
++			dev_err(&priv->udev->dev,
++				"%s: dma_agg_pages=%i too small, minium is 6\n",
++				__func__, rtl8xxxu_dma_agg_pages);
++		else
++			dev_err(&priv->udev->dev,
++				"%s: dma_agg_pages=%i larger than limit %i\n",
++				__func__, rtl8xxxu_dma_agg_pages, page_thresh);
++	}
+ 	rtl8xxxu_write8(priv, REG_RXDMA_AGG_PG_TH, page_thresh);
+ 	/*
+ 	 * REG_RXDMA_AGG_PG_TH + 1 seems to be the timeout register on
+@@ -4448,6 +4466,16 @@ void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
+ 	 * don't set it, so better set both.
+ 	 */
+ 	timeout = 4;
++
++	if (rtl8xxxu_dma_agg_timeout >= 0) {
++		if (rtl8xxxu_dma_agg_timeout <= 127)
++			timeout = rtl8xxxu_dma_agg_timeout;
++		else
++			dev_err(&priv->udev->dev,
++				"%s: Invalid dma_agg_timeout: %i\n",
++				__func__, rtl8xxxu_dma_agg_timeout);
++	}
++
+ 	rtl8xxxu_write8(priv, REG_RXDMA_AGG_PG_TH + 1, timeout);
+ 	rtl8xxxu_write8(priv, REG_USB_DMA_AGG_TO, timeout);
+ 	priv->rx_buf_aggregation = 1;
 -- 
-Thanks,
-Prasun
+2.7.4
+
