@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:54626 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751206AbcFAQX4 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13148 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbcF0JA6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 12:23:56 -0400
-From: Colin King <colin.king@canonical.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] rtl8xxxu: fix typo on variable name, compare against correct variable
-Date: Wed,  1 Jun 2016 17:23:45 +0100
-Message-Id: <1464798225-7315-1-git-send-email-colin.king@canonical.com> (sfid-20160601_182441_444808_17D81AD3)
+	Mon, 27 Jun 2016 05:00:58 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCHV2 0/3] Add testmode support for 10.4
+Date: Mon, 27 Jun 2016 14:36:11 +0530
+Message-ID: <1467018371-24416-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_110102_127951_01D99D10)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-path_b_ok is being assigned but immediately after path_a_ok is being
-compared to the value 0x03.  This appears to be a typo on the
-variable name, compare path_b_ok instead.
+*The below patches add testmode support for 10.4.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+*Some of the codeswap related code in ath10k for example code
+which  initializes the code swap segment works only on normal fw,
+below patches  make such code generic so that it can be used
+for utf binary as well.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index fe19ace..b04cf30 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -1149,7 +1149,7 @@ static void rtl8192eu_phy_iqcalibrate(struct rtl8xxxu_priv *priv,
- 
- 		for (i = 0; i < retry; i++) {
- 			path_b_ok = rtl8192eu_rx_iqk_path_b(priv);
--			if (path_a_ok == 0x03) {
-+			if (path_b_ok == 0x03) {
- 				val32 = rtl8xxxu_read32(priv,
- 							REG_RX_POWER_BEFORE_IQK_B_2);
- 				result[t][6] = (val32 >> 16) & 0x3ff;
+Tamizh chelvam (3):
+  ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
+  ath10k: handle testmode events for 10.2 and 10.4 based firmware
+  ath10k: add testmode support for 10.4 firmware
+
+V2:
+  * changed author and signed off mail id.
+
+ drivers/net/wireless/ath/ath10k/core.c     |    6 +++---
+ drivers/net/wireless/ath/ath10k/core.h     |    6 ++----
+ drivers/net/wireless/ath/ath10k/swap.c     |   26 ++++++++++++++------------
+ drivers/net/wireless/ath/ath10k/swap.h     |   11 ++++++++---
+ drivers/net/wireless/ath/ath10k/testmode.c |   23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c      |   26 ++++++++++++++++++++++++++
+ 6 files changed, 76 insertions(+), 22 deletions(-)
+
 -- 
-2.8.1
+1.7.9.5
 
