@@ -1,43 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39623 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752660AbcF2Pr2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 11:47:28 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: libertas: Add spinlock to avoid race condition
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1465990443-19738-1-git-send-email-andrianov@ispras.ru>
-To: Pavel Andrianov <andrianov@ispras.ru>
-Cc: Pavel Andrianov <andrianov@ispras.ru>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	ldv-project@linuxtesting.org, vaishali.thakkar@oracle.com
-Message-Id: <20160629154712.95563613CE@smtp.codeaurora.org> (sfid-20160629_174804_870695_7554D81A)
-Date: Wed, 29 Jun 2016 15:47:12 +0000 (UTC)
+Received: from mx1.redhat.com ([209.132.183.28]:45723 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751875AbcF0QcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:12 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 02/12] rtl8xxxu: Move skb delivery into parse_tx_desc() handler
+Date: Mon, 27 Jun 2016 12:32:00 -0400
+Message-Id: <1467045130-18874-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183220_637357_8E9DBAAE)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pavel Andrianov <andrianov@ispras.ru> wrote:
-> lbs_mac_event_disconnected may free priv->currenttxskb
-> while lbs_hard_start_xmit accesses to it.
-> The patch adds a spinlock for mutual exclusion.
-> 
-> Tested on OLPC XO-1 (usb8388) and XO-1.5 (sd8686) with v4.7-rc3.
-> 
-> Confirmed that lbs_mac_event_disconnected is being called on the
-> station when hostapd on access point is given SIGHUP.
-> 
-> Signed-off-by: Pavel <andrianov@ispras.ru>
-> Tested-by: James Cameron <quozl@laptop.org>
-> Acked-by: Vaishali Thakkar <vaishali.thakkar@oracle.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+This is another prepatory patch to be able to handle aggregated RX
+packets.
 
-f52b041aed77 libertas: Add spinlock to avoid race condition
+In order to avoid adding a prototype, this also moves the
+rtl8723bu_handle_c2h() function.
 
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 104 ++++++++++-----------
+ 1 file changed, 50 insertions(+), 54 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 4ebd819..7c4df4d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5045,6 +5045,51 @@ static void rtl8xxxu_rx_urb_work(struct work_struct *work)
+ 	}
+ }
+ 
++static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
++				 struct sk_buff *skb)
++{
++	struct rtl8723bu_c2h *c2h = (struct rtl8723bu_c2h *)skb->data;
++	struct device *dev = &priv->udev->dev;
++	int len;
++
++	len = skb->len - 2;
++
++	dev_dbg(dev, "C2H ID %02x seq %02x, len %02x source %02x\n",
++		c2h->id, c2h->seq, len, c2h->bt_info.response_source);
++
++	switch(c2h->id) {
++	case C2H_8723B_BT_INFO:
++		if (c2h->bt_info.response_source >
++		    BT_INFO_SRC_8723B_BT_ACTIVE_SEND)
++			dev_dbg(dev, "C2H_BT_INFO WiFi only firmware\n");
++		else
++			dev_dbg(dev, "C2H_BT_INFO BT/WiFi coexist firmware\n");
++
++		if (c2h->bt_info.bt_has_reset)
++			dev_dbg(dev, "BT has been reset\n");
++		if (c2h->bt_info.tx_rx_mask)
++			dev_dbg(dev, "BT TRx mask\n");
++
++		break;
++	case C2H_8723B_BT_MP_INFO:
++		dev_dbg(dev, "C2H_MP_INFO ext ID %02x, status %02x\n",
++			c2h->bt_mp_info.ext_id, c2h->bt_mp_info.status);
++		break;
++	case C2H_8723B_RA_REPORT:
++		dev_dbg(dev,
++			"C2H RA RPT: rate %02x, unk %i, macid %02x, noise %i\n",
++			c2h->ra_report.rate, c2h->ra_report.dummy0_0,
++			c2h->ra_report.macid, c2h->ra_report.noisy_state);
++		break;
++	default:
++		dev_info(dev, "Unhandled C2H event %02x seq %02x\n",
++			 c2h->id, c2h->seq);
++		print_hex_dump(KERN_INFO, "C2H content: ", DUMP_PREFIX_NONE,
++			       16, 1, c2h->raw.payload, len, false);
++		break;
++	}
++}
++
+ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+ 			    struct ieee80211_rx_status *rx_status)
+ {
+@@ -5094,6 +5139,7 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+ 	rx_status->freq = hw->conf.chandef.chan->center_freq;
+ 	rx_status->band = hw->conf.chandef.chan->band;
+ 
++	ieee80211_rx_irqsafe(hw, skb);
+ 	return RX_TYPE_DATA_PKT;
+ }
+ 
+@@ -5125,6 +5171,8 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+ 	if (rx_desc->rpt_sel) {
+ 		struct device *dev = &priv->udev->dev;
+ 		dev_dbg(dev, "%s: C2H packet\n", __func__);
++		rtl8723bu_handle_c2h(priv, skb);
++		dev_kfree_skb(skb);
+ 		return RX_TYPE_C2H;
+ 	}
+ 
+@@ -5152,54 +5200,10 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+ 	rx_status->freq = hw->conf.chandef.chan->center_freq;
+ 	rx_status->band = hw->conf.chandef.chan->band;
+ 
++	ieee80211_rx_irqsafe(hw, skb);
+ 	return RX_TYPE_DATA_PKT;
+ }
+ 
+-static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
+-				 struct sk_buff *skb)
+-{
+-	struct rtl8723bu_c2h *c2h = (struct rtl8723bu_c2h *)skb->data;
+-	struct device *dev = &priv->udev->dev;
+-	int len;
+-
+-	len = skb->len - 2;
+-
+-	dev_dbg(dev, "C2H ID %02x seq %02x, len %02x source %02x\n",
+-		c2h->id, c2h->seq, len, c2h->bt_info.response_source);
+-
+-	switch(c2h->id) {
+-	case C2H_8723B_BT_INFO:
+-		if (c2h->bt_info.response_source >
+-		    BT_INFO_SRC_8723B_BT_ACTIVE_SEND)
+-			dev_dbg(dev, "C2H_BT_INFO WiFi only firmware\n");
+-		else
+-			dev_dbg(dev, "C2H_BT_INFO BT/WiFi coexist firmware\n");
+-
+-		if (c2h->bt_info.bt_has_reset)
+-			dev_dbg(dev, "BT has been reset\n");
+-		if (c2h->bt_info.tx_rx_mask)
+-			dev_dbg(dev, "BT TRx mask\n");
+-
+-		break;
+-	case C2H_8723B_BT_MP_INFO:
+-		dev_dbg(dev, "C2H_MP_INFO ext ID %02x, status %02x\n",
+-			c2h->bt_mp_info.ext_id, c2h->bt_mp_info.status);
+-		break;
+-	case C2H_8723B_RA_REPORT:
+-		dev_dbg(dev,
+-			"C2H RA RPT: rate %02x, unk %i, macid %02x, noise %i\n",
+-			c2h->ra_report.rate, c2h->ra_report.dummy0_0,
+-			c2h->ra_report.macid, c2h->ra_report.noisy_state);
+-		break;
+-	default:
+-		dev_info(dev, "Unhandled C2H event %02x seq %02x\n",
+-			 c2h->id, c2h->seq);
+-		print_hex_dump(KERN_INFO, "C2H content: ", DUMP_PREFIX_NONE,
+-			       16, 1, c2h->raw.payload, len, false);
+-		break;
+-	}
+-}
+-
+ static void rtl8xxxu_rx_complete(struct urb *urb)
+ {
+ 	struct rtl8xxxu_rx_urb *rx_urb =
+@@ -5209,19 +5213,11 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
+ 	struct sk_buff *skb = (struct sk_buff *)urb->context;
+ 	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
+ 	struct device *dev = &priv->udev->dev;
+-	int rx_type;
+ 
+ 	skb_put(skb, urb->actual_length);
+ 
+ 	if (urb->status == 0) {
+-		rx_type = priv->fops->parse_rx_desc(priv, skb, rx_status);
+-
+-		if (rx_type == RX_TYPE_DATA_PKT)
+-			ieee80211_rx_irqsafe(hw, skb);
+-		else {
+-			rtl8723bu_handle_c2h(priv, skb);
+-			dev_kfree_skb(skb);
+-		}
++		priv->fops->parse_rx_desc(priv, skb, rx_status);
+ 
+ 		skb = NULL;
+ 		rx_urb->urb.context = NULL;
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9178477/
+2.7.4
 
