@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:51112 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188AbcFYVgF (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34378 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbcF0HWj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 17:36:05 -0400
-Date: Sat, 25 Jun 2016 14:36:06 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Luis de Bethencourt <luisbg@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, chris.park@atmel.com,
-	austin.shin@atmel.com, johnny.kim@atmel.com,
-	julian.calaby@gmail.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH v2 1/2] staging: wilc1000: fix error handling in
- wilc_debugfs_init()
-Message-ID: <20160625213606.GA15125@kroah.com> (sfid-20160625_233642_263478_7EA09400)
-References: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com>
+	Mon, 27 Jun 2016 03:22:39 -0400
+Received: by mail-wm0-f68.google.com with SMTP id 187so22128662wmz.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 00:22:38 -0700 (PDT)
+Date: Mon, 27 Jun 2016 09:22:35 +0200
+From: Mirco Tischler <mt-ml@gmx.de>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	miaoqing pan <miaoqing@codeaurora.org>
+Subject: Re: ath9k: fix GPIO mask for AR9462 and AR9565
+Message-ID: <20160627072235.GB31166@frangipani> (sfid-20160627_092242_353793_FFB73A94)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1466685378-15597-1-git-send-email-luisbg@osg.samsung.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 23, 2016 at 01:36:17PM +0100, Luis de Bethencourt wrote:
-> The common format to check if a function returned an error pointer is to
-> use PTR_ERR(). Instead of ERR_PTR() which is used to return said errors.
-> 
-> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-> ---
->  drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-> index fcbc95d..48797dc 100644
-> --- a/drivers/staging/wilc1000/wilc_debugfs.c
-> +++ b/drivers/staging/wilc1000/wilc_debugfs.c
-> @@ -107,7 +107,7 @@ static int __init wilc_debugfs_init(void)
->  	struct wilc_debugfs_info_t *info;
->  
->  	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
-> -	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
-> +	if (PTR_ERR(wilc_dir) == -ENODEV) {
->  		/* it's not error. the debugfs is just not being enabled. */
->  		printk("ERR, kernel has built without debugfs support\n");
->  		return 0;
+Kalle Valo <kva..@qca.qualcomm.com> wrote:
+>miaoqing pan <miaoq...@codeaurora.org> wrote:
+>> From: Miaoqing Pan <miaoq...@codeaurora.org>
+>> 
+>> The incorrect GPIO mask cause kernel warning, when AR9462 access GPIO11.
+>> Also fix the mask for AR9565.
+>> 
+>> WARNING: CPU: 1 PID: 199 at ../drivers/net/wireless/ath/ath9k/hw.c:2778 
+>> ath9k_hw_gpio_get+0x1a9/0x1b0 [ath9k_hw]
+>> CPU: 1 PID: 199 Comm: kworker/u16:9 Not tainted 4.7.0-rc1-next-20160530+ #5
+>> Hardware name: Acer TravelMate P243/BA40_HC, BIOS V1.01 04/20/2012
+>> Workqueue: events_power_efficient rfkill_poll
+>>  0000000000000000 ffff88002cf73d28 ffffffff813b8ddc 0000000000000000
+>>  0000000000000000 ffff88002cf73d68 ffffffff8107a331 00000ada00000086
+>>  ffff880148d9c018 000000000000000b ffff880147e68720 0000000000000200
+>> Call Trace:
+>>  [<ffffffff813b8ddc>] dump_stack+0x63/0x87
+>>  [<ffffffff8107a331>] __warn+0xd1/0xf0
+>>  [<ffffffff8107a41d>] warn_slowpath_null+0x1d/0x20
+>>  [<ffffffffc0775b19>] ath9k_hw_gpio_get+0x1a9/0x1b0 [ath9k_hw]
+>>  [<ffffffffc047f3e4>] ath9k_rfkill_poll_state+0x34/0x60 [ath9k]
+>>  [<ffffffffc06dbb53>] ieee80211_rfkill_poll+0x33/0x40 [mac80211]
+>>  [<ffffffffc03ad65a>] cfg80211_rfkill_poll+0x2a/0xc0 [cfg80211]
+>>  [<ffffffff817c5514>] rfkill_poll+0x24/0x50
+>>  [<ffffffff81093183>] process_one_work+0x153/0x3f0
+>>  [<ffffffff8109393b>] worker_thread+0x12b/0x4b0
+>>  [<ffffffff81093810>] ? rescuer_thread+0x340/0x340
+>>  [<ffffffff81099129>] kthread+0xc9/0xe0
+>>  [<ffffffff817d8f1f>] ret_from_fork+0x1f/0x40
+>>  [<ffffffff81099060>] ? kthread_park+0x60/0x60
+>> 
+>> Signed-off-by: Miaoqing Pan <miaoq...@codeaurora.org>
+>
+>
+>Thanks, 1 patch applied to ath-current branch of ath.git:
+>
+>e024111f6946 ath9k: fix GPIO mask for AR9462 and AR9565
+>
+Hello Kalle,
+I see this warning in 4.7-rc4. Could the fix please go into 4.7? if I understand correctly
+it is only queued for 4.8?
 
-No, the best way to do this is to just ignore the return value, you
-don't care about it.  It can be passed back into any debugfs calls just
-fine.
+Btw. I applied the patch and it does fix the problem :)
 
-So don't check the value and all is good, debugfs was written in a way
-to make it _easy_ to use, no need for fancy error checking at all with
-it.
-
-thanks,
-
-greg k-h
+Thank you,
+Mirco
