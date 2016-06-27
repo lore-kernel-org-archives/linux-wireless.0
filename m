@@ -1,49 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43645 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752116AbcFJWkH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 18:40:07 -0400
-Message-ID: <575B41C5.7010608@candelatech.com> (sfid-20160611_004012_197516_86968564)
-Date: Fri, 10 Jun 2016 15:40:05 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: NL80211_ATTR_PAD question
-References: <575B1964.2030806@candelatech.com>	 (sfid-20160610_214753_670799_49B46ECD) <1465592932.2308.6.camel@sipsolutions.net>
-In-Reply-To: <1465592932.2308.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:49134 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751879AbcF0QcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:12 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 11/12] rtl8xxxu: gen1: Set aggregation timeout (REG_RXDMA_AGG_PG_TH + 1) as well
+Date: Mon, 27 Jun 2016 12:32:09 -0400
+Message-Id: <1467045130-18874-12-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183228_519681_0821FA26)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
+gen2 chips as well as 8188eu seems to use this register for setting
+DMA timeout threshold values, however the 8192cu is using
+REG_USB_DMA_AGG_TO. Set both to be on the safe side.
 
-On 06/10/2016 02:08 PM, Johannes Berg wrote:
-> On Fri, 2016-06-10 at 12:47 -0700, Ben Greear wrote:
->> I see this was added sometime recently:  NL80211_ATTR_PAD
->>
->> If another enum member is added, should it replace the PAD enum?
->
-> No.
->
->> At the least, I think we need some comments about how this is to be
->> dealt with.
->>
->
-> You simply ignore it :)
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-Please add a comment...it is normal behaviour to fill in 'pads' when
-possible, and even when I looked up the commit message it wasn't exactly
-clear what this member was for.
-
-Even reading nla_put_u64_64bit offers no useful clues...I didn't follow
-the call chain longer, probably somewhere it would start making sense,
-but then again, this is netlink code, so who knows!
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index b392a92..609c216 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4410,7 +4410,7 @@ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
+ 
+ void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
+ {
+-	u8 agg_ctrl, usb_spec, page_thresh;
++	u8 agg_ctrl, usb_spec, page_thresh, timeout;
+ 
+ 	usb_spec = rtl8xxxu_read8(priv, REG_USB_SPECIAL_OPTION);
+ 	usb_spec &= ~USB_SPEC_USB_AGG_ENABLE;
+@@ -4442,7 +4442,14 @@ void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
+ 
+ 	page_thresh = (priv->fops->rx_agg_buf_size / 512);
+ 	rtl8xxxu_write8(priv, REG_RXDMA_AGG_PG_TH, page_thresh);
+-	rtl8xxxu_write8(priv, REG_USB_DMA_AGG_TO, 4);
++	/*
++	 * REG_RXDMA_AGG_PG_TH + 1 seems to be the timeout register on
++	 * gen2 chips and rtl8188eu. The rtl8723au seems unhappy if we
++	 * don't set it, so better set both.
++	 */
++	timeout = 4;
++	rtl8xxxu_write8(priv, REG_RXDMA_AGG_PG_TH + 1, timeout);
++	rtl8xxxu_write8(priv, REG_USB_DMA_AGG_TO, timeout);
+ 	priv->rx_buf_aggregation = 1;
+ }
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
+
