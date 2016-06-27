@@ -1,68 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:34103 "EHLO
-	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424071AbcFMPZF convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46502 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751639AbcF0Ipg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 11:25:05 -0400
+	Mon, 27 Jun 2016 04:45:36 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH 2/3] ath10k: handle testmode events for 10.2 and 10.4 based firmware
+Date: Mon, 27 Jun 2016 14:20:50 +0530
+Message-ID: <1467017450-7552-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_104539_342675_59A7CA13)
 MIME-Version: 1.0
-In-Reply-To: <1465476194.3442.21.camel@sipsolutions.net>
-References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
- <1462199948-6424-2-git-send-email-jprvita@endlessm.com> <20160504072936.GB17045@amd>
- <1463045572.13313.21.camel@sipsolutions.net> <20160519071639.GB17077@amd> <1465476194.3442.21.camel@sipsolutions.net>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Mon, 13 Jun 2016 11:24:24 -0400
-Message-ID: <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com> (sfid-20160613_172530_745186_E8D00B29)
-Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED trigger
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Pavel Machek <pavel@ucw.cz>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 June 2016 at 08:43, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2016-05-19 at 09:16 +0200, Pavel Machek wrote:
->
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-(...)
+Currently testmode events for 10.x firmware are processed from
+10.1 wmi event processing. This patch is used to handle testmode
+events in 10.2 and 10.4 based firmware.
 
->> LED
->> subsystem seems to use suffix of LED name to do that. So if we
->> standartize, lets say "::rfkill" suffix for this, it should work and
->> follow existing practice.
-> [...]
->> There is one -- suffix in the LED name.
->
-> I don't really think that's a good way, and it doesn't seem to be used
-> universally, but I suppose it's good enough.
->
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |   26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-The main practical drawback of this approach IMO is that we can't
-guarantee that userspace processes will not step on each other's toes
-trying to control the LED concurrently. But I guess that is something
-that userspace will have to solve for now, I rather get this moving
-without the trigger than not moving at all.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 6279ab4..72b5483 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5095,6 +5095,7 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_cmd_hdr *cmd_hdr;
+ 	enum wmi_10_2_event_id id;
++	bool consumed;
+ 
+ 	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
+ 	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
+@@ -5104,6 +5105,18 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
+ 
++	consumed = ath10k_tm_event_wmi(ar, id, skb);
++
++	/* Ready event must be handled normally also in UTF mode so that we
++	 * know the UTF firmware has booted, others we are just bypass WMI
++	 * events to testmode.
++	 */
++	if (consumed && id != WMI_10_2_READY_EVENTID) {
++		ath10k_dbg(ar, ATH10K_DBG_WMI,
++			   "wmi testmode consumed 0x%x\n", id);
++		goto out;
++	}
++
+ 	switch (id) {
+ 	case WMI_10_2_MGMT_RX_EVENTID:
+ 		ath10k_wmi_event_mgmt_rx(ar, skb);
+@@ -5219,6 +5232,7 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct wmi_cmd_hdr *cmd_hdr;
+ 	enum wmi_10_4_event_id id;
++	bool consumed;
+ 
+ 	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
+ 	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
+@@ -5228,6 +5242,18 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 
+ 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
+ 
++	consumed = ath10k_tm_event_wmi(ar, id, skb);
++
++	/* Ready event must be handled normally also in UTF mode so that we
++	 * know the UTF firmware has booted, others we are just bypass WMI
++	 * events to testmode.
++	 */
++	if (consumed && id != WMI_10_4_READY_EVENTID) {
++		ath10k_dbg(ar, ATH10K_DBG_WMI,
++			   "wmi testmode consumed 0x%x\n", id);
++		goto out;
++	}
++
+ 	switch (id) {
+ 	case WMI_10_4_MGMT_RX_EVENTID:
+ 		ath10k_wmi_event_mgmt_rx(ar, skb);
+-- 
+1.7.9.5
 
-> João, that means you should send a patch to add the ::rfkill suffix.
->
-
-IMO "airplane" (or maybe "airplane-mode") is a better suffix, as it
-reflects the label on the machine's chassis. I'll name it
-"asus-wireless::airplane" and send this through platform-drivers-x86,
-as this is now contained in the platform-drivers-x86 subsystem. Thanks
-Johannes for your patience and help designing and reviewing the rfkill
-changes, even if not all of them made it through in the end. And
-thanks everyone else involved for the feedback.
-
-Best regards,
-
---
-João Paulo Rechi Vita
-http://about.me/jprvita
