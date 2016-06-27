@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57814 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754443AbcFPPNw (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:16883 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870AbcF0NlM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 11:13:52 -0400
-Content-Type: text/plain; charset="utf-8"
+	Mon, 27 Jun 2016 09:41:12 -0400
+Date: Mon, 27 Jun 2016 16:40:34 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: zajec5@gmail.com
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+Subject: re: b43: update cordic code to match current specs
+Message-ID: <20160627134034.GA4382@mwanda> (sfid-20160627_154116_445948_166EE542)
 MIME-Version: 1.0
-Subject: Re: rtlwifi: fix error handling in *_read_adapter_info()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1464622792-1749047-1-git-send-email-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Taehee Yoo <ap420073@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <20160616151351.4AD026141C@smtp.codeaurora.org> (sfid-20160616_171457_137185_88351E61)
-Date: Thu, 16 Jun 2016 15:13:51 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
-> There are nine copies of the _rtl88ee_read_adapter_info() function,
-> and most but not all of them cause a build warning in some configurations:
-> 
-> rtl8192de/hw.c: In function '_rtl92de_read_adapter_info':
-> rtl8192de/hw.c:1767:12: error: 'hwinfo' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> rtl8723ae/hw.c: In function '_rtl8723e_read_adapter_info.constprop':
-> rtlwifi/rtl8723ae/hw.c:1654:12: error: 'hwinfo' may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> 
-> The problem is that when rtlefuse->epromtype is something other than
-> EEPROM_BOOT_EFUSE, the rest of the function uses undefined data, resulting
-> in random behavior later.
-> 
-> Apparently, in some drivers, the problem was already found and fixed
-> but the fix did not make it into the others.
-> 
-> This picks one approach to deal with the problem and applies identical
-> code to all 9 files, to simplify the later consolidation of those.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Hello Rafał Miłecki,
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+The patch 6f98e62a9f1b: "b43: update cordic code to match current
+specs" from Jan 25, 2010, leads to the following static checker
+warning:
 
-5345ea6a4bfb rtlwifi: fix error handling in *_read_adapter_info()
+	drivers/net/wireless/broadcom/b43/phy_lp.c:1803 lpphy_start_tx_tone()
+	warn: mask and shift to zero
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9141721/
+drivers/net/wireless/broadcom/b43/phy_lp.c
+  1800          for (i = 0; i < samples; i++) {
+  1801                  sample = b43_cordic(angle);
+  1802                  angle += rotation;
+  1803                  buf[i] = CORDIC_CONVERT((sample.i * max) & 0xFF) << 8;
+  1804                  buf[i] |= CORDIC_CONVERT((sample.q * max) & 0xFF);
 
+The CORDIC_CONVERT() macro is a bit complicated but I made a small test
+program to see how it worked and I believe it just sets buf[i] to zero.
+
+  1805          }
+  1806  
+  1807          b43_lptab_write_bulk(dev, B43_LPTAB16(5, 0), samples, buf);
+
+regards,
+dan carpenter
