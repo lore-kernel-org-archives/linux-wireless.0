@@ -1,82 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:36695 "EHLO
-	mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751501AbcF0AUq (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:13194 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751601AbcF0JBY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 26 Jun 2016 20:20:46 -0400
-Received: by mail-it0-f65.google.com with SMTP id h190so8603287ith.3
-        for <linux-wireless@vger.kernel.org>; Sun, 26 Jun 2016 17:20:46 -0700 (PDT)
+	Mon, 27 Jun 2016 05:01:24 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCHV2 1/3] ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
+Date: Mon, 27 Jun 2016 14:36:44 +0530
+Message-ID: <1467018404-24460-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_110127_693672_B01B5F14)
 MIME-Version: 1.0
-In-Reply-To: <20160624123430.4097-2-martin.blumenstingl@googlemail.com>
-References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com> <20160624123430.4097-2-martin.blumenstingl@googlemail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 27 Jun 2016 10:20:26 +1000
-Message-ID: <CAGRGNgUeFJevhRVUPUoUvzLfkqst=jf2sCz3+ew8AeY=4ruR8w@mail.gmail.com> (sfid-20160627_022049_909419_019F7A21)
-Subject: Re: [PATCH RFC v3 1/3] Documentation: dt: net: add ath9k wireless
- device binding
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@lists.ath9k.org, Felix Fietkau <nbd@nbd.name>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Martin,
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-On Fri, Jun 24, 2016 at 10:34 PM, Martin Blumenstingl
-<martin.blumenstingl@googlemail.com> wrote:
-> Add documentation how devicetree can be used to configure ath9k based
-> devices.
->
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-> ---
-> changes in v2 -> v3:
-> - improved wording of the qca,disable-2ghz and qca,disable-5ghz properties
-> - replaced qca,eeprom-name with qca,no-eeprom (the eeprom name is now
->   built automatically within ath9k). The naming was chosen to stay
->   consistent with other drivers (such as davicom-dm9000 and via-velocity)
-> - added reference to the mac-address and local-mac-address properties
-> - removed invalid device_type property from the example
->
->  .../devicetree/bindings/net/wireless/qca,ath9k.txt | 46 ++++++++++++++++++++++
->  1 file changed, 46 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
->
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> new file mode 100644
-> index 0000000..ff83fd4
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> @@ -0,0 +1,46 @@
-> +* Qualcomm Atheros ath9k wireless devices
-> +
-> +This node provides properties for configuring the ath9k wireless device. The
-> +node is expected to be specified as a child node of the PCI controller to
-> +which the wireless chip is connected.
-> +
-> +Required properties:
-> +- compatible: Should be "qca,ath9k"
-> +
-> +Optional properties:
-> +- reg: Address and length of the register set for the device.
-> +- qca,gpio-mask: The GPIO mask
-> +- qca,gpio-val: The GPIO value
-> +- qca,led-pin: The GPIO number to which the LED is connected
-> +- qca,led-active-high: The LED is active when the GPIO is HIGH
-> +- qca,clk-25mhz: Defines that at 25MHz clock is used
-> +- qca,no-eeprom: Indicates that there is on physical EEPROM connected
+Preparation to make use of firmware_swap_code_seg_info for
+UTF binary.
 
-Typo: ...Indicates that there is _no_ physical EEPROM...
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    6 +++---
+ drivers/net/wireless/ath/ath10k/core.h |    6 ++----
+ drivers/net/wireless/ath/ath10k/swap.c |   26 ++++++++++++++------------
+ drivers/net/wireless/ath/ath10k/swap.h |   11 ++++++++---
+ 4 files changed, 27 insertions(+), 22 deletions(-)
 
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index dfb3db0..0a1946b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -723,7 +723,7 @@ static int ath10k_download_fw(struct ath10k *ar)
+ 	data = ar->running_fw->fw_file.firmware_data;
+ 	data_len = ar->running_fw->fw_file.firmware_len;
+ 
+-	ret = ath10k_swap_code_seg_configure(ar);
++	ret = ath10k_swap_code_seg_configure(ar, &ar->running_fw->fw_file);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to configure fw code swap: %d\n",
+ 			   ret);
+@@ -765,7 +765,7 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 	if (!IS_ERR(ar->pre_cal_file))
+ 		release_firmware(ar->pre_cal_file);
+ 
+-	ath10k_swap_code_seg_release(ar);
++	ath10k_swap_code_seg_release(ar, &ar->normal_mode_fw.fw_file);
+ 
+ 	ar->normal_mode_fw.fw_file.otp_data = NULL;
+ 	ar->normal_mode_fw.fw_file.otp_len = 0;
+@@ -2009,7 +2009,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 		goto err_free_firmware_files;
+ 	}
+ 
+-	ret = ath10k_swap_code_seg_init(ar);
++	ret = ath10k_swap_code_seg_init(ar, &ar->normal_mode_fw.fw_file);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to initialize code swap segment: %d\n",
+ 			   ret);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 3da18c9..e69e7e7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -654,6 +654,8 @@ struct ath10k_fw_file {
+ 
+ 	const void *codeswap_data;
+ 	size_t codeswap_len;
++	/* FIXME: add a comment */
++	struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
+ };
+ 
+ struct ath10k_fw_components {
+@@ -765,10 +767,6 @@ struct ath10k {
+ 	const struct firmware *cal_file;
+ 
+ 	struct {
+-		struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
+-	} swap;
+-
+-	struct {
+ 		u32 vendor;
+ 		u32 device;
+ 		u32 subsystem_vendor;
+diff --git a/drivers/net/wireless/ath/ath10k/swap.c b/drivers/net/wireless/ath/ath10k/swap.c
+index 0c5f586..c904a41 100644
+--- a/drivers/net/wireless/ath/ath10k/swap.c
++++ b/drivers/net/wireless/ath/ath10k/swap.c
+@@ -134,17 +134,18 @@ ath10k_swap_code_seg_alloc(struct ath10k *ar, size_t swap_bin_len)
+ 	return seg_info;
+ }
+ 
+-int ath10k_swap_code_seg_configure(struct ath10k *ar)
++int ath10k_swap_code_seg_configure(struct ath10k *ar,
++				   const struct ath10k_fw_file *fw_file)
+ {
+ 	int ret;
+ 	struct ath10k_swap_code_seg_info *seg_info = NULL;
+ 
+-	if (!ar->swap.firmware_swap_code_seg_info)
++	if (fw_file->firmware_swap_code_seg_info)
+ 		return 0;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot found firmware code swap binary\n");
+ 
+-	seg_info = ar->swap.firmware_swap_code_seg_info;
++	seg_info = fw_file->firmware_swap_code_seg_info;
+ 
+ 	ret = ath10k_bmi_write_memory(ar, seg_info->target_addr,
+ 				      &seg_info->seg_hw_info,
+@@ -158,28 +159,29 @@ int ath10k_swap_code_seg_configure(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-void ath10k_swap_code_seg_release(struct ath10k *ar)
++void ath10k_swap_code_seg_release(struct ath10k *ar,
++				  struct ath10k_fw_file *fw_file)
+ {
+-	ath10k_swap_code_seg_free(ar, ar->swap.firmware_swap_code_seg_info);
++	ath10k_swap_code_seg_free(ar, fw_file->firmware_swap_code_seg_info);
+ 
+ 	/* FIXME: these two assignments look to bein wrong place! Shouldn't
+ 	 * they be in ath10k_core_free_firmware_files() like the rest?
+ 	 */
+-	ar->normal_mode_fw.fw_file.codeswap_data = NULL;
+-	ar->normal_mode_fw.fw_file.codeswap_len = 0;
++	fw_file->codeswap_data = NULL;
++	fw_file->codeswap_len = 0;
+ 
+-	ar->swap.firmware_swap_code_seg_info = NULL;
++	fw_file->firmware_swap_code_seg_info = NULL;
+ }
+ 
+-int ath10k_swap_code_seg_init(struct ath10k *ar)
++int ath10k_swap_code_seg_init(struct ath10k *ar, struct ath10k_fw_file *fw_file)
+ {
+ 	int ret;
+ 	struct ath10k_swap_code_seg_info *seg_info;
+ 	const void *codeswap_data;
+ 	size_t codeswap_len;
+ 
+-	codeswap_data = ar->normal_mode_fw.fw_file.codeswap_data;
+-	codeswap_len = ar->normal_mode_fw.fw_file.codeswap_len;
++	codeswap_data = fw_file->codeswap_data;
++	codeswap_len = fw_file->codeswap_len;
+ 
+ 	if (!codeswap_len || !codeswap_data)
+ 		return 0;
+@@ -200,7 +202,7 @@ int ath10k_swap_code_seg_init(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
+-	ar->swap.firmware_swap_code_seg_info = seg_info;
++	fw_file->firmware_swap_code_seg_info = seg_info;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/swap.h b/drivers/net/wireless/ath/ath10k/swap.h
+index 36991c7..f5dc047 100644
+--- a/drivers/net/wireless/ath/ath10k/swap.h
++++ b/drivers/net/wireless/ath/ath10k/swap.h
+@@ -23,6 +23,8 @@
+ /* Currently only one swap segment is supported */
+ #define ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED	1
+ 
++struct ath10k_fw_file;
++
+ struct ath10k_swap_code_seg_tlv {
+ 	__le32 address;
+ 	__le32 length;
+@@ -58,8 +60,11 @@ struct ath10k_swap_code_seg_info {
+ 	dma_addr_t paddr[ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED];
+ };
+ 
+-int ath10k_swap_code_seg_configure(struct ath10k *ar);
+-void ath10k_swap_code_seg_release(struct ath10k *ar);
+-int ath10k_swap_code_seg_init(struct ath10k *ar);
++int ath10k_swap_code_seg_configure(struct ath10k *ar,
++				   const struct ath10k_fw_file *fw_file);
++void ath10k_swap_code_seg_release(struct ath10k *ar,
++				  struct ath10k_fw_file *fw_file);
++int ath10k_swap_code_seg_init(struct ath10k *ar,
++			      struct ath10k_fw_file *fw_file);
+ 
+ #endif
 -- 
-Julian Calaby
+1.7.9.5
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
