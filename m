@@ -1,41 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:42736 "EHLO mail2.tohojo.dk"
+Received: from mx1.redhat.com ([209.132.183.28]:54834 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751348AbcFEKzS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2016 06:55:18 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Adrian Chadd <adrian@freebsd.org>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Subject: Re: [RFC/RFT 5/5] ath9k: Count RX airtime in airtime deficit
-References: <20160603165144.17356-1-toke@toke.dk>
-	<20160603165144.17356-6-toke@toke.dk>
-	<CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
-Date: Sun, 05 Jun 2016 12:55:15 +0200
-In-Reply-To: <CAJ-VmonzVQ5Yx6mvnvcT4PKTT7CXRR_Vf=K75da04i8GqrhjfQ@mail.gmail.com>
-	(Adrian Chadd's message of "Sat, 4 Jun 2016 10:06:08 -0700")
-Message-ID: <8737orucq4.fsf@toke.dk> (sfid-20160605_125524_291829_0C0879E7)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751862AbcF0QcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:12 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 08/12] rtl8xxxu: Enable aggregation for rtl8723au
+Date: Mon, 27 Jun 2016 12:32:06 -0400
+Message-Id: <1467045130-18874-9-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_184248_842617_ED280742)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adrian Chadd <adrian@freebsd.org> writes:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> I've been working on something similar in freebsd, so cool to see this
-> happening here!
+Implement rtl8xxxu_gen1_init_aggregation(). Aggregation should be the
+same for all gen1 parts. We may want to allow for tuning parameters in
+the fileopes struct. For now this is based allocating 16KB RX buffers,
+leaving 16000 bytes for actual packets, and the rest for the skb
+overhead.
 
-Cool. Do you have code available somewhere?
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  1 +
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c |  2 ++
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 34 ++++++++++++++++++++++
+ 3 files changed, 37 insertions(+)
 
-> The only thing missing atm is STBC and LDPC. My RX airtime code looks
-> basically like this one too; but I have TODO items for ensuring
-> LDPC/STBC calculations are sane.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index f06e3aa..4341d56 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1412,6 +1412,7 @@ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
+ 				  u8 macid, bool connect);
+ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
+ 				  u8 macid, bool connect);
++void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv);
+ void rtl8xxxu_gen1_enable_rf(struct rtl8xxxu_priv *priv);
+ void rtl8xxxu_gen1_disable_rf(struct rtl8xxxu_priv *priv);
+ void rtl8xxxu_gen2_disable_rf(struct rtl8xxxu_priv *priv);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+index a8e172c..686c551 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+@@ -377,6 +377,7 @@ struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.phy_iq_calibrate = rtl8xxxu_gen1_phy_iq_calibrate,
+ 	.config_channel = rtl8xxxu_gen1_config_channel,
+ 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
++	.init_aggregation = rtl8xxxu_gen1_init_aggregation,
+ 	.enable_rf = rtl8xxxu_gen1_enable_rf,
+ 	.disable_rf = rtl8xxxu_gen1_disable_rf,
+ 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
+@@ -384,6 +385,7 @@ struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.update_rate_mask = rtl8xxxu_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen1_report_connect,
+ 	.writeN_block_size = 1024,
++	.rx_agg_buf_size = 16000,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
+ 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16),
+ 	.adda_1t_init = 0x0b1b25a0,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index f77dae8..e488406 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4405,6 +4405,40 @@ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
+ 	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
+ }
+ 
++void rtl8xxxu_gen1_init_aggregation(struct rtl8xxxu_priv *priv)
++{
++	u8 agg_ctrl, usb_spec, page_thresh;
++
++	usb_spec = rtl8xxxu_read8(priv, REG_USB_SPECIAL_OPTION);
++	usb_spec &= ~USB_SPEC_USB_AGG_ENABLE;
++
++	agg_ctrl = rtl8xxxu_read8(priv, REG_TRXDMA_CTRL);
++	agg_ctrl &= ~TRXDMA_CTRL_RXDMA_AGG_EN;
++
++	agg_ctrl |= TRXDMA_CTRL_RXDMA_AGG_EN;
++
++	rtl8xxxu_write8(priv, REG_TRXDMA_CTRL, agg_ctrl);
++	rtl8xxxu_write8(priv, REG_USB_SPECIAL_OPTION, usb_spec);
++
++	/*
++	 * The number of packets we can take looks to be buffer size / 512
++	 * which matches the 512 byte rounding we have to do when de-muxing
++	 * the packets.
++	 *
++	 * Sample numbers from the vendor driver:
++	 * USB High-Speed mode values:
++	 *   RxAggBlockCount = 8 : 512 byte unit
++	 *   RxAggBlockTimeout = 6
++	 *   RxAggPageCount = 48 : 128 byte unit
++	 *   RxAggPageTimeout = 4 or 6 (absolute time 34ms/(2^6))
++	 */
++
++	page_thresh = (priv->fops->rx_agg_buf_size / 512);
++	rtl8xxxu_write8(priv, REG_RXDMA_AGG_PG_TH, page_thresh);
++	rtl8xxxu_write8(priv, REG_USB_DMA_AGG_TO, 4);
++	priv->rx_buf_aggregation = 1;
++}
++
+ static void rtl8xxxu_set_basic_rates(struct rtl8xxxu_priv *priv, u32 rate_cfg)
+ {
+ 	u32 val32;
+-- 
+2.7.4
 
-So basically this means taking into account whether there was MIMO in
-use (which may lower the transmit time)? My understanding is that (at
-least in Linux) this is encoded in the rate tables (i.e. a MIMO rate is
-a separate entry). Am I wrong in thinking so? Or is this something else
-entirely?
-
--Toke
