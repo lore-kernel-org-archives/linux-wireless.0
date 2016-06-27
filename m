@@ -1,88 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34850 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751046AbcFRV6w convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 18 Jun 2016 17:58:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <5765A06C.3040005@broadcom.com>
-References: <1466273932-11554-1-git-send-email-zajec5@gmail.com> <5765A06C.3040005@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Sat, 18 Jun 2016 23:58:50 +0200
-Message-ID: <CACna6rydCmKhyxsyOPrCsT_KbQLQPAg2doCcovVdvedBcRT+=w@mail.gmail.com> (sfid-20160618_235929_194126_FDA9A41F)
-Subject: Re: [PATCH RFC 1/2] brcmfmac: remove interface before notifying listener
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<linux-wireless@vger.kernel.org>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<brcm80211-dev-list.pdl@broadcom.com>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:56619 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752006AbcF0QcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:17 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 07/12] rtl8xxxu: Adjust RX skb size to include space for phystats
+Date: Mon, 27 Jun 2016 12:32:05 -0400
+Message-Id: <1467045130-18874-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183224_593910_B2DF5811)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 June 2016 at 21:26, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
-> On 18-06-16 20:18, Rafał Miłecki wrote:
->> So far when receiving event about in-firmware-interface removal we were
->> notifying our listener and afterwards we were removing Linux interface.
->>
->
-> [snip]
->
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
->> index 9da7a4c..5fd1886 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
->> @@ -18,6 +18,7 @@
->>  #include "brcmu_wifi.h"
->>  #include "brcmu_utils.h"
->>
->> +#include "cfg80211.h"
->>  #include "core.h"
->>  #include "debug.h"
->>  #include "tracepoint.h"
->> @@ -180,10 +181,16 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
->>       if (ifp && ifevent->action == BRCMF_E_IF_CHANGE)
->>               brcmf_fws_reset_interface(ifp);
->>
->> -     err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
->
-> The reason for doing this first is because we are passing the ifp, which
-> is netdev_priv(ifp->ndev). In brcmf_remove_interface() we only
-> unregister the netdev, which will end up (after scheduling) in
-> brcmf_free_netdev() thus freeing the ifp. By moving the event handler
-> function ifp may be stale already.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Good catch. What about making brcmf_fweh_call_event_handler work
-without ifp? Would that be OK then?
+The old allocation didn't leave space for phystats in the buffer,
+allowing the packet to be rejected if a frame size of size
+IEEE80211_MAX_FRAME_LEN was received.
 
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
->> +     if (ifp && ifevent->action == BRCMF_E_IF_DEL) {
->> +             bool rtnl_locked = brcmf_cfg80211_vif_event_armed(drvr->config);
->> +
->> +             brcmf_remove_interface(ifp, rtnl_locked);
->
-> I guess rtnl_locked here means "rtnl_is_locked() by brcmfmac". It
-> actually does not matter who is holding the rtnl_lock. At least when it
-> is brcmfmac it is still a different task, ie. hostapd, iw, etc. Also
-> when brcmf_cfg80211_vif_event_armed() return false there may still be
-> some task holding the rtnl_lock.
-
-It does matter who holds the lock.
-
-If it's e.g. some other driver (ath, intel, ralink, whatever) we still
-should call unregister_netdevice. It'll just wait until rtnl lock gets
-released.
-
-If it's brcmfmac holding the lock, we can't expect it to be released
-as brcmfmac waits for completion event.
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 393ae3b3..f77dae8 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5276,11 +5276,12 @@ static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
+ 
+ 	rx_desc_sz = fops->rx_desc_size;
+ 
+-	if (priv->rx_buf_aggregation && fops->rx_agg_buf_size)
++	if (priv->rx_buf_aggregation && fops->rx_agg_buf_size) {
+ 		skb_size = fops->rx_agg_buf_size;
+-	else
++		skb_size += (rx_desc_sz + sizeof(struct rtl8723au_phy_stats));
++	} else {
+ 		skb_size = IEEE80211_MAX_FRAME_LEN;
+-	skb_size += rx_desc_sz;
++	}
+ 
+ 	skb = __netdev_alloc_skb(NULL, skb_size, GFP_KERNEL);
+ 	if (!skb)
 -- 
-Rafał
+2.7.4
+
