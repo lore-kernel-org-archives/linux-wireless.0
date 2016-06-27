@@ -1,63 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:35144 "EHLO
-	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932430AbcFMUAQ convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34609 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751673AbcF0PxM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 16:00:16 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160613190048.GA17101@amd>
-References: <1462199948-6424-1-git-send-email-jprvita@endlessm.com>
- <1462199948-6424-2-git-send-email-jprvita@endlessm.com> <20160504072936.GB17045@amd>
- <1463045572.13313.21.camel@sipsolutions.net> <20160519071639.GB17077@amd>
- <1465476194.3442.21.camel@sipsolutions.net> <CA+A7VXXP3TYuk4Vvgc8YvxPFo06GG6WpyLJS+2vMLzr0iKQgsA@mail.gmail.com>
- <20160613190048.GA17101@amd>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Mon, 13 Jun 2016 15:59:35 -0400
-Message-ID: <CA+A7VXXOfN1Td2T6uiunWZMS4gvS5sHDzPiDp9VEdx+OPJpSmA@mail.gmail.com> (sfid-20160613_220039_917940_B932FD63)
-Subject: Re: [RESEND PATCH 1/3] rfkill: Create "rfkill-airplane-mode" LED trigger
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 27 Jun 2016 11:53:12 -0400
+Received: by mail-oi0-f65.google.com with SMTP id s17so31356071oih.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 08:53:11 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 04/10] rtlwifi: rtl8188ee: Convert driver to use common hardware info routine
+Date: Mon, 27 Jun 2016 10:52:32 -0500
+Message-Id: <1467042758-25742-5-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160627_175326_191846_6025963B)
+In-Reply-To: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13 June 2016 at 15:00, Pavel Machek <pavel@ucw.cz> wrote:
-> Hi!
->
->> > João, that means you should send a patch to add the ::rfkill suffix.
->> >
->>
->> IMO "airplane" (or maybe "airplane-mode") is a better suffix, as it
->> reflects the label on the machine's chassis. I'll name it
->> "asus-wireless::airplane" and send this through platform-drivers-x86,
->> as this is now contained in the platform-drivers-x86 subsystem. Thanks
->> Johannes for your patience and help designing and reviewing the rfkill
->> changes, even if not all of them made it through in the end. And
->> thanks everyone else involved for the feedback.
->
-> Actually, I'd do '::rfkill', for consistency with other places in
-> /sys.
->
-> /sys/devices/platform/thinkpad_acpi/rfkill/rfkill1/name
-> /sys/class/rfkill
-> /sys/module/rfkill
->
+The driver for RTL8188EE chips is converted to use the common routine
+for getting the hardware information.
 
-If we use "rfkill" as a suffix, how do you expect userspace to be able
-to differentiate between a LED that indicates airplane-mode (LED ON
-when all radios are OFF) and a LED that indicates the state of a
-specific radio like WiFi or Bluetooth (LED ON when that specific radio
-is ON)? If we're going this route we should provide meaningful
-information here.
+Reported-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arnd Bergmann <arnd@arndb.de>
+---
+V2 - Fixes bug found after V1 was submitted.
 
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
+	submitted by Joe Perches.
+---
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    | 76 ++++------------------
+ 1 file changed, 13 insertions(+), 63 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+index cfdf6d8..4ab6201 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
+@@ -1835,76 +1835,24 @@ static void _rtl88ee_read_adapter_info(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	u16 i, usvalue;
+-	u8 hwinfo[HWSET_MAX_SIZE];
+-	u16 eeprom_id;
+-
+-	switch (rtlefuse->epromtype) {
+-	case EEPROM_BOOT_EFUSE:
+-		rtl_efuse_shadow_map_update(hw);
+-		break;
+-
+-	case EEPROM_93C46:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "RTL819X Not boot from eeprom, check it !!\n");
++	int params[] = {RTL8188E_EEPROM_ID, EEPROM_VID, EEPROM_DID,
++			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
++			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
++			COUNTRY_CODE_WORLD_WIDE_13};
++	u8 *hwinfo;
++
++	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
++	if (!hwinfo)
+ 		return;
+ 
+-	default:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "boot from neither eeprom nor efuse, check it !!\n");
+-		return;
+-	}
+-	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+-
+-	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
+-		      hwinfo, HWSET_MAX_SIZE);
+-
+-	eeprom_id = *((u16 *)&hwinfo[0]);
+-	if (eeprom_id != RTL8188E_EEPROM_ID) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+-			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
+-		rtlefuse->autoload_failflag = true;
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
+-		rtlefuse->autoload_failflag = false;
+-	}
++	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
++		goto exit;
+ 
+-	if (rtlefuse->autoload_failflag == true)
+-		return;
+-	/*VID DID SVID SDID*/
+-	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
+-	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
+-	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
+-	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROMId = 0x%4x\n", eeprom_id);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
+-	/*customer ID*/
+-	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
+ 	if (rtlefuse->eeprom_oemid == 0xFF)
+-		rtlefuse->eeprom_oemid =	0;
++		rtlefuse->eeprom_oemid = 0;
+ 
+ 	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+ 		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
+-	/*EEPROM version*/
+-	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
+-	/*mac address*/
+-	for (i = 0; i < 6; i += 2) {
+-		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
+-		*((u16 *)(&rtlefuse->dev_addr[i])) = usvalue;
+-	}
+-
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "dev_addr: %pM\n", rtlefuse->dev_addr);
+-	/*channel plan */
+-	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
+ 	/* set channel plan from efuse */
+ 	rtlefuse->channel_plan = rtlefuse->eeprom_channelplan;
+ 	/*tx power*/
+@@ -1978,6 +1926,8 @@ static void _rtl88ee_read_adapter_info(struct ieee80211_hw *hw)
+ 
+ 		}
+ 	}
++exit:
++	kfree(hwinfo);
+ }
+ 
+ static void _rtl88ee_hal_customized_behavior(struct ieee80211_hw *hw)
+-- 
+2.1.4
+
