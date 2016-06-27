@@ -1,47 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56874 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752447AbcFISiw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 14:38:52 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 0/4] rtl8xxxu bugfix and minor updates
-Date: Thu,  9 Jun 2016 14:38:46 -0400
-Message-Id: <1465497530-18510-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160609_203857_683794_F3D64CB9)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50605 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbcF0ILv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 04:11:51 -0400
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qualcomm.com>,
+	miaoqing pan <miaoqing@codeaurora.org>
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Mirco Tischler <mt-ml@gmx.de>
+Subject: Re: ath9k: fix GPIO mask for AR9462 and AR9565
+Date: Mon, 27 Jun 2016 08:08:51 +0000
+Message-ID: <87por3dpf2.fsf@kamboji.qca.qualcomm.com> (sfid-20160627_101157_778173_31852C1B)
+References: <20160627072235.GB31166@frangipani>
+In-Reply-To: <20160627072235.GB31166@frangipani> (Mirco Tischler's message of
+	"Mon, 27 Jun 2016 09:22:35 +0200")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Mirco Tischler <mt-ml@gmx.de> writes:
 
-Hi,
+>>Thanks, 1 patch applied to ath-current branch of ath.git:
+>>
+>>e024111f6946 ath9k: fix GPIO mask for AR9462 and AR9565
+>
+> I see this warning in 4.7-rc4. Could the fix please go into 4.7? if I
+> understand correctly it is only queued for 4.8?
 
-A couple of simple patches from my current queue. The most important
-one is from Colin Ian King fixing the use of a wrong variable. That
-one should probably go into v4.7. The others are fine for the next
-round.
+The patch is queued for 4.7 and the patch is in the net tree currently.
+I'm expect it to reach Linus' tree during this week.
 
-Cheers,
-Jes
+> Btw. I applied the patch and it does fix the problem :)
 
-
-Andy Shevchenko (1):
-  rtl8xxxu: tuse %*ph to dump buffers
-
-Colin Ian King (1):
-  rtl8xxxu: fix typo on variable name, compare against correct variable
-
-Jes Sorensen (2):
-  rtl8xxxu: Add bit definitions for REG_USB_SPECIAL_OPTION
-  rtl8xxxu: Add additional documentation for RX DMA registers
-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c |  9 ++-------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 11 +++--------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c |  9 ++-------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  | 14 +++++++++++---
- 4 files changed, 18 insertions(+), 25 deletions(-)
+This is good to know, gives more confidence that the fix is correct.
+Thanks for testing.
 
 -- 
-2.5.5
-
+Kalle Valo
