@@ -1,82 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34295 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752337AbcFQMas convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44963 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751940AbcF0IqD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 08:30:48 -0400
+	Mon, 27 Jun 2016 04:46:03 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH 3/3] ath10k: add testmode support for 10.4 firmware
+Date: Mon, 27 Jun 2016 14:21:20 +0530
+Message-ID: <1467017480-12374-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_104626_765354_BC688FD2)
 MIME-Version: 1.0
-In-Reply-To: <574F30D8.5000300@broadcom.com>
-References: <1464791845-23944-1-git-send-email-zajec5@gmail.com> <574F30D8.5000300@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Fri, 17 Jun 2016 14:30:47 +0200
-Message-ID: <CACna6rzcfYu=3qoMsTCShHUWbpz-0-uWgogVLWJwiNv228PhPQ@mail.gmail.com> (sfid-20160617_143111_874501_ED94DADD)
-Subject: Re: [PATCH RFC] brcmfmac: support deleting MBSS AP interfaces
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<brcm80211-dev-list@broadcom.com>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 June 2016 at 21:00, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
-> On 01-06-16 16:36, Rafał Miłecki wrote:
->> We already support adding extra (AP) interfaces so it also makes an
->> obvious sense to allow deleting them.
->>
->> Adding a new interface is implemented by sending request to firmware for
->> creating a new BSS and waiting for a proper event. Ideally deleting
->> interface should be handled in a similar way. There should be a request
->> to firmware for deleting BSS and firmware should respond with an event.
->>
->> Unfortunately it doesn't seem to work with recent firmwares. They never
->> seem to delete BSS and never send BRCMF_E_IF_DEL. As a workaround this
->> patch deletes Linux interface while keeping a track of BSSes present in
->> a firmware. If there is request for adding a new interface this code is
->> capable of reusing existing BSS-es.
->
-> It is not so much an issue of recent firmware. Actually, on recent
-> firmware 7.x.y.z and higher there are other command to create *and*
-> delete additional interfaces. On the other hand we aim to support a
-> large number of devices going back to bcm4329 so we have to come up with
-> a scheme to use the new commands or fallback to old api. Let's hope we
-> can reuse much of this effort you put in.
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-You gave me a complex puzzle there :D It took me a while to find out
-what API you meant.
+This patch adds testmode support for QCA99X0 chipsets which uses
+10.4 firmware and added code swap support for UTF binary.
 
-Finally I found an interesting wlioctl.h in SDK 9.10.178.27 that gave
-me some clue. I got this SDK from ASUS RT-AC1200G+ open souce tarball.
-There are 2 interesting structs:
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/testmode.c |   23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-typedef struct wl_interface_create {
-        uint16 ver; /* version of this struct */
-        uint32  flags; /* flags that defines the operation */
-        struct ether_addr   mac_addr; /* Optional Mac address */
-        uint32  wlc_index; /* Optional wlc index */
-} wl_interface_create_t;
+diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
+index 120f423..2c10c0e 100644
+--- a/drivers/net/wireless/ath/ath10k/testmode.c
++++ b/drivers/net/wireless/ath/ath10k/testmode.c
+@@ -23,6 +23,7 @@
+ #include "wmi.h"
+ #include "hif.h"
+ #include "hw.h"
++#include "core.h"
+ 
+ #include "testmode_i.h"
+ 
+@@ -240,6 +241,18 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
+ 		goto err;
+ 	}
+ 
++	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
++	    ar->testmode.utf_mode_fw.fw_file.codeswap_len) {
++		ret = ath10k_swap_code_seg_init(ar,
++					&ar->testmode.utf_mode_fw.fw_file);
++		if (ret) {
++			ath10k_warn(ar,
++				"failed to init utf code swap segment: %d\n",
++				ret);
++			goto err_release_utf_mode_fw;
++		}
++	}
++
+ 	spin_lock_bh(&ar->data_lock);
+ 	ar->testmode.utf_monitor = true;
+ 	spin_unlock_bh(&ar->data_lock);
+@@ -279,6 +292,11 @@ err_power_down:
+ 	ath10k_hif_power_down(ar);
+ 
+ err_release_utf_mode_fw:
++	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
++	    ar->testmode.utf_mode_fw.fw_file.codeswap_len)
++		ath10k_swap_code_seg_release(ar,
++					&ar->testmode.utf_mode_fw.fw_file);
++
+ 	release_firmware(ar->testmode.utf_mode_fw.fw_file.firmware);
+ 	ar->testmode.utf_mode_fw.fw_file.firmware = NULL;
+ 
+@@ -301,6 +319,11 @@ static void __ath10k_tm_cmd_utf_stop(struct ath10k *ar)
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+ 
++	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
++	    ar->testmode.utf_mode_fw.fw_file.codeswap_len)
++		ath10k_swap_code_seg_release(ar,
++					&ar->testmode.utf_mode_fw.fw_file);
++
+ 	release_firmware(ar->testmode.utf_mode_fw.fw_file.firmware);
+ 	ar->testmode.utf_mode_fw.fw_file.firmware = NULL;
+ 
+-- 
+1.7.9.5
 
-typedef struct wl_interface_info {
-        uint16 ver; /* version of this struct */
-        struct ether_addr    mac_addr; /* MAC address of the interface */
-        char ifname[BCM_MSG_IFNAME_MAX]; /* name of interface */
-        uint8 bsscfgidx; /* source bsscfg index */
-} wl_interface_info_t;
-
-I couldn't find any corresponding WLC_* in wlioctl_defs.h, so I guess
-I should use WLC_SET_VAR (or WLC_SET_VAR as you prefer) with some
-string. Any tip what would it be? Something like
-"wl_interface_create"? Can you reveal such a small secret?
-
-Also can you share any tip on removing interface? I don't see any
-struct for that. Is that handled by some special value in
-"wl_interface_create_t" or by separated string used with WLC_SET_VAR?
