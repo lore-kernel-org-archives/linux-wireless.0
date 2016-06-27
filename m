@@ -1,90 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:49142 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751175AbcFDLuc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 07:50:32 -0400
-Date: Sat, 4 Jun 2016 13:50:10 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Hugh =?UTF-8?B?U2lwacOocmU=?= <hgsipiere@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: ssb: Fix comments to suit coding style
-Message-ID: <20160604135010.4066a7a6@wiggum> (sfid-20160604_135037_461848_6F0A6218)
-In-Reply-To: <1465039933-3984-1-git-send-email-hgsipiere@gmail.com>
-References: <1465039933-3984-1-git-send-email-hgsipiere@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/5L6kmpIXHnFj3pDdgIIjjZQ"; protocol="application/pgp-signature"
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34895 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751860AbcF0PxP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 11:53:15 -0400
+Received: by mail-oi0-f65.google.com with SMTP id d132so31324687oig.2
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 08:53:15 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 08/10] rtlwifi: rtl8821ae: Convert driver to use common hardware info routine
+Date: Mon, 27 Jun 2016 10:52:36 -0500
+Message-Id: <1467042758-25742-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160627_175318_492556_893FC1C2)
+In-Reply-To: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/5L6kmpIXHnFj3pDdgIIjjZQ
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+The driver for RTL8821AE chips is converted to use the common routine
+for getting the hardware information.
 
-On Sat,  4 Jun 2016 12:32:13 +0100
-Hugh Sipi=C3=A8re <hgsipiere@gmail.com> wrote:
+Reported-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arnd Bergmann <arnd@arndb.de>
+---
+V2 - Fixes bug found after V1 was submitted.
 
-> I changed it so that these two comments do not end on a line with text.
->=20
-> Signed-off-by: Hugh Sipi=C3=A8re <hgsipiere@gmail.com>
-> ---
->  drivers/ssb/driver_gpio.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->=20
-> diff --git a/drivers/ssb/driver_gpio.c b/drivers/ssb/driver_gpio.c
-> index 180e027..f2435f3 100644
-> --- a/drivers/ssb/driver_gpio.c
-> +++ b/drivers/ssb/driver_gpio.c
-> @@ -231,7 +231,8 @@ static int ssb_gpio_chipco_init(struct ssb_bus *bus)
->  	chip->ngpio		=3D 16;
->  	/* There is just one SoC in one device and its GPIO addresses should be
->  	 * deterministic to address them more easily. The other buses could get
-> -	 * a random base number. */
-> +	 * a random base number.
-> +	 */
->  	if (bus->bustype =3D=3D SSB_BUSTYPE_SSB)
->  		chip->base		=3D 0;
->  	else
-> @@ -424,7 +425,8 @@ static int ssb_gpio_extif_init(struct ssb_bus *bus)
->  	chip->ngpio		=3D 5;
->  	/* There is just one SoC in one device and its GPIO addresses should be
->  	 * deterministic to address them more easily. The other buses could get
-> -	 * a random base number. */
-> +	 * a random base number.
-> +	 */
->  	if (bus->bustype =3D=3D SSB_BUSTYPE_SSB)
->  		chip->base		=3D 0;
->  	else
+This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
+	submitted by Joe Perches.
+---
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    | 84 +++-------------------
+ 1 file changed, 11 insertions(+), 73 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+index ac8836b..0cddf1a 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
+@@ -3101,86 +3101,22 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+ 	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
+-	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+-	u16 i, usvalue;
+-	u8 hwinfo[HWSET_MAX_SIZE];
+-	u16 eeprom_id;
++	int params[] = {RTL_EEPROM_ID, EEPROM_VID, EEPROM_DID,
++			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
++			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
++			COUNTRY_CODE_WORLD_WIDE_13};
++	u8 *hwinfo;
+ 
+ 	if (b_pseudo_test) {
+ 		;/* need add */
+ 	}
+ 
+-	switch (rtlefuse->epromtype) {
+-	case EEPROM_BOOT_EFUSE:
+-		rtl_efuse_shadow_map_update(hw);
+-		break;
+-
+-	case EEPROM_93C46:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "RTL819X Not boot from eeprom, check it !!\n");
+-		return;
+-
+-	default:
+-		dev_warn(dev, "no efuse data\n");
+-	}
+-	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+-
+-	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
+-		      hwinfo, HWSET_MAX_SIZE);
+-
+-	eeprom_id = *((u16 *)&hwinfo[0]);
+-	if (eeprom_id != RTL_EEPROM_ID) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+-			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
+-		rtlefuse->autoload_failflag = true;
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
+-		rtlefuse->autoload_failflag = false;
+-	}
+-
+-	if (rtlefuse->autoload_failflag) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "RTL8812AE autoload_failflag, check it !!\n");
++	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
++	if (!hwinfo)
+ 		return;
+-	}
+-
+-	rtlefuse->eeprom_version = *(u8 *)&hwinfo[EEPROM_VERSION];
+-	if (rtlefuse->eeprom_version == 0xff)
+-			rtlefuse->eeprom_version = 0;
+-
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM version: 0x%2x\n", rtlefuse->eeprom_version);
+-
+-	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
+-	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
+-	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
+-	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROMId = 0x%4x\n", eeprom_id);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
+-
+-	/*customer ID*/
+-	rtlefuse->eeprom_oemid = *(u8 *)&hwinfo[EEPROM_CUSTOMER_ID];
+-	if (rtlefuse->eeprom_oemid == 0xFF)
+-		rtlefuse->eeprom_oemid = 0;
+-
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
+-
+-	for (i = 0; i < 6; i += 2) {
+-		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
+-		*((u16 *)(&rtlefuse->dev_addr[i])) = usvalue;
+-	}
+ 
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "dev_addr: %pM\n", rtlefuse->dev_addr);
++	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
++		goto exit;
+ 
+ 	_rtl8821ae_read_txpower_info_from_hwpg(hw, rtlefuse->autoload_failflag,
+ 					       hwinfo);
+@@ -3280,6 +3216,8 @@ static void _rtl8821ae_read_adapter_info(struct ieee80211_hw *hw, bool b_pseudo_
+ 			break;
+ 		}
+ 	}
++exit:
++	kfree(hwinfo);
+ }
+ 
+ /*static void _rtl8821ae_hal_customized_behavior(struct ieee80211_hw *hw)
+-- 
+2.1.4
 
-What's the benefit from this change?
-Will the next person submit a patch to remove wasted lines that just
-contain a */?
-
-
---=20
-Michael
-
---Sig_/5L6kmpIXHnFj3pDdgIIjjZQ
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXUsByAAoJEPUyvh2QjYsOzzEQAJa3Y/n7vs2MFR7sPoWzVCJM
-Iu4pfkD8aT3JlmQo1ebNevhjVSt6z2NKwesOGHlhaSbYGX9O2o/8nIqjE/QKSBat
-jwVZV1MhkE9yuXho9p3mpzrA6YCa/ehP8OwEGEhJXOzeSEVicxMNGSzf/ld2oMnE
-mOOEvkeT7Bolbt1UcBwSaaUE3e4cq8FPROiqEZ7O/fJtKcAh23tBfDb8vtur6x54
-UngnQmLEvPGBvMvcdwoXvYZ4LE6VnLV78M1PmzMTJa+1RJCtDMiD6lkW+6YWERja
-HJzQD+YG4yCc51mq/pFxDCZiaua2MGwxrRMmiZP0fne8ofDTYczoAQG3Wn9g61lE
-4IRPcNsd44vM93nS9jZpmFyzCvU4+Z2ksDcKZYDGQ6tJJeXtPqmOq1qRdF8bNKgN
-nFkS6ogbfzk26F1UclV1Zc7CMUcQ4xGO63oi/JjHClzxuVgK5ARQHFBBOyKRKY/j
-6XIyGMnP8MnF/aLM8t68YPB353uWOC6IxFZW0YsDf8BuXHaNh8di8TA+GIJjTx0N
-uEM0ThVGkL/gXTku/PGt6MIzE3RnvFfVz+SHKq9U2UIaR5hOephfZDo3HgAIv7+8
-HSqbqzm3f73S96Ex33sPCmmjS8leoO130BK3xEJeKpFhd9ox4UOcqFbMG4vv255v
-tpAZ5ohv5TGM3/rVDKzY
-=Vitr
------END PGP SIGNATURE-----
-
---Sig_/5L6kmpIXHnFj3pDdgIIjjZQ--
