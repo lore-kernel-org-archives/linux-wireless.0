@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57047 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750809AbcFWRMG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21828 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751787AbcF0Hxy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 13:12:06 -0400
-Message-ID: <576C1861.7020402@candelatech.com> (sfid-20160623_191210_742937_179276D2)
-Date: Thu, 23 Jun 2016 10:12:01 -0700
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 27 Jun 2016 03:53:54 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <tamizhchelvam@codeaurora.org>
+Subject: [PATCH 0/3] Add testmode support for 10.4
+Date: Mon, 27 Jun 2016 13:29:11 +0530
+Message-ID: <1467014351-30894-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_095358_117650_AAA9ADBF)
 MIME-Version: 1.0
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	ath10k@lists.infradead.org
-CC: mohammed@codeaurora.org, linux-wireless@vger.kernel.org,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
- QCA99X0 and later
-References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com> <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/23/2016 09:40 AM, Mohammed Shafi Shajakhan wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
-> NULL func status (always acked/successs !!) when hostapd does a
-> PROBE_CLIENT via nullfunc frames when the station is powered off
-> abruptly (inactive timer probes client via null func after the inactive
-> time reaches beyond the threshold). Fix this by disabling the workaround
-> (getting the ACK status of NULL func frames by sending via HTT mgmt-tx
->   path) introduced by the change ("ath10k: fix beacon loss handling ")
-> for QCA99X0 and later chipsets. The normal tx path provides the proper
-> ACK status for NULL data frames. As of now disable this workaround for
-> chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
-> completely get rid of this workaround for all the chipsets
+From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
 
-Did you see my fix for the tx-status that Kalle posted about recently?
-That fixed my problem with 9980, but I normally test status with tx over
-the htt mgt path instead of wmi path, so possibly that makes a difference.
+*The below patches add testmode support for 10.4.
 
-Thanks,
-Ben
+*Some of the codeswap related code in ath10k for example code
+which  initializes the code swap segment works only on normal fw,
+below patches  make such code generic so that it can be used
+for utf binary as well.
+
+Tamizh chelvam (3):
+  ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
+  ath10k: handle testmode events for 10.2 and 10.4 based firmware
+  ath10k: add testmode support for 10.4 firmware
+
+ drivers/net/wireless/ath/ath10k/core.c     |    6 +++---
+ drivers/net/wireless/ath/ath10k/core.h     |    6 ++----
+ drivers/net/wireless/ath/ath10k/swap.c     |   26 ++++++++++++++------------
+ drivers/net/wireless/ath/ath10k/swap.h     |   11 ++++++++---
+ drivers/net/wireless/ath/ath10k/testmode.c |   23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c      |   26 ++++++++++++++++++++++++++
+ 6 files changed, 76 insertions(+), 22 deletions(-)
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.7.9.5
 
