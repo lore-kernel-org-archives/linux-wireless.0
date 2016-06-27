@@ -1,103 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40835 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751298AbcFZA1T (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36737 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751871AbcF0PxS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 20:27:19 -0400
-Message-ID: <576F2165.3010109@candelatech.com> (sfid-20160626_022723_615901_78B25022)
-Date: Sat, 25 Jun 2016 17:27:17 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-CC: Tamizh chelvam <c_traja@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
- QCA99X0 and later
-References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com> <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com> <576C1861.7020402@candelatech.com> <20160625185350.GA25330@atheros-ThinkPad-T61>
-In-Reply-To: <20160625185350.GA25330@atheros-ThinkPad-T61>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Mon, 27 Jun 2016 11:53:18 -0400
+Received: by mail-oi0-f66.google.com with SMTP id x6so31303158oif.3
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 08:53:18 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v2 06/10] rtlwifi: rtl8723ae: Convert driver to use common hardware info routine
+Date: Mon, 27 Jun 2016 10:52:34 -0500
+Message-Id: <1467042758-25742-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160627_175322_315102_E5B21B6A)
+In-Reply-To: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/25/2016 11:53 AM, Mohammed Shafi Shajakhan wrote:
-> Hello Ben,
->
-> On Thu, Jun 23, 2016 at 10:12:01AM -0700, Ben Greear wrote:
->> On 06/23/2016 09:40 AM, Mohammed Shafi Shajakhan wrote:
->>> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->>>
->>> For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
->>> NULL func status (always acked/successs !!) when hostapd does a
->>> PROBE_CLIENT via nullfunc frames when the station is powered off
->>> abruptly (inactive timer probes client via null func after the inactive
->>> time reaches beyond the threshold). Fix this by disabling the workaround
->>> (getting the ACK status of NULL func frames by sending via HTT mgmt-tx
->>>   path) introduced by the change ("ath10k: fix beacon loss handling ")
->>> for QCA99X0 and later chipsets. The normal tx path provides the proper
->>> ACK status for NULL data frames. As of now disable this workaround for
->>> chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
->>> completely get rid of this workaround for all the chipsets
->>
->> Did you see my fix for the tx-status that Kalle posted about recently?
->> That fixed my problem with 9980, but I normally test status with tx over
->> the htt mgt path instead of wmi path, so possibly that makes a difference.
->
-> [shafi] Yes Kalle suggested to try your change (BTW we were not aware that you
-> already discovered this problem !!), https://patchwork.kernel.org/patch/8460831/
-> but ..
+The driver for RTL8723AE chips is converted to use the common routine
+for getting the hardware information.
 
-Is there a better way than posting to the ath10k mailing list?  There are quite
-a few more of my patches that are stuck in pending or ignored state.  If you
-could review some of them and add them to your testing trees then it might help
-them go upstream.
+Reported-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arnd Bergmann <arnd@arndb.de>
+---
+V2 - Fixes bug found after V1 was submitted.
 
-Maybe someone else with more time and resources could take over maintainer-ship of ath10k
-and let Kalle focus on the drivers in general?
+This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
+	submitted by Joe Perches.
+---
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    | 76 ++++------------------
+ 1 file changed, 11 insertions(+), 65 deletions(-)
 
-> "[ 747.803652] ath10k_pci 0000:01:00.0: htt tx completion msdu_id 0 discard 0
-> no_ack 0 success 1"
->
-> "[ 747.803843] ath10k_pci 0001:01:00.0: htt tx completion msdu_id 0 discard 0
-> no_ack 0 success 1"
->
-> to be more precise looks like we hit this path for MSG type 0xE,( management Tx
-> completion indication) path(status ok ??) for null func frame without ACK
->
-> case HTT_MGMT_TX_STATUS_OK:
-> 	tx_done.status = HTT_TX_COMPL_STATE_ACK;
-> 	break;
->
->
-> a) The success bit being 'set' without the fix so the change you had mentioned may not help
-> for the upstreamed f/w, should we  give a shot with your change as well to
-> confirm it ?
-
-I have no good way to know what exact source creates the upstream firmware.  But, grep
-around for FILTERED and you will probably see your firmware using that tx code.
-
-It could easily be that both of our patches are correct and needed.
-
-> b) and also the workaround is for older firmware which got fixed in
-> 10.2.4 and 10.4, if you can help us that 10.1 also reports NULL func frame
-> status properly via normal data path, we can probably get rid of this workaround
-> once and for all ? thoughts ?
-
-I can fix my 10.1 if it is not already fixed.  If you are ready to have my
-10.1 be the only supported 10.1, then we can do the tests.  If that is the
-case, then you should add a feature flag for my firmware and fail to load any
-other 10.1 firmware since it would then be guaranteed to fail since you are removing
-workarounds for it...
-
-I would rather focus on getting some of the debug patches upstream so that
-I can actually make progress on firmware bugs found on stock kernels.  Without
-them, I have to ask people to run patched drivers in order to get debug info,
-and that is painful for all involved.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+index 0025e21..662c445 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
+@@ -1630,67 +1630,22 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+-	u16 i, usvalue;
+-	u8 hwinfo[HWSET_MAX_SIZE];
+-	u16 eeprom_id;
++	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
++			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
++			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
++			COUNTRY_CODE_WORLD_WIDE_13};
++	u8 *hwinfo;
+ 
+ 	if (b_pseudo_test) {
+ 		/* need add */
+ 		return;
+ 	}
+-	switch (rtlefuse->epromtype) {
+-	case EEPROM_BOOT_EFUSE:
+-		rtl_efuse_shadow_map_update(hw);
+-
+-	case EEPROM_93C46:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "RTL819X Not boot from eeprom, check it !!\n");
++	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
++	if (!hwinfo)
+ 		return;
+ 
+-	default:
+-		dev_warn(dev, "no efuse data\n");
+-	}
+-	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+-
+-	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP\n",
+-		      hwinfo, HWSET_MAX_SIZE);
+-
+-	eeprom_id = *((u16 *)&hwinfo[0]);
+-	if (eeprom_id != RTL8190_EEPROM_ID) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+-			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
+-		rtlefuse->autoload_failflag = true;
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
+-		rtlefuse->autoload_failflag = false;
+-	}
+-
+-	if (rtlefuse->autoload_failflag)
+-		return;
+-
+-	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
+-	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
+-	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
+-	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROMId = 0x%4x\n", eeprom_id);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
+-
+-	for (i = 0; i < 6; i += 2) {
+-		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
+-		*((u16 *)(&rtlefuse->dev_addr[i])) = usvalue;
+-	}
+-
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG,
+-		 "dev_addr: %pM\n", rtlefuse->dev_addr);
++	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
++		goto exit;
+ 
+ 	_rtl8723e_read_txpower_info_from_hwpg(hw, rtlefuse->autoload_failflag,
+ 					      hwinfo);
+@@ -1698,17 +1653,6 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
+ 	rtl8723e_read_bt_coexist_info_from_hwpg(hw,
+ 			rtlefuse->autoload_failflag, hwinfo);
+ 
+-	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
+-	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
+-	rtlefuse->txpwr_fromeprom = true;
+-	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
+-
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
+-
+-	/* set channel paln to world wide 13 */
+-	rtlefuse->channel_plan = COUNTRY_CODE_WORLD_WIDE_13;
+-
+ 	if (rtlhal->oem_id == RT_CID_DEFAULT) {
+ 		switch (rtlefuse->eeprom_oemid) {
+ 		case EEPROM_CID_DEFAULT:
+@@ -1836,6 +1780,8 @@ static void _rtl8723e_read_adapter_info(struct ieee80211_hw *hw,
+ 
+ 		}
+ 	}
++exit:
++	kfree(hwinfo);
+ }
+ 
+ static void _rtl8723e_hal_customized_behavior(struct ieee80211_hw *hw)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.4
 
