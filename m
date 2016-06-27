@@ -1,56 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33506 "EHLO
-	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751722AbcFYSiT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 25 Jun 2016 14:38:19 -0400
-Received: by mail-oi0-f68.google.com with SMTP id w141so24017518oia.0
-        for <linux-wireless@vger.kernel.org>; Sat, 25 Jun 2016 11:38:19 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Pavel Andrianov <andrianov@ispras.ru>
-Subject: [PATCH 6/6] rtlwifi: rtl8821ae: Fix potential race condition
-Date: Sat, 25 Jun 2016 13:37:47 -0500
-Message-Id: <1466879867-2499-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160625_203828_460249_126E02C8)
-In-Reply-To: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1466879867-2499-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from lists.s-osg.org ([54.187.51.154]:37647 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751385AbcF0NA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 09:00:58 -0400
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org,
+	Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH v3] staging: wilc1000: fix error handling in wilc_debugfs_init()
+Date: Mon, 27 Jun 2016 14:00:20 +0100
+Message-Id: <1467032420-19995-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160627_150118_581322_294CFE16)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Flag rfchange_inprogress in struct rtl_ps_ctl is protected by a spinlock
-in most routines but not in rtl8821ae_dm_watchdog() which could
-lead to a race condition. The necessary locking to prevent this condition
-is added.
+We can just ignore the return value from debugfs_create_dir() and
+debugfs_create_file(). The second one already interanlly checks the dentry
+created by the first before creating the file.
 
-Reported-by: Pavel Andrianov <andrianov@ispras.ru>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Pavel Andrianov <andrianov@ispras.ru>
+debugfs was written so it would be easy to use, no need for error checking.
+
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/staging/wilc1000/wilc_debugfs.c | 29 +++++------------------------
+ 1 file changed, 5 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-index 17a6817..35c6f8a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-@@ -2949,6 +2949,7 @@ void rtl8821ae_dm_watchdog(struct ieee80211_hw *hw)
- 	if (ppsc->p2p_ps_info.p2p_ps_mode)
- 		fw_ps_awake = false;
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index fcbc95d..b052628 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -102,35 +102,16 @@ static struct wilc_debugfs_info_t debugfs_info[] = {
+ static int __init wilc_debugfs_init(void)
+ {
+ 	int i;
+-
+-	struct dentry *debugfs_files;
+ 	struct wilc_debugfs_info_t *info;
  
-+	spin_lock(&rtlpriv->locks.rf_ps_lock);
- 	if ((ppsc->rfpwr_state == ERFON) &&
- 	    ((!fw_current_inpsmode) && fw_ps_awake) &&
- 	    (!ppsc->rfchange_inprogress)) {
-@@ -2967,6 +2968,7 @@ void rtl8821ae_dm_watchdog(struct ieee80211_hw *hw)
- 			rtl8821ae_dm_check_txpower_tracking_thermalmeter(hw);
- 		rtl8821ae_dm_iq_calibrate(hw);
+ 	wilc_dir = debugfs_create_dir("wilc_wifi", NULL);
+-	if (wilc_dir ==  ERR_PTR(-ENODEV)) {
+-		/* it's not error. the debugfs is just not being enabled. */
+-		printk("ERR, kernel has built without debugfs support\n");
+-		return 0;
+-	}
+-
+-	if (!wilc_dir) {
+-		printk("ERR, debugfs create dir\n");
+-		return -1;
+-	}
+-
+ 	for (i = 0; i < ARRAY_SIZE(debugfs_info); i++) {
+ 		info = &debugfs_info[i];
+-		debugfs_files = debugfs_create_file(info->name,
+-						    info->perm,
+-						    wilc_dir,
+-						    &info->data,
+-						    &info->fops);
+-
+-		if (!debugfs_files) {
+-			printk("ERR fail to create the debugfs file, %s\n", info->name);
+-			debugfs_remove_recursive(wilc_dir);
+-			return -1;
+-		}
++		debugfs_create_file(info->name,
++				    info->perm,
++				    wilc_dir,
++				    &info->data,
++				    &info->fops);
  	}
-+	spin_unlock(&rtlpriv->locks.rf_ps_lock);
- 
- 	rtlpriv->dm.dbginfo.num_qry_beacon_pkt = 0;
- 	RT_TRACE(rtlpriv, COMP_DIG, DBG_DMESG, "\n");
+ 	return 0;
+ }
 -- 
-2.1.4
+2.6.4
 
