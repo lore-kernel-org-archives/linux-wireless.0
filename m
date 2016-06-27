@@ -1,57 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:39882 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889AbcFORqV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2016 13:46:21 -0400
-Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail2.candelatech.com (Postfix) with ESMTPSA id DDF5240A959
-	for <linux-wireless@vger.kernel.org>; Wed, 15 Jun 2016 10:46:20 -0700 (PDT)
-Subject: Re: mac80211 splat with pktgen on hacked 4.4 kernel.
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <576192B2.3000304@candelatech.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <5761946C.80101@candelatech.com> (sfid-20160615_194625_284077_634E2EC3)
-Date: Wed, 15 Jun 2016 10:46:20 -0700
-MIME-Version: 1.0
-In-Reply-To: <576192B2.3000304@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:40941 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752014AbcF0QcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:17 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 05/12] rtl8xxxu: Add support for aggregated RX packets on gen1 parts
+Date: Mon, 27 Jun 2016 12:32:03 -0400
+Message-Id: <1467045130-18874-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183222_490406_CD54A0B4)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/15/2016 10:38 AM, Ben Greear wrote:
-> On 4.4.11 + local hacks, including fairly extensive pktgen changes....
->
-> When I overdrive transmit on a station with pktgen, I see this
-> splat hit below repeatedly.  Any ideas on what kinds of things
-> might cause this?
->
->          while (!skb_queue_empty(&local->pending[i])) {
->              struct sk_buff *skb = __skb_dequeue(&local->pending[i]);
->              struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
->
->              if (WARN_ON(!info->control.vif)) {
->                  ieee80211_free_txskb(&local->hw, skb);
->                  continue;
->              }
->
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-For instance, should this method below set the vif when it is queueing up a backlogged
-frame when the queue is stopped?  Seems it only sets the vif it it is transmitting
-the frame?
+This implements support for demuxing aggregated RX packets on gen1
+devices, using the rxdesc16 format.
 
-static bool ieee80211_tx_frags(struct ieee80211_local *local,
-                                struct ieee80211_vif *vif,
-                                struct ieee80211_sta *sta,
-                                struct sk_buff_head *skbs,
-                                bool txpending)
+So far this has only been tested with rtl8723au devices.
 
-Thanks,
-Ben
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 103 ++++++++++++++-------
+ 1 file changed, 69 insertions(+), 34 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 52652e6..01a4f89 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5093,53 +5093,88 @@ static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
+ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hw *hw = priv->hw;
+-	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
+-	struct rtl8xxxu_rxdesc16 *rx_desc =
+-		(struct rtl8xxxu_rxdesc16 *)skb->data;
++	struct ieee80211_rx_status *rx_status;
++	struct rtl8xxxu_rxdesc16 *rx_desc;
+ 	struct rtl8723au_phy_stats *phy_stats;
+-	__le32 *_rx_desc_le = (__le32 *)skb->data;
+-	u32 *_rx_desc = (u32 *)skb->data;
++	struct sk_buff *next_skb = NULL;
++	__le32 *_rx_desc_le;
++	u32 *_rx_desc;
+ 	int drvinfo_sz, desc_shift;
+-	int i;
++	int i, pkt_cnt, pkt_len, urb_len, pkt_offset;
+ 
+-	for (i = 0; i < (sizeof(struct rtl8xxxu_rxdesc16) / sizeof(u32)); i++)
+-		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
++	urb_len = skb->len;
++	pkt_cnt = 0;
+ 
+-	memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
++	do {
++		rx_desc = (struct rtl8xxxu_rxdesc16 *)skb->data;
++		_rx_desc_le = (__le32 *)skb->data;
++		_rx_desc = (u32 *)skb->data;
+ 
+-	skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc16));
++		for (i = 0;
++		     i < (sizeof(struct rtl8xxxu_rxdesc16) / sizeof(u32)); i++)
++			_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
+ 
+-	phy_stats = (struct rtl8723au_phy_stats *)skb->data;
++		/*
++		 * Only read pkt_cnt from the header if we're parsing the
++		 * first packet
++		 */
++		if (!pkt_cnt)
++			pkt_cnt = rx_desc->pkt_cnt;
++		pkt_len = rx_desc->pktlen;
+ 
+-	drvinfo_sz = rx_desc->drvinfo_sz * 8;
+-	desc_shift = rx_desc->shift;
+-	skb_pull(skb, drvinfo_sz + desc_shift);
++		drvinfo_sz = rx_desc->drvinfo_sz * 8;
++		desc_shift = rx_desc->shift;
++		pkt_offset = roundup(pkt_len + drvinfo_sz + desc_shift +
++				     sizeof(struct rtl8xxxu_rxdesc16), 128);
+ 
+-	if (rx_desc->phy_stats)
+-		rtl8xxxu_rx_parse_phystats(priv, rx_status, phy_stats,
+-					   rx_desc->rxmcs);
++		if (pkt_cnt > 1)
++			next_skb = skb_clone(skb, GFP_ATOMIC);
+ 
+-	rx_status->mactime = le32_to_cpu(rx_desc->tsfl);
+-	rx_status->flag |= RX_FLAG_MACTIME_START;
++		rx_status = IEEE80211_SKB_RXCB(skb);
++		memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ 
+-	if (!rx_desc->swdec)
+-		rx_status->flag |= RX_FLAG_DECRYPTED;
+-	if (rx_desc->crc32)
+-		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+-	if (rx_desc->bw)
+-		rx_status->flag |= RX_FLAG_40MHZ;
++		skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc16));
+ 
+-	if (rx_desc->rxht) {
+-		rx_status->flag |= RX_FLAG_HT;
+-		rx_status->rate_idx = rx_desc->rxmcs - DESC_RATE_MCS0;
+-	} else {
+-		rx_status->rate_idx = rx_desc->rxmcs;
+-	}
++		phy_stats = (struct rtl8723au_phy_stats *)skb->data;
+ 
+-	rx_status->freq = hw->conf.chandef.chan->center_freq;
+-	rx_status->band = hw->conf.chandef.chan->band;
++		skb_pull(skb, drvinfo_sz + desc_shift);
++
++		skb_trim(skb, pkt_len);
++
++		if (rx_desc->phy_stats)
++			rtl8xxxu_rx_parse_phystats(priv, rx_status, phy_stats,
++						   rx_desc->rxmcs);
++
++		rx_status->mactime = le32_to_cpu(rx_desc->tsfl);
++		rx_status->flag |= RX_FLAG_MACTIME_START;
++
++		if (!rx_desc->swdec)
++			rx_status->flag |= RX_FLAG_DECRYPTED;
++		if (rx_desc->crc32)
++			rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
++		if (rx_desc->bw)
++			rx_status->flag |= RX_FLAG_40MHZ;
++
++		if (rx_desc->rxht) {
++			rx_status->flag |= RX_FLAG_HT;
++			rx_status->rate_idx = rx_desc->rxmcs - DESC_RATE_MCS0;
++		} else {
++			rx_status->rate_idx = rx_desc->rxmcs;
++		}
++
++		rx_status->freq = hw->conf.chandef.chan->center_freq;
++		rx_status->band = hw->conf.chandef.chan->band;
++
++		ieee80211_rx_irqsafe(hw, skb);
++
++		skb = next_skb;
++		if (skb)
++			skb_pull(next_skb, pkt_offset);
++
++		pkt_cnt--;
++		urb_len -= pkt_offset;
++	} while (skb && urb_len > 0 && pkt_cnt > 0);
+ 
+-	ieee80211_rx_irqsafe(hw, skb);
+ 	return RX_TYPE_DATA_PKT;
+ }
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
 
