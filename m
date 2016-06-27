@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:36655 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750847AbcFDTo4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 15:44:56 -0400
-Received: by mail-oi0-f48.google.com with SMTP id j1so173969844oih.3
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Jun 2016 12:44:56 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <57526D1D.9000305@gmx.net>
-References: <CAArymCnfQaa29D2EXGzwOrp0yvXES+Qq1X-HbSUxC6gig8pH_A@mail.gmail.com>
- <57526D1D.9000305@gmx.net>
-From: bruce m beach <brucembeach@gmail.com>
-Date: Sat, 4 Jun 2016 12:44:55 -0700
-Message-ID: <CAArymCm7SgKyK_cy+MucMb5-8nDZshiOCu-mPVyKR6WnNCm5Lg@mail.gmail.com> (sfid-20160604_214459_491210_39DD7B9E)
-Subject: ath9k_htc firmware
-To: Oleksij Rempel <fishor@gmx.net>
-Cc: ath9k-devel@lists.ath9k.org, ath9k_htc_fw@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:38547 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752009AbcF0QcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:17 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 09/12] rtl8xxxu: Enable aggregation for rtl8192cu/rtl8188cu/rtl8188ru
+Date: Mon, 27 Jun 2016 12:32:07 -0400
+Message-Id: <1467045130-18874-10-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183223_941954_DC38BA7A)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> I'm looking for some kind of simple request in the ath9k_htc driver, through
->> the usb ep0, like a memory read on the card, where a urb is sent with
->> the resulting chain of events. The simpler the better. The simplest.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> For EP0 on drivers site:
-> static int ath9k_hif_usb_download_fw(struct hif_device_usb *hif_dev)
-> {
-> int transfer, err;
-> const void *data = hif_dev->fw_data;
-> size_t len = hif_dev->fw_size;
-> u32 addr = AR9271_FIRMWARE;
-> u8 *buf = kzalloc(4096, GFP_KERNEL);
-> u32 firm_offset;
-> ...
+This enables aggregation on rtl8192cu and derivative parts. This uses
+the same parameters as for rtl8723au.
 
-  What about the code for setting and resetting leds ???
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Bruce
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+index eefb7ca..69d1a14 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+@@ -560,6 +560,7 @@ struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.phy_iq_calibrate = rtl8xxxu_gen1_phy_iq_calibrate,
+ 	.config_channel = rtl8xxxu_gen1_config_channel,
+ 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
++	.init_aggregation = rtl8xxxu_gen1_init_aggregation,
+ 	.enable_rf = rtl8xxxu_gen1_enable_rf,
+ 	.disable_rf = rtl8xxxu_gen1_disable_rf,
+ 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
+@@ -567,6 +568,7 @@ struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.update_rate_mask = rtl8xxxu_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen1_report_connect,
+ 	.writeN_block_size = 128,
++	.rx_agg_buf_size = 16000,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
+ 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16),
+ 	.adda_1t_init = 0x0b1b25a0,
+-- 
+2.7.4
+
