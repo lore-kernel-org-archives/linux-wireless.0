@@ -1,33 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51209 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751651AbcF2Jov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 05:44:51 -0400
-Message-ID: <1467193486.2461.10.camel@sipsolutions.net> (sfid-20160629_114456_829250_F266E0BC)
-Subject: Re: [PATCH] mac80211: minstrel: Enable STBC and LDPC for VHT Rates
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	Karl Beldan <karl.beldan@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Date: Wed, 29 Jun 2016 11:44:46 +0200
-In-Reply-To: <CABPxzYKk2ofEzfSTJHx8fZhNYHhAiipSk+zhQbQ+QvFFJYe+uQ@mail.gmail.com> (sfid-20160629_105646_975045_B9FBDFEF)
-References: <1467021206-2702-1-git-send-email-chaitanya.mgit@gmail.com>
- <CACYmx9O-xnLLUWgVFBWnY2L2ArsHW_+voOA+xeTBMqOK9mAPLg@mail.gmail.com>
- <CABPxzYLQyBsDD+HK=eS7qBXtrAdxwOajC3-xyYhKP8Bf_HExww@mail.gmail.com>
-	 <CABPxzYJYGiCHGh2drjDq73JL9_FUWy-Bhb3zqORNz=wBy2Tzuw@mail.gmail.com>
-	 <CABPxzYKk2ofEzfSTJHx8fZhNYHhAiipSk+zhQbQ+QvFFJYe+uQ@mail.gmail.com>
-	 (sfid-20160629_105646_975045_B9FBDFEF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:36012 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751655AbcF0IoW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 04:44:22 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <tamizhchelvam@codeaurora.org>
+Subject: [PATCH 0/3] Add testmode support for 10.4
+Date: Mon, 27 Jun 2016 14:19:37 +0530
+Message-ID: <1467017377-25145-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160627_104425_792552_B42B7F00)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
 
-> How do you want to proceed? Do you want to
-> revert this patch and shall i send another patch?
-> 
+*The below patches add testmode support for 10.4.
 
-I'll rebase the patch out.
+*Some of the codeswap related code in ath10k for example code
+which  initializes the code swap segment works only on normal fw,
+below patches  make such code generic so that it can be used
+for utf binary as well.
 
-johannes
+Tamizh chelvam (3):
+  ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
+  ath10k: handle testmode events for 10.2 and 10.4 based firmware
+  ath10k: add testmode support for 10.4 firmware
+
+ drivers/net/wireless/ath/ath10k/core.c     |    6 +++---
+ drivers/net/wireless/ath/ath10k/core.h     |    6 ++----
+ drivers/net/wireless/ath/ath10k/swap.c     |   26 ++++++++++++++------------
+ drivers/net/wireless/ath/ath10k/swap.h     |   11 ++++++++---
+ drivers/net/wireless/ath/ath10k/testmode.c |   23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c      |   26 ++++++++++++++++++++++++++
+ 6 files changed, 76 insertions(+), 22 deletions(-)
+
+-- 
+1.7.9.5
+
