@@ -1,121 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35781 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751255AbcFWSOv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 14:14:51 -0400
-Received: by mail-wm0-f66.google.com with SMTP id a66so13006104wme.2
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 11:14:50 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160623175809.GA31170@leverpostej>
-References: <20160623174536.5967-1-martin.blumenstingl@googlemail.com>
- <20160623174536.5967-2-martin.blumenstingl@googlemail.com> <20160623175809.GA31170@leverpostej>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Thu, 23 Jun 2016 20:14:29 +0200
-Message-ID: <CAFBinCC6iY_y-_w_yeoqOOysqYBQxcRf8oVgXYs3YqqSE=sJrQ@mail.gmail.com> (sfid-20160623_201455_484619_BF98D158)
-Subject: Re: [PATCH RFC v2 1/2] Documentation: dt: net: add ath9k wireless
- device binding
-To: Mark Rutland <mark.rutland@arm.com>
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, nbd@nbd.name, chunkeey@googlemail.com,
-	robh+dt@kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:40937 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751831AbcF0QcM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:12 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 03/12] rtl8xxxu: Obtain ieee80211_rx_status within parse_rx_desc()
+Date: Mon, 27 Jun 2016 12:32:01 -0400
+Message-Id: <1467045130-18874-4-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_183216_478697_0CB00BEF)
+In-Reply-To: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 23, 2016 at 7:58 PM, Mark Rutland <mark.rutland@arm.com> wrote:
-> On Thu, Jun 23, 2016 at 07:45:35PM +0200, Martin Blumenstingl wrote:
->> Add documentation how devicetree can be used to configure ath9k based
->> devices.
->>
->> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
->> ---
->> changes in v1 -> v2:
->> - use vendor prefix "qca" instead of "ath"
->> - extend the example so it includes the "compatible" property
->>
->>  .../devicetree/bindings/net/wireless/qca,ath9k.txt | 41 ++++++++++++++++++++++
->>  1 file changed, 41 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
->>
->> diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
->> new file mode 100644
->> index 0000000..bb78f68
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
->> @@ -0,0 +1,41 @@
->> +* Qualcomm Atheros ath9k wireless devices
->> +
->> +This node provides properties for configuring the ath9k wireless device. The
->> +node is expected to be specified as a child node of the PCI controller to
->> +which the wireless chip is connected.
->> +
->> +Required properties:
->> +- compatible: Should be "qca,ath9k"
->> +
->> +Optional properties:
->> +- reg: Address and length of the register set for the device.
->> +- qca,gpio-mask: The GPIO mask
->> +- qca,gpio-val: The GPIO value
->> +- qca,led-pin: The GPIO number to which the LED is connected
->> +- qca,led-active-high: The LED is active when the GPIO is HIGH
->> +- qca,clk-25mhz: Defines that at 25MHz clock is used
->
-> I must assume these apply to internal GPIOs, LEDs and clocks, so I'm
-> somewhat surprised any description is necessary.
->
-> How variable are these in practice?
-led-pin and led-active-high are definitely used on various OpenWrt devices.
-However, I am afraid that I have to pass this question to the ath9k
-developers for the other properties (gpio-mask, gpio-val and
-clk-25mhz).
-If you want we can skip gpio-mask, gpio-val and clk-25mhz for now, but
-keep led-pin and led-active-high.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
->> +- qca,eeprom-name: The name of the file which contains the EEPROM data (which
->> +                     will be loaded via request_firmware)
->
-> The binding shouldn't know anything about the host filesystem,
-> request_firmware, etc. So the description is a best a little off.
->
-> What happens when a new FW comes out? I shouldn't have to update my DT
-> to cater for that.
-This is not exactly a "firmware" but rather device-specific
-calibration data (RF settings, MAC address, etc). Usually there is an
-eeprom connected directly to the wifi chip, but on embedded devices
-this is usually skipped and instead the calibration data is shipped
-somewhere on the main flash (directly on SPI-/NOR-/NAND flash,
-sometimes even inside an UBI volume).
+When handling aggregated packets, we'll get a new ieee80211_rx_status
+for each cloned skb, so passing in the pointer from the outside
+doesn't make sense.
 
-> Please find a better way to identify relevant FW. What exactly affects
-> which FW can be used, or would ideally be used? Are different FWs
-> required for the same HW in some contexts?
->
-> Can we not figure out the relevant FW names in the driver based on some
-> identification mechanism (e.g. a more thoroughly defined set of
-> compatible strings)?
-The only way of auto-detecting a "correct" name would be via
-dev_name() (with some prefix this could give something like
-ath9k-pci-0000:00:0e.0.bin).
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      |  9 +++------
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 11 +++++------
+ 2 files changed, 8 insertions(+), 12 deletions(-)
 
->> +- qca,check-eeprom-endianness: Allow checking the EEPROM endianness and
->> +                             swapping of the EEPROM data if required
->
-> CAn we not simply always do this?
-I've asked myself this question as well, but unfortunately some
-manufacturers ship the EEPROM data with incorrect endianness magic.
-Thus I decided to stay consistent with ath9k_platform_data which also
-has a boolean (which defaults to false).
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 870c9cd..d0ccda8 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1315,8 +1315,7 @@ struct rtl8xxxu_fileops {
+ 	void (*phy_init_antenna_selection) (struct rtl8xxxu_priv *priv);
+ 	void (*phy_iq_calibrate) (struct rtl8xxxu_priv *priv);
+ 	void (*config_channel) (struct ieee80211_hw *hw);
+-	int (*parse_rx_desc) (struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+-			      struct ieee80211_rx_status *rx_status);
++	int (*parse_rx_desc) (struct rtl8xxxu_priv *priv, struct sk_buff *skb);
+ 	void (*init_aggregation) (struct rtl8xxxu_priv *priv);
+ 	void (*init_statistics) (struct rtl8xxxu_priv *priv);
+ 	void (*enable_rf) (struct rtl8xxxu_priv *priv);
+@@ -1412,10 +1411,8 @@ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
+ void rtl8xxxu_gen1_enable_rf(struct rtl8xxxu_priv *priv);
+ void rtl8xxxu_gen1_disable_rf(struct rtl8xxxu_priv *priv);
+ void rtl8xxxu_gen2_disable_rf(struct rtl8xxxu_priv *priv);
+-int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+-			    struct ieee80211_rx_status *rx_status);
+-int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+-			    struct ieee80211_rx_status *rx_status);
++int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb);
++int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb);
+ int rtl8xxxu_gen2_channel_to_group(int channel);
+ bool rtl8xxxu_gen2_simularity_compare(struct rtl8xxxu_priv *priv,
+ 				      int result[][8], int c1, int c2);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 7c4df4d..52652e6 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5090,10 +5090,10 @@ static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
+ 	}
+ }
+ 
+-int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+-			    struct ieee80211_rx_status *rx_status)
++int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hw *hw = priv->hw;
++	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
+ 	struct rtl8xxxu_rxdesc16 *rx_desc =
+ 		(struct rtl8xxxu_rxdesc16 *)skb->data;
+ 	struct rtl8723au_phy_stats *phy_stats;
+@@ -5143,10 +5143,10 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+ 	return RX_TYPE_DATA_PKT;
+ }
+ 
+-int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+-			    struct ieee80211_rx_status *rx_status)
++int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
+ {
+ 	struct ieee80211_hw *hw = priv->hw;
++	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
+ 	struct rtl8xxxu_rxdesc24 *rx_desc =
+ 		(struct rtl8xxxu_rxdesc24 *)skb->data;
+ 	struct rtl8723au_phy_stats *phy_stats;
+@@ -5211,13 +5211,12 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
+ 	struct ieee80211_hw *hw = rx_urb->hw;
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	struct sk_buff *skb = (struct sk_buff *)urb->context;
+-	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
+ 	struct device *dev = &priv->udev->dev;
+ 
+ 	skb_put(skb, urb->actual_length);
+ 
+ 	if (urb->status == 0) {
+-		priv->fops->parse_rx_desc(priv, skb, rx_status);
++		priv->fops->parse_rx_desc(priv, skb);
+ 
+ 		skb = NULL;
+ 		rx_urb->urb.context = NULL;
+-- 
+2.7.4
 
->> +- qca,disable-2ghz: Disables the 2.4GHz band, even if enabled in the EEPROM
->> +- qca,disable-5ghz: Disables the 5GHz band, even if enabled in the EEPROM
->
-> When/why would these be necessary?
-sometimes a manufacturer (accidentally) leaves both bands enabled in
-the EEPROM data,while the RF hardware is only suitable for one of both
-bands. The same settings exist in ath9k_platform_data, serving exactly
-the same purpose
-
-
-Regards,
-Martin
