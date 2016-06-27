@@ -1,86 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37981 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751036AbcFCFrQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 01:47:16 -0400
-From: miaoqing@codeaurora.org
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	sudipm.mukherjee@gmail.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH] ath9k: fix GPIO mask for AR9462 and AR9565
-Date: Fri,  3 Jun 2016 13:46:57 +0800
-Message-Id: <1464932817-30988-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160603_074720_161206_AAF4F404)
+Received: from mx1.redhat.com ([209.132.183.28]:65195 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751748AbcF0QcL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 12:32:11 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 00/12] rtl8xxxu: Add RX packet DMA aggregation
+Date: Mon, 27 Jun 2016 12:31:58 -0400
+Message-Id: <1467045130-18874-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160627_184249_002935_E5164653)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-The incorrect GPIO mask cause kernel warning, when AR9462 access GPIO11.
-Also fix the mask for AR9565.
+Hi
 
-WARNING: CPU: 1 PID: 199 at ../drivers/net/wireless/ath/ath9k/hw.c:2778 ath9k_hw_gpio_get+0x1a9/0x1b0 [ath9k_hw]
-CPU: 1 PID: 199 Comm: kworker/u16:9 Not tainted 4.7.0-rc1-next-20160530+ #5
-Hardware name: Acer TravelMate P243/BA40_HC, BIOS V1.01 04/20/2012
-Workqueue: events_power_efficient rfkill_poll
- 0000000000000000 ffff88002cf73d28 ffffffff813b8ddc 0000000000000000
- 0000000000000000 ffff88002cf73d68 ffffffff8107a331 00000ada00000086
- ffff880148d9c018 000000000000000b ffff880147e68720 0000000000000200
-Call Trace:
- [<ffffffff813b8ddc>] dump_stack+0x63/0x87
- [<ffffffff8107a331>] __warn+0xd1/0xf0
- [<ffffffff8107a41d>] warn_slowpath_null+0x1d/0x20
- [<ffffffffc0775b19>] ath9k_hw_gpio_get+0x1a9/0x1b0 [ath9k_hw]
- [<ffffffffc047f3e4>] ath9k_rfkill_poll_state+0x34/0x60 [ath9k]
- [<ffffffffc06dbb53>] ieee80211_rfkill_poll+0x33/0x40 [mac80211]
- [<ffffffffc03ad65a>] cfg80211_rfkill_poll+0x2a/0xc0 [cfg80211]
- [<ffffffff817c5514>] rfkill_poll+0x24/0x50
- [<ffffffff81093183>] process_one_work+0x153/0x3f0
- [<ffffffff8109393b>] worker_thread+0x12b/0x4b0
- [<ffffffff81093810>] ? rescuer_thread+0x340/0x340
- [<ffffffff81099129>] kthread+0xc9/0xe0
- [<ffffffff817d8f1f>] ret_from_fork+0x1f/0x40
- [<ffffffff81099060>] ? kthread_park+0x60/0x60
+This patchset enabled RX packet DMA aggregation, batching multiple
+received packets into larger buffers. This should reduce the number of
+DMA transactions and the number of USB interrupts due to DMA complete
+notifications.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/reg.h | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Since this is new code, I am leaving it disabled per default for
+now. In order to enable it, a user must set dma_aggregation=1 on
+module load.
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 9272ca9..80ff69f 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1122,12 +1122,12 @@ enum {
- #define AR9300_NUM_GPIO                          16
- #define AR9330_NUM_GPIO				 16
- #define AR9340_NUM_GPIO				 23
--#define AR9462_NUM_GPIO				 10
-+#define AR9462_NUM_GPIO				 14
- #define AR9485_NUM_GPIO				 12
- #define AR9531_NUM_GPIO				 18
- #define AR9550_NUM_GPIO				 24
- #define AR9561_NUM_GPIO				 23
--#define AR9565_NUM_GPIO				 12
-+#define AR9565_NUM_GPIO				 14
- #define AR9580_NUM_GPIO				 16
- #define AR7010_NUM_GPIO                          16
- 
-@@ -1139,12 +1139,12 @@ enum {
- #define AR9300_GPIO_MASK			 0x0000F4FF
- #define AR9330_GPIO_MASK			 0x0000F4FF
- #define AR9340_GPIO_MASK			 0x0000000F
--#define AR9462_GPIO_MASK			 0x000003FF
-+#define AR9462_GPIO_MASK			 0x00003FFF
- #define AR9485_GPIO_MASK			 0x00000FFF
- #define AR9531_GPIO_MASK			 0x0000000F
- #define AR9550_GPIO_MASK			 0x0000000F
- #define AR9561_GPIO_MASK			 0x0000000F
--#define AR9565_GPIO_MASK			 0x00000FFF
-+#define AR9565_GPIO_MASK			 0x00003FFF
- #define AR9580_GPIO_MASK			 0x0000F4FF
- #define AR7010_GPIO_MASK			 0x0000FFFF
- 
+I'd love to hear feedback from people testing this feature. For those
+who wish to compile directly, you can checkout the
+rtl8xxxu-aggregation branch of my git tree.
+
+Cheers,
+Jes
+
+Jes Sorensen (12):
+  rtl8xxxu: Set all ieee80211_rx_status values in parse_rx_desc()
+  rtl8xxxu: Move skb delivery into parse_tx_desc() handler
+  rtl8xxxu: Obtain ieee80211_rx_status within parse_rx_desc()
+  rtl8xxxu: Correct rxdesc16 definition
+  rtl8xxxu: Add support for aggregated RX packets on gen1 parts
+  rtl8xxxu: Allocate larger RX skbs when aggregation is enabled
+  rtl8xxxu: Adjust RX skb size to include space for phystats
+  rtl8xxxu: Enable aggregation for rtl8723au
+  rtl8xxxu: Enable aggregation for rtl8192cu/rtl8188cu/rtl8188ru
+  rtl8xxxu: Make DMA aggregation optional by setting a module parameter
+  rtl8xxxu: gen1: Set aggregation timeout (REG_RXDMA_AGG_PG_TH + 1) as
+    well
+  rtl8xxxu: gen1: Add module parameters to adjust DMA aggregation
+    parameters
+
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  18 +-
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c |   2 +
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c |   2 +
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 313 ++++++++++++++-------
+ 4 files changed, 230 insertions(+), 105 deletions(-)
+
 -- 
-1.9.1
+2.7.4
 
