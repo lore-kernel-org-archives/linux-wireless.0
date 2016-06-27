@@ -1,43 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:37384 "EHLO
-	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932753AbcFBOEP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 10:04:15 -0400
-Received: by mail-wm0-f47.google.com with SMTP id z87so71135479wmh.0
-        for <linux-wireless@vger.kernel.org>; Thu, 02 Jun 2016 07:04:14 -0700 (PDT)
+Received: from bear.ext.ti.com ([198.47.19.11]:40810 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750869AbcF0Nf2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 27 Jun 2016 09:35:28 -0400
+From: Yaniv Machani <yanivma@ti.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Yaniv Machani <yanivma@ti.com>, Kalle Valo <kvalo@codeaurora.org>,
+	Guy Mishol <guym@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: [PATCH v2] wlcore: time sync : add support for 64 bit clock
+Date: Mon, 27 Jun 2016 16:37:14 +0300
+Message-ID: <20160627133744.12564-1-yanivma@ti.com> (sfid-20160627_153554_794332_9A0578B8)
 MIME-Version: 1.0
-Date: Thu, 2 Jun 2016 16:04:13 +0200
-Message-ID: <CAAfyv37Sr7JRtfrZYyb=c530sK8PR_ymeJ6w38274i1aDkHZ8A@mail.gmail.com> (sfid-20160602_160423_894028_393CD542)
-Subject: iw reg overwritten after connecting to AP
-From: Belisko Marek <marek.belisko@gmail.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Changed the configuration to support 64bit instead of 32bit
+this in order to offload the driver from handling a wraparound.
 
-I'm using kernel 4.1 with option CONFIG_CFG80211_INTERNAL_REGDB
-enabled. I have set one country in db.txt which during startup I set
-via 'iw reg set XX'. When connected to some AP which sends country
-code (e.g. SK) region is overwritten to 00 (in kernel log there is
-some timeout message - I suppose it's communication with crda daemon
-which I'm not using). Is there a way how to override this behavior (to
-keep my regulatory persistent). Many thanks.
+Signed-off-by: Yaniv Machani <yanivma@ti.com>
+---
+V2 - Update the interface parameters type to le16 from u16.
 
-BR,
+ drivers/net/wireless/ti/wl18xx/event.c | 26 +++++++++++++++++---------
+ drivers/net/wireless/ti/wl18xx/event.h | 19 +++++++++++++------
+ 2 files changed, 30 insertions(+), 15 deletions(-)
 
-marek
-
+diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
+index ef81184..2c5df43 100644
+--- a/drivers/net/wireless/ti/wl18xx/event.c
++++ b/drivers/net/wireless/ti/wl18xx/event.c
+@@ -112,12 +112,18 @@ static int wlcore_smart_config_decode_event(struct wl1271 *wl,
+ 	return 0;
+ }
+ 
+-static void wlcore_event_time_sync(struct wl1271 *wl, u16 tsf_msb, u16 tsf_lsb)
++static void wlcore_event_time_sync(struct wl1271 *wl,
++				   u16 tsf_high_msb, u16 tsf_high_lsb,
++				   u16 tsf_low_msb, u16 tsf_low_lsb)
+ {
+-	u32 clock;
+-	/* convert the MSB+LSB to a u32 TSF value */
+-	clock = (tsf_msb << 16) | tsf_lsb;
+-	wl1271_info("TIME_SYNC_EVENT_ID: clock %u", clock);
++	u32 clock_low;
++	u32 clock_high;
++
++	clock_high = (tsf_high_msb << 16) | tsf_high_lsb;
++	clock_low = (tsf_low_msb << 16) | tsf_low_lsb;
++
++	wl1271_info("TIME_SYNC_EVENT_ID: clock_high %u, clock low %u",
++		    clock_high, clock_low);
+ }
+ 
+ int wl18xx_process_mailbox_events(struct wl1271 *wl)
+@@ -138,8 +144,10 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
+ 
+ 	if (vector & TIME_SYNC_EVENT_ID)
+ 		wlcore_event_time_sync(wl,
+-				mbox->time_sync_tsf_msb,
+-				mbox->time_sync_tsf_lsb);
++			mbox->time_sync_tsf_high_msb,
++			mbox->time_sync_tsf_high_lsb,
++			mbox->time_sync_tsf_low_msb,
++			mbox->time_sync_tsf_low_lsb);
+ 
+ 	if (vector & RADAR_DETECTED_EVENT_ID) {
+ 		wl1271_info("radar event: channel %d type %s",
+@@ -187,11 +195,11 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
+ 	 */
+ 	if (vector & MAX_TX_FAILURE_EVENT_ID)
+ 		wlcore_event_max_tx_failure(wl,
+-				le32_to_cpu(mbox->tx_retry_exceeded_bitmap));
++				le16_to_cpu(mbox->tx_retry_exceeded_bitmap));
+ 
+ 	if (vector & INACTIVE_STA_EVENT_ID)
+ 		wlcore_event_inactive_sta(wl,
+-				le32_to_cpu(mbox->inactive_sta_bitmap));
++				le16_to_cpu(mbox->inactive_sta_bitmap));
+ 
+ 	if (vector & REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID)
+ 		wlcore_event_roc_complete(wl);
+diff --git a/drivers/net/wireless/ti/wl18xx/event.h b/drivers/net/wireless/ti/wl18xx/event.h
+index 070de12..ce8ea9c0 100644
+--- a/drivers/net/wireless/ti/wl18xx/event.h
++++ b/drivers/net/wireless/ti/wl18xx/event.h
+@@ -74,10 +74,16 @@ struct wl18xx_event_mailbox {
+ 	__le16 bss_loss_bitmap;
+ 
+ 	/* bitmap of stations (by HLID) which exceeded max tx retries */
+-	__le32 tx_retry_exceeded_bitmap;
++	__le16 tx_retry_exceeded_bitmap;
++
++	/* time sync high msb*/
++	__le16 time_sync_tsf_high_msb;
+ 
+ 	/* bitmap of inactive stations (by HLID) */
+-	__le32 inactive_sta_bitmap;
++	__le16 inactive_sta_bitmap;
++
++	/* time sync high lsb*/
++	__le16 time_sync_tsf_high_lsb;
+ 
+ 	/* rx BA win size indicated by RX_BA_WIN_SIZE_CHANGE_EVENT_ID */
+ 	u8 rx_ba_role_id;
+@@ -98,14 +104,15 @@ struct wl18xx_event_mailbox {
+ 	u8 sc_sync_channel;
+ 	u8 sc_sync_band;
+ 
+-	/* time sync msb*/
+-	u16 time_sync_tsf_msb;
++	/* time sync low msb*/
++	__le16 time_sync_tsf_low_msb;
++
+ 	/* radar detect */
+ 	u8 radar_channel;
+ 	u8 radar_type;
+ 
+-	/* time sync lsb*/
+-	u16 time_sync_tsf_lsb;
++	/* time sync low lsb*/
++	__le16 time_sync_tsf_low_lsb;
+ 
+ } __packed;
+ 
 -- 
-as simple and primitive as possible
--------------------------------------------------
-Marek Belisko - OPEN-NANDRA
-Freelance Developer
+2.9.0
 
-Ruska Nova Ves 219 | Presov, 08005 Slovak Republic
-Tel: +421 915 052 184
-skype: marekwhite
-twitter: #opennandra
-web: http://open-nandra.com
