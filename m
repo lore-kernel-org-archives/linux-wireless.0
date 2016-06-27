@@ -1,62 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:65446 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751449AbcF2UGh (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:38172 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbcF0J13 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 16:06:37 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Priit Laes <plaes@plaes.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
-Date: Wed, 29 Jun 2016 22:07:21 +0200
-Message-ID: <6119590.gPKNGsSJ3t@wuerfel> (sfid-20160629_220642_081194_ABDE1C5F)
-In-Reply-To: <1467230078.2598.2.camel@plaes.org>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> <6402170.5s0abZDqlD@wuerfel> <1467230078.2598.2.camel@plaes.org>
+	Mon, 27 Jun 2016 05:27:29 -0400
+Received: by mail-wm0-f49.google.com with SMTP id r201so105938245wme.1
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 02:27:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
+References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com> <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Mon, 27 Jun 2016 11:27:27 +0200
+Message-ID: <CA+BoTQnUvF2Zy7_WuEi0V+KjByRghVmoeR6yrs6hu6ag=KmBqQ@mail.gmail.com> (sfid-20160627_112733_378120_6724A4FB)
+Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
+ QCA99X0 and later
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, June 29, 2016 10:54:38 PM CEST Priit Laes wrote:
-> On Wed, 2016-06-29 at 21:33 +0200, Arnd Bergmann wrote:
+On 23 June 2016 at 18:40, Mohammed Shafi Shajakhan
+<mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
+> NULL func status (always acked/successs !!) when hostapd does a
+> PROBE_CLIENT via nullfunc frames when the station is powered off
+> abruptly (inactive timer probes client via null func after the inactive
+> time reaches beyond the threshold). Fix this by disabling the workaround
+> (getting the ACK status of NULL func frames by sending via HTT mgmt-tx
+>  path) introduced by the change ("ath10k: fix beacon loss handling ")
+> for QCA99X0 and later chipsets. The normal tx path provides the proper
+> ACK status for NULL data frames. As of now disable this workaround for
+> chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
+> completely get rid of this workaround for all the chipsets
+>
+> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c | 3 +++
+>  drivers/net/wireless/ath/ath10k/core.h | 6 ++++++
+>  drivers/net/wireless/ath/ath10k/mac.c  | 1 +
+>  3 files changed, 10 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index 689d6ce..9978e4a 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>                         .board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
+>                         .board_size = QCA99X0_BOARD_DATA_SZ,
+>                         .board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
+> +                       .disable_null_func_workaround = true,
 
-> > What is the size of this nvram file? As it's board specific, I wonder
-> > if we can simply include it inside of the DT verbatim. I remember
-> > doing that (in the pre-dtb days, on real open firmware) for the
-> > "spidernet"
-> > ethernet driver.
-> 
-> It contains a bit too much info:
-> 
-> This is what CubieTruck requires:
-> 
-> http://dl.cubieboard.org/public/Cubieboard/benn/firmware/ap6210/nvram_a
-> p6210.txt
+Tx completion (bugs) are firmware specific, not hardware. This should
+be expressed via features bits in ath10k FW API, no?
 
-Ah, I had not realized that this is a text based interface rather than
-a small binary blob with fixed offsets.
 
-On the other hand, each line in there could be translated easily into
-a separate DT property, and some of them (manfid/prodid, macaddr, ...)
-look like they directly correspond to properties we already have.
-
-As Arend said there is also the option of having a chip specific
-nvram file (brcmfmac43362-sdio.txt) as a fallback when there is no
-more specific module. How many of the lines in your example would
-actually differ between the two? Does this affect all of them, or
-just a subset that could be turned into a smaller set of DT
-properties?
-
-	Arnd
+Michał
