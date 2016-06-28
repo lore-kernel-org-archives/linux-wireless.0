@@ -1,65 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58940 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932102AbcF3PEq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 11:04:46 -0400
-Message-ID: <1467299025.14836.0.camel@sipsolutions.net> (sfid-20160630_170527_261148_26655A6E)
-Subject: Re: [PATCH v2] wlcore: Add support for get_expected_throughput
- opcode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Altshul <maxim.altshul@ti.com>, linux-kernel@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>, Yaniv Machani <yanivma@ti.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 30 Jun 2016 17:03:45 +0200
-In-Reply-To: <20160630145534.26052-1-maxim.altshul@ti.com> (sfid-20160630_165356_857494_C1EF09DF)
-References: <20160630145534.26052-1-maxim.altshul@ti.com>
-	 (sfid-20160630_165356_857494_C1EF09DF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33050 "EHLO
+	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932103AbcF1U5C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2016 16:57:02 -0400
+Date: Tue, 28 Jun 2016 15:56:53 -0500
+From: Rob Herring <robh@kernel.org>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
+Subject: Re: [PATCH v4] wlcore: spi: add wl18xx support
+Message-ID: <20160628205653.GR3737@rob-hp-laptop> (sfid-20160628_225754_355281_92886273)
+References: <1466935675-14696-1-git-send-email-eyalr@ti.com>
+ <8665E2433BC68541A24DFFCA87B70F5B3613BF60@DFRE01.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B3613BF60@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-06-30 at 17:49 +0300, Maxim Altshul wrote:
-> Adding this opcode, allows the TI wireless driver,
-> to report throughput directly from FW to mac80211.
+On Sun, Jun 26, 2016 at 10:10:54AM +0000, Reizer, Eyal wrote:
+> Add support for using with both wl12xx and wl18xx.
 > 
-> This is used mainly for mesh metric calculation.
+> - all wilink family needs special init command for entering wspi mode.
+>   extra clock cycles should be sent after the spi init command while the
+>   cs pin is high.
+> - Use inverted chip select for sending a dummy 4 bytes command that
+>   completes the init stage.
 > 
-> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+> Signed-off-by: Eyal Reizer <eyalr@ti.com>
 > ---
-> Changed the units of returned value.
-> drv_get_expected_throughput returns units of Kbps 
-> by definition, and thus we must comply as well.
-> Mbps * 1000 = Kbps.
+> v1->v2:update device tree bindings configuration
+> v2->v3:revert from manual gpio manipulation. use inverted chip select instead
+> for sending the extra init cycle which, achieves the same hardware purpose.
+> update device tree bindings docucmentation accordingly
+> v3->v4: Remove redundant data form binding documentation and fix chip select
+> number mismatch in wl1271 example
 > 
->  drivers/net/wireless/ti/wlcore/main.c | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ti/wlcore/main.c
-> b/drivers/net/wireless/ti/wlcore/main.c
-> index 39dec7d..cb1103b 100644
-> --- a/drivers/net/wireless/ti/wlcore/main.c
-> +++ b/drivers/net/wireless/ti/wlcore/main.c
-> @@ -5851,6 +5851,20 @@ out:
->  	mutex_unlock(&wl->mutex);
->  }
->  
-> +static u32 wlcore_op_get_expected_throughput(struct ieee80211_sta
-> *sta)
-> +{
-> +	struct wl1271_station *wl_sta = (struct wl1271_station
-> *)sta->drv_priv;
-> +	struct wl1271 *wl = wl_sta->wl;
-> +	u8 hlid = wl_sta->hlid;
-> +	u32 ret = 0;
-> +
-> +	/* return in units of Kbps */
-> +	if (wl)
-> +		ret = (wl->links[hlid].fw_rate_mbps * 1000);
-> +
-I don't see how wl can ever be NULL?
+>  .../bindings/net/wireless/ti,wlcore,spi.txt        |  41 +++++--
 
-Also, you can certainly remove the 'ret' variable.
+Acked-by: Rob Herring <robh@kernel.org>
 
-johannes
+>  drivers/net/wireless/ti/wlcore/spi.c               | 124 +++++++++++++++++----
+>  2 files changed, 137 insertions(+), 28 deletions(-)
