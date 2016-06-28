@@ -1,55 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:59735 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753893AbcFPMxg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 08:53:36 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Disable TX_STBC for tx chainmask of 1
-Date: Thu, 16 Jun 2016 18:25:13 +0530
-Message-ID: <1466081713-8122-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160616_145342_807549_67814B24)
+Received: from comal.ext.ti.com ([198.47.26.152]:35556 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751158AbcF1LLF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2016 07:11:05 -0400
+From: Yaniv Machani <yanivma@ti.com>
+To: <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S . Miller" <davem@davemloft.net>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+CC: Maital Hahn <maitalm@ti.com>
+Subject: [PATCH 1/4] mac80211: mesh: flush stations before beacons are stopped
+Date: Tue, 28 Jun 2016 14:13:04 +0300
+Message-ID: <20160628111307.8784-2-yanivma@ti.com> (sfid-20160628_131242_322678_C8EEF9F3)
+In-Reply-To: <20160628111307.8784-1-yanivma@ti.com>
+References: <20160628111307.8784-1-yanivma@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Maital Hahn <maitalm@ti.com>
 
-Disable TX_STBC for both HT and VHT if the devices tx chainmask is '1'
-TX_STBC is required only for devices with tx_chainmask > 1. This fixes
-a ping failure for QCA9887 (1x1) in HT/VHT mode
+Some drivers (e.g. wl18xx) expect that the last stage in the
+de-initialization process will be stopping the beacons, similar to ap.
+Update ieee80211_stop_mesh() flow accordingly.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Maital Hahn <maitalm@ti.com>
+Acked-by: Yaniv Machani <yanivma@ti.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ net/mac80211/mesh.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 1fe33c36..5e40922 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4224,6 +4224,9 @@ static struct ieee80211_sta_vht_cap ath10k_create_vht_cap(struct ath10k *ar)
- 			mcs_map |= IEEE80211_VHT_MCS_NOT_SUPPORTED << (i * 2);
- 	}
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 21b1fdf..9214bc1 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -896,20 +896,22 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
  
-+	if (ar->cfg_tx_chainmask <= 1)
-+		vht_cap.cap &= ~IEEE80211_VHT_CAP_TXSTBC;
+ 	netif_carrier_off(sdata->dev);
+ 
++	/* flush STAs and mpaths on this iface */
++	sta_info_flush(sdata);
++	mesh_path_flush_by_iface(sdata);
 +
- 	vht_cap.vht_mcs.rx_mcs_map = cpu_to_le16(mcs_map);
- 	vht_cap.vht_mcs.tx_mcs_map = cpu_to_le16(mcs_map);
+ 	/* stop the beacon */
+ 	ifmsh->mesh_id_len = 0;
+ 	sdata->vif.bss_conf.enable_beacon = false;
+ 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
+ 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
++
++	/* remove beacon */
+ 	bcn = rcu_dereference_protected(ifmsh->beacon,
+ 					lockdep_is_held(&sdata->wdev.mtx));
+ 	RCU_INIT_POINTER(ifmsh->beacon, NULL);
+ 	kfree_rcu(bcn, rcu_head);
  
-@@ -4261,7 +4264,7 @@ static struct ieee80211_sta_ht_cap ath10k_get_ht_cap(struct ath10k *ar)
- 		ht_cap.cap |= smps;
- 	}
- 
--	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC)
-+	if (ar->ht_cap_info & WMI_HT_CAP_TX_STBC && (ar->cfg_tx_chainmask > 1))
- 		ht_cap.cap |= IEEE80211_HT_CAP_TX_STBC;
- 
- 	if (ar->ht_cap_info & WMI_HT_CAP_RX_STBC) {
+-	/* flush STAs and mpaths on this iface */
+-	sta_info_flush(sdata);
+-	mesh_path_flush_by_iface(sdata);
+-
+ 	/* free all potentially still buffered group-addressed frames */
+ 	local->total_ps_buffered -= skb_queue_len(&ifmsh->ps.bc_buf);
+ 	skb_queue_purge(&ifmsh->ps.bc_buf);
 -- 
-1.9.1
+2.9.0
 
