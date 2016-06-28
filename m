@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-by2on0068.outbound.protection.outlook.com ([207.46.100.68]:53152
-	"EHLO na01-by2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752979AbcFHLzI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 07:55:08 -0400
-Subject: Re: [PATCH] qtnfmac: announcement of new FullMAC driver for Quantenna
- chipsets
-To: Kalle Valo <kvalo@codeaurora.org>, Jonas Gorski <jogo@openwrt.org>
-References: <1464288752-6625-1-git-send-email-avinashp@quantenna.com>
- <CAOiHx==C56Pj768bRX16VOaxj0Qf_oh5KXfhFJakT2zi-SokQQ@mail.gmail.com>
- <87wpm5rn9h.fsf@kamboji.qca.qualcomm.com>
-CC: Avinash Patil <avinashp@quantenna.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	<dlebed@quantenna.com>, <smaksimenko@quantenna.com>,
-	<smatyukevich@quantenna.com>, <btherthala@quantenna.com>,
-	<hwang@quantenna.com>, <krath@quantenna.com>
-From: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Message-ID: <d6d402f7-087a-ad97-31f5-788f7288403b@quantenna.com> (sfid-20160608_135516_196492_B492C323)
-Date: Wed, 8 Jun 2016 14:22:13 +0300
-MIME-Version: 1.0
-In-Reply-To: <87wpm5rn9h.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:44913 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753048AbcF1Ktu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2016 06:49:50 -0400
+Message-ID: <1467110982.2493.10.camel@sipsolutions.net> (sfid-20160628_125019_994178_36A45F11)
+Subject: Re: [PATCH] nl80211: improve nl80211_parse_mesh_config type checking
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Tue, 28 Jun 2016 12:49:42 +0200
+In-Reply-To: <20160615203012.3544326-1-arnd@arndb.de>
+References: <20160615203012.3544326-1-arnd@arndb.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/04/2016 06:23 PM, Kalle Valo wrote:
-> Jonas Gorski <jogo@openwrt.org> writes:
->
->> On 26 May 2016 at 20:52, Avinash Patil <avinashp@quantenna.com> wrote:
->>
->>> This email, including its contents and any attachment(s), may contain
->>> confidential information of Quantenna Communications, Inc. and is
->>> solely for the intended recipient(s). If you may have received this
->>> in error, please contact the sender and permanently delete this
->>> email, its contents and any attachment(s).
->> You will need to remove this footer to be taken seriously, as
->> confidential information would be not GPL compatible, and "may
->> contain" means it is too risky to accept that.
-> Yeah, I'm not going to take (or even look) patches with such
-> disclaimers. So please resend so that we can start the review.
->
+On Wed, 2016-06-15 at 22:29 +0200, Arnd Bergmann wrote:
+> When building a kernel with W=1, the nl80211.c file causes a number
+> of
+> warnings, all about the same problem:
+> 
+> net/wireless/nl80211.c: In function 'nl80211_parse_mesh_config':
+> net/wireless/nl80211.c:5287:103: error: comparison is always false
+> due to limited range of data type [-Werror=type-limits]
+> net/wireless/nl80211.c:5290:96: error: comparison is always false due
+> to limited range of data type [-Werror=type-limits]
+> net/wireless/nl80211.c:5293:124: error: comparison is always false
+> due to limited range of data type [-Werror=type-limits]
+> net/wireless/nl80211.c:5295:148: error: comparison is always false
+> due to limited range of data type [-Werror=type-limits]
+> net/wireless/nl80211.c:5298:106: error: comparison is always false
+> due to limited range of data type [-Werror=type-limits]
+> net/wireless/nl80211.c:5305:116: error: comparison is always false
+> due to limited range of data type [-Werror=type-limits]
+> 
+> The problem is that gcc does not notice that the check is generate
+> by a macro, so it complains about comparing an unsigned type against
+> 0.
+> 
+> I've tried to come up with a way to rephrase that code in a way that
+> avoids the warnings and otherwise improves the code as well.
+> 
+> This uses a set of new helper functions that perform the range
+> checking,
+> and should provide slightly better type safety than the older patch,
+> at the expense of adding 44 lines to the code. Binary code size is
+> basically unchanged though (20 bytes added to 126561 bytes .text).
+> 
+Applied.
 
-Kalle, Jonas,
-we will resend the patch without disclaimer, sorry for inconvenience.
+johannes
