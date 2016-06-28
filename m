@@ -1,82 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:35487 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752183AbcFFOea (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37576 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751946AbcF1RC7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2016 10:34:30 -0400
-Received: by mail-pa0-f66.google.com with SMTP id gp3so11955192pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 06 Jun 2016 07:34:25 -0700 (PDT)
-From: Prasun Maiti <prasunmaiti87@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Subject: [PATCH] wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel
-Date: Mon,  6 Jun 2016 20:04:19 +0530
-Message-Id: <1465223659-11530-1-git-send-email-prasunmaiti87@gmail.com> (sfid-20160606_163435_275621_781F2C12)
-In-Reply-To: <1464690345.3076.17.camel@sipsolutions.net>
-References: <1464690345.3076.17.camel@sipsolutions.net>
+	Tue, 28 Jun 2016 13:02:59 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	"Linux-Kernel\@Vger. Kernel. Org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] libertas_tf: Remove create_workqueue
+References: <20160607200853.GA13742@Karyakshetra>
+	<20160611224708.GC31708@htj.duckdns.org>
+	<CAFNHFT8_4P3h1Ou0PZ6d4tPbJ1ysb5JjPc=NL2GiVO-tUZAp5g@mail.gmail.com>
+Date: Tue, 28 Jun 2016 20:02:53 +0300
+In-Reply-To: <CAFNHFT8_4P3h1Ou0PZ6d4tPbJ1ysb5JjPc=NL2GiVO-tUZAp5g@mail.gmail.com>
+	(Bhaktipriya Shridhar's message of "Tue, 28 Jun 2016 22:20:11 +0530")
+Message-ID: <87shvxb60y.fsf@kamboji.qca.qualcomm.com> (sfid-20160628_190340_823433_3A9833FB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwpriv app uses iw_point structure to send data to Kernel. The iw_point
-structure holds a pointer. For compatibility Kernel converts the pointer
-as required for WEXT IOCTLs (SIOCIWFIRST to SIOCIWLAST). Some drivers
-may use iw_handler_def.private_args to populate iwpriv commands instead
-of iw_handler_def.private. For those case, the IOCTLs from
-SIOCIWFIRSTPRIV to SIOCIWLASTPRIV will follow the path ndo_do_ioctl().
-Accordingly when the filled up iw_point structure comes from 32 bit
-iwpriv to 64 bit Kernel, Kernel will not convert the pointer and sends
-it to driver. So, the driver may get the invalid data.
+Bhaktipriya Shridhar <bhaktipriya96@gmail.com> writes:
 
-The pointer conversion for the IOCTLs (SIOCIWFIRSTPRIV to
-SIOCIWLASTPRIV), which follow the path ndo_do_ioctl(), is mandatory.
-This patch adds pointer conversion from 32 bit to 64 bit and vice versa,
-if the ioctl comes from 32 bit iwpriv to 64 bit Kernel.
+> Ping!
 
-Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
-Tested-by: Dibyajyoti Ghosh <dibyajyotig@gmail.com>
----
- net/wireless/wext-core.c | 24 ++++++++++++++++++++++--
- 1 file changed, 22 insertions(+), 2 deletions(-)
+I'm lagging behind, the patch is still on my queue:
 
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index 6250b1c..a96dcc6 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -958,8 +958,28 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
- 			return private(dev, iwr, cmd, info, handler);
- 	}
- 	/* Old driver API : call driver ioctl handler */
--	if (dev->netdev_ops->ndo_do_ioctl)
--		return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
-+	if (dev->netdev_ops->ndo_do_ioctl) {
-+#ifdef CONFIG_COMPAT
-+		if (info->flags & IW_REQUEST_FLAG_COMPAT) {
-+			int ret = 0;
-+			struct iwreq iwr_lcl;
-+			struct compat_iw_point *iwp_compat = (void *) &iwr->u.data;
-+
-+			memcpy(&iwr_lcl, iwr, sizeof(struct iwreq));
-+			iwr_lcl.u.data.pointer = compat_ptr(iwp_compat->pointer);
-+			iwr_lcl.u.data.length = iwp_compat->length;
-+			iwr_lcl.u.data.flags = iwp_compat->flags;
-+
-+			ret = dev->netdev_ops->ndo_do_ioctl(dev, (void *) &iwr_lcl, cmd);
-+
-+			iwp_compat->pointer = ptr_to_compat(iwr_lcl.u.data.pointer);
-+			iwp_compat->length = iwr_lcl.u.data.length;
-+			iwp_compat->flags = iwr_lcl.u.data.flags;
-+			return ret;
-+		} else
-+#endif
-+			return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
-+	}
- 	return -EOPNOTSUPP;
- }
+https://patchwork.kernel.org/patch/9162447/
 
---
-1.9.1
+Please don't top most, it's annoying.
 
+-- 
+Kalle Valo
