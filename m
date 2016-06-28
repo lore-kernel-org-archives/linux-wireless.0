@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:34870 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751710AbcFIIgG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 04:36:06 -0400
-Received: by mail-wm0-f51.google.com with SMTP id v199so96485249wmv.0
-        for <linux-wireless@vger.kernel.org>; Thu, 09 Jun 2016 01:36:04 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: avoid possible memleak on nl80211_set_reg
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Eduardo Abinader <eabinader@ocedo.com>,
-	linux-wireless@vger.kernel.org
-References: <1465224967-26892-1-git-send-email-eduardo.abinader@riverbed.com>
- <1465459080.3442.2.camel@sipsolutions.net>
-Cc: Eduardo Abinader <eduardo.abinader@riverbed.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <a961b2ee-b4fa-dec9-72ed-f9b600fa51b2@broadcom.com> (sfid-20160609_103615_018102_7539095F)
-Date: Thu, 9 Jun 2016 10:36:00 +0200
-MIME-Version: 1.0
-In-Reply-To: <1465459080.3442.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:44959 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752683AbcF1K5g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2016 06:57:36 -0400
+Message-ID: <1467111448.2493.15.camel@sipsolutions.net> (sfid-20160628_125754_579773_E74FF98F)
+Subject: Re: [PATCH] cfg80211/nl80211: add wifi tx power mode switching
+ support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Wei-Ning Huang <wnhuang@google.com>, Dan Williams <dcbw@redhat.com>
+Cc: Linux-Wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Sameer Nanda <snanda@chromium.org>,
+	Todd Broch <tbroch@chromium.org>, davem@davemloft.net,
+	netdev@vger.kernel.org
+Date: Tue, 28 Jun 2016 12:57:28 +0200
+In-Reply-To: <CABicQ-UeU-8PPdK9Je51j_KD-BH8G1HuOjo0yZLcNBQgtJsyTA@mail.gmail.com> (sfid-20160512_113439_036671_8A8ED376)
+References: <1462430663-9448-1-git-send-email-wnhuang@chromium.org>
+	<1462464478.23962.12.camel@redhat.com>
+	<CABicQ-VWrRG+0rEEF0GxUTPixSbkA18Gq4b5hbgph60SoEQ+2Q@mail.gmail.com>
+	<CABicQ-XWm=Rxdj3at4+-0OAWn=T7qOTWEaTK=JY7LDOmcN87yw@mail.gmail.com>
+	<1462991620.22404.5.camel@redhat.com>
+	 <CABicQ-UeU-8PPdK9Je51j_KD-BH8G1HuOjo0yZLcNBQgtJsyTA@mail.gmail.com>
+	 (sfid-20160512_113439_036671_8A8ED376)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9-6-2016 9:58, Johannes Berg wrote:
-> On Mon, 2016-06-06 at 16:56 +0200, Eduardo Abinader wrote:
->> Setting NULL just after freeing regdomain.
->>
->> Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
->> ---
->>  net/wireless/nl80211.c | 3 ++-
->>  1 file changed, 2 insertions(+), 1 deletion(-)
->>
->> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->> index d120449..39d107d 100644
->> --- a/net/wireless/nl80211.c
->> +++ b/net/wireless/nl80211.c
->> @@ -5839,10 +5839,11 @@ static int nl80211_set_reg(struct sk_buff
->> *skb, struct genl_info *info)
->>  
->>  	r = set_regdom(rd, REGD_SOURCE_CRDA);
->>  	/* set_regdom took ownership */
->> -	rd = NULL;
->>  
->>   bad_reg:
->>  	kfree(rd);
->> +	rd = NULL;
+On Thu, 2016-05-12 at 17:34 +0800, Wei-Ning Huang wrote:
+> 
+> Johannes, I feel like being able to set calibration data at runtime
+> is something common to all wireless drivers, so instead of using
+> vendor commands what do you think if I pass the calibration data name
+> instead of using those magic constants? This way, userspace does not
+> need to know the details of what band/range power limit the driver
+> supports. It allows for flexible driver side implementation and
+> easier for userspace to control.
 > 
-> To this I can only say: what?
 
-The patch is bad, but the confusion starts with the original code
-(ab)using kfree() behaviour by setting rd to NULL. Personally, I do not
-like it, but prefer it over bugs ;-)
+Sorry - I dropped this thread accidentally.
 
-Regards,
-Arend
+I'm not really sure I understand the situation fully, but right now to
+me this seems very strange.
+
+The physical antennas probably don't really change between "clamshell"
+and "tablet" mode, do the physical radiation properties change enough
+to actually require different *calibration*? To me, that sounds very
+strange.
+
+Assuming they don't really change fundamentally, then I understand the
+need to set different power levels, per band/channel/whatever
+granularity. But that can be achieved in very different ways, and in
+fact if you look at Chrome then for our iwl7000 driver there we do have
+a command to do something similar (currently a vendor command, but that
+can be changed) without ever changing the *calibration*.
+
+So to me, the whole premise of the patch is confusing and/or wrong.
+
+johannes
