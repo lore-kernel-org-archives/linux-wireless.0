@@ -1,226 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:41346 "EHLO lists.s-osg.org"
+Received: from comal.ext.ti.com ([198.47.26.152]:35566 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752681AbcFFRDP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 6 Jun 2016 13:03:15 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Javier Martinez Canillas <javier@osg.samsung.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH v2 3/3] mwifiex: add get_antenna support for cfg80211
-Date: Mon,  6 Jun 2016 13:02:38 -0400
-Message-Id: <1465232558-31678-4-git-send-email-javier@osg.samsung.com> (sfid-20160606_190343_458113_1946547A)
-In-Reply-To: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
-References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
+	id S1752159AbcF1LLI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2016 07:11:08 -0400
+From: Yaniv Machani <yanivma@ti.com>
+To: <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S . Miller" <davem@davemloft.net>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+CC: Maital Hahn <maitalm@ti.com>
+Subject: [PATCH 2/4] mac80211/cfg: mesh: fix healing time when a mesh peer is disconnecting
+Date: Tue, 28 Jun 2016 14:13:05 +0300
+Message-ID: <20160628111307.8784-3-yanivma@ti.com> (sfid-20160628_131230_769604_71902D12)
+In-Reply-To: <20160628111307.8784-2-yanivma@ti.com>
+References: <20160628111307.8784-1-yanivma@ti.com>
+ <20160628111307.8784-2-yanivma@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+From: Maital Hahn <maitalm@ti.com>
 
-Since commit de3bb771f471 ("cfg80211: add more warnings for inconsistent
-ops") the wireless core warns if a driver implements a cfg80211 callback
-but doesn't implements the inverse operation.
+Once receiving a CLOSE action frame from the disconnecting peer,
+flush all entries in the path table which has this peer as the
+next hop.
 
-The mwifiex driver defines a .set_antenna handler but not a .get_antenna
-so this not only makes the core to print a warning when creating a new
-wiphy but also the antenna isn't reported to user-space apps such as iw.
+In addition, upon receiving a packet, if next hop is not found,
+trigger PERQ immidiatly, instead of just putting it in the queue.
 
-This patch queries the antenna to the firmware so is properly reported to
-user-space. With this patch, the wireless core does not warn anymore and:
-
-$ iw phy phy0 info | grep Antennas
-        Available Antennas: TX 0x3 RX 0x3
-        Configured Antennas: TX 0x3 RX 0x3
-
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-[javier: expand the commit message]
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-
+Signed-off-by: Maital Hahn <maitalm@ti.com>
+Acked-by: Yaniv Machani <yanivma@ti.com>
 ---
+ net/mac80211/cfg.c       |  1 +
+ net/mac80211/mesh.c      |  3 ++-
+ net/mac80211/mesh_hwmp.c | 42 +++++++++++++++++++++++++-----------------
+ 3 files changed, 28 insertions(+), 18 deletions(-)
 
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 16 +++++++
- drivers/net/wireless/marvell/mwifiex/fw.h          |  3 ++
- drivers/net/wireless/marvell/mwifiex/init.c        |  2 +
- drivers/net/wireless/marvell/mwifiex/main.h        |  2 +
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 50 +++++++++++++++-------
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 10 +++--
- 6 files changed, 64 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index ff3f63ed95e1..ff1eefe5087b 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1819,6 +1819,21 @@ mwifiex_cfg80211_set_antenna(struct wiphy *wiphy, u32 tx_ant, u32 rx_ant)
- 				HostCmd_ACT_GEN_SET, 0, &ant_cfg, true);
- }
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 0c12e40..f876ef7 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -1011,6 +1011,7 @@ static void sta_apply_mesh_params(struct ieee80211_local *local,
+ 			if (sta->mesh->plink_state == NL80211_PLINK_ESTAB)
+ 				changed = mesh_plink_dec_estab_count(sdata);
+ 			sta->mesh->plink_state = params->plink_state;
++			mesh_path_flush_by_nexthop(sta);
  
-+static int
-+mwifiex_cfg80211_get_antenna(struct wiphy *wiphy, u32 *tx_ant, u32 *rx_ant)
-+{
-+	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
-+	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
-+							MWIFIEX_BSS_ROLE_ANY);
-+	mwifiex_send_cmd(priv, HostCmd_CMD_RF_ANTENNA,
-+			 HostCmd_ACT_GEN_GET, 0, NULL, true);
-+
-+	*tx_ant = priv->tx_ant;
-+	*rx_ant = priv->rx_ant;
-+
-+	return 0;
-+}
-+
- /* cfg80211 operation handler for stop ap.
-  * Function stops BSS running at uAP interface.
-  */
-@@ -3962,6 +3977,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 	.change_beacon = mwifiex_cfg80211_change_beacon,
- 	.set_cqm_rssi_config = mwifiex_cfg80211_set_cqm_rssi_config,
- 	.set_antenna = mwifiex_cfg80211_set_antenna,
-+	.get_antenna = mwifiex_cfg80211_get_antenna,
- 	.del_station = mwifiex_cfg80211_del_station,
- 	.sched_scan_start = mwifiex_cfg80211_sched_scan_start,
- 	.sched_scan_stop = mwifiex_cfg80211_sched_scan_stop,
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 8e4145abdbfa..cef72343f5b6 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -462,6 +462,9 @@ enum P2P_MODES {
- #define HostCmd_ACT_SET_RX              0x0001
- #define HostCmd_ACT_SET_TX              0x0002
- #define HostCmd_ACT_SET_BOTH            0x0003
-+#define HostCmd_ACT_GET_RX              0x0004
-+#define HostCmd_ACT_GET_TX              0x0008
-+#define HostCmd_ACT_GET_BOTH            0x000c
+ 			ieee80211_mps_sta_status_update(sta);
+ 			changed |= ieee80211_mps_set_sta_local_pm(sta,
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 9214bc1..1f5be54 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -159,7 +159,8 @@ void mesh_sta_cleanup(struct sta_info *sta)
+ 	if (!sdata->u.mesh.user_mpm) {
+ 		changed |= mesh_plink_deactivate(sta);
+ 		del_timer_sync(&sta->mesh->plink_timer);
+-	}
++	} else
++		mesh_path_flush_by_nexthop(sta);
  
- #define RF_ANTENNA_AUTO                 0xFFFF
+ 	/* make sure no readers can access nexthop sta from here on */
+ 	mesh_path_flush_by_nexthop(sta);
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 8f9c3bd..9783d49 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -19,7 +19,7 @@
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-index 78c532f0d286..fbaf49056746 100644
---- a/drivers/net/wireless/marvell/mwifiex/init.c
-+++ b/drivers/net/wireless/marvell/mwifiex/init.c
-@@ -110,6 +110,8 @@ int mwifiex_init_priv(struct mwifiex_private *priv)
- 	priv->tx_power_level = 0;
- 	priv->max_tx_power_level = 0;
- 	priv->min_tx_power_level = 0;
-+	priv->tx_ant = 0;
-+	priv->rx_ant = 0;
- 	priv->tx_rate = 0;
- 	priv->rxpd_htinfo = 0;
- 	priv->rxpd_rate = 0;
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 79c28cfb7780..2ae7ff74e1c6 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -533,6 +533,8 @@ struct mwifiex_private {
- 	u16 tx_power_level;
- 	u8 max_tx_power_level;
- 	u8 min_tx_power_level;
-+	u32 tx_ant;
-+	u32 rx_ant;
- 	u8 tx_rate;
- 	u8 tx_htinfo;
- 	u8 rxpd_htinfo;
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index e436574b1698..8c658495bf66 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -313,23 +313,41 @@ static int mwifiex_cmd_rf_antenna(struct mwifiex_private *priv,
+ #define MAX_PREQ_QUEUE_LEN	64
  
- 	cmd->command = cpu_to_le16(HostCmd_CMD_RF_ANTENNA);
+-static void mesh_queue_preq(struct mesh_path *, u8);
++static void mesh_queue_preq(struct mesh_path *, u8, bool);
  
--	if (cmd_action != HostCmd_ACT_GEN_SET)
--		return 0;
--
--	if (priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2) {
--		cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_rf_ant_mimo) +
--					S_DS_GEN);
--		ant_mimo->action_tx = cpu_to_le16(HostCmd_ACT_SET_TX);
--		ant_mimo->tx_ant_mode = cpu_to_le16((u16)ant_cfg->tx_ant);
--		ant_mimo->action_rx = cpu_to_le16(HostCmd_ACT_SET_RX);
--		ant_mimo->rx_ant_mode = cpu_to_le16((u16)ant_cfg->rx_ant);
--	} else {
--		cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_rf_ant_siso) +
--					S_DS_GEN);
--		ant_siso->action = cpu_to_le16(HostCmd_ACT_SET_BOTH);
--		ant_siso->ant_mode = cpu_to_le16((u16)ant_cfg->tx_ant);
-+	switch (cmd_action) {
-+	case HostCmd_ACT_GEN_SET:
-+		if (priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2) {
-+			cmd->size = cpu_to_le16(sizeof(struct
-+						host_cmd_ds_rf_ant_mimo)
-+						+ S_DS_GEN);
-+			ant_mimo->action_tx = cpu_to_le16(HostCmd_ACT_SET_TX);
-+			ant_mimo->tx_ant_mode = cpu_to_le16((u16)ant_cfg->
-+							    tx_ant);
-+			ant_mimo->action_rx = cpu_to_le16(HostCmd_ACT_SET_RX);
-+			ant_mimo->rx_ant_mode = cpu_to_le16((u16)ant_cfg->
-+							    rx_ant);
-+		} else {
-+			cmd->size = cpu_to_le16(sizeof(struct
-+						host_cmd_ds_rf_ant_siso) +
-+						S_DS_GEN);
-+			ant_siso->action = cpu_to_le16(HostCmd_ACT_SET_BOTH);
-+			ant_siso->ant_mode = cpu_to_le16((u16)ant_cfg->tx_ant);
-+		}
-+		break;
-+	case HostCmd_ACT_GEN_GET:
-+		if (priv->adapter->hw_dev_mcs_support == HT_STREAM_2X2) {
-+			cmd->size = cpu_to_le16(sizeof(struct
-+						host_cmd_ds_rf_ant_mimo) +
-+						S_DS_GEN);
-+			ant_mimo->action_tx = cpu_to_le16(HostCmd_ACT_GET_TX);
-+			ant_mimo->action_rx = cpu_to_le16(HostCmd_ACT_GET_RX);
-+		} else {
-+			cmd->size = cpu_to_le16(sizeof(struct
-+						host_cmd_ds_rf_ant_siso) +
-+						S_DS_GEN);
-+			ant_siso->action = cpu_to_le16(HostCmd_ACT_GET_BOTH);
-+		}
-+		break;
+ static inline u32 u32_field_get(const u8 *preq_elem, int offset, bool ae)
+ {
+@@ -830,7 +830,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		mhwmp_dbg(sdata,
+ 			  "time to refresh root mpath %pM\n",
+ 			  orig_addr);
+-		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
++		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH,
++				false);
+ 		mpath->last_preq_to_root = jiffies;
  	}
--
- 	return 0;
- }
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index d18c7979d723..11f19b668e13 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -469,7 +469,9 @@ static int mwifiex_ret_rf_antenna(struct mwifiex_private *priv,
- 	struct host_cmd_ds_rf_ant_siso *ant_siso = &resp->params.ant_siso;
- 	struct mwifiex_adapter *adapter = priv->adapter;
+@@ -925,7 +926,7 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+  * Locking: the function must be called from within a rcu read lock block.
+  *
+  */
+-static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
++static void mesh_queue_preq(struct mesh_path *mpath, u8 flags, bool immediate)
+ {
+ 	struct ieee80211_sub_if_data *sdata = mpath->sdata;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+@@ -964,18 +965,24 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
+ 	++ifmsh->preq_queue_len;
+ 	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
  
--	if (adapter->hw_dev_mcs_support == HT_STREAM_2X2)
-+	if (adapter->hw_dev_mcs_support == HT_STREAM_2X2) {
-+		priv->tx_ant = le16_to_cpu(ant_mimo->tx_ant_mode);
-+		priv->rx_ant = le16_to_cpu(ant_mimo->rx_ant_mode);
- 		mwifiex_dbg(adapter, INFO,
- 			    "RF_ANT_RESP: Tx action = 0x%x, Tx Mode = 0x%04x\t"
- 			    "Rx action = 0x%x, Rx Mode = 0x%04x\n",
-@@ -477,12 +479,14 @@ static int mwifiex_ret_rf_antenna(struct mwifiex_private *priv,
- 			    le16_to_cpu(ant_mimo->tx_ant_mode),
- 			    le16_to_cpu(ant_mimo->action_rx),
- 			    le16_to_cpu(ant_mimo->rx_ant_mode));
--	else
+-	if (time_after(jiffies, ifmsh->last_preq + min_preq_int_jiff(sdata)))
++	if (immediate) {
+ 		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
 +	} else {
-+		priv->tx_ant = le16_to_cpu(ant_siso->ant_mode);
-+		priv->rx_ant = le16_to_cpu(ant_siso->ant_mode);
- 		mwifiex_dbg(adapter, INFO,
- 			    "RF_ANT_RESP: action = 0x%x, Mode = 0x%04x\n",
- 			    le16_to_cpu(ant_siso->action),
- 			    le16_to_cpu(ant_siso->ant_mode));
--
++		if (time_after(jiffies,
++			       ifmsh->last_preq + min_preq_int_jiff(sdata))) {
++			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ 
+-	else if (time_before(jiffies, ifmsh->last_preq)) {
+-		/* avoid long wait if did not send preqs for a long time
+-		 * and jiffies wrapped around
+-		 */
+-		ifmsh->last_preq = jiffies - min_preq_int_jiff(sdata) - 1;
+-		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+-	} else
+-		mod_timer(&ifmsh->mesh_path_timer, ifmsh->last_preq +
+-						min_preq_int_jiff(sdata));
++		} else if (time_before(jiffies, ifmsh->last_preq)) {
++			/* avoid long wait if did not send preqs for a long time
++			 * and jiffies wrapped around
++			 */
++			ifmsh->last_preq = jiffies -
++					   min_preq_int_jiff(sdata) - 1;
++			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
++		} else
++			mod_timer(&ifmsh->mesh_path_timer, ifmsh->last_preq +
++				  min_preq_int_jiff(sdata));
 +	}
- 	return 0;
  }
  
+ /**
+@@ -1110,7 +1117,7 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (!(mpath->flags & MESH_PATH_RESOLVING))
+-		mesh_queue_preq(mpath, PREQ_Q_F_START);
++		mesh_queue_preq(mpath, PREQ_Q_F_START, true);
+ 
+ 	if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
+ 		skb_to_free = skb_dequeue(&mpath->frame_queue);
+@@ -1157,8 +1164,9 @@ int mesh_nexthop_lookup(struct ieee80211_sub_if_data *sdata,
+ 		       msecs_to_jiffies(sdata->u.mesh.mshcfg.path_refresh_time)) &&
+ 	    ether_addr_equal(sdata->vif.addr, hdr->addr4) &&
+ 	    !(mpath->flags & MESH_PATH_RESOLVING) &&
+-	    !(mpath->flags & MESH_PATH_FIXED))
+-		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
++	    !(mpath->flags & MESH_PATH_FIXED)) {
++	    mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH, false);
++	}
+ 
+ 	next_hop = rcu_dereference(mpath->next_hop);
+ 	if (next_hop) {
+@@ -1192,7 +1200,7 @@ void mesh_path_timer(unsigned long data)
+ 		mpath->discovery_timeout *= 2;
+ 		mpath->flags &= ~MESH_PATH_REQ_QUEUED;
+ 		spin_unlock_bh(&mpath->state_lock);
+-		mesh_queue_preq(mpath, 0);
++		mesh_queue_preq(mpath, 0, false);
+ 	} else {
+ 		mpath->flags &= ~(MESH_PATH_RESOLVING |
+ 				  MESH_PATH_RESOLVED |
 -- 
-2.5.5
+2.9.0
 
