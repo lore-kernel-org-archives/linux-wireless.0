@@ -1,51 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:36031 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbcFDRWp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 13:22:45 -0400
-Received: by mail-wm0-f54.google.com with SMTP id n184so36596375wmn.1
-        for <linux-wireless@vger.kernel.org>; Sat, 04 Jun 2016 10:22:44 -0700 (PDT)
-To: Craig McQueen <craig.mcqueen@innerrange.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: rt2800usb firmware rt2870.bin 0.36 not scanning
-Message-ID: <f2d6e3de-826a-c7b6-ac29-16b83be758e8@gmail.com> (sfid-20160604_192320_291090_471FBC39)
-Date: Sat, 4 Jun 2016 19:22:42 +0200
+Received: from bear.ext.ti.com ([198.47.19.11]:56637 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752353AbcF1LLX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 28 Jun 2016 07:11:23 -0400
+From: Yaniv Machani <yanivma@ti.com>
+To: <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S . Miller" <davem@davemloft.net>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+CC: Meirav Kama <meiravk@ti.com>
+Subject: [PATCH 4/4] mac80211: sta_info: max_peers reached falsely
+Date: Tue, 28 Jun 2016 14:13:07 +0300
+Message-ID: <20160628111307.8784-5-yanivma@ti.com> (sfid-20160628_131150_835793_30092C2E)
+In-Reply-To: <20160628111307.8784-4-yanivma@ti.com>
+References: <20160628111307.8784-1-yanivma@ti.com>
+ <20160628111307.8784-2-yanivma@ti.com>
+ <20160628111307.8784-3-yanivma@ti.com>
+ <20160628111307.8784-4-yanivma@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Craig McQueen wrote:
+From: Meirav Kama <meiravk@ti.com>
 
-> I have a D-Link DWA-140 USB Wi-Fi device which is rt2800 based (5392
-> chipset). I'm trying to use it on a BeagleBone Black based system with
-> 3.14.x kernel built with Yocto. We're using ConnMan 1.30 at the moment.
+Issue happened when receiving delete_sta command without
+changing plink_state from ESTAB to HOLDING before.
+When receiving delete_sta command for mesh interface
+verify plink_state is not ESTAB and if so, decrease
+plink count and update beacon.
 
-Try it with a _desktop x86_64 distribution_ , with a *recent kernel*
-as Fedora: (WORK is gnome) https://alt.fedoraproject.org/pub/alt/live-respins/
+Signed-off-by: Meirav Kama <meiravk@ti.com>
+Acked-by: Yaniv Machani <yanivma@ti.com>
+---
+ net/mac80211/sta_info.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-> We've been finding some instabilities with it periodically disconnecting
-> from some networks. So we tried upgrading the firmware file rt2870.bin
-> from version 0.29 to 0.36. That seems to be more stable with the
-> network. However, we're finding that it initially doesn't connect, until
-> the Wi-Fi has been disabled and then re-enabled. '  scan wifi'
-> and 'iwlist scan' don't return anything until Wi-Fi has been disabled
-> and then re-enabled.
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 76b737d..1ce6320 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1009,11 +1009,25 @@ int sta_info_destroy_addr_bss(struct ieee80211_sub_if_data *sdata,
+ {
+ 	struct sta_info *sta;
+ 	int ret;
++#ifdef CONFIG_MAC80211_MESH
++	bool dec_links = false;
++#endif
+ 
+ 	mutex_lock(&sdata->local->sta_mtx);
+ 	sta = sta_info_get_bss(sdata, addr);
++#ifdef CONFIG_MAC80211_MESH
++	if (sdata->vif.type == NL80211_IFTYPE_MESH_POINT &&
++	    sta->mesh->plink_state == NL80211_PLINK_ESTAB)
++		dec_links = true;
++#endif
+ 	ret = __sta_info_destroy(sta);
+ 	mutex_unlock(&sdata->local->sta_mtx);
++#ifdef CONFIG_MAC80211_MESH
++	if (dec_links) {
++		mesh_plink_dec_estab_count(sdata);
++		ieee80211_mbss_info_change_notify(sdata, BSS_CHANGED_BEACON);
++	}
++#endif
+ 
+ 	return ret;
+ }
+-- 
+2.9.0
 
-Don't use any wrapper(NM, ConnMan, wicd, ...), usually are buggy. You should
-use raw commands "iw" and "wpa_supplicant". Hints:
-https://wireless.wiki.kernel.org/en/users/documentation/iw and  wpa_supplicant
-always running with "-Dnl80211"
-
-> Have there been any Linux driver changes needed to support this 0.36
-> firmware? Does anyone have any pointers on where to look to understand
-> this behaviour between 0.29 and 0.36 firmware?
-
-closed source, but old changelogs are available at:
-http://rt2x00.serialmonkey.com/pipermail/users_rt2x00.serialmonkey.com/2013-September/006391.html
-
-Related to latest firmware releases, ralink/mediatek guys say:
-"According to the engineers comment, the firmware didn't change much
-these years, just some bbp register update and led stuff."
