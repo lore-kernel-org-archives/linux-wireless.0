@@ -1,56 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:11387 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752414AbcFCQKl convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37544 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710AbcF1Gsl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 12:10:41 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@codeaurora.org>
-CC: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 2/2] ath10k: remove 10.1 firmware support
-Date: Fri, 3 Jun 2016 16:09:55 +0000
-Message-ID: <87shwuuuct.fsf@kamboji.qca.qualcomm.com> (sfid-20160603_181044_786772_9E539C0B)
-References: <20160603153328.11947-1-rmanohar@qti.qualcomm.com>
-	<20160603153328.11947-2-rmanohar@qti.qualcomm.com>
-	<5751A6D5.7080901@candelatech.com>
-	<743182bcbd1efbdb576bcc51b0215300@codeaurora.org>
-In-Reply-To: <743182bcbd1efbdb576bcc51b0215300@codeaurora.org> (Rajkumar
-	Manoharan's message of "Fri, 03 Jun 2016 21:25:00 +0530")
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 28 Jun 2016 02:48:41 -0400
+Received: by mail-wm0-f51.google.com with SMTP id a66so12260230wme.0
+        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 23:48:40 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20160627143600.GA5292@atheros-ThinkPad-T61>
+References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
+ <CA+BoTQnUvF2Zy7_WuEi0V+KjByRghVmoeR6yrs6hu6ag=KmBqQ@mail.gmail.com> <20160627143600.GA5292@atheros-ThinkPad-T61>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Tue, 28 Jun 2016 08:48:38 +0200
+Message-ID: <CA+BoTQn+HeishCMf4hjpWjLBmvFG2r0gosBv77RTyk7+uOAvPA@mail.gmail.com> (sfid-20160628_084848_067106_EF43D503)
+Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
+ QCA99X0 and later
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@codeaurora.org> writes:
-
-> On 2016-06-03 21:18, Ben Greear wrote:
->> On 06/03/2016 08:33 AM, Rajkumar Manoharan wrote:
->>> Earlier qca9888 device was brought up using 10.1 firmware and then
->>> later all firmware fixes and new features are migrated to 10.2/10.2.x
->>> firmware branch. As all of 10.1 funtionalities are supported in 10.2
->>> based firmware, removing 10.1 firmware support for qca9888 device.
+On 27 June 2016 at 16:36, Mohammed Shafi Shajakhan
+<mohammed@codeaurora.org> wrote:
+> Hi Michal,
+>
+> thanks for the review ..
+>
+> On Mon, Jun 27, 2016 at 11:27:27AM +0200, Michal Kazior wrote:
+>> On 23 June 2016 at 18:40, Mohammed Shafi Shajakhan
+>> <mohammed@qti.qualcomm.com> wrote:
+>> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>> >
+>> > For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
+>> > NULL func status (always acked/successs !!) when hostapd does a
+>> > PROBE_CLIENT via nullfunc frames when the station is powered off
+>> > abruptly (inactive timer probes client via null func after the inactive
+>> > time reaches beyond the threshold). Fix this by disabling the workaround
+>> > (getting the ACK status of NULL func frames by sending via HTT mgmt-tx
+>> >  path) introduced by the change ("ath10k: fix beacon loss handling ")
+>> > for QCA99X0 and later chipsets. The normal tx path provides the proper
+>> > ACK status for NULL data frames. As of now disable this workaround for
+>> > chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
+>> > completely get rid of this workaround for all the chipsets
+>> >
+>> > Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+>> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>> > ---
+>> >  drivers/net/wireless/ath/ath10k/core.c | 3 +++
+>> >  drivers/net/wireless/ath/ath10k/core.h | 6 ++++++
+>> >  drivers/net/wireless/ath/ath10k/mac.c  | 1 +
+>> >  3 files changed, 10 insertions(+)
+>> >
+>> > diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+>> > index 689d6ce..9978e4a 100644
+>> > --- a/drivers/net/wireless/ath/ath10k/core.c
+>> > +++ b/drivers/net/wireless/ath/ath10k/core.c
+>> > @@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>> >                         .board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
+>> >                         .board_size = QCA99X0_BOARD_DATA_SZ,
+>> >                         .board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
+>> > +                       .disable_null_func_workaround = true,
 >>
->> Oh please do not do this.  My 10.1 firmware works very nicely,
->> and out-performs 10.2 in my testing.  Lots of people use my firmware
->> when they need IBSS support or other features not found in
->> official firmware, so it is not just me that will have
->> problems if you remove this support.
+>> Tx completion (bugs) are firmware specific, not hardware. This should
+>> be expressed via features bits in ath10k FW API, no?
 >>
-> Aah.. I thought CT firmware is 10.2 based. Since most of firmware bug
-> fixes and enhancements are integrated into 10.2 based firmware, we
-> thought of get rid of 10.1 firmware to reduce code size. Moreover
-> existing 10.1 official firmware has known issues.
+>>
+> [shafi] Are you suggesting me to introduce something like
+> "ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT" ? Kalle any suggestions ?
+>
+> Also how about getting this workaround completely if Ben had fixed this in his tree,
+> will this affect older 10.2.4 ?
 
-Yeah, we really want to reduce the amount firmware branches to support
-in ath10k.
+There's still 636.
 
-> Is it possible to upgrade CT firmware to 10.2 WMI/HTT interfaces?
+We could probably get rid of this as long as:
+ - ath10k can express the need to use Probe Requests for AP probing
+(in client mode) and beacon loss handling purposes instead of NullFunc
+to mac80211
+ - everyone uses hostapd with disassoc_low_ack=1 with affected
+firmware revisions
+ - supplicant uses disassoc_low_ack=1 for p2p go
+ - I have no idea about mesh/ibss but they might require some work as well
 
-That's a good idea. That shouldn't be too hard, right? I don't think HTT needs
-any changes, but for WMI few commands and ids need to be changed.
+Otherwise you'll introduce regressions.
 
--- 
-Kalle Valo
+
+Michał
