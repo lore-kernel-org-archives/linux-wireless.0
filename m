@@ -1,133 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:35300 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422766AbcFHMVZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 8 Jun 2016 08:21:25 -0400
-From: Prasun Maiti <prasunmaiti87@gmail.com>
-To: Linux Kernel <linux-kernel@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-	Linux Next <linux-next@vger.kernel.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux Kernel <prasunmaii87@gmail.com>
-Subject: [PATCH] Add .set_antenna callback in ath6kl driver to remove wireless core warns
-Date: Wed,  8 Jun 2016 17:51:14 +0530
-Message-Id: <1465388474-20503-1-git-send-email-prasunmaiti87@gmail.com> (sfid-20160608_142154_969197_EF8C54DA)
+Received: from s3.sipsolutions.net ([5.9.151.49]:50452 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751184AbcF2HOX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 03:14:23 -0400
+Message-ID: <1467184459.2461.1.camel@sipsolutions.net> (sfid-20160629_091446_005879_C2017345)
+Subject: Re: [PATCH 1/4] mac80211: mesh: flush stations before beacons are
+ stopped
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org,
+	"David S . Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Maital Hahn <maitalm@ti.com>
+Date: Wed, 29 Jun 2016 09:14:19 +0200
+In-Reply-To: <20160628111307.8784-2-yanivma@ti.com> (sfid-20160628_131058_738638_5F9A964D)
+References: <20160628111307.8784-1-yanivma@ti.com>
+	 <20160628111307.8784-2-yanivma@ti.com>
+	 (sfid-20160628_131058_738638_5F9A964D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since add more warnings for inconsistent ops in cfg80211, the wireless
-core warns if a driver implements a cfg80211 callback but doesn't
-implements the inverse operation. The ath6kl driver implements a cfg80211
-.get_antenna operation handler but doesn't have the inverse .set_antenna
-callback. So, it makes warning.
+On Tue, 2016-06-28 at 14:13 +0300, Yaniv Machani wrote:
+> From: Maital Hahn <maitalm@ti.com>
+> 
+> Some drivers (e.g. wl18xx) expect that the last stage in the
+> de-initialization process will be stopping the beacons, similar to
+> ap. Update ieee80211_stop_mesh() flow accordingly.
+> 
+How well have you tested that with other drivers?
 
-To remove this warning, add .set_antenna callback in ath6kl driver and
-also send a cmd to firmware with it's values.
+Changing behaviour to something a single driver desires isn't
+necessarily the best thing to do, since there always are multiple
+drivers.
 
-Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 24 ++++++++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.c      | 18 ++++++++++++++++++
- drivers/net/wireless/ath/ath6kl/wmi.h      |  6 ++++++
- 3 files changed, 48 insertions(+)
+If you're able to demonstrate that it works with the other drivers I'm
+willing to take that - the change makes sense after all, and it seems
+drivers must support this ordering since peers are also removed
+dynamically... But still. Don't just make a change like that without
+even giving any indication why you think it's fine for other drivers!
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index 4e11ba0..0d51228 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -3231,6 +3231,29 @@ static int ath6kl_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
- 					wait, buf, len, no_cck);
- }
- 
-+static int ath6kl_set_antenna(struct wiphy *wiphy,
-+				u32 tx_ant, u32 rx_ant)
-+{
-+	struct ath6kl *ar = wiphy_priv(wiphy);
-+	struct ath6kl_vif *vif = NULL;
-+
-+	vif = ath6kl_vif_first(ar);
-+	if (!vif)
-+		return -EIO;
-+
-+	if (!ath6kl_cfg80211_ready(vif))
-+		return -EIO;
-+
-+	if (!tx_ant || !rx_ant)
-+		return -EINVAL;
-+
-+	ar->hw.tx_ant = tx_ant;
-+	ar->hw.rx_ant = rx_ant;
-+
-+	return ath6kl_wmi_set_antenna(ar->wmi, vif->fw_vif_idx,
-+			tx_ant, rx_ant);
-+}
-+
- static int ath6kl_get_antenna(struct wiphy *wiphy,
- 			      u32 *tx_ant, u32 *rx_ant)
- {
-@@ -3456,6 +3479,7 @@ static struct cfg80211_ops ath6kl_cfg80211_ops = {
- 	.cancel_remain_on_channel = ath6kl_cancel_remain_on_channel,
- 	.mgmt_tx = ath6kl_mgmt_tx,
- 	.mgmt_frame_register = ath6kl_mgmt_frame_register,
-+	.set_antenna = ath6kl_set_antenna,
- 	.get_antenna = ath6kl_get_antenna,
- 	.sched_scan_start = ath6kl_cfg80211_sscan_start,
- 	.sched_scan_stop = ath6kl_cfg80211_sscan_stop,
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index 631c3a0..300ccc6 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1605,6 +1605,24 @@ static int ath6kl_wmi_txe_notify_event_rx(struct wmi *wmi, u8 *datap, int len,
- 	return 0;
- }
- 
-+int ath6kl_wmi_set_antenna(struct wmi *wmi, u8 idx,
-+			      u32 tx_ant, u32 rx_ant)
-+{
-+	struct sk_buff *skb;
-+	struct wmi_txe_notify_cmd *cmd;
-+
-+	skb = ath6kl_wmi_get_new_buf(sizeof(*cmd));
-+	if (!skb)
-+		return -ENOMEM;
-+
-+	cmd = (struct wmi_set_antenna_cmd *) skb->data;
-+	cmd->tx_ant = cpu_to_le32(tx_ant);
-+	cmd->rx_ant = cpu_to_le32(rx_ant);
-+
-+	return ath6kl_wmi_cmd_send(wmi, idx, skb, WMI_SET_ANTENNA_CMDID,
-+			NO_SYNC_WMIFLAG);
-+}
-+
- int ath6kl_wmi_set_txe_notify(struct wmi *wmi, u8 idx,
- 			      u32 rate, u32 pkts, u32 intvl)
- {
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.h b/drivers/net/wireless/ath/ath6kl/wmi.h
-index 3af464a..f2e65b3 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.h
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.h
-@@ -642,6 +642,7 @@ enum wmi_cmd_id {
- 	WMI_SET_RECOVERY_TEST_PARAMETER_CMDID, /*0xf094*/
- 
- 	WMI_ENABLE_SCHED_SCAN_CMDID,
-+	WMI_SET_ANTENNA_CMDID,
- };
- 
- enum wmi_mgmt_frame_type {
-@@ -2312,6 +2313,11 @@ struct wmi_ap_set_apsd_cmd {
- 	u8 enable;
- } __packed;
- 
-+struct wmi_set_antenna_cmd {
-+	__le32 tx_ant;
-+	__le32 rx_ant;
-+} __packed;
-+
- enum wmi_ap_apsd_buffered_traffic_flags {
- 	WMI_AP_APSD_NO_DELIVERY_FRAMES =  0x1,
- };
--- 
-1.9.1
-
+johannes
