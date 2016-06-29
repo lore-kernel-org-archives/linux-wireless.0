@@ -1,115 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:36540 "EHLO
-	mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751167AbcFSQgX (ORCPT
+Received: from mail-db3on0126.outbound.protection.outlook.com ([157.55.234.126]:41649
+	"EHLO emea01-db3-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752015AbcF2PSy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2016 12:36:23 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2 RFC 2/2] brcmfmac: support removing AP interfaces with "interface_remove"
-Date: Sun, 19 Jun 2016 18:23:25 +0200
-Message-Id: <1466353420-30998-2-git-send-email-zajec5@gmail.com> (sfid-20160619_183701_071619_565E03CF)
-In-Reply-To: <1466353420-30998-1-git-send-email-zajec5@gmail.com>
-References: <1466273932-11554-1-git-send-email-zajec5@gmail.com>
- <1466353420-30998-1-git-send-email-zajec5@gmail.com>
+	Wed, 29 Jun 2016 11:18:54 -0400
+From: "Baumann, Christoph (C.)" <cbaumann@visteon.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v8] Add new mac80211 driver mwlwifi.
+Date: Wed, 29 Jun 2016 13:44:38 +0000
+Message-ID: <DB5PR06MB1285C28251AB35F0F86DE178D0230@DB5PR06MB1285.eurprd06.prod.outlook.com> (sfid-20160629_171909_741955_C18C5B1F)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New firmwares (e.g. 10.10.69.36 for BCM4366) support "interface_remove"
-for removing interfaces. Try to use this method on cfg80211 request. In
-case of older firmwares (e.g. 7.35.177.56 for BCM43602 as I tested) this
-will just result in firmware rejecting command and this won't change any
-behavior.
+Hello David,
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Add extra chcek for ndev. Thanks Arend.
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 39 +++++++++++++++++++++-
- 1 file changed, 38 insertions(+), 1 deletion(-)
+I tried this new driver and it worked for me (board based on Renesas R-Car H3).
+But Inoticed that the data rates are asymmetrical (seen from the device):
+	* iperf -c (mainly TX): 598 Kbits/sec to 2.67 Mbits/sec
+	* iperf -s (mainly RX): 64.4 Mbits/sec to 69.2 Mbits/sec
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 502b0a0..1e411dc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -785,12 +785,48 @@ s32 brcmf_notify_escan_complete(struct brcmf_cfg80211_info *cfg,
- 	return err;
- }
- 
-+static int brcmf_cfg80211_del_ap_iface(struct wiphy *wiphy,
-+				       struct wireless_dev *wdev)
-+{
-+	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
-+	struct net_device *ndev = wdev->netdev;
-+	struct brcmf_if *ifp = netdev_priv(ndev);
-+	int ret;
-+	int err;
-+
-+	brcmf_cfg80211_arm_vif_event(cfg, ifp->vif);
-+
-+	err = brcmf_fil_bsscfg_data_set(ifp, "interface_remove", NULL, 0);
-+	if (err) {
-+		brcmf_err("interface_remove failed %d\n", err);
-+		goto err_unarm;
-+	}
-+
-+	/* wait for firmware event */
-+	ret = brcmf_cfg80211_wait_vif_event(cfg, BRCMF_E_IF_DEL,
-+					    BRCMF_VIF_EVENT_TIMEOUT);
-+	if (!ret) {
-+		brcmf_err("timeout occurred\n");
-+		err = -EIO;
-+		goto err_unarm;
-+	}
-+
-+	brcmf_remove_interface(ifp, true);
-+
-+err_unarm:
-+	brcmf_cfg80211_arm_vif_event(cfg, NULL);
-+	return err;
-+}
-+
- static
- int brcmf_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
- 	struct net_device *ndev = wdev->netdev;
- 
-+	if (ndev && ndev == cfg_to_ndev(cfg))
-+		return -ENOTSUPP;
-+
- 	/* vif event pending in firmware */
- 	if (brcmf_cfg80211_vif_event_armed(cfg))
- 		return -EBUSY;
-@@ -807,12 +843,13 @@ int brcmf_cfg80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	switch (wdev->iftype) {
- 	case NL80211_IFTYPE_ADHOC:
- 	case NL80211_IFTYPE_STATION:
--	case NL80211_IFTYPE_AP:
- 	case NL80211_IFTYPE_AP_VLAN:
- 	case NL80211_IFTYPE_WDS:
- 	case NL80211_IFTYPE_MONITOR:
- 	case NL80211_IFTYPE_MESH_POINT:
- 		return -EOPNOTSUPP;
-+	case NL80211_IFTYPE_AP:
-+		return brcmf_cfg80211_del_ap_iface(wiphy, wdev);
- 	case NL80211_IFTYPE_P2P_CLIENT:
- 	case NL80211_IFTYPE_P2P_GO:
- 	case NL80211_IFTYPE_P2P_DEVICE:
--- 
-1.8.4.5
 
+
+Regards,
+Christoph
