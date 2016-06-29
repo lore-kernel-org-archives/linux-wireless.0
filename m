@@ -1,52 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59640 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753864AbcFPPkC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 11:40:02 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: John S Gruber <johnsgruber@gmail.com>
-CC: Miaoqing Pan <miaoqing@codeaurora.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ATH9K warnings from commit b2d70d494
-Date: Thu, 16 Jun 2016 15:39:43 +0000
-Message-ID: <8737odw3b5.fsf@kamboji.qca.qualcomm.com> (sfid-20160616_174007_645410_C0CB34D1)
-References: <CAPotdmQA6qwbUD9g7BLc_ad3VZ57y4FX_6UJ3ibMovC7Kaa4TA@mail.gmail.com>
-	<87ziqlpeue.fsf@qca.qualcomm.com>
-	<CAPotdmTXsNC0AeqqKEa0_WQUA-4tuS8sMJtU5VRxZcWSM4iVgQ@mail.gmail.com>
-In-Reply-To: <CAPotdmTXsNC0AeqqKEa0_WQUA-4tuS8sMJtU5VRxZcWSM4iVgQ@mail.gmail.com>	(John S.
- Gruber's message of "Thu, 16 Jun 2016 15:11:10 +0000")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:43501 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751504AbcF2SBQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 14:01:16 -0400
+Subject: Re: [linux-sunxi] Re: [PATCH 2/4] ARM: dts: sun7i-a20-cubietruck: Set
+ brcm,nvram_file_name
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+ <1467209074-15634-2-git-send-email-hdegoede@redhat.com>
+ <87wpl8c4km.fsf@purkki.adurom.net>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <e0355531-d727-ea7f-0930-22b47c568a5a@redhat.com> (sfid-20160629_200119_356316_FD3D946D)
+Date: Wed, 29 Jun 2016 20:01:02 +0200
 MIME-Version: 1.0
+In-Reply-To: <87wpl8c4km.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-John S Gruber <johnsgruber@gmail.com> writes:
+HI,
 
-> It's an AR9462
+On 29-06-16 19:01, Kalle Valo wrote:
+> Hans de Goede <hdegoede@redhat.com> writes:
 >
-> Here's the wifi adapter:
+>> The cubietruck uses an ap6210 sdio wifi module, set brcm,nvram_file_name
+>> to brcmfmac43362-ap6210.txt so that we can ship the ap6210 specific
+>> nvram file in linunx-firmware to get the wifi to work out of the box
+>> without users needing to download and install the nvram file themselves.
+>>
+>> Note a downside of this patch is that users who have already manually
+>> installed the nvram file will need to rename it.
+>>
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>  arch/arm/boot/dts/sun7i-a20-cubietruck.dts | 1 +
+>>  1 file changed, 1 insertion(+)
 >
-> 03:00.0 Network controller: Qualcomm Atheros AR9462 Wireless Network Adapter
-> (rev 01)
-> Subsystem: Lite-On Communications Inc Device 6621
-> Flags: bus master, fast devsel, latency 0, IRQ 19
-> Memory at f7c00000 (64-bit, non-prefetchable) [size=512K]
-> Expansion ROM at f7c80000 [disabled] [size=64K]
-> Capabilities: [40] Power Management version 2
-> Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
-> Capabilities: [70] Express Endpoint, MSI 00
-> Capabilities: [100] Advanced Error Reporting
-> Capabilities: [140] Virtual Channel
-> Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
-> Kernel driver in use: ath9k
->
-> The warnings go away with the patch you identified and wifi and bluetooth are
-> working.
+> I can't apply .dts changes so better to send them in a separate
+> patchset.
 
-Great, thanks for testing. The patch will go to 4.7-rc release in a week
-or two.
+Maxime Ripard who is in the Cc maintains the dts files
+in question, I've send these as one set because I find
+that sending out actual dts usage examples helps.
 
--- 
-Kalle Valo
+Regards,
+
+Hans
+
