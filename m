@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57449 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:41230 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751383AbcF3KHQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 06:07:16 -0400
-Message-ID: <1467281231.2499.3.camel@sipsolutions.net> (sfid-20160630_120721_364505_0498180B)
-Subject: Re: [PATCH] mac80211: use common cleanup for user/!user_mpm
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Jouni Malinen <j@w1.fi>, linux-wireless@vger.kernel.org
-Date: Thu, 30 Jun 2016 12:07:11 +0200
-In-Reply-To: <20160625231416.19488-1-me@bobcopeland.com> (sfid-20160626_011440_567853_49925C4B)
-References: <20160625231416.19488-1-me@bobcopeland.com>
-	 (sfid-20160626_011440_567853_49925C4B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752543AbcF2PRC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 11:17:02 -0400
+Subject: Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
+To: Jonas Gorski <jonas.gorski@gmail.com>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+ <CAOiHx=n6itfmvwYQh+jUSDNguQFkos=MzjkDWP=GsupdgvF6KQ@mail.gmail.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <b49a9e4b-d591-d978-8005-413f39ebf2bd@redhat.com> (sfid-20160629_171707_083952_A5D0BB8A)
+Date: Wed, 29 Jun 2016 17:16:32 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAOiHx=n6itfmvwYQh+jUSDNguQFkos=MzjkDWP=GsupdgvF6KQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-06-25 at 19:14 -0400, Bob Copeland wrote:
-> We've accumulated a couple of different fixes now to
-> mesh_sta_cleanup()
-> due to the different paths that user_mpm and !user_mpm cases take --
-> one
-> fix to flush nexthop paths and one to fix the counting.
-> 
-> The only caller of mesh_plink_deactivate() is mesh_sta_cleanup(), so
-> we
-> can push the user_mpm checks down into there in order to share more
-> code.
-> 
-> In doing so, we can remove an extra call to
-> mesh_path_flush_by_nexthop()
-> and the (unnecessary) call to mesh_accept_plinks_update().  This will
-> also ensure the powersaving state code gets called in the user_mpm
-> case.
-> 
-> The only cleanup tasks we need to avoid when MPM is in user-space
-> are sending the peering frames and stopping the plink timer, so wrap
-> those in the appropriate check.
-> 
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> ---
-> 
-> This applies on top of Jouni's patch,
-> "mac80211: Fix mesh estab_plinks counting in STA removal case", so
-> this can go for -next.
-> 
-Applied.
+Hi,
 
-johannes
+On 29-06-16 16:42, Jonas Gorski wrote:
+> Hi,
+>
+> On 29 June 2016 at 16:04, Hans de Goede <hdegoede@redhat.com> wrote:
+>> Add a brcm,nvram_file_name dt property to allow overruling the default
+>> nvram filename for sdio devices. The idea is that we can specify a
+>> board specific nvram file, e.g. brcmfmac43362-ap6210.txt for boards
+>> with an ap6210 wifi sdio module and ship this in linux-firmware, so
+>> that wifi will work out of the box, without requiring users to find
+>> and then manually install the right nvram file for their board.
+>
+> Directly defining a filename doesn't seem like a good OS-agnostic
+> approach. Maybe an alternative would be to add a model-property to the
+> nodes (this is allowed) and make brcmfmac to request
+> "FWFILENAME-<model>" as firmware if set? That would leave it to the OS
+> on how the filename is set.
+
+It only defines the base-filename, not the entire path, how / where
+this file is searched for / loaded-from is then left up to the os
+
+Regards,
+
+Hans
