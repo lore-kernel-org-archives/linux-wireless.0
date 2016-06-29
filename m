@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60204 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423225AbcFMNSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 09:18:05 -0400
-Message-ID: <1465823880.10050.3.camel@sipsolutions.net> (sfid-20160613_151808_748113_8C92EA2C)
-Subject: Re: [PATCH] ath10k: fix potential null dereference bugs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Date: Mon, 13 Jun 2016 15:18:00 +0200
-In-Reply-To: <20160613130507.GA11074@localhost> (sfid-20160613_150522_731750_3B82E728)
-References: <1465563164-783-1-git-send-email-me@bobcopeland.com>
- <CA+BoTQkg+uea_YzUgrVBPhA8uRxNpd29Kd1y1tvt0a-JyOSLQw@mail.gmail.com>
- <1465808939.2434.1.camel@sipsolutions.net>
-	 <20160613130507.GA11074@localhost> (sfid-20160613_150522_731750_3B82E728)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:39115 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534AbcF2Pl6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 11:41:58 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: brcmfmac: slightly simplify building interface combinations
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1465326626-365-1-git-send-email-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Message-Id: <20160629154152.8E340613A6@smtp.codeaurora.org> (sfid-20160629_174228_391446_CE2461C2)
+Date: Wed, 29 Jun 2016 15:41:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-06-13 at 09:05 -0400, Bob Copeland wrote:
-> 
-> So I did just go and check the generated code for each of these cases
-> and gcc didn't elide the subsequent if-test, at least on x86-64 and
-> my compiler / build config.  Given http://lwn.net/Articles/342330, it
-> seems possible, though.
+Rafał Miłecki wrote:
+> This change reorders some operations in brcmf_setup_ifmodes in hope to
+> make it simpler:
+> 1) It allocates arrays right before filling them. This way it's easier
+>    to follow requested array length as it's immediately followed by
+>    code filling it. It's easier to check e.g. why we need 4 entries for
+>    P2P. Other than that it deduplicates some checks (e.g. for P2P).
+> 2) It reorders code to first prepare limits and then define a new combo.
+>    Previously this was mixed (e.g. we were setting num of channels
+>    before preparing limits).
+> 3) It modifies mbss code to use i variable just like other combos do.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-It's not clear that's the same situation, since tun->sk is very likely
-to have been an actual pointer, not an embedded thing like drv_priv.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-However, with all this, I think I'd simply not take any chances - the
-patch isn't exactly invasive and in some cases (for example the first
-hunk of the patch) will even improve the code to the point where the
-compiler could warn about uninitialized usage of the pointer when the
-code gets modified to use it in case of !txq->sta.
+f568adac7d1a brcmfmac: slightly simplify building interface combinations
 
-I'd take it, but I guess it's Kalle's decision :)
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9162267/
 
-johannes
