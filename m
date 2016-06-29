@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39745 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39623 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160AbcF2Pu3 (ORCPT
+	with ESMTP id S1752660AbcF2Pr2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 11:50:29 -0400
+	Wed, 29 Jun 2016 11:47:28 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v2] rtlwifi: use s8 instead of char
+Subject: Re: libertas: Add spinlock to avoid race condition
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <4937395.5geC2TFNE0@wuerfel>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
-Message-Id: <20160629154857.E131B611F1@smtp.codeaurora.org> (sfid-20160629_175103_988409_4B8F1D03)
-Date: Wed, 29 Jun 2016 15:48:57 +0000 (UTC)
+In-Reply-To: <1465990443-19738-1-git-send-email-andrianov@ispras.ru>
+To: Pavel Andrianov <andrianov@ispras.ru>
+Cc: Pavel Andrianov <andrianov@ispras.ru>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ldv-project@linuxtesting.org, vaishali.thakkar@oracle.com
+Message-Id: <20160629154712.95563613CE@smtp.codeaurora.org> (sfid-20160629_174804_870695_7554D81A)
+Date: Wed, 29 Jun 2016 15:47:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
-> Compiling the rtlwifi drivers for ARM with gcc -Wextra warns about lots of
-> incorrect code that results from 'char' being unsigned here, e.g.
+Pavel Andrianov <andrianov@ispras.ru> wrote:
+> lbs_mac_event_disconnected may free priv->currenttxskb
+> while lbs_hard_start_xmit accesses to it.
+> The patch adds a spinlock for mutual exclusion.
 > 
-> realtek/rtlwifi/rc.c:113:18: error: comparison is always true due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8188ee/dm.c:1070:22: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8192ce/trx.c:54:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8192cu/mac.c:601:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8192de/trx.c:53:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8192ee/phy.c:1268:12: error: comparison is always true due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8192se/rf.c:150:20: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8723be/dm.c:877:29: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8723be/phy.c:386:16: error: comparison is always true due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8821ae/dm.c:1514:38: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8821ae/phy.c:1558:11: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8821ae/phy.c:386:24: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/rtl8821ae/trx.c:55:12: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-> realtek/rtlwifi/stats.c:31:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> Tested on OLPC XO-1 (usb8388) and XO-1.5 (sd8686) with v4.7-rc3.
 > 
-> This patch changes all uses of 'char' in this driver that refer to
-> 8-bit integers to use 's8' instead, which is signed on all architectures.
+> Confirmed that lbs_mac_event_disconnected is being called on the
+> station when hostapd on access point is given SIGHUP.
 > 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Pavel <andrianov@ispras.ru>
+> Tested-by: James Cameron <quozl@laptop.org>
+> Acked-by: Vaishali Thakkar <vaishali.thakkar@oracle.com>
 
 Thanks, 1 patch applied to wireless-drivers-next.git:
 
-08aba42fcc7e rtlwifi: use s8 instead of char
+f52b041aed77 libertas: Add spinlock to avoid race condition
 
 -- 
 Sent by pwcli
-https://patchwork.kernel.org/patch/9179539/
+https://patchwork.kernel.org/patch/9178477/
 
