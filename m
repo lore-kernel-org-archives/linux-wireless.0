@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:43861 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750842AbcFSOHS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39745 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752160AbcF2Pu3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 19 Jun 2016 10:07:18 -0400
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id u5JE6eBM023065
-	for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2016 09:06:41 -0500
-Received: from DFLE73.ent.ti.com (dfle73.ent.ti.com [128.247.5.110])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id u5JE7H6p030472
-	for <linux-wireless@vger.kernel.org>; Sun, 19 Jun 2016 09:07:17 -0500
-From: Guy Mishol <guym@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Guy Mishol <guym@ti.com>
-Subject: [PATCH] wlcore: reconfigure sta rates on authorization
-Date: Sun, 19 Jun 2016 17:08:58 +0300
-Message-ID: <1466345338-31972-1-git-send-email-guym@ti.com> (sfid-20160619_160725_130111_40FDF07B)
+	Wed, 29 Jun 2016 11:50:29 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v2] rtlwifi: use s8 instead of char
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <4937395.5geC2TFNE0@wuerfel>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>
+Message-Id: <20160629154857.E131B611F1@smtp.codeaurora.org> (sfid-20160629_175103_988409_4B8F1D03)
+Date: Wed, 29 Jun 2016 15:48:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since stations can now be added before association
-(NL80211_FEATURE_FULL_AP_CLIENT_STATE support),
-no supported rates are set when the station is added
-to the fw, resulting in fw recovery.
+Arnd Bergmann <arnd@arndb.de> wrote:
+> Compiling the rtlwifi drivers for ARM with gcc -Wextra warns about lots of
+> incorrect code that results from 'char' being unsigned here, e.g.
+> 
+> realtek/rtlwifi/rc.c:113:18: error: comparison is always true due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8188ee/dm.c:1070:22: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192ce/trx.c:54:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192cu/mac.c:601:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192de/trx.c:53:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192ee/phy.c:1268:12: error: comparison is always true due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8192se/rf.c:150:20: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8723be/dm.c:877:29: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8723be/phy.c:386:16: error: comparison is always true due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8821ae/dm.c:1514:38: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8821ae/phy.c:1558:11: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8821ae/phy.c:386:24: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/rtl8821ae/trx.c:55:12: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> realtek/rtlwifi/stats.c:31:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> 
+> This patch changes all uses of 'char' in this driver that refer to
+> 8-bit integers to use 's8' instead, which is signed on all architectures.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Fix it by first configuring the AP basic rates as
-the station configured rates (when the station is
-first added to the driver), and after the station
-was authorized re-configure it, now with the actual
-supported rates.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Signed-off-by: Guy Mishol <guym@ti.com>
----
- drivers/net/wireless/ti/wlcore/cmd.c  | 7 +++++++
- drivers/net/wireless/ti/wlcore/main.c | 5 +++++
- 2 files changed, 12 insertions(+)
+08aba42fcc7e rtlwifi: use s8 instead of char
 
-diff --git a/drivers/net/wireless/ti/wlcore/cmd.c b/drivers/net/wireless/ti/wlcore/cmd.c
-index 3315356..5f360ce 100644
---- a/drivers/net/wireless/ti/wlcore/cmd.c
-+++ b/drivers/net/wireless/ti/wlcore/cmd.c
-@@ -1566,6 +1566,13 @@ int wl12xx_cmd_add_peer(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 		cpu_to_le32(wl1271_tx_enabled_rates_get(wl, sta_rates,
- 							wlvif->band));
- 
-+	if (!cmd->supported_rates) {
-+		wl1271_debug(DEBUG_CMD,
-+			     "peer has no supported rates yet, configuring basic rates: 0x%x",
-+			     wlvif->basic_rate_set);
-+		cmd->supported_rates = cpu_to_le32(wlvif->basic_rate_set);
-+	}
-+
- 	wl1271_debug(DEBUG_CMD, "new peer rates=0x%x queues=0x%x",
- 		     cmd->supported_rates, sta->uapsd_queues);
- 
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 10fd24c..a53033d 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5091,6 +5091,11 @@ static int wl12xx_update_sta_state(struct wl1271 *wl,
- 		if (ret < 0)
- 			return ret;
- 
-+		/* reconfigure rates */
-+		ret = wl12xx_cmd_add_peer(wl, wlvif, sta, wl_sta->hlid);
-+		if (ret < 0)
-+			return ret;
-+
- 		ret = wl1271_acx_set_ht_capabilities(wl, &sta->ht_cap, true,
- 						     wl_sta->hlid);
- 		if (ret)
 -- 
-2.6.4
+Sent by pwcli
+https://patchwork.kernel.org/patch/9179539/
 
