@@ -1,71 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57672 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60023 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754594AbcFPPMw (ORCPT
+	with ESMTP id S1751810AbcF2JsI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 11:12:52 -0400
-Content-Type: text/plain; charset="utf-8"
+	Wed, 29 Jun 2016 05:48:08 -0400
+Date: Wed, 29 Jun 2016 15:17:54 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
+ QCA99X0 and later
+Message-ID: <20160629094754.GA8867@atheros-ThinkPad-T61> (sfid-20160629_114816_778661_61B8CBB6)
+References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
+ <CA+BoTQnUvF2Zy7_WuEi0V+KjByRghVmoeR6yrs6hu6ag=KmBqQ@mail.gmail.com>
+ <20160627143600.GA5292@atheros-ThinkPad-T61>
+ <CA+BoTQn+HeishCMf4hjpWjLBmvFG2r0gosBv77RTyk7+uOAvPA@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [V2,
- next] brcmfmac: don't remove interface on link down firmware event
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1464583269-30255-1-git-send-email-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Message-Id: <20160616151252.30C226141A@smtp.codeaurora.org> (sfid-20160616_171301_734081_A4B001D4)
-Date: Thu, 16 Jun 2016 15:12:52 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+BoTQn+HeishCMf4hjpWjLBmvFG2r0gosBv77RTyk7+uOAvPA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> There are two firmware events we handle similarly in brcmfmac:
-> BRCMF_E_LINK and BRCMF_E_IF. The difference from firmware point of view
-> is that the first one means BSS remains present in the firmware. Trying
-> to (re)create it (e.g. when adding new virtual interface) will result in
-> an error.
-> 
-> Current code treats both events in a similar way. It removes Linux
-> interface for each of them. It works OK with e.g. BCM43602. Its firmware
-> generates both events for each interface. It means we get BRCMF_E_LINK
-> and remove interface. That is soon followed by BRCMF_E_IF which means
-> BSS was also removed in a firmware. The only downside of this is a
-> harmless error like:
-> [  208.643180] brcmfmac: brcmf_fweh_call_event_handler: no interface object
-> 
-> Unfortunately BCM4366 firmware doesn't automatically remove BSS and so
-> it doesn't generate BRCMF_E_IF. In such case we incorrectly remove Linux
-> interface on BRCMF_E_LINK as BSS is still present in the firmware. It
-> results in an error when trying to re-create virtual interface, e.g.:
-> > iw phy phy1 interface add wlan1-1 type __ap
-> [ 3602.929199] brcmfmac: brcmf_ap_add_vif: timeout occurred
-> command failed: I/O error (-5)
-> 
-> With this patch we don't remove Linux interface while firmware keeps
-> BSS. Thanks to this we keep a consistent states of host driver and
-> device firmware.
-> 
-> Further improvement should be to mark BSS as disabled and remove
-> interface on BRCMF_E_LINK. Then we should add support for reusing
-> BSS-es.
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Hello Michal/ Kalle,
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+On Tue, Jun 28, 2016 at 08:48:38AM +0200, Michal Kazior wrote:
+> On 27 June 2016 at 16:36, Mohammed Shafi Shajakhan
+> <mohammed@codeaurora.org> wrote:
+> > Hi Michal,
+> >
+> > thanks for the review ..
+> >
+> > On Mon, Jun 27, 2016 at 11:27:27AM +0200, Michal Kazior wrote:
+> >> On 23 June 2016 at 18:40, Mohammed Shafi Shajakhan
+> >> <mohammed@qti.qualcomm.com> wrote:
+> >> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> >> >
+> >> > For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
+> >> > NULL func status (always acked/successs !!) when hostapd does a
+> >> > PROBE_CLIENT via nullfunc frames when the station is powered off
+> >> > abruptly (inactive timer probes client via null func after the inactive
+> >> > time reaches beyond the threshold). Fix this by disabling the workaround
+> >> > (getting the ACK status of NULL func frames by sending via HTT mgmt-tx
+> >> >  path) introduced by the change ("ath10k: fix beacon loss handling ")
+> >> > for QCA99X0 and later chipsets. The normal tx path provides the proper
+> >> > ACK status for NULL data frames. As of now disable this workaround for
+> >> > chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
+> >> > completely get rid of this workaround for all the chipsets
+> >> >
+> >> > Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+> >> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> >> > ---
+> >> >  drivers/net/wireless/ath/ath10k/core.c | 3 +++
+> >> >  drivers/net/wireless/ath/ath10k/core.h | 6 ++++++
+> >> >  drivers/net/wireless/ath/ath10k/mac.c  | 1 +
+> >> >  3 files changed, 10 insertions(+)
+> >> >
+> >> > diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> >> > index 689d6ce..9978e4a 100644
+> >> > --- a/drivers/net/wireless/ath/ath10k/core.c
+> >> > +++ b/drivers/net/wireless/ath/ath10k/core.c
+> >> > @@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+> >> >                         .board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
+> >> >                         .board_size = QCA99X0_BOARD_DATA_SZ,
+> >> >                         .board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
+> >> > +                       .disable_null_func_workaround = true,
+> >>
+> >> Tx completion (bugs) are firmware specific, not hardware. This should
+> >> be expressed via features bits in ath10k FW API, no?
+> >>
+> >>
+> > [shafi] Are you suggesting me to introduce something like
+> > "ATH10K_FW_FEATURE_SUPPORTS_SKIP_CLOCK_INIT" ? Kalle any suggestions ?
+> >
+> > Also how about getting this workaround completely if Ben had fixed this in his tree,
+> > will this affect older 10.2.4 ?
+> 
+> There's still 636.
+> 
+> We could probably get rid of this as long as:
+>  - ath10k can express the need to use Probe Requests for AP probing
+> (in client mode) and beacon loss handling purposes instead of NullFunc
+> to mac80211
+>  - everyone uses hostapd with disassoc_low_ack=1 with affected
+> firmware revisions
+>  - supplicant uses disassoc_low_ack=1 for p2p go
+>  - I have no idea about mesh/ibss but they might require some work as well
+> 
+> Otherwise you'll introduce regressions.
+>
 
-fd3667a8d1cb brcmfmac: don't remove interface on link down firmware event
+[shafi] sure then we will disable this for 10.4 (QCA99X0 and later)
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9140237/
+*firmware feature requires a new firmware updated this feature, so the bug
+will be present for all the older firmware, please correct me if my
+understanding is wrong
+
+*We discussed wmi_op_version is not the way to go (in the sense just disable it
+for 10.4 alone)
+
+Let me know if there is any other suggestion (the existing change though bit
+cleanly is very explicit regarding the chipsets that this workaround is not
+needed), thank you !
+
+regards,
+shafi
 
