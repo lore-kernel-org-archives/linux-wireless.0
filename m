@@ -1,112 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:36583 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752817AbcF2SwE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 29 Jun 2016 14:52:04 -0400
-Received: by mail-wm0-f51.google.com with SMTP id f126so193126521wma.1
-        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2016 11:51:50 -0700 (PDT)
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name
- dt property
-To: Hans de Goede <hdegoede@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
- <CAOiHx=n6itfmvwYQh+jUSDNguQFkos=MzjkDWP=GsupdgvF6KQ@mail.gmail.com>
- <b49a9e4b-d591-d978-8005-413f39ebf2bd@redhat.com>
- <871t3gdj6p.fsf@purkki.adurom.net>
- <ea10ff70-26e6-e151-5cea-c54bd12a054c@redhat.com>
-Cc: Jonas Gorski <jonas.gorski@gmail.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
+Received: from mx1.redhat.com ([209.132.183.28]:45283 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752466AbcF2OGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 10:06:41 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
 	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
+	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
 	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f8995599-115d-87e5-7928-c029b48584f1@broadcom.com> (sfid-20160629_205228_556318_59F4838C)
-Date: Wed, 29 Jun 2016 20:51:44 +0200
-MIME-Version: 1.0
-In-Reply-To: <ea10ff70-26e6-e151-5cea-c54bd12a054c@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
+Date: Wed, 29 Jun 2016 16:04:31 +0200
+Message-Id: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> (sfid-20160629_160742_937228_C6DCEB6D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29-6-2016 20:01, Hans de Goede wrote:
-> Hi,
-> 
-> On 29-06-16 19:00, Kalle Valo wrote:
->> Hans de Goede <hdegoede@redhat.com> writes:
->>
->>> Hi,
->>>
->>> On 29-06-16 16:42, Jonas Gorski wrote:
->>>> Hi,
->>>>
->>>> On 29 June 2016 at 16:04, Hans de Goede <hdegoede@redhat.com> wrote:
->>>>> Add a brcm,nvram_file_name dt property to allow overruling the default
->>>>> nvram filename for sdio devices. The idea is that we can specify a
->>>>> board specific nvram file, e.g. brcmfmac43362-ap6210.txt for boards
->>>>> with an ap6210 wifi sdio module and ship this in linux-firmware, so
->>>>> that wifi will work out of the box, without requiring users to find
->>>>> and then manually install the right nvram file for their board.
->>>>
->>>> Directly defining a filename doesn't seem like a good OS-agnostic
->>>> approach. Maybe an alternative would be to add a model-property to the
->>>> nodes (this is allowed) and make brcmfmac to request
->>>> "FWFILENAME-<model>" as firmware if set? That would leave it to the OS
->>>> on how the filename is set.
->>>
->>> It only defines the base-filename, not the entire path, how / where
->>> this file is searched for / loaded-from is then left up to the os
->>
->> It's still a bad idea. The filename, including the path, should be
->> created in the driver. Can't you provide chipname (or similar) via
->> device tree and then the driver can choose what image to use?
-> 
-> No, the driver already does that, but this is not ...
-> 
->> Can you tell more about the naming the firmware image, how does it work
->> exactly?
-> 
-> About firmware, this is about the nvram file which is board specific,
-> rather then chip specific.
+Add a brcm,nvram_file_name dt property to allow overruling the default
+nvram filename for sdio devices. The idea is that we can specify a
+board specific nvram file, e.g. brcmfmac43362-ap6210.txt for boards
+with an ap6210 wifi sdio module and ship this in linux-firmware, so
+that wifi will work out of the box, without requiring users to find
+and then manually install the right nvram file for their board.
 
-The nvram filename is determined pretty much the same as the firmware
-filename, but indeed the nvram data is board specific. This is main
-reason why we do not submit nvram files to linux-firmware, because we
-simply do not have those files.
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt          | 2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c               | 2 ++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c             | 6 ++++++
+ include/linux/platform_data/brcmfmac.h                              | 2 ++
+ 4 files changed, 12 insertions(+)
 
-> Typical wifi devices will have some sort of non volatile storage
-> on board to not only store the ethernet(mac) address, but also
-> to contain e.g. info about the antenna gain so that the firmware
-> and/or the driver can take the antenna gain into account and ensure
-> that they never exceed the maximum allowed broadcast strength.
-> 
-> However on some embedded devices there is no non-volatile storage
-> for the wifi (for cost reasons) and instead this configuration info
-> (which is board / pcb specific) is loaded in the form of a
-> file which contains the contents which would normally be in the
-> non-volatile storage.
-> 
-> Since we are dealing with a per-board config-file here, which is
-> loaded from the os filesystem we really need to specify a basename
-> here as the list of possible boards is endless, so we cannot
-> have a lookup table in the driver.
+diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+index 5dbf169..2ba13a6 100644
+--- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
++++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+@@ -11,6 +11,7 @@ Required properties:
+ Optional properties:
+  - brcm,drive-strength : drive strength used for SDIO pins on device in mA
+ 	(default = 6).
++ - brcm,nvram_file_name : name of the nvram file to load
+  - interrupt-parent : the phandle for the interrupt controller to which the
+ 	device interrupts are connected.
+  - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
+@@ -34,6 +35,7 @@ mmc3: mmc@01c12000 {
+ 	brcmf: bcrmf@1 {
+ 		reg = <1>;
+ 		compatible = "brcm,bcm4329-fmac";
++		brcm,nvram_file_name = "brcm/brcmfmac43362-ap6210.txt";
+ 		interrupt-parent = <&pio>;
+ 		interrupts = <10 8>; /* PH10 / EINT10 */
+ 		interrupt-names = "host-wake";
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+index 425c41d..a054122 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
+@@ -36,6 +36,8 @@ void brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_pd *sdio)
+ 	if (of_property_read_u32(np, "brcm,drive-strength", &val) == 0)
+ 		sdio->drive_strength = val;
+ 
++	of_property_read_string(np, "brcm,nvram_file_name", &sdio->nvram_name);
++
+ 	/* make sure there are interrupts defined in the node */
+ 	if (!of_find_property(np, "interrupts", NULL))
+ 		return;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 67e69bf..2655409 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4201,6 +4201,12 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 	if (ret)
+ 		goto fail;
+ 
++	if (sdiodev->settings->bus.sdio.nvram_name) {
++		strlcpy(sdiodev->nvram_name,
++			sdiodev->settings->bus.sdio.nvram_name,
++			BRCMF_FW_NAME_LEN);
++	}
++
+ 	ret = brcmf_fw_get_firmwares(sdiodev->dev, BRCMF_FW_REQUEST_NVRAM,
+ 				     sdiodev->fw_name, sdiodev->nvram_name,
+ 				     brcmf_sdio_firmware_callback);
+diff --git a/include/linux/platform_data/brcmfmac.h b/include/linux/platform_data/brcmfmac.h
+index 1d30bf2..a5515dd 100644
+--- a/include/linux/platform_data/brcmfmac.h
++++ b/include/linux/platform_data/brcmfmac.h
+@@ -65,6 +65,7 @@ enum brcmf_bus_type {
+  *			the target drive strength, the exact drive strength
+  *			which will be used depends on the capabilities of the
+  *			device.
++ * @nvram_name:		name of nvram file to load.
+  * @oob_irq_supported:	does the board have support for OOB interrupts. SDIO
+  *			in-band interrupts are relatively slow and for having
+  *			less overhead on interrupt processing an out of band
+@@ -91,6 +92,7 @@ enum brcmf_bus_type {
+ struct brcmfmac_sdio_pd {
+ 	int		txglomsz;
+ 	unsigned int	drive_strength;
++	const char	*nvram_name;
+ 	bool		oob_irq_supported;
+ 	unsigned int	oob_irq_nr;
+ 	unsigned long	oob_irq_flags;
+-- 
+2.7.4
 
-As Jonas mentioned the general principle of device tree is to be
-agnostic with regards to OS and/or driver as you undoubtedly know. His
-proposal seems like a usable solution for your problem while complying
-to the device tree principle. So instead of overriding the default
-brcmfmac should modify it when dt specifies the "module" property, ie:
-
-no "module" in DT:	nvram filename = brcm/brcmfmac43362-sdio.txt
-"module=ap6210" in DT:	nvram filename = brcm/brcmfmac43362-ap6210.txt
-
-By the way, the example in the bindings file does not seem to specify a
-basename, but path+basename+fileext.
-
-Regards,
-Arend
