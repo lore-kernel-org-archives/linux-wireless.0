@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44027 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbcFDQwH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 12:52:07 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jan Kiszka <jan.kiszka@web.de>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: Change long delays to sleeps
-References: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
-	<57530495.50302@web.de>
-Date: Sat, 04 Jun 2016 19:52:00 +0300
-In-Reply-To: <57530495.50302@web.de> (Jan Kiszka's message of "Sat, 4 Jun 2016
-	18:40:53 +0200")
-Message-ID: <87fusssxqn.fsf@kamboji.qca.qualcomm.com> (sfid-20160604_185518_607647_916254C7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:51209 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751651AbcF2Jov (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 05:44:51 -0400
+Message-ID: <1467193486.2461.10.camel@sipsolutions.net> (sfid-20160629_114456_829250_F266E0BC)
+Subject: Re: [PATCH] mac80211: minstrel: Enable STBC and LDPC for VHT Rates
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	Karl Beldan <karl.beldan@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@nbd.name>
+Date: Wed, 29 Jun 2016 11:44:46 +0200
+In-Reply-To: <CABPxzYKk2ofEzfSTJHx8fZhNYHhAiipSk+zhQbQ+QvFFJYe+uQ@mail.gmail.com> (sfid-20160629_105646_975045_B9FBDFEF)
+References: <1467021206-2702-1-git-send-email-chaitanya.mgit@gmail.com>
+ <CACYmx9O-xnLLUWgVFBWnY2L2ArsHW_+voOA+xeTBMqOK9mAPLg@mail.gmail.com>
+ <CABPxzYLQyBsDD+HK=eS7qBXtrAdxwOajC3-xyYhKP8Bf_HExww@mail.gmail.com>
+	 <CABPxzYJYGiCHGh2drjDq73JL9_FUWy-Bhb3zqORNz=wBy2Tzuw@mail.gmail.com>
+	 <CABPxzYKk2ofEzfSTJHx8fZhNYHhAiipSk+zhQbQ+QvFFJYe+uQ@mail.gmail.com>
+	 (sfid-20160629_105646_975045_B9FBDFEF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jan Kiszka <jan.kiszka@web.de> writes:
 
-> On 2016-02-15 23:12, Larry Finger wrote:
->> Routine rtl_addr_delay() uses delay statements in code that can
->> sleep. To improve system responsiveness, the various delay statements
->> are changed.
->> 
->> In addition, routines rtl_rfreg_delay() and rtl_bb_delay() are
->> rewritten to use the code in rtl_addr_delay() for most of their
->> input values.
->> 
->> Suggested-by: Byeoungwook Kim <quddnr145@gmail.com>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> How do you want to proceed? Do you want to
+> revert this patch and shall i send another patch?
+> 
 
-[...]
+I'll rebase the patch out.
 
-> This breaks spectacularly when turning on a little bit of correctness
-> checking:
->
-> BUG: scheduling while atomic: wpa_supplicant/1116/0x00000002
-
-This should fix it:
-
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=de26859dcf363d520cc44e59f6dcaf20ebe0aadf
-
--- 
-Kalle Valo
+johannes
