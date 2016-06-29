@@ -1,433 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:33582 "EHLO
-	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262AbcFVKDq (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35818 "EHLO
+	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751839AbcF2TzP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 22 Jun 2016 06:03:46 -0400
-Received: by mail-pf0-f170.google.com with SMTP id i123so16397836pfg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 22 Jun 2016 03:02:56 -0700 (PDT)
-From: Binoy Jayan <binoy.jayan@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
-Subject: [PATCH v3 1/3] staging: wilc1000: message_queue: Move code to host interface
-Date: Wed, 22 Jun 2016 15:31:29 +0530
-Message-Id: <1466589691-14798-2-git-send-email-binoy.jayan@linaro.org> (sfid-20160622_120605_794272_05B98350)
-In-Reply-To: <1466589691-14798-1-git-send-email-binoy.jayan@linaro.org>
-References: <1466417419-13568-1-git-send-email-binoy.jayan@linaro.org>
- <1466589691-14798-1-git-send-email-binoy.jayan@linaro.org>
+	Wed, 29 Jun 2016 15:55:15 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH 1/2] brcmfmac: delete interface directly in code that sent fw request
+Date: Wed, 29 Jun 2016 21:54:26 +0200
+Message-Id: <1467230067-3302-2-git-send-email-zajec5@gmail.com> (sfid-20160629_215544_328905_1B674D16)
+In-Reply-To: <1467230067-3302-1-git-send-email-zajec5@gmail.com>
+References: <1466353420-30998-1-git-send-email-zajec5@gmail.com>
+ <1467230067-3302-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the contents of wilc_msgqueue.c and wilc_msgqueue.h into
-host_interface.c, remove 'wilc_msgqueue.c' and 'wilc_msgqueue.h'.
-This is done so as to restructure the implementation of the kthread
-'hostIFthread' using a work queue.
+So far when receiving event about in-firmware-interface removal our
+event worker was notifying listener and afterwards it was removing Linux
+interface.
 
-Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+First of all it was resulting in slightly unexpected order. The listener
+(del_virtual_intf callback) was (usually) returning with success before
+we even called unregister_netdev(ice).
+
+Please note this couldn't be simply fixed by changing order of calls in
+brcmf_fweh_handle_if_event as unregistering interface earlier could free
+struct brcmf_if.
+
+Another problem of current implementation are possible lockups. Focus on
+the time slot between calling event handler and removing Linux
+interface. During that time original caller may leave (unlocking rtnl
+semaphore) *and* another call to the same code may be done (locking it
+again). If that happens our event handler will stuck at removing Linux
+interface, it won't handle another event and will block process holding
+rtnl lock.
+
+This can be simply solved by unregistering interface in a proper
+callback, right after receiving confirmation event from firmware. This
+only required modifying worker to don't unregister on its own if there
+is someone waiting for the event.
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/staging/wilc1000/Makefile         |   1 -
- drivers/staging/wilc1000/host_interface.c | 163 +++++++++++++++++++++++++++++-
- drivers/staging/wilc1000/wilc_msgqueue.c  | 144 --------------------------
- drivers/staging/wilc1000/wilc_msgqueue.h  |  28 -----
- 4 files changed, 162 insertions(+), 174 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/wilc_msgqueue.c
- delete mode 100644 drivers/staging/wilc1000/wilc_msgqueue.h
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c | 10 ++++++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c  |  3 +--
+ 2 files changed, 9 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index acc3f3e..d226283 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -6,7 +6,6 @@ ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
- ccflags-y += -I$(src)/ -DWILC_ASIC_A0 -DWILC_DEBUGFS
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index 9da7a4c..79c081f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -18,6 +18,7 @@
+ #include "brcmu_wifi.h"
+ #include "brcmu_utils.h"
  
- wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
--			wilc_msgqueue.o \
- 			coreconfigurator.o host_interface.o \
- 			wilc_wlan_cfg.o wilc_debugfs.o \
- 			wilc_wlan.o
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9535842..2d250c6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3,11 +3,13 @@
- #include <linux/kthread.h>
- #include <linux/delay.h>
- #include <linux/completion.h>
-+#include <linux/list.h>
- #include "host_interface.h"
-+#include <linux/spinlock.h>
-+#include <linux/errno.h>
- #include "coreconfigurator.h"
- #include "wilc_wlan.h"
- #include "wilc_wlan_if.h"
--#include "wilc_msgqueue.h"
- #include <linux/etherdevice.h>
- #include "wilc_wfi_netdevice.h"
++#include "cfg80211.h"
+ #include "core.h"
+ #include "debug.h"
+ #include "tracepoint.h"
+@@ -182,8 +183,13 @@ static void brcmf_fweh_handle_if_event(struct brcmf_pub *drvr,
  
-@@ -57,6 +59,20 @@
- #define TCP_ACK_FILTER_LINK_SPEED_THRESH	54
- #define DEFAULT_LINK_SPEED			72
+ 	err = brcmf_fweh_call_event_handler(ifp, emsg->event_code, emsg, data);
  
-+struct message {
-+	void *buf;
-+	u32 len;
-+	struct list_head list;
-+};
+-	if (ifp && ifevent->action == BRCMF_E_IF_DEL)
+-		brcmf_remove_interface(ifp, false);
++	if (ifp && ifevent->action == BRCMF_E_IF_DEL) {
++		bool armed = brcmf_cfg80211_vif_event_armed(drvr->config);
 +
-+struct message_queue {
-+	struct semaphore sem;
-+	spinlock_t lock;
-+	bool exiting;
-+	u32 recv_count;
-+	struct list_head msg_list;
-+};
-+
- struct host_if_wpa_attr {
- 	u8 *key;
- 	const u8 *mac_addr;
-@@ -264,6 +280,151 @@ static struct wilc_vif *join_req_vif;
- static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo);
- static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
- static s32 Handle_ScanDone(struct wilc_vif *vif, enum scan_event enuEvent);
-+static int wilc_mq_create(struct message_queue *mq);
-+static int wilc_mq_send(struct message_queue *mq,
-+		 const void *send_buf, u32 send_buf_size);
-+static int wilc_mq_recv(struct message_queue *mq,
-+		 void *recv_buf, u32 recv_buf_size, u32 *recv_len);
-+static int wilc_mq_destroy(struct message_queue *mq);
-+
-+/*!
-+ *  @author		syounan
-+ *  @date		1 Sep 2010
-+ *  @note		copied from FLO glue implementatuion
-+ *  @version		1.0
-+ */
-+static int wilc_mq_create(struct message_queue *mq)
-+{
-+	spin_lock_init(&mq->lock);
-+	sema_init(&mq->sem, 0);
-+	INIT_LIST_HEAD(&mq->msg_list);
-+	mq->recv_count = 0;
-+	mq->exiting = false;
-+	return 0;
-+}
-+
-+/*!
-+ *  @author		syounan
-+ *  @date		1 Sep 2010
-+ *  @note		copied from FLO glue implementatuion
-+ *  @version		1.0
-+ */
-+static int wilc_mq_destroy(struct message_queue *mq)
-+{
-+	struct message *msg;
-+
-+	mq->exiting = true;
-+
-+	/* Release any waiting receiver thread. */
-+	while (mq->recv_count > 0) {
-+		up(&mq->sem);
-+		mq->recv_count--;
++		/* Default handling in case no-one waits for this event */
++		if (!armed)
++			brcmf_remove_interface(ifp, false);
 +	}
-+
-+	while (!list_empty(&mq->msg_list)) {
-+		msg = list_first_entry(&mq->msg_list, struct message, list);
-+		list_del(&msg->list);
-+		kfree(msg->buf);
-+	}
-+
-+	return 0;
-+}
-+
-+/*!
-+ *  @author		syounan
-+ *  @date		1 Sep 2010
-+ *  @note		copied from FLO glue implementatuion
-+ *  @version		1.0
-+ */
-+static int wilc_mq_send(struct message_queue *mq,
-+			const void *send_buf, u32 send_buf_size)
-+{
-+	unsigned long flags;
-+	struct message *new_msg = NULL;
-+
-+	if (!mq || (send_buf_size == 0) || !send_buf)
-+		return -EINVAL;
-+
-+	if (mq->exiting)
-+		return -EFAULT;
-+
-+	/* construct a new message */
-+	new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
-+	if (!new_msg)
-+		return -ENOMEM;
-+
-+	new_msg->len = send_buf_size;
-+	INIT_LIST_HEAD(&new_msg->list);
-+	new_msg->buf = kmemdup(send_buf, send_buf_size, GFP_ATOMIC);
-+	if (!new_msg->buf) {
-+		kfree(new_msg);
-+		return -ENOMEM;
-+	}
-+
-+	spin_lock_irqsave(&mq->lock, flags);
-+
-+	/* add it to the message queue */
-+	list_add_tail(&new_msg->list, &mq->msg_list);
-+
-+	spin_unlock_irqrestore(&mq->lock, flags);
-+
-+	up(&mq->sem);
-+
-+	return 0;
-+}
-+
-+/*!
-+ *  @author		syounan
-+ *  @date		1 Sep 2010
-+ *  @note		copied from FLO glue implementatuion
-+ *  @version		1.0
-+ */
-+static int wilc_mq_recv(struct message_queue *mq,
-+		 void *recv_buf, u32 recv_buf_size, u32 *recv_len)
-+{
-+	struct message *msg;
-+	unsigned long flags;
-+
-+	if (!mq || (recv_buf_size == 0) || !recv_buf || !recv_len)
-+		return -EINVAL;
-+
-+	if (mq->exiting)
-+		return -EFAULT;
-+
-+	spin_lock_irqsave(&mq->lock, flags);
-+	mq->recv_count++;
-+	spin_unlock_irqrestore(&mq->lock, flags);
-+
-+	down(&mq->sem);
-+	spin_lock_irqsave(&mq->lock, flags);
-+
-+	if (list_empty(&mq->msg_list)) {
-+		spin_unlock_irqrestore(&mq->lock, flags);
-+		up(&mq->sem);
-+		return -EFAULT;
-+	}
-+	/* check buffer size */
-+	msg = list_first_entry(&mq->msg_list, struct message, list);
-+	if (recv_buf_size < msg->len) {
-+		spin_unlock_irqrestore(&mq->lock, flags);
-+		up(&mq->sem);
-+		return -EOVERFLOW;
-+	}
-+
-+	/* consume the message */
-+	mq->recv_count--;
-+	memcpy(recv_buf, msg->buf, msg->len);
-+	*recv_len = msg->len;
-+
-+	list_del(&msg->list);
-+
-+	kfree(msg->buf);
-+	kfree(msg);
-+
-+	spin_unlock_irqrestore(&mq->lock, flags);
-+
-+	return 0;
-+}
+ }
  
- /* The u8IfIdx starts from 0 to NUM_CONCURRENT_IFC -1, but 0 index used as
-  * special purpose in wilc device, so we add 1 to the index to starts from 1.
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-deleted file mode 100644
-index 6cb894e..0000000
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ /dev/null
-@@ -1,144 +0,0 @@
--
--#include "wilc_msgqueue.h"
--#include <linux/spinlock.h>
--#include <linux/errno.h>
--#include <linux/slab.h>
--
--/*!
-- *  @author		syounan
-- *  @date		1 Sep 2010
-- *  @note		copied from FLO glue implementatuion
-- *  @version		1.0
-- */
--int wilc_mq_create(struct message_queue *mq)
--{
--	spin_lock_init(&mq->lock);
--	sema_init(&mq->sem, 0);
--	INIT_LIST_HEAD(&mq->msg_list);
--	mq->recv_count = 0;
--	mq->exiting = false;
--	return 0;
--}
--
--/*!
-- *  @author		syounan
-- *  @date		1 Sep 2010
-- *  @note		copied from FLO glue implementatuion
-- *  @version		1.0
-- */
--int wilc_mq_destroy(struct message_queue *mq)
--{
--	struct message *msg;
--
--	mq->exiting = true;
--
--	/* Release any waiting receiver thread. */
--	while (mq->recv_count > 0) {
--		up(&mq->sem);
--		mq->recv_count--;
--	}
--
--	while (!list_empty(&mq->msg_list)) {
--		msg = list_first_entry(&mq->msg_list, struct message, list);
--		list_del(&msg->list);
--		kfree(msg->buf);
--	}
--
--	return 0;
--}
--
--/*!
-- *  @author		syounan
-- *  @date		1 Sep 2010
-- *  @note		copied from FLO glue implementatuion
-- *  @version		1.0
-- */
--int wilc_mq_send(struct message_queue *mq,
--		 const void *send_buf, u32 send_buf_size)
--{
--	unsigned long flags;
--	struct message *new_msg = NULL;
--
--	if (!mq || (send_buf_size == 0) || !send_buf)
--		return -EINVAL;
--
--	if (mq->exiting)
--		return -EFAULT;
--
--	/* construct a new message */
--	new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
--	if (!new_msg)
--		return -ENOMEM;
--
--	new_msg->len = send_buf_size;
--	INIT_LIST_HEAD(&new_msg->list);
--	new_msg->buf = kmemdup(send_buf, send_buf_size, GFP_ATOMIC);
--	if (!new_msg->buf) {
--		kfree(new_msg);
--		return -ENOMEM;
--	}
--
--	spin_lock_irqsave(&mq->lock, flags);
--
--	/* add it to the message queue */
--	list_add_tail(&new_msg->list, &mq->msg_list);
--
--	spin_unlock_irqrestore(&mq->lock, flags);
--
--	up(&mq->sem);
--
--	return 0;
--}
--
--/*!
-- *  @author		syounan
-- *  @date		1 Sep 2010
-- *  @note		copied from FLO glue implementatuion
-- *  @version		1.0
-- */
--int wilc_mq_recv(struct message_queue *mq,
--		 void *recv_buf, u32 recv_buf_size, u32 *recv_len)
--{
--	struct message *msg;
--	unsigned long flags;
--
--	if (!mq || (recv_buf_size == 0) || !recv_buf || !recv_len)
--		return -EINVAL;
--
--	if (mq->exiting)
--		return -EFAULT;
--
--	spin_lock_irqsave(&mq->lock, flags);
--	mq->recv_count++;
--	spin_unlock_irqrestore(&mq->lock, flags);
--
--	down(&mq->sem);
--	spin_lock_irqsave(&mq->lock, flags);
--
--	if (list_empty(&mq->msg_list)) {
--		spin_unlock_irqrestore(&mq->lock, flags);
--		up(&mq->sem);
--		return -EFAULT;
--	}
--	/* check buffer size */
--	msg = list_first_entry(&mq->msg_list, struct message, list);
--	if (recv_buf_size < msg->len) {
--		spin_unlock_irqrestore(&mq->lock, flags);
--		up(&mq->sem);
--		return -EOVERFLOW;
--	}
--
--	/* consume the message */
--	mq->recv_count--;
--	memcpy(recv_buf, msg->buf, msg->len);
--	*recv_len = msg->len;
--
--	list_del(&msg->list);
--
--	kfree(msg->buf);
--	kfree(msg);
--
--	spin_unlock_irqrestore(&mq->lock, flags);
--
--	return 0;
--}
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-deleted file mode 100644
-index 846a484..0000000
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ /dev/null
-@@ -1,28 +0,0 @@
--#ifndef __WILC_MSG_QUEUE_H__
--#define __WILC_MSG_QUEUE_H__
--
--#include <linux/semaphore.h>
--#include <linux/list.h>
--
--struct message {
--	void *buf;
--	u32 len;
--	struct list_head list;
--};
--
--struct message_queue {
--	struct semaphore sem;
--	spinlock_t lock;
--	bool exiting;
--	u32 recv_count;
--	struct list_head msg_list;
--};
--
--int wilc_mq_create(struct message_queue *mq);
--int wilc_mq_send(struct message_queue *mq,
--		 const void *send_buf, u32 send_buf_size);
--int wilc_mq_recv(struct message_queue *mq,
--		 void *recv_buf, u32 recv_buf_size, u32 *recv_len);
--int wilc_mq_destroy(struct message_queue *mq);
--
--#endif
+ /**
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index f6241fd..66f942f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -2288,8 +2288,7 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 		else
+ 			err = 0;
+ 	}
+-	if (err)
+-		brcmf_remove_interface(vif->ifp, true);
++	brcmf_remove_interface(vif->ifp, true);
+ 
+ 	brcmf_cfg80211_arm_vif_event(cfg, NULL);
+ 	if (vif->wdev.iftype != NL80211_IFTYPE_P2P_DEVICE)
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+1.8.4.5
 
