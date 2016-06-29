@@ -1,86 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:34551 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965028AbcFMKiW (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47459 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751230AbcF2RKk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 06:38:22 -0400
-Received: by mail-pf0-f174.google.com with SMTP id 62so45157891pfd.1
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 03:38:22 -0700 (PDT)
-From: Binoy Jayan <binoy.jayan@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Binoy Jayan <binoy.jayan@linaro.org>
-Subject: [PATCH 4/7] staging: wilc1000: Replace semaphore sync_event with completion
-Date: Mon, 13 Jun 2016 16:07:36 +0530
-Message-Id: <1465814259-3009-5-git-send-email-binoy.jayan@linaro.org> (sfid-20160613_123928_884697_132C6B17)
-In-Reply-To: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
-References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
+	Wed, 29 Jun 2016 13:10:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Jonas Gorski <jonas.gorski@gmail.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel\@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+Subject: Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+	<CAOiHx=n6itfmvwYQh+jUSDNguQFkos=MzjkDWP=GsupdgvF6KQ@mail.gmail.com>
+	<b49a9e4b-d591-d978-8005-413f39ebf2bd@redhat.com>
+Date: Wed, 29 Jun 2016 20:00:14 +0300
+In-Reply-To: <b49a9e4b-d591-d978-8005-413f39ebf2bd@redhat.com> (Hans de
+	Goede's message of "Wed, 29 Jun 2016 17:16:32 +0200")
+Message-ID: <871t3gdj6p.fsf@purkki.adurom.net> (sfid-20160629_191044_016623_B66E90B3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The semaphore 'sync_event' is used as completion, so convert
-it to a struct completion type. Also, return -ETIME if the return
-value of wait_for_completion_timeout is 0.
+Hans de Goede <hdegoede@redhat.com> writes:
 
-Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
----
- drivers/staging/wilc1000/linux_wlan.c         | 10 +++++-----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+> Hi,
+>
+> On 29-06-16 16:42, Jonas Gorski wrote:
+>> Hi,
+>>
+>> On 29 June 2016 at 16:04, Hans de Goede <hdegoede@redhat.com> wrote:
+>>> Add a brcm,nvram_file_name dt property to allow overruling the default
+>>> nvram filename for sdio devices. The idea is that we can specify a
+>>> board specific nvram file, e.g. brcmfmac43362-ap6210.txt for boards
+>>> with an ap6210 wifi sdio module and ship this in linux-firmware, so
+>>> that wifi will work out of the box, without requiring users to find
+>>> and then manually install the right nvram file for their board.
+>>
+>> Directly defining a filename doesn't seem like a good OS-agnostic
+>> approach. Maybe an alternative would be to add a model-property to the
+>> nodes (this is allowed) and make brcmfmac to request
+>> "FWFILENAME-<model>" as firmware if set? That would leave it to the OS
+>> on how the filename is set.
+>
+> It only defines the base-filename, not the entire path, how / where
+> this file is searched for / loaded-from is then left up to the os
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 81a469a..39fe350 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -241,7 +241,7 @@ void wilc_mac_indicate(struct wilc *wilc, int flag)
- 				      (unsigned char *)&status, 4);
- 		if (wilc->mac_status == WILC_MAC_STATUS_INIT) {
- 			wilc->mac_status = status;
--			up(&wilc->sync_event);
-+			complete(&wilc->sync_event);
- 		} else {
- 			wilc->mac_status = status;
- 		}
-@@ -386,9 +386,9 @@ static int linux_wlan_start_firmware(struct net_device *dev)
- 	if (ret < 0)
- 		return ret;
- 
--	ret = wilc_lock_timeout(wilc, &wilc->sync_event, 5000);
--	if (ret)
--		return ret;
-+	if (!wait_for_completion_timeout(&wilc->sync_event,
-+					msecs_to_jiffies(5000)))
-+		return -ETIME;
- 
- 	return 0;
- }
-@@ -684,7 +684,7 @@ static int wlan_init_locks(struct net_device *dev)
- 	init_completion(&wl->txq_event);
- 
- 	init_completion(&wl->cfg_event);
--	sema_init(&wl->sync_event, 0);
-+	init_completion(&wl->sync_event);
- 	init_completion(&wl->txq_thread_started);
- 
- 	return 0;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 5fbc07c..5cc6a82 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -179,7 +179,7 @@ struct wilc {
- 	struct mutex hif_cs;
- 
- 	struct completion cfg_event;
--	struct semaphore sync_event;
-+	struct completion sync_event;
- 	struct completion txq_event;
- 	struct completion txq_thread_started;
- 
+It's still a bad idea. The filename, including the path, should be
+created in the driver. Can't you provide chipname (or similar) via
+device tree and then the driver can choose what image to use?
+
+Can you tell more about the naming the firmware image, how does it work
+exactly?
+
 -- 
-2.7.4
-
+Kalle Valo
