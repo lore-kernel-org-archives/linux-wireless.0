@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:33100 "EHLO
-	mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752586AbcF2Dnk (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40186 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752913AbcF2Pya (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 23:43:40 -0400
+	Wed, 29 Jun 2016 11:54:30 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20160629033719.13215-1-standby24x7@gmail.com>
-References: <20160629033719.13215-1-standby24x7@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 29 Jun 2016 13:41:43 +1000
-Message-ID: <CAGRGNgVOsCWzwAxJQMnVeCE4Paw4GnTSh-TSVtss7MF5n1i78w@mail.gmail.com> (sfid-20160629_054409_470407_4EFF04E1)
-Subject: Re: [PATCH] [linux-next] rtlwifi: Fix typo in printk
-To: Masanari Iida <standby24x7@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, trivial@kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [1/6] mwifiex: Fix an issue spotted by KASAN
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1466083346-18607-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	Ganapathi Bhat <gbhat@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160629155429.81E2461388@smtp.codeaurora.org> (sfid-20160629_175433_443125_BDED0102)
+Date: Wed, 29 Jun 2016 15:54:29 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Ganapathi Bhat <gbhat@marvell.com>
+> 
+> When an association command is sent to firmware but the process is
+> killed before the command response arrives, driver will try to
+> access bss_desc which is already freed. This issue is fixed by
+> checking return value of bss_start.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-On Wed, Jun 29, 2016 at 1:37 PM, Masanari Iida <standby24x7@gmail.com> wrote:
-> This patch fix spelling typos found in drivers/net/wireless/realtek.
->
-> Signed-off-by: Masanari Iida <standby24x7@gmail.com>
+Thanks, 6 patches applied to wireless-drivers-next.git:
 
-Looks right to me.
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-Thanks,
+4699fc3f2dcb mwifiex: Fix an issue spotted by KASAN
+a9c790ba23eb mwifiex: factor out mwifiex_cancel_scan
+dec277f781ce mwifiex: cancel pending scan during disconnect
+437322ea2a36 mwifiex: fix system hang problem after resume
+568fb26ec8be mwifiex: fix AP unable to start in VHT40 problem
+7311ea850079 mwifiex: fix AP start problem for newly added interface
 
 -- 
-Julian Calaby
+Sent by pwcli
+https://patchwork.kernel.org/patch/9180805/
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
