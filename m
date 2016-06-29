@@ -1,71 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35847 "EHLO
-	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751301AbcFQKtK (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.13]:50241 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751438AbcF2Tjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 06:49:10 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] brcmfmac: use const char * for interface name in brcmf_add_if
-Date: Fri, 17 Jun 2016 12:48:44 +0200
-Message-Id: <1466160530-32626-1-git-send-email-zajec5@gmail.com> (sfid-20160617_124932_955363_941981A9)
-In-Reply-To: <1464378815-23282-1-git-send-email-zajec5@gmail.com>
-References: <1464378815-23282-1-git-send-email-zajec5@gmail.com>
+	Wed, 29 Jun 2016 15:39:31 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
+Date: Wed, 29 Jun 2016 21:33:59 +0200
+Message-ID: <6402170.5s0abZDqlD@wuerfel> (sfid-20160629_213935_057041_94F497A5)
+In-Reply-To: <f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> <ea10ff70-26e6-e151-5cea-c54bd12a054c@redhat.com> <f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function can work just fine with const pointer, it only calls
-alloc_netdev which take const as well. Moreover it makes this function
-more flexible as some cfg80211 callback may provide const char * as
-well, e.g. add_virtual_intf. This will be needed for more advanced
-interface management.
+On Wednesday, June 29, 2016 8:51:44 PM CEST Arend Van Spriel wrote:
+> > Typical wifi devices will have some sort of non volatile storage
+> > on board to not only store the ethernet(mac) address, but also
+> > to contain e.g. info about the antenna gain so that the firmware
+> > and/or the driver can take the antenna gain into account and ensure
+> > that they never exceed the maximum allowed broadcast strength.
+> > 
+> > However on some embedded devices there is no non-volatile storage
+> > for the wifi (for cost reasons) and instead this configuration info
+> > (which is board / pcb specific) is loaded in the form of a
+> > file which contains the contents which would normally be in the
+> > non-volatile storage.
+> > 
+> > Since we are dealing with a per-board config-file here, which is
+> > loaded from the os filesystem we really need to specify a basename
+> > here as the list of possible boards is endless, so we cannot
+> > have a lookup table in the driver.
+> 
+> As Jonas mentioned the general principle of device tree is to be
+> agnostic with regards to OS and/or driver as you undoubtedly know. His
+> proposal seems like a usable solution for your problem while complying
+> to the device tree principle. So instead of overriding the default
+> brcmfmac should modify it when dt specifies the "module" property, ie:
+> 
+> no "module" in DT:      nvram filename = brcm/brcmfmac43362-sdio.txt
+> "module=ap6210" in DT:  nvram filename = brcm/brcmfmac43362-ap6210.txt
+> 
+> By the way, the example in the bindings file does not seem to specify a
+> basename, but path+basename+fileext.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+What is the size of this nvram file? As it's board specific, I wonder
+if we can simply include it inside of the DT verbatim. I remember
+doing that (in the pre-dtb days, on real open firmware) for the "spidernet"
+ethernet driver.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 7b38c2b..8d16f02 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -638,7 +638,7 @@ fail:
- }
- 
- struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
--			      bool is_p2pdev, char *name, u8 *mac_addr)
-+			      bool is_p2pdev, const char *name, u8 *mac_addr)
- {
- 	struct brcmf_if *ifp;
- 	struct net_device *ndev;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index a0a6f7f..8fa34ca 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -215,7 +215,7 @@ char *brcmf_ifname(struct brcmf_if *ifp);
- struct brcmf_if *brcmf_get_ifp(struct brcmf_pub *drvr, int ifidx);
- int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked);
- struct brcmf_if *brcmf_add_if(struct brcmf_pub *drvr, s32 bsscfgidx, s32 ifidx,
--			      bool is_p2pdev, char *name, u8 *mac_addr);
-+			      bool is_p2pdev, const char *name, u8 *mac_addr);
- void brcmf_remove_interface(struct brcmf_if *ifp, bool rtnl_locked);
- void brcmf_txflowblock_if(struct brcmf_if *ifp,
- 			  enum brcmf_netif_stop_reason reason, bool state);
--- 
-1.8.4.5
-
+	Arnd
