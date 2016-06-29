@@ -1,125 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33528 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509AbcF2Di0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 23:38:26 -0400
-From: Masanari Iida <standby24x7@gmail.com>
-To: Larry.Finger@lwfinger.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, trivial@kernel.org,
-	linux-kernel@vger.kernel.org, davem@davemloft.net,
-	Jes.Sorensen@redhat.com
-Cc: Masanari Iida <standby24x7@gmail.com>
-Subject: [PATCH] [linux-next] rtlwifi: Fix typo in printk
-Date: Wed, 29 Jun 2016 12:37:19 +0900
-Message-Id: <20160629033719.13215-1-standby24x7@gmail.com> (sfid-20160629_053849_843393_75898863)
+Received: from plaes.org ([188.166.43.21]:33416 "EHLO plaes.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751839AbcF2TzB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 15:55:01 -0400
+Message-ID: <1467230078.2598.2.camel@plaes.org> (sfid-20160629_215505_927197_CD032CD5)
+Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add
+ brcm,nvram_file_name dt property
+From: Priit Laes <plaes@plaes.org>
+To: arnd@arndb.de, Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Hans de Goede <hdegoede@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+Date: Wed, 29 Jun 2016 22:54:38 +0300
+In-Reply-To: <6402170.5s0abZDqlD@wuerfel>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+	 <ea10ff70-26e6-e151-5cea-c54bd12a054c@redhat.com>
+	 <f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
+	 <6402170.5s0abZDqlD@wuerfel>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix spelling typos found in drivers/net/wireless/realtek.
+On Wed, 2016-06-29 at 21:33 +0200, Arnd Bergmann wrote:
+> On Wednesday, June 29, 2016 8:51:44 PM CEST Arend Van Spriel wrote:
+> > > Typical wifi devices will have some sort of non volatile storage
+> > > on board to not only store the ethernet(mac) address, but also
+> > > to contain e.g. info about the antenna gain so that the firmware
+> > > and/or the driver can take the antenna gain into account and
+> > > ensure
+> > > that they never exceed the maximum allowed broadcast strength.
+> > > 
+> > > However on some embedded devices there is no non-volatile storage
+> > > for the wifi (for cost reasons) and instead this configuration
+> > > info
+> > > (which is board / pcb specific) is loaded in the form of a
+> > > file which contains the contents which would normally be in the
+> > > non-volatile storage.
+> > > 
+> > > Since we are dealing with a per-board config-file here, which is
+> > > loaded from the os filesystem we really need to specify a
+> > > basename
+> > > here as the list of possible boards is endless, so we cannot
+> > > have a lookup table in the driver.
+> > 
+> > As Jonas mentioned the general principle of device tree is to be
+> > agnostic with regards to OS and/or driver as you undoubtedly know.
+> > His
+> > proposal seems like a usable solution for your problem while
+> > complying
+> > to the device tree principle. So instead of overriding the default
+> > brcmfmac should modify it when dt specifies the "module" property,
+> > ie:
+> > 
+> > no "module" in DT:      nvram filename = brcm/brcmfmac43362-
+> > sdio.txt
+> > "module=ap6210" in DT:  nvram filename = brcm/brcmfmac43362-
+> > ap6210.txt
+> > 
+> > By the way, the example in the bindings file does not seem to
+> > specify a
+> > basename, but path+basename+fileext.
+> 
+> What is the size of this nvram file? As it's board specific, I wonder
+> if we can simply include it inside of the DT verbatim. I remember
+> doing that (in the pre-dtb days, on real open firmware) for the
+> "spidernet"
+> ethernet driver.
 
-Signed-off-by: Masanari Iida <standby24x7@gmail.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c       | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c        | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c       | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c       | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c        | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c       | 2 +-
- 7 files changed, 7 insertions(+), 7 deletions(-)
+It contains a bit too much info:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-index 416a9ba6382e..422c7813f5ee 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-@@ -1239,7 +1239,7 @@ u8 rtl88e_phy_sw_chnl(struct ieee80211_hw *hw)
- 	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
- 		rtl88e_phy_sw_chnl_callback(hw);
- 		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
--			 "sw_chnl_inprogress false schdule workitem current channel %d\n",
-+			 "sw_chnl_inprogress false schedule workitem current channel %d\n",
- 			 rtlphy->current_channel);
- 		rtlphy->sw_chnl_inprogress = false;
- 	} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-index 77e61b19bf36..9301583ce768 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-@@ -757,7 +757,7 @@ u8 rtl92c_phy_sw_chnl(struct ieee80211_hw *hw)
- 	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
- 		rtl92c_phy_sw_chnl_callback(hw);
- 		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
--			 "sw_chnl_inprogress false schdule workitem\n");
-+			 "sw_chnl_inprogress false schedule workitem\n");
- 		rtlphy->sw_chnl_inprogress = false;
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-index 459f3d0efa2f..0a5c9fcfe73b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/dm.c
-@@ -496,7 +496,7 @@ static void rtl92ee_dm_find_minimum_rssi(struct ieee80211_hw *hw)
- 		rtl_dm_dig->min_undec_pwdb_for_dm =
- 			rtlpriv->dm.entry_min_undec_sm_pwdb;
- 		RT_TRACE(rtlpriv, COMP_BB_POWERSAVING, DBG_LOUD,
--			 "AP Ext Port or disconnet PWDB = 0x%x\n",
-+			 "AP Ext Port or disconnect PWDB = 0x%x\n",
- 			 rtl_dm_dig->min_undec_pwdb_for_dm);
- 	}
- 	RT_TRACE(rtlpriv, COMP_DIG, DBG_LOUD,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-index c2bf8d1a7af3..97d9a8e209f1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-@@ -1819,7 +1819,7 @@ u8 rtl92ee_phy_sw_chnl(struct ieee80211_hw *hw)
- 	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
- 		rtl92ee_phy_sw_chnl_callback(hw);
- 		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
--			 "sw_chnl_inprogress false schdule workitem current channel %d\n",
-+			 "sw_chnl_inprogress false schedule workitem current channel %d\n",
- 			 rtlphy->current_channel);
- 		rtlphy->sw_chnl_inprogress = false;
- 	} else {
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-index d367097f490b..e9a9bbf44966 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-@@ -893,7 +893,7 @@ u8 rtl8723e_phy_sw_chnl(struct ieee80211_hw *hw)
- 	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
- 		rtl8723e_phy_sw_chnl_callback(hw);
- 		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
--			 "sw_chnl_inprogress false schdule workitem\n");
-+			 "sw_chnl_inprogress false schedule workitem\n");
- 		rtlphy->sw_chnl_inprogress = false;
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index 08288ac9020a..97ae14d48840 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -1474,7 +1474,7 @@ static enum version_8723e _rtl8723be_read_chip_version(struct ieee80211_hw *hw)
- 
- 	value32 = rtl_read_dword(rtlpriv, REG_SYS_CFG1);
- 	if ((value32 & (CHIP_8723B)) != CHIP_8723B)
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "unkown chip version\n");
-+		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "unknown chip version\n");
- 	else
- 		version = (enum version_8723e)CHIP_8723B;
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-index c5ca9dfb445c..dbe7c1eb0085 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-@@ -1395,7 +1395,7 @@ u8 rtl8723be_phy_sw_chnl(struct ieee80211_hw *hw)
- 	if (!(is_hal_stop(rtlhal)) && !(RT_CANNOT_IO(hw))) {
- 		rtl8723be_phy_sw_chnl_callback(hw);
- 		RT_TRACE(rtlpriv, COMP_CHAN, DBG_LOUD,
--			 "sw_chnl_inprogress false schdule workitem current channel %d\n",
-+			 "sw_chnl_inprogress false schedule workitem current channel %d\n",
- 			 rtlphy->current_channel);
- 		rtlphy->sw_chnl_inprogress = false;
- 	} else {
--- 
-2.9.0.137.gcf4c2cf
+This is what CubieTruck requires:
+
+http://dl.cubieboard.org/public/Cubieboard/benn/firmware/ap6210/nvram_a
+p6210.txt
 
