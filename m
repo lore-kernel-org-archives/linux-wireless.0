@@ -1,94 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:41760 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751530AbcFPQGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 16 Jun 2016 12:06:17 -0400
-Date: Thu, 16 Jun 2016 18:05:58 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Guenter Roeck <linux@roeck-us.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: [v3,1/2] b43: Remove unused phy_a code
-Message-ID: <20160616180558.1d682d9e@wiggum> (sfid-20160616_180850_074091_CAE299A4)
-In-Reply-To: <87y465unz5.fsf@kamboji.qca.qualcomm.com>
-References: <1465052053-26740-1-git-send-email-linux@roeck-us.net>
-	<20160616152337.63AB261421@smtp.codeaurora.org>
-	<20160616174813.595440bb@wiggum>
-	<87y465unz5.fsf@kamboji.qca.qualcomm.com>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34527 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbcF2Wiy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 18:38:54 -0400
+Received: by mail-wm0-f68.google.com with SMTP id 187so17869718wmz.1
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2016 15:37:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/lu_T2eW5nuWK50zDeG3Eeer"; protocol="application/pgp-signature"
+In-Reply-To: <a19c21f6-40b9-98e9-30dc-c21fb2143534@nbd.name>
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
+ <20160624123430.4097-3-martin.blumenstingl@googlemail.com> <a19c21f6-40b9-98e9-30dc-c21fb2143534@nbd.name>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Thu, 30 Jun 2016 00:37:33 +0200
+Message-ID: <CAFBinCDXDgLp79DVFvSES08=bFWMr_GvM+Kebj4f4crZyRKvEQ@mail.gmail.com> (sfid-20160630_003859_464132_EF6BD282)
+Subject: Re: [PATCH v3 2/3] ath9k: add a helper to get the string
+ representation of ath_bus_type
+To: Felix Fietkau <nbd@nbd.name>
+Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, chunkeey@googlemail.com,
+	mark.rutland@arm.com, robh+dt@kernel.org,
+	arend.vanspriel@broadcom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/lu_T2eW5nuWK50zDeG3Eeer
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-On Thu, 16 Jun 2016 18:56:14 +0300
-Kalle Valo <kvalo@codeaurora.org> wrote:
-
-> Michael B=C3=BCsch <m@bues.ch> writes:
->=20
-> > On Thu, 16 Jun 2016 15:23:37 +0000 (UTC)
-> > Kalle Valo <kvalo@codeaurora.org> wrote:
-> > =20
-> >> Guenter Roeck <linux@roeck-us.net> wrote: =20
-> >> > gcc-6 reports the following error with -Werror=3Dunused-const-variab=
-le.
-> >> >=20
-> >> > drivers/net/wireless/broadcom/b43/phy_a.c:576:40: error:
-> >> > 	'b43_phyops_a' defined but not used
-> >> >=20
-> >> > Per Michael B=C3=BCsch: "All a-phy code is usused", so remove it all,
-> >> > and move the remaining Type-G initialization code into phy_g.c.
-> >> >=20
-> >> > Reported-by: Fengguang Wu <fengguang.wu@intel.com> [0-day test robot]
-> >> > Cc: Michael B=C3=BCsch <m@bues.ch>
-> >> > Signed-off-by: Guenter Roeck <linux@roeck-us.net>   =20
-> >>=20
-> >> Thanks, 2 patches applied to wireless-drivers-next.git:
-> >>=20
-> >> 9791333a840f b43: Remove unused phy_a code
-> >> afdfdc481ea9 b43: Completely remove support for phy_a =20
-> >
-> > Did anybody test this on any hardware? I think this should be tested
-> > on some G-PHY hardware, before it goes to Linus. =20
->=20
-> Larry tested these:
->=20
-> "These two patches have been tested on a BCM4318."
->=20
-> https://patchwork.kernel.org/patch/9154719/
-
-
-Ah OK. I forgot.
-Everything is fine then.
-
---=20
-Michael
-
---Sig_/lu_T2eW5nuWK50zDeG3Eeer
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJXYs5mAAoJEPUyvh2QjYsOoR8P/AteuEOom+iy/iatxHEJx/im
-Yx1Bq4pomneAAfvoeok1zJNevrQgGkAW6NzLiM2iYL7qtjvhYbokwbU67tgprZh6
-huWGfTEC0g0XP05IXyoN1xUv7wLXHUMuzreOkxOI1Zo/FIFRBC/dg8rj25qCc4Nq
-K8ktu5bmiToUoR02fGy9ZbWUQAtTbZJ9EJXegKNtGfBaucdrHxUNEAIUeJexVwk1
-Kgf1pHgbT+zfr2gOaNotAlMx4mhPLVFldm/WubcEtfDbz2c/Ex658JQ/RLO7aliC
-+LZit9/iAxN+qFXBh5vt5OxkKjgGjErgu0l9MEdVOqGoOi2yL1f32geqvMidBRyO
-nIeOy/6MTq2mNmNntdoKbFIo9QM7ocoQ328rQcuK86Y33TnYvrA07cqWaQ+HwvIL
-6PmY6+5Ga3y90Ga2L3SiTLXf3pNi0EEcM5HM+mIWT8HX32R9WZFA5Ku6KcY8NB8y
-HphDVk2JHtOreCKa+pfeZtuFY97ApclXzF79FYVIb2qboeFgfodAnPwH2NCOKS0N
-QpiEA8ZTbEvDStvmE2ZtwFLpLGGGHhoCL+uf6/x+PFUNqCTH/3T2HwtohChSZhKI
-X91hzQ8wCiVLyPSdNrjK3RH/Q96kMa1u6fG9cCrkQZs8v9hr7dZ6AuKoSfzeSmZv
-cm9IPF+xs1DfEQHdsw0/
-=JWKQ
------END PGP SIGNATURE-----
-
---Sig_/lu_T2eW5nuWK50zDeG3Eeer--
+On Mon, Jun 27, 2016 at 12:26 PM, Felix Fietkau <nbd@nbd.name> wrote:
+> On 2016-06-24 14:34, Martin Blumenstingl wrote:
+>> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+>> ---
+>> this is a new patch which didn't exist in v2 yet, it prepares the new
+>> function ath_bus_type_to_string which will be used in patch #3
+>>
+>>  drivers/net/wireless/ath/ath.h  |  2 ++
+>>  drivers/net/wireless/ath/main.c | 15 +++++++++++++++
+>>  2 files changed, 17 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath.h b/drivers/net/wireless/ath/ath.h
+>> index da7a7c8..be0d292 100644
+>> --- a/drivers/net/wireless/ath/ath.h
+>> +++ b/drivers/net/wireless/ath/ath.h
+>> @@ -327,4 +327,6 @@ static inline const char *ath_opmode_to_string(enum nl80211_iftype opmode)
+>>  }
+>>  #endif
+>>
+>> +const char *ath_bus_type_to_string(enum ath_bus_type bustype);
+>> +
+>>  #endif /* ATH_H */
+>> diff --git a/drivers/net/wireless/ath/main.c b/drivers/net/wireless/ath/main.c
+>> index 338d723..90427cb 100644
+>> --- a/drivers/net/wireless/ath/main.c
+>> +++ b/drivers/net/wireless/ath/main.c
+>> @@ -90,3 +90,18 @@ void ath_printk(const char *level, const struct ath_common* common,
+>>       va_end(args);
+>>  }
+>>  EXPORT_SYMBOL(ath_printk);
+>> +
+>> +const char *ath_bus_type_to_string(enum ath_bus_type bustype)
+>> +{
+>> +     switch (bustype) {
+>> +     case ATH_PCI:
+>> +             return "pci";
+>> +     case ATH_AHB:
+>> +             return "ahb";
+>> +     case ATH_USB:
+>> +             return "usb";
+>> +     default:
+>> +             return "unknown";
+>> +     }
+>> +}
+>> +EXPORT_SYMBOL(ath_bus_type_to_string);
+> Why not simply add a const char* array with ath_bus_type as index?
+Would you add this const char* array directly in ath.h or would you
+define it as extern there and set it in main.c?
+I would still provide the ath_bus_type_to_string function, but make it
+static inline in that case.
