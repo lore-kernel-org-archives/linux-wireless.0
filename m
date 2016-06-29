@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:59483 "EHLO lists.s-osg.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50409 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758268AbcFANvk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 09:51:40 -0400
-Subject: Re: [PATCH 7/8] mwifiex: don't print an error if an optional DT
- property is missing
-To: Julian Calaby <julian.calaby@gmail.com>
-References: <1464358702-19083-1-git-send-email-javier@osg.samsung.com>
- <1464358702-19083-8-git-send-email-javier@osg.samsung.com>
- <CAGRGNgUZ+mG_KzhiOzquB3qd-V_Pdbazag=nrFpG87mRQGmXLg@mail.gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-Message-ID: <ec09757e-302a-b341-6bf0-46737abb7976@osg.samsung.com> (sfid-20160601_155207_558294_FEDA21A0)
-Date: Wed, 1 Jun 2016 09:51:30 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgUZ+mG_KzhiOzquB3qd-V_Pdbazag=nrFpG87mRQGmXLg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	id S1751173AbcF2HKV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 03:10:21 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2016-06-29
+Date: Wed, 29 Jun 2016 09:10:14 +0200
+Message-Id: <1467184215-4598-1-git-send-email-johannes@sipsolutions.net> (sfid-20160629_091030_745623_EE23E06B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Julian,
+Hi Dave,
 
-Thanks a lot for your feedback and reviews.
+Another (pretty old) bug showed up, and I have a single fix for it
+from Jouni; would be nice to still get it in, but it's in mesh which
+seems to mostly have users who integrate everything themselves.
 
-On 06/01/2016 12:20 AM, Julian Calaby wrote:
-> Hi All,
-> 
-> On Sat, May 28, 2016 at 12:18 AM, Javier Martinez Canillas
-> <javier@osg.samsung.com> wrote:
->> The Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt DT
->> binding document say that the "interrupts" property in the child node is
->> optional. So the property being missed shouldn't be treated as an error.
-> 
-> Have you checked whether it is truly optional? I.e. nothing else
-> breaks if this property isn't set?
->
+Let me know if there's any problem.
 
-That's what the DT binding says and the IRQ is only used as a wakeup source
-during system suspend, it is not used during runtime. And that is why the
-mwifiex_sdio_probe_of() function does not fail if the IRQ is missing.
+Thanks,
+johannes
 
-Now, I just got to that conclusion by reading the binding docs, the message
-in the commits that introduced this and the driver code. Xinming Hu should
-comment on how critical this feature is for systems that needs to be wakeup.
 
-In any case I think that the code should be consistent with what the binding
-doc says and also the function does (i.e: dev_err only if returns an error).
- 
->> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-> 
-> Other than that, this looks sensible to me.
-> 
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-> 
 
-Best regards,
--- 
-Javier Martinez Canillas
-Open Source Group
-Samsung Research America
+The following changes since commit 3d5fdff46c4b2b9534fa2f9fc78e90a48e0ff724:
+
+  wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel (2016-06-09 09:56:11 +0200)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-06-29
+
+for you to fetch changes up to 126e7557328a1cd576be4fca95b133a2695283ff:
+
+  mac80211: Fix mesh estab_plinks counting in STA removal case (2016-06-28 12:39:50 +0200)
+
+----------------------------------------------------------------
+A single fix:
+ * fix mesh peer link counter, decrement wasn't always done at all
+
+----------------------------------------------------------------
+Jouni Malinen (1):
+      mac80211: Fix mesh estab_plinks counting in STA removal case
+
+ net/mac80211/mesh.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
