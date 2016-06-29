@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:37993 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752325AbcF1NFc convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41272 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752698AbcF2QCM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 09:05:32 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Bob Copeland <me@bobcopeland.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Johannes Berg" <johannes@sipsolutions.net>,
-	"David S . Miller" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Kama, Meirav" <meiravk@ti.com>
-Subject: RE: [PATCH 4/4] mac80211: sta_info: max_peers reached falsely
-Date: Tue, 28 Jun 2016 13:05:18 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101391D5053@DFRE01.ent.ti.com> (sfid-20160628_150555_620638_314B4412)
-References: <20160628111307.8784-1-yanivma@ti.com>
- <20160628111307.8784-2-yanivma@ti.com>
- <20160628111307.8784-3-yanivma@ti.com>
- <20160628111307.8784-4-yanivma@ti.com>
- <20160628111307.8784-5-yanivma@ti.com> <20160628125621.GA9223@localhost>
-In-Reply-To: <20160628125621.GA9223@localhost>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 29 Jun 2016 12:02:12 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: brcmfmac: add missing break when deleting P2P_DEVICE
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1466294168-8890-1-git-send-email-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Message-Id: <20160629160212.42D5461385@smtp.codeaurora.org> (sfid-20160629_180239_499919_5F708D29)
+Date: Wed, 29 Jun 2016 16:02:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 28, 2016 at 15:56:21, Bob Copeland wrote:
-> linux- wireless@vger.kernel.org; netdev@vger.kernel.org; Kama, Meirav
-> Subject: Re: [PATCH 4/4] mac80211: sta_info: max_peers reached falsely
+Rafał Miłecki wrote:
+> We obviously don't want to fall through in that switch. With this change
+> 1) We wait for event (triggered by p2p_disc) as expected
+> 2) We remove interface manually on timeout
+> 3) We return 0 on success instead of -ENOTSUPP
 > 
-> On Tue, Jun 28, 2016 at 02:13:07PM +0300, Yaniv Machani wrote:
-> > From: Meirav Kama <meiravk@ti.com>
-> >
-> > Issue happened when receiving delete_sta command without changing 
-> > plink_state from ESTAB to HOLDING before.
-> > When receiving delete_sta command for mesh interface verify 
-> > plink_state is not ESTAB and if so, decrease plink count and update 
-> > beacon.
-> 
-> This should be fixed already (and properly) by the patch
-> "mac80211: Fix mesh estab links counting" -- please let us know if you 
-> have a case that's still broken with that fix.
-> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Thanks Bob,
-Will be dropped.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Yaniv
-> --
-> Bob Copeland %% http://bobcopeland.com/
+20856adf2280 brcmfmac: add missing break when deleting P2P_DEVICE
 
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9185903/
 
