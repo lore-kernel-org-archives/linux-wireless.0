@@ -1,49 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:33050 "EHLO
-	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932103AbcF1U5C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 28 Jun 2016 16:57:02 -0400
-Date: Tue, 28 Jun 2016 15:56:53 -0500
-From: Rob Herring <robh@kernel.org>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
-Subject: Re: [PATCH v4] wlcore: spi: add wl18xx support
-Message-ID: <20160628205653.GR3737@rob-hp-laptop> (sfid-20160628_225754_355281_92886273)
-References: <1466935675-14696-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B3613BF60@DFRE01.ent.ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B3613BF60@DFRE01.ent.ti.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:50481 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752574AbcF2HUf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 03:20:35 -0400
+Message-ID: <1467184830.2461.6.camel@sipsolutions.net> (sfid-20160629_092057_798615_78ABDC8D)
+Subject: Re: [PATCH] mac80211: util: mesh is not connected properly after
+ recovery
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org
+Cc: Maital Hahn <maitalm@ti.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 29 Jun 2016 09:20:30 +0200
+In-Reply-To: <20160628111546.8932-1-yanivma@ti.com> (sfid-20160628_131320_130252_9109DD97)
+References: <20160628111546.8932-1-yanivma@ti.com>
+	 (sfid-20160628_131320_130252_9109DD97)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jun 26, 2016 at 10:10:54AM +0000, Reizer, Eyal wrote:
-> Add support for using with both wl12xx and wl18xx.
-> 
-> - all wilink family needs special init command for entering wspi mode.
->   extra clock cycles should be sent after the spi init command while the
->   cs pin is high.
-> - Use inverted chip select for sending a dummy 4 bytes command that
->   completes the init stage.
-> 
-> Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> ---
-> v1->v2:update device tree bindings configuration
-> v2->v3:revert from manual gpio manipulation. use inverted chip select instead
-> for sending the extra init cycle which, achieves the same hardware purpose.
-> update device tree bindings docucmentation accordingly
-> v3->v4: Remove redundant data form binding documentation and fix chip select
-> number mismatch in wl1271 example
-> 
->  .../bindings/net/wireless/ti,wlcore,spi.txt        |  41 +++++--
+Also - your subject lines should explain the *fix*, not the *bug*
 
-Acked-by: Rob Herring <robh@kernel.org>
-
->  drivers/net/wireless/ti/wlcore/spi.c               | 124 +++++++++++++++++----
->  2 files changed, 137 insertions(+), 28 deletions(-)
+johannes
