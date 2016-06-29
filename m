@@ -1,67 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0206.hostedemail.com ([216.40.44.206]:34282 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752042AbcF1DzT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 23:55:19 -0400
-Message-ID: <1467086116.24287.11.camel@perches.com> (sfid-20160628_055545_012254_55CBF154)
-Subject: Re: [PATCH] rtlwifi: Create _rtl_dbg_trace function to reduce
- RT_TRACE code size
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 27 Jun 2016 20:55:16 -0700
-In-Reply-To: <5771CA6C.1060403@lwfinger.net>
-References: <90cd7c8f12b51571db565fd496a2fcf610e2e484.1466894688.git.joe@perches.com>
-	 <5771CA6C.1060403@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:59029 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752135AbcF2OMb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 10:12:31 -0400
+From: Hans de Goede <hdegoede@redhat.com>
+To: "John W . Linville" <linville@tuxdriver.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com, Hans de Goede <hdegoede@redhat.com>
+Subject: [PATCH 3/4] ARM: dts: sun7i-a20-wits-pro-a20-dkt: Set brcm,nvram_file_name
+Date: Wed, 29 Jun 2016 16:04:33 +0200
+Message-Id: <1467209074-15634-3-git-send-email-hdegoede@redhat.com> (sfid-20160629_161240_904738_27DD2D88)
+In-Reply-To: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-06-27 at 19:53 -0500, Larry Finger wrote:
-> On 06/25/2016 05:46 PM, Joe Perches wrote:
-> > 
-> > This debugging macro can expand to a lot of code.
-> > Make it a function to reduce code size.
-> > 
-> > (x86-64 defconfig w/ all rtlwifi drivers and allyesconfig)
-> > $ size drivers/net/wireless/realtek/rtlwifi/built-in.o*
-> >     text	   data	    bss	    dec	    hex	filename
-> >   900083	 200499	   1907	1102489	 10d299	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.new
-> > 1113597	 200499	   1907	1316003	 1414a3	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.old
-> > 1746879	 453503	   8512	2208894	 21b47e	drivers/net/wireless/realtek/rtlwifi/built-in.o.new
-> > 2051965	 503311	   8512	2563788	 271ecc	drivers/net/wireless/realtek/rtlwifi/built-in.o.old
-> > 
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> I acked this before; however there is a bug that breaks the build if 
-> CONFIG_RTLWIFI_DEBUG is not defined. The rest of the code calls 
-> _rtl_dbg_trace(), but that symbol is never defined. The problem can be fixed in 
-> debug.c or debug.h.
+The wits pro uses an ap6476 sdio wifi module, we do not have a nvram file
+for this, so set brcm,nvram_file_name to brcmfmac43362-ap6210.txt which
+works fine for this wifi module.
 
-Confused a bit.  What breaks again?
+Setting brcm,nvram_file_name allows us to ship the ap6210 specific nvram
+file in linux-firmware to get the wifi to work out of the box without
+users needing to download and install the nvram file themselves.
 
-debug.h:
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+---
+ arch/arm/boot/dts/sun7i-a20-wits-pro-a20-dkt.dts | 1 +
+ 1 file changed, 1 insertion(+)
 
-#ifdef CONFIG_RTLWIFI_DEBUG
-[]
-__printf(5, 6)
-void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
-		    const char *modname, const char *fmt, ...);
+diff --git a/arch/arm/boot/dts/sun7i-a20-wits-pro-a20-dkt.dts b/arch/arm/boot/dts/sun7i-a20-wits-pro-a20-dkt.dts
+index dc31d47..3c5455a9 100644
+--- a/arch/arm/boot/dts/sun7i-a20-wits-pro-a20-dkt.dts
++++ b/arch/arm/boot/dts/sun7i-a20-wits-pro-a20-dkt.dts
+@@ -140,6 +140,7 @@
+ 	brcmf: bcrmf@1 {
+ 		reg = <1>;
+ 		compatible = "brcm,bcm4329-fmac";
++		brcm,nvram_file_name = "brcm/brcmfmac43362-ap6210.txt";
+ 		interrupt-parent = <&pio>;
+ 		interrupts = <7 10 IRQ_TYPE_LEVEL_LOW>; /* PH10 / EINT10 */
+ 		interrupt-names = "host-wake";
+-- 
+2.7.4
 
-#define RT_TRACE(rtlpriv, comp, level, fmt, ...)			\
-	_rtl_dbg_trace(rtlpriv, comp, level,				\
-		       KBUILD_MODNAME, fmt, ##__VA_ARGS__)
-[]
-#else
-[]
-__printf(4, 5)
-static inline void RT_TRACE(struct rtl_priv *rtlpriv,
-			    int comp, int level,
-			    const char *fmt, ...)
-{
-}
-[]
-#endif
