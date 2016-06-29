@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42991 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752264AbcFWLfp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 07:35:45 -0400
-Message-ID: <1466681739.11061.3.camel@sipsolutions.net> (sfid-20160623_133620_451943_39C29DC6)
-Subject: Re: [PATCH] wlcore: time sync : add support for 64 bit clock
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Machani, Yaniv" <yanivma@ti.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Cc: Kalle Valo <kvalo@codeaurora.org>, "Mishol, Guy" <guym@ti.com>,
-	Eliad Peller <eliad@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Date: Thu, 23 Jun 2016 13:35:39 +0200
-In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101391CF584@DFRE01.ent.ti.com>
-References: <20160623111332.23326-1-yanivma@ti.com>
-	 (sfid-20160623_131215_419855_E4550AFE)
- <1466680680.11061.2.camel@sipsolutions.net>
-	 <AE1C82FB3D0EC64DB1F752C81CBD1101391CF584@DFRE01.ent.ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:40318 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752756AbcF2P4o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 11:56:44 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/8] wireless: airo: rename 'register' variable
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160616135245.3198419-1-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: netdev@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
+	Ondrej Zary <linux@rainbow-software.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20160629155643.6DD4B61372@smtp.codeaurora.org> (sfid-20160629_175712_029614_14A6F0CA)
+Date: Wed, 29 Jun 2016 15:56:43 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> > Additionally, this looks like it changes the firmware API, so that 
-> > older firmware images will no longer work?
+Arnd Bergmann <arnd@arndb.de> wrote:
+> 'register' is a keyword in C and cannot be used in place of a
+> variable name, as shown by this -Wextra warning:
 > 
-> It is backwards compatible, 
-> although it changes a API structure, older firmware are using only
-> u16 for the field so there is no impact on that.
+> drivers/net/wireless/cisco/airo.c:1105:29: error: 'register' is not at beginning of declaration [-Werror=old-style-declaration]
 > 
+> This replaces the 'register' keyword with a 'reg' identifier in
+> the declaration, which matches the definition and has the intended
+> meaning.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Oh, ok. I had also thought that the size changed, but missed that you
-replaced a u32 with two u16. Thanks for checking :)
+Thanks, 3 patches applied to wireless-drivers-next.git:
 
-johannes
+88e97c32068f wireless: airo: rename 'register' variable
+2a063835ce7c wireless: brcmsmac: fix old-style declaration
+6f07e0f12a57 wireless: ipw2200: fix old-style declaration
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9180951/
+
