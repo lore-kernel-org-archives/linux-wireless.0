@@ -1,48 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:42662 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752656AbcFEKwE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 5 Jun 2016 06:52:04 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Luca Muscariello <luca.muscariello@gmail.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"make-wifi-fast\@lists.bufferbloat.net"
-	<make-wifi-fast@lists.bufferbloat.net>,
-	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>
-Subject: Re: [Make-wifi-fast] [RFC/RFT 0/5] Adding an airtime fairness
-	scheduler to ath9k
-References: <20160603165144.17356-1-toke@toke.dk>
-	<CAHx=1M4K5jx1__PtD1hXZcpTrqvULfEr2fd7KJ=0neYoBQQt3g@mail.gmail.com>
-Date: Sun, 05 Jun 2016 12:51:58 +0200
-In-Reply-To: <CAHx=1M4K5jx1__PtD1hXZcpTrqvULfEr2fd7KJ=0neYoBQQt3g@mail.gmail.com>
-	(Luca Muscariello's message of "Sat, 4 Jun 2016 17:24:42 +0200")
-Message-ID: <877fe3ucvl.fsf@toke.dk> (sfid-20160605_125221_878750_380462D6)
+Received: from mail-vk0-f68.google.com ([209.85.213.68]:36279 "EHLO
+	mail-vk0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751443AbcF2IR7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 04:17:59 -0400
+Received: by mail-vk0-f68.google.com with SMTP id v188so5376765vkf.3
+        for <linux-wireless@vger.kernel.org>; Wed, 29 Jun 2016 01:17:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1467021206-2702-1-git-send-email-chaitanya.mgit@gmail.com>
+References: <1467021206-2702-1-git-send-email-chaitanya.mgit@gmail.com>
+From: Karl Beldan <karl.beldan@gmail.com>
+Date: Wed, 29 Jun 2016 08:17:56 +0000
+Message-ID: <CACYmx9Pjd7h=VkzXoPDAdb53DZrJT+LgD0LRfhD=6xm=KYrF+A@mail.gmail.com> (sfid-20160629_101806_805826_6AA118FB)
+Subject: Re: [PATCH] mac80211: minstrel: Enable STBC and LDPC for VHT Rates
+To: Chaitanya TK <chaitanya.mgit@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@nbd.name>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Muscariello <luca.muscariello@gmail.com> writes:
+On Mon, Jun 27, 2016 at 9:53 AM, Chaitanya TK <chaitanya.mgit@gmail.com> wrote:
+> From: Chaitanya T K <chaitanya.mgit@gmail.com>
+>
+> If peer support reception of STBC and LDPC, enable them for better
+> performance.
+>
+> Signed-off-by: Chaitanya TK <chaitanya.mgit@gmail.com>
+> ---
+>  include/linux/ieee80211.h          |    1 +
+>  net/mac80211/rc80211_minstrel_ht.c |   25 +++++++++++++++++--------
+>  2 files changed, 18 insertions(+), 8 deletions(-)
+>
+> diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+> index b118744..4d01130 100644
+> --- a/include/linux/ieee80211.h
+> +++ b/include/linux/ieee80211.h
+> @@ -1550,6 +1550,7 @@ struct ieee80211_vht_operation {
+>  #define IEEE80211_VHT_CAP_RXSTBC_3                             0x00000300
+>  #define IEEE80211_VHT_CAP_RXSTBC_4                             0x00000400
+>  #define IEEE80211_VHT_CAP_RXSTBC_MASK                          0x00000700
+> +#define IEEE80211_VHT_CAP_RXSTBC_SHIFT                         8
+>  #define IEEE80211_VHT_CAP_SU_BEAMFORMER_CAPABLE                        0x00000800
+>  #define IEEE80211_VHT_CAP_SU_BEAMFORMEE_CAPABLE                        0x00001000
+>  #define IEEE80211_VHT_CAP_BEAMFORMEE_STS_SHIFT                  13
+> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> index 30fbabf..e2fcdea 100644
+> --- a/net/mac80211/rc80211_minstrel_ht.c
+> +++ b/net/mac80211/rc80211_minstrel_ht.c
+> @@ -1166,13 +1166,14 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+>         struct minstrel_ht_sta_priv *msp = priv_sta;
+>         struct minstrel_ht_sta *mi = &msp->ht;
+>         struct ieee80211_mcs_info *mcs = &sta->ht_cap.mcs;
+> -       u16 sta_cap = sta->ht_cap.cap;
+> +       u16 ht_cap = sta->ht_cap.cap;
+>         struct ieee80211_sta_vht_cap *vht_cap = &sta->vht_cap;
+>         int use_vht;
+>         int n_supported = 0;
+>         int ack_dur;
+>         int stbc;
+>         int i;
+> +       bool ldpc;
+>
+>         /* fall back to the old minstrel for legacy stations */
+>         if (!sta->ht_cap.ht_supported)
+> @@ -1210,16 +1211,24 @@ minstrel_ht_update_caps(void *priv, struct ieee80211_supported_band *sband,
+>         }
+>         mi->sample_tries = 4;
+>
+> -       /* TODO tx_flags for vht - ATM the RC API is not fine-grained enough */
+>         if (!use_vht) {
+> -               stbc = (sta_cap & IEEE80211_HT_CAP_RX_STBC) >>
+> +               stbc = (ht_cap & IEEE80211_HT_CAP_RX_STBC) >>
+>                         IEEE80211_HT_CAP_RX_STBC_SHIFT;
+> -               mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
+>
+> -               if (sta_cap & IEEE80211_HT_CAP_LDPC_CODING)
+> -                       mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
+> +               if (ht_cap & IEEE80211_HT_CAP_LDPC_CODING)
+> +                       ldpc = true;
+> +       } else {
+> +               stbc = (vht_cap->cap & IEEE80211_VHT_CAP_RXSTBC_MASK) >>
+> +                       IEEE80211_VHT_CAP_RXSTBC_SHIFT;
+> +
+> +               if (vht_cap->cap & IEEE80211_VHT_CAP_RXLDPC)
+> +                       ldpc = true;
+>         }
+>
+> +       mi->tx_flags |= stbc << IEEE80211_TX_CTL_STBC_SHIFT;
+> +       if (ldpc)
+> +               mi->tx_flags |= IEEE80211_TX_CTL_LDPC;
+> +
 
-> I don't fully understand your plots but it would be useful to report
-> the  physical rate of the stations.
+Here you are using ldpc uninitialized.
 
-Yes, well, there's not really one rate to report for each station, since
-Minstrel jumps about a bit and tries different ones.
 
-> As a benchmark, if you know the physical rates assuming they are also
-> optimally chosen (by minstrel for instance ) and stations don't move,
-> the long term throughout can be computed ( e.g. for TCP ) assuming air
-> time fairness. Than you can understand if your gain is what you should
-> expect or if the implementation is not yet done.
+As for the idea, ldpc and stbc support/enable in HT and VHT being
+independant and tx_flags being shared by all the info.rates, you
+cannot use it as you are trying to (e.g. you might end up asking lower
+layers to send stbc/vht with a hw only supporting stbc/ht or/and
+trying to send stbc/vht with inappropriate advertised vht caps).
+This stems from the STBC/LDPC CTL flags being a
+mac80211_tx_info_flags, this is what should be changed.
 
-So far I've just been looking at the figures for airtime (the first
-graph in the blog post). These are the same numbers that the scheduler
-uses to make scheduling decisions. It seems like the scheduler does help
-somewhat, but is not perfect yet. Am definitely lacking a good ground
-truth to compare against, though. Computing the expected throughput
-might be possible, since minstrel does report statistics for how many
-packets were transmitted at each rate. Will look into it; thanks for the
-suggestion :)
 
--Toke
+Regards,
+Karl
