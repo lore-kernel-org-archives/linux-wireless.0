@@ -1,102 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:23459 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932860AbcFJQ0s convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 10 Jun 2016 12:26:48 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Javier Martinez Canillas <javier@osg.samsung.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Julian Calaby" <julian.calaby@gmail.com>,
-	Shengzhen Li <szli@marvell.com>,
-	"Enric Balletbo i Serra" <enric.balletbo@collabora.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: RE: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl
- file
-Date: Fri, 10 Jun 2016 16:26:40 +0000
-Message-ID: <2b5e5833ecc74a2b9cd822e8455cd0af@SC-EXCH04.marvell.com> (sfid-20160610_182710_412558_4054598B)
-References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com>
- <1465232558-31678-3-git-send-email-javier@osg.samsung.com>
- <87wplxdsln.fsf@kamboji.qca.qualcomm.com>
- <12ccd90e-e3eb-ecac-b23f-8124b0db32ad@osg.samsung.com>
-In-Reply-To: <12ccd90e-e3eb-ecac-b23f-8124b0db32ad@osg.samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:53164 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751622AbcF2Qmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 12:42:50 -0400
+Message-ID: <1467217536.2461.11.camel@sipsolutions.net> (sfid-20160629_184252_903050_F32BE313)
+Subject: Re: [PATCH v3] mac80211: Encrypt "Group addressed privacy" action
+ frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Masashi Honma <masashi.honma@gmail.com>, j@w1.fi
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 29 Jun 2016 18:25:36 +0200
+In-Reply-To: <5773E453.9060206@gmail.com> (sfid-20160629_170808_017136_351F2679)
+References: <20160621170120.GA24882@w1.fi>
+ <1466592920-2716-1-git-send-email-masashi.honma@gmail.com>
+	 <5773E453.9060206@gmail.com> (sfid-20160629_170808_017136_351F2679)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle/Javier,
+On Thu, 2016-06-30 at 00:08 +0900, Masashi Honma wrote:
+[please don't quote everything to add a single line]
 
-> From: Javier Martinez Canillas [mailto:javier@osg.samsung.com]
-> Sent: Friday, June 10, 2016 8:07 PM
-> To: Kalle Valo
-> Cc: linux-kernel@vger.kernel.org; Julian Calaby; Shengzhen Li; Enric
-> Balletbo i Serra; Amitkumar Karwar; netdev@vger.kernel.org; linux-
-> wireless@vger.kernel.org; Nishant Sarmukadam
-> Subject: Re: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station
-> ioctl file
-> 
-> Hello Kalle,
-> 
-> On 06/10/2016 10:30 AM, Kalle Valo wrote:
-> > Javier Martinez Canillas <javier@osg.samsung.com> writes:
-> >
-> >> From: Shengzhen Li <szli@marvell.com>
-> >>
-> >> Most cfg80211 operations are just a wrappers to functions defined in
-> >> the sta_ioctl.c file, so for consistency move the .get_tx_power logic
-> there.
-> >>
-> >> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> >> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> >> [javier: update the subject line and commit message]
-> >> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-> >
-> > [...]
-> >
-> >> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> >> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> >> @@ -385,18 +385,10 @@ mwifiex_cfg80211_get_tx_power(struct wiphy
-> *wiphy,
-> >>  			      int *dbm)
-> >>  {
-> >>  	struct mwifiex_adapter *adapter =
-> mwifiex_cfg80211_get_adapter(wiphy);
-> >> -	struct mwifiex_private *priv = mwifiex_get_priv(adapter,
-> >> -							MWIFIEX_BSS_ROLE_ANY);
-> >> -	int ret = mwifiex_send_cmd(priv, HostCmd_CMD_RF_TX_PWR,
-> >> -				   HostCmd_ACT_GEN_GET, 0, NULL, true);
-> >> -
-> >> -	if (ret < 0)
-> >> -		return ret;
-> >> -
-> >> -	/* tx_power_level is set in HostCmd_CMD_RF_TX_PWR command handler
-> */
-> >> -	*dbm = priv->tx_power_level;
-> >> +	struct mwifiex_private *priv;
-> >>
-> >> -	return 0;
-> >> +	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
-> >> +	return mwifiex_get_tx_power(priv, dbm);
-> >>  }
-> >
-> > So in patch 1 you added the patch and in patch 2 you move it to a
-> > different location? That doesn't make any sense, can't you just fold
-> > the two patches into one so that the function is added only once.
-> >
-> 
-> I posted this patch in v1 but then Amitkumar shared his patch with me
-> that was very similar to mine, only that the logic was in a different
-> location.
-> 
-> So I included his delta as a separate patch to try keeping attribution
-> as best as possible.
+> Is there any comment about this ?
 > 
 
-This patch (2/3) is only for code rearrangement and adds an unnecessary wrapper function. We can simply drop the patch.
+I applied it today, but forgot to say so. Sorry about that.
 
-Regards,
-Amitkumar
+johannes
