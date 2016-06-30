@@ -1,112 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34924 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752191AbcF1AxE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39306 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751757AbcF3KZY convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 20:53:04 -0400
-Subject: Re: [PATCH] rtlwifi: Create _rtl_dbg_trace function to reduce
- RT_TRACE code size
-To: Joe Perches <joe@perches.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>
-References: <90cd7c8f12b51571db565fd496a2fcf610e2e484.1466894688.git.joe@perches.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <5771CA6C.1060403@lwfinger.net> (sfid-20160628_025342_410840_D3BC611E)
-Date: Mon, 27 Jun 2016 19:53:00 -0500
+	Thu, 30 Jun 2016 06:25:24 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
+	"Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
+ QCA99X0 and later
+Date: Thu, 30 Jun 2016 10:25:16 +0000
+Message-ID: <8760sr6kj8.fsf@kamboji.qca.qualcomm.com> (sfid-20160630_122533_350358_5E575614)
+References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
+	<1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
+	<576C1861.7020402@candelatech.com>
+	<20160625185350.GA25330@atheros-ThinkPad-T61>
+	<576F2165.3010109@candelatech.com>
+In-Reply-To: <576F2165.3010109@candelatech.com> (Ben Greear's message of "Sat,
+	25 Jun 2016 17:27:17 -0700")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <90cd7c8f12b51571db565fd496a2fcf610e2e484.1466894688.git.joe@perches.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/25/2016 05:46 PM, Joe Perches wrote:
-> This debugging macro can expand to a lot of code.
-> Make it a function to reduce code size.
->
-> (x86-64 defconfig w/ all rtlwifi drivers and allyesconfig)
-> $ size drivers/net/wireless/realtek/rtlwifi/built-in.o*
->     text	   data	    bss	    dec	    hex	filename
->   900083	 200499	   1907	1102489	 10d299	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.new
-> 1113597	 200499	   1907	1316003	 1414a3	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.old
-> 1746879	 453503	   8512	2208894	 21b47e	drivers/net/wireless/realtek/rtlwifi/built-in.o.new
-> 2051965	 503311	   8512	2563788	 271ecc	drivers/net/wireless/realtek/rtlwifi/built-in.o.old
->
-> Signed-off-by: Joe Perches <joe@perches.com>
+Ben Greear <greearb@candelatech.com> writes:
 
-I acked this before; however there is a bug that breaks the build if 
-CONFIG_RTLWIFI_DEBUG is not defined. The rest of the code calls 
-_rtl_dbg_trace(), but that symbol is never defined. The problem can be fixed in 
-debug.c or debug.h.
+> Is there a better way than posting to the ath10k mailing list?  There are quite
+> a few more of my patches that are stuck in pending or ignored state.  If you
+> could review some of them and add them to your testing trees then it might help
+> them go upstream.
 
-Larry
+Yes, as you seem to test with your custom ath10k and custom firmware
+review and testing feedback from others is more than welcome. That way I
+can have more confidence that the patch really works with the mainline
+version.
 
-> ---
->   drivers/net/wireless/realtek/rtlwifi/debug.c | 25 +++++++++++++++++++++++++
->   drivers/net/wireless/realtek/rtlwifi/debug.h | 17 +++++++++--------
->   2 files changed, 34 insertions(+), 8 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.c b/drivers/net/wireless/realtek/rtlwifi/debug.c
-> index fd25aba..33905bb 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/debug.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/debug.c
-> @@ -48,3 +48,28 @@ void rtl_dbgp_flag_init(struct ieee80211_hw *hw)
->   	/*Init Debug flag enable condition */
->   }
->   EXPORT_SYMBOL_GPL(rtl_dbgp_flag_init);
-> +
-> +#ifdef CONFIG_RTLWIFI_DEBUG
-> +void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
-> +		    const char *modname, const char *fmt, ...)
-> +{
-> +	if (unlikely((comp & rtlpriv->dbg.global_debugcomponents) &&
-> +		     (level <= rtlpriv->dbg.global_debuglevel))) {
-> +		struct va_format vaf;
-> +		va_list args;
-> +
-> +		va_start(args, fmt);
-> +
-> +		vaf.fmt = fmt;
-> +		vaf.va = &args;
-> +
-> +		printk(KERN_DEBUG "%s:%ps:<%lx-%x> %pV",
-> +		       modname, __builtin_return_address(0),
-> +		       in_interrupt(), in_atomic(),
-> +		       &vaf);
-> +
-> +		va_end(args);
-> +	}
-> +}
-> +EXPORT_SYMBOL_GPL(_rtl_dbg_trace);
-> +#endif
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/debug.h b/drivers/net/wireless/realtek/rtlwifi/debug.h
-> index fc794b3..6156a79 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/debug.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/debug.h
-> @@ -174,15 +174,16 @@ do {									\
->   	}								\
->   } while (0)
->
-> +
-> +struct rtl_priv;
-> +
-> +__printf(5, 6)
-> +void _rtl_dbg_trace(struct rtl_priv *rtlpriv, int comp, int level,
-> +		    const char *modname, const char *fmt, ...);
-> +
->   #define RT_TRACE(rtlpriv, comp, level, fmt, ...)			\
-> -do {									\
-> -	if (unlikely(((comp) & rtlpriv->dbg.global_debugcomponents) &&	\
-> -		     ((level) <= rtlpriv->dbg.global_debuglevel))) {	\
-> -		printk(KERN_DEBUG KBUILD_MODNAME ":%s():<%lx-%x> " fmt,	\
-> -		       __func__, in_interrupt(), in_atomic(),		\
-> -		       ##__VA_ARGS__);					\
-> -	}								\
-> -} while (0)
-> +	_rtl_dbg_trace(rtlpriv, comp, level,				\
-> +		       KBUILD_MODNAME, fmt, ##__VA_ARGS__)
->
->   #define RTPRINT(rtlpriv, dbgtype, dbgflag, fmt, ...)			\
->   do {									\
->
+The problem with your patches is that you dump more responsibility on
+me. I have no idea if they work with the mainline kernel, or if they
+break something, so I need to personally test the patch and that takes
+time. Basically I have a rule if that I need to use more than two
+minutes on a patch it goes to the Deferred queue and I'll go through
+that less often than the normal patch queue.
 
+-- 
+Kalle Valo
