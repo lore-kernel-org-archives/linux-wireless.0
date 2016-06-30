@@ -1,53 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ns.lynxeye.de ([87.118.118.114]:34051 "EHLO lynxeye.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751848AbcFCVPF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 17:15:05 -0400
-From: Lucas Stach <dev@lynxeye.de>
-To: Kalle Valo <kvalo@codeaurora.org>, Michael Buesch <m@bues.ch>
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: [PATCH] b43: only hardcode LED behavior if SPROM doesn't encode any
-Date: Fri,  3 Jun 2016 23:04:03 +0200
-Message-Id: <1464987843-6928-1-git-send-email-dev@lynxeye.de> (sfid-20160603_231510_815993_68D93379)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20301 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751527AbcF3BP1 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 29 Jun 2016 21:15:27 -0400
+From: David Lin <dlin@marvell.com>
+To: "Baumann, Christoph (C.)" <cbaumann@visteon.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+CC: Chor Teck Law <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [PATCH v8] Add new mac80211 driver mwlwifi.
+Date: Thu, 30 Jun 2016 01:15:25 +0000
+Message-ID: <ce48c516ec364bcaba5bb938165e0927@SC-EXCH02.marvell.com> (sfid-20160630_031531_142486_A455BE7F)
+References: <DB5PR06MB1285C28251AB35F0F86DE178D0230@DB5PR06MB1285.eurprd06.prod.outlook.com>
+In-Reply-To: <DB5PR06MB1285C28251AB35F0F86DE178D0230@DB5PR06MB1285.eurprd06.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Only hardcode the LED behavior if the SROM doesn't provide any for all
-LEDs of the card. This avoids instantiating LED triggers for unconnected
-LEDs, while (hopefully) keeping things working for old cards with a
-blank SROM.
+> From: linux-wireless-owner@vger.kernel.org
+> [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of Baumann,
+> Christoph (C.)
+> Sent: Wednesday, June 29, 2016 9:45 PM
+> To: linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH v8] Add new mac80211 driver mwlwifi.
+> 
+> Hello David,
+> 
+> I tried this new driver and it worked for me (board based on Renesas R-Car
+> H3).
+> But Inoticed that the data rates are asymmetrical (seen from the device):
+> 	* iperf -c (mainly TX): 598 Kbits/sec to 2.67 Mbits/sec
+> 	* iperf -s (mainly RX): 64.4 Mbits/sec to 69.2 Mbits/sec
+>
 
-Signed-off-by: Lucas Stach <dev@lynxeye.de>
----
- drivers/net/wireless/broadcom/b43/leds.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Please check https://github.com/kaloz/mwlwifi to get latest firmware and configuration sample.
 
-diff --git a/drivers/net/wireless/broadcom/b43/leds.c b/drivers/net/wireless/broadcom/b43/leds.c
-index d79ab2a..cb987c2 100644
---- a/drivers/net/wireless/broadcom/b43/leds.c
-+++ b/drivers/net/wireless/broadcom/b43/leds.c
-@@ -222,7 +222,7 @@ static void b43_led_get_sprominfo(struct b43_wldev *dev,
- 	sprom[2] = dev->dev->bus_sprom->gpio2;
- 	sprom[3] = dev->dev->bus_sprom->gpio3;
- 
--	if (sprom[led_index] == 0xFF) {
-+	if ((sprom[0] & sprom[1] & sprom[2] & sprom[3]) == 0xff) {
- 		/* There is no LED information in the SPROM
- 		 * for this LED. Hardcode it here. */
- 		*activelow = false;
-@@ -250,7 +250,11 @@ static void b43_led_get_sprominfo(struct b43_wldev *dev,
- 			return;
- 		}
- 	} else {
--		*behaviour = sprom[led_index] & B43_LED_BEHAVIOUR;
-+		/* keep LED disabled if no mapping is defined */
-+		if (sprom[led_index] == 0xff)
-+			*behaviour = B43_LED_OFF;
-+		else
-+			*behaviour = sprom[led_index] & B43_LED_BEHAVIOUR;
- 		*activelow = !!(sprom[led_index] & B43_LED_ACTIVELOW);
- 	}
- }
--- 
-2.5.5
+If you still get problem, please open an issue on https://github.com/kaloz/mwlwifi.
 
+You can get HW, driver and firmware information via "cat /sys/kernel/debug/ieee80211/phy0/mwlwifi/info".
+
+Please specify your configuration and test environment.
+
+Thanks,
+David
+
+> 
+> 
+> Regards,
+> Christoph
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the
+> body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
