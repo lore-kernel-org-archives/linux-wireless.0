@@ -1,128 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34258 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972AbcFWPNi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51629 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751383AbcF3KFl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 23 Jun 2016 11:13:38 -0400
-Received: by mail-wm0-f66.google.com with SMTP id 187so11790136wmz.1
-        for <linux-wireless@vger.kernel.org>; Thu, 23 Jun 2016 08:13:37 -0700 (PDT)
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org
-Cc: nbd@nbd.name,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 1/2] ath9k: parse the device configuration from an OF node
-Date: Thu, 23 Jun 2016 17:13:27 +0200
-Message-Id: <20160623151328.24061-2-martin.blumenstingl@googlemail.com> (sfid-20160623_171341_839092_DC7D202A)
-In-Reply-To: <20160623151328.24061-1-martin.blumenstingl@googlemail.com>
-References: <20160623151328.24061-1-martin.blumenstingl@googlemail.com>
+	Thu, 30 Jun 2016 06:05:41 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Priit Laes <plaes@plaes.org>, arnd@arndb.de,
+	Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	Jonas Gorski <jonas.gorski@gmail.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel\@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+	<ea10ff70-26e6-e151-5cea-c54bd12a054c@redhat.com>
+	<f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
+	<6402170.5s0abZDqlD@wuerfel> <1467230078.2598.2.camel@plaes.org>
+	<87eg7f6odi.fsf@kamboji.qca.qualcomm.com>
+	<e94f58fe-f709-94bd-21f6-144c4e038d17@redhat.com>
+Date: Thu, 30 Jun 2016 12:58:14 +0300
+In-Reply-To: <e94f58fe-f709-94bd-21f6-144c4e038d17@redhat.com> (Hans de
+	Goede's message of "Thu, 30 Jun 2016 11:50:01 +0200")
+Message-ID: <87a8i36ls9.fsf@kamboji.qca.qualcomm.com> (sfid-20160630_120544_786742_A113FFB9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This makes it possible to configure ath9k based devices using
-devicetree. That makes some out-of-tree "convert devicetree to
-ath9k_platform_data glue"-code obsolete.
+Hans de Goede <hdegoede@redhat.com> writes:
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 70 +++++++++++++++++++++++++++++++++++
- 1 file changed, 70 insertions(+)
+> Hi,
+>
+> On 30-06-16 11:02, Kalle Valo wrote:
+>> Priit Laes <plaes@plaes.org> writes:
+>>
+>>>> What is the size of this nvram file? As it's board specific, I wonder
+>>>> if we can simply include it inside of the DT verbatim. I remember
+>>>> doing that (in the pre-dtb days, on real open firmware) for the
+>>>> "spidernet"
+>>>> ethernet driver.
+>>>
+>>> It contains a bit too much info:
+>>>
+>>> This is what CubieTruck requires:
+>>>
+>>> http://dl.cubieboard.org/public/Cubieboard/benn/firmware/ap6210/nvram_ap6210.txt
+>>
+>> In the nvram file I see lots of identifiers:
+>>
+>> manfid=0x2d0
+>> prodid=0x492
+>> vendid=0x14e4
+>> devid=0x4343
+>> boardtype=0x0598
+>> boardrev=0x1307
+>> boardnum=777
+>>
+>> Are any of these (or a combination of them) unique for each board type?
+>> What if one of these is provided through DT and then the driver could
+>> choose the nvram file based on the board id? Just another idea...
+>
+> That would require updating a table in the driver every time a new
+> board comes out, I do not believe that that is a good solution.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index a0f4a52..0f76137 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -20,6 +20,8 @@
- #include <linux/slab.h>
- #include <linux/ath9k_platform.h>
- #include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_net.h>
- #include <linux/relay.h>
- #include <net/ieee80211_radiotap.h>
- 
-@@ -555,6 +557,70 @@ static int ath9k_init_platform(struct ath_softc *sc)
- 	return 0;
- }
- 
-+static int ath9k_of_init(struct ath_softc *sc)
-+{
-+	struct device_node *np = sc->dev->of_node;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	const char *mac, *eeprom_name;
-+	int led_pin, ret;
-+	u32 gpio_data;
-+
-+	if (!np)
-+		return 0;
-+
-+	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
-+
-+	if (!of_property_read_u32(np, "ath,led-pin", &led_pin))
-+		ah->led_pin = led_pin;
-+
-+	if (!of_property_read_u32(np, "ath,gpio-mask", &gpio_data))
-+		ah->gpio_mask = gpio_data;
-+
-+	if (!of_property_read_u32(np, "ath,gpio-val", &gpio_data))
-+		ah->gpio_val = gpio_data;
-+
-+	if (of_property_read_bool(np, "ath,clk-25mhz"))
-+		ah->is_clk_25mhz = true;
-+
-+	if (!of_property_read_u32(np, "ath,gpio-mask", &gpio_data))
-+		ah->gpio_mask = gpio_data;
-+
-+	if (!of_property_read_u32(np, "ath,gpio-val", &gpio_data))
-+		ah->gpio_val = gpio_data;
-+
-+	if (of_property_read_bool(np, "ath,clk-25mhz"))
-+		ah->is_clk_25mhz = true;
-+
-+	if (of_property_read_bool(np, "ath,led-active-high"))
-+		ah->config.led_active_high = true;
-+
-+	if (of_property_read_bool(np, "ath,disable-2ghz"))
-+		ah->disable_2ghz = true;
-+
-+	if (of_property_read_bool(np, "ath,disable-5ghz"))
-+		ah->disable_5ghz = true;
-+
-+	if (of_property_read_bool(np, "ath,check-eeprom-endianness"))
-+		ah->ah_flags &= ~AH_NO_EEP_SWAP;
-+	else
-+		ah->ah_flags |= AH_NO_EEP_SWAP;
-+
-+	if (!of_property_read_string(np, "ath,eeprom-name", &eeprom_name)) {
-+		ret = ath9k_eeprom_request(sc, eeprom_name);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	mac = of_get_mac_address(np);
-+	if (mac)
-+		ether_addr_copy(common->macaddr, mac);
-+
-+	ah->ah_flags &= ~AH_USE_EEPROM;
-+
-+	return 0;
-+}
-+
- static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 			    const struct ath_bus_ops *bus_ops)
- {
-@@ -611,6 +677,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		return ret;
- 
-+	ret = ath9k_of_init(sc);
-+	if (ret)
-+		return ret;
-+
- 	if (ath9k_led_active_high != -1)
- 		ah->config.led_active_high = ath9k_led_active_high == 1;
- 
+You don't necessarily need to have a table in the driver if you embed
+the id to the filename, for example something like this:
+
+nvram-0598-1307.txt
+nvram-<boardtype>-<boardrev>.txt
+
 -- 
-2.9.0
-
+Kalle Valo
