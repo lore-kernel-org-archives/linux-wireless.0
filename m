@@ -1,46 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:36395 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753090AbcFLX2l (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:36639 "EHLO
+	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751575AbcF3MBE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 12 Jun 2016 19:28:41 -0400
-Received: by mail-pf0-f193.google.com with SMTP id 62so9239239pfd.3
-        for <linux-wireless@vger.kernel.org>; Sun, 12 Jun 2016 16:28:40 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 6/6] staging: wilc1000: remove unnecesary type cast of bss_type
-Date: Mon, 13 Jun 2016 08:28:15 +0900
-Message-Id: <20160612232815.12112-6-chaehyun.lim@gmail.com> (sfid-20160613_012843_889505_9CED2C44)
-In-Reply-To: <20160612232815.12112-1-chaehyun.lim@gmail.com>
-References: <20160612232815.12112-1-chaehyun.lim@gmail.com>
+	Thu, 30 Jun 2016 08:01:04 -0400
+Received: by mail-pf0-f169.google.com with SMTP id t190so28952705pfb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 05:01:04 -0700 (PDT)
+Subject: Re: [PATCH] cfg80211: Add mesh peer AID setting API
+To: Bob Copeland <me@bobcopeland.com>
+References: <1467277258-2331-1-git-send-email-masashi.honma@gmail.com>
+ <20160630111110.GF9984@localhost>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org, j@w1.fi
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <577509FD.7040906@gmail.com> (sfid-20160630_140110_052769_05573C14)
+Date: Thu, 30 Jun 2016 21:01:01 +0900
+MIME-Version: 1.0
+In-Reply-To: <20160630111110.GF9984@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to use type cast of bss_type because
-hif_drv->cfg_values.bss_type is u8.
+On 2016年06月30日 20:11, Bob Copeland wrote:
+> Let's call it peer_aid or mesh_peer_aid or something like that, per my
+> email on hostapd list.  Also you probably saw kbuild robot pointed out
+> missing documentation for the field.
+Yes. I will modify this also.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 828efff..5b2278b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -434,7 +434,7 @@ static void handle_cfg_param(struct wilc_vif *vif,
- 			wid_list[i].val = (s8 *)&bss_type;
- 			wid_list[i].type = WID_CHAR;
- 			wid_list[i].size = sizeof(char);
--			hif_drv->cfg_values.bss_type = (u8)bss_type;
-+			hif_drv->cfg_values.bss_type = bss_type;
- 		} else {
- 			netdev_err(vif->ndev, "check value 6 over\n");
- 			goto unlock;
--- 
-2.8.4
+> We need a check against IEEE80211_MAX_AID somewhere.
+Sure. I will add a check.
 
