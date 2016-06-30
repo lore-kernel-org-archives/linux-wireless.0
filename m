@@ -1,123 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:32935 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751910AbcF0PxL (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36819 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665AbcF3Rqc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 27 Jun 2016 11:53:11 -0400
-Received: by mail-oi0-f66.google.com with SMTP id w141so31396505oia.0
-        for <linux-wireless@vger.kernel.org>; Mon, 27 Jun 2016 08:53:10 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v2 03/10] rtlwifi: rtl8192cu: Convert driver to use common hardware info routine
-Date: Mon, 27 Jun 2016 10:52:31 -0500
-Message-Id: <1467042758-25742-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160627_175316_129271_515F1C66)
-In-Reply-To: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1467042758-25742-1-git-send-email-Larry.Finger@lwfinger.net>
+	Thu, 30 Jun 2016 13:46:32 -0400
+Received: by mail-pa0-f45.google.com with SMTP id wo6so30380875pac.3
+        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 10:46:31 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicolas Dechesne <ndec@linaro.org>
+Subject: [PATCH] wcn36xx: Implement print_reg indication
+Date: Thu, 30 Jun 2016 10:46:29 -0700
+Message-Id: <1467308789-23475-1-git-send-email-bjorn.andersson@linaro.org> (sfid-20160630_194704_263709_DA3969D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for RTL8192CU chips is converted to use the common routine
-for getting the hardware information.
+Some firmware versions sends a "print register indication", handle this
+by printing out the content.
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Nicolas Dechesne <ndec@linaro.org>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
-V2 - Fixes bug found after V1 was submitted.
+ drivers/net/wireless/ath/wcn36xx/hal.h | 16 ++++++++++++++++
+ drivers/net/wireless/ath/wcn36xx/smd.c | 30 ++++++++++++++++++++++++++++++
+ 2 files changed, 46 insertions(+)
 
-This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
-	submitted by Joe Perches.
----
- .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    | 61 ++++++----------------
- 1 file changed, 15 insertions(+), 46 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index ae1129f..8789752 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -347,56 +347,24 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u16 i, usvalue;
--	u8 hwinfo[HWSET_MAX_SIZE] = {0};
--	u16 eeprom_id;
--
--	switch (rtlefuse->epromtype) {
--	case EEPROM_BOOT_EFUSE:
--		rtl_efuse_shadow_map_update(hw);
--		break;
--
--	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
-+	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
-+			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
-+			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
-+			0};
-+	u8 *hwinfo;
-+
-+	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
-+	if (!hwinfo)
- 		return;
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index 4f87ef1e1eb8..b765c647319d 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -350,6 +350,8 @@ enum wcn36xx_hal_host_msg_type {
  
--	default:
--		pr_warn("rtl92cu: no efuse data\n\n");
--		return;
--	}
--	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
--	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_LOUD, "MAP",
--		      hwinfo, HWSET_MAX_SIZE);
--	eeprom_id = le16_to_cpu(*((__le16 *)&hwinfo[0]));
--	if (eeprom_id != RTL8190_EEPROM_ID) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
--		rtlefuse->autoload_failflag = true;
--	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
--		rtlefuse->autoload_failflag = false;
--	}
--	if (rtlefuse->autoload_failflag)
--		return;
--	for (i = 0; i < 6; i += 2) {
--		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
--		*((u16 *) (&rtlefuse->dev_addr[i])) = usvalue;
--	}
--	pr_info("MAC address: %pM\n", rtlefuse->dev_addr);
-+	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
-+		goto exit;
+ 	WCN36XX_HAL_AVOID_FREQ_RANGE_IND = 233,
+ 
++	WCN36XX_HAL_PRINT_REG_INFO_IND = 259,
 +
- 	_rtl92cu_read_txpower_info_from_hwpg(hw,
- 					   rtlefuse->autoload_failflag, hwinfo);
--	rtlefuse->eeprom_vid = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VID]);
--	rtlefuse->eeprom_did = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_DID]);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, " VID = 0x%02x PID = 0x%02x\n",
--		 rtlefuse->eeprom_vid, rtlefuse->eeprom_did);
--	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
--	rtlefuse->eeprom_version =
--			 le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VERSION]);
-+	_rtl92cu_read_board_type(hw, hwinfo);
+ 	WCN36XX_HAL_MSG_MAX = WCN36XX_HAL_MSG_TYPE_MAX_ENUM_SIZE
+ };
+ 
+@@ -4703,4 +4705,18 @@ struct stats_class_b_ind {
+ 	u32 rx_time_total;
+ };
+ 
++/* WCN36XX_HAL_PRINT_REG_INFO_IND */
++struct wcn36xx_hal_print_reg_info_ind {
++	struct wcn36xx_hal_msg_header header;
 +
- 	rtlefuse->txpwr_fromeprom = true;
--	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "EEPROM Customer ID: 0x%2x\n",
--		 rtlefuse->eeprom_oemid);
- 	if (rtlhal->oem_id == RT_CID_DEFAULT) {
- 		switch (rtlefuse->eeprom_oemid) {
- 		case EEPROM_CID_DEFAULT:
-@@ -422,7 +390,8 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
- 			break;
- 		}
- 	}
--	_rtl92cu_read_board_type(hw, hwinfo);
-+exit:
-+	kfree(hwinfo);
++	u32 count;
++	u32 scenario;
++	u32 reason;
++
++	struct {
++		u32 addr;
++		u32 value;
++	} regs[];
++} __packed;
++
+ #endif /* _HAL_H_ */
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 87a62eb6228c..28d6ca0ca819 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2109,6 +2109,30 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
+ 	return -ENOENT;
  }
  
- static void _rtl92cu_hal_customized_behavior(struct ieee80211_hw *hw)
++static int wcn36xx_smd_print_reg_info_ind(struct wcn36xx *wcn,
++					  void *buf,
++					  size_t len)
++{
++	struct wcn36xx_hal_print_reg_info_ind *rsp = buf;
++	int i;
++
++	if (len < sizeof(*rsp)) {
++		wcn36xx_warn("Corrupted print reg info indication\n");
++		return -EIO;
++	}
++
++	wcn36xx_dbg(WCN36XX_DBG_HAL,
++		    "reginfo indication, scenario: 0x%x reason: 0x%x\n",
++		    rsp->scenario, rsp->reason);
++
++	for (i = 0; i < rsp->count; i++) {
++		wcn36xx_dbg(WCN36XX_DBG_HAL, "\t0x%x: 0x%x\n",
++			    rsp->regs[i].addr, rsp->regs[i].value);
++	}
++
++	return 0;
++}
++
+ int wcn36xx_smd_update_cfg(struct wcn36xx *wcn, u32 cfg_id, u32 value)
+ {
+ 	struct wcn36xx_hal_update_cfg_req_msg msg_body, *body;
+@@ -2238,6 +2262,7 @@ int wcn36xx_smd_rsp_process(struct qcom_smd_channel *channel,
+ 	case WCN36XX_HAL_OTA_TX_COMPL_IND:
+ 	case WCN36XX_HAL_MISSED_BEACON_IND:
+ 	case WCN36XX_HAL_DELETE_STA_CONTEXT_IND:
++	case WCN36XX_HAL_PRINT_REG_INFO_IND:
+ 		msg_ind = kmalloc(sizeof(*msg_ind) + len, GFP_ATOMIC);
+ 		if (!msg_ind) {
+ 			/*
+@@ -2300,6 +2325,11 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 						   hal_ind_msg->msg,
+ 						   hal_ind_msg->msg_len);
+ 		break;
++	case WCN36XX_HAL_PRINT_REG_INFO_IND:
++		wcn36xx_smd_print_reg_info_ind(wcn,
++					       hal_ind_msg->msg,
++					       hal_ind_msg->msg_len);
++		break;
+ 	default:
+ 		wcn36xx_err("SMD_EVENT (%d) not supported\n",
+ 			      msg_header->msg_type);
 -- 
-2.1.4
+2.5.0
 
