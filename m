@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:43368 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752620AbcFTOzd (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59320 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751853AbcF3Kyr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 20 Jun 2016 10:55:33 -0400
-Date: Mon, 20 Jun 2016 10:54:53 -0400
-From: Kyle McMartin <kyle@infradead.org>
-To: "Machani, Yaniv" <yanivma@ti.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-firmware@kernel.org
-Subject: Re: Linux-firmware: pull-request TI wireless firmware update
-Message-ID: <20160620145453.GR9173@merlin.infradead.org> (sfid-20160620_165626_351712_EC9AB01B)
-References: <AE1C82FB3D0EC64DB1F752C81CBD1101391C5135@DFRE01.ent.ti.com>
+	Thu, 30 Jun 2016 06:54:47 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101391C5135@DFRE01.ent.ti.com>
+Subject: Re: ath10k: fix potential null dereference bugs
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1465563164-783-1-git-send-email-me@bobcopeland.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Bob Copeland <me@bobcopeland.com>, <ath10k@lists.infradead.org>
+Message-ID: <fa78b1942cf2454898cc33b31a253b81@euamsexm01a.eu.qualcomm.com> (sfid-20160630_125501_889191_0FBBA988)
+Date: Thu, 30 Jun 2016 12:54:40 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jun 16, 2016 at 12:14:34PM +0000, Machani, Yaniv wrote:
-> Hi,
+Bob Copeland <me@bobcopeland.com> wrote:
+> Smatch warns about a number of cases in ath10k where a pointer is
+> null-checked after it has already been dereferenced, in code involving
+> ath10k private virtual interface pointers.
 > 
-> Please see below pull request,
+> Fix these by making the dereference happen later.
 > 
-> It contains an update to the WiLink8 chip.
+> Addresses the following smatch warnings:
 > 
+> drivers/net/wireless/ath/ath10k/mac.c:3651 ath10k_mac_txq_init() warn: variable dereferenced before check 'txq' (see line 3649)
+> drivers/net/wireless/ath/ath10k/mac.c:3664 ath10k_mac_txq_unref() warn: variable dereferenced before check 'txq' (see line 3659)
+> drivers/net/wireless/ath/ath10k/htt_tx.c:70 __ath10k_htt_tx_txq_recalc() warn: variable dereferenced before check 'txq->sta' (see line 52)
+> drivers/net/wireless/ath/ath10k/htt_tx.c:740 ath10k_htt_tx_get_vdev_id() warn: variable dereferenced before check 'cb->vif' (see line 736)
+> drivers/net/wireless/ath/ath10k/txrx.c:86 ath10k_txrx_tx_unref() warn: variable dereferenced before check 'txq' (see line 84)
+> drivers/net/wireless/ath/ath10k/wmi.c:1837 ath10k_wmi_op_gen_mgmt_tx() warn: variable dereferenced before check 'cb->vif' (see line 1825)
+> 
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
 
-Pulled, thanks Yaniv.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
---Kyle
+a66cd733a729 ath10k: fix potential null dereference bugs
 
-> Thanks,
-> Yaniv
-> 
-> 
-> The following changes since commit a4bbc8112cc04fcc0e0861e8b72197b6cb83ab83:
-> 
->   linux-firmware: Update firmware file for Intel Bluetooth 8260 (2016-06-09 08:11:22 -0400)
-> 
-> are available in the git repository at:
-> 
->   git://git.ti.com/wilink8-wlan/linux-firmware.git master
-> 
-> for you to fetch changes up to dbb85a5154a5da7fa94bf9caa3658d4b6999cee6:
-> 
->   wl18xx: update firmware file (2016-06-16 14:59:20 +0300)
-> 
-> ----------------------------------------------------------------
-> Yaniv Machani (1):
->       wl18xx: update firmware file
-> 
-> WHENCE                          |   2 +-
-> ti-connectivity/wl18xx-fw-4.bin | Bin 738540 -> 745228 bytes
-> 2 files changed, 1 insertion(+), 1 deletion(-)
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9169669/
+
