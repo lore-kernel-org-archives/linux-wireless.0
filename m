@@ -1,117 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:36018 "EHLO
-	mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932091AbcFIIL4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:38512 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751547AbcF3LJl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 9 Jun 2016 04:11:56 -0400
+	Thu, 30 Jun 2016 07:09:41 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+CC: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath10k: Fix 10.4 extended peer stats update
+Date: Thu, 30 Jun 2016 11:09:31 +0000
+Message-ID: <87mvm353x1.fsf@kamboji.qca.qualcomm.com> (sfid-20160630_130943_854538_B935757C)
+References: <1464851602-12969-1-git-send-email-mohammed@qca.qualcomm.com>
+	<87vb0r5529.fsf@kamboji.qca.qualcomm.com>
+	<87r3bf54v6.fsf@kamboji.qca.qualcomm.com>
+	<20160630105951.GA10001@atheros-ThinkPad-T61>
+In-Reply-To: <20160630105951.GA10001@atheros-ThinkPad-T61> (Mohammed Shafi
+	Shajakhan's message of "Thu, 30 Jun 2016 16:29:51 +0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1465232558-31678-3-git-send-email-javier@osg.samsung.com>
-References: <1465232558-31678-1-git-send-email-javier@osg.samsung.com> <1465232558-31678-3-git-send-email-javier@osg.samsung.com>
-From: Enric Balletbo Serra <eballetbo@gmail.com>
-Date: Thu, 9 Jun 2016 10:11:54 +0200
-Message-ID: <CAFqH_51ysBHYfC9vTNDKFW9T9HX+LEf4-56xN56jf8Usz_gQ3Q@mail.gmail.com> (sfid-20160609_101233_391406_3DE347A4)
-Subject: Re: [PATCH v2 2/3] mwifiex: move .get_tx_power logic to station ioctl file
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-2016-06-06 19:02 GMT+02:00 Javier Martinez Canillas <javier@osg.samsung.com>:
-> From: Shengzhen Li <szli@marvell.com>
->
-> Most cfg80211 operations are just a wrappers to functions defined in the
-> sta_ioctl.c file, so for consistency move the .get_tx_power logic there.
->
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> [javier: update the subject line and commit message]
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
->
-> ---
->
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 14 +++-----------
->  drivers/net/wireless/marvell/mwifiex/main.h      |  2 ++
->  drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 18 ++++++++++++++++++
->  3 files changed, 23 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index b17f3d09a2c7..ff3f63ed95e1 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -385,18 +385,10 @@ mwifiex_cfg80211_get_tx_power(struct wiphy *wiphy,
->                               int *dbm)
->  {
->         struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
-> -       struct mwifiex_private *priv = mwifiex_get_priv(adapter,
-> -                                                       MWIFIEX_BSS_ROLE_ANY);
-> -       int ret = mwifiex_send_cmd(priv, HostCmd_CMD_RF_TX_PWR,
-> -                                  HostCmd_ACT_GEN_GET, 0, NULL, true);
-> -
-> -       if (ret < 0)
-> -               return ret;
-> -
-> -       /* tx_power_level is set in HostCmd_CMD_RF_TX_PWR command handler */
-> -       *dbm = priv->tx_power_level;
-> +       struct mwifiex_private *priv;
->
-> -       return 0;
-> +       priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
-> +       return mwifiex_get_tx_power(priv, dbm);
->  }
->
->  /*
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-> index 0207af00be42..79c28cfb7780 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
-> @@ -1464,6 +1464,8 @@ int mwifiex_drv_get_driver_version(struct mwifiex_adapter *adapter,
->  int mwifiex_set_tx_power(struct mwifiex_private *priv,
->                          struct mwifiex_power_cfg *power_cfg);
->
-> +int mwifiex_get_tx_power(struct mwifiex_private *priv, int *dbm);
-> +
->  int mwifiex_main_process(struct mwifiex_adapter *);
->
->  int mwifiex_queue_tx_pkt(struct mwifiex_private *priv, struct sk_buff *skb);
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-> index 8e0862657122..70ff9b805b5b 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-> @@ -775,6 +775,24 @@ int mwifiex_set_tx_power(struct mwifiex_private *priv,
->  }
->
->  /*
-> + * IOCTL request handler to get tx power configuration.
-> + *
-> + * This function prepares the correct firmware command and
-> + * issues it.
-> + */
-> +int mwifiex_get_tx_power(struct mwifiex_private *priv, int *dbm)
-> +{
-> +       int ret;
-> +
-> +       ret = mwifiex_send_cmd(priv, HostCmd_CMD_TXPWR_CFG,
-> +                              HostCmd_ACT_GEN_GET, 0, NULL, true);
-> +
-> +       *dbm = priv->tx_power_level;
-> +
-> +       return ret;
-> +}
-> +
-> +/*
->   * IOCTL request handler to get power save mode.
->   *
->   * This function prepares the correct firmware command and
-> --
-> 2.5.5
->
+Mohammed Shafi Shajakhan <mohammed@codeaurora.org> writes:
 
-Tested-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+> Hi Kalle,
+>
+> On Thu, Jun 30, 2016 at 10:49:02AM +0000, Valo, Kalle wrote:
+>> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>> 
+>> >> @@ -261,6 +263,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>> >>  			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
+>> >>  			.board_size = QCA4019_BOARD_DATA_SZ,
+>> >>  			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
+>> >> +			.extd_peer_stats = true,
+>> >>  		},
+>> >>  	},
+>> >>  };
+>> >
+>> > This is not a hardware feature so hw_params is not really the right
+>> > place to handle this. In the pending branch I tried to solve this a bit
+>> > differently:
+>> >
+>> > https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=ecf4daadc7677518ec7185dbddab959ac6e2db96
+>> >
+>> > I added a bool "extended" to struct ath10k_fw_stats which is used to
+>> > detect if extended stats are used. Would that work? Please note that I
+>> > have only compile tested the patch.
+>
+> [shafi] thanks for taking time to do this, the change looks fine to me !
+> since 'ath10k_sta_update_rx_duration' is called right after 'ath10k_wmi_pull_fw_stats'
+> this should properly update the rx_duration based on the current data
+
+Could you also run some tests to make sure? I don't trust my own code :)
+
+-- 
+Kalle Valo
