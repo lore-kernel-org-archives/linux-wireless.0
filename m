@@ -1,107 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:34125 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862AbcFDN7H (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:45933 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932139AbcF3Ox1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 4 Jun 2016 09:59:07 -0400
-Date: Sat, 4 Jun 2016 19:29:01 +0530
-From: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Andreas Kemnade <andreas@kemnade.info>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
-	"Andrew F. Davis" <afd@ti.com>,
-	Jonathan Cameron <jic23@kernel.org>,
-	Mark Brown <broonie@kernel.org>
-Cc: Tejun Heo <tj@kernel.org>, libertas-dev@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] net: wireless: marvell: libertas: Remove create_workqueue
-Message-ID: <20160604135901.GA29897@Karyakshetra> (sfid-20160604_155944_882407_5AD2D680)
+	Thu, 30 Jun 2016 10:53:27 -0400
+From: Maxim Altshul <maxim.altshul@ti.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Maxim Altshul <maxim.altshul@ti.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>, Yaniv Machani <yanivma@ti.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH v2] wlcore: Add support for get_expected_throughput opcode
+Date: Thu, 30 Jun 2016 17:49:03 +0300
+Message-ID: <20160630145534.26052-1-maxim.altshul@ti.com> (sfid-20160630_165356_857494_C1EF09DF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-alloc_workqueue replaces deprecated create_workqueue().
+Adding this opcode, allows the TI wireless driver,
+to report throughput directly from FW to mac80211.
 
-In if_sdio.c, the workqueue card->workqueue has workitem
-&card->packet_worker, which is mapped to if_sdio_host_to_card_worker.
-The workitem is involved in sending packets to firmware.
-Forward progress under memory pressure is a requirement here.
+This is used mainly for mesh metric calculation.
 
-In if_spi.c, the workqueue card->workqueue has workitem
-&card->packet_worker, which is mapped to if_spi_host_to_card_worker.
-The workitem is involved in sending command packets from the host.
-Forward progress under memory pressure is a requirement here.
-
-Dedicated workqueues have been used in both cases since the workitems
-on the workqueues are involved in normal device operation with
-WQ_MEM_RECLAIM set to gurantee forward progress under memory pressure.
-Since there are only a fixed number of work items, explicit concurrency
-limit is unnecessary.
-
-flush_workqueue is unnecessary since destroy_workqueue() itself calls
-drain_workqueue() which flushes repeatedly till the workqueue
-becomes empty. Hence the calls to flush_workqueue() before
-destroy_workqueue() have been dropped.
-
-Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
 ---
- drivers/net/wireless/marvell/libertas/if_sdio.c | 3 +--
- drivers/net/wireless/marvell/libertas/if_spi.c  | 4 +---
- 2 files changed, 2 insertions(+), 5 deletions(-)
+Changed the units of returned value.
+drv_get_expected_throughput returns units of Kbps 
+by definition, and thus we must comply as well.
+Mbps * 1000 = Kbps.
 
-diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c b/drivers/net/wireless/marvell/libertas/if_sdio.c
-index 13eae9f..47f4a14 100644
---- a/drivers/net/wireless/marvell/libertas/if_sdio.c
-+++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
-@@ -1228,7 +1228,7 @@ static int if_sdio_probe(struct sdio_func *func,
- 	}
+ drivers/net/wireless/ti/wlcore/main.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
- 	spin_lock_init(&card->lock);
--	card->workqueue = create_workqueue("libertas_sdio");
-+	card->workqueue = alloc_workqueue("libertas_sdio", WQ_MEM_RECLAIM, 0);
- 	INIT_WORK(&card->packet_worker, if_sdio_host_to_card_worker);
- 	init_waitqueue_head(&card->pwron_waitq);
-
-@@ -1326,7 +1326,6 @@ static void if_sdio_remove(struct sdio_func *func)
- 	lbs_stop_card(card->priv);
- 	lbs_remove_card(card->priv);
-
--	flush_workqueue(card->workqueue);
- 	destroy_workqueue(card->workqueue);
-
- 	while (card->packets) {
-diff --git a/drivers/net/wireless/marvell/libertas/if_spi.c b/drivers/net/wireless/marvell/libertas/if_spi.c
-index 82c0796..c3a53cd 100644
---- a/drivers/net/wireless/marvell/libertas/if_spi.c
-+++ b/drivers/net/wireless/marvell/libertas/if_spi.c
-@@ -1180,7 +1180,7 @@ static int if_spi_probe(struct spi_device *spi)
- 	priv->fw_ready = 1;
-
- 	/* Initialize interrupt handling stuff. */
--	card->workqueue = create_workqueue("libertas_spi");
-+	card->workqueue = alloc_workqueue("libertas_spi", WQ_MEM_RECLAIM, 0);
- 	INIT_WORK(&card->packet_work, if_spi_host_to_card_worker);
- 	INIT_WORK(&card->resume_work, if_spi_resume_worker);
-
-@@ -1208,7 +1208,6 @@ static int if_spi_probe(struct spi_device *spi)
- release_irq:
- 	free_irq(spi->irq, card);
- terminate_workqueue:
--	flush_workqueue(card->workqueue);
- 	destroy_workqueue(card->workqueue);
- 	lbs_remove_card(priv); /* will call free_netdev */
- free_card:
-@@ -1235,7 +1234,6 @@ static int libertas_spi_remove(struct spi_device *spi)
- 	lbs_remove_card(priv); /* will call free_netdev */
-
- 	free_irq(spi->irq, card);
--	flush_workqueue(card->workqueue);
- 	destroy_workqueue(card->workqueue);
- 	if (card->pdata->teardown)
- 		card->pdata->teardown(spi);
---
-2.1.4
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 39dec7d..cb1103b 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5851,6 +5851,20 @@ out:
+ 	mutex_unlock(&wl->mutex);
+ }
+ 
++static u32 wlcore_op_get_expected_throughput(struct ieee80211_sta *sta)
++{
++	struct wl1271_station *wl_sta = (struct wl1271_station *)sta->drv_priv;
++	struct wl1271 *wl = wl_sta->wl;
++	u8 hlid = wl_sta->hlid;
++	u32 ret = 0;
++
++	/* return in units of Kbps */
++	if (wl)
++		ret = (wl->links[hlid].fw_rate_mbps * 1000);
++
++	return ret;
++}
++
+ static bool wl1271_tx_frames_pending(struct ieee80211_hw *hw)
+ {
+ 	struct wl1271 *wl = hw->priv;
+@@ -6051,6 +6065,7 @@ static const struct ieee80211_ops wl1271_ops = {
+ 	.switch_vif_chanctx = wlcore_op_switch_vif_chanctx,
+ 	.sta_rc_update = wlcore_op_sta_rc_update,
+ 	.sta_statistics = wlcore_op_sta_statistics,
++	.get_expected_throughput = wlcore_op_get_expected_throughput,
+ 	CFG80211_TESTMODE_CMD(wl1271_tm_cmd)
+ };
+ 
+-- 
+2.9.0
 
