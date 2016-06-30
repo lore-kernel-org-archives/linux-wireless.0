@@ -1,47 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:34555 "EHLO
-	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750923AbcFCHbX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:43630 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751984AbcF3K4e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 3 Jun 2016 03:31:23 -0400
-Received: by mail-vk0-f66.google.com with SMTP id a6so12093543vkg.1
-        for <linux-wireless@vger.kernel.org>; Fri, 03 Jun 2016 00:31:23 -0700 (PDT)
+	Thu, 30 Jun 2016 06:56:34 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1464881803.2169.11.camel@sipsolutions.net>
-References: <1464880903-13116-1-git-send-email-dibyajyotig@gmail.com> <1464881803.2169.11.camel@sipsolutions.net>
-From: Dibyajyoti Ghosh <dibyajyotig@gmail.com>
-Date: Fri, 3 Jun 2016 13:01:21 +0530
-Message-ID: <CACtQq=YDbYsO4k5oERvqwR38i1BYQkC0_4So6W3D4Atk-_NTpQ@mail.gmail.com> (sfid-20160603_093126_817821_84C2AA0D)
-Subject: Re: [PATCH] Support for 32 bit iwpriv on 64 bits kernels
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: WiFi Mailing List <linux-wireless@vger.kernel.org>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Prasun Maiti <prasunmaiti87@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [v2] ath10k: Fix crash during card removal
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1465478927-21401-1-git-send-email-mohammed@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
+	<linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Message-ID: <d95e54d0554c4c55aae695d5be61d9ed@euamsexm01a.eu.qualcomm.com> (sfid-20160630_125719_727084_494A8335)
+Date: Thu, 30 Jun 2016 12:51:13 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> 
+> Usually when the firmware crashes we check for the value
+> 'FW_IND_EVENT_PENDING' in 'FW_INDICATOR_ADDRESS' and proceed with
+> disabling the irq and dumping firmware 'crash dump'. Now
+> when the PCI card is unplugged from the device the PCI controller
+> seems to generate a spurious interrupt after some time which
+> was as treated a firmware crash and resulting in the below race
+> condition (and eventually crashing the system)
+> 
+> 	ath10k_core_unregister -> ath10k_core_free_board_files
+> 
+> 	...... device unplug spurious interrupt .........
+> 
+> 	ath10k_pci_taklet -> ath10k_pci_fw_crashed_dump  ...etc
+> 
+> Clearly even after the firmware board files related data structure
+> is freed up we are getting a spurious interrupt from PCI with 0xfffffff
+> in the 'FW_INDICATOR_ADDRESS' resulting in scheduling of the pci tasklet
+> and doing a crash dump, printing f/w board related info resulting in the
+> below crash. Fix this by detecting this spurious interrupt in ath10k PCI
+> irq handler itself and return IRQ_NONE. Thanks to Michal Kazior for
+> helping us conclude the most appropriate fix.
+> 
+> Call trace:
+> 
+>  EIP is at ath10k_debug_print_board_info+0x39/0xb0
+> [ath10k_core]
+> EAX: 00000000 EBX: d4de15a0 ECX: 00000000 EDX: 00000064
+> ESI: f615ddd0 EDI: f8530000 EBP: f615de3c ESP: f615ddbc
+>  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+> CR0: 80050033 CR2: 00000004 CR3: 01c0a000 CR4: 000006f0
+> Stack:
+>  f615ddd0 00000064 f8b4ecdd 00000000 00000000 00412f4e
+> 00000000 00000000
+> 00000000 00000000 00000000 00000000 00000000 00000000
+> 00000000 00000000
+>  00000000 00000000 00000000 00000000 00000000 00000000
+> 00000000 00000000
+> Call Trace:
+>   [<f8b1f517>] ath10k_print_driver_info+0x17/0x30
+> [ath10k_core]
+> [<f875463a>] ath10k_pci_fw_crashed_dump+0x7a/0xe0
+> [ath10k_pci]
+> [<f87549d0>] ath10k_pci_tasklet+0x70/0x90 [ath10k_pci]
+> [<c106151e>] tasklet_action+0x9e/0xb0
+> 
+> Cc: Michal Kazior <michal.kazior@tieto.com>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Sorry for the conflict. We misunderstood from our kernel-patch related
-conversation that it is you are reluctant to accept that. So we
-attempted to accomplish the same through app-side modification. Any
-way, sorry again.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-However, we are again concentrating on our kernel side modification,
-and will update you soon.
+fb7caababc02 ath10k: fix crash during card removal
 
-Thanks,
-Dibyajyoti
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9167045/
 
-
-On Thu, Jun 2, 2016 at 9:06 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2016-06-02 at 20:51 +0530, Dibyajyoti Ghosh wrote:
->> This patch adds pointer conversion from 32 bit to 64 bit and vice
->> versa,
->> if the ioctl is issued from 32 bit iwpriv to 64 bit Kernel.
->>
-> Huh? the kernel should handle that, no? And didn't you just submit a
-> patch for it, so you break it again with this change?
->
-> johannes
