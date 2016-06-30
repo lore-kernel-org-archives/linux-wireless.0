@@ -1,139 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:33732 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752087AbcFOFaz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 15 Jun 2016 01:30:55 -0400
-Received: by mail-pf0-f173.google.com with SMTP id i123so1314220pfg.0
-        for <linux-wireless@vger.kernel.org>; Tue, 14 Jun 2016 22:30:55 -0700 (PDT)
-From: Binoy Jayan <binoy.jayan@linaro.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
-Subject: [PATCH v3 1/5] staging: wilc1000: Replace semaphore txq_event with completion
-Date: Wed, 15 Jun 2016 11:00:34 +0530
-Message-Id: <1465968638-22129-2-git-send-email-binoy.jayan@linaro.org> (sfid-20160615_073301_408661_60573A87)
-In-Reply-To: <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org>
-References: <1465814259-3009-1-git-send-email-binoy.jayan@linaro.org>
- <1465968638-22129-1-git-send-email-binoy.jayan@linaro.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51857 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751383AbcF3Jx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2016 05:53:29 -0400
+Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name
+ dt property
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+ <CAOiHx=n6itfmvwYQh+jUSDNguQFkos=MzjkDWP=GsupdgvF6KQ@mail.gmail.com>
+ <b49a9e4b-d591-d978-8005-413f39ebf2bd@redhat.com>
+ <871t3gdj6p.fsf@purkki.adurom.net>
+ <ea10ff70-26e6-e151-5cea-c54bd12a054c@redhat.com>
+ <f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
+Cc: Jonas Gorski <jonas.gorski@gmail.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <dfca4fd8-4d01-0ff6-8930-07ee264349cc@redhat.com> (sfid-20160630_115333_228232_58E5BAEB)
+Date: Thu, 30 Jun 2016 11:53:21 +0200
+MIME-Version: 1.0
+In-Reply-To: <f8995599-115d-87e5-7928-c029b48584f1@broadcom.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The semaphore 'txq_event' is used as completion, so convert it
-to a struct completion type.
+Hi,
 
-Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/staging/wilc1000/linux_wlan.c         | 8 ++++----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 3 ++-
- drivers/staging/wilc1000/wilc_wlan.c          | 8 +++++---
- 3 files changed, 11 insertions(+), 8 deletions(-)
+On 29-06-16 20:51, 'Arend Van Spriel' via linux-sunxi wrote:
+> On 29-6-2016 20:01, Hans de Goede wrote:
+>> Hi,
+>>
+>> On 29-06-16 19:00, Kalle Valo wrote:
+>>> Hans de Goede <hdegoede@redhat.com> writes:
+>>>
+>>>> Hi,
+>>>>
+>>>> On 29-06-16 16:42, Jonas Gorski wrote:
+>>>>> Hi,
+>>>>>
+>>>>> On 29 June 2016 at 16:04, Hans de Goede <hdegoede@redhat.com> wrote:
+>>>>>> Add a brcm,nvram_file_name dt property to allow overruling the default
+>>>>>> nvram filename for sdio devices. The idea is that we can specify a
+>>>>>> board specific nvram file, e.g. brcmfmac43362-ap6210.txt for boards
+>>>>>> with an ap6210 wifi sdio module and ship this in linux-firmware, so
+>>>>>> that wifi will work out of the box, without requiring users to find
+>>>>>> and then manually install the right nvram file for their board.
+>>>>>
+>>>>> Directly defining a filename doesn't seem like a good OS-agnostic
+>>>>> approach. Maybe an alternative would be to add a model-property to the
+>>>>> nodes (this is allowed) and make brcmfmac to request
+>>>>> "FWFILENAME-<model>" as firmware if set? That would leave it to the OS
+>>>>> on how the filename is set.
+>>>>
+>>>> It only defines the base-filename, not the entire path, how / where
+>>>> this file is searched for / loaded-from is then left up to the os
+>>>
+>>> It's still a bad idea. The filename, including the path, should be
+>>> created in the driver. Can't you provide chipname (or similar) via
+>>> device tree and then the driver can choose what image to use?
+>>
+>> No, the driver already does that, but this is not ...
+>>
+>>> Can you tell more about the naming the firmware image, how does it work
+>>> exactly?
+>>
+>> About firmware, this is about the nvram file which is board specific,
+>> rather then chip specific.
+>
+> The nvram filename is determined pretty much the same as the firmware
+> filename, but indeed the nvram data is board specific. This is main
+> reason why we do not submit nvram files to linux-firmware, because we
+> simply do not have those files.
+>
+>> Typical wifi devices will have some sort of non volatile storage
+>> on board to not only store the ethernet(mac) address, but also
+>> to contain e.g. info about the antenna gain so that the firmware
+>> and/or the driver can take the antenna gain into account and ensure
+>> that they never exceed the maximum allowed broadcast strength.
+>>
+>> However on some embedded devices there is no non-volatile storage
+>> for the wifi (for cost reasons) and instead this configuration info
+>> (which is board / pcb specific) is loaded in the form of a
+>> file which contains the contents which would normally be in the
+>> non-volatile storage.
+>>
+>> Since we are dealing with a per-board config-file here, which is
+>> loaded from the os filesystem we really need to specify a basename
+>> here as the list of possible boards is endless, so we cannot
+>> have a lookup table in the driver.
+>
+> As Jonas mentioned the general principle of device tree is to be
+> agnostic with regards to OS and/or driver as you undoubtedly know. His
+> proposal seems like a usable solution for your problem while complying
+> to the device tree principle. So instead of overriding the default
+> brcmfmac should modify it when dt specifies the "module" property, ie:
+>
+> no "module" in DT:	nvram filename = brcm/brcmfmac43362-sdio.txt
+> "module=ap6210" in DT:	nvram filename = brcm/brcmfmac43362-ap6210.txt
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 4f93c11..90f906d 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -316,7 +316,7 @@ static int linux_wlan_txq_task(void *vp)
- 
- 	complete(&wl->txq_thread_started);
- 	while (1) {
--		down(&wl->txq_event);
-+		wait_for_completion(&wl->txq_event);
- 
- 		if (wl->close) {
- 			complete(&wl->txq_thread_started);
-@@ -650,7 +650,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
- 			mutex_unlock(&wl->hif_cs);
- 		}
- 		if (&wl->txq_event)
--			up(&wl->txq_event);
-+			wait_for_completion(&wl->txq_event);
- 
- 		wlan_deinitialize_threads(dev);
- 		deinit_irq(dev);
-@@ -681,7 +681,7 @@ static int wlan_init_locks(struct net_device *dev)
- 	spin_lock_init(&wl->txq_spinlock);
- 	sema_init(&wl->txq_add_to_head_cs, 1);
- 
--	sema_init(&wl->txq_event, 0);
-+	init_completion(&wl->txq_event);
- 
- 	sema_init(&wl->cfg_event, 0);
- 	sema_init(&wl->sync_event, 0);
-@@ -738,7 +738,7 @@ static void wlan_deinitialize_threads(struct net_device *dev)
- 	wl->close = 1;
- 
- 	if (&wl->txq_event)
--		up(&wl->txq_event);
-+		complete(&wl->txq_event);
- 
- 	if (wl->txq_thread) {
- 		kthread_stop(wl->txq_thread);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 3a561df6..12d7c7b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -42,6 +42,7 @@
- #include "host_interface.h"
- #include "wilc_wlan.h"
- #include <linux/wireless.h>
-+#include <linux/completion.h>
- 
- #define FLOW_CONTROL_LOWER_THRESHOLD	128
- #define FLOW_CONTROL_UPPER_THRESHOLD	256
-@@ -178,7 +179,7 @@ struct wilc {
- 
- 	struct semaphore cfg_event;
- 	struct semaphore sync_event;
--	struct semaphore txq_event;
-+	struct completion txq_event;
- 	struct completion txq_thread_started;
- 
- 	struct task_struct *txq_thread;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 11e16d5..1a57135 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1,3 +1,4 @@
-+#include <linux/completion.h>
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
- #include "wilc_wfi_netdevice.h"
-@@ -89,7 +90,7 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
- 
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- 
--	up(&wilc->txq_event);
-+	complete(&wilc->txq_event);
- }
- 
- static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
-@@ -119,7 +120,7 @@ static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
- 
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
- 	up(&wilc->txq_add_to_head_cs);
--	up(&wilc->txq_event);
-+	complete(&wilc->txq_event);
- 
- 	return 0;
- }
-@@ -287,7 +288,8 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 	spin_unlock_irqrestore(&wilc->txq_spinlock, wilc->txq_spinlock_flags);
- 
- 	while (dropped > 0) {
--		wilc_lock_timeout(wilc, &wilc->txq_event, 1);
-+		wait_for_completion_timeout(&wilc->txq_event,
-+						msecs_to_jiffies(1));
- 		dropped--;
- 	}
- 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Yes that seems like a good solution, I will send a v2 implementing this.
 
+> By the way, the example in the bindings file does not seem to specify a
+> basename, but path+basename+fileext.
+
+fileext is always part of a file basename, but you're right that it
+does include a relative path because of the way the existing firmware
+files are organized under /lib/firmware under Linux and yes I'll admit
+that that is a bit os specific :)
+
+Regards,
+
+Hans
