@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f50.google.com ([209.85.213.50]:33685 "EHLO
-	mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422674AbcFNAa4 convert rfc822-to-8bit (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.135]:57687 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751547AbcF3L3Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 13 Jun 2016 20:30:56 -0400
-Received: by mail-vk0-f50.google.com with SMTP id d185so76757726vkg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 13 Jun 2016 17:30:56 -0700 (PDT)
+	Thu, 30 Jun 2016 07:29:25 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: jonas.gorski@gmail.com, Kalle Valo <kvalo@codeaurora.org>,
+	Priit Laes <plaes@plaes.org>,
+	Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
+Date: Thu, 30 Jun 2016 13:31:07 +0200
+Message-ID: <3960223.GqB9zXL8s8@wuerfel> (sfid-20160630_132928_983155_E765BDB4)
+In-Reply-To: <8d8bd933-717b-48e4-f002-7b834abed6fd@redhat.com>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> <CAOiHx==82LHOeQMNVD+dybFifXX690Q6AJTcMBMynjSfUOyGUw@mail.gmail.com> <8d8bd933-717b-48e4-f002-7b834abed6fd@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <2259a8e8239c9497571d30fa86e7f84c@smile.fr>
-References: <4eed6159efdc3f86e4f549bb31ce6a74@smile.fr> <CAKVVYBk2Rf6RMPW1uySq4M7LeFCRHBGipYdiOqwQSHxFNmst=A@mail.gmail.com>
- <053ed5ba9d69bc5e6f36ed7e95526663@smile.fr> <4fdb1514a02744ad9b8ac11b96e57130@SC-EXCH04.marvell.com>
- <404feff5a5bca118ba53b69301700e2f@smile.fr> <db092693c63a4a06ada95537e22d5abf@SC-EXCH04.marvell.com>
- <2259a8e8239c9497571d30fa86e7f84c@smile.fr>
-From: Raymond Hayes <hayesr@google.com>
-Date: Mon, 13 Jun 2016 17:30:54 -0700
-Message-ID: <CAKVVYBmb1X0OFz9kanTcGKxHTYDJt8u_ZusFEdPWk4Mu3FMBBQ@mail.gmail.com> (sfid-20160614_023100_276943_DFE0137A)
-Subject: Re: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
-To: Vincent CESSON <vincent.cesson@smile.fr>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	linux-wireless@vger.kernel.org, Shengzhen Li <szli@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->From the RSN log, the dual 4-way handshakes succeeded, but the GTK was
-not installed:
+On Thursday, June 30, 2016 12:25:15 PM CEST Hans de Goede wrote:
+> > So then how about making use of a more specific compatible string?
+> >
+> > e.g.
+> >
+> > brcmf {
+> >         compatible = "foo,ap6210", "brcm,bcm4329-fmac";
+> >         ...
+> > };
+> >
+> > and if the compatible has more than one element you request
+> > FW_NAME_<compatible>.txt as the nvram file. Or try each comptible (and
+> > lastly no suffix) until you get a match. (AFAICT, this is what the
+> > "model" property was originally intended for anyway, but almost nobody
+> > did it right, and everyone put a user readable string into "model" for
+> > boards instead of the ePAPR defined compatible string).
+> 
+> Hmm, interesting idea. Not sure how easy / hard it will be to implement
+> this, but from a dt binding point of view it seems elegant.
+> 
+> Kalle, Arend, what do you think of this ?
 
-nl80211: set_key failed; err=-22 Invalid argument)
+I think that's reasonable. Also, we have precedent for using things like
+the boardid as part of the compatible string, which would help do what
+Kalle suggested earlier with "nvram-<boardtype>-<boardrev>.txt",
+as we get that for free by trying out all the compatible strings.
 
-and it looks like there was a problem marking the peer authorized:
+	Arnd
 
-AUTH: 48:45:20:3b:31:75 authorizing port
-Could not set station 48:45:20:3b:31:75 flags for kernel driver (errno=11)
-
-Ray
-
-On Mon, Jun 13, 2016 at 7:42 AM, Vincent CESSON <vincent.cesson@smile.fr> wrote:
-> Hi Amitkumar,
->
-> Here are the wpa_supplicant logs (with CONFIG_IBSS_RSN=y enabled) from the
-> two devices. Beside wpa_supplicant, I manually set IPs 192.168.1.xy with
-> command "ifconfig mlan0 192.168.1.xy" and then I try to ping each other,
-> without success.
->
-> Vincent
->
->
->
-> Le 2016-06-13 15:40, Amitkumar Karwar a écrit :
->>
->> Hi Vincent,
->>
->>> From: Vincent CESSON [mailto:vincent.cesson@smile.fr]
->>> Sent: Monday, June 13, 2016 7:09 PM
->>> To: Amitkumar Karwar
->>> Cc: Raymond Hayes; linux-wireless@vger.kernel.org
->>> Subject: RE: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
->>>
->>> About the strange behaviour with the two devices connecting despite the
->>> bad passwords, I made a little mistake: on the device 2, wpa_supplicant
->>> was not built with option CONFIG_IBSS_RSN=y. But still, device 1 should
->>> not accept device 2...
->>>
->>> Note that with option CONFIG_IBSS_RSN=y enabled on both devices, WPA-PSK
->>> connection does not work, even with the right password...
->>>
->>
->> I see. Please share the wpa_supplicant logs with CONFIG_IBSS_RSN=y
->> enabled for analysis.
->>
->> Regards,
->> Amitkumar
