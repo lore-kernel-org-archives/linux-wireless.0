@@ -1,101 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36549 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754901AbcFQUpD convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 16:45:03 -0400
-MIME-Version: 1.0
-In-Reply-To: <576448C0.4080102@broadcom.com>
-References: <1464791845-23944-1-git-send-email-zajec5@gmail.com>
- <574F30D8.5000300@broadcom.com> <CACna6rzcfYu=3qoMsTCShHUWbpz-0-uWgogVLWJwiNv228PhPQ@mail.gmail.com>
- <576448C0.4080102@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Fri, 17 Jun 2016 22:44:55 +0200
-Message-ID: <CACna6ryebj3iv=TJs2cXgR2uDRrTaBzbvvhx8MSLKy2A8yBQTA@mail.gmail.com> (sfid-20160617_224527_274534_1D00C5FD)
-Subject: Re: [PATCH RFC] brcmfmac: support deleting MBSS AP interfaces
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<brcm80211-dev-list@broadcom.com>,
-	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:58940 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932102AbcF3PEq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2016 11:04:46 -0400
+Message-ID: <1467299025.14836.0.camel@sipsolutions.net> (sfid-20160630_170527_261148_26655A6E)
+Subject: Re: [PATCH v2] wlcore: Add support for get_expected_throughput
+ opcode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Altshul <maxim.altshul@ti.com>, linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, Eliad Peller <eliad@wizery.com>,
+	Arik Nemtsov <arik@wizery.com>, Yaniv Machani <yanivma@ti.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 30 Jun 2016 17:03:45 +0200
+In-Reply-To: <20160630145534.26052-1-maxim.altshul@ti.com> (sfid-20160630_165356_857494_C1EF09DF)
+References: <20160630145534.26052-1-maxim.altshul@ti.com>
+	 (sfid-20160630_165356_857494_C1EF09DF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 June 2016 at 21:00, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
-> On 17-06-16 14:30, Rafał Miłecki wrote:
->> On 1 June 2016 at 21:00, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
->>> On 01-06-16 16:36, Rafał Miłecki wrote:
->>>> We already support adding extra (AP) interfaces so it also makes an
->>>> obvious sense to allow deleting them.
->>>>
->>>> Adding a new interface is implemented by sending request to firmware for
->>>> creating a new BSS and waiting for a proper event. Ideally deleting
->>>> interface should be handled in a similar way. There should be a request
->>>> to firmware for deleting BSS and firmware should respond with an event.
->>>>
->>>> Unfortunately it doesn't seem to work with recent firmwares. They never
->>>> seem to delete BSS and never send BRCMF_E_IF_DEL. As a workaround this
->>>> patch deletes Linux interface while keeping a track of BSSes present in
->>>> a firmware. If there is request for adding a new interface this code is
->>>> capable of reusing existing BSS-es.
->>>
->>> It is not so much an issue of recent firmware. Actually, on recent
->>> firmware 7.x.y.z and higher there are other command to create *and*
->>> delete additional interfaces. On the other hand we aim to support a
->>> large number of devices going back to bcm4329 so we have to come up with
->>> a scheme to use the new commands or fallback to old api. Let's hope we
->>> can reuse much of this effort you put in.
->>
->> You gave me a complex puzzle there :D It took me a while to find out
->> what API you meant.
->
-> Actually, the puzzle was supposed to be for me, but I like your
-> curiosity and persistence in digging up the (partial) info.
->
->> Finally I found an interesting wlioctl.h in SDK 9.10.178.27 that gave
->> me some clue. I got this SDK from ASUS RT-AC1200G+ open souce tarball.
->> There are 2 interesting structs:
->>
->> typedef struct wl_interface_create {
->>         uint16 ver; /* version of this struct */
->>         uint32  flags; /* flags that defines the operation */
->>         struct ether_addr   mac_addr; /* Optional Mac address */
->>         uint32  wlc_index; /* Optional wlc index */
->> } wl_interface_create_t;
->>
->> typedef struct wl_interface_info {
->>         uint16 ver; /* version of this struct */
->>         struct ether_addr    mac_addr; /* MAC address of the interface */
->>         char ifname[BCM_MSG_IFNAME_MAX]; /* name of interface */
->>         uint8 bsscfgidx; /* source bsscfg index */
->> } wl_interface_info_t;
->>
->> I couldn't find any corresponding WLC_* in wlioctl_defs.h, so I guess
->> I should use WLC_SET_VAR (or WLC_SET_VAR as you prefer) with some
->
-> (huh)? anyway the api indeed uses what we call an iovar, ie.
-> string-based ioctl.
+On Thu, 2016-06-30 at 17:49 +0300, Maxim Altshul wrote:
+> Adding this opcode, allows the TI wireless driver,
+> to report throughput directly from FW to mac80211.
+> 
+> This is used mainly for mesh metric calculation.
+> 
+> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+> ---
+> Changed the units of returned value.
+> drv_get_expected_throughput returns units of Kbps 
+> by definition, and thus we must comply as well.
+> Mbps * 1000 = Kbps.
+> 
+>  drivers/net/wireless/ti/wlcore/main.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ti/wlcore/main.c
+> b/drivers/net/wireless/ti/wlcore/main.c
+> index 39dec7d..cb1103b 100644
+> --- a/drivers/net/wireless/ti/wlcore/main.c
+> +++ b/drivers/net/wireless/ti/wlcore/main.c
+> @@ -5851,6 +5851,20 @@ out:
+>  	mutex_unlock(&wl->mutex);
+>  }
+>  
+> +static u32 wlcore_op_get_expected_throughput(struct ieee80211_sta
+> *sta)
+> +{
+> +	struct wl1271_station *wl_sta = (struct wl1271_station
+> *)sta->drv_priv;
+> +	struct wl1271 *wl = wl_sta->wl;
+> +	u8 hlid = wl_sta->hlid;
+> +	u32 ret = 0;
+> +
+> +	/* return in units of Kbps */
+> +	if (wl)
+> +		ret = (wl->links[hlid].fw_rate_mbps * 1000);
+> +
+I don't see how wl can ever be NULL?
 
-That's what I meant, sorry for wrong naming :)
+Also, you can certainly remove the 'ret' variable.
 
-
->> string. Any tip what would it be? Something like
->> "wl_interface_create"? Can you reveal such a small secret?
->
-> It is "interface_create" and "interface_remove".
-
-It (almost) works, thanks! I just hit some bug in brcmfmac in handling
-events. It can be exposed by deleting 2 interfaces quickly, one by
-one, it seems. I'll debug this.
-
--- 
-Rafał
+johannes
