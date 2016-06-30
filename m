@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35835 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750749AbcFAScM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 1 Jun 2016 14:32:12 -0400
-Message-ID: <1464805919.4958.31.camel@redhat.com> (sfid-20160601_203216_220591_701EB4B5)
-Subject: Re: Where to post Wireless Tools Patches
-From: Dan Williams <dcbw@redhat.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 01 Jun 2016 13:31:59 -0500
-In-Reply-To: <1464802721.3465.1.camel@sipsolutions.net>
-References: <CACtQq=bixCDdZpSvj6W+SZKt5N6FSebfgPBjQcqePuj2aN8OAA@mail.gmail.com>
-	 <1464801615.4958.6.camel@redhat.com>
-	 (sfid-20160601_192032_001317_E1E532F3) <1464802721.3465.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:41018 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932072AbcF3P3h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2016 11:29:37 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u5UF1xRR020794
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 08:02:40 -0700
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0b-0016f401.pphosted.com with ESMTP id 23ssffacjw-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 08:02:40 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 0/2] mwifiex: manufacturing mode
+Date: Thu, 30 Jun 2016 20:31:13 +0530
+Message-ID: <1467298875-3581-1-git-send-email-akarwar@marvell.com> (sfid-20160630_172956_648797_4FE80D32)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-06-01 at 19:38 +0200, Johannes Berg wrote:
-> On Wed, 2016-06-01 at 12:20 -0500, Dan Williams wrote:
-> 
-> > 
-> > Assuming you mean the "wireless-tools" package, this list is OK.
-> >  But
-> > probably nobody will apply the patches, since wireless-tools and
-> > the
-> > WEXT API are long-since deprecated
-> I don't think anyone even maintains the wireless-tools package any
-> more. I don't know who would, anyway, since I haven't heard anything
-> from Jean in many years.
+This patch series adds support for loading the driver in manufacturing
+mode. It's needed to perform certain factory tests.
 
-I was surprised to run into Jean at the 2015 OVS Fall Conference last
-November.  He's spent the last few years shepherding OpenFlow
-specifications though formalization and hasn't done any work in
-wireless for a long long time.  He also said he's extremely unlikely to
-do any wireless stuff now or in the future :)  So yeah, wireless-tools
-is unmaintained.
+Amitkumar Karwar (1):
+  mwifiex: add manufacturing mode support
 
-Dan
+Xinming Hu (1):
+  mwifiex: add hostcmd wext ioctl support
+
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 67 ++++++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/init.c   | 22 +++++---
+ drivers/net/wireless/marvell/mwifiex/main.c   | 73 +++++++++++++++++++++++++--
+ drivers/net/wireless/marvell/mwifiex/main.h   | 13 ++++-
+ drivers/net/wireless/marvell/mwifiex/pcie.c   |  2 +-
+ drivers/net/wireless/marvell/mwifiex/sdio.c   |  2 +-
+ drivers/net/wireless/marvell/mwifiex/usb.c    |  2 +-
+ 7 files changed, 166 insertions(+), 15 deletions(-)
+
+-- 
+1.9.1
+
