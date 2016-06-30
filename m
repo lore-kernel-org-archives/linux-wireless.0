@@ -1,51 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:45596 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751109AbcFUM3f convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:36543 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752014AbcF3IlR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 08:29:35 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Bob Copeland <me@bobcopeland.com>,
-	"Altshul, Maxim" <maxim.altshul@ti.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"eliad@wizery.com" <eliad@wizery.com>, "Mishol, Guy" <guym@ti.com>,
-	"arik@wizery.com" <arik@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"davem@davemloft.net" <davem@davemloft.net>
-Subject: RE: [PATCH 0/3] *** Mesh Path Selection Metric Calculation ***
-Date: Tue, 21 Jun 2016 12:23:48 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101391CC2B1@DFRE01.ent.ti.com> (sfid-20160621_142939_561469_21FE6CCB)
-References: <1466427622-5953-1-git-send-email-maxim.altshul@ti.com>
- <20160621121905.GA4210@localhost>
-In-Reply-To: <20160621121905.GA4210@localhost>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 30 Jun 2016 04:41:17 -0400
 MIME-Version: 1.0
+In-Reply-To: <9f524718509042ac904b2db09081048e@SC-EXCH04.marvell.com>
+References: <10cf2879532349d29143ecbac3b459b7@SC-EXCH04.marvell.com>
+ <1467275483-24091-1-git-send-email-prasunmaiti87@gmail.com> <9f524718509042ac904b2db09081048e@SC-EXCH04.marvell.com>
+From: Prasun Maiti <prasunmaiti87@gmail.com>
+Date: Thu, 30 Jun 2016 14:11:16 +0530
+Message-ID: <CAEO8o4nXQppOgwc-Mk+NZZpd4x_qS=sds6SbXO+7CJuGLFxGkw@mail.gmail.com> (sfid-20160630_104216_966430_4F7153D3)
+Subject: Re: [PATCH v2] mwifiex: Fix endianness for event TLV type TLV_BTCOEX_WL_SCANTIME
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yes,
-TI driver have added support in our latest release (TI git).
-http://software-dl.ti.com/ecs/WiLink8/R8_7/exports/release_notes_R8_7.html
+On Thu, Jun 30, 2016 at 2:07 PM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+> Hi Prasun,
+> Updated change looks fine to me.
+>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+>
+> Regards,
+> Amitkumar
 
-Patches will be shared with mainline in the near future.
+Hi AmitKumar,
 
+Thanks for your verification.
+
+-- 
 Thanks,
-Yaniv Machani
-
------Original Message-----
-From: Bob Copeland [mailto:me@bobcopeland.com] 
-Sent: Tuesday, June 21, 2016 15:19
-To: Altshul, Maxim
-Cc: johannes@sipsolutions.net; kvalo@codeaurora.org; eliad@wizery.com; Machani, Yaniv; Mishol, Guy; arik@wizery.com; linux-wireless@vger.kernel.org; netdev@vger.kernel.org; davem@davemloft.net
-Subject: Re: [PATCH 0/3] *** Mesh Path Selection Metric Calculation ***
-
-On Mon, Jun 20, 2016 at 04:00:19PM +0300, Maxim Altshul wrote:
-> 2. Implements the opcode and the mechanism that reports the rates in 
-> TI driver.
-
-Does this mean TI driver will support mesh at some point?
-
---
-Bob Copeland %% http://bobcopeland.com/
+Prasun
