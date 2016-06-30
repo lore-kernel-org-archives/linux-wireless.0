@@ -1,38 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:36329 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752035AbcFULpq (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:60323 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751669AbcF3HfT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 21 Jun 2016 07:45:46 -0400
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 1/2] ath10k: remove unused <linux/semaphore.h>
-Date: Tue, 21 Jun 2016 20:45:38 +0900
-Message-Id: <20160621114539.15313-1-chaehyun.lim@gmail.com> (sfid-20160621_134811_696476_6933A88C)
+	Thu, 30 Jun 2016 03:35:19 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Prasun Maiti <prasunmaiti87@gmail.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+CC: Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] mwifiex: Fixed endianness for event TLV type
+ TLV_BTCOEX_WL_SCANTIME
+Date: Thu, 30 Jun 2016 07:35:15 +0000
+Message-ID: <10cf2879532349d29143ecbac3b459b7@SC-EXCH04.marvell.com> (sfid-20160630_093653_325375_65783B24)
+References: <1466050770-21789-1-git-send-email-prasunmaiti87@gmail.com>
+ <CAEO8o4=k2y4RBDFJ8RH9RF1xobWKW-zZobRFvrn8Hp8MB=L9AA@mail.gmail.com>
+In-Reply-To: <CAEO8o4=k2y4RBDFJ8RH9RF1xobWKW-zZobRFvrn8Hp8MB=L9AA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-<linux/semaphore.h> is not used anymore, so just remove it.
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/net/wireless/ath/ath10k/htc.h | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htc.h b/drivers/net/wireless/ath/ath10k/htc.h
-index cc82718..0c55cd9 100644
---- a/drivers/net/wireless/ath/ath10k/htc.h
-+++ b/drivers/net/wireless/ath/ath10k/htc.h
-@@ -22,7 +22,6 @@
- #include <linux/list.h>
- #include <linux/bug.h>
- #include <linux/skbuff.h>
--#include <linux/semaphore.h>
- #include <linux/timer.h>
- 
- struct ath10k;
--- 
-2.9.0
-
+SGkgUHJhc3VuLA0KDQo+IEZyb206IFByYXN1biBNYWl0aSBbbWFpbHRvOnByYXN1bm1haXRpODdA
+Z21haWwuY29tXQ0KPiBTZW50OiBGcmlkYXksIEp1bmUgMjQsIDIwMTYgMTI6MjcgUE0NCj4gVG86
+IEFtaXRrdW1hciBLYXJ3YXI7IE5pc2hhbnQgU2FybXVrYWRhbTsgS2FsbGUgVmFsbw0KPiBDYzog
+TGludXggV2lyZWxlc3M7IExpbnV4IE5leHQ7IExpbnV4IEtlcm5lbA0KPiBTdWJqZWN0OiBSZTog
+W1BBVENIXSBtd2lmaWV4OiBGaXhlZCBlbmRpYW5uZXNzIGZvciBldmVudCBUTFYgdHlwZQ0KPiBU
+TFZfQlRDT0VYX1dMX1NDQU5USU1FDQo+IA0KPiBPbiBUaHUsIEp1biAxNiwgMjAxNiBhdCA5OjQ5
+IEFNLCBQcmFzdW4gTWFpdGkgPHByYXN1bm1haXRpODdAZ21haWwuY29tPg0KPiB3cm90ZToNCj4g
+PiBUaGUgdHdvIG1lbWJlcnMgbWluX3NjYW5fdGltZSBhbmQgbWF4X3NjYW5fdGltZSBvZiBzdHJ1
+Y3R1cmUNCj4gPiAibXdpZmlleF9pZV90eXBlc19idGNvZXhfc2Nhbl90aW1lIiBhcmUgb2YgdHdv
+IGJ5dGVzIGVhY2guIFRoZSB2YWx1ZXMNCj4gPiBhcmUgYXNzaWduZWQgZGlyZWN0dGx5IGZyb20g
+ZmlybXdhcmUgd2l0aG91dCBlbmRpYW4gY29udmVyc2lvbg0KPiBoYW5kbGluZy4NCj4gPiBTbywg
+d3JvbmcgZGF0YXMgd2lsbCBnZXQgc2F2ZWQgaW4gYmlnLWVuZGlhbiBzeXN0ZW1zLg0KPiA+DQo+
+ID4gVGhpcyBwYXRjaCBjb252ZXJ0cyB0aGUgdmFsdWVzIGludG8gY3B1J3MgYnl0ZSBvcmRlciBi
+ZWZvcmUgYXNzaWduaW5nDQo+ID4gdGhlbSBpbnRvIHRoZSBsb2NhbCBtZW1iZXJzLg0KPiA+DQo+
+ID4gU2lnbmVkLW9mZi1ieTogUHJhc3VuIE1haXRpIDxwcmFzdW5tYWl0aTg3QGdtYWlsLmNvbT4N
+Cj4gPiAtLS0NCj4gPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L3N0YV9l
+dmVudC5jIHwgNCArKy0tDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIg
+ZGVsZXRpb25zKC0pDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3Mv
+bWFydmVsbC9td2lmaWV4L3N0YV9ldmVudC5jDQo+ID4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9t
+YXJ2ZWxsL213aWZpZXgvc3RhX2V2ZW50LmMNCj4gPiBpbmRleCAwMTA0MTA4Li43ZGZmNDUyIDEw
+MDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9zdGFf
+ZXZlbnQuYw0KPiA+ICsrKyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9z
+dGFfZXZlbnQuYw0KPiA+IEBAIC00NzQsOCArNDc0LDggQEAgdm9pZA0KPiBtd2lmaWV4X2J0X2Nv
+ZXhfd2xhbl9wYXJhbV91cGRhdGVfZXZlbnQoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAqcHJpdiwN
+Cj4gPiAgICAgICAgICAgICAgICAgICAgICAgICBzY2FudGx2ID0NCj4gPiAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgKHN0cnVjdCBtd2lmaWV4X2llX3R5cGVzX2J0Y29leF9zY2FuX3RpbWUN
+Cj4gKil0bHY7DQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgYWRhcHRlci0+Y29leF9zY2Fu
+ID0gc2NhbnRsdi0+Y29leF9zY2FuOw0KPiA+IC0gICAgICAgICAgICAgICAgICAgICAgIGFkYXB0
+ZXItPmNvZXhfbWluX3NjYW5fdGltZSA9IHNjYW50bHYtDQo+ID5taW5fc2Nhbl90aW1lOw0KPiA+
+IC0gICAgICAgICAgICAgICAgICAgICAgIGFkYXB0ZXItPmNvZXhfbWF4X3NjYW5fdGltZSA9IHNj
+YW50bHYtDQo+ID5tYXhfc2Nhbl90aW1lOw0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIGFk
+YXB0ZXItPmNvZXhfbWluX3NjYW5fdGltZSA9DQo+IGxlMTZfdG9fY3B1KHNjYW50bHYtPm1pbl9z
+Y2FuX3RpbWUpOw0KPiA+ICsgICAgICAgICAgICAgICAgICAgICAgIGFkYXB0ZXItPmNvZXhfbWF4
+X3NjYW5fdGltZSA9DQo+ID4gKyBsZTE2X3RvX2NwdShzY2FudGx2LT5tYXhfc2Nhbl90aW1lKTsN
+Cj4gPiAgICAgICAgICAgICAgICAgICAgICAgICBicmVhazsNCj4gPg0KPiA+ICAgICAgICAgICAg
+ICAgICBkZWZhdWx0Og0KPiA+IC0tDQo+ID4gMS45LjENCj4gPg0KDQpBbG9uZyB3aXRoIHRoaXMg
+Y2hhbmdlLCB5b3UgbmVlZCB0byBkZWZpbmUgdGhlc2UgZWxlbWVudHMgYXMgX19sZTE2IGluIHNj
+YW5fdGx2IHN0cnVjdHVyZS4gRW5zdXJlIHRoYXQgc3BhcnNlIGNvbXBpbGF0aW9uIGlzIHBhc3Nl
+ZCB3aXRoIHlvdXIgZmluYWwgcGF0Y2guDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
