@@ -1,109 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:43329 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752038AbcFQNnc convert rfc822-to-8bit (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:61622 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932228AbcF3PEq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 17 Jun 2016 09:43:32 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-	Tim Shepard <shep@alum.mit.edu>
-Subject: Re: [PATCH 1/2] ath9k: use mac80211 intermediate software queues
-References: <20160617090929.31606-1-toke@toke.dk>
-	<20160617090929.31606-2-toke@toke.dk>
-	<30beabff-a8c6-5431-be09-8f2f83ffc974@nbd.name>
-Date: Fri, 17 Jun 2016 15:43:27 +0200
-In-Reply-To: <30beabff-a8c6-5431-be09-8f2f83ffc974@nbd.name> (Felix Fietkau's
-	message of "Fri, 17 Jun 2016 15:28:26 +0200")
-Message-ID: <87d1ng3p8g.fsf@toke.dk> (sfid-20160617_154336_635102_F1A2A710)
+	Thu, 30 Jun 2016 11:04:46 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u5UF1uJO003104
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 08:03:56 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0a-0016f401.pphosted.com with ESMTP id 23sqakucgy-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 08:03:55 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Cathy Luo <cluo@marvell.com>, Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/2] mwifiex: add hostcmd wext ioctl support
+Date: Thu, 30 Jun 2016 20:31:14 +0530
+Message-ID: <1467298875-3581-2-git-send-email-akarwar@marvell.com> (sfid-20160630_170526_223383_C624B7B1)
+In-Reply-To: <1467298875-3581-1-git-send-email-akarwar@marvell.com>
+References: <1467298875-3581-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+From: Xinming Hu <huxm@marvell.com>
 
-> On 2016-06-17 11:09, Toke Høiland-Jørgensen wrote:
->> This patch leaves the code for ath9k's internal per-node per-tid
->> queues in place and just modifies the driver to also pull from
->> the new mac80211 intermediate software queues, and implements
->> the .wake_tx_queue method, which will cause mac80211 to deliver
->> packets to be sent via the new intermediate queue.
->> 
->> Signed-off-by: Tim Shepard <shep@alum.mit.edu>
->> 
->> Reworked to not require the global variable renaming in ath9k.
->> 
->> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
->> ---
->>  drivers/net/wireless/ath/ath9k/ath9k.h     |  16 +++-
->>  drivers/net/wireless/ath/ath9k/debug_sta.c |   7 +-
->>  drivers/net/wireless/ath/ath9k/init.c      |   1 +
->>  drivers/net/wireless/ath/ath9k/main.c      |   1 +
->>  drivers/net/wireless/ath/ath9k/xmit.c      | 119 +++++++++++++++++++++++++----
->>  5 files changed, 125 insertions(+), 19 deletions(-)
->> 
->> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
->> index 93b3793..caeae10 100644
->> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
->> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
->> @@ -145,8 +145,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
->>  #define BAW_WITHIN(_start, _bawsz, _seqno) \
->>  	((((_seqno) - (_start)) & 4095) < (_bawsz))
->>  
->> -#define ATH_AN_2_TID(_an, _tidno)  (&(_an)->tid[(_tidno)])
->> -
->>  #define IS_HT_RATE(rate)   (rate & 0x80)
->>  #define IS_CCK_RATE(rate)  ((rate >= 0x18) && (rate <= 0x1e))
->>  #define IS_OFDM_RATE(rate) ((rate >= 0x8) && (rate <= 0xf))
->> @@ -232,8 +230,10 @@ struct ath_buf {
->>  
->>  struct ath_atx_tid {
->>  	struct list_head list;
->> +	struct sk_buff_head i_q;
-> Do we really need a third queue here? Instead of adding yet another
-> layer of queueing here, I think we should even get rid of buf_q.
+This patch adds ndo_ioctl support to mwifiex netdev handlers.
+This will be used to download hostcmds to firmware from userspace.
+This is needed for manufacturing mode support in mwifiex. ndo_ioctl
+is allowed only when mfg mode is enabled via module load parameters.
 
-This is definitely something that needs to be improved. One other
-sticking point related to this: in the current version of this patch
-ath_tid_has_buffered() gains a side effect of pulling from the mac80211
-txq, which is obviously not so nice.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 59 +++++++++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/main.c   | 38 +++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/main.h   |  9 +++-
+ 3 files changed, 105 insertions(+), 1 deletion(-)
 
-The obvious way to get rid of this is to export a txq_has_buffered()
-function at the mac80211 layer. But avoiding that may be possible; the
-sticking point is what to do with the code paths that do not dequeue
-packets, but check ath_tid_has_buffered() to decide whether to schedule
-the queue and/or to tell ieee80211_sta_set_buffered() about it (these
-are for instance ath_tx_aggr_sleep/wakeup(). Can those just be removed
-(i.e. don't call into ieee80211, and always schedule the txq on wakeup?
-I'm not familiar enough with the intermediate queues to make that
-call...
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index c29f26d..fcfe556 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -818,6 +818,8 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
+ 			hostcmd = adapter->curr_cmd->data_buf;
+ 			hostcmd->len = size;
+ 			memcpy(hostcmd->cmd, resp, size);
++			adapter->hostcmd_resp_data.len = size;
++			memcpy(adapter->hostcmd_resp_data.cmd, resp, size);
+ 		}
+ 	}
+ 	orig_cmdresp_no = le16_to_cpu(resp->command);
+@@ -1200,6 +1202,63 @@ mwifiex_process_hs_config(struct mwifiex_adapter *adapter)
+ 				   false);
+ }
+ EXPORT_SYMBOL_GPL(mwifiex_process_hs_config);
++/* This function get hostcmd data from userspace and construct a cmd
++   * to be download to FW.
++  */
++int mwifiex_process_host_command(struct mwifiex_private *priv,
++				 struct iwreq *wrq)
++{
++	struct mwifiex_ds_misc_cmd *hostcmd_buf;
++	struct host_cmd_ds_command *cmd;
++	struct mwifiex_adapter *adapter = priv->adapter;
++	int ret;
++
++	hostcmd_buf = kzalloc(sizeof(*hostcmd_buf), GFP_KERNEL);
++	if (!hostcmd_buf)
++		return -ENOMEM;
++
++	cmd = (void *)hostcmd_buf->cmd;
++
++	if (copy_from_user(cmd, wrq->u.data.pointer,
++			   sizeof(cmd->command) + sizeof(cmd->size))) {
++		ret = -EFAULT;
++		goto done;
++	}
++
++	hostcmd_buf->len = le16_to_cpu(cmd->size);
++	if (hostcmd_buf->len > MWIFIEX_SIZE_OF_CMD_BUFFER) {
++		ret = -EINVAL;
++		goto done;
++	}
++
++	if (copy_from_user(cmd, wrq->u.data.pointer, hostcmd_buf->len)) {
++		ret = -EFAULT;
++		goto done;
++	}
++
++	if (mwifiex_send_cmd(priv, 0, 0, 0, hostcmd_buf, true)) {
++		dev_err(priv->adapter->dev, "Failed to process hostcmd\n");
++		ret = -EFAULT;
++		goto done;
++	}
++
++	if (adapter->hostcmd_resp_data.len > hostcmd_buf->len) {
++		ret = -EFBIG;
++		goto done;
++	}
++
++	if (copy_to_user(wrq->u.data.pointer, adapter->hostcmd_resp_data.cmd,
++			 adapter->hostcmd_resp_data.len)) {
++		ret = -EFAULT;
++		goto done;
++	}
++	wrq->u.data.length = adapter->hostcmd_resp_data.len;
++
++	ret = 0;
++done:
++	kfree(hostcmd_buf);
++	return ret;
++}
+ 
+ /*
+  * This function handles the command response of a sleep confirm command.
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 0e280f8..8b06d1d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1211,17 +1211,54 @@ mwifiex_netdev_select_wmm_queue(struct net_device *dev, struct sk_buff *skb,
+ 	return mwifiex_1d_to_wmm_queue[skb->priority];
+ }
+ 
++static int mwifiex_do_ioctl(struct net_device *dev, struct ifreq *req, int cmd)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++	struct iwreq *wrq = (struct iwreq *)req;
++	int ret;
++
++	if (!priv->adapter->mfg_mode)
++		return -EINVAL;
++
++	dev_dbg(priv->adapter->dev, "ioctl cmd = 0x%x\n", cmd);
++
++	switch (cmd) {
++	case MWIFIEX_HOSTCMD_IOCTL:
++		ret = mwifiex_process_host_command(priv, wrq);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
++	}
++
++	return ret;
++}
++
+ /* Network device handlers */
+ static const struct net_device_ops mwifiex_netdev_ops = {
+ 	.ndo_open = mwifiex_open,
+ 	.ndo_stop = mwifiex_close,
+ 	.ndo_start_xmit = mwifiex_hard_start_xmit,
+ 	.ndo_set_mac_address = mwifiex_set_mac_address,
++	.ndo_do_ioctl = mwifiex_do_ioctl,
+ 	.ndo_validate_addr = eth_validate_addr,
+ 	.ndo_tx_timeout = mwifiex_tx_timeout,
+ 	.ndo_get_stats = mwifiex_get_stats,
+ 	.ndo_set_rx_mode = mwifiex_set_multicast_list,
+ 	.ndo_select_queue = mwifiex_netdev_select_wmm_queue,
++	};
++
++static const struct iw_priv_args mwifiex_iwpriv_args[] = {
++	{       MWIFIEX_HOSTCMD_IOCTL,
++		IW_PRIV_TYPE_BYTE | 2047,
++		IW_PRIV_TYPE_BYTE | 2047,
++		"hostcmd"
++	},
++};
++
++static struct iw_handler_def mwifiex_iwpriv_handler_def = {
++	.num_private_args = ARRAY_SIZE(mwifiex_iwpriv_args),
++	.private_args = (struct iw_priv_args *)mwifiex_iwpriv_args,
+ };
+ 
+ /*
+@@ -1249,6 +1286,7 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
+ {
+ 	dev->netdev_ops = &mwifiex_netdev_ops;
+ 	dev->destructor = free_netdev;
++	dev->wireless_handlers = &mwifiex_iwpriv_handler_def;
+ 	/* Initialize private structure */
+ 	priv->current_key_index = 0;
+ 	priv->media_connected = false;
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 9f6bb40..23532cf 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -48,6 +48,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ #include <linux/of_irq.h>
++#include <linux/wireless.h>
++#include <net/iw_handler.h>
+ 
+ #include "decl.h"
+ #include "ioctl.h"
+@@ -157,6 +159,9 @@ enum {
+ /* Threshold for tx_timeout_cnt before we trigger a card reset */
+ #define TX_TIMEOUT_THRESHOLD	6
+ 
++/* IOCTL number used for hostcmd process*/
++#define MWIFIEX_HOSTCMD_IOCTL (SIOCIWFIRSTPRIV + 17)
++
+ #define MWIFIEX_DRV_INFO_SIZE_MAX 0x40000
+ 
+ /* Address alignment */
+@@ -892,6 +897,7 @@ struct mwifiex_adapter {
+ 	u8 event_received;
+ 	u8 data_received;
+ 	u16 seq_num;
++	struct mwifiex_ds_misc_cmd hostcmd_resp_data;
+ 	struct cmd_ctrl_node *cmd_pool;
+ 	struct cmd_ctrl_node *curr_cmd;
+ 	/* spin lock for command */
+@@ -1553,7 +1559,8 @@ bool mwifiex_is_bss_in_11ac_mode(struct mwifiex_private *priv);
+ u8 mwifiex_get_center_freq_index(struct mwifiex_private *priv, u8 band,
+ 				 u32 pri_chan, u8 chan_bw);
+ int mwifiex_init_channel_scan_gap(struct mwifiex_adapter *adapter);
+-
++int mwifiex_process_host_command(struct mwifiex_private *priv,
++				 struct iwreq *wrq);
+ int mwifiex_tdls_check_tx(struct mwifiex_private *priv, struct sk_buff *skb);
+ void mwifiex_flush_auto_tdls_list(struct mwifiex_private *priv);
+ void mwifiex_auto_tdls_update_peer_status(struct mwifiex_private *priv,
+-- 
+1.9.1
 
-
-> Channel context based queue handling can be dealt with by
-> stopping/starting relevant queues on channel context changes.
-
-Noted.
-
-> buf_q becomes unnecessary when you remove all code in the drv_tx
-> codepath that moves frames to the intermediate queue.
->
-> Any frame that was pulled from the intermediate queue and prepared for
-> tx, but which can't be sent right now can simply be queued to retry_q.
-
-Right.
-
-> This will also help with getting the diffstat insertion/deletion ratio
-> under control ;)
-
-Yes, that would be good ;)
-
->>  	struct sk_buff_head buf_q;
->>  	struct sk_buff_head retry_q;
->> +	struct ieee80211_txq *swq;
-> No need for this pointer, you can use container_of.
-
-Ah, cool, thanks!
-
--Toke
