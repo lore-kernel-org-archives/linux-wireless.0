@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:36023 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754303AbcG0Uv5 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22643 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbcGAHAG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 16:51:57 -0400
-Received: by mail-wm0-f54.google.com with SMTP id q128so227214531wma.1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2016 13:51:56 -0700 (PDT)
-Subject: Re: brcm4330 fails to load on newer kernels
-To: Fabio Estevam <festevam@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>
-References: <CAOMZO5Cu_UO6L9wYy6eJUJwEE25BN-qeBRAMbFveFrJKHtF=aw@mail.gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <57991EE9.30005@broadcom.com> (sfid-20160727_225201_463120_4D6B4687)
-Date: Wed, 27 Jul 2016 22:51:53 +0200
+	Fri, 1 Jul 2016 03:00:06 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>,
+	"Tamizh chelvam" <c_traja@qti.qualcomm.com>
+Subject: [PATCHv3 0/3]ath10k: Add testmode support for 10.4 
+Date: Fri, 1 Jul 2016 12:35:09 +0530
+Message-ID: <1467356709-31555-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160701_090013_623856_78A86FA6)
 MIME-Version: 1.0
-In-Reply-To: <CAOMZO5Cu_UO6L9wYy6eJUJwEE25BN-qeBRAMbFveFrJKHtF=aw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-07-16 00:35, Fabio Estevam wrote:
-> Hi,
-> 
-> On a imx6sl-warp board with a brcm4330 I get the following results
-> depending on the kernel version:
-> 
-> - Kernel 4.4.15: place brcmfmac4330-sdio.bin and brcmfmac4330-sdio.txt
-> in the rootfs and the kernel is able to read them correctly. wlan0 is
-> present. All is fine.
-> 
-> - Kernel 4.5.7: place brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt in
-> the rootfs and the kernel fails to load them:
-> 
-> brcmfmac mmc1:0001:1: Direct firmware load for
-> brcm/brcmfmac4330-sdio.bin failed with error -2
-> 
-> Then I build brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt into the
-> kernel and then firmware is detected and wlan0 appears.
-> 
-> - Kernel 4.7: I can place the firmware and nvram file into the rootfs
-> or built-i and the following error is seen:
-> 
-> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
-> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
-> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
-> 
-> So wlan0 never appears here.
-> 
-> Does anyone have any suggestions about these different behaviours?
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-So for all kernel you have brcmfmac built-in the kernel or as a module?
+* The below patches add testmode support for 10.4.
 
-Regards,
-Arend
+* Some of the codeswap related code in ath10k for example code which 
+  initializes the code swap segment works only on normal fw, below patches 
+  make such code generic so that it can be used for utf binary as well.
 
-> Thanks,
-> 
-> Fabio Estevam
-> 
+Tamizh chelvam (3):
+  ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
+  ath10k: handle testmode events for 10.2 and 10.4 based firmware
+  ath10k: add testmode support for 10.4 firmware
+
+v3:
+  * Fixed crash reported by Kalle.
+
+v2:
+  * changed author and signed off mail id.
+
+ drivers/net/wireless/ath/ath10k/core.c     |    6 +++---
+ drivers/net/wireless/ath/ath10k/core.h     |    6 ++----
+ drivers/net/wireless/ath/ath10k/swap.c     |   26 ++++++++++++++------------
+ drivers/net/wireless/ath/ath10k/swap.h     |   11 ++++++++---
+ drivers/net/wireless/ath/ath10k/testmode.c |   23 +++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c      |   26 ++++++++++++++++++++++++++
+ 6 files changed, 76 insertions(+), 22 deletions(-)
+
+-- 
+1.7.9.5
+
