@@ -1,40 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33127 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178AbcGMHSb (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:37815 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752537AbcGAV1W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 03:18:31 -0400
-Received: from purkki.adurom.net (purkki.adurom.net [80.68.90.206])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: kvalo@smtp.codeaurora.org)
-	by smtp.codeaurora.org (Postfix) with ESMTPSA id 448F06034D
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 07:18:30 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: Re: 4.8 merge window closing
-References: <878txg2ld6.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 13 Jul 2016 10:18:28 +0300
-In-Reply-To: <878txg2ld6.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Tue, 05 Jul 2016 17:46:45 +0300")
-Message-ID: <8760saatvf.fsf@purkki.adurom.net> (sfid-20160713_091925_020426_232B01A5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 1 Jul 2016 17:27:22 -0400
+Received: by mail-wm0-f43.google.com with SMTP id a66so44452951wme.0
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 14:27:21 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv3 wl-drv-next 1/2] add basic register-field manipulation macros
+Date: Fri,  1 Jul 2016 22:26:48 +0100
+Message-Id: <1467408409-24224-2-git-send-email-jakub.kicinski@netronome.com> (sfid-20160701_232817_743879_C29FFAD1)
+In-Reply-To: <1467408409-24224-1-git-send-email-jakub.kicinski@netronome.com>
+References: <1467408409-24224-1-git-send-email-jakub.kicinski@netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+C bitfields are problematic and best avoided.  Developers
+interacting with hardware registers find themselves searching
+for easy-to-use alternatives.  Common approach is to define
+structures or sets of macros containing mask and shift pair.
+Operations on the register are then performed as follows:
 
-> Linus released 4.7-rc6 last Sunday but didn't give any hints how close
-> the real release is, but nevertheless the merge window for 4.8 is
-> getting quite close so if there's anything you want to have in
-> wireless-drivers-next for 4.8 better send them NOW. Especially as I
-> won't have that much time to apply patches the next two weeks.
+ field = (reg >> shift) & mask;
 
-Due to travelling Linus gave us one more week so the deadline for
-wireless-drivers patches is now next Sunday (or so). As I'm taking it
-easy this week still I will start actively applying patches only next
-week, but better to have the patches reviewed and ready by then.
+ reg &= ~(mask << shift);
+ reg |= (field & mask) << shift;
 
+Defining shift and mask separately is tedious.  Ivo van Doorn
+came up with an idea of computing them at compilation time
+based on a single shifted mask (later refined by Felix) which
+can be used like this:
+
+ #define REG_FIELD 0x000ff000
+
+ field = FIELD_GET(REG_FIELD, reg);
+
+ reg &= ~REG_FIELD;
+ reg |= FIELD_PUT(REG_FIELD, field);
+
+FIELD_{GET,PUT} macros take care of finding out what the
+appropriate shift is based on compilation time ffs operation.
+
+GENMASK can be used to define registers (which is usually
+less error-prone and easier to match with datasheets).
+
+This approach is the most convenient I've seen so to limit code
+multiplication let's move the macros to a global header file.
+
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+---
+ include/linux/bitfield.h | 58 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/bug.h      |  3 +++
+ 2 files changed, 61 insertions(+)
+ create mode 100644 include/linux/bitfield.h
+
+diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
+new file mode 100644
+index 000000000000..d6a36c3c1775
+--- /dev/null
++++ b/include/linux/bitfield.h
+@@ -0,0 +1,58 @@
++/*
++ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
++ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#ifndef _LINUX_BITFIELD_H
++#define _LINUX_BITFIELD_H
++
++#include <asm/types.h>
++#include <linux/bug.h>
++#include <linux/log2.h>
++
++#define _bf_shf(x) (__builtin_ffsll(x) - 1)
++
++#define _BF_FIELD_CHECK(_mask, _val)					\
++	({								\
++		BUILD_BUG_ON(!(_mask));					\
++		BUILD_BUG_ON(__builtin_constant_p(_val) ?		\
++			     ~((_mask) >> _bf_shf(_mask)) & (_val) :	\
++			     0);					\
++		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
++					      (1ULL << _bf_shf(_mask))); \
++	})
++
++#define FIELD_PUT(_mask, _val)					\
++	({							\
++		_BF_FIELD_CHECK(_mask, _val);			\
++		((u32)(_val) << _bf_shf(_mask)) & (_mask);	\
++	})
++
++#define FIELD_GET(_mask, _val)					\
++	({							\
++		_BF_FIELD_CHECK(_mask, 0);			\
++		(u32)(((_val) & (_mask)) >> _bf_shf(_mask));	\
++	})
++
++#define FIELD_PUT64(_mask, _val)				\
++	({							\
++		_BF_FIELD_CHECK(_mask, _val);			\
++		((u64)(_val) << _bf_shf(_mask)) & (_mask);	\
++	})
++
++#define FIELD_GET64(_mask, _val)				\
++	({							\
++		_BF_FIELD_CHECK(_mask, 0);			\
++		(u64)(((_val) & (_mask)) >> _bf_shf(_mask));	\
++	})
++
++#endif
+diff --git a/include/linux/bug.h b/include/linux/bug.h
+index e51b0709e78d..bba5bdae1681 100644
+--- a/include/linux/bug.h
++++ b/include/linux/bug.h
+@@ -13,6 +13,7 @@ enum bug_trap_type {
+ struct pt_regs;
+ 
+ #ifdef __CHECKER__
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_ZERO(e) (0)
+ #define BUILD_BUG_ON_NULL(e) ((void*)0)
+@@ -24,6 +25,8 @@ struct pt_regs;
+ #else /* __CHECKER__ */
+ 
+ /* Force a compilation error if a constant expression is not a power of 2 */
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) 			\
++	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
+ 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
+ 
 -- 
-Kalle Valo
+1.9.1
+
