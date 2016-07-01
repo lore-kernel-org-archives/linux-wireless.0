@@ -1,55 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:39420 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932335AbcG0Xpr (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:37807 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752450AbcGAV1V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 19:45:47 -0400
-Date: Wed, 27 Jul 2016 16:45:43 -0700 (PDT)
-Message-Id: <20160727.164543.1466564919313003461.davem@davemloft.net> (sfid-20160728_014615_024159_83C867FF)
-To: alexmcwhirter@triadic.us
-Cc: rlwinm@sdf.org, viro@zeniv.linux.org.uk, chunkeey@googlemail.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87c4ed555bcb4229f2334f6f2bb69bcb@triadic.us>
-References: <201607271032.u6RAWPcS008174@sdf.org>
-	<4dbfebe8136bc963b5b51463d6887db4@triadic.us>
-	<87c4ed555bcb4229f2334f6f2bb69bcb@triadic.us>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 1 Jul 2016 17:27:21 -0400
+Received: by mail-wm0-f47.google.com with SMTP id a66so44452489wme.0
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 14:27:20 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv3 wl-drv-next 0/2] register-field manipulation macros
+Date: Fri,  1 Jul 2016 22:26:47 +0100
+Message-Id: <1467408409-24224-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160701_232801_151259_1ED6C5AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: alexmcwhirter@triadic.us
-Date: Wed, 27 Jul 2016 19:02:40 -0400
+Hi!
 
-> On 2016-07-27 14:04, alexmcwhirter@triadic.us wrote:
->> Just to add some more information to this, the corruption seems to
->> effect ssh as well.
->> Using a sun hme interface, occasionally upon an ssh connection it will
->> refuse to authenticate a client with either password or cert
->> authentication. Using wireshark to capture and decrypt the packets
->> between the two machines, the data coming from the server seems good,
->> but the data received by the server from the client is essentially
->> garbage. Note that the client is sending valid data, but the server is
->> corrupting it upon receipt. Closing the connection and starting a new
->> one will remedy the login issue, but you do occasionally see
->> corruption on the server side sporadically.
->> So far this only seems to occur on incoming data, outgoing data seems
->> fine.
-> 
-> Also, there is another patch the references this commit on sparc64 at
-> least.
-> 
-> https://patchwork.kernel.org/patch/9221895/
-> 
-> I highly expect both my issue and OP's issue to revolve not around
-> commit e5a4b0bb803b specifically, but around other code that no longer
-> behaves as expected because of it.
+This set moves to a global header file macros which I find
+very useful and worth popularising.  The basic problem is
+that since C bitfields are not very dependable accessing
+subfields of registers becomes slightly inconvenient.
+It is nice to have the necessary mask and shift operations
+wrapped in a macro.  It is also nice to have that macro
+compute the shift amount based on the mask automatically.
 
-Indeed, and that fault address rounding bug occurs two other times
-in arch/sparc/lib/user_fixup.c
+My implementation follows what Felix Fietkau has done in
+mt76.  Hannes Frederic Sowa suggested more use of standard
+Linux/GCC functions.  Since the RFC I've also added a 
+compile-time check to validate that the value passed to
+setters fits in the mask.
 
-The mentioned patchwork patch should fix the bug and I'll get that
-into my sparc tree, merged, and queued up for -stable ASAP.
+I attempted the use of static inlines instead of macros
+but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
+I also noticed that forcing arguments to be u32 for inlines
+makes the compiler use 32bit arithmetic where it could
+get away with 64bit before (on 64bit machines, obviously).
+That's a potential performance concern but probably not
+a very practical one today.  Apart from looking "cleaner"
+static inlines would have the advantage that we could #undef
+the auxiliary macros at the end of the header.
+
+v3:
+Build bot caught a build failure with -Os set.  AFAICT gcc
+did not handle temporary variable I put in the macro
+expression too well.  I work around that by defining
+__BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
+BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
+
+Please review and advise on improvements.
+
+If accepted I think would be best to push this through
+Kalle's tree, since the only existing user is in
+drivers/net/wireless/.
+
+v3:
+ - don't use variables in statement expressions;
+ - use __BUILD_BUG_ON_NOT_POWER_OF_2.
+v2:
+ - change Felix's email address.
+
+Jakub Kicinski (2):
+  add basic register-field manipulation macros
+  mt7601u: use linux/bitfield.h
+
+ drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
+ drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
+ include/linux/bitfield.h                        | 58 +++++++++++++++++++
+ include/linux/bug.h                             |  3 +
+ 5 files changed, 65 insertions(+), 80 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+ create mode 100644 include/linux/bitfield.h
+
+-- 
+1.9.1
+
