@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54697 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752761AbcGSHWY (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:34302 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752138AbcGAJHU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 03:22:24 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Eyal Reizer <eyalreizer@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-spi@vger.kernel.org, robh@kernel.org,
-	Eyal Reizer <eyalr@ti.com>
-Subject: Re: [PATCH v7] wlcore: spi: add wl18xx support
-References: <1468911482-32560-1-git-send-email-eyalr@ti.com>
-Date: Tue, 19 Jul 2016 10:22:18 +0300
-In-Reply-To: <1468911482-32560-1-git-send-email-eyalr@ti.com> (Eyal Reizer's
-	message of "Tue, 19 Jul 2016 09:58:02 +0300")
-Message-ID: <87poqaum6t.fsf@kamboji.qca.qualcomm.com> (sfid-20160719_092254_431989_1943C51C)
+	Fri, 1 Jul 2016 05:07:20 -0400
+Received: by mail-oi0-f53.google.com with SMTP id s66so102435412oif.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 02:07:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <002601d1d305$183c3070$48b49150$@inventeksys.com>
+References: <002601d1d305$183c3070$48b49150$@inventeksys.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Fri, 1 Jul 2016 11:07:19 +0200
+Message-ID: <CACna6rx-iw8cBT9kp5gsW0REuVNE-GzU62GBKjR9BAtWu14mCA@mail.gmail.com> (sfid-20160701_110735_752682_FB2E642E)
+Subject: Re: building brcmfmac driver for iMX6 Ultralite platform
+To: Michael Eskowitz <MichaelE@inventeksys.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eyal Reizer <eyalreizer@gmail.com> writes:
-
-> From: Eyal Reizer <eyalreizer@gmail.com>
+On 30 June 2016 at 21:24, Michael Eskowitz <MichaelE@inventeksys.com> wrote:
+>         insmod  brcmfmac.ko
+> firmware_path=ISM4334X_Wifi_FW_6.10.190.49_P.bin
+> nvram_path=ISM4334X_NVRAM_C1.txt
 >
-> Add support for using with both wl12xx and wl18xx.
+> I receive the following errors:
 >
-> - all wilink family needs special init command for entering wspi mode.
->   extra clock cycles should be sent after the spi init command while the
->   cs pin is high.
-> - Use inverted chip select for sending a dummy 4 bytes command that
->   completes the init stage.
+>         brcmfmac: Unknown symbol brcmu_pktq_mlen (err 0)
+>         brcmfmac: Unknown symbol brcmu_pkt_buf_free_skb (err 0)
+>         brcmfmac: Unknown symbol brcmu_pktq_init (err 0)
+>         brcmfmac: Unknown symbol brcmu_pktq_penq_head (err 0)
+>         brcmfmac: Unknown symbol brcmu_pktq_pdeq (err 0)
+>         brcmfmac: Unknown symbol brcmu_pktq_peek_tail (err 0)
+>         brcmfmac: Unknown symbol brcmu_pktq_flush (err 0)
+>         brcmfmac: Unknown symbol brcmu_pktq_pdeq_match (err 0)
+>         brcmfmac: Unknown symbol brcmu_pktq_mdeq (err 0)
+>         brcmfmac: Unknown symbol brcmu_pktq_penq (err 0)
+>         brcmfmac: Unknown symbol brcmu_pktq_pdeq_tail (err 0)
+>         brcmfmac: Unknown symbol brcmu_pkt_buf_get_skb (err 0)
+>         brcmfmac: Unknown symbol brcmu_d11_attach (err 0)
+>         insmod: ERROR: could not insert module brcmfmac.ko: Unknown symbol
+> in module
 >
-> Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> Acked-by: Rob Herring <robh@kernel.org>
+> I'm not sure that the firmware_path and nvram_path should be specified in
+> this manner, but I doubt that is what is causing these errors.
+>
+> The module compiled and built just fine so I am assuming that there are some
+> dependencies that aren't being met.  Is there another module that I need to
+> load before attempting to load the fmac driver?
 
-This looks ok in patchwork:
+If you don't know module dependencies, why not use something that
+handled this for you? Replace insmod with modprobe.
 
-https://patchwork.kernel.org/patch/9235983/
-
-Because you used ti.com in S-o-b I assume From should also use ti.com. I
-can fix that before I apply but please confirm that's really the case?
+You can't load brcmfmac.ko without loading brcmutil.ko first.
 
 -- 
-Kalle Valo
+Rafał
