@@ -1,135 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34423 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751993AbcGXRpY (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.131]:63816 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751218AbcGAIvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2016 13:45:24 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Alan Curry <rlwinm@sdf.org>
-Cc: chunkeey@googlemail.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Al Viro <viro@zeniv.linux.org.uk>, alexmcwhirter@triadic.us
-Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
-Date: Sun, 24 Jul 2016 19:45:13 +0200
-Message-ID: <1659922.nTqITfJpFk@debian64> (sfid-20160724_194548_630611_E88362C3)
-In-Reply-To: <201607240335.u6O3ZE81014171@sdf.org>
-References: <201607240335.u6O3ZE81014171@sdf.org>
+	Fri, 1 Jul 2016 04:51:04 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	devicetree <devicetree@vger.kernel.org>,
+	Priit Laes <plaes@plaes.org>, linux-sunxi@googlegroups.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Chen-Yu Tsai <wens@csie.org>, jonas.gorski@gmail.com,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm, nvram_file_name dt property
+Date: Fri, 01 Jul 2016 10:51:10 +0200
+Message-ID: <5046715.4MWnq2SdoR@wuerfel> (sfid-20160701_105135_715376_214A6D08)
+In-Reply-To: <1f44df41-0111-441b-4671-718eec0c4346@broadcom.com>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> <3960223.GqB9zXL8s8@wuerfel> <1f44df41-0111-441b-4671-718eec0c4346@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Thursday, June 30, 2016 9:23:56 PM CEST Arend Van Spriel wrote:
+> 
+> On 30-6-2016 13:31, Arnd Bergmann wrote:
+> > On Thursday, June 30, 2016 12:25:15 PM CEST Hans de Goede wrote:
+> >>> So then how about making use of a more specific compatible string?
+> >>>
+> >>> e.g.
+> >>>
+> >>> brcmf {
+> >>>         compatible = "foo,ap6210", "brcm,bcm4329-fmac";
+> >>>         ...
+> >>> };
+> >>>
+> >>> and if the compatible has more than one element you request
+> >>> FW_NAME_<compatible>.txt as the nvram file. Or try each comptible (and
+> >>> lastly no suffix) until you get a match. (AFAICT, this is what the
+> >>> "model" property was originally intended for anyway, but almost nobody
+> >>> did it right, and everyone put a user readable string into "model" for
+> >>> boards instead of the ePAPR defined compatible string).
+> >>
+> >> Hmm, interesting idea. Not sure how easy / hard it will be to implement
+> >> this, but from a dt binding point of view it seems elegant.
+> >>
+> >> Kalle, Arend, what do you think of this ?
+> 
+> At first glance I like the suggestion, but this would mean updating the
+> bindings document for each new wifi module that we want to add. Not a
+> big problem, but it makes that I have a slight preference to using a
+> property for it, eg. brcm,module = "ap6210";
 
-I added Al Viro to the CC (probably not necessary...)
+I think we can be a little relaxed with the requirement for updating the
+binding document here, as long as the binding lists all the strings that
+are understood by the driver itself and documents that there can be
+additional strings in it.
 
-On Sunday, July 24, 2016 3:35:14 AM CEST Alan Curry wrote:
-> [1.] One line summary of the problem:
-> network data corruption (bisected to e5a4b0bb803b)
-> 
-> [2.] Full description of the problem/report:
-> Note: although my bisect ended at a commit from before 3.19, I have the
-> same symptom in all newer kernels I've tried, up to 4.6.4.
-> 
-> The commit was:
-> 
-> >commit e5a4b0bb803b39a36478451eae53a880d2663d5b
-> >Author: Al Viro <viro@zeniv.linux.org.uk>
-> >Date:   Mon Nov 24 18:17:55 2014 -0500
-> >
-> >    switch memcpy_to_msg() and skb_copy{,_and_csum}_datagram_msg() to primitives
-> 
-> The symptom is that downloaded files (http, ftp, and probably other
-> protocols) have small corrupted segments (about 1-2 kilobytes long) in
-> random locations. Only downloads that sustain a high speed for at least a
-> few seconds are corrupted. Anything small enough to be received in less
-> than about 5 seconds is not affected.
-> 
-> If I download the same file twice in a row, the corruption is in different
-> places in each copy.
-> 
-> If I try to do a git clone, it fails a few seconds into the "Receiving
-> objects" stage with a deflate error.
+In particular, documenting how a compatible string that is made up from
+the board id and revision should be unproblematic.
 
-Thanks for the detailed bug-report. I looked around the web to see if it
-was already reported or not. If found that this issue was reported before:
-[0], [1] and [2] by the same person (CC'ed). One difference is that the 
-reporter had this issue with rsync on multiple SPARC systems. I ran a
-git grep on a 4.7.0-rc7+ (wt-2016-07-21-15-g97bd3b0). But it didn't find
-any patches directly referencing the commit. I'm not sure if this issue
-has been fixed by now or not. I would greatly appreciate any comment
-about this from the "people of netdev" (Al Viro? Alex Mcwhirter?).
-
-As for carl9170: I'm not sure what the driver or firmware can do about
-this at this time. You can try to disable the hardware crypto by setting
-nohwcrypt via the module option. However, this might not do anything at all.
-
-> [3.] Keywords: networking, carl9170
-> 
-> [4.] Kernel information
-> [4.1.] Kernel version (from /proc/version):
-> Multiple versions are known to be affected, from 3.19 to 4.6.4
-> 
-> [4.2.] Kernel .config file:
-> For testing I built with make x86_64_defconfig followed by enabling the
-> carl9170 driver, which adds these lines:
-> CONFIG_ATH_COMMON=m
-> CONFIG_ATH_CARDS=m
-> CONFIG_CARL9170=m
-> CONFIG_CARL9170_LEDS=y
-> CONFIG_CARL9170_WPC=y
-> 
-> [5.] Most recent kernel version which did not have the bug:
-> That would be the predecessor of e5a4b0bb803b39a36478451eae53a880d2663d5b
-> which is v3.18-rc6-1620-g17836394e578
-> 
-> [6.] no Oops
-> 
-> [7.] A small shell script or example program which triggers the
->      problem (if possible)
-> 
-> This command fails reliably for me when running an affected kernel:
-> 
-> git clone git://git.kernel.org/pub/scm/git/git.git
-> 
-> (I'm including all the standard format stuff suggested by REPORTING-BUGS,
-> but I think you can skip from here to section 8.7 without missing anything
-> relevant)
-Yes, I removed it for the most part. If anyone is interested in the details:
-Here's a link to the original post @LKML [3].
-
-> 
-> [8.] Environment
-> [8.1.] Software (add the output of the ver_linux script here)
-> 
-> Mostly Debian 8.5 stable packages here.
-> 
-> [8.3.] Module information (from /proc/modules):
-> 
-> When I tested with the x86_64_defconfig + carl9170 kernel, there were
-> hardly any modules built, and I reproduced the problem after booting with
-> init=/bin/sh, so no unnecessary modules were loaded. Currently running a
-> normal 4.6.4 kernel which is showing the bug.
-> 
-> [...]
-> [8.7.] Other information that might be relevant to the problem
->        (please look in /proc and include all information that you
->        think to be relevant):
-> 
-> lsusb identifies my network device as:
-> 
-> Bus 005 Device 004: ID 0cf3:1002 Atheros Communications, Inc. TP-Link TL-WN821N v2 802.11n [Atheros AR9170]
-> 
-> I have version 1.9.9 of carl9170-1.fw in /lib/firmware
-Just one additional question: Is the TL-WN821N connected to a USB3 port?
-
-Regards,
-Christian
-
-[0] <https://lists.debian.org/debian-sparc/2016/06/msg00160.html>
-[1] <https://marc.info/?l=gentoo-sparc&m=145766845820114&w=2>
-[2] <http://permalink.gmane.org/gmane.linux.ports.sparc/22507>
-[3] <https://lkml.org/lkml/2016/7/23/184>
-
-
-
+	Arnd
