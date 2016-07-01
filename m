@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipv4.connman.net ([82.165.8.211]:42162 "EHLO mail.holtmann.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751051AbcGMNNF convert rfc822-to-8bit (ORCPT
+Received: from mail-vk0-f44.google.com ([209.85.213.44]:33036 "EHLO
+	mail-vk0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751218AbcGARmw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 09:13:05 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: [PATCH] drivers: misc: ti-st: Use int instead of fuzzy char for callback status
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1465203723-16928-1-git-send-email-geert@linux-m68k.org>
-Date: Wed, 13 Jul 2016 14:12:36 +0100
-Cc: "Gustavo F. Padovan" <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Pavan Savoy <pavan_savoy@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	linux-media@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Message-Id: <CE4AC59B-9138-4415-99AD-8C359ACFB5C7@holtmann.org> (sfid-20160713_151459_701290_B1CCA0A7)
-References: <1465203723-16928-1-git-send-email-geert@linux-m68k.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
+	Fri, 1 Jul 2016 13:42:52 -0400
+Received: by mail-vk0-f44.google.com with SMTP id k68so75635970vkb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 10:42:52 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1467325262-82799-1-git-send-email-briannorris@chromium.org>
+References: <1467325262-82799-1-git-send-email-briannorris@chromium.org>
+From: Doug Anderson <dianders@chromium.org>
+Date: Fri, 1 Jul 2016 10:42:40 -0700
+Message-ID: <CAD=FV=W6BttCyg6Pq4hdBHaQ7hYXF0-ACHiqR84X4M4WG2ppVw@mail.gmail.com> (sfid-20160701_194309_769629_D7562CBC)
+Subject: Re: [PATCH] mwifiex: mask PCIe interrupts before removal
+To: Brian Norris <briannorris@chromium.org>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Brian Norris <computersforpeace@gmail.com>,
+	Stephen Barber <smbarber@chromium.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Geert,
+Hi,
 
-> On mips and parisc:
-> 
->    drivers/bluetooth/btwilink.c: In function 'ti_st_open':
->    drivers/bluetooth/btwilink.c:174:21: warning: overflow in implicit constant conversion [-Woverflow]
->       hst->reg_status = -EINPROGRESS;
-> 
->    drivers/nfc/nfcwilink.c: In function 'nfcwilink_open':
->    drivers/nfc/nfcwilink.c:396:31: warning: overflow in implicit constant conversion [-Woverflow]
->      drv->st_register_cb_status = -EINPROGRESS;
-> 
-> There are actually two issues:
->  1. Whether "char" is signed or unsigned depends on the architecture.
->     As the completion callback data is used to pass a (negative) error
->     code, it should always be signed.
->  2. EINPROGRESS is 150 on mips, 245 on parisc.
->     Hence -EINPROGRESS doesn't fit in a signed 8-bit number.
-> 
-> Change the callback status from "char" to "int" to fix these.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+On Thu, Jun 30, 2016 at 3:21 PM, Brian Norris <briannorris@chromium.org> wrote:
+> The PCIe driver didn't mask the host interrupts before trying to tear
+> down. This causes lockups at reboot or rmmod when using MSI-X on 8997,
+> since the MSI handler gets confused and locks up the system.
+>
+> Also tested on 8897, which does not support MSI-X (and wasn't
+> experiencing this same bug). No regressions seen there.
+>
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 > ---
-> Compile-tested only.
-> ---
-> drivers/bluetooth/btwilink.c              | 4 ++--
-> drivers/media/radio/wl128x/fmdrv_common.c | 2 +-
-> drivers/misc/ti-st/st_core.c              | 2 +-
-> drivers/nfc/nfcwilink.c                   | 4 ++--
-> include/linux/ti_wilink_st.h              | 2 +-
-> 5 files changed, 7 insertions(+), 7 deletions(-)
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
 
-patch has been applied to bluetooth-next tree.
+This looks very sane but isn't my area of expertise at all.  However,
+if my Reviewed-by is at all useful feel free to add it.  I will say
+that this fixes the issue of the crash at reboot time, so at least
+I'll add:
 
-Regards
-
-Marcel
-
+Tested-by: Douglas Anderson <dianders@chromium.org>
