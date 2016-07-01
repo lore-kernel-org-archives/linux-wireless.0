@@ -1,216 +1,189 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50422 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751747AbcGVWP1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 18:15:27 -0400
-Date: Sat, 23 Jul 2016 00:15:23 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>, mmarek@suse.com
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-Message-ID: <20160722221523.GM5537@wotan.suse.de> (sfid-20160723_001535_091374_6D2746FB)
-References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
- <20160721070938.GA2658@redhat.com>
- <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
- <20160721080541.GB2658@redhat.com>
- <5790A28F.8030102@redhat.com>
- <20160721115122.GA31869@redhat.com>
- <a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
- <20160722102559.GA2662@redhat.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:3245 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508AbcGAHAn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jul 2016 03:00:43 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>,
+	"Tamizh chelvam" <c_traja@qti.qualcomm.com>
+Subject: [PATCHv3 1/3] ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
+Date: Fri, 1 Jul 2016 12:36:07 +0530
+Message-ID: <1467356767-31646-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160701_090046_169152_228E19D9)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160722102559.GA2662@redhat.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 22, 2016 at 12:26:00PM +0200, Stanislaw Gruszka wrote:
-> On Fri, Jul 22, 2016 at 10:38:24AM +0200, Arend Van Spriel wrote:
-> > + Luis
-> > 
-> > On 21-7-2016 13:51, Stanislaw Gruszka wrote:
-> > > (cc: firmware and brcmfmac maintainers)
-> > > 
-> > > On Thu, Jul 21, 2016 at 06:23:11AM -0400, Prarit Bhargava wrote:
-> > >>
-> > >>
-> > >> On 07/21/2016 04:05 AM, Stanislaw Gruszka wrote:
-> > >>> On Thu, Jul 21, 2016 at 10:36:42AM +0300, Emmanuel Grumbach wrote:
-> > >>>> On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> > >>>>> On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
-> > >>>>>> Firmware files are versioned to prevent older
-> > >>>>>> driver instances to load unsupported firmware
-> > >>>>>> blobs. This is reflected with a fallback logic
-> > >>>>>> which attempts to load several firmware files.
-> > >>>>>>
-> > >>>>>> This however produced a lot of unnecessary
-> > >>>>>> warnings sometimes confusing users and leading
-> > >>>>>> them to rename firmware files making things even
-> > >>>>>> more confusing.
-> > >>>>>
-> > >>>>> This happens on kernels configured with
-> > >>>>> CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
-> > >>>>> but also 60 seconds delay before loading next firmware version.
-> > >>>>> For some reason RHEL kernel needs above config option, so this
-> > >>>>> patch is very welcome from my perspective.
-> > >>>>>
-> > >>>>
-> > >>>> Sorry for my ignorance but how does the firmware loading work if not
-> > >>>> with udev's help?
-> > >>>
-> > >>> I'm not sure exactly, but I think kernel VFS layer is capable to copy
-> > >>> file data directly from mounted filesystem without user space helper.
-> > >>
-> > >> Here's the situation: request_firmware() waits 60 seconds for udev to do its
-> > >> loading magic via a "usermode helper".  This delay is there to allow, for
-> > >> example, userspace to unpack or download a new firmware image or verify the
-> > >> firmware image *in userspace* before providing it to the driver to apply to the HW.
-> > >>
-> > >> Why 60 seconds?  It is arbitrary and there is no way for udev & the kernel to
-> > >> handshake on completion.
-> > >>
-> > >>>
-> > >>>> As you can imagine, iwlwifi is suffering from the
-> > >>>> same problem and I would be interested in applying the same change,
-> > >>>> but I'd love to understand a bit more :)
-> > >>>
-> > >>> Yes, iwlwifi (and some other drivers) suffer from this. However this
-> > >>> happen when the newest firmware version is not installed on the system
-> > >>> and CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled. What I suppose
-> > >>> it's not common.
-> > >>
-> > >> request_firmware_direct() was introduced at my request because (as you've
-> > >> noticed) when CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y drivers may stall for long
-> > >> periods of time when starting.  The bug that this introduced was a 60 second
-> > >> delay per logical cpu when starting a system.  On a 64 cpu system that meant the
-> > >> boot would complete in a little over one hour.
-> > >>
-> > >>>
-> > >>> I started to see this currently, because that option was enabled on 
-> > >>> RHEL kernel. BTW: I think Prarit iwlwifi thermal_zone problem was
-> > >>> happened because of that, i.e. thermal device was not functional
-> > >>> because f/w wasn't loaded due to big delay.
-> > >>>
-> > >>> I'm not sure if replacing to request_firmware_direct() is a good
-> > >>> fix though. For example I can see this problem also on brcmfmac, which
-> > >>> use request_firmware_nowait(). I think I would rather prefer special
-> > >>> helper for firmware drivers that needs user helper and have
-> > >>> request_firmware() be direct as default.
-> > >>>
-> > >>
-> > >> The difference between request_firmware_direct() and request_firmware() is that
-> > >> the _direct() version does not wait the 60 seconds for udev interaction.  The
-> > >> only userspace check performed is to see if the file is there, and if the file
-> > >> does exist it is provided to the driver to be applied to the hardware.
-> > >>
-> > >> So the real question to ask here is whether or not the ath10k, brcmfmac, and
-> > >> iwlwifi require udev to do anything beyond checking for the existence and
-> > >> loading the firmware image.  If they don't, then it is better to use
-> > >> request_firmware_direct().
-> > > 
-> > > They don't need that, like 99% of the drivers I think, hence changing the
-> > > default seems to be more reasonable. However changing 3 drivers would work
-> > > for me as well, and that change do not introduce risk of broking drivers
-> > > that require udev fw download.
-> > > 
-> > > iwlwifi and ath10k are trivial, bcrmfmac is a bit more complex as it
-> > > use request_firmware_nowait(), so it first need to be converted to
-> > > ordinary request_firmware(), but this should be doable and I can do
-> > > that.
-> > 
-> > I am going bonkers here. This is the Nth time a discussion pops up on
-> > firmware API usage. I stopped counting N :-( So the first issue was that
-> > the INIT was taking to long as we were requesting firmware during probe
-> > which was executed in the INIT context. So we added a worker and
-> > register the driver from there. There was probably a reason for
-> > switching to _no_wait() as well, but I do not recall the details. The
-> > things is I don't know if I need user-space or not. I just need firmware
-> > to get the device up and running. We have changed our driver a couple of
-> > times now to accommodate something that in my opinion should have been
-> > abstracted behind the firmware API in the first place and now here is
-> > another proposal to change the drivers. Come on!
-> 
-> I understand you dislike that :-) Just to clarify the issue here:
-> 
-> Some drivers (including brcmfmac) request new firmware images, which are
-> not yet available (i.e. development F/W versions) and then fall-back
-> to older firmware version and works perfectly fine.
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-The right way to address this of course is to extend the FW API
-so that a batch of firmware files can be hunted for and one can
-easily annotate as a driver developer which are optional and which are
-not. The API then will do everything for you.
+Preparation to make use of firmware_swap_code_seg_info for UTF binary.
 
-I was considering this as a future extension to the firmware API
-through the new extensible firmware API, the sysdata API. I'd prefer
-to add that as a secondary step, but if someone wants to add support
-for it now feel free to send me some patches against my tree.
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    6 +++---
+ drivers/net/wireless/ath/ath10k/core.h |    6 ++----
+ drivers/net/wireless/ath/ath10k/swap.c |   26 ++++++++++++++------------
+ drivers/net/wireless/ath/ath10k/swap.h |   11 ++++++++---
+ 4 files changed, 27 insertions(+), 22 deletions(-)
 
-> However with CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y configured, in case
-> of missing F/W image, request firmware involve user space helper and
-> waits 60s (loading_timeout value from drivers/base/firmware_class.c),
-> what delays creating network interface and confuse users.
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index dfb3db0..0a1946b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -723,7 +723,7 @@ static int ath10k_download_fw(struct ath10k *ar)
+ 	data = ar->running_fw->fw_file.firmware_data;
+ 	data_len = ar->running_fw->fw_file.firmware_len;
+ 
+-	ret = ath10k_swap_code_seg_configure(ar);
++	ret = ath10k_swap_code_seg_configure(ar, &ar->running_fw->fw_file);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to configure fw code swap: %d\n",
+ 			   ret);
+@@ -765,7 +765,7 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 	if (!IS_ERR(ar->pre_cal_file))
+ 		release_firmware(ar->pre_cal_file);
+ 
+-	ath10k_swap_code_seg_release(ar);
++	ath10k_swap_code_seg_release(ar, &ar->normal_mode_fw.fw_file);
+ 
+ 	ar->normal_mode_fw.fw_file.otp_data = NULL;
+ 	ar->normal_mode_fw.fw_file.otp_len = 0;
+@@ -2009,7 +2009,7 @@ static int ath10k_core_probe_fw(struct ath10k *ar)
+ 		goto err_free_firmware_files;
+ 	}
+ 
+-	ret = ath10k_swap_code_seg_init(ar);
++	ret = ath10k_swap_code_seg_init(ar, &ar->normal_mode_fw.fw_file);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to initialize code swap segment: %d\n",
+ 			   ret);
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 3da18c9..e69e7e7 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -654,6 +654,8 @@ struct ath10k_fw_file {
+ 
+ 	const void *codeswap_data;
+ 	size_t codeswap_len;
++	/* FIXME: add a comment */
++	struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
+ };
+ 
+ struct ath10k_fw_components {
+@@ -765,10 +767,6 @@ struct ath10k {
+ 	const struct firmware *cal_file;
+ 
+ 	struct {
+-		struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
+-	} swap;
+-
+-	struct {
+ 		u32 vendor;
+ 		u32 device;
+ 		u32 subsystem_vendor;
+diff --git a/drivers/net/wireless/ath/ath10k/swap.c b/drivers/net/wireless/ath/ath10k/swap.c
+index 0c5f586..adf4592 100644
+--- a/drivers/net/wireless/ath/ath10k/swap.c
++++ b/drivers/net/wireless/ath/ath10k/swap.c
+@@ -134,17 +134,18 @@ ath10k_swap_code_seg_alloc(struct ath10k *ar, size_t swap_bin_len)
+ 	return seg_info;
+ }
+ 
+-int ath10k_swap_code_seg_configure(struct ath10k *ar)
++int ath10k_swap_code_seg_configure(struct ath10k *ar,
++				   const struct ath10k_fw_file *fw_file)
+ {
+ 	int ret;
+ 	struct ath10k_swap_code_seg_info *seg_info = NULL;
+ 
+-	if (!ar->swap.firmware_swap_code_seg_info)
++	if (!fw_file->firmware_swap_code_seg_info)
+ 		return 0;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot found firmware code swap binary\n");
+ 
+-	seg_info = ar->swap.firmware_swap_code_seg_info;
++	seg_info = fw_file->firmware_swap_code_seg_info;
+ 
+ 	ret = ath10k_bmi_write_memory(ar, seg_info->target_addr,
+ 				      &seg_info->seg_hw_info,
+@@ -158,28 +159,29 @@ int ath10k_swap_code_seg_configure(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-void ath10k_swap_code_seg_release(struct ath10k *ar)
++void ath10k_swap_code_seg_release(struct ath10k *ar,
++				  struct ath10k_fw_file *fw_file)
+ {
+-	ath10k_swap_code_seg_free(ar, ar->swap.firmware_swap_code_seg_info);
++	ath10k_swap_code_seg_free(ar, fw_file->firmware_swap_code_seg_info);
+ 
+ 	/* FIXME: these two assignments look to bein wrong place! Shouldn't
+ 	 * they be in ath10k_core_free_firmware_files() like the rest?
+ 	 */
+-	ar->normal_mode_fw.fw_file.codeswap_data = NULL;
+-	ar->normal_mode_fw.fw_file.codeswap_len = 0;
++	fw_file->codeswap_data = NULL;
++	fw_file->codeswap_len = 0;
+ 
+-	ar->swap.firmware_swap_code_seg_info = NULL;
++	fw_file->firmware_swap_code_seg_info = NULL;
+ }
+ 
+-int ath10k_swap_code_seg_init(struct ath10k *ar)
++int ath10k_swap_code_seg_init(struct ath10k *ar, struct ath10k_fw_file *fw_file)
+ {
+ 	int ret;
+ 	struct ath10k_swap_code_seg_info *seg_info;
+ 	const void *codeswap_data;
+ 	size_t codeswap_len;
+ 
+-	codeswap_data = ar->normal_mode_fw.fw_file.codeswap_data;
+-	codeswap_len = ar->normal_mode_fw.fw_file.codeswap_len;
++	codeswap_data = fw_file->codeswap_data;
++	codeswap_len = fw_file->codeswap_len;
+ 
+ 	if (!codeswap_len || !codeswap_data)
+ 		return 0;
+@@ -200,7 +202,7 @@ int ath10k_swap_code_seg_init(struct ath10k *ar)
+ 		return ret;
+ 	}
+ 
+-	ar->swap.firmware_swap_code_seg_info = seg_info;
++	fw_file->firmware_swap_code_seg_info = seg_info;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/swap.h b/drivers/net/wireless/ath/ath10k/swap.h
+index 36991c7..f5dc047 100644
+--- a/drivers/net/wireless/ath/ath10k/swap.h
++++ b/drivers/net/wireless/ath/ath10k/swap.h
+@@ -23,6 +23,8 @@
+ /* Currently only one swap segment is supported */
+ #define ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED	1
+ 
++struct ath10k_fw_file;
++
+ struct ath10k_swap_code_seg_tlv {
+ 	__le32 address;
+ 	__le32 length;
+@@ -58,8 +60,11 @@ struct ath10k_swap_code_seg_info {
+ 	dma_addr_t paddr[ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED];
+ };
+ 
+-int ath10k_swap_code_seg_configure(struct ath10k *ar);
+-void ath10k_swap_code_seg_release(struct ath10k *ar);
+-int ath10k_swap_code_seg_init(struct ath10k *ar);
++int ath10k_swap_code_seg_configure(struct ath10k *ar,
++				   const struct ath10k_fw_file *fw_file);
++void ath10k_swap_code_seg_release(struct ath10k *ar,
++				  struct ath10k_fw_file *fw_file);
++int ath10k_swap_code_seg_init(struct ath10k *ar,
++			      struct ath10k_fw_file *fw_file);
+ 
+ #endif
+-- 
+1.7.9.5
 
-Correct, this has been a holy mess. One way to fix this on userspace
-is to upgrade systemd with an exception to the udev kmod helper,
-and avoid the timeout completely for kmod helper which loads drivers.
-
-CONFIG_FW_LOADER_USER_HELPER_FALLBACK should be avoided.
-
-> For brcmfmac this looks like this:
-> 
-> [   15.160923] brcmfmac 0000:03:00.0: Direct firmware load for brcm/brcmfmac4356-pcie.txt failed with error -2
-> [   15.170759] brcmfmac 0000:03:00.0: Falling back to user helper
-> <snip>
-> [   75.709397] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015 06:16:41 version 7.35.180.119 (r594535) FWID 01-1a5c4016
-> [   75.736941] brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166 code (0x30 0x30)
-> 
-> Without CONFIG_FW_LOADER_USER_HELPER_FALLBACK first firmware request
-> silently fail and then instantly next F/W image is loaded.
-
-Yup.
-
-> Another option to solve to problem would be stop requesting not
-> available publicly firmware. However, I assume some drivers would
-> like to preserve that option.
-
-No, this seems counter productive given that the firmware is expected
-to land eventually.
-
-> > > However I wonder if changing that will not broke the case when
-> > > driver is build-in in the kernel and f/w is not yet available when
-> > > driver start to initialize. Or maybe nowadays this is not the case
-> > > any longer, i.e. the MODULE_FIRMWARE macros assure proper f/w 
-> > > images are build-in in the kernel or copied to initramfs?
-> > 
-> > That is a nice idea, but I have not seen any change in that area. Could
-> > have missed it.
-> 
-> I believe this is how the things are already done, IOW switching to
-> request_firmware_direct() in the driver should be no harm.
-
-We don't stuff firmware as built-in if the driver used MODULE_FIRMWARE()
-and the driver is built-in. What commit did that?
-
-The right thing to do is distros should avoid
-CONFIG_FW_LOADER_USER_HELPER_FALLBACK and if they are stuck with it, a
-systemd work around is possible. Upstream systemd already increased
-the timeout to 180 seconds. Upstream also added a udevd --event-timeout
-command line option, look into that. Other distros (OpenSUSE) avoids
-the kmod timeout ;)
-
-The timeout thing was simply a mistake, specially for kmod and it wasn't
-well thought out. I've listed more serious implications for it here:
-
-http://www.do-not-panic.com/2015/12/linux-asynchronous-probe.html
-
-  Luis
