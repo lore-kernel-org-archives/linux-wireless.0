@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51092 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751035AbcGGQcB convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33909 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752242AbcGAQK6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2016 12:32:01 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: disable wake_tx_queue for older devices
-Date: Thu, 7 Jul 2016 16:30:48 +0000
-Message-ID: <87zipt1kco.fsf@kamboji.qca.qualcomm.com> (sfid-20160707_183207_260436_07B8936D)
-References: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com>
-	<1467201146-6844-1-git-send-email-michal.kazior@tieto.com>
-In-Reply-To: <1467201146-6844-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Wed, 29 Jun 2016 13:52:26 +0200")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Fri, 1 Jul 2016 12:10:58 -0400
+Received: by mail-wm0-f66.google.com with SMTP id 187so6344367wmz.1
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 09:10:45 -0700 (PDT)
+From: Pierre Le Magourou <lemagoup@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
+	jmassot@aldebaran.com,
+	Pierre Le Magourou <plemagourou@aldebaran.com>
+Subject: [PATCH 2/3] ath6kl: Fix wrong regulatory domain disconnection.
+Date: Fri,  1 Jul 2016 18:10:04 +0200
+Message-Id: <20160701161005.30341-3-plemagourou@aldebaran.com> (sfid-20160701_181101_192301_5109C732)
+In-Reply-To: <20160701161005.30341-1-plemagourou@aldebaran.com>
+References: <20160701161005.30341-1-plemagourou@aldebaran.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+One minute after a successful connection, the kernel checks if the
+frequency and the channel width are well configured for the country we
+are in. (regulatory domain)
 
-> Ideally wake_tx_queue should be used regardless as
-> it is a requirement for reducing bufferbloat and
-> implementing airtime fairness in the future.
->
-> However some setups (typically low-end platforms
-> hosting QCA988X) suffer performance regressions
-> with the current wake_tx_queue implementation.
-> Therefore disable it unless it is really
-> beneficial with current codebase (which is when
-> firmware supports smart pull-push tx scheduling).
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+ath6kl driver was setting the NL80211_CHAN_HT20 channel without checking
+for the HT capabilities. (we should have NL80211_CHAN_NO_HT in our
+case because the firmware did not support HT)
 
-I think it's too late to send this to 4.7 anymore (and this due to my
-vacation). So I'm planning to queue this to 4.8, but if the feedback is
-positive we can always send this to a 4.7 stable release.
+This patch adds a check on ht_cap.ht_supported in order to create the
+channel corresponding to the firmware capabilities.
 
+Signed-off-by: Pierre Le Magourou <plemagourou@aldebaran.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index 4e11ba0..c9c4d7f 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -1104,7 +1104,8 @@ void ath6kl_cfg80211_ch_switch_notify(struct ath6kl_vif *vif, int freq,
+ 
+ 	cfg80211_chandef_create(&chandef,
+ 				ieee80211_get_channel(vif->ar->wiphy, freq),
+-				(mode == WMI_11G_HT20) ?
++				(mode == WMI_11G_HT20 &&
++				 ath6kl_band_2ghz.ht_cap.ht_supported) ?
+ 					NL80211_CHAN_HT20 : NL80211_CHAN_NO_HT);
+ 
+ 	mutex_lock(&vif->wdev.mtx);
 -- 
-Kalle Valo
+2.9.0
+
