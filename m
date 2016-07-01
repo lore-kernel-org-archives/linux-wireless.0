@@ -1,185 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:33560 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751897AbcGIRF3 (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:35461 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752000AbcGAI0F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2016 13:05:29 -0400
-Subject: Re: [v1] ErrHandling:Make IS_ERR_VALUE_U32 as generic API to avoid
- IS_ERR_VALUE abuses.
-To: kbuild test robot <lkp@intel.com>
-References: <201607100030.7r0gSKVZ%fengguang.wu@intel.com>
-Cc: kbuild-all@01.org, zajec5@gmail.com, viresh.kumar@linaro.org,
-	akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: arvind Yadav <arvind.yadav.cs@gmail.com>
-Message-ID: <57812ED2.8030300@gmail.com> (sfid-20160709_190551_860422_EAA570ED)
-Date: Sat, 9 Jul 2016 22:35:22 +0530
+	Fri, 1 Jul 2016 04:26:05 -0400
+Received: by mail-pf0-f175.google.com with SMTP id c2so38348283pfa.2
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 01:26:05 -0700 (PDT)
+Subject: Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
+To: Rob Herring <robh@kernel.org>, Hans de Goede <hdegoede@redhat.com>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+ <20160701020836.GA1722@rob-hp-laptop>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, linux-sunxi@googlegroups.com,
+	Chen-Yu Tsai <wens@csie.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <b18cd232-711a-b617-2f09-09c4bdf2c3c4@broadcom.com> (sfid-20160701_102622_144651_912CC6A7)
+Date: Fri, 1 Jul 2016 10:17:37 +0200
 MIME-Version: 1.0
-In-Reply-To: <201607100030.7r0gSKVZ%fengguang.wu@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20160701020836.GA1722@rob-hp-laptop>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I have summited one more version-2 patch. Please test on that. please 
-share your result with us.
 
-Thanks,
-Arvind yadav
 
-On Saturday 09 July 2016 10:08 PM, kbuild test robot wrote:
-> Hi,
->
-> [auto build test WARNING on v4.7-rc6]
-> [also build test WARNING on next-20160708]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Arvind-Yadav/ErrHandling-Make-IS_ERR_VALUE_U32-as-generic-API-to-avoid-IS_ERR_VALUE-abuses/20160709-235356
-> config: x86_64-rhel (attached as .config)
-> compiler: gcc-4.9 (Debian 4.9.3-14) 4.9.3
-> reproduce:
->          # save the attached .config to linux build tree
->          make ARCH=x86_64
->
-> All warnings (new ones prefixed by >>):
->
->     In file included from include/uapi/linux/stddef.h:1:0,
->                      from include/linux/stddef.h:4,
->                      from include/uapi/linux/posix_types.h:4,
->                      from include/uapi/linux/types.h:13,
->                      from include/linux/types.h:5,
->                      from include/linux/mod_devicetable.h:11,
->                      from include/linux/pci.h:20,
->                      from include/linux/bcma/bcma.h:4,
->                      from drivers/bcma/bcma_private.h:8,
->                      from drivers/bcma/scan.c:9:
->     drivers/bcma/scan.c: In function 'bcma_get_next_core':
->     include/linux/err.h:23:52: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                                         ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->>> drivers/bcma/scan.c:361:18: note: in expansion of macro 'IS_ERR_VALUE_U32'
->       if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
->                       ^
->>> include/linux/err.h:23:38: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                           ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->>> drivers/bcma/scan.c:361:18: note: in expansion of macro 'IS_ERR_VALUE_U32'
->       if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
->                       ^
->     include/linux/err.h:23:52: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                                         ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->     drivers/bcma/scan.c:365:19: note: in expansion of macro 'IS_ERR_VALUE_U32'
->        if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
->                        ^
->>> include/linux/err.h:23:38: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                           ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->     drivers/bcma/scan.c:365:19: note: in expansion of macro 'IS_ERR_VALUE_U32'
->        if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
->                        ^
->     include/linux/err.h:23:52: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                                         ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->     drivers/bcma/scan.c:380:8: note: in expansion of macro 'IS_ERR_VALUE_U32'
->         if (IS_ERR_VALUE_U32(tmp)) {
->             ^
->>> include/linux/err.h:23:38: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                           ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->     drivers/bcma/scan.c:380:8: note: in expansion of macro 'IS_ERR_VALUE_U32'
->         if (IS_ERR_VALUE_U32(tmp)) {
->             ^
->     include/linux/err.h:23:52: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                                         ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->     drivers/bcma/scan.c:397:8: note: in expansion of macro 'IS_ERR_VALUE_U32'
->         if (IS_ERR_VALUE_U32(tmp)) {
->             ^
->>> include/linux/err.h:23:38: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                           ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->     drivers/bcma/scan.c:397:8: note: in expansion of macro 'IS_ERR_VALUE_U32'
->         if (IS_ERR_VALUE_U32(tmp)) {
->             ^
->     include/linux/err.h:23:52: warning: cast to pointer from integer of different size [-Wint-to-pointer-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                                         ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->     drivers/bcma/scan.c:415:8: note: in expansion of macro 'IS_ERR_VALUE_U32'
->         if (IS_ERR_VALUE_U32(tmp)) {
->             ^
->>> include/linux/err.h:23:38: warning: cast from pointer to integer of different size [-Wpointer-to-int-cast]
->      #define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
->                                           ^
->     include/linux/compiler.h:170:42: note: in definition of macro 'unlikely'
->      # define unlikely(x) __builtin_expect(!!(x), 0)
->                                               ^
->     drivers/bcma/scan.c:415:8: note: in expansion of macro 'IS_ERR_VALUE_U32'
->         if (IS_ERR_VALUE_U32(tmp)) {
->             ^
->
-> vim +/IS_ERR_VALUE_U32 +361 drivers/bcma/scan.c
->
-> 517f43e5 Hauke Mehrtens 2011-07-23  345  	    )) {
-> 517f43e5 Hauke Mehrtens 2011-07-23  346  		bcma_erom_skip_component(bus, eromptr);
-> 517f43e5 Hauke Mehrtens 2011-07-23  347  		return -ENODEV;
-> 517f43e5 Hauke Mehrtens 2011-07-23  348  	}
-> 517f43e5 Hauke Mehrtens 2011-07-23  349
-> 8369ae33 Rafał Miłecki  2011-05-09  350  	/* get & parse master ports */
-> 8369ae33 Rafał Miłecki  2011-05-09  351  	for (i = 0; i < ports[0]; i++) {
-> 4e0d8cc1 Dan Carpenter  2011-08-23  352  		s32 mst_port_d = bcma_erom_get_mst_port(bus, eromptr);
-> 982eee67 Hauke Mehrtens 2011-07-23  353  		if (mst_port_d < 0)
-> 982eee67 Hauke Mehrtens 2011-07-23  354  			return -EILSEQ;
-> 8369ae33 Rafał Miłecki  2011-05-09  355  	}
-> 8369ae33 Rafał Miłecki  2011-05-09  356
-> e167d9fb Hauke Mehrtens 2012-03-15  357  	/* First Slave Address Descriptor should be port 0:
-> e167d9fb Hauke Mehrtens 2012-03-15  358  	 * the main register space for the core
-> e167d9fb Hauke Mehrtens 2012-03-15  359  	 */
-> e167d9fb Hauke Mehrtens 2012-03-15  360  	tmp = bcma_erom_get_addr_desc(bus, eromptr, SCAN_ADDR_TYPE_SLAVE, 0);
-> aaa2ced1 Hauke Mehrtens 2013-09-07 @361  	if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
-> e167d9fb Hauke Mehrtens 2012-03-15  362  		/* Try again to see if it is a bridge */
-> e167d9fb Hauke Mehrtens 2012-03-15  363  		tmp = bcma_erom_get_addr_desc(bus, eromptr,
-> e167d9fb Hauke Mehrtens 2012-03-15  364  					      SCAN_ADDR_TYPE_BRIDGE, 0);
-> aaa2ced1 Hauke Mehrtens 2013-09-07  365  		if (tmp == 0 || IS_ERR_VALUE_U32(tmp)) {
-> e167d9fb Hauke Mehrtens 2012-03-15  366  			return -EILSEQ;
-> e167d9fb Hauke Mehrtens 2012-03-15  367  		} else {
-> 3d9d8af3 Rafał Miłecki  2012-07-05  368  			bcma_info(bus, "Bridge found\n");
-> e167d9fb Hauke Mehrtens 2012-03-15  369  			return -ENXIO;
->
-> :::::: The code at line 361 was first introduced by commit
-> :::::: aaa2ced15ad8dca8048666c9f70736424d696a6b bcma: fix error code handling on 64 Bit systems
->
-> :::::: TO: Hauke Mehrtens <hauke@hauke-m.de>
-> :::::: CC: John W. Linville <linville@tuxdriver.com>
->
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+On 1-7-2016 4:08, Rob Herring wrote:
+> On Wed, Jun 29, 2016 at 04:04:31PM +0200, Hans de Goede wrote:
+>> Add a brcm,nvram_file_name dt property to allow overruling the default
+>> nvram filename for sdio devices. The idea is that we can specify a
+>> board specific nvram file, e.g. brcmfmac43362-ap6210.txt for boards
+>> with an ap6210 wifi sdio module and ship this in linux-firmware, so
+>> that wifi will work out of the box, without requiring users to find
+>> and then manually install the right nvram file for their board.
+> 
+> What about putting its contents directly into DT? It's just text 
+> key/value pairs so it would match up well.
 
+It would be an option, but I have no clue how to dig up documentation of
+these key,value pairs. The file is typically obtained from a wifi module
+vendor which would need to be converted to DT format, ie. prefix with
+"brcm," etc. From driver perspective this would mean it need to know
+keys. Currently, it just takes the file contents and sends it to the device.
+
+> Also, I have to wonder how all the non-SDIO based cards don't need this 
+> file.
+
+PCIe devices have more on-board storage. Also on some router platforms
+it gets nvram data from flash memory.
+
+>> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+>> ---
+>>  .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt          | 2 ++
+>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c               | 2 ++
+>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c             | 6 ++++++
+>>  include/linux/platform_data/brcmfmac.h                              | 2 ++
+>>  4 files changed, 12 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> index 5dbf169..2ba13a6 100644
+>> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+>> @@ -11,6 +11,7 @@ Required properties:
+>>  Optional properties:
+>>   - brcm,drive-strength : drive strength used for SDIO pins on device in mA
+>>  	(default = 6).
+>> + - brcm,nvram_file_name : name of the nvram file to load
+> 
+> The need for firmware file names has come up several times though 
+> nothing merged to yet. There has been at least some level of agreement 
+> to use "firmware-name" here. 
+
+Do you mean with or without vendor prefix? Actually the device needs two
+files to initialize. The firmware that is needed to have anything
+running on the device and the nvram data that characterizes the device
+for that firmware.
+
+Regards,
+Arend
+
+>>   - interrupt-parent : the phandle for the interrupt controller to which the
+>>  	device interrupts are connected.
+>>   - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
+>> @@ -34,6 +35,7 @@ mmc3: mmc@01c12000 {
+>>  	brcmf: bcrmf@1 {
+>>  		reg = <1>;
+>>  		compatible = "brcm,bcm4329-fmac";
+>> +		brcm,nvram_file_name = "brcm/brcmfmac43362-ap6210.txt";
+>>  		interrupt-parent = <&pio>;
+>>  		interrupts = <10 8>; /* PH10 / EINT10 */
+>>  		interrupt-names = "host-wake";
