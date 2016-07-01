@@ -1,172 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f178.google.com ([209.85.161.178]:35454 "EHLO
-	mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752983AbcGGSnc (ORCPT
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:36160 "EHLO
+	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752160AbcGAHtS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2016 14:43:32 -0400
-Received: by mail-yw0-f178.google.com with SMTP id l125so21578061ywb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2016 11:43:32 -0700 (PDT)
+	Fri, 1 Jul 2016 03:49:18 -0400
+Received: by mail-pf0-f176.google.com with SMTP id t190so38016275pfb.3
+        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 00:49:18 -0700 (PDT)
+Subject: Re: building brcmfmac driver for iMX6 Ultralite platform
+To: Michael Eskowitz <MichaelE@inventeksys.com>,
+	linux-wireless@vger.kernel.org
+References: <002601d1d305$183c3070$48b49150$@inventeksys.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <6d12bb3e-a01d-34c7-c1a9-b1952a84f99e@broadcom.com> (sfid-20160701_094921_861254_F7F19A1C)
+Date: Fri, 1 Jul 2016 09:49:09 +0200
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
-References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 8 Jul 2016 00:05:46 +0530
-Message-ID: <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com> (sfid-20160707_204346_934048_9C28D687)
-Subject: Re: ath10k + iw set bitrates is causing FW crash
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <002601d1d305$183c3070$48b49150$@inventeksys.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 7, 2016 at 10:19 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> Hi,
->
-> I am using ath10k driver with qca988x hw2.0 and trying to limit it to use
-> VHT MCS0-7 (iw set bitrates vht-mcs-5 2:0-7).
->
-> But the command it causing a FW crash, if it disable HW_HAS_RATE_CONTROL
-> no crash is observed but it still uses MCS9.
->
-> tree: wireless-drivers-next: commit#535633a5ba4ea2504fa6c33176633becf0e59339
->
-> 1) If i disable HW_RATE_CONTROL, will ath10k honor
-> the mac80211 rates?
->
-> 2) Please find below the dmesg after the crash.
->
-> [ 3879.419737] ath10k_pci 0000:01:00.0: device successfully recovered
-> [ 3941.919995] wlan0: deauthenticating from 74:d0:2b:41:e4:b4 by local
-> choice (Reason: 3=DEAUTH_LEAVING)
-> [ 3953.665725] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [ 3955.768675] wlan0: authenticate with 74:d0:2b:41:e4:b4
-> [ 3955.768688] ieee80211_determine_chantype:306 enter..: cwid:3 vht_cwid:3
-> [ 3955.776460] wlan0: send auth to 74:d0:2b:41:e4:b4 (try 1/3)
-> [ 3955.777014] wlan0: authenticated
-> [ 3955.781060] wlan0: associate with 74:d0:2b:41:e4:b4 (try 1/3)
-> [ 3955.782124] wlan0: RX AssocResp from 74:d0:2b:41:e4:b4 (capab=0x11
-> status=0 aid=2)
-> [ 3955.783147] wlan0: associated
-> [ 3955.783213] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [ 3959.053601] wlan0: deauthenticating from 74:d0:2b:41:e4:b4 by local
-> choice (Reason: 3=DEAUTH_LEAVING)
-> [ 3964.025669] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> [ 3967.104520] wlan0: authenticate with 74:d0:2b:41:e4:b4
-> [ 3967.104533] ieee80211_determine_chantype:306 enter..: cwid:3 vht_cwid:3
-> [ 3967.112366] wlan0: send auth to 74:d0:2b:41:e4:b4 (try 1/3)
-> [ 3967.112905] wlan0: authenticated
-> [ 3967.113166] wlan0: associate with 74:d0:2b:41:e4:b4 (try 1/3)
-> [ 3967.114248] wlan0: RX AssocResp from 74:d0:2b:41:e4:b4 (capab=0x11
-> status=0 aid=2)
-> [ 3967.115327] wlan0: associated
-> [ 3967.115357] IPv6: ADDRCONF(NETDEV_CHANGE): wlan0: link becomes ready
-> [ 3976.110218] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
-> bfab5915-ae19-40b1-be67-544d909779ab)
-> [ 3976.110226] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
-> 0x4100016c chip_id 0x043222ff sub 0000:0000
-> [ 3976.110228] ath10k_pci 0000:01:00.0: kconfig debug 1 debugfs 1
-> tracing 1 dfs 0 testmode 0
-> [ 3976.110467] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.9-2 api
-> 5 features no-p2p,raw-mode crc32 b8d50af5
-> [ 3976.110472] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
-> crc32 bebc7c08
-> [ 3976.110475] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op 2
-> cal otp max-sta 128 raw 0 hwcrypto 1
-> [ 3976.112483] ath10k_pci 0000:01:00.0: firmware register dump:
-> [ 3976.112485] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
-> 0x009BF931 0x00955B31
-> [ 3976.112487] ath10k_pci 0000:01:00.0: [04]: 0x009BF931 0x00060530
-> 0x00000010 0xFFFFFFFF
-> [ 3976.112490] ath10k_pci 0000:01:00.0: [08]: 0x0044D9B8 0x0000C001
-> 0x00000000 0x00000005
-> [ 3976.112492] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000
-> 0x00957F04 0x00957F12
-> [ 3976.112494] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094085D
-> 0x00000000 0x00000000
-> [ 3976.112496] ath10k_pci 0000:01:00.0: [20]: 0x409BF931 0x0040AA44
-> 0x00420854 0x00440198
-> [ 3976.112498] ath10k_pci 0000:01:00.0: [24]: 0x809BF9A1 0x0040AAA4
-> 0x00789518 0xC09BF931
-> [ 3976.112500] ath10k_pci 0000:01:00.0: [28]: 0x809B837F 0x0040AAC4
-> 0x0044D9B8 0x000005DC
-> [ 3976.112502] ath10k_pci 0000:01:00.0: [32]: 0x809B8555 0x0040AAE4
-> 0x0044D9A0 0x00000100
-> [ 3976.112504] ath10k_pci 0000:01:00.0: [36]: 0x809A0DF5 0x0040AB04
-> 0x0043EAA8 0x0040AD14
-> [ 3976.112506] ath10k_pci 0000:01:00.0: [40]: 0x809896F9 0x0040AB24
-> 0x0043EAA8 0x0040AD14
-> [ 3976.112508] ath10k_pci 0000:01:00.0: [44]: 0x809B5ACC 0x0040AB44
-> 0x009C575C 0x0043EAA8
-> [ 3976.112510] ath10k_pci 0000:01:00.0: [48]: 0x809B1C74 0x0040ADA4
-> 0x00400000 0x00416DEC
-> [ 3976.112512] ath10k_pci 0000:01:00.0: [52]: 0x809BFB39 0x0040ADE4
-> 0x0040AE08 0x00411F80
-> [ 3976.112514] ath10k_pci 0000:01:00.0: [56]: 0x809486FA 0x0040AE04
-> 0x00000001 0x00000000
-> [ 3976.195917] ieee80211 phy0: Hardware restart was requested
-> [ 3977.561878] ath10k_pci 0000:01:00.0: device successfully recovered
-> [ 8494.632109] ath10k_pci 0000:01:00.0: firmware crashed! (uuid
-> 5b6f2fe0-1a2c-4485-a7d5-64705ca051a2)
-> [ 8494.632116] ath10k_pci 0000:01:00.0: qca988x hw2.0 target
-> 0x4100016c chip_id 0x043222ff sub 0000:0000
-> [ 8494.632119] ath10k_pci 0000:01:00.0: kconfig debug 1 debugfs 1
-> tracing 1 dfs 0 testmode 0
-> [ 8494.632357] ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.9-2 api
-> 5 features no-p2p,raw-mode crc32 b8d50af5
-> [ 8494.632362] ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A
-> crc32 bebc7c08
-> [ 8494.632364] ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op 2
-> cal otp max-sta 128 raw 0 hwcrypto 1
-> [ 8494.634373] ath10k_pci 0000:01:00.0: firmware register dump:
-> [ 8494.634376] ath10k_pci 0000:01:00.0: [00]: 0x4100016C 0x000015B3
-> 0x009BF931 0x00955B31
-> [ 8494.634378] ath10k_pci 0000:01:00.0: [04]: 0x009BF931 0x00060530
-> 0x00000010 0xFFFFFFFF
-> [ 8494.634380] ath10k_pci 0000:01:00.0: [08]: 0x0044D9B8 0x0000C001
-> 0x00000000 0x00000005
-> [ 8494.634382] ath10k_pci 0000:01:00.0: [12]: 0x00000009 0x00000000
-> 0x00957F04 0x00957F12
-> [ 8494.634384] ath10k_pci 0000:01:00.0: [16]: 0x00958080 0x0094085D
-> 0x00000000 0x00000000
-> [ 8494.634386] ath10k_pci 0000:01:00.0: [20]: 0x409BF931 0x0040AA44
-> 0x00420854 0x00440198
-> [ 8494.634388] ath10k_pci 0000:01:00.0: [24]: 0x809BF9A1 0x0040AAA4
-> 0x00789518 0xC09BF931
-> [ 8494.634390] ath10k_pci 0000:01:00.0: [28]: 0x809B837F 0x0040AAC4
-> 0x0044D9B8 0x000005DC
-> [ 8494.634392] ath10k_pci 0000:01:00.0: [32]: 0x809B8555 0x0040AAE4
-> 0x0044D9A0 0x00000100
-> [ 8494.634394] ath10k_pci 0000:01:00.0: [36]: 0x809A0DF5 0x0040AB04
-> 0x0043EAA8 0x0040AD14
-> [ 8494.634396] ath10k_pci 0000:01:00.0: [40]: 0x809896F9 0x0040AB24
-> 0x0043EAA8 0x0040AD14
-> [ 8494.634398] ath10k_pci 0000:01:00.0: [44]: 0x809B5ACC 0x0040AB44
-> 0x009C575C 0x0043EAA8
-> [ 8494.634400] ath10k_pci 0000:01:00.0: [48]: 0x809B1C74 0x0040ADA4
-> 0x00400000 0x00416E0C
-> [ 8494.634402] ath10k_pci 0000:01:00.0: [52]: 0x809BFB39 0x0040ADE4
-> 0x0040AE08 0x00411F80
-> [ 8494.634404] ath10k_pci 0000:01:00.0: [56]: 0x809486FA 0x0040AE04
-> 0x00000001 0x00000000
-> [ 8494.724659] ieee80211 phy0: Hardware restart was requested
-> [ 8496.090883] ath10k_pci 0000:01:00.0: device successfully recovered
->
->
-+ath10k list.
-I am using latest firmware-5.bin from linux-firmware.git.
+On 30-6-2016 21:24, Michael Eskowitz wrote:
+> I am trying to bring up the brcmfmac driver on an iMX6 Ultralite board.  I
+> have both a 43341 and 43362 Wi-Fi SDIO module up and running on this
+> platform already using the standard bcmdhd.  I am told by some Broadcom
+> folks that the brcmfmac driver should support concurrent connections which
+> is something the bcmdhd does not do and that is my primary motivation for
+> getting the fmac driver up and running.
 
-Also i see below messages during fw loading:
+bcmdhd is the standard *android* driver as provided in AOSP. So do you
+intend to productize your platform with android. The brcmfmac is our
+upstream driver so it will not have android specific functionality.
 
-ath10k_pci 0000:01:00.0: pci irq msi oper_irq_mode 2 irq_mode 0 reset_mode 0
-ath10k/pre-cal-pci-0000:01:00.0.bin failed with error -2
-ath10k/cal-pci-0000:01:00.0.bin failed with error -2
-ath10k_pci 0000:01:00.0: qca988x hw2.0 target 0x4100016c chip_id
-0x043222ff sub 0000:0000
-ath10k_pci 0000:01:00.0: kconfig debug 1 debugfs 1 tracing 1 dfs 0 testmode 0
-ath10k_pci 0000:01:00.0: firmware ver 10.2.4.70.9-2 api 5 features
-no-p2p,raw-mode crc32 b8d50af5
-ath10k/QCA988X/hw2.0/board-2.bin failed with error -2
-ath10k_pci 0000:01:00.0: board_file api 1 bmi_id N/A crc32 bebc7c08
-ath10k_pci 0000:01:00.0: htt-ver 2.1 wmi-op 5 htt-op 2 cal otp max-sta
-128 raw 0 hwcrypto 1
+> The brcmfmac driver is included in NXP's kernel git and I have successfully
+> built it and have it on the Ultralite platform running kernel 3.14.38.  When
+> I attempt to insert the module using the command
+> 
+> 	insmod  brcmfmac.ko
+> firmware_path=ISM4334X_Wifi_FW_6.10.190.49_P.bin
+> nvram_path=ISM4334X_NVRAM_C1.txt
+> 
+> I receive the following errors:
+> 
+> 	brcmfmac: Unknown symbol brcmu_pktq_mlen (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pkt_buf_free_skb (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pktq_init (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pktq_penq_head (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pktq_pdeq (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pktq_peek_tail (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pktq_flush (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pktq_pdeq_match (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pktq_mdeq (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pktq_penq (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pktq_pdeq_tail (err 0)
+> 	brcmfmac: Unknown symbol brcmu_pkt_buf_get_skb (err 0)
+> 	brcmfmac: Unknown symbol brcmu_d11_attach (err 0)
+> 	insmod: ERROR: could not insert module brcmfmac.ko: Unknown symbol
+> in module
+> 
+> I'm not sure that the firmware_path and nvram_path should be specified in
+> this manner, but I doubt that is what is causing these errors.  
+
+The brcmfmac driver does not have module parameters firmware_path and
+nvram_path. The filenaming is determined by the driver and it must be in
+a location that firmware api provider looks for:
+
+drivers/base/firmware_class.c:277:
+/* direct firmware loading support */
+static char fw_path_para[256];
+static const char * const fw_path[] = {
+        fw_path_para,
+        "/lib/firmware/updates/" UTS_RELEASE,
+        "/lib/firmware/updates",
+        "/lib/firmware/" UTS_RELEASE,
+        "/lib/firmware"
+};
+
+/*
+ * Typical usage is that passing 'firmware_class.path=$CUSTOMIZED_PATH'
+ * from kernel command line because firmware_class is generally built in
+ * kernel instead of module.
+ */
+module_param_string(path, fw_path_para, sizeof(fw_path_para), 0644);
+MODULE_PARM_DESC(path, "customized firmware image search path with a
+higher priority than default path");
+
+However, this is indeed not the reason for the errors. The brcmfmac
+needs functions exported by brcmutil.ko which should be created in the
+build you executed.
+
+Regards,
+Arend
+
+> The module compiled and built just fine so I am assuming that there are some
+> dependencies that aren't being met.  Is there another module that I need to
+> load before attempting to load the fmac driver?
+> 
+> Thanks,
+> -Mike
