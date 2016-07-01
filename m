@@ -1,160 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:38077 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932965AbcGELn3 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22941 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752025AbcGAHBr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 07:43:29 -0400
-Received: by mail-wm0-f42.google.com with SMTP id r201so148808424wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 04:43:28 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
-	linux-kernel@vger.kernel.org,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv4 wl-drv-next 2/2] mt7601u: use linux/bitfield.h
-Date: Tue,  5 Jul 2016 12:42:59 +0100
-Message-Id: <1467718979-20029-3-git-send-email-jakub.kicinski@netronome.com> (sfid-20160705_134356_000650_6EF13C83)
-In-Reply-To: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
+	Fri, 1 Jul 2016 03:01:47 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>,
+	"Tamizh chelvam" <c_traja@qti.qualcomm.com>
+Subject: [PATCHv3 3/3] ath10k: add testmode support for 10.4 firmware
+Date: Fri, 1 Jul 2016 12:37:15 +0530
+Message-ID: <1467356835-31836-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160701_090150_303940_9FA42CFE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the newly added linux/bitfield.h.
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+This patch adds testmode support for 10.4 based chipsets
+and added code swap support for UTF binary.
+
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
- drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
- drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
- 3 files changed, 4 insertions(+), 80 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+ drivers/net/wireless/ath/ath10k/testmode.c |   23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.h b/drivers/net/wireless/mediatek/mt7601u/dma.h
-index 978e8a90b87f..166ac71905d2 100644
---- a/drivers/net/wireless/mediatek/mt7601u/dma.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/dma.h
-@@ -18,8 +18,6 @@
- #include <asm/unaligned.h>
- #include <linux/skbuff.h>
+diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
+index 120f423..7b8e33b 100644
+--- a/drivers/net/wireless/ath/ath10k/testmode.c
++++ b/drivers/net/wireless/ath/ath10k/testmode.c
+@@ -23,6 +23,7 @@
+ #include "wmi.h"
+ #include "hif.h"
+ #include "hw.h"
++#include "core.h"
  
--#include "util.h"
--
- #define MT_DMA_HDR_LEN			4
- #define MT_RX_INFO_LEN			4
- #define MT_FCE_INFO_LEN			4
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-index 428bd2f10b7b..5ef62e02ce66 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-@@ -15,6 +15,7 @@
- #ifndef MT7601U_H
- #define MT7601U_H
+ #include "testmode_i.h"
  
-+#include <linux/bitfield.h>
- #include <linux/kernel.h>
- #include <linux/device.h>
- #include <linux/mutex.h>
-@@ -24,7 +25,6 @@
- #include <linux/debugfs.h>
+@@ -240,6 +241,18 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
+ 		goto err;
+ 	}
  
- #include "regs.h"
--#include "util.h"
- 
- #define MT_CALIBRATE_INTERVAL		(4 * HZ)
- 
-@@ -282,6 +282,9 @@ struct mt7601u_rxwi;
- 
- extern const struct ieee80211_ops mt7601u_ops;
- 
-+#define MT76_SET	FIELD_PUT
-+#define MT76_GET	FIELD_GET
++	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
++	    ar->testmode.utf_mode_fw.fw_file.codeswap_len) {
++		ret = ath10k_swap_code_seg_init(ar,
++					&ar->testmode.utf_mode_fw.fw_file);
++		if (ret) {
++			ath10k_warn(ar,
++				"failed to init utf code swap segment: %d\n",
++				ret);
++			goto err_release_utf_mode_fw;
++		}
++	}
 +
- void mt7601u_init_debugfs(struct mt7601u_dev *dev);
+ 	spin_lock_bh(&ar->data_lock);
+ 	ar->testmode.utf_monitor = true;
+ 	spin_unlock_bh(&ar->data_lock);
+@@ -279,6 +292,11 @@ err_power_down:
+ 	ath10k_hif_power_down(ar);
  
- u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset);
-diff --git a/drivers/net/wireless/mediatek/mt7601u/util.h b/drivers/net/wireless/mediatek/mt7601u/util.h
-deleted file mode 100644
-index b89140bf1210..000000000000
---- a/drivers/net/wireless/mediatek/mt7601u/util.h
-+++ /dev/null
-@@ -1,77 +0,0 @@
--/*
-- * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
-- * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2
-- * as published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- */
--
--#ifndef __MT76_UTIL_H
--#define __MT76_UTIL_H
--
--/*
-- * Power of two check, this will check
-- * if the mask that has been given contains and contiguous set of bits.
-- * Note that we cannot use the is_power_of_2() function since this
-- * check must be done at compile-time.
-- */
--#define is_power_of_two(x)	( !((x) & ((x)-1)) )
--#define low_bit_mask(x)		( ((x)-1) & ~(x) )
--#define is_valid_mask(x)	is_power_of_two(1LU + (x) + low_bit_mask(x))
--
--/*
-- * Macros to find first set bit in a variable.
-- * These macros behave the same as the __ffs() functions but
-- * the most important difference that this is done during
-- * compile-time rather then run-time.
-- */
--#define compile_ffs2(__x) \
--	__builtin_choose_expr(((__x) & 0x1), 0, 1)
--
--#define compile_ffs4(__x) \
--	__builtin_choose_expr(((__x) & 0x3), \
--			      (compile_ffs2((__x))), \
--			      (compile_ffs2((__x) >> 2) + 2))
--
--#define compile_ffs8(__x) \
--	__builtin_choose_expr(((__x) & 0xf), \
--			      (compile_ffs4((__x))), \
--			      (compile_ffs4((__x) >> 4) + 4))
--
--#define compile_ffs16(__x) \
--	__builtin_choose_expr(((__x) & 0xff), \
--			      (compile_ffs8((__x))), \
--			      (compile_ffs8((__x) >> 8) + 8))
--
--#define compile_ffs32(__x) \
--	__builtin_choose_expr(((__x) & 0xffff), \
--			      (compile_ffs16((__x))), \
--			      (compile_ffs16((__x) >> 16) + 16))
--
--/*
-- * This macro will check the requirements for the FIELD{8,16,32} macros
-- * The mask should be a constant non-zero contiguous set of bits which
-- * does not exceed the given typelimit.
-- */
--#define FIELD_CHECK(__mask) \
--	BUILD_BUG_ON(!(__mask) || !is_valid_mask(__mask))
--
--#define MT76_SET(_mask, _val)						\
--	({								\
--		FIELD_CHECK(_mask);					\
--		(((u32) (_val)) << compile_ffs32(_mask)) & _mask;	\
--	})
--
--#define MT76_GET(_mask, _val)						\
--	({								\
--		FIELD_CHECK(_mask);					\
--		(u32) (((_val) & _mask) >> compile_ffs32(_mask));	\
--	})
--
--#endif
+ err_release_utf_mode_fw:
++	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
++	    ar->testmode.utf_mode_fw.fw_file.codeswap_len)
++		ath10k_swap_code_seg_release(ar,
++					     &ar->testmode.utf_mode_fw.fw_file);
++
+ 	release_firmware(ar->testmode.utf_mode_fw.fw_file.firmware);
+ 	ar->testmode.utf_mode_fw.fw_file.firmware = NULL;
+ 
+@@ -301,6 +319,11 @@ static void __ath10k_tm_cmd_utf_stop(struct ath10k *ar)
+ 
+ 	spin_unlock_bh(&ar->data_lock);
+ 
++	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
++	    ar->testmode.utf_mode_fw.fw_file.codeswap_len)
++		ath10k_swap_code_seg_release(ar,
++					     &ar->testmode.utf_mode_fw.fw_file);
++
+ 	release_firmware(ar->testmode.utf_mode_fw.fw_file.firmware);
+ 	ar->testmode.utf_mode_fw.fw_file.firmware = NULL;
+ 
 -- 
-1.9.1
+1.7.9.5
 
