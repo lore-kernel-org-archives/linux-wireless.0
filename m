@@ -1,85 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36481 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932587AbcGKRA6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 13:00:58 -0400
-Message-ID: <5783D0C3.20804@redhat.com> (sfid-20160711_190130_640391_8054D51A)
-Date: Mon, 11 Jul 2016 13:00:51 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:33319 "EHLO
+	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751793AbcGAC04 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 30 Jun 2016 22:26:56 -0400
+Date: Thu, 30 Jun 2016 21:08:36 -0500
+From: Rob Herring <robh@kernel.org>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: "John W . Linville" <linville@tuxdriver.com>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, linux-sunxi@googlegroups.com,
+	Chen-Yu Tsai <wens@csie.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
+Message-ID: <20160701020836.GA1722@rob-hp-laptop> (sfid-20160701_042701_212592_A62C681A)
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
 MIME-Version: 1.0
-To: "Coelho, Luciano" <luciano.coelho@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: linuxwifi <linuxwifi@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
- ucode is loaded
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com> <1468253261.25088.126.camel@intel.com>
-In-Reply-To: <1468253261.25088.126.camel@intel.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, Jun 29, 2016 at 04:04:31PM +0200, Hans de Goede wrote:
+> Add a brcm,nvram_file_name dt property to allow overruling the default
+> nvram filename for sdio devices. The idea is that we can specify a
+> board specific nvram file, e.g. brcmfmac43362-ap6210.txt for boards
+> with an ap6210 wifi sdio module and ship this in linux-firmware, so
+> that wifi will work out of the box, without requiring users to find
+> and then manually install the right nvram file for their board.
 
+What about putting its contents directly into DT? It's just text 
+key/value pairs so it would match up well.
 
-On 07/11/2016 12:07 PM, Coelho, Luciano wrote:
-> On Mon, 2016-07-11 at 11:18 -0400, Prarit Bhargava wrote:
->> Didn't get any feedback or review comments on this patch.  Resending
->> ...
->>
->> P.
+Also, I have to wonder how all the non-SDIO based cards don't need this 
+file.
+  
+> Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+> ---
+>  .../devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt          | 2 ++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c               | 2 ++
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c             | 6 ++++++
+>  include/linux/platform_data/brcmfmac.h                              | 2 ++
+>  4 files changed, 12 insertions(+)
 > 
-> Sorry, this got flooded down my inbox.
+> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> index 5dbf169..2ba13a6 100644
+> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
+> @@ -11,6 +11,7 @@ Required properties:
+>  Optional properties:
+>   - brcm,drive-strength : drive strength used for SDIO pins on device in mA
+>  	(default = 6).
+> + - brcm,nvram_file_name : name of the nvram file to load
 
-NP, Luciano -- My worry was that it hadn't been seen or didn't make it out to
-the list.
+The need for firmware file names has come up several times though 
+nothing merged to yet. There has been at least some level of agreement 
+to use "firmware-name" here. 
 
-I'm being a bit impatient too ;)
-
-P.
-
-> 
-> 
->> ---8<---
->>
->> The iwlwifi driver implements a thermal zone and hwmon device, but
->> returns -EIO on temperature reads if the firmware isn't loaded.  This
->> results in the error
->>
->> iwlwifi-virtual-0
->> Adapter: Virtual device
->> ERROR: Can't get value of subfeature temp1_input: I/O error
->> temp1:            N/A
->>
->> being output when using sensors from the lm-sensors package.  Since
->> the temperature cannot be read unless the ucode is loaded there is no
->> reason to add the interface only to have it return an error 100% of
->> the time.
->>
->> This patch moves the firmware check to
->> iwl_mvm_thermal_zone_register() and
->> stops the thermal zone from being created if the ucode hasn't been
->> loaded.
->>
->> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
->> Cc: Johannes Berg <johannes.berg@intel.com>
->> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> Cc: Luca Coelho <luciano.coelho@intel.com>
->> Cc: Intel Linux Wireless <linuxwifi@intel.com>
->> Cc: Kalle Valo <kvalo@codeaurora.org>
->> Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
->> Cc: Sara Sharon <sara.sharon@intel.com>
->> Cc: linux-wireless@vger.kernel.org
->> Cc: netdev@vger.kernel.org
->> ---
-> 
-> I have now sent it for review on our internal tree.
-> 
-> --
-> Luca.
-> 
+>   - interrupt-parent : the phandle for the interrupt controller to which the
+>  	device interrupts are connected.
+>   - interrupts : specifies attributes for the out-of-band interrupt (host-wake).
+> @@ -34,6 +35,7 @@ mmc3: mmc@01c12000 {
+>  	brcmf: bcrmf@1 {
+>  		reg = <1>;
+>  		compatible = "brcm,bcm4329-fmac";
+> +		brcm,nvram_file_name = "brcm/brcmfmac43362-ap6210.txt";
+>  		interrupt-parent = <&pio>;
+>  		interrupts = <10 8>; /* PH10 / EINT10 */
+>  		interrupt-names = "host-wake";
