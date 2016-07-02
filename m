@@ -1,45 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40826 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752107AbcGRTnO (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:33724 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752541AbcGBSUn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 15:43:14 -0400
-Content-Type: text/plain; charset="utf-8"
+	Sat, 2 Jul 2016 14:20:43 -0400
+Received: by mail-wm0-f50.google.com with SMTP id r190so14953920wmr.0
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jul 2016 11:20:42 -0700 (PDT)
+Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name
+ dt property
+To: Jonas Gorski <jonas.gorski@gmail.com>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+ <CAOiHx==82LHOeQMNVD+dybFifXX690Q6AJTcMBMynjSfUOyGUw@mail.gmail.com>
+ <8d8bd933-717b-48e4-f002-7b834abed6fd@redhat.com>
+ <3960223.GqB9zXL8s8@wuerfel>
+ <1f44df41-0111-441b-4671-718eec0c4346@broadcom.com>
+ <CAOiHx=m8Zf0T4=BTG6BMRjj3kOHzt4YaQa3yzutmrhFSOyZMmA@mail.gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hans de Goede <hdegoede@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Priit Laes <plaes@plaes.org>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <ced2a770-2724-bdc9-7e2a-3dc9f76abf29@broadcom.com> (sfid-20160702_202047_267727_F07DD3F8)
+Date: Sat, 2 Jul 2016 20:20:35 +0200
 MIME-Version: 1.0
-Subject: Re: [1/2] mwifiex: fix PCIe legacy interrupt problem
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1468589825-9188-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160718194313.880B3602A9@smtp.codeaurora.org> (sfid-20160718_214319_434729_33488783)
-Date: Mon, 18 Jul 2016 19:43:13 +0000 (UTC)
+In-Reply-To: <CAOiHx=m8Zf0T4=BTG6BMRjj3kOHzt4YaQa3yzutmrhFSOyZMmA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> In corner case, we may end up processing same interrupt twice.
-> We have a logic to read pending interrupts at the end of interrupt
-> processing routine. It has a race with interrupts read in interrupt
-> handler. This patch solves the problem by ORing the interrupt bitmap
-> in this case.
+On 1-7-2016 10:58, Jonas Gorski wrote:
+> Hi,
 > 
-> The symptom for this bug is below messages in dmesg log.
+> On 30 June 2016 at 21:23, Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
+>>
+>>
+>> On 30-6-2016 13:31, Arnd Bergmann wrote:
+>>> On Thursday, June 30, 2016 12:25:15 PM CEST Hans de Goede wrote:
+>>>>> So then how about making use of a more specific compatible string?
+>>>>>
+>>>>> e.g.
+>>>>>
+>>>>> brcmf {
+>>>>>         compatible = "foo,ap6210", "brcm,bcm4329-fmac";
+>>>>>         ...
+>>>>> };
+>>>>>
+>>>>> and if the compatible has more than one element you request
+>>>>> FW_NAME_<compatible>.txt as the nvram file. Or try each comptible (and
+>>>>> lastly no suffix) until you get a match. (AFAICT, this is what the
+>>>>> "model" property was originally intended for anyway, but almost nobody
+>>>>> did it right, and everyone put a user readable string into "model" for
+>>>>> boards instead of the ePAPR defined compatible string).
+>>>>
+>>>> Hmm, interesting idea. Not sure how easy / hard it will be to implement
+>>>> this, but from a dt binding point of view it seems elegant.
+>>>>
+>>>> Kalle, Arend, what do you think of this ?
+>>
+>> At first glance I like the suggestion, but this would mean updating the
+>> bindings document for each new wifi module that we want to add. Not a
+>> big problem, but it makes that I have a slight preference to using a
+>> property for it, eg. brcm,module = "ap6210";
 > 
-> [   11.522123] mwifiex_pcie 0000:01:00.0: CMD_RESP: invalid cmd resp
-> [   11.680412] mwifiex_pcie 0000:01:00.0: There is no command but got cmdrsp
+> If you want a separate property, then I repeat my very first
+> suggestion, the well defined model property.
+> e.g.
 > 
-> Link: https://bugzilla.kernel.org/show_bug.cgi?id=109681
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> brcmf@0 {
+>         model = "ampak,ap6210";
+>         compatible = "brcm,bcm4329-fmac";
+>         ...
+> };
+> 
+> All device nodes may have a model property, not just the top "machine" one.
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+I heard you the first time :-p I just was not sure what the implications
+would be to use it. Hence I suggested a vendor specific property.
+However, looking up and reading the definition in ePAPRv1.1 I suppose it
+is fine to use the model property:
 
-514952889544 mwifiex: fix PCIe legacy interrupt problem
-2fd40d2d349f mwifiex: update command response skb length correctly
+Property: model
+Value type: <string>
+Description:
+The model property value is a <string> that specifies the manufacturer’s
+model number of the device.
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9232091/
+The recommended format is: “manufacturer,model”, where manufacturer is a
+string describing the name of the manufacturer (such as a stock ticker
+symbol), and model specifies the model number.
 
+Regards,
+Arend
