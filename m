@@ -1,73 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35880 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751198AbcGQVpF (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:38249 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752316AbcGBSAm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2016 17:45:05 -0400
-Date: Sun, 17 Jul 2016 16:45:02 -0500
-From: Rob Herring <robh@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	Jonas Gorski <jonas.gorski@gmail.com>,
-	Hans de Goede <hdegoede@redhat.com>,
+	Sat, 2 Jul 2016 14:00:42 -0400
+Received: by mail-wm0-f45.google.com with SMTP id r201so66578431wme.1
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jul 2016 11:00:41 -0700 (PDT)
+Subject: Re: [patch] mwifiex: fix mwifiex_add_virtual_intf()
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+References: <20160702072045.GA25758@mwanda>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
 	Kalle Valo <kvalo@codeaurora.org>,
-	Priit Laes <plaes@plaes.org>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name
- dt property
-Message-ID: <20160717214502.GA11498@rob-hp-laptop> (sfid-20160717_234510_721479_5EC8CAA5)
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
- <3354017.XSBSmHHtrQ@wuerfel>
- <bb1beb8d-652d-aa97-e24b-e3e27397dd2e@broadcom.com>
- <3996482.D5xdKXDiGl@wuerfel>
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d95186fc-fa1f-b60d-41a9-4d25c7ccc53d@broadcom.com> (sfid-20160702_200050_711935_B481C775)
+Date: Sat, 2 Jul 2016 20:00:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3996482.D5xdKXDiGl@wuerfel>
+In-Reply-To: <20160702072045.GA25758@mwanda>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 07, 2016 at 10:46:28AM +0200, Arnd Bergmann wrote:
-> On Wednesday, July 6, 2016 9:19:41 PM CEST Arend Van Spriel wrote:
-> > On 6-7-2016 15:42, Arnd Bergmann wrote:
-> > > On Wednesday, July 6, 2016 10:08:55 AM CEST Arend Van Spriel wrote:
-> > >> On Tue, Jul 5, 2016 at 3:43 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > > All existing uses of the model property in arch/arm/boot/dts and most of
-> > > the ones in arch/powerpc/boot/dts are against the intended usage in
-> > > one way or another, but adding different kind of incorrect usage won't
-> > > improve that.
-> > > 
-> > > The only way I can see the model property being used correctly would
-> > > be to have it match the first entry in the compatible property, but
-> > > that is completely redundant, so we tend to omit it, except for the
-> > > root node in which it is required. For the root node however, the
-> > > historic practice that has crept in on ARM is to put something completely
-> > > different in there, which is a human-readable description of the
-> > > machine rather than something we can use as a unique indentifier.
-> > > 
-> > > I'd just consider the "model" property burned, and not use it for anything
-> > > that doesn't already use it, just like we handle "device_type": a few
-> > > things require it, nothing else should use it.
-> > 
-> > If that is the agreed approach in devicetree arena I am fine with it. I
-> > have been unaware of this and just looked at the suggestion from Jonas
-> > seeing a solution to the problem at hand.
+
+
+On 2-7-2016 9:20, Dan Carpenter wrote:
+> We accidentally left some if statements out so the
+> mwifiex_add_virtual_intf() function returns early.
 > 
-> I don't think it has been discussed or decided before as the question
-> has not come up, so for now this is my personal view. Maybe one of
-> the devicetree maintainers can comment on this.
+> Fixes: 7311ea850079 ('mwifiex: fix AP start problem for newly added interface')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Back from vacation and getting caught up.
+Someone beat you to it [1] ;-)
 
-I agree with Arnd here. In my view model is the OEM branding on the 
-device, compatible is the h/w. If you have different firmware related 
-files, that goes beyond OEM branding.
+Regards,
+Arend
 
-Rob
+[1]
+http://mid.gmane.org/1467401982-18943-1-git-send-email-javier@osg.samsung.com
+
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> index 99e8cf1..5de9f63 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> @@ -2865,9 +2865,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
+>  
+>  	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
+>  			       HostCmd_ACT_GEN_SET, 0, NULL, true);
+> +	if (ret)
+>  		return ERR_PTR(ret);
+>  
+>  	ret = mwifiex_sta_init_cmd(priv, false, false);
+> +	if (ret)
+>  		return ERR_PTR(ret);
+>  
+>  	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
