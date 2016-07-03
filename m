@@ -1,158 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:40654 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751139AbcGMKlr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 06:41:47 -0400
-Date: Wed, 13 Jul 2016 07:41:14 -0300
-From: Mauro Carvalho Chehab <mchehab@osg.samsung.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Marcel Holtmann <marcel@holtmann.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Pavan Savoy <pavan_savoy@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-bluetooth@vger.kernel.org,
-	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] drivers: misc: ti-st: Use int instead of fuzzy char for
- callback status
-Message-ID: <20160713074114.76c35d04@recife.lan> (sfid-20160713_124154_421054_53B6C349)
-In-Reply-To: <1465203723-16928-1-git-send-email-geert@linux-m68k.org>
-References: <1465203723-16928-1-git-send-email-geert@linux-m68k.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from paleale.coelho.fi ([176.9.41.70]:60810 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752891AbcGCTtE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jul 2016 15:49:04 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun,  3 Jul 2016 22:48:45 +0300
+Message-Id: <1467575332-32112-6-git-send-email-luca@coelho.fi> (sfid-20160703_214924_548262_10A06123)
+In-Reply-To: <467405215.1837.15.camel@coelho.fi>
+References: <467405215.1837.15.camel@coelho.fi>
+Subject: [PATCH 06/13] iwlwifi: mvm: update mpdu metadata API
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Em Mon,  6 Jun 2016 11:02:03 +0200
-Geert Uytterhoeven <geert@linux-m68k.org> escreveu:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> On mips and parisc:
-> 
->     drivers/bluetooth/btwilink.c: In function 'ti_st_open':
->     drivers/bluetooth/btwilink.c:174:21: warning: overflow in implicit constant conversion [-Woverflow]
->        hst->reg_status = -EINPROGRESS;
-> 
->     drivers/nfc/nfcwilink.c: In function 'nfcwilink_open':
->     drivers/nfc/nfcwilink.c:396:31: warning: overflow in implicit constant conversion [-Woverflow]
->       drv->st_register_cb_status = -EINPROGRESS;
-> 
-> There are actually two issues:
->   1. Whether "char" is signed or unsigned depends on the architecture.
->      As the completion callback data is used to pass a (negative) error
->      code, it should always be signed.
->   2. EINPROGRESS is 150 on mips, 245 on parisc.
->      Hence -EINPROGRESS doesn't fit in a signed 8-bit number.
-> 
-> Change the callback status from "char" to "int" to fix these.
-> 
-> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+rx_phy notification is no longer sent in devices with
+multiple rx queues.
+All the needed data is now set in the metadata - update
+code accordingly to reflect all the features as in the
+previous RX path.
 
-Patch looks sane to me, but who will apply it?
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     |  5 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h | 24 +++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      | 51 +++++++++++++++-------
+ 4 files changed, 58 insertions(+), 23 deletions(-)
 
-Anyway:
-
-Acked-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-
-
-> ---
-> Compile-tested only.
-> ---
->  drivers/bluetooth/btwilink.c              | 4 ++--
->  drivers/media/radio/wl128x/fmdrv_common.c | 2 +-
->  drivers/misc/ti-st/st_core.c              | 2 +-
->  drivers/nfc/nfcwilink.c                   | 4 ++--
->  include/linux/ti_wilink_st.h              | 2 +-
->  5 files changed, 7 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/bluetooth/btwilink.c b/drivers/bluetooth/btwilink.c
-> index 24a652f9252be899..485281b3f1677678 100644
-> --- a/drivers/bluetooth/btwilink.c
-> +++ b/drivers/bluetooth/btwilink.c
-> @@ -51,7 +51,7 @@
->   */
->  struct ti_st {
->  	struct hci_dev *hdev;
-> -	char reg_status;
-> +	int reg_status;
->  	long (*st_write) (struct sk_buff *);
->  	struct completion wait_reg_completion;
->  };
-> @@ -83,7 +83,7 @@ static inline void ti_st_tx_complete(struct ti_st *hst, int pkt_type)
->   * status.ti_st_open() function will wait for signal from this
->   * API when st_register() function returns ST_PENDING.
->   */
-> -static void st_reg_completion_cb(void *priv_data, char data)
-> +static void st_reg_completion_cb(void *priv_data, int data)
->  {
->  	struct ti_st *lhst = priv_data;
->  
-> diff --git a/drivers/media/radio/wl128x/fmdrv_common.c b/drivers/media/radio/wl128x/fmdrv_common.c
-> index 3f9e6df7d837ac27..642b89c66bcb99eb 100644
-> --- a/drivers/media/radio/wl128x/fmdrv_common.c
-> +++ b/drivers/media/radio/wl128x/fmdrv_common.c
-> @@ -1472,7 +1472,7 @@ static long fm_st_receive(void *arg, struct sk_buff *skb)
->   * Called by ST layer to indicate protocol registration completion
->   * status.
->   */
-> -static void fm_st_reg_comp_cb(void *arg, char data)
-> +static void fm_st_reg_comp_cb(void *arg, int data)
->  {
->  	struct fmdev *fmdev;
->  
-> diff --git a/drivers/misc/ti-st/st_core.c b/drivers/misc/ti-st/st_core.c
-> index dcdbd58672ccc6d2..00051590e00f9647 100644
-> --- a/drivers/misc/ti-st/st_core.c
-> +++ b/drivers/misc/ti-st/st_core.c
-> @@ -141,7 +141,7 @@ static void st_send_frame(unsigned char chnl_id, struct st_data_s *st_gdata)
->   * This function is being called with spin lock held, protocol drivers are
->   * only expected to complete their waits and do nothing more than that.
->   */
-> -static void st_reg_complete(struct st_data_s *st_gdata, char err)
-> +static void st_reg_complete(struct st_data_s *st_gdata, int err)
->  {
->  	unsigned char i = 0;
->  	pr_info(" %s ", __func__);
-> diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
-> index f81e500e765061fd..3fbd18b8e473f696 100644
-> --- a/drivers/nfc/nfcwilink.c
-> +++ b/drivers/nfc/nfcwilink.c
-> @@ -94,7 +94,7 @@ struct nfcwilink {
->  	struct nci_dev			*ndev;
->  	unsigned long			flags;
->  
-> -	char				st_register_cb_status;
-> +	int				st_register_cb_status;
->  	long				(*st_write) (struct sk_buff *);
->  
->  	struct completion		completed;
-> @@ -320,7 +320,7 @@ exit:
->  }
->  
->  /* Called by ST when registration is complete */
-> -static void nfcwilink_register_complete(void *priv_data, char data)
-> +static void nfcwilink_register_complete(void *priv_data, int data)
->  {
->  	struct nfcwilink *drv = priv_data;
->  
-> diff --git a/include/linux/ti_wilink_st.h b/include/linux/ti_wilink_st.h
-> index 0a0d56834c8eb412..f2293028ab9d65e6 100644
-> --- a/include/linux/ti_wilink_st.h
-> +++ b/include/linux/ti_wilink_st.h
-> @@ -71,7 +71,7 @@ struct st_proto_s {
->  	enum proto_type type;
->  	long (*recv) (void *, struct sk_buff *);
->  	unsigned char (*match_packet) (const unsigned char *data);
-> -	void (*reg_complete_cb) (void *, char data);
-> +	void (*reg_complete_cb) (void *, int data);
->  	long (*write) (struct sk_buff *skb);
->  	void *priv_data;
->  
-
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 8193d36..2f024c7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -211,6 +211,7 @@ struct iwl_cmd_header_wide {
+ #define FH_RSCSR_FRAME_SIZE_MSK		0x00003FFF	/* bits 0-13 */
+ #define FH_RSCSR_FRAME_INVALID		0x55550000
+ #define FH_RSCSR_FRAME_ALIGN		0x40
++#define FH_RSCSR_RPA_EN			BIT(25)
+ 
+ struct iwl_rx_packet {
+ 	/*
+@@ -220,7 +221,9 @@ struct iwl_rx_packet {
+ 	 * 31:    flag flush RB request
+ 	 * 30:    flag ignore TC (terminal counter) request
+ 	 * 29:    flag fast IRQ request
+-	 * 28-14: Reserved
++	 * 28-26: Reserved
++	 * 25:    Offload enabled
++	 * 24-14: Reserved
+ 	 * 13-00: RX frame size
+ 	 */
+ 	__le32 len_n_flags;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+index bb8ff40..1994331 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+@@ -336,6 +336,18 @@ enum iwl_rx_mpdu_reorder_data {
+ 	IWL_RX_MPDU_REORDER_BA_OLD_SN		= 0x80000000,
+ };
+ 
++enum iwl_rx_mpdu_phy_info {
++	IWL_RX_MPDU_PHY_AMPDU		= BIT(5),
++	IWL_RX_MPDU_PHY_AMPDU_TOGGLE	= BIT(6),
++	IWL_RX_MPDU_PHY_SHORT_PREAMBLE	= BIT(7),
++	IWL_RX_MPDU_PHY_TSF_OVERLOAD	= BIT(8),
++};
++
++enum iwl_rx_mpdu_mac_info {
++	IWL_RX_MPDU_PHY_MAC_INDEX_MASK		= 0x0f,
++	IWL_RX_MPDU_PHY_PHY_INDEX_MASK		= 0xf0,
++};
++
+ struct iwl_rx_mpdu_desc {
+ 	/* DW2 */
+ 	__le16 mpdu_len;
+@@ -343,9 +355,9 @@ struct iwl_rx_mpdu_desc {
+ 	u8 mac_flags2;
+ 	/* DW3 */
+ 	u8 amsdu_info;
+-	__le16 reserved_for_software;
++	__le16 phy_info;
+ 	u8 mac_phy_idx;
+-	/* DW4 */
++	/* DW4 - carries csum data only when rpa_en == 1 */
+ 	__le16 raw_csum; /* alledgedly unreliable */
+ 	__le16 l3l4_flags;
+ 	/* DW5 */
+@@ -354,17 +366,17 @@ struct iwl_rx_mpdu_desc {
+ 	u8 sta_id_flags;
+ 	/* DW6 */
+ 	__le32 reorder_data;
+-	/* DW7 */
++	/* DW7 - carries rss_hash only when rpa_en == 1 */
+ 	__le32 rss_hash;
+-	/* DW8 */
++	/* DW8 - carries filter_match only when rpa_en == 1 */
+ 	__le32 filter_match;
+ 	/* DW9 */
+ 	__le32 rate_n_flags;
+ 	/* DW10 */
+-	u8 energy_a, energy_b, channel, reserved;
++	u8 energy_a, energy_b, channel, mac_context;
+ 	/* DW11 */
+ 	__le32 gp2_on_air_rise;
+-	/* DW12 & DW13 */
++	/* DW12 & DW13 - carries TSF only TSF_OVERLOAD bit == 0 */
+ 	__le64 tsf_on_air_rise;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index dd0b8f8..65f9a4b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -731,6 +731,7 @@ struct iwl_mvm {
+ 	struct iwl_sf_region sf_space;
+ 
+ 	u32 ampdu_ref;
++	bool ampdu_toggle;
+ 
+ 	struct iwl_notif_wait_data notif_wait;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index 67924fc..1f4fef4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -737,6 +737,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 	struct ieee80211_hdr *hdr = (void *)(pkt->data + sizeof(*desc));
+ 	u32 len = le16_to_cpu(desc->mpdu_len);
+ 	u32 rate_n_flags = le32_to_cpu(desc->rate_n_flags);
++	u16 phy_info = le16_to_cpu(desc->phy_info);
+ 	struct ieee80211_sta *sta = NULL;
+ 	struct sk_buff *skb;
+ 	u8 crypt_len = 0;
+@@ -767,16 +768,34 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			     le16_to_cpu(desc->status));
+ 		rx_status->flag |= RX_FLAG_FAILED_FCS_CRC;
+ 	}
+-
+-	rx_status->mactime = le64_to_cpu(desc->tsf_on_air_rise);
++	/* set the preamble flag if appropriate */
++	if (phy_info & IWL_RX_MPDU_PHY_SHORT_PREAMBLE)
++		rx_status->flag |= RX_FLAG_SHORTPRE;
++
++	if (likely(!(phy_info & IWL_RX_MPDU_PHY_TSF_OVERLOAD))) {
++		rx_status->mactime = le64_to_cpu(desc->tsf_on_air_rise);
++		/* TSF as indicated by the firmware is at INA time */
++		rx_status->flag |= RX_FLAG_MACTIME_PLCP_START;
++	}
+ 	rx_status->device_timestamp = le32_to_cpu(desc->gp2_on_air_rise);
+ 	rx_status->band = desc->channel > 14 ? NL80211_BAND_5GHZ :
+ 					       NL80211_BAND_2GHZ;
+ 	rx_status->freq = ieee80211_channel_to_frequency(desc->channel,
+ 							 rx_status->band);
+ 	iwl_mvm_get_signal_strength(mvm, desc, rx_status);
+-	/* TSF as indicated by the firmware is at INA time */
+-	rx_status->flag |= RX_FLAG_MACTIME_PLCP_START;
++
++	/* update aggregation data for monitor sake on default queue */
++	if (!queue && (phy_info & IWL_RX_MPDU_PHY_AMPDU)) {
++		bool toggle_bit = phy_info & IWL_RX_MPDU_PHY_AMPDU_TOGGLE;
++
++		rx_status->flag |= RX_FLAG_AMPDU_DETAILS;
++		rx_status->ampdu_reference = mvm->ampdu_ref;
++		/* toggle is switched whenever new aggregation starts */
++		if (toggle_bit != mvm->ampdu_toggle) {
++			mvm->ampdu_ref++;
++			mvm->ampdu_toggle = toggle_bit;
++		}
++	}
+ 
+ 	rcu_read_lock();
+ 
+@@ -831,8 +850,6 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 				iwl_mvm_fw_dbg_collect_trig(mvm, trig, NULL);
+ 		}
+ 
+-		/* TODO: multi queue TCM */
+-
+ 		if (ieee80211_is_data(hdr->frame_control))
+ 			iwl_mvm_rx_csum(sta, skb, desc);
+ 
+@@ -857,14 +874,6 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 			iwl_mvm_agg_rx_received(mvm, baid);
+ 	}
+ 
+-	/*
+-	 * TODO: PHY info.
+-	 * Verify we don't have the information in the MPDU descriptor and
+-	 * that it is not needed.
+-	 * Make sure for monitor mode that we are on default queue, update
+-	 * ampdu_ref and the rest of phy info then
+-	 */
+-
+ 	/* Set up the HT phy flags */
+ 	switch (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK) {
+ 	case RATE_MCS_CHAN_WIDTH_20:
+@@ -908,8 +917,18 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 							    rx_status->band);
+ 	}
+ 
+-	/* TODO: PHY info - update ampdu queue statistics (for debugfs) */
+-	/* TODO: PHY info - gscan */
++	/* management stuff on default queue */
++	if (!queue) {
++		if (unlikely((ieee80211_is_beacon(hdr->frame_control) ||
++			      ieee80211_is_probe_resp(hdr->frame_control)) &&
++			     mvm->sched_scan_pass_all ==
++			     SCHED_SCAN_PASS_ALL_ENABLED))
++			mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_FOUND;
++
++		if (unlikely(ieee80211_is_beacon(hdr->frame_control) ||
++			     ieee80211_is_probe_resp(hdr->frame_control)))
++			rx_status->boottime_ns = ktime_get_boot_ns();
++	}
+ 
+ 	iwl_mvm_create_skb(skb, hdr, len, crypt_len, rxb);
+ 	if (!iwl_mvm_reorder(mvm, napi, queue, sta, skb, desc))
 -- 
-Thanks,
-Mauro
+2.8.1
+
