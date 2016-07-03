@@ -1,141 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ol.sdf.org ([192.94.73.20]:52740 "EHLO sdf.lonestar.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757869AbcG0BOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2016 21:14:42 -0400
-From: Alan Curry <rlwinm@sdf.org>
-Message-Id: <201607270114.u6R1EPxB018526@sdf.org> (sfid-20160727_031451_518082_633706B9)
-Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
-In-Reply-To: <2589898.190WVraD7Z@debian64>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Date: Wed, 27 Jul 2016 01:14:25 +0000 (UTC)
-CC: Alan Curry <rlwinm@sdf.org>, Al Viro <viro@zeniv.linux.org.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, alexmcwhirter@triadic.us
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from paleale.coelho.fi ([176.9.41.70]:60798 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752850AbcGCTtE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jul 2016 15:49:04 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun,  3 Jul 2016 22:48:43 +0300
+Message-Id: <1467575332-32112-4-git-send-email-luca@coelho.fi> (sfid-20160703_214922_788631_4CBD91F8)
+In-Reply-To: <467405215.1837.15.camel@coelho.fi>
+References: <467405215.1837.15.camel@coelho.fi>
+Subject: [PATCH 04/13] iwlwifi: rename CAPA_P2P_STANDALONE_UAPSD to CAPA_P2P_SCM_UAPSD
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
-> Thanks, I gave the program a try with my WNDA3100 and a WN821N v2 devices.
-> I did not see any corruptions in any of the tests though. Can you tell me
-> something about your wireless network too? I would like to know what router
-> and firmware are you using? Also important: what's your wireless configuration?
+From: Avraham Stern <avraham.stern@intel.com>
 
-The router/access-point is a Comcast-issued Technicolor cable modem, model
-TC8305C. The only thing I can find on it that looks like it might identify
-a firmware version is this:
+Ucode capability bit 26 indicates support for UAPSD on P2P interface
+even with a simultaneous BSS station interface, as long as both
+interfaces are in the same binding. Change the name of the
+capability bit to reflect that.
 
-    System Software Version
+Signed-off-by: Avraham Stern <avraham.stern@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h  | 5 +++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c    | 2 +-
+ 4 files changed, 7 insertions(+), 6 deletions(-)
 
-    eMTA & DOCSIS Software Version: 01.E6.01.22.25
-    Packet Cable: 2.0
-
-I assume Comcast pushes firmware updates whenever they feel like it.
-
-There is possibly another clue. I get this message from the kernel sometimes:
-
-    ieee80211 phy0: invalid plcp cck rate (0).
-
-I had this message appearing long before the data corruption bug started.
-It never correlated with any actual problems, so I turned down the priority
-level of the message to get it off the console, and forgot about it. I
-was unable to discover what a "plcp" or "cck" is so the message means
-nothing to me.
-
-> (WPA?, CCMP or TKIP? HT40, HT20 or Legacy rates? ...)
-> 
-> Probably the quickest and easiest way to get that information is by running
-> the following commands as root, when you are connected to your wifi network
-> and post the results:
-> # iw dev wlan0 link
-> # iw dev wlan0 scan dump
-
-Connected to cc:03:fa:bf:e9:ea (on wlan0)
-	SSID: HOME-E9EA
-	freq: 2462
-	RX: 20726719 bytes (106483 packets)
-	TX: 5902478 bytes (44707 packets)
-	signal: -43 dBm
-	tx bitrate: 54.0 MBit/s
-
-	bss flags:	short-slot-time
-	dtim period:	1
-	beacon int:	100
-
-BSS cc:03:fa:bf:e9:ea(on wlan0) -- associated
-	TSF: 236407205748 usec (2d, 17:40:07)
-	freq: 2462
-	beacon interval: 100 TUs
-	capability: ESS Privacy ShortSlotTime (0x0411)
-	signal: -33.00 dBm
-	last seen: 634452 ms ago
-	Information elements from Probe Response frame:
-	SSID: HOME-E9EA
-	Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
-	DS Parameter set: channel 11
-	ERP: <no flags>
-	ERP D4.0: <no flags>
-	RSN:	 * Version: 1
-		 * Group cipher: TKIP
-		 * Pairwise ciphers: CCMP TKIP
-		 * Authentication suites: PSK
-		 * Capabilities: 16-PTKSA-RC 1-GTKSA-RC (0x000c)
-	Extended supported rates: 6.0* 9.0 12.0* 48.0 
-	HT capabilities:
-		Capabilities: 0x18bd
-			RX LDPC
-			HT20
-			SM Power Save disabled
-			RX Greenfield
-			RX HT20 SGI
-			TX STBC
-			No RX STBC
-			Max AMSDU length: 7935 bytes
-			DSSS/CCK HT40
-		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
-		Minimum RX AMPDU time spacing: 8 usec (0x06)
-		HT RX MCS rate indexes supported: 0-23
-		HT TX MCS rate indexes are undefined
-	HT operation:
-		 * primary channel: 11
-		 * secondary channel offset: no secondary
-		 * STA channel width: 20 MHz
-		 * RIFS: 1
-		 * HT protection: nonmember
-		 * non-GF present: 1
-		 * OBSS non-GF present: 1
-		 * dual beacon: 0
-		 * dual CTS protection: 0
-		 * STBC beacon: 0
-		 * L-SIG TXOP Prot: 0
-		 * PCO active: 0
-		 * PCO phase: 0
-	WPS:	 * Version: 1.0
-		 * Wi-Fi Protected Setup State: 2 (Configured)
-		 * Response Type: 3 (AP)
-		 * UUID: 6d1b1911-14a9-391c-cdee-89850a5aa1ef
-		 * Manufacturer: Technicolor
-		 * Model: Technicolor
-		 * Model Number: 123456
-		 * Serial Number: 0000001
-		 * Primary Device Type: 6-0050f204-1
-		 * Device name: TechnicolorAP
-		 * Config methods: Display
-		 * RF Bands: 0x1
-		 * Unknown TLV (0x1049, 6 bytes): 00 37 2a 00 01 20
-	WPA:	 * Version: 1
-		 * Group cipher: TKIP
-		 * Pairwise ciphers: CCMP TKIP
-		 * Authentication suites: PSK
-		 * Capabilities: 16-PTKSA-RC 1-GTKSA-RC (0x000c)
-	WMM:	 * Parameter version 1
-		 * u-APSD
-		 * BE: CW 15-1023, AIFSN 3
-		 * BK: CW 15-1023, AIFSN 7
-		 * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
-		 * VO: CW 3-7, AIFSN 2, TXOP 1504 usec
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index 843232b..3f5029e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -299,7 +299,8 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
+  * @IWL_UCODE_TLV_CAPA_DC2DC_SUPPORT: supports DC2DC Command
+  * @IWL_UCODE_TLV_CAPA_CSUM_SUPPORT: supports TCP Checksum Offload
+  * @IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS: support radio and beacon statistics
+- * @IWL_UCODE_TLV_CAPA_P2P_STANDALONE_UAPSD: support p2p standalone U-APSD
++ * @IWL_UCODE_TLV_CAPA_P2P_SCM_UAPSD: supports U-APSD on p2p interface when it
++ *	is standalone or with a BSS station interface in the same binding.
+  * @IWL_UCODE_TLV_CAPA_BT_COEX_PLCR: enabled BT Coex packet level co-running
+  * @IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC: ucode supports LAR updates with different
+  *	sources for the MCC. This TLV bit is a future replacement to
+@@ -345,7 +346,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_DC2DC_CONFIG_SUPPORT		= (__force iwl_ucode_tlv_capa_t)19,
+ 	IWL_UCODE_TLV_CAPA_CSUM_SUPPORT			= (__force iwl_ucode_tlv_capa_t)21,
+ 	IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS		= (__force iwl_ucode_tlv_capa_t)22,
+-	IWL_UCODE_TLV_CAPA_P2P_STANDALONE_UAPSD		= (__force iwl_ucode_tlv_capa_t)26,
++	IWL_UCODE_TLV_CAPA_P2P_SCM_UAPSD		= (__force iwl_ucode_tlv_capa_t)26,
+ 	IWL_UCODE_TLV_CAPA_BT_COEX_PLCR			= (__force iwl_ucode_tlv_capa_t)28,
+ 	IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC		= (__force iwl_ucode_tlv_capa_t)29,
+ 	IWL_UCODE_TLV_CAPA_BT_COEX_RRC			= (__force iwl_ucode_tlv_capa_t)30,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index e5f267b..b7014bc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2360,7 +2360,7 @@ static void iwl_mvm_check_uapsd(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT))
+ 		return;
+ 
+-	if (vif->p2p && !iwl_mvm_is_p2p_standalone_uapsd_supported(mvm)) {
++	if (vif->p2p && !iwl_mvm_is_p2p_scm_uapsd_supported(mvm)) {
+ 		vif->driver_flags &= ~IEEE80211_VIF_SUPPORTS_UAPSD;
+ 		return;
+ 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index ffbd41d..4843e02 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1158,10 +1158,10 @@ static inline bool iwl_mvm_is_mplut_supported(struct iwl_mvm *mvm)
+ }
+ 
+ static inline
+-bool iwl_mvm_is_p2p_standalone_uapsd_supported(struct iwl_mvm *mvm)
++bool iwl_mvm_is_p2p_scm_uapsd_supported(struct iwl_mvm *mvm)
+ {
+ 	return fw_has_capa(&mvm->fw->ucode_capa,
+-			   IWL_UCODE_TLV_CAPA_P2P_STANDALONE_UAPSD) &&
++			   IWL_UCODE_TLV_CAPA_P2P_SCM_UAPSD) &&
+ 		!(iwlwifi_mod_params.uapsd_disable &
+ 		  IWL_DISABLE_UAPSD_P2P_CLIENT);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+index 7b1f6ad..ff85865 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+@@ -308,7 +308,7 @@ static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
+ 		/* Allow U-APSD only if p2p is stand alone */
+ 		bool is_p2p_standalone = true;
+ 
+-		if (!iwl_mvm_is_p2p_standalone_uapsd_supported(mvm))
++		if (!iwl_mvm_is_p2p_scm_uapsd_supported(mvm))
+ 			return false;
+ 
+ 		ieee80211_iterate_active_interfaces_atomic(mvm->hw,
 -- 
-Alan Curry
+2.8.1
+
