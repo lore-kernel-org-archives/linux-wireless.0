@@ -1,48 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:58907 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220AbcGTHa2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 03:30:28 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>,
-	Rob Herring <robh@kernel.org>
-Subject: [PATCH] wlcore: spi: fix build warning caused by redundant variable
-Date: Wed, 20 Jul 2016 07:30:20 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B36161A64@DFRE01.ent.ti.com> (sfid-20160720_093052_203036_1D772196)
-References: <1468999637-31006-1-git-send-email-eyalr@ti.com>
-In-Reply-To: <1468999637-31006-1-git-send-email-eyalr@ti.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from www.xplot.org ([23.30.144.12]:36492 "EHLO www.xplot.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750987AbcGCDxJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jul 2016 23:53:09 -0400
+From: Tim Shepard <shep@alum.mit.edu>
+To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+cc: linux-wireless@vger.kernel.org,
+	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+	Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] ath9k: Switch to using mac80211 intermediate software queues. 
+In-reply-to: Your message of Sat, 18 Jun 2016 21:05:05 +0200.
+             <20160618190505.24038-1-toke@toke.dk>
+Date: Sat, 02 Jul 2016 23:52:59 -0400
+Message-Id: <E1bJYSp-0001M8-00@www.xplot.org> (sfid-20160703_055342_590611_AEDA9F0B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ret variable is unused in wlcore_probe_of()
-Remove it for fixing build warning.
 
-Fixes: 01efe65aba65 ("wlcore: spi: add wl18xx support")
-Signed-off-by: Eyal Reizer <eyalr@ti.com>
----
- drivers/net/wireless/ti/wlcore/spi.c | 1 -
- 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index 73fbcf1..6d24040 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -454,7 +454,6 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
- 			   struct wlcore_platdev_data *pdev_data)
- {
- 	struct device_node *dt_node = spi->dev.of_node;
--	int ret;
- 	const struct of_device_id *of_id;
- 
- 	of_id = of_match_node(wlcore_spi_of_match_table, dt_node);
--- 
-2.7.4
+
+Toke,
+
+I've been tesing your ath9k patch (using it instead of my earlier
+ath9k patch) and plan to continue testing it.
+
+Thanks for unconfusing me a couple weeks ago, and cluing me into how
+the limit on ->pending_frames is not really relevant for the data
+packets that go through the new intermediate queues.
+
+But I'm not sure if this would allow us to remove the limit on
+pending_frames because even though normal data packets would not
+normally build up that many packets, there are other packet types
+which bypass the intermediate queues and are transmitted directly
+(also in most cases bypassing the ath9k internal queues in the way
+ath9k worked before we patched it to use the mac80211 intermediate
+queues).
+
+
+Along similar lines, from reading the code I think your patch has
+introduced a bug (but I don't know how to demonstrate it at runtime).
+
+Looking in the body of ath_tx_start() at the result of applying your
+patch, we now see this:
+
+	[...]
+
+	/* Force queueing of all frames that belong to a virtual interface on
+	 * a different channel context, to ensure that they are sent on the
+	 * correct channel.
+	 */
+	if (((avp && avp->chanctx != sc->cur_chan) ||
+	     sc->cur_chan->stopped) && !txctl->force_channel) {
+		if (!txctl->an)
+			txctl->an = &avp->mcast_node;
+		queue = true;
+		skip_uapsd = true;
+	}
+
+	if (!skip_uapsd && ps_resp) {
+		ath_txq_unlock(sc, txq);
+		txq = sc->tx.uapsdq;
+		ath_txq_lock(sc, txq);
+	} else if(WARN_ON(txctl->an && queue)) 
+		ath_txq_unlock(sc, txq);
+		return -EINVAL;
+	}
+
+	[...]
+
+
+In the case where the first if body above is run to force queuing of
+all packets (not just normal data packets), then the else case of the
+second if statement above will surely run and its if statement will
+surely be true, so your new WARN_ON will happen.
+
+This is why I left the previous ath9k internal queueing mechanisms in
+place.  I couldn't figure out how to handle the above case without
+leaving the ath9k internal queueing mechanisms.
+
+I'm not sure how to test for this though... I don't know what sort of
+configuration scenario I would need to set up to generate the above
+situation and trigger the warning. (Presumably, it involves multiple
+vifs on different channels.)  But unless the first if statement body
+is dead code that can never happen, I think you've introduced a bug
+here (with a good WARN_ON to make it obvious when it happens).
+
+Earlier Felix said:
+
+> Channel context based queue handling can be dealt with by
+> stopping/starting relevant queues on channel context changes.
+
+But I don't see how to handle the case here where packets get passed
+to the driver with ath_tx_start() and wind up in the scenario above.
+
+
+			-Tim Shepard
+			 shep@alum.mit.edu
+
 
