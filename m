@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33022 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:60828 "EHLO
 	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752611AbcGEOMW (ORCPT
+	with ESMTP id S1752922AbcGCTtG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 10:12:22 -0400
-Message-ID: <1467727939.4193.3.camel@coelho.fi> (sfid-20160705_161225_090483_4DC3CDCB)
+	Sun, 3 Jul 2016 15:49:06 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Avraham Stern <avraham.stern@intel.com>,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	David Spinadel <david.spinadel@intel.com>
-Date: Tue, 05 Jul 2016 17:12:19 +0300
-In-Reply-To: <1467727813-2196-1-git-send-email-luca@coelho.fi>
-References: <1467721394-8195-5-git-send-email-luca@coelho.fi>
-	 <1467727813-2196-1-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v2] nl80211: Add info to scan results to support beacon
- report
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun,  3 Jul 2016 22:48:48 +0300
+Message-Id: <1467575332-32112-9-git-send-email-luca@coelho.fi> (sfid-20160703_214918_562619_9848EC8E)
+In-Reply-To: <467405215.1837.15.camel@coelho.fi>
+References: <467405215.1837.15.camel@coelho.fi>
+Subject: [PATCH 09/13] iwlwifi: pcie: set RB chunk size per bus
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-07-05 at 17:10 +0300, Luca Coelho wrote:
-> From: Avraham Stern <avraham.stern@intel.com>
-> 
-> Beacon report radio measurement requires reporting observed BSSs
-> on the channels specified in the beacon request. If the measurement
-> mode is set to passive or active, it requires actually performing a
-> scan (passive or active, accordingly), and reporting the time that
-> the scan was started and the time each beacon/probe was received
-> (both in terms of TSF of the BSS of the requesting AP). If the
-> request mode is table, this information is optional.
-> In addition, the radio measurement request specifies the channel
-> dwell time for the measurement.
-> 
-> In order to use scan for beacon report when the mode is active or
-> passive, add a parameter to scan request that specifies the
-> channel dwell time, and add scan start time and beacon received time
-> to scan results information.
-> 
-> Supporting beacon report is required for Multi Band Operation (MBO).
-> 
-> Signed-off-by: Assaf Krauss <assaf.krauss@intel.com>
-> Signed-off-by: David Spinadel <david.spinadel@intel.com>
-> Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-> ---
+From: Sara Sharon <sara.sharon@intel.com>
 
-Forgot to say, the non-mac80211 driver changes are just compiled-
-tested.
+For 9000 devices we can have PCIe bus for discrete
+devices and IOSF bus for integrated devices.
+PCIe supports maximum transfer size of 128B while IOSF
+bus supports maximum transfer size of 64B.
+Configure RB size accordingly.
 
---
-Luca.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h  | 4 +++-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 8 ++++++--
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
+index 270f39e..f08cdee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
+@@ -384,7 +384,9 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(unsigned int chnl)
+ #define RFH_GEN_CFG	0xA09800
+ #define RFH_GEN_CFG_SERVICE_DMA_SNOOP	BIT(0)
+ #define RFH_GEN_CFG_RFH_DMA_SNOOP	BIT(1)
+-#define RFH_GEN_CFG_RB_CHUNK_SIZE	BIT(4) /* 0 - 64B, 1- 128B */
++#define RFH_GEN_CFG_RB_CHUNK_SIZE_POS	4
++#define RFH_GEN_CFG_RB_CHUNK_SIZE_128	1
++#define RFH_GEN_CFG_RB_CHUNK_SIZE_64	0
+ #define RFH_GEN_CFG_DEFAULT_RXQ_NUM_MASK 0xF00
+ #define RFH_GEN_CFG_DEFAULT_RXQ_NUM_POS 8
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index f1e309d..27ff74d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -848,13 +848,17 @@ static void iwl_pcie_rx_mq_hw_init(struct iwl_trans *trans)
+ 
+ 	/*
+ 	 * Activate DMA snooping.
+-	 * Set RX DMA chunk size to 64B
++	 * Set RX DMA chunk size to 64B for IOSF and 128B for PCIe
+ 	 * Default queue is 0
+ 	 */
+ 	iwl_write_prph_no_grab(trans, RFH_GEN_CFG, RFH_GEN_CFG_RFH_DMA_SNOOP |
+ 			       (DEFAULT_RXQ_NUM <<
+ 				RFH_GEN_CFG_DEFAULT_RXQ_NUM_POS) |
+-			       RFH_GEN_CFG_SERVICE_DMA_SNOOP);
++			       RFH_GEN_CFG_SERVICE_DMA_SNOOP |
++			       (trans->cfg->integrated ?
++				RFH_GEN_CFG_RB_CHUNK_SIZE_64 :
++				RFH_GEN_CFG_RB_CHUNK_SIZE_128) <<
++			       RFH_GEN_CFG_RB_CHUNK_SIZE_POS);
+ 	/* Enable the relevant rx queues */
+ 	iwl_write_prph_no_grab(trans, RFH_RXF_RXQ_ACTIVE, enabled);
+ 
+-- 
+2.8.1
+
