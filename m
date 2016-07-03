@@ -1,144 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:34524 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750956AbcGMLmP (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60870 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932068AbcGCT7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 07:42:15 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Yaniv Machani <yanivma@ti.com>, Maital Hahn <maitalm@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
-Date: Wed, 13 Jul 2016 14:45:25 +0300
-Message-ID: <20160713114528.24835-1-yanivma@ti.com> (sfid-20160713_134300_961040_111130DC)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 3 Jul 2016 15:59:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org
+Date: Sun,  3 Jul 2016 22:48:50 +0300
+Message-Id: <1467575332-32112-11-git-send-email-luca@coelho.fi> (sfid-20160703_215918_638075_9924BF9A)
+In-Reply-To: <467405215.1837.15.camel@coelho.fi>
+References: <467405215.1837.15.camel@coelho.fi>
+Subject: [PATCH 11/13] iwlwifi: pcie: make sure packet arrived to destined queue
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When a packet is received for transmission,
-a PREQ frame is sent to resolve the appropriate path to the desired destination.
-After path was established, any sequential PREQ will be sent only after
-dot11MeshHWMPpreqMinInterval, which usually set to few seconds.
+From: Sara Sharon <sara.sharon@intel.com>
 
-This implementation has an impact in cases where we would like to
-resolve the path quickly.
-A clear example is when a peer was disconnected from us,
-while he acted as a hop to our destination.
-Although the path table will be cleared, the next PREQ frame will be sent only after reaching the MinInterval.
-This will cause unwanted delay, possibly of few seconds until the traffic will resume.
+Add a warning in case packet didn't end up in the HW
+destined queue.
 
-To improve that, added an 'immediate' flag to be used when the path needs to be resolved.
-Once set, a PREQ frame will be send w/o considering the MinInterval parameter.
-
-Signed-off-by: Maital Hahn <maitalm@ti.com>
-Signed-off-by: Yaniv Machani <yanivma@ti.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-v2 - Updated comment to explain the scenario better.
-   - Removed unnccesary changes that was alreay upstreamed.
-   
- net/mac80211/mesh_hwmp.c | 42 +++++++++++++++++++++++++-----------------
- 1 file changed, 25 insertions(+), 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 8 +++++++-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c   | 3 +++
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 8f9c3bd..9783d49 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -19,7 +19,7 @@
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 2f024c7..a45be1d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -212,6 +212,8 @@ struct iwl_cmd_header_wide {
+ #define FH_RSCSR_FRAME_INVALID		0x55550000
+ #define FH_RSCSR_FRAME_ALIGN		0x40
+ #define FH_RSCSR_RPA_EN			BIT(25)
++#define FH_RSCSR_RXQ_POS		16
++#define FH_RSCSR_RXQ_MASK		0x3F0000
  
- #define MAX_PREQ_QUEUE_LEN	64
+ struct iwl_rx_packet {
+ 	/*
+@@ -223,7 +225,11 @@ struct iwl_rx_packet {
+ 	 * 29:    flag fast IRQ request
+ 	 * 28-26: Reserved
+ 	 * 25:    Offload enabled
+-	 * 24-14: Reserved
++	 * 24:    RPF enabled
++	 * 23:    RSS enabled
++	 * 22:    Checksum enabled
++	 * 21-16: RX queue
++	 * 15-14: Reserved
+ 	 * 13-00: RX frame size
+ 	 */
+ 	__le32 len_n_flags;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 4fad808..70e39e4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1104,6 +1104,9 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
+ 		if (pkt->len_n_flags == cpu_to_le32(FH_RSCSR_FRAME_INVALID))
+ 			break;
  
--static void mesh_queue_preq(struct mesh_path *, u8);
-+static void mesh_queue_preq(struct mesh_path *, u8, bool);
- 
- static inline u32 u32_field_get(const u8 *preq_elem, int offset, bool ae)
- {
-@@ -830,7 +830,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
- 		mhwmp_dbg(sdata,
- 			  "time to refresh root mpath %pM\n",
- 			  orig_addr);
--		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
-+		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH,
-+				false);
- 		mpath->last_preq_to_root = jiffies;
- 	}
- 
-@@ -925,7 +926,7 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
-  * Locking: the function must be called from within a rcu read lock block.
-  *
-  */
--static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
-+static void mesh_queue_preq(struct mesh_path *mpath, u8 flags, bool immediate)
- {
- 	struct ieee80211_sub_if_data *sdata = mpath->sdata;
- 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
-@@ -964,18 +965,24 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
- 	++ifmsh->preq_queue_len;
- 	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
- 
--	if (time_after(jiffies, ifmsh->last_preq + min_preq_int_jiff(sdata)))
-+	if (immediate) {
- 		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-+	} else {
-+		if (time_after(jiffies,
-+			       ifmsh->last_preq + min_preq_int_jiff(sdata))) {
-+			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
- 
--	else if (time_before(jiffies, ifmsh->last_preq)) {
--		/* avoid long wait if did not send preqs for a long time
--		 * and jiffies wrapped around
--		 */
--		ifmsh->last_preq = jiffies - min_preq_int_jiff(sdata) - 1;
--		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
--	} else
--		mod_timer(&ifmsh->mesh_path_timer, ifmsh->last_preq +
--						min_preq_int_jiff(sdata));
-+		} else if (time_before(jiffies, ifmsh->last_preq)) {
-+			/* avoid long wait if did not send preqs for a long time
-+			 * and jiffies wrapped around
-+			 */
-+			ifmsh->last_preq = jiffies -
-+					   min_preq_int_jiff(sdata) - 1;
-+			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
-+		} else
-+			mod_timer(&ifmsh->mesh_path_timer, ifmsh->last_preq +
-+				  min_preq_int_jiff(sdata));
-+	}
- }
- 
- /**
-@@ -1110,7 +1117,7 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
- 	}
- 
- 	if (!(mpath->flags & MESH_PATH_RESOLVING))
--		mesh_queue_preq(mpath, PREQ_Q_F_START);
-+		mesh_queue_preq(mpath, PREQ_Q_F_START, true);
- 
- 	if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
- 		skb_to_free = skb_dequeue(&mpath->frame_queue);
-@@ -1157,8 +1164,9 @@ int mesh_nexthop_lookup(struct ieee80211_sub_if_data *sdata,
- 		       msecs_to_jiffies(sdata->u.mesh.mshcfg.path_refresh_time)) &&
- 	    ether_addr_equal(sdata->vif.addr, hdr->addr4) &&
- 	    !(mpath->flags & MESH_PATH_RESOLVING) &&
--	    !(mpath->flags & MESH_PATH_FIXED))
--		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
-+	    !(mpath->flags & MESH_PATH_FIXED)) {
-+	    mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH, false);
-+	}
- 
- 	next_hop = rcu_dereference(mpath->next_hop);
- 	if (next_hop) {
-@@ -1192,7 +1200,7 @@ void mesh_path_timer(unsigned long data)
- 		mpath->discovery_timeout *= 2;
- 		mpath->flags &= ~MESH_PATH_REQ_QUEUED;
- 		spin_unlock_bh(&mpath->state_lock);
--		mesh_queue_preq(mpath, 0);
-+		mesh_queue_preq(mpath, 0, false);
- 	} else {
- 		mpath->flags &= ~(MESH_PATH_RESOLVING |
- 				  MESH_PATH_RESOLVED |
++		WARN_ON((le32_to_cpu(pkt->len_n_flags) & FH_RSCSR_RXQ_MASK) >>
++			FH_RSCSR_RXQ_POS != rxq->id);
++
+ 		IWL_DEBUG_RX(trans,
+ 			     "cmd at offset %d: %s (0x%.2x, seq 0x%x)\n",
+ 			     rxcb._offset,
 -- 
-2.9.0
+2.8.1
 
