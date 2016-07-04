@@ -1,118 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56429 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932162AbcGKKCx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 06:02:53 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 4/4] ath9k_hw: implement temperature compensation support for AR9003+
-Date: Mon, 11 Jul 2016 12:02:48 +0200
-Message-Id: <20160711100248.68678-4-nbd@nbd.name> (sfid-20160711_120522_951012_EF6C8642)
-In-Reply-To: <20160711100248.68678-1-nbd@nbd.name>
-References: <20160711100248.68678-1-nbd@nbd.name>
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36446 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753337AbcGDJIx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2016 05:08:53 -0400
+Received: by mail-pa0-f44.google.com with SMTP id zl15so17022110pab.3
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2016 02:08:53 -0700 (PDT)
+Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name
+ dt property
+To: Arnd Bergmann <arnd@arndb.de>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
+ <7975990.MvNRQ06u39@wuerfel>
+ <ac480a61-5bfd-5d0c-26fe-b85220ee5076@broadcom.com>
+ <5756670.9hMGo8oEyl@wuerfel>
+Cc: Jonas Gorski <jonas.gorski@gmail.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Priit Laes <plaes@plaes.org>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi@googlegroups.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <6cc6dabf-e6da-d70d-3cce-a7f1804f233e@broadcom.com> (sfid-20160704_110857_160978_780024A1)
+Date: Mon, 4 Jul 2016 11:08:38 +0200
+MIME-Version: 1.0
+In-Reply-To: <5756670.9hMGo8oEyl@wuerfel>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/ath/ath9k/ar9003_calib.c | 25 ++++++++++++++++++++++---
- drivers/net/wireless/ath/ath9k/hw.h           |  1 +
- 2 files changed, 23 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-index 7e27a06..b6f064a 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
-@@ -33,6 +33,7 @@ struct coeff {
- 
- enum ar9003_cal_types {
- 	IQ_MISMATCH_CAL = BIT(0),
-+	TEMP_COMP_CAL = BIT(1),
- };
- 
- static void ar9003_hw_setup_calibration(struct ath_hw *ah,
-@@ -58,6 +59,12 @@ static void ar9003_hw_setup_calibration(struct ath_hw *ah,
- 		/* Kick-off cal */
- 		REG_SET_BIT(ah, AR_PHY_TIMING4, AR_PHY_TIMING4_DO_CAL);
- 		break;
-+	case TEMP_COMP_CAL:
-+		ath_dbg(common, CALIBRATE,
-+			"starting Temperature Compensation Calibration\n");
-+		REG_SET_BIT(ah, AR_CH0_THERM, AR_CH0_THERM_LOCAL);
-+		REG_SET_BIT(ah, AR_CH0_THERM, AR_CH0_THERM_START);
-+		break;
- 	default:
- 		ath_err(common, "Invalid calibration type\n");
- 		break;
-@@ -86,7 +93,8 @@ static bool ar9003_hw_per_calibration(struct ath_hw *ah,
- 		/*
- 		* Accumulate cal measures for active chains
- 		*/
--		cur_caldata->calCollect(ah);
-+		if (cur_caldata->calCollect)
-+			cur_caldata->calCollect(ah);
- 		ah->cal_samples++;
- 
- 		if (ah->cal_samples >= cur_caldata->calNumSamples) {
-@@ -99,7 +107,8 @@ static bool ar9003_hw_per_calibration(struct ath_hw *ah,
- 			/*
- 			* Process accumulated data
- 			*/
--			cur_caldata->calPostProc(ah, numChains);
-+			if (cur_caldata->calPostProc)
-+				cur_caldata->calPostProc(ah, numChains);
- 
- 			/* Calibration has finished. */
- 			caldata->CalValid |= cur_caldata->calType;
-@@ -314,9 +323,16 @@ static const struct ath9k_percal_data iq_cal_single_sample = {
- 	ar9003_hw_iqcalibrate
- };
- 
-+static const struct ath9k_percal_data temp_cal_single_sample = {
-+	TEMP_COMP_CAL,
-+	MIN_CAL_SAMPLES,
-+	PER_MAX_LOG_COUNT,
-+};
-+
- static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
- {
- 	ah->iq_caldata.calData = &iq_cal_single_sample;
-+	ah->temp_caldata.calData = &temp_cal_single_sample;
- 
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		ah->enabled_cals |= TX_IQ_CAL;
-@@ -324,7 +340,7 @@ static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
- 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
- 	}
- 
--	ah->supp_cals = IQ_MISMATCH_CAL;
-+	ah->supp_cals = IQ_MISMATCH_CAL | TEMP_COMP_CAL;
- }
- 
- #define OFF_UPPER_LT 24
-@@ -1383,6 +1399,9 @@ static void ar9003_hw_init_cal_common(struct ath_hw *ah)
- 	INIT_CAL(&ah->iq_caldata);
- 	INSERT_CAL(ah, &ah->iq_caldata);
- 
-+	INIT_CAL(&ah->temp_caldata);
-+	INSERT_CAL(ah, &ah->temp_caldata);
-+
- 	/* Initialize current pointer to first element in list */
- 	ah->cal_list_curr = ah->cal_list;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 9cbca12..2a5d3ad 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -830,6 +830,7 @@ struct ath_hw {
- 	/* Calibration */
- 	u32 supp_cals;
- 	struct ath9k_cal_list iq_caldata;
-+	struct ath9k_cal_list temp_caldata;
- 	struct ath9k_cal_list adcgain_caldata;
- 	struct ath9k_cal_list adcdc_caldata;
- 	struct ath9k_cal_list *cal_list;
--- 
-2.8.4
 
+On 4-7-2016 10:55, Arnd Bergmann wrote:
+> On Monday, July 4, 2016 10:41:20 AM CEST Arend Van Spriel wrote:
+>> On 2-7-2016 23:30, Arnd Bergmann wrote:
+>>> On Saturday, July 2, 2016 8:20:35 PM CEST Arend Van Spriel wrote:
+>>>>> If you want a separate property, then I repeat my very first
+>>>>> suggestion, the well defined model property.
+>>>>> e.g.
+>>>>>
+>>>>> brcmf@0 {
+>>>>>         model = "ampak,ap6210";
+>>>>>         compatible = "brcm,bcm4329-fmac";
+>>>>>         ...
+>>>>> };
+>>>>>
+>>>>> All device nodes may have a model property, not just the top "machine" one.
+>>>>
+>>>> I heard you the first time  I just was not sure what the implications
+>>>> would be to use it. Hence I suggested a vendor specific property.
+>>>> However, looking up and reading the definition in ePAPRv1.1 I suppose it
+>>>> is fine to use the model property:
+>>>>
+>>>> Property: model
+>>>> Value type: <string>
+>>>> Description:
+>>>> The model property value is a <string> that specifies the manufacturer’s
+>>>> model number of the device.
+>>>>
+>>>> The recommended format is: “manufacturer,model”, where manufacturer is a
+>>>> string describing the name of the manufacturer (such as a stock ticker
+>>>> symbol), and model specifies the model number.
+>>>
+>>> The model property is very similar to compatible, except that there is
+>>> only one entry rather than a list of entries from most specific to
+>>> most generic.
+>>
+>> They seem very similar, but I think there is a conceptual difference.
+>> The compatible property is mainly used to select the appropriate driver
+>> and as such the property is typically ignored by device drivers.
+>> Probably there are exceptions to be found.
+>>
+>>> I think by writing the above example as
+>>>
+>>>       compatible = "ampak,ap6210", "brcm,bcm4329-fmac";
+>>>
+>>> we can provide the same functionality in a slightly simpler way, the driver
+>>> then just goes on to look for the nvram file for each entry in sequence until
+>>> it finds one.
+>>
+>> Not sure why this would be simpler. Why would traversing the compatible
+>> string be simpler than handling the model property if present and
+>> otherwise fallback to the default nvram naming.
+> 
+> Because you have to walk the list anyway to find the other firmware files:
+> when you have a specialization of a device that requires listing both values
+> as compatible, the driver has no idea which of the entries to use, unless
+> you add a lookup table that adds more complexity.
+
+Currently, the brcmfmac bindings describe a single compatible string,
+ie. "brcm,bcm4329-fmac", which selects the driver/programming model. If
+that programming model supports "use model property if present,
+otherwise use default" there is nothing to traverse. The default way in
+the driver to determine firmware and nvram filename already has a lookup
+table which uses the chip id and chip revision as key, which are read
+from the device.
+
+Regards,
+Arend
