@@ -1,55 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:58563 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755284AbcGHPrX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 11:47:23 -0400
-Subject: Re: ath10k + iw set bitrates is causing FW crash
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
- <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
- <1467972560885.99812@qti.qualcomm.com>
- <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com>
- <1467982766213.21223@qti.qualcomm.com>
- <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com>
- <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com>
- <CABPxzYKOqBmrjRwAyZV9daV8adEhUV71XEAsfrLhtTnKwWzuaw@mail.gmail.com>
- <577FC9D0.2010809@candelatech.com>
- <CABPxzYLdS-QicOj9AdcubT8uxgw0cqXpzerpuwGcwkSQ7PCiOA@mail.gmail.com>
-Cc: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <577FCB04.4030905@candelatech.com> (sfid-20160708_174730_461131_9511C085)
-Date: Fri, 8 Jul 2016 08:47:16 -0700
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYLdS-QicOj9AdcubT8uxgw0cqXpzerpuwGcwkSQ7PCiOA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:54796 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753543AbcGDMiF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jul 2016 08:38:05 -0400
+From: Benjamin Berg <benjamin@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@nbd.name>,
+	ath9k-devel@lists.ath9k.org,
+	Benjamin Berg <benjamin.berg@open-mesh.com>
+Subject: [PATCH v2 3/6] ath9k: Use tsf offset helper in ath9k_hw_reset
+Date: Mon,  4 Jul 2016 14:37:22 +0200
+Message-Id: <1467635845-32653-3-git-send-email-benjamin@sipsolutions.net> (sfid-20160704_143812_558693_D0C8365E)
+In-Reply-To: <1467635845-32653-1-git-send-email-benjamin@sipsolutions.net>
+References: <1467635845-32653-1-git-send-email-benjamin@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/08/2016 08:44 AM, Krishna Chaitanya wrote:
-> On Fri, Jul 8, 2016 at 9:12 PM, Ben Greear <greearb@candelatech.com> wrote:
->> On 07/08/2016 08:39 AM, Krishna Chaitanya wrote:
->>
->>> Also can you please tell me how to make ath10k use minstrel rc, its needed
->>> for comparative purposes? Is disable HW_RATE_CONTROL enough or does
->>> it need more changes?
->>
->>
->> It cannot be done.  You have to use whatever rate-ctrl is baked into the
->> firmware.
-> Ok, its a good feature to have.
->
+From: Benjamin Berg <benjamin.berg@open-mesh.com>
 
-It is unlikely to happen anytime soon.  It requires significant firmware
-modification (and driver too), and probably you would have to add MU-MIMO
-support to minstrel if you wanted to support latest ath10k NICs.
+These changes make ath9k_hw_reset more consistent with other places that
+handle the TSF value by using the same helper routine.
 
-Thanks,
-Ben
+A slight improvement is to not assume that a fixed time of 1.5ms has
+passed for the initval writes when compared to the first write attempt.
+Instead the TSF value is re-calculated which will yield a higher accuracy
+of the restored TSF timer.
 
+Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 8b2895f..1c27e2d 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1832,8 +1832,9 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	u32 saveLedState;
+ 	u32 saveDefAntenna;
+ 	u32 macStaId1;
++	struct timespec tsf_ts;
++	u32 tsf_offset;
+ 	u64 tsf = 0;
+-	s64 usec = 0;
+ 	int r;
+ 	bool start_mci_reset = false;
+ 	bool save_fullsleep = ah->chip_fullsleep;
+@@ -1877,8 +1878,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	macStaId1 = REG_READ(ah, AR_STA_ID1) & AR_STA_ID1_BASE_RATE_11B;
+ 
+ 	/* Save TSF before chip reset, a cold reset clears it */
++	getrawmonotonic(&tsf_ts);
+ 	tsf = ath9k_hw_gettsf64(ah);
+-	usec = ktime_to_us(ktime_get_raw());
+ 
+ 	saveLedState = REG_READ(ah, AR_CFG_LED) &
+ 		(AR_CFG_LED_ASSOC_CTL | AR_CFG_LED_MODE_SEL |
+@@ -1911,8 +1912,8 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	}
+ 
+ 	/* Restore TSF */
+-	usec = ktime_to_us(ktime_get_raw()) - usec;
+-	ath9k_hw_settsf64(ah, tsf + usec);
++	tsf_offset = ath9k_hw_get_tsf_offset(&tsf_ts, NULL);
++	ath9k_hw_settsf64(ah, tsf + tsf_offset);
+ 
+ 	if (AR_SREV_9280_20_OR_LATER(ah))
+ 		REG_SET_BIT(ah, AR_GPIO_INPUT_EN_VAL, AR_GPIO_JTAG_DISABLE);
+@@ -1932,12 +1933,11 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	/*
+ 	 * Some AR91xx SoC devices frequently fail to accept TSF writes
+ 	 * right after the chip reset. When that happens, write a new
+-	 * value after the initvals have been applied, with an offset
+-	 * based on measured time difference
++	 * value after the initvals have been applied.
+ 	 */
+ 	if (AR_SREV_9100(ah) && (ath9k_hw_gettsf64(ah) < tsf)) {
+-		tsf += 1500;
+-		ath9k_hw_settsf64(ah, tsf);
++		tsf_offset = ath9k_hw_get_tsf_offset(&tsf_ts, NULL);
++		ath9k_hw_settsf64(ah, tsf + tsf_offset);
+ 	}
+ 
+ 	ath9k_hw_init_mfp(ah);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.8.1
 
