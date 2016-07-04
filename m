@@ -1,49 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f180.google.com ([209.85.223.180]:33934 "EHLO
-	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbcGVA3z (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37837 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753265AbcGDLJ0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 20:29:55 -0400
-Received: by mail-io0-f180.google.com with SMTP id q83so91831994iod.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 17:29:54 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1469088884-28469-1-git-send-email-rajan.vaja@gmail.com>
-References: <1469088884-28469-1-git-send-email-rajan.vaja@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 22 Jul 2016 10:29:34 +1000
-Message-ID: <CAGRGNgU91PirkgsytVopGhLyKQ-gQQ9rSmSjeoFU8T4J7dJQgg@mail.gmail.com> (sfid-20160722_022958_326855_7347777D)
-Subject: Re: [PATCH] hostap: Use memdup_user() to reuse code
-To: Rajan Vaja <rajan.vaja@gmail.com>
-Cc: Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 4 Jul 2016 07:09:26 -0400
+Received: by mail-wm0-f51.google.com with SMTP id a66so110874284wme.0
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2016 04:09:25 -0700 (PDT)
+From: lemagoup@gmail.com
+To: kvalo@qca.qualcomm.com
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
+	jmassot@aldebaran.com,
+	Pierre Le Magourou <plemagourou@aldebaran.com>
+Subject: [PATCH v2 0/3] ath6kl: Fix tethering problems
+Date: Mon,  4 Jul 2016 13:07:16 +0200
+Message-Id: <20160704110719.7694-1-plemagourou@aldebaran.com> (sfid-20160704_130946_748901_4DFA1C9A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+From: Pierre Le Magourou <plemagourou@aldebaran.com>
 
-On Thu, Jul 21, 2016 at 6:14 PM, Rajan Vaja <rajan.vaja@gmail.com> wrote:
-> Fix coccicheck warning which recommends to
-> use memdup_user() instead of reimplementing its
-> code.
->
-> This patch fixes below coccicheck warnings:
->
-> drivers/net/wireless/intersil/hostap/hostap_ioctl.c:3044:9-16: WARNING
-> opportunity for memdup_user
-> drivers/net/wireless/intersil/hostap/hostap_ioctl.c:3806:9-16: WARNING
-> opportunity for memdup_user
->
-> Signed-off-by: Rajan Vaja <rajan.vaja@gmail.com>
+These 3 patchs fix problems detected when using tethering mode with a
+AR9374 chipset.
 
-Looks right to me.
+v2:
+ * Change "From:" line of the email header
+ * Remove locking from "Unset IFF_LOWER_UP flag on AP mode leave" patch
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-Thanks,
+Pierre Le Magourou (3):
+  ath6kl: Fix WLAN tethering authentication problem.
+  ath6kl: Fix wrong regulatory domain disconnection.
+  ath6kl: Unset IFF_LOWER_UP flag on AP mode leave.
+
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 4 +++-
+ drivers/net/wireless/ath/ath6kl/txrx.c     | 9 +++++----
+ 2 files changed, 8 insertions(+), 5 deletions(-)
 
 -- 
-Julian Calaby
+2.9.0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
