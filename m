@@ -1,37 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36560 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:55182 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379AbcGMHy5 convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1751168AbcGENYZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 03:54:57 -0400
+	Tue, 5 Jul 2016 09:24:25 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	torvalds@linux-foundation.org,
-	"Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
-	linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi 2016-07-11
-References: <1468233921.25088.107.camel@coelho.fi>
-Date: Wed, 13 Jul 2016 10:54:41 +0300
-In-Reply-To: <1468233921.25088.107.camel@coelho.fi> (Luca Coelho's message of
-	"Mon, 11 Jul 2016 13:45:21 +0300")
-Message-ID: <87mvlmynum.fsf@kamboji.qca.qualcomm.com> (sfid-20160713_095500_941300_242B1E30)
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org, David Miller <davem@davemloft.net>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCHv4 wl-drv-next 0/2] register-field manipulation macros
+References: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
+Date: Tue, 05 Jul 2016 16:24:18 +0300
+In-Reply-To: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
+	(Jakub Kicinski's message of "Tue, 5 Jul 2016 12:42:57 +0100")
+Message-ID: <87lh1g2p6l.fsf@kamboji.qca.qualcomm.com> (sfid-20160705_152442_254491_BB530410)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Jakub Kicinski <jakub.kicinski@netronome.com> writes:
 
-> This is a fix for a warning that was spotted by Linus.  We already have
-> this patch queued in -next, but it should have gone to -fixes.  I hope
-> it is still possible to send it for 4.7.  And it shouldn't be a problem
-> to have it in both, right? I guess git merge would take care of that.
+> This set moves to a global header file macros which I find
+> very useful and worth popularising.  The basic problem is
+> that since C bitfields are not very dependable accessing
+> subfields of registers becomes slightly inconvenient.
+> It is nice to have the necessary mask and shift operations
+> wrapped in a macro.  It is also nice to have that macro
+> compute the shift amount based on the mask automatically.
+>
+> My implementation follows what Felix Fietkau has done in
+> mt76.  Hannes Frederic Sowa suggested more use of standard
+> Linux/GCC functions.  Since the RFC I've also added a 
+> compile-time check to validate that the value passed to
+> setters fits in the mask.
+>
+> I attempted the use of static inlines instead of macros
+> but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
+> I also noticed that forcing arguments to be u32 for inlines
+> makes the compiler use 32bit arithmetic where it could
+> get away with 64bit before (on 64bit machines, obviously).
+> That's a potential performance concern but probably not
+> a very practical one today.  Apart from looking "cleaner"
+> static inlines would have the advantage that we could #undef
+> the auxiliary macros at the end of the header.
 
-Like we discussed privately, even if iwlwifi was printing warnings the
-connection was still working for Linus so this is not critical enough
-for 4.7 so late in the cycle. So let's drop this and the fix can go to
-4.8 as planned.
+This information about various compiler problems is good to have in the
+commit log as the cover letter itself is not stored in the git log.
+
+> v3:
+> Build bot caught a build failure with -Os set.  AFAICT gcc
+> did not handle temporary variable I put in the macro
+> expression too well.  I work around that by defining
+> __BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
+> BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
+>
+> Please review and advise on improvements.
+>
+> If accepted I think would be best to push this through
+> Kalle's tree, since the only existing user is in
+> drivers/net/wireless/.
+
+I like it. But I feel much more comfortable to take these if I get an
+ack from someone like Dave Miller or Andrew Morton (CCed).
+
+Full patches here:
+
+https://patchwork.kernel.org/patch/9214129/
+https://patchwork.kernel.org/patch/9214135/
 
 -- 
 Kalle Valo
