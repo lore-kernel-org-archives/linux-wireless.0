@@ -1,51 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eng.riverbed.com ([208.70.196.45]:39057 "EHLO
-	smtp1.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752168AbcGAPXL (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:38018 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754779AbcGELnY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 11:23:11 -0400
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	kvalo@qca.qualcomm.com
-From: Eduardo Abinader <eduardo.abinader@riverbed.com>
-Subject: [PATCH V2] ath9k: consider return code on ar9300_eeprom_restore_flash
-Message-ID: <57768ADC.6060103@riverbed.com> (sfid-20160701_172315_702812_A36C4073)
-Date: Fri, 1 Jul 2016 17:23:08 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 5 Jul 2016 07:43:24 -0400
+Received: by mail-wm0-f51.google.com with SMTP id r201so148805769wme.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 04:43:23 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv4 wl-drv-next 0/2] register-field manipulation macros
+Date: Tue,  5 Jul 2016 12:42:57 +0100
+Message-Id: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160705_134423_851520_90323331)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-just to comply with current ath9k_hw_nvram_read to return value, hence
-behaving reacting accordingly.
+Hi!
 
-Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+This set moves to a global header file macros which I find
+very useful and worth popularising.  The basic problem is
+that since C bitfields are not very dependable accessing
+subfields of registers becomes slightly inconvenient.
+It is nice to have the necessary mask and shift operations
+wrapped in a macro.  It is also nice to have that macro
+compute the shift amount based on the mask automatically.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 5bd2cba..b7dc08e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3252,7 +3252,8 @@ static int ar9300_eeprom_restore_flash(struct ath_hw *ah, u8 *mptr,
- 	int i;
- 
- 	for (i = 0; i < mdata_size / 2; i++, data++)
--		ath9k_hw_nvram_read(ah, i, data);
-+		if (!ath9k_hw_nvram_read(ah, i, data))
-+			return -1;
- 
- 	return 0;
- }
-@@ -3282,7 +3283,8 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	if (ath9k_hw_use_flash(ah)) {
- 		u8 txrx;
- 
--		ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
-+		if (ar9300_eeprom_restore_flash(ah, mptr, mdata_size))
-+			return -1;
- 
- 		/* check if eeprom contains valid data */
- 		eep = (struct ar9300_eeprom *) mptr;
+My implementation follows what Felix Fietkau has done in
+mt76.  Hannes Frederic Sowa suggested more use of standard
+Linux/GCC functions.  Since the RFC I've also added a 
+compile-time check to validate that the value passed to
+setters fits in the mask.
+
+I attempted the use of static inlines instead of macros
+but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
+I also noticed that forcing arguments to be u32 for inlines
+makes the compiler use 32bit arithmetic where it could
+get away with 64bit before (on 64bit machines, obviously).
+That's a potential performance concern but probably not
+a very practical one today.  Apart from looking "cleaner"
+static inlines would have the advantage that we could #undef
+the auxiliary macros at the end of the header.
+
+v3:
+Build bot caught a build failure with -Os set.  AFAICT gcc
+did not handle temporary variable I put in the macro
+expression too well.  I work around that by defining
+__BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
+BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
+
+Please review and advise on improvements.
+
+If accepted I think would be best to push this through
+Kalle's tree, since the only existing user is in
+drivers/net/wireless/.
+
+v4:
+ - add documentation in the header.
+v3:
+ - don't use variables in statement expressions;
+ - use __BUILD_BUG_ON_NOT_POWER_OF_2.
+v2:
+ - change Felix's email address.
+
+Jakub Kicinski (2):
+  add basic register-field manipulation macros
+  mt7601u: use linux/bitfield.h
+
+ drivers/net/wireless/mediatek/mt7601u/dma.h     |   2 -
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h |   5 +-
+ drivers/net/wireless/mediatek/mt7601u/util.h    |  77 -----------------
+ include/linux/bitfield.h                        | 110 ++++++++++++++++++++++++
+ include/linux/bug.h                             |   3 +
+ 5 files changed, 117 insertions(+), 80 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+ create mode 100644 include/linux/bitfield.h
+
 -- 
-2.5.0
+1.9.1
+
