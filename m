@@ -1,55 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57115 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:54444 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbcGMQbz (ORCPT
+	with ESMTP id S1754981AbcGENQ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 12:31:55 -0400
+	Tue, 5 Jul 2016 09:16:27 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cathy Luo" <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH v3 1/2] mwifiex: add manufacturing mode support
-References: <1468417703-32716-1-git-send-email-akarwar@marvell.com>
-	<87twfta66k.fsf@purkki.adurom.net>
-	<2dcba20e490840918e80c4f91a250739@SC-EXCH04.marvell.com>
-Date: Wed, 13 Jul 2016 19:31:02 +0300
-In-Reply-To: <2dcba20e490840918e80c4f91a250739@SC-EXCH04.marvell.com>
-	(Amitkumar Karwar's message of "Wed, 13 Jul 2016 15:57:15 +0000")
-Message-ID: <87eg6xzeih.fsf@kamboji.qca.qualcomm.com> (sfid-20160713_183359_780400_9EB2652D)
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCHv4 wl-drv-next 2/2] mt7601u: use linux/bitfield.h
+References: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
+	<1467718979-20029-3-git-send-email-jakub.kicinski@netronome.com>
+Date: Tue, 05 Jul 2016 16:16:20 +0300
+In-Reply-To: <1467718979-20029-3-git-send-email-jakub.kicinski@netronome.com>
+	(Jakub Kicinski's message of "Tue, 5 Jul 2016 12:42:59 +0100")
+Message-ID: <87poqs2pjv.fsf@kamboji.qca.qualcomm.com> (sfid-20160705_151647_751562_5D4432F6)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> writes:
+Jakub Kicinski <jakub.kicinski@netronome.com> writes:
 
-> Hi Kalle,
+> Use the newly added linux/bitfield.h.
 >
->> -----Original Message-----
->> From: Kalle Valo [mailto:kvalo@codeaurora.org]
->> Sent: Wednesday, July 13, 2016 9:20 PM
->> To: Amitkumar Karwar
->> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam
->> Subject: Re: [PATCH v3 1/2] mwifiex: add manufacturing mode support
->> 
->> Amitkumar Karwar <akarwar@marvell.com> writes:
->> 
->> > By default normal mode is chosen when driver is loaded. This patch
->> > adds a provision to choose manufacturing mode via module parameters.
->> >
->> > Command to load driver in manufacturing mode insmod mwifiex.ko
->> > mfg_mode=1 and mfg_firmware=mrvl/firmware.
->> >
->> > Tested-by: chunfan chen <jeffc@marvell.com>
->> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
->> 
->> Why the mfg_firmware module parameter?
->
-> It's to specify a firmware name.
+> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
 
-Yeah, I got that. But why do you need that? Why not just hardcode the
-firmware name in the driver, which is the normal thing to do?
+[...]
+
+> +#define MT76_SET	FIELD_PUT
+> +#define MT76_GET	FIELD_GET
+
+This define is useless now, I would just remove it entirely. But you can
+do that in a follow up patch.
 
 -- 
 Kalle Valo
