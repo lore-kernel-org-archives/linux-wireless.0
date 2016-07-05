@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:50108 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754881AbcGHO1D (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35043 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752088AbcGEObM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 10:27:03 -0400
+	Tue, 5 Jul 2016 10:31:12 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [v3] ath9k: Switch to using mac80211 intermediate software queues.
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160706193417.13080-1-toke@toke.dk>
-To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-CC: <linux-wireless@vger.kernel.org>,
-	<make-wifi-fast@lists.bufferbloat.net>,
-	<ath9k-devel@lists.ath9k.org>,
-	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
-Message-ID: <ac5b5bc6532d4fe7ae3198124ecce7fc@euamsexm01a.eu.qualcomm.com> (sfid-20160708_162712_921217_287555D3)
-Date: Fri, 8 Jul 2016 16:26:54 +0200
+Subject: Re: mwifiex: disable MSIx interrupt for 8997 chipset
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1466499752-1818-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Wei-Ning Huang <wnhuang@chromium.org>,
+	Cathy Luo <cluo@marvell.com>, Shengzhen Li <szli@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160705143111.A7028611DD@smtp.codeaurora.org> (sfid-20160705_163115_778181_70AC15DF)
+Date: Tue,  5 Jul 2016 14:31:11 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Toke Høiland-Jørgensen wrote:
-> This switches ath9k over to using the mac80211 intermediate software
-> queueing mechanism for data packets. It removes the queueing inside the
-> driver, except for the retry queue, and instead pulls from mac80211 when
-> a packet is needed. The retry queue is used to store a packet that was
-> pulled but can't be sent immediately.
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Shengzhen Li <szli@marvell.com>
 > 
-> The old code path in ath_tx_start that would queue packets has been
-> removed completely, as has the qlen limit tunables (since there's no
-> longer a queue in the driver to limit).
+> Sometimes MSIx interrupts are received out of order on multi-core
+> system. This creates a problem when there is a race between data
+> packet and SLEEP event from firmware. We will disable MSIx interrupt
+> mode to solve the problem and go with MSI mode.
 > 
-> Based on Tim's original patch set, but reworked quite thoroughly.
-> 
-> Cc: Tim Shepard <shep@alum.mit.edu>
-> Cc: Felix Fietkau <nbd@nbd.name>
-> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Nice work. Because this is such a significant change, and to maximise testing
-time, I'm planning to queue this for 4.9 (so I would apply this to ath-next in
-3-4 weeks after the merge window closes). But anyone who wants to test this can
-use master-pending branch from my ath.git tree (uses wireless-testing as the
-baseline). Sounds good?
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Testing and review feedback very welcome!
+bf942091678c mwifiex: disable MSIx interrupt for 8997 chipset
 
 -- 
 Sent by pwcli
-https://patchwork.kernel.org/patch/9216993/
+https://patchwork.kernel.org/patch/9190001/
 
