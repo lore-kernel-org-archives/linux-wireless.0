@@ -1,90 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31061 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752043AbcGAHBG (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:35204 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752566AbcGELZn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 03:01:06 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>,
-	"Tamizh chelvam" <c_traja@qti.qualcomm.com>
-Subject: [PATCHv3 2/3] ath10k: handle testmode events for 10.2 and 10.4 based firmware
-Date: Fri, 1 Jul 2016 12:36:36 +0530
-Message-ID: <1467356796-31683-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160701_090109_924885_A49AE021)
+	Tue, 5 Jul 2016 07:25:43 -0400
+Received: by mail-wm0-f52.google.com with SMTP id z126so71519395wme.0
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 04:25:43 -0700 (PDT)
+Date: Tue, 5 Jul 2016 12:25:38 +0100
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: David Laight <David.Laight@ACULAB.COM>
+Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"hannes@stressinduktion.org" <hannes@stressinduktion.org>,
+	"nbd@nbd.name" <nbd@nbd.name>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCHv3 wl-drv-next 1/2] add basic register-field manipulation
+ macros
+Message-ID: <20160705122538.5ba043d9@jkicinski-Precision-T1700> (sfid-20160705_132604_610664_FADB653F)
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D5F4F06BF@AcuExch.aculab.com>
+References: <1467408409-24224-1-git-send-email-jakub.kicinski@netronome.com>
+	<1467408409-24224-2-git-send-email-jakub.kicinski@netronome.com>
+	<063D6719AE5E284EB5DD2968C1650D6D5F4F06BF@AcuExch.aculab.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+On Tue, 5 Jul 2016 10:56:13 +0000, David Laight wrote:
+> From: Jakub Kicinski
+> > Sent: 01 July 2016 22:27
+> > 
+> > C bitfields are problematic and best avoided.  Developers
+> > interacting with hardware registers find themselves searching
+> > for easy-to-use alternatives.  Common approach is to define
+> > structures or sets of macros containing mask and shift pair.
+> > Operations on the register are then performed as follows:
+> > 
+> >  field = (reg >> shift) & mask;
+> > 
+> >  reg &= ~(mask << shift);
+> >  reg |= (field & mask) << shift;
+> > 
+> > Defining shift and mask separately is tedious.  Ivo van Doorn
+> > came up with an idea of computing them at compilation time
+> > based on a single shifted mask (later refined by Felix) which
+> > can be used like this:
+> > 
+> >  #define REG_FIELD 0x000ff000
+> > 
+> >  field = FIELD_GET(REG_FIELD, reg);
+> > 
+> >  reg &= ~REG_FIELD;
+> >  reg |= FIELD_PUT(REG_FIELD, field);  
+> 
+> My problem with these sort of 'helpers' is that they make it much harder
+> to read code unless you happen to know exactly what the helpers do.
+> Unexpected issues (like values being sign extended) can be hard to spot.
+> 
+> A lot of the time you can make things simpler by not doing the shifts
+> (ie define shifted constants).
 
-Currently testmode events for 10.x firmware are processed from
-10.1 wmi event processing. This patch is used to handle testmode
-events in 10.2 and 10.4 based firmware.
+I think creating a standard set of macros in a global header file is
+actually helping the problems you raise.  One is much more likely to
+know exactly what a common macro is doing than some driver-specific
+ad hoc macro.  Common macros are also much more likely to be well
+tested making "unexpected issues" less likely to appear.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c |   26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 12a4347..6c82a89 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -5097,6 +5097,7 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_cmd_hdr *cmd_hdr;
- 	enum wmi_10_2_event_id id;
-+	bool consumed;
- 
- 	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
- 	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
-@@ -5106,6 +5107,18 @@ static void ath10k_wmi_10_2_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
- 
-+	consumed = ath10k_tm_event_wmi(ar, id, skb);
-+
-+	/* Ready event must be handled normally also in UTF mode so that we
-+	 * know the UTF firmware has booted, others we are just bypass WMI
-+	 * events to testmode.
-+	 */
-+	if (consumed && id != WMI_10_2_READY_EVENTID) {
-+		ath10k_dbg(ar, ATH10K_DBG_WMI,
-+			   "wmi testmode consumed 0x%x\n", id);
-+		goto out;
-+	}
-+
- 	switch (id) {
- 	case WMI_10_2_MGMT_RX_EVENTID:
- 		ath10k_wmi_event_mgmt_rx(ar, skb);
-@@ -5221,6 +5234,7 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_cmd_hdr *cmd_hdr;
- 	enum wmi_10_4_event_id id;
-+	bool consumed;
- 
- 	cmd_hdr = (struct wmi_cmd_hdr *)skb->data;
- 	id = MS(__le32_to_cpu(cmd_hdr->cmd_id), WMI_CMD_HDR_CMD_ID);
-@@ -5230,6 +5244,18 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- 	trace_ath10k_wmi_event(ar, id, skb->data, skb->len);
- 
-+	consumed = ath10k_tm_event_wmi(ar, id, skb);
-+
-+	/* Ready event must be handled normally also in UTF mode so that we
-+	 * know the UTF firmware has booted, others we are just bypass WMI
-+	 * events to testmode.
-+	 */
-+	if (consumed && id != WMI_10_4_READY_EVENTID) {
-+		ath10k_dbg(ar, ATH10K_DBG_WMI,
-+			   "wmi testmode consumed 0x%x\n", id);
-+		goto out;
-+	}
-+
- 	switch (id) {
- 	case WMI_10_4_MGMT_RX_EVENTID:
- 		ath10k_wmi_event_mgmt_rx(ar, skb);
--- 
-1.7.9.5
-
+Defining constants is fine in 20% of cases when you have only a small
+set of meaningful values (e.g. what to do for a 8 bit delay or
+priority field?)  Besides when fields are not aligned to 4 bits it's
+hard to tell from the shifted value what the base was.
