@@ -1,59 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33454 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753651AbcGFKoq (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35399 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932596AbcGEPIi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:44:46 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	"[4.1+]" <stable@vger.kernel.org>,
-	David Spinadel <david.spinadel@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:08 +0300
-Message-Id: <1467801651-1816-13-git-send-email-luca@coelho.fi> (sfid-20160706_124450_941500_5F7392D4)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 13/56] iwlwifi: add new 8260 PCI IDs
+	Tue, 5 Jul 2016 11:08:38 -0400
+Received: by mail-oi0-f66.google.com with SMTP id d132so27968712oig.2
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 08:08:33 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v3 02/10] rtlwifi: rtl8192ce: Convert driver to use common hardware info routine
+Date: Tue,  5 Jul 2016 10:08:07 -0500
+Message-Id: <1467731295-25850-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160705_170911_016380_B892C687)
+In-Reply-To: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+The driver for RTL8192CE chips is converted to use the common routine
+for getting the hardware information.
 
-Add 3 new 8260 series PCI IDs:
-  - (0x24F3, 0x10B0)
-  - (0x24F3, 0xD0B0)
-  - (0x24F3, 0xB0B0)
-
-CC: <stable@vger.kernel.org> [4.1+]
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Reported-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 3 +++
- 1 file changed, 3 insertions(+)
+V2 - Fixes bug found after V1 was submitted.
+V3 - No changes.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index a588b05..1cae19d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -433,6 +433,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- /* 8000 Series */
- 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x1010, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0x10B0, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0130, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x1130, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x0132, iwl8260_2ac_cfg)},
-@@ -454,6 +455,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24F3, 0xD010, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0xC050, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0xD050, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0xD0B0, iwl8260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24F3, 0xB0B0, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x8010, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x8110, iwl8260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24F3, 0x9010, iwl8260_2ac_cfg)},
+This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
+	submitted by Joe Perches.
+---
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    | 83 ++++------------------
+ 1 file changed, 12 insertions(+), 71 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+index 809a021..2446079 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
+@@ -1680,65 +1680,18 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+-	u16 i, usvalue;
+-	u8 hwinfo[HWSET_MAX_SIZE];
+-	u16 eeprom_id;
+-
+-	switch (rtlefuse->epromtype) {
+-	case EEPROM_BOOT_EFUSE:
+-		rtl_efuse_shadow_map_update(hw);
+-		break;
+-
+-	case EEPROM_93C46:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "RTL819X Not boot from eeprom, check it !!\n");
+-		return;
+-
+-	default:
+-		dev_warn(dev, "no efuse data\n");
+-		return;
+-	}
+-
+-	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+-
+-	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP",
+-		      hwinfo, HWSET_MAX_SIZE);
+-
+-	eeprom_id = *((u16 *)&hwinfo[0]);
+-	if (eeprom_id != RTL8190_EEPROM_ID) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+-			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
+-		rtlefuse->autoload_failflag = true;
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
+-		rtlefuse->autoload_failflag = false;
+-	}
+-
+-	if (rtlefuse->autoload_failflag)
++	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
++			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
++			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
++			COUNTRY_CODE_WORLD_WIDE_13};
++	u8 *hwinfo;
++
++	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
++	if (!hwinfo)
+ 		return;
+ 
+-	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
+-	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
+-	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
+-	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROMId = 0x%4x\n", eeprom_id);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
+-
+-	for (i = 0; i < 6; i += 2) {
+-		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
+-		*((u16 *) (&rtlefuse->dev_addr[i])) = usvalue;
+-	}
+-
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "%pM\n", rtlefuse->dev_addr);
++	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
++		goto exit;
+ 
+ 	_rtl92ce_read_txpower_info_from_hwpg(hw,
+ 					     rtlefuse->autoload_failflag,
+@@ -1747,18 +1700,6 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
+ 	rtl8192ce_read_bt_coexist_info_from_hwpg(hw,
+ 						 rtlefuse->autoload_failflag,
+ 						 hwinfo);
+-
+-	rtlefuse->eeprom_channelplan = *&hwinfo[EEPROM_CHANNELPLAN];
+-	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
+-	rtlefuse->txpwr_fromeprom = true;
+-	rtlefuse->eeprom_oemid = *&hwinfo[EEPROM_CUSTOMER_ID];
+-
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
+-
+-	/* set channel paln to world wide 13 */
+-	rtlefuse->channel_plan = COUNTRY_CODE_WORLD_WIDE_13;
+-
+ 	if (rtlhal->oem_id == RT_CID_DEFAULT) {
+ 		switch (rtlefuse->eeprom_oemid) {
+ 		case EEPROM_CID_DEFAULT:
+@@ -1782,10 +1723,10 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
+ 		default:
+ 			rtlhal->oem_id = RT_CID_DEFAULT;
+ 			break;
+-
+ 		}
+ 	}
+-
++exit:
++	kfree(hwinfo);
+ }
+ 
+ static void _rtl92ce_hal_customized_behavior(struct ieee80211_hw *hw)
 -- 
-2.8.1
+2.1.4
 
