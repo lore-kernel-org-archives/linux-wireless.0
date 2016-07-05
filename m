@@ -1,76 +1,197 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:36699 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752982AbcGSH0R (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:38051 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932938AbcGELn1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 03:26:17 -0400
-Date: Tue, 19 Jul 2016 00:26:13 -0700
-From: Brian Norris <computersforpeace@gmail.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	David Woodhouse <dwmw2@infradead.org>,
-	"open list:MEMORY TECHNOLOGY DEVICES (MTD)"
-	<linux-mtd@lists.infradead.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] mtd: add arch dependency for MTD_BCM47XXSFLASH symbol
-Message-ID: <20160719072613.GA96986@google.com> (sfid-20160719_092637_961746_6E20284B)
-References: <1468912123-14899-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1468912123-14899-1-git-send-email-zajec5@gmail.com>
+	Tue, 5 Jul 2016 07:43:27 -0400
+Received: by mail-wm0-f45.google.com with SMTP id r201so148807162wme.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 04:43:26 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv4 wl-drv-next 1/2] add basic register-field manipulation macros
+Date: Tue,  5 Jul 2016 12:42:58 +0100
+Message-Id: <1467718979-20029-2-git-send-email-jakub.kicinski@netronome.com> (sfid-20160705_134331_380502_719D1244)
+In-Reply-To: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
+References: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 19, 2016 at 09:08:32AM +0200, Rafał Miłecki wrote:
-> We dropped strict MIPS dependency for bcm47xxsflash driver in:
-> commit 5651d6aaf489 ("mtd: bcm47xxsflash: use ioremap_cache() instead of
-> KSEG0ADDR()") but using ioremap_cache still limits building it to few
-> selected architectures only.
-> 
-> A recent commit 57d8f7dd2132 ("bcma: allow enabling serial flash support
-> on non-MIPS SoCs") automatically dropped MIPS dependency for
-> MTD_BCM47XXSFLASH which broke building e.g. on powerpc and cris.
-> 
-> The bcma change is alright as it doesn't break building bcma code in any
-> way. MTD_BCM47XXSFLASH on the other hand should be limited to archs
-> which need it and can build it (by providing ioremap_cache).
-> 
-> Fixes: 57d8f7dd2132 ("bcma: allow enabling serial flash support on non-MIPS SoCs")
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> Cc: Brian Norris <computersforpeace@gmail.com>
+Common approach to accessing register fields is to define
+structures or sets of macros containing mask and shift pair.
+Operations on the register are then performed as follows:
 
-While I might prefer we have a better consistent set of portable I/O
-accessors (it's really a mess), it seems quite reasonable to restrict
-the damage to ARM and MIPS here if it saves some short-term hassle:
+ field = (reg >> shift) & mask;
 
-Acked-by: Brian Norris <computersforpeace@gmail.com>
+ reg &= ~(mask << shift);
+ reg |= (field & mask) << shift;
 
-> ---
-> That bcma commit breaking building landed in the wireless-drivers-next.
-> Is that possible to get this patch through the same tree?
+Defining shift and mask separately is tedious.  Ivo van Doorn
+came up with an idea of computing them at compilation time
+based on a single shifted mask (later refined by Felix) which
+can be used like this:
 
-That's fine with me.
+ #define REG_FIELD 0x000ff000
 
-Regards,
-Brian
+ field = FIELD_GET(REG_FIELD, reg);
 
-> ---
->  drivers/mtd/devices/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/mtd/devices/Kconfig b/drivers/mtd/devices/Kconfig
-> index f73c416..64a2485 100644
-> --- a/drivers/mtd/devices/Kconfig
-> +++ b/drivers/mtd/devices/Kconfig
-> @@ -114,7 +114,7 @@ config MTD_SST25L
->  
->  config MTD_BCM47XXSFLASH
->  	tristate "R/O support for serial flash on BCMA bus"
-> -	depends on BCMA_SFLASH
-> +	depends on BCMA_SFLASH && (MIPS || ARM)
->  	help
->  	  BCMA bus can have various flash memories attached, they are
->  	  registered by bcma as platform devices. This enables driver for
-> -- 
-> 1.8.4.5
-> 
+ reg &= ~REG_FIELD;
+ reg |= FIELD_PUT(REG_FIELD, field);
+
+FIELD_{GET,PUT} macros take care of finding out what the
+appropriate shift is based on compilation time ffs operation.
+
+GENMASK can be used to define registers (which is usually
+less error-prone and easier to match with datasheets).
+
+This approach is the most convenient I've seen so to limit code
+multiplication let's move the macros to a global header file.
+
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+---
+ include/linux/bitfield.h | 109 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/bug.h      |   3 ++
+ 2 files changed, 112 insertions(+)
+ create mode 100644 include/linux/bitfield.h
+
+diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
+new file mode 100644
+index 000000000000..ff9fd0af2ac7
+--- /dev/null
++++ b/include/linux/bitfield.h
+@@ -0,0 +1,109 @@
++/*
++ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
++ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#ifndef _LINUX_BITFIELD_H
++#define _LINUX_BITFIELD_H
++
++#include <asm/types.h>
++#include <linux/bug.h>
++
++#define _bf_shf(x) (__builtin_ffsll(x) - 1)
++
++#define _BF_FIELD_CHECK(_mask, _val)					\
++	({								\
++		BUILD_BUG_ON(!(_mask));					\
++		BUILD_BUG_ON(__builtin_constant_p(_val) ?		\
++			     ~((_mask) >> _bf_shf(_mask)) & (_val) :	\
++			     0);					\
++		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
++					      (1ULL << _bf_shf(_mask))); \
++	})
++
++/*
++ * Bitfield access macros
++ *
++ * This file contains macros which take as input shifted mask
++ * from which they extract the base mask and shift amount at
++ * compilation time.  There are two separate sets of the macros
++ * one for 32bit registers and one for 64bit ones.
++ *
++ * Fields can be defined using GENMASK (which is usually
++ * less error-prone and easier to match with datasheets).
++ *
++ * FIELD_{GET,PUT} macros are designed to be used with masks which
++ * are compilation time constants.
++ *
++ * Example:
++ *
++ *  #define REG_FIELD_A  GENMASK(6, 0)
++ *  #define REG_FIELD_B  BIT(7)
++ *  #define REG_FIELD_C  GENMASK(15, 8)
++ *  #define REG_FIELD_D  GENMASK(31, 16)
++ *
++ * Get:
++ *  a = FIELD_GET(REG_FIELD_A, reg);
++ *  b = FIELD_GET(REG_FIELD_B, reg);
++ *
++ * Set:
++ *  reg = FIELD_PUT(REG_FIELD_A, 1) |
++ *	  FIELD_PUT(REG_FIELD_B, 0) |
++ *	  FIELD_PUT(REG_FIELD_C, c) |
++ *	  FIELD_PUT(REG_FIELD_D, 0x40);
++ *
++ * Modify:
++ *  reg &= ~REG_FIELD_C;
++ *  reg |= FIELD_PUT(REG_FIELD_C, c);
++ */
++
++/**
++ * FIELD_PUT() - construct a bitfield element
++ * @_mask: shifted mask defining the field's length and position
++ * @_val:  value to put in the field
++ *
++ * FIELD_PUT() masks and shifts up the value.  The result should
++ * be combined with other fields of the bitfield using logical OR.
++ */
++#define FIELD_PUT(_mask, _val)					\
++	({							\
++		_BF_FIELD_CHECK(_mask, _val);			\
++		((u32)(_val) << _bf_shf(_mask)) & (_mask);	\
++	})
++
++/**
++ * FIELD_GET() - extract a bitfield element
++ * @_mask: shifted mask defining the field's length and position
++ * @_val:  32bit value of entire bitfield
++ *
++ * FIELD_GET() extracts the field specified by @_mask from the
++ * bitfield passed in as @_val.
++ */
++#define FIELD_GET(_mask, _val)					\
++	({							\
++		_BF_FIELD_CHECK(_mask, 0);			\
++		(u32)(((_val) & (_mask)) >> _bf_shf(_mask));	\
++	})
++
++#define FIELD_PUT64(_mask, _val)				\
++	({							\
++		_BF_FIELD_CHECK(_mask, _val);			\
++		((u64)(_val) << _bf_shf(_mask)) & (_mask);	\
++	})
++
++#define FIELD_GET64(_mask, _val)				\
++	({							\
++		_BF_FIELD_CHECK(_mask, 0);			\
++		(u64)(((_val) & (_mask)) >> _bf_shf(_mask));	\
++	})
++
++#endif
+diff --git a/include/linux/bug.h b/include/linux/bug.h
+index e51b0709e78d..bba5bdae1681 100644
+--- a/include/linux/bug.h
++++ b/include/linux/bug.h
+@@ -13,6 +13,7 @@ enum bug_trap_type {
+ struct pt_regs;
+ 
+ #ifdef __CHECKER__
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_ZERO(e) (0)
+ #define BUILD_BUG_ON_NULL(e) ((void*)0)
+@@ -24,6 +25,8 @@ struct pt_regs;
+ #else /* __CHECKER__ */
+ 
+ /* Force a compilation error if a constant expression is not a power of 2 */
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) 			\
++	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
+ 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
+ 
+-- 
+1.9.1
+
