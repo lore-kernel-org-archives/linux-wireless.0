@@ -1,138 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:33776 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751953AbcGSTgQ (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:36147 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754832AbcGEPIW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 15:36:16 -0400
-Received: by mail-pa0-f50.google.com with SMTP id ks6so9920713pab.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 12:36:15 -0700 (PDT)
-Subject: Re: [PATCH 0/4] brcm80211: Misc coverity fixes
-To: Florian Fainelli <f.fainelli@gmail.com>,
-	brcm80211-dev-list.pdl@broadcom.com
-References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
- <bdbaa850-4ec4-9faf-dbae-e2a6dcc54e7c@broadcom.com>
- <578E5845.6030100@gmail.com>
- <53a36e85-37ad-10a5-81fc-40ce4efa6a65@broadcom.com>
- <578E71C8.1050003@gmail.com>
-Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
-	kvalo@codeaurora.org, hante.meuleman@broadcom.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <9774b991-ef09-66c9-c997-b2d043db5f0f@broadcom.com> (sfid-20160719_213621_677701_CE549141)
-Date: Tue, 19 Jul 2016 21:36:09 +0200
-MIME-Version: 1.0
-In-Reply-To: <578E71C8.1050003@gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Tue, 5 Jul 2016 11:08:22 -0400
+Received: by mail-oi0-f49.google.com with SMTP id f189so233125527oig.3
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 08:08:22 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 00/10 V3] rtlwifi: Various clean-ups for the hwinfo routines
+Date: Tue,  5 Jul 2016 10:08:05 -0500
+Message-Id: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160705_170837_866664_EE22B834)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19-7-2016 20:30, Florian Fainelli wrote:
-> On 07/19/2016 11:21 AM, Arend Van Spriel wrote:
->> On 19-7-2016 18:41, Florian Fainelli wrote:
->>> On 07/19/2016 02:20 AM, Arend Van Spriel wrote:
->>>> + Bob
->>>>
->>>> On 19-7-2016 1:24, Florian Fainelli wrote:
->>>>> Hi,
->>>>>
->>>>> This patch series addresses several coverity issues, they all seemed relevant
->>>>> to me.
->>>>
->>>> Hi Florian,
->>>>
->>>> Been a while so nice to see coverity fixes popping up. Actually
->>>> something that I have on my todo list to add our brcm80211 to coverity
->>>> within Broadcom. So being curious as to whether this comes from a public
->>>> coverity server like scan.coverity.com. Maybe bit redundant to setup
->>>> internally if there is a good coverity analysis publicly available.
->>>
->>> This is coming from the public coverity instance, if you create an
->>> account there I could transfer to you the other bugs that affect the
->>> brcm80211 drivers (hint: there is a ton of of them because of
->>> brcmf_fil_iovar_int_get and friends).
->>
->> I did create an account and noticed "Broadcom Linux Kernel Open Source
->> Repository" project. Anyways, let me have it :-p
->>
->>>>
->>>>> There is also a ton of warnings in Coverity caused by brcmf_fil_iovar_int_get()
->>>>> and friends because of the initial access:
->>>>>
->>>>> __le32 data_le = cpu_to_le32(*data) which can utilize unitialized memory. I am
->>>>> not sure if we actually care about any kind of initial, value, but if we don't,
->>>>> then the fix should be fairly obvious.
->>>>
->>>> If we are talking only about "get" variant than we mostly don't care.
->>>> Some getters support filter variables to be passed towards firmware. I
->>>> have not looked at the analysis to give any judgement here.
->>>
->>> Alright, do you have a good way to test a patch that would just zero
->>> initialize the data variable in brcmf_fil_iovar_int_get()? If so, I will
->>> submit one with the appropriate CID references.
->>
->> But why would we care to zero the data when firmware simply overwrites
->> it. These control messages are not high-prio so we can burn some cycles
->> to initialize the variable, but to me this is a false positive.
-> 
-> We have something like this all over the place:
-> 
-> func() {
-> 	u32 val;
-> 
-> 	brcmf_fil_iovar_int_get(..., &val, sizeof(val));
+The rtlwifi family of drivers use similar routines to extract hardware
+information from EFUSE. This set of patches create a common routine to
+extract this data, and converts most of the drivers to use this routine.
 
-If I am not mistaken the iovar_int_get only passes &val.
+In addition, a complicated set of if ... else if ... else statements are
+present in rtl8723ae. These are converted into switch statements that
+are much easier to read.
 
-> }
-> 
-> brcmf_fil_iovar_int_get(.., const u32 *data, size_t len)
-> {
-> 	__le32 data_le = cpu_to_le32(*data);
-> 	...
-> }
-> 
-> So here data_le also has an uninitialized value, and later on, this:
-> 
-> 
->         buflen = brcmf_create_iovar(name, data, len, drvr->proto_buf,
->                                     sizeof(drvr->proto_buf));
+The changes in the hwinfo routines was suggested by Arnd Bergmann.
 
-create_iovar is used for both get and set...
+All of this material is intended for kernel 4.8.
 
-> }
-> 
-> And this function does this:
-> 
-> static u32
-> brcmf_create_iovar(char *name, const char *data, u32 datalen,
->                    char *buf, u32 buflen)
-> {
->         u32 len;
-> 
->         len = strlen(name) + 1;
-> 
->         if ((len + datalen) > buflen)
->                 return 0;
-> 
->         memcpy(buf, name, len);
-> 
->         /* append data onto the end of the name string */
->         if (data && datalen)
->                 memcpy(&buf[len], data, datalen);
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+V2 - Applied changes suggested by Joe Perches
+     Fixed a bug found after V1 was submitted
+     These patches require ("rtlwifi: Add missing newlines to RT_TRACE calls")
+	submitted by Joe Perches.
+v3 - Adding missing break statements.
 
-but it does not have that info so it does the memcpy. We could add an
-extra parameter to avoid the memcpy for get, but as said there are
-instances where get passes query data to firmware.
+Larry Finger (10):
+  rtlwifi: Create common routine to get hardware info
+  rtlwifi: rtl8192ce: Convert driver to use common hardware info routine
+  rtlwifi: rtl8192cu: Convert driver to use common hardware info routine
+  rtlwifi: rtl8188ee: Convert driver to use common hardware info routine
+  rtlwifi: rtl8192ee: Convert driver to use common hardware info routine
+  rtlwifi: rtl8723ee: Convert driver to use common hardware info routine
+  rtlwifi: rtl8723be: Convert driver to use common hardware info routine
+  rtlwifi: rtl8821ae: Convert driver to use common hardware info routine
+  rtlwifi: rtl8192de: Convert driver to use common hardware info routine
+  rtlwifi: rtl8723ae: Clean up the hardware info routine
 
->         return len + datalen;
-> }
-> 
-> 
-> We are essentially copying into buf an uninitialized value coming from
-> the stack, which seems like a problem to me.
+ drivers/net/wireless/realtek/rtlwifi/efuse.c       |  78 ++++++
+ drivers/net/wireless/realtek/rtlwifi/efuse.h       |   2 +
+ .../net/wireless/realtek/rtlwifi/rtl8188ee/hw.c    |  76 +-----
+ .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    |  83 +-----
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    |  61 ++---
+ .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    |  77 ++----
+ .../net/wireless/realtek/rtlwifi/rtl8192ee/hw.c    |  73 +-----
+ .../net/wireless/realtek/rtlwifi/rtl8723ae/hw.c    | 286 +++++++++------------
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |  74 +-----
+ .../net/wireless/realtek/rtlwifi/rtl8821ae/hw.c    |  84 +-----
+ 10 files changed, 288 insertions(+), 606 deletions(-)
 
-Functionally I still don't see the problem. For the instances where this
-is true, the buf will be overwritten with data from firmware. It may be
-a security issue as stack content is passed to an external device.
+-- 
+2.1.4
 
-Regards,
-Arend
