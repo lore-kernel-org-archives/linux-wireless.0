@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:35864 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756918AbcG1TBz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 15:01:55 -0400
-Received: by mail-pa0-f43.google.com with SMTP id pp5so23445518pac.3
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2016 12:01:55 -0700 (PDT)
-Date: Thu, 28 Jul 2016 12:01:51 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Daniel Wagner <wagi@monom.org>, Bastien Nocera <hadess@hadess.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>, linux-input@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>
-Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
- completion
-Message-ID: <20160728190151.GV13516@tuxbot> (sfid-20160728_210217_689216_3011CE15)
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
- <1469692512-16863-8-git-send-email-wagi@monom.org>
- <20160728183343.GD16852@dtor-ws>
+Received: from mga01.intel.com ([192.55.52.88]:50453 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754464AbcGEN0c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2016 09:26:32 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Krauss, Assaf" <assaf.krauss@intel.com>,
+	"Stern, Avraham" <avraham.stern@intel.com>,
+	"Spinadel, David" <david.spinadel@intel.com>
+Subject: Re: [PATCH 4/7] nl80211: Add info to scan results to support beacon
+ report
+Date: Tue, 5 Jul 2016 13:26:28 +0000
+Message-ID: <1467725186.4193.2.camel@intel.com> (sfid-20160705_152635_991373_D5D55F7A)
+References: <1467721394-8195-1-git-send-email-luca@coelho.fi>
+	 <1467721394-8195-5-git-send-email-luca@coelho.fi>
+In-Reply-To: <1467721394-8195-5-git-send-email-luca@coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160728183343.GD16852@dtor-ws>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu 28 Jul 11:33 PDT 2016, Dmitry Torokhov wrote:
-
-> On Thu, Jul 28, 2016 at 09:55:11AM +0200, Daniel Wagner wrote:
-> > From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-> > 
-[..]
-> 
-> Do not quite like it... I'd rather asynchronous request give out a
-> firmware status pointer that could be used later on.
-> 
-> 	pcu->fw_st = request_firmware_async(IMS_PCU_FIRMWARE_NAME,
-> 					    pcu,
-> 					    ims_pcu_process_async_firmware);
-> 	if (IS_ERR(pcu->fw_st))
-> 		return PTR_ERR(pcu->fw_st);
-> 
-> 	....
-> 
-> 	fw_loading_wait(pcu->fw_st);
-> 
-
-In the remoteproc case (patch 6) this would clean up the code, rather
-than replacing the completion API 1 to 1. I like it!
-
-Regards,
-Bjorn
+T24gVHVlLCAyMDE2LTA3LTA1IGF0IDE1OjIzICswMzAwLCBMdWNhIENvZWxobyB3cm90ZToNCj4g
+RnJvbTogQXZyYWhhbSBTdGVybiA8YXZyYWhhbS5zdGVybkBpbnRlbC5jb20+DQo+IA0KPiBCZWFj
+b24gcmVwb3J0IHJhZGlvIG1lYXN1cmVtZW50IHJlcXVpcmVzIHJlcG9ydGluZyBvYnNlcnZlZCBC
+U1NzDQo+IG9uIHRoZSBjaGFubmVscyBzcGVjaWZpZWQgaW4gdGhlIGJlYWNvbiByZXF1ZXN0LiBJ
+ZiB0aGUgbWVhc3VyZW1lbnQNCj4gbW9kZSBpcyBzZXQgdG8gcGFzc2l2ZSBvciBhY3RpdmUsIGl0
+IHJlcXVpcmVzIGFjdHVhbGx5IHBlcmZvcm1pbmcgYQ0KPiBzY2FuIChwYXNzaXZlIG9yIGFjdGl2
+ZSwgYWNjb3JkaW5nbHkpLCBhbmQgcmVwb3J0aW5nIHRoZSB0aW1lIHRoYXQNCj4gdGhlIHNjYW4g
+d2FzIHN0YXJ0ZWQgYW5kIHRoZSB0aW1lIGVhY2ggYmVhY29uL3Byb2JlIHdhcyByZWNlaXZlZA0K
+PiAoYm90aCBpbiB0ZXJtcyBvZiBUU0Ygb2YgdGhlIEJTUyBvZiB0aGUgcmVxdWVzdGluZyBBUCku
+IElmIHRoZQ0KPiByZXF1ZXN0IG1vZGUgaXMgdGFibGUsIHRoaXMgaW5mb3JtYXRpb24gaXMgb3B0
+aW9uYWwuDQo+IEluIGFkZGl0aW9uLCB0aGUgcmFkaW8gbWVhc3VyZW1lbnQgcmVxdWVzdCBzcGVj
+aWZpZXMgdGhlIGNoYW5uZWwNCj4gZHdlbGwgdGltZSBmb3IgdGhlIG1lYXN1cmVtZW50Lg0KPiAN
+Cj4gSW4gb3JkZXIgdG8gdXNlIHNjYW4gZm9yIGJlYWNvbiByZXBvcnQgd2hlbiB0aGUgbW9kZSBp
+cyBhY3RpdmUgb3INCj4gcGFzc2l2ZSwgYWRkIGEgcGFyYW1ldGVyIHRvIHNjYW4gcmVxdWVzdCB0
+aGF0IHNwZWNpZmllcyB0aGUNCj4gY2hhbm5lbCBkd2VsbCB0aW1lLCBhbmQgYWRkIHNjYW4gc3Rh
+cnQgdGltZSBhbmQgYmVhY29uIHJlY2VpdmVkIHRpbWUNCj4gdG8gc2NhbiByZXN1bHRzIGluZm9y
+bWF0aW9uLg0KPiANCj4gU3VwcG9ydGluZyBiZWFjb24gcmVwb3J0IGlzIHJlcXVpcmVkIGZvciBN
+dWx0aSBCYW5kIE9wZXJhdGlvbiAoTUJPKS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEFzc2FmIEty
+YXVzcyA8YXNzYWYua3JhdXNzQGludGVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogRGF2aWQgU3Bp
+bmFkZWwgPGRhdmlkLnNwaW5hZGVsQGludGVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogQXZyYWhh
+bSBTdGVybiA8YXZyYWhhbS5zdGVybkBpbnRlbC5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IEx1Y2Eg
+Q29lbGhvIDxsdWNpYW5vLmNvZWxob0BpbnRlbC5jb20+DQo+IC0tLQ0KPsKgDQrCoGluY2x1ZGUv
+bmV0L2NmZzgwMjExLmjCoMKgwqDCoMKgwqDCoHwgNDANCj4gKysrKysrKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKystLS0tLQ0KPiDCoGluY2x1ZGUvdWFwaS9saW51eC9ubDgwMjExLmggfCA0
+Mg0KPiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gwqBuZXQv
+bWFjODAyMTEvc2Nhbi5jwqDCoMKgwqDCoMKgwqDCoMKgwqB8wqDCoDkgKysrKysrKy0tDQo+IMKg
+bmV0L3dpcmVsZXNzL2NvcmUuY8KgwqDCoMKgwqDCoMKgwqDCoMKgfMKgwqA0ICsrLS0NCj4gwqBu
+ZXQvd2lyZWxlc3MvY29yZS5owqDCoMKgwqDCoMKgwqDCoMKgwqB8IDEyICsrKysrKysrKysrKw0K
+PiDCoG5ldC93aXJlbGVzcy9ubDgwMjExLmPCoMKgwqDCoMKgwqDCoHwgMjcgKysrKysrKysrKysr
+KysrKysrKysrKysrKysrDQo+IMKgbmV0L3dpcmVsZXNzL3NjYW4uY8KgwqDCoMKgwqDCoMKgwqDC
+oMKgfCAxOCArKysrKysrKysrKystLS0tLS0NCj4gwqBuZXQvd2lyZWxlc3MvdHJhY2UuaMKgwqDC
+oMKgwqDCoMKgwqDCoHwgMzMgKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tDQo+IMKg
+OCBmaWxlcyBjaGFuZ2VkLCAxNjIgaW5zZXJ0aW9ucygrKSwgMjMgZGVsZXRpb25zKC0pDQoNCk91
+Y2gsIEkgbWlzc2VkIGNoYW5naW5nIHRoZSBBUElzIG9mIHRoZSBub24tY2ZnODAyMTEgZHJpdmVy
+cyBoZXJlLg0KwqBJJ2xsIGZpeCBhbmQgcmVzZW5kLg0KDQpUaGFua3MgdG8ga2J1aWxkIHRlc3Qg
+cm9ib3QgZm9yIHJlcG9ydGluZy4gOikNCg0KLS0NCkx1Y2Eu
