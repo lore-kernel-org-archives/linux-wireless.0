@@ -1,105 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f194.google.com ([209.85.214.194]:35485 "EHLO
-	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754881AbcGHPiB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49602 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755051AbcGEMbr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 11:38:01 -0400
-Received: by mail-ob0-f194.google.com with SMTP id wj2so2825016obc.2
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 08:38:00 -0700 (PDT)
+	Tue, 5 Jul 2016 08:31:47 -0400
 MIME-Version: 1.0
-In-Reply-To: <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com>
-References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
- <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
- <1467972560885.99812@qti.qualcomm.com> <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com>
- <1467982766213.21223@qti.qualcomm.com> <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 8 Jul 2016 21:07:40 +0530
-Message-ID: <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com> (sfid-20160708_173805_648538_983D451A)
-Subject: Re: ath10k + iw set bitrates is causing FW crash
-To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 05 Jul 2016 18:01:45 +0530
+From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 1/2] cfg80211: Add support to set tx power for a station
+ associated
+In-Reply-To: <1467110918.2493.9.camel@sipsolutions.net>
+References: <1465926256-6463-1-git-send-email-arnagara@qti.qualcomm.com>
+ <1467110918.2493.9.camel@sipsolutions.net>
+Message-ID: <1cb3e2cc49b433fe5ed834a33adf64b6@codeaurora.org> (sfid-20160705_143150_988458_84A7F884)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 8, 2016 at 8:57 PM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
-> On Fri, Jul 8, 2016 at 6:29 PM, Manoharan, Rajkumar
-> <rmanohar@qti.qualcomm.com> wrote:
->> I think security failures are due to peer unmap & map upon reassoc. Can you please try below change?
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index 5e1cc8f4c43c..f7f04bb46fc8 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -5745,8 +5745,9 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
->>                                     sta->addr, smps, err);
->>         }
->>
->> -       if (changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
->> -           changed & IEEE80211_RC_NSS_CHANGED) {
->> +       if ((changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
->> +           changed & IEEE80211_RC_NSS_CHANGED) &&
->> +           (arvif->vif->type == NL80211_IFTYPE_ADHOC)) {
->>                 ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates/nss\n",
->>                            sta->addr);
->
-> Bottom posting please. I have tried your change i still see the same issue.
-> Right after connecting i see that packets are encrypted but once it
-> unset/set "bitrates" plain packets are seen in sniffer.
->
-> BTW, i am not rebooting for each driver update, just re-inserting the module,
-> do i need to do a reboot for each driver change?
+On 2016-06-28 16:18, Johannes Berg wrote:
+> On Tue, 2016-06-14 at 23:14 +0530, Ashok Raj Nagarajan wrote:
+>> This patch adds support to set transmit power setting type and
+>> transmit power level attributes to NL80211_CMD_SET_STATION in order
+>> to facilitate adjusting the transmit power level of a station
+>> associated to the AP.
+> 
+> Why would you ever need to do that manually? Please give more
+> explanation in the commit message.
+> 
+> We have minstrel-blues (which never made it into the code, but that's
+> just because the submitter went away) doing power adjustments, so you
+> need to explain why this should be necessary.
+> 
 
-After reboot i dont see the "unencrypted" packet issue, i will do
-some more testing on limiting the rates, currently in my setup its
-not reaching MCS9 so cannot verify now.
+Hi Johannes,
 
-Thanks for the fixes and prompt reply.
-  ________________________________________
->> From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
->> Sent: Friday, July 8, 2016 5:26 PM
->> To: Manoharan, Rajkumar
->> Cc: linux-wireless; ath10k
->> Subject: Re: ath10k + iw set bitrates is causing FW crash
->>
->> On Fri, Jul 8, 2016 at 3:39 PM, Manoharan, Rajkumar
->> <rmanohar@qti.qualcomm.com> wrote:
->>>>> I am using ath10k driver with qca988x hw2.0 and trying to limit it to use
->>>>> VHT MCS0-7 (iw set bitrates vht-mcs-5 2:0-7).
->>>>>
->>>>> But the command it causing a FW crash, if it disable HW_HAS_RATE_CONTROL
->>>>> no crash is observed but it still uses MCS9.
->>>>>
->>>>> tree: wireless-drivers-next: commit#535633a5ba4ea2504fa6c33176633becf0e59339
->>>>>
->>>>> 1) If i disable HW_RATE_CONTROL, will ath10k honor
->>>>> the mac80211 rates?
->>>>>
->>>>
->>> Thanks for reporting the issue. Could you please try with below change?
->>>
->>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->>> index 5e1cc8f4c43c..cfa7e01a6103 100644
->>> --- a/drivers/net/wireless/ath/ath10k/mac.c
->>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->>> @@ -2812,6 +2812,9 @@ static int ath10k_station_assoc(struct ath10k *ar,
->>>                 return ret;
->>>         }
->>>
->>> +       if (vif->type != NL80211_IFTYPE_ADHOC)
->>> +               peer_arg.peer_reassoc = reassoc;
->>> +
->>>         ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
->>>         if (ret) {
->>>                 ath10k_warn(ar, "failed to run peer assoc for STA %pM vdev %i: %d\n",
->>
->> Thanks Raj, with this fix the rates are 0-7, if i disable then i am
->> seeing 0-9, so its
->> working.
->>
->> But i am seeing a weird issues, the moment i give bitrates command,
->> ath10k no longer does encryption, link is a WPA2-PSK: AES. Even after
->> interface up/down
->> it doesn't work.
+Sure.. First use case will be to help with the problem of legacy client 
+devices that
+roam across multiple APs. It is a classic enterprise Wi-Fi AP problem, 
+often
+managed by a "network controller" unit that is connected to all the APs. 
+The
+problem is how to handle seamless handoff of clients between multiple 
+APs while
+maximizing the client throughput and minimizing disruption of IP 
+application
+services like VoIP calls and video streaming. A legacy client will often 
+hold
+onto an AP association, even down to 1 Mbps as it roams away. Instead, 
+if the
+AP can recognise that the client RSSI (and therefore throughput) is 
+poor, it
+can "drop" the Tx power significantly (just to that client) such that it 
+forces
+the client to look for a better, closer, and therefore higher-throughput
+association. It would "give it a kick" without blacklisting it. It just 
+needs
+to hold the power low for the small amount of time it takes to convince 
+it to
+go away.
+
+Other use cases may be
+         - Support a form of QoS per STA since a higher MCS rate might be
+           achievable, and CW delays might be reduced
+         - The optimal power can be negotiated (closed loop) or observed 
+(open
+           loop) for a given STA, reducing needless congestion on the 
+overall channel
+         - Reduce power to a STA that does not support certain radio 
+features
+           (e.g.  11b clients)
+
+Thanks,
+Ashok
+
+> johannes
