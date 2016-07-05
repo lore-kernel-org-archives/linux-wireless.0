@@ -1,130 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56718 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751693AbcGMKUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 06:20:33 -0400
-Message-ID: <578615EF.9010305@redhat.com> (sfid-20160713_122142_810487_8832BEBF)
-Date: Wed, 13 Jul 2016 06:20:31 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-MIME-Version: 1.0
-To: Luca Coelho <luca@coelho.fi>, Kalle Valo <kvalo@codeaurora.org>
-CC: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
- ucode is loaded
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com>		<CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>		<5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>		<57840214.8000904@redhat.com> <87eg6yav5e.fsf@purkki.adurom.net> <1468394693.25088.138.camel@coelho.fi>
-In-Reply-To: <1468394693.25088.138.camel@coelho.fi>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35436 "EHLO
+	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755317AbcGEPId (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2016 11:08:33 -0400
+Received: by mail-oi0-f68.google.com with SMTP id d132so27969069oig.2
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 08:08:32 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v3 07/10] rtlwifi: rtl8723be: Convert driver to use common hardware info routine
+Date: Tue,  5 Jul 2016 10:08:12 -0500
+Message-Id: <1467731295-25850-8-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160705_170912_109403_C9E6AF6E)
+In-Reply-To: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The driver for RTL8723BE chips is converted to use the common routine
+for getting the hardware information.
 
+Reported-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arnd Bergmann <arnd@arndb.de>
+---
+V2 - Fixes bug found after V1 was submitted.
+V3 - No changes.
 
-On 07/13/2016 03:24 AM, Luca Coelho wrote:
-> On Wed, 2016-07-13 at 09:50 +0300, Kalle Valo wrote:
->> Prarit Bhargava <prarit@redhat.com> writes:
->>
->>>> We implement thermal zone because we do support it, but the
->>>> problem is
->>>> that we need the firmware to be loaded for that. So you can argue
->>>> that
->>>> we should register *later* when the firmware is loaded. But this
->>>> is
->>>> really not helping all that much because the firmware can also be
->>>> stopped at any time. So you'd want us to register / unregister
->>>> the
->>>> thermal zone anytime the firmware is loaded / unloaded?
->>>
->>> You might have to do that.  I think that if the firmware enables a
->>> feature then
->>> the act of loading the firmware should run the code that enables
->>> the feature.
->>> IMO of course.
->>
->> But I suspect that the iwlwifi firmware is loaded during interface up
->> (and unloaded during interface down) and in that case
->> register/unregister would be happening all the time. That doesn't
->> sound
->> like a good idea. I would rather try to fix the thermal interface to
->> handle the cases when the measurement is not available.
-> 
-> I totally agree with Emmanuel and Kalle.  We should not change this.
->  It is a design decision to return an error when the interface is down,
-> this is very common with other subsystems as well.  
+This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
+	submitted by Joe Perches.
+---
+ .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    | 74 ++++------------------
+ 1 file changed, 12 insertions(+), 62 deletions(-)
 
-Please show me another subsystem or driver that does this.  I've looked around
-the kernel but cannot find one that updates the firmware and implements new
-features on the fly like this.  I have come across several drivers that allow
-for an update, but they do not implement new features based on the firmware.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index 63b0df6..cb68c719 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -2026,10 +2026,12 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
+-	u16 i, usvalue;
+-	u8 hwinfo[HWSET_MAX_SIZE];
+-	u16 eeprom_id;
++	int params[] = {RTL8723BE_EEPROM_ID, EEPROM_VID, EEPROM_DID,
++			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
++			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
++			COUNTRY_CODE_WORLD_WIDE_13};
++	u8 *hwinfo;
++	int i;
+ 	bool is_toshiba_smid1 = false;
+ 	bool is_toshiba_smid2 = false;
+ 	bool is_samsung_smid = false;
+@@ -2057,58 +2059,12 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
+ 		return;
+ 	}
+ 
+-	switch (rtlefuse->epromtype) {
+-	case EEPROM_BOOT_EFUSE:
+-		rtl_efuse_shadow_map_update(hw);
+-		break;
+-
+-	case EEPROM_93C46:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "RTL819X Not boot from eeprom, check it !!\n");
++	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
++	if (!hwinfo)
+ 		return;
+ 
+-	default:
+-		dev_warn(dev, "no efuse data\n");
+-		return;
+-	}
+-	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+-	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, ("MAP\n"),
+-		      hwinfo, HWSET_MAX_SIZE);
+-
+-	eeprom_id = *((u16 *)&hwinfo[0]);
+-	if (eeprom_id != RTL8723BE_EEPROM_ID) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
+-			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
+-		rtlefuse->autoload_failflag = true;
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
+-		rtlefuse->autoload_failflag = false;
+-	}
+-
+-	if (rtlefuse->autoload_failflag)
+-		return;
+-
+-	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
+-	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
+-	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
+-	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROMId = 0x%4x\n", eeprom_id);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
+-
+-	for (i = 0; i < 6; i += 2) {
+-		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
+-		*((u16 *)(&rtlefuse->dev_addr[i])) = usvalue;
+-	}
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "dev_addr: %pM\n",
+-		 rtlefuse->dev_addr);
++	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
++		goto exit;
+ 
+ 	/*parse xtal*/
+ 	rtlefuse->crystalcap = hwinfo[EEPROM_XTAL_8723BE];
+@@ -2122,14 +2078,6 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
+ 						 rtlefuse->autoload_failflag,
+ 						 hwinfo);
+ 
+-	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
+-	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
+-	rtlefuse->txpwr_fromeprom = true;
+-	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
+-
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
+-
+ 	/* set channel plan from efuse */
+ 	rtlefuse->channel_plan = rtlefuse->eeprom_channelplan;
+ 
+@@ -2240,6 +2188,8 @@ static void _rtl8723be_read_adapter_info(struct ieee80211_hw *hw,
+ 			break;
+ 		}
+ 	}
++exit:
++	kfree(hwinfo);
+ }
+ 
+ static void _rtl8723be_hal_customized_behavior(struct ieee80211_hw *hw)
+-- 
+2.1.4
 
-Additionally, what happens when someone back revs firmware versions (which
-happens far more than you and I would expect)?  Does that mean I now go from a
-functional system to a non-functional system wrt to userspace?
-
-The userspace
-> should be able to handle errors and report something like "unavailable"
-> when this kind of error is returned.
-> 
-
-I myself have made the same arguments wrt to cpufreq code & bad userspace
-choices.  I just went through this a few months back with what went from a
-simple patch and turned out to be a hideous patch in cpufreq.  You cannot break
-userspace like this.
-
-See commit 51443fbf3d2c ("cpufreq: intel_pstate: Fix intel_pstate powersave
-min_perf_pct value").  What should have been a trivial change resulted in a
-massive change because of broken userspace.
-
-> I'm not sure EIO is the best we can have, but for me that's exactly
-> what it is.  The thermal zone *is* there, but cannot be accessed
-> because the firmware is not available.  I'm okay to change it to EBUSY,
-> if that would help userspace, but I think that's a bit misleading.  The
-> device is not busy, on the contrary, it's not even running at all.
-> 
-
-I understand that, but by returning -EIO we end up with an error.
-
-> Furthermore, I don't think this is "breaking userspace" in the sense of
-> being a regression.  
-
-I run (let's say 4.5 kernel).  sensors works.  I update to 4.7.  sensors doesn't
-work.  How is that not a regression?  That's _exactly_ what it should be
-reported as.
-
-The userspace API has always been implemented with
-> the possibility of returning errors.  It's not a good design if a
-> single device returning an error causes all the other devices to also
-> fail.
-> 
-
-If that were the case we would never have to worry about "breaking userspace"?
-For any kernel change I could just say that the userspace design was bad and be
-done with it.  Why fix anything then?
-
-I don't see any harm in waiting to register the sysfs files for hwmon until the
-firmware has been validated.  IIUC, the up/down'ing of the device doesn't happen
-that often (during initial boot, and suspend/resume, switching wifi connections,
-shutdown?).  This would make the iwlwifi community happy (IMO) and sensors would
-still work.  At the same time I could write a patch for lm-sensors to fix this
-issue if it comes up in future versions.  [Aside: I'm going to have the
-reproducing system available today and will test this out.  It looks like just
-moving some code around.]
-
-The bottom line is that lm-sensors is currently broken with this change in
-iwlwifi.  AFAICT, no other thermal device returns an error this way, and IMO
-that means the iwlwifi driver is doing something new and unexpected wrt to
-userspace.
-
-P.
-
-
-> --
-> Cheers,
-> Luca.
-> 
