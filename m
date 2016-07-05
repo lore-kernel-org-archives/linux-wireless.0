@@ -1,94 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33992 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbcGPPKy (ORCPT
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:38077 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932965AbcGELn3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2016 11:10:54 -0400
-Received: by mail-wm0-f68.google.com with SMTP id q128so6081421wma.1
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2016 08:10:48 -0700 (PDT)
-From: Alex Briskin <br.shurik@gmail.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: Alex Briskin <br.shurik@gmail.com>
-Subject: [PATCH 3/3 v3] mac80211: Refactor ieee80211_iface_work
-Date: Sat, 16 Jul 2016 18:10:38 +0300
-Message-Id: <1468681838-16601-3-git-send-email-br.shurik@gmail.com> (sfid-20160716_171101_149090_3AD37475)
-In-Reply-To: <1468681838-16601-1-git-send-email-br.shurik@gmail.com>
-References: <1468681838-16601-1-git-send-email-br.shurik@gmail.com>
+	Tue, 5 Jul 2016 07:43:29 -0400
+Received: by mail-wm0-f42.google.com with SMTP id r201so148808424wme.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 04:43:28 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv4 wl-drv-next 2/2] mt7601u: use linux/bitfield.h
+Date: Tue,  5 Jul 2016 12:42:59 +0100
+Message-Id: <1467718979-20029-3-git-send-email-jakub.kicinski@netronome.com> (sfid-20160705_134356_000650_6EF13C83)
+In-Reply-To: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
+References: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added ieee80211_iface_work_handle_vif_type function. Moved the code that
-handles sdata->vif.type from ieee80211_iface_work to the function.
+Use the newly added linux/bitfield.h.
 
-Signed-off-by: Alex Briskin <br.shurik@gmail.com>
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
 ---
- net/mac80211/iface.c | 44 ++++++++++++++++++++++++--------------------
- 1 file changed, 24 insertions(+), 20 deletions(-)
+ drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
+ drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
+ 3 files changed, 4 insertions(+), 80 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index c185801..e82f80d 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1323,6 +1323,27 @@ static int ieee80211_iface_work_handle_frame_control(struct sk_buff *skb,
- 	return 0;
- }
+diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.h b/drivers/net/wireless/mediatek/mt7601u/dma.h
+index 978e8a90b87f..166ac71905d2 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/dma.h
++++ b/drivers/net/wireless/mediatek/mt7601u/dma.h
+@@ -18,8 +18,6 @@
+ #include <asm/unaligned.h>
+ #include <linux/skbuff.h>
  
-+static void ieee80211_iface_work_handle_vif_type(struct sk_buff *skb,
-+					 struct ieee80211_sub_if_data *sdata)
-+{
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_STATION:
-+		ieee80211_sta_rx_queued_mgmt(sdata, skb);
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		ieee80211_ibss_rx_queued_mgmt(sdata, skb);
-+		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		if (!ieee80211_vif_is_mesh(&sdata->vif))
-+			break;
-+		ieee80211_mesh_rx_queued_mgmt(sdata, skb);
-+		break;
-+	default:
-+		WARN(1, "frame for unexpected interface type");
-+		break;
-+	}
-+}
+-#include "util.h"
+-
+ #define MT_DMA_HDR_LEN			4
+ #define MT_RX_INFO_LEN			4
+ #define MT_FCE_INFO_LEN			4
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
+index 428bd2f10b7b..5ef62e02ce66 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
++++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
+@@ -15,6 +15,7 @@
+ #ifndef MT7601U_H
+ #define MT7601U_H
+ 
++#include <linux/bitfield.h>
+ #include <linux/kernel.h>
+ #include <linux/device.h>
+ #include <linux/mutex.h>
+@@ -24,7 +25,6 @@
+ #include <linux/debugfs.h>
+ 
+ #include "regs.h"
+-#include "util.h"
+ 
+ #define MT_CALIBRATE_INTERVAL		(4 * HZ)
+ 
+@@ -282,6 +282,9 @@ struct mt7601u_rxwi;
+ 
+ extern const struct ieee80211_ops mt7601u_ops;
+ 
++#define MT76_SET	FIELD_PUT
++#define MT76_GET	FIELD_GET
 +
- static void ieee80211_iface_work(struct work_struct *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
-@@ -1341,28 +1362,11 @@ static void ieee80211_iface_work(struct work_struct *work)
+ void mt7601u_init_debugfs(struct mt7601u_dev *dev);
  
- 	/* first process frames */
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
--		if (!ieee80211_iface_work_handle_pkt_type(skb, sdata)) {
--			goto free_skb;
--		} else if (!ieee80211_iface_work_handle_frame_control(skb, sdata)) {
--			goto free_skb;
--		} else switch (sdata->vif.type) {
--		case NL80211_IFTYPE_STATION:
--			ieee80211_sta_rx_queued_mgmt(sdata, skb);
--			break;
--		case NL80211_IFTYPE_ADHOC:
--			ieee80211_ibss_rx_queued_mgmt(sdata, skb);
--			break;
--		case NL80211_IFTYPE_MESH_POINT:
--			if (!ieee80211_vif_is_mesh(&sdata->vif))
--				break;
--			ieee80211_mesh_rx_queued_mgmt(sdata, skb);
--			break;
--		default:
--			WARN(1, "frame for unexpected interface type");
--			break;
-+		if (!ieee80211_iface_work_handle_pkt_type(skb, sdata) &&
-+		    !ieee80211_iface_work_handle_frame_control(skb, sdata)) {
-+			ieee80211_iface_work_handle_vif_type(skb, sdata);
- 		}
- 
--free_skb:
- 		kfree_skb(skb);
- 	}
- 
+ u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset);
+diff --git a/drivers/net/wireless/mediatek/mt7601u/util.h b/drivers/net/wireless/mediatek/mt7601u/util.h
+deleted file mode 100644
+index b89140bf1210..000000000000
+--- a/drivers/net/wireless/mediatek/mt7601u/util.h
++++ /dev/null
+@@ -1,77 +0,0 @@
+-/*
+- * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
+- * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2
+- * as published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- */
+-
+-#ifndef __MT76_UTIL_H
+-#define __MT76_UTIL_H
+-
+-/*
+- * Power of two check, this will check
+- * if the mask that has been given contains and contiguous set of bits.
+- * Note that we cannot use the is_power_of_2() function since this
+- * check must be done at compile-time.
+- */
+-#define is_power_of_two(x)	( !((x) & ((x)-1)) )
+-#define low_bit_mask(x)		( ((x)-1) & ~(x) )
+-#define is_valid_mask(x)	is_power_of_two(1LU + (x) + low_bit_mask(x))
+-
+-/*
+- * Macros to find first set bit in a variable.
+- * These macros behave the same as the __ffs() functions but
+- * the most important difference that this is done during
+- * compile-time rather then run-time.
+- */
+-#define compile_ffs2(__x) \
+-	__builtin_choose_expr(((__x) & 0x1), 0, 1)
+-
+-#define compile_ffs4(__x) \
+-	__builtin_choose_expr(((__x) & 0x3), \
+-			      (compile_ffs2((__x))), \
+-			      (compile_ffs2((__x) >> 2) + 2))
+-
+-#define compile_ffs8(__x) \
+-	__builtin_choose_expr(((__x) & 0xf), \
+-			      (compile_ffs4((__x))), \
+-			      (compile_ffs4((__x) >> 4) + 4))
+-
+-#define compile_ffs16(__x) \
+-	__builtin_choose_expr(((__x) & 0xff), \
+-			      (compile_ffs8((__x))), \
+-			      (compile_ffs8((__x) >> 8) + 8))
+-
+-#define compile_ffs32(__x) \
+-	__builtin_choose_expr(((__x) & 0xffff), \
+-			      (compile_ffs16((__x))), \
+-			      (compile_ffs16((__x) >> 16) + 16))
+-
+-/*
+- * This macro will check the requirements for the FIELD{8,16,32} macros
+- * The mask should be a constant non-zero contiguous set of bits which
+- * does not exceed the given typelimit.
+- */
+-#define FIELD_CHECK(__mask) \
+-	BUILD_BUG_ON(!(__mask) || !is_valid_mask(__mask))
+-
+-#define MT76_SET(_mask, _val)						\
+-	({								\
+-		FIELD_CHECK(_mask);					\
+-		(((u32) (_val)) << compile_ffs32(_mask)) & _mask;	\
+-	})
+-
+-#define MT76_GET(_mask, _val)						\
+-	({								\
+-		FIELD_CHECK(_mask);					\
+-		(u32) (((_val) & _mask) >> compile_ffs32(_mask));	\
+-	})
+-
+-#endif
 -- 
-2.7.4
+1.9.1
 
