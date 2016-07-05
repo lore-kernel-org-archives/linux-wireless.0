@@ -1,90 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:36827 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932622AbcGLMNu convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34163 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755305AbcGEPIa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2016 08:13:50 -0400
-Received: by mail-oi0-f53.google.com with SMTP id w18so19221040oiw.3
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jul 2016 05:13:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
-References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Tue, 12 Jul 2016 14:13:48 +0200
-Message-ID: <CAA93jw6=_pemSUjk3dje1GmnTzrs+=pEdza4j1Wjtrw+VKNdNg@mail.gmail.com> (sfid-20160712_141400_750420_A22DDC45)
-Subject: Re: TCP performance regression in mac80211 triggered by the fq code
-To: Felix Fietkau <nbd@nbd.name>, make-wifi-fast@lists.bufferbloat.net
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	=?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 Jul 2016 11:08:30 -0400
+Received: by mail-oi0-f65.google.com with SMTP id s17so28015506oih.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 08:08:29 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v3 03/10] rtlwifi: rtl8192cu: Convert driver to use common hardware info routine
+Date: Tue,  5 Jul 2016 10:08:08 -0500
+Message-Id: <1467731295-25850-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160705_170838_976255_626C5966)
+In-Reply-To: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 12, 2016 at 12:09 PM, Felix Fietkau <nbd@nbd.name> wrote:
-> Hi,
->
-> With Toke's ath9k txq patch I've noticed a pretty nasty performance
-> regression when running local iperf on an AP (running the txq stuff) to
-> a wireless client.
+The driver for RTL8192CU chips is converted to use the common routine
+for getting the hardware information.
 
-Your kernel? cpu architecture?
+Reported-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Arnd Bergmann <arnd@arndb.de>
+---
+V2 - Fixes bug found after V1 was submitted.
+V3 - No changes.
 
-What happens when going through the AP to a server from the wireless client?
+This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
+	submitted by Joe Perches.
+---
+ .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    | 61 ++++++----------------
+ 1 file changed, 15 insertions(+), 46 deletions(-)
 
-Which direction?
-
-> Here's some things that I found:
-> - when I use only one TCP stream I get around 90-110 Mbit/s
-
-with how much cpu left over?
-
-> - when running multiple TCP streams, I get only 35-40 Mbit/s total
-
-with how much cpu left over?
-context switch difference between the two tests?
-tcp_limit_output_bytes is?
-
-got perf?
-
-> - fairness between TCP streams looks completely fine
-
-A codel will get to long term fairness pretty fast. Packet captures
-from a fq will show much more regular interleaving of packets,
-regardless.
-
-> - there's no big queue buildup, the code never actually drops any packets
-
-A "trick" I have been using to observe codel behavior has been to
-enable ecn on server and client, then checking in wireshark for ect(3)
-marked packets.
-
-> - if I put a hack in the fq code to force the hash to a constant value
-
-You could also set "flows" to 1 to keep the hash being generated, but
-not actually use it.
-
-> (effectively disabling fq without disabling codel), the problem
-> disappears and even multiple streams get proper performance.
-
-Meaning you get 90-110Mbits ?
-
-Do you have a "before toke" figure for this platform?
-
-> Please let me know if you have any ideas.
-
-I am in berlin, packing hardware...
-
->
-> - Felix
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+index ae1129f..8789752 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
+@@ -347,56 +347,24 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
+ 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
+-	u16 i, usvalue;
+-	u8 hwinfo[HWSET_MAX_SIZE] = {0};
+-	u16 eeprom_id;
+-
+-	switch (rtlefuse->epromtype) {
+-	case EEPROM_BOOT_EFUSE:
+-		rtl_efuse_shadow_map_update(hw);
+-		break;
+-
+-	case EEPROM_93C46:
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "RTL819X Not boot from eeprom, check it !!\n");
++	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
++			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
++			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
++			0};
++	u8 *hwinfo;
++
++	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
++	if (!hwinfo)
+ 		return;
+ 
+-	default:
+-		pr_warn("rtl92cu: no efuse data\n\n");
+-		return;
+-	}
+-	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
+-	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_LOUD, "MAP",
+-		      hwinfo, HWSET_MAX_SIZE);
+-	eeprom_id = le16_to_cpu(*((__le16 *)&hwinfo[0]));
+-	if (eeprom_id != RTL8190_EEPROM_ID) {
+-		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+-			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
+-		rtlefuse->autoload_failflag = true;
+-	} else {
+-		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
+-		rtlefuse->autoload_failflag = false;
+-	}
+-	if (rtlefuse->autoload_failflag)
+-		return;
+-	for (i = 0; i < 6; i += 2) {
+-		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
+-		*((u16 *) (&rtlefuse->dev_addr[i])) = usvalue;
+-	}
+-	pr_info("MAC address: %pM\n", rtlefuse->dev_addr);
++	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
++		goto exit;
++
+ 	_rtl92cu_read_txpower_info_from_hwpg(hw,
+ 					   rtlefuse->autoload_failflag, hwinfo);
+-	rtlefuse->eeprom_vid = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VID]);
+-	rtlefuse->eeprom_did = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_DID]);
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, " VID = 0x%02x PID = 0x%02x\n",
+-		 rtlefuse->eeprom_vid, rtlefuse->eeprom_did);
+-	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
+-	rtlefuse->eeprom_version =
+-			 le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VERSION]);
++	_rtl92cu_read_board_type(hw, hwinfo);
++
+ 	rtlefuse->txpwr_fromeprom = true;
+-	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
+-	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "EEPROM Customer ID: 0x%2x\n",
+-		 rtlefuse->eeprom_oemid);
+ 	if (rtlhal->oem_id == RT_CID_DEFAULT) {
+ 		switch (rtlefuse->eeprom_oemid) {
+ 		case EEPROM_CID_DEFAULT:
+@@ -422,7 +390,8 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
+ 			break;
+ 		}
+ 	}
+-	_rtl92cu_read_board_type(hw, hwinfo);
++exit:
++	kfree(hwinfo);
+ }
+ 
+ static void _rtl92cu_hal_customized_behavior(struct ieee80211_hw *hw)
 -- 
-Dave Täht
-Let's go make home routers and wifi faster! With better software!
-http://blog.cerowrt.org
+2.1.4
+
