@@ -1,89 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48205 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:35133 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750789AbcGBHAG (ORCPT
+	with ESMTP id S1754606AbcGEOcK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jul 2016 03:00:06 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jonas Gorski <jonas.gorski@gmail.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Priit Laes <plaes@plaes.org>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
-	<CAOiHx==82LHOeQMNVD+dybFifXX690Q6AJTcMBMynjSfUOyGUw@mail.gmail.com>
-	<8d8bd933-717b-48e4-f002-7b834abed6fd@redhat.com>
-	<3960223.GqB9zXL8s8@wuerfel>
-	<1f44df41-0111-441b-4671-718eec0c4346@broadcom.com>
-	<CAOiHx=m8Zf0T4=BTG6BMRjj3kOHzt4YaQa3yzutmrhFSOyZMmA@mail.gmail.com>
-Date: Sat, 02 Jul 2016 09:59:55 +0300
-In-Reply-To: <CAOiHx=m8Zf0T4=BTG6BMRjj3kOHzt4YaQa3yzutmrhFSOyZMmA@mail.gmail.com>
-	(Jonas Gorski's message of "Fri, 1 Jul 2016 10:58:43 +0200")
-Message-ID: <87k2h44j9w.fsf@kamboji.qca.qualcomm.com> (sfid-20160702_090010_894840_FBA40412)
+	Tue, 5 Jul 2016 10:32:10 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [1/6] rtlwifi: Remove unused parameter from rtl_ps_set_rf_state()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1466879867-2499-2-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Pavel Andrianov <andrianov@ispras.ru>
+Message-Id: <20160705143210.081C0611CF@smtp.codeaurora.org> (sfid-20160705_163215_584097_EFB6E2D4)
+Date: Tue,  5 Jul 2016 14:32:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jonas Gorski <jonas.gorski@gmail.com> writes:
+Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Commit 4b9d8d67b44a ("rtlwifi: rtl8192cu: Remove unused parameter") reworked
+> this routine. Those changes were later reverted by commit d3feae41a347
+> ("rtlwifi: Update power-save routines for 062814 driver").
+> 
+> There were two changes in commit 4b9d8d67b44a. The first of these removed
+> a parameter from rtl_ps_set_rf_state() that was always false. This is the
+> change that is restored in the current patch. A second change that reworked
+> the locking is still being analyzed.
+> 
+> In addition to removing the unused parameter, there is no need for
+> rtl_ps_set_rf_state() to be exported.
+> 
+> Reported-by: Pavel Andrianov <andrianov@ispras.ru>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Pavel Andrianov <andrianov@ispras.ru>
 
-> Hi,
->
-> On 30 June 2016 at 21:23, Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>
->>
->> On 30-6-2016 13:31, Arnd Bergmann wrote:
->>> On Thursday, June 30, 2016 12:25:15 PM CEST Hans de Goede wrote:
->>>>> So then how about making use of a more specific compatible string?
->>>>>
->>>>> e.g.
->>>>>
->>>>> brcmf {
->>>>>         compatible = "foo,ap6210", "brcm,bcm4329-fmac";
->>>>>         ...
->>>>> };
->>>>>
->>>>> and if the compatible has more than one element you request
->>>>> FW_NAME_<compatible>.txt as the nvram file. Or try each comptible (and
->>>>> lastly no suffix) until you get a match. (AFAICT, this is what the
->>>>> "model" property was originally intended for anyway, but almost nobody
->>>>> did it right, and everyone put a user readable string into "model" for
->>>>> boards instead of the ePAPR defined compatible string).
->>>>
->>>> Hmm, interesting idea. Not sure how easy / hard it will be to implement
->>>> this, but from a dt binding point of view it seems elegant.
->>>>
->>>> Kalle, Arend, what do you think of this ?
->>
->> At first glance I like the suggestion, but this would mean updating the
->> bindings document for each new wifi module that we want to add. Not a
->> big problem, but it makes that I have a slight preference to using a
->> property for it, eg. brcm,module = "ap6210";
->
-> If you want a separate property, then I repeat my very first
-> suggestion, the well defined model property.
-> e.g.
->
-> brcmf@0 {
->         model = "ampak,ap6210";
->         compatible = "brcm,bcm4329-fmac";
->         ...
-> };
->
-> All device nodes may have a model property, not just the top "machine" one.
+Thanks, 6 patches applied to wireless-drivers-next.git:
 
-I like this model property but I'm no DT expert. What others think about
-it, would it work?
+30462b514fb3 rtlwifi: Remove unused parameter from rtl_ps_set_rf_state()
+204e2ab22e1e rtlwifi: rtl8188ee: Fix potential race condition
+c3ae8ec4a264 rtlwifi: rtl8192ee: Fix potential race condition
+31c2e76c77fb rtlwifi: rtl8723be: Fix potential race condition
+4f29b348bdc0 rtlwifi: rtl8723ae: Fix potential race condition
+300c32ca84f5 rtlwifi: rtl8821ae: Fix potential race condition
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/9198637/
+
