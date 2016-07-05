@@ -1,58 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:34941 "EHLO
-	mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932236AbcGDAuQ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:32890 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751168AbcGEMXV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jul 2016 20:50:16 -0400
-Received: by mail-it0-f65.google.com with SMTP id g4so2630832ith.2
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jul 2016 17:50:15 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1467356767-31646-1-git-send-email-c_traja@qti.qualcomm.com>
-References: <1467356767-31646-1-git-send-email-c_traja@qti.qualcomm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 4 Jul 2016 10:49:55 +1000
-Message-ID: <CAGRGNgWd-5ef5bxOkthpfH1hjqO4HJuWuBA=jNRAr=geQDH1zA@mail.gmail.com> (sfid-20160704_025020_290075_DA69AEA0)
-Subject: Re: [PATCHv3 1/3] ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
-To: c_traja@qti.qualcomm.com
-Cc: ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	tamizhchelvam@codeaurora.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 Jul 2016 08:23:21 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  5 Jul 2016 15:23:07 +0300
+Message-Id: <1467721394-8195-1-git-send-email-luca@coelho.fi> (sfid-20160705_142325_234148_69051442)
+Subject: [PATCH 0/7] mac80211/cfg80211: a bunch of patches from our internal tree
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Tamizh,
+From: Luca Coelho <luciano.coelho@intel.com>
 
-On Fri, Jul 1, 2016 at 5:06 PM,  <c_traja@qti.qualcomm.com> wrote:
-> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
->
-> Preparation to make use of firmware_swap_code_seg_info for UTF binary.
->
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/core.c |    6 +++---
->  drivers/net/wireless/ath/ath10k/core.h |    6 ++----
->  drivers/net/wireless/ath/ath10k/swap.c |   26 ++++++++++++++------------
->  drivers/net/wireless/ath/ath10k/swap.h |   11 ++++++++---
->  4 files changed, 27 insertions(+), 22 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-> index 3da18c9..e69e7e7 100644
-> --- a/drivers/net/wireless/ath/ath10k/core.h
-> +++ b/drivers/net/wireless/ath/ath10k/core.h
-> @@ -654,6 +654,8 @@ struct ath10k_fw_file {
->
->         const void *codeswap_data;
->         size_t codeswap_len;
-> +       /* FIXME: add a comment */
-> +       struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
+Hi Johannes,
 
-Why not just add a comment? Adding FIXMEs makes the patch look incomplete to me.
+These are some cfg80211/mac80211 patches that were pending upstreaming
+in our internal tree (I think you know about them ;).
 
-Thanks,
+Please let me know if everything is okay.
+
+There is a couple of checkpatch >80 chars line warnings, which I
+decided to ignore, since fixing them would make things uglier.
+
+One patch required changes in other drivers.  Those changes are
+compile-tested only.
+
+Cheers,
+Luca.
+
+Aviya Erenfeld (1):
+  nl80211: Add API to support VHT MU-MIMO air sniffer
+
+Avraham Stern (2):
+  nl80211: Add info to scan results to support beacon report
+  mac80211: Add support for beacon report radio measurement
+
+Gregory Greenman (1):
+  cfg80211: handle failed skb allocation
+
+Ilan Peer (1):
+  mac80211_hwsim: Add radar bandwidths to the P2P Device combination
+
+Johannes Berg (2):
+  mac80211: report failure to start (partial) scan as scan abort
+  mac80211: parse wide bandwidth channel switch IE with workaround
+
+ drivers/net/wireless/ath/ath10k/mac.c         | 14 ++++--
+ drivers/net/wireless/ath/ath9k/channel.c      |  5 +-
+ drivers/net/wireless/atmel/at76c50x-usb.c     |  5 +-
+ drivers/net/wireless/intel/iwlegacy/common.c  |  6 ++-
+ drivers/net/wireless/intel/iwlwifi/dvm/scan.c |  6 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 37 +++++++++++---
+ drivers/net/wireless/mac80211_hwsim.c         | 36 ++++++--------
+ drivers/net/wireless/st/cw1200/scan.c         |  6 ++-
+ drivers/net/wireless/ti/wl1251/event.c        |  6 ++-
+ drivers/net/wireless/ti/wl1251/main.c         |  6 ++-
+ drivers/net/wireless/ti/wlcore/main.c         | 11 ++++-
+ drivers/net/wireless/ti/wlcore/scan.c         |  5 +-
+ include/net/cfg80211.h                        | 50 ++++++++++++++++---
+ include/net/mac80211.h                        |  5 +-
+ include/uapi/linux/nl80211.h                  | 71 +++++++++++++++++++++++++++
+ net/mac80211/ieee80211_i.h                    |  1 +
+ net/mac80211/scan.c                           | 42 ++++++++++++++--
+ net/mac80211/spectmgmt.c                      | 45 +++++++----------
+ net/wireless/core.c                           |  4 +-
+ net/wireless/core.h                           | 12 +++++
+ net/wireless/nl80211.c                        | 63 ++++++++++++++++++++++++
+ net/wireless/scan.c                           | 18 ++++---
+ net/wireless/trace.h                          | 33 ++++++++++---
+ net/wireless/util.c                           |  2 +
+ 24 files changed, 386 insertions(+), 103 deletions(-)
 
 -- 
-Julian Calaby
+2.8.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
