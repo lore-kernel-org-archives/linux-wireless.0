@@ -1,80 +1,192 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42809 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756455AbcGZM4e (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:32896 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752039AbcGEMXW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2016 08:56:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, benjamin.berg@open-mesh.com
-Subject: Re: [PATCH] ath9k: fix client mode beacon configuration
-References: <20160726062923.98555-1-nbd@nbd.name>
-Date: Tue, 26 Jul 2016 15:56:23 +0300
-In-Reply-To: <20160726062923.98555-1-nbd@nbd.name> (Felix Fietkau's message of
-	"Tue, 26 Jul 2016 08:29:23 +0200")
-Message-ID: <8737mweex4.fsf@kamboji.qca.qualcomm.com> (sfid-20160726_145638_801201_D584FAAD)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 5 Jul 2016 08:23:22 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Aviya Erenfeld <aviya.erenfeld@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  5 Jul 2016 15:23:08 +0300
+Message-Id: <1467721394-8195-2-git-send-email-luca@coelho.fi> (sfid-20160705_142326_800420_23B07FCE)
+In-Reply-To: <1467721394-8195-1-git-send-email-luca@coelho.fi>
+References: <1467721394-8195-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 1/7] nl80211: Add API to support VHT MU-MIMO air sniffer
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+From: Aviya Erenfeld <aviya.erenfeld@intel.com>
 
-> For pure station mode, iter_data.primary_beacon_vif was used and passed
-> to ath_beacon_config, but not set to the station vif.
-> This was causing the following warning:
->
-> [  100.310919] ------------[ cut here ]------------
-> [  100.315683] WARNING: CPU: 0 PID: 7 at compat-wireless-2016-06-20/drivers/net/wireless/ath/ath9k/beacon.c:642 ath9k_calculate_summary_state+0x250/0x60c [ath9k]()
-> [  100.402028] CPU: 0 PID: 7 Comm: kworker/u2:1 Tainted: G        W       4.4.15 #5
-> [  100.409676] Workqueue: phy0 ieee80211_ibss_leave [mac80211]
-> [  100.415351] Stack : 8736e98c 870b4b20 87a25b54 800a6800 8782a080 80400d63 8039b96c 00000007
-> [  100.415351]    803c5edc 87875914 80400000 800a47cc 87a25b54 800a6800 803a0fd8 80400000
-> [  100.415351]    00000003 87875914 80400000 80094ae0 87a25b54 8787594c 00000000 801ef308
-> [  100.415351]    803ffe70 801ef300 87193d58 87b3a400 87b3ad00 70687930 00000000 00000000
-> [  100.415351]    00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> [  100.415351]    ...
-> [  100.451703] Call Trace:
-> [  100.454235] [<800a6800>] vprintk_default+0x24/0x30
-> [  100.459110] [<800a47cc>] printk+0x2c/0x38
-> [  100.463190] [<800a6800>] vprintk_default+0x24/0x30
-> [  100.468072] [<80094ae0>] print_worker_info+0x148/0x174
-> [  100.473378] [<801ef308>] serial8250_console_putchar+0x0/0x44
-> [  100.479122] [<801ef300>] wait_for_xmitr+0xc4/0xcc
-> [  100.484014] [<87193d58>] ieee80211_ibss_leave+0xb90/0x1900 [mac80211]
-> [  100.490590] [<80081604>] warn_slowpath_common+0xa0/0xd0
-> [  100.495922] [<801a359c>] dump_stack+0x14/0x28
-> [  100.500350] [<80071a00>] show_stack+0x50/0x84
-> [  100.504784] [<80081604>] warn_slowpath_common+0xa0/0xd0
-> [  100.510106] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
-> [  100.517105] [<800816b8>] warn_slowpath_null+0x18/0x24
-> [  100.522256] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
-> [  100.529273] [<87025418>] ath9k_set_txpower+0x148/0x498 [ath9k]
-> [  100.535302] [<871d2c64>] cleanup_module+0xa74/0xd4c [mac80211]
-> [  100.541237] [<801ef308>] serial8250_console_putchar+0x0/0x44
-> [  100.547042] [<800a5d18>] wake_up_klogd+0x54/0x68
-> [  100.551730] [<800a6650>] vprintk_emit+0x404/0x43c
-> [  100.556623] [<871b9db8>] ieee80211_sta_rx_notify+0x258/0x32c [mac80211]
-> [  100.563475] [<871ba6a4>] ieee80211_sta_rx_queued_mgmt+0x63c/0x734 [mac80211]
-> [  100.570693] [<871aa49c>] ieee80211_tx_prepare_skb+0x210/0x230 [mac80211]
-> [  100.577609] [<800af5d4>] mod_timer+0x15c/0x190
-> [  100.582220] [<871ba8b8>] ieee80211_sta_work+0xfc/0xe1c [mac80211]
-> [  100.588539] [<871940b4>] ieee80211_ibss_leave+0xeec/0x1900 [mac80211]
-> [  100.595122] [<8009ec84>] dequeue_task_fair+0x44/0x130
-> [  100.600281] [<80092a34>] process_one_work+0x1f8/0x334
-> [  100.605454] [<80093830>] worker_thread+0x2b4/0x408
-> [  100.610317] [<8009357c>] worker_thread+0x0/0x408
-> [  100.615019] [<8009357c>] worker_thread+0x0/0x408
-> [  100.619705] [<80097b68>] kthread+0xdc/0xe8
-> [  100.623886] [<80097a8c>] kthread+0x0/0xe8
-> [  100.627961] [<80060878>] ret_from_kernel_thread+0x14/0x1c
-> [  100.633448]
-> [  100.634956] ---[ end trace aafbe57e9ae6862f ]---
->
-> Fixes: cfda2d8e2314 ("ath9k: Fix beacon configuration for addition/removal of interfaces")
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+add API to support VHT MU-MIMO air sniffer.
+in MU-MIMO there are parallel frames on the air while the HW
+has only one RX.
+add the capability to sniff one of the MU-MIMO parallel frames by
+giving the sniffer additional information so it'll know which
+of the parallel frames it shall follow.
 
-I'm planning to push this to 4.8.
+Add attribute - NL80211_ATTR_MU_MIMO_GROUP_DATA - for getting
+a MU-MIMO groupID in order to monitor packets from that group
+using VHT MU-MIMO.
+And add attribute -NL80211_ATTR_MU_MIMO_FOLLOW_ADDR - for passing
+MAC address to monitor mode.
+that option will be used by VHT MU-MIMO air sniffer to follow a
+station according to it's MAC address using VHT MU-MIMO.
 
+Signed-off-by: Aviya Erenfeld <aviya.erenfeld@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/cfg80211.h       | 10 ++++++++--
+ include/uapi/linux/nl80211.h | 29 +++++++++++++++++++++++++++++
+ net/wireless/nl80211.c       | 36 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 73 insertions(+), 2 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 7bbb00d..fa4f0f7 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -330,6 +330,9 @@ struct ieee80211_supported_band {
+  * in a separate chapter.
+  */
+ 
++#define VHT_MUMIMO_GROUPS_DATA_LEN (WLAN_MEMBERSHIP_LEN +\
++				    WLAN_USER_POSITION_LEN)
++
+ /**
+  * struct vif_params - describes virtual interface parameters
+  * @use_4addr: use 4-address frames
+@@ -339,10 +342,13 @@ struct ieee80211_supported_band {
+  *	This feature is only fully supported by drivers that enable the
+  *	%NL80211_FEATURE_MAC_ON_CREATE flag.  Others may support creating
+  **	only p2p devices with specified MAC.
++ * @vht_mumimo_groups: MU-MIMO groupID. used for monitoring only
++ *	 packets belonging to that MU-MIMO groupID.
+  */
+ struct vif_params {
+-       int use_4addr;
+-       u8 macaddr[ETH_ALEN];
++	int use_4addr;
++	u8 macaddr[ETH_ALEN];
++	u8 vht_mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN];
+ };
+ 
+ /**
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 53c8278..1d7da78 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1829,6 +1829,25 @@ enum nl80211_commands {
+  *	%NL80211_ATTR_EXT_CAPA_MASK, to specify the extended capabilities per
+  *	interface type.
+  *
++ * @NL80211_ATTR_MU_MIMO_GROUP_DATA: array of 24 bytes that defines a MU-MIMO
++ *	groupID for monitor mode.
++ *	The first 8 bytes are a mask that defines the membership in each
++ *	group (there are 64 groups, group 0 and 63 are reserved),
++ *	each bit represents a group and set to 1 for being a member in
++ *	that group and 0 for not being a member.
++ *	The remaining 16 bytes define the position in each group: 2 bits for
++ *	each group.
++ *	(smaller group numbers represented on most significant bits and bigger
++ *	group numbers on least significant bits.)
++ *	This attribute is used only if all interfaces are in monitor mode.
++ *	Set this attribute in order to monitor packets using the given MU-MIMO
++ *	groupID data.
++ *	to turn off that feature set all the bits of the groupID to zero.
++ * @NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR: mac address for the sniffer to follow
++ *	when using MU-MIMO air sniffer.
++ *	to turn that feature off set an invalid mac address
++ *	(e.g. FF:FF:FF:FF:FF:FF)
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2213,6 +2232,9 @@ enum nl80211_attrs {
+ 
+ 	NL80211_ATTR_IFTYPE_EXT_CAPA,
+ 
++	NL80211_ATTR_MU_MIMO_GROUP_DATA,
++	NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR,
++
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -4479,6 +4501,12 @@ enum nl80211_feature_flags {
+  *	%NL80211_CMD_ASSOCIATE and %NL80211_CMD_CONNECT requests, which will set
+  *	the ASSOC_REQ_USE_RRM flag in the association request even if
+  *	NL80211_FEATURE_QUIET is not advertized.
++ * @NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER: This device supports MU-MIMO air
++ *	sniffer which means that it can be configured to hear packets from
++ *	certain groups which can be configured by the
++ *	%NL80211_ATTR_MU_MIMO_GROUP_DATA attribute,
++ *	or can be configured to follow a station by configuring the
++ *	%NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR attribute.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+@@ -4486,6 +4514,7 @@ enum nl80211_feature_flags {
+ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_VHT_IBSS,
+ 	NL80211_EXT_FEATURE_RRM,
++	NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER,
+ 
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 244d552..447026f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -405,6 +405,10 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_PBSS] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_BSS_SELECT] = { .type = NLA_NESTED },
+ 	[NL80211_ATTR_STA_SUPPORT_P2P_PS] = { .type = NLA_U8 },
++	[NL80211_ATTR_MU_MIMO_GROUP_DATA] = {
++		.len = VHT_MUMIMO_GROUPS_DATA_LEN
++	},
++	[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR] = { .len = ETH_ALEN },
+ };
+ 
+ /* policy for the key attributes */
+@@ -2695,6 +2699,38 @@ static int nl80211_set_interface(struct sk_buff *skb, struct genl_info *info)
+ 		change = true;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]) {
++		const u8 *mumimo_groups;
++		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
++
++		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
++			return -EOPNOTSUPP;
++
++		mumimo_groups =
++			nla_data(info->attrs[NL80211_ATTR_MU_MIMO_GROUP_DATA]);
++
++		/* bits 0 and 63 are reserved and must be zero */
++		if ((mumimo_groups[0] & BIT(7)) ||
++		    (mumimo_groups[VHT_MUMIMO_GROUPS_DATA_LEN - 1] & BIT(0)))
++			return -EINVAL;
++
++		memcpy(params.vht_mumimo_groups, mumimo_groups,
++		       VHT_MUMIMO_GROUPS_DATA_LEN);
++		change = true;
++	}
++
++	if (info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR]) {
++		u32 cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
++
++		if (!wiphy_ext_feature_isset(&rdev->wiphy, cap_flag))
++			return -EOPNOTSUPP;
++
++		nla_memcpy(params.macaddr,
++			   info->attrs[NL80211_ATTR_MU_MIMO_FOLLOW_MAC_ADDR],
++			   ETH_ALEN);
++		change = true;
++	}
++
+ 	if (flags && (*flags & MONITOR_FLAG_ACTIVE) &&
+ 	    !(rdev->wiphy.features & NL80211_FEATURE_ACTIVE_MONITOR))
+ 		return -EOPNOTSUPP;
 -- 
-Kalle Valo
+2.8.1
+
