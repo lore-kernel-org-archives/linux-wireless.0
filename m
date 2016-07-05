@@ -1,160 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:36095 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754927AbcGFQUL (ORCPT
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:45209 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997AbcGERbi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 12:20:11 -0400
-Received: by mail-wm0-f44.google.com with SMTP id f126so179920175wma.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 09:20:10 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
-	linux-kernel@vger.kernel.org,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv5 wl-drv-next 2/2] mt7601u: use linux/bitfield.h
-Date: Wed,  6 Jul 2016 17:19:37 +0100
-Message-Id: <1467821977-11777-3-git-send-email-jakub.kicinski@netronome.com> (sfid-20160706_182032_930402_96945332)
-In-Reply-To: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
+	Tue, 5 Jul 2016 13:31:38 -0400
+From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
+To: "linux@rempel-privat.de" <linux@rempel-privat.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"anders.darander@gmail.com" <anders.darander@gmail.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"fixed-term.Oleksij.Rempel@de.bosch.com"
+	<fixed-term.Oleksij.Rempel@de.bosch.com>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
+Subject: Re: ath9k-htc on OHCI -> bogus usb xfer
+Date: Tue, 5 Jul 2016 17:31:33 +0000
+Message-ID: <1467739821.3086.13.camel@synopsys.com> (sfid-20160705_193142_440305_7F1D3FEC)
+References: <1467721137.3144.81.camel@synopsys.com>
+	 <577BED2D.7070209@rempel-privat.de>
+In-Reply-To: <577BED2D.7070209@rempel-privat.de>
+Content-Type: text/plain; charset="utf-7"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the newly added linux/bitfield.h.
+Hi Oleksij,
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
- drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
- 3 files changed, 4 insertions(+), 80 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+On Tue, 2016-07-05 at 19:23 +-0200, Oleksij Rempel wrote:
++AD4- Hi,
++AD4- 
++AD4- Am 05.07.2016 um 14:20 schrieb Alexey Brodkin:
++AD4- +AD4- 
++AD4- +AD4- Hello,
++AD4- +AD4- 
++AD4- +AD4- Looks like this is another manifestation of already seen problem with ath9k-htc
++AD4- +AD4- and OHCI controller.
++AD4- +AD4- 
++AD4- +AD4- I'm trying to get USB Wi-Fi dongle based on Atheros AR9271 to work with our
++AD4- +AD4- development board (this is Synopsys AXS103) and seeing a picture very similar to
++AD4- +AD4- what was discussed here http://thread.gmane.org/gmane.linux.usb.general/110847
++AD4- +AD4- 
++AD4- +AD4- Below is what I see on insertion of the dongle.
++AD4- +AD4- Note I have the most recent ath9k-htc firmware (see +ACI-ath9k+AF8-htc/htc+AF8-9271-1.4.0.fw+ACI-
++AD4- +AD4- in the log below) and Linux kernel is 4.6.3 (latest stable as of today) but the same
++AD4- +AD4- happens even on 4.4.
++AD4- +AD4- 
++AD4- +AD4- Interesting enough if I simply remove or disable the warning like that
++AD4- +AD4- ------------------------+AD4-8---------------------------
++AD4- +AD4- diff --git a/drivers/usb/core/urb.c b/drivers/usb/core/urb.c
++AD4- +AD4- index 3d27477..a317e1e 100644
++AD4- +AD4- --- a/drivers/usb/core/urb.c
++AD4- +AD4- +-+-+- b/drivers/usb/core/urb.c
++AD4- +AD4- +AEAAQA- -443,11 +-443,6 +AEAAQA- int usb+AF8-submit+AF8-urb(struct urb +ACo-urb, gfp+AF8-t mem+AF8-flags)
++AD4- +AD4- +AKAAoACgAKAAoACgAKAAoACgACo- cause problems in HCDs if they get it wrong.
++AD4- +AD4- +AKAAoACgAKAAoACgAKAAoACgACo-/
++AD4- +AD4- +AKA-
++AD4- +AD4- -+AKAAoACgAKAAoACgAKA-/+ACo- Check that the pipe's type matches the endpoint's type +ACo-/
++AD4- +AD4- -+AKAAoACgAKAAoACgAKA-if (usb+AF8-pipetype(urb-+AD4-pipe) +ACEAPQ- pipetypes+AFs-xfertype+AF0-)
++AD4- +AD4- -+AKAAoACgAKAAoACgAKAAoACgAKAAoACgAKAAoACg-dev+AF8-WARN(+ACY-dev-+AD4-dev, +ACI-BOGUS urb xfer, pipe +ACU-x +ACEAPQ- type +ACU-x+AFw-n+ACI-,
++AD4- +AD4- -+AKAAoACgAKAAoACgAKAAoACgAKAAoACgAKAAoACgAKAAoACgAKAAoACgAKAAoA-usb+AF8-pipetype(urb-+AD4-pipe), pipetypes+AFs-xfertype+AF0-)+ADs-
++AD4- +AD4- -
++AD4- +AD4- +AKAAoACgAKAAoACgAKAAoA-/+ACo- Check against a simple/standard policy +ACo-/
++AD4- +AD4- +AKAAoACgAKAAoACgAKAAoA-allowed +AD0- (URB+AF8-NO+AF8-TRANSFER+AF8-DMA+AF8-MAP +AHw- URB+AF8-NO+AF8-INTERRUPT +AHw- URB+AF8-DIR+AF8-MASK +AHw-
++AD4- +AD4- +AKAAoACgAKAAoACgAKAAoACgAKAAoACgAKAAoACgAKAAoACgAKAAoACgAKAAoACg-URB+AF8-FREE+AF8-BUFFER)+ADs-
++AD4- +AD4- ------------------------+AD4-8---------------------------
++AD4- +AD4- everything seem to work quite nice.
++AD4- +AD4- 
++AD4- +AD4- Any thoughts are much appreciated.
++AD4- +AD4- 
++AD4- +AD4- That's the log itself:
++AD4- +AD4- ------------------------+AD4-8---------------------------
++AD4- +AD4- usb 1-1: new full-speed USB device number 2 using ohci-platform
++AD4- +AD4- usb 1-1: ath9k+AF8-htc: Firmware ath9k+AF8-htc/htc+AF8-9271-1.4.0.fw requested
++AD4- +AD4- usb 1-1: ath9k+AF8-htc: Transferred FW: ath9k+AF8-htc/htc+AF8-9271-1.4.0.fw, size: 51008
++AD4- +AD4- ------------+AFs- cut here +AF0-------------
++AD4- +AD4- WARNING: CPU: 0 PID: 4 at drivers/usb/core/urb.c:450 usb+AF8-submit+AF8-urb+-0x162/0x404
++AD4- +AD4- usb 1-1: BOGUS urb xfer, pipe 1 +ACEAPQ- type 3
++AD4- +AD4- Modules linked in:
++AD4- +AD4- CPU: 0 PID: 4 Comm: kworker/0:0 Not tainted 4.6.3 +ACM-10
++AD4- +AD4- Workqueue: events request+AF8-firmware+AF8-work+AF8-func
++AD4- +AD4- 
++AD4- +AD4- Stack Trace:
++AD4- +AD4- +AKA- arc+AF8-unwind+AF8-core.constprop.1+-0x94/0x10c
++AD4- +AD4- ---+AFs- end trace 2249b79eac9991d1 +AF0----
++AD4- +AD4- ------------+AFs- cut here +AF0-------------
++AD4- +AD4- WARNING: CPU: 0 PID: 4 at drivers/usb/core/urb.c:450 usb+AF8-submit+AF8-urb+-0x162/0x404
++AD4- +AD4- usb 1-1: BOGUS urb xfer, pipe 1 +ACEAPQ- type 3
++AD4- +AD4- Modules linked in:
++AD4- +AD4- CPU: 0 PID: 4 Comm: kworker/0:0 Tainted: G+AKAAoACgAKAAoACgAKAAoA-W+AKAAoACgAKAAoACgAKA-4.6.3 +ACM-10
++AD4- +AD4- Workqueue: events request+AF8-firmware+AF8-work+AF8-func
++AD4- +AD4- 
++AD4- +AD4- Stack Trace:
++AD4- +AD4- +AKA- arc+AF8-unwind+AF8-core.constprop.1+-0x94/0x10c
++AD4- +AD4- ---+AFs- end trace 2249b79eac9991d2 +AF0----
++AD4- +AD4- ------------+AFs- cut here +AF0-------------
++AD4- +AD4- WARNING: CPU: 0 PID: 4 at drivers/usb/core/urb.c:450 usb+AF8-submit+AF8-urb+-0x162/0x404
++AD4- +AD4- usb 1-1: BOGUS urb xfer, pipe 1 +ACEAPQ- type 3
++AD4- +AD4- Modules linked in:
++AD4- +AD4- CPU: 0 PID: 4 Comm: kworker/0:0 Tainted: G+AKAAoACgAKAAoACgAKAAoA-W+AKAAoACgAKAAoACgAKA-4.6.3 +ACM-10
++AD4- +AD4- Workqueue: events request+AF8-firmware+AF8-work+AF8-func
++AD4- +AD4- 
++AD4- +AD4- Stack Trace:
++AD4- +AD4- +AKA- arc+AF8-unwind+AF8-core.constprop.1+-0x94/0x10c
++AD4- +AD4- ---+AFs- end trace 2249b79eac9991d3 +AF0----
++AD4- +AD4- 
++AD4- 
++AD4- please send content of hif+AF8-usb+AF8-send+AF8-regout() from your source code.
++AD4- It is located in drivers/net/wireless/ath/ath9k/hif+AF8-usb.c
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.h b/drivers/net/wireless/mediatek/mt7601u/dma.h
-index 978e8a90b87f..166ac71905d2 100644
---- a/drivers/net/wireless/mediatek/mt7601u/dma.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/dma.h
-@@ -18,8 +18,6 @@
- #include <asm/unaligned.h>
- #include <linux/skbuff.h>
- 
--#include "util.h"
--
- #define MT_DMA_HDR_LEN			4
- #define MT_RX_INFO_LEN			4
- #define MT_FCE_INFO_LEN			4
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-index 428bd2f10b7b..5ef62e02ce66 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-@@ -15,6 +15,7 @@
- #ifndef MT7601U_H
- #define MT7601U_H
- 
-+#include <linux/bitfield.h>
- #include <linux/kernel.h>
- #include <linux/device.h>
- #include <linux/mutex.h>
-@@ -24,7 +25,6 @@
- #include <linux/debugfs.h>
- 
- #include "regs.h"
--#include "util.h"
- 
- #define MT_CALIBRATE_INTERVAL		(4 * HZ)
- 
-@@ -282,6 +282,9 @@ struct mt7601u_rxwi;
- 
- extern const struct ieee80211_ops mt7601u_ops;
- 
-+#define MT76_SET	FIELD_PUT
-+#define MT76_GET	FIELD_GET
-+
- void mt7601u_init_debugfs(struct mt7601u_dev *dev);
- 
- u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset);
-diff --git a/drivers/net/wireless/mediatek/mt7601u/util.h b/drivers/net/wireless/mediatek/mt7601u/util.h
-deleted file mode 100644
-index b89140bf1210..000000000000
---- a/drivers/net/wireless/mediatek/mt7601u/util.h
-+++ /dev/null
-@@ -1,77 +0,0 @@
--/*
-- * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
-- * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2
-- * as published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- */
--
--#ifndef __MT76_UTIL_H
--#define __MT76_UTIL_H
--
--/*
-- * Power of two check, this will check
-- * if the mask that has been given contains and contiguous set of bits.
-- * Note that we cannot use the is_power_of_2() function since this
-- * check must be done at compile-time.
-- */
--#define is_power_of_two(x)	( !((x) & ((x)-1)) )
--#define low_bit_mask(x)		( ((x)-1) & ~(x) )
--#define is_valid_mask(x)	is_power_of_two(1LU + (x) + low_bit_mask(x))
--
--/*
-- * Macros to find first set bit in a variable.
-- * These macros behave the same as the __ffs() functions but
-- * the most important difference that this is done during
-- * compile-time rather then run-time.
-- */
--#define compile_ffs2(__x) \
--	__builtin_choose_expr(((__x) & 0x1), 0, 1)
--
--#define compile_ffs4(__x) \
--	__builtin_choose_expr(((__x) & 0x3), \
--			      (compile_ffs2((__x))), \
--			      (compile_ffs2((__x) >> 2) + 2))
--
--#define compile_ffs8(__x) \
--	__builtin_choose_expr(((__x) & 0xf), \
--			      (compile_ffs4((__x))), \
--			      (compile_ffs4((__x) >> 4) + 4))
--
--#define compile_ffs16(__x) \
--	__builtin_choose_expr(((__x) & 0xff), \
--			      (compile_ffs8((__x))), \
--			      (compile_ffs8((__x) >> 8) + 8))
--
--#define compile_ffs32(__x) \
--	__builtin_choose_expr(((__x) & 0xffff), \
--			      (compile_ffs16((__x))), \
--			      (compile_ffs16((__x) >> 16) + 16))
--
--/*
-- * This macro will check the requirements for the FIELD{8,16,32} macros
-- * The mask should be a constant non-zero contiguous set of bits which
-- * does not exceed the given typelimit.
-- */
--#define FIELD_CHECK(__mask) \
--	BUILD_BUG_ON(!(__mask) || !is_valid_mask(__mask))
--
--#define MT76_SET(_mask, _val)						\
--	({								\
--		FIELD_CHECK(_mask);					\
--		(((u32) (_val)) << compile_ffs32(_mask)) & _mask;	\
--	})
--
--#define MT76_GET(_mask, _val)						\
--	({								\
--		FIELD_CHECK(_mask);					\
--		(u32) (((_val) & _mask) >> compile_ffs32(_mask));	\
--	})
--
--#endif
--- 
-1.9.1
+I use vanilla 4.6.3 tree so that's what I have is the same as
+http://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/tree/drivers/net/wireless/ath/ath9k/hif+AF8-usb.c?h+AD0-linu
+x-4.6.y+ACM-n99
 
+-Alexey
