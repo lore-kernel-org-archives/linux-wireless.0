@@ -1,126 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59171 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752137AbcGULvx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 07:51:53 -0400
-Date: Thu, 21 Jul 2016 13:51:24 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-Message-ID: <20160721115122.GA31869@redhat.com> (sfid-20160721_135201_351140_D780E727)
-References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
- <20160721070938.GA2658@redhat.com>
- <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
- <20160721080541.GB2658@redhat.com>
- <5790A28F.8030102@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5790A28F.8030102@redhat.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:32910 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751168AbcGEMXX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2016 08:23:23 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Tue,  5 Jul 2016 15:23:10 +0300
+Message-Id: <1467721394-8195-4-git-send-email-luca@coelho.fi> (sfid-20160705_142330_166092_0664416C)
+In-Reply-To: <1467721394-8195-1-git-send-email-luca@coelho.fi>
+References: <1467721394-8195-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 3/7] cfg80211: handle failed skb allocation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(cc: firmware and brcmfmac maintainers)
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-On Thu, Jul 21, 2016 at 06:23:11AM -0400, Prarit Bhargava wrote:
-> 
-> 
-> On 07/21/2016 04:05 AM, Stanislaw Gruszka wrote:
-> > On Thu, Jul 21, 2016 at 10:36:42AM +0300, Emmanuel Grumbach wrote:
-> >> On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> >>> On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
-> >>>> Firmware files are versioned to prevent older
-> >>>> driver instances to load unsupported firmware
-> >>>> blobs. This is reflected with a fallback logic
-> >>>> which attempts to load several firmware files.
-> >>>>
-> >>>> This however produced a lot of unnecessary
-> >>>> warnings sometimes confusing users and leading
-> >>>> them to rename firmware files making things even
-> >>>> more confusing.
-> >>>
-> >>> This happens on kernels configured with
-> >>> CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
-> >>> but also 60 seconds delay before loading next firmware version.
-> >>> For some reason RHEL kernel needs above config option, so this
-> >>> patch is very welcome from my perspective.
-> >>>
-> >>
-> >> Sorry for my ignorance but how does the firmware loading work if not
-> >> with udev's help?
-> > 
-> > I'm not sure exactly, but I think kernel VFS layer is capable to copy
-> > file data directly from mounted filesystem without user space helper.
-> 
-> Here's the situation: request_firmware() waits 60 seconds for udev to do its
-> loading magic via a "usermode helper".  This delay is there to allow, for
-> example, userspace to unpack or download a new firmware image or verify the
-> firmware image *in userspace* before providing it to the driver to apply to the HW.
-> 
-> Why 60 seconds?  It is arbitrary and there is no way for udev & the kernel to
-> handshake on completion.
-> 
-> > 
-> >> As you can imagine, iwlwifi is suffering from the
-> >> same problem and I would be interested in applying the same change,
-> >> but I'd love to understand a bit more :)
-> > 
-> > Yes, iwlwifi (and some other drivers) suffer from this. However this
-> > happen when the newest firmware version is not installed on the system
-> > and CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled. What I suppose
-> > it's not common.
-> 
-> request_firmware_direct() was introduced at my request because (as you've
-> noticed) when CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y drivers may stall for long
-> periods of time when starting.  The bug that this introduced was a 60 second
-> delay per logical cpu when starting a system.  On a 64 cpu system that meant the
-> boot would complete in a little over one hour.
-> 
-> > 
-> > I started to see this currently, because that option was enabled on 
-> > RHEL kernel. BTW: I think Prarit iwlwifi thermal_zone problem was
-> > happened because of that, i.e. thermal device was not functional
-> > because f/w wasn't loaded due to big delay.
-> > 
-> > I'm not sure if replacing to request_firmware_direct() is a good
-> > fix though. For example I can see this problem also on brcmfmac, which
-> > use request_firmware_nowait(). I think I would rather prefer special
-> > helper for firmware drivers that needs user helper and have
-> > request_firmware() be direct as default.
-> > 
-> 
-> The difference between request_firmware_direct() and request_firmware() is that
-> the _direct() version does not wait the 60 seconds for udev interaction.  The
-> only userspace check performed is to see if the file is there, and if the file
-> does exist it is provided to the driver to be applied to the hardware.
-> 
-> So the real question to ask here is whether or not the ath10k, brcmfmac, and
-> iwlwifi require udev to do anything beyond checking for the existence and
-> loading the firmware image.  If they don't, then it is better to use
-> request_firmware_direct().
+Handle the case when dev_alloc_skb returns NULL.
 
-They don't need that, like 99% of the drivers I think, hence changing the
-default seems to be more reasonable. However changing 3 drivers would work
-for me as well, and that change do not introduce risk of broking drivers
-that require udev fw download.
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/wireless/util.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-iwlwifi and ath10k are trivial, bcrmfmac is a bit more complex as it
-use request_firmware_nowait(), so it first need to be converted to
-ordinary request_firmware(), but this should be doable and I can do
-that.
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 2443ee3..b7d1592 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -721,6 +721,8 @@ __ieee80211_amsdu_copy(struct sk_buff *skb, unsigned int hlen,
+ 	 * alignment since sizeof(struct ethhdr) is 14.
+ 	 */
+ 	frame = dev_alloc_skb(hlen + sizeof(struct ethhdr) + 2 + cur_len);
++	if (!frame)
++		return NULL;
+ 
+ 	skb_reserve(frame, hlen + sizeof(struct ethhdr) + 2);
+ 	skb_copy_bits(skb, offset, skb_put(frame, cur_len), cur_len);
+-- 
+2.8.1
 
-However I wonder if changing that will not broke the case when
-driver is build-in in the kernel and f/w is not yet available when
-driver start to initialize. Or maybe nowadays this is not the case
-any longer, i.e. the MODULE_FIRMWARE macros assure proper f/w 
-images are build-in in the kernel or copied to initramfs?
-
-Thanks
-Stanislaw
