@@ -1,58 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:52490 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbcG1IF3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 04:05:29 -0400
-From: Daniel Wagner <wagi@monom.org>
-To: Bastien Nocera <hadess@hadess.net>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>
-Subject: [RFC v0 1/8] selftests: firmware: do not abort test too early
-Date: Thu, 28 Jul 2016 09:55:05 +0200
-Message-Id: <1469692512-16863-2-git-send-email-wagi@monom.org> (sfid-20160728_100536_251287_A12EFE52)
-In-Reply-To: <1469692512-16863-1-git-send-email-wagi@monom.org>
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:40372 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753878AbcGFNDg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2016 09:03:36 -0400
+Message-ID: <1467810206.5460.12.camel@sipsolutions.net> (sfid-20160706_150339_725056_8A90653A)
+Subject: Re: [PATCH v2] cfg80211: Add mesh peer AID setting API
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Masashi Honma <masashi.honma@gmail.com>,
+	linux-wireless@vger.kernel.org, j@w1.fi
+Date: Wed, 06 Jul 2016 15:03:26 +0200
+In-Reply-To: <20160706125826.GA7819@localhost> (sfid-20160706_145831_452947_AB83CB96)
+References: <1467277258-2331-1-git-send-email-masashi.honma@gmail.com>
+ <1467335974-2802-1-git-send-email-masashi.honma@gmail.com>
+ <1467808954.5460.6.camel@sipsolutions.net>
+	 <20160706125826.GA7819@localhost> (sfid-20160706_145831_452947_AB83CB96)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
 
-When running the test script you will get:
+> > It seems to me that it could just use the
+> > regular NL80211_ATTR_STA_AID
+> > attribute, and the cfg80211 code would already be in place, and
+> > you'd
+> > just need to add a single line to mac80211 and
+> > to cfg80211_check_station_change() to accept that.
+> 
+> We are already using NL80211_ATTR_STA_AID, though -- one is for the
+> station's AID (in our TIM, which is NL80211_ATTR_STA_AID) and the new
+> one
+> is for our AID in the peer's TIM.
+> 
+> There is the NL80211_ATTR_PEER_AID but that seems specific to TDLS
+> and
+> also doesn't appear to be processed in the necessary way (e.g.
+> overrides
+> STA_AID in nl80211_new_station).
 
-kselftest/firmware/fw_userhelper.sh: line 69: echo: write error: Resource temporarily unavailable
+Oh, ok. Applied then.
 
-and stops right there. Because the script runs with the '-e' option
-which will stop the script at any error.
-
-We should stop there because we are trying to something wrong and get an
-error reported back. Instead, ignore the error message and make sure we
-do not stop the script by setting the last error code to true.
-
-Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
----
- tools/testing/selftests/firmware/fw_userhelper.sh | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/tools/testing/selftests/firmware/fw_userhelper.sh b/tools/testing/selftests/firmware/fw_userhelper.sh
-index b9983f8..2d244a7 100755
---- a/tools/testing/selftests/firmware/fw_userhelper.sh
-+++ b/tools/testing/selftests/firmware/fw_userhelper.sh
-@@ -66,7 +66,7 @@ NAME=$(basename "$FW")
- 
- # Test failure when doing nothing (timeout works).
- echo 1 >/sys/class/firmware/timeout
--echo -n "$NAME" >"$DIR"/trigger_request
-+echo -n "$NAME" >"$DIR"/trigger_request 2> /dev/null || true
- if diff -q "$FW" /dev/test_firmware >/dev/null ; then
- 	echo "$0: firmware was not expected to match" >&2
- 	exit 1
--- 
-2.7.4
+johannes
