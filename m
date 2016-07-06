@@ -1,94 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33415 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751635AbcGFA3J (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33500 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753772AbcGFKpA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 20:29:09 -0400
-From: Masashi Honma <masashi.honma@gmail.com>
-To: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-	linux-audit@redhat.com, cluster-devel@redhat.com
-Cc: davem@davemloft.net, johannes@sipsolutions.net,
-	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
-	dledford@redhat.com, sean.hefty@intel.com,
-	hal.rosenstock@gmail.com, paul@paul-moore.com, eparis@redhat.com,
-	zbr@ioremap.net, pshelar@nicira.com, ccaulfie@redhat.com,
-	teigland@redhat.com, bsingharora@gmail.com,
-	Masashi Honma <masashi.honma@gmail.com>
-Subject: [RFC 2/7] netfilter: Add allocation flag to nfnetlink_unicast()
-Date: Wed,  6 Jul 2016 09:28:31 +0900
-Message-Id: <1467764916-4983-3-git-send-email-masashi.honma@gmail.com> (sfid-20160706_023052_219000_12D56C6A)
-In-Reply-To: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
-References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
+	Wed, 6 Jul 2016 06:45:00 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:34 +0300
+Message-Id: <1467801651-1816-39-git-send-email-luca@coelho.fi> (sfid-20160706_124506_985254_E62E733C)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 39/56] iwlwifi: mvm: unmap the paging memory before freeing it
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- include/linux/netfilter/nfnetlink.h | 2 +-
- net/netfilter/nfnetlink.c           | 4 ++--
- net/netfilter/nfnetlink_log.c       | 4 ++--
- net/netfilter/nfnetlink_queue.c     | 3 ++-
- 4 files changed, 7 insertions(+), 6 deletions(-)
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-diff --git a/include/linux/netfilter/nfnetlink.h b/include/linux/netfilter/nfnetlink.h
-index 1d82dd5..a1c7808 100644
---- a/include/linux/netfilter/nfnetlink.h
-+++ b/include/linux/netfilter/nfnetlink.h
-@@ -38,7 +38,7 @@ int nfnetlink_send(struct sk_buff *skb, struct net *net, u32 portid,
- 		   unsigned int group, int echo, gfp_t flags);
- int nfnetlink_set_err(struct net *net, u32 portid, u32 group, int error);
- int nfnetlink_unicast(struct sk_buff *skb, struct net *net, u32 portid,
--		      int flags);
-+		      int flags, gfp_t allocation);
+This led to a DMA splat.
+
+Fixes: a6c4fb4441f4 ("iwlwifi: mvm: Add FW paging mechanism for the UMAC on PCI")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 4db1d84..4c16fa7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -160,17 +160,21 @@ void iwl_free_fw_paging(struct iwl_mvm *mvm)
+ 		return;
  
- void nfnl_lock(__u8 subsys_id);
- void nfnl_unlock(__u8 subsys_id);
-diff --git a/net/netfilter/nfnetlink.c b/net/netfilter/nfnetlink.c
-index f6193e7..b0910c7 100644
---- a/net/netfilter/nfnetlink.c
-+++ b/net/netfilter/nfnetlink.c
-@@ -141,9 +141,9 @@ int nfnetlink_set_err(struct net *net, u32 portid, u32 group, int error)
- EXPORT_SYMBOL_GPL(nfnetlink_set_err);
+ 	for (i = 0; i < NUM_OF_FW_PAGING_BLOCKS; i++) {
+-		if (!mvm->fw_paging_db[i].fw_paging_block) {
++		struct iwl_fw_paging *paging = &mvm->fw_paging_db[i];
++
++		if (!paging->fw_paging_block) {
+ 			IWL_DEBUG_FW(mvm,
+ 				     "Paging: block %d already freed, continue to next page\n",
+ 				     i);
  
- int nfnetlink_unicast(struct sk_buff *skb, struct net *net, u32 portid,
--		      int flags)
-+		      int flags, gfp_t allocation)
- {
--	return netlink_unicast(net->nfnl, skb, portid, flags, 0);
-+	return netlink_unicast(net->nfnl, skb, portid, flags, allocation);
- }
- EXPORT_SYMBOL_GPL(nfnetlink_unicast);
- 
-diff --git a/net/netfilter/nfnetlink_log.c b/net/netfilter/nfnetlink_log.c
-index 11f81c8..c834306 100644
---- a/net/netfilter/nfnetlink_log.c
-+++ b/net/netfilter/nfnetlink_log.c
-@@ -357,8 +357,8 @@ __nfulnl_send(struct nfulnl_instance *inst)
- 			goto out;
+ 			continue;
  		}
- 	}
--	nfnetlink_unicast(inst->skb, inst->net, inst->peer_portid,
--			  MSG_DONTWAIT);
-+	nfnetlink_unicast(inst->skb, inst->net, inst->peer_portid, MSG_DONTWAIT,
-+			  gfp_any());
- out:
- 	inst->qlen = 0;
- 	inst->skb = NULL;
-diff --git a/net/netfilter/nfnetlink_queue.c b/net/netfilter/nfnetlink_queue.c
-index 5d36a09..8d7b6ff 100644
---- a/net/netfilter/nfnetlink_queue.c
-+++ b/net/netfilter/nfnetlink_queue.c
-@@ -638,7 +638,8 @@ __nfqnl_enqueue_packet(struct net *net, struct nfqnl_instance *queue,
- 	*packet_id_ptr = htonl(entry->id);
++		dma_unmap_page(mvm->trans->dev, paging->fw_paging_phys,
++			       paging->fw_paging_size, DMA_BIDIRECTIONAL);
  
- 	/* nfnetlink_unicast will either free the nskb or add it to a socket */
--	err = nfnetlink_unicast(nskb, net, queue->peer_portid, MSG_DONTWAIT);
-+	err = nfnetlink_unicast(nskb, net, queue->peer_portid, MSG_DONTWAIT,
-+				GFP_ATOMIC);
- 	if (err < 0) {
- 		if (queue->flags & NFQA_CFG_F_FAIL_OPEN) {
- 			failopen = 1;
+-		__free_pages(mvm->fw_paging_db[i].fw_paging_block,
+-			     get_order(mvm->fw_paging_db[i].fw_paging_size));
+-		mvm->fw_paging_db[i].fw_paging_block = NULL;
++		__free_pages(paging->fw_paging_block,
++			     get_order(paging->fw_paging_size));
++		paging->fw_paging_block = NULL;
+ 	}
+ 	kfree(mvm->trans->paging_download_buf);
+ 	mvm->trans->paging_download_buf = NULL;
 -- 
-2.7.4
+2.8.1
 
