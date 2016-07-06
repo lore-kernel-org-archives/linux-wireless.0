@@ -1,23 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward15j.cmail.yandex.net ([5.255.227.179]:32891 "EHLO
-	forward15j.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752979AbcG2PYV (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:34205 "EHLO
+	mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622AbcGFKXY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2016 11:24:21 -0400
-From: russianneuromancer@ya.ru
-To: ath6kl@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Subject: Dell Venue 8 Pro "Dell Wireless" (Atheros 6k) chipset with SDIO ID 0271:0418 not recognized/supported
-Date: Fri, 29 Jul 2016 23:19:10 +0800
-Message-ID: <14140188.nOOhQX7Q2z@laptop1> (sfid-20160729_172425_969082_A9B2DE2A)
+	Wed, 6 Jul 2016 06:23:24 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] brcmfmac: respect hidden_ssid for AP interfaces
+Date: Wed,  6 Jul 2016 12:22:54 +0200
+Message-Id: <1467800585-10678-1-git-send-email-zajec5@gmail.com> (sfid-20160706_122354_977312_CB6520B1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+This was succesfully tested with 4366B1. A small workaround is needed
+for the main interface otherwise it would stuck at the hidden state.
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 6e6066a..8d1328f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -4662,6 +4662,15 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 			brcmf_err("SET SSID error (%d)\n", err);
+ 			goto exit;
+ 		}
++
++		if (settings->hidden_ssid) {
++			err = brcmf_fil_iovar_int_set(ifp, "closednet", 1);
++			if (err) {
++				brcmf_err("closednet error (%d)\n", err);
++				goto exit;
++			}
++		}
++
+ 		brcmf_dbg(TRACE, "AP mode configuration complete\n");
+ 	} else if (dev_role == NL80211_IFTYPE_P2P_GO) {
+ 		err = brcmf_fil_iovar_int_set(ifp, "chanspec", chanspec);
+@@ -4720,6 +4729,10 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+ 			return err;
+ 		}
  
-Please look into commentary 50 from bugreport https://bugzilla.kernel.org/show_bug.cgi?id=67921#c50 
-There is patch for enabling support of Atheros Wireless adapter in Dell Venue 8 Pro tablet.
- 
-Please review if this possible to include this patch into upstream.
++		/* First BSS doesn't get a full reset */
++		if (ifp->bsscfgidx == 0)
++			brcmf_fil_iovar_int_set(ifp, "closednet", 0);
++
+ 		memset(&join_params, 0, sizeof(join_params));
+ 		err = brcmf_fil_cmd_data_set(ifp, BRCMF_C_SET_SSID,
+ 					     &join_params, sizeof(join_params));
+-- 
+1.8.4.5
+
