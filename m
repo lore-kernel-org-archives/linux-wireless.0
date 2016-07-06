@@ -1,52 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59569 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750883AbcGMGvD (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33524 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753894AbcGFKpJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 02:51:03 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Coelho\, Luciano" <luciano.coelho@intel.com>,
-	"Berg\, Johannes" <johannes.berg@intel.com>,
-	"Ivgi\, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon\, Sara" <sara.sharon@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless ucode is loaded
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
-	<CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
-	<5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>
-	<57840214.8000904@redhat.com>
-Date: Wed, 13 Jul 2016 09:50:53 +0300
-In-Reply-To: <57840214.8000904@redhat.com> (Prarit Bhargava's message of "Mon,
-	11 Jul 2016 16:31:16 -0400")
-Message-ID: <87eg6yav5e.fsf@purkki.adurom.net> (sfid-20160713_085108_740452_4E9E465C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 6 Jul 2016 06:45:09 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:38 +0300
+Message-Id: <1467801651-1816-43-git-send-email-luca@coelho.fi> (sfid-20160706_124524_574714_15E500BD)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 43/56] iwlwifi: mvm: add RX aggregation prints
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prarit Bhargava <prarit@redhat.com> writes:
+From: Sara Sharon <sara.sharon@intel.com>
 
->> We implement thermal zone because we do support it, but the problem is
->> that we need the firmware to be loaded for that. So you can argue that
->> we should register *later* when the firmware is loaded. But this is
->> really not helping all that much because the firmware can also be
->> stopped at any time. So you'd want us to register / unregister the
->> thermal zone anytime the firmware is loaded / unloaded?
->
-> You might have to do that.  I think that if the firmware enables a feature then
-> the act of loading the firmware should run the code that enables the feature.
-> IMO of course.
+Add some prints to track BAID assignment.
 
-But I suspect that the iwlwifi firmware is loaded during interface up
-(and unloaded during interface down) and in that case
-register/unregister would be happening all the time. That doesn't sound
-like a good idea. I would rather try to fix the thermal interface to
-handle the cases when the measurement is not available.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 6 ++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 7 +++++--
+ 2 files changed, 11 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index d13397a..a1cbf48 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -476,6 +476,9 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
+ 		rcu_read_lock();
+ 		sta = rcu_dereference(buf->mvm->fw_id_to_mac_id[buf->sta_id]);
+ 		/* SN is set to the last expired frame + 1 */
++		IWL_DEBUG_HT(buf->mvm,
++			     "Releasing expired frames for sta %u, sn %d\n",
++			     buf->sta_id, sn);
+ 		iwl_mvm_release_frames(buf->mvm, sta, NULL, buf, sn);
+ 		rcu_read_unlock();
+ 	} else if (buf->num_stored) {
+@@ -956,6 +959,9 @@ void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
+ 
+ 	int baid = release->baid;
+ 
++	IWL_DEBUG_HT(mvm, "Frame release notification for BAID %u, NSSN %d\n",
++		     release->baid, le16_to_cpu(release->nssn));
++
+ 	if (WARN_ON_ONCE(baid == IWL_RX_REORDER_DATA_INVALID_BAID))
+ 		return;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index a6d6df9..c0c2ea3 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1768,8 +1768,8 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 
+ 	switch (status & IWL_ADD_STA_STATUS_MASK) {
+ 	case ADD_STA_SUCCESS:
+-		IWL_DEBUG_INFO(mvm, "RX BA Session %sed in fw\n",
+-			       start ? "start" : "stopp");
++		IWL_DEBUG_HT(mvm, "RX BA Session %sed in fw\n",
++			     start ? "start" : "stopp");
+ 		break;
+ 	case ADD_STA_IMMEDIATE_BA_FAILURE:
+ 		IWL_WARN(mvm, "RX BA Session refused by fw\n");
+@@ -1824,6 +1824,8 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		 * supposed to happen) and we will free the session data while
+ 		 * RX is being processed in parallel
+ 		 */
++		IWL_DEBUG_HT(mvm, "Sta %d(%d) is assigned to BAID %d\n",
++			     mvm_sta->sta_id, tid, baid);
+ 		WARN_ON(rcu_access_pointer(mvm->baid_map[baid]));
+ 		rcu_assign_pointer(mvm->baid_map[baid], baid_data);
+ 	} else if (mvm->rx_ba_sessions > 0) {
+@@ -1846,6 +1848,7 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 		del_timer_sync(&baid_data->session_timer);
+ 		RCU_INIT_POINTER(mvm->baid_map[baid], NULL);
+ 		kfree_rcu(baid_data, rcu_head);
++		IWL_DEBUG_HT(mvm, "BAID %d is free\n", baid);
+ 	}
+ 	return 0;
+ 
 -- 
-Kalle Valo
+2.8.1
+
