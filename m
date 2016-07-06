@@ -1,35 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33646 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752055AbcGFLyD (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:35347 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754702AbcGFQUJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 07:54:03 -0400
-Message-ID: <1467806037.25088.26.camel@coelho.fi> (sfid-20160706_135407_230604_ACCB47BC)
-From: Luca Coelho <luca@coelho.fi>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Gregory Greenman <gregory.greenman@intel.com>
-Date: Wed, 06 Jul 2016 14:53:57 +0300
-In-Reply-To: <1467805908.26633.1.camel@sipsolutions.net>
-References: <1467721394-8195-1-git-send-email-luca@coelho.fi>
-	 <1467721394-8195-4-git-send-email-luca@coelho.fi>
-	 <1467805908.26633.1.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 3/7] cfg80211: handle failed skb allocation
+	Wed, 6 Jul 2016 12:20:09 -0400
+Received: by mail-wm0-f45.google.com with SMTP id z126so117897185wme.0
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 09:20:08 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv5 wl-drv-next 0/2] register-field manipulation macros
+Date: Wed,  6 Jul 2016 17:19:35 +0100
+Message-Id: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160706_182056_031545_ECE0F980)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-07-06 at 13:51 +0200, Johannes Berg wrote:
-> On Tue, 2016-07-05 at 15:23 +0300, Luca Coelho wrote:
-> > From: Gregory Greenman <gregory.greenman@intel.com>
-> > 
-> > Handle the case when dev_alloc_skb returns NULL.
-> > 
-> Applied. A Fixes: tag would have been nice, but I added one :)
+Hi!
 
-Oh, did I miss that one? Sorry.  I tried to add "Fixes" to all the
-relevant patches I sent... but probably missed some.
+I've added few lines about the compilation problems in 
+the commit message of patch 1.  I would prefer the mass
+rename of macros in mt7601u not to be part of this series
+so patch 2 is left as it was and I'll follow up once this
+is accepted.
 
---
-Luca.
+== v4 blurb
+
+This set moves to a global header file macros which I find
+very useful and worth popularising.  The basic problem is
+that since C bitfields are not very dependable accessing
+subfields of registers becomes slightly inconvenient.
+It is nice to have the necessary mask and shift operations
+wrapped in a macro.  It is also nice to have that macro
+compute the shift amount based on the mask automatically.
+
+My implementation follows what Felix Fietkau has done in
+mt76.  Hannes Frederic Sowa suggested more use of standard
+Linux/GCC functions.  Since the RFC I've also added a 
+compile-time check to validate that the value passed to
+setters fits in the mask.
+
+I attempted the use of static inlines instead of macros
+but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
+I also noticed that forcing arguments to be u32 for inlines
+makes the compiler use 32bit arithmetic where it could
+get away with 64bit before (on 64bit machines, obviously).
+That's a potential performance concern but probably not
+a very practical one today.  Apart from looking "cleaner"
+static inlines would have the advantage that we could #undef
+the auxiliary macros at the end of the header.
+
+v3:
+Build bot caught a build failure with -Os set.  AFAICT gcc
+did not handle temporary variable I put in the macro
+expression too well.  I work around that by defining
+__BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
+BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
+
+Please review and advise on improvements.
+
+If accepted I think would be best to push this through
+Kalle's tree, since the only existing user is in
+drivers/net/wireless/.
+
+v4:
+ - add documentation in the header.
+v3:
+ - don't use variables in statement expressions;
+ - use __BUILD_BUG_ON_NOT_POWER_OF_2.
+v2:
+ - change Felix's email address.
+
+Jakub Kicinski (2):
+  add basic register-field manipulation macros
+  mt7601u: use linux/bitfield.h
+
+ drivers/net/wireless/mediatek/mt7601u/dma.h     |   2 -
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h |   5 +-
+ drivers/net/wireless/mediatek/mt7601u/util.h    |  77 -----------------
+ include/linux/bitfield.h                        | 109 ++++++++++++++++++++++++
+ include/linux/bug.h                             |   3 +
+ 5 files changed, 116 insertions(+), 80 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+ create mode 100644 include/linux/bitfield.h
+
+-- 
+1.9.1
+
