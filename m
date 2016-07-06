@@ -1,165 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:64788 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753212AbcGTPMg (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:36098 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751990AbcGFA3S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 11:12:36 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
-Date: Wed, 20 Jul 2016 17:12:09 +0200
-Message-ID: <3876342.AU5AfU16PB@wuerfel> (sfid-20160720_171301_915897_CBB9B672)
-In-Reply-To: <wrfjlh0wsg9s.fsf@redhat.com>
-References: <20160719153403.2967812-1-arnd@arndb.de> <4806848.QL77nxBrs4@wuerfel> <wrfjlh0wsg9s.fsf@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 5 Jul 2016 20:29:18 -0400
+From: Masashi Honma <masashi.honma@gmail.com>
+To: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-audit@redhat.com, cluster-devel@redhat.com
+Cc: davem@davemloft.net, johannes@sipsolutions.net,
+	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
+	dledford@redhat.com, sean.hefty@intel.com,
+	hal.rosenstock@gmail.com, paul@paul-moore.com, eparis@redhat.com,
+	zbr@ioremap.net, pshelar@nicira.com, ccaulfie@redhat.com,
+	teigland@redhat.com, bsingharora@gmail.com,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [RFC 3/7] netlink: Add allocation flag to nlmsg_unicast()
+Date: Wed,  6 Jul 2016 09:28:32 +0900
+Message-Id: <1467764916-4983-4-git-send-email-masashi.honma@gmail.com> (sfid-20160706_023103_250884_7F244319)
+In-Reply-To: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
+References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, July 20, 2016 7:25:19 AM CEST Jes Sorensen wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
-> >> I'd like to get rid of all the drivers/staging/rtl* drivers eventually 
-> >
-> > That would be great, yes.
-> >
-> > Can you clarify what the long-term plan is? I see that
-> > drivers/net/wireless/realtek/rtlwifi/ has most of the PCIe parts
-> > and one USB device (rtl8192cu/rtl8188cus) while
-> > drivers/net/wireless/rtl8xxx has all the USB parts including
-> > that one.
-> >
-> > Does that mean we want the staging drivers for PCIe devices
-> > to get merged into rtlwifi, and the remaining USB drivers to get
-> > replaced by r8xxxu?
-> 
-> Well it really all depends on how much time I have and how much others
-> step up and help contribute to the code. For rtl8xxxu my plans are as
-> follows:
-> 
-> 1) rtl8188eu support, since this is the most widely distributed USB
-> dongle which isn't currently supported by a non staging driver. I am
-> currently working on this together with Andrea Merello.
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ crypto/crypto_user.c              |  3 ++-
+ drivers/infiniband/core/netlink.c |  2 +-
+ include/net/genetlink.h           |  2 +-
+ include/net/netlink.h             |  6 ++++--
+ net/core/rtnetlink.c              |  2 +-
+ net/netfilter/nf_tables_api.c     | 10 +++++-----
+ net/netlink/af_netlink.c          |  2 +-
+ net/xfrm/xfrm_user.c              | 15 +++++++++------
+ 8 files changed, 24 insertions(+), 18 deletions(-)
 
-Ok, cool.
+diff --git a/crypto/crypto_user.c b/crypto/crypto_user.c
+index 7097a33..f379b74 100644
+--- a/crypto/crypto_user.c
++++ b/crypto/crypto_user.c
+@@ -249,7 +249,8 @@ drop_alg:
+ 	if (err)
+ 		return err;
+ 
+-	return nlmsg_unicast(crypto_nlsk, skb, NETLINK_CB(in_skb).portid);
++	return nlmsg_unicast(crypto_nlsk, skb, NETLINK_CB(in_skb).portid,
++			     GFP_ATOMIC);
+ }
+ 
+ static int crypto_dump_report(struct sk_buff *skb, struct netlink_callback *cb)
+diff --git a/drivers/infiniband/core/netlink.c b/drivers/infiniband/core/netlink.c
+index 9b8c20c..09037a9 100644
+--- a/drivers/infiniband/core/netlink.c
++++ b/drivers/infiniband/core/netlink.c
+@@ -229,7 +229,7 @@ static void ibnl_rcv(struct sk_buff *skb)
+ int ibnl_unicast(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 			__u32 pid)
+ {
+-	return nlmsg_unicast(nls, skb, pid);
++	return nlmsg_unicast(nls, skb, pid, gfp_any());
+ }
+ EXPORT_SYMBOL(ibnl_unicast);
+ 
+diff --git a/include/net/genetlink.h b/include/net/genetlink.h
+index 8d4608c..b107a35 100644
+--- a/include/net/genetlink.h
++++ b/include/net/genetlink.h
+@@ -334,7 +334,7 @@ int genlmsg_multicast_allns(struct genl_family *family,
+  */
+ static inline int genlmsg_unicast(struct net *net, struct sk_buff *skb, u32 portid)
+ {
+-	return nlmsg_unicast(net->genl_sock, skb, portid);
++	return nlmsg_unicast(net->genl_sock, skb, portid, 0);
+ }
+ 
+ /**
+diff --git a/include/net/netlink.h b/include/net/netlink.h
+index 898e449..df5b533 100644
+--- a/include/net/netlink.h
++++ b/include/net/netlink.h
+@@ -585,12 +585,14 @@ static inline int nlmsg_multicast(struct sock *sk, struct sk_buff *skb,
+  * @sk: netlink socket to spread message to
+  * @skb: netlink message as socket buffer
+  * @portid: netlink portid of the destination socket
++ * @flags: allocation flags
+  */
+-static inline int nlmsg_unicast(struct sock *sk, struct sk_buff *skb, u32 portid)
++static inline int nlmsg_unicast(struct sock *sk, struct sk_buff *skb,
++				u32 portid, gfp_t flags)
+ {
+ 	int err;
+ 
+-	err = netlink_unicast(sk, skb, portid, MSG_DONTWAIT, 0);
++	err = netlink_unicast(sk, skb, portid, MSG_DONTWAIT, flags);
+ 	if (err > 0)
+ 		err = 0;
+ 
+diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
+index 3433633f..7f7927f 100644
+--- a/net/core/rtnetlink.c
++++ b/net/core/rtnetlink.c
+@@ -657,7 +657,7 @@ int rtnl_unicast(struct sk_buff *skb, struct net *net, u32 pid)
+ {
+ 	struct sock *rtnl = net->rtnl;
+ 
+-	return nlmsg_unicast(rtnl, skb, pid);
++	return nlmsg_unicast(rtnl, skb, pid, gfp_any());
+ }
+ EXPORT_SYMBOL(rtnl_unicast);
+ 
+diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c
+index 2c88187..4afb751 100644
+--- a/net/netfilter/nf_tables_api.c
++++ b/net/netfilter/nf_tables_api.c
+@@ -581,7 +581,7 @@ static int nf_tables_gettable(struct net *net, struct sock *nlsk,
+ 	if (err < 0)
+ 		goto err;
+ 
+-	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
++	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
+ 
+ err:
+ 	kfree_skb(skb2);
+@@ -1144,7 +1144,7 @@ static int nf_tables_getchain(struct net *net, struct sock *nlsk,
+ 	if (err < 0)
+ 		goto err;
+ 
+-	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
++	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
+ 
+ err:
+ 	kfree_skb(skb2);
+@@ -1976,7 +1976,7 @@ static int nf_tables_getrule(struct net *net, struct sock *nlsk,
+ 	if (err < 0)
+ 		goto err;
+ 
+-	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
++	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
+ 
+ err:
+ 	kfree_skb(skb2);
+@@ -2664,7 +2664,7 @@ static int nf_tables_getset(struct net *net, struct sock *nlsk,
+ 	if (err < 0)
+ 		goto err;
+ 
+-	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
++	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
+ 
+ err:
+ 	kfree_skb(skb2);
+@@ -3798,7 +3798,7 @@ static int nf_tables_getgen(struct net *net, struct sock *nlsk,
+ 	if (err < 0)
+ 		goto err;
+ 
+-	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
++	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
+ err:
+ 	kfree_skb(skb2);
+ 	return err;
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index c68bf74..acc1ee6 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -2328,7 +2328,7 @@ int nlmsg_notify(struct sock *sk, struct sk_buff *skb, u32 portid,
+ 	if (report) {
+ 		int err2;
+ 
+-		err2 = nlmsg_unicast(sk, skb, portid);
++		err2 = nlmsg_unicast(sk, skb, portid, flags);
+ 		if (!err || err == -ESRCH)
+ 			err = err2;
+ 	}
+diff --git a/net/xfrm/xfrm_user.c b/net/xfrm/xfrm_user.c
+index d516845..4af9977 100644
+--- a/net/xfrm/xfrm_user.c
++++ b/net/xfrm/xfrm_user.c
+@@ -1108,7 +1108,7 @@ static int xfrm_get_spdinfo(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 	if (build_spdinfo(r_skb, net, sportid, seq, *flags) < 0)
+ 		BUG();
+ 
+-	return nlmsg_unicast(net->xfrm.nlsk, r_skb, sportid);
++	return nlmsg_unicast(net->xfrm.nlsk, r_skb, sportid, GFP_ATOMIC);
+ }
+ 
+ static inline size_t xfrm_sadinfo_msgsize(void)
+@@ -1166,7 +1166,7 @@ static int xfrm_get_sadinfo(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 	if (build_sadinfo(r_skb, net, sportid, seq, *flags) < 0)
+ 		BUG();
+ 
+-	return nlmsg_unicast(net->xfrm.nlsk, r_skb, sportid);
++	return nlmsg_unicast(net->xfrm.nlsk, r_skb, sportid, GFP_ATOMIC);
+ }
+ 
+ static int xfrm_get_sa(struct sk_buff *skb, struct nlmsghdr *nlh,
+@@ -1186,7 +1186,8 @@ static int xfrm_get_sa(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 	if (IS_ERR(resp_skb)) {
+ 		err = PTR_ERR(resp_skb);
+ 	} else {
+-		err = nlmsg_unicast(net->xfrm.nlsk, resp_skb, NETLINK_CB(skb).portid);
++		err = nlmsg_unicast(net->xfrm.nlsk, resp_skb,
++				    NETLINK_CB(skb).portid, GFP_ATOMIC);
+ 	}
+ 	xfrm_state_put(x);
+ out_noput:
+@@ -1244,7 +1245,8 @@ static int xfrm_alloc_userspi(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 		goto out;
+ 	}
+ 
+-	err = nlmsg_unicast(net->xfrm.nlsk, resp_skb, NETLINK_CB(skb).portid);
++	err = nlmsg_unicast(net->xfrm.nlsk, resp_skb, NETLINK_CB(skb).portid,
++			    GFP_ATOMIC);
+ 
+ out:
+ 	xfrm_state_put(x);
+@@ -1760,7 +1762,7 @@ static int xfrm_get_policy(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 			err = PTR_ERR(resp_skb);
+ 		} else {
+ 			err = nlmsg_unicast(net->xfrm.nlsk, resp_skb,
+-					    NETLINK_CB(skb).portid);
++					    NETLINK_CB(skb).portid, GFP_KERNEL);
+ 		}
+ 	} else {
+ 		xfrm_audit_policy_delete(xp, err ? 0 : 1, true);
+@@ -1914,7 +1916,8 @@ static int xfrm_get_ae(struct sk_buff *skb, struct nlmsghdr *nlh,
+ 
+ 	if (build_aevent(r_skb, x, &c) < 0)
+ 		BUG();
+-	err = nlmsg_unicast(net->xfrm.nlsk, r_skb, NETLINK_CB(skb).portid);
++	err = nlmsg_unicast(net->xfrm.nlsk, r_skb, NETLINK_CB(skb).portid,
++			    GFP_ATOMIC);
+ 	spin_unlock_bh(&x->lock);
+ 	xfrm_state_put(x);
+ 	return err;
+-- 
+2.7.4
 
-> 2) Beacon support for IBSS and AP mode - hopefully this should make it
-> possible to default rtl8xxxu for rtl8192cu/rtl8188cu devices and disable
-> them in rtlwifi.
-
-Do we have any indication that those two actually work in rtlwifi at the
-moment? My experience seems to match the recommendations for all the
-raspberry pi users that use yet another (worse looking) driver:
-
-https://github.com/raspberrypi/linux/commit/9ee31007a5032a3afe2fcb20c36b34f0ad57df56
-
-> 3) SDIO device support
-> 
-> 4) PCI device support
-> 
-> 5) 802.11ac device support
-> 
-> 3/4/5 not necessarily in that order. There really is no reason why
-> rtl8xxxu shouldn't have SDIO and PCI device support added so the core
-> code can be shared.
-
-Ok, got it.
-
-> > As one data point that I can provide (but you are probably
-> > aware of), I could never get my rtl8188cus stick to work with
-> > rtlwifi, but I found the older r8712u device to work fine with
-> > the staging/rtl8712 driver.
-> 
-> I'd love to hear if the rtl8188cus works better with rtl8xxxu.
-
-It took me far too long to get the driver running on my machine (all my fault),
-but I've tested it now. Unfortunately there is something very wrong
-with my home wireless network at the moment, so I can only confirm
-that it doesn't work any worse than my Intel Wireless card on 2.4GHz,
-but that isn't any good (5GHz devices are fine, but that doesn't
-help on a 2.4GHz-only device).
-
-This is what I see in the kernel log
-
-[  773.862848] usb 2-1.2: new high-speed USB device number 8 using ehci-pci
-[  773.957415] usb 2-1.2: New USB device found, idVendor=0bda, idProduct=8176
-[  773.957425] usb 2-1.2: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-[  773.957430] usb 2-1.2: Manufacturer: Realtek
-[  773.957433] usb 2-1.2: SerialNumber: 00e04c000001
-[  774.115182] usb 2-1.2: Vendor: Realtek
-[  774.115192] usb 2-1.2: Product: 
-[  774.115199] usb 2-1.2: rtl8192cu_parse_efuse: dumping efuse (0x80 bytes):
-[  774.115206] usb 2-1.2: 00: 29 81 00 74 ed 00 00 00
-[  774.115212] usb 2-1.2: 08: ff 00 da 0b 76 81 01 41
-[  774.115219] usb 2-1.2: 10: 32 00 85 62 7e ad 5c f3
-[  774.115225] usb 2-1.2: 18: 70 15 9c b1 0a 03 52 65
-[  774.115231] usb 2-1.2: 20: 61 6c 74 65 6b 00 02 03
-[  774.115237] usb 2-1.2: 28: 00 00 00 00 00 00 00 00
-[  774.115242] usb 2-1.2: 30: 00 00 00 00 00 00 00 00
-[  774.115248] usb 2-1.2: 38: 00 00 00 00 00 00 00 00
-[  774.115254] usb 2-1.2: 40: 00 00 00 00 00 00 00 00
-[  774.115260] usb 2-1.2: 48: 00 00 00 00 00 00 00 00
-[  774.115265] usb 2-1.2: 50: 00 00 00 00 00 00 00 00
-[  774.115271] usb 2-1.2: 58: 06 00 2a 2a 2a 00 00 00
-[  774.115277] usb 2-1.2: 60: 2a 2a 2a 00 00 00 00 00
-[  774.115283] usb 2-1.2: 68: 00 00 00 00 04 04 04 00
-[  774.115289] usb 2-1.2: 70: 00 00 00 00 00 00 05 00
-[  774.115295] usb 2-1.2: 78: 10 00 00 00 36 00 00 00
-[  774.115302] usb 2-1.2: RTL8188CU rev A (TSMC) 1T1R, TX queues 2, WiFi=1, BT=0, GPS=0, HI PA=0
-[  774.115308] usb 2-1.2: RTL8188CU MAC: 5c:f3:70:15:9c:b1
-[  774.115314] usb 2-1.2: rtl8xxxu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
-[  774.115409] usb 2-1.2: Firmware revision 80.0 (signature 0x88c1)
-[  775.692344] rtl8xxxu 2-1.2:1.0 wlan1: renamed from wlan0
-[  775.721151] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
-[  775.746653] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
-[  775.798780] IPv6: ADDRCONF(NETDEV_UP): wlan1: link is not ready
-[  788.414618] wlan2: authenticate with 22:4e:7f:6f:5b:3c
-[  788.452485] wlan2: send auth to 22:4e:7f:6f:5b:3c (try 1/3)
-[  788.457926] wlan2: authenticated
-[  788.462261] wlan2: associate with 22:4e:7f:6f:5b:3c (try 1/3)
-[  788.475159] wlan2: RX AssocResp from 22:4e:7f:6f:5b:3c (capab=0x431 status=0 aid=1)
-[  788.504683] wlan2: associated
-
-throughput for me is 2mbit/s, compared to my intel 2x2 wireless that gets
-5mbit/s on the same network, but I guess that doesn't really mean much
-as long as I have problems with the infrastructure.
-
-rtl8xxxu  IEEE 802.11  ESSID:"openwrt24-ab"  
-          Mode:Managed  Frequency:2.462 GHz  Access Point: 22:4E:7F:6F:5B:3C   
-          Bit Rate=54 Mb/s   Tx-Power=20 dBm   
-          Retry short limit:7   RTS thr=2347 B   Fragment thr:off
-          Power Management:off
-          Link Quality=47/70  Signal level=-63 dBm  
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:0  Invalid misc:38   Missed beacon:0
-
-iwlwifi   IEEE 802.11  ESSID:"openwrt24-ab"  
-          Mode:Managed  Frequency:2.462 GHz  Access Point: 22:4E:7F:6F:5B:3C   
-          Bit Rate=54 Mb/s   Tx-Power=15 dBm   
-          Retry short limit:7   RTS thr:off   Fragment thr:off
-          Power Management:on
-          Link Quality=65/70  Signal level=-45 dBm  
-          Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-          Tx excessive retries:90  Invalid misc:146   Missed beacon:0
-
-
-> For the rtl8712 device, rtl8192su?, then potentially that could be added to
-> rtl8xxxu as well, but it's not a top priority on my list right now.
-
-This one:
-Bus 001 Device 033: ID 0bda:8171 Realtek Semiconductor Corp. RTL8188SU 802.11n WLAN Adapter
-
-I bought the rtl8188su a while ago, while the rtl8188cus (0bda:8176)
-is from this year. According to https://wikidevi.com/wiki/Realtek, it
-seems to be one year older than the rtl8188cus and was almost as common
-in its day. Apparently everyone that used to make ...su device replaced it
-with a ...cu or the newer ...eu chips and that is all you can buy these days
-on the low end.
-
-	Arnd
