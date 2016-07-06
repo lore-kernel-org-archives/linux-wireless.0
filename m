@@ -1,49 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41393 "EHLO mx1.redhat.com"
+Received: from mail2.tohojo.dk ([77.235.48.147]:58164 "EHLO mail2.tohojo.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932627AbcGOL2c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2016 07:28:32 -0400
-Date: Fri, 15 Jul 2016 13:25:53 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "prarit@redhat.com" <prarit@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Coelho, Luciano" <luciano.coelho@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
- ucode is loaded
-Message-ID: <20160715112552.GB6939@redhat.com> (sfid-20160715_132852_471774_1CD55F6F)
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
- <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
- <5783E33E.7090205@redhat.com>
- <1468261650.20877.14.camel@intel.com>
- <20160714092408.GA27271@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3466901DA@hasmsx107.ger.corp.intel.com>
+	id S1754168AbcGFTIg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2016 15:08:36 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org,
+	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+	Tim Shepard <shep@alum.mit.edu>
+Subject: Re: [PATCH v2] ath9k: Switch to using mac80211 intermediate software
+	queues.
+References: <20160618190505.24038-1-toke@toke.dk>
+	<20160706161612.16597-1-toke@toke.dk>
+	<85779557-6c5a-fcd3-60cf-4d3c79aec652@nbd.name>
+	<87r3b6mwej.fsf@toke.dk>
+	<97e6ac26-6ec0-24ee-2834-33f0c86532f3@nbd.name>
+Date: Wed, 06 Jul 2016 21:08:30 +0200
+In-Reply-To: <97e6ac26-6ec0-24ee-2834-33f0c86532f3@nbd.name> (Felix Fietkau's
+	message of "Wed, 6 Jul 2016 20:59:55 +0200")
+Message-ID: <87mvlumvo1.fsf@toke.dk> (sfid-20160706_210840_534013_31D7ADEF)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3466901DA@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 14, 2016 at 09:44:22AM +0000, Grumbach, Emmanuel wrote:
-> > If I understad correctly this error happen 100% of the time, not only during
-> > init. Hence seems there is an issue here, i.e. cur_ucode is not marked
-> > correctly as IWL_UCODE_REGULAR or iwl_mvm_get_temp() fail 100% of the
-> > time (iwl_mvm_is_tt_in_fw() incorrecly return true on Prarit device ? ).
-> 
-> Cur_ucode will not be IWL_UCODE_REGULAR until you load the firmware which
-> will happen upon ifup.
+Felix Fietkau <nbd@nbd.name> writes:
 
-Then creating thermal_device on ifup looks more reasonable to me.
-Otherwise we can create device that can be non-functional virtually
-forever, i.e. when soft RFKILL is enabled. However I admit that
-creating thermal_device when HW is detected has some advantages
-too.
+> On 2016-07-06 20:52, Toke Høiland-Jørgensen wrote:
+>> Felix Fietkau <nbd@nbd.name> writes:
+>> 
+>>> On 2016-07-06 18:16, Toke Høiland-Jørgensen wrote:
+>>>> This switches ath9k over to using the mac80211 intermediate software
+>>>> queueing mechanism for data packets. It removes the queueing inside the
+>>>> driver, except for the retry queue, and instead pulls from mac80211 when
+>>>> a packet is needed. The retry queue is used to store a packet that was
+>>>> pulled but can't be sent immediately.
+>>>> 
+>>>> The old code path in ath_tx_start that would queue packets has been
+>>>> removed completely, as has the qlen limit tunables (since there's no
+>>>> longer a queue in the driver to limit).
+>>>> 
+>>>> Based on Tim's original patch set, but reworked quite thoroughly.
+>>>> 
+>>>> Cc: Tim Shepard <shep@alum.mit.edu>
+>>>> Cc: Felix Fietkau <nbd@nbd.name>
+>>>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+>>>> ---
+>>>> Changes since v1:
+>>>>   - Remove the old intermediate queueing logic completely instead of
+>>>>     just disabling it.
+>>>>   - Remove the qlen debug tunables.
+>>>>   - Remove the force_channel parameter from struct txctl (since we just
+>>>>     removed the code path that was using it).
+>>>> 
+>>>>  drivers/net/wireless/ath/ath9k/ath9k.h     |  12 +-
+>>>>  drivers/net/wireless/ath/ath9k/channel.c   |   2 -
+>>>>  drivers/net/wireless/ath/ath9k/debug.c     |  14 +-
+>>>>  drivers/net/wireless/ath/ath9k/debug.h     |   2 -
+>>>>  drivers/net/wireless/ath/ath9k/debug_sta.c |   4 +-
+>>>>  drivers/net/wireless/ath/ath9k/init.c      |   2 +-
+>>>>  drivers/net/wireless/ath/ath9k/main.c      |   1 +
+>>>>  drivers/net/wireless/ath/ath9k/xmit.c      | 307 +++++++++++------------------
+>>>>  8 files changed, 130 insertions(+), 214 deletions(-)
+>>> Nice work!
+>> 
+>> Thanks :)
+>> 
+>>>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>>>> index fe795fc..4077eeb 100644
+>>>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>>>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>>>> @@ -912,8 +923,16 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
+>>>>  		seqno = bf->bf_state.seqno;
+>>>>  
+>>>>  		/* do not step over block-ack window */
+>>>> -		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno))
+>>>> +		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
+>>>> +			__skb_queue_tail(&tid->retry_q, skb);
+>>>> +
+>>>> +			/* If there are other skbs in the retry q, they are
+>>>> +			 * probably within the BAW, so loop immediately to get
+>>>> +			 * one of them. Otherwise the queue can get stuck. */
+>>>> +			if (!skb_queue_is_first(&tid->retry_q, skb))
+>>>> +				continue;
+>>> Not sure if this can happen, but if we ever somehow end up with two skbs
+>>> in the retry queue that do not fit into the Block-Ack window, there's
+>>> potential for an infinite loop here.
+>> 
+>> Yes, I realise that (v1 contained a comment on that). However, I don't
+>> actually think it can happen: The code will only ever put one skb from
+>> the intermediate queues on the retry queue (ath_tid_pull() is only
+>> called if the retry queue is empty). Everything else on there are actual
+>> retries that have been put on there by ath_tx_complete_aggr(). Figure
+>> the latter will always be within the BAW?
+> I think it would be a good idea to have a check there (with WARN_ON), in
+> case there's some weird corner case with seqno handling, software retry
+> and aggregation state changes.
 
-Stanislaw
+Right, can do :)
+
+-Toke
