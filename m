@@ -1,64 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40249 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751201AbcGFMaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 08:30:55 -0400
-Message-ID: <1467808252.5460.1.camel@sipsolutions.net> (sfid-20160706_143110_099163_E4AE86A7)
-Subject: Re: [RFC] nl80211: Allow GET_INTERFACE dumps to be filtered
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Date: Wed, 06 Jul 2016 14:30:52 +0200
-In-Reply-To: <1467334294-6384-1-git-send-email-denkenz@gmail.com> (sfid-20160630_185128_850366_B817D4E2)
-References: <1467334294-6384-1-git-send-email-denkenz@gmail.com>
-	 (sfid-20160630_185128_850366_B817D4E2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:34953 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752160AbcGFA31 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jul 2016 20:29:27 -0400
+From: Masashi Honma <masashi.honma@gmail.com>
+To: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-audit@redhat.com, cluster-devel@redhat.com
+Cc: davem@davemloft.net, johannes@sipsolutions.net,
+	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
+	dledford@redhat.com, sean.hefty@intel.com,
+	hal.rosenstock@gmail.com, paul@paul-moore.com, eparis@redhat.com,
+	zbr@ioremap.net, pshelar@nicira.com, ccaulfie@redhat.com,
+	teigland@redhat.com, bsingharora@gmail.com,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [RFC 6/7] genetlink: Add allocation flag to genlmsg_unicast()
+Date: Wed,  6 Jul 2016 09:28:35 +0900
+Message-Id: <1467764916-4983-7-git-send-email-masashi.honma@gmail.com> (sfid-20160706_022947_833170_1D93B075)
+In-Reply-To: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
+References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-06-30 at 19:51 -0500, Denis Kenzior wrote:
-> This patch allows GET_INTERFACE dumps to be filtered based on
-> NL80211_ATTR_WIPHY or NL80211_ATTR_WDEV.  The documentation for
-> GET_INTERFACE mentions that this is possible:
-> "Request an interface's configuration; either a dump request on
-> a %NL80211_ATTR_WIPHY or ..."
-> 
-> However, this behavior has not been implemented until now.
-> ---
->  net/wireless/nl80211.c | 36 ++++++++++++++++++++++++++++++++++++
->  1 file changed, 36 insertions(+)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 244d552..24cb4d9 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -2515,15 +2515,47 @@ static int nl80211_send_iface(struct sk_buff
-> *msg, u32 portid, u32 seq, int flag
->  	return -EMSGSIZE;
->  }
->  
-> +static int nl80211_dump_interface_parse(struct sk_buff *skb,
-> +				    struct netlink_callback *cb,
-> +				    int *filter_wiphy)
-> +{
-> +	struct nlattr **tb = nl80211_fam.attrbuf;
-> +	int ret = nlmsg_parse(cb->nlh, GENL_HDRLEN +
-> nl80211_fam.hdrsize,
-> +			      tb, nl80211_fam.maxattr,
-> nl80211_policy);
-> +	/* ignore parse errors for backward compatibility */
-> +	if (ret)
-> +		return 0;
-> +
-> +	if (tb[NL80211_ATTR_WIPHY])
-> +		*filter_wiphy = nla_get_u32(tb[NL80211_ATTR_WIPHY]);
-> +	if (tb[NL80211_ATTR_WDEV])
-> +		*filter_wiphy = nla_get_u64(tb[NL80211_ATTR_WDEV])
-> >> 32;
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ drivers/net/gtp.c                     | 3 ++-
+ drivers/net/team/team.c               | 5 +++--
+ drivers/net/wireless/mac80211_hwsim.c | 2 +-
+ fs/dlm/netlink.c                      | 2 +-
+ include/net/genetlink.h               | 8 +++++---
+ kernel/taskstats.c                    | 2 +-
+ net/hsr/hsr_netlink.c                 | 6 ++++--
+ net/l2tp/l2tp_netlink.c               | 8 +++++---
+ net/openvswitch/datapath.c            | 3 ++-
+ net/tipc/netlink_compat.c             | 2 +-
+ net/wireless/nl80211.c                | 9 +++++----
+ 11 files changed, 30 insertions(+), 20 deletions(-)
 
-The whole ret thing seems a bit pointless since you check the tb[], but
-I guess it's better to be explicit.
+diff --git a/drivers/net/gtp.c b/drivers/net/gtp.c
+index 97e0cbc..0156abb 100644
+--- a/drivers/net/gtp.c
++++ b/drivers/net/gtp.c
+@@ -1210,7 +1210,8 @@ static int gtp_genl_get_pdp(struct sk_buff *skb, struct genl_info *info)
+ 		goto err_unlock_free;
+ 
+ 	rcu_read_unlock();
+-	return genlmsg_unicast(genl_info_net(info), skb2, info->snd_portid);
++	return genlmsg_unicast(genl_info_net(info), skb2, info->snd_portid,
++			       GFP_ATOMIC);
+ 
+ err_unlock_free:
+ 	kfree_skb(skb2);
+diff --git a/drivers/net/team/team.c b/drivers/net/team/team.c
+index f9eebea..3d40b55 100644
+--- a/drivers/net/team/team.c
++++ b/drivers/net/team/team.c
+@@ -2194,7 +2194,8 @@ static int team_nl_cmd_noop(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+-	return genlmsg_unicast(genl_info_net(info), msg, info->snd_portid);
++	return genlmsg_unicast(genl_info_net(info), msg, info->snd_portid,
++			       GFP_KERNEL);
+ 
+ err_msg_put:
+ 	nlmsg_free(msg);
+@@ -2240,7 +2241,7 @@ typedef int team_nl_send_func_t(struct sk_buff *skb,
+ 
+ static int team_nl_send_unicast(struct sk_buff *skb, struct team *team, u32 portid)
+ {
+-	return genlmsg_unicast(dev_net(team->dev), skb, portid);
++	return genlmsg_unicast(dev_net(team->dev), skb, portid, gfp_any());
+ }
+ 
+ static int team_nl_fill_one_option_get(struct sk_buff *skb, struct team *team,
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index 382109bb..5c7bf77 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1008,7 +1008,7 @@ static int hwsim_unicast_netgroup(struct mac80211_hwsim_data *data,
+ 	rcu_read_lock();
+ 	for_each_net_rcu(net) {
+ 		if (data->netgroup == hwsim_net_get_netgroup(net)) {
+-			res = genlmsg_unicast(net, skb, portid);
++			res = genlmsg_unicast(net, skb, portid, GFP_ATOMIC);
+ 			found = true;
+ 			break;
+ 		}
+diff --git a/fs/dlm/netlink.c b/fs/dlm/netlink.c
+index 1e6e227..c498616 100644
+--- a/fs/dlm/netlink.c
++++ b/fs/dlm/netlink.c
+@@ -59,7 +59,7 @@ static int send_data(struct sk_buff *skb)
+ 
+ 	genlmsg_end(skb, data);
+ 
+-	return genlmsg_unicast(&init_net, skb, listener_nlportid);
++	return genlmsg_unicast(&init_net, skb, listener_nlportid, GFP_NOFS);
+ }
+ 
+ static int user_cmd(struct sk_buff *skb, struct genl_info *info)
+diff --git a/include/net/genetlink.h b/include/net/genetlink.h
+index b107a35..5f0f2ff 100644
+--- a/include/net/genetlink.h
++++ b/include/net/genetlink.h
+@@ -331,10 +331,12 @@ int genlmsg_multicast_allns(struct genl_family *family,
+  * genlmsg_unicast - unicast a netlink message
+  * @skb: netlink message as socket buffer
+  * @portid: netlink portid of the destination socket
++ * @flags: allocation flags
+  */
+-static inline int genlmsg_unicast(struct net *net, struct sk_buff *skb, u32 portid)
++static inline int genlmsg_unicast(struct net *net, struct sk_buff *skb,
++				  u32 portid, gfp_t flags)
+ {
+-	return nlmsg_unicast(net->genl_sock, skb, portid, 0);
++	return nlmsg_unicast(net->genl_sock, skb, portid, flags);
+ }
+ 
+ /**
+@@ -344,7 +346,7 @@ static inline int genlmsg_unicast(struct net *net, struct sk_buff *skb, u32 port
+  */
+ static inline int genlmsg_reply(struct sk_buff *skb, struct genl_info *info)
+ {
+-	return genlmsg_unicast(genl_info_net(info), skb, info->snd_portid);
++	return genlmsg_unicast(genl_info_net(info), skb, info->snd_portid, 0);
+ }
+ 
+ /**
+diff --git a/kernel/taskstats.c b/kernel/taskstats.c
+index b3f05ee..ecfcaff 100644
+--- a/kernel/taskstats.c
++++ b/kernel/taskstats.c
+@@ -140,7 +140,7 @@ static void send_cpu_listeners(struct sk_buff *skb,
+ 			if (!skb_next)
+ 				break;
+ 		}
+-		rc = genlmsg_unicast(&init_net, skb_cur, s->pid);
++		rc = genlmsg_unicast(&init_net, skb_cur, s->pid, GFP_KERNEL);
+ 		if (rc == -ECONNREFUSED) {
+ 			s->valid = 0;
+ 			delcount++;
+diff --git a/net/hsr/hsr_netlink.c b/net/hsr/hsr_netlink.c
+index d4d1617..dcc674f 100644
+--- a/net/hsr/hsr_netlink.c
++++ b/net/hsr/hsr_netlink.c
+@@ -351,7 +351,8 @@ static int hsr_get_node_status(struct sk_buff *skb_in, struct genl_info *info)
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(skb_out, msg_head);
+-	genlmsg_unicast(genl_info_net(info), skb_out, info->snd_portid);
++	genlmsg_unicast(genl_info_net(info), skb_out, info->snd_portid,
++			GFP_KERNEL);
+ 
+ 	return 0;
+ 
+@@ -433,7 +434,8 @@ static int hsr_get_node_list(struct sk_buff *skb_in, struct genl_info *info)
+ 	rcu_read_unlock();
+ 
+ 	genlmsg_end(skb_out, msg_head);
+-	genlmsg_unicast(genl_info_net(info), skb_out, info->snd_portid);
++	genlmsg_unicast(genl_info_net(info), skb_out, info->snd_portid,
++			GFP_KERNEL);
+ 
+ 	return 0;
+ 
+diff --git a/net/l2tp/l2tp_netlink.c b/net/l2tp/l2tp_netlink.c
+index 1d02e8d..5a3cc56 100644
+--- a/net/l2tp/l2tp_netlink.c
++++ b/net/l2tp/l2tp_netlink.c
+@@ -100,7 +100,8 @@ static int l2tp_nl_cmd_noop(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+-	return genlmsg_unicast(genl_info_net(info), msg, info->snd_portid);
++	return genlmsg_unicast(genl_info_net(info), msg, info->snd_portid,
++			       GFP_KERNEL);
+ 
+ err_out:
+ 	nlmsg_free(msg);
+@@ -450,7 +451,7 @@ static int l2tp_nl_cmd_tunnel_get(struct sk_buff *skb, struct genl_info *info)
+ 	if (ret < 0)
+ 		goto err_out;
+ 
+-	return genlmsg_unicast(net, msg, info->snd_portid);
++	return genlmsg_unicast(net, msg, info->snd_portid, GFP_KERNEL);
+ 
+ err_out:
+ 	nlmsg_free(msg);
+@@ -820,7 +821,8 @@ static int l2tp_nl_cmd_session_get(struct sk_buff *skb, struct genl_info *info)
+ 	if (ret < 0)
+ 		goto err_out;
+ 
+-	return genlmsg_unicast(genl_info_net(info), msg, info->snd_portid);
++	return genlmsg_unicast(genl_info_net(info), msg, info->snd_portid,
++			       GFP_KERNEL);
+ 
+ err_out:
+ 	nlmsg_free(msg);
+diff --git a/net/openvswitch/datapath.c b/net/openvswitch/datapath.c
+index 524c0fd..374e0ec 100644
+--- a/net/openvswitch/datapath.c
++++ b/net/openvswitch/datapath.c
+@@ -542,7 +542,8 @@ static int queue_userspace_packet(struct datapath *dp, struct sk_buff *skb,
+ 
+ 	((struct nlmsghdr *) user_skb->data)->nlmsg_len = user_skb->len;
+ 
+-	err = genlmsg_unicast(ovs_dp_get_net(dp), user_skb, upcall_info->portid);
++	err = genlmsg_unicast(ovs_dp_get_net(dp), user_skb, upcall_info->portid,
++			      GFP_ATOMIC);
+ 	user_skb = NULL;
+ out:
+ 	if (err)
+diff --git a/net/tipc/netlink_compat.c b/net/tipc/netlink_compat.c
+index 3ad9fab..205577c 100644
+--- a/net/tipc/netlink_compat.c
++++ b/net/tipc/netlink_compat.c
+@@ -1210,7 +1210,7 @@ send:
+ 	rep_nlh = nlmsg_hdr(msg.rep);
+ 	memcpy(rep_nlh, info->nlhdr, len);
+ 	rep_nlh->nlmsg_len = msg.rep->len;
+-	genlmsg_unicast(msg.net, msg.rep, NETLINK_CB(skb).portid);
++	genlmsg_unicast(msg.net, msg.rep, NETLINK_CB(skb).portid, GFP_KERNEL);
+ 
+ 	return err;
+ }
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 244d552..e608937 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -12648,7 +12648,7 @@ static bool __nl80211_unexpected_frame(struct net_device *dev, u8 cmd,
+ 		goto nla_put_failure;
+ 
+ 	genlmsg_end(msg, hdr);
+-	genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
++	genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid, gfp);
+ 	return true;
+ 
+  nla_put_failure:
+@@ -12733,7 +12733,7 @@ int nl80211_send_mgmt(struct cfg80211_registered_device *rdev,
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+-	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
++	return genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid, gfp);
+ 
+  nla_put_failure:
+ 	genlmsg_cancel(msg, hdr);
+@@ -13245,7 +13245,8 @@ void cfg80211_report_obss_beacon(struct wiphy *wiphy,
+ 
+ 		genlmsg_end(msg, hdr);
+ 
+-		genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, reg->nlportid);
++		genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, reg->nlportid,
++				GFP_ATOMIC);
+ 	}
+ 	spin_unlock_bh(&rdev->beacon_registrations_lock);
+ 	return;
+@@ -13623,7 +13624,7 @@ void cfg80211_crit_proto_stopped(struct wireless_dev *wdev, gfp_t gfp)
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+-	genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid);
++	genlmsg_unicast(wiphy_net(&rdev->wiphy), msg, nlportid, gfp);
+ 	return;
+ 
+  nla_put_failure:
+-- 
+2.7.4
 
-Looks fine.
-
-johannes
