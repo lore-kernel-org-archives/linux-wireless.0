@@ -1,56 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipv4.connman.net ([82.165.8.211]:40987 "EHLO mail.holtmann.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750778AbcGIOFl convert rfc822-to-8bit (ORCPT
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:43033 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753185AbcGFIcF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2016 10:05:41 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: [RFC v2 1/3] nl80211: Add nl80211_notify_iface
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <1468044967-9236-2-git-send-email-denkenz@gmail.com>
-Date: Sat, 9 Jul 2016 16:05:33 +0200
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <1601C89F-62D4-42F5-B5A4-2C9E2F02A673@holtmann.org> (sfid-20160709_160610_980414_B29C2A97)
-References: <1468044967-9236-1-git-send-email-denkenz@gmail.com> <1468044967-9236-2-git-send-email-denkenz@gmail.com>
-To: Denis Kenzior <denkenz@gmail.com>
+	Wed, 6 Jul 2016 04:32:05 -0400
+From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
+To: "fixed-term.Oleksij.Rempel@de.bosch.com"
+	<fixed-term.Oleksij.Rempel@de.bosch.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"anders.darander@gmail.com" <anders.darander@gmail.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux@rempel-privat.de" <linux@rempel-privat.de>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
+Subject: Re: ath9k-htc on OHCI -> bogus usb xfer
+Date: Wed, 6 Jul 2016 08:32:00 +0000
+Message-ID: <1467793848.3086.37.camel@synopsys.com> (sfid-20160706_103212_110577_F5A51E1C)
+References: <1467721137.3144.81.camel@synopsys.com>
+	 <577BED2D.7070209@rempel-privat.de> <1467739821.3086.13.camel@synopsys.com>
+	 <577C041C.7080905@rempel-privat.de> <1467790987.3086.15.camel@synopsys.com>
+	 <577CC035.1000404@de.bosch.com>
+In-Reply-To: <577CC035.1000404@de.bosch.com>
+Content-Type: text/plain; charset="utf-7"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Denis,
+Hi+AKA-Oleksij,
 
-> This function emits NL80211_CMD_NEW_INTERFACE or
-> NL80211_CMD_DEL_INTERFACE events.  This is meant to be used by the core
-> to notify userspace applications such as wpa_supplicant when a netdev
-> related to a wireless device has been added or removed.
-> 
-> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
-> ---
-> net/wireless/nl80211.c | 28 ++++++++++++++++++++++++++++
-> net/wireless/nl80211.h |  3 +++
-> 2 files changed, 31 insertions(+)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index f39fd4d..da03e17 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -11855,6 +11855,34 @@ void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
-> 				NL80211_MCGRP_CONFIG, GFP_KERNEL);
-> }
-> 
-> +void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
-> +				struct wireless_dev *wdev,
-> +				enum nl80211_commands cmd)
-> +{
-> +	struct sk_buff *msg;
-> +	bool removal;
-> +
-> +	WARN_ON(cmd != NL80211_CMD_NEW_INTERFACE &&
-> +		cmd != NL80211_CMD_DEL_INTERFACE);
+On Wed, 2016-07-06 at 10:24 +-0200, fixed-term.Oleksij.Rempel wrote:
++AD4AoA-
++AD4- Hm... this Endpoint should be Interrupt, not Bulk. If you search for
++AD4- lsusb of this kind of adapter all of them list EP3 and EP4 as Interrupt.
++AD4- 
++AD4- what did went wrong here? Is it not working in USB High Speed mode?
 
-I would assume that BUILD_BUG_ON does a way job better here.
+Unfortunately as of now on that board EHCI doesn't work.
 
-Regards
+That's not a problem of a particular USB device but something in either
+ECHI host controller or its integration. I do hope we will fix it sometime soon
+(this is a development board and USB controller is implemented in FPGA so
+there's a chance to fix stuff later on).
 
-Marcel
+So given only OHCI works on the board I went forward and attempted to use it
+with Wi-Fi USB dongle.
 
+-Alexey
