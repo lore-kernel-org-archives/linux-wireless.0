@@ -1,58 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36416 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751204AbcGMUUP (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33530 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932071AbcGFKpL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 16:20:15 -0400
-Received: by mail-wm0-f68.google.com with SMTP id x83so7062116wma.3
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 13:20:09 -0700 (PDT)
-From: Alex Briskin <br.shurik@gmail.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: Alex Briskin <br.shurik@gmail.com>
-Subject: [PATCH 0/4 v1] Refactoring ieee80211_iface_work
-Date: Wed, 13 Jul 2016 23:19:52 +0300
-Message-Id: <1468441196-23503-1-git-send-email-br.shurik@gmail.com> (sfid-20160713_222019_250407_2DAE1C6D)
+	Wed, 6 Jul 2016 06:45:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:33 +0300
+Message-Id: <1467801651-1816-38-git-send-email-luca@coelho.fi> (sfid-20160706_124525_233099_065E2595)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 38/56] iwlwifi: remove iwl_ht_params.smps_mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-This is my first patch(s).
+From: Johannes Berg <johannes.berg@intel.com>
 
-I've decided to refactor ieee80211_iface_work function and break it down
-to smaller better defined function.
+This struct member is never set, so remove it.
 
-I think these changes make the code much more readable and do not impose
-no overhead.
+Since this is the last thing that needs mac80211.h, also change
+the includes to no longer use mac80211.h
 
-I've tested these patches with sparse and checkpatch.pl 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/dvm/rxon.c   | 5 -----
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h | 6 +++---
+ 2 files changed, 3 insertions(+), 8 deletions(-)
 
-Function names might not be descriptive enough.
-Hope you find this useful.
-
-Alex Briskin (4):
-  0) [28e464b19aaaba90c8946fb979b58709d55dffcf] 
-	Added new function ieee80211_is_skb_handled_by_pkt_type and moved
-	some code from ieee80211_iface_work to reduce complexity and 
-	improve readability
-
-  1) [486e3d5abb4dc6361cdd923254a2b68d43dcdaba]
-	Refactored code in ieee80211_is_skb_handled_by_pkt_type.
-	"if () {} else if ()" replaced by switch case. 
-
-  2) [9ef2eab8e831420bc6748a4466ffa6b7a99bf447]
-	Added new function ieee80211_is_handled_by_frame_control and moved
-	some code from ieee80211_iface_work to it.
-
-  3) [1de8cdf9a0c05c6a21d9e43e5b55862f6efcf450] 
-	Added new function ieee80211_handle_by_vif_type with code from
-	ieee80211_iface_work.
-
-	At this point ieee80211_iface_work seems to me much more readable
-	and better understood. 
-
- net/mac80211/iface.c | 264 +++++++++++++++++++++++++++++----------------------
- 1 file changed, 150 insertions(+), 114 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c b/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
+index b228552..087e579 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
+@@ -523,11 +523,6 @@ static int iwlagn_rxon_connect(struct iwl_priv *priv,
+ 		return ret;
+ 	}
+ 
+-	if (ctx->vif && ctx->vif->type == NL80211_IFTYPE_STATION &&
+-	    priv->cfg->ht_params && priv->cfg->ht_params->smps_mode)
+-		ieee80211_request_smps(ctx->vif,
+-				       priv->cfg->ht_params->smps_mode);
+-
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 122e895..64108cc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -66,8 +66,9 @@
+ #define __IWL_CONFIG_H__
+ 
+ #include <linux/types.h>
+-#include <net/mac80211.h>
+-
++#include <linux/netdevice.h>
++#include <linux/ieee80211.h>
++#include <linux/nl80211.h>
+ 
+ enum iwl_device_family {
+ 	IWL_DEVICE_FAMILY_UNDEFINED,
+@@ -192,7 +193,6 @@ struct iwl_base_params {
+  * @ht40_bands: bitmap of bands (using %NL80211_BAND_*) that support HT40
+  */
+ struct iwl_ht_params {
+-	enum ieee80211_smps_mode smps_mode;
+ 	u8 ht_greenfield_support:1,
+ 	   stbc:1,
+ 	   ldpc:1,
 -- 
-2.5.0
+2.8.1
 
