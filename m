@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35564 "EHLO
-	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753145AbcGSHLN convert rfc822-to-8bit (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33358 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751243AbcGFKoL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 03:11:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <871t2qw1cz.fsf@kamboji.qca.qualcomm.com>
-References: <20160719160831.79c0303f@canb.auug.org.au> <8760s2w369.fsf@kamboji.qca.qualcomm.com>
- <CACna6rxVFD1MpAEYP_Zd4W8CvgnxSQpa0wJs83jwDJ5v11gZ=Q@mail.gmail.com> <871t2qw1cz.fsf@kamboji.qca.qualcomm.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Tue, 19 Jul 2016 09:11:11 +0200
-Message-ID: <CACna6ry6QgrbUoHuJacmr1EhHZyrwqsXfr51gENvY-0zM9L+3Q@mail.gmail.com> (sfid-20160719_091122_971019_94717556)
-Subject: Re: linux-next: build failure after merge of the wireless-drivers-next
- tree
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Brian Norris <computersforpeace@gmail.com>,
-	"linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-next <linux-next@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Jul 2016 06:44:11 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:10 +0300
+Message-Id: <1467801651-1816-15-git-send-email-luca@coelho.fi> (sfid-20160706_124418_810499_E0554FA0)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 15/56] iwlwifi: mvm: remove unnecessary device conversion when reading the MCC
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 July 2016 at 09:09, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
->
->> On 19 July 2016 at 08:30, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Stephen Rothwell <sfr@canb.auug.org.au> writes:
->>>
->>>> After merging the wireless-drivers-next tree, today's linux-next build
->>>> (powerpc allyesconfig) failed like this:
->>>>
->>>> drivers/mtd/devices/bcm47xxsflash.c: In function 'bcm47xxsflash_bcma_probe':
->>>> drivers/mtd/devices/bcm47xxsflash.c:299:17: error: implicit declaration of function 'ioremap_cache' [-Werror=implicit-function-declaration]
->>>>   b47s->window = ioremap_cache(res->start, resource_size(res));
->>>>                  ^
->>>> drivers/mtd/devices/bcm47xxsflash.c:299:15: warning: assignment makes pointer from integer without a cast [-Wint-conversion]
->>>>   b47s->window = ioremap_cache(res->start, resource_size(res));
->>>>                ^
->>>>
->>>> Caused by commit
->>>>
->>>>   57d8f7dd2132 ("bcma: allow enabling serial flash support on non-MIPS SoCs")
->>>>
->>>> I have reverted that commit for today.
->>>
->>> Thanks, kbuild bot also notified about this.
->>>
->>> Rafał, as the merge window is getting really close I would like to
->>> revert this for now and we can reapply it once we the problem is fully
->>> solved. And we can use my pending branch for build testing the patch
->>> with kbuild bot. What do you think?
->>
->> The simplest fix sounds pretty much as simple as the revert.
->
-> The problem is that I don't have much time, I need to send the pull
-> request to Dave within next few days. The fix might create other
-> problems so I'm not enthusiastic about iterating with this patch at the
-> moment. I think it can wait for 4.9.
+From: Luca Coelho <luciano.coelho@intel.com>
 
-I sent a patch seconds ago, you may just take a look at it. If you
-still prefer to revert my commit, go ahead.
+We convert the mvm device to a PCI device and then back again when
+trying to find the handle for the device's ACPI data.  This is
+unnecessary, so it can be removed.
 
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index 25a9840..182ec20 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -66,7 +66,6 @@
+  *****************************************************************************/
+ #include <linux/firmware.h>
+ #include <linux/rtnetlink.h>
+-#include <linux/pci.h>
+ #include <linux/acpi.h>
+ #include "iwl-trans.h"
+ #include "iwl-csr.h"
+@@ -802,9 +801,8 @@ static int iwl_mvm_get_bios_mcc(struct iwl_mvm *mvm, char *mcc)
+ 	struct acpi_buffer wrdd = {ACPI_ALLOCATE_BUFFER, NULL};
+ 	acpi_status status;
+ 	u32 mcc_val;
+-	struct pci_dev *pdev = to_pci_dev(mvm->dev);
+ 
+-	root_handle = ACPI_HANDLE(&pdev->dev);
++	root_handle = ACPI_HANDLE(mvm->dev);
+ 	if (!root_handle) {
+ 		IWL_DEBUG_LAR(mvm,
+ 			      "Could not retrieve root port ACPI handle\n");
 -- 
-Rafał
+2.8.1
+
