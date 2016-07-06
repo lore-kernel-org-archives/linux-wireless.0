@@ -1,86 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22941 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752025AbcGAHBr (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33350 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751203AbcGFKoH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 03:01:47 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <tamizhchelvam@codeaurora.org>,
-	"Tamizh chelvam" <c_traja@qti.qualcomm.com>
-Subject: [PATCHv3 3/3] ath10k: add testmode support for 10.4 firmware
-Date: Fri, 1 Jul 2016 12:37:15 +0530
-Message-ID: <1467356835-31836-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160701_090150_303940_9FA42CFE)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 6 Jul 2016 06:44:07 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:16 +0300
+Message-Id: <1467801651-1816-21-git-send-email-luca@coelho.fi> (sfid-20160706_124417_010532_DE4DC083)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 21/56] iwlwifi: mvm: fix txq aggregation bug
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+From: Oren Givon <oren.givon@intel.com>
 
-This patch adds testmode support for 10.4 based chipsets
-and added code swap support for UTF binary.
+Fix an issue where nullfunc frames and block ack requests
+had the same tid as aggregation frames and were queued on
+a non aggregation queue. The pending frames counter included
+those frames but the check whether to decrement the pending
+frames counter relied on the tid status and not on the txq id.
+The result was an inconsistent state of the pending frames
+counter followed by a failure to remove the station.
+This failure triggered SYSASSERT 0x3421.
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+In addition, fix a situation in DQA mode where the number
+of pending frames turned negative. This was due to the TX queue
+being on the IWL_EMPTYING_HW_QUEUE_DELBA state and its frames
+were still decremented.
+
+Even though the SYSASSERT issue is fixed when DQA is disabled,
+the issue is not completely solved when DQA is enabled and
+should still be fixed.
+
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Fixes: cf961e16620f ("iwlwifi: mvm: support dqa-mode agg on non-shared queue")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/testmode.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
-index 120f423..7b8e33b 100644
---- a/drivers/net/wireless/ath/ath10k/testmode.c
-+++ b/drivers/net/wireless/ath/ath10k/testmode.c
-@@ -23,6 +23,7 @@
- #include "wmi.h"
- #include "hif.h"
- #include "hw.h"
-+#include "core.h"
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index d91edab..1f23cee 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1329,7 +1329,15 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 			bool send_eosp_ndp = false;
  
- #include "testmode_i.h"
- 
-@@ -240,6 +241,18 @@ static int ath10k_tm_cmd_utf_start(struct ath10k *ar, struct nlattr *tb[])
- 		goto err;
- 	}
- 
-+	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
-+	    ar->testmode.utf_mode_fw.fw_file.codeswap_len) {
-+		ret = ath10k_swap_code_seg_init(ar,
-+					&ar->testmode.utf_mode_fw.fw_file);
-+		if (ret) {
-+			ath10k_warn(ar,
-+				"failed to init utf code swap segment: %d\n",
-+				ret);
-+			goto err_release_utf_mode_fw;
-+		}
-+	}
+ 			spin_lock_bh(&mvmsta->lock);
+-			txq_agg = (mvmsta->tid_data[tid].state == IWL_AGG_ON);
++			if (iwl_mvm_is_dqa_supported(mvm)) {
++				enum iwl_mvm_agg_state state;
 +
- 	spin_lock_bh(&ar->data_lock);
- 	ar->testmode.utf_monitor = true;
- 	spin_unlock_bh(&ar->data_lock);
-@@ -279,6 +292,11 @@ err_power_down:
- 	ath10k_hif_power_down(ar);
++				state = mvmsta->tid_data[tid].state;
++				txq_agg = (state == IWL_AGG_ON ||
++					state == IWL_EMPTYING_HW_QUEUE_DELBA);
++			} else {
++				txq_agg = txq_id >= mvm->first_agg_queue;
++			}
  
- err_release_utf_mode_fw:
-+	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
-+	    ar->testmode.utf_mode_fw.fw_file.codeswap_len)
-+		ath10k_swap_code_seg_release(ar,
-+					     &ar->testmode.utf_mode_fw.fw_file);
-+
- 	release_firmware(ar->testmode.utf_mode_fw.fw_file.firmware);
- 	ar->testmode.utf_mode_fw.fw_file.firmware = NULL;
- 
-@@ -301,6 +319,11 @@ static void __ath10k_tm_cmd_utf_stop(struct ath10k *ar)
- 
- 	spin_unlock_bh(&ar->data_lock);
- 
-+	if (ar->testmode.utf_mode_fw.fw_file.codeswap_data &&
-+	    ar->testmode.utf_mode_fw.fw_file.codeswap_len)
-+		ath10k_swap_code_seg_release(ar,
-+					     &ar->testmode.utf_mode_fw.fw_file);
-+
- 	release_firmware(ar->testmode.utf_mode_fw.fw_file.firmware);
- 	ar->testmode.utf_mode_fw.fw_file.firmware = NULL;
- 
+ 			if (!is_ndp) {
+ 				tid_data->next_reclaimed = next_reclaimed;
 -- 
-1.7.9.5
+2.8.1
 
