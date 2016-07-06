@@ -1,54 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54788 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:53063 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753520AbcGDMiE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2016 08:38:04 -0400
-From: Benjamin Berg <benjamin@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>, Felix Fietkau <nbd@nbd.name>,
-	ath9k-devel@lists.ath9k.org,
-	Benjamin Berg <benjamin.berg@open-mesh.com>
-Subject: [PATCH v2 4/6] ath9k: Expose tsf_adjustment in mac80211 tsf getters and setters.
-Date: Mon,  4 Jul 2016 14:37:23 +0200
-Message-Id: <1467635845-32653-4-git-send-email-benjamin@sipsolutions.net> (sfid-20160704_143809_461486_AC494C3C)
-In-Reply-To: <1467635845-32653-1-git-send-email-benjamin@sipsolutions.net>
-References: <1467635845-32653-1-git-send-email-benjamin@sipsolutions.net>
+	id S1751925AbcGFMhF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2016 08:37:05 -0400
+From: Prarit Bhargava <prarit@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+	Sara Sharon <sara.sharon@intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH] iwlwifi, Do not implement thermal zone unless ucode is loaded
+Date: Wed,  6 Jul 2016 08:37:03 -0400
+Message-Id: <1467808623-25255-1-git-send-email-prarit@redhat.com> (sfid-20160706_143725_610071_94EF7C66)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Benjamin Berg <benjamin.berg@open-mesh.com>
+The iwlwifi driver implements a thermal zone and hwmon device, but
+returns -EIO on temperature reads if the firmware isn't loaded.  This
+results in the error
 
-The ath9k driver modifies the TSF for VIFs for the purpose of sending
-beacons in a staggered fashion. This patch exposes this VIF specific
-adjustment of the TSF value to mac80211. Without the change the TSF
-routines handle the hardware TSF value instead of the actual TSF value as
-seen on the air.
+iwlwifi-virtual-0
+Adapter: Virtual device
+ERROR: Can't get value of subfeature temp1_input: I/O error
+temp1:            N/A
 
-Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
+being output when using sensors from the lm-sensors package.  Since
+the temperature cannot be read unless the ucode is loaded there is no
+reason to add the interface only to have it return an error 100% of
+the time.
+
+This patch moves the firmware check to iwl_mvm_thermal_zone_register() and
+stops the thermal zone from being created if the ucode hasn't been loaded.
+
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+Cc: Johannes Berg <johannes.berg@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: Luca Coelho <luciano.coelho@intel.com>
+Cc: Intel Linux Wireless <linuxwifi@intel.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Cc: Sara Sharon <sara.sharon@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
 ---
- drivers/net/wireless/ath/ath9k/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c |   13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 375c2ac..f2ebc85 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1835,6 +1835,7 @@ static u64 ath9k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
- 		tsf = sc->cur_chan->tsf_val +
- 		      ath9k_hw_get_tsf_offset(&sc->cur_chan->tsf_ts, NULL);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 58fc7b3c711c..64802659711f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -634,11 +634,6 @@ static int iwl_mvm_tzone_get_temp(struct thermal_zone_device *device,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
+-	if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR)) {
+-		ret = -EIO;
+-		goto out;
+-	}
+-
+ 	ret = iwl_mvm_get_temp(mvm, &temp);
+ 	if (ret)
+ 		goto out;
+@@ -684,11 +679,6 @@ static int iwl_mvm_tzone_set_trip_temp(struct thermal_zone_device *device,
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
+-	if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR)) {
+-		ret = -EIO;
+-		goto out;
+-	}
+-
+ 	if (trip < 0 || trip >= IWL_MAX_DTS_TRIPS) {
+ 		ret = -EINVAL;
+ 		goto out;
+@@ -750,6 +740,9 @@ static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
+ 		return;
  	}
-+	tsf += le64_to_cpu(avp->tsf_adjust);
- 	ath9k_ps_restore(sc);
- 	mutex_unlock(&sc->mutex);
  
-@@ -1850,6 +1851,7 @@ static void ath9k_set_tsf(struct ieee80211_hw *hw,
++	if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR))
++		return;
++
+ 	BUILD_BUG_ON(ARRAY_SIZE(name) >= THERMAL_NAME_LENGTH);
  
- 	mutex_lock(&sc->mutex);
- 	ath9k_ps_wakeup(sc);
-+	tsf -= le64_to_cpu(avp->tsf_adjust);
- 	getrawmonotonic(&avp->chanctx->tsf_ts);
- 	if (sc->cur_chan == avp->chanctx)
- 		ath9k_hw_settsf64(sc->sc_ah, tsf);
+ 	mvm->tz_device.tzone = thermal_zone_device_register(name,
 -- 
-2.8.1
+1.7.9.3
 
