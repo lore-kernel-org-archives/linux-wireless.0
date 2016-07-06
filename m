@@ -1,56 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33605 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbcGTHCT (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33618 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753983AbcGFKqV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 03:02:19 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Reizer\, Eyal" <eyalr@ti.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree\@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi\@vger.kernel.org" <linux-spi@vger.kernel.org>,
-	Rob Herring <robh@kernel.org>
-Subject: Re: [PATCHv8] wlcore: spi: add wl18xx support
-References: <1468994768-23609-1-git-send-email-eyalr@ti.com>
-	<8665E2433BC68541A24DFFCA87B70F5B36161990@DFRE01.ent.ti.com>
-Date: Wed, 20 Jul 2016 10:02:13 +0300
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36161990@DFRE01.ent.ti.com>
-	(Eyal Reizer's message of "Wed, 20 Jul 2016 06:58:12 +0000")
-Message-ID: <871t2ovll6.fsf@kamboji.qca.qualcomm.com> (sfid-20160720_090241_472758_E4FCCB51)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 6 Jul 2016 06:46:21 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Golan Ben-Ami <golan.ben.ami@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:30 +0300
+Message-Id: <1467801651-1816-35-git-send-email-luca@coelho.fi> (sfid-20160706_125026_180482_4A3A01E7)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 35/56] iwlwifi: mvm: write the correct internal TXF index
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Reizer, Eyal" <eyalr@ti.com> writes:
+From: Golan Ben-Ami <golan.ben.ami@intel.com>
 
-> Add support for using with both wl12xx and wl18xx.
->
-> - all wilink family needs special init command for entering wspi mode.
->   extra clock cycles should be sent after the spi init command while the
->   cs pin is high.
-> - Use inverted chip select for sending a dummy 4 bytes command that
->   completes the init stage.
->
-> Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> Acked-by: Rob Herring <robh@kernel.org>
-> ---
-> v1->v2:update device tree bindings configuration
-> v2->v3:revert from manual gpio manipulation. use inverted chip select instead
-> for sending the extra init cycle which, achieves the same hardware purpose.
-> update device tree bindings docucmentation accordingly
-> v3->v4: Remove redundant data form binding documentation and fix chip select
-> number mismatch in wl1271 example
-> v4->v5: Rebase on top of head of wireless-drivers-next
-> v5->v6: Add ACKs
-> v6->v7: Mail format issues
-> v7->v8: Remove redundant varaible from wlcore_probe_of
+The TX fifos are arranged consecutively in the SMEM, beginning
+with the regular fifos, and tailed by the internal fifos.
+In the current code, while trying to read the internal fifos,
+we read the fifos beginning with the index zero.
+By doing this we actually re-read the regular fifos.
 
-I have already applied this patch, it's too late to send a new version.
-Now you need to send a new patch, on top of wireless-drivers-next, which
-removes the redundant variable.
+In order to read the internal fifos, start the reading index
+from the number of regular fifos configured by the fw.
 
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Fixes: 39654cb3a6a2 ("iwlwifi: don't access a nonexistent register upon assert")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index 1ece19d..6e692a8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -288,7 +288,8 @@ static void iwl_mvm_dump_fifos(struct iwl_mvm *mvm,
+ 			fifo_hdr->fifo_num = cpu_to_le32(i);
+ 
+ 			/* Mark the number of TXF we're pulling now */
+-			iwl_trans_write_prph(mvm->trans, TXF_CPU2_NUM, i);
++			iwl_trans_write_prph(mvm->trans, TXF_CPU2_NUM, i +
++				ARRAY_SIZE(mvm->shared_mem_cfg.txfifo_size));
+ 
+ 			fifo_hdr->available_bytes =
+ 				cpu_to_le32(iwl_trans_read_prph(mvm->trans,
 -- 
-Kalle Valo
+2.8.1
+
