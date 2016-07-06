@@ -1,41 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37212 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031AbcGBHVX (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33646 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752055AbcGFLyD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jul 2016 03:21:23 -0400
-Date: Sat, 2 Jul 2016 10:20:45 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [patch] mwifiex: fix mwifiex_add_virtual_intf()
-Message-ID: <20160702072045.GA25758@mwanda> (sfid-20160702_092127_969122_C099FBE6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 6 Jul 2016 07:54:03 -0400
+Message-ID: <1467806037.25088.26.camel@coelho.fi> (sfid-20160706_135407_230604_ACCB47BC)
+From: Luca Coelho <luca@coelho.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Gregory Greenman <gregory.greenman@intel.com>
+Date: Wed, 06 Jul 2016 14:53:57 +0300
+In-Reply-To: <1467805908.26633.1.camel@sipsolutions.net>
+References: <1467721394-8195-1-git-send-email-luca@coelho.fi>
+	 <1467721394-8195-4-git-send-email-luca@coelho.fi>
+	 <1467805908.26633.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 3/7] cfg80211: handle failed skb allocation
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We accidentally left some if statements out so the
-mwifiex_add_virtual_intf() function returns early.
+On Wed, 2016-07-06 at 13:51 +0200, Johannes Berg wrote:
+> On Tue, 2016-07-05 at 15:23 +0300, Luca Coelho wrote:
+> > From: Gregory Greenman <gregory.greenman@intel.com>
+> > 
+> > Handle the case when dev_alloc_skb returns NULL.
+> > 
+> Applied. A Fixes: tag would have been nice, but I added one :)
 
-Fixes: 7311ea850079 ('mwifiex: fix AP start problem for newly added interface')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Oh, did I miss that one? Sorry.  I tried to add "Fixes" to all the
+relevant patches I sent... but probably missed some.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 99e8cf1..5de9f63 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2865,9 +2865,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
- 
- 	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
- 			       HostCmd_ACT_GEN_SET, 0, NULL, true);
-+	if (ret)
- 		return ERR_PTR(ret);
- 
- 	ret = mwifiex_sta_init_cmd(priv, false, false);
-+	if (ret)
- 		return ERR_PTR(ret);
- 
- 	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
+--
+Luca.
