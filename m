@@ -1,266 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:11097 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752867AbcGYPwQ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33596 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753933AbcGFKqO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2016 11:52:16 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6PFoFx6031715
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:52:15 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0a-0016f401.pphosted.com with ESMTP id 24c5xkfr1m-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:52:15 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2 7/8] mwifiex: add HT aggregation support for adhoc mode
-Date: Mon, 25 Jul 2016 21:21:10 +0530
-Message-ID: <1469461871-3135-8-git-send-email-akarwar@marvell.com> (sfid-20160725_175219_831772_2FB6257D)
-In-Reply-To: <1469461871-3135-1-git-send-email-akarwar@marvell.com>
-References: <1469461871-3135-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 6 Jul 2016 06:46:14 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:37 +0300
+Message-Id: <1467801651-1816-42-git-send-email-luca@coelho.fi> (sfid-20160706_125024_780473_D1643AA7)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 42/56] iwlwifi: mvm: support dqa-mode scd queue redirection
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-This patch adds HT support for adhoc station. Firmware will upload
-ibss sta connect event with beacon data, whenever new station joins
-the adhoc network. Driver will check the HT IE and decide whether to
-support HT aggreagation or not.
+Make sure that in DQA mode, the SCD's configuration of a
+queue is redirected to the lower AC of the streams of the
+queue.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Make sure that this queue is redirected to the lowest AC
+when adding a new RA/TID to an existing queue. If it isn't -
+redirect the queue.
+
+Also, as redirection revealed a bug in the marking of a
+shared queue, this patch contains a small fix to make
+sure a shared queue maintains the appropriate "shared queue
+marking".
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/11n.h       |   7 +-
- drivers/net/wireless/marvell/mwifiex/fw.h        |   9 ++
- drivers/net/wireless/marvell/mwifiex/sta_event.c | 132 ++++++++++++++++++++++-
- 3 files changed, 144 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 115 +++++++++++++++++++++++++--
+ 1 file changed, 110 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n.h b/drivers/net/wireless/marvell/mwifiex/11n.h
-index afdd58a..ea0fa68 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n.h
-+++ b/drivers/net/wireless/marvell/mwifiex/11n.h
-@@ -171,9 +171,10 @@ mwifiex_find_stream_to_delete(struct mwifiex_private *priv, int ptr_tid,
- static inline int mwifiex_is_sta_11n_enabled(struct mwifiex_private *priv,
- 					     struct mwifiex_sta_node *node)
- {
--
--	if (!node || (priv->bss_role != MWIFIEX_BSS_ROLE_UAP) ||
--	    !priv->ap_11n_enabled)
-+	if (!node || ((priv->bss_role == MWIFIEX_BSS_ROLE_UAP) &&
-+		      !priv->ap_11n_enabled) ||
-+	    ((priv->bss_mode == NL80211_IFTYPE_ADHOC) &&
-+	     !priv->adapter->adhoc_11n_enabled))
- 		return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 1617de7..a6d6df9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -513,6 +513,101 @@ static int iwl_mvm_get_shared_queue(struct iwl_mvm *mvm,
+ 	return queue;
+ }
  
- 	return node->is_11n_enabled;
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 3b40e0d..a88030a 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -210,6 +210,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- 
- #define MWIFIEX_TX_DATA_BUF_SIZE_4K        4096
- #define MWIFIEX_TX_DATA_BUF_SIZE_8K        8192
-+#define MWIFIEX_TX_DATA_BUF_SIZE_12K       12288
- 
- #define ISSUPP_11NENABLED(FwCapInfo) (FwCapInfo & BIT(11))
- #define ISSUPP_TDLS_ENABLED(FwCapInfo) (FwCapInfo & BIT(14))
-@@ -506,6 +507,8 @@ enum P2P_MODES {
- #define EVENT_RSSI_HIGH                 0x0000001c
- #define EVENT_SNR_HIGH                  0x0000001d
- #define EVENT_IBSS_COALESCED            0x0000001e
-+#define EVENT_IBSS_STA_CONNECT          0x00000020
-+#define EVENT_IBSS_STA_DISCONNECT       0x00000021
- #define EVENT_DATA_RSSI_LOW             0x00000024
- #define EVENT_DATA_SNR_LOW              0x00000025
- #define EVENT_DATA_RSSI_HIGH            0x00000026
-@@ -1686,6 +1689,12 @@ struct mwifiex_ie_types_wmm_param_set {
- 	u8 wmm_ie[1];
- };
- 
-+struct mwifiex_ie_types_mgmt_frame {
-+	struct mwifiex_ie_types_header header;
-+	__le16 frame_control;
-+	u8 frame_contents[0];
-+};
-+
- struct mwifiex_ie_types_wmm_queue_status {
- 	struct mwifiex_ie_types_header header;
- 	u8 queue_index;
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-index b973ee8..9df0c4d 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
-@@ -25,6 +25,99 @@
- #include "wmm.h"
- #include "11n.h"
- 
-+#define MWIFIEX_IBSS_CONNECT_EVT_FIX_SIZE    12
-+
-+static int mwifiex_check_ibss_peer_capabilties(struct mwifiex_private *priv,
-+					       struct mwifiex_sta_node *sta_ptr,
-+					       struct sk_buff *event)
++/*
++ * If a given queue has a higher AC than the TID stream that is being added to
++ * it, the queue needs to be redirected to the lower AC. This function does that
++ * in such a case, otherwise - if no redirection required - it does nothing,
++ * unless the %force param is true.
++ */
++static int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
++				      int ac, int ssn, unsigned int wdg_timeout,
++				      bool force)
 +{
-+	int evt_len, ele_len;
-+	u8 *curr;
-+	struct ieee_types_header *ele_hdr;
-+	struct mwifiex_ie_types_mgmt_frame *tlv_mgmt_frame;
-+	const struct ieee80211_ht_cap *ht_cap;
-+	const struct ieee80211_vht_cap *vht_cap;
++	struct iwl_scd_txq_cfg_cmd cmd = {
++		.scd_queue = queue,
++		.enable = 0,
++	};
++	bool shared_queue;
++	unsigned long mq;
++	int ret;
 +
-+	skb_pull(event, MWIFIEX_IBSS_CONNECT_EVT_FIX_SIZE);
-+	evt_len = event->len;
-+	curr = event->data;
++	/*
++	 * If the AC is lower than current one - FIFO needs to be redirected to
++	 * the lowest one of the streams in the queue. Check if this is needed
++	 * here.
++	 * Notice that the enum ieee80211_ac_numbers is "flipped", so BK is with
++	 * value 3 and VO with value 0, so to check if ac X is lower than ac Y
++	 * we need to check if the numerical value of X is LARGER than of Y.
++	 */
++	spin_lock_bh(&mvm->queue_info_lock);
++	if (ac <= mvm->queue_info[queue].mac80211_ac && !force) {
++		spin_unlock_bh(&mvm->queue_info_lock);
 +
-+	mwifiex_dbg_dump(priv->adapter, EVT_D, "ibss peer capabilties:",
-+			 event->data, event->len);
-+
-+	skb_push(event, MWIFIEX_IBSS_CONNECT_EVT_FIX_SIZE);
-+
-+	tlv_mgmt_frame = (void *)curr;
-+	if (evt_len >= sizeof(*tlv_mgmt_frame) &&
-+	    le16_to_cpu(tlv_mgmt_frame->header.type) ==
-+	    TLV_TYPE_UAP_MGMT_FRAME) {
-+		/* Locate curr pointer to the start of beacon tlv,
-+		 * timestamp 8 bytes, beacon intervel 2 bytes,
-+		 * capability info 2 bytes, totally 12 byte beacon header
-+		 */
-+		evt_len = le16_to_cpu(tlv_mgmt_frame->header.len);
-+		curr += (sizeof(*tlv_mgmt_frame) + 12);
-+	} else {
-+		mwifiex_dbg(priv->adapter, MSG,
-+			    "management frame tlv not found!\n");
++		IWL_DEBUG_TX_QUEUES(mvm,
++				    "No redirection needed on TXQ #%d\n",
++				    queue);
 +		return 0;
 +	}
 +
-+	while (evt_len >= sizeof(*ele_hdr)) {
-+		ele_hdr = (struct ieee_types_header *)curr;
-+		ele_len = ele_hdr->len;
++	cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
++	cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[mvm->queue_info[queue].mac80211_ac];
++	mq = mvm->queue_info[queue].hw_queue_to_mac80211;
++	shared_queue = (mvm->queue_info[queue].hw_queue_refcount > 1);
++	spin_unlock_bh(&mvm->queue_info_lock);
 +
-+		if (evt_len < ele_len + sizeof(*ele_hdr))
-+			break;
++	IWL_DEBUG_TX_QUEUES(mvm, "Redirecting shared TXQ #%d to FIFO #%d\n",
++			    queue, iwl_mvm_ac_to_tx_fifo[ac]);
 +
-+		switch (ele_hdr->element_id) {
-+		case WLAN_EID_HT_CAPABILITY:
-+			sta_ptr->is_11n_enabled = true;
-+			ht_cap = (void *)(ele_hdr + 2);
-+			sta_ptr->max_amsdu = le16_to_cpu(ht_cap->cap_info) &
-+				IEEE80211_HT_CAP_MAX_AMSDU ?
-+				MWIFIEX_TX_DATA_BUF_SIZE_8K :
-+				MWIFIEX_TX_DATA_BUF_SIZE_4K;
-+			mwifiex_dbg(priv->adapter, INFO,
-+				    "11n enabled!, max_amsdu : %d\n",
-+				    sta_ptr->max_amsdu);
-+			break;
-+
-+		case WLAN_EID_VHT_CAPABILITY:
-+			sta_ptr->is_11ac_enabled = true;
-+			vht_cap = (void *)(ele_hdr + 2);
-+			/* check VHT MAXMPDU capability */
-+			switch (le32_to_cpu(vht_cap->vht_cap_info) & 0x3) {
-+			case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454:
-+				sta_ptr->max_amsdu =
-+					MWIFIEX_TX_DATA_BUF_SIZE_12K;
-+				break;
-+			case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991:
-+				sta_ptr->max_amsdu =
-+					MWIFIEX_TX_DATA_BUF_SIZE_8K;
-+				break;
-+			case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895:
-+				sta_ptr->max_amsdu =
-+					MWIFIEX_TX_DATA_BUF_SIZE_4K;
-+			default:
-+				break;
-+			}
-+
-+			mwifiex_dbg(priv->adapter, INFO,
-+				    "11ac enabled!, max_amsdu : %d\n",
-+				    sta_ptr->max_amsdu);
-+			break;
-+		default:
-+			break;
-+		}
-+
-+		curr += (ele_len + sizeof(*ele_hdr));
-+		evt_len -= (ele_len + sizeof(*ele_hdr));
++	/* Stop MAC queues and wait for this queue to empty */
++	iwl_mvm_stop_mac_queues(mvm, mq);
++	ret = iwl_trans_wait_tx_queue_empty(mvm->trans, BIT(queue));
++	if (ret) {
++		IWL_ERR(mvm, "Error draining queue %d before reconfig\n",
++			queue);
++		ret = -EIO;
++		goto out;
 +	}
 +
-+	return 0;
++	/* Before redirecting the queue we need to de-activate it */
++	iwl_trans_txq_disable(mvm->trans, queue, false);
++	ret = iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd), &cmd);
++	if (ret)
++		IWL_ERR(mvm, "Failed SCD disable TXQ %d (ret=%d)\n", queue,
++			ret);
++
++	/* Make sure the SCD wrptr is correctly set before reconfiguring */
++	iwl_trans_txq_enable(mvm->trans, queue, iwl_mvm_ac_to_tx_fifo[ac],
++			     cmd.sta_id, tid, LINK_QUAL_AGG_FRAME_LIMIT_DEF,
++			     ssn, wdg_timeout);
++
++	/* TODO: Work-around SCD bug when moving back by multiples of 0x40 */
++
++	/* Redirect to lower AC */
++	iwl_mvm_reconfig_scd(mvm, queue, iwl_mvm_ac_to_tx_fifo[ac],
++			     cmd.sta_id, tid, LINK_QUAL_AGG_FRAME_LIMIT_DEF,
++			     ssn);
++
++	/* Update AC marking of the queue */
++	spin_lock_bh(&mvm->queue_info_lock);
++	mvm->queue_info[queue].mac80211_ac = ac;
++	spin_unlock_bh(&mvm->queue_info_lock);
++
++	/*
++	 * Mark queue as shared in transport if shared
++	 * Note this has to be done after queue enablement because enablement
++	 * can also set this value, and there is no indication there to shared
++	 * queues
++	 */
++	if (shared_queue)
++		iwl_trans_txq_set_shared_mode(mvm->trans, queue, true);
++
++out:
++	/* Continue using the MAC queues */
++	iwl_mvm_start_mac_queues(mvm, mq);
++
++	return ret;
 +}
 +
- /*
-  * This function resets the connection state.
-  *
-@@ -519,6 +612,8 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
-  *      - EVENT_LINK_QUALITY
-  *      - EVENT_PRE_BEACON_LOST
-  *      - EVENT_IBSS_COALESCED
-+ *      - EVENT_IBSS_STA_CONNECT
-+ *      - EVENT_IBSS_STA_DISCONNECT
-  *      - EVENT_WEP_ICV_ERR
-  *      - EVENT_BW_CHANGE
-  *      - EVENT_HOSTWAKE_STAIE
-@@ -547,9 +642,11 @@ void mwifiex_bt_coex_wlan_param_update_event(struct mwifiex_private *priv,
- int mwifiex_process_sta_event(struct mwifiex_private *priv)
- {
- 	struct mwifiex_adapter *adapter = priv->adapter;
--	int ret = 0;
-+	int ret = 0, i;
- 	u32 eventcause = adapter->event_cause;
- 	u16 ctrl, reason_code;
-+	u8 ibss_sta_addr[ETH_ALEN];
-+	struct mwifiex_sta_node *sta_ptr;
+ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 				   struct ieee80211_sta *sta, u8 ac, int tid,
+ 				   struct ieee80211_hdr *hdr)
+@@ -680,17 +775,21 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 			iwl_mvm_invalidate_sta_queue(mvm, queue,
+ 						     disable_agg_tids, false);
+ 		}
+-
+-		/* Mark queue as shared in transport */
+-		iwl_trans_txq_set_shared_mode(mvm->trans, queue, true);
+-
+-		/* TODO: a redirection may be required - DQA phase 2 */
+ 	}
  
- 	switch (eventcause) {
- 	case EVENT_DUMMY_HOST_WAKEUP_SIGNAL:
-@@ -775,6 +872,39 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
- 				HostCmd_CMD_802_11_IBSS_COALESCING_STATUS,
- 				HostCmd_ACT_GEN_GET, 0, NULL, false);
- 		break;
-+	case EVENT_IBSS_STA_CONNECT:
-+		ether_addr_copy(ibss_sta_addr, adapter->event_body + 2);
-+		mwifiex_dbg(adapter, EVENT, "event: IBSS_STA_CONNECT %pM\n",
-+			    ibss_sta_addr);
-+		sta_ptr = mwifiex_add_sta_entry(priv, ibss_sta_addr);
-+		if (sta_ptr && adapter->adhoc_11n_enabled) {
-+			mwifiex_check_ibss_peer_capabilties(priv, sta_ptr,
-+							    adapter->event_skb);
-+			if (sta_ptr->is_11n_enabled)
-+				for (i = 0; i < MAX_NUM_TID; i++)
-+					sta_ptr->ampdu_sta[i] =
-+					priv->aggr_prio_tbl[i].ampdu_user;
-+			else
-+				for (i = 0; i < MAX_NUM_TID; i++)
-+					sta_ptr->ampdu_sta[i] =
-+						BA_STREAM_NOT_ALLOWED;
-+			memset(sta_ptr->rx_seq, 0xff, sizeof(sta_ptr->rx_seq));
-+		}
+ 	ssn = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+ 	iwl_mvm_enable_txq(mvm, queue, mac_queue, ssn, &cfg,
+ 			   wdg_timeout);
+ 
++	/*
++	 * Mark queue as shared in transport if shared
++	 * Note this has to be done after queue enablement because enablement
++	 * can also set this value, and there is no indication there to shared
++	 * queues
++	 */
++	if (shared_queue)
++		iwl_trans_txq_set_shared_mode(mvm->trans, queue, true);
 +
-+		break;
-+	case EVENT_IBSS_STA_DISCONNECT:
-+		ether_addr_copy(ibss_sta_addr, adapter->event_body + 2);
-+		mwifiex_dbg(adapter, EVENT, "event: IBSS_STA_DISCONNECT %pM\n",
-+			    ibss_sta_addr);
-+		sta_ptr = mwifiex_get_sta_entry(priv, ibss_sta_addr);
-+		if (sta_ptr && sta_ptr->is_11n_enabled) {
-+			mwifiex_11n_del_rx_reorder_tbl_by_ta(priv,
-+							     ibss_sta_addr);
-+			mwifiex_del_tx_ba_stream_tbl_by_ra(priv, ibss_sta_addr);
-+		}
-+		mwifiex_wmm_del_peer_ra_list(priv, ibss_sta_addr);
-+		mwifiex_del_sta_entry(priv, ibss_sta_addr);
-+		break;
- 	case EVENT_ADDBA:
- 		mwifiex_dbg(adapter, EVENT, "event: ADDBA Request\n");
- 		mwifiex_send_cmd(priv, HostCmd_CMD_11N_ADDBA_RSP,
+ 	spin_lock_bh(&mvmsta->lock);
+ 	mvmsta->tid_data[tid].txq_id = queue;
+ 	mvmsta->tid_data[tid].is_tid_active = true;
+@@ -712,6 +811,12 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 			if (ret)
+ 				goto out_err;
+ 		}
++	} else {
++		/* Redirect queue, if needed */
++		ret = iwl_mvm_scd_queue_redirect(mvm, queue, tid, ac, ssn,
++						 wdg_timeout, false);
++		if (ret)
++			goto out_err;
+ 	}
+ 
+ 	return 0;
 -- 
-1.9.1
+2.8.1
 
