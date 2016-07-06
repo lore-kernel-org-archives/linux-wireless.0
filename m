@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:44697 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752584AbcGGSjK (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33198 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753242AbcGFKlU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2016 14:39:10 -0400
-From: Kamal Mostafa <kamal@canonical.com>
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	kernel-team@lists.ubuntu.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	ath9k-devel@lists.ath9k.org,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Kamal Mostafa <kamal@canonical.com>
-Subject: [PATCH 3.19.y-ckt 19/99] ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
-Date: Thu,  7 Jul 2016 11:37:18 -0700
-Message-Id: <1467916718-18638-20-git-send-email-kamal@canonical.com> (sfid-20160707_210318_920433_D907D835)
-In-Reply-To: <1467916718-18638-1-git-send-email-kamal@canonical.com>
-References: <1467916718-18638-1-git-send-email-kamal@canonical.com>
+	Wed, 6 Jul 2016 06:41:20 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:00 +0300
+Message-Id: <1467801651-1816-5-git-send-email-luca@coelho.fi> (sfid-20160706_124130_723831_99983661)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 05/56] iwlwifi: mvm: fix possible division by zero
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-3.19.8-ckt23 -stable review patch.  If anyone has any objections, please let me know.
+From: Sara Sharon <sara.sharon@intel.com>
 
----8<------------------------------------------------------------
+Theoretically we may get only one IRQ from OS, in which
+case we will have only 1 queue even in MSIx mode.
+This will cause division by zero in the indirection table
+calculation.
+We do not need send the command in that case, as there is
+only one queue so all RX traffic will be directed to it
+anyway. Bail out early if there is only one queue.
 
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-
-commit 0f9edcdd88a993914fa1d1dc369b35dc503979db upstream.
-
-The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
-(active high instead of active low).
-
-The same PCI Subsystem ID is used by both cards, which are based on
-the same Atheros MB92 design.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Kamal Mostafa <kamal@canonical.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/pci.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index f009b5b..b9ec8c7 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pci_id_table[] = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
-+
-+#ifdef CONFIG_ATH9K_PCOEM
-+	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0029,
-+			 PCI_VENDOR_ID_ATHEROS,
-+			 0x2096),
-+	  .driver_data = ATH9K_PCI_LED_ACT_HI },
-+#endif
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 7057f35..0a5490c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -122,6 +122,9 @@ static int iwl_send_rss_cfg_cmd(struct iwl_mvm *mvm)
+ 			     IWL_RSS_HASH_TYPE_IPV6_PAYLOAD,
+ 	};
  
- #ifdef CONFIG_ATH9K_PCOEM
++	if (mvm->trans->num_rx_queues == 1)
++		return 0;
++
+ 	/* Do not direct RSS traffic to Q 0 which is our fallback queue */
+ 	for (i = 0; i < ARRAY_SIZE(cmd.indirection_table); i++)
+ 		cmd.indirection_table[i] =
 -- 
-2.7.4
+2.8.1
 
