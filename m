@@ -1,75 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([198.47.19.12]:39296 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751557AbcGSUBt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 16:01:49 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
-	Bob Copeland <me@bobcopeland.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Hahn, Maital" <maitalm@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: RE: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
-Date: Tue, 19 Jul 2016 20:01:38 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD110139206BD6@DFRE01.ent.ti.com> (sfid-20160719_220205_849988_FBE89763)
-References: <CAEFj987X26u59K32Mt-bKBSTmy3cWvOiNNBG7K4wbdQBAdR97Q@mail.gmail.com>
- <20160719124456.GD11996@localhost>
- <AE1C82FB3D0EC64DB1F752C81CBD110139206115@DFRE01.ent.ti.com>
- <20160719134355.GA1833@localhost>
- <CAEFj987V0r3aVn+JhQOX-40bheKyEJdrppF75OCaLXhU=skmNw@mail.gmail.com>
-In-Reply-To: <CAEFj987V0r3aVn+JhQOX-40bheKyEJdrppF75OCaLXhU=skmNw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:33454 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753651AbcGFKoq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2016 06:44:46 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	"[4.1+]" <stable@vger.kernel.org>,
+	David Spinadel <david.spinadel@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:08 +0300
+Message-Id: <1467801651-1816-13-git-send-email-luca@coelho.fi> (sfid-20160706_124450_941500_5F7392D4)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 13/56] iwlwifi: add new 8260 PCI IDs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCBKdWwgMTksIDIwMTYgYXQgMTk6MDE6NTQsIFllb2ggQ2h1bi1ZZW93IHdyb3RlOg0K
-PiBKb2hhbm5lcyBCZXJnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgMi8zXSBtYWM4MDIxMTog
-bWVzaDogaW1wcm92ZSBwYXRoIHJlc29sdmluZyANCj4gdGltZQ0KPiANCj4gT24gVHVlLCBKdWwg
-MTksIDIwMTYgYXQgOTo0MyBQTSwgQm9iIENvcGVsYW5kIDxtZUBib2Jjb3BlbGFuZC5jb20+DQo+
-IHdyb3RlOg0KPiA+IE9uIFR1ZSwgSnVsIDE5LCAyMDE2IGF0IDAxOjAyOjEzUE0gKzAwMDAsIE1h
-Y2hhbmksIFlhbml2IHdyb3RlOg0KPiA+PiBPbiBUdWUsIEp1bCAxOSwgMjAxNiBhdCAxNTo0NDo1
-NiwgQm9iIENvcGVsYW5kIHdyb3RlOg0KPiA+DQo+ID4gVGhpcyB3b3JkaW5nIHNlZW1zIHRvIGlu
-ZGljYXRlIHRoYXQgaXQgaXMgbm90IHBlciBwYXRoLiAgUGVyaGFwcyANCj4gPiB0aGlzIHNob3Vs
-ZCBiZSBjbGFyaWZpZWQgaW4gdGhlIHN0YW5kYXJkLiAgKElmIHRoZSBpbnRlbnQgdHVybnMgb3V0
-IA0KPiA+IHRvIGJlIHBlciBwYXRoLCB0aGVuIEkgZ3Vlc3Mgd2Ugc2hvdWxkIGZpeCBpdCBieSBz
-dG9yaW5nIGxhc3RfcHJlcSANCj4gPiBwZXIgcGF0aA0KPiA+IGluc3RlYWQuKQ0KPiA+DQo+ID4N
-Cj4gPiBJZ25vcmluZyB0aGUgc3RhbmRhcmQgZm9yIGEgc2Vjb25kLCBsZXQncyBleHBsb3JlIHRo
-aXM6IGNhbiB5b3UgZ2l2ZSANCj4gPiBzb21lIGlkZWEgb24gaG93IG1hbnkgc3RhdGlvbnMgYXJl
-IGluIHlvdXIgdGFyZ2V0IG5ldHdvcmssIGhvdyANCj4gPiBmcmVxdWVudGx5IGEgZ2l2ZW4gcGFp
-ciBvZiBub2RlcyB1bnBlZXIsIHdoYXQgc29ydCBvZiBpbXByb3ZlbWVudHMgDQo+ID4geW91IHNl
-ZSB3aXRoIHRoZSBwYXRjaD8gIEl0IHNob3VsZCB0aGVuIGJlIHByZXR0eSBlYXN5IHRvIHJ1biBz
-b21lIA0KPiA+IHNpbXVsYXRpb25zIHRvIHNlZSB0aGUgc2NlbmFyaW9zIHdoZXJlIHRoaXMgaGVs
-cHMgYW5kIHdoZXJlIGl0IGh1cnRzLg0KPiA+DQo+IA0KDQpCb2IsIENodW4tWWVvdywNClRoYW5r
-cyBmb3IgeW91ciBpbnB1dHMuDQoNCkxldCB0YWtlIGEgc2ltcGxlIHNjZW5hcmlvLCB3aGVyZSB5
-b3UgaGF2ZSBhLGIsYyxkIG5vZGVzIGNvbm5lY3RlZCB0byBlYWNoIG90aGVyIGFzIHNob3duIGJl
-bG93Lg0KDQpBfiB+IH5+fn5DLSAtIC0gRA0KICAgXCAgICAgICAgICAvDQogICAgICBcICAgICAv
-ICAgDQogICAgICAgICBCDQoNCkEgd291bGQgbGlrZSB0byBwYXNzIGRhdGEgdG8gRC4NCkEtQyBt
-YXRyaWMgaXMgd29yc2UgdGhhbiBBLUItQywgc28gcGF0aCBpcyBjb25zdHJ1Y3RlZCB2aWEgQi4N
-CldlIGFyZSBpbiBpZGxlIHN0YXRlLCBhbmQgUFJFUSBhcmUgc2VudCBldmVyeSBkb3QxMU1lc2hI
-V01QcHJlcU1pbkludGVydmFsLg0KTm93LCBub2RlIEIgaGF2ZSBiZWVuIGRpc2Nvbm5lY3RlZCAo
-cmFuIG91dCBvZiBiYXR0ZXJ5L3NodXQgZG93bi9zdWRkZW5seSB3ZW50IG91dCBvZiByYW5nZSkN
-CkFzIEEgaGFzIGEgcGF0aCB0byBEIHZpYSBCLCBoZSBjbGVhbnMgdXAgaGlzIHBhdGggdGFibGUu
-DQpOb3cgaGUgbmVlZHMgdG8gYnVpbGQgYSBuZXcgcGF0aCwgaW4gdGhlIFdDUywgaGUgaGF2ZSBq
-dXN0IHNlbnQgYSBQUkVRLg0KQW5kIG5vdyBoZSBuZWVkcyB0byB3YWl0IGRvdDExTWVzaEhXTVBw
-cmVxTWluSW50ZXJ2YWwgc2Vjb25kcywgdW50aWwgaGUgY2FuIHJlYnVpbGQgdGhlIHBhdGguDQpB
-cyB3ZSB3b3VsZG4ndCBsaWtlIHRvIGZsb29kIHRoZSBuZXR3b3JrIHdpdGggUFJFUSwgd2UgY2Fu
-IGFzc3VtZSB0aGF0IHRoZSBkb3QxMU1lc2hIV01QcHJlcU1pbkludGVydmFsIGlzIGZldyBzZWNv
-bmRzLCBmb3IgdXMsIGl0IHNlZW1lZCB1bi1hY2NlcHRhYmxlLg0KDQpJbiBjYXNlcyB3aGVyZSB5
-b3UgbmVlZCB0byBoYXZlIGEgcmVsaWFibGUgZGF0YSBsaW5rLCBwYXNzaW5nIGF1ZGlvL3ZpZGVv
-IHlvdSB1c3VhbGx5IGNhbid0IGFmZm9yZCBmZXcgc2Vjb25kcyB3L28gdHJhZmZpYy4NCg0KPiBJ
-biBhZGRpdGlvbiB0byBCb2IncyBjb21tZW50LCB5b3UgcHJvYmFibHkgY2FuIHRyeSB0byByZWR1
-Y2UgdGhlIA0KPiBkb3QxMU1lc2hIV01QcHJlcU1pbkludGVydmFsIHRvIDEgVFUgKDFtcykgaW5z
-dGVhZCBvZiBzdGlja2luZyB0byANCj4gZGVmYXVsdCB2YWx1ZSAxMCBUVXMuIEJlc2lkZXMsIHlv
-dSBjYW4gYWxzbyByZWR1Y2UgdGhlIA0KPiBtZXNoX3BhdGhfcmVmcmVzaF90aW1lIHdoaWNoIGlz
-IGN1cnJlbnRseSBkZWZhdWx0IHRvIDEwMDAgbXMgYW5kIGNoZWNrIA0KPiB3aGV0aGVyIHlvdSBj
-YW4gaW1wcm92ZSBvbiB5b3VyIG5ldHdvcmsgc2NlbmFyaW9zLg0KPg0KDQpXZSBkaWQgdHJpZWQg
-dG8gcGxheSB3aXRoIHRoZXNlIHZhbHVlcywgYnV0IGFnYWluLCB3ZSBkb24ndCB3YW50IHRvIGZs
-b29kIHRoZSBuZXR3b3JrLg0KV2UganVzdCB3YW50IHRvIHJlY292ZXIgQVNBUC4NCiANCj4gV2hl
-biB5b3UgbWVudGlvbmVkICJuZXh0IGhvcCBwZWVyIGRpc2Nvbm5lY3QiLCBpdCBjb3VsZCBhbHNv
-IGJlIHRoZSANCj4gdGltZSB0YWtlbiB0byByZS1lc3RhYmxpc2hlZCB0aGUgbWVzaCBwZWVyaW5n
-IGJlZm9yZSB5b3VyIG1lc2ggU1RBIGNhbiANCj4gdHJhbnNtaXQgdGhlIGRhdGEgdG8geW91ciBw
-ZWVyIG1lc2ggU1RBLg0KPiANCg0KTGluayBlc3RhYmxpc2htZW50IHRha2VzIG5vIG1vcmUgdGhh
-biBmZXcgMTAwcyBvZiBtcyB1c3VhbGx5LA0KQW5kIGluIHRoZSBleGFtcGxlIGFib3ZlLCB0aGVy
-ZSBpcyBubyBuZXcgbGluayBlc3RhYmxpc2htZW50LCBqdXN0IHBhdGggZ2VuZXJhdGlvbi4NCg0K
-DQpUaGFua3MsDQpZYW5pdg0KDQo=
+From: Oren Givon <oren.givon@intel.com>
+
+Add 3 new 8260 series PCI IDs:
+  - (0x24F3, 0x10B0)
+  - (0x24F3, 0xD0B0)
+  - (0x24F3, 0xB0B0)
+
+CC: <stable@vger.kernel.org> [4.1+]
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index a588b05..1cae19d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -433,6 +433,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ /* 8000 Series */
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0010, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x1010, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0x10B0, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0130, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x1130, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0132, iwl8260_2ac_cfg)},
+@@ -454,6 +455,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24F3, 0xD010, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0xC050, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0xD050, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0xD0B0, iwl8260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24F3, 0xB0B0, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x8010, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x8110, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x9010, iwl8260_2ac_cfg)},
+-- 
+2.8.1
+
