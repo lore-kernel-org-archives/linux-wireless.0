@@ -1,53 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33618 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753983AbcGFKqV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:46:21 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Golan Ben-Ami <golan.ben.ami@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:30 +0300
-Message-Id: <1467801651-1816-35-git-send-email-luca@coelho.fi> (sfid-20160706_125026_180482_4A3A01E7)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 35/56] iwlwifi: mvm: write the correct internal TXF index
+Received: from s3.sipsolutions.net ([5.9.151.49]:40249 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751201AbcGFMaz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2016 08:30:55 -0400
+Message-ID: <1467808252.5460.1.camel@sipsolutions.net> (sfid-20160706_143110_099163_E4AE86A7)
+Subject: Re: [RFC] nl80211: Allow GET_INTERFACE dumps to be filtered
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Wed, 06 Jul 2016 14:30:52 +0200
+In-Reply-To: <1467334294-6384-1-git-send-email-denkenz@gmail.com> (sfid-20160630_185128_850366_B817D4E2)
+References: <1467334294-6384-1-git-send-email-denkenz@gmail.com>
+	 (sfid-20160630_185128_850366_B817D4E2)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben-Ami <golan.ben.ami@intel.com>
+On Thu, 2016-06-30 at 19:51 -0500, Denis Kenzior wrote:
+> This patch allows GET_INTERFACE dumps to be filtered based on
+> NL80211_ATTR_WIPHY or NL80211_ATTR_WDEV.  The documentation for
+> GET_INTERFACE mentions that this is possible:
+> "Request an interface's configuration; either a dump request on
+> a %NL80211_ATTR_WIPHY or ..."
+> 
+> However, this behavior has not been implemented until now.
+> ---
+>  net/wireless/nl80211.c | 36 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 36 insertions(+)
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 244d552..24cb4d9 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -2515,15 +2515,47 @@ static int nl80211_send_iface(struct sk_buff
+> *msg, u32 portid, u32 seq, int flag
+>  	return -EMSGSIZE;
+>  }
+>  
+> +static int nl80211_dump_interface_parse(struct sk_buff *skb,
+> +				    struct netlink_callback *cb,
+> +				    int *filter_wiphy)
+> +{
+> +	struct nlattr **tb = nl80211_fam.attrbuf;
+> +	int ret = nlmsg_parse(cb->nlh, GENL_HDRLEN +
+> nl80211_fam.hdrsize,
+> +			      tb, nl80211_fam.maxattr,
+> nl80211_policy);
+> +	/* ignore parse errors for backward compatibility */
+> +	if (ret)
+> +		return 0;
+> +
+> +	if (tb[NL80211_ATTR_WIPHY])
+> +		*filter_wiphy = nla_get_u32(tb[NL80211_ATTR_WIPHY]);
+> +	if (tb[NL80211_ATTR_WDEV])
+> +		*filter_wiphy = nla_get_u64(tb[NL80211_ATTR_WDEV])
+> >> 32;
 
-The TX fifos are arranged consecutively in the SMEM, beginning
-with the regular fifos, and tailed by the internal fifos.
-In the current code, while trying to read the internal fifos,
-we read the fifos beginning with the index zero.
-By doing this we actually re-read the regular fifos.
+The whole ret thing seems a bit pointless since you check the tb[], but
+I guess it's better to be explicit.
 
-In order to read the internal fifos, start the reading index
-from the number of regular fifos configured by the fw.
+Looks fine.
 
-Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
-Fixes: 39654cb3a6a2 ("iwlwifi: don't access a nonexistent register upon assert")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 1ece19d..6e692a8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -288,7 +288,8 @@ static void iwl_mvm_dump_fifos(struct iwl_mvm *mvm,
- 			fifo_hdr->fifo_num = cpu_to_le32(i);
- 
- 			/* Mark the number of TXF we're pulling now */
--			iwl_trans_write_prph(mvm->trans, TXF_CPU2_NUM, i);
-+			iwl_trans_write_prph(mvm->trans, TXF_CPU2_NUM, i +
-+				ARRAY_SIZE(mvm->shared_mem_cfg.txfifo_size));
- 
- 			fifo_hdr->available_bytes =
- 				cpu_to_le32(iwl_trans_read_prph(mvm->trans,
--- 
-2.8.1
-
+johannes
