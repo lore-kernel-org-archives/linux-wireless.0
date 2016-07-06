@@ -1,114 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43922 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:40262 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750948AbcGKUbS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 16:31:18 -0400
-Message-ID: <57840214.8000904@redhat.com> (sfid-20160711_223143_790397_ABB413C8)
-Date: Mon, 11 Jul 2016 16:31:16 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-MIME-Version: 1.0
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Coelho, Luciano" <luciano.coelho@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
- ucode is loaded
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com>	 <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>	 <5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>
-In-Reply-To: <1468261650.20877.14.camel@intel.com>
-Content-Type: text/plain; charset=utf-8
+	id S1751925AbcGFMfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2016 08:35:31 -0400
+Message-ID: <1467808525.5460.4.camel@sipsolutions.net> (sfid-20160706_143553_650521_4B8CC2FE)
+Subject: Re: [PATCH v2] mac80211: mesh: Add support for HW RC implementation
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Maxim Altshul <maxim.altshul@ti.com>, linux-kernel@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 06 Jul 2016 14:35:25 +0200
+In-Reply-To: <20160630153055.26497-1-maxim.altshul@ti.com>
+References: <20160630153055.26497-1-maxim.altshul@ti.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 07/11/2016 02:27 PM, Grumbach, Emmanuel wrote:
-> On Mon, 2016-07-11 at 14:19 -0400, Prarit Bhargava wrote:
->>
->> On 07/11/2016 02:00 PM, Emmanuel Grumbach wrote:
->>> On Mon, Jul 11, 2016 at 6:18 PM, Prarit Bhargava <prarit@redhat.com
->>>> wrote:
->>>>
->>>> Didn't get any feedback or review comments on this patch. 
->>>>  Resending ...
->>>>
->>>> P.
->>>
->>> This change is obviously completely broken. It simply disables the
->>> registration to thermal zone core.
->>
->> No it is not broken, and yes, that is exactly what should happen IMO.
->>
->> The problem is that the iwlwifi driver implements the thermal zone
->> even when the
->> device doesn't support it.
+On Thu, 2016-06-30 at 18:30 +0300, Maxim Altshul wrote:
+> Mesh HWMP module will be able to rely on the HW
+> RC algorithm if it exists, for path metric calculations.
 > 
-> We implement thermal zone because we do support it, but the problem is
-> that we need the firmware to be loaded for that. So you can argue that
-> we should register *later* when the firmware is loaded. But this is
-> really not helping all that much because the firmware can also be
-> stopped at any time. So you'd want us to register / unregister the
-> thermal zone anytime the firmware is loaded / unloaded?
-
-You might have to do that.  I think that if the firmware enables a feature then
-the act of loading the firmware should run the code that enables the feature.
-IMO of course.
-
-> I guess that works, but it seems wrong to me. Usually, registration
-> should happen only upon INIT, and yes, at that time the firmware is not
-> ready to provide the information yet.
-> Maybe returning -EBUSY would help lm-sensors not to get confused?
-
-I'll give that a shot, but I expect that won't work either as an error message
-will still be displayed.
-
+> This allows the metric calculation mechanism to calculate
+> a correct metric, based on PER and last TX rate both via
+> HW RC algorithm if it exists or via parameters collected
+> by the SW.
 > 
->>
->> As can be seen in the current code base, iwl_mvm_tzone_get_temp()
->> will return
->> -EIO 100% of the time when the firmware doesn't support reading the
->> temperature[1].  In this case a read of sysfs will result in a return
->> of -EIO,
->> and this breaks existing userspace programs such as lm-sensors (which
->> by all
->> accounts is bad to do).
+> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+> ---
+> Changed the function to return u32, I agree that this
+> is much clearer.
+> As for the rate, two things:
+> 1. I had to divide the returned value by 100, since
+> drv_get_expected_throughput returns values in units of Kbps.
+> On the contrary, the function cfg80211_calculate_bitrate
+> returns in units of 100Kbps, so a correction is needed.
+> 2. Why return the value into rate?
+> As I understand, rate here is actually bitrate,
+> and so, we have two possible outcomes:
+> - A SW/HW RC algo does exist, and an estimated throughput is
+> returned. err is set to 0 (as it is already included in the RC algo)
+> and the airtime is calculated using the estimated throughput.
+> - A SW/HW RC algo does not exist, and thus the regular calculation
+> takes place, in which an estimated throughput is calculated
+> using the bitrate and the err parameter.
+> From this calculation the airtime is calculated.
 > 
-> Right, but I don't understand why the userspace is broken because of
-> that? 
-
-Before the iwlwifi change, sensors successfully returned.  Now, because of the
-error, it doesn't.
-
-Unless we register / unregister anytime the firmware is loaded, I
-> don't see any proper way to fix this. And yes, I'd expect the userspace
-> to handle gracefully failures in its requests.
-
-I agree with you in principle *and there's a great many things I wish userspace
-would do gracefully* but updating the kernel shouldn't result in userspace
-programs failing.
-
+>  net/mac80211/mesh_hwmp.c | 25 +++++++++++++++++--------
+>  net/mac80211/sta_info.c  | 23 +++++++++++++++++++----
+>  net/mac80211/sta_info.h  |  2 ++
+>  3 files changed, 38 insertions(+), 12 deletions(-)
 > 
->>
->> Note that in my patch I have removed the -EIO return in favor of not
->> registering
->> the non-existent thermal zone.  I'm not removing any functionality by
->> changing
->> this, nor am I adding functionality.  In both cases the thermal zone
->> is not
->> functional, and with my patch userspace continues to work.
-> 
-> You are removing the thermal zone functionality since even when the
-> firmware will be loaded (which typically happens fairly quickly),
-> thermal zone won't work.
+> diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+> index c6be0b4..ad67f46 100644
+> --- a/net/mac80211/mesh_hwmp.c
+> +++ b/net/mac80211/mesh_hwmp.c
+> @@ -322,19 +322,28 @@ static u32 airtime_link_metric_get(struct
+> ieee80211_local *local,
+>  	int device_constant = 1 << ARITH_SHIFT;
+>  	int test_frame_len = TEST_FRAME_LEN << ARITH_SHIFT;
+>  	int s_unit = 1 << ARITH_SHIFT;
+> -	int rate, err;
+> +	int rate = 0, err = 0;
 
-Then I agree with your suggestion above that you need to enable the thermal zone
-on a successful load of the firmware.  [Aside: I wonder what other drivers do in
-this situation?  While this does seem like an odd case, I can't believe that the
-iwlwifi driver is the only driver to enable features based on firmware.]
+The rate init is wrong - you overwrite it immediately.
 
-P.
+The err init is questionable - I think it might be better to write
+
+if (rate) {
+   err = 0;
+} else {
+   ...
+}
+
+below?
+
+>  	u32 tx_time, estimated_retx;
+>  	u64 result;
+>  
+> -	if (sta->mesh->fail_avg >= 100)
+> -		return MAX_METRIC;
+> +	/* Try to get rate based on HW/SW RC algorithm.
+> +	 * Rate is returned in units of Kbps, correct this
+> +	 * to comply with airtime calculation units
+> +	 */
+> +	rate = sta_get_expected_throughput(sta) / 100;
+> +
+> +	/* if we did not get a rate */
+> +	if (!rate) {
+
+Maybe you want DIV_ROUND_UP to account for getting a very lot estimated
+rate (< 100Kbps) returned, which isn't "no rate"?
+
+Ohterwise looks fine.
+
+johannes
+
