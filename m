@@ -1,69 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48194 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751517AbcGRNx2 (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:33631 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752945AbcGFQUP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 09:53:28 -0400
-From: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
-	<usdutt@qti.qualcomm.com>, <ganeshk@qti.qualcomm.com>,
-	<mkalikot@qca.qualcomm.com>, <amarnath@qca.qualcomm.com>,
-	<pkushwah@qti.qualcomm.com>
-Subject: [PATCH v2] cfg80211: Allow differnt beacon interval if driver supports
-Date: Mon, 18 Jul 2016 19:23:05 +0530
-Message-ID: <1468849985-6881-1-git-send-email-pkushwah@qti.qualcomm.com> (sfid-20160718_155331_841623_BF84D2FC)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 6 Jul 2016 12:20:15 -0400
+Received: by mail-wm0-f50.google.com with SMTP id r190so33275134wmr.0
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 09:20:14 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv5 wl-drv-next 1/2] add basic register-field manipulation macros
+Date: Wed,  6 Jul 2016 17:19:36 +0100
+Message-Id: <1467821977-11777-2-git-send-email-jakub.kicinski@netronome.com> (sfid-20160706_182029_877193_79253A34)
+In-Reply-To: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
+References: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver may allow support for different beacon interval on virtual interfaces.
-Allow if such support is advertised by driver. This adds new ext_feature as
-NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL.
+Common approach to accessing register fields is to define
+structures or sets of macros containing mask and shift pair.
+Operations on the register are then performed as follows:
 
-Signed-off-by: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+ field = (reg >> shift) & mask;
+
+ reg &= ~(mask << shift);
+ reg |= (field & mask) << shift;
+
+Defining shift and mask separately is tedious.  Ivo van Doorn
+came up with an idea of computing them at compilation time
+based on a single shifted mask (later refined by Felix) which
+can be used like this:
+
+ #define REG_FIELD 0x000ff000
+
+ field = FIELD_GET(REG_FIELD, reg);
+
+ reg &= ~REG_FIELD;
+ reg |= FIELD_PUT(REG_FIELD, field);
+
+FIELD_{GET,PUT} macros take care of finding out what the
+appropriate shift is based on compilation time ffs operation.
+
+GENMASK can be used to define registers (which is usually
+less error-prone and easier to match with datasheets).
+
+This approach is the most convenient I've seen so to limit code
+multiplication let's move the macros to a global header file.
+Attempts to use static inlines instead of macros failed due
+to false positive triggering of BUILD_BUG_ON()s, especially with
+GCC < 6.0.
+
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
 ---
- include/uapi/linux/nl80211.h | 3 +++
- net/wireless/util.c          | 4 ++++
- 2 files changed, 7 insertions(+)
+ include/linux/bitfield.h | 109 +++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/bug.h      |   3 ++
+ 2 files changed, 112 insertions(+)
+ create mode 100644 include/linux/bitfield.h
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 2206941..a910d0e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4551,6 +4551,8 @@ enum nl80211_feature_flags {
-  *	(if available).
-  * @NL80211_EXT_FEATURE_SET_SCAN_DWELL: This driver supports configuration of
-  *	channel dwell time.
-+ * @NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL: This driver supports different
-+ *	beacon interval on virtual interfaces.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -4562,6 +4564,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_SCAN_START_TIME,
- 	NL80211_EXT_FEATURE_BSS_PARENT_TSF,
- 	NL80211_EXT_FEATURE_SET_SCAN_DWELL,
-+	NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 2443ee3..65eeb23 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1560,6 +1560,10 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	if (!beacon_int)
- 		return -EINVAL;
- 
-+	if (wiphy_ext_feature_isset(&rdev->wiphy,
-+				    NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL))
-+		return 0;
+diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
+new file mode 100644
+index 000000000000..ff9fd0af2ac7
+--- /dev/null
++++ b/include/linux/bitfield.h
+@@ -0,0 +1,109 @@
++/*
++ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
++ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
 +
- 	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
- 		if (!wdev->beacon_interval)
- 			continue;
++#ifndef _LINUX_BITFIELD_H
++#define _LINUX_BITFIELD_H
++
++#include <asm/types.h>
++#include <linux/bug.h>
++
++#define _bf_shf(x) (__builtin_ffsll(x) - 1)
++
++#define _BF_FIELD_CHECK(_mask, _val)					\
++	({								\
++		BUILD_BUG_ON(!(_mask));					\
++		BUILD_BUG_ON(__builtin_constant_p(_val) ?		\
++			     ~((_mask) >> _bf_shf(_mask)) & (_val) :	\
++			     0);					\
++		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
++					      (1ULL << _bf_shf(_mask))); \
++	})
++
++/*
++ * Bitfield access macros
++ *
++ * This file contains macros which take as input shifted mask
++ * from which they extract the base mask and shift amount at
++ * compilation time.  There are two separate sets of the macros
++ * one for 32bit registers and one for 64bit ones.
++ *
++ * Fields can be defined using GENMASK (which is usually
++ * less error-prone and easier to match with datasheets).
++ *
++ * FIELD_{GET,PUT} macros are designed to be used with masks which
++ * are compilation time constants.
++ *
++ * Example:
++ *
++ *  #define REG_FIELD_A  GENMASK(6, 0)
++ *  #define REG_FIELD_B  BIT(7)
++ *  #define REG_FIELD_C  GENMASK(15, 8)
++ *  #define REG_FIELD_D  GENMASK(31, 16)
++ *
++ * Get:
++ *  a = FIELD_GET(REG_FIELD_A, reg);
++ *  b = FIELD_GET(REG_FIELD_B, reg);
++ *
++ * Set:
++ *  reg = FIELD_PUT(REG_FIELD_A, 1) |
++ *	  FIELD_PUT(REG_FIELD_B, 0) |
++ *	  FIELD_PUT(REG_FIELD_C, c) |
++ *	  FIELD_PUT(REG_FIELD_D, 0x40);
++ *
++ * Modify:
++ *  reg &= ~REG_FIELD_C;
++ *  reg |= FIELD_PUT(REG_FIELD_C, c);
++ */
++
++/**
++ * FIELD_PUT() - construct a bitfield element
++ * @_mask: shifted mask defining the field's length and position
++ * @_val:  value to put in the field
++ *
++ * FIELD_PUT() masks and shifts up the value.  The result should
++ * be combined with other fields of the bitfield using logical OR.
++ */
++#define FIELD_PUT(_mask, _val)					\
++	({							\
++		_BF_FIELD_CHECK(_mask, _val);			\
++		((u32)(_val) << _bf_shf(_mask)) & (_mask);	\
++	})
++
++/**
++ * FIELD_GET() - extract a bitfield element
++ * @_mask: shifted mask defining the field's length and position
++ * @_val:  32bit value of entire bitfield
++ *
++ * FIELD_GET() extracts the field specified by @_mask from the
++ * bitfield passed in as @_val.
++ */
++#define FIELD_GET(_mask, _val)					\
++	({							\
++		_BF_FIELD_CHECK(_mask, 0);			\
++		(u32)(((_val) & (_mask)) >> _bf_shf(_mask));	\
++	})
++
++#define FIELD_PUT64(_mask, _val)				\
++	({							\
++		_BF_FIELD_CHECK(_mask, _val);			\
++		((u64)(_val) << _bf_shf(_mask)) & (_mask);	\
++	})
++
++#define FIELD_GET64(_mask, _val)				\
++	({							\
++		_BF_FIELD_CHECK(_mask, 0);			\
++		(u64)(((_val) & (_mask)) >> _bf_shf(_mask));	\
++	})
++
++#endif
+diff --git a/include/linux/bug.h b/include/linux/bug.h
+index e51b0709e78d..bba5bdae1681 100644
+--- a/include/linux/bug.h
++++ b/include/linux/bug.h
+@@ -13,6 +13,7 @@ enum bug_trap_type {
+ struct pt_regs;
+ 
+ #ifdef __CHECKER__
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_ZERO(e) (0)
+ #define BUILD_BUG_ON_NULL(e) ((void*)0)
+@@ -24,6 +25,8 @@ struct pt_regs;
+ #else /* __CHECKER__ */
+ 
+ /* Force a compilation error if a constant expression is not a power of 2 */
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) 			\
++	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
+ 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
+ 
 -- 
 1.9.1
 
