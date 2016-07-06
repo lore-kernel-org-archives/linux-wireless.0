@@ -1,70 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.182]:62970 "EHLO
-	smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753891AbcGZJGp convert rfc822-to-8bit (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33476 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753746AbcGFKoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2016 05:06:45 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Arvind Yadav' <arvind.yadav.cs@gmail.com>,
-	"zajec5@gmail.com" <zajec5@gmail.com>,
-	"leoli@freescale.com" <leoli@freescale.com>
-CC: "qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
-	"scottwood@freescale.com" <scottwood@freescale.com>,
-	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux@roeck-us.net" <linux@roeck-us.net>,
-	"arnd@arndb.de" <arnd@arndb.de>
-Subject: RE: [v3] UCC_GETH/UCC_FAST: Use IS_ERR_VALUE_U32 API to avoid
- IS_ERR_VALUE abuses.
-Date: Tue, 26 Jul 2016 09:04:33 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D5F5023E2@AcuExch.aculab.com> (sfid-20160726_110706_047292_CAD2C1B5)
-References: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
-In-Reply-To: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+	Wed, 6 Jul 2016 06:44:54 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"[4.5+]" <stable@vger.kernel.org>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:43 +0300
+Message-Id: <1467801651-1816-48-git-send-email-luca@coelho.fi> (sfid-20160706_124458_162630_6C2F4D6D)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 48/56] iwlwifi: pcie: fix a race in firmware loading flow
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arvind Yadav
-> Sent: 23 July 2016 19:06
-> IS_ERR_VALUE() assumes that its parameter is an unsigned long.
-> It can not be used to check if an 'unsigned int' reflects an error.
-> As they pass an 'unsigned int' into a function that takes an
-> 'unsigned long' argument. This happens to work because the type
-> is sign-extended on 64-bit architectures before it gets converted
-> into an unsigned type.
-> 
-> However, anything that passes an 'unsigned short' or 'unsigned int'
-> argument into IS_ERR_VALUE() is guaranteed to be broken, as are
-> 8-bit integers and types that are wider than 'unsigned long'.
-> 
-> It would be nice to any users that are not passing 'unsigned int'
-> arguments.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-Isn't that a load of bollocks???
-It is certainly very over-wordy.
+Upon firmware load interrupt (FH_TX), the ISR re-enables the
+firmware load interrupt only to avoid races with other
+flows as described in the commit below. When the firmware
+is completely loaded, the thread that is loading the
+firmware will enable all the interrupts to make sure that
+the driver gets the ALIVE interrupt.
+The problem with that is that the thread that is loading
+the firmware is actually racing against the ISR and we can
+get to the following situation:
 
-IS_ERR_VALUE(x) is ((x) >= (unsigned long)-4096)
+CPU0					CPU1
+iwl_pcie_load_given_ucode
+	...
+	iwl_pcie_load_firmware_chunk
+		wait_for_interrupt
+					<interrupt>
+					ISR handles CSR_INT_BIT_FH_TX
+					ISR wakes up the thread on CPU0
+	/* enable all the interrupts
+	 * to get the ALIVE interrupt
+	 */
+	iwl_enable_interrupts
+					ISR re-enables CSR_INT_BIT_FH_TX only
+	/* start the firmware */
+	iwl_write32(trans, CSR_RESET, 0);
 
-Assuming sizeof (short) == 2 && sizeof (int) == 4 && sizeof (long) == 8.
+BUG! ALIVE interrupt will never arrive since it has been
+masked by CPU1.
 
-'signed char' and 'signed short' are first sign extended to 'signed int'.
-'unsigned char' and 'unsigned short' are first zero extended to 'signed int'.
-'signed int' is sign extended to 'signed long'.
-'signed long' is converted to 'unsigned long' treating the bit-pattern as 'unsigned long'.
-'unsigned int' is zero extended to 'unsigned long'.
+In order to fix that, change the ISR to first check if
+STATUS_INT_ENABLED is set. If so, re-enable all the
+interrupts. If STATUS_INT_ENABLED is clear, then we can
+check what specific interrupt happened and re-enable only
+that specific interrupt (RFKILL or FH_TX).
 
-It is probably enough to say that on 64bit systems IS_ERR_VALUE() of unsigned int
-is always false because the 32bit value is zero extended to 64 bits.
+All the credit for the analysis goes to Kirtika who did the
+actual debugging work.
 
-A possible 'fix' would be to define IS_ERR_VALUE() as:
-#define IS_ERR_VALUE(x) unlikely(sizeof (x) > sizeof (int) ? (x) > (unsigned long)-MAX_ERRNO : (x) > (unsigned int)-MAX_ERRNO)
+Cc: <stable@vger.kernel.org> [4.5+]
+Fixes: a6bd005fe92 ("iwlwifi: pcie: fix RF-Kill vs. firmware load race")
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 21 +++++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 16 +++++++++-------
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |  8 --------
+ 3 files changed, 28 insertions(+), 17 deletions(-)
 
-However correct analysis of every case might show up real errors.
-So a compilation warning/error might be more appropriate.
-
-	David
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index f684b9d..54af3da 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -500,7 +500,7 @@ void iwl_pcie_dump_csr(struct iwl_trans *trans);
+ /*****************************************************
+ * Helpers
+ ******************************************************/
+-static inline void iwl_disable_interrupts(struct iwl_trans *trans)
++static inline void _iwl_disable_interrupts(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+@@ -523,7 +523,16 @@ static inline void iwl_disable_interrupts(struct iwl_trans *trans)
+ 	IWL_DEBUG_ISR(trans, "Disabled interrupts\n");
+ }
+ 
+-static inline void iwl_enable_interrupts(struct iwl_trans *trans)
++static inline void iwl_disable_interrupts(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++
++	spin_lock(&trans_pcie->irq_lock);
++	_iwl_disable_interrupts(trans);
++	spin_unlock(&trans_pcie->irq_lock);
++}
++
++static inline void _iwl_enable_interrupts(struct iwl_trans *trans)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 
+@@ -546,6 +555,14 @@ static inline void iwl_enable_interrupts(struct iwl_trans *trans)
+ 	}
+ }
+ 
++static inline void iwl_enable_interrupts(struct iwl_trans *trans)
++{
++	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
++
++	spin_lock(&trans_pcie->irq_lock);
++	_iwl_enable_interrupts(trans);
++	spin_unlock(&trans_pcie->irq_lock);
++}
+ static inline void iwl_enable_hw_int_msk_msix(struct iwl_trans *trans, u32 msk)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 0296c29..45f1b7e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -1535,7 +1535,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 		 * have anything to service
+ 		 */
+ 		if (test_bit(STATUS_INT_ENABLED, &trans->status))
+-			iwl_enable_interrupts(trans);
++			_iwl_enable_interrupts(trans);
+ 		spin_unlock(&trans_pcie->irq_lock);
+ 		lock_map_release(&trans->sync_cmd_lockdep_map);
+ 		return IRQ_NONE;
+@@ -1727,15 +1727,17 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
+ 			 inta & ~trans_pcie->inta_mask);
+ 	}
+ 
++	spin_lock(&trans_pcie->irq_lock);
++	/* only Re-enable all interrupt if disabled by irq */
++	if (test_bit(STATUS_INT_ENABLED, &trans->status))
++		_iwl_enable_interrupts(trans);
+ 	/* we are loading the firmware, enable FH_TX interrupt only */
+-	if (handled & CSR_INT_BIT_FH_TX)
++	else if (handled & CSR_INT_BIT_FH_TX)
+ 		iwl_enable_fw_load_int(trans);
+-	/* only Re-enable all interrupt if disabled by irq */
+-	else if (test_bit(STATUS_INT_ENABLED, &trans->status))
+-		iwl_enable_interrupts(trans);
+ 	/* Re-enable RF_KILL if it occurred */
+ 	else if (handled & CSR_INT_BIT_RF_KILL)
+ 		iwl_enable_rfkill_int(trans);
++	spin_unlock(&trans_pcie->irq_lock);
+ 
+ out:
+ 	lock_map_release(&trans->sync_cmd_lockdep_map);
+@@ -1799,7 +1801,7 @@ void iwl_pcie_reset_ict(struct iwl_trans *trans)
+ 		return;
+ 
+ 	spin_lock(&trans_pcie->irq_lock);
+-	iwl_disable_interrupts(trans);
++	_iwl_disable_interrupts(trans);
+ 
+ 	memset(trans_pcie->ict_tbl, 0, ICT_SIZE);
+ 
+@@ -1815,7 +1817,7 @@ void iwl_pcie_reset_ict(struct iwl_trans *trans)
+ 	trans_pcie->use_ict = true;
+ 	trans_pcie->ict_index = 0;
+ 	iwl_write32(trans, CSR_INT, trans_pcie->inta_mask);
+-	iwl_enable_interrupts(trans);
++	_iwl_enable_interrupts(trans);
+ 	spin_unlock(&trans_pcie->irq_lock);
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 3b7a414..9e953a4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1037,9 +1037,7 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 	was_hw_rfkill = iwl_is_rfkill_set(trans);
+ 
+ 	/* tell the device to stop sending interrupts */
+-	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+-	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	/* device going down, Stop using ICT table */
+ 	iwl_pcie_disable_ict(trans);
+@@ -1083,9 +1081,7 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
+ 	 * the time, unless the interrupt is ACKed even if the interrupt
+ 	 * should be masked. Re-ACK all the interrupts here.
+ 	 */
+-	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+-	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	/* clear all status bits */
+ 	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
+@@ -1578,15 +1574,11 @@ static void iwl_trans_pcie_op_mode_leave(struct iwl_trans *trans)
+ 	mutex_lock(&trans_pcie->mutex);
+ 
+ 	/* disable interrupts - don't enable HW RF kill interrupt */
+-	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+-	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	iwl_pcie_apm_stop(trans, true);
+ 
+-	spin_lock(&trans_pcie->irq_lock);
+ 	iwl_disable_interrupts(trans);
+-	spin_unlock(&trans_pcie->irq_lock);
+ 
+ 	iwl_pcie_disable_ict(trans);
+ 
+-- 
+2.8.1
 
