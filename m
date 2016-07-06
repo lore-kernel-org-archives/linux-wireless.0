@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:17272 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752867AbcGYPwK (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33520 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753885AbcGFKpI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2016 11:52:10 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6PFo7f0019449
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:52:10 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 24c83gynf5-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:52:10 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2 6/8] mwifiex: remove misleading disconnect message
-Date: Mon, 25 Jul 2016 21:21:09 +0530
-Message-ID: <1469461871-3135-7-git-send-email-akarwar@marvell.com> (sfid-20160725_175215_294043_3705FEE9)
-In-Reply-To: <1469461871-3135-1-git-send-email-akarwar@marvell.com>
-References: <1469461871-3135-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 6 Jul 2016 06:45:08 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Ayala Beker <ayala.beker@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:13 +0300
+Message-Id: <1467801651-1816-18-git-send-email-luca@coelho.fi> (sfid-20160706_124511_591344_B69113F9)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 18/56] iwlwifi: mvm: fix RX mpdu status enum
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Disconnect message in mwifiex_reset_connect_state() would displays
-necessary information. We unnecessarily have exactly same message in
-cfg80211_disconnect(). As priv->cfg_bssid is cleared at this point of
-time, it prints incorrect(all zero) MAC.
+From: Ayala Beker <ayala.beker@intel.com>
 
-This message is removed here.
+FW sets status for each RX packet.
+Enum in the driver doesn't match with FW definition - fix it.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 871ad8a..235fb39 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2012,10 +2012,6 @@ mwifiex_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
- 	if (mwifiex_deauthenticate(priv, NULL))
- 		return -EFAULT;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+index 1994331..acc5cd5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+@@ -296,7 +296,7 @@ enum iwl_rx_mpdu_status {
+ 	IWL_RX_MPDU_STATUS_OVERRUN_OK		= BIT(1),
+ 	IWL_RX_MPDU_STATUS_SRC_STA_FOUND	= BIT(2),
+ 	IWL_RX_MPDU_STATUS_KEY_VALID		= BIT(3),
+-	IWL_RX_MPDU_STATUS_KEY_ERROR		= BIT(4),
++	IWL_RX_MPDU_STATUS_KEY_PARAM_OK		= BIT(4),
+ 	IWL_RX_MPDU_STATUS_ICV_OK		= BIT(5),
+ 	IWL_RX_MPDU_STATUS_MIC_OK		= BIT(6),
+ 	IWL_RX_MPDU_RES_STATUS_TTAK_OK		= BIT(7),
+@@ -311,7 +311,7 @@ enum iwl_rx_mpdu_status {
+ 	IWL_RX_MPDU_STATUS_WEP_MATCH		= BIT(12),
+ 	IWL_RX_MPDU_STATUS_EXT_IV_MATCH		= BIT(13),
+ 	IWL_RX_MPDU_STATUS_KEY_ID_MATCH		= BIT(14),
+-	IWL_RX_MPDU_STATUS_KEY_COLOR		= BIT(15),
++	IWL_RX_MPDU_STATUS_ROBUST_MNG_FRAME	= BIT(15),
+ };
  
--	mwifiex_dbg(priv->adapter, MSG,
--		    "info: successfully disconnected from %pM:\t"
--		    "reason code %d\n", priv->cfg_bssid, reason_code);
--
- 	eth_zero_addr(priv->cfg_bssid);
- 	priv->hs2_enabled = false;
- 
+ enum iwl_rx_mpdu_hash_filter {
 -- 
-1.9.1
+2.8.1
 
