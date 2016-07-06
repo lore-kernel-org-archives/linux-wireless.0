@@ -1,237 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:36098 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990AbcGFA3S (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33180 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753242AbcGFKlR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 20:29:18 -0400
-From: Masashi Honma <masashi.honma@gmail.com>
-To: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-	linux-audit@redhat.com, cluster-devel@redhat.com
-Cc: davem@davemloft.net, johannes@sipsolutions.net,
-	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
-	dledford@redhat.com, sean.hefty@intel.com,
-	hal.rosenstock@gmail.com, paul@paul-moore.com, eparis@redhat.com,
-	zbr@ioremap.net, pshelar@nicira.com, ccaulfie@redhat.com,
-	teigland@redhat.com, bsingharora@gmail.com,
-	Masashi Honma <masashi.honma@gmail.com>
-Subject: [RFC 3/7] netlink: Add allocation flag to nlmsg_unicast()
-Date: Wed,  6 Jul 2016 09:28:32 +0900
-Message-Id: <1467764916-4983-4-git-send-email-masashi.honma@gmail.com> (sfid-20160706_023103_250884_7F244319)
-In-Reply-To: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
-References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
+	Wed, 6 Jul 2016 06:41:17 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:39:57 +0300
+Message-Id: <1467801651-1816-2-git-send-email-luca@coelho.fi> (sfid-20160706_124126_650504_67D9AC45)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 02/56] iwlwifi: change fw.mvm_fw to fw.type
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- crypto/crypto_user.c              |  3 ++-
- drivers/infiniband/core/netlink.c |  2 +-
- include/net/genetlink.h           |  2 +-
- include/net/netlink.h             |  6 ++++--
- net/core/rtnetlink.c              |  2 +-
- net/netfilter/nf_tables_api.c     | 10 +++++-----
- net/netlink/af_netlink.c          |  2 +-
- net/xfrm/xfrm_user.c              | 15 +++++++++------
- 8 files changed, 24 insertions(+), 18 deletions(-)
+From: Johannes Berg <johannes.berg@intel.com>
 
-diff --git a/crypto/crypto_user.c b/crypto/crypto_user.c
-index 7097a33..f379b74 100644
---- a/crypto/crypto_user.c
-+++ b/crypto/crypto_user.c
-@@ -249,7 +249,8 @@ drop_alg:
- 	if (err)
- 		return err;
+Instead of explicitly indicating the difference between just
+DVM and MVM with an mvm_fw boolean change this to fw.type to
+be more extensible and easier to understand.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 26 ++++++++++++++++----------
+ drivers/net/wireless/intel/iwlwifi/iwl-fw.h  | 14 ++++++++++++--
+ 2 files changed, 28 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 26afa72..e2df544 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -795,17 +795,17 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 		 case IWL_UCODE_TLV_SEC_RT:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_REGULAR,
+ 					    tlv_len);
+-			drv->fw.mvm_fw = true;
++			drv->fw.type = IWL_FW_MVM;
+ 			break;
+ 		case IWL_UCODE_TLV_SEC_INIT:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_INIT,
+ 					    tlv_len);
+-			drv->fw.mvm_fw = true;
++			drv->fw.type = IWL_FW_MVM;
+ 			break;
+ 		case IWL_UCODE_TLV_SEC_WOWLAN:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_WOWLAN,
+ 					    tlv_len);
+-			drv->fw.mvm_fw = true;
++			drv->fw.type = IWL_FW_MVM;
+ 			break;
+ 		case IWL_UCODE_TLV_DEF_CALIB:
+ 			if (tlv_len != sizeof(struct iwl_tlv_calib_data))
+@@ -827,17 +827,17 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 		 case IWL_UCODE_TLV_SECURE_SEC_RT:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_REGULAR,
+ 					    tlv_len);
+-			drv->fw.mvm_fw = true;
++			drv->fw.type = IWL_FW_MVM;
+ 			break;
+ 		case IWL_UCODE_TLV_SECURE_SEC_INIT:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_INIT,
+ 					    tlv_len);
+-			drv->fw.mvm_fw = true;
++			drv->fw.type = IWL_FW_MVM;
+ 			break;
+ 		case IWL_UCODE_TLV_SECURE_SEC_WOWLAN:
+ 			iwl_store_ucode_sec(pieces, tlv_data, IWL_UCODE_WOWLAN,
+ 					    tlv_len);
+-			drv->fw.mvm_fw = true;
++			drv->fw.type = IWL_FW_MVM;
+ 			break;
+ 		case IWL_UCODE_TLV_NUM_OF_CPU:
+ 			if (tlv_len != sizeof(u32))
+@@ -1272,7 +1272,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	 * In mvm uCode there is no difference between data and instructions
+ 	 * sections.
+ 	 */
+-	if (!fw->mvm_fw && validate_sec_sizes(drv, pieces, drv->cfg))
++	if (fw->type == IWL_FW_DVM && validate_sec_sizes(drv, pieces, drv->cfg))
+ 		goto try_again;
  
--	return nlmsg_unicast(crypto_nlsk, skb, NETLINK_CB(in_skb).portid);
-+	return nlmsg_unicast(crypto_nlsk, skb, NETLINK_CB(in_skb).portid,
-+			     GFP_ATOMIC);
- }
+ 	/* Allocate ucode buffers for card's bus-master loading ... */
+@@ -1400,10 +1400,16 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
+ 	release_firmware(ucode_raw);
  
- static int crypto_dump_report(struct sk_buff *skb, struct netlink_callback *cb)
-diff --git a/drivers/infiniband/core/netlink.c b/drivers/infiniband/core/netlink.c
-index 9b8c20c..09037a9 100644
---- a/drivers/infiniband/core/netlink.c
-+++ b/drivers/infiniband/core/netlink.c
-@@ -229,7 +229,7 @@ static void ibnl_rcv(struct sk_buff *skb)
- int ibnl_unicast(struct sk_buff *skb, struct nlmsghdr *nlh,
- 			__u32 pid)
- {
--	return nlmsg_unicast(nls, skb, pid);
-+	return nlmsg_unicast(nls, skb, pid, gfp_any());
- }
- EXPORT_SYMBOL(ibnl_unicast);
+ 	mutex_lock(&iwlwifi_opmode_table_mtx);
+-	if (fw->mvm_fw)
+-		op = &iwlwifi_opmode_table[MVM_OP_MODE];
+-	else
++	switch (fw->type) {
++	case IWL_FW_DVM:
+ 		op = &iwlwifi_opmode_table[DVM_OP_MODE];
++		break;
++	default:
++		WARN(1, "Invalid fw type %d\n", fw->type);
++	case IWL_FW_MVM:
++		op = &iwlwifi_opmode_table[MVM_OP_MODE];
++		break;
++	}
  
-diff --git a/include/net/genetlink.h b/include/net/genetlink.h
-index 8d4608c..b107a35 100644
---- a/include/net/genetlink.h
-+++ b/include/net/genetlink.h
-@@ -334,7 +334,7 @@ int genlmsg_multicast_allns(struct genl_family *family,
-  */
- static inline int genlmsg_unicast(struct net *net, struct sk_buff *skb, u32 portid)
- {
--	return nlmsg_unicast(net->genl_sock, skb, portid);
-+	return nlmsg_unicast(net->genl_sock, skb, portid, 0);
- }
+ 	IWL_INFO(drv, "loaded firmware version %s op_mode %s\n",
+ 		 drv->fw.fw_version, op->name);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
+index e461d63..655ec52 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
+@@ -231,6 +231,16 @@ struct iwl_gscan_capabilities {
+ };
  
  /**
-diff --git a/include/net/netlink.h b/include/net/netlink.h
-index 898e449..df5b533 100644
---- a/include/net/netlink.h
-+++ b/include/net/netlink.h
-@@ -585,12 +585,14 @@ static inline int nlmsg_multicast(struct sock *sk, struct sk_buff *skb,
-  * @sk: netlink socket to spread message to
-  * @skb: netlink message as socket buffer
-  * @portid: netlink portid of the destination socket
-+ * @flags: allocation flags
-  */
--static inline int nlmsg_unicast(struct sock *sk, struct sk_buff *skb, u32 portid)
-+static inline int nlmsg_unicast(struct sock *sk, struct sk_buff *skb,
-+				u32 portid, gfp_t flags)
- {
- 	int err;
++ * enum iwl_fw_type - iwlwifi firmware type
++ * @IWL_FW_DVM: DVM firmware
++ * @IWL_FW_MVM: MVM firmware
++ */
++enum iwl_fw_type {
++	IWL_FW_DVM,
++	IWL_FW_MVM,
++};
++
++/**
+  * struct iwl_fw - variables associated with the firmware
+  *
+  * @ucode_ver: ucode version from the ucode file
+@@ -244,7 +254,7 @@ struct iwl_gscan_capabilities {
+  * @inst_evtlog_ptr: event log offset for runtime ucode.
+  * @inst_evtlog_size: event log size for runtime ucode.
+  * @inst_errlog_ptr: error log offfset for runtime ucode.
+- * @mvm_fw: indicates this is MVM firmware
++ * @type: firmware type (&enum iwl_fw_type)
+  * @cipher_scheme: optional external cipher scheme.
+  * @human_readable: human readable version
+  * @sdio_adma_addr: the default address to set for the ADMA in SDIO mode until
+@@ -275,7 +285,7 @@ struct iwl_fw {
+ 	u8 valid_tx_ant;
+ 	u8 valid_rx_ant;
  
--	err = netlink_unicast(sk, skb, portid, MSG_DONTWAIT, 0);
-+	err = netlink_unicast(sk, skb, portid, MSG_DONTWAIT, flags);
- 	if (err > 0)
- 		err = 0;
+-	bool mvm_fw;
++	enum iwl_fw_type type;
  
-diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
-index 3433633f..7f7927f 100644
---- a/net/core/rtnetlink.c
-+++ b/net/core/rtnetlink.c
-@@ -657,7 +657,7 @@ int rtnl_unicast(struct sk_buff *skb, struct net *net, u32 pid)
- {
- 	struct sock *rtnl = net->rtnl;
- 
--	return nlmsg_unicast(rtnl, skb, pid);
-+	return nlmsg_unicast(rtnl, skb, pid, gfp_any());
- }
- EXPORT_SYMBOL(rtnl_unicast);
- 
-diff --git a/net/netfilter/nf_tables_api.c b/net/netfilter/nf_tables_api.c
-index 2c88187..4afb751 100644
---- a/net/netfilter/nf_tables_api.c
-+++ b/net/netfilter/nf_tables_api.c
-@@ -581,7 +581,7 @@ static int nf_tables_gettable(struct net *net, struct sock *nlsk,
- 	if (err < 0)
- 		goto err;
- 
--	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
-+	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
- 
- err:
- 	kfree_skb(skb2);
-@@ -1144,7 +1144,7 @@ static int nf_tables_getchain(struct net *net, struct sock *nlsk,
- 	if (err < 0)
- 		goto err;
- 
--	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
-+	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
- 
- err:
- 	kfree_skb(skb2);
-@@ -1976,7 +1976,7 @@ static int nf_tables_getrule(struct net *net, struct sock *nlsk,
- 	if (err < 0)
- 		goto err;
- 
--	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
-+	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
- 
- err:
- 	kfree_skb(skb2);
-@@ -2664,7 +2664,7 @@ static int nf_tables_getset(struct net *net, struct sock *nlsk,
- 	if (err < 0)
- 		goto err;
- 
--	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
-+	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
- 
- err:
- 	kfree_skb(skb2);
-@@ -3798,7 +3798,7 @@ static int nf_tables_getgen(struct net *net, struct sock *nlsk,
- 	if (err < 0)
- 		goto err;
- 
--	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid);
-+	return nlmsg_unicast(nlsk, skb2, NETLINK_CB(skb).portid, GFP_KERNEL);
- err:
- 	kfree_skb(skb2);
- 	return err;
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index c68bf74..acc1ee6 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -2328,7 +2328,7 @@ int nlmsg_notify(struct sock *sk, struct sk_buff *skb, u32 portid,
- 	if (report) {
- 		int err2;
- 
--		err2 = nlmsg_unicast(sk, skb, portid);
-+		err2 = nlmsg_unicast(sk, skb, portid, flags);
- 		if (!err || err == -ESRCH)
- 			err = err2;
- 	}
-diff --git a/net/xfrm/xfrm_user.c b/net/xfrm/xfrm_user.c
-index d516845..4af9977 100644
---- a/net/xfrm/xfrm_user.c
-+++ b/net/xfrm/xfrm_user.c
-@@ -1108,7 +1108,7 @@ static int xfrm_get_spdinfo(struct sk_buff *skb, struct nlmsghdr *nlh,
- 	if (build_spdinfo(r_skb, net, sportid, seq, *flags) < 0)
- 		BUG();
- 
--	return nlmsg_unicast(net->xfrm.nlsk, r_skb, sportid);
-+	return nlmsg_unicast(net->xfrm.nlsk, r_skb, sportid, GFP_ATOMIC);
- }
- 
- static inline size_t xfrm_sadinfo_msgsize(void)
-@@ -1166,7 +1166,7 @@ static int xfrm_get_sadinfo(struct sk_buff *skb, struct nlmsghdr *nlh,
- 	if (build_sadinfo(r_skb, net, sportid, seq, *flags) < 0)
- 		BUG();
- 
--	return nlmsg_unicast(net->xfrm.nlsk, r_skb, sportid);
-+	return nlmsg_unicast(net->xfrm.nlsk, r_skb, sportid, GFP_ATOMIC);
- }
- 
- static int xfrm_get_sa(struct sk_buff *skb, struct nlmsghdr *nlh,
-@@ -1186,7 +1186,8 @@ static int xfrm_get_sa(struct sk_buff *skb, struct nlmsghdr *nlh,
- 	if (IS_ERR(resp_skb)) {
- 		err = PTR_ERR(resp_skb);
- 	} else {
--		err = nlmsg_unicast(net->xfrm.nlsk, resp_skb, NETLINK_CB(skb).portid);
-+		err = nlmsg_unicast(net->xfrm.nlsk, resp_skb,
-+				    NETLINK_CB(skb).portid, GFP_ATOMIC);
- 	}
- 	xfrm_state_put(x);
- out_noput:
-@@ -1244,7 +1245,8 @@ static int xfrm_alloc_userspi(struct sk_buff *skb, struct nlmsghdr *nlh,
- 		goto out;
- 	}
- 
--	err = nlmsg_unicast(net->xfrm.nlsk, resp_skb, NETLINK_CB(skb).portid);
-+	err = nlmsg_unicast(net->xfrm.nlsk, resp_skb, NETLINK_CB(skb).portid,
-+			    GFP_ATOMIC);
- 
- out:
- 	xfrm_state_put(x);
-@@ -1760,7 +1762,7 @@ static int xfrm_get_policy(struct sk_buff *skb, struct nlmsghdr *nlh,
- 			err = PTR_ERR(resp_skb);
- 		} else {
- 			err = nlmsg_unicast(net->xfrm.nlsk, resp_skb,
--					    NETLINK_CB(skb).portid);
-+					    NETLINK_CB(skb).portid, GFP_KERNEL);
- 		}
- 	} else {
- 		xfrm_audit_policy_delete(xp, err ? 0 : 1, true);
-@@ -1914,7 +1916,8 @@ static int xfrm_get_ae(struct sk_buff *skb, struct nlmsghdr *nlh,
- 
- 	if (build_aevent(r_skb, x, &c) < 0)
- 		BUG();
--	err = nlmsg_unicast(net->xfrm.nlsk, r_skb, NETLINK_CB(skb).portid);
-+	err = nlmsg_unicast(net->xfrm.nlsk, r_skb, NETLINK_CB(skb).portid,
-+			    GFP_ATOMIC);
- 	spin_unlock_bh(&x->lock);
- 	xfrm_state_put(x);
- 	return err;
+ 	struct ieee80211_cipher_scheme cs[IWL_UCODE_MAX_CS];
+ 	u8 human_readable[FW_VER_HUMAN_READABLE_SZ];
 -- 
-2.7.4
+2.8.1
 
