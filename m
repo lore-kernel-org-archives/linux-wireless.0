@@ -1,90 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:61765 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752910AbcGAJSn (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:36095 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754927AbcGFQUL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 05:18:43 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Rob Herring <robh@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, linux-sunxi@googlegroups.com,
-	Chen-Yu Tsai <wens@csie.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
-Date: Fri, 01 Jul 2016 11:20:26 +0200
-Message-ID: <4973367.zalLWgQG3c@wuerfel> (sfid-20160701_111901_611843_56CC298B)
-In-Reply-To: <b18cd232-711a-b617-2f09-09c4bdf2c3c4@broadcom.com>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> <20160701020836.GA1722@rob-hp-laptop> <b18cd232-711a-b617-2f09-09c4bdf2c3c4@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 6 Jul 2016 12:20:11 -0400
+Received: by mail-wm0-f44.google.com with SMTP id f126so179920175wma.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 09:20:10 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
+	linux-kernel@vger.kernel.org,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv5 wl-drv-next 2/2] mt7601u: use linux/bitfield.h
+Date: Wed,  6 Jul 2016 17:19:37 +0100
+Message-Id: <1467821977-11777-3-git-send-email-jakub.kicinski@netronome.com> (sfid-20160706_182032_930402_96945332)
+In-Reply-To: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
+References: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, July 1, 2016 10:17:37 AM CEST Arend Van Spriel wrote:
-> 
-> On 1-7-2016 4:08, Rob Herring wrote:
-> > On Wed, Jun 29, 2016 at 04:04:31PM +0200, Hans de Goede wrote:
-> >> Add a brcm,nvram_file_name dt property to allow overruling the default
-> >> nvram filename for sdio devices. The idea is that we can specify a
-> >> board specific nvram file, e.g. brcmfmac43362-ap6210.txt for boards
-> >> with an ap6210 wifi sdio module and ship this in linux-firmware, so
-> >> that wifi will work out of the box, without requiring users to find
-> >> and then manually install the right nvram file for their board.
-> > 
-> > What about putting its contents directly into DT? It's just text 
-> > key/value pairs so it would match up well.
-> 
-> It would be an option, but I have no clue how to dig up documentation of
-> these key,value pairs. The file is typically obtained from a wifi module
-> vendor which would need to be converted to DT format, ie. prefix with
-> "brcm," etc. From driver perspective this would mean it need to know
-> keys. Currently, it just takes the file contents and sends it to the device.
+Use the newly added linux/bitfield.h.
 
-I can see multiple ways to do this here:
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+---
+ drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
+ drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
+ 3 files changed, 4 insertions(+), 80 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
 
-- create a child node for the nvram settings and document that the properties
-  in there follow exactly the format that is used for the nvram file.
+diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.h b/drivers/net/wireless/mediatek/mt7601u/dma.h
+index 978e8a90b87f..166ac71905d2 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/dma.h
++++ b/drivers/net/wireless/mediatek/mt7601u/dma.h
+@@ -18,8 +18,6 @@
+ #include <asm/unaligned.h>
+ #include <linux/skbuff.h>
+ 
+-#include "util.h"
+-
+ #define MT_DMA_HDR_LEN			4
+ #define MT_RX_INFO_LEN			4
+ #define MT_FCE_INFO_LEN			4
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
+index 428bd2f10b7b..5ef62e02ce66 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
++++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
+@@ -15,6 +15,7 @@
+ #ifndef MT7601U_H
+ #define MT7601U_H
+ 
++#include <linux/bitfield.h>
+ #include <linux/kernel.h>
+ #include <linux/device.h>
+ #include <linux/mutex.h>
+@@ -24,7 +25,6 @@
+ #include <linux/debugfs.h>
+ 
+ #include "regs.h"
+-#include "util.h"
+ 
+ #define MT_CALIBRATE_INTERVAL		(4 * HZ)
+ 
+@@ -282,6 +282,9 @@ struct mt7601u_rxwi;
+ 
+ extern const struct ieee80211_ops mt7601u_ops;
+ 
++#define MT76_SET	FIELD_PUT
++#define MT76_GET	FIELD_GET
++
+ void mt7601u_init_debugfs(struct mt7601u_dev *dev);
+ 
+ u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset);
+diff --git a/drivers/net/wireless/mediatek/mt7601u/util.h b/drivers/net/wireless/mediatek/mt7601u/util.h
+deleted file mode 100644
+index b89140bf1210..000000000000
+--- a/drivers/net/wireless/mediatek/mt7601u/util.h
++++ /dev/null
+@@ -1,77 +0,0 @@
+-/*
+- * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
+- * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License version 2
+- * as published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- */
+-
+-#ifndef __MT76_UTIL_H
+-#define __MT76_UTIL_H
+-
+-/*
+- * Power of two check, this will check
+- * if the mask that has been given contains and contiguous set of bits.
+- * Note that we cannot use the is_power_of_2() function since this
+- * check must be done at compile-time.
+- */
+-#define is_power_of_two(x)	( !((x) & ((x)-1)) )
+-#define low_bit_mask(x)		( ((x)-1) & ~(x) )
+-#define is_valid_mask(x)	is_power_of_two(1LU + (x) + low_bit_mask(x))
+-
+-/*
+- * Macros to find first set bit in a variable.
+- * These macros behave the same as the __ffs() functions but
+- * the most important difference that this is done during
+- * compile-time rather then run-time.
+- */
+-#define compile_ffs2(__x) \
+-	__builtin_choose_expr(((__x) & 0x1), 0, 1)
+-
+-#define compile_ffs4(__x) \
+-	__builtin_choose_expr(((__x) & 0x3), \
+-			      (compile_ffs2((__x))), \
+-			      (compile_ffs2((__x) >> 2) + 2))
+-
+-#define compile_ffs8(__x) \
+-	__builtin_choose_expr(((__x) & 0xf), \
+-			      (compile_ffs4((__x))), \
+-			      (compile_ffs4((__x) >> 4) + 4))
+-
+-#define compile_ffs16(__x) \
+-	__builtin_choose_expr(((__x) & 0xff), \
+-			      (compile_ffs8((__x))), \
+-			      (compile_ffs8((__x) >> 8) + 8))
+-
+-#define compile_ffs32(__x) \
+-	__builtin_choose_expr(((__x) & 0xffff), \
+-			      (compile_ffs16((__x))), \
+-			      (compile_ffs16((__x) >> 16) + 16))
+-
+-/*
+- * This macro will check the requirements for the FIELD{8,16,32} macros
+- * The mask should be a constant non-zero contiguous set of bits which
+- * does not exceed the given typelimit.
+- */
+-#define FIELD_CHECK(__mask) \
+-	BUILD_BUG_ON(!(__mask) || !is_valid_mask(__mask))
+-
+-#define MT76_SET(_mask, _val)						\
+-	({								\
+-		FIELD_CHECK(_mask);					\
+-		(((u32) (_val)) << compile_ffs32(_mask)) & _mask;	\
+-	})
+-
+-#define MT76_GET(_mask, _val)						\
+-	({								\
+-		FIELD_CHECK(_mask);					\
+-		(u32) (((_val) & _mask) >> compile_ffs32(_mask));	\
+-	})
+-
+-#endif
+-- 
+1.9.1
 
-- have just one property that contains a copy of the entire nvram file,
-  serving as a backing store for the file instead of pointing to the file.
-
-- figure out more about the actual properties that are required and then
-  document only the ones that are actually different between devices using
-  the same chip. With a per-chip file that we can put into linux-firmware,
-  and the data from the OTP ROM, we might need only a small subset here
-  that fits well enough in the DT.
-
-> >> diff --git a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> >> index 5dbf169..2ba13a6 100644
-> >> --- a/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> >> +++ b/Documentation/devicetree/bindings/net/wireless/brcm,bcm43xx-fmac.txt
-> >> @@ -11,6 +11,7 @@ Required properties:
-> >>  Optional properties:
-> >>   - brcm,drive-strength : drive strength used for SDIO pins on device in mA
-> >>  	(default = 6).
-> >> + - brcm,nvram_file_name : name of the nvram file to load
-> > 
-> > The need for firmware file names has come up several times though 
-> > nothing merged to yet. There has been at least some level of agreement 
-> > to use "firmware-name" here. 
-> 
-> Do you mean with or without vendor prefix? Actually the device needs two
-> files to initialize. The firmware that is needed to have anything
-> running on the device and the nvram data that characterizes the device
-> for that firmware.
-
-I thought the outcome was to never put file names into DT for new bindings, because
-it doesn't do what you want in the end: Either the "compatible" string correctly
-identifies the device and can be used to construct or look up a file name, or
-the compatible string is not enough to actually identify the device and should
-be extended with a more specific one.
-
-Having the module identifer in a property to use that along with the compatible
-string for the file name would also work, but I think just using the compatible
-string list by itself makes more sense.
-
-	Arnd
