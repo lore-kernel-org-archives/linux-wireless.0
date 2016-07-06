@@ -1,271 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [67.231.156.173] ([67.231.156.173]:49943 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752883AbcGMNuC (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:33472 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753724AbcGFKov (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 09:50:02 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6DDlKfD029844
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 06:49:07 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0b-0016f401.pphosted.com with ESMTP id 2430sgqrqv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 06:49:07 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 2/2] mwifiex: add hostcmd wext ioctl support
-Date: Wed, 13 Jul 2016 19:18:23 +0530
-Message-ID: <1468417703-32716-2-git-send-email-akarwar@marvell.com> (sfid-20160713_155347_220504_0B0B2AB1)
-In-Reply-To: <1468417703-32716-1-git-send-email-akarwar@marvell.com>
-References: <1468417703-32716-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 6 Jul 2016 06:44:51 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Date: Wed,  6 Jul 2016 13:40:36 +0300
+Message-Id: <1467801651-1816-41-git-send-email-luca@coelho.fi> (sfid-20160706_124456_110713_44B41473)
+In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
+References: <1467801452.25088.20.camel@coelho.fi>
+Subject: [PATCH 41/56] iwlwifi: mvm: support tdls in dqa mode
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-This patch adds ndo_ioctl support to mwifiex netdev handlers.
-This will be used to download hostcmds to firmware from userspace.
-This is needed for manufacturing mode support in mwifiex. ndo_ioctl
-is allowed only when mfg mode is enabled via module load parameters.
+Support TDLS when working in DQA mode.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+This is done mainly by NOT doing any special things
+for TDLS, as the queues are dynamically created anyway,
+so no need to allocate them ahead of time.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-v3: Add "select WIRELESS_EXT" in Kconfig to resolve kbuild test robot errors.
-    WEXT_PRIV seems to have a dependency with WIRELESS_EXT.
-v2: 1) Sequence of these two patches are changed to resolve compilation
-    error seen if only 1/2 is applied.
-    2) Add "select WEXT_PRIV" in Kconfig to resolve warnings reported by
-    kbuild test robot.
----
- drivers/net/wireless/marvell/mwifiex/Kconfig  |  6 +++
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 59 +++++++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/main.c   | 38 +++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/main.h   |  9 +++-
- 4 files changed, 111 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 31 +++++++++++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c  |  8 ++++++-
+ 2 files changed, 26 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/Kconfig b/drivers/net/wireless/marvell/mwifiex/Kconfig
-index 279167d..aed32ce 100644
---- a/drivers/net/wireless/marvell/mwifiex/Kconfig
-+++ b/drivers/net/wireless/marvell/mwifiex/Kconfig
-@@ -13,6 +13,8 @@ config MWIFIEX_SDIO
- 	depends on MWIFIEX && MMC
- 	select FW_LOADER
- 	select WANT_DEV_COREDUMP
-+	select WIRELESS_EXT
-+	select WEXT_PRIV
- 	---help---
- 	  This adds support for wireless adapters based on Marvell
- 	  8786/8787/8797/8887/8897/8997 chipsets with SDIO interface.
-@@ -25,6 +27,8 @@ config MWIFIEX_PCIE
- 	depends on MWIFIEX && PCI
- 	select FW_LOADER
- 	select WANT_DEV_COREDUMP
-+	select WIRELESS_EXT
-+	select WEXT_PRIV
- 	---help---
- 	  This adds support for wireless adapters based on Marvell
- 	  8766/8897/8997 chipsets with PCIe interface.
-@@ -36,6 +40,8 @@ config MWIFIEX_USB
- 	tristate "Marvell WiFi-Ex Driver for USB8766/8797/8997"
- 	depends on MWIFIEX && USB
- 	select FW_LOADER
-+	select WIRELESS_EXT
-+	select WEXT_PRIV
- 	---help---
- 	  This adds support for wireless adapters based on Marvell
- 	  8797/8997 chipset with USB interface.
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 8d57493..d961305 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -826,6 +826,8 @@ int mwifiex_process_cmdresp(struct mwifiex_adapter *adapter)
- 			hostcmd = adapter->curr_cmd->data_buf;
- 			hostcmd->len = size;
- 			memcpy(hostcmd->cmd, resp, size);
-+			adapter->hostcmd_resp_data.len = size;
-+			memcpy(adapter->hostcmd_resp_data.cmd, resp, size);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 7321bb6..1617de7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -893,8 +893,11 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 	mvm_sta->tid_disable_agg = 0xffff; /* No aggs at first */
+ 	mvm_sta->tfd_queue_msk = 0;
+ 
+-	/* allocate new queues for a TDLS station */
+-	if (sta->tdls) {
++	/*
++	 * Allocate new queues for a TDLS station, unless we're in DQA mode,
++	 * and then they'll be allocated dynamically
++	 */
++	if (!iwl_mvm_is_dqa_supported(mvm) && sta->tdls) {
+ 		ret = iwl_mvm_tdls_sta_init(mvm, sta);
+ 		if (ret)
+ 			return ret;
+@@ -958,7 +961,8 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 	return 0;
+ 
+ err:
+-	iwl_mvm_tdls_sta_deinit(mvm, sta);
++	if (!iwl_mvm_is_dqa_supported(mvm) && sta->tdls)
++		iwl_mvm_tdls_sta_deinit(mvm, sta);
+ 	return ret;
+ }
+ 
+@@ -1164,16 +1168,19 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
+ 		if (iwl_mvm_is_dqa_supported(mvm))
+ 			iwl_mvm_disable_sta_queues(mvm, vif, mvm_sta);
+ 
+-		/* if we are associated - we can't remove the AP STA now */
+-		if (vif->bss_conf.assoc)
+-			return ret;
++		if (vif->type == NL80211_IFTYPE_STATION &&
++		    mvmvif->ap_sta_id == mvm_sta->sta_id) {
++			/* if associated - we can't remove the AP STA now */
++			if (vif->bss_conf.assoc)
++				return ret;
+ 
+-		/* unassoc - go ahead - remove the AP STA now */
+-		mvmvif->ap_sta_id = IWL_MVM_STATION_COUNT;
++			/* unassoc - go ahead - remove the AP STA now */
++			mvmvif->ap_sta_id = IWL_MVM_STATION_COUNT;
+ 
+-		/* clear d0i3_ap_sta_id if no longer relevant */
+-		if (mvm->d0i3_ap_sta_id == mvm_sta->sta_id)
+-			mvm->d0i3_ap_sta_id = IWL_MVM_STATION_COUNT;
++			/* clear d0i3_ap_sta_id if no longer relevant */
++			if (mvm->d0i3_ap_sta_id == mvm_sta->sta_id)
++				mvm->d0i3_ap_sta_id = IWL_MVM_STATION_COUNT;
++		}
+ 	}
+ 
+ 	/*
+@@ -1211,7 +1218,7 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
+ 	} else {
+ 		spin_unlock_bh(&mvm_sta->lock);
+ 
+-		if (sta->tdls)
++		if (!iwl_mvm_is_dqa_supported(mvm) && sta->tdls)
+ 			iwl_mvm_tdls_sta_deinit(mvm, sta);
+ 
+ 		ret = iwl_mvm_rm_sta_common(mvm, mvm_sta->sta_id);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index f3a6e95..c6585ab 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -546,6 +546,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 	 * (this is not possible for unicast packets as a TLDS discovery
+ 	 * response are sent without a station entry); otherwise use the
+ 	 * AUX station.
++	 * In DQA mode, if vif is of type STATION and frames are not multicast,
++	 * they should be sent from the BSS queue. For example, TDLS setup
++	 * frames should be sent on this queue, as they go through the AP.
+ 	 */
+ 	sta_id = mvm->aux_sta.sta_id;
+ 	if (info.control.vif) {
+@@ -563,6 +566,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 
+ 			if (ap_sta_id != IWL_MVM_STATION_COUNT)
+ 				sta_id = ap_sta_id;
++		} else if (iwl_mvm_is_dqa_supported(mvm) &&
++			   info.control.vif->type == NL80211_IFTYPE_STATION) {
++			queue = IWL_MVM_DQA_BSS_CLIENT_QUEUE;
  		}
  	}
- 	orig_cmdresp_no = le16_to_cpu(resp->command);
-@@ -1208,6 +1210,63 @@ mwifiex_process_hs_config(struct mwifiex_adapter *adapter)
- 				   false);
- }
- EXPORT_SYMBOL_GPL(mwifiex_process_hs_config);
-+/* This function get hostcmd data from userspace and construct a cmd
-+   * to be download to FW.
-+  */
-+int mwifiex_process_host_command(struct mwifiex_private *priv,
-+				 struct iwreq *wrq)
-+{
-+	struct mwifiex_ds_misc_cmd *hostcmd_buf;
-+	struct host_cmd_ds_command *cmd;
-+	struct mwifiex_adapter *adapter = priv->adapter;
-+	int ret;
-+
-+	hostcmd_buf = kzalloc(sizeof(*hostcmd_buf), GFP_KERNEL);
-+	if (!hostcmd_buf)
-+		return -ENOMEM;
-+
-+	cmd = (void *)hostcmd_buf->cmd;
-+
-+	if (copy_from_user(cmd, wrq->u.data.pointer,
-+			   sizeof(cmd->command) + sizeof(cmd->size))) {
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	hostcmd_buf->len = le16_to_cpu(cmd->size);
-+	if (hostcmd_buf->len > MWIFIEX_SIZE_OF_CMD_BUFFER) {
-+		ret = -EINVAL;
-+		goto done;
-+	}
-+
-+	if (copy_from_user(cmd, wrq->u.data.pointer, hostcmd_buf->len)) {
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	if (mwifiex_send_cmd(priv, 0, 0, 0, hostcmd_buf, true)) {
-+		dev_err(priv->adapter->dev, "Failed to process hostcmd\n");
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+
-+	if (adapter->hostcmd_resp_data.len > hostcmd_buf->len) {
-+		ret = -EFBIG;
-+		goto done;
-+	}
-+
-+	if (copy_to_user(wrq->u.data.pointer, adapter->hostcmd_resp_data.cmd,
-+			 adapter->hostcmd_resp_data.len)) {
-+		ret = -EFAULT;
-+		goto done;
-+	}
-+	wrq->u.data.length = adapter->hostcmd_resp_data.len;
-+
-+	ret = 0;
-+done:
-+	kfree(hostcmd_buf);
-+	return ret;
-+}
  
- /*
-  * This function handles the command response of a sleep confirm command.
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index b54edf4..e3e1fe9 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1238,17 +1238,54 @@ mwifiex_netdev_select_wmm_queue(struct net_device *dev, struct sk_buff *skb,
- 	return mwifiex_1d_to_wmm_queue[skb->priority];
- }
+@@ -906,7 +912,7 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
  
-+static int mwifiex_do_ioctl(struct net_device *dev, struct ifreq *req, int cmd)
-+{
-+	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
-+	struct iwreq *wrq = (struct iwreq *)req;
-+	int ret;
-+
-+	if (!priv->adapter->mfg_mode)
-+		return -EINVAL;
-+
-+	dev_dbg(priv->adapter->dev, "ioctl cmd = 0x%x\n", cmd);
-+
-+	switch (cmd) {
-+	case MWIFIEX_HOSTCMD_IOCTL:
-+		ret = mwifiex_process_host_command(priv, wrq);
-+		break;
-+	default:
-+		ret = -EINVAL;
-+		break;
-+	}
-+
-+	return ret;
-+}
-+
- /* Network device handlers */
- static const struct net_device_ops mwifiex_netdev_ops = {
- 	.ndo_open = mwifiex_open,
- 	.ndo_stop = mwifiex_close,
- 	.ndo_start_xmit = mwifiex_hard_start_xmit,
- 	.ndo_set_mac_address = mwifiex_set_mac_address,
-+	.ndo_do_ioctl = mwifiex_do_ioctl,
- 	.ndo_validate_addr = eth_validate_addr,
- 	.ndo_tx_timeout = mwifiex_tx_timeout,
- 	.ndo_get_stats = mwifiex_get_stats,
- 	.ndo_set_rx_mode = mwifiex_set_multicast_list,
- 	.ndo_select_queue = mwifiex_netdev_select_wmm_queue,
-+	};
-+
-+static const struct iw_priv_args mwifiex_iwpriv_args[] = {
-+	{       MWIFIEX_HOSTCMD_IOCTL,
-+		IW_PRIV_TYPE_BYTE | 2047,
-+		IW_PRIV_TYPE_BYTE | 2047,
-+		"hostcmd"
-+	},
-+};
-+
-+static struct iw_handler_def mwifiex_iwpriv_handler_def = {
-+	.num_private_args = ARRAY_SIZE(mwifiex_iwpriv_args),
-+	.private_args = (struct iw_priv_args *)mwifiex_iwpriv_args,
- };
+ 	WARN_ON_ONCE(info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM);
  
- /*
-@@ -1276,6 +1313,7 @@ void mwifiex_init_priv_params(struct mwifiex_private *priv,
- {
- 	dev->netdev_ops = &mwifiex_netdev_ops;
- 	dev->destructor = free_netdev;
-+	dev->wireless_handlers = &mwifiex_iwpriv_handler_def;
- 	/* Initialize private structure */
- 	priv->current_key_index = 0;
- 	priv->media_connected = false;
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index ee71e4a..5713fe5 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -48,6 +48,8 @@
- #include <linux/pm_runtime.h>
- #include <linux/slab.h>
- #include <linux/of_irq.h>
-+#include <linux/wireless.h>
-+#include <net/iw_handler.h>
+-	if (sta->tdls) {
++	if (sta->tdls && !iwl_mvm_is_dqa_supported(mvm)) {
+ 		/* default to TID 0 for non-QoS packets */
+ 		u8 tdls_tid = tid == IWL_MAX_TID_COUNT ? 0 : tid;
  
- #include "decl.h"
- #include "ioctl.h"
-@@ -160,6 +162,9 @@ enum {
- /* Threshold for tx_timeout_cnt before we trigger a card reset */
- #define TX_TIMEOUT_THRESHOLD	6
- 
-+/* IOCTL number used for hostcmd process*/
-+#define MWIFIEX_HOSTCMD_IOCTL (SIOCIWFIRSTPRIV + 17)
-+
- #define MWIFIEX_DRV_INFO_SIZE_MAX 0x40000
- 
- /* Address alignment */
-@@ -895,6 +900,7 @@ struct mwifiex_adapter {
- 	u8 event_received;
- 	u8 data_received;
- 	u16 seq_num;
-+	struct mwifiex_ds_misc_cmd hostcmd_resp_data;
- 	struct cmd_ctrl_node *cmd_pool;
- 	struct cmd_ctrl_node *curr_cmd;
- 	/* spin lock for command */
-@@ -1557,7 +1563,8 @@ bool mwifiex_is_bss_in_11ac_mode(struct mwifiex_private *priv);
- u8 mwifiex_get_center_freq_index(struct mwifiex_private *priv, u8 band,
- 				 u32 pri_chan, u8 chan_bw);
- int mwifiex_init_channel_scan_gap(struct mwifiex_adapter *adapter);
--
-+int mwifiex_process_host_command(struct mwifiex_private *priv,
-+				 struct iwreq *wrq);
- int mwifiex_tdls_check_tx(struct mwifiex_private *priv, struct sk_buff *skb);
- void mwifiex_flush_auto_tdls_list(struct mwifiex_private *priv);
- void mwifiex_auto_tdls_update_peer_status(struct mwifiex_private *priv,
 -- 
-1.9.1
+2.8.1
 
