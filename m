@@ -1,154 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:34692 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751421AbcGSUKA (ORCPT
+Received: from mail2.tohojo.dk ([77.235.48.147]:57883 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932084AbcGFSwm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 16:10:00 -0400
-Received: by mail-pa0-f67.google.com with SMTP id hh10so1888556pac.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 13:10:00 -0700 (PDT)
-Subject: Re: [PATCH 0/4] brcm80211: Misc coverity fixes
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	brcm80211-dev-list.pdl@broadcom.com
-References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
- <bdbaa850-4ec4-9faf-dbae-e2a6dcc54e7c@broadcom.com>
- <578E5845.6030100@gmail.com>
- <53a36e85-37ad-10a5-81fc-40ce4efa6a65@broadcom.com>
- <578E71C8.1050003@gmail.com>
- <9774b991-ef09-66c9-c997-b2d043db5f0f@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
-	kvalo@codeaurora.org, hante.meuleman@broadcom.com
-From: Florian Fainelli <f.fainelli@gmail.com>
-Message-ID: <578E8916.6030601@gmail.com> (sfid-20160719_221005_736073_6D0FB2A3)
-Date: Tue, 19 Jul 2016 13:09:58 -0700
+	Wed, 6 Jul 2016 14:52:42 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless@vger.kernel.org,
+	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+	Tim Shepard <shep@alum.mit.edu>
+Subject: Re: [PATCH v2] ath9k: Switch to using mac80211 intermediate software
+	queues.
+References: <20160618190505.24038-1-toke@toke.dk>
+	<20160706161612.16597-1-toke@toke.dk>
+	<85779557-6c5a-fcd3-60cf-4d3c79aec652@nbd.name>
+Date: Wed, 06 Jul 2016 20:52:36 +0200
+In-Reply-To: <85779557-6c5a-fcd3-60cf-4d3c79aec652@nbd.name> (Felix Fietkau's
+	message of "Wed, 6 Jul 2016 20:13:55 +0200")
+Message-ID: <87r3b6mwej.fsf@toke.dk> (sfid-20160706_205246_250453_7854C352)
 MIME-Version: 1.0
-In-Reply-To: <9774b991-ef09-66c9-c997-b2d043db5f0f@broadcom.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/2016 12:36 PM, Arend Van Spriel wrote:
-> On 19-7-2016 20:30, Florian Fainelli wrote:
->> On 07/19/2016 11:21 AM, Arend Van Spriel wrote:
->>> On 19-7-2016 18:41, Florian Fainelli wrote:
->>>> On 07/19/2016 02:20 AM, Arend Van Spriel wrote:
->>>>> + Bob
->>>>>
->>>>> On 19-7-2016 1:24, Florian Fainelli wrote:
->>>>>> Hi,
->>>>>>
->>>>>> This patch series addresses several coverity issues, they all seemed relevant
->>>>>> to me.
->>>>>
->>>>> Hi Florian,
->>>>>
->>>>> Been a while so nice to see coverity fixes popping up. Actually
->>>>> something that I have on my todo list to add our brcm80211 to coverity
->>>>> within Broadcom. So being curious as to whether this comes from a public
->>>>> coverity server like scan.coverity.com. Maybe bit redundant to setup
->>>>> internally if there is a good coverity analysis publicly available.
->>>>
->>>> This is coming from the public coverity instance, if you create an
->>>> account there I could transfer to you the other bugs that affect the
->>>> brcm80211 drivers (hint: there is a ton of of them because of
->>>> brcmf_fil_iovar_int_get and friends).
->>>
->>> I did create an account and noticed "Broadcom Linux Kernel Open Source
->>> Repository" project. Anyways, let me have it :-p
->>>
->>>>>
->>>>>> There is also a ton of warnings in Coverity caused by brcmf_fil_iovar_int_get()
->>>>>> and friends because of the initial access:
->>>>>>
->>>>>> __le32 data_le = cpu_to_le32(*data) which can utilize unitialized memory. I am
->>>>>> not sure if we actually care about any kind of initial, value, but if we don't,
->>>>>> then the fix should be fairly obvious.
->>>>>
->>>>> If we are talking only about "get" variant than we mostly don't care.
->>>>> Some getters support filter variables to be passed towards firmware. I
->>>>> have not looked at the analysis to give any judgement here.
->>>>
->>>> Alright, do you have a good way to test a patch that would just zero
->>>> initialize the data variable in brcmf_fil_iovar_int_get()? If so, I will
->>>> submit one with the appropriate CID references.
->>>
->>> But why would we care to zero the data when firmware simply overwrites
->>> it. These control messages are not high-prio so we can burn some cycles
->>> to initialize the variable, but to me this is a false positive.
->>
->> We have something like this all over the place:
->>
->> func() {
->> 	u32 val;
->>
->> 	brcmf_fil_iovar_int_get(..., &val, sizeof(val));
-> 
-> If I am not mistaken the iovar_int_get only passes &val.
+Felix Fietkau <nbd@nbd.name> writes:
 
-We pass data and len:
+> On 2016-07-06 18:16, Toke Høiland-Jørgensen wrote:
+>> This switches ath9k over to using the mac80211 intermediate software
+>> queueing mechanism for data packets. It removes the queueing inside the
+>> driver, except for the retry queue, and instead pulls from mac80211 when
+>> a packet is needed. The retry queue is used to store a packet that was
+>> pulled but can't be sent immediately.
+>> 
+>> The old code path in ath_tx_start that would queue packets has been
+>> removed completely, as has the qlen limit tunables (since there's no
+>> longer a queue in the driver to limit).
+>> 
+>> Based on Tim's original patch set, but reworked quite thoroughly.
+>> 
+>> Cc: Tim Shepard <shep@alum.mit.edu>
+>> Cc: Felix Fietkau <nbd@nbd.name>
+>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+>> ---
+>> Changes since v1:
+>>   - Remove the old intermediate queueing logic completely instead of
+>>     just disabling it.
+>>   - Remove the qlen debug tunables.
+>>   - Remove the force_channel parameter from struct txctl (since we just
+>>     removed the code path that was using it).
+>> 
+>>  drivers/net/wireless/ath/ath9k/ath9k.h     |  12 +-
+>>  drivers/net/wireless/ath/ath9k/channel.c   |   2 -
+>>  drivers/net/wireless/ath/ath9k/debug.c     |  14 +-
+>>  drivers/net/wireless/ath/ath9k/debug.h     |   2 -
+>>  drivers/net/wireless/ath/ath9k/debug_sta.c |   4 +-
+>>  drivers/net/wireless/ath/ath9k/init.c      |   2 +-
+>>  drivers/net/wireless/ath/ath9k/main.c      |   1 +
+>>  drivers/net/wireless/ath/ath9k/xmit.c      | 307 +++++++++++------------------
+>>  8 files changed, 130 insertions(+), 214 deletions(-)
+> Nice work!
 
-        err = brcmf_fil_iovar_data_get(ifp, name, &data_le,
-sizeof(data_le));
-        if (err == 0)
+Thanks :)
 
+>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+>> index fe795fc..4077eeb 100644
+>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
+>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
+>> @@ -912,8 +923,16 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
+>>  		seqno = bf->bf_state.seqno;
+>>  
+>>  		/* do not step over block-ack window */
+>> -		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno))
+>> +		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
+>> +			__skb_queue_tail(&tid->retry_q, skb);
+>> +
+>> +			/* If there are other skbs in the retry q, they are
+>> +			 * probably within the BAW, so loop immediately to get
+>> +			 * one of them. Otherwise the queue can get stuck. */
+>> +			if (!skb_queue_is_first(&tid->retry_q, skb))
+>> +				continue;
+> Not sure if this can happen, but if we ever somehow end up with two skbs
+> in the retry queue that do not fit into the Block-Ack window, there's
+> potential for an infinite loop here.
 
+Yes, I realise that (v1 contained a comment on that). However, I don't
+actually think it can happen: The code will only ever put one skb from
+the intermediate queues on the retry queue (ath_tid_pull() is only
+called if the retry queue is empty). Everything else on there are actual
+retries that have been put on there by ath_tx_complete_aggr(). Figure
+the latter will always be within the BAW?
 
-> 
->> }
->>
->> brcmf_fil_iovar_int_get(.., const u32 *data, size_t len)
->> {
->> 	__le32 data_le = cpu_to_le32(*data);
->> 	...
->> }
->>
->> So here data_le also has an uninitialized value, and later on, this:
->>
->>
->>         buflen = brcmf_create_iovar(name, data, len, drvr->proto_buf,
->>                                     sizeof(drvr->proto_buf));
-> 
-> create_iovar is used for both get and set...
-> 
->> }
->>
->> And this function does this:
->>
->> static u32
->> brcmf_create_iovar(char *name, const char *data, u32 datalen,
->>                    char *buf, u32 buflen)
->> {
->>         u32 len;
->>
->>         len = strlen(name) + 1;
->>
->>         if ((len + datalen) > buflen)
->>                 return 0;
->>
->>         memcpy(buf, name, len);
->>
->>         /* append data onto the end of the name string */
->>         if (data && datalen)
->>                 memcpy(&buf[len], data, datalen);
-> 
-> but it does not have that info so it does the memcpy. We could add an
-> extra parameter to avoid the memcpy for get, but as said there are
-> instances where get passes query data to firmware.
-
-OK.
-
-> 
->>         return len + datalen;
->> }
->>
->>
->> We are essentially copying into buf an uninitialized value coming from
->> the stack, which seems like a problem to me.
-> 
-> Functionally I still don't see the problem. For the instances where this
-> is true, the buf will be overwritten with data from firmware. It may be
-> a security issue as stack content is passed to an external device.
-
-That's the part that I am mostly concerned with, and the fact that this
-is a genuine uninitialized value, not under direct control, but still.
--- 
-Florian
+-Toke
