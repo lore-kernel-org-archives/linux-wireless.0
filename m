@@ -1,65 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49884 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752082AbcGVP7x convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 11:59:53 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Jouni Malinen <j@w1.fi>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>,
-	"Nishant Sarmukadam" <nishants@marvell.com>
-Subject: RE: [PATCH 5/9] mwifiex: cfg80211 set_default_mgmt_key handler
-Date: Fri, 22 Jul 2016 15:59:47 +0000
-Message-ID: <ab0bb1b790c74675a92b129916662545@SC-EXCH04.marvell.com> (sfid-20160722_175956_969357_CBA36F78)
-References: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
- <1468248832-21969-6-git-send-email-akarwar@marvell.com>
- <87r3aqx3sq.fsf@kamboji.qca.qualcomm.com>
- <33207c0c98c646548bdedf50449719c2@SC-EXCH04.marvell.com>
- <20160721155131.GA6292@w1.fi>
-In-Reply-To: <20160721155131.GA6292@w1.fi>
-Content-Type: text/plain; charset="us-ascii"
+Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:43293 "EHLO
+	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753356AbcGFIqA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jul 2016 04:46:00 -0400
+From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
+To: "fixed-term.Oleksij.Rempel@de.bosch.com"
+	<fixed-term.Oleksij.Rempel@de.bosch.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"anders.darander@gmail.com" <anders.darander@gmail.com>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	"linux@rempel-privat.de" <linux@rempel-privat.de>,
+	"linux-snps-arc@lists.infradead.org"
+	<linux-snps-arc@lists.infradead.org>,
+	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
+Subject: Re: ath9k-htc on OHCI -> bogus usb xfer
+Date: Wed, 6 Jul 2016 08:45:50 +0000
+Message-ID: <1467794679.3086.42.camel@synopsys.com> (sfid-20160706_104607_730407_1AA61064)
+References: <1467721137.3144.81.camel@synopsys.com>
+	 <577BED2D.7070209@rempel-privat.de> <1467739821.3086.13.camel@synopsys.com>
+	 <577C041C.7080905@rempel-privat.de> <1467790987.3086.15.camel@synopsys.com>
+	 <577CC035.1000404@de.bosch.com> <1467793848.3086.37.camel@synopsys.com>
+	 <577CC3A2.5070607@de.bosch.com>
+In-Reply-To: <577CC3A2.5070607@de.bosch.com>
+Content-Type: text/plain; charset="utf-7"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jouni,
+Hi+AKA-Oleksij,
 
-> From: Jouni Malinen [mailto:j@w1.fi]
-> Sent: Thursday, July 21, 2016 9:22 PM
-> To: Amitkumar Karwar
-> Cc: Kalle Valo; linux-wireless@vger.kernel.org; Cathy Luo; Nishant
-> Sarmukadam
-> Subject: Re: [PATCH 5/9] mwifiex: cfg80211 set_default_mgmt_key handler
-> 
-> On Thu, Jul 21, 2016 at 09:18:11AM +0000, Amitkumar Karwar wrote:
-> > > From: Kalle Valo [mailto:kvalo@codeaurora.org] Is it correct to
-> > > ignore the key index? I see that brcmfmac ignores it as well but I
-> > > want to still confirm this.
-> > >
-> > > Does this mean that with this patcfh mwifiex properly supports MFP?
-> >
-> > Yes. We do pass MFP tests with this patch.
-> 
-> Did you test IGTK rekeying? This patch looks exactly as broken as it did
-> the last time it was proposed more than a year ago and after the same
-> concern not receiving any reaction.. hostapd will configure two
-> different IGTKs with different Key IDs and change the TX key on the AP
-> once all associated STAs have the new key. If the driver does not
-> support updating the TX key index, either the old or the new STAs
-> associated after rekeying will not have the correct key.
-> 
+On Wed, 2016-07-06 at 10:38 +-0200, fixed-term.Oleksij.Rempel wrote:
++AD4- 
++AD4- On 06.07.2016 10:32, Alexey Brodkin wrote:
++AD4- +AD4- 
++AD4- +AD4- Hi Oleksij,
++AD4- +AD4- 
++AD4- +AD4- On Wed, 2016-07-06 at 10:24 +-0200, fixed-term.Oleksij.Rempel wrote:
++AD4- +AD4- +AD4- 
++AD4- +AD4- +AD4- +AKA-
++AD4- +AD4- +AD4- Hm... this Endpoint should be Interrupt, not Bulk. If you search for
++AD4- +AD4- +AD4- lsusb of this kind of adapter all of them list EP3 and EP4 as Interrupt.
++AD4- +AD4- +AD4- 
++AD4- +AD4- +AD4- what did went wrong here? Is it not working in USB High Speed mode?
++AD4- +AD4- Unfortunately as of now on that board EHCI doesn't work.
++AD4- +AD4- 
++AD4- +AD4- That's not a problem of a particular USB device but something in either
++AD4- +AD4- ECHI host controller or its integration. I do hope we will fix it sometime soon
++AD4- +AD4- (this is a development board and USB controller is implemented in FPGA so
++AD4- +AD4- there's a chance to fix stuff later on).
++AD4- +AD4- 
++AD4- +AD4- So given only OHCI works on the board I went forward and attempted to use it
++AD4- +AD4- with Wi-Fi USB dongle.
++AD4-
++AD4- I did some tests for 2 years on OHCI controller on x86. There was no
++AD4- noticable issues. It was even a bit faster then Intels EHCI. I don't
++AD4- think OHCI alone is the source of this problem.
 
-Thanks for your feedback and guidance on this.
+Well I was also surprised how well that dongle works with that board in
+OHCI mode. I saw quite consistent +AH4-4-5 Mbit/second rates when doing Speedtest
+from my smartphone. So IMHO it's completely usable. Especially on that kind of
+HW which has main CPU running at just 100MHz.
 
-I am trying to understand the problem you mentioned during IGTK rekeying. Today I ran tests with two stations connecting an AP. MFP is enabled on all of them.
++AD4- On other side, so far i know, this adapter claims to provide usb full
++AD4- speed support, (Not only high speed) and may use different usb
++AD4- descriptor for this. May be this is the problem.
 
-On hostapd side, my observation is add_key() is always called followed by set_default_mgmt_key(). set_default_mgmt_key() sets the key added by add_key() as default key.
+So is there something we may do with all that?
 
-We are ignoring set_default_mgmt_key() and updating Tx key index during add_key() itself.
-
-Your concerns is we should not update Tx key index during add_key(). Reason is IGTK rekeying is not yet completed with all stations. Right?
-
-Regards,
-Amitkumar
+-Alexey
