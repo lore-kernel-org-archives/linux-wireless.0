@@ -1,80 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:37807 "EHLO
-	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450AbcGAV1V (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33807 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986AbcGFA3R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 17:27:21 -0400
-Received: by mail-wm0-f47.google.com with SMTP id a66so44452489wme.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 14:27:20 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
-	linux-kernel@vger.kernel.org,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv3 wl-drv-next 0/2] register-field manipulation macros
-Date: Fri,  1 Jul 2016 22:26:47 +0100
-Message-Id: <1467408409-24224-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160701_232801_151259_1ED6C5AB)
+	Tue, 5 Jul 2016 20:29:17 -0400
+From: Masashi Honma <masashi.honma@gmail.com>
+To: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-audit@redhat.com, cluster-devel@redhat.com
+Cc: davem@davemloft.net, johannes@sipsolutions.net,
+	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
+	dledford@redhat.com, sean.hefty@intel.com,
+	hal.rosenstock@gmail.com, paul@paul-moore.com, eparis@redhat.com,
+	zbr@ioremap.net, pshelar@nicira.com, ccaulfie@redhat.com,
+	teigland@redhat.com, bsingharora@gmail.com,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [RFC 4/7] infiniband: Add allocation flag to ibnl_unicast()
+Date: Wed,  6 Jul 2016 09:28:33 +0900
+Message-Id: <1467764916-4983-5-git-send-email-masashi.honma@gmail.com> (sfid-20160706_022929_062446_607702D3)
+In-Reply-To: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
+References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ drivers/infiniband/core/iwpm_msg.c  | 6 +++---
+ drivers/infiniband/core/iwpm_util.c | 5 +++--
+ drivers/infiniband/core/iwpm_util.h | 1 +
+ drivers/infiniband/core/netlink.c   | 4 ++--
+ include/rdma/rdma_netlink.h         | 3 ++-
+ 5 files changed, 11 insertions(+), 8 deletions(-)
 
-This set moves to a global header file macros which I find
-very useful and worth popularising.  The basic problem is
-that since C bitfields are not very dependable accessing
-subfields of registers becomes slightly inconvenient.
-It is nice to have the necessary mask and shift operations
-wrapped in a macro.  It is also nice to have that macro
-compute the shift amount based on the mask automatically.
-
-My implementation follows what Felix Fietkau has done in
-mt76.  Hannes Frederic Sowa suggested more use of standard
-Linux/GCC functions.  Since the RFC I've also added a 
-compile-time check to validate that the value passed to
-setters fits in the mask.
-
-I attempted the use of static inlines instead of macros
-but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
-I also noticed that forcing arguments to be u32 for inlines
-makes the compiler use 32bit arithmetic where it could
-get away with 64bit before (on 64bit machines, obviously).
-That's a potential performance concern but probably not
-a very practical one today.  Apart from looking "cleaner"
-static inlines would have the advantage that we could #undef
-the auxiliary macros at the end of the header.
-
-v3:
-Build bot caught a build failure with -Os set.  AFAICT gcc
-did not handle temporary variable I put in the macro
-expression too well.  I work around that by defining
-__BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
-BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
-
-Please review and advise on improvements.
-
-If accepted I think would be best to push this through
-Kalle's tree, since the only existing user is in
-drivers/net/wireless/.
-
-v3:
- - don't use variables in statement expressions;
- - use __BUILD_BUG_ON_NOT_POWER_OF_2.
-v2:
- - change Felix's email address.
-
-Jakub Kicinski (2):
-  add basic register-field manipulation macros
-  mt7601u: use linux/bitfield.h
-
- drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
- drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
- include/linux/bitfield.h                        | 58 +++++++++++++++++++
- include/linux/bug.h                             |  3 +
- 5 files changed, 65 insertions(+), 80 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
- create mode 100644 include/linux/bitfield.h
-
+diff --git a/drivers/infiniband/core/iwpm_msg.c b/drivers/infiniband/core/iwpm_msg.c
+index 1c41b95..4307eab 100644
+--- a/drivers/infiniband/core/iwpm_msg.c
++++ b/drivers/infiniband/core/iwpm_msg.c
+@@ -174,7 +174,7 @@ int iwpm_add_mapping(struct iwpm_sa_data *pm_msg, u8 nl_client)
+ 		goto add_mapping_error;
+ 	nlmsg_request->req_buffer = pm_msg;
+ 
+-	ret = ibnl_unicast(skb, nlh, iwpm_user_pid);
++	ret = ibnl_unicast(skb, nlh, iwpm_user_pid, GFP_ATOMIC);
+ 	if (ret) {
+ 		skb = NULL; /* skb is freed in the netlink send-op handling */
+ 		iwpm_user_pid = IWPM_PID_UNDEFINED;
+@@ -251,7 +251,7 @@ int iwpm_add_and_query_mapping(struct iwpm_sa_data *pm_msg, u8 nl_client)
+ 		goto query_mapping_error;
+ 	nlmsg_request->req_buffer = pm_msg;
+ 
+-	ret = ibnl_unicast(skb, nlh, iwpm_user_pid);
++	ret = ibnl_unicast(skb, nlh, iwpm_user_pid, GFP_ATOMIC);
+ 	if (ret) {
+ 		skb = NULL; /* skb is freed in the netlink send-op handling */
+ 		err_str = "Unable to send a nlmsg";
+@@ -312,7 +312,7 @@ int iwpm_remove_mapping(struct sockaddr_storage *local_addr, u8 nl_client)
+ 	if (ret)
+ 		goto remove_mapping_error;
+ 
+-	ret = ibnl_unicast(skb, nlh, iwpm_user_pid);
++	ret = ibnl_unicast(skb, nlh, iwpm_user_pid, GFP_ATOMIC);
+ 	if (ret) {
+ 		skb = NULL; /* skb is freed in the netlink send-op handling */
+ 		iwpm_user_pid = IWPM_PID_UNDEFINED;
+diff --git a/drivers/infiniband/core/iwpm_util.c b/drivers/infiniband/core/iwpm_util.c
+index b65e06c..6dcbb2d 100644
+--- a/drivers/infiniband/core/iwpm_util.c
++++ b/drivers/infiniband/core/iwpm_util.c
+@@ -609,7 +609,7 @@ static int send_mapinfo_num(u32 mapping_num, u8 nl_client, int iwpm_pid)
+ 				&mapping_num, IWPM_NLA_MAPINFO_SEND_NUM);
+ 	if (ret)
+ 		goto mapinfo_num_error;
+-	ret = ibnl_unicast(skb, nlh, iwpm_pid);
++	ret = ibnl_unicast(skb, nlh, iwpm_pid, GFP_ATOMIC);
+ 	if (ret) {
+ 		skb = NULL;
+ 		err_str = "Unable to send a nlmsg";
+@@ -638,7 +638,8 @@ static int send_nlmsg_done(struct sk_buff *skb, u8 nl_client, int iwpm_pid)
+ 		return -ENOMEM;
+ 	}
+ 	nlh->nlmsg_type = NLMSG_DONE;
+-	ret = ibnl_unicast(skb, (struct nlmsghdr *)skb->data, iwpm_pid);
++	ret = ibnl_unicast(skb, (struct nlmsghdr *)skb->data, iwpm_pid,
++			   GFP_ATOMIC);
+ 	if (ret)
+ 		pr_warn("%s Unable to send a nlmsg\n", __func__);
+ 	return ret;
+diff --git a/drivers/infiniband/core/iwpm_util.h b/drivers/infiniband/core/iwpm_util.h
+index af1fc14..0ced7f4 100644
+--- a/drivers/infiniband/core/iwpm_util.h
++++ b/drivers/infiniband/core/iwpm_util.h
+@@ -46,6 +46,7 @@
+ #include <linux/jhash.h>
+ #include <linux/kref.h>
+ #include <net/netlink.h>
++#include <net/sock.h>
+ #include <linux/errno.h>
+ #include <rdma/iw_portmap.h>
+ #include <rdma/rdma_netlink.h>
+diff --git a/drivers/infiniband/core/netlink.c b/drivers/infiniband/core/netlink.c
+index 09037a9..1451238 100644
+--- a/drivers/infiniband/core/netlink.c
++++ b/drivers/infiniband/core/netlink.c
+@@ -227,9 +227,9 @@ static void ibnl_rcv(struct sk_buff *skb)
+ }
+ 
+ int ibnl_unicast(struct sk_buff *skb, struct nlmsghdr *nlh,
+-			__u32 pid)
++			__u32 pid, gfp_t flags)
+ {
+-	return nlmsg_unicast(nls, skb, pid, gfp_any());
++	return nlmsg_unicast(nls, skb, pid, flags);
+ }
+ EXPORT_SYMBOL(ibnl_unicast);
+ 
+diff --git a/include/rdma/rdma_netlink.h b/include/rdma/rdma_netlink.h
+index 5852661..0bb3010 100644
+--- a/include/rdma/rdma_netlink.h
++++ b/include/rdma/rdma_netlink.h
+@@ -61,10 +61,11 @@ int ibnl_put_attr(struct sk_buff *skb, struct nlmsghdr *nlh,
+  * @skb: The netlink skb
+  * @nlh: Header of the netlink message to send
+  * @pid: Userspace netlink process ID
++ * @flags: allocation flags
+  * Returns 0 on success or a negative error code.
+  */
+ int ibnl_unicast(struct sk_buff *skb, struct nlmsghdr *nlh,
+-			__u32 pid);
++			__u32 pid, gfp_t flags);
+ 
+ /**
+  * Send the supplied skb to a netlink group.
 -- 
-1.9.1
+2.7.4
 
