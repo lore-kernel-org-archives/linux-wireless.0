@@ -1,231 +1,272 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:35608 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757241AbcG1TXw (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:33225 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751635AbcGFA3X (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 15:23:52 -0400
-Received: by mail-wm0-f49.google.com with SMTP id f65so264174577wmi.0
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2016 12:23:51 -0700 (PDT)
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
- <20160721070938.GA2658@redhat.com>
- <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
- <20160721080541.GB2658@redhat.com> <5790A28F.8030102@redhat.com>
- <20160721115122.GA31869@redhat.com>
- <a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
- <20160722102559.GA2662@redhat.com> <20160722221523.GM5537@wotan.suse.de>
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>,
-	Arend van Spriel <arend@broadcom.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>, mmarek@suse.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <313899f0-5980-867c-eef1-afe2a984f85e@broadcom.com> (sfid-20160728_212355_752173_2D15703F)
-Date: Thu, 28 Jul 2016 21:23:48 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160722221523.GM5537@wotan.suse.de>
-Content-Type: text/plain; charset=windows-1252
+	Tue, 5 Jul 2016 20:29:23 -0400
+From: Masashi Honma <masashi.honma@gmail.com>
+To: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-audit@redhat.com, cluster-devel@redhat.com
+Cc: davem@davemloft.net, johannes@sipsolutions.net,
+	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
+	dledford@redhat.com, sean.hefty@intel.com,
+	hal.rosenstock@gmail.com, paul@paul-moore.com, eparis@redhat.com,
+	zbr@ioremap.net, pshelar@nicira.com, ccaulfie@redhat.com,
+	teigland@redhat.com, bsingharora@gmail.com,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [RFC 5/7] net: Add allocation flag to rtnl_unicast()
+Date: Wed,  6 Jul 2016 09:28:34 +0900
+Message-Id: <1467764916-4983-6-git-send-email-masashi.honma@gmail.com> (sfid-20160706_022935_068816_D4438A13)
+In-Reply-To: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
+References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ include/linux/rtnetlink.h |  3 ++-
+ net/core/net_namespace.c  |  2 +-
+ net/core/rtnetlink.c      | 10 ++++++----
+ net/dcb/dcbnl.c           |  2 +-
+ net/decnet/dn_route.c     |  3 ++-
+ net/ipv4/devinet.c        |  2 +-
+ net/ipv4/ipmr.c           |  6 ++++--
+ net/ipv4/route.c          |  2 +-
+ net/ipv6/addrconf.c       |  4 ++--
+ net/ipv6/addrlabel.c      |  2 +-
+ net/ipv6/ip6mr.c          |  6 ++++--
+ net/ipv6/route.c          |  2 +-
+ net/sched/act_api.c       |  2 +-
+ 13 files changed, 27 insertions(+), 19 deletions(-)
 
+diff --git a/include/linux/rtnetlink.h b/include/linux/rtnetlink.h
+index 2daece8..132730f 100644
+--- a/include/linux/rtnetlink.h
++++ b/include/linux/rtnetlink.h
+@@ -8,7 +8,8 @@
+ #include <uapi/linux/rtnetlink.h>
+ 
+ extern int rtnetlink_send(struct sk_buff *skb, struct net *net, u32 pid, u32 group, int echo);
+-extern int rtnl_unicast(struct sk_buff *skb, struct net *net, u32 pid);
++extern int rtnl_unicast(struct sk_buff *skb, struct net *net, u32 pid,
++			gfp_t flags);
+ extern void rtnl_notify(struct sk_buff *skb, struct net *net, u32 pid,
+ 			u32 group, struct nlmsghdr *nlh, gfp_t flags);
+ extern void rtnl_set_sk_err(struct net *net, u32 group, int error);
+diff --git a/net/core/net_namespace.c b/net/core/net_namespace.c
+index 2c2eb1b..28eed58 100644
+--- a/net/core/net_namespace.c
++++ b/net/core/net_namespace.c
+@@ -646,7 +646,7 @@ static int rtnl_net_getid(struct sk_buff *skb, struct nlmsghdr *nlh)
+ 	if (err < 0)
+ 		goto err_out;
+ 
+-	err = rtnl_unicast(msg, net, NETLINK_CB(skb).portid);
++	err = rtnl_unicast(msg, net, NETLINK_CB(skb).portid, GFP_KERNEL);
+ 	goto out;
+ 
+ err_out:
+diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
+index 7f7927f..89fd826 100644
+--- a/net/core/rtnetlink.c
++++ b/net/core/rtnetlink.c
+@@ -653,11 +653,11 @@ int rtnetlink_send(struct sk_buff *skb, struct net *net, u32 pid, unsigned int g
+ 	return err;
+ }
+ 
+-int rtnl_unicast(struct sk_buff *skb, struct net *net, u32 pid)
++int rtnl_unicast(struct sk_buff *skb, struct net *net, u32 pid, gfp_t flags)
+ {
+ 	struct sock *rtnl = net->rtnl;
+ 
+-	return nlmsg_unicast(rtnl, skb, pid, gfp_any());
++	return nlmsg_unicast(rtnl, skb, pid, flags);
+ }
+ EXPORT_SYMBOL(rtnl_unicast);
+ 
+@@ -2565,7 +2565,8 @@ static int rtnl_getlink(struct sk_buff *skb, struct nlmsghdr* nlh)
+ 		WARN_ON(err == -EMSGSIZE);
+ 		kfree_skb(nskb);
+ 	} else
+-		err = rtnl_unicast(nskb, net, NETLINK_CB(skb).portid);
++		err = rtnl_unicast(nskb, net, NETLINK_CB(skb).portid,
++				   GFP_KERNEL);
+ 
+ 	return err;
+ }
+@@ -3601,7 +3602,8 @@ static int rtnl_stats_get(struct sk_buff *skb, struct nlmsghdr *nlh)
+ 		WARN_ON(err == -EMSGSIZE);
+ 		kfree_skb(nskb);
+ 	} else {
+-		err = rtnl_unicast(nskb, net, NETLINK_CB(skb).portid);
++		err = rtnl_unicast(nskb, net, NETLINK_CB(skb).portid,
++				   GFP_KERNEL);
+ 	}
+ 
+ 	return err;
+diff --git a/net/dcb/dcbnl.c b/net/dcb/dcbnl.c
+index 4f6c186..e4de9fe 100644
+--- a/net/dcb/dcbnl.c
++++ b/net/dcb/dcbnl.c
+@@ -1749,7 +1749,7 @@ static int dcb_doit(struct sk_buff *skb, struct nlmsghdr *nlh)
+ 
+ 	nlmsg_end(reply_skb, reply_nlh);
+ 
+-	ret = rtnl_unicast(reply_skb, net, portid);
++	ret = rtnl_unicast(reply_skb, net, portid, GFP_KERNEL);
+ out:
+ 	return ret;
+ }
+diff --git a/net/decnet/dn_route.c b/net/decnet/dn_route.c
+index b1dc096..6fe02bb 100644
+--- a/net/decnet/dn_route.c
++++ b/net/decnet/dn_route.c
+@@ -1714,7 +1714,8 @@ static int dn_cache_getroute(struct sk_buff *in_skb, struct nlmsghdr *nlh)
+ 		goto out_free;
+ 	}
+ 
+-	return rtnl_unicast(skb, &init_net, NETLINK_CB(in_skb).portid);
++	return rtnl_unicast(skb, &init_net, NETLINK_CB(in_skb).portid,
++			    GFP_KERNEL);
+ 
+ out_free:
+ 	kfree_skb(skb);
+diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+index e333bc8..5e969e5 100644
+--- a/net/ipv4/devinet.c
++++ b/net/ipv4/devinet.c
+@@ -1917,7 +1917,7 @@ static int inet_netconf_get_devconf(struct sk_buff *in_skb,
+ 		kfree_skb(skb);
+ 		goto errout;
+ 	}
+-	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid);
++	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid, GFP_ATOMIC);
+ errout:
+ 	return err;
+ }
+diff --git a/net/ipv4/ipmr.c b/net/ipv4/ipmr.c
+index 5ad48ec..c704a2a 100644
+--- a/net/ipv4/ipmr.c
++++ b/net/ipv4/ipmr.c
+@@ -654,7 +654,8 @@ static void ipmr_destroy_unres(struct mr_table *mrt, struct mfc_cache *c)
+ 			e->error = -ETIMEDOUT;
+ 			memset(&e->msg, 0, sizeof(e->msg));
+ 
+-			rtnl_unicast(skb, net, NETLINK_CB(skb).portid);
++			rtnl_unicast(skb, net, NETLINK_CB(skb).portid,
++				     gfp_any());
+ 		} else {
+ 			kfree_skb(skb);
+ 		}
+@@ -933,7 +934,8 @@ static void ipmr_cache_resolve(struct net *net, struct mr_table *mrt,
+ 				memset(&e->msg, 0, sizeof(e->msg));
+ 			}
+ 
+-			rtnl_unicast(skb, net, NETLINK_CB(skb).portid);
++			rtnl_unicast(skb, net, NETLINK_CB(skb).portid,
++				     gfp_any());
+ 		} else {
+ 			ip_mr_forward(net, mrt, skb, c, 0);
+ 		}
+diff --git a/net/ipv4/route.c b/net/ipv4/route.c
+index a1f2830..10cb0e0 100644
+--- a/net/ipv4/route.c
++++ b/net/ipv4/route.c
+@@ -2621,7 +2621,7 @@ static int inet_rtm_getroute(struct sk_buff *in_skb, struct nlmsghdr *nlh)
+ 	if (err < 0)
+ 		goto errout_free;
+ 
+-	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid);
++	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid, GFP_KERNEL);
+ errout:
+ 	return err;
+ 
+diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+index a1f6b7b..2b0b994 100644
+--- a/net/ipv6/addrconf.c
++++ b/net/ipv6/addrconf.c
+@@ -628,7 +628,7 @@ static int inet6_netconf_get_devconf(struct sk_buff *in_skb,
+ 		kfree_skb(skb);
+ 		goto errout;
+ 	}
+-	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid);
++	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid, GFP_ATOMIC);
+ errout:
+ 	return err;
+ }
+@@ -4824,7 +4824,7 @@ static int inet6_rtm_getaddr(struct sk_buff *in_skb, struct nlmsghdr *nlh)
+ 		kfree_skb(skb);
+ 		goto errout_ifa;
+ 	}
+-	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid);
++	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid, GFP_KERNEL);
+ errout_ifa:
+ 	in6_ifa_put(ifa);
+ errout:
+diff --git a/net/ipv6/addrlabel.c b/net/ipv6/addrlabel.c
+index a8f6986..597e0eb 100644
+--- a/net/ipv6/addrlabel.c
++++ b/net/ipv6/addrlabel.c
+@@ -580,7 +580,7 @@ static int ip6addrlbl_get(struct sk_buff *in_skb, struct nlmsghdr *nlh)
+ 		goto out;
+ 	}
+ 
+-	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid);
++	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid, GFP_KERNEL);
+ out:
+ 	return err;
+ }
+diff --git a/net/ipv6/ip6mr.c b/net/ipv6/ip6mr.c
+index 487ef3b..135ba15 100644
+--- a/net/ipv6/ip6mr.c
++++ b/net/ipv6/ip6mr.c
+@@ -850,7 +850,8 @@ static void ip6mr_destroy_unres(struct mr6_table *mrt, struct mfc6_cache *c)
+ 			nlh->nlmsg_len = nlmsg_msg_size(sizeof(struct nlmsgerr));
+ 			skb_trim(skb, nlh->nlmsg_len);
+ 			((struct nlmsgerr *)nlmsg_data(nlh))->error = -ETIMEDOUT;
+-			rtnl_unicast(skb, net, NETLINK_CB(skb).portid);
++			rtnl_unicast(skb, net, NETLINK_CB(skb).portid,
++				     gfp_any());
+ 		} else
+ 			kfree_skb(skb);
+ 	}
+@@ -1114,7 +1115,8 @@ static void ip6mr_cache_resolve(struct net *net, struct mr6_table *mrt,
+ 				skb_trim(skb, nlh->nlmsg_len);
+ 				((struct nlmsgerr *)nlmsg_data(nlh))->error = -EMSGSIZE;
+ 			}
+-			rtnl_unicast(skb, net, NETLINK_CB(skb).portid);
++			rtnl_unicast(skb, net, NETLINK_CB(skb).portid,
++				     gfp_any());
+ 		} else
+ 			ip6_mr_forward(net, mrt, skb, c);
+ 	}
+diff --git a/net/ipv6/route.c b/net/ipv6/route.c
+index 4981755..81318a8 100644
+--- a/net/ipv6/route.c
++++ b/net/ipv6/route.c
+@@ -3367,7 +3367,7 @@ static int inet6_rtm_getroute(struct sk_buff *in_skb, struct nlmsghdr *nlh)
+ 		goto errout;
+ 	}
+ 
+-	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid);
++	err = rtnl_unicast(skb, net, NETLINK_CB(in_skb).portid, GFP_KERNEL);
+ errout:
+ 	return err;
+ }
+diff --git a/net/sched/act_api.c b/net/sched/act_api.c
+index 47ec230..b988a84 100644
+--- a/net/sched/act_api.c
++++ b/net/sched/act_api.c
+@@ -737,7 +737,7 @@ act_get_notify(struct net *net, u32 portid, struct nlmsghdr *n,
+ 		return -EINVAL;
+ 	}
+ 
+-	return rtnl_unicast(skb, net, portid);
++	return rtnl_unicast(skb, net, portid, GFP_KERNEL);
+ }
+ 
+ static struct tc_action *create_a(int i)
+-- 
+2.7.4
 
-On 23-07-16 00:15, Luis R. Rodriguez wrote:
-> On Fri, Jul 22, 2016 at 12:26:00PM +0200, Stanislaw Gruszka wrote:
->> On Fri, Jul 22, 2016 at 10:38:24AM +0200, Arend Van Spriel wrote:
->>> + Luis
->>>
->>> On 21-7-2016 13:51, Stanislaw Gruszka wrote:
->>>> (cc: firmware and brcmfmac maintainers)
->>>>
->>>> On Thu, Jul 21, 2016 at 06:23:11AM -0400, Prarit Bhargava wrote:
->>>>>
->>>>>
->>>>> On 07/21/2016 04:05 AM, Stanislaw Gruszka wrote:
->>>>>> On Thu, Jul 21, 2016 at 10:36:42AM +0300, Emmanuel Grumbach wrote:
->>>>>>> On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->>>>>>>> On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
->>>>>>>>> Firmware files are versioned to prevent older
->>>>>>>>> driver instances to load unsupported firmware
->>>>>>>>> blobs. This is reflected with a fallback logic
->>>>>>>>> which attempts to load several firmware files.
->>>>>>>>>
->>>>>>>>> This however produced a lot of unnecessary
->>>>>>>>> warnings sometimes confusing users and leading
->>>>>>>>> them to rename firmware files making things even
->>>>>>>>> more confusing.
->>>>>>>>
->>>>>>>> This happens on kernels configured with
->>>>>>>> CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
->>>>>>>> but also 60 seconds delay before loading next firmware version.
->>>>>>>> For some reason RHEL kernel needs above config option, so this
->>>>>>>> patch is very welcome from my perspective.
->>>>>>>>
->>>>>>>
->>>>>>> Sorry for my ignorance but how does the firmware loading work if not
->>>>>>> with udev's help?
->>>>>>
->>>>>> I'm not sure exactly, but I think kernel VFS layer is capable to copy
->>>>>> file data directly from mounted filesystem without user space helper.
->>>>>
->>>>> Here's the situation: request_firmware() waits 60 seconds for udev to do its
->>>>> loading magic via a "usermode helper".  This delay is there to allow, for
->>>>> example, userspace to unpack or download a new firmware image or verify the
->>>>> firmware image *in userspace* before providing it to the driver to apply to the HW.
->>>>>
->>>>> Why 60 seconds?  It is arbitrary and there is no way for udev & the kernel to
->>>>> handshake on completion.
->>>>>
->>>>>>
->>>>>>> As you can imagine, iwlwifi is suffering from the
->>>>>>> same problem and I would be interested in applying the same change,
->>>>>>> but I'd love to understand a bit more :)
->>>>>>
->>>>>> Yes, iwlwifi (and some other drivers) suffer from this. However this
->>>>>> happen when the newest firmware version is not installed on the system
->>>>>> and CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled. What I suppose
->>>>>> it's not common.
->>>>>
->>>>> request_firmware_direct() was introduced at my request because (as you've
->>>>> noticed) when CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y drivers may stall for long
->>>>> periods of time when starting.  The bug that this introduced was a 60 second
->>>>> delay per logical cpu when starting a system.  On a 64 cpu system that meant the
->>>>> boot would complete in a little over one hour.
->>>>>
->>>>>>
->>>>>> I started to see this currently, because that option was enabled on 
->>>>>> RHEL kernel. BTW: I think Prarit iwlwifi thermal_zone problem was
->>>>>> happened because of that, i.e. thermal device was not functional
->>>>>> because f/w wasn't loaded due to big delay.
->>>>>>
->>>>>> I'm not sure if replacing to request_firmware_direct() is a good
->>>>>> fix though. For example I can see this problem also on brcmfmac, which
->>>>>> use request_firmware_nowait(). I think I would rather prefer special
->>>>>> helper for firmware drivers that needs user helper and have
->>>>>> request_firmware() be direct as default.
->>>>>>
->>>>>
->>>>> The difference between request_firmware_direct() and request_firmware() is that
->>>>> the _direct() version does not wait the 60 seconds for udev interaction.  The
->>>>> only userspace check performed is to see if the file is there, and if the file
->>>>> does exist it is provided to the driver to be applied to the hardware.
->>>>>
->>>>> So the real question to ask here is whether or not the ath10k, brcmfmac, and
->>>>> iwlwifi require udev to do anything beyond checking for the existence and
->>>>> loading the firmware image.  If they don't, then it is better to use
->>>>> request_firmware_direct().
->>>>
->>>> They don't need that, like 99% of the drivers I think, hence changing the
->>>> default seems to be more reasonable. However changing 3 drivers would work
->>>> for me as well, and that change do not introduce risk of broking drivers
->>>> that require udev fw download.
->>>>
->>>> iwlwifi and ath10k are trivial, bcrmfmac is a bit more complex as it
->>>> use request_firmware_nowait(), so it first need to be converted to
->>>> ordinary request_firmware(), but this should be doable and I can do
->>>> that.
->>>
->>> I am going bonkers here. This is the Nth time a discussion pops up on
->>> firmware API usage. I stopped counting N :-( So the first issue was that
->>> the INIT was taking to long as we were requesting firmware during probe
->>> which was executed in the INIT context. So we added a worker and
->>> register the driver from there. There was probably a reason for
->>> switching to _no_wait() as well, but I do not recall the details. The
->>> things is I don't know if I need user-space or not. I just need firmware
->>> to get the device up and running. We have changed our driver a couple of
->>> times now to accommodate something that in my opinion should have been
->>> abstracted behind the firmware API in the first place and now here is
->>> another proposal to change the drivers. Come on!
->>
->> I understand you dislike that :-) Just to clarify the issue here:
->>
->> Some drivers (including brcmfmac) request new firmware images, which are
->> not yet available (i.e. development F/W versions) and then fall-back
->> to older firmware version and works perfectly fine.
-> 
-> The right way to address this of course is to extend the FW API
-> so that a batch of firmware files can be hunted for and one can
-> easily annotate as a driver developer which are optional and which are
-> not. The API then will do everything for you.
-
-That is more or less how I abstracted it in brcmfmac. Our batch only
-consists of max two files with binary executable image and rf
-calibration data, which may or may not be optional. So we do not have
-firmware fallback sequence.
-
-For iwlwifi and ath10k I guess the use-case is that the batch is an
-ordered list from newest supported firmware to oldest supported firmware.
-
-> I was considering this as a future extension to the firmware API
-> through the new extensible firmware API, the sysdata API. I'd prefer
-> to add that as a secondary step, but if someone wants to add support
-> for it now feel free to send me some patches against my tree.
-> 
->> However with CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y configured, in case
->> of missing F/W image, request firmware involve user space helper and
->> waits 60s (loading_timeout value from drivers/base/firmware_class.c),
->> what delays creating network interface and confuse users.
-> 
-> Correct, this has been a holy mess. One way to fix this on userspace
-> is to upgrade systemd with an exception to the udev kmod helper,
-> and avoid the timeout completely for kmod helper which loads drivers.
-> 
-> CONFIG_FW_LOADER_USER_HELPER_FALLBACK should be avoided.
-> 
->> For brcmfmac this looks like this:
->>
->> [   15.160923] brcmfmac 0000:03:00.0: Direct firmware load for brcm/brcmfmac4356-pcie.txt failed with error -2
->> [   15.170759] brcmfmac 0000:03:00.0: Falling back to user helper
->> <snip>
->> [   75.709397] brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Oct 22 2015 06:16:41 version 7.35.180.119 (r594535) FWID 01-1a5c4016
->> [   75.736941] brcmfmac: brcmf_cfg80211_reg_notifier: not a ISO3166 code (0x30 0x30)
->>
->> Without CONFIG_FW_LOADER_USER_HELPER_FALLBACK first firmware request
->> silently fail and then instantly next F/W image is loaded.
-> 
-> Yup.
-> 
->> Another option to solve to problem would be stop requesting not
->> available publicly firmware. However, I assume some drivers would
->> like to preserve that option.
-> 
-> No, this seems counter productive given that the firmware is expected
-> to land eventually.
-> 
->>>> However I wonder if changing that will not broke the case when
->>>> driver is build-in in the kernel and f/w is not yet available when
->>>> driver start to initialize. Or maybe nowadays this is not the case
->>>> any longer, i.e. the MODULE_FIRMWARE macros assure proper f/w 
->>>> images are build-in in the kernel or copied to initramfs?
->>>
->>> That is a nice idea, but I have not seen any change in that area. Could
->>> have missed it.
->>
->> I believe this is how the things are already done, IOW switching to
->> request_firmware_direct() in the driver should be no harm.
-> 
-> We don't stuff firmware as built-in if the driver used MODULE_FIRMWARE()
-> and the driver is built-in. What commit did that?
-> 
-> The right thing to do is distros should avoid
-> CONFIG_FW_LOADER_USER_HELPER_FALLBACK and if they are stuck with it, a
-> systemd work around is possible. Upstream systemd already increased
-> the timeout to 180 seconds. Upstream also added a udevd --event-timeout
-> command line option, look into that. Other distros (OpenSUSE) avoids
-> the kmod timeout ;)
-> 
-> The timeout thing was simply a mistake, specially for kmod and it wasn't
-> well thought out. I've listed more serious implications for it here:
-> 
-> http://www.do-not-panic.com/2015/12/linux-asynchronous-probe.html
-
-Thanks. Will read that.
-
-Regards,
-Arend
