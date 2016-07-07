@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13901 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751601AbcGRUIO (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:33005 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932912AbcGFXIt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 16:08:14 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: add support for controlling tx power to a station
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1465925914-6404-1-git-send-email-arnagara@qti.qualcomm.com>
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-	<arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <75a921ad7f1940f6ba046564f67c508d@euamsexm01a.eu.qualcomm.com> (sfid-20160718_220817_943215_A818E621)
-Date: Mon, 18 Jul 2016 22:08:05 +0200
+	Wed, 6 Jul 2016 19:08:49 -0400
+Received: by mail-oi0-f65.google.com with SMTP id w141so193776oia.0
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 16:08:49 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH 4/5] core: Notify when wireless netdev is removed
+Date: Thu,  7 Jul 2016 02:08:49 -0500
+Message-Id: <1467875330-7835-5-git-send-email-denkenz@gmail.com> (sfid-20160707_010857_211671_2698CB96)
+In-Reply-To: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
+References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
-> This patch will add the support to control the transmit power for traffic
-> to a station associated with the AP. Userspace provide the transmit power
-> value in mBm units and the allowed range is from 0 to 70. Underlying FW
-> will enforce that the maximum tx power will be based on the regulatory
-> requirements. If the user given transmit power is greater than the allowed
-> tx power in the given channel, then the FW will use the maximum tx power
-> in the same channel.
-> 
-> When 0 is sent to the FW as tx power, it will revert to the automatic tx
-> power for the station.
-> 
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+---
+ net/wireless/core.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-(A note to patchwork)
-
-Depends on these patches:
-
-cfg80211: Add support to set tx power for a station associated
-https://patchwork.kernel.org/patch/9176355/
-
-mac80211: store tx power value from user to station
-https://patchwork.kernel.org/patch/9176359/
-
-Both are currently in state Changes Requested.
-
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 7758c0f..d35038b 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1159,6 +1159,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		 * remove and clean it up.
+ 		 */
+ 		if (!list_empty(&wdev->list)) {
++			nl80211_notify_iface(rdev, wdev,
++						NL80211_CMD_DEL_INTERFACE);
+ 			sysfs_remove_link(&dev->dev.kobj, "phy80211");
+ 			list_del_rcu(&wdev->list);
+ 			rdev->devlist_generation++;
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9176353/
+2.7.3
 
