@@ -1,47 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:47874 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751229AbcG1BW7 (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:52546 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964824AbcGGIog (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 21:22:59 -0400
-Date: Thu, 28 Jul 2016 02:22:53 +0100
-From: Al Viro <viro@ZenIV.linux.org.uk>
-To: alexmcwhirter@triadic.us
-Cc: David Miller <davem@davemloft.net>, rlwinm@sdf.org,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
-Message-ID: <20160728012253.GT2356@ZenIV.linux.org.uk> (sfid-20160728_032303_922270_9938C9CC)
-References: <201607271032.u6RAWPcS008174@sdf.org>
- <4dbfebe8136bc963b5b51463d6887db4@triadic.us>
- <87c4ed555bcb4229f2334f6f2bb69bcb@triadic.us>
- <20160727.164543.1466564919313003461.davem@davemloft.net>
- <20160728003102.GS2356@ZenIV.linux.org.uk>
- <8b3126f66186015956e0f8090fb70532@triadic.us>
+	Thu, 7 Jul 2016 04:44:36 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Jonas Gorski <jonas.gorski@gmail.com>,
+	Hans de Goede <hdegoede@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Priit Laes <plaes@plaes.org>,
+	"John W . Linville" <linville@tuxdriver.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Maxime Ripard <maxime.ripard@free-electrons.com>,
+	Chen-Yu Tsai <wens@csie.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	devicetree <devicetree@vger.kernel.org>,
+	linux-sunxi <linux-sunxi@googlegroups.com>
+Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
+Date: Thu, 07 Jul 2016 10:46:28 +0200
+Message-ID: <3996482.D5xdKXDiGl@wuerfel> (sfid-20160707_104455_653187_0ABF5EA9)
+In-Reply-To: <bb1beb8d-652d-aa97-e24b-e3e27397dd2e@broadcom.com>
+References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> <3354017.XSBSmHHtrQ@wuerfel> <bb1beb8d-652d-aa97-e24b-e3e27397dd2e@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8b3126f66186015956e0f8090fb70532@triadic.us>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 27, 2016 at 08:26:48PM -0400, alexmcwhirter@triadic.us wrote:
-
-> I'm going to go ahead and say this is where my issue and the op's issue
-> begin to branch apart from one another. He's seeing this on all incoming
-> data, whereas i am only seeing it on ssl data and not on sun4v.
+On Wednesday, July 6, 2016 9:19:41 PM CEST Arend Van Spriel wrote:
+> On 6-7-2016 15:42, Arnd Bergmann wrote:
+> > On Wednesday, July 6, 2016 10:08:55 AM CEST Arend Van Spriel wrote:
+> >> On Tue, Jul 5, 2016 at 3:43 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > All existing uses of the model property in arch/arm/boot/dts and most of
+> > the ones in arch/powerpc/boot/dts are against the intended usage in
+> > one way or another, but adding different kind of incorrect usage won't
+> > improve that.
+> > 
+> > The only way I can see the model property being used correctly would
+> > be to have it match the first entry in the compatible property, but
+> > that is completely redundant, so we tend to omit it, except for the
+> > root node in which it is required. For the root node however, the
+> > historic practice that has crept in on ARM is to put something completely
+> > different in there, which is a human-readable description of the
+> > machine rather than something we can use as a unique indentifier.
+> > 
+> > I'd just consider the "model" property burned, and not use it for anything
+> > that doesn't already use it, just like we handle "device_type": a few
+> > things require it, nothing else should use it.
 > 
-> At this point i would say data from my issue is only going to cloud this
-> issue as they seem to be two completely different issues revolving around
-> the same commit. If i come across any relevant data for x86_64 ill be sure
-> to post it if this isn't resolved by then, but for now i'm going to refrain
-> from submitting anything sparc related.
+> If that is the agreed approach in devicetree arena I am fine with it. I
+> have been unaware of this and just looked at the suggestion from Jonas
+> seeing a solution to the problem at hand.
 
-Which just might mean that we have *three* issues here -
-	(1) buggered __copy_to_user_inatomic() (and friends) on some sparcs
-	(2) your ssl-only corruption
-	(3) Alan's x86_64 corruption on plain TCP read - no ssl *or* sparc
-anywhere, and no multi-segment recvmsg().  Which would strongly argue in
-favour of some kind of copy_page_to_iter() breakage triggered when handling
-a fragmented skb, as in (1).  Except that I don't see anything similar in
-x86_64 uaccess primitives...
+I don't think it has been discussed or decided before as the question
+has not come up, so for now this is my personal view. Maybe one of
+the devicetree maintainers can comment on this.
+
+> > I agree with your point that the "compatible" property in case of brcmfmac
+> > is really odd because it is not required to identify the hardware when
+> > the SDIO device identification is sufficient, and we just need it to guard
+> > the definition of the other properties. However it seems that now we
+> > actually do need to identify the hardware because we cannot read the
+> > board ID and revision that is supposed to come from nvram but also needed
+> > to read the nvram contents from a file.
+> 
+> The board ID and rev in the nvram may not be used if the device has
+> these stored in OTP. However, the problem is that the device need
+> firmware+nvram loaded into it before we can start the firmware on the
+> device. Now if we were to add boardtype and boardrev properties in the
+> binding to identify the hardware, I suppose a new compatible value would
+> be required.
+
+I'm a bit confused by the interdependencies now. You say that there are
+board ID/rev values stored in OTP. What exactly prevents us from just
+using those to generate a file name to look up the nvram file on disk
+for the remaining values?
+
+Do we require the firmware to be running before we can read the OTP,
+or are there cases where the board ID in OTP is wrong or missing?
+
+If we can't rely on OTP for one of those reasons and instead add two
+properties for boardtype/boardrev, I don't think that requires a
+change of the compatible string, we would just document those two
+as optional properties.
+
+	Arnd
