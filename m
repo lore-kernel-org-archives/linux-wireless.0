@@ -1,51 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from incomingmail.riverbed.com ([208.70.196.45]:23761 "EHLO
-	smtp1.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751214AbcG0NTN (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:41920 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750784AbcGGFco (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 09:19:13 -0400
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: kvalo@qca.qualcomm.com
-From: Eduardo Abinader <eduardo.abinader@riverbed.com>
-Subject: [PATCH 1/1 V3] ath9k: consider return code on
-Message-ID: <490b6e07-d357-7985-8796-80125322e82e@riverbed.com> (sfid-20160727_151915_907811_052E2BA0)
-Date: Wed, 27 Jul 2016 15:19:09 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Thu, 7 Jul 2016 01:32:44 -0400
+Date: Wed, 06 Jul 2016 22:32:41 -0700 (PDT)
+Message-Id: <20160706.223241.1511538517808855333.davem@davemloft.net> (sfid-20160707_073250_960421_7789D1BC)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2016-07-06
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1467819300-29764-1-git-send-email-johannes@sipsolutions.net>
+References: <1467819300-29764-1-git-send-email-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-just to comply with current ath9k_hw_nvram_read to return value, hence
-behaving reacting accordingly.
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Wed,  6 Jul 2016 17:34:59 +0200
 
-Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> And here's another set of new things. This is the last one I'll send
+> since I'll be away for a bit.
+> 
+> Let me know if there's any problem.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 5bd2cba..08607d7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3252,7 +3252,8 @@ static int ar9300_eeprom_restore_flash(struct ath_hw *ah, u8 *mptr,
- 	int i;
- 
- 	for (i = 0; i < mdata_size / 2; i++, data++)
--		ath9k_hw_nvram_read(ah, i, data);
-+		if (!ath9k_hw_nvram_read(ah, i, data))
-+			return -EIO;
- 
- 	return 0;
- }
-@@ -3282,7 +3283,8 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	if (ath9k_hw_use_flash(ah)) {
- 		u8 txrx;
- 
--		ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
-+		if (ar9300_eeprom_restore_flash(ah, mptr, mdata_size))
-+			return -EIO;
- 
- 		/* check if eeprom contains valid data */
- 		eep = (struct ar9300_eeprom *) mptr;
--- 
-2.5.0
+Pulled, thanks Johannes.
