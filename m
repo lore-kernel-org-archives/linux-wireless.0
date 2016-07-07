@@ -1,43 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47755 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753375AbcG0PE4 (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36835 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932892AbcGFXIj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 11:04:56 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Remove driver log suggesting QCA9887 support is experimental
-Date: Wed, 27 Jul 2016 20:34:56 +0530
-Message-ID: <1469631896-9852-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160727_170459_661244_73B1009C)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 6 Jul 2016 19:08:39 -0400
+Received: by mail-oi0-f65.google.com with SMTP id m11so175148oik.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 16:08:38 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH 3/5] nl80211: Emit NEW_INTERFACE only in special cases
+Date: Thu,  7 Jul 2016 02:08:48 -0500
+Message-Id: <1467875330-7835-4-git-send-email-denkenz@gmail.com> (sfid-20160707_010855_964627_CA5A76F0)
+In-Reply-To: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
+References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+For wireless device objects with an associated netdev, the NEW_INTERFACE
+event is generated inside the netdev notifier.  The event is generated
+regardless of whether it was due to a NL80211_CMD_NEW_INTERFACE call
+from userspace or if the netdev was created implicitly by the driver.
 
-Support for QCA9887 is no longer experimental and if there are any issues
-we need to address them
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+If NL80211_CMD_NEW_INTERFACE handler is called, then a duplicate
+NEW_INTERFACE event will be multicast.  This change modifies the logic
+inside nl80211_new_interface to avoid this.
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 1 -
- 1 file changed, 1 deletion(-)
+ net/wireless/nl80211.c | 23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index f06dd39..f3d943c 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -3144,7 +3144,6 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 		pci_hard_reset = ath10k_pci_qca988x_chip_reset;
- 		break;
- 	case QCA9887_1_0_DEVICE_ID:
--		dev_warn(&pdev->dev, "QCA9887 support is still experimental, there are likely bugs. You have been warned.\n");
- 		hw_rev = ATH10K_HW_QCA9887;
- 		pci_ps = false;
- 		pci_soft_reset = ath10k_pci_warm_reset;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index da03e17..ec8eb88 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2787,7 +2787,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct vif_params params;
+ 	struct wireless_dev *wdev;
+-	struct sk_buff *msg, *event;
++	struct sk_buff *msg;
+ 	int err;
+ 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
+ 	u32 flags;
+@@ -2891,20 +2891,15 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		return -ENOBUFS;
+ 	}
+ 
+-	event = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-	if (event) {
+-		if (nl80211_send_iface(event, 0, 0, 0,
+-				       rdev, wdev, false) < 0) {
+-			nlmsg_free(event);
+-			goto out;
+-		}
+-
+-		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
+-					event, 0, NL80211_MCGRP_CONFIG,
+-					GFP_KERNEL);
+-	}
++	/*
++	 * For wdevs which have no associated netdev object (e.g. of type
++	 * NL80211_IFTYPE_P2P_DEVICE), emit the NEW_INTERFACE event here.
++	 * For all other types, the event will be generated from the
++	 * netdev notifier
++	 */
++	if (!wdev->netdev)
++		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
+ 
+-out:
+ 	return genlmsg_reply(msg, info);
+ }
+ 
 -- 
-1.9.1
+2.7.3
 
