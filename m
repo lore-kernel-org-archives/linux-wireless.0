@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33416 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756652AbcGZOAB (ORCPT
+Received: from mail-yw0-f196.google.com ([209.85.161.196]:33421 "EHLO
+	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932829AbcGGAhA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2016 10:00:01 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Alan Curry <rlwinm@sdf.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, alexmcwhirter@triadic.us
-Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
-Date: Tue, 26 Jul 2016 15:59:53 +0200
-Message-ID: <2589898.190WVraD7Z@debian64> (sfid-20160726_160026_050775_4C8A6824)
-In-Reply-To: <201607260457.u6Q4v3pM010082@sdf.org>
-References: <201607260457.u6Q4v3pM010082@sdf.org>
+	Wed, 6 Jul 2016 20:37:00 -0400
+Received: by mail-yw0-f196.google.com with SMTP id i12so275064ywa.0
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 17:36:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+From: Nestor Machno <nestor.machno89@gmail.com>
+Date: Thu, 7 Jul 2016 02:36:58 +0200
+Message-ID: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com> (sfid-20160707_023704_762673_4D25D642)
+Subject: Fwd: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday, July 26, 2016 4:57:03 AM CEST Alan Curry wrote:
-> Al Viro wrote:
-> > On Sun, Jul 24, 2016 at 07:45:13PM +0200, Christian Lamparter wrote:
-> > 
-> > > > The symptom is that downloaded files (http, ftp, and probably other
-> > > > protocols) have small corrupted segments (about 1-2 kilobytes long) in
-> > > > random locations. Only downloads that sustain a high speed for at least a
-> > > > few seconds are corrupted. Anything small enough to be received in less
-> > > > than about 5 seconds is not affected.
-> > 
-> > Can that sucker be reproduced with netcat?  That would eliminate all issues
-> > with multi-iovec recvmsg(2), narrowing the things down quite bit.
-> 
-> netcat seems to be immune. Comparing strace results, I didn't see any
-> recvmsg() calls in the other programs that have had the problem, but there
-> is an interesting difference: netcat calls select() to wait for the socket
-> to be ready for reading, where my other test programs just call read() and
-> let it block until ready.
-> 
-> So I wrote a small test program to isolate that difference. It downloads
-> a file using only read() and write() and a hardcoded HTTP request. It has
-> a select mode (main loop alternates read() and select() on the TCP socket)
-> and a noselect mode (main loop just read()s the TCP socket).
-> 
-> The program is included at the bottom of this message.
-> 
-> I ran it several times in both modes and got corruption if and only if the
-> noselect mode was used.
-> 
-> > 
-> > Another thing (and if that works, it's *NOT* a proper fix - it would be
-> > papering over the problem, but at least it would show where to look for
-> > it) - try (on top of mainline) the following delta:
-> > 
-> > diff --git a/net/core/datagram.c b/net/core/datagram.c
-> 
-> Will try that patch soon. Meanwhile, here's my test:
-> 
-> /* Demonstration program "dlbug".
->    Usage: dlbug select > outfile
->           or
->           dlbug noselect > outfile
->    outfile will contain the full HTTP response. Edit out the HTTP headers
->    and what's left should be a valid gzip if the download worked. */
-> [...]
-Thanks, I gave the program a try with my WNDA3100 and a WN821N v2 devices.
-I did not see any corruptions in any of the tests though. Can you tell me
-something about your wireless network too? I would like to know what router
-and firmware are you using? Also important: what's your wireless configuration?
-(WPA?, CCMP or TKIP? HT40, HT20 or Legacy rates? ...)
+Hi All,
+Amitkumar, can you confirm if this this is a bug or today is fixed?
 
-Probably the quickest and easiest way to get that information is by running
-the following commands as root, when you are connected to your wifi network
-and post the results:
-# iw dev wlan0 link
-# iw dev wlan0 scan dump
+Vincent, I had also faced similar issue on Surface Pro 2 with
+backports from 4.1... So here few question:
 
-(You can of course remove your device's MACs, but please do it consistently).
+* I saw in 1st post that you where working to make work the
+wpa_supplicant with mixed configuration for adhoc (wpa-none +
+wpa-ibss), but also in recent post that you focus mostly on debugging
+wpa-ibss. I suggest to focus your test on one wpa mode and I think
+wpa-none better because it's easier..
+* Why you are not testing the latest backport from upstream kernel? as
+you can know Marvell is focus most to fix open issue on current stable
+release, I saw from commit that recently they fix something about WPA
+on mixflex, see
+https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers/hacking
+* Would be good information to know if you tested also on backport
+3.x, did you?  I know mwifiex's WPA stack changed a lot from 3.x
+kernel.
+* To support you more, could you enable debug info and provide full
+log of your setup? .config? patch? anything else?
+* Can you share us your hacked backport?
+* Lat question Vincent, are you working for AIRBUS, ACTIA or THALES ?  :)
 
-Regards,
-Christian
+Best Regards
+Nestor
+
+On Mon, Jun 13, 2016 at 7:42 AM, Vincent CESSON <vincent.cesson@smile.fr> wrote:
+> Hi Amitkumar,
+>
+> Here are the wpa_supplicant logs (with CONFIG_IBSS_RSN=y enabled) from the
+> two devices. Beside wpa_supplicant, I manually set IPs 192.168.1.xy with
+> command "ifconfig mlan0 192.168.1.xy" and then I try to ping each other,
+> without success.
+>
+> Vincent
