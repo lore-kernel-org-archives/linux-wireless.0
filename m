@@ -1,66 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f179.google.com ([209.85.217.179]:34111 "EHLO
-	mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751923AbcG0U5L (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35658 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932724AbcGFXIh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 16:57:11 -0400
-Received: by mail-ua0-f179.google.com with SMTP id 35so26085451uap.1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2016 13:57:10 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <57991EE9.30005@broadcom.com>
-References: <CAOMZO5Cu_UO6L9wYy6eJUJwEE25BN-qeBRAMbFveFrJKHtF=aw@mail.gmail.com>
- <57991EE9.30005@broadcom.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Wed, 27 Jul 2016 17:57:09 -0300
-Message-ID: <CAOMZO5CvuumYQZ92YFCjd7Vrmp4i1T1pdYAmGUvRgjNzVpMWyQ@mail.gmail.com> (sfid-20160727_225714_491802_32DE635C)
-Subject: Re: brcm4330 fails to load on newer kernels
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Jul 2016 19:08:37 -0400
+Received: by mail-oi0-f67.google.com with SMTP id d132so180326oig.2
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 16:08:37 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH 0/5] Improve wireless netdev detection
+Date: Thu,  7 Jul 2016 02:08:45 -0500
+Message-Id: <1467875330-7835-1-git-send-email-denkenz@gmail.com> (sfid-20160707_010855_453684_CF867D15)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+The current mechanism to detect hot-plug / unplug of wireless devices is
+somewhat arcane.  One has to listen to NEW_WIPHY/DEL_WIPHY events over
+nl80211 as well as RTM_NEWLINK / RTM_DELLINK events over rtnl, then
+somehow find a correlation between these events.  This involves userspace
+sending GET_INTERFACE or GET_WIPHY commands to the kernel, which incurs
+additional roundtrips.
 
-On Wed, Jul 27, 2016 at 5:51 PM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 27-07-16 00:35, Fabio Estevam wrote:
->> Hi,
->>
->> On a imx6sl-warp board with a brcm4330 I get the following results
->> depending on the kernel version:
->>
->> - Kernel 4.4.15: place brcmfmac4330-sdio.bin and brcmfmac4330-sdio.txt
->> in the rootfs and the kernel is able to read them correctly. wlan0 is
->> present. All is fine.
->>
->> - Kernel 4.5.7: place brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt in
->> the rootfs and the kernel fails to load them:
->>
->> brcmfmac mmc1:0001:1: Direct firmware load for
->> brcm/brcmfmac4330-sdio.bin failed with error -2
->>
->> Then I build brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt into the
->> kernel and then firmware is detected and wlan0 appears.
->>
->> - Kernel 4.7: I can place the firmware and nvram file into the rootfs
->> or built-i and the following error is seen:
->>
->> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
->> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
->> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
->>
->> So wlan0 never appears here.
->>
->> Does anyone have any suggestions about these different behaviours?
->
-> So for all kernel you have brcmfmac built-in the kernel or as a module?
+This patch series proposes that NEW_INTERFACE and DEL_INTERFACE events are
+always emitted, regardless of whether a netdev was added/removed by the
+driver or explicitly via NEW_INTERFACE/DEL_INTERFACE commands.
 
-In all these tests I have brcmfmac built-in the kernel.
+One side effect of this approach is that multiple NEW_INTERFACE/DEL_INTERFACE
+events might be generated for P2P interfaces.  Once when a wdev is created
+or destroyed, and once when the associated p2p netdev is connecte or 
+disconnected.  It is likely that only the caller of P2P oriented
+NEW_INTERFACE / DEL_INTERFACE commands is interested in the status of these
+operations.  E.g. the caller is / should be using SOCKET_OWNER attribute.
+Thus one possibility is to not emit NEW_INTERFACE/DEL_INTERFACE events in
+such cases.
 
-Thanks,
+Denis Kenzior (5):
+  nl80211: Add nl80211_notify_iface
+  core: Notify of new wireless netdevs
+  nl80211: Emit NEW_INTERFACE only in special cases
+  core: Notify when wireless netdev is removed
+  nl80211: Emit DEL_INTERFACE only in special cases
 
-Fabio Estevam
+ net/wireless/core.c    |  4 ++++
+ net/wireless/nl80211.c | 63 ++++++++++++++++++++++++++++++++++++++------------
+ net/wireless/nl80211.h |  3 +++
+ 3 files changed, 55 insertions(+), 15 deletions(-)
+
+-- 
+2.7.3
+
