@@ -1,77 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44892 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754086AbcGHLBK (ORCPT
+Received: from mail-vk0-f52.google.com ([209.85.213.52]:35425 "EHLO
+	mail-vk0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756211AbcGGJaP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 07:01:10 -0400
-Date: Fri, 8 Jul 2016 16:30:53 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
- QCA99X0 and later
-Message-ID: <20160708110053.GA19841@atheros-ThinkPad-T61> (sfid-20160708_130115_310554_6094B037)
-References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
- <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
- <576C1861.7020402@candelatech.com>
- <20160625185350.GA25330@atheros-ThinkPad-T61>
- <576F2165.3010109@candelatech.com>
- <8760sr6kj8.fsf@kamboji.qca.qualcomm.com>
- <577BD05D.6000607@candelatech.com>
+	Thu, 7 Jul 2016 05:30:15 -0400
+Received: by mail-vk0-f52.google.com with SMTP id v6so12944249vkb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2016 02:30:15 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <577BD05D.6000607@candelatech.com>
+In-Reply-To: <1467111448.2493.15.camel@sipsolutions.net>
+References: <1462430663-9448-1-git-send-email-wnhuang@chromium.org>
+ <1462464478.23962.12.camel@redhat.com> <CABicQ-VWrRG+0rEEF0GxUTPixSbkA18Gq4b5hbgph60SoEQ+2Q@mail.gmail.com>
+ <CABicQ-XWm=Rxdj3at4+-0OAWn=T7qOTWEaTK=JY7LDOmcN87yw@mail.gmail.com>
+ <1462991620.22404.5.camel@redhat.com> <CABicQ-UeU-8PPdK9Je51j_KD-BH8G1HuOjo0yZLcNBQgtJsyTA@mail.gmail.com>
+ <1467111448.2493.15.camel@sipsolutions.net>
+From: Wei-Ning Huang <wnhuang@google.com>
+Date: Thu, 7 Jul 2016 17:30:13 +0800
+Message-ID: <CABicQ-VVhNwbL6BxsTHa2xhEsgVCpudv9+uLO=PngBBZ+VvDYQ@mail.gmail.com> (sfid-20160707_113106_331469_41D3528A)
+Subject: Re: [PATCH] cfg80211/nl80211: add wifi tx power mode switching support
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dan Williams <dcbw@redhat.com>,
+	Linux-Wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Sameer Nanda <snanda@chromium.org>,
+	Todd Broch <tbroch@chromium.org>, davem@davemloft.net,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Michal / Kalle / Ben,
+Hi Johannes,
 
-is this patch is good to go (or) should i re-work  ?
-I had replied to Michal's comment of introducing a new firmware
-feature flag will not address the issue in older firmware / code.
-Let me know if i had missed something very obvious.
+Thanks for the reply.
 
+You are right that the physical antenna does not change.
+When I refer to 'calibration data', it actually corresponding to how
+mwifiex adjust the per-band tx power. For mwifiex, the per-band tx
+power is pre-calculated based on need, and stored in DT, a vendor
+command or std nl80211 message is sent
+to tell the driver to switch between two set of "calibration data".
+I'm aware that iwl7000 is using a vendor command to do this as well,
+but instead of pre-calculate required tx power info, the tx value can
+be passed along with the vendor command message.
 
-On Tue, Jul 05, 2016 at 08:21:01AM -0700, Ben Greear wrote:
-> On 06/30/2016 03:25 AM, Valo, Kalle wrote:
-> >Ben Greear <greearb@candelatech.com> writes:
-> >
-> >>Is there a better way than posting to the ath10k mailing list?  There are quite
-> >>a few more of my patches that are stuck in pending or ignored state.  If you
-> >>could review some of them and add them to your testing trees then it might help
-> >>them go upstream.
-> >
-> >Yes, as you seem to test with your custom ath10k and custom firmware
-> >review and testing feedback from others is more than welcome. That way I
-> >can have more confidence that the patch really works with the mainline
-> >version.
-> >
-> >The problem with your patches is that you dump more responsibility on
-> >me. I have no idea if they work with the mainline kernel, or if they
-> >break something, so I need to personally test the patch and that takes
-> >time. Basically I have a rule if that I need to use more than two
-> >minutes on a patch it goes to the Deferred queue and I'll go through
-> >that less often than the normal patch queue.
-> 
-> I can do some testing with stock firmware, but stock firmware is often quite limited
-> so I cannot do the more interesting test cases that we use internally.
-> Some of my patches are for fixing edge cases that cannot be easily reproduced,
-> and that code really needs to be reviewed for correctness more by looking at
-> the code than by trying to run some exhaustive test case.
-> 
-> I think if there were a specific maintainer for ath10k that could take a more
-> active role, especially with regard to keeping a fairly wide variety of test rigs
-> around to run regression tests, then it would help all involved.  I think this person
-> needs access to firmware source so that they can more easily verify the driver
-> matches the firmware:  Many of the regressions and bug fixes, for instance with
-> stats, would be much easier to clean up if you look at firmware while developing
-> the driver bits.
+This patch was sent originally to standardize the requirement of
+sending a vendor command to the driver (so it'll be a standard nl80211
+message). However, we have decided to move along with vendor command
+for both mwifiex and nl80211, so this patch is not needed anymore.
+Thanks for the comments!
+
+Wei-Ning
+
+On Tue, Jun 28, 2016 at 6:57 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2016-05-12 at 17:34 +0800, Wei-Ning Huang wrote:
+>>
+>> Johannes, I feel like being able to set calibration data at runtime
+>> is something common to all wireless drivers, so instead of using
+>> vendor commands what do you think if I pass the calibration data name
+>> instead of using those magic constants? This way, userspace does not
+>> need to know the details of what band/range power limit the driver
+>> supports. It allows for flexible driver side implementation and
+>> easier for userspace to control.
+>>
 >
+> Sorry - I dropped this thread accidentally.
+>
+> I'm not really sure I understand the situation fully, but right now to
+> me this seems very strange.
+>
+> The physical antennas probably don't really change between "clamshell"
+> and "tablet" mode, do the physical radiation properties change enough
+> to actually require different *calibration*? To me, that sounds very
+> strange.
+>
+> Assuming they don't really change fundamentally, then I understand the
+> need to set different power levels, per band/channel/whatever
+> granularity. But that can be achieved in very different ways, and in
+> fact if you look at Chrome then for our iwl7000 driver there we do have
+> a command to do something similar (currently a vendor command, but that
+> can be changed) without ever changing the *calibration*.
+>
+> So to me, the whole premise of the patch is confusing and/or wrong.
+>
+> johannes
 
-regards,
-shafi
+
+
+-- 
+Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
+wnhuang@google.com | Cell: +886 910-380678
