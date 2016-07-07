@@ -1,28 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:41920 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750784AbcGGFco (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:34550 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750844AbcGGSQ6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2016 01:32:44 -0400
-Date: Wed, 06 Jul 2016 22:32:41 -0700 (PDT)
-Message-Id: <20160706.223241.1511538517808855333.davem@davemloft.net> (sfid-20160707_073250_960421_7789D1BC)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211-next 2016-07-06
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1467819300-29764-1-git-send-email-johannes@sipsolutions.net>
-References: <1467819300-29764-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 7 Jul 2016 14:16:58 -0400
+Received: by mail-pa0-f52.google.com with SMTP id bz2so8050621pad.1
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2016 11:16:58 -0700 (PDT)
+Date: Thu, 7 Jul 2016 11:16:53 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Cc: linux-kernel@vger.kernel.org,
+	Doug Anderson <dianders@chromium.org>,
+	Brian Norris <computersforpeace@gmail.com>,
+	Stephen Barber <smbarber@chromium.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	wnhuang@chromium.org
+Subject: Re: [PATCH] mwifiex: mask PCIe interrupts before removal
+Message-ID: <20160707181652.GA70075@google.com> (sfid-20160707_201727_730381_81DCDD86)
+References: <1467325262-82799-1-git-send-email-briannorris@chromium.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1467325262-82799-1-git-send-email-briannorris@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed,  6 Jul 2016 17:34:59 +0200
+Hi,
 
-> And here's another set of new things. This is the last one I'll send
-> since I'll be away for a bit.
+On Thu, Jun 30, 2016 at 03:21:02PM -0700, Brian Norris wrote:
+> The PCIe driver didn't mask the host interrupts before trying to tear
+> down. This causes lockups at reboot or rmmod when using MSI-X on 8997,
+> since the MSI handler gets confused and locks up the system.
 > 
-> Let me know if there's any problem.
+> Also tested on 8897, which does not support MSI-X (and wasn't
+> experiencing this same bug). No regressions seen there.
 
-Pulled, thanks Johannes.
+Ping? This is a bugfix, and it'd be nice to either know what's wrong
+with it, or see it merged.
+
+Regards,
+Brian
+
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index 0c7937eb6b77..af98371dc2af 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -440,6 +440,11 @@ static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
+>  	return 0;
+>  }
+>  
+> +static void mwifiex_pcie_disable_host_int_noerr(struct mwifiex_adapter *adapter)
+> +{
+> +	WARN_ON(mwifiex_pcie_disable_host_int(adapter));
+> +}
+> +
+>  /*
+>   * This function enables the host interrupt.
+>   *
+> @@ -2945,6 +2950,7 @@ static struct mwifiex_if_ops pcie_ops = {
+>  	.register_dev =			mwifiex_register_dev,
+>  	.unregister_dev =		mwifiex_unregister_dev,
+>  	.enable_int =			mwifiex_pcie_enable_host_int,
+> +	.disable_int =			mwifiex_pcie_disable_host_int_noerr,
+>  	.process_int_status =		mwifiex_process_int_status,
+>  	.host_to_card =			mwifiex_pcie_host_to_card,
+>  	.wakeup =			mwifiex_pm_wakeup_card,
+> -- 
+> 2.8.0.rc3.226.g39d4020
+> 
