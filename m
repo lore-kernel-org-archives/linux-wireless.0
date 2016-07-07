@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:36440 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752452AbcGVKiQ (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36838 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932724AbcGFXIp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 06:38:16 -0400
-Received: by mail-io0-f178.google.com with SMTP id b62so101349458iod.3
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 03:38:16 -0700 (PDT)
-Date: Fri, 22 Jul 2016 06:38:07 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] iw: display 5/10 MHz channel widths
-Message-ID: <20160722103807.GA15262@localhost> (sfid-20160722_123819_648756_1FC707DF)
-References: <20160721153948.32171-1-me@bobcopeland.com>
- <CAGRGNgWHJEFBnak-MCK2htkaeQcZ6dmZ=w96omC99G5Z2UJWFg@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGRGNgWHJEFBnak-MCK2htkaeQcZ6dmZ=w96omC99G5Z2UJWFg@mail.gmail.com>
+	Wed, 6 Jul 2016 19:08:45 -0400
+Received: by mail-oi0-f66.google.com with SMTP id m11so175179oik.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 16:08:40 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH 5/5] nl80211: Emit DEL_INTERFACE only in special cases
+Date: Thu,  7 Jul 2016 02:08:50 -0500
+Message-Id: <1467875330-7835-6-git-send-email-denkenz@gmail.com> (sfid-20160707_010856_560340_CB72F6E9)
+In-Reply-To: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
+References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 22, 2016 at 07:53:35PM +1000, Julian Calaby wrote:
-> Hi Bob,
+For wireless device objects with an associated netdev, the DEL_INTERFACE
+event is generated inside the netdev notifier.  The event is generated
+regardless of whether it was due to a NL80211_CMD_DEL_INTERFACE call
+from userspace or if the netdev was destroyed by other means.
 
-Hi!
+If NL80211_CMD_DEL_INTERFACE handler is called, then a duplicate
+DEL_INTERFACE event will be multicast.  This change modifies the logic
+inside nl80211_del_interface to avoid this.
+---
+ net/wireless/nl80211.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-> > --- a/interface.c
-> > +++ b/interface.c
-> > @@ -295,6 +295,10 @@ char *channel_width_name(enum nl80211_chan_width width)
-> >                 return "80+80 MHz";
-> >         case NL80211_CHAN_WIDTH_160:
-> >                 return "160 MHz";
-> > +       case NL80211_CHAN_WIDTH_5:
-> > +               return "5 MHz";
-> > +       case NL80211_CHAN_WIDTH_10:
-> > +               return "10 MHz";
-> >         default:
-> >                 return "unknown";
-> >         }
-> 
-> Judging by the previous two entries, it looks like the case statements
-> are sorted, so should these ones therefore be at the top of the list?
-
-These are sorted by NL80211_CHAN_WIDTH_* attribute value, which makes
-a little more sense to me than sorting by the string or numerically by
-width, but sure, I can do it either way.
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ec8eb88..a65c271 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2913,7 +2913,17 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (!rdev->ops->del_virtual_intf)
+ 		return -EOPNOTSUPP;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	/*
++	 * For wdevs which have no associated netdev object (e.g. of type
++	 * NL80211_IFTYPE_P2P_DEVICE), emit the DEL_INTERFACE event here.
++	 * For all other types, the event will be generated from the
++	 * netdev notifier
++	 */
++	if (!wdev->netdev)
++		msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	else
++		msg = NULL;
++
+ 	if (msg && nl80211_send_iface(msg, 0, 0, 0, rdev, wdev, true) < 0) {
+ 		nlmsg_free(msg);
+ 		msg = NULL;
 -- 
-Bob Copeland %% http://bobcopeland.com/
+2.7.3
+
