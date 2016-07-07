@@ -1,72 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:52442 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751420AbcGBV20 convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:34799 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932890AbcGFXIi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jul 2016 17:28:26 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Jonas Gorski <jonas.gorski@gmail.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Priit Laes <plaes@plaes.org>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
-Date: Sat, 02 Jul 2016 23:30:21 +0200
-Message-ID: <7975990.MvNRQ06u39@wuerfel> (sfid-20160702_232836_120708_3824B47B)
-In-Reply-To: <ced2a770-2724-bdc9-7e2a-3dc9f76abf29@broadcom.com>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> <CAOiHx=m8Zf0T4=BTG6BMRjj3kOHzt4YaQa3yzutmrhFSOyZMmA@mail.gmail.com> <ced2a770-2724-bdc9-7e2a-3dc9f76abf29@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+	Wed, 6 Jul 2016 19:08:38 -0400
+Received: by mail-oi0-f67.google.com with SMTP id s17so187813oih.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 16:08:38 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH 2/5] core: Notify of new wireless netdevs
+Date: Thu,  7 Jul 2016 02:08:47 -0500
+Message-Id: <1467875330-7835-3-git-send-email-denkenz@gmail.com> (sfid-20160707_010854_800753_CCC40313)
+In-Reply-To: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
+References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Saturday, July 2, 2016 8:20:35 PM CEST Arend Van Spriel wrote:
-> > If you want a separate property, then I repeat my very first
-> > suggestion, the well defined model property.
-> > e.g.
-> > 
-> > brcmf@0 {
-> >         model = "ampak,ap6210";
-> >         compatible = "brcm,bcm4329-fmac";
-> >         ...
-> > };
-> > 
-> > All device nodes may have a model property, not just the top "machine" one.
-> 
-> I heard you the first time  I just was not sure what the implications
-> would be to use it. Hence I suggested a vendor specific property.
-> However, looking up and reading the definition in ePAPRv1.1 I suppose it
-> is fine to use the model property:
-> 
-> Property: model
-> Value type: <string>
-> Description:
-> The model property value is a <string> that specifies the manufacturer’s
-> model number of the device.
-> 
-> The recommended format is: “manufacturer,model”, where manufacturer is a
-> string describing the name of the manufacturer (such as a stock ticker
-> symbol), and model specifies the model number.
+---
+ net/wireless/core.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-The model property is very similar to compatible, except that there is
-only one entry rather than a list of entries from most specific to
-most generic.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 7645e97..7758c0f 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1079,6 +1079,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+ 		     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
+ 			dev->priv_flags |= IFF_DONT_BRIDGE;
++
++		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+ 		cfg80211_leave(rdev, wdev);
+-- 
+2.7.3
 
-I think by writing the above example as
-
-	compatible = "ampak,ap6210", "brcm,bcm4329-fmac";
-
-we can provide the same functionality in a slightly simpler way, the driver
-then just goes on to look for the nvram file for each entry in sequence until
-it finds one.
-
-	Arnd
