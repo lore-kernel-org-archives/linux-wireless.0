@@ -1,45 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39640 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754150AbcGHJzn (ORCPT
+Received: from mail2.tohojo.dk ([77.235.48.147]:57669 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755518AbcGHQic convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 05:55:43 -0400
-Content-Type: text/plain; charset="utf-8"
+	Fri, 8 Jul 2016 12:38:32 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+	Tim Shepard <shep@alum.mit.edu>
+Subject: Re: [v3] ath9k: Switch to using mac80211 intermediate software queues.
+References: <ac5b5bc6532d4fe7ae3198124ecce7fc@euamsexm01a.eu.qualcomm.com>
+	<87wpkwktx9.fsf@toke.dk>
+	<112300e0-7d39-0c4c-45c9-158651f0c0ed@nbd.name>
+	<87lh1cksao.fsf@toke.dk>
+	<aba77f01-cfee-0e5a-9b84-9d2e0439bb56@nbd.name>
+Date: Fri, 08 Jul 2016 18:38:27 +0200
+In-Reply-To: <aba77f01-cfee-0e5a-9b84-9d2e0439bb56@nbd.name> (Felix Fietkau's
+	message of "Fri, 8 Jul 2016 18:31:11 +0200")
+Message-ID: <87h9c0kruk.fsf@toke.dk> (sfid-20160708_183836_101240_F3F68664)
 MIME-Version: 1.0
-Subject: Re: rtlwifi: Create _rtl_dbg_trace function to reduce RT_TRACE code
- size
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <90cd7c8f12b51571db565fd496a2fcf610e2e484.1466894688.git.joe@perches.com>
-To: Joe Perches <joe@perches.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <20160708095542.49BF460239@smtp.codeaurora.org> (sfid-20160708_115609_810976_36B24A7C)
-Date: Fri,  8 Jul 2016 09:55:42 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> wrote:
-> This debugging macro can expand to a lot of code.
-> Make it a function to reduce code size.
-> 
-> (x86-64 defconfig w/ all rtlwifi drivers and allyesconfig)
-> $ size drivers/net/wireless/realtek/rtlwifi/built-in.o*
->    text	   data	    bss	    dec	    hex	filename
->  900083	 200499	   1907	1102489	 10d299	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.new
-> 1113597	 200499	   1907	1316003	 1414a3	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.old
-> 1746879	 453503	   8512	2208894	 21b47e	drivers/net/wireless/realtek/rtlwifi/built-in.o.new
-> 2051965	 503311	   8512	2563788	 271ecc	drivers/net/wireless/realtek/rtlwifi/built-in.o.old
-> 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+Felix Fietkau <nbd@nbd.name> writes:
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+> On 2016-07-08 18:28, Toke Høiland-Jørgensen wrote:
+>> Felix Fietkau <nbd@nbd.name> writes:
+>> 
+>>> On 2016-07-08 17:53, Toke Høiland-Jørgensen wrote:
+>>>> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>>>> 
+>>>>> Toke Høiland-Jørgensen wrote:
+>>>>>> This switches ath9k over to using the mac80211 intermediate software
+>>>>>> queueing mechanism for data packets. It removes the queueing inside the
+>>>>>> driver, except for the retry queue, and instead pulls from mac80211 when
+>>>>>> a packet is needed. The retry queue is used to store a packet that was
+>>>>>> pulled but can't be sent immediately.
+>>>>>> 
+>>>>>> The old code path in ath_tx_start that would queue packets has been
+>>>>>> removed completely, as has the qlen limit tunables (since there's no
+>>>>>> longer a queue in the driver to limit).
+>>>>>> 
+>>>>>> Based on Tim's original patch set, but reworked quite thoroughly.
+>>>>>> 
+>>>>>> Cc: Tim Shepard <shep@alum.mit.edu>
+>>>>>> Cc: Felix Fietkau <nbd@nbd.name>
+>>>>>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+>>>>>
+>>>>> Nice work.
+>>>> 
+>>>> Thanks :)
+>>>> 
+>>>>> Because this is such a significant change, and to maximise testing
+>>>>> time, I'm planning to queue this for 4.9 (so I would apply this to
+>>>>> ath-next in 3-4 weeks after the merge window closes). But anyone who
+>>>>> wants to test this can use master-pending branch from my ath.git tree
+>>>>> (uses wireless-testing as the baseline). Sounds good?
+>>>> 
+>>>> Sounds good to me. I'm planning on backporting this and Michael's
+>>>> mac80211 FQ-CoDel patches to 4.4 and post them for inclusion in LEDE.
+>>>> Hopefully that will get it some more testing as well.
+>>> I've pushed a backport of this into my LEDE staging tree:
+>>> https://git.lede-project.org/?p=lede/nbd/staging.git;a=summary
+>> 
+>> Awesome! What about the FQ-CoDel mac80211 patches themselves? I have a
+>> tree where I've separated out the needed patches and rebased them on
+>> mainline 4.4.9. Can I post that somewhere (or just email you the series)
+>> and get you to include those as well? Or do I just dump the patch files
+>> into the LEDE patches dir and send that as a patch to LEDE? (I see your
+>> patch also refreshed subsequent patches; is there a script to do that
+>> automatically?)
+> You don't need to do anything here. LEDE does not use mac80211 and
+> drivers from the kernel tree, it's built using backports.
+> It's currently using a backports snapshot that I built myself from
+> wireless-testing 2016-06-20, which already includes FQ-Codel.
 
-9ce221915a94 rtlwifi: Create _rtl_dbg_trace function to reduce RT_TRACE code size
+Ah, didn't know that. Cool; and thanks for taking care of the
+backporting :)
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9198897/
-
+-Toke
