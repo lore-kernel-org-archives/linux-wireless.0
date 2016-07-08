@@ -1,59 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57089 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755490AbcG0R02 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40052 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754345AbcGHJ7z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 13:26:28 -0400
-Subject: Re: [PATCH] ath10k: Allow setting coverage class
-To: Benjamin Berg <benjamin@sipsolutions.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-References: <1469608424-11370-1-git-send-email-benjamin@sipsolutions.net>
-Cc: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
-	Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-	ath10k@lists.infradead.org,
-	Simon Wunderlich <sw@simonwunderlich.de>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <5798EEC3.5040008@candelatech.com> (sfid-20160727_192632_124053_0DA1045A)
-Date: Wed, 27 Jul 2016 10:26:27 -0700
+	Fri, 8 Jul 2016 05:59:55 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1469608424-11370-1-git-send-email-benjamin@sipsolutions.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: [1/3] mwifiex: code rearrangement in suspend handler
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1467017189-26917-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Wei-Ning Huang <wnhuang@chromium.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160708095944.DB01760395@smtp.codeaurora.org> (sfid-20160708_115959_401045_8E38EFE2)
+Date: Fri,  8 Jul 2016 09:59:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/27/2016 01:33 AM, Benjamin Berg wrote:
-> Unfortunately ath10k does not generally allow modifying the coverage class
-> with the stock firmware and Qualcomm has so far refused to implement this
-> feature so that it can be properly supported in ath10k. If we however know
-> the registers that need to be modified for proper operation with a higher
-> coverage class, then we can do these modifications from the driver.
->
-> This patch implements this hack for first generation cards which are based
-> on a core that is similar to ath9k. The registers are modified in place and
-> need to be re-written every time the firmware sets them. To achieve this
-> the register status is verified after any event from the firmware.
->
-> The coverage class may not be modified temporarily right after the card
-> re-initializes the registers. This is for example the case during scanning.
->
-> A warning will be generated if the hack is not supported on the card or
-> unexpected values are hit. There is no error reporting for userspace
-> applications though (this is a limitation in the mac80211 driver
-> interface).
->
-> Thanks to Sebastian Gottschall <s.gottschall@dd-wrt.com> for initially
-> working on a userspace support for this. This patch wouldn't have been
-> possible without this documentation.
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> We will derive sta_priv at the beginning of suspend handler.
+> This will be useful for next patch in this series.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-I would be concerned about the various resets firmware does to work around
-hardware hangs as well.  I don't think any events are generated for these, unless
-you count the dbglog messages?
+Thanks, 3 patches applied to wireless-drivers-next.git:
 
-Thanks,
-Ben
+322397b268f7 mwifiex: code rearrangement in suspend handler
+09e672a16b92 mwifiex: clear scan_aborting flag
+16d25da94f3d mwifiex: fix NULL pointer dereference during suspend
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Sent by pwcli
+https://patchwork.kernel.org/patch/9200033/
 
