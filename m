@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:38600 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755085AbcGKPy7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57602 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932529AbcGHNt2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 11:54:59 -0400
-From: Colin King <colin.king@canonical.com>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S . Miller" <davem@davemloft.net>,
-	Rolf Neugebauer <rolf.neugebauer@netronome.com>,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>,
-	oss-drivers@netronome.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH][V2] nfp: check idx is -ENOSPC before using it is an index
-Date: Mon, 11 Jul 2016 16:54:20 +0100
-Message-Id: <1468252460-15117-1-git-send-email-colin.king@canonical.com> (sfid-20160711_175506_841012_C9293A60)
+	Fri, 8 Jul 2016 09:49:28 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: fix interrupt processing corner case in MSI mode
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1467377812-5716-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Shengzhen Li <szli@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160708134927.D2071611DF@smtp.codeaurora.org> (sfid-20160708_154931_972052_EC6D7F8D)
+Date: Fri,  8 Jul 2016 13:49:27 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Shengzhen Li <szli@marvell.com>
+> 
+> As interrupt is read in interrupt handler as well as interrupt processing
+> thread, we observed a corner case issue for MSI in which interrupt gets
+> processed twice.
+> 
+> This patch moves interrupt reading code for MSI mode from
+> mwifiex_interrupt_status() to mwifiex_pcie_process_int() to avoid the
+> issue.
+> 
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-idx can be returned as -ENOSPC, so we should check for this first
-before using it as an index into nn->vxlan_usecnt[] to avoid an
-out of bounds array offset read.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/ethernet/netronome/nfp/nfp_net_common.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+5781fc29dbbd mwifiex: fix interrupt processing corner case in MSI mode
 
-diff --git a/drivers/net/ethernet/netronome/nfp/nfp_net_common.c b/drivers/net/ethernet/netronome/nfp/nfp_net_common.c
-index 1e74b91..88678c1 100644
---- a/drivers/net/ethernet/netronome/nfp/nfp_net_common.c
-+++ b/drivers/net/ethernet/netronome/nfp/nfp_net_common.c
-@@ -2578,7 +2578,7 @@ static void nfp_net_del_vxlan_port(struct net_device *netdev,
- 		return;
- 
- 	idx = nfp_net_find_vxlan_idx(nn, ti->port);
--	if (!nn->vxlan_usecnt[idx] || idx == -ENOSPC)
-+	if (idx == -ENOSPC || !nn->vxlan_usecnt[idx])
- 		return;
- 
- 	if (!--nn->vxlan_usecnt[idx])
 -- 
-2.8.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9209885/
 
