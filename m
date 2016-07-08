@@ -1,162 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:35094 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751009AbcGOJcS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57276 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755366AbcGHNqG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2016 05:32:18 -0400
-Received: by mail-pf0-f175.google.com with SMTP id c2so39968822pfa.2
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2016 02:32:18 -0700 (PDT)
-Subject: Re: [PATCH 1/4 v2 iface_work] New function
- ieee80211_is_skb_handled_by_pkt_type
-To: Alex Briskin <br.shurik@gmail.com>, linux-wireless@vger.kernel.org,
-	johannes@sipsolutions.net
-References: <1468573596-20055-1-git-send-email-br.shurik@gmail.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <dda1046c-2b71-9f97-c452-ed96d4585eef@broadcom.com> (sfid-20160715_113223_168463_7F66A328)
-Date: Fri, 15 Jul 2016 11:32:10 +0200
+	Fri, 8 Jul 2016 09:46:06 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1468573596-20055-1-git-send-email-br.shurik@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Subject: Re: [1/2] brcmfmac: delete interface directly in code that sent fw
+ request
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1467230067-3302-2-git-send-email-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
+	IEEE802.11n WIRELESS DRIVER),
+	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Message-Id: <20160708134605.3BF7E60260@smtp.codeaurora.org> (sfid-20160708_154631_520398_63FC3969)
+Date: Fri,  8 Jul 2016 13:46:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-7-2016 11:06, Alex Briskin wrote:
-> Split ieee80211_iface_work in two. Moved part of a code that checks
-> pkt_type.
-
-As mentioned before the subject of the patches should use "mac80211: "
-prefix. So:
-
-[PATCH 1/4 v2] mac80211: New function ieee80211_is_skb_handled_by_pkt_type
-
-So I did not mean you should rename function from ieee80211_... to
-mac80211_...
-
-Another thing is that a lot of people skim the repository using 'git log
---oneline' to find a commit (unless they use git blame first) so it
-would be great to have the subject line summarize the patch intent in a
-meaningful manner. Using generic terms like "Further improve radability"
-does not really help.
-
-My comment from the initial patch series on the function names is that
-it would be better to be consistent and reflect it is used in iface_work
-context, eg. ieee80211_iface_Work_handle_pkt_type,
-ieee80211_iface_Work_handle_frame_control, and
-ieee80211_iface_Work_handle_vif_type.
-
-Regards,
-Arend
-
-> Signed-off-by: Alex Briskin <br.shurik@gmail.com>
-> ---
->  net/mac80211/iface.c | 75 +++++++++++++++++++++++++++++++---------------------
->  1 file changed, 45 insertions(+), 30 deletions(-)
+Rafał Miłecki wrote:
+> So far when receiving event about in-firmware-interface removal our
+> event worker was notifying listener and afterwards it was removing Linux
+> interface.
 > 
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index c59af3e..a68cbac 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -1198,6 +1198,48 @@ static void ieee80211_if_setup(struct net_device *dev)
->  	dev->destructor = ieee80211_if_free;
->  }
->  
-> +static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
-> +						 struct ieee80211_sub_if_data
-> +						 *sdata)
-> +{
-> +	struct ieee80211_ra_tid *ra_tid;
-> +	struct ieee80211_rx_agg *rx_agg;
-> +	struct ieee80211_local *local = sdata->local;
-> +	struct sta_info *sta;
-> +
-> +	if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
-> +		ra_tid = (void *)&skb->cb;
-> +		ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
-> +	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
-> +		ra_tid = (void *)&skb->cb;
-> +		ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
-> +	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
-> +		rx_agg = (void *)&skb->cb;
-> +		mutex_lock(&local->sta_mtx);
-> +		sta = sta_info_get_bss(sdata, rx_agg->addr);
-> +		if (sta)
-> +			__ieee80211_start_rx_ba_session(sta,
-> +							0, 0, 0, 1, rx_agg->tid,
-> +							IEEE80211_MAX_AMPDU_BUF,
-> +							false, true);
-> +		mutex_unlock(&local->sta_mtx);
-> +	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
-> +		rx_agg = (void *)&skb->cb;
-> +		mutex_lock(&local->sta_mtx);
-> +		sta = sta_info_get_bss(sdata, rx_agg->addr);
-> +		if (sta)
-> +			__ieee80211_stop_rx_ba_session(sta,
-> +						       rx_agg->tid,
-> +						       WLAN_BACK_RECIPIENT, 0,
-> +						       false);
-> +		mutex_unlock(&local->sta_mtx);
-> +	} else {
-> +		return false;
-> +	}
-> +	/*will return true if pkt_type found and handled */
-> +	return true;
-> +}
-> +
->  static void ieee80211_iface_work(struct work_struct *work)
->  {
->  	struct ieee80211_sub_if_data *sdata =
-> @@ -1205,8 +1247,6 @@ static void ieee80211_iface_work(struct work_struct *work)
->  	struct ieee80211_local *local = sdata->local;
->  	struct sk_buff *skb;
->  	struct sta_info *sta;
-> -	struct ieee80211_ra_tid *ra_tid;
-> -	struct ieee80211_rx_agg *rx_agg;
->  
->  	if (!ieee80211_sdata_running(sdata))
->  		return;
-> @@ -1221,34 +1261,8 @@ static void ieee80211_iface_work(struct work_struct *work)
->  	while ((skb = skb_dequeue(&sdata->skb_queue))) {
->  		struct ieee80211_mgmt *mgmt = (void *)skb->data;
->  
-> -		if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
-> -			ra_tid = (void *)&skb->cb;
-> -			ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra,
-> -						 ra_tid->tid);
-> -		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
-> -			ra_tid = (void *)&skb->cb;
-> -			ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra,
-> -						ra_tid->tid);
-> -		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
-> -			rx_agg = (void *)&skb->cb;
-> -			mutex_lock(&local->sta_mtx);
-> -			sta = sta_info_get_bss(sdata, rx_agg->addr);
-> -			if (sta)
-> -				__ieee80211_start_rx_ba_session(sta,
-> -						0, 0, 0, 1, rx_agg->tid,
-> -						IEEE80211_MAX_AMPDU_BUF,
-> -						false, true);
-> -			mutex_unlock(&local->sta_mtx);
-> -		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
-> -			rx_agg = (void *)&skb->cb;
-> -			mutex_lock(&local->sta_mtx);
-> -			sta = sta_info_get_bss(sdata, rx_agg->addr);
-> -			if (sta)
-> -				__ieee80211_stop_rx_ba_session(sta,
-> -							rx_agg->tid,
-> -							WLAN_BACK_RECIPIENT, 0,
-> -							false);
-> -			mutex_unlock(&local->sta_mtx);
-> +		if (ieee80211_is_skb_handled_by_pkt_type(skb, sdata)) {
-> +			goto free_skb;
->  		} else if (ieee80211_is_action(mgmt->frame_control) &&
->  			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
->  			int len = skb->len;
-> @@ -1333,6 +1347,7 @@ static void ieee80211_iface_work(struct work_struct *work)
->  			break;
->  		}
->  
-> +free_skb:
->  		kfree_skb(skb);
->  	}
->  
+> First of all it was resulting in slightly unexpected order. The listener
+> (del_virtual_intf callback) was (usually) returning with success before
+> we even called unregister_netdev(ice).
 > 
+> Please note this couldn't be simply fixed by changing order of calls in
+> brcmf_fweh_handle_if_event as unregistering interface earlier could free
+> struct brcmf_if.
+> 
+> Another problem of current implementation are possible lockups. Focus on
+> the time slot between calling event handler and removing Linux
+> interface. During that time original caller may leave (unlocking rtnl
+> semaphore) *and* another call to the same code may be done (locking it
+> again). If that happens our event handler will stuck at removing Linux
+> interface, it won't handle another event and will block process holding
+> rtnl lock.
+> 
+> This can be simply solved by unregistering interface in a proper
+> callback, right after receiving confirmation event from firmware. This
+> only required modifying worker to don't unregister on its own if there
+> is someone waiting for the event.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+
+Thanks, 2 patches applied to wireless-drivers-next.git:
+
+a63b09872c1d brcmfmac: delete interface directly in code that sent fw request
+dba8fbc67ecd brcmfmac: support removing AP interfaces with "interface_remove"
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9206157/
+
