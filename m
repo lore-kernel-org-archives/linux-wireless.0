@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from incomingmail.riverbed.com ([208.70.196.45]:44684 "EHLO
-	smtp1.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750915AbcGAPT1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 11:19:27 -0400
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org
-Cc: kvalo@qca.qualcomm.com
-From: Eduardo Abinader <eduardo.abinader@riverbed.com>
-Subject: [PATCH] ath9k: consider return code on ar9300_eeprom_restore_flash
-Message-ID: <577688D8.2080600@riverbed.com> (sfid-20160701_171931_231080_52ADCC9C)
-Date: Fri, 1 Jul 2016 17:14:32 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56020 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755691AbcGHP0o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2016 11:26:44 -0400
+Message-ID: <1467991593.4837.7.camel@sipsolutions.net> (sfid-20160708_172734_830413_2B86028B)
+Subject: Re: [PATCH 0/5] Improve wireless netdev detection
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Fri, 08 Jul 2016 17:26:33 +0200
+In-Reply-To: <577FC51E.7010901@gmail.com> (sfid-20160708_172209_534342_D9E86FEB)
+References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
+ <1467973953.4837.3.camel@sipsolutions.net> <577FC51E.7010901@gmail.com>
+	 (sfid-20160708_172209_534342_D9E86FEB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-just to comply with current ath9k_hw_nvram_read to return value, hence
-behaving reacting accordingly.
+On Fri, 2016-07-08 at 10:22 -0500, Denis Kenzior wrote:
+> 
+> Apologies, I've only been looking at the kernel side for several
+> days, so my understanding is still incomplete.
+> 
+> I was looking at mac80211/iface.c: ieee80211_if_add() which seems to 
+> handle NL80211_IFTYPE_P2P_DEVICE specially by not
+> creating/registering a 
+> net_device object.  For some reason I thought that this object was 
+> registered somewhere later, but my understanding was incorrect.  So
+> the  entire 'side effect' paragraph above does not apply.
 
-Signed-off-by: Eduardo Abinader <eduardo.abinader@riverbed.com>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Ok, makes sense.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 5bd2cba..491c352 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3252,7 +3252,8 @@ static int ar9300_eeprom_restore_flash(struct ath_hw *ah, u8 *mptr,
- 	int i;
- 
- 	for (i = 0; i < mdata_size / 2; i++, data++)
--		ath9k_hw_nvram_read(ah, i, data);
-+		if (!ath9k_hw_nvram_read(ah, i, data))
-+			return -1;
- 
- 	return 0;
- }
-@@ -3282,7 +3283,8 @@ static int ar9300_eeprom_restore_internal(struct ath_hw *ah,
- 	if (ath9k_hw_use_flash(ah)) {
- 		u8 txrx;
- 
--		ar9300_eeprom_restore_flash(ah, mptr, mdata_size);
-+		if (!ar9300_eeprom_restore_flash(ah, mptr, mdata_size))
-+			return -1;
- 
- 		/* check if eeprom contains valid data */
- 		eep = (struct ar9300_eeprom *) mptr;
--- 
-2.5.0
+> Are you okay with the general approach? 
+
+I see no issues with sending these events out. I'd like them to
+actually be reliable (if present) though, not double as you'd implied -
+but I didn't really understand in which cases you were expecting
+issues, was it only P2P-Device?
+
+>  Are there any locking issues I 
+> might be overlooking?
+
+Not that I'm aware of. All of the netdev/wdev handling should be
+protected by RTNL.
+
+johannes
