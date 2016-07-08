@@ -1,90 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.xplot.org ([23.30.144.12]:39438 "EHLO www.xplot.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755400AbcGHQiL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 12:38:11 -0400
-From: Tim Shepard <shep@alum.mit.edu>
-To: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-cc: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-	Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v3] ath9k: Switch to using mac80211 intermediate software queues. 
-In-reply-to: Your message of Wed, 06 Jul 2016 21:34:17 +0200.
-             <20160706193417.13080-1-toke@toke.dk>
-Date: Fri, 08 Jul 2016 12:38:02 -0400
-Message-Id: <E1bLYmw-0004wm-00@www.xplot.org> (sfid-20160708_183819_231027_AC18FE4D)
+Received: from smtp.codeaurora.org ([198.145.29.96]:44892 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754086AbcGHLBK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2016 07:01:10 -0400
+Date: Fri, 8 Jul 2016 16:30:53 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
+ QCA99X0 and later
+Message-ID: <20160708110053.GA19841@atheros-ThinkPad-T61> (sfid-20160708_130115_310554_6094B037)
+References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
+ <576C1861.7020402@candelatech.com>
+ <20160625185350.GA25330@atheros-ThinkPad-T61>
+ <576F2165.3010109@candelatech.com>
+ <8760sr6kj8.fsf@kamboji.qca.qualcomm.com>
+ <577BD05D.6000607@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <577BD05D.6000607@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Michal / Kalle / Ben,
 
-> The old code path in ath_tx_start that would queue packets has been
-> removed completely, 
-
-It seems to me that this breaks the ath9k driver when non-data packets
-which mac80211 will not queue on the new intermediate queues, see
-ieee80211_drv_tx( ) in mac80211/tx.c where it says
-
-	if (!ieee80211_is_data(hdr->frame_control))
-		goto tx_normal;
-
-This means that non-data packets can come down from mac80211 via
-ath_tx --> ath_tx_start which might be for a vif that is not on the
-same channel, and so cannot be sent straight away but must be queued.
-Maybe this problem should be fixed in mac80211, but as of now this is
-a problem.   It appears to me that your new patch just sends them on
-the wrong channel.
-
-Maybe I'm confused about something, hints appreciated.
+is this patch is good to go (or) should i re-work  ?
+I had replied to Michal's comment of introducing a new firmware
+feature flag will not address the issue in older firmware / code.
+Let me know if i had missed something very obvious.
 
 
-> as has the qlen limit tunables (since there's no
-> longer a queue in the driver to limit).
+On Tue, Jul 05, 2016 at 08:21:01AM -0700, Ben Greear wrote:
+> On 06/30/2016 03:25 AM, Valo, Kalle wrote:
+> >Ben Greear <greearb@candelatech.com> writes:
+> >
+> >>Is there a better way than posting to the ath10k mailing list?  There are quite
+> >>a few more of my patches that are stuck in pending or ignored state.  If you
+> >>could review some of them and add them to your testing trees then it might help
+> >>them go upstream.
+> >
+> >Yes, as you seem to test with your custom ath10k and custom firmware
+> >review and testing feedback from others is more than welcome. That way I
+> >can have more confidence that the patch really works with the mainline
+> >version.
+> >
+> >The problem with your patches is that you dump more responsibility on
+> >me. I have no idea if they work with the mainline kernel, or if they
+> >break something, so I need to personally test the patch and that takes
+> >time. Basically I have a rule if that I need to use more than two
+> >minutes on a patch it goes to the Deferred queue and I'll go through
+> >that less often than the normal patch queue.
+> 
+> I can do some testing with stock firmware, but stock firmware is often quite limited
+> so I cannot do the more interesting test cases that we use internally.
+> Some of my patches are for fixing edge cases that cannot be easily reproduced,
+> and that code really needs to be reviewed for correctness more by looking at
+> the code than by trying to run some exhaustive test case.
+> 
+> I think if there were a specific maintainer for ath10k that could take a more
+> active role, especially with regard to keeping a fairly wide variety of test rigs
+> around to run regression tests, then it would help all involved.  I think this person
+> needs access to firmware source so that they can more easily verify the driver
+> matches the firmware:  Many of the regressions and bug fixes, for instance with
+> stats, would be much easier to clean up if you look at firmware while developing
+> the driver bits.
+>
 
-> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-> index 5294595..daf972c 100644
-> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
-> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-> @@ -91,7 +91,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
->  #define ATH_RXBUF               512
->  #define ATH_TXBUF               512
->  #define ATH_TXBUF_RESERVE       5
-> -#define ATH_MAX_QDEPTH          (ATH_TXBUF / 4 - ATH_TXBUF_RESERVE)
->  #define ATH_TXMAXTRY            13
->  #define ATH_MAX_SW_RETRIES      30
-
-I thought the purpose of ATH_MAX_QDEPTH was due to a limit on the
-depth of a hardware FIFO.  Not all packets that get handed to the
-hardware come through a software queue (e.g. those that bypass the
-intermediate queueing in mac80211 now) and (it seems to me) there
-needs to be a limit to prevent overflowing a hardware fifo.   Yes,
-normal data packets are (much) further limited as you taught me a few
-weeks ago, but not all packets are subject to that constraint (as far
-as I can understand at the moment).   I'm not entirely sure of the
-details, but I think it is the sorts of packets sent directly by
-hostapd and wpa_supplicant that bypass all the queueing.  And maybe
-those things aren't likely to be sending a burst of hundreds of
-packets in a very short period of time (where it could overrun the
-FIFO), but there may be other tools that send raw 802.11 non-data
-packets which could then overflow the above limit, and it seems you
-are removing the check.    Actually I think my original version of
-this patch may have had a flaw in that some combination of non-data
-and data packets could be combined to overflow this limit (since I
-failed to check overflowing this limit where I pulled from the
-mac80211 intermediate queue).
-
-
-
-My hope is that I'm just confused and you all understand what's really
-going on better than I do and have an explanation why all the above
-doesn't matter and is handled in some other way.   But in case you
-don't, I don't want these issues to be overlooked.
-
-(I'm not testing using vifs on multiple channels.   But even if I was,
- I'm not sure if normal operation of wpa_supplicant or hostapd would
- be enough to trigger these problems.)
-
-
-
-			-Tim Shepard
-			 shep@alum.mit.edu
-
+regards,
+shafi
