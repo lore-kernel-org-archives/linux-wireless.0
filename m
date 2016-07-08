@@ -1,72 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33396 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753129AbcGFKoY (ORCPT
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:36145 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755830AbcGHPt5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:44:24 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:25 +0300
-Message-Id: <1467801651-1816-30-git-send-email-luca@coelho.fi> (sfid-20160706_125027_470500_1627C5D5)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 30/56] iwlwifi: mvm: checksum IPv6 fragmented packet
+	Fri, 8 Jul 2016 11:49:57 -0400
+Received: by mail-yw0-f195.google.com with SMTP id y188so5338002ywf.3
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 08:49:57 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <577FCB04.4030905@candelatech.com>
+References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
+ <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
+ <1467972560885.99812@qti.qualcomm.com> <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com>
+ <1467982766213.21223@qti.qualcomm.com> <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com>
+ <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com>
+ <CABPxzYKOqBmrjRwAyZV9daV8adEhUV71XEAsfrLhtTnKwWzuaw@mail.gmail.com>
+ <577FC9D0.2010809@candelatech.com> <CABPxzYLdS-QicOj9AdcubT8uxgw0cqXpzerpuwGcwkSQ7PCiOA@mail.gmail.com>
+ <577FCB04.4030905@candelatech.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 8 Jul 2016 21:19:37 +0530
+Message-ID: <CABPxzYLTg5Y0-m6YNemXAd75s3_6uBCCecbsoJG09jM=vqKTFw@mail.gmail.com> (sfid-20160708_175006_130890_E0000704)
+Subject: Re: ath10k + iw set bitrates is causing FW crash
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
-
-Our HW does not support checksum of fragmented packets.
-Fix code accordingly to checksum those packets in the driver.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Fixes: 5e6a98dc4863 ("iwlwifi: mvm: enable TCP/UDP checksum support for 9000 family")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 21 ++++++---------------
- 1 file changed, 6 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 2373142..f3a6e95 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -138,28 +138,19 @@ static void iwl_mvm_tx_csum(struct iwl_mvm *mvm, struct sk_buff *skb,
- 
- 		protocol = ipv6h->nexthdr;
- 		while (protocol != NEXTHDR_NONE && ipv6_ext_hdr(protocol)) {
-+			struct ipv6_opt_hdr *hp;
-+
- 			/* only supported extension headers */
- 			if (protocol != NEXTHDR_ROUTING &&
- 			    protocol != NEXTHDR_HOP &&
--			    protocol != NEXTHDR_DEST &&
--			    protocol != NEXTHDR_FRAGMENT) {
-+			    protocol != NEXTHDR_DEST) {
- 				skb_checksum_help(skb);
- 				return;
- 			}
- 
--			if (protocol == NEXTHDR_FRAGMENT) {
--				struct frag_hdr *hp =
--					OPT_HDR(struct frag_hdr, skb, off);
--
--				protocol = hp->nexthdr;
--				off += sizeof(struct frag_hdr);
--			} else {
--				struct ipv6_opt_hdr *hp =
--					OPT_HDR(struct ipv6_opt_hdr, skb, off);
--
--				protocol = hp->nexthdr;
--				off += ipv6_optlen(hp);
--			}
-+			hp = OPT_HDR(struct ipv6_opt_hdr, skb, off);
-+			protocol = hp->nexthdr;
-+			off += ipv6_optlen(hp);
- 		}
- 		/* if we get here - protocol now should be TCP/UDP */
- #endif
--- 
-2.8.1
-
+On Fri, Jul 8, 2016 at 9:17 PM, Ben Greear <greearb@candelatech.com> wrote:
+> On 07/08/2016 08:44 AM, Krishna Chaitanya wrote:
+>>
+>> On Fri, Jul 8, 2016 at 9:12 PM, Ben Greear <greearb@candelatech.com>
+>> wrote:
+>>>
+>>> On 07/08/2016 08:39 AM, Krishna Chaitanya wrote:
+>>>
+>>>> Also can you please tell me how to make ath10k use minstrel rc, its
+>>>> needed
+>>>> for comparative purposes? Is disable HW_RATE_CONTROL enough or does
+>>>> it need more changes?
+>>>
+>>>
+>>>
+>>> It cannot be done.  You have to use whatever rate-ctrl is baked into the
+>>> firmware.
+>>
+>> Ok, its a good feature to have.
+>>
+>
+> It is unlikely to happen anytime soon.  It requires significant firmware
+> modification (and driver too),
+Ok, I understand.
+>and probably you would have to add MU-MIMO
+> support to minstrel if you wanted to support latest ath10k NICs.
+It need not be a full pledged one, but 11ac MIMO works should be
+good enough (for now).
