@@ -1,78 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33903 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938AbcGAQKw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 12:10:52 -0400
-Received: by mail-wm0-f67.google.com with SMTP id 187so6344318wmz.1
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 09:10:39 -0700 (PDT)
-From: Pierre Le Magourou <lemagoup@gmail.com>
-To: kvalo@qca.qualcomm.com
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-	jmassot@aldebaran.com,
-	Pierre Le Magourou <plemagourou@aldebaran.com>
-Subject: [PATCH 1/3] ath6kl: Fix WLAN tethering authentication problem.
-Date: Fri,  1 Jul 2016 18:10:03 +0200
-Message-Id: <20160701161005.30341-2-plemagourou@aldebaran.com> (sfid-20160701_181055_779627_07D50F58)
-In-Reply-To: <20160701161005.30341-1-plemagourou@aldebaran.com>
-References: <20160701161005.30341-1-plemagourou@aldebaran.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:54380 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754049AbcGHKeo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2016 06:34:44 -0400
+Message-ID: <1467974081.4837.5.camel@sipsolutions.net> (sfid-20160708_123446_820437_AB543E51)
+Subject: Re: [PATCH] cfg80211: Allow different beacon interval support on
+ virtual interface.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	usdutt@qti.qualcomm.com, ganeshk@qti.qualcomm.com,
+	mkalikot@qca.qualcomm.com, amarnath@qca.qualcomm.com
+Date: Fri, 08 Jul 2016 12:34:41 +0200
+In-Reply-To: <1467973935-32308-1-git-send-email-pkushwah@qti.qualcomm.com> (sfid-20160708_123302_163593_694AA25F)
+References: <1467973935-32308-1-git-send-email-pkushwah@qti.qualcomm.com>
+	 (sfid-20160708_123302_163593_694AA25F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When enabling WLAN tethering, a new AP is visible and a STA could
-connect to it. When the STA tries to authenticate to the newly created
-AP, the WPA authentication mechanism is stuck in the 1/4 msg of 4-Way
-Handshake.
+On Fri, 2016-07-08 at 16:02 +0530, Purushottam Kushwaha wrote:
+> Driver may support different beacon interval on virtual interfaces.
+> Allow setting different beacon interval per interface if driver has
+> such support.
+> 
+It seems this should be an nl80211 feature flag (ext features)
 
-In ath6kl_rx(), the ath6kl_find_sta() function is looking for the
-h_source field of the Ethernet frame header received by the STA. The
-datap pointer that points to the Ethernet frame header is incorrect,
-and was pointing at the wrong offset in the buffer.
-
-This commit adds a pad_before_data_start offset to set the datap pointer
-to the Ethernet frame header. datap->h_source parameter is now really
-pointing to the source ethernet address and the authentication process
-can continue.
-
-Signed-off-by: Pierre Le Magourou <plemagourou@aldebaran.com>
----
- drivers/net/wireless/ath/ath6kl/txrx.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/txrx.c b/drivers/net/wireless/ath/ath6kl/txrx.c
-index 40432fe..9df41d5 100644
---- a/drivers/net/wireless/ath/ath6kl/txrx.c
-+++ b/drivers/net/wireless/ath/ath6kl/txrx.c
-@@ -1401,6 +1401,10 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 		return;
- 	}
- 
-+	pad_before_data_start =
-+		(le16_to_cpu(dhdr->info3) >> WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT)
-+			& WMI_DATA_HDR_PAD_BEFORE_DATA_MASK;
-+
- 	/* Get the Power save state of the STA */
- 	if (vif->nw_type == AP_NETWORK) {
- 		meta_type = wmi_data_hdr_get_meta(dhdr);
-@@ -1408,7 +1412,7 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 		ps_state = !!((dhdr->info >> WMI_DATA_HDR_PS_SHIFT) &
- 			      WMI_DATA_HDR_PS_MASK);
- 
--		offset = sizeof(struct wmi_data_hdr);
-+		offset = sizeof(struct wmi_data_hdr) + pad_before_data_start;
- 		trig_state = !!(le16_to_cpu(dhdr->info3) & WMI_DATA_HDR_TRIG);
- 
- 		switch (meta_type) {
-@@ -1523,9 +1527,6 @@ void ath6kl_rx(struct htc_target *target, struct htc_packet *packet)
- 	seq_no = wmi_data_hdr_get_seqno(dhdr);
- 	meta_type = wmi_data_hdr_get_meta(dhdr);
- 	dot11_hdr = wmi_data_hdr_get_dot11(dhdr);
--	pad_before_data_start =
--		(le16_to_cpu(dhdr->info3) >> WMI_DATA_HDR_PAD_BEFORE_DATA_SHIFT)
--			& WMI_DATA_HDR_PAD_BEFORE_DATA_MASK;
- 
- 	skb_pull(skb, sizeof(struct wmi_data_hdr));
- 
--- 
-2.9.0
-
+johannes
