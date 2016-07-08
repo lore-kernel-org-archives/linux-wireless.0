@@ -1,67 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59387 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750872AbcGMQkX convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 12:40:23 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cathy Luo" <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: RE: [PATCH v3 1/2] mwifiex: add manufacturing mode support
-Date: Wed, 13 Jul 2016 16:39:42 +0000
-Message-ID: <219643fbabd740c3a8a79b8a3e99d5ad@SC-EXCH04.marvell.com> (sfid-20160713_184137_250411_801BF12E)
-References: <1468417703-32716-1-git-send-email-akarwar@marvell.com>
-	<87twfta66k.fsf@purkki.adurom.net>
-	<2dcba20e490840918e80c4f91a250739@SC-EXCH04.marvell.com>
- <87eg6xzeih.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87eg6xzeih.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:50108 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754881AbcGHO1D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2016 10:27:03 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [v3] ath9k: Switch to using mac80211 intermediate software queues.
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160706193417.13080-1-toke@toke.dk>
+To: =?utf-8?q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+CC: <linux-wireless@vger.kernel.org>,
+	<make-wifi-fast@lists.bufferbloat.net>,
+	<ath9k-devel@lists.ath9k.org>,
+	=?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+	Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
+Message-ID: <ac5b5bc6532d4fe7ae3198124ecce7fc@euamsexm01a.eu.qualcomm.com> (sfid-20160708_162712_921217_287555D3)
+Date: Fri, 8 Jul 2016 16:26:54 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
-
-> -----Original Message-----
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Wednesday, July 13, 2016 10:01 PM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam
-> Subject: Re: [PATCH v3 1/2] mwifiex: add manufacturing mode support
+Toke Høiland-Jørgensen wrote:
+> This switches ath9k over to using the mac80211 intermediate software
+> queueing mechanism for data packets. It removes the queueing inside the
+> driver, except for the retry queue, and instead pulls from mac80211 when
+> a packet is needed. The retry queue is used to store a packet that was
+> pulled but can't be sent immediately.
 > 
-> Amitkumar Karwar <akarwar@marvell.com> writes:
+> The old code path in ath_tx_start that would queue packets has been
+> removed completely, as has the qlen limit tunables (since there's no
+> longer a queue in the driver to limit).
 > 
-> > Hi Kalle,
-> >
-> >> -----Original Message-----
-> >> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> >> Sent: Wednesday, July 13, 2016 9:20 PM
-> >> To: Amitkumar Karwar
-> >> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam
-> >> Subject: Re: [PATCH v3 1/2] mwifiex: add manufacturing mode support
-> >>
-> >> Amitkumar Karwar <akarwar@marvell.com> writes:
-> >>
-> >> > By default normal mode is chosen when driver is loaded. This patch
-> >> > adds a provision to choose manufacturing mode via module
-> parameters.
-> >> >
-> >> > Command to load driver in manufacturing mode insmod mwifiex.ko
-> >> > mfg_mode=1 and mfg_firmware=mrvl/firmware.
-> >> >
-> >> > Tested-by: chunfan chen <jeffc@marvell.com>
-> >> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> >>
-> >> Why the mfg_firmware module parameter?
-> >
-> > It's to specify a firmware name.
+> Based on Tim's original patch set, but reworked quite thoroughly.
 > 
-> Yeah, I got that. But why do you need that? Why not just hardcode the
-> firmware name in the driver, which is the normal thing to do?
+> Cc: Tim Shepard <shep@alum.mit.edu>
+> Cc: Felix Fietkau <nbd@nbd.name>
+> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
 
-Ok. I will do this in updated version.
+Nice work. Because this is such a significant change, and to maximise testing
+time, I'm planning to queue this for 4.9 (so I would apply this to ath-next in
+3-4 weeks after the merge window closes). But anyone who wants to test this can
+use master-pending branch from my ath.git tree (uses wireless-testing as the
+baseline). Sounds good?
 
-Regards,
-Amitkumar
+Testing and review feedback very welcome!
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9216993/
+
