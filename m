@@ -1,86 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:63164 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757107AbcGZQqj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57366 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755279AbcGHNre (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2016 12:46:39 -0400
-From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <arnagara@codeaurora.org>,
-	"Ashok Raj Nagarajan" <arnagara@qti.qualcomm.com>
-Subject: [PATCH] ath10k: fix get rx_status from htt context
-Date: Tue, 26 Jul 2016 22:15:52 +0530
-Message-ID: <1469551552-845-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20160726_184643_411115_2937D06F)
+	Fri, 8 Jul 2016 09:47:34 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: mwifiex: Change default firmware for PCIe8997 chipset
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1467305697-2371-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160708134733.DB7E7611CB@smtp.codeaurora.org> (sfid-20160708_154738_210917_09A482DF)
+Date: Fri,  8 Jul 2016 13:47:33 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On handling amsdu on rx path, get the rx_status from htt context. Without this
-fix, we are seeing warnings when running DBDC traffic like this.
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> PCIe-USB8997 variant is being used in the product. Let's change default
+> firmware from PCIe-UART to PCIe-USB. So by default PCIe-USB firmware would
+> be downloaded if version register doesn't give any information.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-WARNING: CPU: 0 PID: 0 at net/mac80211/rx.c:4105 ieee80211_rx_napi+0x88/0x7d8 [mac80211]()
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-[ 1715.878248] CPU: 0 PID: 0 Comm: swapper/0 Tainted: G W 3.18.21 #1
-[ 1715.878273] [<c001d3f4>] (unwind_backtrace) from [<c001a4b0>] (show_stack+0x10/0x14)
-[ 1715.878293] [<c001a4b0>] (show_stack) from [<c01bee64>] (dump_stack+0x70/0xbc)
-[ 1715.878315] [<c01bee64>] (dump_stack) from [<c002a61c>] (warn_slowpath_common+0x64/0x88)
-[ 1715.878339] [<c002a61c>] (warn_slowpath_common) from [<c002a6d0>] (warn_slowpath_null+0x18/0x20)
-[ 1715.878395] [<c002a6d0>] (warn_slowpath_null) from [<bf4caa98>] (ieee80211_rx_napi+0x88/0x7d8 [mac80211])
-[ 1715.878474] [<bf4caa98>] (ieee80211_rx_napi [mac80211]) from [<bf568658>] (ath10k_htt_t2h_msg_handler+0xb48/0xbfc [ath10k_core])
-[ 1715.878535] [<bf568658>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf568708>] (ath10k_htt_t2h_msg_handler+0xbf8/0xbfc [ath10k_core])
-[ 1715.878597] [<bf568708>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf569160>] (ath10k_htt_txrx_compl_task+0xa54/0x1170 [ath10k_core])
-[ 1715.878639] [<bf569160>] (ath10k_htt_txrx_compl_task [ath10k_core]) from [<c002db14>] (tasklet_action+0xb4/0x130)
-[ 1715.878659] [<c002db14>] (tasklet_action) from [<c002d110>] (__do_softirq+0xe0/0x210)
-[ 1715.878678] [<c002d110>] (__do_softirq) from [<c002d4b4>] (irq_exit+0x84/0xe0)
-[ 1715.878700] [<c002d4b4>] (irq_exit) from [<c005a544>] (__handle_domain_irq+0x98/0xd0)
-[ 1715.878722] [<c005a544>] (__handle_domain_irq) from [<c00085f4>] (gic_handle_irq+0x38/0x5c)
-[ 1715.878741] [<c00085f4>] (gic_handle_irq) from [<c0009680>] (__irq_svc+0x40/0x74)
-[ 1715.878753] Exception stack(0xc05f9f50 to 0xc05f9f98)
-[ 1715.878767] 9f40: ffffffed 00000000 00399e1e c000a220
-[ 1715.878786] 9f60: 00000000 c05f6780 c05f8000 00000000 c05f5db8 ffffffed c05f8000 c04d1980
-[ 1715.878802] 9f80: 00000000 c05f9f98 c0018110 c0018114 60000013 ffffffff
-[ 1715.878822] [<c0009680>] (__irq_svc) from [<c0018114>] (arch_cpu_idle+0x2c/0x50)
-[ 1715.878844] [<c0018114>] (arch_cpu_idle) from [<c00530d4>] (cpu_startup_entry+0x108/0x234)
-[ 1715.878866] [<c00530d4>] (cpu_startup_entry) from [<c05c7be0>] (start_kernel+0x33c/0x3b8)
-[ 1715.878879] ---[ end trace 6d5e1cc0fef8ed6a ]---
-[ 1715.878899] ------------[ cut here ]------------
+473dfbfa0993 mwifiex: Change default firmware for PCIe8997 chipset
 
-Fixes: 18235664e7f9 ("ath10k: cleanup amsdu processing for rx indication")
-Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 78db5d6..24c8d65 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1525,7 +1525,7 @@ static void ath10k_htt_rx_h_filter(struct ath10k *ar,
- static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
- {
- 	struct ath10k *ar = htt->ar;
--	static struct ieee80211_rx_status rx_status;
-+	struct ieee80211_rx_status *rx_status = &htt->rx_status;
- 	struct sk_buff_head amsdu;
- 	int ret;
- 
-@@ -1549,11 +1549,11 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
- 		return ret;
- 	}
- 
--	ath10k_htt_rx_h_ppdu(ar, &amsdu, &rx_status, 0xffff);
-+	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
- 	ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);
--	ath10k_htt_rx_h_filter(ar, &amsdu, &rx_status);
--	ath10k_htt_rx_h_mpdu(ar, &amsdu, &rx_status);
--	ath10k_htt_rx_h_deliver(ar, &amsdu, &rx_status);
-+	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
-+	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
-+	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
- 
- 	return 0;
- }
 -- 
-1.9.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9208641/
 
