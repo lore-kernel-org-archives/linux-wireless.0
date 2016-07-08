@@ -1,14 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35069 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932077AbcGHDPm (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36804 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750858AbcGHEBP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2016 23:15:42 -0400
+	Fri, 8 Jul 2016 00:01:15 -0400
+Message-ID: <1467950431.17638.6.camel@edumazet-glaptop3.roam.corp.google.com> (sfid-20160708_060125_070414_75A33625)
 Subject: Re: [RFC 5/7] net: Add allocation flag to rtnl_unicast()
-To: Eric Dumazet <eric.dumazet@gmail.com>
-References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
- <1467764916-4983-6-git-send-email-masashi.honma@gmail.com>
- <1467946591.1273.45.camel@edumazet-glaptop3.roam.corp.google.com>
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Masashi Honma <masashi.honma@gmail.com>
 Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
 	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
 	linux-audit@redhat.com, cluster-devel@redhat.com,
@@ -18,41 +17,38 @@ Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
 	hal.rosenstock@gmail.com, paul@paul-moore.com, eparis@redhat.com,
 	zbr@ioremap.net, pshelar@nicira.com, ccaulfie@redhat.com,
 	teigland@redhat.com, bsingharora@gmail.com
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <577F1AD7.8040800@gmail.com> (sfid-20160708_051549_101247_6745E394)
-Date: Fri, 8 Jul 2016 12:15:35 +0900
-MIME-Version: 1.0
-In-Reply-To: <1467946591.1273.45.camel@edumazet-glaptop3.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Date: Fri, 08 Jul 2016 06:00:31 +0200
+In-Reply-To: <577F1AD7.8040800@gmail.com>
+References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
+	 <1467764916-4983-6-git-send-email-masashi.honma@gmail.com>
+	 <1467946591.1273.45.camel@edumazet-glaptop3.roam.corp.google.com>
+	 <577F1AD7.8040800@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016年07月08日 11:56, Eric Dumazet wrote:
->
-> Managing to mix GFP_ATOMIC and GFP_KERNEL almost randomly as you did in
-> this patch is definitely not good.
->
-> Further more, RTNL is a mutex, held in control path, designed to allow
-> schedules and waiting for memory under pressure.
->
-> We do not want to encourage GFP_ATOMIC usage in control path.
->
-> Your patch series gives the wrong signal to developers.
->
->
->
+On Fri, 2016-07-08 at 12:15 +0900, Masashi Honma wrote:
+=
+> Thanks for comment.
+> 
+> I have selected GFP flags based on existing code.
+> 
+> I have selected GFP_ATOMIC in inet6_netconf_get_devconf() because
+> skb was allocated with GFP_ATOMIC.
 
-Thanks for comment.
+Point is : we should remove GFP_ATOMIC uses as much as we can.
 
-I have selected GFP flags based on existing code.
+Everytime we see one of them, we should think why it was added
+and if this is really needed.
 
-I have selected GFP_ATOMIC in inet6_netconf_get_devconf() because
-skb was allocated with GFP_ATOMIC.
+inet6_netconf_get_devconf() is a perfect example of one careless
+GFP_ATOMIC usage
 
-I have used GFP_KERNEL in inet6_rtm_getaddr() by same reason.
+https://patchwork.ozlabs.org/patch/646291/
 
- > I will send a patch against net/ipv4/devinet.c so that we remove
- > GFP_ATOMIC usage there.
 
-Thanks. I will modify my patch based on your new code.
+
+
+
 
