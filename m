@@ -1,38 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:43458 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238AbcGYSKD (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52025 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751299AbcGHGyJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2016 14:10:03 -0400
-Date: Mon, 25 Jul 2016 11:10:01 -0700 (PDT)
-Message-Id: <20160725.111001.2062566223923183810.davem@davemloft.net> (sfid-20160725_201023_433019_AD511C53)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, computersforpeace@gmail.com
-Subject: Re: pull-request: wireless-drivers-next 2016-07-22
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87fur1rbkz.fsf@kamboji.qca.qualcomm.com>
-References: <87fur1rbkz.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 8 Jul 2016 02:54:09 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/2] ath10k: Replace warning with an error message if HTT op
+ version is unset
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Message-ID: <f38889b09514441d82aef5559b645dc2@euamsexm01a.eu.qualcomm.com> (sfid-20160708_085413_725208_DAC64694)
+Date: Fri, 8 Jul 2016 08:54:02 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Fri, 22 Jul 2016 17:28:44 +0300
-
-> I'm sick so I have to keep this short, but here's the last pull request
-> to net-next. This time there's a trivial conflict with mtd tree:
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 > 
-> http://lkml.kernel.org/g/20160720123133.44dab209@canb.auug.org.au
+> Print an ath10k error message rather a call trace when HTT op version is
+> not found from firmware META data (IE). This should be sufficient to figure
+> out what went wrong.
 > 
-> We concluded with Brian (CCed) that it's best that we ask Linus to fix
-> this. The patches have been in linux-next for a couple of days. This
-> time I haven't done any merge tests so I don't know if there are any
-> other conflicts etc.
-> 
-> Please let me know if there are any problems.
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Ok, pulled, thanks Kalle.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-Feel better soon.
+ce30c4fe1a22 ath10k: replace warning with an error message if HTT op version is unset
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9195581/
+
