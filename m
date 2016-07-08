@@ -1,34 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:38395 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752161AbcGYOpz (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33052 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755737AbcGHPb2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2016 10:45:55 -0400
-Received: by mail-wm0-f51.google.com with SMTP id o80so160639998wme.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 07:45:54 -0700 (PDT)
-Date: Mon, 25 Jul 2016 15:45:49 +0100
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCHv5 wl-drv-next 0/2] register-field manipulation macros
-Message-ID: <20160725154549.6492cac1@jkicinski-Precision-T1700> (sfid-20160725_164601_427537_46C97FE7)
-In-Reply-To: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
+	Fri, 8 Jul 2016 11:31:28 -0400
+Received: by mail-pf0-f195.google.com with SMTP id c74so8443971pfb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 08:31:28 -0700 (PDT)
+Subject: Re: [PATCH 0/5] Improve wireless netdev detection
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
+ <1467973953.4837.3.camel@sipsolutions.net> <577FC51E.7010901@gmail.com>
+ <1467991593.4837.7.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <577FC74E.3080903@gmail.com> (sfid-20160708_173135_150419_A2B98746)
+Date: Fri, 8 Jul 2016 10:31:26 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1467991593.4837.7.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed,  6 Jul 2016 17:19:35 +0100, Jakub Kicinski wrote:
-> Hi!
-> 
-> I've added few lines about the compilation problems in 
-> the commit message of patch 1.  I would prefer the mass
-> rename of macros in mt7601u not to be part of this series
-> so patch 2 is left as it was and I'll follow up once this
-> is accepted.
+Hi Johannes,
 
-Hi Kalle,
+ >> Are you okay with the general approach?
+>
+> I see no issues with sending these events out. I'd like them to
+> actually be reliable (if present) though, not double as you'd implied -
+> but I didn't really understand in which cases you were expecting
+> issues, was it only P2P-Device?
+>
 
-what's the status of this set?  It's marked as 'Deferred' in
-linux-wireless patchwork.
+That seems to be the only special case.  At least I didn't find any 
+other situations where a NEW_INTERFACE command can be called without a 
+corresponding net_device being created.
+
+>>   Are there any locking issues I
+>> might be overlooking?
+>
+> Not that I'm aware of. All of the netdev/wdev handling should be
+> protected by RTNL.
+>
+
+That was my understanding as well.  Thanks.
+
+Okay, let me spin up a v2 with patches 2+3 and 4+5 squished together. 
+Or do you want one big patch?
+
+Regards,
+-Denis
