@@ -1,34 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:56084 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751028AbcGUJFn (ORCPT
+Received: from mail-ob0-f196.google.com ([209.85.214.196]:32844 "EHLO
+	mail-ob0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755837AbcGHP1n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 05:05:43 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Luana Borgia <luanaborgia1969@gmail.com>
-CC: Nestor Machno <nestor.machno89@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
-Date: Thu, 21 Jul 2016 09:05:40 +0000
-Message-ID: <c18d3a077345402d83a4d12f1d75f07d@SC-EXCH04.marvell.com> (sfid-20160721_110548_293920_C4EDF1F9)
-References: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com>
- <efa3441022124e74af56753a70041eee@SC-EXCH04.marvell.com>
- <CAD3r-iQScbuUiGiF3uDKzMk-0mycG3WVFDGaYCy6aPxAEjq3mg@mail.gmail.com>
-In-Reply-To: <CAD3r-iQScbuUiGiF3uDKzMk-0mycG3WVFDGaYCy6aPxAEjq3mg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Fri, 8 Jul 2016 11:27:43 -0400
+Received: by mail-ob0-f196.google.com with SMTP id jg10so2712660obb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 08:27:43 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <1467982766213.21223@qti.qualcomm.com>
+References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
+ <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
+ <1467972560885.99812@qti.qualcomm.com> <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com>
+ <1467982766213.21223@qti.qualcomm.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 8 Jul 2016 20:57:23 +0530
+Message-ID: <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com> (sfid-20160708_172758_160474_7D065A46)
+Subject: Re: ath10k + iw set bitrates is causing FW crash
+To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVhbmEsDQoNCj4gRnJvbTogTHVhbmEgQm9yZ2lhIFttYWlsdG86bHVhbmFib3JnaWExOTY5
-QGdtYWlsLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5LCBKdWx5IDIwLCAyMDE2IDY6NTMgUE0NCj4g
-VG86IEFtaXRrdW1hciBLYXJ3YXINCj4gQ2M6IE5lc3RvciBNYWNobm87IGxpbnV4LXdpcmVsZXNz
-QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogbXdpZmlleCt3cGFfc3VwcGxpY2FudCBj
-YW5ub3Qgc2V0IHVwIFdQQS9XUEEyIEFESE9DDQo+IA0KPiBIaSBBbWl0a3VtYXIsDQo+IGFueSBu
-ZXdzIGFib3V0IHRoaXMgaXNzdWU/IEkndmUgdGhlIHNhbWUgcHJvYmxlbSBhbHNvLi4NCj4gDQo+
-IFNlY3VyaXR5IGEgcGFydCwgd2UgY2FuJ3QgbGVhdmUgdGhlIFdJRkkgb3BlbiBvciBqdXN0IHdp
-dGggV0VQIGJlY2F1c2UNCj4gd2UgZ2V0IHRvbyBtYW55IG5vdCB0cnVzdGVkIGNvbm5lY3Rpb24g
-dGhhdCBjb25zdW1lIGEgbG90IG9mIG91cg0KPiBiYW5kd2lkdGgNCj4gDQoNCldlIGFyZSBzdGls
-bCB3b3JraW5nIG9uIHRoaXMuIFdpdGggc29tZSBkcml2ZXIgY2hhbmdlcywgd2UgYXJlIGFibGUg
-dG8gUlNOIElFIGluIHRyYW5zbWl0dGVkIGZyYW1lcywgYnV0IDQgd2F5IGhhbmRzaGFrZSBkb2Vz
-bid0IG9jY3VyLg0KDQpSZWdhcmRzLA0KQW1pdGt1bWFyDQo=
+On Fri, Jul 8, 2016 at 6:29 PM, Manoharan, Rajkumar
+<rmanohar@qti.qualcomm.com> wrote:
+> I think security failures are due to peer unmap & map upon reassoc. Can you please try below change?
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 5e1cc8f4c43c..f7f04bb46fc8 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -5745,8 +5745,9 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
+>                                     sta->addr, smps, err);
+>         }
+>
+> -       if (changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
+> -           changed & IEEE80211_RC_NSS_CHANGED) {
+> +       if ((changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
+> +           changed & IEEE80211_RC_NSS_CHANGED) &&
+> +           (arvif->vif->type == NL80211_IFTYPE_ADHOC)) {
+>                 ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates/nss\n",
+>                            sta->addr);
+
+Bottom posting please. I have tried your change i still see the same issue.
+Right after connecting i see that packets are encrypted but once it
+unset/set "bitrates" plain packets are seen in sniffer.
+
+BTW, i am not rebooting for each driver update, just re-inserting the module,
+do i need to do a reboot for each driver change?
+ ________________________________________
+> From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+> Sent: Friday, July 8, 2016 5:26 PM
+> To: Manoharan, Rajkumar
+> Cc: linux-wireless; ath10k
+> Subject: Re: ath10k + iw set bitrates is causing FW crash
+>
+> On Fri, Jul 8, 2016 at 3:39 PM, Manoharan, Rajkumar
+> <rmanohar@qti.qualcomm.com> wrote:
+>>>> I am using ath10k driver with qca988x hw2.0 and trying to limit it to use
+>>>> VHT MCS0-7 (iw set bitrates vht-mcs-5 2:0-7).
+>>>>
+>>>> But the command it causing a FW crash, if it disable HW_HAS_RATE_CONTROL
+>>>> no crash is observed but it still uses MCS9.
+>>>>
+>>>> tree: wireless-drivers-next: commit#535633a5ba4ea2504fa6c33176633becf0e59339
+>>>>
+>>>> 1) If i disable HW_RATE_CONTROL, will ath10k honor
+>>>> the mac80211 rates?
+>>>>
+>>>
+>> Thanks for reporting the issue. Could you please try with below change?
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 5e1cc8f4c43c..cfa7e01a6103 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -2812,6 +2812,9 @@ static int ath10k_station_assoc(struct ath10k *ar,
+>>                 return ret;
+>>         }
+>>
+>> +       if (vif->type != NL80211_IFTYPE_ADHOC)
+>> +               peer_arg.peer_reassoc = reassoc;
+>> +
+>>         ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
+>>         if (ret) {
+>>                 ath10k_warn(ar, "failed to run peer assoc for STA %pM vdev %i: %d\n",
+>
+> Thanks Raj, with this fix the rates are 0-7, if i disable then i am
+> seeing 0-9, so its
+> working.
+>
+> But i am seeing a weird issues, the moment i give bitrates command,
+> ath10k no longer does encryption, link is a WPA2-PSK: AES. Even after
+> interface up/down
+> it doesn't work.
