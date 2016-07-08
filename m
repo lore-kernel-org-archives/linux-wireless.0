@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:36202 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932568AbcGIBCb (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:28348 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755108AbcGHOEV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 21:02:31 -0400
-Received: by mail-io0-f196.google.com with SMTP id s93so3673538ioi.3
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 18:02:31 -0700 (PDT)
-From: engineering@keppy.com
-To: kvalo@qca.qualcomm.com
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] ath6kl: sme_state shortcut to SME_DISCONNECTED removed
-Date: Fri,  8 Jul 2016 21:04:19 -0400
-Message-Id: <1468026259-25148-1-git-send-email-dan.kephart@lairdtech.com> (sfid-20160709_030241_300406_E8EB46E4)
+	Fri, 8 Jul 2016 10:04:21 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2,
+ 1/6] ath9k: Correct TSF adjustment to align the beacon time correctly
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1467635845-32653-1-git-send-email-benjamin@sipsolutions.net>
+To: Benjamin Berg <benjamin@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"Felix Fietkau" <nbd@nbd.name>, <ath9k-devel@lists.ath9k.org>,
+	Benjamin Berg <benjamin.berg@open-mesh.com>
+Message-ID: <0baa0e2ea2244c589e28ac00b92fe252@euamsexm01a.eu.qualcomm.com> (sfid-20160708_160424_718982_CDC2A4D9)
+Date: Fri, 8 Jul 2016 16:04:13 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Kephart <dan.kephart@lairdtech.com>
+Benjamin Berg <benjamin@sipsolutions.net> wrote:
+> From: Benjamin Berg <benjamin.berg@open-mesh.com>
+> 
+> Beacons were not send out at (timestamp % beacon_time == 0) for interfaces
+> other than the primary one. To send out beacons with the correct timestamp
+> according to 10.1.3.2 of the 802.11 standard the tsf_adjustment has to be
+> set to the negative time difference instead of positive. This way the
+> later beacons get corrected to have a lower (and similar) timestamp with
+> regard to the beacon from slot 0.
+> 
+> I am not aware about any issues that have been caused by this.
+> 
+> Signed-off-by: Benjamin Berg <benjamin.berg@open-mesh.com>
 
-When an NL80211_DISCONNECT is sent to cfg80211, the driver's cfg80211
-disconnect function sets the sme_state to SME_DISCONNECTED before receiving
-a WMI_DISCONNECT_EVENT from the firmware.  This caused cfg80211 to not know
-that the connection is disconnected because the driver fails to notify
-cfg80211 upon receiving WMI_DISCONNECT_EVENT from the firmware believing
-it is already disconnected.
+Thanks, 6 patches applied to ath-next branch of ath.git:
 
-Signed-off-by: Dan Kephart <dan.kephart@lairdtech.com>
----
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 2 --
- 1 file changed, 2 deletions(-)
+fa5106e1d793 ath9k: Correct TSF adjustment to align the beacon time correctly
+9580cb889f35 ath9k: Handle channel context in get_/set_/reset_tsf
+bec9a94bc4e2 ath9k: Use tsf offset helper in ath9k_hw_reset
+7fde51227aed ath9k: Expose tsf_adjustment in mac80211 tsf getters and setters.
+11b0ac2e0c1c ath9k: Remove some #defined constants to decrease verbosity
+cfda2d8e2314 ath9k: Fix beacon configuration for addition/removal of interfaces
 
-diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-index ef5b40e..86a860f 100644
---- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
-+++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
-@@ -847,8 +847,6 @@ static int ath6kl_cfg80211_disconnect(struct wiphy *wiphy,
- 
- 	up(&ar->sem);
- 
--	vif->sme_state = SME_DISCONNECTED;
--
- 	return 0;
- }
- 
 -- 
-2.4.10
+Sent by pwcli
+https://patchwork.kernel.org/patch/9212535/
 
