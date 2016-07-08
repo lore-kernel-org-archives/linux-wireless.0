@@ -1,47 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:35044 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752106AbcGSXgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 19:36:44 -0400
-Date: Wed, 20 Jul 2016 09:36:41 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-next <linux-next@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the
- wireless-drivers-next tree
-Message-ID: <20160720093641.2dbb1f83@canb.auug.org.au> (sfid-20160720_013704_746639_C8A71D04)
-In-Reply-To: <20160719183913.GA88186@google.com>
-References: <20160719160831.79c0303f@canb.auug.org.au>
-	<8760s2w369.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rxVFD1MpAEYP_Zd4W8CvgnxSQpa0wJs83jwDJ5v11gZ=Q@mail.gmail.com>
-	<871t2qw1cz.fsf@kamboji.qca.qualcomm.com>
-	<CACna6ry6QgrbUoHuJacmr1EhHZyrwqsXfr51gENvY-0zM9L+3Q@mail.gmail.com>
-	<87h9blvhxg.fsf@kamboji.qca.qualcomm.com>
-	<20160719183913.GA88186@google.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3991 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753018AbcGHJP5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2016 05:15:57 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Nestor Machno <nestor.machno89@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
+Date: Fri, 8 Jul 2016 09:15:53 +0000
+Message-ID: <efa3441022124e74af56753a70041eee@SC-EXCH04.marvell.com> (sfid-20160708_111601_173820_A2958E06)
+References: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com>
+In-Reply-To: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Brian,
-
-On Tue, 19 Jul 2016 11:39:13 -0700 Brian Norris <computersforpeace@gmail.com> wrote:
->
-> I applied a trivial change to this same Kconfig entry:
-> 
-> Subject: mtd: update description of MTD_BCM47XXSFLASH symbol
-> http://git.infradead.org/l2-mtd.git/commitdiff/0a526341fee054c1e2b9f0e4b2b424ae81707d4c
-> 
-> It's a trivial conflict, so should we just let Linus work it out? I can
-> note it my MTD pull request, if wireless lands first.
-
-Linus and I should be able to cope.  I will send my usual notification today.
-
--- 
-Cheers,
-Stephen Rothwell
+PiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51
+eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgTmVzdG9y
+IE1hY2hubw0KPiBTZW50OiBUaHVyc2RheSwgSnVseSAwNywgMjAxNiA2OjA3IEFNDQo+IFRvOiBs
+aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogRndkOiBtd2lmaWV4K3dw
+YV9zdXBwbGljYW50IGNhbm5vdCBzZXQgdXAgV1BBL1dQQTIgQURIT0MNCj4gDQo+IEhpIEFsbCwN
+Cj4gQW1pdGt1bWFyLCBjYW4geW91IGNvbmZpcm0gaWYgdGhpcyB0aGlzIGlzIGEgYnVnIG9yIHRv
+ZGF5IGlzIGZpeGVkPw0KDQpZZXMuIFRoaXMgaXMgYSBidWcgaW4gb3VyIGZpcm13YXJlLiBBREhP
+QyBpbiBXUEEvV1BBMiBzZWN1cml0eSBpcyBicm9rZW4uIFdlIGhhdmUgYXNrZWQgZmlybXdhcmUg
+ZXhwZXJ0cyB0byBsb29rIGludG8gdGhpcy4gQXMgd2UgaGF2ZSBhIG1pZC15ZWFyIHNodXRkb3du
+IHRoaXMgd2VlaywgdGhleSB3aWxsIGJlIGFibGUgdG8gY2hlY2sgdGhlIHByb2JsZW0gbmV4dCB3
+ZWVrIG9ubHkuIEhvd2V2ZXIgQURIT0MgaW4gb3BlbiBtb2RlIHNob3VsZCB3b3JrIGFzIGV4cGVj
+dGVkDQoNCj4gDQo+IFZpbmNlbnQsIEkgaGFkIGFsc28gZmFjZWQgc2ltaWxhciBpc3N1ZSBvbiBT
+dXJmYWNlIFBybyAyIHdpdGggYmFja3BvcnRzDQo+IGZyb20gNC4xLi4uIFNvIGhlcmUgZmV3IHF1
+ZXN0aW9uOg0KPiANCj4gKiBJIHNhdyBpbiAxc3QgcG9zdCB0aGF0IHlvdSB3aGVyZSB3b3JraW5n
+IHRvIG1ha2Ugd29yayB0aGUNCj4gd3BhX3N1cHBsaWNhbnQgd2l0aCBtaXhlZCBjb25maWd1cmF0
+aW9uIGZvciBhZGhvYyAod3BhLW5vbmUgKyB3cGEtaWJzcyksDQo+IGJ1dCBhbHNvIGluIHJlY2Vu
+dCBwb3N0IHRoYXQgeW91IGZvY3VzIG1vc3RseSBvbiBkZWJ1Z2dpbmcgd3BhLWlic3MuIEkNCj4g
+c3VnZ2VzdCB0byBmb2N1cyB5b3VyIHRlc3Qgb24gb25lIHdwYSBtb2RlIGFuZCBJIHRoaW5rIHdw
+YS1ub25lIGJldHRlcg0KPiBiZWNhdXNlIGl0J3MgZWFzaWVyLi4NCj4gKiBXaHkgeW91IGFyZSBu
+b3QgdGVzdGluZyB0aGUgbGF0ZXN0IGJhY2twb3J0IGZyb20gdXBzdHJlYW0ga2VybmVsPyBhcw0K
+PiB5b3UgY2FuIGtub3cgTWFydmVsbCBpcyBmb2N1cyBtb3N0IHRvIGZpeCBvcGVuIGlzc3VlIG9u
+IGN1cnJlbnQgc3RhYmxlDQo+IHJlbGVhc2UsIEkgc2F3IGZyb20gY29tbWl0IHRoYXQgcmVjZW50
+bHkgdGhleSBmaXggc29tZXRoaW5nIGFib3V0IFdQQSBvbg0KPiBtaXhmbGV4LCBzZWUNCj4gaHR0
+cHM6Ly9iYWNrcG9ydHMud2lraS5rZXJuZWwub3JnL2luZGV4LnBocC9Eb2N1bWVudGF0aW9uL2Nv
+bXBhdC0NCj4gZHJpdmVycy9oYWNraW5nDQo+ICogV291bGQgYmUgZ29vZCBpbmZvcm1hdGlvbiB0
+byBrbm93IGlmIHlvdSB0ZXN0ZWQgYWxzbyBvbiBiYWNrcG9ydCAzLngsDQo+IGRpZCB5b3U/ICBJ
+IGtub3cgbXdpZmlleCdzIFdQQSBzdGFjayBjaGFuZ2VkIGEgbG90IGZyb20gMy54IGtlcm5lbC4N
+Cj4gKiBUbyBzdXBwb3J0IHlvdSBtb3JlLCBjb3VsZCB5b3UgZW5hYmxlIGRlYnVnIGluZm8gYW5k
+IHByb3ZpZGUgZnVsbCBsb2cNCj4gb2YgeW91ciBzZXR1cD8gLmNvbmZpZz8gcGF0Y2g/IGFueXRo
+aW5nIGVsc2U/DQo+ICogQ2FuIHlvdSBzaGFyZSB1cyB5b3VyIGhhY2tlZCBiYWNrcG9ydD8NCj4g
+KiBMYXQgcXVlc3Rpb24gVmluY2VudCwgYXJlIHlvdSB3b3JraW5nIGZvciBBSVJCVVMsIEFDVElB
+IG9yIFRIQUxFUyA/DQo+IDopDQo+IA0KPiBCZXN0IFJlZ2FyZHMNCj4gTmVzdG9yDQo+IA0KPiBP
+biBNb24sIEp1biAxMywgMjAxNiBhdCA3OjQyIEFNLCBWaW5jZW50IENFU1NPTg0KPiA8dmluY2Vu
+dC5jZXNzb25Ac21pbGUuZnI+IHdyb3RlOg0KPiA+IEhpIEFtaXRrdW1hciwNCj4gPg0KPiA+IEhl
+cmUgYXJlIHRoZSB3cGFfc3VwcGxpY2FudCBsb2dzICh3aXRoIENPTkZJR19JQlNTX1JTTj15IGVu
+YWJsZWQpIGZyb20NCj4gPiB0aGUgdHdvIGRldmljZXMuIEJlc2lkZSB3cGFfc3VwcGxpY2FudCwg
+SSBtYW51YWxseSBzZXQgSVBzDQo+ID4gMTkyLjE2OC4xLnh5IHdpdGggY29tbWFuZCAiaWZjb25m
+aWcgbWxhbjAgMTkyLjE2OC4xLnh5IiBhbmQgdGhlbiBJIHRyeQ0KPiA+IHRvIHBpbmcgZWFjaCBv
+dGhlciwgd2l0aG91dCBzdWNjZXNzLg0KPiA+DQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
