@@ -1,81 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34844 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbcG2PJn (ORCPT
+Received: from mail2.tohojo.dk ([77.235.48.147]:57505 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755171AbcGHQ26 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2016 11:09:43 -0400
-Subject: Re: [PATCH] ath10k: Allow setting coverage class
-To: Benjamin Berg <benjamin@sipsolutions.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org
-References: <1469608424-11370-1-git-send-email-benjamin@sipsolutions.net>
- <5798EEC3.5040008@candelatech.com>
- <1469803947.7306.139.camel@sipsolutions.net>
-Cc: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
-	Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-	ath10k@lists.infradead.org,
-	Simon Wunderlich <sw@simonwunderlich.de>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <579B71B4.7080206@candelatech.com> (sfid-20160729_170947_408846_FC848D82)
-Date: Fri, 29 Jul 2016 08:09:40 -0700
+	Fri, 8 Jul 2016 12:28:58 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+	Tim Shepard <shep@alum.mit.edu>
+Subject: Re: [v3] ath9k: Switch to using mac80211 intermediate software queues.
+References: <ac5b5bc6532d4fe7ae3198124ecce7fc@euamsexm01a.eu.qualcomm.com>
+	<87wpkwktx9.fsf@toke.dk>
+	<112300e0-7d39-0c4c-45c9-158651f0c0ed@nbd.name>
+Date: Fri, 08 Jul 2016 18:28:47 +0200
+In-Reply-To: <112300e0-7d39-0c4c-45c9-158651f0c0ed@nbd.name> (Felix Fietkau's
+	message of "Fri, 8 Jul 2016 18:10:11 +0200")
+Message-ID: <87lh1cksao.fsf@toke.dk> (sfid-20160708_182901_980249_44E36EE9)
 MIME-Version: 1.0
-In-Reply-To: <1469803947.7306.139.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/29/2016 07:52 AM, Benjamin Berg wrote:
-> On Mi, 2016-07-27 at 10:26 -0700, Ben Greear wrote:
->> On 07/27/2016 01:33 AM, Benjamin Berg wrote:
->>>
->>> Unfortunately ath10k does not generally allow modifying the coverage class
->>> with the stock firmware and Qualcomm has so far refused to implement this
->>> feature so that it can be properly supported in ath10k. If we however know
->>> the registers that need to be modified for proper operation with a higher
->>> coverage class, then we can do these modifications from the driver.
->>>
->>> This patch implements this hack for first generation cards which are based
->>> on a core that is similar to ath9k. The registers are modified in place and
->>> need to be re-written every time the firmware sets them. To achieve this
->>> the register status is verified after any event from the firmware.
->>>
->>> The coverage class may not be modified temporarily right after the card
->>> re-initializes the registers. This is for example the case during scanning.
->>>
->>> A warning will be generated if the hack is not supported on the card or
->>> unexpected values are hit. There is no error reporting for userspace
->>> applications though (this is a limitation in the mac80211 driver
->>> interface).
->>>
->>>>> Thanks to Sebastian Gottschall <s.gottschall@dd-wrt.com> for initially
->>> working on a userspace support for this. This patch wouldn't have been
->>> possible without this documentation.
->>
->> I would be concerned about the various resets firmware does to work around
->> hardware hangs as well.  I don't think any events are generated for these, unless
->> you count the dbglog messages?
->
-> Yeah, I am aware of the fact that the firmware may do internal resets
-> from time to time. The interesting question (and one for which I do not
-> know the answer) is whether we get a wmi or other event under all
-> conditions where the register may be rewritten due to a reset.
->
-> The current code will re-set the register value after any wmi event
-> including debug messages. If this is not enough, then the only solution
-> might be to periodically poll the register values instead of relying on
-> a received event.
+Felix Fietkau <nbd@nbd.name> writes:
 
-You will get a dbglog event at least most of the time, so maybe that
-will be good enough.
+> On 2016-07-08 17:53, Toke Høiland-Jørgensen wrote:
+>> Kalle Valo <kvalo@qca.qualcomm.com> writes:
+>> 
+>>> Toke Høiland-Jørgensen wrote:
+>>>> This switches ath9k over to using the mac80211 intermediate software
+>>>> queueing mechanism for data packets. It removes the queueing inside the
+>>>> driver, except for the retry queue, and instead pulls from mac80211 when
+>>>> a packet is needed. The retry queue is used to store a packet that was
+>>>> pulled but can't be sent immediately.
+>>>> 
+>>>> The old code path in ath_tx_start that would queue packets has been
+>>>> removed completely, as has the qlen limit tunables (since there's no
+>>>> longer a queue in the driver to limit).
+>>>> 
+>>>> Based on Tim's original patch set, but reworked quite thoroughly.
+>>>> 
+>>>> Cc: Tim Shepard <shep@alum.mit.edu>
+>>>> Cc: Felix Fietkau <nbd@nbd.name>
+>>>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+>>>
+>>> Nice work.
+>> 
+>> Thanks :)
+>> 
+>>> Because this is such a significant change, and to maximise testing
+>>> time, I'm planning to queue this for 4.9 (so I would apply this to
+>>> ath-next in 3-4 weeks after the merge window closes). But anyone who
+>>> wants to test this can use master-pending branch from my ath.git tree
+>>> (uses wireless-testing as the baseline). Sounds good?
+>> 
+>> Sounds good to me. I'm planning on backporting this and Michael's
+>> mac80211 FQ-CoDel patches to 4.4 and post them for inclusion in LEDE.
+>> Hopefully that will get it some more testing as well.
+> I've pushed a backport of this into my LEDE staging tree:
+> https://git.lede-project.org/?p=lede/nbd/staging.git;a=summary
 
-Someone with src code and that cared could audit the code I guess, but then
-that person could also just implement the feature properly in the firmware
-to begin with...
+Awesome! What about the FQ-CoDel mac80211 patches themselves? I have a
+tree where I've separated out the needed patches and rebased them on
+mainline 4.4.9. Can I post that somewhere (or just email you the series)
+and get you to include those as well? Or do I just dump the patch files
+into the LEDE patches dir and send that as a patch to LEDE? (I see your
+patch also refreshed subsequent patches; is there a script to do that
+automatically?)
 
-Thanks,
-Ben
+> I don't have time for testing it myself at the moment, but I'll try to
+> get some people to do so.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Awesome :)
 
+-Toke
