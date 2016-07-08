@@ -1,40 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:33677 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753828AbcGSNOB convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:33697 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932371AbcGHPWJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 09:14:01 -0400
-Received: by mail-wm0-f45.google.com with SMTP id r190so26112286wmr.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 06:14:00 -0700 (PDT)
+	Fri, 8 Jul 2016 11:22:09 -0400
+Received: by mail-pa0-f66.google.com with SMTP id ts6so7986128pac.0
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 08:22:08 -0700 (PDT)
+Subject: Re: [PATCH 0/5] Improve wireless netdev detection
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
+ <1467973953.4837.3.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <577FC51E.7010901@gmail.com> (sfid-20160708_172231_331185_AFBB8572)
+Date: Fri, 8 Jul 2016 10:22:06 -0500
 MIME-Version: 1.0
-In-Reply-To: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
-References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Tue, 19 Jul 2016 15:13:58 +0200
-Message-ID: <CA+BoTQ=Bi070XDXNjq6ypzs3w0+9OYM_8tXeikSR_a0TMN2P=g@mail.gmail.com> (sfid-20160719_151406_430623_A504EECB)
-Subject: Re: TCP performance regression in mac80211 triggered by the fq code
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1467973953.4837.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 July 2016 at 12:09, Felix Fietkau <nbd@nbd.name> wrote:
-> Hi,
+Hi Johannes,
+
+On 07/08/2016 05:32 AM, Johannes Berg wrote:
+> On Thu, 2016-07-07 at 02:08 -0500, Denis Kenzior wrote:
+>> The current mechanism to detect hot-plug / unplug of wireless devices
+>> is
+>> somewhat arcane.  One has to listen to NEW_WIPHY/DEL_WIPHY events
+>> over
+>> nl80211 as well as RTM_NEWLINK / RTM_DELLINK events over rtnl, then
+>> somehow find a correlation between these events.  This involves
+>> userspace
+>> sending GET_INTERFACE or GET_WIPHY commands to the kernel, which
+>> incurs
+>> additional roundtrips.
+>>
+>> This patch series proposes that NEW_INTERFACE and DEL_INTERFACE
+>> events are
+>> always emitted, regardless of whether a netdev was added/removed by
+>> the
+>> driver or explicitly via NEW_INTERFACE/DEL_INTERFACE commands.
+>>
+>> One side effect of this approach is that multiple
+>> NEW_INTERFACE/DEL_INTERFACE
+>> events might be generated for P2P interfaces.  Once when a wdev is
+>> created
+>> or destroyed, and once when the associated p2p netdev is connecte or
+>> disconnected.
 >
-> With Toke's ath9k txq patch I've noticed a pretty nasty performance
-> regression when running local iperf on an AP (running the txq stuff) to
-> a wireless client.
+> I think you got some things mixed up. Are you talking of P2P GO/client
+> interfaces, which have netdevs, but are really the same as AP/BSS
+> client and thus the issue here would affect the others? Or are you
+> talking about the P2P-Device wdev? but that has no netdev.
+
+Apologies, I've only been looking at the kernel side for several days, 
+so my understanding is still incomplete.
+
+I was looking at mac80211/iface.c: ieee80211_if_add() which seems to 
+handle NL80211_IFTYPE_P2P_DEVICE specially by not creating/registering a 
+net_device object.  For some reason I thought that this object was 
+registered somewhere later, but my understanding was incorrect.  So the 
+entire 'side effect' paragraph above does not apply.
+
+Are you okay with the general approach?  Are there any locking issues I 
+might be overlooking?
+
 >
-> Here's some things that I found:
-> - when I use only one TCP stream I get around 90-110 Mbit/s
-> - when running multiple TCP streams, I get only 35-40 Mbit/s total
+>> It is likely that only the caller of P2P oriented
+>> NEW_INTERFACE / DEL_INTERFACE commands is interested in the status of
+>> these
+>> operations.  E.g. the caller is / should be using SOCKET_OWNER
+>> attribute.
+>> Thus one possibility is to not emit NEW_INTERFACE/DEL_INTERFACE
+>> events in
+>> such cases.
+>>
+>
+> The breaking up of patches is also confusing. You seem to be
+> introducing things in the first, then breaking them again, and then
+> fixing them?
 
-What is the baseline here (i.e. without fq/txq stuff)? Is it ~100mbps?
+Sorry, this was meant to be posted as an RFC.
 
-Did you try running multiple streams, each on separate tids (matching
-the same AC perhaps) or different clients?
+First patch just introduces a notification utility.  The rest of the 
+patches were broken up for ease of review.
 
+>
+> Couldn't the whole thing be done in one or maybe two (new/del)
+> patch(es)?
 
-Michał
+Sure, I can squash them together however you like.
+
+>
+> (You obviously also need to sign off your patches, see the kernel
+> Documentation/)
+>
+
+Apologies, still working the kinks out of my environment setup.
+
+Regards,
+-Denis
+
