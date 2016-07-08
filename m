@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.sdf.org ([192.94.73.20]:50118 "EHLO sdf.lonestar.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753836AbcG0Kcl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 06:32:41 -0400
-From: Alan Curry <rlwinm@sdf.org>
-Message-Id: <201607271032.u6RAWPcS008174@sdf.org> (sfid-20160727_123306_589102_77DBFA3B)
-Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
-In-Reply-To: <20160724190237.GP2356@ZenIV.linux.org.uk>
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Date: Wed, 27 Jul 2016 10:32:25 +0000 (UTC)
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	Alan Curry <rlwinm@sdf.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	alexmcwhirter@triadic.us
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63439 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755183AbcGHOaB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2016 10:30:01 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: ath10k: implement NAPI support
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160627055128.7005-1-rmanohar@qti.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
+	<rmanohar@codeaurora.org>
+Message-ID: <6169ec35e7d9438180c60909a96390ae@euamsexm01a.eu.qualcomm.com> (sfid-20160708_163005_710985_C51D0DB6)
+Date: Fri, 8 Jul 2016 16:29:53 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Al Viro wrote:
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> Add NAPI support for rx and tx completion. NAPI poll is scheduled
+> from interrupt handler. The design is as below
 > 
-> Another thing (and if that works, it's *NOT* a proper fix - it would be
-> papering over the problem, but at least it would show where to look for
-> it) - try (on top of mainline) the following delta:
+>  - on interrupt
+>      - schedule napi and mask interrupts
+>  - on poll
+>    - process all pipes (no actual Tx/Rx)
+>    - process Rx within budget
+>    - if quota exceeds budget reschedule napi poll by returning budget
+>    - process Tx completions and update budget if necessary
+>    - process Tx fetch indications (pull-push)
+>    - push any other pending Tx (if possible)
+>    - before resched or napi completion replenish htt rx ring buffer
+>    - if work done < budget, complete napi poll and unmask interrupts
+> 
+> This change also get rid of two tasklets (intr_tq and txrx_compl_task).
+> 
+> Measured peak throughput with NAPI on IPQ4019 platform in controlled
+> environment. No noticeable reduction in throughput is seen and also
+> observed improvements in CPU usage. Approx. 15% CPU usage got reduced
+> in UDP uplink case.
+> 
+> DL: AP DUT Tx
+> UL: AP DUT Rx
+> 
+> IPQ4019 (avg. cpu usage %)
+> 
+> ========
+>                 TOT              +NAPI
+>               ===========      =============
+> TCP DL       644 Mbps (42%)    645 Mbps (36%)
+> TCP UL       673 Mbps (30%)    675 Mbps (26%)
+> UDP DL       682 Mbps (49%)    680 Mbps (49%)
+> UDP UL       720 Mbps (28%)    717 Mbps (11%)
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-I tried it on top of v4.6.4 and on top of the very recent v4.7-2509-g59ebc44
-from Linus, and still got corruption.
-
-> 
-> diff --git a/net/core/datagram.c b/net/core/datagram.c
-> index b7de71f..0ee5995 100644
-> --- a/net/core/datagram.c
-> +++ b/net/core/datagram.c
-> @@ -734,7 +734,7 @@ int skb_copy_and_csum_datagram_msg(struct sk_buff *skb,
->  	if (!chunk)
->  		return 0;
->  
-> -	if (msg_data_left(msg) < chunk) {
-> +	if (iov_iter_single_seg_count(&msg->msg_iter) < chunk) {
->  		if (__skb_checksum_complete(skb))
->  			goto csum_error;
->  		if (skb_copy_datagram_msg(skb, hlen, msg, chunk))
-> 
+This is quite big change and I'm planning to queue this for 4.9. So I'm not
+applying this quite yet.
 
 -- 
-Alan Curry
+Sent by pwcli
+https://patchwork.kernel.org/patch/9199911/
+
