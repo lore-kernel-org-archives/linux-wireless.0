@@ -1,53 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:33470 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751083AbcGMJxl convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40135 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932412AbcGHKAZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 05:53:41 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: "Hahn, Maital" <maitalm@ti.com>, Eliad Peller <eliad@wizery.com>,
-	"Mishol, Guy" <guym@ti.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"Arik Nemtsov" <arik@wizery.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: [PATCH] wlcore/wl18xx: mesh: added initial mesh support for wl8
-Date: Wed, 13 Jul 2016 09:53:35 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101391FC336@DFRE01.ent.ti.com> (sfid-20160713_115454_081055_0A14BEDC)
-References: <20160628104305.4533-1-yanivma@ti.com>
-In-Reply-To: <20160628104305.4533-1-yanivma@ti.com>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 8 Jul 2016 06:00:25 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [v2] wlcore: time sync : add support for 64 bit clock
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160627133744.12564-1-yanivma@ti.com>
+To: "Machani, Yaniv" <yanivma@ti.com>
+Cc: <linux-kernel@vger.kernel.org>, Yaniv Machani <yanivma@ti.com>,
+	Guy Mishol <guym@ti.com>, Eliad Peller <eliad@wizery.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Message-Id: <20160708100024.7950A611E2@smtp.codeaurora.org> (sfid-20160708_120056_870943_341124CA)
+Date: Fri,  8 Jul 2016 10:00:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jun 28, 2016 at 13:41:35, Machani, Yaniv wrote:
-> Guy; Johannes Berg; Arik Nemtsov; linux-wireless@vger.kernel.org; 
-> netdev@vger.kernel.org
-> Subject: [PATCH] wlcore/wl18xx: mesh: added initial mesh support for 
-> wl8
+"Machani, Yaniv" <yanivma@ti.com> wrote:
+> Changed the configuration to support 64bit instead of 32bit
+> this in order to offload the driver from handling a wraparound.
 > 
-> From: Maital Hahn <maitalm@ti.com>
-> 
-> 1. Added support for interface and role of mesh type.
-> 2. Enabled enable/start of mesh-point role,
->    and opening and closing a connection with a mesh peer.
-> 3. Added multirole combination of mesh and ap
->    under the same limits of dual ap mode.
-> 4. Add support for 'sta_rc_update' opcode for mesh IF.
->    The 'sta_rc_update' opcode is being used in mesh_plink.c.
-> Add support in wlcore to handle this opcode correctly for mesh (as 
-> opposed to current implementation that handles STA only).
-> 5. Bumped the firmware version to support new Mesh functionality
-> 
-> Signed-off-by: Maital Hahn <maitalm@ti.com>
 > Signed-off-by: Yaniv Machani <yanivma@ti.com>
-> ---
 
-Any comments on this patch ?
-Can this be pulled ?
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Thanks,
-Yaniv
+585dfe813fa5 wlcore: time sync : add support for 64 bit clock
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9200631/
+
