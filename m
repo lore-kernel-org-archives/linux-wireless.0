@@ -1,78 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40277 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751007AbcGFMmn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 08:42:43 -0400
-Message-ID: <1467808954.5460.6.camel@sipsolutions.net> (sfid-20160706_144245_868578_E2DD071B)
-Subject: Re: [PATCH v2] cfg80211: Add mesh peer AID setting API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com
-Date: Wed, 06 Jul 2016 14:42:34 +0200
-In-Reply-To: <1467335974-2802-1-git-send-email-masashi.honma@gmail.com> (sfid-20160701_031947_889703_68F66C0A)
-References: <1467277258-2331-1-git-send-email-masashi.honma@gmail.com>
-	 <1467335974-2802-1-git-send-email-masashi.honma@gmail.com>
-	 (sfid-20160701_031947_889703_68F66C0A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:15151 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754881AbcGHOcl convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2016 10:32:41 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Prasun Maiti <prasunmaiti87@gmail.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v4] mwifiex: Reduce endian conversion for REG Host
+ Commands
+Date: Fri, 8 Jul 2016 14:32:31 +0000
+Message-ID: <edd221ee06dd4f9c8ecec45de67de35b@SC-EXCH04.marvell.com> (sfid-20160708_163301_511310_A50D2E1E)
+References: <39f33dff10344e53b0fbbc9681f90b33@SC-EXCH04.marvell.com>
+	<1467022402-23990-1-git-send-email-prasunmaiti87@gmail.com>
+	<8e1cc4765b4242a4a48f86abddbe40fc@SC-EXCH04.marvell.com>
+ <877fcw1c51.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <877fcw1c51.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-07-01 at 10:19 +0900, Masashi Honma wrote:
-> Previously, mesh power management functionality works only with
-> kernel
-> MPM. Because user space MPM did not report mesh peer AID to kernel,
-> the kernel could not identify the bit in TIM element. So this patch
-> adds mesh peer AID setting API.
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] On Behalf Of Kalle Valo
+> Sent: Friday, July 08, 2016 7:10 PM
+> To: Amitkumar Karwar
+> Cc: Prasun Maiti; Nishant Sarmukadam; Linux Wireless; Linux Next; Linux
+> Kernel
+> Subject: Re: [PATCH v4] mwifiex: Reduce endian conversion for REG Host
+> Commands
 > 
-> Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
-> ---
->  include/net/cfg80211.h       | 2 ++
->  include/uapi/linux/nl80211.h | 5 +++++
->  net/mac80211/cfg.c           | 1 +
->  net/wireless/nl80211.c       | 7 +++++++
->  4 files changed, 15 insertions(+)
+> Amitkumar Karwar <akarwar@marvell.com> writes:
 > 
-> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-> index 7bbb00d..23e34ca 100644
-> --- a/include/net/cfg80211.h
-> +++ b/include/net/cfg80211.h
-> @@ -774,6 +774,7 @@ enum station_parameters_apply_mask {
->   *	(bitmask of BIT(NL80211_STA_FLAG_...))
->   * @listen_interval: listen interval or -1 for no change
->   * @aid: AID or zero for no change
-> + * @peer_aid: mesh peer AID or zero for no change
->   * @plink_action: plink action to take
->   * @plink_state: set the peer link state for a station
->   * @ht_capa: HT capabilities of station
-> @@ -805,6 +806,7 @@ struct station_parameters {
->  	u32 sta_modify_mask;
->  	int listen_interval;
->  	u16 aid;
-> +	u16 peer_aid;
->  	u8 supported_rates_len;
->  	u8 plink_action;
->  	u8 plink_state;
-> diff --git a/include/uapi/linux/nl80211.h
-> b/include/uapi/linux/nl80211.h
-> index 53c8278..f8c454e 100644
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -1829,6 +1829,9 @@ enum nl80211_commands {
->   *	%NL80211_ATTR_EXT_CAPA_MASK, to specify the extended
-> capabilities per
->   *	interface type.
->   *
-> + * @NL80211_ATTR_MESH_PEER_AID: Association ID for the mesh peer
-> (u16). This is
-> + *	used to pull the stored data for mesh peer in power save
-> state.
+> >> From: Prasun Maiti [mailto:prasunmaiti87@gmail.com]
+> >> Sent: Monday, June 27, 2016 3:43 PM
+> >> To: Amitkumar Karwar
+> >> Cc: Nishant Sarmukadam; Linux Wireless; Linux Next; Linux Kernel;
+> >> Kalle Valo
+> >> Subject: [PATCH v4] mwifiex: Reduce endian conversion for REG Host
+> >> Commands
+> >>
+> >> For multiple REG Host Commands (e.g HostCmd_CMD_802_11_EEPROM_ACCESS,
+> >> HostCmd_CMD_MAC_REG_ACCESS etc.) "cpu_to_leX"-converted values are
+> >> saved to driver. So, "leX_to_cpu" conversion is required too many
+> >> times afterwards in driver.
+> >>
+> >> This patch reduces the endian: conversion without saving "cpu_to_leX"
+> >> converted values in driver. This will convert endianness in prepare
+> >> command and command response path.
+> >>
+> >> Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
 > 
-Why does this need new API all over?
+> [deleted almost 300 lines of unnecessary quotes]
+> 
+> > Any specific reason for dropping this patch?
+> > I can see the status as "Deferred" on patchwork.
+> 
+> It's not dropped, "Deferred" means that the patch was postponed for some
+> reason and I need to look at the patch more carefully. In this case I
+> did it because I was hoping to see an Acked-by from you.
 
-It seems to me that it could just use the regular NL80211_ATTR_STA_AID
-attribute, and the cfg80211 code would already be in place, and you'd
-just need to add a single line to mac80211 and
-to cfg80211_check_station_change() to accept that.
+Thanks for clarification. I will ack the patch.
 
-johannes
+Regards,
+Amitkumar
