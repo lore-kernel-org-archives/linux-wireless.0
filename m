@@ -1,62 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:38249 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752316AbcGBSAm (ORCPT
+Received: from mail-yw0-f194.google.com ([209.85.161.194]:33261 "EHLO
+	mail-yw0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754328AbcGHL4f (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jul 2016 14:00:42 -0400
-Received: by mail-wm0-f45.google.com with SMTP id r201so66578431wme.1
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jul 2016 11:00:41 -0700 (PDT)
-Subject: Re: [patch] mwifiex: fix mwifiex_add_virtual_intf()
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-References: <20160702072045.GA25758@mwanda>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <d95186fc-fa1f-b60d-41a9-4d25c7ccc53d@broadcom.com> (sfid-20160702_200050_711935_B481C775)
-Date: Sat, 2 Jul 2016 20:00:33 +0200
+	Fri, 8 Jul 2016 07:56:35 -0400
+Received: by mail-yw0-f194.google.com with SMTP id i12so6743938ywa.0
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 04:56:35 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20160702072045.GA25758@mwanda>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1467972560885.99812@qti.qualcomm.com>
+References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
+ <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com> <1467972560885.99812@qti.qualcomm.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 8 Jul 2016 17:26:15 +0530
+Message-ID: <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com> (sfid-20160708_135638_620900_5634EF79)
+Subject: Re: ath10k + iw set bitrates is causing FW crash
+To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Fri, Jul 8, 2016 at 3:39 PM, Manoharan, Rajkumar
+<rmanohar@qti.qualcomm.com> wrote:
+>>> I am using ath10k driver with qca988x hw2.0 and trying to limit it to use
+>>> VHT MCS0-7 (iw set bitrates vht-mcs-5 2:0-7).
+>>>
+>>> But the command it causing a FW crash, if it disable HW_HAS_RATE_CONTROL
+>>> no crash is observed but it still uses MCS9.
+>>>
+>>> tree: wireless-drivers-next: commit#535633a5ba4ea2504fa6c33176633becf0e59339
+>>>
+>>> 1) If i disable HW_RATE_CONTROL, will ath10k honor
+>>> the mac80211 rates?
+>>>
+>>
+> Thanks for reporting the issue. Could you please try with below change?
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 5e1cc8f4c43c..cfa7e01a6103 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -2812,6 +2812,9 @@ static int ath10k_station_assoc(struct ath10k *ar,
+>                 return ret;
+>         }
+>
+> +       if (vif->type != NL80211_IFTYPE_ADHOC)
+> +               peer_arg.peer_reassoc = reassoc;
+> +
+>         ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
+>         if (ret) {
+>                 ath10k_warn(ar, "failed to run peer assoc for STA %pM vdev %i: %d\n",
 
+Thanks Raj, with this fix the rates are 0-7, if i disable then i am
+seeing 0-9, so its
+working.
 
-On 2-7-2016 9:20, Dan Carpenter wrote:
-> We accidentally left some if statements out so the
-> mwifiex_add_virtual_intf() function returns early.
-> 
-> Fixes: 7311ea850079 ('mwifiex: fix AP start problem for newly added interface')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-Someone beat you to it [1] ;-)
-
-Regards,
-Arend
-
-[1]
-http://mid.gmane.org/1467401982-18943-1-git-send-email-javier@osg.samsung.com
-
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index 99e8cf1..5de9f63 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -2865,9 +2865,11 @@ struct wireless_dev *mwifiex_add_virtual_intf(struct wiphy *wiphy,
->  
->  	ret = mwifiex_send_cmd(priv, HostCmd_CMD_SET_BSS_MODE,
->  			       HostCmd_ACT_GEN_SET, 0, NULL, true);
-> +	if (ret)
->  		return ERR_PTR(ret);
->  
->  	ret = mwifiex_sta_init_cmd(priv, false, false);
-> +	if (ret)
->  		return ERR_PTR(ret);
->  
->  	mwifiex_setup_ht_caps(&wiphy->bands[NL80211_BAND_2GHZ]->ht_cap, priv);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+But i am seeing a weird issues, the moment i give bitrates command,
+ath10k no longer does encryption, link is a WPA2-PSK: AES. Even after
+interface up/down
+it doesn't work.
