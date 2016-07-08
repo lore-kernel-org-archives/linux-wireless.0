@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:37800 "EHLO
-	mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753329AbcGVLVV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 07:21:21 -0400
-Received: by mail-it0-f41.google.com with SMTP id f6so43502778ith.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 04:21:21 -0700 (PDT)
+Received: from ozlabs.org ([103.22.144.67]:45411 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753775AbcGHBcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jul 2016 21:32:17 -0400
+Date: Fri, 8 Jul 2016 11:32:14 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	<linux-wireless@vger.kernel.org>,
+	David Miller <davem@davemloft.net>, <netdev@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Avraham Stern <avraham.stern@intel.com>,
+	David Spinadel <david.spinadel@intel.com>,
+	Assaf Krauss <assaf.krauss@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>
+Subject: linux-next: build warning after merge of the wireless-drivers-next
+ tree
+Message-ID: <20160708113214.7f371cb3@canb.auug.org.au> (sfid-20160708_033249_698594_1331177D)
 MIME-Version: 1.0
-In-Reply-To: <20160722103807.GA15262@localhost>
-References: <20160721153948.32171-1-me@bobcopeland.com> <CAGRGNgWHJEFBnak-MCK2htkaeQcZ6dmZ=w96omC99G5Z2UJWFg@mail.gmail.com>
- <20160722103807.GA15262@localhost>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 22 Jul 2016 21:21:01 +1000
-Message-ID: <CAGRGNgWHboAR2iK=sB9RO7WJOz4PEQQy8AB2WG_LDF1FMm897A@mail.gmail.com> (sfid-20160722_132128_412023_E59AA268)
-Subject: Re: [PATCH] iw: display 5/10 MHz channel widths
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Bob,
+Hi all,
 
-On Fri, Jul 22, 2016 at 8:38 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Fri, Jul 22, 2016 at 07:53:35PM +1000, Julian Calaby wrote:
->> Hi Bob,
->
-> Hi!
->
->> > --- a/interface.c
->> > +++ b/interface.c
->> > @@ -295,6 +295,10 @@ char *channel_width_name(enum nl80211_chan_width width)
->> >                 return "80+80 MHz";
->> >         case NL80211_CHAN_WIDTH_160:
->> >                 return "160 MHz";
->> > +       case NL80211_CHAN_WIDTH_5:
->> > +               return "5 MHz";
->> > +       case NL80211_CHAN_WIDTH_10:
->> > +               return "10 MHz";
->> >         default:
->> >                 return "unknown";
->> >         }
->>
->> Judging by the previous two entries, it looks like the case statements
->> are sorted, so should these ones therefore be at the top of the list?
->
-> These are sorted by NL80211_CHAN_WIDTH_* attribute value, which makes
-> a little more sense to me than sorting by the string or numerically by
-> width, but sure, I can do it either way.
+After merging the wireless-drivers-next tree, today's linux-next build
+(arm multi_v7_defconfig, x86_64 allmodconfig) produced this warning:
 
-That's fine by me: I was asking because it looked like you might have
-just added them to the bottom.
+drivers/net/wireless/marvell/mwifiex/scan.c: In function 'mwifiex_cancel_scan':
+drivers/net/wireless/marvell/mwifiex/scan.c:2031:44: warning: passing argument 2 of 'cfg80211_scan_done' makes pointer from integer without a cast [-Wint-conversion]
+     cfg80211_scan_done(priv->scan_request, 1);
+                                            ^
+In file included from include/net/mac80211.h:23:0,
+                 from drivers/net/wireless/marvell/mwifiex/decl.h:30,
+                 from drivers/net/wireless/marvell/mwifiex/scan.c:20:
+include/net/cfg80211.h:4104:6: note: expected 'struct cfg80211_scan_info *' but argument is of type 'int'
+ void cfg80211_scan_done(struct cfg80211_scan_request *request,
+      ^
 
-Thanks,
+Introduced by commit
+
+  a9c790ba23eb ("mwifiex: factor out mwifiex_cancel_scan")
+
+interacting with commit
+
+  1d76250bd34a ("nl80211: support beacon report scanning")
+
+from the net-next (and mac80211-next) tree.
+
+This will need some merge fix patch ... please send me or Dave one.
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Cheers,
+Stephen Rothwell
