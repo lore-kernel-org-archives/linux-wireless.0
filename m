@@ -1,47 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43501 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:57330 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750965AbcGRInO (ORCPT
+	with ESMTP id S1755366AbcGHNrF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 04:43:14 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Maxim Altshul <maxim.altshul@ti.com>
-Cc: <linux-kernel@vger.kernel.org>, Eliad Peller <eliad@wizery.com>,
-	Arik Nemtsov <arik@wizery.com>, Yaniv Machani <yanivma@ti.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2 v4] wlcore: Add support for get_expected_throughput opcode
-References: <20160711142251.30443-1-maxim.altshul@ti.com>
-	<20160711142251.30443-2-maxim.altshul@ti.com>
-Date: Mon, 18 Jul 2016 11:43:10 +0300
-In-Reply-To: <20160711142251.30443-2-maxim.altshul@ti.com> (Maxim Altshul's
-	message of "Mon, 11 Jul 2016 17:22:33 +0300")
-Message-ID: <87inw39w0x.fsf@purkki.adurom.net> (sfid-20160718_104333_917330_0C2EA02B)
+	Fri, 8 Jul 2016 09:47:05 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [v2] mwifiex: Fix endianness for event TLV type
+ TLV_BTCOEX_WL_SCANTIME
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1467275483-24091-1-git-send-email-prasunmaiti87@gmail.com>
+To: Prasun Maiti <prasunmaiti87@gmail.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+Message-Id: <20160708134703.E88D061154@smtp.codeaurora.org> (sfid-20160708_154709_221141_44CFDB23)
+Date: Fri,  8 Jul 2016 13:47:03 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Altshul <maxim.altshul@ti.com> writes:
+Prasun Maiti <prasunmaiti87@gmail.com> wrote:
+> The two members min_scan_time and max_scan_time of structure
+> "mwifiex_ie_types_btcoex_scan_time" are of two bytes each. The values
+> are assigned directtly from firmware without endian conversion handling.
+> So, wrong datas will get saved in big-endian systems.
+> 
+> This patch converts the values into cpu's byte order before assigning them
+> into the local members.
+> 
+> Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-> Adding this opcode, allows the TI wireless driver,
-> to report throughput directly from FW to mac80211.
->
-> This is used mainly for mesh metric calculation.
->
-> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-[...]
-
-> +static u32 wlcore_op_get_expected_throughput(struct ieee80211_sta *sta)
-> +{
-> +	struct wl1271_station *wl_sta = (struct wl1271_station *)sta->drv_priv;
-> +	struct wl1271 *wl = wl_sta->wl;
-> +	u8 hlid = wl_sta->hlid;
-> +
-> +	/* return in units of Kbps */
-> +		return (wl->links[hlid].fw_rate_mbps * 1000);
-
-The indentation looks wrong, but I can fix it before I apply the patch.
+c18b104dd249 mwifiex: Fix endianness for event TLV type TLV_BTCOEX_WL_SCANTIME
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/9206939/
+
