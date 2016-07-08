@@ -1,81 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56009 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56659 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752084AbcGTQ2G (ORCPT
+	with ESMTP id S1754947AbcGHNkd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 12:28:06 -0400
-Date: Wed, 20 Jul 2016 21:57:51 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	Mohammed Shafi <shafi.wireless@gmail.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
- QCA99X0 and later
-Message-ID: <20160720162751.GA17599@atheros-ThinkPad-T61> (sfid-20160720_182810_696792_FB5745BA)
-References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>
- <1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>
- <CA+BoTQnUvF2Zy7_WuEi0V+KjByRghVmoeR6yrs6hu6ag=KmBqQ@mail.gmail.com>
- <20160627143600.GA5292@atheros-ThinkPad-T61>
- <CA+BoTQn+HeishCMf4hjpWjLBmvFG2r0gosBv77RTyk7+uOAvPA@mail.gmail.com>
- <20160629094754.GA8867@atheros-ThinkPad-T61>
- <CAD2nsn3TOSaOCmm5YT6_D+aaoH9=pagQamDDz2VT+nKrFH0K8g@mail.gmail.com>
- <900ae7541c5a4194a2f73479e1dd8bb2@aphydexm01b.ap.qualcomm.com>
- <CA+BoTQmHW=uYompSLXUv2d+-Nr=11KYuA=VrmUz6X2T+D=-=Ag@mail.gmail.com>
+	Fri, 8 Jul 2016 09:40:33 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Prasun Maiti <prasunmaiti87@gmail.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	Linux Next <linux-next@vger.kernel.org>,
+	Linux Kernel <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4] mwifiex: Reduce endian conversion for REG Host Commands
+References: <39f33dff10344e53b0fbbc9681f90b33@SC-EXCH04.marvell.com>
+	<1467022402-23990-1-git-send-email-prasunmaiti87@gmail.com>
+	<8e1cc4765b4242a4a48f86abddbe40fc@SC-EXCH04.marvell.com>
+Date: Fri, 08 Jul 2016 16:40:26 +0300
+In-Reply-To: <8e1cc4765b4242a4a48f86abddbe40fc@SC-EXCH04.marvell.com>
+	(Amitkumar Karwar's message of "Fri, 8 Jul 2016 11:02:45 +0000")
+Message-ID: <877fcw1c51.fsf@kamboji.qca.qualcomm.com> (sfid-20160708_154056_040973_8BADE512)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+BoTQmHW=uYompSLXUv2d+-Nr=11KYuA=VrmUz6X2T+D=-=Ag@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 20, 2016 at 02:22:29PM +0200, Michal Kazior wrote:
-> On 20 July 2016 at 13:43, Shajakhan, Mohammed Shafi (Mohammed Shafi)
-> <mohammed@qti.qualcomm.com> wrote:
-> > Michal,
-> >
-> > Can you please let me know if this change is fine or not ?
-> > I am waiting infinitely for  your reply long time
-> 
-> Sorry. I was absent for a while and this email slipped by.
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-[shafi] ah ok, i thought you had blacklisted this change :)
+>> From: Prasun Maiti [mailto:prasunmaiti87@gmail.com]
+>> Sent: Monday, June 27, 2016 3:43 PM
+>> To: Amitkumar Karwar
+>> Cc: Nishant Sarmukadam; Linux Wireless; Linux Next; Linux Kernel; Kalle
+>> Valo
+>> Subject: [PATCH v4] mwifiex: Reduce endian conversion for REG Host
+>> Commands
+>> 
+>> For multiple REG Host Commands (e.g HostCmd_CMD_802_11_EEPROM_ACCESS,
+>> HostCmd_CMD_MAC_REG_ACCESS etc.) "cpu_to_leX"-converted values are saved
+>> to driver. So, "leX_to_cpu" conversion is required too many times
+>> afterwards in driver.
+>> 
+>> This patch reduces the endian: conversion without saving "cpu_to_leX"
+>> converted values in driver. This will convert endianness in prepare
+>> command and command response path.
+>> 
+>> Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
 
-> 
-> Quoting your other email:
-> 
-> > is this patch is good to go (or) should i re-work  ?
-> > I had replied to Michal's comment of introducing a new firmware
-> > feature flag will not address the issue in older firmware / code.
-> > Let me know if i had missed something very obvious.
-> 
-> I couldn't really find any conclusion to this thread in my inbox.
-> 
-> The hw_params approach is definitely wrong. The ACK problem is
-> firmware-specific, not hardware-specific.
+[deleted almost 300 lines of unnecessary quotes]
 
-[shafi] sure let me see if i can figure out an alternative way that shall be
-accepted by you and Kalle
+> Any specific reason for dropping this patch?
+> I can see the status as "Deferred" on patchwork.
 
-> 
-> I'm fine with removing the workaround completely if 636 is guaranteed
-> to not be broken, including AP and P2P GO operation. The client
-> operation will probably work since wmi-roam event is used for HW
-> connection monitoring.
+It's not dropped, "Deferred" means that the patch was postponed for some
+reason and I need to look at the patch more carefully. In this case I
+did it because I was hoping to see an Acked-by from you.
 
-[shafi] sorry i am not sure how to validate that, so i will keep this workaround
-
-> 
-> Nullfunc tx-status ack/noack reports could be probably fixed up using
-> sta kickout events (with short timeouts) as a fallback. This would
-> make it easier for users because otherwise they'd need to enable
-> disassoc_low_ack in hostapd (which is probably impossible with
-> wpa_supplicant for p2p, no?).
-> 
->
-[shafi] let me check this, i think we usually don't enable disassoc_low_ack to
-avoid kicking out stations frequently.
-
-shafi
+-- 
+Kalle Valo
