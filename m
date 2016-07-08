@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:25535 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752905AbcGYPvh (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35069 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932077AbcGHDPm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2016 11:51:37 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6PFoFQa031659
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:51:36 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 24c5xkfr04-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:51:36 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2 0/8] mwifiex patches
-Date: Mon, 25 Jul 2016 21:21:03 +0530
-Message-ID: <1469461871-3135-1-git-send-email-akarwar@marvell.com> (sfid-20160725_175141_282486_854DF11F)
+	Thu, 7 Jul 2016 23:15:42 -0400
+Subject: Re: [RFC 5/7] net: Add allocation flag to rtnl_unicast()
+To: Eric Dumazet <eric.dumazet@gmail.com>
+References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
+ <1467764916-4983-6-git-send-email-masashi.honma@gmail.com>
+ <1467946591.1273.45.camel@edumazet-glaptop3.roam.corp.google.com>
+Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-audit@redhat.com, cluster-devel@redhat.com,
+	davem@davemloft.net, johannes@sipsolutions.net,
+	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
+	dledford@redhat.com, sean.hefty@intel.com,
+	hal.rosenstock@gmail.com, paul@paul-moore.com, eparis@redhat.com,
+	zbr@ioremap.net, pshelar@nicira.com, ccaulfie@redhat.com,
+	teigland@redhat.com, bsingharora@gmail.com
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <577F1AD7.8040800@gmail.com> (sfid-20160708_051549_101247_6745E394)
+Date: Fri, 8 Jul 2016 12:15:35 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1467946591.1273.45.camel@edumazet-glaptop3.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series includes couple of fixes and enhancements.
+On 2016年07月08日 11:56, Eric Dumazet wrote:
+>
+> Managing to mix GFP_ATOMIC and GFP_KERNEL almost randomly as you did in
+> this patch is definitely not good.
+>
+> Further more, RTNL is a mutex, held in control path, designed to allow
+> schedules and waiting for memory under pressure.
+>
+> We do not want to encourage GFP_ATOMIC usage in control path.
+>
+> Your patch series gives the wrong signal to developers.
+>
+>
+>
 
-Changes in v2:
-  1) Dropped "[5/9] mwifiex: cfg80211 set_default_mgmt_key handler"
-     patch in v1 series. We are working on review comment from Jouni
-     Malinen.
-  2) Removed MWIFIEX_RX_PKT_DROPPED_IN_FW macro in "[6/9] mwifiex:
-     process rxba_sync event" and used NULL pointer to indicate dropped
-     packet(Kalle Valo).
+Thanks for comment.
 
-Amitkumar Karwar (2):
-  mwifiex: fix failed to reconnect after interface disabled/enabled
-  mwifiex: remove misleading disconnect message
+I have selected GFP flags based on existing code.
 
-Ganapathi Bhat (2):
-  mwifiex: support random MAC address for scanning
-  mwifiex: fix radar detection issue
+I have selected GFP_ATOMIC in inet6_netconf_get_devconf() because
+skb was allocated with GFP_ATOMIC.
 
-Karthik D A (2):
-  mwifiex: Fixed endianness problem for big endian platform
-  mwifiex: add region code information in debugfs
+I have used GFP_KERNEL in inet6_rtm_getaddr() by same reason.
 
-Xinming Hu (2):
-  mwifiex: process rxba_sync event
-  mwifiex: add HT aggregation support for adhoc mode
+ > I will send a patch against net/ipv4/devinet.c so that we remove
+ > GFP_ATOMIC usage there.
 
- drivers/net/wireless/marvell/mwifiex/11h.c         |  27 ++--
- drivers/net/wireless/marvell/mwifiex/11n.h         |   7 +-
- .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |  78 ++++++++++-
- .../net/wireless/marvell/mwifiex/11n_rxreorder.h   |   3 +-
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    |  19 ++-
- drivers/net/wireless/marvell/mwifiex/cmdevt.c      |  18 ++-
- drivers/net/wireless/marvell/mwifiex/debugfs.c     |   2 +
- drivers/net/wireless/marvell/mwifiex/fw.h          |  58 ++++++---
- drivers/net/wireless/marvell/mwifiex/main.h        |   1 +
- drivers/net/wireless/marvell/mwifiex/scan.c        |  16 +++
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  27 ++--
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |   2 +-
- drivers/net/wireless/marvell/mwifiex/sta_event.c   | 144 ++++++++++++++++++++-
- drivers/net/wireless/marvell/mwifiex/uap_event.c   |   7 +-
- 14 files changed, 350 insertions(+), 59 deletions(-)
-
--- 
-1.9.1
+Thanks. I will modify my patch based on your new code.
 
