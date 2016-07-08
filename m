@@ -1,62 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39512 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39640 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375AbcGTSbx convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1754150AbcGHJzn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 14:31:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Brian Norris <computersforpeace@gmail.com>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	"linux-mtd\@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-next <linux-next@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the wireless-drivers-next tree
-References: <20160719160831.79c0303f@canb.auug.org.au>
-	<8760s2w369.fsf@kamboji.qca.qualcomm.com>
-	<CACna6rxVFD1MpAEYP_Zd4W8CvgnxSQpa0wJs83jwDJ5v11gZ=Q@mail.gmail.com>
-	<871t2qw1cz.fsf@kamboji.qca.qualcomm.com>
-	<CACna6ry6QgrbUoHuJacmr1EhHZyrwqsXfr51gENvY-0zM9L+3Q@mail.gmail.com>
-	<87h9blvhxg.fsf@kamboji.qca.qualcomm.com>
-	<20160719183913.GA88186@google.com>
-Date: Wed, 20 Jul 2016 21:31:48 +0300
-In-Reply-To: <20160719183913.GA88186@google.com> (Brian Norris's message of
-	"Tue, 19 Jul 2016 11:39:13 -0700")
-Message-ID: <87shv4qhyj.fsf@kamboji.qca.qualcomm.com> (sfid-20160720_203226_269320_F0EE318F)
+	Fri, 8 Jul 2016 05:55:43 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: rtlwifi: Create _rtl_dbg_trace function to reduce RT_TRACE code
+ size
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <90cd7c8f12b51571db565fd496a2fcf610e2e484.1466894688.git.joe@perches.com>
+To: Joe Perches <joe@perches.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20160708095542.49BF460239@smtp.codeaurora.org> (sfid-20160708_115609_810976_36B24A7C)
+Date: Fri,  8 Jul 2016 09:55:42 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Brian Norris <computersforpeace@gmail.com> writes:
+Joe Perches <joe@perches.com> wrote:
+> This debugging macro can expand to a lot of code.
+> Make it a function to reduce code size.
+> 
+> (x86-64 defconfig w/ all rtlwifi drivers and allyesconfig)
+> $ size drivers/net/wireless/realtek/rtlwifi/built-in.o*
+>    text	   data	    bss	    dec	    hex	filename
+>  900083	 200499	   1907	1102489	 10d299	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.new
+> 1113597	 200499	   1907	1316003	 1414a3	drivers/net/wireless/realtek/rtlwifi/built-in.o.defconfig.old
+> 1746879	 453503	   8512	2208894	 21b47e	drivers/net/wireless/realtek/rtlwifi/built-in.o.new
+> 2051965	 503311	   8512	2563788	 271ecc	drivers/net/wireless/realtek/rtlwifi/built-in.o.old
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-> Just to head this off, since I noticed it...
->
-> On Tue, Jul 19, 2016 at 05:08:59PM +0300, Kalle Valo wrote:
->> Rafał Miłecki <zajec5@gmail.com> writes:
->> > I sent a patch seconds ago, you may just take a look at it. If you
->> > still prefer to revert my commit, go ahead.
->> 
->> Ok, let's try your fix. We still have few days. I applied the patch[1]
->> to the pending branch this morning and if I don't see any errors I apply
->> it later tonight and hopefully it will be in tomorrow's linux-next
->> build. Thanks for the quick fix, very much appreciated.
->> 
->> [1] "mtd: add arch dependency for MTD_BCM47XXSFLASH symbol"
->>     https://patchwork.kernel.org/patch/9236053/
->
-> I applied a trivial change to this same Kconfig entry:
->
-> Subject: mtd: update description of MTD_BCM47XXSFLASH symbol
-> http://git.infradead.org/l2-mtd.git/commitdiff/0a526341fee054c1e2b9f0e4b2b424ae81707d4c
->
-> It's a trivial conflict, so should we just let Linus work it out? I can
-> note it my MTD pull request, if wireless lands first.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Sounds good to me. Do note that Linus doesn't pull wireless-drivers-next
-directly, it goes through net-next. But I'll let Dave also know about
-this when I send him the pull request.
+9ce221915a94 rtlwifi: Create _rtl_dbg_trace function to reduce RT_TRACE code size
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/9198897/
+
