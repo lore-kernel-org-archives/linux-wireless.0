@@ -1,53 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:47622 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755286AbcGKQHq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 12:07:46 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"prarit@redhat.com" <prarit@redhat.com>
-CC: linuxwifi <linuxwifi@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
- ucode is loaded
-Date: Mon, 11 Jul 2016 16:07:42 +0000
-Message-ID: <1468253261.25088.126.camel@intel.com> (sfid-20160711_180809_690462_9C467C6E)
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
-In-Reply-To: <1468250301-10357-1-git-send-email-prarit@redhat.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:33513 "EHLO
+	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754911AbcGHPkA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jul 2016 11:40:00 -0400
+Received: by mail-yw0-f193.google.com with SMTP id i12so8850058ywa.0
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 08:40:00 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com>
+References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
+ <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
+ <1467972560885.99812@qti.qualcomm.com> <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com>
+ <1467982766213.21223@qti.qualcomm.com> <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com>
+ <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 8 Jul 2016 21:09:40 +0530
+Message-ID: <CABPxzYKOqBmrjRwAyZV9daV8adEhUV71XEAsfrLhtTnKwWzuaw@mail.gmail.com> (sfid-20160708_174004_341432_E3F6F130)
+Subject: Re: ath10k + iw set bitrates is causing FW crash
+To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE2LTA3LTExIGF0IDExOjE4IC0wNDAwLCBQcmFyaXQgQmhhcmdhdmEgd3JvdGU6
-DQo+IERpZG4ndCBnZXQgYW55IGZlZWRiYWNrIG9yIHJldmlldyBjb21tZW50cyBvbiB0aGlzIHBh
-dGNoLsKgwqBSZXNlbmRpbmcNCj4gLi4uDQo+IA0KPiBQLg0KDQpTb3JyeSwgdGhpcyBnb3QgZmxv
-b2RlZCBkb3duIG15IGluYm94Lg0KDQoNCj4gLS0tODwtLS0NCj4gDQo+IFRoZSBpd2x3aWZpIGRy
-aXZlciBpbXBsZW1lbnRzIGEgdGhlcm1hbCB6b25lIGFuZCBod21vbiBkZXZpY2UsIGJ1dA0KPiBy
-ZXR1cm5zIC1FSU8gb24gdGVtcGVyYXR1cmUgcmVhZHMgaWYgdGhlIGZpcm13YXJlIGlzbid0IGxv
-YWRlZC7CoMKgVGhpcw0KPiByZXN1bHRzIGluIHRoZSBlcnJvcg0KPiANCj4gaXdsd2lmaS12aXJ0
-dWFsLTANCj4gQWRhcHRlcjogVmlydHVhbCBkZXZpY2UNCj4gRVJST1I6IENhbid0IGdldCB2YWx1
-ZSBvZiBzdWJmZWF0dXJlIHRlbXAxX2lucHV0OiBJL08gZXJyb3INCj4gdGVtcDE6wqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgTi9BDQo+IA0KPiBiZWluZyBvdXRwdXQgd2hlbiB1c2luZyBzZW5zb3Jz
-IGZyb20gdGhlIGxtLXNlbnNvcnMgcGFja2FnZS7CoMKgU2luY2UNCj4gdGhlIHRlbXBlcmF0dXJl
-IGNhbm5vdCBiZSByZWFkIHVubGVzcyB0aGUgdWNvZGUgaXMgbG9hZGVkIHRoZXJlIGlzIG5vDQo+
-IHJlYXNvbiB0byBhZGQgdGhlIGludGVyZmFjZSBvbmx5IHRvIGhhdmUgaXQgcmV0dXJuIGFuIGVy
-cm9yIDEwMCUgb2YNCj4gdGhlIHRpbWUuDQo+IA0KPiBUaGlzIHBhdGNoIG1vdmVzIHRoZSBmaXJt
-d2FyZSBjaGVjayB0bw0KPiBpd2xfbXZtX3RoZXJtYWxfem9uZV9yZWdpc3RlcigpIGFuZA0KPiBz
-dG9wcyB0aGUgdGhlcm1hbCB6b25lIGZyb20gYmVpbmcgY3JlYXRlZCBpZiB0aGUgdWNvZGUgaGFz
-bid0IGJlZW4NCj4gbG9hZGVkLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogUHJhcml0IEJoYXJnYXZh
-IDxwcmFyaXRAcmVkaGF0LmNvbT4NCj4gQ2M6IEpvaGFubmVzIEJlcmcgPGpvaGFubmVzLmJlcmdA
-aW50ZWwuY29tPg0KPiBDYzogRW1tYW51ZWwgR3J1bWJhY2ggPGVtbWFudWVsLmdydW1iYWNoQGlu
-dGVsLmNvbT4NCj4gQ2M6IEx1Y2EgQ29lbGhvIDxsdWNpYW5vLmNvZWxob0BpbnRlbC5jb20+DQo+
-IENjOiBJbnRlbCBMaW51eCBXaXJlbGVzcyA8bGludXh3aWZpQGludGVsLmNvbT4NCj4gQ2M6IEth
-bGxlIFZhbG8gPGt2YWxvQGNvZGVhdXJvcmEub3JnPg0KPiBDYzogQ2hheWEgUmFjaGVsIEl2Z2kg
-PGNoYXlhLnJhY2hlbC5pdmdpQGludGVsLmNvbT4NCj4gQ2M6IFNhcmEgU2hhcm9uIDxzYXJhLnNo
-YXJvbkBpbnRlbC5jb20+DQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4g
-Q2M6IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNCj4gLS0tDQoNCkkgaGF2ZSBub3cgc2VudCBpdCBm
-b3IgcmV2aWV3IG9uIG91ciBpbnRlcm5hbCB0cmVlLg0KDQotLQ0KTHVjYS4=
+On Fri, Jul 8, 2016 at 9:07 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+> On Fri, Jul 8, 2016 at 8:57 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Fri, Jul 8, 2016 at 6:29 PM, Manoharan, Rajkumar
+>> <rmanohar@qti.qualcomm.com> wrote:
+>>> I think security failures are due to peer unmap & map upon reassoc. Can you please try below change?
+>>>
+>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>>> index 5e1cc8f4c43c..f7f04bb46fc8 100644
+>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>>> @@ -5745,8 +5745,9 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
+>>>                                     sta->addr, smps, err);
+>>>         }
+>>>
+>>> -       if (changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
+>>> -           changed & IEEE80211_RC_NSS_CHANGED) {
+>>> +       if ((changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
+>>> +           changed & IEEE80211_RC_NSS_CHANGED) &&
+>>> +           (arvif->vif->type == NL80211_IFTYPE_ADHOC)) {
+>>>                 ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates/nss\n",
+>>>                            sta->addr);
+>>
+>> Bottom posting please. I have tried your change i still see the same issue.
+>> Right after connecting i see that packets are encrypted but once it
+>> unset/set "bitrates" plain packets are seen in sniffer.
+>>
+>> BTW, i am not rebooting for each driver update, just re-inserting the module,
+>> do i need to do a reboot for each driver change?
+>
+> After reboot i dont see the "unencrypted" packet issue, i will do
+> some more testing on limiting the rates, currently in my setup its
+> not reaching MCS9 so cannot verify now.
+>
+> Thanks for the fixes and prompt reply.
+>   ________________________________________
+>>> From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+>>> Sent: Friday, July 8, 2016 5:26 PM
+>>> To: Manoharan, Rajkumar
+>>> Cc: linux-wireless; ath10k
+>>> Subject: Re: ath10k + iw set bitrates is causing FW crash
+>>>
+>>> On Fri, Jul 8, 2016 at 3:39 PM, Manoharan, Rajkumar
+>>> <rmanohar@qti.qualcomm.com> wrote:
+>>>>>> I am using ath10k driver with qca988x hw2.0 and trying to limit it to use
+>>>>>> VHT MCS0-7 (iw set bitrates vht-mcs-5 2:0-7).
+>>>>>>
+>>>>>> But the command it causing a FW crash, if it disable HW_HAS_RATE_CONTROL
+>>>>>> no crash is observed but it still uses MCS9.
+>>>>>>
+>>>>>> tree: wireless-drivers-next: commit#535633a5ba4ea2504fa6c33176633becf0e59339
+>>>>>>
+>>>>>> 1) If i disable HW_RATE_CONTROL, will ath10k honor
+>>>>>> the mac80211 rates?
+>>>>>>
+>>>>>
+>>>> Thanks for reporting the issue. Could you please try with below change?
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>>>> index 5e1cc8f4c43c..cfa7e01a6103 100644
+>>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>>>> @@ -2812,6 +2812,9 @@ static int ath10k_station_assoc(struct ath10k *ar,
+>>>>                 return ret;
+>>>>         }
+>>>>
+>>>> +       if (vif->type != NL80211_IFTYPE_ADHOC)
+>>>> +               peer_arg.peer_reassoc = reassoc;
+>>>> +
+>>>>         ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
+>>>>         if (ret) {
+>>>>                 ath10k_warn(ar, "failed to run peer assoc for STA %pM vdev %i: %d\n",
+>>>
+>>> Thanks Raj, with this fix the rates are 0-7, if i disable then i am
+>>> seeing 0-9, so its
+>>> working.
+>>>
+>>> But i am seeing a weird issues, the moment i give bitrates command,
+>>> ath10k no longer does encryption, link is a WPA2-PSK: AES. Even after
+>>> interface up/down
+>>> it doesn't work.
+
+Also can you please tell me how to make ath10k use minstrel rc, its needed
+for comparative purposes? Is disable HW_RATE_CONTROL enough or does
+it need more changes?
