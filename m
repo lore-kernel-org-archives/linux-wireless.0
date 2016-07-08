@@ -1,65 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:26513 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932562AbcGOKvP (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:58563 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755284AbcGHPrX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2016 06:51:15 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] brcmfmac: defer DPC processing during probe
-Date: Fri, 15 Jul 2016 12:39:13 +0200
-Message-Id: <1468579153-14292-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160715_125203_640557_8A4AE0BA)
+	Fri, 8 Jul 2016 11:47:23 -0400
+Subject: Re: ath10k + iw set bitrates is causing FW crash
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
+ <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
+ <1467972560885.99812@qti.qualcomm.com>
+ <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com>
+ <1467982766213.21223@qti.qualcomm.com>
+ <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com>
+ <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com>
+ <CABPxzYKOqBmrjRwAyZV9daV8adEhUV71XEAsfrLhtTnKwWzuaw@mail.gmail.com>
+ <577FC9D0.2010809@candelatech.com>
+ <CABPxzYLdS-QicOj9AdcubT8uxgw0cqXpzerpuwGcwkSQ7PCiOA@mail.gmail.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <577FCB04.4030905@candelatech.com> (sfid-20160708_174730_461131_9511C085)
+Date: Fri, 8 Jul 2016 08:47:16 -0700
+MIME-Version: 1.0
+In-Reply-To: <CABPxzYLdS-QicOj9AdcubT8uxgw0cqXpzerpuwGcwkSQ7PCiOA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The sdio dpc starts processing when in SDIOD_STATE_DATA. This state was
-entered right after firmware download. This patch moves that transition
-just before enabling sdio interrupt handling thus avoiding watchdog
-expiry which would put the bus to sleep while probing.
+On 07/08/2016 08:44 AM, Krishna Chaitanya wrote:
+> On Fri, Jul 8, 2016 at 9:12 PM, Ben Greear <greearb@candelatech.com> wrote:
+>> On 07/08/2016 08:39 AM, Krishna Chaitanya wrote:
+>>
+>>> Also can you please tell me how to make ath10k use minstrel rc, its needed
+>>> for comparative purposes? Is disable HW_RATE_CONTROL enough or does
+>>> it need more changes?
+>>
+>>
+>> It cannot be done.  You have to use whatever rate-ctrl is baked into the
+>> firmware.
+> Ok, its a good feature to have.
+>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
-Hi Kalle,
+It is unlikely to happen anytime soon.  It requires significant firmware
+modification (and driver too), and probably you would have to add MU-MIMO
+support to minstrel if you wanted to support latest ath10k NICs.
 
-Here a straggler commit for wireless-drivers-next. No harm if it does
-not make it in v4.8.
+Thanks,
+Ben
 
-Regards,
-Arend
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 5fb8b91..68ab3ac 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3305,10 +3305,6 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
- 		goto err;
- 	}
- 
--	/* Allow full data communication using DPC from now on. */
--	brcmf_sdiod_change_state(bus->sdiodev, BRCMF_SDIOD_DATA);
--	bcmerror = 0;
--
- err:
- 	brcmf_sdio_clkctl(bus, CLK_SDONLY, false);
- 	sdio_release_host(bus->sdiodev->func[1]);
-@@ -4046,6 +4042,9 @@ static void brcmf_sdio_firmware_callback(struct device *dev,
- 	}
- 
- 	if (err == 0) {
-+		/* Allow full data communication using DPC from now on. */
-+		brcmf_sdiod_change_state(bus->sdiodev, BRCMF_SDIOD_DATA);
-+
- 		err = brcmf_sdiod_intr_register(sdiodev);
- 		if (err != 0)
- 			brcmf_err("intr register failed:%d\n", err);
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
