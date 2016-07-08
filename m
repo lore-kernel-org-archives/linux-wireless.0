@@ -1,56 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30352 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752914AbcGYPvs (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39977 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754396AbcGHJ7G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2016 11:51:48 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6PFoFPf031642
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:51:47 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0a-0016f401.pphosted.com with ESMTP id 24c5xkfr0h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:51:47 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Karthik D A <karthida@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2 2/8] mwifiex: add region code information in debugfs
-Date: Mon, 25 Jul 2016 21:21:05 +0530
-Message-ID: <1469461871-3135-3-git-send-email-akarwar@marvell.com> (sfid-20160725_175151_009011_E29F8278)
-In-Reply-To: <1469461871-3135-1-git-send-email-akarwar@marvell.com>
-References: <1469461871-3135-1-git-send-email-akarwar@marvell.com>
+	Fri, 8 Jul 2016 05:59:06 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: rtlwifi: Add missing newlines to RT_TRACE calls
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <5677791872bfb47963780c198c825d882456720f.1466969647.git.joe@perches.com>
+To: Joe Perches <joe@perches.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20160708095905.632BA611B8@smtp.codeaurora.org> (sfid-20160708_115911_220952_618319C4)
+Date: Fri,  8 Jul 2016 09:59:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karthik D A <karthida@marvell.com>
+Joe Perches <joe@perches.com> wrote:
+> RT_TRACE does not add a newline to the end of a message and always
+> emits at KERN_DEBUG so these are susceptible to message interleaving
+> from other processes without the newline.
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-region code is an EEPROM setting received from firmware. Let's display
-this in debugfs along with other information.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Signed-off-by: Karthik D A <karthida@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/debugfs.c | 2 ++
- 1 file changed, 2 insertions(+)
+4713bd1c7407 rtlwifi: Add missing newlines to RT_TRACE calls
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-index bccf17a..b9284b5 100644
---- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
-+++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
-@@ -118,6 +118,8 @@ mwifiex_info_read(struct file *file, char __user *ubuf,
- 		p += sprintf(p, "bssid=\"%pM\"\n", info.bssid);
- 		p += sprintf(p, "channel=\"%d\"\n", (int) info.bss_chan);
- 		p += sprintf(p, "country_code = \"%s\"\n", info.country_code);
-+		p += sprintf(p, "region_code=\"0x%x\"\n",
-+			     priv->adapter->region_code);
- 
- 		netdev_for_each_mc_addr(ha, netdev)
- 			p += sprintf(p, "multicast_address[%d]=\"%pM\"\n",
 -- 
-1.9.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9199581/
 
