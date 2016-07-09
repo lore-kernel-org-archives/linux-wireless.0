@@ -1,158 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:51240 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751972AbcGSPfX (ORCPT
+Received: from 51.23-broadband.acttv.in ([106.51.23.179]:19773 "EHLO
+	arvind-ThinkPad-Edge-E431" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751539AbcGIQAV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 11:35:23 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
-Date: Tue, 19 Jul 2016 17:33:01 +0200
-Message-Id: <20160719153403.2967812-2-arnd@arndb.de> (sfid-20160719_173547_895226_203AFF97)
-In-Reply-To: <20160719153403.2967812-1-arnd@arndb.de>
-References: <20160719153403.2967812-1-arnd@arndb.de>
+	Sat, 9 Jul 2016 12:00:21 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: zajec5@gmail.com
+Cc: viresh.kumar@linaro.org, akpm@linux-foundation.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Arvind Yadav <arvind.yadav.cs@gmail.com>
+Subject: [v1] ErrHandling:Make IS_ERR_VALUE_U32 as generic API to avoid IS_ERR_VALUE abuses.
+Date: Sat,  9 Jul 2016 21:21:00 +0530
+Message-Id: <1468079460-10153-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20160709_180024_440413_304ABDAA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compiling the rtlwifi drivers for ARM with gcc -Wextra warns about lots of
-incorrect code that results from 'char' being unsigned here, e.g.
+IS_ERR_VALUE() assumes that its parameter is an unsigned long.
+It can not be used to check if an 'unsigned int' reflects an error.
+As they pass an 'unsigned int' into a function that takes an
+'unsigned long' argument. This happens to work because the type
+is sign-extended on 64-bit architectures before it gets converted
+into an unsigned type.
 
-staging/rtl8192e/rtl8192e/r8192E_phy.c:1072:36: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-staging/rtl8192e/rtl8192e/r8192E_phy.c:1104:36: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-staging/rtl8192e/rtl8192e/rtl_core.c:1987:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-staging/rtl8192e/rtl8192e/rtl_dm.c:782:37: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-staging/rtl8192e/rtl819x_TSProc.c:326:14: error: comparison is always true due to limited range of data type [-Werror=type-limits]
-staging/rtl8192e/rtllib_softmac_wx.c:465:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+However, anything that passes an 'unsigned short' or 'unsigned int'
+argument into IS_ERR_VALUE() is guaranteed to be broken, as are
+8-bit integers and types that are wider than 'unsigned long'.
 
-This patch changes all uses of 'char' in this driver that refer to
-8-bit integers to use 's8' instead, which is signed on all architectures.
+It would be nice to any users that are not passing 'unsigned int'
+arguments.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 8 ++++----
- drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c | 2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_core.c   | 6 +++---
- drivers/staging/rtl8192e/rtl8192e/rtl_core.h   | 8 ++++----
- drivers/staging/rtl8192e/rtl819x_TSProc.c      | 2 +-
- 5 files changed, 13 insertions(+), 13 deletions(-)
+ drivers/bcma/scan.c | 1 -
+ include/linux/err.h | 2 ++
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-index ba64a4f1b3a8..8d6bca61e7aa 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-@@ -1487,8 +1487,8 @@ static void _rtl92e_query_rxphystatus(
- 	struct phy_ofdm_rx_status_rxsc_sgien_exintfflag *prxsc;
- 	u8 *prxpkt;
- 	u8 i, max_spatial_stream, tmp_rxsnr, tmp_rxevm, rxsc_sgien_exflg;
--	char rx_pwr[4], rx_pwr_all = 0;
--	char rx_snrX, rx_evmX;
-+	s8 rx_pwr[4], rx_pwr_all = 0;
-+	s8 rx_snrX, rx_evmX;
- 	u8 evm, pwdb_all;
- 	u32 RSSI, total_rssi = 0;
- 	u8 is_cck_rate = 0;
-@@ -1613,7 +1613,7 @@ static void _rtl92e_query_rxphystatus(
- 				     2) - 110;
- 
- 			tmp_rxsnr = pofdm_buf->rxsnr_X[i];
--			rx_snrX = (char)(tmp_rxsnr);
-+			rx_snrX = (s8)(tmp_rxsnr);
- 			rx_snrX /= 2;
- 			priv->stats.rxSNRdB[i] = (long)rx_snrX;
- 
-@@ -1643,7 +1643,7 @@ static void _rtl92e_query_rxphystatus(
- 
- 		for (i = 0; i < max_spatial_stream; i++) {
- 			tmp_rxevm = pofdm_buf->rxevm_X[i];
--			rx_evmX = (char)(tmp_rxevm);
-+			rx_evmX = (s8)(tmp_rxevm);
- 
- 			rx_evmX /= 2;
- 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-index 5e3bbe5c3ca4..0698131e4300 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-@@ -630,7 +630,7 @@ void rtl92e_set_tx_power(struct net_device *dev, u8 channel)
- {
- 	struct r8192_priv *priv = rtllib_priv(dev);
- 	u8	powerlevel = 0, powerlevelOFDM24G = 0;
--	char ant_pwr_diff;
-+	s8	ant_pwr_diff;
- 	u32	u4RegValue;
- 
- 	if (priv->epromtype == EEPROM_93C46) {
-diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_core.c b/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
-index 13a5ddc2bea5..41e05f206300 100644
---- a/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
-@@ -1982,7 +1982,7 @@ void rtl92e_update_rx_statistics(struct r8192_priv *priv,
- 					weighting) / 6;
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 4a2d1b2..3bc77eb 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -272,7 +272,6 @@ static struct bcma_device *bcma_find_core_reverse(struct bcma_bus *bus, u16 core
+ 	return NULL;
  }
  
--u8 rtl92e_rx_db_to_percent(char antpower)
-+u8 rtl92e_rx_db_to_percent(s8 antpower)
+-#define IS_ERR_VALUE_U32(x) ((x) >= (u32)-MAX_ERRNO)
+ 
+ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 			      struct bcma_device_id *match, int core_num,
+diff --git a/include/linux/err.h b/include/linux/err.h
+index 1e35588..1940af7 100644
+--- a/include/linux/err.h
++++ b/include/linux/err.h
+@@ -20,6 +20,8 @@
+ 
+ #define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)
+ 
++#define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(void *)(x) >= (unsigned int)-MAX_ERRNO)
++
+ static inline void * __must_check ERR_PTR(long error)
  {
- 	if ((antpower <= -100) || (antpower >= 20))
- 		return	0;
-@@ -1993,9 +1993,9 @@ u8 rtl92e_rx_db_to_percent(char antpower)
- 
- }	/* QueryRxPwrPercentage */
- 
--u8 rtl92e_evm_db_to_percent(char value)
-+u8 rtl92e_evm_db_to_percent(s8 value)
- {
--	char ret_val;
-+	s8 ret_val;
- 
- 	ret_val = value;
- 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_core.h b/drivers/staging/rtl8192e/rtl8192e/rtl_core.h
-index f627fdc15a58..6921125c9d35 100644
---- a/drivers/staging/rtl8192e/rtl8192e/rtl_core.h
-+++ b/drivers/staging/rtl8192e/rtl8192e/rtl_core.h
-@@ -503,8 +503,8 @@ struct r8192_priv {
- 	u32 Pwr_Track;
- 	u8 CCKPresentAttentuation_20Mdefault;
- 	u8 CCKPresentAttentuation_40Mdefault;
--	char CCKPresentAttentuation_difference;
--	char CCKPresentAttentuation;
-+	s8 CCKPresentAttentuation_difference;
-+	s8 CCKPresentAttentuation;
- 	long undecorated_smoothed_pwdb;
- 
- 	u32 MCSTxPowerLevelOriginalOffset[6];
-@@ -604,8 +604,8 @@ void rtl92e_update_rx_pkt_timestamp(struct net_device *dev,
- long rtl92e_translate_to_dbm(struct r8192_priv *priv, u8 signal_strength_index);
- void rtl92e_update_rx_statistics(struct r8192_priv *priv,
- 				 struct rtllib_rx_stats *pprevious_stats);
--u8 rtl92e_evm_db_to_percent(char value);
--u8 rtl92e_rx_db_to_percent(char antpower);
-+u8 rtl92e_evm_db_to_percent(s8 value);
-+u8 rtl92e_rx_db_to_percent(s8 antpower);
- void rtl92e_copy_mpdu_stats(struct rtllib_rx_stats *psrc_stats,
- 			    struct rtllib_rx_stats *ptarget_stats);
- bool rtl92e_enable_nic(struct net_device *dev);
-diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-index 2c8a526773ed..e0a2fe5e6148 100644
---- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
-+++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-@@ -323,7 +323,7 @@ bool GetTs(struct rtllib_device *ieee, struct ts_common_info **ppTS,
- 	if (ieee->current_network.qos_data.supported == 0) {
- 		UP = 0;
- 	} else {
--		if (!IsACValid(TID)) {
-+		if (!IsACValid((s8)TID)) {
- 			netdev_warn(ieee->dev, "%s(): TID(%d) is not valid\n",
- 				    __func__, TID);
- 			return false;
+ 	return (void *) error;
 -- 
-2.9.0
+1.9.1
 
