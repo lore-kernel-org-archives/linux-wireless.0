@@ -1,74 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33926 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751783AbcGUIPE (ORCPT
+Received: from 51.23-broadband.acttv.in ([106.51.23.179]:21157 "EHLO
+	arvind-ThinkPad-Edge-E431" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933094AbcGIRBn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 04:15:04 -0400
-Received: by mail-pf0-f194.google.com with SMTP id g202so5051852pfb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 01:15:03 -0700 (PDT)
-From: Rajan Vaja <rajan.vaja@gmail.com>
-To: j@w1.fi
-Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] hostap: Use memdup_user() to reuse code
-Date: Thu, 21 Jul 2016 13:44:44 +0530
-Message-Id: <1469088884-28469-1-git-send-email-rajan.vaja@gmail.com> (sfid-20160721_101508_630035_666DBACD)
+	Sat, 9 Jul 2016 13:01:43 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: zajec5@gmail.com
+Cc: viresh.kumar@linaro.org, akpm@linux-foundation.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linville@tuxdriver.com, Arvind Yadav <arvind.yadav.cs@gmail.com>
+Subject: [v2] ErrHandling:Make IS_ERR_VALUE_U32 as generic API to avoid IS_ERR_VALUE abuses.
+Date: Sat,  9 Jul 2016 22:31:36 +0530
+Message-Id: <1468083696-15283-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20160709_190204_507237_4D541CF3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix coccicheck warning which recommends to
-use memdup_user() instead of reimplementing its
-code.
+IS_ERR_VALUE() assumes that its parameter is an unsigned long.
+It can not be used to check if an 'unsigned int' reflects an error.
+As they pass an 'unsigned int' into a function that takes an
+'unsigned long' argument. This happens to work because the type
+is sign-extended on 64-bit architectures before it gets converted
+into an unsigned type.
 
-This patch fixes below coccicheck warnings:
+However, anything that passes an 'unsigned short' or 'unsigned int'
+argument into IS_ERR_VALUE() is guaranteed to be broken, as are
+8-bit integers and types that are wider than 'unsigned long'.
 
-drivers/net/wireless/intersil/hostap/hostap_ioctl.c:3044:9-16: WARNING
-opportunity for memdup_user
-drivers/net/wireless/intersil/hostap/hostap_ioctl.c:3806:9-16: WARNING
-opportunity for memdup_user
+It would be nice to any users that are not passing 'unsigned int'
+arguments.
 
-Signed-off-by: Rajan Vaja <rajan.vaja@gmail.com>
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/intersil/hostap/hostap_ioctl.c | 20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
+ drivers/bcma/scan.c | 1 -
+ include/linux/err.h | 2 ++
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-index 3e5fa78..a5656bc 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-@@ -3041,13 +3041,9 @@ static int prism2_ioctl_priv_download(local_info_t *local, struct iw_point *p)
- 	    p->length > 1024 || !p->pointer)
- 		return -EINVAL;
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index 4a2d1b2..3bc77eb 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -272,7 +272,6 @@ static struct bcma_device *bcma_find_core_reverse(struct bcma_bus *bus, u16 core
+ 	return NULL;
+ }
  
--	param = kmalloc(p->length, GFP_KERNEL);
--	if (param == NULL)
--		return -ENOMEM;
--
--	if (copy_from_user(param, p->pointer, p->length)) {
--		ret = -EFAULT;
--		goto out;
-+	param = memdup_user(p->pointer, p->length);
-+	if (IS_ERR(param)) {
-+		return PTR_ERR(param);
- 	}
+-#define IS_ERR_VALUE_U32(x) ((x) >= (u32)-MAX_ERRNO)
  
- 	if (p->length < sizeof(struct prism2_download_param) +
-@@ -3803,13 +3799,9 @@ static int prism2_ioctl_priv_hostapd(local_info_t *local, struct iw_point *p)
- 	    p->length > PRISM2_HOSTAPD_MAX_BUF_SIZE || !p->pointer)
- 		return -EINVAL;
+ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
+ 			      struct bcma_device_id *match, int core_num,
+diff --git a/include/linux/err.h b/include/linux/err.h
+index 1e35588..e05a63d 100644
+--- a/include/linux/err.h
++++ b/include/linux/err.h
+@@ -20,6 +20,8 @@
  
--	param = kmalloc(p->length, GFP_KERNEL);
--	if (param == NULL)
--		return -ENOMEM;
--
--	if (copy_from_user(param, p->pointer, p->length)) {
--		ret = -EFAULT;
--		goto out;
-+	param = memdup_user(p->pointer, p->length);
-+	if (IS_ERR(param)) {
-+		return PTR_ERR(param);
- 	}
+ #define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)
  
- 	switch (param->cmd) {
++#define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(x) >= (unsigned int)-MAX_ERRNO)
++
+ static inline void * __must_check ERR_PTR(long error)
+ {
+ 	return (void *) error;
 -- 
 1.9.1
 
