@@ -1,61 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipv4.connman.net ([82.165.8.211]:49066 "EHLO mail.holtmann.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752003AbcGJTrx convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33452 "EHLO
+	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756327AbcGHWbP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2016 15:47:53 -0400
-Content-Type: text/plain; charset=windows-1252
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: [RFC v2 1/3] nl80211: Add nl80211_notify_iface
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <ab4b33b0-cc34-80d1-49a0-51846bb7c7f2@broadcom.com>
-Date: Sun, 10 Jul 2016 21:47:50 +0200
-Cc: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Message-Id: <5DF59CC1-84AA-45EF-B2EF-B16469A9D736@holtmann.org> (sfid-20160710_214800_771099_2642B924)
-References: <1468044967-9236-1-git-send-email-denkenz@gmail.com> <1468044967-9236-2-git-send-email-denkenz@gmail.com> <1601C89F-62D4-42F5-B5A4-2C9E2F02A673@holtmann.org> <ab4b33b0-cc34-80d1-49a0-51846bb7c7f2@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+	Fri, 8 Jul 2016 18:31:15 -0400
+Received: by mail-oi0-f68.google.com with SMTP id w141so12089812oia.0
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 15:31:14 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v2 2/3] core: Always notify of new wireless netdevs
+Date: Sat,  9 Jul 2016 01:16:06 -0500
+Message-Id: <1468044967-9236-3-git-send-email-denkenz@gmail.com> (sfid-20160709_003118_110396_55AC9B04)
+In-Reply-To: <1468044967-9236-1-git-send-email-denkenz@gmail.com>
+References: <1468044967-9236-1-git-send-email-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+This change alters the semantics of NL80211_CMD_NEW_INTERFACE events
+by always sending this event whenever a new net_device object
+associated with a wdev is registered.  Prior to this change, this event
+was only sent as a result of NL80211_CMD_NEW_INTERFACE command sent
+from userspace.  This allows userspace to reliably detect new wireless
+interfaces (e.g. due to hardware hot-plug events, etc).
 
->>> This function emits NL80211_CMD_NEW_INTERFACE or
->>> NL80211_CMD_DEL_INTERFACE events.  This is meant to be used by the core
->>> to notify userspace applications such as wpa_supplicant when a netdev
->>> related to a wireless device has been added or removed.
->>> 
->>> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
->>> ---
->>> net/wireless/nl80211.c | 28 ++++++++++++++++++++++++++++
->>> net/wireless/nl80211.h |  3 +++
->>> 2 files changed, 31 insertions(+)
->>> 
->>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->>> index f39fd4d..da03e17 100644
->>> --- a/net/wireless/nl80211.c
->>> +++ b/net/wireless/nl80211.c
->>> @@ -11855,6 +11855,34 @@ void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
->>> 				NL80211_MCGRP_CONFIG, GFP_KERNEL);
->>> }
->>> 
->>> +void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
->>> +				struct wireless_dev *wdev,
->>> +				enum nl80211_commands cmd)
->>> +{
->>> +	struct sk_buff *msg;
->>> +	bool removal;
->>> +
->>> +	WARN_ON(cmd != NL80211_CMD_NEW_INTERFACE &&
->>> +		cmd != NL80211_CMD_DEL_INTERFACE);
->> 
->> I would assume that BUILD_BUG_ON does a way job better here.
-> 
-> Why? I don't see why the condition would be compile-time constant as it
-> can be called from outside nl80211.c.
+For wdevs created without an associated net_device object (e.g.
+NL80211_IFTYPE_P2P_DEVICE), the NL80211_CMD_NEW_INTERFACE event is
+still generated inside the relevant nl80211 command handler.
 
-what has that to do with it. No matter who calls it, the point is to ensure that it is called for new/del interface. And if a caller uses it for something else, then it should fail and it should fail loudly.
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ net/wireless/core.c    |  2 ++
+ net/wireless/nl80211.c | 23 +++++++++--------------
+ 2 files changed, 11 insertions(+), 14 deletions(-)
 
-Regards
-
-Marcel
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 7645e97..7758c0f 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -1079,6 +1079,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		     wdev->iftype == NL80211_IFTYPE_P2P_CLIENT ||
+ 		     wdev->iftype == NL80211_IFTYPE_ADHOC) && !wdev->use_4addr)
+ 			dev->priv_flags |= IFF_DONT_BRIDGE;
++
++		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+ 		cfg80211_leave(rdev, wdev);
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index da03e17..ec8eb88 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2787,7 +2787,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct vif_params params;
+ 	struct wireless_dev *wdev;
+-	struct sk_buff *msg, *event;
++	struct sk_buff *msg;
+ 	int err;
+ 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
+ 	u32 flags;
+@@ -2891,20 +2891,15 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		return -ENOBUFS;
+ 	}
+ 
+-	event = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-	if (event) {
+-		if (nl80211_send_iface(event, 0, 0, 0,
+-				       rdev, wdev, false) < 0) {
+-			nlmsg_free(event);
+-			goto out;
+-		}
+-
+-		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
+-					event, 0, NL80211_MCGRP_CONFIG,
+-					GFP_KERNEL);
+-	}
++	/*
++	 * For wdevs which have no associated netdev object (e.g. of type
++	 * NL80211_IFTYPE_P2P_DEVICE), emit the NEW_INTERFACE event here.
++	 * For all other types, the event will be generated from the
++	 * netdev notifier
++	 */
++	if (!wdev->netdev)
++		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
+ 
+-out:
+ 	return genlmsg_reply(msg, info);
+ }
+ 
+-- 
+2.7.3
 
