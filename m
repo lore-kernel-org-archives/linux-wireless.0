@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49602 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755051AbcGEMbr (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:36202 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932568AbcGIBCb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 08:31:47 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 05 Jul 2016 18:01:45 +0530
-From: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH 1/2] cfg80211: Add support to set tx power for a station
- associated
-In-Reply-To: <1467110918.2493.9.camel@sipsolutions.net>
-References: <1465926256-6463-1-git-send-email-arnagara@qti.qualcomm.com>
- <1467110918.2493.9.camel@sipsolutions.net>
-Message-ID: <1cb3e2cc49b433fe5ed834a33adf64b6@codeaurora.org> (sfid-20160705_143150_988458_84A7F884)
+	Fri, 8 Jul 2016 21:02:31 -0400
+Received: by mail-io0-f196.google.com with SMTP id s93so3673538ioi.3
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 18:02:31 -0700 (PDT)
+From: engineering@keppy.com
+To: kvalo@qca.qualcomm.com
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] ath6kl: sme_state shortcut to SME_DISCONNECTED removed
+Date: Fri,  8 Jul 2016 21:04:19 -0400
+Message-Id: <1468026259-25148-1-git-send-email-dan.kephart@lairdtech.com> (sfid-20160709_030241_300406_E8EB46E4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-06-28 16:18, Johannes Berg wrote:
-> On Tue, 2016-06-14 at 23:14 +0530, Ashok Raj Nagarajan wrote:
->> This patch adds support to set transmit power setting type and
->> transmit power level attributes to NL80211_CMD_SET_STATION in order
->> to facilitate adjusting the transmit power level of a station
->> associated to the AP.
-> 
-> Why would you ever need to do that manually? Please give more
-> explanation in the commit message.
-> 
-> We have minstrel-blues (which never made it into the code, but that's
-> just because the submitter went away) doing power adjustments, so you
-> need to explain why this should be necessary.
-> 
+From: Dan Kephart <dan.kephart@lairdtech.com>
 
-Hi Johannes,
+When an NL80211_DISCONNECT is sent to cfg80211, the driver's cfg80211
+disconnect function sets the sme_state to SME_DISCONNECTED before receiving
+a WMI_DISCONNECT_EVENT from the firmware.  This caused cfg80211 to not know
+that the connection is disconnected because the driver fails to notify
+cfg80211 upon receiving WMI_DISCONNECT_EVENT from the firmware believing
+it is already disconnected.
 
-Sure.. First use case will be to help with the problem of legacy client 
-devices that
-roam across multiple APs. It is a classic enterprise Wi-Fi AP problem, 
-often
-managed by a "network controller" unit that is connected to all the APs. 
-The
-problem is how to handle seamless handoff of clients between multiple 
-APs while
-maximizing the client throughput and minimizing disruption of IP 
-application
-services like VoIP calls and video streaming. A legacy client will often 
-hold
-onto an AP association, even down to 1 Mbps as it roams away. Instead, 
-if the
-AP can recognise that the client RSSI (and therefore throughput) is 
-poor, it
-can "drop" the Tx power significantly (just to that client) such that it 
-forces
-the client to look for a better, closer, and therefore higher-throughput
-association. It would "give it a kick" without blacklisting it. It just 
-needs
-to hold the power low for the small amount of time it takes to convince 
-it to
-go away.
+Signed-off-by: Dan Kephart <dan.kephart@lairdtech.com>
+---
+ drivers/net/wireless/ath/ath6kl/cfg80211.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Other use cases may be
-         - Support a form of QoS per STA since a higher MCS rate might be
-           achievable, and CW delays might be reduced
-         - The optimal power can be negotiated (closed loop) or observed 
-(open
-           loop) for a given STA, reducing needless congestion on the 
-overall channel
-         - Reduce power to a STA that does not support certain radio 
-features
-           (e.g.  11b clients)
+diff --git a/drivers/net/wireless/ath/ath6kl/cfg80211.c b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+index ef5b40e..86a860f 100644
+--- a/drivers/net/wireless/ath/ath6kl/cfg80211.c
++++ b/drivers/net/wireless/ath/ath6kl/cfg80211.c
+@@ -847,8 +847,6 @@ static int ath6kl_cfg80211_disconnect(struct wiphy *wiphy,
+ 
+ 	up(&ar->sem);
+ 
+-	vif->sme_state = SME_DISCONNECTED;
+-
+ 	return 0;
+ }
+ 
+-- 
+2.4.10
 
-Thanks,
-Ashok
-
-> johannes
