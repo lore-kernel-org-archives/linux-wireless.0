@@ -1,65 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33400 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751243AbcGFKo0 (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33650 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932844AbcGIDwX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:44:26 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	"[4.6+]" <stable@vger.kernel.org>,
-	David Spinadel <david.spinadel@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:09 +0300
-Message-Id: <1467801651-1816-14-git-send-email-luca@coelho.fi> (sfid-20160706_124430_207352_0F58CBFB)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 14/56] iwlwifi: add new 8265
+	Fri, 8 Jul 2016 23:52:23 -0400
+Subject: Re: [RFC 0/7] netlink: Add allocation flag to netlink_unicast()
+To: David Teigland <teigland@redhat.com>
+References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
+ <577DA3E1.6020103@gmail.com> <20160708160821.GA2048@redhat.com>
+Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
+	linux-audit@redhat.com, cluster-devel@redhat.com,
+	johannes@sipsolutions.net, pablo@netfilter.org, kaber@trash.net,
+	kadlec@blackhole.kfki.hu, dledford@redhat.com,
+	sean.hefty@intel.com, hal.rosenstock@gmail.com,
+	paul@paul-moore.com, eparis@redhat.com, zbr@ioremap.net,
+	pshelar@nicira.com, ccaulfie@redhat.com, bsingharora@gmail.com
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <578074F0.9030809@gmail.com> (sfid-20160709_055227_971172_278DD91C)
+Date: Sat, 9 Jul 2016 12:52:16 +0900
+MIME-Version: 1.0
+In-Reply-To: <20160708160821.GA2048@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
-
-Add 6 new 8265 series PCI IDs:
-  - (0x24FD, 0x1130)
-  - (0x24FD, 0x0130)
-  - (0x24FD, 0x0910)
-  - (0x24FD, 0x0930)
-  - (0x24FD, 0x0950)
-  - (0x24FD, 0x0850)
-
-CC: <stable@vger.kernel.org> [4.6+]
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 1cae19d..6f020e4 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -484,6 +484,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24FD, 0x0010, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x0110, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x1110, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x1130, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0130, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x1010, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x0050, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x0150, iwl8265_2ac_cfg)},
-@@ -494,6 +496,10 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24FD, 0x0810, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x9110, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x8130, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0910, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0930, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0950, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0850, iwl8265_2ac_cfg)},
- 
- /* 9000 Series */
- 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
--- 
-2.8.1
+On 2016年07月09日 01:08, David Teigland wrote:
+> On Thu, Jul 07, 2016 at 09:35:45AM +0900, Masashi Honma wrote:
+>> At the fs/dlm/netlink.c#dlm_timeout_warn(),
+>> prepare_data allocates buffer with GFP_NOFS
+>> and send_data() sends the buffer.
+>>
+>> But send_data() uses GFP_KERNEL or GFP_ATOMIC inside it.
+>> Should it be replaced by GFP_NOFS ?
+> That's old code that's never been used so it doesn't really matter.
+>
+I see. Thank you.
 
