@@ -1,86 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49758 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751462AbcGUJsa convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 05:48:30 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cathy Luo" <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH 6/9] mwifiex: process rxba_sync event
-Date: Thu, 21 Jul 2016 09:48:26 +0000
-Message-ID: <7fc6db4ae2f64443b863180bf2b90bf8@SC-EXCH04.marvell.com> (sfid-20160721_114833_964260_1A9532BA)
-References: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
-	<1468248832-21969-7-git-send-email-akarwar@marvell.com>
- <87mvlex3jx.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87mvlex3jx.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34836 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933099AbcGIX2z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jul 2016 19:28:55 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Cc: mcgrof@do-not-panic.com, galak@codeaurora.org,
+	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
+	pawel.moll@arm.com, robh+dt@kernel.org, kvalo@codeaurora.org,
+	chunkeey@googlemail.com, arend.vanspriel@broadcom.com,
+	julian.calaby@gmail.com,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v4 3/3] ath9k: parse the device configuration from an OF node
+Date: Sun, 10 Jul 2016 01:28:34 +0200
+Message-Id: <20160709232834.31654-4-martin.blumenstingl@googlemail.com> (sfid-20160710_012900_623440_B5076F78)
+In-Reply-To: <20160709232834.31654-1-martin.blumenstingl@googlemail.com>
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
+ <20160709232834.31654-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+This makes it possible to configure ath9k based devices using
+devicetree. That makes some out-of-tree "convert devicetree to
+ath9k_platform_data glue"-code obsolete.
 
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Monday, July 18, 2016 10:54 PM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> Xinming Hu
-> Subject: Re: [PATCH 6/9] mwifiex: process rxba_sync event
-> 
-> Amitkumar Karwar <akarwar@marvell.com> writes:
-> 
-> > From: Xinming Hu <huxm@marvell.com>
-> >
-> > Firmware may filter and drop packets under certain condition, for
-> > example, ARP SA=DA packet. this event will be used to synchronize the
-> > Rx Block Acknowledgment (BA) window bitmap and to fill any holes in
-> > driver side.
-> >
-> > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> [...]
-> 
-> > --- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-> > +++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-> > @@ -78,8 +78,15 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct
-> mwifiex_private *priv,
-> >   */
-> >  static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv,
-> > void *payload)  {
-> > -	int ret = mwifiex_11n_dispatch_amsdu_pkt(priv, payload);
-> >
-> > +	int ret;
-> > +
-> > +	if (payload == (void *)MWIFIEX_RX_PKT_DROPPED_IN_FW) {
-> > +		mwifiex_dbg(priv->adapter, INFO, "info: fw drop data\n");
-> > +		return 0;
-> > +	}
-> 
-> [...]
-> 
-> > +					mwifiex_dbg(priv->adapter, ERROR,
-> > +						    "drop packet,seq=%d\n",
-> > +						    seq_num);
-> > +
-> > +					ret = mwifiex_11n_rx_reorder_pkt
-> > +					(priv, seq_num, tlv_rxba->tid,
-> > +					 tlv_rxba->mac, 0,
-> > +					 (void *)MWIFIEX_RX_PKT_DROPPED_IN_FW);
-> 
-> [...]
-> 
-> > +/* Indicate packet has been dropped in FW */
-> > +#define MWIFIEX_RX_PKT_DROPPED_IN_FW             0xffffffff
-> 
-> That pointer magic is rather ugly, why not use a proper boolean?
-> 
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 55 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
-Thanks for review. I will get rid of this macro and submit updated version.
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index edc74fc..9dd7ed5 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -20,6 +20,8 @@
+ #include <linux/slab.h>
+ #include <linux/ath9k_platform.h>
+ #include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_net.h>
+ #include <linux/relay.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+@@ -555,6 +557,55 @@ static int ath9k_init_platform(struct ath_softc *sc)
+ 	return 0;
+ }
+ 
++static int ath9k_of_init(struct ath_softc *sc)
++{
++	struct device_node *np = sc->dev->of_node;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	enum ath_bus_type bus_type = common->bus_ops->ath_bus_type;
++	const char *mac;
++	char eeprom_name[100];
++	int ret;
++
++	if (!of_device_is_available(np))
++		return 0;
++
++	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
++
++	if (of_property_read_bool(np, "qca,clk-25mhz"))
++		ah->is_clk_25mhz = true;
++
++	if (of_property_read_bool(np, "qca,disable-2ghz"))
++		ah->disable_2ghz = true;
++
++	if (of_property_read_bool(np, "qca,disable-5ghz"))
++		ah->disable_5ghz = true;
++
++	if (of_property_read_bool(np, "qca,check-eeprom-endianness"))
++		ah->ah_flags &= ~AH_NO_EEP_SWAP;
++	else
++		ah->ah_flags |= AH_NO_EEP_SWAP;
++
++	if (of_property_read_bool(np, "qca,no-eeprom")) {
++		/* ath9k-eeprom-<bus>-<id>.bin */
++		scnprintf(eeprom_name, sizeof(eeprom_name),
++			  "ath9k-eeprom-%s-%s.bin",
++			  ath_bus_type_to_string(bus_type), dev_name(ah->dev));
++
++		ret = ath9k_eeprom_request(sc, eeprom_name);
++		if (ret)
++			return ret;
++	}
++
++	mac = of_get_mac_address(np);
++	if (mac)
++		ether_addr_copy(common->macaddr, mac);
++
++	ah->ah_flags &= ~AH_USE_EEPROM;
++
++	return 0;
++}
++
+ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 			    const struct ath_bus_ops *bus_ops)
+ {
+@@ -611,6 +662,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		return ret;
+ 
++	ret = ath9k_of_init(sc);
++	if (ret)
++		return ret;
++
+ 	if (ath9k_led_active_high != -1)
+ 		ah->config.led_active_high = ath9k_led_active_high == 1;
+ 
+-- 
+2.9.0
 
-Regards,
-Amitkumar
