@@ -1,90 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:35347 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754702AbcGFQUJ (ORCPT
+Received: from mail-qt0-f173.google.com ([209.85.216.173]:35456 "EHLO
+	mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751579AbcGIQsd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 12:20:09 -0400
-Received: by mail-wm0-f45.google.com with SMTP id z126so117897185wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 09:20:08 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
-	linux-kernel@vger.kernel.org,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv5 wl-drv-next 0/2] register-field manipulation macros
-Date: Wed,  6 Jul 2016 17:19:35 +0100
-Message-Id: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160706_182056_031545_ECE0F980)
+	Sat, 9 Jul 2016 12:48:33 -0400
+Received: by mail-qt0-f173.google.com with SMTP id f89so35528916qtd.2
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Jul 2016 09:48:32 -0700 (PDT)
+MIME-Version: 1.0
+From: Ken Harris <kjh@hokulea.org>
+Date: Sat, 9 Jul 2016 09:41:25 -0700
+Message-ID: <CAK_-F2+JrduJyWtLcLi8q4s9p4apv5bB7Dj1mTKtjgOmQ-Z2NQ@mail.gmail.com> (sfid-20160709_184950_730413_7E17D674)
+Subject: WiFi testing tools
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Peeps :
 
-I've added few lines about the compilation problems in 
-the commit message of patch 1.  I would prefer the mass
-rename of macros in mt7601u not to be part of this series
-so patch 2 is left as it was and I'll follow up once this
-is accepted.
+I'm trying to test 20 to 200 WiFi "stations" (running OpenWRT) in a warehouse.
 
-== v4 blurb
+I'd like to find some tools to gather lots of stats about each station
+and access point , such as RSSI, bitrate, etc (similar to "iw $if0
+station dump) and output to CSV (or JSON or YAML). It would also be
+nice to track ping times and speed (like http://flent.org ).
 
-This set moves to a global header file macros which I find
-very useful and worth popularising.  The basic problem is
-that since C bitfields are not very dependable accessing
-subfields of registers becomes slightly inconvenient.
-It is nice to have the necessary mask and shift operations
-wrapped in a macro.  It is also nice to have that macro
-compute the shift amount based on the mask automatically.
+I'm using the ath9k driver, so stats specific to the ath9k are also useful.
 
-My implementation follows what Felix Fietkau has done in
-mt76.  Hannes Frederic Sowa suggested more use of standard
-Linux/GCC functions.  Since the RFC I've also added a 
-compile-time check to validate that the value passed to
-setters fits in the mask.
+I'm also looking for analysis tools.
 
-I attempted the use of static inlines instead of macros
-but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
-I also noticed that forcing arguments to be u32 for inlines
-makes the compiler use 32bit arithmetic where it could
-get away with 64bit before (on 64bit machines, obviously).
-That's a potential performance concern but probably not
-a very practical one today.  Apart from looking "cleaner"
-static inlines would have the advantage that we could #undef
-the auxiliary macros at the end of the header.
+Any suggestions are appreciated.
 
-v3:
-Build bot caught a build failure with -Os set.  AFAICT gcc
-did not handle temporary variable I put in the macro
-expression too well.  I work around that by defining
-__BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
-BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
-
-Please review and advise on improvements.
-
-If accepted I think would be best to push this through
-Kalle's tree, since the only existing user is in
-drivers/net/wireless/.
-
-v4:
- - add documentation in the header.
-v3:
- - don't use variables in statement expressions;
- - use __BUILD_BUG_ON_NOT_POWER_OF_2.
-v2:
- - change Felix's email address.
-
-Jakub Kicinski (2):
-  add basic register-field manipulation macros
-  mt7601u: use linux/bitfield.h
-
- drivers/net/wireless/mediatek/mt7601u/dma.h     |   2 -
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |   5 +-
- drivers/net/wireless/mediatek/mt7601u/util.h    |  77 -----------------
- include/linux/bitfield.h                        | 109 ++++++++++++++++++++++++
- include/linux/bug.h                             |   3 +
- 5 files changed, 116 insertions(+), 80 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
- create mode 100644 include/linux/bitfield.h
-
--- 
-1.9.1
-
+Thanks
