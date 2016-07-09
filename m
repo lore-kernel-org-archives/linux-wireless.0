@@ -1,37 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:47710 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326AbcGFDWl (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35988 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756307AbcGHWaN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 23:22:41 -0400
-Date: Tue, 05 Jul 2016 20:22:37 -0700 (PDT)
-Message-Id: <20160705.202237.33945138215381341.davem@davemloft.net> (sfid-20160706_052246_832330_D4A29367)
-To: masashi.honma@gmail.com
-Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-	linux-audit@redhat.com, cluster-devel@redhat.com,
-	johannes@sipsolutions.net, pablo@netfilter.org, kaber@trash.net,
-	kadlec@blackhole.kfki.hu, dledford@redhat.com,
-	sean.hefty@intel.com, hal.rosenstock@gmail.com,
-	paul@paul-moore.com, eparis@redhat.com, zbr@ioremap.net,
-	pshelar@nicira.com, ccaulfie@redhat.com, teigland@redhat.com,
-	bsingharora@gmail.com
-Subject: Re: [RFC 0/7] netlink: Add allocation flag to netlink_unicast()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
-References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 8 Jul 2016 18:30:13 -0400
+Received: by mail-oi0-f67.google.com with SMTP id u68so401487oie.3
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 15:30:12 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [RFC v2 3/3] core: Always notify when wireless netdev is removed
+Date: Sat,  9 Jul 2016 01:16:07 -0500
+Message-Id: <1468044967-9236-4-git-send-email-denkenz@gmail.com> (sfid-20160709_003017_880989_A2B5D241)
+In-Reply-To: <1468044967-9236-1-git-send-email-denkenz@gmail.com>
+References: <1468044967-9236-1-git-send-email-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Masashi Honma <masashi.honma@gmail.com>
-Date: Wed,  6 Jul 2016 09:28:29 +0900
+This change alters the semantics of NL80211_CMD_DEL_INTERFACE events
+by always sending this event whenever a net_device object associated
+with a wdev is destroyed.  Prior to this change, this event was only
+emitted as a result of NL80211_CMD_DEL_INTERFACE command sent from
+userspace.  This allows userspace to reliably detect when wireless
+interfaces have been removed, e.g. due to USB removal events, etc.
 
-> Though currently such a use case was not found, to solve potential
-> issue we will add an allocation flag to netlink_unicast().
+For wireless device objects without an associated net_device (e.g.
+NL80211_IFTYPE_P2P_DEVICE), the NL80211_CMD_DEL_INTERFACE event is
+now generated inside cfg80211_unregister_wdev.
 
-We don't solve potential issues, we solve real issues.
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+---
+ net/wireless/core.c    |  4 ++++
+ net/wireless/nl80211.c | 18 +-----------------
+ 2 files changed, 5 insertions(+), 17 deletions(-)
 
-There is no reason to add the GFP parameter until it is actually
-needed.
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 7758c0f..fccead7 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -906,6 +906,8 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
+ 	if (WARN_ON(wdev->netdev))
+ 		return;
+ 
++	nl80211_notify_iface(rdev, wdev, NL80211_CMD_DEL_INTERFACE);
++
+ 	list_del_rcu(&wdev->list);
+ 	rdev->devlist_generation++;
+ 
+@@ -1159,6 +1161,8 @@ static int cfg80211_netdev_notifier_call(struct notifier_block *nb,
+ 		 * remove and clean it up.
+ 		 */
+ 		if (!list_empty(&wdev->list)) {
++			nl80211_notify_iface(rdev, wdev,
++						NL80211_CMD_DEL_INTERFACE);
+ 			sysfs_remove_link(&dev->dev.kobj, "phy80211");
+ 			list_del_rcu(&wdev->list);
+ 			rdev->devlist_generation++;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ec8eb88..bc45d8a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2907,18 +2907,10 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+ {
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+ 	struct wireless_dev *wdev = info->user_ptr[1];
+-	struct sk_buff *msg;
+-	int status;
+ 
+ 	if (!rdev->ops->del_virtual_intf)
+ 		return -EOPNOTSUPP;
+ 
+-	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
+-	if (msg && nl80211_send_iface(msg, 0, 0, 0, rdev, wdev, true) < 0) {
+-		nlmsg_free(msg);
+-		msg = NULL;
+-	}
+-
+ 	/*
+ 	 * If we remove a wireless device without a netdev then clear
+ 	 * user_ptr[1] so that nl80211_post_doit won't dereference it
+@@ -2929,15 +2921,7 @@ static int nl80211_del_interface(struct sk_buff *skb, struct genl_info *info)
+ 	if (!wdev->netdev)
+ 		info->user_ptr[1] = NULL;
+ 
+-	status = rdev_del_virtual_intf(rdev, wdev);
+-	if (status >= 0 && msg)
+-		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
+-					msg, 0, NL80211_MCGRP_CONFIG,
+-					GFP_KERNEL);
+-	else
+-		nlmsg_free(msg);
+-
+-	return status;
++	return rdev_del_virtual_intf(rdev, wdev);
+ }
+ 
+ static int nl80211_set_noack_map(struct sk_buff *skb, struct genl_info *info)
+-- 
+2.7.3
+
