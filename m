@@ -1,65 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53639 "EHLO sipsolutions.net"
+Received: from mail2.tohojo.dk ([77.235.48.147]:37285 "EHLO mail2.tohojo.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753270AbcGDIfn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2016 04:35:43 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.87)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1bJzLu-0003GW-Ef
-	for linux-wireless@vger.kernel.org; Mon, 04 Jul 2016 10:35:38 +0200
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] mac80211: agg-rx: refuse ADDBA Request with timeout update
-Date: Mon,  4 Jul 2016 10:35:33 +0200
-Message-Id: <1467621333-12317-1-git-send-email-johannes@sipsolutions.net> (sfid-20160704_103546_990407_C1D3C78C)
+	id S1751464AbcGIMA1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 9 Jul 2016 08:00:27 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: Felix Fietkau <nbd@nbd.name>, Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+	Tim Shepard <shep@alum.mit.edu>
+Subject: Re: [v3] ath9k: Switch to using mac80211 intermediate software queues.
+References: <ac5b5bc6532d4fe7ae3198124ecce7fc@euamsexm01a.eu.qualcomm.com>
+	<87wpkwktx9.fsf@toke.dk>
+	<112300e0-7d39-0c4c-45c9-158651f0c0ed@nbd.name>
+	<87lh1cksao.fsf@toke.dk>
+	<aba77f01-cfee-0e5a-9b84-9d2e0439bb56@nbd.name>
+	<d2ba9ca5-17ac-8031-9c22-177535424e5e@dd-wrt.com>
+Date: Sat, 09 Jul 2016 14:00:15 +0200
+In-Reply-To: <d2ba9ca5-17ac-8031-9c22-177535424e5e@dd-wrt.com> (Sebastian
+	Gottschall's message of "Fri, 8 Jul 2016 20:24:08 +0200")
+Message-ID: <87a8hrkomo.fsf@toke.dk> (sfid-20160709_140150_421948_75F51B10)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current implementation of handling ADDBA Request while a session
-is already active with the peer is wrong - in case the peer is using
-the existing session's dialog token this should be treated as update
-to the session, which can update the timeout value.
+Sebastian Gottschall <s.gottschall@dd-wrt.com> writes:
 
-We don't really have a good way of supporting that, so reject, but
-implement the required behaviour in the spec of "Even if the updated
-ADDBA Request frame is not accepted, the original Block ACK setup
-remains active." (802.11-2012 10.5.4)
+> for me it crashes on wds sta on 3.18 kernels. 
 
-Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
----
- net/mac80211/agg-rx.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+Bugger :/
 
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 3a8f881b22f1..a9aff6079c42 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -306,6 +306,24 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	mutex_lock(&sta->ampdu_mlme.mtx);
- 
- 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
-+		tid_agg_rx = rcu_dereference_protected(
-+				sta->ampdu_mlme.tid_rx[tid],
-+				lockdep_is_held(&sta->ampdu_mlme.mtx));
-+
-+		if (tid_agg_rx->dialog_token == dialog_token) {
-+			ht_dbg_ratelimited(sta->sdata,
-+					   "updated AddBA Req from %pM on tid %u\n",
-+					   sta->sta.addr, tid);
-+			/* We have no API to update the timeout value in the
-+			 * driver so reject the timeout update.
-+			 */
-+			status = WLAN_STATUS_REQUEST_DECLINED;
-+			ieee80211_send_addba_resp(sta->sdata, sta->sta.addr,
-+						  tid, dialog_token, status,
-+						  1, buf_size, timeout);
-+			goto end;
-+		}
-+
- 		ht_dbg_ratelimited(sta->sdata,
- 				   "unexpected AddBA Req from %pM on tid %u\n",
- 				   sta->sta.addr, tid);
--- 
-2.8.1
+> need to solder a serial to get more logs
 
+That would be helpful :)
+
+-Toke
