@@ -1,132 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:15815 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752445AbcGANVI (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.73]:55464 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757207AbcGJV6A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 09:21:08 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u61CvOeq013258
-	for <linux-wireless@vger.kernel.org>; Fri, 1 Jul 2016 05:58:03 -0700
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0a-0016f401.pphosted.com with ESMTP id 23sqaky7tu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 05:58:03 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Shengzhen Li <szli@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: fix interrupt processing corner case in MSI mode
-Date: Fri, 1 Jul 2016 18:26:52 +0530
-Message-ID: <1467377812-5716-1-git-send-email-akarwar@marvell.com> (sfid-20160701_152115_809757_3E4EEF4E)
+	Sun, 10 Jul 2016 17:58:00 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	mcgrof@do-not-panic.com, galak@codeaurora.org,
+	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
+	pawel.moll@arm.com, robh+dt@kernel.org, kvalo@codeaurora.org,
+	chunkeey@googlemail.com, arend.vanspriel@broadcom.com,
+	julian.calaby@gmail.com
+Subject: Re: [PATCH v4 1/3] Documentation: dt: net: add ath9k wireless device binding
+Date: Mon, 11 Jul 2016 00:01:05 +0200
+Message-ID: <1877260.9mAQ7eY9me@wuerfel> (sfid-20160710_235804_561059_1B0F26A7)
+In-Reply-To: <CAFBinCBbzMM0Pz8s444YE+NSN+035+o8PtNBoUn4v8yPMzG9Mw@mail.gmail.com>
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com> <1746957.vJhcHQMZVi@wuerfel> <CAFBinCBbzMM0Pz8s444YE+NSN+035+o8PtNBoUn4v8yPMzG9Mw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+On Sunday, July 10, 2016 10:54:50 PM CEST Martin Blumenstingl wrote:
+> On Sun, Jul 10, 2016 at 10:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> > On Sunday, July 10, 2016 1:28:32 AM CEST Martin Blumenstingl wrote:
+> >> +- qca,check-eeprom-endianness: When enabled, the driver checks if the
+> >> +                               endianness of the EEPROM (based on the two
+> >> +                               magic bytes at the start of the EEPROM)
+> >> +                               matches the host system's native endianness.
+> >> +                               The data will be swapped accordingly if there
+> >> +                               is a mismatch.
+> >> +                               Leaving this disabled means that the EEPROM
+> >> +                               data will be interpreted in the system's
+> >> +                               native endianness, regardless of the magic
+> >> +                               bytes.
+> >> +                               Enable this option only when the magic bytes
+> >> +                               are known to indicate the correct endianness
+> >> +                               of the EEPROM data, because otherwise the
+> >> +                               EEPROM data may be swapped and thus may be
+> >> +                               parsed incorrectly.
+> >
+> > Defining properties in terms of "native" endianess is usually not a good
+> > idea, as some architectures (ARMv6+, PowerPC, ...) allow running either
+> > big-endian or little-endian without changing the endianess of device
+> > registers in the process.
+> >
+> > It's better to document the property as defaulting to a specific endianess
+> > unless you have an override or the autodetection flag, regardless of
+> > the CPU endianess.
+> ath9k reads the data from the EEPROM into memory. With that property
+> disabled ath9k simply assumes that the endianness of the values in the
+> EEPROM are having the correct endianness for the host system (in other
+> words: no swap is being applied).
+> I am not sure I understand you correctly, but isn't what you are
+> explaining an issue in the ath9k code, rather than in this
+> documentation?
 
-As interrupt is read in interrupt handler as well as interrupt processing
-thread, we observed a corner case issue for MSI in which interrupt gets
-processed twice.
+I looked at the code more to find that out now, but I'm more confused
+now, as the eeprom seems to be read as a byte stream, and the endianess
+conversion that the driver performs is not on the data values in it,
+but seems to instead swap the bytes in each 16-bit word, regardless
+of the contents (the values inside of the byte stream are always
+interpreted as big-endian). Is that a correct observation?
 
-This patch moves interrupt reading code for MSI mode from
-mwifiex_interrupt_status() to mwifiex_pcie_process_int() to avoid the
-issue.
+What I see in ath_pci_eeprom_read() is that the 16-bit words are taken
+from the lower 16 bit of the little-endian AR_EEPROM_STATUS_DATA
+register. As this is coming from a PCI register, it must have a device
+specific endianess that is identical on all CPUs, so in the description
+above, mentioning CPU endianess is a bit confusing. I could not find
+the code that does the conditional byteswap, instead this function
 
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 50 ++++++++++++++++++++++++++---
- 1 file changed, 46 insertions(+), 4 deletions(-)
+static bool ar9300_eeprom_read_byte(struct ath_hw *ah, int address,
+                                    u8 *buffer)
+{
+        u16 val;
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 7b17389..2c64b99 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2086,6 +2086,13 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
- 	unsigned long flags;
- 	struct pcie_service_card *card = adapter->card;
- 
-+	if (card->msi_enable) {
-+		spin_lock_irqsave(&adapter->int_lock, flags);
-+		adapter->int_status = 1;
-+		spin_unlock_irqrestore(&adapter->int_lock, flags);
-+		return;
-+	}
-+
- 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
- 		return;
- 
-@@ -2187,15 +2194,44 @@ exit:
- static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
- {
- 	int ret;
--	u32 pcie_ireg;
-+	u32 pcie_ireg = 0;
- 	unsigned long flags;
-+	struct pcie_service_card *card = adapter->card;
- 
- 	spin_lock_irqsave(&adapter->int_lock, flags);
--	/* Clear out unused interrupts */
--	pcie_ireg = adapter->int_status;
-+	if (!card->msi_enable) {
-+		/* Clear out unused interrupts */
-+		pcie_ireg = adapter->int_status;
-+	}
- 	adapter->int_status = 0;
- 	spin_unlock_irqrestore(&adapter->int_lock, flags);
- 
-+	if (card->msi_enable) {
-+		if (mwifiex_pcie_ok_to_access_hw(adapter)) {
-+			if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
-+					     &pcie_ireg)) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "Read register failed\n");
-+				return -1;
-+			}
-+
-+			if ((pcie_ireg != 0xFFFFFFFF) && (pcie_ireg)) {
-+				if (mwifiex_write_reg(adapter,
-+						      PCIE_HOST_INT_STATUS,
-+						      ~pcie_ireg)) {
-+					mwifiex_dbg(adapter, ERROR,
-+						    "Write register failed\n");
-+					return -1;
-+				}
-+				if (!adapter->pps_uapsd_mode &&
-+				    adapter->ps_state == PS_STATE_SLEEP) {
-+					adapter->ps_state = PS_STATE_AWAKE;
-+					adapter->pm_wakeup_fw_try = false;
-+					del_timer(&adapter->wakeup_timer);
-+				}
-+			}
-+		}
-+	}
- 	while (pcie_ireg & HOST_INTR_MASK) {
- 		if (pcie_ireg & HOST_INTR_DNLD_DONE) {
- 			pcie_ireg &= ~HOST_INTR_DNLD_DONE;
-@@ -2235,6 +2271,12 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
- 				return ret;
- 		}
- 
-+		if (card->msi_enable) {
-+			spin_lock_irqsave(&adapter->int_lock, flags);
-+			adapter->int_status = 0;
-+			spin_unlock_irqrestore(&adapter->int_lock, flags);
-+		}
-+
- 		if (mwifiex_pcie_ok_to_access_hw(adapter)) {
- 			if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
- 					     &pcie_ireg)) {
-@@ -2258,7 +2300,7 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
- 	mwifiex_dbg(adapter, INTR,
- 		    "info: cmd_sent=%d data_sent=%d\n",
- 		    adapter->cmd_sent, adapter->data_sent);
--	if (adapter->ps_state != PS_STATE_SLEEP)
-+	if (!card->msi_enable && adapter->ps_state != PS_STATE_SLEEP)
- 		mwifiex_pcie_enable_host_int(adapter);
- 
- 	return 0;
--- 
-1.9.1
+        if (unlikely(!ath9k_hw_nvram_read(ah, address / 2, &val)))
+                return false;
 
+        *buffer = (val >> (8 * (address % 2))) & 0xff;
+        return true;
+}
+
+evidently assumes that the lower 8 bit of the 16-bit data from PCI
+come first, i.e. it byteswaps on big-endian CPUs to get the bytestream
+back into the order in which it is stored in the EEPROM.
+
+Interestingly, this also seems to happen for ath_ahb_eeprom_read()
+even though on that one the value does not get swapped by the bus
+accessor, so presumably big-endian machines with a ahb based ath9k
+store their eeprom byte-reversed?
+
+	Arnd
