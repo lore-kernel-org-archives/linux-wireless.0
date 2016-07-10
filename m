@@ -1,73 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34114 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750829AbcGMUUH (ORCPT
+Received: from betelgeuse.uberspace.de ([185.26.156.37]:51658 "EHLO
+	betelgeuse.uberspace.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbcGJKd0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 16:20:07 -0400
-Received: by mail-wm0-f66.google.com with SMTP id q128so2661849wma.1
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 13:20:06 -0700 (PDT)
-From: Alex Briskin <br.shurik@gmail.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: Alex Briskin <br.shurik@gmail.com>
-Subject: [PATCH 2/4 v1] even better readability
-Date: Wed, 13 Jul 2016 23:19:54 +0300
-Message-Id: <1468441196-23503-3-git-send-email-br.shurik@gmail.com> (sfid-20160713_222012_050393_852FB7EE)
-In-Reply-To: <1468441196-23503-1-git-send-email-br.shurik@gmail.com>
-References: <1468441196-23503-1-git-send-email-br.shurik@gmail.com>
+	Sun, 10 Jul 2016 06:33:26 -0400
+Subject: Re: Problem: iwlwifi: Microcode SW error detected. Restarting
+ 0x2000000
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+References: <57820E4A.3010102@ytvwld.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB346688F92@hasmsx107.ger.corp.intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>
+From: Niklas Sombert <niklas@ytvwld.de>
+Message-ID: <57822467.30500@ytvwld.de> (sfid-20160710_123334_352787_7841DCF0)
+Date: Sun, 10 Jul 2016 12:33:11 +0200
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB346688F92@hasmsx107.ger.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="L0G9IQxSdFRgfc2ejMWrs7deVjOmLjCto"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Further improve readability by replacing if else with switch case
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--L0G9IQxSdFRgfc2ejMWrs7deVjOmLjCto
+Content-Type: multipart/mixed; boundary="lXqhGwvXofj9vQ6pOpNrO8aKM3cqprxAV"
+From: Niklas Sombert <niklas@ytvwld.de>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ linuxwifi <linuxwifi@intel.com>
+Message-ID: <57822467.30500@ytvwld.de>
+Subject: Re: Problem: iwlwifi: Microcode SW error detected. Restarting
+ 0x2000000
+References: <57820E4A.3010102@ytvwld.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB346688F92@hasmsx107.ger.corp.intel.com>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB346688F92@hasmsx107.ger.corp.intel.com>
 
-Signed-off-by: Alex Briskin <br.shurik@gmail.com>
----
- net/mac80211/iface.c | 15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+--lXqhGwvXofj9vQ6pOpNrO8aKM3cqprxAV
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index a68cbac..1793ad2 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1207,13 +1207,16 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 
--	if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
-+	switch (skb->pkt_type) {
-+	case IEEE80211_SDATA_QUEUE_AGG_START:
- 		ra_tid = (void *)&skb->cb;
- 		ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
--	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
-+		break;
-+	case IEEE80211_SDATA_QUEUE_AGG_STOP:
- 		ra_tid = (void *)&skb->cb;
- 		ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
--	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
-+		break;
-+	case IEEE80211_SDATA_QUEUE_RX_AGG_START:
- 		rx_agg = (void *)&skb->cb;
- 		mutex_lock(&local->sta_mtx);
- 		sta = sta_info_get_bss(sdata, rx_agg->addr);
-@@ -1223,7 +1226,8 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
- 							IEEE80211_MAX_AMPDU_BUF,
- 							false, true);
- 		mutex_unlock(&local->sta_mtx);
--	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
-+		break;
-+	case IEEE80211_SDATA_QUEUE_RX_AGG_STOP:
- 		rx_agg = (void *)&skb->cb;
- 		mutex_lock(&local->sta_mtx);
- 		sta = sta_info_get_bss(sdata, rx_agg->addr);
-@@ -1233,7 +1237,8 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
- 						       WLAN_BACK_RECIPIENT, 0,
- 						       false);
- 		mutex_unlock(&local->sta_mtx);
--	} else {
-+		break;
-+	default:
- 		return false;
- 	}
- 	/*will return true if pkt_type found and handled */
--- 
-2.5.0
+Emmanuel Grumbach wrote:
+> Can you please try the newest firmware?
+> https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware.git=
+/commit/?id=3D72266846faa78b939a864842a2aa6ecd8fe6989b
 
+Yes, I've tried the newest firmware. The problem still persists.
+
+> You should pick up the -17.ucode version.
+> Note that I can't know if your device is 7265 or 7265D. In able to dete=
+rmine, please check:
+> https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi#and_7265_supp=
+ort
+
+Yes, it's a 7265D.
+
+> Thank you!
+
+Thank you.
+
+
+--lXqhGwvXofj9vQ6pOpNrO8aKM3cqprxAV--
+
+--L0G9IQxSdFRgfc2ejMWrs7deVjOmLjCto
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJXgiRvAAoJEIOFK7hVFsHHSkUH/iZpb/NcOBKHx497PxOuNrW6
+oL7D+j1F6rl0bs7E1NXsw/4Hkau+p8KtxZCx5GjkZgZKiWuiUsbX3LbvAbKkiIe8
+s2AnUqn89rZVm7TKsJhniP0qDAkxxTvzbBWwUA/OAgJOepVXyeQWudU7p682rgK6
+wxXBREAHpKCezTnfv1QRd9usvjzBBOC6zg8fKOuZLmS5uvz1pvG1sRcLuCNnnDlw
+uuGbBall00rRsE8oufXufVj/yvxW5xJRFtRq7vS+uh9MEkLSwsCISpm0ai0aMQZX
+hLhGfxaegkvu4OG/rlQrdyt9fTvDIIrYpp1Qqzt/b8IFVVdszGpiZSlKMWfJo2w=
+=chLx
+-----END PGP SIGNATURE-----
+
+--L0G9IQxSdFRgfc2ejMWrs7deVjOmLjCto--
