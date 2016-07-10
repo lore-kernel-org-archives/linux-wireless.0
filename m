@@ -1,97 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:35928 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751750AbcGVQjx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 12:39:53 -0400
-Received: by mail-wm0-f46.google.com with SMTP id q128so63773251wma.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 09:39:52 -0700 (PDT)
-From: Christopher Williamson <home@chrisaw.com>
-In-Reply-To: <CANXHH3nvu7TC=x5RTR_WcgGkd2=_0h4BZrc_Nv74023nrc3P5w@mail.gmail.com>
-References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
- <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
- <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
- <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
- <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
- <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
- <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
- <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
- <1469115440.29944.1.camel@redhat.com> <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
- <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
- <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com>
- <etPan.579137d1.40bb3278.381a@chrisaw.com> <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
- <435adbc6-9fa3-e9e3-9815-8cf4b62e5342@broadcom.com> <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
- <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
- <CANXHH3mOsN3-U=BS4fA6iax0ciwbSSywHAgOhHCNj8e7CPCyfQ@mail.gmail.com>
- <1469204186.15064.6.camel@redhat.com> <1469204186.15064.6.camel@redhat.com> <CANXHH3nvu7TC=x5RTR_WcgGkd2=_0h4BZrc_Nv74023nrc3P5w@mail.gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:41670 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752012AbcGJPay (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jul 2016 11:30:54 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: new firmware files for all mvm wireless devices
+Date: Sun, 10 Jul 2016 15:30:49 +0000
+Message-ID: <1468164649.8394.3.camel@intel.com> (sfid-20160710_173101_790380_46EF2337)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Date: Fri, 22 Jul 2016 12:39:50 -0400
-Message-ID: <CANXHH3kX-U_CRfBf+DVe7AMpU13fKGG5bRwgLhDqYuGOBF-HBw@mail.gmail.com> (sfid-20160722_183957_019611_FF540D21)
-Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
-To: Dan Williams <dcbw@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arend Van Spriel <arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ok so I created a guest wifi network without any encryption enabled at
-all and the client still refuses to connect.
-
-Again, the connection is made perfectly using the USB dongle I have
-but not the built in libertas sd8686 chipset.
-
-I do currently use pfSense as a firewall box behind my wireless router
-(acting as an AP) and can see that no DHCP request is making it to the
-pfSense box. I believe you are right in the point about the firmware
-being the problem here.
-
-I should also confirm - the firmware in use is the latest from the
-linux-firmware Ubuntu 16.04 package. I did read around the net about
-being having various issues with various firmware sources and not
-others but despite trying firmware linked directly from Marvell I seem
-to always get one of two issues:
-
-1.) I am unable to connect and keep getting asked for passphrases, or:
-2.) The system completely freezes up (with the v8 firmwares I tried)
-
-I’m not really sure what else to try at this point.
-Christopher Williamson
-
-
-
-On 22 July 2016 at 17:24:52, Christopher Williamson
-(home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
-
->
-> Hi Dan,
->
-> I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
->
-> For now though - the iwlist scan results for both a USB device and the
-> libertas device:
->
-> USB: http://termbin.com/hdwl
-> Libertas: http://termbin.com/jxh7
->
-> Will follow up shortly with WPA and Open network configs.
->
-> Christopher Williamson
->
->
->
-> On 22 July 2016 at 17:16:29, Dan Williams (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
->
-> > Hi Dan,
-> >
-> > I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
-> >
-> > For now though - the iwlist scan results for both a USB device and the
-> > libertas device:
-> >
-> > USB: http://termbin.com/hdwl
-> > Libertas: http://termbin.com/jxh7
-> >
-> > Will follow up shortly with WPA and Open network configs.
-> >
-> > *Christopher Williamson*
+SGkgS3lsZSwNCg0KSW50ZWwgaXMgcmVsZWFzaW5nIG5ldyBmaXJtd2FyZSB2ZXJzaW9ucyBmb3Ig
+YWxsIGl0cyBtdm0gd2lyZWxlc3MNCmRldmljZXMuDQpGb3IgZGV2aWNlcyA3MjYwLCA3MjY1IGFu
+ZCAzMTYwLCB0aGlzIGlzIHRoZSBsYXN0IGZpcm13YXJlIHVwZGF0ZXMuIFdlDQptYXkgc3RpbGwg
+aGF2ZSBjcml0aWNhbCBidWcgZml4ZXMsIGJ1dCB0aG9zZSB3b24ndCBnZXQgYW55IG5ldyBtYWpv
+cg0KcmVsZWFzZXMuIFRoZXkgd2lsbCBzdGF5IHdpdGggLTE3LnVjb2RlLg0KRm9yIDcyNjVEIGFu
+ZCB1cCwgd2UgcmVsZWFzZSBoZXJlIHRoZSAtMjIudWNvZGUgdmVyc2lvbi4NCg0KUGxlYXNlIHB1
+bGwuDQoNClRoYW5rcyENCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCBhMTQx
+NTAwNjEzODhmNGJjYmYzYzM0OTlmMWIxMmUzZjBkNWMwZTdiOg0KDQogIGxpbnV4LWZpcm13YXJl
+OiBGaXggdGhlIGZpbGVuYW1lIGZvciBXc1AgdG8gYWxpZ24gd2l0aCBkZXZpY2UgSFdfVkFSSUFO
+VCAoMjAxNi0wNy0wOCAxODowNzowMiAtMDcwMCkNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0
+IHJlcG9zaXRvcnkgYXQ6DQoNCiAgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9r
+ZXJuZWwvZ2l0L2l3bHdpZmkvbGludXgtZmlybXdhcmUuZ2l0IHRhZ3MvaXdsd2lmaS1mdy0yMDE2
+LTA3LTEwDQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byBiMjI0YmQwYzc3MzcwYTU4
+Yjk5NmE3YmUyYzMyMmI5ZmI0ODQ5Mzk4Og0KDQogIGl3bHdpZmk6IGFkZCBuZXcgLTIyIGZpcm13
+YXJlIGZvciA3MjY1RCBhbmQgdXAgKDIwMTYtMDctMTAgMDk6NDE6MTQgKzAzMDApDQoNCi0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0NClJlbGVhc2UgLTIxLnVjb2RlIGZvciA3MjY1RCBhbmQgdXANClJlbGVhc2UgLTE3LnVjb2Rl
+IGZvciA3MjYwIC8gNzI2NSBhbmQgMzE2MA0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQpFbW1hbnVlbCBHcnVtYmFjaCAo
+Mik6DQogICAgICBpd2x3aWZpOiBhZGQgbmV3IC0xNyBmaXJtd2FyZSBmb3IgaXdsbXZtIGRldmlj
+ZXMNCiAgICAgIGl3bHdpZmk6IGFkZCBuZXcgLTIyIGZpcm13YXJlIGZvciA3MjY1RCBhbmQgdXAN
+Cg0KIFdIRU5DRSAgICAgICAgICAgICAgICAgfCAgMjQgKysrKysrKysrKysrKysrKysrKysrKysr
+DQogaXdsd2lmaS0zMTYwLTE3LnVjb2RlICB8IEJpbiAwIC0+IDkxODI2OCBieXRlcw0KIGl3bHdp
+ZmktMzE2OC0yMi51Y29kZSAgfCBCaW4gMCAtPiAxMDI4MDMyIGJ5dGVzDQogaXdsd2lmaS03MjYw
+LTE3LnVjb2RlICB8IEJpbiAwIC0+IDEwNDkzNDAgYnl0ZXMNCiBpd2x3aWZpLTcyNjUtMTcudWNv
+ZGUgIHwgQmluIDAgLT4gMTE4MDQxMiBieXRlcw0KIGl3bHdpZmktNzI2NUQtMTcudWNvZGUgfCBC
+aW4gMCAtPiAxMzgzNjA0IGJ5dGVzDQogaXdsd2lmaS03MjY1RC0yMi51Y29kZSB8IEJpbiAwIC0+
+IDEwMjgzMTYgYnl0ZXMNCiBpd2x3aWZpLTgwMDBDLTIyLnVjb2RlIHwgQmluIDAgLT4gMjEyMDg2
+MCBieXRlcw0KIGl3bHdpZmktODI2NS0yMi51Y29kZSAgfCBCaW4gMCAtPiAxODExOTg0IGJ5dGVz
+DQogOSBmaWxlcyBjaGFuZ2VkLCAyNCBpbnNlcnRpb25zKCspDQogY3JlYXRlIG1vZGUgMTAwNjQ0
+IGl3bHdpZmktMzE2MC0xNy51Y29kZQ0KIGNyZWF0ZSBtb2RlIDEwMDY0NCBpd2x3aWZpLTMxNjgt
+MjIudWNvZGUNCiBjcmVhdGUgbW9kZSAxMDA2NDQgaXdsd2lmaS03MjYwLTE3LnVjb2RlDQogY3Jl
+YXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmktNzI2NS0xNy51Y29kZQ0KIGNyZWF0ZSBtb2RlIDEwMDY0
+NCBpd2x3aWZpLTcyNjVELTE3LnVjb2RlDQogY3JlYXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmktNzI2
+NUQtMjIudWNvZGUNCiBjcmVhdGUgbW9kZSAxMDA2NDQgaXdsd2lmaS04MDAwQy0yMi51Y29kZQ0K
+IGNyZWF0ZSBtb2RlIDEwMDY0NCBpd2x3aWZpLTgyNjUtMjIudWNvZGUNCg0KZGlmZiAtLWdpdCBh
+L1dIRU5DRSBiL1dIRU5DRQ0KaW5kZXggYzNkOThmNi4uNGM0MWYyMSAxMDA2NDQNCi0tLSBhL1dI
+RU5DRQ0KKysrIGIvV0hFTkNFDQpAQCAtODQ4LDYgKzg0OCw5IEBAIFZlcnNpb246IDI1LjMwLjEz
+LjANCiBGaWxlOiBpd2x3aWZpLTcyNjAtMTYudWNvZGUNCiBWZXJzaW9uIDE2LjI0MjQxNC4wDQog
+DQorRmlsZTogaXdsd2lmaS03MjYwLTE3LnVjb2RlDQorVmVyc2lvbiAxNy4zNTI3MzguMA0KKw0K
+IEZpbGU6IGl3bHdpZmktMzE2MC03LnVjb2RlDQogVmVyc2lvbjogMjIuMS43LjANCiANCkBAIC04
+NjksNiArODcyLDkgQEAgVmVyc2lvbjogMjUuMzAuMTMuMA0KIEZpbGU6IGl3bHdpZmktMzE2MC0x
+Ni51Y29kZQ0KIFZlcnNpb24gMTYuMjQyNDE0LjANCiANCitGaWxlOiBpd2x3aWZpLTMxNjAtMTcu
+dWNvZGUNCitWZXJzaW9uIDE3LjM1MjczOC4wDQorDQogRmlsZTogaXdsd2lmaS03MjY1LTgudWNv
+ZGUNCiBWZXJzaW9uOiAyMi4yNC44LjANCiANCkBAIC04ODcsNiArODkzLDkgQEAgVmVyc2lvbjog
+MjUuMzAuMTMuMA0KIEZpbGU6IGl3bHdpZmktNzI2NS0xNi51Y29kZQ0KIFZlcnNpb24gMTYuMjQy
+NDE0LjANCiANCitGaWxlOiBpd2x3aWZpLTcyNjUtMTcudWNvZGUNCitWZXJzaW9uIDE3LjM1Mjcz
+OC4wDQorDQogRmlsZTogaXdsd2lmaS03MjY1RC0xMC51Y29kZQ0KIFZlcnNpb246IDIzLjE1LjEw
+LjANCiANCkBAIC04OTksMTIgKzkwOCwyMSBAQCBWZXJzaW9uOiAyNS4zMC4xMy4wDQogRmlsZTog
+aXdsd2lmaS03MjY1RC0xNi51Y29kZQ0KIFZlcnNpb24gMTYuMjQyNDE0LjANCiANCitGaWxlOiBp
+d2x3aWZpLTcyNjVELTE3LnVjb2RlDQorVmVyc2lvbiAxNy4zNTI3MzguMA0KKw0KIEZpbGU6IGl3
+bHdpZmktNzI2NUQtMjEudWNvZGUNCiBWZXJzaW9uIDIxLjMwMjgwMC4wDQogDQorRmlsZTogaXds
+d2lmaS03MjY1RC0yMi51Y29kZQ0KK1ZlcnNpb24gMjIuMzYxNDc2LjANCisNCiBGaWxlOiBpd2x3
+aWZpLTMxNjgtMjEudWNvZGUNCiBWZXJzaW9uIDIxLjMwMjgwMC4wDQogDQorRmlsZTogaXdsd2lm
+aS0zMTY4LTIyLnVjb2RlDQorVmVyc2lvbiAyMi4zNjE0NzYuMA0KKw0KIEZpbGU6IGl3bHdpZmkt
+ODAwMEMtMTMudWNvZGUNCiBWZXJzaW9uOiAyNS4zMC4xMy4wDQogDQpAQCAtOTE0LDkgKzkzMiwx
+NSBAQCBWZXJzaW9uIDE2LjI0MjQxNC4wDQogRmlsZTogaXdsd2lmaS04MDAwQy0yMS51Y29kZQ0K
+IFZlcnNpb24gMjEuMzAyODAwLjANCiANCitGaWxlOiBpd2x3aWZpLTgwMDBDLTIyLnVjb2RlDQor
+VmVyc2lvbiAyMi4zNjE0NzYuMA0KKw0KIEZpbGU6IGl3bHdpZmktODI2NS0yMS51Y29kZQ0KIFZl
+cnNpb24gMjEuMzAyODAwLjANCiANCitGaWxlOiBpd2x3aWZpLTgyNjUtMjIudWNvZGUNCitWZXJz
+aW9uIDIyLjM2MTQ3Ni4wDQorDQogTGljZW5jZTogUmVkaXN0cmlidXRhYmxlLiBTZWUgTElDRU5D
+RS5pd2x3aWZpX2Zpcm13YXJlIGZvciBkZXRhaWxzDQogDQogQWxzbyBhdmFpbGFibGUgZnJvbSBo
+dHRwOi8vd2lyZWxlc3Mua2VybmVsLm9yZy9lbi91c2Vycy9Ecml2ZXJzL2l3bHdpZmkjRmlybXdh
+cmUNCmRpZmYgLS1naXQgYS9pd2x3aWZpLTMxNjAtMTcudWNvZGUgYi9pd2x3aWZpLTMxNjAtMTcu
+dWNvZGUNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwLi5lNThmNzE1DQpCaW5h
+cnkgZmlsZXMgL2Rldi9udWxsIGFuZCBiL2l3bHdpZmktMzE2MC0xNy51Y29kZSBkaWZmZXINCmRp
+ZmYgLS1naXQgYS9pd2x3aWZpLTMxNjgtMjIudWNvZGUgYi9pd2x3aWZpLTMxNjgtMjIudWNvZGUN
+Cm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwLi5kOTY5YWVkDQpCaW5hcnkgZmls
+ZXMgL2Rldi9udWxsIGFuZCBiL2l3bHdpZmktMzE2OC0yMi51Y29kZSBkaWZmZXINCmRpZmYgLS1n
+aXQgYS9pd2x3aWZpLTcyNjAtMTcudWNvZGUgYi9pd2x3aWZpLTcyNjAtMTcudWNvZGUNCm5ldyBm
+aWxlIG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwLi42ZjVkNzEzDQpCaW5hcnkgZmlsZXMgL2Rl
+di9udWxsIGFuZCBiL2l3bHdpZmktNzI2MC0xNy51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9p
+d2x3aWZpLTcyNjUtMTcudWNvZGUgYi9pd2x3aWZpLTcyNjUtMTcudWNvZGUNCm5ldyBmaWxlIG1v
+ZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwLi5mMmJmMzBlDQpCaW5hcnkgZmlsZXMgL2Rldi9udWxs
+IGFuZCBiL2l3bHdpZmktNzI2NS0xNy51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZp
+LTcyNjVELTE3LnVjb2RlIGIvaXdsd2lmaS03MjY1RC0xNy51Y29kZQ0KbmV3IGZpbGUgbW9kZSAx
+MDA2NDQNCmluZGV4IDAwMDAwMDAuLjY2OTQwYzQNCkJpbmFyeSBmaWxlcyAvZGV2L251bGwgYW5k
+IGIvaXdsd2lmaS03MjY1RC0xNy51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTcy
+NjVELTIyLnVjb2RlIGIvaXdsd2lmaS03MjY1RC0yMi51Y29kZQ0KbmV3IGZpbGUgbW9kZSAxMDA2
+NDQNCmluZGV4IDAwMDAwMDAuLjI2Y2ExYmQNCkJpbmFyeSBmaWxlcyAvZGV2L251bGwgYW5kIGIv
+aXdsd2lmaS03MjY1RC0yMi51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTgwMDBD
+LTIyLnVjb2RlIGIvaXdsd2lmaS04MDAwQy0yMi51Y29kZQ0KbmV3IGZpbGUgbW9kZSAxMDA2NDQN
+CmluZGV4IDAwMDAwMDAuLjkzYTgyOGINCkJpbmFyeSBmaWxlcyAvZGV2L251bGwgYW5kIGIvaXds
+d2lmaS04MDAwQy0yMi51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTgyNjUtMjIu
+dWNvZGUgYi9pd2x3aWZpLTgyNjUtMjIudWNvZGUNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRl
+eCAwMDAwMDAwLi4zZGJlYjgzDQpCaW5hcnkgZmlsZXMgL2Rldi9udWxsIGFuZCBiL2l3bHdpZmkt
+ODI2NS0yMi51Y29kZSBkaWZmZXI=
