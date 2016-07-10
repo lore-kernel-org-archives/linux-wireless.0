@@ -1,70 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42338 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751373AbcGUIGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 04:06:04 -0400
-Date: Thu, 21 Jul 2016 10:05:42 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>, prarit@redhat.com
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-Message-ID: <20160721080541.GB2658@redhat.com> (sfid-20160721_100610_788813_88801DE9)
-References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
- <20160721070938.GA2658@redhat.com>
- <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.134]:65147 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757207AbcGJUsx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jul 2016 16:48:53 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	mcgrof@do-not-panic.com, galak@codeaurora.org,
+	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
+	pawel.moll@arm.com, robh+dt@kernel.org, kvalo@codeaurora.org,
+	chunkeey@googlemail.com, arend.vanspriel@broadcom.com,
+	julian.calaby@gmail.com
+Subject: Re: [PATCH v4 1/3] Documentation: dt: net: add ath9k wireless device binding
+Date: Sun, 10 Jul 2016 22:52:03 +0200
+Message-ID: <1746957.vJhcHQMZVi@wuerfel> (sfid-20160710_224859_911067_3092B478)
+In-Reply-To: <20160709232834.31654-2-martin.blumenstingl@googlemail.com>
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com> <20160709232834.31654-1-martin.blumenstingl@googlemail.com> <20160709232834.31654-2-martin.blumenstingl@googlemail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 21, 2016 at 10:36:42AM +0300, Emmanuel Grumbach wrote:
-> On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> > On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
-> >> Firmware files are versioned to prevent older
-> >> driver instances to load unsupported firmware
-> >> blobs. This is reflected with a fallback logic
-> >> which attempts to load several firmware files.
-> >>
-> >> This however produced a lot of unnecessary
-> >> warnings sometimes confusing users and leading
-> >> them to rename firmware files making things even
-> >> more confusing.
-> >
-> > This happens on kernels configured with
-> > CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
-> > but also 60 seconds delay before loading next firmware version.
-> > For some reason RHEL kernel needs above config option, so this
-> > patch is very welcome from my perspective.
-> >
-> 
-> Sorry for my ignorance but how does the firmware loading work if not
-> with udev's help?
+On Sunday, July 10, 2016 1:28:32 AM CEST Martin Blumenstingl wrote:
+> +- qca,check-eeprom-endianness: When enabled, the driver checks if the
+> +                               endianness of the EEPROM (based on the two
+> +                               magic bytes at the start of the EEPROM)
+> +                               matches the host system's native endianness.
+> +                               The data will be swapped accordingly if there
+> +                               is a mismatch.
+> +                               Leaving this disabled means that the EEPROM
+> +                               data will be interpreted in the system's
+> +                               native endianness, regardless of the magic
+> +                               bytes.
+> +                               Enable this option only when the magic bytes
+> +                               are known to indicate the correct endianness
+> +                               of the EEPROM data, because otherwise the
+> +                               EEPROM data may be swapped and thus may be
+> +                               parsed incorrectly.
 
-I'm not sure exactly, but I think kernel VFS layer is capable to copy
-file data directly from mounted filesystem without user space helper.
+Defining properties in terms of "native" endianess is usually not a good
+idea, as some architectures (ARMv6+, PowerPC, ...) allow running either
+big-endian or little-endian without changing the endianess of device
+registers in the process.
 
-> As you can imagine, iwlwifi is suffering from the
-> same problem and I would be interested in applying the same change,
-> but I'd love to understand a bit more :)
+It's better to document the property as defaulting to a specific endianess
+unless you have an override or the autodetection flag, regardless of
+the CPU endianess.
 
-Yes, iwlwifi (and some other drivers) suffer from this. However this
-happen when the newest firmware version is not installed on the system
-and CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled. What I suppose
-it's not common.
-
-I started to see this currently, because that option was enabled on 
-RHEL kernel. BTW: I think Prarit iwlwifi thermal_zone problem was
-happened because of that, i.e. thermal device was not functional
-because f/w wasn't loaded due to big delay.
-
-I'm not sure if replacing to request_firmware_direct() is a good
-fix though. For example I can see this problem also on brcmfmac, which
-use request_firmware_nowait(). I think I would rather prefer special
-helper for firmware drivers that needs user helper and have
-request_firmware() be direct as default.
-
-Stanislaw
+	Arnd
