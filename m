@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34503 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751454AbcGVOI2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 10:08:28 -0400
-Received: by mail-pf0-f196.google.com with SMTP id g202so7384855pfb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 07:08:28 -0700 (PDT)
-From: Wei Yongjun <weiyj.lk@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, "Andrew F. Davis" <afd@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Uri Mashiach <uri.mashiach@compulab.co.il>,
-	Rob Herring <robh@kernel.org>, "Reizer, Eyal" <eyalr@ti.com>
-Cc: Wei Yongjun <weiyj.lk@gmail.com>, linux-wireless@vger.kernel.org
-Subject: [PATCH -next] wlcore: spi: fix non static symbol warning
-Date: Fri, 22 Jul 2016 14:08:08 +0000
-Message-Id: <1469196488-21050-1-git-send-email-weiyj.lk@gmail.com> (sfid-20160722_160832_217954_4BE2B40B)
+Received: from mga09.intel.com ([134.134.136.24]:16949 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756887AbcGJLFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jul 2016 07:05:32 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Niklas Sombert <niklas@ytvwld.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>
+Subject: RE: Problem: iwlwifi: Microcode SW error detected. Restarting
+ 0x2000000
+Date: Sun, 10 Jul 2016 11:05:28 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB346689061@hasmsx107.ger.corp.intel.com> (sfid-20160710_130536_020472_71ED948C)
+References: <57820E4A.3010102@ytvwld.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB346688F92@hasmsx107.ger.corp.intel.com>
+ <57822467.30500@ytvwld.de>
+In-Reply-To: <57822467.30500@ytvwld.de>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes the following sparse warning:
-
-drivers/net/wireless/ti/wlcore/spi.c:87:34: warning:
- symbol 'wilink_data' was not declared. Should it be static?
-
-Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
----
- drivers/net/wireless/ti/wlcore/spi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index 6d24040..0ed526e 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -84,7 +84,7 @@ struct wilink_familiy_data {
- 	char name[8];
- };
- 
--const struct wilink_familiy_data *wilink_data;
-+static const struct wilink_familiy_data *wilink_data;
- 
- static const struct wilink_familiy_data wl18xx_data = {
- 	.name = "wl18xx",
-
+PiANCj4gRW1tYW51ZWwgR3J1bWJhY2ggd3JvdGU6DQo+ID4gQ2FuIHlvdSBwbGVhc2UgdHJ5IHRo
+ZSBuZXdlc3QgZmlybXdhcmU/DQo+ID4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4
+L2tlcm5lbC9naXQvaXdsd2lmaS9saW51eC0NCj4gZmlybXdhcmUuZ2l0L2NvbW1pdC8/aWQ9NzIy
+NjY4NDZmYWE3OGI5MzlhODY0ODQyYTJhYTZlY2Q4ZmU2OTg5Yg0KPiANCj4gWWVzLCBJJ3ZlIHRy
+aWVkIHRoZSBuZXdlc3QgZmlybXdhcmUuIFRoZSBwcm9ibGVtIHN0aWxsIHBlcnNpc3RzLg0KPiAN
+Cj4gPiBZb3Ugc2hvdWxkIHBpY2sgdXAgdGhlIC0xNy51Y29kZSB2ZXJzaW9uLg0KPiA+IE5vdGUg
+dGhhdCBJIGNhbid0IGtub3cgaWYgeW91ciBkZXZpY2UgaXMgNzI2NSBvciA3MjY1RC4gSW4gYWJs
+ZSB0byBkZXRlcm1pbmUsDQo+IHBsZWFzZSBjaGVjazoNCj4gPg0KPiBodHRwczovL3dpcmVsZXNz
+Lndpa2kua2VybmVsLm9yZy9lbi91c2Vycy9kcml2ZXJzL2l3bHdpZmkjYW5kXzcyNjVfc3VwcG9y
+dA0KPiANCj4gWWVzLCBpdCdzIGEgNzI2NUQuDQoNCkluIHRoYXQgY2FzZSwgcGxlYXNlIHRyeSAt
+MjEudWNvZGUgYW5kIHNlbmQgbWUgYWdhaW4gdGhlIG91dHB1dCBvZiB0aGUgZmlybXdhcmUgZXJy
+b3IuDQoNCg0KPiANCj4gPiBUaGFuayB5b3UhDQo+IA0KPiBUaGFuayB5b3UuDQoNCg==
