@@ -1,52 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:65147 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757207AbcGJUsx (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:37917 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756723AbcGJSnB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2016 16:48:53 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	mcgrof@do-not-panic.com, galak@codeaurora.org,
-	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
-	pawel.moll@arm.com, robh+dt@kernel.org, kvalo@codeaurora.org,
-	chunkeey@googlemail.com, arend.vanspriel@broadcom.com,
-	julian.calaby@gmail.com
-Subject: Re: [PATCH v4 1/3] Documentation: dt: net: add ath9k wireless device binding
-Date: Sun, 10 Jul 2016 22:52:03 +0200
-Message-ID: <1746957.vJhcHQMZVi@wuerfel> (sfid-20160710_224859_911067_3092B478)
-In-Reply-To: <20160709232834.31654-2-martin.blumenstingl@googlemail.com>
-References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com> <20160709232834.31654-1-martin.blumenstingl@googlemail.com> <20160709232834.31654-2-martin.blumenstingl@googlemail.com>
+	Sun, 10 Jul 2016 14:43:01 -0400
+Received: by mail-wm0-f41.google.com with SMTP id o80so24984160wme.1
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jul 2016 11:43:00 -0700 (PDT)
+Subject: Re: [RFC v2 1/3] nl80211: Add nl80211_notify_iface
+To: Marcel Holtmann <marcel@holtmann.org>,
+	Denis Kenzior <denkenz@gmail.com>
+References: <1468044967-9236-1-git-send-email-denkenz@gmail.com>
+ <1468044967-9236-2-git-send-email-denkenz@gmail.com>
+ <1601C89F-62D4-42F5-B5A4-2C9E2F02A673@holtmann.org>
+Cc: linux-wireless@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <ab4b33b0-cc34-80d1-49a0-51846bb7c7f2@broadcom.com> (sfid-20160710_204310_681031_E4F816E5)
+Date: Sun, 10 Jul 2016 20:42:50 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1601C89F-62D4-42F5-B5A4-2C9E2F02A673@holtmann.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, July 10, 2016 1:28:32 AM CEST Martin Blumenstingl wrote:
-> +- qca,check-eeprom-endianness: When enabled, the driver checks if the
-> +                               endianness of the EEPROM (based on the two
-> +                               magic bytes at the start of the EEPROM)
-> +                               matches the host system's native endianness.
-> +                               The data will be swapped accordingly if there
-> +                               is a mismatch.
-> +                               Leaving this disabled means that the EEPROM
-> +                               data will be interpreted in the system's
-> +                               native endianness, regardless of the magic
-> +                               bytes.
-> +                               Enable this option only when the magic bytes
-> +                               are known to indicate the correct endianness
-> +                               of the EEPROM data, because otherwise the
-> +                               EEPROM data may be swapped and thus may be
-> +                               parsed incorrectly.
 
-Defining properties in terms of "native" endianess is usually not a good
-idea, as some architectures (ARMv6+, PowerPC, ...) allow running either
-big-endian or little-endian without changing the endianess of device
-registers in the process.
 
-It's better to document the property as defaulting to a specific endianess
-unless you have an override or the autodetection flag, regardless of
-the CPU endianess.
+On 9-7-2016 16:05, Marcel Holtmann wrote:
+> Hi Denis,
+> 
+>> This function emits NL80211_CMD_NEW_INTERFACE or
+>> NL80211_CMD_DEL_INTERFACE events.  This is meant to be used by the core
+>> to notify userspace applications such as wpa_supplicant when a netdev
+>> related to a wireless device has been added or removed.
+>>
+>> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+>> ---
+>> net/wireless/nl80211.c | 28 ++++++++++++++++++++++++++++
+>> net/wireless/nl80211.h |  3 +++
+>> 2 files changed, 31 insertions(+)
+>>
+>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+>> index f39fd4d..da03e17 100644
+>> --- a/net/wireless/nl80211.c
+>> +++ b/net/wireless/nl80211.c
+>> @@ -11855,6 +11855,34 @@ void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
+>> 				NL80211_MCGRP_CONFIG, GFP_KERNEL);
+>> }
+>>
+>> +void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
+>> +				struct wireless_dev *wdev,
+>> +				enum nl80211_commands cmd)
+>> +{
+>> +	struct sk_buff *msg;
+>> +	bool removal;
+>> +
+>> +	WARN_ON(cmd != NL80211_CMD_NEW_INTERFACE &&
+>> +		cmd != NL80211_CMD_DEL_INTERFACE);
+> 
+> I would assume that BUILD_BUG_ON does a way job better here.
 
-	Arnd
+Why? I don't see why the condition would be compile-time constant as it
+can be called from outside nl80211.c.
+
+Regards,
+Arend
+
+> Regards
+> 
+> Marcel
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
