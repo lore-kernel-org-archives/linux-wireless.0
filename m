@@ -1,107 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33192 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753313AbcGFKlT (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:36245 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757207AbcGJUzM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:41:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:39:59 +0300
-Message-Id: <1467801651-1816-4-git-send-email-luca@coelho.fi> (sfid-20160706_124130_084754_D604EB34)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 04/56] iwlwifi: pcie: unify restock calls on init
+	Sun, 10 Jul 2016 16:55:12 -0400
+MIME-Version: 1.0
+In-Reply-To: <1746957.vJhcHQMZVi@wuerfel>
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
+ <20160709232834.31654-1-martin.blumenstingl@googlemail.com>
+ <20160709232834.31654-2-martin.blumenstingl@googlemail.com> <1746957.vJhcHQMZVi@wuerfel>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Sun, 10 Jul 2016 22:54:50 +0200
+Message-ID: <CAFBinCBbzMM0Pz8s444YE+NSN+035+o8PtNBoUn4v8yPMzG9Mw@mail.gmail.com> (sfid-20160710_225516_320502_D7B76F00)
+Subject: Re: [PATCH v4 1/3] Documentation: dt: net: add ath9k wireless device binding
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	mcgrof@do-not-panic.com, galak@codeaurora.org,
+	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
+	pawel.moll@arm.com, robh+dt@kernel.org, kvalo@codeaurora.org,
+	chunkeey@googlemail.com, arend.vanspriel@broadcom.com,
+	julian.calaby@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
-
-Currently code calls restock for mq devices during the init
-function, unlike sq where restock is called after init.
-This causes an harmless but alarming deadlock warning from
-lockdep, to fix this - unify the init code.
-Rename the restock functions while at it.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 28 +++++++++++++---------------
- 1 file changed, 13 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 70e39e4..8d4a60d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -233,10 +233,10 @@ static void iwl_pcie_rxq_check_wrptr(struct iwl_trans *trans)
- }
- 
- /*
-- * iwl_pcie_rxq_mq_restock - restock implementation for multi-queue rx
-+ * iwl_pcie_rxmq_restock - restock implementation for multi-queue rx
-  */
--static void iwl_pcie_rxq_mq_restock(struct iwl_trans *trans,
--				    struct iwl_rxq *rxq)
-+static void iwl_pcie_rxmq_restock(struct iwl_trans *trans,
-+				  struct iwl_rxq *rxq)
- {
- 	struct iwl_rx_mem_buffer *rxb;
- 
-@@ -281,10 +281,10 @@ static void iwl_pcie_rxq_mq_restock(struct iwl_trans *trans,
- }
- 
- /*
-- * iwl_pcie_rxq_sq_restock - restock implementation for single queue rx
-+ * iwl_pcie_rxsq_restock - restock implementation for single queue rx
-  */
--static void iwl_pcie_rxq_sq_restock(struct iwl_trans *trans,
--				    struct iwl_rxq *rxq)
-+static void iwl_pcie_rxsq_restock(struct iwl_trans *trans,
-+				  struct iwl_rxq *rxq)
- {
- 	struct iwl_rx_mem_buffer *rxb;
- 
-@@ -343,9 +343,9 @@ static
- void iwl_pcie_rxq_restock(struct iwl_trans *trans, struct iwl_rxq *rxq)
- {
- 	if (trans->cfg->mq_rx_supported)
--		iwl_pcie_rxq_mq_restock(trans, rxq);
-+		iwl_pcie_rxmq_restock(trans, rxq);
- 	else
--		iwl_pcie_rxq_sq_restock(trans, rxq);
-+		iwl_pcie_rxsq_restock(trans, rxq);
- }
- 
- /*
-@@ -828,9 +828,6 @@ static void iwl_pcie_rx_mq_hw_init(struct iwl_trans *trans)
- 		enabled |= BIT(i) | BIT(i + 16);
- 	}
- 
--	/* restock default queue */
--	iwl_pcie_rxq_mq_restock(trans, &trans_pcie->rxq[0]);
--
- 	/*
- 	 * Enable Rx DMA
- 	 * Rx buffer size 4 or 8k or 12k
-@@ -960,12 +957,13 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
- 	}
- 
- 	iwl_pcie_rxq_alloc_rbs(trans, GFP_KERNEL, def_rxq);
--	if (trans->cfg->mq_rx_supported) {
-+
-+	if (trans->cfg->mq_rx_supported)
- 		iwl_pcie_rx_mq_hw_init(trans);
--	} else {
--		iwl_pcie_rxq_sq_restock(trans, def_rxq);
-+	else
- 		iwl_pcie_rx_hw_init(trans, def_rxq);
--	}
-+
-+	iwl_pcie_rxq_restock(trans, def_rxq);
- 
- 	spin_lock(&def_rxq->lock);
- 	iwl_pcie_rxq_inc_wr_ptr(trans, def_rxq);
--- 
-2.8.1
-
+On Sun, Jul 10, 2016 at 10:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Sunday, July 10, 2016 1:28:32 AM CEST Martin Blumenstingl wrote:
+>> +- qca,check-eeprom-endianness: When enabled, the driver checks if the
+>> +                               endianness of the EEPROM (based on the two
+>> +                               magic bytes at the start of the EEPROM)
+>> +                               matches the host system's native endianness.
+>> +                               The data will be swapped accordingly if there
+>> +                               is a mismatch.
+>> +                               Leaving this disabled means that the EEPROM
+>> +                               data will be interpreted in the system's
+>> +                               native endianness, regardless of the magic
+>> +                               bytes.
+>> +                               Enable this option only when the magic bytes
+>> +                               are known to indicate the correct endianness
+>> +                               of the EEPROM data, because otherwise the
+>> +                               EEPROM data may be swapped and thus may be
+>> +                               parsed incorrectly.
+>
+> Defining properties in terms of "native" endianess is usually not a good
+> idea, as some architectures (ARMv6+, PowerPC, ...) allow running either
+> big-endian or little-endian without changing the endianess of device
+> registers in the process.
+>
+> It's better to document the property as defaulting to a specific endianess
+> unless you have an override or the autodetection flag, regardless of
+> the CPU endianess.
+ath9k reads the data from the EEPROM into memory. With that property
+disabled ath9k simply assumes that the endianness of the values in the
+EEPROM are having the correct endianness for the host system (in other
+words: no swap is being applied).
+I am not sure I understand you correctly, but isn't what you are
+explaining an issue in the ath9k code, rather than in this
+documentation?
