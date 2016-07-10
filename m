@@ -1,94 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34525 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751685AbcGPRVg (ORCPT
+Received: from betelgeuse.uberspace.de ([185.26.156.37]:35908 "EHLO
+	betelgeuse.uberspace.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753273AbcGJMzT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2016 13:21:36 -0400
-Received: by mail-wm0-f68.google.com with SMTP id q128so6411471wma.1
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2016 10:21:36 -0700 (PDT)
-From: Alex Briskin <br.shurik@gmail.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: Alex Briskin <br.shurik@gmail.com>
-Subject: [PATCH 3/3 v5] mac80211: Refactor ieee80211_iface_work
-Date: Sat, 16 Jul 2016 20:21:27 +0300
-Message-Id: <1468689687-18943-3-git-send-email-br.shurik@gmail.com> (sfid-20160716_192147_458461_92133FBC)
-In-Reply-To: <1468689687-18943-1-git-send-email-br.shurik@gmail.com>
-References: <1468689687-18943-1-git-send-email-br.shurik@gmail.com>
+	Sun, 10 Jul 2016 08:55:19 -0400
+Subject: Re: Problem: iwlwifi: Microcode SW error detected. Restarting
+ 0x2000000
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+References: <57820E4A.3010102@ytvwld.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB346688F92@hasmsx107.ger.corp.intel.com>
+ <57822467.30500@ytvwld.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB346689061@hasmsx107.ger.corp.intel.com>
+ <57822F84.7060103@ytvwld.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB3466890C6@hasmsx107.ger.corp.intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>
+From: Niklas Sombert <niklas@ytvwld.de>
+Message-ID: <57824594.7030202@ytvwld.de> (sfid-20160710_145526_670406_5A13E60F)
+Date: Sun, 10 Jul 2016 14:54:44 +0200
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3466890C6@hasmsx107.ger.corp.intel.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="d8h4trT6CnpCHth3iGUITxab3PnqM44ot"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Added ieee80211_iface_work_handle_vif_type function. Moved the code that
-handles sdata->vif.type from ieee80211_iface_work to the function.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--d8h4trT6CnpCHth3iGUITxab3PnqM44ot
+Content-Type: multipart/mixed; boundary="jkwGRvtH7eMXX7tgj8dPA0hpATCHC1wKb"
+From: Niklas Sombert <niklas@ytvwld.de>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+ linuxwifi <linuxwifi@intel.com>
+Message-ID: <57824594.7030202@ytvwld.de>
+Subject: Re: Problem: iwlwifi: Microcode SW error detected. Restarting
+ 0x2000000
+References: <57820E4A.3010102@ytvwld.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB346688F92@hasmsx107.ger.corp.intel.com>
+ <57822467.30500@ytvwld.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB346689061@hasmsx107.ger.corp.intel.com>
+ <57822F84.7060103@ytvwld.de>
+ <0BA3FCBA62E2DC44AF3030971E174FB3466890C6@hasmsx107.ger.corp.intel.com>
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB3466890C6@hasmsx107.ger.corp.intel.com>
 
-Signed-off-by: Alex Briskin <br.shurik@gmail.com>
----
- net/mac80211/iface.c | 44 ++++++++++++++++++++++++--------------------
- 1 file changed, 24 insertions(+), 20 deletions(-)
+--jkwGRvtH7eMXX7tgj8dPA0hpATCHC1wKb
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index c185801..3643430 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1323,6 +1323,27 @@ static int ieee80211_iface_work_handle_frame_control(struct sk_buff *skb,
- 	return 0;
- }
- 
-+static void ieee80211_iface_work_handle_vif_type(struct sk_buff *skb,
-+					 struct ieee80211_sub_if_data *sdata)
-+{
-+	switch (sdata->vif.type) {
-+	case NL80211_IFTYPE_STATION:
-+		ieee80211_sta_rx_queued_mgmt(sdata, skb);
-+		break;
-+	case NL80211_IFTYPE_ADHOC:
-+		ieee80211_ibss_rx_queued_mgmt(sdata, skb);
-+		break;
-+	case NL80211_IFTYPE_MESH_POINT:
-+		if (!ieee80211_vif_is_mesh(&sdata->vif))
-+			break;
-+		ieee80211_mesh_rx_queued_mgmt(sdata, skb);
-+		break;
-+	default:
-+		WARN(1, "frame for unexpected interface type");
-+		break;
-+	}
-+}
-+
- static void ieee80211_iface_work(struct work_struct *work)
- {
- 	struct ieee80211_sub_if_data *sdata =
-@@ -1341,28 +1362,11 @@ static void ieee80211_iface_work(struct work_struct *work)
- 
- 	/* first process frames */
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
--		if (!ieee80211_iface_work_handle_pkt_type(skb, sdata)) {
--			goto free_skb;
--		} else if (!ieee80211_iface_work_handle_frame_control(skb, sdata)) {
--			goto free_skb;
--		} else switch (sdata->vif.type) {
--		case NL80211_IFTYPE_STATION:
--			ieee80211_sta_rx_queued_mgmt(sdata, skb);
--			break;
--		case NL80211_IFTYPE_ADHOC:
--			ieee80211_ibss_rx_queued_mgmt(sdata, skb);
--			break;
--		case NL80211_IFTYPE_MESH_POINT:
--			if (!ieee80211_vif_is_mesh(&sdata->vif))
--				break;
--			ieee80211_mesh_rx_queued_mgmt(sdata, skb);
--			break;
--		default:
--			WARN(1, "frame for unexpected interface type");
--			break;
-+		if (ieee80211_iface_work_handle_pkt_type(skb, sdata) ||
-+		    ieee80211_iface_work_handle_frame_control(skb, sdata)) {
-+			ieee80211_iface_work_handle_vif_type(skb, sdata);
- 		}
- 
--free_skb:
- 		kfree_skb(skb);
- 	}
- 
--- 
-2.7.4
+Emmanuel Grumbach wrote:
+> Thanks -this is the same bug as https://bugzilla.kernel.org/show_bug.cg=
+i?id=3D114501 then.
+> Seems really Bluetooth related.
 
+Yes, I can confirm that this problem doesn't occur when I rename
+/lib/firmware/intel/ibt-hw-37.8.10-fw-1.10.3.11.e.bseq to something else.=
+
+
+
+--jkwGRvtH7eMXX7tgj8dPA0hpATCHC1wKb--
+
+--d8h4trT6CnpCHth3iGUITxab3PnqM44ot
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJXgkWdAAoJEIOFK7hVFsHHudUH/2htTSV9GdwTByxY/CHil6Ix
+2v3BdqDNDa3WVcd97rTsqG2tOcUxo2xMZm4mpeZSAVWwj2VujwHx9bLnhnJxqpfN
+pwlHYirCDa63BQvQamTnFftZBjFb/jkmARbkNKxcJB1249aCaa82wnUqHztuQfku
+eS3V41jjGmNtraR4aYFyvYwzcgIHFH/+IR9S1iYPrCcFitcwrwOLQHgMcOiV5A6f
+W423AtZP5PY910kwW5OXDkD4La28UCkiy0DK1ct0XNZVV35iEIYEE9kgZJQT5lDr
+qzdHXHW5TEc4X1FVjPeKcnTZkFcMKtp2dkIaChqUVOzubP7BAiAkvvIkjKo8jzA=
+=FP/9
+-----END PGP SIGNATURE-----
+
+--d8h4trT6CnpCHth3iGUITxab3PnqM44ot--
