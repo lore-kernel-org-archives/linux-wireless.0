@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54859 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbcGaJTr (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:38441 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757207AbcGJU5A convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jul 2016 05:19:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: russianneuromancer@ya.ru
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: Dell Venue 8 Pro "Dell Wireless" (Atheros 6k) chipset with SDIO ID 0271:0418 not recognized/supported
-References: <14140188.nOOhQX7Q2z@laptop1>
-Date: Sun, 31 Jul 2016 12:19:43 +0300
-In-Reply-To: <14140188.nOOhQX7Q2z@laptop1> (russianneuromancer@ya.ru's message
-	of "Fri, 29 Jul 2016 23:19:10 +0800")
-Message-ID: <87bn1e88r4.fsf@purkki.adurom.net> (sfid-20160731_111958_248469_F21A47C2)
+	Sun, 10 Jul 2016 16:57:00 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87inwe9wfb.fsf@miraculix.mork.no>
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
+ <20160709232834.31654-1-martin.blumenstingl@googlemail.com>
+ <20160709232834.31654-4-martin.blumenstingl@googlemail.com> <87inwe9wfb.fsf@miraculix.mork.no>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Sun, 10 Jul 2016 22:56:39 +0200
+Message-ID: <CAFBinCD0b9=o0B4_Orwe6uJfrbexr_Jf5JDctfRDmTnh3vPPug@mail.gmail.com> (sfid-20160710_225705_892659_922E3198)
+Subject: Re: [PATCH v4 3/3] ath9k: parse the device configuration from an OF node
+To: =?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+Cc: ath9k-devel@venema.h4ckr.net, devicetree@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	mcgrof@do-not-panic.com, galak@codeaurora.org,
+	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
+	pawel.moll@arm.com, robh+dt@kernel.org, kvalo@codeaurora.org,
+	chunkeey@googlemail.com, arend.vanspriel@broadcom.com,
+	julian.calaby@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-russianneuromancer@ya.ru writes:
-
-> Please look into commentary 50 from bugreport https://bugzilla.kernel.org/show_bug.cgi?id=67921#c50 
-> There is patch for enabling support of Atheros Wireless adapter in Dell Venue 8 Pro tablet.
->  
-> Please review if this possible to include this patch into upstream.
-
-Do you mean this ath6kl patch:
-
-https://github.com/AdamWill/baytrail-m/blob/master/kernel/support-Dell-OEM-chipset-found-in-Venue-8-Pro-SDIO-I.patch
-
-That looks good to me, but please submit it officially as defined in the wiki:
-
-https://wireless.wiki.kernel.org/en/users/drivers/ath6kl#hacking_on_ath6kl
-
-I also saw the comment about broken ath.git link, I fixed that now.
-
--- 
-Kalle Valo
+On Sun, Jul 10, 2016 at 2:19 AM, Bjørn Mork <bjorn@mork.no> wrote:
+> Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
+>
+>> +     if (of_property_read_bool(np, "qca,clk-25mhz"))
+>> +             ah->is_clk_25mhz = true;
+>> +
+>> +     if (of_property_read_bool(np, "qca,disable-2ghz"))
+>> +             ah->disable_2ghz = true;
+>> +
+>> +     if (of_property_read_bool(np, "qca,disable-5ghz"))
+>> +             ah->disable_5ghz = true;
+>
+> This is bike-shedding, but how about
+>
+>         ah->is_clk_25mhz = of_property_read_bool(np, "qca,clk-25mhz");
+>         ah->disable_2ghz = of_property_read_bool(np, "qca,disable-2ghz");
+>         ah->disable_5ghz = of_property_read_bool(np, "qca,disable-5ghz");
+I'm fine with either way - I'll simply adhere to the coding style that
+the ath9k devs want to use, so just let me know which one you prefer.
