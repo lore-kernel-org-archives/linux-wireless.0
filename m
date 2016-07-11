@@ -1,60 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cit-hm8-mail01.bmw-carit.de ([212.118.206.84]:33595 "EHLO
-	cit-hm8-gw01.bmw-carit.de" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757940AbcG1NKK (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34356 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753296AbcGKLZc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 09:10:10 -0400
-Subject: Re: [RFC v0 4/8] Input: goodix: use firmware_stat instead of
- completion
-To: Bastien Nocera <hadess@hadess.net>, Daniel Wagner <wagi@monom.org>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
- <1469692512-16863-5-git-send-email-wagi@monom.org>
- <1469704952.6761.142.camel@hadess.net>
- <f7dd0db5-af15-7310-ac9f-1034bdf4f592@bmw-carit.de>
- <1469708450.6761.156.camel@hadess.net>
-CC: <linux-input@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<irina.tirdea@intel.com>, <octavian.purdila@intel.com>
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-Message-ID: <d173a67b-43f7-c0d6-255b-9ce4a0fb1e00@bmw-carit.de> (sfid-20160728_151041_351809_3713B067)
-Date: Thu, 28 Jul 2016 15:10:04 +0200
-MIME-Version: 1.0
-In-Reply-To: <1469708450.6761.156.camel@hadess.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+	Mon, 11 Jul 2016 07:25:32 -0400
+Message-ID: <1468236322.25088.114.camel@coelho.fi> (sfid-20160711_132537_230474_15EE9005)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Date: Mon, 11 Jul 2016 14:25:22 +0300
+Content-Type: multipart/signed; micalg="pgp-sha256";
+	protocol="application/pgp-signature"; boundary="=-ADNZBbNKAXvDKKqNExgH"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2016-07-11
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Looking at the API, I really don't like the mixing of namespaces.
-> Either it's fw_ or it's firmware_ but not a mix of both.
 
-I agree, that was not really clever.
+--=-ADNZBbNKAXvDKKqNExgH
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-	struct fw_loading { ... }
-	__fw_loading_*()
-	fw_loading_*()
+Hi Kalle,
 
-Would that make more sense? firmware_loading_ as prefix is a bit long IMO.
+I have one more patch intended for 4.8. =C2=A0I had forgotten to bump the F=
+W
+API version that our driver is now able to load. =C2=A0I hope there is stil=
+l
+time to get it included for 4.8.
 
-> Also looks like fw_loading_start() would do nothing as the struct is
-> likely zero initialised, and FW_STATUS_LOADING == 0. Maybe you need an
-> UNSET enum member?
+Let me know if everything's fine (or not). :)
 
-Good point, I cut a corner here a bit :). In the spirit of making things 
-more clear fw_loading_start() should be used.
+Luca.
 
-> FW_STATUS_ABORT <- FW_STATUS_ABORTED, to match the adjective suffixes
-> of the other members. Ditto fw_loading_abort() which doesn't abort
-> firmware loading but sets the status.
 
-Okay.
+The following changes since commit 6f482e37b75d4e56cdb9b56ae7057f3ce67097bc=
+:
 
-Thanks a lot for the feedback.
+=C2=A0 iwlwifi: move iwl_drv to be shared across transports (2016-07-06 10:=
+37:44 +0300)
 
-cheers,
-daniel
+are available in the git repository at:
+
+=C2=A0 git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.g=
+it tags/iwlwifi-next-for-kalle-2016-07-11
+
+for you to fetch changes up to ad38844b8e00c8d33eb1d1ffb49b945e6a985e13:
+
+=C2=A0 iwlwifi: mvm: bump MAX firmware API for mvm devices (2016-07-11 14:1=
+5:38 +0300)
+
+----------------------------------------------------------------
+* bump firmware version to load newer firmwares
+
+----------------------------------------------------------------
+Luciano Coelho (1):
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: bump MAX firmware API for=
+ mvm devices
+
+=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-7000.c | 4 ++--
+=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 4 ++--
+=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
+=C2=A03 files changed, 5 insertions(+), 5 deletions(-)
+--=-ADNZBbNKAXvDKKqNExgH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJXg4IiAAoJEKFHnKIaPMX6h88P/Axt0nfmHzyoNZSMp21qh8op
+y4Cqa78fMqaePutb7gM5mcKbGkK72X3lgG8mALgdrX3ZWtHluwzmCHgQfpLM69Qs
+N9NcITUkrB73fZkB6ugEzaHG5QYSk49ON0rf3Y/ZnTO0+IRmr2NGvzMUFChYB1Hk
+KfovcPM6klOdeT+0484D9dJeUgC/LrMFt0CTS76g4Falfs1llT9cuSTnBDTCsNA0
+pXnIE2H4YH0ry/FaUcVyqBBrSXac4rL2+6p03J77oO6dAhKHla4lMDHoqXLjyNlv
+3vzfYSDpUXL5Ld23EERSYKevIy023xHzKU0/MkIY67L0JDt6uuhr6DcMplxp0Mfr
+GTyS9c1Zo7ODnoTTm8NjjpaCQRNdZ6x66LyUZJbyIn9UMS8CMQPNInUnXntnX6Bi
+I4yyzREopi9J2aXDB9fIw4Zh1X+4nLExpN/3QI6L7Jd/TnuYHznEXPX0UmKwON0N
+Vp6GHckru71Y9mgN8WvjtsL3sPl0syhKLli5DBuZVKGvW8h9ZYaZUqyY2UatxwOt
+c/xfjdeYtM0cDG4CfbE0HHzz4mnZAFry3SckUU1bZkwbR/M/biDfEv8pDSk4qbFk
+cuEwYi5uu98EBR0lGJJEA1pR5pu1u0PvI4FATH1QaqboqKzAvv5kiqRPIaLvWCyw
+/siGO13aMBc0nagMLH7P
+=Aoak
+-----END PGP SIGNATURE-----
+
+--=-ADNZBbNKAXvDKKqNExgH--
+
