@@ -1,86 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:36019 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754001AbcGSS0F (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 14:26:05 -0400
-Received: by mail-wm0-f43.google.com with SMTP id q128so28463806wma.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 11:26:04 -0700 (PDT)
-Subject: Re: [PATCH 3/4] brcmsmac: Fix invalid memcpy() size in
- brcms_c_d11hdrs_mac80211
-To: Florian Fainelli <f.fainelli@gmail.com>,
-	brcm80211-dev-list.pdl@broadcom.com
-References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
- <1468884277-18606-4-git-send-email-f.fainelli@gmail.com>
- <685abc5d-2e3d-cdce-4849-f7e5beb3309d@broadcom.com>
- <578E5864.3040309@gmail.com>
-Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
-	kvalo@codeaurora.org, hante.meuleman@broadcom.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <88b43756-d41e-e7bf-fa91-2a086ee2bce7@broadcom.com> (sfid-20160719_202610_415699_D66E58D4)
-Date: Tue, 19 Jul 2016 20:26:00 +0200
-MIME-Version: 1.0
-In-Reply-To: <578E5864.3040309@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from nbd.name ([46.4.11.11]:56427 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030415AbcGKKC4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2016 06:02:56 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 2/4] ath9k_hw: simplify ar9003_hw_per_calibration
+Date: Mon, 11 Jul 2016 12:02:46 +0200
+Message-Id: <20160711100248.68678-2-nbd@nbd.name> (sfid-20160711_120326_540491_722962E8)
+In-Reply-To: <20160711100248.68678-1-nbd@nbd.name>
+References: <20160711100248.68678-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Reduce indentation, use a variable to save a few pointer dereferences
 
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 53 +++++++++++++--------------
+ 1 file changed, 26 insertions(+), 27 deletions(-)
 
-On 19-7-2016 18:42, Florian Fainelli wrote:
-> On 07/19/2016 03:38 AM, Arend Van Spriel wrote:
->> On 19-7-2016 1:24, Florian Fainelli wrote:
->>> struct ieee80211_rts::ra is only ETH_ALEN wide, yet we attempt to copy 2
->>> * ETH_ALEN, which will potentially overrun the destination buffer.
->>
->> NACK - this is intentional. Have to admit it is a bit of trickery.
-> 
-> This seems fragile, if there is any kind of re-ordering of fields within
-> that structure your trick breaks apart.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 518e649..b9ef3d3 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -75,50 +75,49 @@ static bool ar9003_hw_per_calibration(struct ath_hw *ah,
+ 				      struct ath9k_cal_list *currCal)
+ {
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+-	/* Cal is assumed not done until explicitly set below */
+-	bool iscaldone = false;
++	const struct ath9k_percal_data *cur_caldata = currCal->calData;
+ 
+ 	/* Calibration in progress. */
+ 	if (currCal->calState == CAL_RUNNING) {
+ 		/* Check to see if it has finished. */
+-		if (!(REG_READ(ah, AR_PHY_TIMING4) & AR_PHY_TIMING4_DO_CAL)) {
++		if (REG_READ(ah, AR_PHY_TIMING4) & AR_PHY_TIMING4_DO_CAL)
++			return false;
++
++		/*
++		* Accumulate cal measures for active chains
++		*/
++		cur_caldata->calCollect(ah);
++		ah->cal_samples++;
++
++		if (ah->cal_samples >= cur_caldata->calNumSamples) {
++			unsigned int i, numChains = 0;
++			for (i = 0; i < AR9300_MAX_CHAINS; i++) {
++				if (rxchainmask & (1 << i))
++					numChains++;
++			}
++
+ 			/*
+-			* Accumulate cal measures for active chains
++			* Process accumulated data
+ 			*/
+-			currCal->calData->calCollect(ah);
+-			ah->cal_samples++;
+-
+-			if (ah->cal_samples >=
+-			    currCal->calData->calNumSamples) {
+-				unsigned int i, numChains = 0;
+-				for (i = 0; i < AR9300_MAX_CHAINS; i++) {
+-					if (rxchainmask & (1 << i))
+-						numChains++;
+-				}
++			cur_caldata->calPostProc(ah, numChains);
+ 
+-				/*
+-				* Process accumulated data
+-				*/
+-				currCal->calData->calPostProc(ah, numChains);
+-
+-				/* Calibration has finished. */
+-				caldata->CalValid |= currCal->calData->calType;
+-				currCal->calState = CAL_DONE;
+-				iscaldone = true;
+-			} else {
++			/* Calibration has finished. */
++			caldata->CalValid |= cur_caldata->calType;
++			currCal->calState = CAL_DONE;
++			return true;
++		} else {
+ 			/*
+ 			 * Set-up collection of another sub-sample until we
+ 			 * get desired number
+ 			 */
+ 			ar9003_hw_setup_calibration(ah, currCal);
+-			}
+ 		}
+-	} else if (!(caldata->CalValid & currCal->calData->calType)) {
++	} else if (!(caldata->CalValid & cur_caldata->calType)) {
+ 		/* If current cal is marked invalid in channel, kick it off */
+ 		ath9k_hw_reset_calibration(ah, currCal);
+ 	}
+ 
+-	return iscaldone;
++	return false;
+ }
+ 
+ static int ar9003_hw_calibrate(struct ath_hw *ah, struct ath9k_channel *chan,
+-- 
+2.8.4
 
-Well, that would be an 802.11 standard update and given that it would
-break legacy devices I think it is unlikely that reordering would happen
-in this case.
-
->> struct ieee80211_rts is mapped over struct d11txh which is sent to
->> hardware. The struct is used for both RTS and CTS. Transmitting CTS will
->> only fill 802.11 addr2 in struct ieee80211_rts::ra. Transmitting RTS
->> fills 802.11 addr1 in ra and 802.11 addr2 in ta using single memcpy().
->> Not very clear, but your change is not the way to go here.
-> 
-> Fair enough, as Kalle suggested, this deserves a comment explaining why,
-> I would not be surprised other people would trip over that.
-
-Agree. I am also fine with two separate memcpy() statements if that
-gives enough clarification.
-
-Regards,
-Arend
-
->>
->> Regards,
->> Arend
->>
->>> Reported-by: coverity (CID 145657)
->>> Fixes: 5b435de0d7868 ("net: wireless: add brcm80211 drivers")
->>> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
->>> ---
->>>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
->>> index c2a938b59044..59813a3666eb 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
->>> @@ -6671,7 +6671,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
->>>  			rts->frame_control = cpu_to_le16(IEEE80211_FTYPE_CTL |
->>>  							 IEEE80211_STYPE_RTS);
->>>  
->>> -			memcpy(&rts->ra, &h->addr1, 2 * ETH_ALEN);
->>> +			memcpy(&rts->ra, &h->addr1, ETH_ALEN);
->>>  		}
->>>  
->>>  		/* mainrate
->>>
-> 
-> 
