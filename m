@@ -1,55 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f182.google.com ([209.85.217.182]:34564 "EHLO
-	mail-ua0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752545AbcG2BF1 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:41608 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933858AbcGKPDM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 21:05:27 -0400
-Received: by mail-ua0-f182.google.com with SMTP id 35so51851988uap.1
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2016 18:05:26 -0700 (PDT)
+	Mon, 11 Jul 2016 11:03:12 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6BF1ZNr000959
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jul 2016 08:03:07 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0a-0016f401.pphosted.com with ESMTP id 242xmkxctp-7
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jul 2016 08:03:06 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 5/9] mwifiex: cfg80211 set_default_mgmt_key handler
+Date: Mon, 11 Jul 2016 20:23:48 +0530
+Message-ID: <1468248832-21969-6-git-send-email-akarwar@marvell.com> (sfid-20160711_170315_730960_21EA8888)
+In-Reply-To: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
+References: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <814ae6d0-2375-e8bd-f3e3-98ec5f69b376@broadcom.com>
-References: <CAOMZO5Cu_UO6L9wYy6eJUJwEE25BN-qeBRAMbFveFrJKHtF=aw@mail.gmail.com>
- <57991EE9.30005@broadcom.com> <CAOMZO5CvuumYQZ92YFCjd7Vrmp4i1T1pdYAmGUvRgjNzVpMWyQ@mail.gmail.com>
- <814ae6d0-2375-e8bd-f3e3-98ec5f69b376@broadcom.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Thu, 28 Jul 2016 22:05:25 -0300
-Message-ID: <CAOMZO5BHs1XOX=7Y8Ji7bv3J8LWxiGDqGgyzuEzb2vGroDCmVA@mail.gmail.com> (sfid-20160729_030530_516391_A3B0B733)
-Subject: Re: brcm4330 fails to load on newer kernels
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+It is observed that hostapd fails to setup with management frame
+protection mode enabled when using mwifiex. This patch adds
+cfg80211_set_default_mgmt_key handler to resolve the problem.
 
-On Thu, Jul 28, 2016 at 3:37 PM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-> Hi Fabio,
->
-> So this is another fine example of firmware API not able to deliver. I
-> think in all these kernels you have the same issue. The problem is that
-> the order of events upon kernel boot is not predictable. In this case
-> you have rootfs being mounted and brcmfmac getting probed as the two
-> competing events. When rootfs is mounted before brcmfmac is being probed
-> it works, but if brcmfmac is probed before rootfs is mounted the
-> firmware request will fail. So the only reliable option for built-in
-> drivers requiring firmware is to built-in the firmware into the kernel
-> as well.
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 8955f8c..bf95cca 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -484,6 +484,18 @@ mwifiex_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
+ }
+ 
+ /*
++ * CFG802.11 operation handler to set default mgmt key.
++ */
++static int
++mwifiex_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
++				      struct net_device *netdev,
++				      u8 key_index)
++{
++	wiphy_dbg(wiphy, "set default mgmt key, key index=%d\n", key_index);
++	return 0;
++}
++
++/*
+  * This function sends domain information to the firmware.
+  *
+  * The following information are passed to the firmware -
+@@ -4002,6 +4014,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.leave_ibss = mwifiex_cfg80211_leave_ibss,
+ 	.add_key = mwifiex_cfg80211_add_key,
+ 	.del_key = mwifiex_cfg80211_del_key,
++	.set_default_mgmt_key = mwifiex_cfg80211_set_default_mgmt_key,
+ 	.mgmt_tx = mwifiex_cfg80211_mgmt_tx,
+ 	.mgmt_frame_register = mwifiex_cfg80211_mgmt_frame_register,
+ 	.remain_on_channel = mwifiex_cfg80211_remain_on_channel,
+-- 
+1.9.1
 
-Thanks for your explanation.
-
-Tried building brcmfmac as module and after doing 'modprobe brcmfmac'
-the firmware is correctly loaded from the rootfs in all the kernels I
-tested.
-
-Now I just need it to load brcmfmac module automatically, but this is
-a a separate issue I will investigate.
-
-Thanks a lot for your help!
-
-Fabio Estevam
