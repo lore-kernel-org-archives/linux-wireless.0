@@ -1,60 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47553 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750921AbcGQGNu convert rfc822-to-8bit (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:33716 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750721AbcGKSAn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jul 2016 02:13:50 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Prarit Bhargava <prarit@redhat.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Coelho, Luciano" <luciano.coelho@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
- ucode is loaded
-Date: Sun, 17 Jul 2016 06:13:44 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3466928D5@hasmsx107.ger.corp.intel.com> (sfid-20160717_081432_722322_C1350AAD)
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
- <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
- <5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>
- <20160714092408.GA27271@redhat.com>
- <0BA3FCBA62E2DC44AF3030971E174FB3466901DA@hasmsx107.ger.corp.intel.com>
- <20160715112552.GB6939@redhat.com> <5788D397.9030904@redhat.com>
-In-Reply-To: <5788D397.9030904@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 11 Jul 2016 14:00:43 -0400
 MIME-Version: 1.0
+In-Reply-To: <1468250301-10357-1-git-send-email-prarit@redhat.com>
+References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Mon, 11 Jul 2016 21:00:41 +0300
+Message-ID: <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com> (sfid-20160711_200111_360402_FFE775AC)
+Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
+ ucode is loaded
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+	Sara Sharon <sara.sharon@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 07/15/2016 07:25 AM, Stanislaw Gruszka wrote:
-> > On Thu, Jul 14, 2016 at 09:44:22AM +0000, Grumbach, Emmanuel wrote:
-> >>> If I understad correctly this error happen 100% of the time, not
-> >>> only during init. Hence seems there is an issue here, i.e. cur_ucode
-> >>> is not marked correctly as IWL_UCODE_REGULAR or
-> iwl_mvm_get_temp()
-> >>> fail 100% of the time (iwl_mvm_is_tt_in_fw() incorrecly return true on
-> Prarit device ? ).
-> >>
-> >> Cur_ucode will not be IWL_UCODE_REGULAR until you load the firmware
-> >> which will happen upon ifup.
-> >
-> > Then creating thermal_device on ifup looks more reasonable to me.
-> > Otherwise we can create device that can be non-functional virtually
-> > forever, i.e. when soft RFKILL is enabled. However I admit that
-> > creating thermal_device when HW is detected has some advantages too.
-> 
-> That's my plan right now.  Unfortunately something else in the kernel seems
-> recently broken and is preventing me from testing.  I will get back to this
-> early next week.
-> 
+On Mon, Jul 11, 2016 at 6:18 PM, Prarit Bhargava <prarit@redhat.com> wrote:
+>
+> Didn't get any feedback or review comments on this patch.  Resending ...
+>
+> P.
 
-But we already said that this won't work since you may have the device enabled upon boot and then disabled. So unless you unregister the thermal zone subsystem upon wifi disable, you won't solve the problem. Kalle and Luca already refused that solution.
+This change is obviously completely broken. It simply disables the
+registration to thermal zone core.
 
-I glanced (again) at the thermal zone API and since it allows to return an int, the subsystem itself should handle the failures and / or the userspace problems. The API itself is awful, it has no documentation whatsoever, even not variable names, but only types... You can't really blame the subsystem users to assume that a method that can return an int can't fail where the out values is passed by a pointer. Of course, you have to guess that this is the expected behavior, since you don't have any hint about the meaning of the parameters.
-I think that the right place to "fix" this problem is to fix the subsystem. This way, you will fix it for iwlwifi and for any (future) other users that may fall into the trap opened by the API itself.
+>
+> ---8<---
+>
+> The iwlwifi driver implements a thermal zone and hwmon device, but
+> returns -EIO on temperature reads if the firmware isn't loaded.  This
+> results in the error
+>
+> iwlwifi-virtual-0
+> Adapter: Virtual device
+> ERROR: Can't get value of subfeature temp1_input: I/O error
+> temp1:            N/A
+>
+> being output when using sensors from the lm-sensors package.  Since
+> the temperature cannot be read unless the ucode is loaded there is no
+> reason to add the interface only to have it return an error 100% of
+> the time.
+>
+> This patch moves the firmware check to iwl_mvm_thermal_zone_register() and
+> stops the thermal zone from being created if the ucode hasn't been loaded.
+>
+> Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+> Cc: Johannes Berg <johannes.berg@intel.com>
+> Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Cc: Luca Coelho <luciano.coelho@intel.com>
+> Cc: Intel Linux Wireless <linuxwifi@intel.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+> Cc: Sara Sharon <sara.sharon@intel.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> ---
+>  drivers/net/wireless/intel/iwlwifi/mvm/tt.c |   13 +++----------
+>  1 file changed, 3 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+> index 58fc7b3c711c..64802659711f 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+> @@ -634,11 +634,6 @@ static int iwl_mvm_tzone_get_temp(struct thermal_zone_device *device,
+>
+>         mutex_lock(&mvm->mutex);
+>
+> -       if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR)) {
+> -               ret = -EIO;
+> -               goto out;
+> -       }
+> -
+>         ret = iwl_mvm_get_temp(mvm, &temp);
+>         if (ret)
+>                 goto out;
+> @@ -684,11 +679,6 @@ static int iwl_mvm_tzone_set_trip_temp(struct thermal_zone_device *device,
+>
+>         mutex_lock(&mvm->mutex);
+>
+> -       if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR)) {
+> -               ret = -EIO;
+> -               goto out;
+> -       }
+> -
+>         if (trip < 0 || trip >= IWL_MAX_DTS_TRIPS) {
+>                 ret = -EINVAL;
+>                 goto out;
+> @@ -750,6 +740,9 @@ static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
+>                 return;
+>         }
+>
+> +       if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR))
+> +               return;
+> +
+>         BUILD_BUG_ON(ARRAY_SIZE(name) >= THERMAL_NAME_LENGTH);
+>
+>         mvm->tz_device.tzone = thermal_zone_device_register(name,
+> --
+> 1.7.9.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
