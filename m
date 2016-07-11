@@ -1,127 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:38386 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932558AbcGDSgJ (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:36411 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030787AbcGKOOS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2016 14:36:09 -0400
-Received: by mail-wm0-f41.google.com with SMTP id r201so125307728wme.1
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2016 11:36:07 -0700 (PDT)
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name
- dt property
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
- <5756670.9hMGo8oEyl@wuerfel>
- <6cc6dabf-e6da-d70d-3cce-a7f1804f233e@broadcom.com>
- <8717879.O1RMZcQt4V@wuerfel>
-Cc: Jonas Gorski <jonas.gorski@gmail.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Priit Laes <plaes@plaes.org>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <577AAC95.7040800@broadcom.com> (sfid-20160704_203617_353589_AB2D438C)
-Date: Mon, 4 Jul 2016 20:36:05 +0200
+	Mon, 11 Jul 2016 10:14:18 -0400
+Received: by mail-oi0-f44.google.com with SMTP id w18so5996700oiw.3
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jul 2016 07:14:18 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <8717879.O1RMZcQt4V@wuerfel>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <349f74d9-ee27-8abb-afce-96532fec5e80@gmail.com>
+References: <349f74d9-ee27-8abb-afce-96532fec5e80@gmail.com>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Mon, 11 Jul 2016 16:14:07 +0200
+Message-ID: <CAA93jw6L7ym=P5ebtD1G40KRNraVnrqjVK8z8AgNvJEVnG8rnw@mail.gmail.com> (sfid-20160711_161434_470989_865BD80B)
+Subject: Re: A question about MAC80211 (3.9)
+To: Joan Josep Aleixendri <jj.aleixendri@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04-07-16 16:54, Arnd Bergmann wrote:
-> On Monday, July 4, 2016 11:08:38 AM CEST Arend Van Spriel wrote:
->> On 4-7-2016 10:55, Arnd Bergmann wrote:
->>> On Monday, July 4, 2016 10:41:20 AM CEST Arend Van Spriel wrote:
->>>> On 2-7-2016 23:30, Arnd Bergmann wrote:
->>>>> On Saturday, July 2, 2016 8:20:35 PM CEST Arend Van Spriel wrote:
->>>>>>> If you want a separate property, then I repeat my very first
->>>>>>> suggestion, the well defined model property.
->>>>>>> e.g.
->>>>>>>
->>>>>>> brcmf@0 {
->>>>>>>         model = "ampak,ap6210";
->>>>>>>         compatible = "brcm,bcm4329-fmac";
->>>>>>>         ...
->>>>>>> };
->>>>>>>
->>>>>>> All device nodes may have a model property, not just the top "machine" one.
->>>>>>
->>>>>> I heard you the first time  I just was not sure what the implications
->>>>>> would be to use it. Hence I suggested a vendor specific property.
->>>>>> However, looking up and reading the definition in ePAPRv1.1 I suppose it
->>>>>> is fine to use the model property:
->>>>>>
->>>>>> Property: model
->>>>>> Value type: <string>
->>>>>> Description:
->>>>>> The model property value is a <string> that specifies the manufacturer’s
->>>>>> model number of the device.
->>>>>>
->>>>>> The recommended format is: “manufacturer,model”, where manufacturer is a
->>>>>> string describing the name of the manufacturer (such as a stock ticker
->>>>>> symbol), and model specifies the model number.
->>>>>
->>>>> The model property is very similar to compatible, except that there is
->>>>> only one entry rather than a list of entries from most specific to
->>>>> most generic.
->>>>
->>>> They seem very similar, but I think there is a conceptual difference.
->>>> The compatible property is mainly used to select the appropriate driver
->>>> and as such the property is typically ignored by device drivers.
->>>> Probably there are exceptions to be found.
->>>>
->>>>> I think by writing the above example as
->>>>>
->>>>>       compatible = "ampak,ap6210", "brcm,bcm4329-fmac";
->>>>>
->>>>> we can provide the same functionality in a slightly simpler way, the driver
->>>>> then just goes on to look for the nvram file for each entry in sequence until
->>>>> it finds one.
->>>>
->>>> Not sure why this would be simpler. Why would traversing the compatible
->>>> string be simpler than handling the model property if present and
->>>> otherwise fallback to the default nvram naming.
->>>
->>> Because you have to walk the list anyway to find the other firmware files:
->>> when you have a specialization of a device that requires listing both values
->>> as compatible, the driver has no idea which of the entries to use, unless
->>> you add a lookup table that adds more complexity.
->>
->> Currently, the brcmfmac bindings describe a single compatible string,
->> ie. "brcm,bcm4329-fmac", which selects the driver/programming model. If
->> that programming model supports "use model property if present,
->> otherwise use default" there is nothing to traverse. The default way in
->> the driver to determine firmware and nvram filename already has a lookup
->> table which uses the chip id and chip revision as key, which are read
->> from the device.
-> 
-> In drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c I already see
-> over a dozen different chips being supported, bcm4329 is only one of
-> them. In particular, there seem to be some that have various modules:
-> 
->         BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43241_CHIP_ID, 0x0000001F, 43241B0),
->         BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43241_CHIP_ID, 0x00000020, 43241B4),
->         BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43241_CHIP_ID, 0xFFFFFFC0, 43241B5),
-> 
-> So if you have a bcm43241, that compatible string probably should
-> include both brcm,bcm43241-b4-fmac and brcm,bcm43241-fmac, possibly also
-> brcm,bcm4329-fmac, to show that it is a superset of the programming
-> interface of that one.
+What are you trying to accomplish? I look forward to seeing any rate
+control algorithm that can address the issues in minstrel!
+( http://blog.cerowrt.org/post/minstrel/ )
 
-Hi Arnd,
+It has generally been my hope to implement some form of better service
+sharing between the VO, VI, and BE queues than what currently exists
+in linux mainline... after the swq, fq_codel and airtime fairness
+stuff finishes landing. (
+https://blog.tohojo.dk/2016/06/fixing-the-wifi-performance-anomaly-on-ath9k.html
+)
 
-I have to disagree here. The compatible string "brcm,bcm4329-fmac" is
-chosen as the bcm4329 chip was the first supported and we never added
-others as there is no other programming required. For all supported
-devices the same device tree properties apply and are handled the same.
-As such there is no need to come up with a new compatible string.
+VO could only offer service once per 10ms per destination, VI, cap the
+backlog at no more than 50ms, and in neither case starve BE, BK could
+often be folded into BE, and so on. We've got bits of an architecture
+for managing these queues discussed out (more discussion at ietf next
+week), folding flows into the most appropriate queue rather than
+treating them as totally separate. (so as to take better advantage of
+aggregation)
 
-Regards,
-Arend
+Some of the other things in the make-wifi-fast backlog are in the appendix here:
+
+https://docs.google.com/document/d/1Se36svYE1Uzpppe1HWnEyat_sAGghB3kE285LElJBW4/edit#heading=h.3ankl68j6jjo
+
+On Mon, Jul 11, 2016 at 2:24 PM, Joan Josep Aleixendri
+<jj.aleixendri@gmail.com> wrote:
+> Hello everybody!
+>
+>
+> I'm a student working on a project about mac80211. I'm trying to modify the
+> behaviour of the AC's queues but I could really need some help about this
+> subject.
+>
+>
+> We are implementing a rate control algorithm. To do this we enqueue packets
+> on ieee80211_tx_frags() function, just after we are sure the packet is going
+> to be submitted to the driver under the standard code. You can see the code
+> below
+>
+>
+> The problem is that once we send a packet that was going to the driver to
+> the pending queue (because our custom logic), the tasklet takes over and
+> tries to resubmit the packet to tx_frags(). The result is that we start
+> losing connection and queuing the same packet over and over. Is there a way
+> to stop the tasklet for some defined period of time? Or maybe another advice
+> to implement rate limiting at mac80211?
+>
+>
+> Thanks for your time! And i really appreciate your help!
+>
+>
+> Joan Josep Aleixendri Cruelles
+>
+>
+> Code:
+>
+> ieee80211_tx_frags():
+>
+>     spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+>         if (local->queue_stop_reasons[q] ||
+>             (!txpending && !skb_queue_empty(&local->pending[q]))) {
+>                 if (unlikely(info->flags &
+>                         IEEE80211_TX_INTFL_OFFCHAN_TX_OK)) {
+>                     if (local->queue_stop_reasons[q] &
+> ~BIT(IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL)) {
+>                          /*
+>                          * Drop off-channel frames if queues
+>                          * are stopped for any reason other
+>                          * than off-channel operation. Never
+>                          * queue them.
+>                          */
+>                          spin_unlock_irqrestore(
+> &local->queue_stop_reason_lock,
+>                                  flags);
+> ieee80211_purge_tx_queue(&local->hw,
+>                                  skbs);
+>                              return true;
+>                          }
+>                      } else {
+>                          /*
+>                          * Since queue is stopped, queue up frames for
+>                          * later transmission from the tx-pending
+>                          * tasklet when the queue is woken again.
+>                          */
+>                          if (txpending)
+> skb_queue_splice_init(skbs,
+>                                  &local->pending[q]);
+>                          else
+>                              skb_queue_splice_tail_init(skbs,
+> &local->pending[q]);
+>
+> spin_unlock_irqrestore(&local->queue_stop_reason_lock,
+> flags);
+>                          return false;
+>                      }
+>                  }
+> ++           // CUSTOM CODE
+> ++           if(packet_meets_requirements_to_be_xmitted()){
+> ++               goto xmit;
+> ++           }
+> ++           else{
+> ++               //Send the packet back to pending
+> ++               if (txpending)
+> ++                   skb_queue_splice_init(skbs,
+> ++                           &local->pending[q]);
+> ++               else
+> ++                   skb_queue_splice_tail_init(skbs,
+> ++                           &local->pending[q]);
+> ++ spin_unlock_irqrestore(&local->queue_stop_reason_lock,
+> ++                       flags);
+> ++               return false;
+> ++           }
+> ++           xmit:
+> spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+>
+>          info->control.vif = vif;
+>          control.sta = sta;
+>
+>          __skb_unlink(skb, skbs);
+>          drv_tx(local, &control, skb);
+>      }
+>
+> return true;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Dave Täht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
