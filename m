@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46319 "EHLO mga11.intel.com"
+Received: from nbd.name ([46.4.11.11]:35633 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755085AbcGKQAJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 12:00:09 -0400
-Date: Mon, 11 Jul 2016 17:59:59 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Jakub Kicinski <jakub.kicinski@netronome.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	Rolf Neugebauer <rolf.neugebauer@netronome.com>,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>,
-	oss-drivers@netronome.com, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] nfp: check idx is -ENOSPC before using it is an index
-Message-ID: <20160711155959.GA16111@zurbaran.home> (sfid-20160711_180021_740393_2FF48DB3)
-References: <1468252017-14864-1-git-send-email-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1468252017-14864-1-git-send-email-colin.king@canonical.com>
+	id S1752831AbcGKNEN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2016 09:04:13 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: toke@toke.dk
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH ath9k-txq-work 2/2] ath9k: call ieee80211_sta_set_buffered if frames are pending
+Date: Mon, 11 Jul 2016 15:04:05 +0200
+Message-Id: <20160711130405.77451-2-nbd@nbd.name> (sfid-20160711_150416_870420_035D4C05)
+In-Reply-To: <20160711130405.77451-1-nbd@nbd.name>
+References: <20160711130405.77451-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Colin,
+mac80211 needs to know about driver queued frames
 
-On Mon, Jul 11, 2016 at 04:46:57PM +0100, Colin King wrote:
-> diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
-> index e44a7a2..d93d314 100644
-> --- a/drivers/nfc/fdp/fdp.c
-> +++ b/drivers/nfc/fdp/fdp.c
-> @@ -345,7 +345,7 @@ static void fdp_nci_release_firmware(struct nci_dev *ndev)
->  
->  	if (info->ram_patch) {
->  		release_firmware(info->ram_patch);
-> -		info->otp_patch = NULL;
-> +		info->ram_patch = NULL;
->  	}
->  }
-This chunk is unrelated and also already applied to my nfc-next tree.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Cheers,
-Samuel.
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index b3521c3..18c7443 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -1561,6 +1561,9 @@ void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
+ 			continue;
+ 		}
+ 
++		if (!skb_queue_empty(&tid->retry_q))
++			ieee80211_sta_set_buffered(sta, tid->tidno, true);
++
+ 		list_del_init(&tid->list);
+ 
+ 		ath_txq_unlock(sc, txq);
+-- 
+2.8.4
+
