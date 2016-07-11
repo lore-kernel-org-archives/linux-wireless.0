@@ -1,51 +1,170 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:56968 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752072AbcGVQzV (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:47317 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933733AbcGKO4g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 12:55:21 -0400
-Date: Fri, 22 Jul 2016 19:55:17 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH 5/9] mwifiex: cfg80211 set_default_mgmt_key handler
-Message-ID: <20160722165517.GA14456@w1.fi> (sfid-20160722_185524_719632_177FE09C)
+	Mon, 11 Jul 2016 10:56:36 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6BEpVPj032459
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jul 2016 07:56:35 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 2430sge4vp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Jul 2016 07:56:35 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Karthik D A <karthida@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/9] mwifiex: Fixed endianness problem for big endian platform
+Date: Mon, 11 Jul 2016 20:23:44 +0530
+Message-ID: <1468248832-21969-2-git-send-email-akarwar@marvell.com> (sfid-20160711_165640_120430_078C15C0)
+In-Reply-To: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
 References: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
- <1468248832-21969-6-git-send-email-akarwar@marvell.com>
- <87r3aqx3sq.fsf@kamboji.qca.qualcomm.com>
- <33207c0c98c646548bdedf50449719c2@SC-EXCH04.marvell.com>
- <20160721155131.GA6292@w1.fi>
- <ab0bb1b790c74675a92b129916662545@SC-EXCH04.marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ab0bb1b790c74675a92b129916662545@SC-EXCH04.marvell.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 22, 2016 at 03:59:47PM +0000, Amitkumar Karwar wrote:
-> I am trying to understand the problem you mentioned during IGTK rekeying. Today I ran tests with two stations connecting an AP. MFP is enabled on all of them.
-> 
-> On hostapd side, my observation is add_key() is always called followed by set_default_mgmt_key(). set_default_mgmt_key() sets the key added by add_key() as default key.
-> 
-> We are ignoring set_default_mgmt_key() and updating Tx key index during add_key() itself.
-> 
-> Your concerns is we should not update Tx key index during add_key(). Reason is IGTK rekeying is not yet completed with all stations. Right?
+From: Karthik D A <karthida@marvell.com>
 
-Correct. set_default_mgmt_key() does not have much effect for the very
-first IGTK configuration, but whenever doing IGTK rekeying, hostapd
-behaves just like it does with GTK rekeying. In other words, a different
-Key ID is selected (alternating between 4 and 5), a random new IGTK is
-generated, the new IGTK is configured to the local driver (but the old
-IGTK is still supposed to be used for TX), each associated STA is
-notified of the new IGTK, the new IGTK is taken into use once the group
-key handshake has completed with each associated STA. It is that last
-operation that needs set_default_mgmt_key() to allow this rekeying to
-work correctly. If you update the TX Key ID on add_key(), you'll risk
-sending out frames that some of the associated STAs do not yet have a
-key to validate.
+The driver sends and recives information to and from the firmware.
+Correct endianness should be ensured as firmware follows little
+endian format and host can be little/big endian.
 
+Signed-off-by: Karthik D A <karthida@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/fw.h          | 30 +++++++++++-----------
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 27 ++++++++++---------
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  2 +-
+ 3 files changed, 31 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 5596b6b..c46267b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -1646,7 +1646,7 @@ struct mwifiex_ie_types_sta_info {
+ };
+ 
+ struct host_cmd_ds_sta_list {
+-	u16 sta_count;
++	__le16 sta_count;
+ 	u8 tlv[0];
+ } __packed;
+ 
+@@ -2034,26 +2034,26 @@ struct host_cmd_ds_set_bss_mode {
+ 
+ struct host_cmd_ds_pcie_details {
+ 	/* TX buffer descriptor ring address */
+-	u32 txbd_addr_lo;
+-	u32 txbd_addr_hi;
++	__le32 txbd_addr_lo;
++	__le32 txbd_addr_hi;
+ 	/* TX buffer descriptor ring count */
+-	u32 txbd_count;
++	__le32 txbd_count;
+ 
+ 	/* RX buffer descriptor ring address */
+-	u32 rxbd_addr_lo;
+-	u32 rxbd_addr_hi;
++	__le32 rxbd_addr_lo;
++	__le32 rxbd_addr_hi;
+ 	/* RX buffer descriptor ring count */
+-	u32 rxbd_count;
++	__le32 rxbd_count;
+ 
+ 	/* Event buffer descriptor ring address */
+-	u32 evtbd_addr_lo;
+-	u32 evtbd_addr_hi;
++	__le32 evtbd_addr_lo;
++	__le32 evtbd_addr_hi;
+ 	/* Event buffer descriptor ring count */
+-	u32 evtbd_count;
++	__le32 evtbd_count;
+ 
+ 	/* Sleep cookie buffer physical address */
+-	u32 sleep_cookie_addr_lo;
+-	u32 sleep_cookie_addr_hi;
++	__le32 sleep_cookie_addr_lo;
++	__le32 sleep_cookie_addr_hi;
+ } __packed;
+ 
+ struct mwifiex_ie_types_rssi_threshold {
+@@ -2093,8 +2093,8 @@ struct mwifiex_ie_types_mc_group_info {
+ 	u8 chan_buf_weight;
+ 	u8 band_config;
+ 	u8 chan_num;
+-	u32 chan_time;
+-	u32 reserved;
++	__le32 chan_time;
++	__le32 reserved;
+ 	union {
+ 		u8 sdio_func_num;
+ 		u8 usb_ep_num;
+@@ -2185,7 +2185,7 @@ struct host_cmd_ds_robust_coex {
+ } __packed;
+ 
+ struct host_cmd_ds_wakeup_reason {
+-	u16  wakeup_reason;
++	__le16  wakeup_reason;
+ } __packed;
+ 
+ struct host_cmd_ds_gtk_rekey_params {
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 8c65849..fd0bc96 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1248,20 +1248,23 @@ mwifiex_cmd_pcie_host_spec(struct mwifiex_private *priv,
+ 		return 0;
+ 
+ 	/* Send the ring base addresses and count to firmware */
+-	host_spec->txbd_addr_lo = (u32)(card->txbd_ring_pbase);
+-	host_spec->txbd_addr_hi = (u32)(((u64)card->txbd_ring_pbase)>>32);
+-	host_spec->txbd_count = MWIFIEX_MAX_TXRX_BD;
+-	host_spec->rxbd_addr_lo = (u32)(card->rxbd_ring_pbase);
+-	host_spec->rxbd_addr_hi = (u32)(((u64)card->rxbd_ring_pbase)>>32);
+-	host_spec->rxbd_count = MWIFIEX_MAX_TXRX_BD;
+-	host_spec->evtbd_addr_lo = (u32)(card->evtbd_ring_pbase);
+-	host_spec->evtbd_addr_hi = (u32)(((u64)card->evtbd_ring_pbase)>>32);
+-	host_spec->evtbd_count = MWIFIEX_MAX_EVT_BD;
++	host_spec->txbd_addr_lo = cpu_to_le32((u32)(card->txbd_ring_pbase));
++	host_spec->txbd_addr_hi =
++			cpu_to_le32((u32)(((u64)card->txbd_ring_pbase) >> 32));
++	host_spec->txbd_count = cpu_to_le32(MWIFIEX_MAX_TXRX_BD);
++	host_spec->rxbd_addr_lo = cpu_to_le32((u32)(card->rxbd_ring_pbase));
++	host_spec->rxbd_addr_hi =
++			cpu_to_le32((u32)(((u64)card->rxbd_ring_pbase) >> 32));
++	host_spec->rxbd_count = cpu_to_le32(MWIFIEX_MAX_TXRX_BD);
++	host_spec->evtbd_addr_lo = cpu_to_le32((u32)(card->evtbd_ring_pbase));
++	host_spec->evtbd_addr_hi =
++			cpu_to_le32((u32)(((u64)card->evtbd_ring_pbase) >> 32));
++	host_spec->evtbd_count = cpu_to_le32(MWIFIEX_MAX_EVT_BD);
+ 	if (card->sleep_cookie_vbase) {
+ 		host_spec->sleep_cookie_addr_lo =
+-						(u32)(card->sleep_cookie_pbase);
+-		host_spec->sleep_cookie_addr_hi =
+-				 (u32)(((u64)(card->sleep_cookie_pbase)) >> 32);
++				cpu_to_le32((u32)(card->sleep_cookie_pbase));
++		host_spec->sleep_cookie_addr_hi = cpu_to_le32((u32)(((u64)
++					(card->sleep_cookie_pbase)) >> 32));
+ 		mwifiex_dbg(priv->adapter, INFO,
+ 			    "sleep_cook_lo phy addr: 0x%x\n",
+ 			    host_spec->sleep_cookie_addr_lo);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+index 9050d06..a1810c2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -963,7 +963,7 @@ static int mwifiex_ret_uap_sta_list(struct mwifiex_private *priv,
+ 	int i;
+ 	struct mwifiex_sta_node *sta_node;
+ 
+-	for (i = 0; i < sta_list->sta_count; i++) {
++	for (i = 0; i < (le16_to_cpu(sta_list->sta_count)); i++) {
+ 		sta_node = mwifiex_get_sta_entry(priv, sta_info->mac);
+ 		if (unlikely(!sta_node))
+ 			continue;
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+1.9.1
+
