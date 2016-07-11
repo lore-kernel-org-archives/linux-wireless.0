@@ -1,44 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:56718 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753147AbcGUPvf (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:60410 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276AbcGKUwU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 11:51:35 -0400
-Date: Thu, 21 Jul 2016 18:51:31 +0300
-From: Jouni Malinen <j@w1.fi>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH 5/9] mwifiex: cfg80211 set_default_mgmt_key handler
-Message-ID: <20160721155131.GA6292@w1.fi> (sfid-20160721_175138_925882_A3D73477)
-References: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
- <1468248832-21969-6-git-send-email-akarwar@marvell.com>
- <87r3aqx3sq.fsf@kamboji.qca.qualcomm.com>
- <33207c0c98c646548bdedf50449719c2@SC-EXCH04.marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <33207c0c98c646548bdedf50449719c2@SC-EXCH04.marvell.com>
+	Mon, 11 Jul 2016 16:52:20 -0400
+Date: Mon, 11 Jul 2016 13:52:18 -0700 (PDT)
+Message-Id: <20160711.135218.1535273154348680313.davem@davemloft.net> (sfid-20160711_225226_540419_562EF579)
+To: colin.king@canonical.com
+Cc: jakub.kicinski@netronome.com, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
+	rolf.neugebauer@netronome.com, christophe.ricard@gmail.com,
+	robert.dolca@intel.com, oss-drivers@netronome.com,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH][V2] nfp: check idx is -ENOSPC before using it is an
+ index
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1468252460-15117-1-git-send-email-colin.king@canonical.com>
+References: <1468252460-15117-1-git-send-email-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 21, 2016 at 09:18:11AM +0000, Amitkumar Karwar wrote:
-> > From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> > Is it correct to ignore the key index? I see that brcmfmac ignores it as
-> > well but I want to still confirm this.
-> > 
-> > Does this mean that with this patcfh mwifiex properly supports MFP?
+From: Colin King <colin.king@canonical.com>
+Date: Mon, 11 Jul 2016 16:54:20 +0100
+
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Yes. We do pass MFP tests with this patch.
+> idx can be returned as -ENOSPC, so we should check for this first
+> before using it as an index into nn->vxlan_usecnt[] to avoid an
+> out of bounds array offset read.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Did you test IGTK rekeying? This patch looks exactly as broken as it did
-the last time it was proposed more than a year ago and after the same
-concern not receiving any reaction.. hostapd will configure two
-different IGTKs with different Key IDs and change the TX key on the AP
-once all associated STAs have the new key. If the driver does not
-support updating the TX key index, either the old or the new STAs
-associated after rekeying will not have the correct key.
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Applied to net-next.
