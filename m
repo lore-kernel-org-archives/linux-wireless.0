@@ -1,173 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47274 "EHLO mx1.redhat.com"
+Received: from mga04.intel.com ([192.55.52.120]:6706 "EHLO mga04.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751093AbcGTQ5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 12:57:07 -0400
-Message-ID: <1469033825.3004.8.camel@redhat.com> (sfid-20160720_185722_541545_C8E0D3FC)
-Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
-From: Dan Williams <dcbw@redhat.com>
-To: Christopher Williamson <home@chrisaw.com>,
+	id S1751754AbcGKS1g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2016 14:27:36 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "prarit@redhat.com" <prarit@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 20 Jul 2016 11:57:05 -0500
-In-Reply-To: <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
-References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
-	 <1468946312.5661.2.camel@redhat.com>
-	 <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
-	 <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
-	 <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
+ ucode is loaded
+Date: Mon, 11 Jul 2016 18:27:30 +0000
+Message-ID: <1468261650.20877.14.camel@intel.com> (sfid-20160711_202806_340387_BEC75498)
+References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
+	 <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
+	 <5783E33E.7090205@redhat.com>
+In-Reply-To: <5783E33E.7090205@redhat.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-07-20 at 02:53 -0700, Christopher Williamson wrote:
-> Just following up from my previous email:
-> 
-> I am actually setting the reg domain using: iw reg set GB
-> (copy/pasted
-> the IN from elsewhere - oops!)
-> 
-> As for progress, however, I have tried the following:
-> 
-> - setting the debug level to 0xfffffff. This still produces no
-> additional output even with 8 set in printk.
-
-Yeah, looks like you'd need to rebuild the libertas driver with
-CONFIG_LIBERTAS_DEBUG set.  Or just #define that to 1 in defs.h.  Is
-that something you could do?
-
-Dan
-
-> - removing the v9 firmware - same result as before - system fully
-> locks up.
-> 
-> - disabling ipv6 - gets rid of IPv6 interface not up warning but
-> that’s not causing any problems and this didn’t make any difference.
-> 
-> It doesn’t seem to matter what I try at the moment - all attempts to
-> connect result in the system crashing which I guess is better than it
-> just asking me for a password over and over - it looks like it is
-> attempting association at this point which is good but I don’t know
-> why the box is crashing out and dmesg -w doesn’t show any additional
-> output before the freeze.
-> 
-> If anyone has any more ideas I would be more than happy to try them!
-> Thanks for the help so far Dan!
-> 
-> Christopher Williamson
-> 
-> On 19 July 2016 at 18:41:34, Christopher Williamson
-> (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
-> 
-> > 
-> > So I’ve now disabled IPv6 and have set the GB (Great Britain)
-> > regulation code using:
-> > 
-> > iw reg set IN
-> > 
-> > Now when I try to connect to the network using wicd the system
-> > seems to crash - I guess at least it’s doing something more than
-> > just asking for the password again like it did with NetworkManager
-> > but so far no further progress on getting this working properly.
-> > 
-> > Christopher Williamson
-> > 
-> > 
-> > 
-> > On 19 July 2016 at 18:03:16, Christopher Williamson (home@chrisaw.c
-> > om(mailto:home@chrisaw.com)) wrote:
-> > 
-> > > 
-> > > Absolutely!
-> > > 
-> > > With the debug logging enabled I got the following:
-> > > 
-> > > Connecting the device initially with debug enabled:
-> > > 
-> > > [ 205.302685] libertas_sdio: Libertas SDIO driver
-> > > [ 205.302698] libertas_sdio: Copyright Pierre Ossman
-> > > [ 205.503465] cfg80211: World regulatory domain updated:
-> > > [ 205.503478] cfg80211: DFS Master region: unset
-> > > [ 205.503483] cfg80211: (start_freq - end_freq @ bandwidth),
-> > > (max_antenna_gain, max_eirp), (dfs_cac_time)
-> > > [ 205.503492] cfg80211: (2402000 KHz - 2472000 KHz @ 40000 KHz),
-> > > (N/A, 2000 mBm), (N/A)
-> > > [ 205.503499] cfg80211: (2457000 KHz - 2482000 KHz @ 40000 KHz),
-> > > (N/A, 2000 mBm), (N/A)
-> > > [ 205.503505] cfg80211: (2474000 KHz - 2494000 KHz @ 20000 KHz),
-> > > (N/A, 2000 mBm), (N/A)
-> > > [ 205.503513] cfg80211: (5170000 KHz - 5250000 KHz @ 80000 KHz,
-> > > 160000 KHz AUTO), (N/A, 2000 mBm), (N/A)
-> > > [ 205.503522] cfg80211: (5250000 KHz - 5330000 KHz @ 80000 KHz,
-> > > 160000 KHz AUTO), (N/A, 2000 mBm), (0 s)
-> > > [ 205.503529] cfg80211: (5490000 KHz - 5730000 KHz @ 160000 KHz),
-> > > (N/A, 2000 mBm), (0 s)
-> > > [ 205.503535] cfg80211: (5735000 KHz - 5835000 KHz @ 80000 KHz),
-> > > (N/A, 2000 mBm), (N/A)
-> > > [ 205.503542] cfg80211: (57240000 KHz - 63720000 KHz @ 2160000
-> > > KHz), (N/A, 0 mBm), (N/A)
-> > > [ 212.249171] gma500 0000:00:02.0: Backlight lvds set brightness
-> > > 7a127a12
-> > > [ 212.324898] mmc1: new SDIO card at address 0001
-> > > [ 212.921672] libertas_sdio mmc1:0001:1 (unnamed net_device)
-> > > (uninitialized): 00:02:78:69:49:94, fw 9.70.20p0, cap 0x00000303
-> > > [ 212.925774] libertas_sdio mmc1:0001:1 (unnamed net_device)
-> > > (uninitialized): PREP_CMD: command 0x00a3 failed: 2
-> > > [ 212.936190] libertas_sdio mmc1:0001:1 wlan0: Marvell WLAN
-> > > 802.11 adapter
-> > > [ 213.053612] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> > > 
-> > > 
-> > > Strangely when I attempt to connect to the WiFi network I’m using
-> > > the only error I get is:
-> > > 
-> > > [ 338.076632] IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
-> > > 
-> > > I was expecting more output and am guessing I’ve missed something
-> > > here.
-> > > 
-> > > Christopher Williamson
-> > > 
-> > > On 19 July 2016 at 17:38:35, Dan Williams (dcbw@redhat.com(mailto
-> > > :dcbw@redhat.com)) wrote:
-> > > 
-> > > > 
-> > > > On Tue, 2016-07-19 at 12:06 -0400, Christopher Williamson
-> > > > wrote:
-> > > > > 
-> > > > > Hi everyone!
-> > > > > 
-> > > > > I’ve just got myself a Viliv N5 and am trying to get the
-> > > > > integrated
-> > > > > Wifi chipset working on it.
-> > > > > 
-> > > > > I am able to see networks around me but any attempts to
-> > > > > connect them
-> > > > > appear to time out and fail.
-> > > > > 
-> > > > > I have filed a linux kernel bug related to this issue:
-> > > > > https://bugzilla.kernel.org/show_bug.cgi?id=135421goo
-> > > > > 
-> > > > > I figured here may be a good place to ask about it and
-> > > > > hopefully to
-> > > > > get to the bottom of why it happens and how I can help to fix
-> > > > > it.
-> > > > > 
-> > > > > Happy to provide any information which may be helpful! :)
-> > > > Can you reload the driver stack:
-> > > > 
-> > > > rmmod libertas_sdio
-> > > > rmmod libertas
-> > > > modprobe libertas libertas_debug=0x251e7ff
-> > > > modprobe libertas_sdio
-> > > > 
-> > > > and then reproduce the issue? The debug info should dump to
-> > > > 'dmesg'
-> > > > and may tell us what's going on.
-> > > > 
-> > > > Dan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-
-> wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gTW9uLCAyMDE2LTA3LTExIGF0IDE0OjE5IC0wNDAwLCBQcmFyaXQgQmhhcmdhdmEgd3JvdGU6
+DQo+IA0KPiBPbiAwNy8xMS8yMDE2IDAyOjAwIFBNLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90ZToN
+Cj4gPiBPbiBNb24sIEp1bCAxMSwgMjAxNiBhdCA2OjE4IFBNLCBQcmFyaXQgQmhhcmdhdmEgPHBy
+YXJpdEByZWRoYXQuY29tDQo+ID4gPiB3cm90ZToNCj4gPiA+IA0KPiA+ID4gRGlkbid0IGdldCBh
+bnkgZmVlZGJhY2sgb3IgcmV2aWV3IGNvbW1lbnRzIG9uIHRoaXMgcGF0Y2guIA0KPiA+ID4gIFJl
+c2VuZGluZyAuLi4NCj4gPiA+IA0KPiA+ID4gUC4NCj4gPiANCj4gPiBUaGlzIGNoYW5nZSBpcyBv
+YnZpb3VzbHkgY29tcGxldGVseSBicm9rZW4uIEl0IHNpbXBseSBkaXNhYmxlcyB0aGUNCj4gPiBy
+ZWdpc3RyYXRpb24gdG8gdGhlcm1hbCB6b25lIGNvcmUuDQo+IA0KPiBObyBpdCBpcyBub3QgYnJv
+a2VuLCBhbmQgeWVzLCB0aGF0IGlzIGV4YWN0bHkgd2hhdCBzaG91bGQgaGFwcGVuIElNTy4NCj4g
+DQo+IFRoZSBwcm9ibGVtIGlzIHRoYXQgdGhlIGl3bHdpZmkgZHJpdmVyIGltcGxlbWVudHMgdGhl
+IHRoZXJtYWwgem9uZQ0KPiBldmVuIHdoZW4gdGhlDQo+IGRldmljZSBkb2Vzbid0IHN1cHBvcnQg
+aXQuDQoNCldlIGltcGxlbWVudCB0aGVybWFsIHpvbmUgYmVjYXVzZSB3ZSBkbyBzdXBwb3J0IGl0
+LCBidXQgdGhlIHByb2JsZW0gaXMNCnRoYXQgd2UgbmVlZCB0aGUgZmlybXdhcmUgdG8gYmUgbG9h
+ZGVkIGZvciB0aGF0LiBTbyB5b3UgY2FuIGFyZ3VlIHRoYXQNCndlIHNob3VsZCByZWdpc3RlciAq
+bGF0ZXIqIHdoZW4gdGhlIGZpcm13YXJlIGlzIGxvYWRlZC4gQnV0IHRoaXMgaXMNCnJlYWxseSBu
+b3QgaGVscGluZyBhbGwgdGhhdCBtdWNoIGJlY2F1c2UgdGhlIGZpcm13YXJlIGNhbiBhbHNvIGJl
+DQpzdG9wcGVkIGF0IGFueSB0aW1lLiBTbyB5b3UnZCB3YW50IHVzIHRvIHJlZ2lzdGVyIC8gdW5y
+ZWdpc3RlciB0aGUNCnRoZXJtYWwgem9uZSBhbnl0aW1lIHRoZSBmaXJtd2FyZSBpcyBsb2FkZWQg
+LyB1bmxvYWRlZD8NCkkgZ3Vlc3MgdGhhdCB3b3JrcywgYnV0IGl0IHNlZW1zIHdyb25nIHRvIG1l
+LiBVc3VhbGx5LCByZWdpc3RyYXRpb24NCnNob3VsZCBoYXBwZW4gb25seSB1cG9uIElOSVQsIGFu
+ZCB5ZXMsIGF0IHRoYXQgdGltZSB0aGUgZmlybXdhcmUgaXMgbm90DQpyZWFkeSB0byBwcm92aWRl
+IHRoZSBpbmZvcm1hdGlvbiB5ZXQuDQpNYXliZSByZXR1cm5pbmcgLUVCVVNZIHdvdWxkIGhlbHAg
+bG0tc2Vuc29ycyBub3QgdG8gZ2V0IGNvbmZ1c2VkPw0KDQo+IA0KPiBBcyBjYW4gYmUgc2VlbiBp
+biB0aGUgY3VycmVudCBjb2RlIGJhc2UsIGl3bF9tdm1fdHpvbmVfZ2V0X3RlbXAoKQ0KPiB3aWxs
+IHJldHVybg0KPiAtRUlPIDEwMCUgb2YgdGhlIHRpbWUgd2hlbiB0aGUgZmlybXdhcmUgZG9lc24n
+dCBzdXBwb3J0IHJlYWRpbmcgdGhlDQo+IHRlbXBlcmF0dXJlWzFdLiAgSW4gdGhpcyBjYXNlIGEg
+cmVhZCBvZiBzeXNmcyB3aWxsIHJlc3VsdCBpbiBhIHJldHVybg0KPiBvZiAtRUlPLA0KPiBhbmQg
+dGhpcyBicmVha3MgZXhpc3RpbmcgdXNlcnNwYWNlIHByb2dyYW1zIHN1Y2ggYXMgbG0tc2Vuc29y
+cyAod2hpY2gNCj4gYnkgYWxsDQo+IGFjY291bnRzIGlzIGJhZCB0byBkbykuDQoNClJpZ2h0LCBi
+dXQgSSBkb24ndCB1bmRlcnN0YW5kIHdoeSB0aGUgdXNlcnNwYWNlIGlzIGJyb2tlbiBiZWNhdXNl
+IG9mDQp0aGF0PyBVbmxlc3Mgd2UgcmVnaXN0ZXIgLyB1bnJlZ2lzdGVyIGFueXRpbWUgdGhlIGZp
+cm13YXJlIGlzIGxvYWRlZCwgSQ0KZG9uJ3Qgc2VlIGFueSBwcm9wZXIgd2F5IHRvIGZpeCB0aGlz
+LiBBbmQgeWVzLCBJJ2QgZXhwZWN0IHRoZSB1c2Vyc3BhY2UNCnRvIGhhbmRsZSBncmFjZWZ1bGx5
+IGZhaWx1cmVzIGluIGl0cyByZXF1ZXN0cy4NCg0KPiANCj4gTm90ZSB0aGF0IGluIG15IHBhdGNo
+IEkgaGF2ZSByZW1vdmVkIHRoZSAtRUlPIHJldHVybiBpbiBmYXZvciBvZiBub3QNCj4gcmVnaXN0
+ZXJpbmcNCj4gdGhlIG5vbi1leGlzdGVudCB0aGVybWFsIHpvbmUuICBJJ20gbm90IHJlbW92aW5n
+IGFueSBmdW5jdGlvbmFsaXR5IGJ5DQo+IGNoYW5naW5nDQo+IHRoaXMsIG5vciBhbSBJIGFkZGlu
+ZyBmdW5jdGlvbmFsaXR5LiAgSW4gYm90aCBjYXNlcyB0aGUgdGhlcm1hbCB6b25lDQo+IGlzIG5v
+dA0KPiBmdW5jdGlvbmFsLCBhbmQgd2l0aCBteSBwYXRjaCB1c2Vyc3BhY2UgY29udGludWVzIHRv
+IHdvcmsuDQoNCllvdSBhcmUgcmVtb3ZpbmcgdGhlIHRoZXJtYWwgem9uZSBmdW5jdGlvbmFsaXR5
+IHNpbmNlIGV2ZW4gd2hlbiB0aGUNCmZpcm13YXJlIHdpbGwgYmUgbG9hZGVkICh3aGljaCB0eXBp
+Y2FsbHkgaGFwcGVucyBmYWlybHkgcXVpY2tseSksDQp0aGVybWFsIHpvbmUgd29uJ3Qgd29yay4N
+Cg0KPiANCj4gUC4NCj4gDQo+IFsxXSBpd2xfbXZtX3R6b25lX3NldF90cmlwX3RlbXAoKSBhbHNv
+IHJldHVybnMgLUVJTywgc28gc2V0dGluZyBhbmQNCj4gZ2V0dGluZyBvZg0KPiB0aGUgdGVtcGVy
+YXR1cmUgaXMgbm9uLWZ1bmN0aW9uYWwuDQo+IA0KPiANCj4gPiANCj4gPiA+IA0KPiA+ID4gLS0t
+ODwtLS0NCj4gPiA+IA0KPiA+ID4gVGhlIGl3bHdpZmkgZHJpdmVyIGltcGxlbWVudHMgYSB0aGVy
+bWFsIHpvbmUgYW5kIGh3bW9uIGRldmljZSwNCj4gPiA+IGJ1dA0KPiA+ID4gcmV0dXJucyAtRUlP
+IG9uIHRlbXBlcmF0dXJlIHJlYWRzIGlmIHRoZSBmaXJtd2FyZSBpc24ndCBsb2FkZWQuIA0KPiA+
+ID4gIFRoaXMNCj4gPiA+IHJlc3VsdHMgaW4gdGhlIGVycm9yDQo+ID4gPiANCj4gPiA+IGl3bHdp
+ZmktdmlydHVhbC0wDQo+ID4gPiBBZGFwdGVyOiBWaXJ0dWFsIGRldmljZQ0KPiA+ID4gRVJST1I6
+IENhbid0IGdldCB2YWx1ZSBvZiBzdWJmZWF0dXJlIHRlbXAxX2lucHV0OiBJL08gZXJyb3INCj4g
+PiA+IHRlbXAxOiAgICAgICAgICAgIE4vQQ0KPiA+ID4gDQo+ID4gPiBiZWluZyBvdXRwdXQgd2hl
+biB1c2luZyBzZW5zb3JzIGZyb20gdGhlIGxtLXNlbnNvcnMgcGFja2FnZS4gDQo+ID4gPiAgU2lu
+Y2UNCj4gPiA+IHRoZSB0ZW1wZXJhdHVyZSBjYW5ub3QgYmUgcmVhZCB1bmxlc3MgdGhlIHVjb2Rl
+IGlzIGxvYWRlZCB0aGVyZQ0KPiA+ID4gaXMgbm8NCj4gPiA+IHJlYXNvbiB0byBhZGQgdGhlIGlu
+dGVyZmFjZSBvbmx5IHRvIGhhdmUgaXQgcmV0dXJuIGFuIGVycm9yIDEwMCUNCj4gPiA+IG9mDQo+
+ID4gPiB0aGUgdGltZS4NCj4gPiA+IA0KPiA+ID4gVGhpcyBwYXRjaCBtb3ZlcyB0aGUgZmlybXdh
+cmUgY2hlY2sgdG8NCj4gPiA+IGl3bF9tdm1fdGhlcm1hbF96b25lX3JlZ2lzdGVyKCkgYW5kDQo+
+ID4gPiBzdG9wcyB0aGUgdGhlcm1hbCB6b25lIGZyb20gYmVpbmcgY3JlYXRlZCBpZiB0aGUgdWNv
+ZGUgaGFzbid0DQo+ID4gPiBiZWVuIGxvYWRlZC4NCj4gPiA+IA0KPiA+ID4gU2lnbmVkLW9mZi1i
+eTogUHJhcml0IEJoYXJnYXZhIDxwcmFyaXRAcmVkaGF0LmNvbT4NCj4gPiA+IENjOiBKb2hhbm5l
+cyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4gPiA+IENjOiBFbW1hbnVlbCBHcnVt
+YmFjaCA8ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPg0KPiA+ID4gQ2M6IEx1Y2EgQ29lbGhv
+IDxsdWNpYW5vLmNvZWxob0BpbnRlbC5jb20+DQo+ID4gPiBDYzogSW50ZWwgTGludXggV2lyZWxl
+c3MgPGxpbnV4d2lmaUBpbnRlbC5jb20+DQo+ID4gPiBDYzogS2FsbGUgVmFsbyA8a3ZhbG9AY29k
+ZWF1cm9yYS5vcmc+DQo+ID4gPiBDYzogQ2hheWEgUmFjaGVsIEl2Z2kgPGNoYXlhLnJhY2hlbC5p
+dmdpQGludGVsLmNvbT4NCj4gPiA+IENjOiBTYXJhIFNoYXJvbiA8c2FyYS5zaGFyb25AaW50ZWwu
+Y29tPg0KPiA+ID4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiA+ID4gQ2M6
+IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcNCj4gPiA+IC0tLQ0KPiA+ID4gIGRyaXZlcnMvbmV0L3dp
+cmVsZXNzL2ludGVsL2l3bHdpZmkvbXZtL3R0LmMgfCAgIDEzICsrKy0tLS0tLS0tLS0NCj4gPiA+
+ICAxIGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAxMCBkZWxldGlvbnMoLSkNCj4gPiA+
+IA0KPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkv
+bXZtL3R0LmMNCj4gPiA+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0v
+dHQuYw0KPiA+ID4gaW5kZXggNThmYzdiM2M3MTFjLi42NDgwMjY1OTcxMWYgMTAwNjQ0DQo+ID4g
+PiAtLS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS90dC5jDQo+ID4g
+PiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS90dC5jDQo+ID4g
+PiBAQCAtNjM0LDExICs2MzQsNiBAQCBzdGF0aWMgaW50IGl3bF9tdm1fdHpvbmVfZ2V0X3RlbXAo
+c3RydWN0DQo+ID4gPiB0aGVybWFsX3pvbmVfZGV2aWNlICpkZXZpY2UsDQo+ID4gPiANCj4gPiA+
+ICAgICAgICAgbXV0ZXhfbG9jaygmbXZtLT5tdXRleCk7DQo+ID4gPiANCj4gPiA+IC0gICAgICAg
+aWYgKCFtdm0tPnVjb2RlX2xvYWRlZCB8fCAhKG12bS0+Y3VyX3Vjb2RlID09DQo+ID4gPiBJV0xf
+VUNPREVfUkVHVUxBUikpIHsNCj4gPiA+IC0gICAgICAgICAgICAgICByZXQgPSAtRUlPOw0KPiA+
+ID4gLSAgICAgICAgICAgICAgIGdvdG8gb3V0Ow0KPiA+ID4gLSAgICAgICB9DQo+ID4gPiAtDQo+
+ID4gPiAgICAgICAgIHJldCA9IGl3bF9tdm1fZ2V0X3RlbXAobXZtLCAmdGVtcCk7DQo+ID4gPiAg
+ICAgICAgIGlmIChyZXQpDQo+ID4gPiAgICAgICAgICAgICAgICAgZ290byBvdXQ7DQo+ID4gPiBA
+QCAtNjg0LDExICs2NzksNiBAQCBzdGF0aWMgaW50DQo+ID4gPiBpd2xfbXZtX3R6b25lX3NldF90
+cmlwX3RlbXAoc3RydWN0IHRoZXJtYWxfem9uZV9kZXZpY2UgKmRldmljZSwNCj4gPiA+IA0KPiA+
+ID4gICAgICAgICBtdXRleF9sb2NrKCZtdm0tPm11dGV4KTsNCj4gPiA+IA0KPiA+ID4gLSAgICAg
+ICBpZiAoIW12bS0+dWNvZGVfbG9hZGVkIHx8ICEobXZtLT5jdXJfdWNvZGUgPT0NCj4gPiA+IElX
+TF9VQ09ERV9SRUdVTEFSKSkgew0KPiA+ID4gLSAgICAgICAgICAgICAgIHJldCA9IC1FSU87DQo+
+ID4gPiAtICAgICAgICAgICAgICAgZ290byBvdXQ7DQo+ID4gPiAtICAgICAgIH0NCj4gPiA+IC0N
+Cj4gPiA+ICAgICAgICAgaWYgKHRyaXAgPCAwIHx8IHRyaXAgPj0gSVdMX01BWF9EVFNfVFJJUFMp
+IHsNCj4gPiA+ICAgICAgICAgICAgICAgICByZXQgPSAtRUlOVkFMOw0KPiA+ID4gICAgICAgICAg
+ICAgICAgIGdvdG8gb3V0Ow0KPiA+ID4gQEAgLTc1MCw2ICs3NDAsOSBAQCBzdGF0aWMgdm9pZA0K
+PiA+ID4gaXdsX212bV90aGVybWFsX3pvbmVfcmVnaXN0ZXIoc3RydWN0IGl3bF9tdm0gKm12bSkN
+Cj4gPiA+ICAgICAgICAgICAgICAgICByZXR1cm47DQo+ID4gPiAgICAgICAgIH0NCj4gPiA+IA0K
+PiA+ID4gKyAgICAgICBpZiAoIW12bS0+dWNvZGVfbG9hZGVkIHx8ICEobXZtLT5jdXJfdWNvZGUg
+PT0NCj4gPiA+IElXTF9VQ09ERV9SRUdVTEFSKSkNCj4gPiA+ICsgICAgICAgICAgICAgICByZXR1
+cm47DQo+ID4gPiArDQo+ID4gPiAgICAgICAgIEJVSUxEX0JVR19PTihBUlJBWV9TSVpFKG5hbWUp
+ID49IFRIRVJNQUxfTkFNRV9MRU5HVEgpOw0KPiA+ID4gDQo+ID4gPiAgICAgICAgIG12bS0+dHpf
+ZGV2aWNlLnR6b25lID0gdGhlcm1hbF96b25lX2RldmljZV9yZWdpc3RlcihuYW1lLA0KPiA+ID4g
+LS0NCj4gPiA+IDEuNy45LjMNCj4gPiA+IA0KPiA+ID4gLS0NCj4gPiA+IFRvIHVuc3Vic2NyaWJl
+IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eA0KPiA+ID4g
+LXdpcmVsZXNzIiBpbg0KPiA+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2
+Z2VyLmtlcm5lbC5vcmcNCj4gPiA+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIA0KPiA+ID4gaHR0
+cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1s
