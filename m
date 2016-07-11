@@ -1,30 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54380 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754049AbcGHKeo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 06:34:44 -0400
-Message-ID: <1467974081.4837.5.camel@sipsolutions.net> (sfid-20160708_123446_820437_AB543E51)
-Subject: Re: [PATCH] cfg80211: Allow different beacon interval support on
- virtual interface.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-	usdutt@qti.qualcomm.com, ganeshk@qti.qualcomm.com,
-	mkalikot@qca.qualcomm.com, amarnath@qca.qualcomm.com
-Date: Fri, 08 Jul 2016 12:34:41 +0200
-In-Reply-To: <1467973935-32308-1-git-send-email-pkushwah@qti.qualcomm.com> (sfid-20160708_123302_163593_694AA25F)
-References: <1467973935-32308-1-git-send-email-pkushwah@qti.qualcomm.com>
-	 (sfid-20160708_123302_163593_694AA25F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.kundenserver.de ([217.72.192.73]:49479 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753108AbcGKUq6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2016 16:46:58 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes.berg@intel.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Eliad Peller <eliad@wizery.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] iwlwifi: add missing type declaration
+Date: Mon, 11 Jul 2016 22:49:53 +0200
+Message-Id: <20160711205020.1587254-1-arnd@arndb.de> (sfid-20160711_224726_550388_E216FF59)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-07-08 at 16:02 +0530, Purushottam Kushwaha wrote:
-> Driver may support different beacon interval on virtual interfaces.
-> Allow setting different beacon interval per interface if driver has
-> such support.
-> 
-It seems this should be an nl80211 feature flag (ext features)
+The iwl-debug.h header relies in implicit inclusion of linux/device.h and
+we get a lot of warnings without that:
 
-johannes
+drivers/net/wireless/intel/iwlwifi/iwl-debug.h:44:23: error: 'struct device' declared inside parameter list will not be visible outside of this definition or declaration [-Werror]
+ void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
+                       ^~~~~~
+In file included from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h:66:0,
+                 from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:68:
+drivers/net/wireless/intel/iwlwifi/iwl-trans.h: In function 'iwl_trans_tx':
+drivers/net/wireless/intel/iwlwifi/iwl-trans.h:1030:348: error: passing argument 1 of '__iwl_err' from incompatible pointer type [-Werror=incompatible-pointer-types]
+   IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
+                                                                                                                                                                                                                                                                                                                                                            ^
+In file included from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:67:0:
+drivers/net/wireless/intel/iwlwifi/iwl-debug.h:44:6: note: expected 'struct device *' but argument is of type 'struct device *'
+ void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
+      ^~~~~~~~~
+
+The easiest workaround is to just declare 'struct device' before its first use,
+rather than including the entire header file.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 21cb3222fe56 ("iwlwifi: decouple PCIe transport from mac80211")
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-debug.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-debug.h b/drivers/net/wireless/intel/iwlwifi/iwl-debug.h
+index 110333208450..cd77c6971753 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-debug.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-debug.h
+@@ -41,6 +41,7 @@ static inline bool iwl_have_debug_level(u32 level)
+ #endif
+ }
+ 
++struct device;
+ void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
+ 		const char *fmt, ...) __printf(4, 5);
+ void __iwl_warn(struct device *dev, const char *fmt, ...) __printf(2, 3);
+-- 
+2.9.0
+
