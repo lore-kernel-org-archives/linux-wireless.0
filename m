@@ -1,89 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:52497 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754757AbcG1IFa (ORCPT
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:32971 "EHLO
+	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752511AbcGKJef (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 04:05:30 -0400
-From: Daniel Wagner <wagi@monom.org>
-To: Bastien Nocera <hadess@hadess.net>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>
-Subject: [RFC v0 4/8] Input: goodix: use firmware_stat instead of completion
-Date: Thu, 28 Jul 2016 09:55:08 +0200
-Message-Id: <1469692512-16863-5-git-send-email-wagi@monom.org> (sfid-20160728_100547_295536_03700D53)
-In-Reply-To: <1469692512-16863-1-git-send-email-wagi@monom.org>
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
+	Mon, 11 Jul 2016 05:34:35 -0400
+Received: by mail-lf0-f42.google.com with SMTP id f6so66874815lfg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jul 2016 02:34:35 -0700 (PDT)
+Subject: Re: [RFC v2 1/3] nl80211: Add nl80211_notify_iface
+To: Marcel Holtmann <marcel@holtmann.org>,
+	Julian Calaby <julian.calaby@gmail.com>
+References: <1468044967-9236-1-git-send-email-denkenz@gmail.com>
+ <1468044967-9236-2-git-send-email-denkenz@gmail.com>
+ <1601C89F-62D4-42F5-B5A4-2C9E2F02A673@holtmann.org>
+ <ab4b33b0-cc34-80d1-49a0-51846bb7c7f2@broadcom.com>
+ <5DF59CC1-84AA-45EF-B2EF-B16469A9D736@holtmann.org>
+ <CAGRGNgVxMZ03XCK1h45uwOdLW3g7VQ1nD23PDghJ5jfkkxqetw@mail.gmail.com>
+ <2BC14E16-4071-443F-9679-55C3BF224380@holtmann.org>
+Cc: Denis Kenzior <denkenz@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f1258edb-1980-76e0-ac45-12e4c121a8cf@broadcom.com> (sfid-20160711_113440_091091_EA7C9A40)
+Date: Mon, 11 Jul 2016 11:34:26 +0200
+MIME-Version: 1.0
+In-Reply-To: <2BC14E16-4071-443F-9679-55C3BF224380@holtmann.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+On 11-7-2016 9:39, Marcel Holtmann wrote:
+> Hi Julian,
+> 
+>>>>>> This function emits NL80211_CMD_NEW_INTERFACE or
+>>>>>> NL80211_CMD_DEL_INTERFACE events.  This is meant to be used by the core
+>>>>>> to notify userspace applications such as wpa_supplicant when a netdev
+>>>>>> related to a wireless device has been added or removed.
+>>>>>>
+>>>>>> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+>>>>>> ---
+>>>>>> net/wireless/nl80211.c | 28 ++++++++++++++++++++++++++++
+>>>>>> net/wireless/nl80211.h |  3 +++
+>>>>>> 2 files changed, 31 insertions(+)
+>>>>>>
+>>>>>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+>>>>>> index f39fd4d..da03e17 100644
+>>>>>> --- a/net/wireless/nl80211.c
+>>>>>> +++ b/net/wireless/nl80211.c
+>>>>>> @@ -11855,6 +11855,34 @@ void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
+>>>>>>                            NL80211_MCGRP_CONFIG, GFP_KERNEL);
+>>>>>> }
+>>>>>>
+>>>>>> +void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
+>>>>>> +                           struct wireless_dev *wdev,
+>>>>>> +                           enum nl80211_commands cmd)
+>>>>>> +{
+>>>>>> +   struct sk_buff *msg;
+>>>>>> +   bool removal;
+>>>>>> +
+>>>>>> +   WARN_ON(cmd != NL80211_CMD_NEW_INTERFACE &&
+>>>>>> +           cmd != NL80211_CMD_DEL_INTERFACE);
+>>>>>
+>>>>> I would assume that BUILD_BUG_ON does a way job better here.
+>>>>
+>>>> Why? I don't see why the condition would be compile-time constant as it
+>>>> can be called from outside nl80211.c.
+>>>
+>>> what has that to do with it. No matter who calls it, the point is to ensure that it is called for new/del interface. And if a caller uses it for something else, then it should fail and it should fail loudly.
+>>
+>> Let me ask this question another way:
+>>
+>> How is BUILD_BUG_ON going to warn about a runtime error?
+> 
+> how is this a runtime error in the first place? If you call it with any other nl80211_commands than the two explicitly allowed, you are doing something wrong. If BUILD_BUG_ON has limitations, then fine, but please don't tell me this is a runtime error.
 
-Loading firmware is an operation many drivers implement in various ways
-around the completion API. And most of them do it almost in the same
-way. Let's reuse the firmware_stat API which is used also by the
-firmware_class loader. Apart of streamlining the firmware loading states
-we also document it slightly better.
+Hi Marcel,
 
-Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
----
- drivers/input/touchscreen/goodix.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Indeed it is not a run-time error. The limitation of BUILD_BUG_ON is
+that the condition has to be compile-time constant. This means upon
+compiling nl80211.c. BUILD_BUG_ON does not work at link-time so upon
+linking nl80211.o with core.o where the function is called from (in
+patches 2 and 3).
 
-diff --git a/drivers/input/touchscreen/goodix.c b/drivers/input/touchscreen/goodix.c
-index 240b16f..67158d3 100644
---- a/drivers/input/touchscreen/goodix.c
-+++ b/drivers/input/touchscreen/goodix.c
-@@ -47,7 +47,7 @@ struct goodix_ts_data {
- 	u16 id;
- 	u16 version;
- 	const char *cfg_name;
--	struct completion firmware_loading_complete;
-+	struct firmware_stat fwst;
- 	unsigned long irq_flags;
- };
- 
-@@ -683,7 +683,7 @@ static void goodix_config_cb(const struct firmware *cfg, void *ctx)
- 
- err_release_cfg:
- 	release_firmware(cfg);
--	complete_all(&ts->firmware_loading_complete);
-+	fw_loading_done(ts->fwst);
- }
- 
- static int goodix_ts_probe(struct i2c_client *client,
-@@ -705,7 +705,7 @@ static int goodix_ts_probe(struct i2c_client *client,
- 
- 	ts->client = client;
- 	i2c_set_clientdata(client, ts);
--	init_completion(&ts->firmware_loading_complete);
-+	firmware_stat_init(&ts->fwst);
- 
- 	error = goodix_get_gpio_config(ts);
- 	if (error)
-@@ -766,7 +766,7 @@ static int goodix_ts_remove(struct i2c_client *client)
- 	struct goodix_ts_data *ts = i2c_get_clientdata(client);
- 
- 	if (ts->gpiod_int && ts->gpiod_rst)
--		wait_for_completion(&ts->firmware_loading_complete);
-+		fw_loading_wait(ts->fwst);
- 
- 	return 0;
- }
-@@ -781,7 +781,7 @@ static int __maybe_unused goodix_suspend(struct device *dev)
- 	if (!ts->gpiod_int || !ts->gpiod_rst)
- 		return 0;
- 
--	wait_for_completion(&ts->firmware_loading_complete);
-+	fw_loading_wait(ts->fwst);
- 
- 	/* Free IRQ as IRQ pin is used as output in the suspend sequence */
- 	goodix_free_irq(ts);
--- 
-2.7.4
+
+Regards,
+Arend
