@@ -1,54 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33482 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753766AbcGFKoz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:44:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
+Received: from ozlabs.org ([103.22.144.67]:35537 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755498AbcGKCGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Jul 2016 22:06:17 -0400
+Date: Mon, 11 Jul 2016 12:06:14 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Kalle Valo <kvalo@codeaurora.org>, <linux-wireless@vger.kernel.org>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Avraham Stern <avraham.stern@intel.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Assaf Krauss <assaf.krauss@intel.com>,
 	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:39 +0300
-Message-Id: <1467801651-1816-44-git-send-email-luca@coelho.fi> (sfid-20160706_124459_114312_CC0012AC)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 44/56] iwlwifi: mvm: free RX reorder buffer on restart
+Subject: linux-next: manual merge of the wireless-drivers-next tree with the
+ net-next tree
+Message-ID: <20160711120614.0cdca5fa@canb.auug.org.au> (sfid-20160711_040637_800406_E3727792)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi all,
 
-Restart flow zeroes the rx_ba_sessions counter. Mac80211 asks
-driver to tear down of the session only afterwards, and as a
-result driver didn't free the data. Fix it.
+Today's linux-next merge of the wireless-drivers-next tree got a
+conflict in:
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Fixes: 10b2b2019d81 ("iwlwifi: mvm: add infrastructure for tracking BA session in driver")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+  drivers/net/wireless/intel/iwlwifi/mvm/scan.c
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index c0c2ea3..61f16c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1828,11 +1828,12 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			     mvm_sta->sta_id, tid, baid);
- 		WARN_ON(rcu_access_pointer(mvm->baid_map[baid]));
- 		rcu_assign_pointer(mvm->baid_map[baid], baid_data);
--	} else if (mvm->rx_ba_sessions > 0) {
-+	} else  {
- 		u8 baid = mvm_sta->tid_to_baid[tid];
- 
--		/* check that restart flow didn't zero the counter */
--		mvm->rx_ba_sessions--;
-+		if (mvm->rx_ba_sessions > 0)
-+			/* check that restart flow didn't zero the counter */
-+			mvm->rx_ba_sessions--;
- 		if (!iwl_mvm_has_new_rx_api(mvm))
- 			return 0;
- 
+between commit:
+
+  7947d3e075cd ("mac80211: Add support for beacon report radio measurement")
+
+from the net-next tree and commit:
+
+  69e046423ad7 ("iwlwifi: mvm: change scan timeout to a delayed work")
+
+from the wireless-drivers-next tree.
+
+I fixed it up (see below) and can carry the fix as necessary. This
+is now fixed as far as linux-next is concerned, but any non trivial
+conflicts should be mentioned to your upstream maintainer when your tree
+is submitted for merging.  You may also want to consider cooperating
+with the maintainer of the conflicting tree to minimise any particularly
+complex conflicts.
+
 -- 
-2.8.1
+Cheers,
+Stephen Rothwell
 
+diff --cc drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 1cac10c5d818,fb25d9e41912..000000000000
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@@ -400,9 -396,10 +400,9 @@@ void iwl_mvm_rx_lmac_scan_complete_noti
+  			       iwl_mvm_ebs_status_str(scan_notif->ebs_status));
+  
+  		mvm->scan_status &= ~IWL_MVM_SCAN_REGULAR;
+ -		ieee80211_scan_completed(mvm->hw,
+ -				scan_notif->status == IWL_SCAN_OFFLOAD_ABORTED);
+ +		ieee80211_scan_completed(mvm->hw, &info);
+  		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
+- 		del_timer(&mvm->scan_timer);
++ 		cancel_delayed_work(&mvm->scan_timeout_dwork);
+  	} else {
+  		IWL_ERR(mvm,
+  			"got scan complete notification but no scan is running\n");
+@@@ -1433,13 -1432,9 +1435,13 @@@ void iwl_mvm_rx_umac_scan_complete_noti
+  
+  	/* if the scan is already stopping, we don't need to notify mac80211 */
+  	if (mvm->scan_uid_status[uid] == IWL_MVM_SCAN_REGULAR) {
+ -		ieee80211_scan_completed(mvm->hw, aborted);
+ +		struct cfg80211_scan_info info = {
+ +			.aborted = aborted,
+ +		};
+ +
+ +		ieee80211_scan_completed(mvm->hw, &info);
+  		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
+- 		del_timer(&mvm->scan_timer);
++ 		cancel_delayed_work(&mvm->scan_timeout_dwork);
+  	} else if (mvm->scan_uid_status[uid] == IWL_MVM_SCAN_SCHED) {
+  		ieee80211_sched_scan_stopped(mvm->hw);
+  		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
+@@@ -1644,14 -1630,9 +1646,14 @@@ out
+  		 * to release the scan reference here.
+  		 */
+  		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
+- 		del_timer(&mvm->scan_timer);
++ 		cancel_delayed_work(&mvm->scan_timeout_dwork);
+ -		if (notify)
+ -			ieee80211_scan_completed(mvm->hw, true);
+ +		if (notify) {
+ +			struct cfg80211_scan_info info = {
+ +				.aborted = true,
+ +			};
+ +
+ +			ieee80211_scan_completed(mvm->hw, &info);
+ +		}
+  	} else if (notify) {
+  		ieee80211_sched_scan_stopped(mvm->hw);
+  		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
