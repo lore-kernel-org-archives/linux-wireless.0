@@ -1,66 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:57855 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbcGEPVF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 11:21:05 -0400
-Message-ID: <577BD05D.6000607@candelatech.com> (sfid-20160705_172110_707788_A87E5F01)
-Date: Tue, 05 Jul 2016 08:21:01 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
-	"Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath10k: Fix sending NULL/ Qos NULL data frames for
- QCA99X0 and later
-References: <1466700001-4883-1-git-send-email-mohammed@qca.qualcomm.com>	<1466700001-4883-2-git-send-email-mohammed@qca.qualcomm.com>	<576C1861.7020402@candelatech.com>	<20160625185350.GA25330@atheros-ThinkPad-T61>	<576F2165.3010109@candelatech.com> <8760sr6kj8.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <8760sr6kj8.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from nbd.name ([46.4.11.11]:56425 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030321AbcGKKCw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2016 06:02:52 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 3/4] ath9k_hw: get rid of some duplicate code in calibration init
+Date: Mon, 11 Jul 2016 12:02:47 +0200
+Message-Id: <20160711100248.68678-3-nbd@nbd.name> (sfid-20160711_120521_110404_5B863016)
+In-Reply-To: <20160711100248.68678-1-nbd@nbd.name>
+References: <20160711100248.68678-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 06/30/2016 03:25 AM, Valo, Kalle wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> Is there a better way than posting to the ath10k mailing list?  There are quite
->> a few more of my patches that are stuck in pending or ignored state.  If you
->> could review some of them and add them to your testing trees then it might help
->> them go upstream.
->
-> Yes, as you seem to test with your custom ath10k and custom firmware
-> review and testing feedback from others is more than welcome. That way I
-> can have more confidence that the patch really works with the mainline
-> version.
->
-> The problem with your patches is that you dump more responsibility on
-> me. I have no idea if they work with the mainline kernel, or if they
-> break something, so I need to personally test the patch and that takes
-> time. Basically I have a rule if that I need to use more than two
-> minutes on a patch it goes to the Deferred queue and I'll go through
-> that less often than the normal patch queue.
+Remove a misleading debug message as well
 
-I can do some testing with stock firmware, but stock firmware is often quite limited
-so I cannot do the more interesting test cases that we use internally.
-Some of my patches are for fixing edge cases that cannot be easily reproduced,
-and that code really needs to be reviewed for correctness more by looking at
-the code than by trying to run some exhaustive test case.
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 54 +++++++++++----------------
+ 1 file changed, 22 insertions(+), 32 deletions(-)
 
-I think if there were a specific maintainer for ath10k that could take a more
-active role, especially with regard to keeping a fairly wide variety of test rigs
-around to run regression tests, then it would help all involved.  I think this person
-needs access to firmware source so that they can more easily verify the driver
-matches the firmware:  Many of the regressions and bug fixes, for instance with
-stats, would be much easier to clean up if you look at firmware while developing
-the driver bits.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index b9ef3d3..7e27a06 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1373,6 +1373,26 @@ static void ar9003_hw_cl_cal_post_proc(struct ath_hw *ah, bool is_reusable)
+ 	}
+ }
+ 
++static void ar9003_hw_init_cal_common(struct ath_hw *ah)
++{
++	struct ath9k_hw_cal_data *caldata = ah->caldata;
++
++	/* Initialize list pointers */
++	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
++
++	INIT_CAL(&ah->iq_caldata);
++	INSERT_CAL(ah, &ah->iq_caldata);
++
++	/* Initialize current pointer to first element in list */
++	ah->cal_list_curr = ah->cal_list;
++
++	if (ah->cal_list_curr)
++		ath9k_hw_reset_calibration(ah, ah->cal_list_curr);
++
++	if (caldata)
++		caldata->CalValid = 0;
++}
++
+ static bool ar9003_hw_init_cal_pcoem(struct ath_hw *ah,
+ 				     struct ath9k_channel *chan)
+ {
+@@ -1532,21 +1552,7 @@ skip_tx_iqcal:
+ 	/* Revert chainmask to runtime parameters */
+ 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
+ 
+-	/* Initialize list pointers */
+-	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+-
+-	INIT_CAL(&ah->iq_caldata);
+-	INSERT_CAL(ah, &ah->iq_caldata);
+-	ath_dbg(common, CALIBRATE, "enabling IQ Calibration\n");
+-
+-	/* Initialize current pointer to first element in list */
+-	ah->cal_list_curr = ah->cal_list;
+-
+-	if (ah->cal_list_curr)
+-		ath9k_hw_reset_calibration(ah, ah->cal_list_curr);
+-
+-	if (caldata)
+-		caldata->CalValid = 0;
++	ar9003_hw_init_cal_common(ah);
+ 
+ 	return true;
+ }
+@@ -1577,8 +1583,6 @@ static bool do_ar9003_agc_cal(struct ath_hw *ah)
+ static bool ar9003_hw_init_cal_soc(struct ath_hw *ah,
+ 				   struct ath9k_channel *chan)
+ {
+-	struct ath_common *common = ath9k_hw_common(ah);
+-	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	bool txiqcal_done = false;
+ 	bool status = true;
+ 	bool run_agc_cal = false, sep_iq_cal = false;
+@@ -1676,21 +1680,7 @@ skip_tx_iqcal:
+ 	/* Revert chainmask to runtime parameters */
+ 	ar9003_hw_set_chain_masks(ah, ah->rxchainmask, ah->txchainmask);
+ 
+-	/* Initialize list pointers */
+-	ah->cal_list = ah->cal_list_last = ah->cal_list_curr = NULL;
+-
+-	INIT_CAL(&ah->iq_caldata);
+-	INSERT_CAL(ah, &ah->iq_caldata);
+-	ath_dbg(common, CALIBRATE, "enabling IQ Calibration\n");
+-
+-	/* Initialize current pointer to first element in list */
+-	ah->cal_list_curr = ah->cal_list;
+-
+-	if (ah->cal_list_curr)
+-		ath9k_hw_reset_calibration(ah, ah->cal_list_curr);
+-
+-	if (caldata)
+-		caldata->CalValid = 0;
++	ar9003_hw_init_cal_common(ah);
+ 
+ 	return true;
+ }
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.8.4
 
