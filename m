@@ -1,75 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55182 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751168AbcGENYZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 09:24:25 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	hannes@stressinduktion.org, nbd@nbd.name,
-	linux-kernel@vger.kernel.org, David Miller <davem@davemloft.net>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCHv4 wl-drv-next 0/2] register-field manipulation macros
-References: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
-Date: Tue, 05 Jul 2016 16:24:18 +0300
-In-Reply-To: <1467718979-20029-1-git-send-email-jakub.kicinski@netronome.com>
-	(Jakub Kicinski's message of "Tue, 5 Jul 2016 12:42:57 +0100")
-Message-ID: <87lh1g2p6l.fsf@kamboji.qca.qualcomm.com> (sfid-20160705_152442_254491_BB530410)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:56429 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932162AbcGKKCx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2016 06:02:53 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 4/4] ath9k_hw: implement temperature compensation support for AR9003+
+Date: Mon, 11 Jul 2016 12:02:48 +0200
+Message-Id: <20160711100248.68678-4-nbd@nbd.name> (sfid-20160711_120522_951012_EF6C8642)
+In-Reply-To: <20160711100248.68678-1-nbd@nbd.name>
+References: <20160711100248.68678-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jakub Kicinski <jakub.kicinski@netronome.com> writes:
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 25 ++++++++++++++++++++++---
+ drivers/net/wireless/ath/ath9k/hw.h           |  1 +
+ 2 files changed, 23 insertions(+), 3 deletions(-)
 
-> This set moves to a global header file macros which I find
-> very useful and worth popularising.  The basic problem is
-> that since C bitfields are not very dependable accessing
-> subfields of registers becomes slightly inconvenient.
-> It is nice to have the necessary mask and shift operations
-> wrapped in a macro.  It is also nice to have that macro
-> compute the shift amount based on the mask automatically.
->
-> My implementation follows what Felix Fietkau has done in
-> mt76.  Hannes Frederic Sowa suggested more use of standard
-> Linux/GCC functions.  Since the RFC I've also added a 
-> compile-time check to validate that the value passed to
-> setters fits in the mask.
->
-> I attempted the use of static inlines instead of macros
-> but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
-> I also noticed that forcing arguments to be u32 for inlines
-> makes the compiler use 32bit arithmetic where it could
-> get away with 64bit before (on 64bit machines, obviously).
-> That's a potential performance concern but probably not
-> a very practical one today.  Apart from looking "cleaner"
-> static inlines would have the advantage that we could #undef
-> the auxiliary macros at the end of the header.
-
-This information about various compiler problems is good to have in the
-commit log as the cover letter itself is not stored in the git log.
-
-> v3:
-> Build bot caught a build failure with -Os set.  AFAICT gcc
-> did not handle temporary variable I put in the macro
-> expression too well.  I work around that by defining
-> __BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
-> BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
->
-> Please review and advise on improvements.
->
-> If accepted I think would be best to push this through
-> Kalle's tree, since the only existing user is in
-> drivers/net/wireless/.
-
-I like it. But I feel much more comfortable to take these if I get an
-ack from someone like Dave Miller or Andrew Morton (CCed).
-
-Full patches here:
-
-https://patchwork.kernel.org/patch/9214129/
-https://patchwork.kernel.org/patch/9214135/
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 7e27a06..b6f064a 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -33,6 +33,7 @@ struct coeff {
+ 
+ enum ar9003_cal_types {
+ 	IQ_MISMATCH_CAL = BIT(0),
++	TEMP_COMP_CAL = BIT(1),
+ };
+ 
+ static void ar9003_hw_setup_calibration(struct ath_hw *ah,
+@@ -58,6 +59,12 @@ static void ar9003_hw_setup_calibration(struct ath_hw *ah,
+ 		/* Kick-off cal */
+ 		REG_SET_BIT(ah, AR_PHY_TIMING4, AR_PHY_TIMING4_DO_CAL);
+ 		break;
++	case TEMP_COMP_CAL:
++		ath_dbg(common, CALIBRATE,
++			"starting Temperature Compensation Calibration\n");
++		REG_SET_BIT(ah, AR_CH0_THERM, AR_CH0_THERM_LOCAL);
++		REG_SET_BIT(ah, AR_CH0_THERM, AR_CH0_THERM_START);
++		break;
+ 	default:
+ 		ath_err(common, "Invalid calibration type\n");
+ 		break;
+@@ -86,7 +93,8 @@ static bool ar9003_hw_per_calibration(struct ath_hw *ah,
+ 		/*
+ 		* Accumulate cal measures for active chains
+ 		*/
+-		cur_caldata->calCollect(ah);
++		if (cur_caldata->calCollect)
++			cur_caldata->calCollect(ah);
+ 		ah->cal_samples++;
+ 
+ 		if (ah->cal_samples >= cur_caldata->calNumSamples) {
+@@ -99,7 +107,8 @@ static bool ar9003_hw_per_calibration(struct ath_hw *ah,
+ 			/*
+ 			* Process accumulated data
+ 			*/
+-			cur_caldata->calPostProc(ah, numChains);
++			if (cur_caldata->calPostProc)
++				cur_caldata->calPostProc(ah, numChains);
+ 
+ 			/* Calibration has finished. */
+ 			caldata->CalValid |= cur_caldata->calType;
+@@ -314,9 +323,16 @@ static const struct ath9k_percal_data iq_cal_single_sample = {
+ 	ar9003_hw_iqcalibrate
+ };
+ 
++static const struct ath9k_percal_data temp_cal_single_sample = {
++	TEMP_COMP_CAL,
++	MIN_CAL_SAMPLES,
++	PER_MAX_LOG_COUNT,
++};
++
+ static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
+ {
+ 	ah->iq_caldata.calData = &iq_cal_single_sample;
++	ah->temp_caldata.calData = &temp_cal_single_sample;
+ 
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		ah->enabled_cals |= TX_IQ_CAL;
+@@ -324,7 +340,7 @@ static void ar9003_hw_init_cal_settings(struct ath_hw *ah)
+ 			ah->enabled_cals |= TX_IQ_ON_AGC_CAL;
+ 	}
+ 
+-	ah->supp_cals = IQ_MISMATCH_CAL;
++	ah->supp_cals = IQ_MISMATCH_CAL | TEMP_COMP_CAL;
+ }
+ 
+ #define OFF_UPPER_LT 24
+@@ -1383,6 +1399,9 @@ static void ar9003_hw_init_cal_common(struct ath_hw *ah)
+ 	INIT_CAL(&ah->iq_caldata);
+ 	INSERT_CAL(ah, &ah->iq_caldata);
+ 
++	INIT_CAL(&ah->temp_caldata);
++	INSERT_CAL(ah, &ah->temp_caldata);
++
+ 	/* Initialize current pointer to first element in list */
+ 	ah->cal_list_curr = ah->cal_list;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 9cbca12..2a5d3ad 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -830,6 +830,7 @@ struct ath_hw {
+ 	/* Calibration */
+ 	u32 supp_cals;
+ 	struct ath9k_cal_list iq_caldata;
++	struct ath9k_cal_list temp_caldata;
+ 	struct ath9k_cal_list adcgain_caldata;
+ 	struct ath9k_cal_list adcdc_caldata;
+ 	struct ath9k_cal_list *cal_list;
 -- 
-Kalle Valo
+2.8.4
+
