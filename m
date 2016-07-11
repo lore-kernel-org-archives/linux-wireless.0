@@ -1,152 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35399 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932596AbcGEPIi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 11:08:38 -0400
-Received: by mail-oi0-f66.google.com with SMTP id d132so27968712oig.2
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 08:08:33 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3 02/10] rtlwifi: rtl8192ce: Convert driver to use common hardware info routine
-Date: Tue,  5 Jul 2016 10:08:07 -0500
-Message-Id: <1467731295-25850-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160705_170911_016380_B892C687)
-In-Reply-To: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from nbd.name ([46.4.11.11]:39132 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751565AbcGKNz7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jul 2016 09:55:59 -0400
+Subject: Re: [PATCH ath9k-txq-work 1/2] ath9k: fix powersave wakeup
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
+References: <20160711130405.77451-1-nbd@nbd.name> <871t30wabu.fsf@toke.dk>
+Cc: linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <42df3d55-9d6c-5f45-0ae8-b5d7ef93d34a@nbd.name> (sfid-20160711_155603_780426_DBD05246)
+Date: Mon, 11 Jul 2016 15:55:55 +0200
+MIME-Version: 1.0
+In-Reply-To: <871t30wabu.fsf@toke.dk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for RTL8192CE chips is converted to use the common routine
-for getting the hardware information.
+On 2016-07-11 15:52, Toke Høiland-Jørgensen wrote:
+> Felix Fietkau <nbd@nbd.name> writes:
+> 
+>> drv_wake_tx_queue will only call into the driver if there are frames
+>> pending in the mac80211 queue. the driver needs to take care of its own
+>> queued frames
+> 
+> Thanks, makes sense. What's the proper etiquette here? Do I roll these
+> up into a v4 (possibly with other changes that show up along the way),
+> or do they go in as separate patches?
+You need to roll them in, otherwise your patch is going to cause
+regressions when it gets merged.
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnd Bergmann <arnd@arndb.de>
----
-V2 - Fixes bug found after V1 was submitted.
-V3 - No changes.
-
-This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
-	submitted by Joe Perches.
----
- .../net/wireless/realtek/rtlwifi/rtl8192ce/hw.c    | 83 ++++------------------
- 1 file changed, 12 insertions(+), 71 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-index 809a021..2446079 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-@@ -1680,65 +1680,18 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
--	u16 i, usvalue;
--	u8 hwinfo[HWSET_MAX_SIZE];
--	u16 eeprom_id;
--
--	switch (rtlefuse->epromtype) {
--	case EEPROM_BOOT_EFUSE:
--		rtl_efuse_shadow_map_update(hw);
--		break;
--
--	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
--		return;
--
--	default:
--		dev_warn(dev, "no efuse data\n");
--		return;
--	}
--
--	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
--
--	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP",
--		      hwinfo, HWSET_MAX_SIZE);
--
--	eeprom_id = *((u16 *)&hwinfo[0]);
--	if (eeprom_id != RTL8190_EEPROM_ID) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
--		rtlefuse->autoload_failflag = true;
--	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
--		rtlefuse->autoload_failflag = false;
--	}
--
--	if (rtlefuse->autoload_failflag)
-+	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
-+			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
-+			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
-+			COUNTRY_CODE_WORLD_WIDE_13};
-+	u8 *hwinfo;
-+
-+	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
-+	if (!hwinfo)
- 		return;
- 
--	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
--	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
--	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
--	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROMId = 0x%4x\n", eeprom_id);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
--
--	for (i = 0; i < 6; i += 2) {
--		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
--		*((u16 *) (&rtlefuse->dev_addr[i])) = usvalue;
--	}
--
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, "%pM\n", rtlefuse->dev_addr);
-+	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
-+		goto exit;
- 
- 	_rtl92ce_read_txpower_info_from_hwpg(hw,
- 					     rtlefuse->autoload_failflag,
-@@ -1747,18 +1700,6 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
- 	rtl8192ce_read_bt_coexist_info_from_hwpg(hw,
- 						 rtlefuse->autoload_failflag,
- 						 hwinfo);
--
--	rtlefuse->eeprom_channelplan = *&hwinfo[EEPROM_CHANNELPLAN];
--	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
--	rtlefuse->txpwr_fromeprom = true;
--	rtlefuse->eeprom_oemid = *&hwinfo[EEPROM_CUSTOMER_ID];
--
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
--
--	/* set channel paln to world wide 13 */
--	rtlefuse->channel_plan = COUNTRY_CODE_WORLD_WIDE_13;
--
- 	if (rtlhal->oem_id == RT_CID_DEFAULT) {
- 		switch (rtlefuse->eeprom_oemid) {
- 		case EEPROM_CID_DEFAULT:
-@@ -1782,10 +1723,10 @@ static void _rtl92ce_read_adapter_info(struct ieee80211_hw *hw)
- 		default:
- 			rtlhal->oem_id = RT_CID_DEFAULT;
- 			break;
--
- 		}
- 	}
--
-+exit:
-+	kfree(hwinfo);
- }
- 
- static void _rtl92ce_hal_customized_behavior(struct ieee80211_hw *hw)
--- 
-2.1.4
-
+- Felix
