@@ -1,90 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:34356 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753296AbcGKLZc (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34584 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932240AbcGKVVs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 07:25:32 -0400
-Message-ID: <1468236322.25088.114.camel@coelho.fi> (sfid-20160711_132537_230474_15EE9005)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Date: Mon, 11 Jul 2016 14:25:22 +0300
-Content-Type: multipart/signed; micalg="pgp-sha256";
-	protocol="application/pgp-signature"; boundary="=-ADNZBbNKAXvDKKqNExgH"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi-next 2016-07-11
+	Mon, 11 Jul 2016 17:21:48 -0400
+MIME-Version: 1.0
+In-Reply-To: <1877260.9mAQ7eY9me@wuerfel>
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
+ <1746957.vJhcHQMZVi@wuerfel> <CAFBinCBbzMM0Pz8s444YE+NSN+035+o8PtNBoUn4v8yPMzG9Mw@mail.gmail.com>
+ <1877260.9mAQ7eY9me@wuerfel>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Mon, 11 Jul 2016 23:21:26 +0200
+Message-ID: <CAFBinCBYmpBVph9vmWcPT512o2ObgmYn4naS2cTrpL61q6u1xw@mail.gmail.com> (sfid-20160711_232152_001875_AA7FDB27)
+Subject: Re: [PATCH v4 1/3] Documentation: dt: net: add ath9k wireless device binding
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	mcgrof@do-not-panic.com, galak@codeaurora.org,
+	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
+	pawel.moll@arm.com, robh+dt@kernel.org, kvalo@codeaurora.org,
+	chunkeey@googlemail.com, arend.vanspriel@broadcom.com,
+	julian.calaby@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Jul 11, 2016 at 12:01 AM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> ath9k reads the data from the EEPROM into memory. With that property
+>> disabled ath9k simply assumes that the endianness of the values in the
+>> EEPROM are having the correct endianness for the host system (in other
+>> words: no swap is being applied).
+>> I am not sure I understand you correctly, but isn't what you are
+>> explaining an issue in the ath9k code, rather than in this
+>> documentation?
+>
+> I looked at the code more to find that out now, but I'm more confused
+> now, as the eeprom seems to be read as a byte stream, and the endianess
+> conversion that the driver performs is not on the data values in it,
+> but seems to instead swap the bytes in each 16-bit word, regardless
+> of the contents (the values inside of the byte stream are always
+> interpreted as big-endian). Is that a correct observation?
+that seems to be the case for the ar9003 eeprom. Other implementations
+are doing it different, look at ath9k_hw_ar9287_check_eeprom for
+example: first ath9k_hw_nvram_swap_data checks the two magic bytes at
+the beginning of the data and swaps the bytes in each 16-bit word if
+the magic bytes don't match the magic bytes for the "native system
+endianness" (see AR5416_EEPROM_MAGIC). Then more swapping is applied.
+I asked for more details about the EEPROM format (specifically the
+endianness part) here [0] as I don't have access to the datasheets
+(all I have is the ath9k code)
 
---=-ADNZBbNKAXvDKKqNExgH
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> What I see in ath_pci_eeprom_read() is that the 16-bit words are taken
+> from the lower 16 bit of the little-endian AR_EEPROM_STATUS_DATA
+> register. As this is coming from a PCI register, it must have a device
+> specific endianess that is identical on all CPUs, so in the description
+> above, mentioning CPU endianess is a bit confusing. I could not find
+> the code that does the conditional byteswap, instead this function
+>
+> static bool ar9300_eeprom_read_byte(struct ath_hw *ah, int address,
+>                                     u8 *buffer)
+> {
+>         u16 val;
+>
+>         if (unlikely(!ath9k_hw_nvram_read(ah, address / 2, &val)))
+>                 return false;
+>
+>         *buffer = (val >> (8 * (address % 2))) & 0xff;
+>         return true;
+> }
+>
+> evidently assumes that the lower 8 bit of the 16-bit data from PCI
+> come first, i.e. it byteswaps on big-endian CPUs to get the bytestream
+> back into the order in which it is stored in the EEPROM.
+Please have a look at the ath9k_hw_nvram_swap_data function and
+eeprom_ops.check_eeprom (for example ath9k_hw_ar9287_check_eeprom).
+These are performing the conditional swapping (in addition to whatever
+previous swapping there was).
+The basic code works like this: read the full EEPROM data into memory
+(either from PCI bus, ath9k_platform_data or request_firmware), then
+eeprom_ops.check_eeprom will call ath9k_hw_nvram_swap_data for 16-bit
+word swapping and afterwards the check_eeprom implementation will doe
+further swapping.
+Apart from that your findings seem correct (at least this is identical
+to how I would interpret the code).
 
-Hi Kalle,
-
-I have one more patch intended for 4.8. =C2=A0I had forgotten to bump the F=
-W
-API version that our driver is now able to load. =C2=A0I hope there is stil=
-l
-time to get it included for 4.8.
-
-Let me know if everything's fine (or not). :)
-
-Luca.
+> Interestingly, this also seems to happen for ath_ahb_eeprom_read()
+> even though on that one the value does not get swapped by the bus
+> accessor, so presumably big-endian machines with a ahb based ath9k
+> store their eeprom byte-reversed?
+on AHB the eeprom data has to be provided via ath9k_platform_data /
+request_firmware mechanism. Thus there is no bus specific swapping,
+only the ath9k_hw_nvram_swap_data / eeprom_ops.check_eeprom swapping
+is applied in this case.
 
 
-The following changes since commit 6f482e37b75d4e56cdb9b56ae7057f3ce67097bc=
-:
-
-=C2=A0 iwlwifi: move iwl_drv to be shared across transports (2016-07-06 10:=
-37:44 +0300)
-
-are available in the git repository at:
-
-=C2=A0 git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.g=
-it tags/iwlwifi-next-for-kalle-2016-07-11
-
-for you to fetch changes up to ad38844b8e00c8d33eb1d1ffb49b945e6a985e13:
-
-=C2=A0 iwlwifi: mvm: bump MAX firmware API for mvm devices (2016-07-11 14:1=
-5:38 +0300)
-
-----------------------------------------------------------------
-* bump firmware version to load newer firmwares
-
-----------------------------------------------------------------
-Luciano Coelho (1):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: bump MAX firmware API for=
- mvm devices
-
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-7000.c | 4 ++--
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 4 ++--
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
-=C2=A03 files changed, 5 insertions(+), 5 deletions(-)
---=-ADNZBbNKAXvDKKqNExgH
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJXg4IiAAoJEKFHnKIaPMX6h88P/Axt0nfmHzyoNZSMp21qh8op
-y4Cqa78fMqaePutb7gM5mcKbGkK72X3lgG8mALgdrX3ZWtHluwzmCHgQfpLM69Qs
-N9NcITUkrB73fZkB6ugEzaHG5QYSk49ON0rf3Y/ZnTO0+IRmr2NGvzMUFChYB1Hk
-KfovcPM6klOdeT+0484D9dJeUgC/LrMFt0CTS76g4Falfs1llT9cuSTnBDTCsNA0
-pXnIE2H4YH0ry/FaUcVyqBBrSXac4rL2+6p03J77oO6dAhKHla4lMDHoqXLjyNlv
-3vzfYSDpUXL5Ld23EERSYKevIy023xHzKU0/MkIY67L0JDt6uuhr6DcMplxp0Mfr
-GTyS9c1Zo7ODnoTTm8NjjpaCQRNdZ6x66LyUZJbyIn9UMS8CMQPNInUnXntnX6Bi
-I4yyzREopi9J2aXDB9fIw4Zh1X+4nLExpN/3QI6L7Jd/TnuYHznEXPX0UmKwON0N
-Vp6GHckru71Y9mgN8WvjtsL3sPl0syhKLli5DBuZVKGvW8h9ZYaZUqyY2UatxwOt
-c/xfjdeYtM0cDG4CfbE0HHzz4mnZAFry3SckUU1bZkwbR/M/biDfEv8pDSk4qbFk
-cuEwYi5uu98EBR0lGJJEA1pR5pu1u0PvI4FATH1QaqboqKzAvv5kiqRPIaLvWCyw
-/siGO13aMBc0nagMLH7P
-=Aoak
------END PGP SIGNATURE-----
-
---=-ADNZBbNKAXvDKKqNExgH--
-
+[0] http://thread.gmane.org/gmane.linux.kernel.wireless.general/153569
