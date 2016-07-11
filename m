@@ -1,111 +1,210 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:52214 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751424AbcGDOw1 convert rfc822-to-8bit (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:49194 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753022AbcGKOTN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2016 10:52:27 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Jonas Gorski <jonas.gorski@gmail.com>,
-	Hans de Goede <hdegoede@redhat.com>,
+	Mon, 11 Jul 2016 10:19:13 -0400
+From: Maxim Altshul <maxim.altshul@ti.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Maxim Altshul <maxim.altshul@ti.com>,
 	Kalle Valo <kvalo@codeaurora.org>,
-	Priit Laes <plaes@plaes.org>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name dt property
-Date: Mon, 04 Jul 2016 16:54:25 +0200
-Message-ID: <8717879.O1RMZcQt4V@wuerfel> (sfid-20160704_165231_368148_35549464)
-In-Reply-To: <6cc6dabf-e6da-d70d-3cce-a7f1804f233e@broadcom.com>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com> <5756670.9hMGo8oEyl@wuerfel> <6cc6dabf-e6da-d70d-3cce-a7f1804f233e@broadcom.com>
+	Eliad Peller <eliad@wizery.com>, Guy Mishol <guym@ti.com>,
+	"Machani, Yaniv" <yanivma@ti.com>, Arik Nemtsov <arik@wizery.com>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2 v4] wlcore/wl18xx: Add functionality to accept TX rate per link
+Date: Mon, 11 Jul 2016 17:22:32 +0300
+Message-ID: <20160711142251.30443-1-maxim.altshul@ti.com> (sfid-20160711_161932_220411_2408EE64)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, July 4, 2016 11:08:38 AM CEST Arend Van Spriel wrote:
-> On 4-7-2016 10:55, Arnd Bergmann wrote:
-> > On Monday, July 4, 2016 10:41:20 AM CEST Arend Van Spriel wrote:
-> >> On 2-7-2016 23:30, Arnd Bergmann wrote:
-> >>> On Saturday, July 2, 2016 8:20:35 PM CEST Arend Van Spriel wrote:
-> >>>>> If you want a separate property, then I repeat my very first
-> >>>>> suggestion, the well defined model property.
-> >>>>> e.g.
-> >>>>>
-> >>>>> brcmf@0 {
-> >>>>>         model = "ampak,ap6210";
-> >>>>>         compatible = "brcm,bcm4329-fmac";
-> >>>>>         ...
-> >>>>> };
-> >>>>>
-> >>>>> All device nodes may have a model property, not just the top "machine" one.
-> >>>>
-> >>>> I heard you the first time  I just was not sure what the implications
-> >>>> would be to use it. Hence I suggested a vendor specific property.
-> >>>> However, looking up and reading the definition in ePAPRv1.1 I suppose it
-> >>>> is fine to use the model property:
-> >>>>
-> >>>> Property: model
-> >>>> Value type: <string>
-> >>>> Description:
-> >>>> The model property value is a <string> that specifies the manufacturer’s
-> >>>> model number of the device.
-> >>>>
-> >>>> The recommended format is: “manufacturer,model”, where manufacturer is a
-> >>>> string describing the name of the manufacturer (such as a stock ticker
-> >>>> symbol), and model specifies the model number.
-> >>>
-> >>> The model property is very similar to compatible, except that there is
-> >>> only one entry rather than a list of entries from most specific to
-> >>> most generic.
-> >>
-> >> They seem very similar, but I think there is a conceptual difference.
-> >> The compatible property is mainly used to select the appropriate driver
-> >> and as such the property is typically ignored by device drivers.
-> >> Probably there are exceptions to be found.
-> >>
-> >>> I think by writing the above example as
-> >>>
-> >>>       compatible = "ampak,ap6210", "brcm,bcm4329-fmac";
-> >>>
-> >>> we can provide the same functionality in a slightly simpler way, the driver
-> >>> then just goes on to look for the nvram file for each entry in sequence until
-> >>> it finds one.
-> >>
-> >> Not sure why this would be simpler. Why would traversing the compatible
-> >> string be simpler than handling the model property if present and
-> >> otherwise fallback to the default nvram naming.
-> > 
-> > Because you have to walk the list anyway to find the other firmware files:
-> > when you have a specialization of a device that requires listing both values
-> > as compatible, the driver has no idea which of the entries to use, unless
-> > you add a lookup table that adds more complexity.
-> 
-> Currently, the brcmfmac bindings describe a single compatible string,
-> ie. "brcm,bcm4329-fmac", which selects the driver/programming model. If
-> that programming model supports "use model property if present,
-> otherwise use default" there is nothing to traverse. The default way in
-> the driver to determine firmware and nvram filename already has a lookup
-> table which uses the chip id and chip revision as key, which are read
-> from the device.
+FW will provide a TX rate per link for each FW status,
+and wlcore will be able to store the information for
+the use of the mesh hwmp module.
 
-In drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c I already see
-over a dozen different chips being supported, bcm4329 is only one of
-them. In particular, there seem to be some that have various modules:
+This is used mainly in mesh.
+Rates are reported when a mesh interface is up.
 
-        BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43241_CHIP_ID, 0x0000001F, 43241B0),
-        BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43241_CHIP_ID, 0x00000020, 43241B4),
-        BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43241_CHIP_ID, 0xFFFFFFC0, 43241B5),
+Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+---
+Send both patches + fixes for reduntant null checks and units
 
-So if you have a bcm43241, that compatible string probably should
-include both brcm,bcm43241-b4-fmac and brcm,bcm43241-fmac, possibly also
-brcm,bcm4329-fmac, to show that it is a superset of the programming
-interface of that one.
+ drivers/net/wireless/ti/wl18xx/main.c     |  4 ++++
+ drivers/net/wireless/ti/wl18xx/tx.c       | 22 ++++++++++++++++++----
+ drivers/net/wireless/ti/wl18xx/wl18xx.h   |  6 +++++-
+ drivers/net/wireless/ti/wlcore/main.c     |  1 +
+ drivers/net/wireless/ti/wlcore/rx.c       |  7 +++++++
+ drivers/net/wireless/ti/wlcore/wlcore_i.h | 13 +++++++++++++
+ 6 files changed, 48 insertions(+), 5 deletions(-)
 
-	Arnd
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 6e89e13..a7913ec 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1214,6 +1214,10 @@ static void wl18xx_convert_fw_status(struct wl1271 *wl, void *raw_fw_status,
+ 			int_fw_status->counters.tx_voice_released_blks;
+ 	fw_status->counters.tx_last_rate =
+ 			int_fw_status->counters.tx_last_rate;
++	fw_status->counters.tx_last_rate_mbps =
++			int_fw_status->counters.tx_last_rate_mbps;
++	fw_status->counters.hlid =
++			int_fw_status->counters.hlid;
+ 
+ 	fw_status->log_start_addr = le32_to_cpu(int_fw_status->log_start_addr);
+ 
+diff --git a/drivers/net/wireless/ti/wl18xx/tx.c b/drivers/net/wireless/ti/wl18xx/tx.c
+index 3406ffb..d198827 100644
+--- a/drivers/net/wireless/ti/wl18xx/tx.c
++++ b/drivers/net/wireless/ti/wl18xx/tx.c
+@@ -30,9 +30,9 @@
+ 
+ static
+ void wl18xx_get_last_tx_rate(struct wl1271 *wl, struct ieee80211_vif *vif,
+-			     u8 band, struct ieee80211_tx_rate *rate)
++			     u8 band, struct ieee80211_tx_rate *rate, u8 hlid)
+ {
+-	u8 fw_rate = wl->fw_status->counters.tx_last_rate;
++	u8 fw_rate = wl->links[hlid].fw_rate_idx;
+ 
+ 	if (fw_rate > CONF_HW_RATE_INDEX_MAX) {
+ 		wl1271_error("last Tx rate invalid: %d", fw_rate);
+@@ -79,6 +79,7 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
+ 	struct sk_buff *skb;
+ 	int id = tx_stat_byte & WL18XX_TX_STATUS_DESC_ID_MASK;
+ 	bool tx_success;
++	struct wl1271_tx_hw_descr *tx_desc;
+ 
+ 	/* check for id legality */
+ 	if (unlikely(id >= wl->num_tx_desc || wl->tx_frames[id] == NULL)) {
+@@ -91,6 +92,7 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
+ 
+ 	skb = wl->tx_frames[id];
+ 	info = IEEE80211_SKB_CB(skb);
++	tx_desc = (struct wl1271_tx_hw_descr *)skb->data;
+ 
+ 	if (wl12xx_is_dummy_packet(wl, skb)) {
+ 		wl1271_free_tx_id(wl, id);
+@@ -105,7 +107,9 @@ static void wl18xx_tx_complete_packet(struct wl1271 *wl, u8 tx_stat_byte)
+ 	 * the info->status structures
+ 	 */
+ 	wl18xx_get_last_tx_rate(wl, info->control.vif,
+-				info->band, &info->status.rates[0]);
++				info->band,
++				&info->status.rates[0],
++				tx_desc->hlid);
+ 
+ 	info->status.rates[0].count = 1; /* no data about retries */
+ 	info->status.ack_signal = -1;
+@@ -144,12 +148,22 @@ void wl18xx_tx_immediate_complete(struct wl1271 *wl)
+ 	struct wl18xx_fw_status_priv *status_priv =
+ 		(struct wl18xx_fw_status_priv *)wl->fw_status->priv;
+ 	struct wl18xx_priv *priv = wl->priv;
+-	u8 i;
++	u8 i, hlid;
+ 
+ 	/* nothing to do here */
+ 	if (priv->last_fw_rls_idx == status_priv->fw_release_idx)
+ 		return;
+ 
++	/* update rates per link */
++	hlid = wl->fw_status->counters.hlid;
++
++	if (hlid < WLCORE_MAX_LINKS) {
++		wl->links[hlid].fw_rate_idx =
++				wl->fw_status->counters.tx_last_rate;
++		wl->links[hlid].fw_rate_mbps =
++				wl->fw_status->counters.tx_last_rate_mbps;
++	}
++
+ 	/* freed Tx descriptors */
+ 	wl1271_debug(DEBUG_TX, "last released desc = %d, current idx = %d",
+ 		     priv->last_fw_rls_idx, status_priv->fw_release_idx);
+diff --git a/drivers/net/wireless/ti/wl18xx/wl18xx.h b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+index d65cc6d..5371cbd 100644
+--- a/drivers/net/wireless/ti/wl18xx/wl18xx.h
++++ b/drivers/net/wireless/ti/wl18xx/wl18xx.h
+@@ -125,7 +125,11 @@ struct wl18xx_fw_packet_counters {
+ 	/* Tx rate of the last transmitted packet */
+ 	u8 tx_last_rate;
+ 
+-	u8 padding[2];
++	/* Tx rate or Tx rate estimate pre-calculated by fw in mbps units */
++	u8 tx_last_rate_mbps;
++
++	/* hlid for which the rates were reported */
++	u8 hlid;
+ } __packed;
+ 
+ /* FW status registers */
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 926d9b4..39dec7d 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5091,6 +5091,7 @@ static int wl12xx_sta_add(struct wl1271 *wl,
+ 		return ret;
+ 
+ 	wl_sta = (struct wl1271_station *)sta->drv_priv;
++	wl_sta->wl = wl;
+ 	hlid = wl_sta->hlid;
+ 
+ 	ret = wl12xx_cmd_add_peer(wl, wlvif, sta, hlid);
+diff --git a/drivers/net/wireless/ti/wlcore/rx.c b/drivers/net/wireless/ti/wlcore/rx.c
+index 438f271..c87d1d4 100644
+--- a/drivers/net/wireless/ti/wlcore/rx.c
++++ b/drivers/net/wireless/ti/wlcore/rx.c
+@@ -228,6 +228,13 @@ int wlcore_rx(struct wl1271 *wl, struct wl_fw_status *status)
+ 	enum wl_rx_buf_align rx_align;
+ 	int ret = 0;
+ 
++	/* update rates per link */
++	hlid = status->counters.hlid;
++
++	if (hlid < WLCORE_MAX_LINKS)
++		wl->links[hlid].fw_rate_mbps =
++				status->counters.tx_last_rate_mbps;
++
+ 	while (drv_rx_counter != fw_rx_counter) {
+ 		buf_size = 0;
+ 		rx_counter = drv_rx_counter;
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index cb72b2b..3875190 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -174,6 +174,12 @@ struct wl_fw_status {
+ 
+ 		/* Tx rate of the last transmitted packet */
+ 		u8 tx_last_rate;
++
++		/* Tx rate or Tx rate estimate pre calculated by fw in mbps */
++		u8 tx_last_rate_mbps;
++
++		/* hlid for which the rates were reported */
++		u8 hlid;
+ 	} counters;
+ 
+ 	u32 log_start_addr;
+@@ -278,6 +284,12 @@ struct wl1271_link {
+ 	/* bitmap of TIDs where RX BA sessions are active for this link */
+ 	u8 ba_bitmap;
+ 
++	/* the last fw rate index we used for this link */
++	u8 fw_rate_idx;
++
++	/* the last fw rate [Mbps] we used for this link */
++	u8 fw_rate_mbps;
++
+ 	/* The wlvif this link belongs to. Might be null for global links */
+ 	struct wl12xx_vif *wlvif;
+ 
+@@ -340,6 +352,7 @@ struct wl1271_station {
+ 	 * Used in both AP and STA mode.
+ 	 */
+ 	u64 total_freed_pkts;
++	struct wl1271 *wl;
+ };
+ 
+ struct wl12xx_vif {
+-- 
+2.9.0
+
