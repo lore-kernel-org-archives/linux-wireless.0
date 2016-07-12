@@ -1,36 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:60410 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276AbcGKUwU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 16:52:20 -0400
-Date: Mon, 11 Jul 2016 13:52:18 -0700 (PDT)
-Message-Id: <20160711.135218.1535273154348680313.davem@davemloft.net> (sfid-20160711_225226_540419_562EF579)
-To: colin.king@canonical.com
-Cc: jakub.kicinski@netronome.com, lauro.venancio@openbossa.org,
-	aloisio.almeida@openbossa.org, sameo@linux.intel.com,
-	rolf.neugebauer@netronome.com, christophe.ricard@gmail.com,
-	robert.dolca@intel.com, oss-drivers@netronome.com,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH][V2] nfp: check idx is -ENOSPC before using it is an
- index
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1468252460-15117-1-git-send-email-colin.king@canonical.com>
-References: <1468252460-15117-1-git-send-email-colin.king@canonical.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from nbd.name ([46.4.11.11]:41808 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752458AbcGLNWz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2016 09:22:55 -0400
+Subject: Re: TCP performance regression in mac80211 triggered by the fq code
+To: Dave Taht <dave.taht@gmail.com>,
+	=?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vu?= =?UTF-8?Q?sen?=
+	<toke@toke.dk>
+References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
+ <87shvfujl4.fsf@toke.dk>
+ <CAA93jw6z53P+JCPsjYD-vaY+9vq9ZO-Ob_cXm0AE76uVcM=F9g@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <a708a057-26f9-db9b-32ee-741108335cb2@nbd.name> (sfid-20160712_152259_391126_DAD48269)
+Date: Tue, 12 Jul 2016 15:22:53 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAA93jw6z53P+JCPsjYD-vaY+9vq9ZO-Ob_cXm0AE76uVcM=F9g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin King <colin.king@canonical.com>
-Date: Mon, 11 Jul 2016 16:54:20 +0100
-
-> From: Colin Ian King <colin.king@canonical.com>
+On 2016-07-12 14:44, Dave Taht wrote:
+> On Tue, Jul 12, 2016 at 2:28 PM, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
+>> Felix Fietkau <nbd@nbd.name> writes:
+>>
+>>> Hi,
+>>>
+>>> With Toke's ath9k txq patch I've noticed a pretty nasty performance
+>>> regression when running local iperf on an AP (running the txq stuff) to
+>>> a wireless client.
+>>>
+>>> Here's some things that I found:
+>>> - when I use only one TCP stream I get around 90-110 Mbit/s
+>>> - when running multiple TCP streams, I get only 35-40 Mbit/s total
+>>> - fairness between TCP streams looks completely fine
+>>> - there's no big queue buildup, the code never actually drops any packets
+>>> - if I put a hack in the fq code to force the hash to a constant value
+>>> (effectively disabling fq without disabling codel), the problem
+>>> disappears and even multiple streams get proper performance.
+>>>
+>>> Please let me know if you have any ideas.
+>>
+>> Hmm, I see two TCP streams get about the same aggregate throughput as
+>> one, both when started from the AP and when started one hop away.
+>> However, do see TCP flows take a while to ramp up when started from the
+>> AP - a short test gets ~70Mbps when run from one hop away and ~50Mbps
+>> when run from the AP. how long are you running the tests for?
+>>
+>> (I seem to recall the ramp-up issue to be there pre-patch as well,
+>> though).
 > 
-> idx can be returned as -ENOSPC, so we should check for this first
-> before using it as an index into nn->vxlan_usecnt[] to avoid an
-> out of bounds array offset read.
+> The original ath10k code had a "swag" at hooking in an estimator from
+> rate control.
+> With minstrel in play that can be done better in the ath9k.
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+>> As for why this would happen... There could be a bug in the dequeue code
+>> somewhere, but since you get better performance from sticking everything
+>> into one queue, my best guess would be that the client is choking on the
+>> interleaved packets? I.e. expending more CPU when it can't stick
+>> subsequent packets into the same TCP flow?
+> 
+> I share this concern.
+> 
+> The quantum is? I am not opposed to a larger quantum (2 full size
+> packets = 3028 in this case?).
+I also agree with increasing quantum, however that did not make any
+difference in my tests.
 
-Applied to net-next.
+- Felix
+
