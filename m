@@ -1,59 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60337 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751287AbcGMHCp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 03:02:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	mcgrof@do-not-panic.com, galak@codeaurora.org,
-	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
-	pawel.moll@arm.com, robh+dt@kernel.org, chunkeey@googlemail.com,
-	arend.vanspriel@broadcom.com, julian.calaby@gmail.com
-Subject: Re: [PATCH v4 1/3] Documentation: dt: net: add ath9k wireless device binding
-References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
-	<20160709232834.31654-1-martin.blumenstingl@googlemail.com>
-	<20160709232834.31654-2-martin.blumenstingl@googlemail.com>
-Date: Wed, 13 Jul 2016 10:02:39 +0300
-In-Reply-To: <20160709232834.31654-2-martin.blumenstingl@googlemail.com>
-	(Martin Blumenstingl's message of "Sun, 10 Jul 2016 01:28:32 +0200")
-Message-ID: <87a8hmauls.fsf@purkki.adurom.net> (sfid-20160713_090316_941553_EC875C05)
+Received: from nbd.name ([46.4.11.11]:41771 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750770AbcGLNV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2016 09:21:28 -0400
+Subject: Re: TCP performance regression in mac80211 triggered by the fq code
+To: Dave Taht <dave.taht@gmail.com>,
+	make-wifi-fast@lists.bufferbloat.net
+References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
+ <CAA93jw6=_pemSUjk3dje1GmnTzrs+=pEdza4j1Wjtrw+VKNdNg@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	=?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <097af8e4-5393-8e1b-1748-36233e605867@nbd.name> (sfid-20160712_152131_701591_DDEEBDE8)
+Date: Tue, 12 Jul 2016 15:21:21 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAA93jw6=_pemSUjk3dje1GmnTzrs+=pEdza4j1Wjtrw+VKNdNg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
+On 2016-07-12 14:13, Dave Taht wrote:
+> On Tue, Jul 12, 2016 at 12:09 PM, Felix Fietkau <nbd@nbd.name> wrote:
+>> Hi,
+>>
+>> With Toke's ath9k txq patch I've noticed a pretty nasty performance
+>> regression when running local iperf on an AP (running the txq stuff) to
+>> a wireless client.
+> 
+> Your kernel? cpu architecture?
+QCA9558, 720 MHz, running Linux 4.4.14
 
-> Add documentation how devicetree can be used to configure ath9k based
-> devices.
->
-> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-> ---
->  .../devicetree/bindings/net/wireless/qca,ath9k.txt | 59 ++++++++++++++++++++++
->  1 file changed, 59 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
->
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> new file mode 100644
-> index 0000000..7c62c59
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> @@ -0,0 +1,59 @@
-> +* Qualcomm Atheros ath9k wireless devices
-> +
-> +This node provides properties for configuring the ath9k wireless device. The
-> +node is expected to be specified as a child node of the PCI controller to
-> +which the wireless chip is connected.
-> +
-> +Required properties:
-> +- compatible: Should be "qca,ath9k"
+> What happens when going through the AP to a server from the wireless client?
+Will test that next.
 
-Isn't this supposed to use the chipset name? ath9k is the driver name
-and something like ar9462 is the chip name. I know in ath10k we used
-"qca,ath10k" but I'm starting to suspect that was a mistake.
+> Which direction?
+AP->STA, iperf running on the AP. Client is a regular MacBook Pro
+(Broadcom).
 
--- 
-Kalle Valo
+>> Here's some things that I found:
+>> - when I use only one TCP stream I get around 90-110 Mbit/s
+> 
+> with how much cpu left over?
+~20%
+
+>> - when running multiple TCP streams, I get only 35-40 Mbit/s total
+> with how much cpu left over?
+~30%
+
+> context switch difference between the two tests?
+What's the easiest way to track that?
+
+> tcp_limit_output_bytes is?
+262144
+
+> got perf?
+Need to make a new build for that.
+
+>> - fairness between TCP streams looks completely fine
+> 
+> A codel will get to long term fairness pretty fast. Packet captures
+> from a fq will show much more regular interleaving of packets,
+> regardless.
+> 
+>> - there's no big queue buildup, the code never actually drops any packets
+> 
+> A "trick" I have been using to observe codel behavior has been to
+> enable ecn on server and client, then checking in wireshark for ect(3)
+> marked packets.
+I verified this with printk. The same issue already appears if I have
+just the fq patch (with the codel patch reverted).
+
+>> - if I put a hack in the fq code to force the hash to a constant value
+> 
+> You could also set "flows" to 1 to keep the hash being generated, but
+> not actually use it.
+> 
+>> (effectively disabling fq without disabling codel), the problem
+>> disappears and even multiple streams get proper performance.
+> 
+> Meaning you get 90-110Mbits ?
+Right.
+
+> Do you have a "before toke" figure for this platform?
+It's quite similar.
+
+>> Please let me know if you have any ideas.
+> 
+> I am in berlin, packing hardware...
+Nice!
+
+- Felix
+
