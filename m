@@ -1,28 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:45722 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751370AbcGRVtc convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:33037 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933130AbcGLMoG convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 17:49:32 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: TCP performance regression in mac80211 triggered by the fq code
-References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
-	<87shvfujl4.fsf@toke.dk>
-Date: Mon, 18 Jul 2016 23:49:21 +0200
-In-Reply-To: <87shvfujl4.fsf@toke.dk> ("Toke =?utf-8?Q?H=C3=B8iland-J?=
-	=?utf-8?Q?=C3=B8rgensen=22's?= message of
-	"Tue, 12 Jul 2016 14:28:07 +0200")
-Message-ID: <87d1mar50e.fsf@toke.dk> (sfid-20160718_234936_022756_F11A0021)
+	Tue, 12 Jul 2016 08:44:06 -0400
+Received: by mail-oi0-f47.google.com with SMTP id j185so13910499oih.0
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jul 2016 05:44:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87shvfujl4.fsf@toke.dk>
+References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name> <87shvfujl4.fsf@toke.dk>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Tue, 12 Jul 2016 14:44:05 +0200
+Message-ID: <CAA93jw6z53P+JCPsjYD-vaY+9vq9ZO-Ob_cXm0AE76uVcM=F9g@mail.gmail.com> (sfid-20160712_144417_168544_4CB123F4)
+Subject: Re: TCP performance regression in mac80211 triggered by the fq code
+To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Cc: Felix Fietkau <nbd@nbd.name>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Toke Høiland-Jørgensen <toke@toke.dk> writes:
-
+On Tue, Jul 12, 2016 at 2:28 PM, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
 > Felix Fietkau <nbd@nbd.name> writes:
 >
 >> Hi,
@@ -44,20 +43,37 @@ Toke Høiland-Jørgensen <toke@toke.dk> writes:
 >
 > Hmm, I see two TCP streams get about the same aggregate throughput as
 > one, both when started from the AP and when started one hop away.
+> However, do see TCP flows take a while to ramp up when started from the
+> AP - a short test gets ~70Mbps when run from one hop away and ~50Mbps
+> when run from the AP. how long are you running the tests for?
+>
+> (I seem to recall the ramp-up issue to be there pre-patch as well,
+> though).
 
-So while I have still not been able to reproduce the issue you
-described, I have seen something else that is at least puzzling, and may
-or may not be related:
+The original ath10k code had a "swag" at hooking in an estimator from
+rate control.
+With minstrel in play that can be done better in the ath9k.
 
-When monitoring the output of /sys/kernel/debug/ieee80211/phy0/aqm I see
-that all stations have their queues empty all the way to zero several
-times per second. This is a bit puzzling; the queue should be kept under
-control, but really shouldn't empty completely. I figure this might also
-be the reason why you're seeing degraded performance...
+> As for why this would happen... There could be a bug in the dequeue code
+> somewhere, but since you get better performance from sticking everything
+> into one queue, my best guess would be that the client is choking on the
+> interleaved packets? I.e. expending more CPU when it can't stick
+> subsequent packets into the same TCP flow?
 
-Since the stats output doesn't include a counter for drops, I haven't
-gotten any further with figuring out if it's CoDel that's being too
-aggressive, or what is happening. But will probably add that in and take
-another look.
+I share this concern.
 
--Toke
+The quantum is? I am not opposed to a larger quantum (2 full size
+packets = 3028 in this case?).
+
+> -Toke
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Dave Täht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
