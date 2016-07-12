@@ -1,43 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43927 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42434 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751226AbcGTVue (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 17:50:34 -0400
-Message-ID: <1469051432.3286.4.camel@redhat.com> (sfid-20160720_235037_982645_4923847B)
-Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
-From: Dan Williams <dcbw@redhat.com>
-To: Christopher Williamson <home@chrisaw.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Wed, 20 Jul 2016 16:50:32 -0500
-In-Reply-To: <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
-References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
-	 <1468946312.5661.2.camel@redhat.com>
-	 <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
-	 <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
-	 <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
-	 <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
-	 <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1750780AbcGLSsK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2016 14:48:10 -0400
+Date: Tue, 12 Jul 2016 20:48:02 +0200
+From: Igor Mammedov <imammedo@redhat.com>
+To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, Stable <stable@vger.kernel.org>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM SPECIFIC AMBA DRIVER
+	(BCMA)), linux-kernel@vger.kernel.org (open list)
+Subject: Re: [PATCH FIX 4.6+] bcma: add PCI ID for Foxconn's BCM43142 device
+Message-ID: <20160712204803.77bf3c59@igors-macbook-pro.local> (sfid-20160712_204834_720996_93A43EB2)
+In-Reply-To: <1468270896-2988-1-git-send-email-zajec5@gmail.com>
+References: <1468270896-2988-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-07-20 at 13:06 -0700, Christopher Williamson wrote:
-> Hi Dan,
+On Mon, 11 Jul 2016 23:01:36 +0200
+Rafał Miłecki <zajec5@gmail.com> wrote:
+
+> After discovering there are 2 very different 14e4:4365 PCI devices we
+> made ID tables less generic. Back then we believed there are only 2
+> such devices:
+> 1) 14e4:4365 1028:0016 with SoftMAC BCM43142 chipset
+> 2) 14e4:4365 14e4:4365 with FullMAC BCM4366 chipset
 > 
-> Ah - yeah I hadn’t thought it may be a kernel build option. I’ve now
-> built that and dmesg is a much more lively place!
+> From the recent report it appears there is also 14e4:4365 105b:e092
+> which should be claimed by bcma. Add back support for it.
 > 
-> I’ve provided output logs for both when the device is connected and
-> when a connection attempt is made - hopefully this is useful.
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=121881
+> Fixes: 515b399c9a20 ("bcma: claim only 14e4:4365 PCI Dell card with
+> SoftMAC BCM43142") Reported-by: Igor Mammedov <imammedo@redhat.com>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> Cc: Stable <stable@vger.kernel.org> [4.6+]
+Tested-by: Igor Mammedov <imammedo@redhat.com>
 
-<snip>
+> ---
+>  drivers/bcma/host_pci.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
+> index cae5385..bd46569 100644
+> --- a/drivers/bcma/host_pci.c
+> +++ b/drivers/bcma/host_pci.c
+> @@ -295,6 +295,7 @@ static const struct pci_device_id
+> bcma_pci_bridge_tbl[] = { { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM,
+> 0x4359) }, { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4360) },
+>  	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_BROADCOM, 0x4365,
+> PCI_VENDOR_ID_DELL, 0x0016) },
+> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_BROADCOM, 0x4365,
+> PCI_VENDOR_ID_FOXCONN, 0xe092) },
+> { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a0) },
+> { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
+> { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
 
-The card is scanning and only finds 'shaunthesheep' 20 seconds after
-you "connect for the first time".  The logs stop 3 seconds later.  Are
-you connecting with wicd or something else?
-
-Can you run wpa_supplicant with the "-dddtu" option so we can get debug
-log output from it?
-
-Dan
