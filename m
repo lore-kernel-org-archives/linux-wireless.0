@@ -1,107 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:53509 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752526AbcGTMPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 08:15:08 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Hahn, Maital" <maitalm@ti.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: RE: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
-Date: Wed, 20 Jul 2016 12:15:00 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD110139208B47@DFRE01.ent.ti.com> (sfid-20160720_141516_006918_3C73110B)
-References: <CAEFj987X26u59K32Mt-bKBSTmy3cWvOiNNBG7K4wbdQBAdR97Q@mail.gmail.com>
- <20160719124456.GD11996@localhost>
- <AE1C82FB3D0EC64DB1F752C81CBD110139206115@DFRE01.ent.ti.com>
- <20160719134355.GA1833@localhost>
- <CAEFj987V0r3aVn+JhQOX-40bheKyEJdrppF75OCaLXhU=skmNw@mail.gmail.com>
- <AE1C82FB3D0EC64DB1F752C81CBD110139206BD6@DFRE01.ent.ti.com>
- <CAEFj986LZ8zjBtyJrRL4GX3S-yTGxL-MJs3S18ze-NNw544OPQ@mail.gmail.com>
-In-Reply-To: <CAEFj986LZ8zjBtyJrRL4GX3S-yTGxL-MJs3S18ze-NNw544OPQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:36752 "EHLO
+	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932085AbcGLKXb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jul 2016 06:23:31 -0400
+Received: by mail-vk0-f66.google.com with SMTP id r135so671747vkf.3
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jul 2016 03:23:30 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <38869535-4f77-f6d8-d8d0-cb01b3f9c65b@broadcom.com>
+References: <1460498140-18874-1-git-send-email-per.forlin@gmail.com>
+ <CAC0pXTLDeiiVma7AGD1XirQG=SqSDht_BA3arQQnvn=ztTLDug@mail.gmail.com>
+ <CAC0pXTJ-hnKgSMwf7KYPwBs7RB2YAgaouOdeJwD2kuLneCGXfA@mail.gmail.com> <38869535-4f77-f6d8-d8d0-cb01b3f9c65b@broadcom.com>
+From: =?UTF-8?Q?Per_F=C3=B6rlin?= <per.forlin@gmail.com>
+Date: Tue, 12 Jul 2016 12:23:29 +0200
+Message-ID: <CAC0pXTKPm=Q2__OuYEp0p4RC_Jum_+tuS3-7R-hBcoa8Ka8==Q@mail.gmail.com> (sfid-20160712_122336_281701_656546AB)
+Subject: Re: [PATCH v4] brcmfmac: Decrease 8021x_cnt for dropped packets
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, arend@broadcom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBKdWwgMjAsIDIwMTYgYXQgMDk6NDU6MTYsIFllb2ggQ2h1bi1ZZW93IHdyb3RlOg0K
-PiBKb2hhbm5lcyBCZXJnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgMi8zXSBtYWM4MDIxMTog
-bWVzaDogaW1wcm92ZSBwYXRoIHJlc29sdmluZyANCj4gdGltZQ0KPiANCj4gT24gV2VkLCBKdWwg
-MjAsIDIwMTYgYXQgNDowMSBBTSwgTWFjaGFuaSwgWWFuaXYgPHlhbml2bWFAdGkuY29tPiB3cm90
-ZToNCj4gPiBPbiBUdWUsIEp1bCAxOSwgMjAxNiBhdCAxOTowMTo1NCwgWWVvaCBDaHVuLVllb3cg
-d3JvdGU6DQo+ID4+IEpvaGFubmVzIEJlcmcNCj4gPj4gU3ViamVjdDogUmU6IFtQQVRDSCB2MiAy
-LzNdIG1hYzgwMjExOiBtZXNoOiBpbXByb3ZlIHBhdGggcmVzb2x2aW5nIA0KPiA+PiB0aW1lDQo+
-ID4+DQo+ID4+IE9uIFR1ZSwgSnVsIDE5LCAyMDE2IGF0IDk6NDMgUE0sIEJvYiBDb3BlbGFuZCA8
-bWVAYm9iY29wZWxhbmQuY29tPg0KPiA+PiB3cm90ZToNCj4gPj4gPiBPbiBUdWUsIEp1bCAxOSwg
-MjAxNiBhdCAwMTowMjoxM1BNICswMDAwLCBNYWNoYW5pLCBZYW5pdiB3cm90ZToNCj4gPj4gPj4g
-T24gVHVlLCBKdWwgMTksIDIwMTYgYXQgMTU6NDQ6NTYsIEJvYiBDb3BlbGFuZCB3cm90ZToNCj4g
-Pj4gPg0KPiA+PiA+IFRoaXMgd29yZGluZyBzZWVtcyB0byBpbmRpY2F0ZSB0aGF0IGl0IGlzIG5v
-dCBwZXIgcGF0aC4gIFBlcmhhcHMgDQo+ID4+ID4gdGhpcyBzaG91bGQgYmUgY2xhcmlmaWVkIGlu
-IHRoZSBzdGFuZGFyZC4gIChJZiB0aGUgaW50ZW50IHR1cm5zIA0KPiA+PiA+IG91dCB0byBiZSBw
-ZXIgcGF0aCwgdGhlbiBJIGd1ZXNzIHdlIHNob3VsZCBmaXggaXQgYnkgc3RvcmluZyANCj4gPj4g
-PiBsYXN0X3ByZXEgcGVyIHBhdGgNCj4gPj4gPiBpbnN0ZWFkLikNCj4gPj4gPg0KPiA+PiA+DQo+
-ID4+ID4gSWdub3JpbmcgdGhlIHN0YW5kYXJkIGZvciBhIHNlY29uZCwgbGV0J3MgZXhwbG9yZSB0
-aGlzOiBjYW4geW91IA0KPiA+PiA+IGdpdmUgc29tZSBpZGVhIG9uIGhvdyBtYW55IHN0YXRpb25z
-IGFyZSBpbiB5b3VyIHRhcmdldCBuZXR3b3JrLCANCj4gPj4gPiBob3cgZnJlcXVlbnRseSBhIGdp
-dmVuIHBhaXIgb2Ygbm9kZXMgdW5wZWVyLCB3aGF0IHNvcnQgb2YgDQo+ID4+ID4gaW1wcm92ZW1l
-bnRzIHlvdSBzZWUgd2l0aCB0aGUgcGF0Y2g/ICBJdCBzaG91bGQgdGhlbiBiZSBwcmV0dHkgDQo+
-ID4+ID4gZWFzeSB0byBydW4gc29tZSBzaW11bGF0aW9ucyB0byBzZWUgdGhlIHNjZW5hcmlvcyB3
-aGVyZSB0aGlzIGhlbHBzIGFuZCB3aGVyZSBpdCBodXJ0cy4NCj4gPj4gPg0KPiA+Pg0KPiA+DQo+
-ID4gQm9iLCBDaHVuLVllb3csDQo+ID4gVGhhbmtzIGZvciB5b3VyIGlucHV0cy4NCj4gPg0KPiA+
-IExldCB0YWtlIGEgc2ltcGxlIHNjZW5hcmlvLCB3aGVyZSB5b3UgaGF2ZSBhLGIsYyxkIG5vZGVz
-IGNvbm5lY3RlZCANCj4gPiB0byBlYWNoDQo+IG90aGVyIGFzIHNob3duIGJlbG93Lg0KPiA+DQo+
-ID4gQX4gfiB+fn5+Qy0gLSAtIEQNCj4gPiAgICBcICAgICAgICAgIC8NCj4gPiAgICAgICBcICAg
-ICAvDQo+ID4gICAgICAgICAgQg0KPiA+DQo+ID4gQSB3b3VsZCBsaWtlIHRvIHBhc3MgZGF0YSB0
-byBELg0KPiA+IEEtQyBtYXRyaWMgaXMgd29yc2UgdGhhbiBBLUItQywgc28gcGF0aCBpcyBjb25z
-dHJ1Y3RlZCB2aWEgQi4NCj4gPiBXZSBhcmUgaW4gaWRsZSBzdGF0ZSwgYW5kIFBSRVEgYXJlIHNl
-bnQgZXZlcnkNCj4gZG90MTFNZXNoSFdNUHByZXFNaW5JbnRlcnZhbC4NCj4gPiBOb3csIG5vZGUg
-QiBoYXZlIGJlZW4gZGlzY29ubmVjdGVkIChyYW4gb3V0IG9mIGJhdHRlcnkvc2h1dCANCj4gPiBk
-b3duL3N1ZGRlbmx5IHdlbnQgb3V0IG9mIHJhbmdlKSBBcyBBIGhhcyBhIHBhdGggdG8gRCB2aWEg
-QiwgaGUgDQo+ID4gY2xlYW5zIHVwIGhpcw0KPiBwYXRoIHRhYmxlLg0KPiA+IE5vdyBoZSBuZWVk
-cyB0byBidWlsZCBhIG5ldyBwYXRoLCBpbiB0aGUgV0NTLCBoZSBoYXZlIGp1c3Qgc2VudCBhIFBS
-RVEuDQo+ID4gQW5kIG5vdyBoZSBuZWVkcyB0byB3YWl0IGRvdDExTWVzaEhXTVBwcmVxTWluSW50
-ZXJ2YWwgc2Vjb25kcywgdW50aWwNCj4gaGUgY2FuIHJlYnVpbGQgdGhlIHBhdGguDQo+IA0KPiBE
-aWQgeW91IHJlZHVjZSB0aGUgZG90MTFNZXNoSFdNUGFjdGl2ZVBhdGhUaW1lb3V0IHRvIHNlZSB3
-aGV0aGVyIGl0IA0KPiBwcm9kdWNlcyBwb3NpdGl2ZSBpbXBhY3QgdG8geW91ciBuZXR3b3JrPyBP
-bmNlIHRoZSBwYXRoIHRvIEEgLSBDIC0gRCANCj4gaGFzIGVzdGFibGlzaGVkLCBpdCBuZWVkcyB0
-byB3YWl0IHRpbGwgdGhlIGFjdGl2ZSBwYXRoIHRpbWVyIHRvIGV4cGlyZSANCj4gYmVmb3JlIGVz
-dGFibGlzaGluZyBhIG5ldyBwYXRoLiBUaGlzIGFjdGl2ZSBwYXRoIHRpbWUgaXMgZGVmYXVsdCB0
-bw0KPiA1MDAwIFRVcyAob3IgNXMpLg0KPiANCg0KV2UgZGlkIHRyaWVkIGl0IGFzIHdlbGwsIGJ1
-dCBhZ2FpbiwgdGhpcyB3aWxsIGNhdXNlIHVzIHNlbmRpbmcgUFJFUSBtb3JlIGZyZXF1ZW50bHku
-DQoNCj4gPiBBcyB3ZSB3b3VsZG4ndCBsaWtlIHRvIGZsb29kIHRoZSBuZXR3b3JrIHdpdGggUFJF
-USwgd2UgY2FuIGFzc3VtZSANCj4gPiB0aGF0IHRoZQ0KPiBkb3QxMU1lc2hIV01QcHJlcU1pbklu
-dGVydmFsIGlzIGZldyBzZWNvbmRzLCBmb3IgdXMsIGl0IHNlZW1lZCB1bi0gDQo+IGFjY2VwdGFi
-bGUuDQo+ID4NCj4gDQo+IEJ1dCB5b3VyIHBhdGNoIGlzIGluZGVlZCBnZW5lcmF0aW5nICJtb3Jl
-IiBQUkVRIGZyYW1lLg0KPg0KV2VsbCwgd2UgYXJlIHNlbmRpbmcgbW9yZSwgYnV0IGp1c3QgaW4g
-YSBzcGVjaWZpYyBzY2VuYXJpbyB3aGVyZSBpdCdzIG5lZWRlZCBBU0FQIHRvIGVzdGFibGlzaCBh
-IHBhdGguDQogDQo+ID4gSW4gY2FzZXMgd2hlcmUgeW91IG5lZWQgdG8gaGF2ZSBhIHJlbGlhYmxl
-IGRhdGEgbGluaywgcGFzc2luZyANCj4gPiBhdWRpby92aWRlbyB5b3UNCj4gdXN1YWxseSBjYW4n
-dCBhZmZvcmQgZmV3IHNlY29uZHMgdy9vIHRyYWZmaWMuDQo+ID4NCj4gPj4gSW4gYWRkaXRpb24g
-dG8gQm9iJ3MgY29tbWVudCwgeW91IHByb2JhYmx5IGNhbiB0cnkgdG8gcmVkdWNlIHRoZSANCj4g
-Pj4gZG90MTFNZXNoSFdNUHByZXFNaW5JbnRlcnZhbCB0byAxIFRVICgxbXMpIGluc3RlYWQgb2Yg
-c3RpY2tpbmcgdG8gDQo+ID4+IGRlZmF1bHQgdmFsdWUgMTAgVFVzLiBCZXNpZGVzLCB5b3UgY2Fu
-IGFsc28gcmVkdWNlIHRoZSANCj4gPj4gbWVzaF9wYXRoX3JlZnJlc2hfdGltZSB3aGljaCBpcyBj
-dXJyZW50bHkgZGVmYXVsdCB0byAxMDAwIG1zIGFuZCANCj4gPj4gY2hlY2sgd2hldGhlciB5b3Ug
-Y2FuIGltcHJvdmUgb24geW91ciBuZXR3b3JrIHNjZW5hcmlvcy4NCj4gPj4NCj4gPg0KPiA+IFdl
-IGRpZCB0cmllZCB0byBwbGF5IHdpdGggdGhlc2UgdmFsdWVzLCBidXQgYWdhaW4sIHdlIGRvbid0
-IHdhbnQgdG8gDQo+ID4gZmxvb2QgdGhlDQo+IG5ldHdvcmsuDQo+ID4gV2UganVzdCB3YW50IHRv
-IHJlY292ZXIgQVNBUC4NCj4gPg0KPiA+PiBXaGVuIHlvdSBtZW50aW9uZWQgIm5leHQgaG9wIHBl
-ZXIgZGlzY29ubmVjdCIsIGl0IGNvdWxkIGFsc28gYmUgdGhlIA0KPiA+PiB0aW1lIHRha2VuIHRv
-IHJlLWVzdGFibGlzaGVkIHRoZSBtZXNoIHBlZXJpbmcgYmVmb3JlIHlvdXIgbWVzaCBTVEEgDQo+
-ID4+IGNhbiB0cmFuc21pdCB0aGUgZGF0YSB0byB5b3VyIHBlZXIgbWVzaCBTVEEuDQo+ID4+DQo+
-ID4NCj4gPiBMaW5rIGVzdGFibGlzaG1lbnQgdGFrZXMgbm8gbW9yZSB0aGFuIGZldyAxMDBzIG9m
-IG1zIHVzdWFsbHksIEFuZCBpbiANCj4gPiB0aGUgZXhhbXBsZSBhYm92ZSwgdGhlcmUgaXMgbm8g
-bmV3IGxpbmsgZXN0YWJsaXNobWVudCwganVzdCBwYXRoIGdlbmVyYXRpb24uDQo+ID4NCj4gDQo+
-IFN1Z2dlc3QgdGhhdCB5b3Ugc2ltdWxhdGUgeW91ciBzY2VuYXJpbyBhbmQgdmFsaWRhdGUgdGhl
-IGltcHJvdmVtZW50IGZpcnN0Lg0KPiANCg0KV2UgaGF2ZSBtYWRlIG1hbnkgbGFiIHRlc3RzLCB3
-aXRoIDEwcyBvZiBub2RlcyBpbiBvcGVuIGFpciBhbmQgaW4gYSBjb250cm9sbGVkIGVudmlyb25t
-ZW50Lg0KVGhpcyBwYXRjaCBpcyBqdXN0IG9uZSBvZiB0aGUgaW1wcm92ZW1lbnRzIHdlIHNhdyBu
-ZWNlc3NhcnkgZm9yIHBlcmZvcm1hbmNlLCB3ZSBoYXZlIG11bHRpcGxlIG90aGVycyBmb3IgdGhl
-IG1ldHJpYyBjYWxjdWxhdGlvbiwgYW5kIG1vcmUuIA0KV2UgdW5kZXJzdGFuZCB0aGF0IHRoZSBI
-V01QIGFuZCB0aGUgZ2VuZXJhbCBtZXNoIGltcGxlbWVudGF0aW9uIGlzIG1vcmUgc2Vuc29yIG5l
-dHdvcmsgcmVsYXRlZCwgd2hlcmUgdGhlcmUgaXMgbm8gbmVlZCBmb3Igc3RhYmxlIGhpZ2ggdGhy
-b3VnaHB1dCAxMDAlIG9mIHRoZSB0aW1lLg0KWW91IGNhbiBhbHNvIGhhdmUgYSBsb29rIGluIG91
-ciB3aGl0ZSBwYXBlciwgZGVzY3JpYmluZyBzbWFsbCBwYXJ0cyBvZiB0aGUgdGVzdHMgd2UgaGF2
-ZSBtYWRlIGluIHRoZSBsYXN0IHNlY3Rpb24gLSBodHRwOi8vd3d3LnRpLmNvbS9saXQvd3Avc3dy
-eTAyNC9zd3J5MDI0LnBkZg0KDQpUaGFua3MsDQpZYW5pdg0KDQo=
+2016-07-12 11:48 GMT+02:00 Arend Van Spriel <arend.vanspriel@broadcom.com>:
+>
+>
+> On 12-7-2016 10:35, Per Förlin wrote:
+>> 2016-07-06 11:53 GMT+02:00 Per Förlin <per.forlin@gmail.com>:
+>>> I have now verified this patch on backports 4.4.
+>>>
+>>> 2016-04-12 23:55 GMT+02:00  <per.forlin@gmail.com>:
+>>>> From: Per Forlin <per.forlin@gmail.com>
+>>>>
+>>>> This patch resolves an issue where pend_8021x_cnt was not decreased
+>>>> on txfinalize. This caused brcmf_netdev_wait_pend8021x to timeout
+>>>> because the counter indicated pending packets.
+>>>>
+>>>> WARNING: at .../brcmfmac/core.c:1289 brcmf_netdev_wait_pend8021x
+>>>>   (warn_slowpath_common)
+>>>>   (warn_slowpath_null)
+>>>>   (brcmf_netdev_wait_pend8021x [brcmfmac])
+>>>>   (send_key_to_dongle [brcmfmac])
+>>>>   (brcmf_cfg80211_del_key [brcmfmac])
+>>>>   (nl80211_del_key [cfg80211])
+>>>>   (genl_rcv_msg)
+>>>>   (netlink_rcv_skb)
+>>>>   (genl_rcv)
+>>>>   (netlink_unicast)
+>>>>   (netlink_sendmsg)
+>>>>   (sock_sendmsg)
+>>>>   (___sys_sendmsg)
+>>>>   (__sys_sendmsg)
+>>>>   (SyS_sendmsg)
+>>>>
+>>>> The solution is to pull back the header offset in case
+>>>> of an error in txdata(), which may happen in case of
+>> Clarification:
+>>
+>> txdata=brcmf_proto_bcdc_txdata()
+>> brcmf_proto_bcdc_txdata(): Calls brcmf_proto_bcdc_hdrpush()
+>>
+>> The header needs to be pulled back in case of error otherwise
+>> the error handling and cleanup up will fail to decrease the counter
+>> of pending packets.
+>
+> Yes, this part of the patch is clear to me.
+>
+Thanks, I wasn't sure.
+
+>>>> packet overload in brcmf_sdio_bus_txdata.
+>>>>
+>>>> Overloading an WLAN interface is not an unlikely scenario.
+>
+> So here is where things start to look suspicious and I have mentioned
+> this before. My thought here was "How the hell can you end up with a
+> 2048 packets on the sdio queue", which I mentioned to you before. There
+> is a high watermark on the queue upon which we do a netif_stop_queue()
+> so network layer does not keep pushing tx packets our way. Looking
+> further into this I found that we introduced a bug with commit
+> 9cd18359d31e ("brcmfmac: Make FWS queueing configurable.") so we ended
+> up doing nothing except increasing as statistics debug counter :-(
+>
+Is there a fix available for the high watermark issue or is it
+something you will look into?
+
+To produce a load on the wlan interface I run
+iperf -c 239.255.1.3 -u -b 10m -f m -i 60 -t 3000
+and this is enough in my case to fill up the 2048 queue.
+
+>>>> In case of packet overload the error print "out of bus->txq"
+>>>> is very verbose. To reduce SPAM degrade it to a debug print.
+>>>>
+>>>> Signed-off-by: Per Forlin <per.forlin@gmail.com>
+>>>> ---
+>>>> Change log:
+>>>>  v2 - Add variable to know whether the counter is increased or not
+>>>>  v3 - txfinalize should decrease the counter. Adjust skb header offset
+>>>>  v4 - Fix build error
+>>>>
+>>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 4 ++++
+>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 4 +++-
+>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c     | 2 +-
+>>>>  3 files changed, 8 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+>>>> index ed9998b..f342f7c 100644
+>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+>>>> @@ -541,6 +541,9 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
+>>>>         struct ethhdr *eh;
+>>>>         u16 type;
+>>>>
+>>>> +       if (!ifp)
+>>>> +               goto free;
+>>>> +
+>
+> This may not be needed.
+>
+This is not strictly needed. I can remove it.
+
+>>>>         eh = (struct ethhdr *)(txp->data);
+>>>>         type = ntohs(eh->h_proto);
+>>>>
+>>>> @@ -553,6 +556,7 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
+>>>>         if (!success)
+>>>>                 ifp->stats.tx_errors++;
+>>>>
+>>>> +free:
+>>>>         brcmu_pkt_buf_free_skb(txp);
+>>>>  }
+>>>>
+>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+>>>> index f82c9ab..98cb83f 100644
+>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+>>>> @@ -1899,8 +1899,10 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+>>>>
+>>>>         if (fws->avoid_queueing) {
+>>>>                 rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
+>>>> -               if (rc < 0)
+>>>> +               if (rc < 0) {
+>>>> +                       (void)brcmf_proto_hdrpull(drvr, false, skb, &ifp);
+>
+> Could it be that the ifp is NULL pointer after brcmf_proto_hdrpull().
+> Can you check. Better use tmp_ifp variable in this call as you have a
+> valid ifp before this call for sure.
+>
+To be on the safe side I can use NULL as in param like you propose,
+and use the available ifp.
+
+>>>>                         brcmf_txfinalize(ifp, skb, false);
+>>>> +               }
+>>>>                 return rc;
+>>>>         }
+>>>>
+>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>>>> index a14d9d9d..485e2ad 100644
+>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>>>> @@ -2721,7 +2721,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
+>>>>         *(u16 *)(pkt->cb) = 0;
+>>>>         if (!brcmf_sdio_prec_enq(&bus->txq, pkt, prec)) {
+>>>>                 skb_pull(pkt, bus->tx_hdrlen);
+>>>> -               brcmf_err("out of bus->txq !!!\n");
+>>>> +               brcmf_dbg(INFO, "out of bus->txq !!!\n");
+>
+> Now that I understand the issue I want to keep this as error print as it
+> should be very unlikely.
+I would like to test this patch with the watermark fix to confirm this.
+>
+> Regards,
+> Arend
+
+Thanks for the review!
+
+>
+>>>>                 ret = -ENOSR;
+>>>>         } else {
+>>>>                 ret = 0;
+>>>> --
+>>>> 2.1.4
+>>>>
