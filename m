@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53206 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:42146 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932812AbcGENBa convert rfc822-to-8bit (ORCPT
+	with ESMTP id S932841AbcGLLyL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 09:01:30 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: pull-request: iwlwifi-next 2016-07-01
-References: <1467405215.1837.15.camel@coelho.fi>
-Date: Tue, 05 Jul 2016 16:01:24 +0300
-In-Reply-To: <1467405215.1837.15.camel@coelho.fi> (Luca Coelho's message of
-	"Fri, 01 Jul 2016 23:33:35 +0300")
-Message-ID: <871t3844t7.fsf@kamboji.qca.qualcomm.com> (sfid-20160705_150206_869096_CFECA6DD)
+	Tue, 12 Jul 2016 07:54:11 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: iwlwifi: add missing type declaration
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160711205020.1587254-1-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	Intel Linux Wireless <linuxwifi@intel.com>,
+	Eliad Peller <eliad@wizery.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20160712115409.7D7176127F@smtp.codeaurora.org> (sfid-20160712_135432_630405_847F54CB)
+Date: Tue, 12 Jul 2016 11:54:09 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Arnd Bergmann <arnd@arndb.de> wrote:
+> The iwl-debug.h header relies in implicit inclusion of linux/device.h and
+> we get a lot of warnings without that:
+> 
+> drivers/net/wireless/intel/iwlwifi/iwl-debug.h:44:23: error: 'struct device' declared inside parameter list will not be visible outside of this definition or declaration [-Werror]
+>  void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
+>                        ^~~~~~
+> In file included from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h:66:0,
+>                  from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:68:
+> drivers/net/wireless/intel/iwlwifi/iwl-trans.h: In function 'iwl_trans_tx':
+> drivers/net/wireless/intel/iwlwifi/iwl-trans.h:1030:348: error: passing argument 1 of '__iwl_err' from incompatible pointer type [-Werror=incompatible-pointer-types]
+>    IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
+>                                                                                                                                                                                                                                                                                                                                                             ^
+> In file included from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:67:0:
+> drivers/net/wireless/intel/iwlwifi/iwl-debug.h:44:6: note: expected 'struct device *' but argument is of type 'struct device *'
+>  void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
+>       ^~~~~~~~~
+> 
+> The easiest workaround is to just declare 'struct device' before its first use,
+> rather than including the entire header file.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 21cb3222fe56 ("iwlwifi: decouple PCIe transport from mac80211")
+> Acked-by: Luca Coelho <luciano.coelho@intel.com>
 
-> Here are some patches intended for 4.8.  I have a lot more patches
-> pending in our internal tree, but I decided to take smaller steps
-> because it's easier to find a few hours to push a few patches than it
-> is to find many hours to send all pending patches.  Is it okay for you
-> if I send a bunch of 10-20 patches pull-reqs or do you prefer if I hold
-> them back and send bigger pull-reqs later?
->
-> There's not much here, more details in the tag description.
->
-> Let me know if everything's fine (or not). :)
->
-> Luca.
->
->
-> The following changes since commit af5e964f3045b66f1cd720b9c5abd37e47e613e2:
->
->   MAINTAINERS: add myself as co-maintainer of the iwlwifi driver (2016-05-10 22:34:11 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-07-01
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Pulled, thanks.
+25f700ef0653 iwlwifi: add missing type declaration
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/9224105/
+
