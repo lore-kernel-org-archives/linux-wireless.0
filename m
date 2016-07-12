@@ -1,212 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35419 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756867AbcGIXKV (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:36827 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932622AbcGLMNu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2016 19:10:21 -0400
-Received: by mail-wm0-f68.google.com with SMTP id k123so12124416wme.2
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Jul 2016 16:10:20 -0700 (PDT)
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, kvalo@qca.qualcomm.com
-Cc: nbd@nbd.name,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v2] ath9k: simplify the code-paths when not using the built-in EEPROM
-Date: Sun, 10 Jul 2016 01:09:55 +0200
-Message-Id: <20160709230955.27266-1-martin.blumenstingl@googlemail.com> (sfid-20160710_011024_830953_27A28E0C)
-In-Reply-To: <20160623145714.20576-7-martin.blumenstingl@googlemail.com>
-References: <20160623145714.20576-7-martin.blumenstingl@googlemail.com>
+	Tue, 12 Jul 2016 08:13:50 -0400
+Received: by mail-oi0-f53.google.com with SMTP id w18so19221040oiw.3
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jul 2016 05:13:49 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
+References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Tue, 12 Jul 2016 14:13:48 +0200
+Message-ID: <CAA93jw6=_pemSUjk3dje1GmnTzrs+=pEdza4j1Wjtrw+VKNdNg@mail.gmail.com> (sfid-20160712_141400_750420_A22DDC45)
+Subject: Re: TCP performance regression in mac80211 triggered by the fq code
+To: Felix Fietkau <nbd@nbd.name>, make-wifi-fast@lists.bufferbloat.net
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	=?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There were two paths in the code for "external" eeprom sources. The code
-in eeprom.c only handled the cases where the eeprom data was loaded via
-request_firmware. ahb.c and pci.c on the other hand had some duplicate
-code which was only used when the eeprom data was passed via
-ath9k_platform_data.
-With this change all eeprom data handling is now unified in eeprom.c.
+On Tue, Jul 12, 2016 at 12:09 PM, Felix Fietkau <nbd@nbd.name> wrote:
+> Hi,
+>
+> With Toke's ath9k txq patch I've noticed a pretty nasty performance
+> regression when running local iperf on an AP (running the txq stuff) to
+> a wireless client.
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
-Changes since v1:
-- rebased to currrent ath.git/ath-next to resolve a small merge
-  conflict with commit
-  "0f27ac40fb64 ath9k: return false when reading wrong eeprom offset"
-- renamed ath9k_hw_nvram_read_blob to ath9k_hw_nvram_read_array since
-  that name fit the function's purpose better
-- fixed a bug in v1 which caused ARRAY_SIZE(pdata->eeprom_blob) to be
-  interpreted as "count of u8", while it is actually "count of u16"
-  (this led to some small code changes, such as introduction of the
-  _read_pdata and _read_firmware functions to make the code easier to
-  read)
+Your kernel? cpu architecture?
 
- drivers/net/wireless/ath/ath9k/ahb.c    | 18 +++-----------
- drivers/net/wireless/ath/ath9k/eeprom.c | 33 +++++++++++++++++++------
- drivers/net/wireless/ath/ath9k/pci.c    | 43 ++++++++++-----------------------
- 3 files changed, 41 insertions(+), 53 deletions(-)
+What happens when going through the AP to a server from the wireless client?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ahb.c b/drivers/net/wireless/ath/ath9k/ahb.c
-index bd4a1a6..bea6186 100644
---- a/drivers/net/wireless/ath/ath9k/ahb.c
-+++ b/drivers/net/wireless/ath/ath9k/ahb.c
-@@ -18,7 +18,6 @@
- 
- #include <linux/nl80211.h>
- #include <linux/platform_device.h>
--#include <linux/ath9k_platform.h>
- #include <linux/module.h>
- #include "ath9k.h"
- 
-@@ -58,20 +57,9 @@ static void ath_ahb_read_cachesize(struct ath_common *common, int *csz)
- 
- static bool ath_ahb_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- {
--	struct ath_softc *sc = (struct ath_softc *)common->priv;
--	struct platform_device *pdev = to_platform_device(sc->dev);
--	struct ath9k_platform_data *pdata;
--
--	pdata = dev_get_platdata(&pdev->dev);
--	if (off >= (ARRAY_SIZE(pdata->eeprom_data))) {
--		ath_err(common,
--			"%s: flash read failed, offset %08x is out of range\n",
--			__func__, off);
--		return false;
--	}
--
--	*data = pdata->eeprom_data[off];
--	return true;
-+	ath_err(common, "%s: eeprom data has to be provided externally\n",
-+		__func__);
-+	return false;
- }
- 
- static struct ath_bus_ops ath_ahb_bus_ops  = {
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index a794157..a449588 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -15,6 +15,7 @@
-  */
- 
- #include "hw.h"
-+#include <linux/ath9k_platform.h>
- 
- void ath9k_hw_analog_shift_regwrite(struct ath_hw *ah, u32 reg, u32 val)
- {
-@@ -108,26 +109,42 @@ void ath9k_hw_usb_gen_fill_eeprom(struct ath_hw *ah, u16 *eep_data,
- 	}
- }
- 
--static bool ath9k_hw_nvram_read_blob(struct ath_hw *ah, u32 off,
--				     u16 *data)
-+static bool ath9k_hw_nvram_read_array(u16 *blob, size_t blob_size,
-+				      off_t offset, u16 *data)
- {
--	u16 *blob_data;
--
--	if (off * sizeof(u16) > ah->eeprom_blob->size)
-+	if (offset > blob_size)
- 		return false;
- 
--	blob_data = (u16 *)ah->eeprom_blob->data;
--	*data =  blob_data[off];
-+	*data =  blob[offset];
- 	return true;
- }
- 
-+static bool ath9k_hw_nvram_read_pdata(struct ath9k_platform_data *pdata,
-+				      off_t offset, u16 *data)
-+{
-+	return ath9k_hw_nvram_read_array(pdata->eeprom_data,
-+					 ARRAY_SIZE(pdata->eeprom_data),
-+					 offset, data);
-+}
-+
-+static bool ath9k_hw_nvram_read_firmware(const struct firmware *eeprom_blob,
-+					 off_t offset, u16 *data)
-+{
-+	return ath9k_hw_nvram_read_array((u16 *) eeprom_blob->data,
-+					 eeprom_blob->size / sizeof(u16),
-+					 offset, data);
-+}
-+
- bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-+	struct ath9k_platform_data *pdata = ah->dev->platform_data;
- 	bool ret;
- 
- 	if (ah->eeprom_blob)
--		ret = ath9k_hw_nvram_read_blob(ah, off, data);
-+		ret = ath9k_hw_nvram_read_firmware(ah->eeprom_blob, off, data);
-+	else if (pdata && !pdata->use_eeprom && pdata->eeprom_data)
-+		ret = ath9k_hw_nvram_read_pdata(pdata, off, data);
- 	else
- 		ret = common->bus_ops->eeprom_read(common, off, data);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index aa04b13..0dd454a 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -19,7 +19,6 @@
- #include <linux/nl80211.h>
- #include <linux/pci.h>
- #include <linux/pci-aspm.h>
--#include <linux/ath9k_platform.h>
- #include <linux/module.h>
- #include "ath9k.h"
- 
-@@ -786,37 +785,21 @@ static void ath_pci_read_cachesize(struct ath_common *common, int *csz)
- 
- static bool ath_pci_eeprom_read(struct ath_common *common, u32 off, u16 *data)
- {
--	struct ath_softc *sc = (struct ath_softc *) common->priv;
--	struct ath9k_platform_data *pdata = sc->dev->platform_data;
--
--	if (pdata && !pdata->use_eeprom) {
--		if (off >= (ARRAY_SIZE(pdata->eeprom_data))) {
--			ath_err(common,
--				"%s: eeprom read failed, offset %08x is out of range\n",
--				__func__, off);
--
--			return false;
--		}
--
--		*data = pdata->eeprom_data[off];
--	} else {
--		struct ath_hw *ah = (struct ath_hw *) common->ah;
--
--		common->ops->read(ah, AR5416_EEPROM_OFFSET +
--				      (off << AR5416_EEPROM_S));
--
--		if (!ath9k_hw_wait(ah,
--				   AR_EEPROM_STATUS_DATA,
--				   AR_EEPROM_STATUS_DATA_BUSY |
--				   AR_EEPROM_STATUS_DATA_PROT_ACCESS, 0,
--				   AH_WAIT_TIMEOUT)) {
--			return false;
--		}
--
--		*data = MS(common->ops->read(ah, AR_EEPROM_STATUS_DATA),
--			   AR_EEPROM_STATUS_DATA_VAL);
-+	struct ath_hw *ah = (struct ath_hw *) common->ah;
-+
-+	common->ops->read(ah, AR5416_EEPROM_OFFSET + (off << AR5416_EEPROM_S));
-+
-+	if (!ath9k_hw_wait(ah,
-+				AR_EEPROM_STATUS_DATA,
-+				AR_EEPROM_STATUS_DATA_BUSY |
-+				AR_EEPROM_STATUS_DATA_PROT_ACCESS, 0,
-+				AH_WAIT_TIMEOUT)) {
-+		return false;
- 	}
- 
-+	*data = MS(common->ops->read(ah, AR_EEPROM_STATUS_DATA),
-+			AR_EEPROM_STATUS_DATA_VAL);
-+
- 	return true;
- }
- 
+Which direction?
+
+> Here's some things that I found:
+> - when I use only one TCP stream I get around 90-110 Mbit/s
+
+with how much cpu left over?
+
+> - when running multiple TCP streams, I get only 35-40 Mbit/s total
+
+with how much cpu left over?
+context switch difference between the two tests?
+tcp_limit_output_bytes is?
+
+got perf?
+
+> - fairness between TCP streams looks completely fine
+
+A codel will get to long term fairness pretty fast. Packet captures
+from a fq will show much more regular interleaving of packets,
+regardless.
+
+> - there's no big queue buildup, the code never actually drops any packets
+
+A "trick" I have been using to observe codel behavior has been to
+enable ecn on server and client, then checking in wireshark for ect(3)
+marked packets.
+
+> - if I put a hack in the fq code to force the hash to a constant value
+
+You could also set "flows" to 1 to keep the hash being generated, but
+not actually use it.
+
+> (effectively disabling fq without disabling codel), the problem
+> disappears and even multiple streams get proper performance.
+
+Meaning you get 90-110Mbits ?
+
+Do you have a "before toke" figure for this platform?
+
+> Please let me know if you have any ideas.
+
+I am in berlin, packing hardware...
+
+>
+> - Felix
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-2.9.0
-
+Dave Täht
+Let's go make home routers and wifi faster! With better software!
+http://blog.cerowrt.org
