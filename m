@@ -1,158 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:14941 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750950AbcGNJI5 convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33048 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbcGLVLF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2016 05:08:57 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Prarit Bhargava <prarit@redhat.com>
-CC: Luca Coelho <luca@coelho.fi>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
- ucode is loaded
-Date: Thu, 14 Jul 2016 09:08:51 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB346690100@hasmsx107.ger.corp.intel.com> (sfid-20160714_110924_570474_3EB828CD)
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
-	<CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
-	<5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>
-	<57840214.8000904@redhat.com> <87eg6yav5e.fsf@purkki.adurom.net>
-	<1468394693.25088.138.camel@coelho.fi> <578615EF.9010305@redhat.com>
- <87oa60y7ff.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87oa60y7ff.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 12 Jul 2016 17:11:05 -0400
+Received: by mail-oi0-f46.google.com with SMTP id j185so35309109oih.0
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jul 2016 14:10:58 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <001201d1dc72$0675f030$1361d090$@inventeksys.com>
+References: <002601d1d305$183c3070$48b49150$@inventeksys.com>
+ <6d12bb3e-a01d-34c7-c1a9-b1952a84f99e@broadcom.com> <001201d1dc72$0675f030$1361d090$@inventeksys.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 12 Jul 2016 23:10:38 +0200
+Message-ID: <CACna6rzU91CRGmgPtAgEhdqwpSGSs0i-C3qL7OiB8soHk8vq8Q@mail.gmail.com> (sfid-20160712_231115_981118_B540057E)
+Subject: Re: building brcmfmac driver for iMX6 Ultralite platform
+To: Michael Eskowitz <MichaelE@inventeksys.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> Prarit Bhargava <prarit@redhat.com> writes:
-> 
-> > On 07/13/2016 03:24 AM, Luca Coelho wrote:
-> >
-> >> I totally agree with Emmanuel and Kalle. We should not change this.
-> >> It is a design decision to return an error when the interface is
-> >> down, this is very common with other subsystems as well.
-> >
-> > Please show me another subsystem or driver that does this.  I've
-> > looked around the kernel but cannot find one that updates the firmware
-> > and implements new features on the fly like this.  I have come across
-> > several drivers that allow for an update, but they do not implement
-> > new features based on the firmware.
-> >
-> > Additionally, what happens when someone back revs firmware versions
-> > (which happens far more than you and I would expect)?  Does that mean
-> > I now go from a functional system to a non-functional system wrt to
-> userspace?
-> 
-> I'm not following, what do you mean exactly? Why are you talking updating
-> the firmware?
-> 
-> So when we talk about "loading firmware" we mean that the driver pushes
-> the firmware image to to the chipset. And then the interface is down the
-> chipset is powered down and the RAM on it will be erased. That's the general
-> idea anyway, I haven't checked how iwlwifi exactly works in this case but
-> Luca or Emmanuel can correct me.
+On 12 July 2016 at 21:17, Michael Eskowitz <MichaelE@inventeksys.com> wrote:
+> Arend,
 
-This is correct.
+What about my reply? ;)
 
 
-> 
-> >> The userspace should be able to handle errors and report something
-> >> like "unavailable" when this kind of error is returned.
-> >
-> > I myself have made the same arguments wrt to cpufreq code & bad
-> > userspace choices.  I just went through this a few months back with
-> > what went from a simple patch and turned out to be a hideous patch in
-> > cpufreq.  You cannot break userspace like this.
-> 
-> Don't get me wrong, I'm a strong supporter of stable user space interfaces
-> and I always try to adher to that. But there's a limit for everything. If I'm
-> understanding correctly, what you mean is that the kernel should never
-> return an error because an application doesn't handle errors gracefully.
-> Sorry, but that doesn't make sense to me.
-> 
-> > See commit 51443fbf3d2c ("cpufreq: intel_pstate: Fix intel_pstate
-> > powersave min_perf_pct value").  What should have been a trivial
-> > change resulted in a massive change because of broken userspace.
-> 
-> In that cpufreq case I understand, it was about a combination of
-> configuration values which broke the user space. But here we are just
-> dealing with a simple error value, nothing fancy.
-> 
-> >> I'm not sure EIO is the best we can have, but for me that's exactly
-> >> what it is.  The thermal zone *is* there, but cannot be accessed
-> >> because the firmware is not available.  I'm okay to change it to
-> >> EBUSY, if that would help userspace, but I think that's a bit
-> >> misleading.  The device is not busy, on the contrary, it's not even running
-> at all.
-> >>
-> >
-> > I understand that, but by returning -EIO we end up with an error.
-> >
-> >> Furthermore, I don't think this is "breaking userspace" in the sense
-> >> of being a regression.
-> >
-> > I run (let's say 4.5 kernel).  sensors works.  I update to 4.7.
-> > sensors doesn't work.  How is that not a regression?  That's _exactly_
-> > what it should be reported as.
-> 
-> Sure, it's a regression in a way. But that's how the user space app you are
-> using is implemented, the same problem would happen with any driver
-> returning errors.
-> 
-> >> The userspace API has always been implemented with the possibility of
-> >> returning errors.  It's not a good design if a single device
-> >> returning an error causes all the other devices to also fail.
-> >>
-> >
-> > If that were the case we would never have to worry about "breaking
-> userspace"?
-> > For any kernel change I could just say that the userspace design was
-> > bad and be done with it.  Why fix anything then?
-> 
-> Because we are talking about a simple error value.
-> 
-> > I don't see any harm in waiting to register the sysfs files for hwmon
-> > until the firmware has been validated.
-> 
-> I'm against of that because it's bad software design. It's standard practise in
-> Linux that drivers register their capabilities during driver probe time so that
-> user space can query them whenever needed. I assume a properly behaving
-> user space app would want to know about all the available sensors once the
-> driver is initialised and your suggestion would break that.
-> 
-> > IIUC, the up/down'ing of the device doesn't happen that often (during
-> > initial boot, and suspend/resume, switching wifi connections,
-> > shutdown?).
-> 
-> Basically it can happen anytime, this is fully controlled by user space.
-> There's no point of trying to make any assumptions as they won't hold
-> anyway.
-> 
-> > This would make the iwlwifi community happy (IMO) and sensors would
-> > still work. At the same time I could write a patch for lm-sensors to
-> > fix this issue if it comes up in future versions.
-> > [Aside: I'm going to have the reproducing system available today and
-> > will test this out. It looks like just moving some code around.]
-> 
-> Another option, but still a bad one I don't like, is that you change the kernel
-> interface to ignore all errors from drivers (like iwlwifi). This way drivers don't
-> need to make ugly workarounds.
-> 
-> > The bottom line is that lm-sensors is currently broken with this
-> > change in iwlwifi.  AFAICT, no other thermal device returns an error
-> > this way, and IMO that means the iwlwifi driver is doing something new
-> > and unexpected wrt to userspace.
-> 
-> I haven't checked but I suspect ath10k has a similar problem when interface
-> is down.
-> 
-> --
-> Kalle Valo
+> That is news to me.  I was under the impression that bcmdhd was Broadcom's
+> proprietary (closed source) Linux driver and brcmfmac was the open source
+> Linux driver.
+
+Don't top post. It's hard to say what you're replying to. bcmdhd is
+also open source (not sure what license), just not mainline.
+
+
+> Either way, I am now running
+>
+>         insmod  brcmutil.ko
+>         insmod  brcmfmac.ko
+>
+> I receive no errors and no kernel messages.
+>
+> When I insert the 43341 module into the SDIO slot nothing happens.  I'm
+> guessing that the version of the brcmfmac driver that I built does not
+> support that chip.
+
+Is is detected by the system? If so, what ID does it use?
+
+
+> When I insert the 43362 module into the SDIO slot I receive the following
+> errors
+>
+>         mmc0: queuing unknown CIS tuple 0x80 (7 bytes)
+>         mmc0: new high speed SDIO card at address 0001
+>         brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jun  7 2012
+> 18:27:16 version 5.90.225 FWID 01-d8fe14bd
+>         brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>         brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>         brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>         brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>         brcmfmac: brcmf_add_if: ERROR: netdev:wlan0 already exists
+>         brcmfmac: brcmf_add_if: ignore IF event
+>         brcmfmac: brcmf_fil_cmd_data: Failed err=-23
+>         brcmfmac: brcmf_construct_reginfo: channel 1: f=2412 bw=0
+> sb=-1998840228
+>         brcmfmac: brcmf_construct_reginfo: channel 2: f=2417 bw=0
+> sb=-1998840228
+>
+> and suddenly ifconfig shows the interface wlan0.  The interface looks to be
+> valid as it is displaying a MAC from our address range.
+>
+> Although the interface wlan0 is present I am not able to use wl commands to
+> scan for networks.  wl reports "wl driver adapter not found" for all command
+> arguments.  If I run the command
+>
+>         iwlist  wlan0  scan
+>
+> I'm told that the interface does not support scanning.  If I run wpa_cli and
+> then the commands scan and scanresults I don't see any networks.
+
+"wl" user space tool uses wlioctl, proprietary protocol, brcmfmac
+doesn't support it.
+
+iwlist uses wext protocol, legacy one.
+
+Please use nl80211 based tools, e.g. "iw".
