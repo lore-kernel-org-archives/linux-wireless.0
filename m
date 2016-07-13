@@ -1,148 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:37815 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752537AbcGAV1W (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35473 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150AbcGMUUL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 17:27:22 -0400
-Received: by mail-wm0-f43.google.com with SMTP id a66so44452951wme.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 14:27:21 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
-	linux-kernel@vger.kernel.org,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv3 wl-drv-next 1/2] add basic register-field manipulation macros
-Date: Fri,  1 Jul 2016 22:26:48 +0100
-Message-Id: <1467408409-24224-2-git-send-email-jakub.kicinski@netronome.com> (sfid-20160701_232817_743879_C29FFAD1)
-In-Reply-To: <1467408409-24224-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1467408409-24224-1-git-send-email-jakub.kicinski@netronome.com>
+	Wed, 13 Jul 2016 16:20:11 -0400
+Received: by mail-wm0-f68.google.com with SMTP id i5so7096931wmg.2
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 13:20:05 -0700 (PDT)
+From: Alex Briskin <br.shurik@gmail.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Alex Briskin <br.shurik@gmail.com>
+Subject: [PATCH 1/4 v1] Refactoring ieee80211_iface_work to reduce complexity and improve readability.
+Date: Wed, 13 Jul 2016 23:19:53 +0300
+Message-Id: <1468441196-23503-2-git-send-email-br.shurik@gmail.com> (sfid-20160713_222015_970466_1E0761F3)
+In-Reply-To: <1468441196-23503-1-git-send-email-br.shurik@gmail.com>
+References: <1468441196-23503-1-git-send-email-br.shurik@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-C bitfields are problematic and best avoided.  Developers
-interacting with hardware registers find themselves searching
-for easy-to-use alternatives.  Common approach is to define
-structures or sets of macros containing mask and shift pair.
-Operations on the register are then performed as follows:
+No performance impact/overhead expected. The (gcc) compiler optimizes the
+added function out.
 
- field = (reg >> shift) & mask;
-
- reg &= ~(mask << shift);
- reg |= (field & mask) << shift;
-
-Defining shift and mask separately is tedious.  Ivo van Doorn
-came up with an idea of computing them at compilation time
-based on a single shifted mask (later refined by Felix) which
-can be used like this:
-
- #define REG_FIELD 0x000ff000
-
- field = FIELD_GET(REG_FIELD, reg);
-
- reg &= ~REG_FIELD;
- reg |= FIELD_PUT(REG_FIELD, field);
-
-FIELD_{GET,PUT} macros take care of finding out what the
-appropriate shift is based on compilation time ffs operation.
-
-GENMASK can be used to define registers (which is usually
-less error-prone and easier to match with datasheets).
-
-This approach is the most convenient I've seen so to limit code
-multiplication let's move the macros to a global header file.
-
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+Signed-off-by: Alex Briskin <br.shurik@gmail.com>
 ---
- include/linux/bitfield.h | 58 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/bug.h      |  3 +++
- 2 files changed, 61 insertions(+)
- create mode 100644 include/linux/bitfield.h
+ net/mac80211/iface.c | 75 +++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 45 insertions(+), 30 deletions(-)
 
-diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
-new file mode 100644
-index 000000000000..d6a36c3c1775
---- /dev/null
-+++ b/include/linux/bitfield.h
-@@ -0,0 +1,58 @@
-+/*
-+ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ */
-+
-+#ifndef _LINUX_BITFIELD_H
-+#define _LINUX_BITFIELD_H
-+
-+#include <asm/types.h>
-+#include <linux/bug.h>
-+#include <linux/log2.h>
-+
-+#define _bf_shf(x) (__builtin_ffsll(x) - 1)
-+
-+#define _BF_FIELD_CHECK(_mask, _val)					\
-+	({								\
-+		BUILD_BUG_ON(!(_mask));					\
-+		BUILD_BUG_ON(__builtin_constant_p(_val) ?		\
-+			     ~((_mask) >> _bf_shf(_mask)) & (_val) :	\
-+			     0);					\
-+		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
-+					      (1ULL << _bf_shf(_mask))); \
-+	})
-+
-+#define FIELD_PUT(_mask, _val)					\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, _val);			\
-+		((u32)(_val) << _bf_shf(_mask)) & (_mask);	\
-+	})
-+
-+#define FIELD_GET(_mask, _val)					\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, 0);			\
-+		(u32)(((_val) & (_mask)) >> _bf_shf(_mask));	\
-+	})
-+
-+#define FIELD_PUT64(_mask, _val)				\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, _val);			\
-+		((u64)(_val) << _bf_shf(_mask)) & (_mask);	\
-+	})
-+
-+#define FIELD_GET64(_mask, _val)				\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, 0);			\
-+		(u64)(((_val) & (_mask)) >> _bf_shf(_mask));	\
-+	})
-+
-+#endif
-diff --git a/include/linux/bug.h b/include/linux/bug.h
-index e51b0709e78d..bba5bdae1681 100644
---- a/include/linux/bug.h
-+++ b/include/linux/bug.h
-@@ -13,6 +13,7 @@ enum bug_trap_type {
- struct pt_regs;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c59af3e..a68cbac 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1198,6 +1198,48 @@ static void ieee80211_if_setup(struct net_device *dev)
+ 	dev->destructor = ieee80211_if_free;
+ }
  
- #ifdef __CHECKER__
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_ZERO(e) (0)
- #define BUILD_BUG_ON_NULL(e) ((void*)0)
-@@ -24,6 +25,8 @@ struct pt_regs;
- #else /* __CHECKER__ */
++static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
++						 struct ieee80211_sub_if_data
++						 *sdata)
++{
++	struct ieee80211_ra_tid *ra_tid;
++	struct ieee80211_rx_agg *rx_agg;
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++
++	if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
++		ra_tid = (void *)&skb->cb;
++		ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
++	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
++		ra_tid = (void *)&skb->cb;
++		ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
++	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
++		rx_agg = (void *)&skb->cb;
++		mutex_lock(&local->sta_mtx);
++		sta = sta_info_get_bss(sdata, rx_agg->addr);
++		if (sta)
++			__ieee80211_start_rx_ba_session(sta,
++							0, 0, 0, 1, rx_agg->tid,
++							IEEE80211_MAX_AMPDU_BUF,
++							false, true);
++		mutex_unlock(&local->sta_mtx);
++	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
++		rx_agg = (void *)&skb->cb;
++		mutex_lock(&local->sta_mtx);
++		sta = sta_info_get_bss(sdata, rx_agg->addr);
++		if (sta)
++			__ieee80211_stop_rx_ba_session(sta,
++						       rx_agg->tid,
++						       WLAN_BACK_RECIPIENT, 0,
++						       false);
++		mutex_unlock(&local->sta_mtx);
++	} else {
++		return false;
++	}
++	/*will return true if pkt_type found and handled */
++	return true;
++}
++
+ static void ieee80211_iface_work(struct work_struct *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+@@ -1205,8 +1247,6 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
+-	struct ieee80211_ra_tid *ra_tid;
+-	struct ieee80211_rx_agg *rx_agg;
  
- /* Force a compilation error if a constant expression is not a power of 2 */
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) 			\
-+	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
- 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+@@ -1221,34 +1261,8 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
+ 		struct ieee80211_mgmt *mgmt = (void *)skb->data;
+ 
+-		if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
+-			ra_tid = (void *)&skb->cb;
+-			ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra,
+-						 ra_tid->tid);
+-		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
+-			ra_tid = (void *)&skb->cb;
+-			ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra,
+-						ra_tid->tid);
+-		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
+-			rx_agg = (void *)&skb->cb;
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, rx_agg->addr);
+-			if (sta)
+-				__ieee80211_start_rx_ba_session(sta,
+-						0, 0, 0, 1, rx_agg->tid,
+-						IEEE80211_MAX_AMPDU_BUF,
+-						false, true);
+-			mutex_unlock(&local->sta_mtx);
+-		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
+-			rx_agg = (void *)&skb->cb;
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, rx_agg->addr);
+-			if (sta)
+-				__ieee80211_stop_rx_ba_session(sta,
+-							rx_agg->tid,
+-							WLAN_BACK_RECIPIENT, 0,
+-							false);
+-			mutex_unlock(&local->sta_mtx);
++		if (ieee80211_is_skb_handled_by_pkt_type(skb, sdata)) {
++			goto free_skb;
+ 		} else if (ieee80211_is_action(mgmt->frame_control) &&
+ 			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+ 			int len = skb->len;
+@@ -1333,6 +1347,7 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 			break;
+ 		}
+ 
++free_skb:
+ 		kfree_skb(skb);
+ 	}
  
 -- 
-1.9.1
+2.5.0
 
