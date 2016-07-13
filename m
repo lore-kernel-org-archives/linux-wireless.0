@@ -1,55 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f43.google.com ([209.85.214.43]:37041 "EHLO
-	mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752301AbcGUMex (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 08:34:53 -0400
-Received: by mail-it0-f43.google.com with SMTP id f6so16024055ith.0
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 05:34:53 -0700 (PDT)
+Received: from mga04.intel.com ([192.55.52.120]:6247 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751058AbcGMLBA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2016 07:01:00 -0400
+Date: Wed, 13 Jul 2016 13:00:45 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Marcel Holtmann <marcel@holtmann.org>
+Cc: Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"Gustavo F. Padovan" <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Pavan Savoy <pavan_savoy@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
+	linux-media@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: misc: ti-st: Use int instead of fuzzy char for
+ callback status
+Message-ID: <20160713110045.GA10530@zurbaran.home> (sfid-20160713_130210_890425_53CDA9B4)
+References: <1465203723-16928-1-git-send-email-geert@linux-m68k.org>
+ <20160713074114.76c35d04@recife.lan>
+ <32897348-2AC5-4AB7-BF58-B1E36FC19CF2@holtmann.org>
 MIME-Version: 1.0
-In-Reply-To: <c18d3a077345402d83a4d12f1d75f07d@SC-EXCH04.marvell.com>
-References: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com>
- <efa3441022124e74af56753a70041eee@SC-EXCH04.marvell.com> <CAD3r-iQScbuUiGiF3uDKzMk-0mycG3WVFDGaYCy6aPxAEjq3mg@mail.gmail.com>
- <c18d3a077345402d83a4d12f1d75f07d@SC-EXCH04.marvell.com>
-From: Luana Borgia <luanaborgia1969@gmail.com>
-Date: Thu, 21 Jul 2016 14:34:52 +0200
-Message-ID: <CAD3r-iSu5TSQxQckp30ZE1cyOC7tsJtmZbQ911bd6KQjOP5CaA@mail.gmail.com> (sfid-20160721_143457_810974_6A5E43DB)
-Subject: Re: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nestor Machno <nestor.machno89@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <32897348-2AC5-4AB7-BF58-B1E36FC19CF2@holtmann.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amitkumar,
-if I understood correctly you are working to solve the issue related
-to ibss-rsn (wpa2 in adhoc), I'm I right?
-What about the alternative WPA mechanism with wpa-none instead? Fix it
-shouldn't be simpler than RSN?
+Hi Marcel,
 
-Thanks for update and
-best regards.
-Luana
+On Wed, Jul 13, 2016 at 11:56:02AM +0100, Marcel Holtmann wrote:
+> Hi Mauro,
+> 
+> >> On mips and parisc:
+> >> 
+> >>    drivers/bluetooth/btwilink.c: In function 'ti_st_open':
+> >>    drivers/bluetooth/btwilink.c:174:21: warning: overflow in implicit constant conversion [-Woverflow]
+> >>       hst->reg_status = -EINPROGRESS;
+> >> 
+> >>    drivers/nfc/nfcwilink.c: In function 'nfcwilink_open':
+> >>    drivers/nfc/nfcwilink.c:396:31: warning: overflow in implicit constant conversion [-Woverflow]
+> >>      drv->st_register_cb_status = -EINPROGRESS;
+> >> 
+> >> There are actually two issues:
+> >>  1. Whether "char" is signed or unsigned depends on the architecture.
+> >>     As the completion callback data is used to pass a (negative) error
+> >>     code, it should always be signed.
+> >>  2. EINPROGRESS is 150 on mips, 245 on parisc.
+> >>     Hence -EINPROGRESS doesn't fit in a signed 8-bit number.
+> >> 
+> >> Change the callback status from "char" to "int" to fix these.
+> >> 
+> >> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> > 
+> > Patch looks sane to me, but who will apply it?
+> > 
+> > Anyway:
+> > 
+> > Acked-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+> 
+> I can take it through bluetooth-next if there is no objection.
+> 
+> Samuel, are you fine with that?
+Yes, please go ahead.
 
-2016-07-21 11:05 GMT+02:00 Amitkumar Karwar <akarwar@marvell.com>:
-> Hi Luana,
->
->> From: Luana Borgia [mailto:luanaborgia1969@gmail.com]
->> Sent: Wednesday, July 20, 2016 6:53 PM
->> To: Amitkumar Karwar
->> Cc: Nestor Machno; linux-wireless@vger.kernel.org
->> Subject: Re: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
->>
->> Hi Amitkumar,
->> any news about this issue? I've the same problem also..
->>
->> Security a part, we can't leave the WIFI open or just with WEP because
->> we get too many not trusted connection that consume a lot of our
->> bandwidth
->>
->
-> We are still working on this. With some driver changes, we are able to RSN IE in transmitted frames, but 4 way handshake doesn't occur.
->
-> Regards,
-> Amitkumar
+Cheers,
+Samuel.
