@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63439 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755183AbcGHOaB (ORCPT
+Received: from mail-it0-f51.google.com ([209.85.214.51]:37529 "EHLO
+	mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751054AbcGMNeY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 10:30:01 -0400
-Content-Type: text/plain; charset="utf-8"
+	Wed, 13 Jul 2016 09:34:24 -0400
+Received: by mail-it0-f51.google.com with SMTP id f6so43137704ith.0
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 06:34:05 -0700 (PDT)
+Date: Wed, 13 Jul 2016 09:33:38 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: "Machani, Yaniv" <yanivma@ti.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S . Miller" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Hahn, Maital" <maitalm@ti.com>
+Subject: Re: [PATCH 1/4] mac80211: mesh: flush stations before beacons are
+ stopped
+Message-ID: <20160713133338.GD7819@localhost> (sfid-20160713_153635_675321_24C15221)
+References: <20160628111307.8784-1-yanivma@ti.com>
+ <20160628111307.8784-2-yanivma@ti.com>
+ <1467184459.2461.1.camel@sipsolutions.net>
+ <AE1C82FB3D0EC64DB1F752C81CBD1101391FC38C@DFRE01.ent.ti.com>
 MIME-Version: 1.0
-Subject: Re: ath10k: implement NAPI support
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160627055128.7005-1-rmanohar@qti.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
-	<rmanohar@codeaurora.org>
-Message-ID: <6169ec35e7d9438180c60909a96390ae@euamsexm01a.eu.qualcomm.com> (sfid-20160708_163005_710985_C51D0DB6)
-Date: Fri, 8 Jul 2016 16:29:53 +0200
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101391FC38C@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> Add NAPI support for rx and tx completion. NAPI poll is scheduled
-> from interrupt handler. The design is as below
+On Wed, Jul 13, 2016 at 10:11:25AM +0000, Machani, Yaniv wrote:
+> > > Some drivers (e.g. wl18xx) expect that the last stage in the 
+> > > de-initialization process will be stopping the beacons, similar to ap.
+> > > Update ieee80211_stop_mesh() flow accordingly.
+> > >
+> > How well have you tested that with other drivers?
+> > 
 > 
->  - on interrupt
->      - schedule napi and mask interrupts
->  - on poll
->    - process all pipes (no actual Tx/Rx)
->    - process Rx within budget
->    - if quota exceeds budget reschedule napi poll by returning budget
->    - process Tx completions and update budget if necessary
->    - process Tx fetch indications (pull-push)
->    - push any other pending Tx (if possible)
->    - before resched or napi completion replenish htt rx ring buffer
->    - if work done < budget, complete napi poll and unmask interrupts
-> 
-> This change also get rid of two tasklets (intr_tq and txrx_compl_task).
-> 
-> Measured peak throughput with NAPI on IPQ4019 platform in controlled
-> environment. No noticeable reduction in throughput is seen and also
-> observed improvements in CPU usage. Approx. 15% CPU usage got reduced
-> in UDP uplink case.
-> 
-> DL: AP DUT Tx
-> UL: AP DUT Rx
-> 
-> IPQ4019 (avg. cpu usage %)
-> 
-> ========
->                 TOT              +NAPI
->               ===========      =============
-> TCP DL       644 Mbps (42%)    645 Mbps (36%)
-> TCP UL       673 Mbps (30%)    675 Mbps (26%)
-> UDP DL       682 Mbps (49%)    680 Mbps (49%)
-> UDP UL       720 Mbps (28%)    717 Mbps (11%)
-> 
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> Sorry for the delayed response (I've been out) and thanks for your comments,
+> I have tested it with RT3572 as well, and didn't see any issue.
+> I'll update the comment to reflect that.
 
-This is quite big change and I'm planning to queue this for 4.9. So I'm not
-applying this quite yet.
+I'll give this a test on ath10k and wcn36xx as they are the ones most
+likely to care about ordering.
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9199911/
-
+Bob Copeland %% http://bobcopeland.com/
