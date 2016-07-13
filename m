@@ -1,151 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52132 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751109AbcGNIBr (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33264 "EHLO
+	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751703AbcGMA34 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2016 04:01:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Prarit Bhargava <prarit@redhat.com>
-Cc: Luca Coelho <luca@coelho.fi>,
-	"Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Berg\, Johannes" <johannes.berg@intel.com>,
-	"Ivgi\, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon\, Sara" <sara.sharon@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless ucode is loaded
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
-	<CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
-	<5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>
-	<57840214.8000904@redhat.com> <87eg6yav5e.fsf@purkki.adurom.net>
-	<1468394693.25088.138.camel@coelho.fi> <578615EF.9010305@redhat.com>
-Date: Thu, 14 Jul 2016 11:01:40 +0300
-In-Reply-To: <578615EF.9010305@redhat.com> (Prarit Bhargava's message of "Wed,
-	13 Jul 2016 06:20:31 -0400")
-Message-ID: <87oa60y7ff.fsf@kamboji.qca.qualcomm.com> (sfid-20160714_100718_240521_6A6E8820)
+	Tue, 12 Jul 2016 20:29:56 -0400
+Received: by mail-qk0-f196.google.com with SMTP id n202so204209qke.0
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jul 2016 17:29:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: =?UTF-8?Q?Ismael_Farf=C3=A1n?= <sulfurfff@gmail.com>
+Date: Tue, 12 Jul 2016 19:29:38 -0500
+Message-ID: <CANXECd56kVUKF1xjiSjLiDTKAqrv9_TJxgPgxu7F-dBSmXcjLA@mail.gmail.com> (sfid-20160713_023048_662985_F7390428)
+Subject: iwlwifi + wpa2-leap + multiple AP's = call trace
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prarit Bhargava <prarit@redhat.com> writes:
+Hello list
 
-> On 07/13/2016 03:24 AM, Luca Coelho wrote:
->
->> I totally agree with Emmanuel and Kalle. We should not change this.
->> It is a design decision to return an error when the interface is
->> down, this is very common with other subsystems as well.
->
-> Please show me another subsystem or driver that does this.  I've looked around
-> the kernel but cannot find one that updates the firmware and implements new
-> features on the fly like this.  I have come across several drivers that allow
-> for an update, but they do not implement new features based on the
-> firmware.
->
-> Additionally, what happens when someone back revs firmware versions (which
-> happens far more than you and I would expect)?  Does that mean I now go from a
-> functional system to a non-functional system wrt to userspace?
+I searched this error around and didn't find anything, so here it goes.
 
-I'm not following, what do you mean exactly? Why are you talking
-updating the firmware?
+Today I tried to connect to an enterprise network, which means,
+literally, tens of AP's sharing the same name... the network requieres
+user/password authentication (wpa2-leap).
 
-So when we talk about "loading firmware" we mean that the driver pushes
-the firmware image to to the chipset. And then the interface is down the
-chipset is powered down and the RAM on it will be erased. That's the
-general idea anyway, I haven't checked how iwlwifi exactly works in this
-case but Luca or Emmanuel can correct me.
+I'm using Arch
+$ uname -a
+Linux 4.6.3-1-ARCH #1 SMP PREEMPT Fri Jun 24 21:19:13 CEST 2016 x86_64 GNU/Linux
 
->> The userspace should be able to handle errors and report something
->> like "unavailable" when this kind of error is returned.
->
-> I myself have made the same arguments wrt to cpufreq code & bad userspace
-> choices.  I just went through this a few months back with what went from a
-> simple patch and turned out to be a hideous patch in cpufreq.  You cannot break
-> userspace like this.
+Since the thing just didn't connect, I checked dmesg and found this:
 
-Don't get me wrong, I'm a strong supporter of stable user space
-interfaces and I always try to adher to that. But there's a limit for
-everything. If I'm understanding correctly, what you mean is that the
-kernel should never return an error because an application doesn't
-handle errors gracefully. Sorry, but that doesn't make sense to me.
+Any ideas?
 
-> See commit 51443fbf3d2c ("cpufreq: intel_pstate: Fix intel_pstate powersave
-> min_perf_pct value").  What should have been a trivial change resulted in a
-> massive change because of broken userspace.
 
-In that cpufreq case I understand, it was about a combination of
-configuration values which broke the user space. But here we are just
-dealing with a simple error value, nothing fancy.
+[   83.030072] wifi0: aborting authentication with xx:xx:xx:xx:xx:xx
+by local choice (Reason: 3=DEAUTH_LEAVING)
+[   83.030073] ------------[ cut here ]------------
+[   83.030082] WARNING: CPU: 2 PID: 1087 at
+drivers/net/wireless/intel/iwlwifi/mvm/time-event.c:507 iwl_mvm_tim
+e_event_send_add+0x1c6/0x200 [iwlmvm]
+[   83.030157] CPU: 2 PID: 1087 Comm: wpa_supplicant Tainted: G
+   O    4.6.3-1-ARCH #1
+[   83.030158] Hardware name: Notebook
+P65_P67SA                       /P65_P67SA
+                , BIOS 1.03.01 07/22/2015
+[   83.030160]  0000000000000286 0000000009e998bc ffff880403a5b940
+ffffffff812e54c2
+[   83.030162]  0000000000000000 0000000000000000 ffff880403a5b980
+ffffffff8107a6bb
+[   83.030164]  000001fb81a8a180 ffff88041b443580 ffff88041c329548
+00000000fffffffb
+[   83.030167] Call Trace:
+[   83.030172]  [<ffffffff812e54c2>] dump_stack+0x63/0x81
+[   83.030174]  [<ffffffff8107a6bb>] __warn+0xcb/0xf0
+[   83.030176]  [<ffffffff8107a7ed>] warn_slowpath_null+0x1d/0x20
+[   83.030181]  [<ffffffffa0b068d6>]
+iwl_mvm_time_event_send_add+0x1c6/0x200 [iwlmvm]
+[   83.030184]  [<ffffffff810c4772>] ? up+0x32/0x50
+[   83.030187]  [<ffffffff810d371b>] ? wake_up_klogd+0x3b/0x50
+[   83.030189]  [<ffffffff810d3c19>] ? console_unlock+0x4e9/0x590
+[   83.030193]  [<ffffffffa0b07520>]
+iwl_mvm_protect_session+0x220/0x280 [iwlmvm]
+[   83.030196]  [<ffffffffa0af100e>] ? iwl_mvm_ref_sync+0x2e/0x140 [iwlmvm]
+[   83.030199]  [<ffffffff810d423f>] ? vprintk_default+0x1f/0x30
+[   83.030202]  [<ffffffffa0af154a>]
+iwl_mvm_mac_mgd_prepare_tx+0x5a/0xa0 [iwlmvm]
+[   83.030216]  [<ffffffffa0c8e198>] ieee80211_mgd_deauth+0x338/0x4d0 [mac80211]
+[   83.030219]  [<ffffffff810b2333>] ? enqueue_entity+0x323/0xd70
+[   83.030228]  [<ffffffffa0c579b8>] ieee80211_deauth+0x18/0x20 [mac80211]
+[   83.030237]  [<ffffffffa05a1b8f>] cfg80211_mlme_deauth+0x9f/0x1a0 [cfg80211]
+[   83.030242]  [<ffffffffa05a62da>] cfg80211_disconnect+0x9a/0x200 [cfg80211]
+[   83.030248]  [<ffffffffa05c4529>]
+cfg80211_mgd_wext_siwessid+0xa9/0x170 [cfg80211]
+[   83.030255]  [<ffffffffa05c3512>] cfg80211_wext_siwessid+0x22/0x40 [cfg80211]
+[   83.030258]  [<ffffffff815af803>] ioctl_standard_iw_point+0x133/0x350
+[   83.030264]  [<ffffffffa05c34f0>] ?
+cfg80211_wext_giwessid+0x50/0x50 [cfg80211]
+[   83.030266]  [<ffffffff810a4a82>] ? wake_up_q+0x32/0x70
+[   83.030268]  [<ffffffff815b0930>] ? iw_handler_get_private+0x60/0x60
+[   83.030271]  [<ffffffff815afd07>] ioctl_standard_call+0x87/0xd0
+[   83.030273]  [<ffffffff815afc80>] ? call_commit_handler.part.4+0x30/0x30
+[   83.030275]  [<ffffffff815afc10>] wireless_process_ioctl+0x1f0/0x230
+[   83.030278]  [<ffffffff814b52fe>] ? dev_get_by_name_rcu+0x5e/0x80
+[   83.030280]  [<ffffffff815aff58>] wext_handle_ioctl+0x78/0xd0
+[   83.030283]  [<ffffffff814d7777>] dev_ioctl+0x2a7/0x5a0
+[   83.030285]  [<ffffffff8149dc86>] sock_ioctl+0x126/0x290
+[   83.030287]  [<ffffffff81209be3>] do_vfs_ioctl+0xa3/0x5d0
+[   83.030290]  [<ffffffff811f7362>] ? vfs_write+0x142/0x190
+[   83.030292]  [<ffffffff8120a189>] SyS_ioctl+0x79/0x90
+[   83.030294]  [<ffffffff815c71b2>] entry_SYSCALL_64_fastpath+0x1a/0xa4
+[   83.030296] ---[ end trace 8247b235a66a1a21 ]---
 
->> I'm not sure EIO is the best we can have, but for me that's exactly
->> what it is.  The thermal zone *is* there, but cannot be accessed
->> because the firmware is not available.  I'm okay to change it to EBUSY,
->> if that would help userspace, but I think that's a bit misleading.  The
->> device is not busy, on the contrary, it's not even running at all.
->> 
->
-> I understand that, but by returning -EIO we end up with an error.
->
->> Furthermore, I don't think this is "breaking userspace" in the sense of
->> being a regression.  
->
-> I run (let's say 4.5 kernel).  sensors works.  I update to 4.7.  sensors doesn't
-> work.  How is that not a regression?  That's _exactly_ what it should be
-> reported as.
 
-Sure, it's a regression in a way. But that's how the user space app you
-are using is implemented, the same problem would happen with any driver
-returning errors.
 
->> The userspace API has always been implemented with
->> the possibility of returning errors.  It's not a good design if a
->> single device returning an error causes all the other devices to also
->> fail.
->> 
->
-> If that were the case we would never have to worry about "breaking userspace"?
-> For any kernel change I could just say that the userspace design was bad and be
-> done with it.  Why fix anything then?
 
-Because we are talking about a simple error value.
-
-> I don't see any harm in waiting to register the sysfs files for hwmon until the
-> firmware has been validated.
-
-I'm against of that because it's bad software design. It's standard
-practise in Linux that drivers register their capabilities during driver
-probe time so that user space can query them whenever needed. I assume a
-properly behaving user space app would want to know about all the
-available sensors once the driver is initialised and your suggestion
-would break that.
-
-> IIUC, the up/down'ing of the device doesn't happen that often (during
-> initial boot, and suspend/resume, switching wifi connections,
-> shutdown?).
-
-Basically it can happen anytime, this is fully controlled by user space.
-There's no point of trying to make any assumptions as they won't hold
-anyway.
-
-> This would make the iwlwifi community happy (IMO) and
-> sensors would still work. At the same time I could write a patch for
-> lm-sensors to fix this issue if it comes up in future versions.
-> [Aside: I'm going to have the reproducing system available today and
-> will test this out. It looks like just moving some code around.]
-
-Another option, but still a bad one I don't like, is that you change the
-kernel interface to ignore all errors from drivers (like iwlwifi). This
-way drivers don't need to make ugly workarounds.
-
-> The bottom line is that lm-sensors is currently broken with this change in
-> iwlwifi.  AFAICT, no other thermal device returns an error this way, and IMO
-> that means the iwlwifi driver is doing something new and unexpected wrt to
-> userspace.
-
-I haven't checked but I suspect ath10k has a similar problem when
-interface is down.
 
 -- 
-Kalle Valo
+Do not let me induce you to satisfy my curiosity, from an expectation,
+that I shall gratify yours. What I may judge proper to conceal, does
+not concern myself alone.
