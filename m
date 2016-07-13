@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56765 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753790AbcGTPlh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 11:41:37 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] staging/rtl8192e: avoid comparing unsigned type >= 0
-References: <20160720151818.4142386-1-arnd@arndb.de>
-	<20160720152606.201775-1-arnd@arndb.de>
-	<20160720152606.201775-2-arnd@arndb.de>
-Date: Wed, 20 Jul 2016 11:41:36 -0400
-In-Reply-To: <20160720152606.201775-2-arnd@arndb.de> (Arnd Bergmann's message
-	of "Wed, 20 Jul 2016 17:26:06 +0200")
-Message-ID: <wrfjbn1spb9r.fsf@redhat.com> (sfid-20160720_174207_257626_0C490A62)
+Received: from devils.ext.ti.com ([198.47.26.153]:34883 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750956AbcGMLyL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2016 07:54:11 -0400
+From: Yaniv Machani <yanivma@ti.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Meirav Kama <meiravk@ti.com>, Yaniv Machani <yanivma@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: [PATCH v2] mac80211: rx: frames received out of order
+Date: Wed, 13 Jul 2016 14:57:56 +0300
+Message-ID: <20160713115758.25395-1-yanivma@ti.com> (sfid-20160713_135419_770394_B76F1024)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
-> There is one remaining warning about a type limit check in rtl8192e:
->
-> staging/rtl8192e/rtl819x_TSProc.c:326:14: error: comparison is always true due to limited range of data type [-Werror=type-limits]
->
-> This changes a macro into a local function to clarify the types and simplify
-> the check while removing the warning.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/staging/rtl8192e/rtl819x_Qos.h    | 3 ---
->  drivers/staging/rtl8192e/rtl819x_TSProc.c | 5 +++++
->  2 files changed, 5 insertions(+), 3 deletions(-)
+From: Meirav Kama <meiravk@ti.com>
 
-Looks good to me!
+Upon forwarding frames from Rx to Tx in mesh, driver clones the skb.
+It zeros the tx_info and doesn't set hw_queue correctly. It then enqueues
+the frame in queue 0 (VOICE) instead of the correct queue.
+Upon re-queue of this frame, driver inserts it to the correct queue (e.g. BE).
+After that, driver dequeue frames from 2 different queues and sends them out of order.
+To fix this, driver will set the tx_info->hw_queue to the correct queue when cloning the skb.
 
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Meirav Kama <meiravk@ti.com>
+Signed-off-by: Yaniv Machani <yanivma@ti.com>
+---
+V2 - Revised comment
 
-> diff --git a/drivers/staging/rtl8192e/rtl819x_Qos.h b/drivers/staging/rtl8192e/rtl819x_Qos.h
-> index 463122db6d29..61da8f7475bb 100644
-> --- a/drivers/staging/rtl8192e/rtl819x_Qos.h
-> +++ b/drivers/staging/rtl8192e/rtl819x_Qos.h
-> @@ -169,9 +169,6 @@ union qos_tclas {
->  	} TYPE2_8021Q;
->  };
->  
-> -#define IsACValid(ac)		((ac >= 0 && ac <= 7) ? true : false)
-> -
-> -
->  union aci_aifsn {
->  	u8	charData;
->  
-> diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-> index 2c8a526773ed..a966a8e490ab 100644
-> --- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
-> +++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-> @@ -306,6 +306,11 @@ static void MakeTSEntry(struct ts_common_info *pTsCommonInfo, u8 *Addr,
->  	pTsCommonInfo->TClasNum = TCLAS_Num;
->  }
->  
-> +static bool IsACValid(unsigned int tid)
-> +{
-> +	return tid < 7;
-> +}
-> +
->  bool GetTs(struct rtllib_device *ieee, struct ts_common_info **ppTS,
->  	   u8 *Addr, u8 TID, enum tr_select TxRxSelect, bool bAddNewTs)
->  {
+ net/mac80211/rx.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9a1eb70..88dc744 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2392,6 +2392,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 	info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 	info->control.vif = &rx->sdata->vif;
+ 	info->control.jiffies = jiffies;
++	info->hw_queue = q;
+ 	if (is_multicast_ether_addr(fwd_hdr->addr1)) {
+ 		IEEE80211_IFSTA_MESH_CTR_INC(ifmsh, fwded_mcast);
+ 		memcpy(fwd_hdr->addr2, sdata->vif.addr, ETH_ALEN);
+-- 
+2.9.0
+
