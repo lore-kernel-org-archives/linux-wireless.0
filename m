@@ -1,200 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:33786 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbcGVIJ7 (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34114 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbcGMUUH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 04:09:59 -0400
-Received: by mail-pa0-f52.google.com with SMTP id ks6so37590058pab.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 01:09:59 -0700 (PDT)
-Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
-To: Christopher Williamson <home@chrisaw.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
- <1468946312.5661.2.camel@redhat.com>
- <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
- <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
- <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
- <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
- <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
- <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
- <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
- <1469115440.29944.1.camel@redhat.com>
- <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
- <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
- <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com>
- <etPan.579137d1.40bb3278.381a@chrisaw.com>
- <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <435adbc6-9fa3-e9e3-9815-8cf4b62e5342@broadcom.com> (sfid-20160722_101016_334430_6739180F)
-Date: Fri, 22 Jul 2016 10:09:50 +0200
-MIME-Version: 1.0
-In-Reply-To: <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Wed, 13 Jul 2016 16:20:07 -0400
+Received: by mail-wm0-f66.google.com with SMTP id q128so2661849wma.1
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 13:20:06 -0700 (PDT)
+From: Alex Briskin <br.shurik@gmail.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Alex Briskin <br.shurik@gmail.com>
+Subject: [PATCH 2/4 v1] even better readability
+Date: Wed, 13 Jul 2016 23:19:54 +0300
+Message-Id: <1468441196-23503-3-git-send-email-br.shurik@gmail.com> (sfid-20160713_222012_050393_852FB7EE)
+In-Reply-To: <1468441196-23503-1-git-send-email-br.shurik@gmail.com>
+References: <1468441196-23503-1-git-send-email-br.shurik@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-7-2016 0:00, Christopher Williamson wrote:
-> I’ve created cleaner logs (particularly the dmesg one) and have added
-> timestamps line-by-line to both so it should be easier to track
-> between the two log files:
-> 
-> wpa_supplicant:
-> http://termbin.com/cx0e
-> 
-> dmesg | grep libertas:
-> http://termbin.com/bvdj
+Further improve readability by replacing if else with switch case
 
-You can make wpa_supplicant log to syslog. That way you get kernel and
-wpa_supplicant log in one file.
+Signed-off-by: Alex Briskin <br.shurik@gmail.com>
+---
+ net/mac80211/iface.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-Regards,
-Arend
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index a68cbac..1793ad2 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1207,13 +1207,16 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
+ 
+-	if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
++	switch (skb->pkt_type) {
++	case IEEE80211_SDATA_QUEUE_AGG_START:
+ 		ra_tid = (void *)&skb->cb;
+ 		ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
+-	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
++		break;
++	case IEEE80211_SDATA_QUEUE_AGG_STOP:
+ 		ra_tid = (void *)&skb->cb;
+ 		ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
+-	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
++		break;
++	case IEEE80211_SDATA_QUEUE_RX_AGG_START:
+ 		rx_agg = (void *)&skb->cb;
+ 		mutex_lock(&local->sta_mtx);
+ 		sta = sta_info_get_bss(sdata, rx_agg->addr);
+@@ -1223,7 +1226,8 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
+ 							IEEE80211_MAX_AMPDU_BUF,
+ 							false, true);
+ 		mutex_unlock(&local->sta_mtx);
+-	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
++		break;
++	case IEEE80211_SDATA_QUEUE_RX_AGG_STOP:
+ 		rx_agg = (void *)&skb->cb;
+ 		mutex_lock(&local->sta_mtx);
+ 		sta = sta_info_get_bss(sdata, rx_agg->addr);
+@@ -1233,7 +1237,8 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
+ 						       WLAN_BACK_RECIPIENT, 0,
+ 						       false);
+ 		mutex_unlock(&local->sta_mtx);
+-	} else {
++		break;
++	default:
+ 		return false;
+ 	}
+ 	/*will return true if pkt_type found and handled */
+-- 
+2.5.0
 
-> Christopher Williamson
-> 
-> 
-> 
-> 
-> On 21 July 2016 at 22:00:02, Christopher Williamson
-> (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
-> 
->> Sure!
->>
->> wpa_supplicant logs:
->> http://termbin.com/z1hg
->>
->> dmesg logs (grepped for libertas):
->> http://termbin.com/7rt5
->>
->>
->> Christopher Williamson
->>
->>
->>
->>
->> On 21 July 2016 at 21:38:26, Dan Williams (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
->>
->>> On Thu, 2016-07-21 at 11:55 -0700, Christopher Williamson wrote:
->>>> Just to confirm - I can connect to the same network using the same
->>>> configurations using a USB wifi adapter I tried.
->>>
->>> Can you grab simultaneous driver debug logging and supplicant debug
->>> logging? Unfortunately the 'status 1' is an unspecified failure, which
->>> could be from the AP or the firmware.
->>>
->>> Dan
->>>
->>>
->>>> Unfortunately it’s not ideal since the point of the Viliv N5 is that
->>>> it’s ultra portable so I would really like to get the inbuilt wifi
->>>> card working.
->>>>
->>>> It seems odd that wpa_supplicant reports the connection being
->>>> “rejected” as seen below:
->>>>
->>>> wlan0: CTRL-EVENT-ASSOC-REJECT bssid=a0:63:91:1e:ee:43 status_code=1
->>>>
->>>> Most of the debug output sadly doesn’t mean a great deal to me - wifi
->>>> isn’t really my area of expertise.
->>>>
->>>> On 21 July 2016 at 19:10:56, Christopher Williamson
->>>> (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
->>>>
->>>>>
->>>>>
->>>>> Sure, here are the results:
->>>>>
->>>>> http://termbin.com/e8e2
->>>>>
->>>>> Christopher Williamson
->>>>>
->>>>>
->>>>> On 21 July 2016 at 16:37:24, Dan Williams (dcbw@redhat.com(mailto:d
->>>>> cbw@redhat.com)) wrote:
->>>>>
->>>>>>
->>>>>> On Wed, 2016-07-20 at 15:16 -0700, Christopher Williamson wrote:
->>>>>>>
->>>>>>> I used NetworkManager in the previous test.
->>>>>>>
->>>>>>> This time around I have used wpa_supplicant directly and get
->>>>>>> the
->>>>>>> following results:
->>>>>>>
->>>>>>> http://termbin.com/j8ea
->>>>>>>
->>>>>>> Thought I’d throw them on a pastebin since it’s over 700 lines.
->>>>>> Can you try with "-D nl80211" instead of using the WEXT
->>>>>> supplicant
->>>>>> driver? NM is likely going to use nl80211 since the driver has
->>>>>> some
->>>>>> support for cfg80211/nl80211 and only does WEXT through the glue
->>>>>> layer.
->>>>>>
->>>>>> Dan
->>>>>>
->>>>>>>
->>>>>>> Christopher Williamson
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> On 20 July 2016 at 22:50:34, Dan Williams
->>>>>>> (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
->>>>>>>
->>>>>>>>
->>>>>>>>
->>>>>>>> On Wed, 2016-07-20 at 13:06 -0700, Christopher Williamson
->>>>>>>> wrote:
->>>>>>>>>
->>>>>>>>>
->>>>>>>>> Hi Dan,
->>>>>>>>>
->>>>>>>>> Ah - yeah I hadn’t thought it may be a kernel build option.
->>>>>>>>> I’ve
->>>>>>>>> now
->>>>>>>>> built that and dmesg is a much more lively place!
->>>>>>>>>
->>>>>>>>> I’ve provided output logs for both when the device is
->>>>>>>>> connected
->>>>>>>>> and
->>>>>>>>> when a connection attempt is made - hopefully this is
->>>>>>>>> useful.
->>>>>>>>
->>>>>>>> The card is scanning and only finds 'shaunthesheep' 20
->>>>>>>> seconds
->>>>>>>> after
->>>>>>>> you "connect for the first time". The logs stop 3 seconds
->>>>>>>> later.
->>>>>>>> Are
->>>>>>>> you connecting with wicd or something else?
->>>>>>>>
->>>>>>>> Can you run wpa_supplicant with the "-dddtu" option so we can
->>>>>>>> get
->>>>>>>> debug
->>>>>>>> log output from it?
->>>>>>>>
->>>>>>>> Dan
->>>>>>> --
->>>>>>> To unsubscribe from this list: send the line "unsubscribe
->>>>>>> linux-
->>>>>>> wireless" in
->>>>>>> the body of a message to majordomo@vger.kernel.org
->>>>>>> More majordomo info at http://vger.kernel.org/majordomo-info.ht
->>>>>>> ml
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-
->>>> wireless" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at http://vger.kernel.org/majordomo-info.html
->>
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
