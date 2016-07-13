@@ -1,65 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f51.google.com ([209.85.214.51]:37000 "EHLO
-	mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757122AbcG1MCt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 08:02:49 -0400
-MIME-Version: 1.0
-In-Reply-To: <590e0614-db41-a193-5463-9e3ad2630489@users.sourceforge.net>
-References: <5307CAA2.8060406@users.sourceforge.net> <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
- <530A086E.8010901@users.sourceforge.net> <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
- <530A72AA.3000601@users.sourceforge.net> <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
- <530B5FB6.6010207@users.sourceforge.net> <alpine.DEB.2.10.1402241710370.2074@hadrien>
- <530C5E18.1020800@users.sourceforge.net> <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net> <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net> <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net> <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
- <dbc8c4f3-a234-9b6a-b6a4-9c7ef45d5d31@users.sourceforge.net> <590e0614-db41-a193-5463-9e3ad2630489@users.sourceforge.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 28 Jul 2016 22:02:29 +1000
-Message-ID: <CAGRGNgUvEYG8fkruQCd-JxA5d=EjrK92A-mZ1rxUj39S5hdtbw@mail.gmail.com> (sfid-20160728_140313_092680_E7B26F51)
-Subject: Re: [PATCH 2/3] staging: wilc1000: One function call less in
- mac_ioctl() after error detection
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Glen Lee <glen.lee@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>, Leo Kim <leo.kim@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:43196 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751425AbcGMJAP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2016 05:00:15 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: remove skb header offset mangling in ieee80211_build_hdr
+Date: Wed, 13 Jul 2016 11:00:02 +0200
+Message-Id: <20160713090002.51127-1-nbd@nbd.name> (sfid-20160713_110026_870407_78F1A4E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcus,
+Since the code only touches the MAC headers, the offsets to the
+network/transport headers remain the same throughout this function.
+Remove pointless pieces of code that try to 'preserve' them.
 
-On Mon, Jul 25, 2016 at 6:22 AM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Sun, 24 Jul 2016 21:15:23 +0200
->
-> The kfree() function was called in two cases by the mac_ioctl() function
-> during error handling even if the passed variable did not contain a pointer
-> for a valid data item.
->
-> Improve this implementation detail by the introduction of another
-> jump label.
->
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/tx.c | 28 ++--------------------------
+ 1 file changed, 2 insertions(+), 26 deletions(-)
 
-This is pointless micro-optimisation: kfree(NULL) is perfectly valid
-and buff is either malloc'd memory or NULL when it's called.
-
-Thanks,
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 24ec38a..cc2ca09 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2325,7 +2325,6 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	struct mesh_path __maybe_unused *mppath = NULL, *mpath = NULL;
+ 	const u8 *encaps_data;
+ 	int encaps_len, skip_header_bytes;
+-	int nh_pos, h_pos;
+ 	bool wme_sta = false, authorized = false;
+ 	bool tdls_peer;
+ 	bool multicast;
+@@ -2634,13 +2633,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 		encaps_len = 0;
+ 	}
+ 
+-	nh_pos = skb_network_header(skb) - skb->data;
+-	h_pos = skb_transport_header(skb) - skb->data;
+-
+ 	skb_pull(skb, skip_header_bytes);
+-	nh_pos -= skip_header_bytes;
+-	h_pos -= skip_header_bytes;
+-
+ 	head_need = hdrlen + encaps_len + meshhdrlen - skb_headroom(skb);
+ 	head_need += padsize;
+ 
+@@ -2667,18 +2660,12 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
+ 
+-	if (encaps_data) {
++	if (encaps_data)
+ 		memcpy(skb_push(skb, encaps_len), encaps_data, encaps_len);
+-		nh_pos += encaps_len;
+-		h_pos += encaps_len;
+-	}
+ 
+ #ifdef CONFIG_MAC80211_MESH
+-	if (meshhdrlen > 0) {
++	if (meshhdrlen > 0)
+ 		memcpy(skb_push(skb, meshhdrlen), &mesh_hdr, meshhdrlen);
+-		nh_pos += meshhdrlen;
+-		h_pos += meshhdrlen;
+-	}
+ #endif
+ 
+ 	if (padsize)
+@@ -2697,15 +2684,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	} else
+ 		memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
+ 
+-	nh_pos += hdrlen + padsize;
+-	h_pos += hdrlen + padsize;
+-
+-	/* Update skb pointers to various headers since this modified frame
+-	 * is going to go through Linux networking code that may potentially
+-	 * need things like pointer to IP header. */
+ 	skb_reset_mac_header(skb);
+-	skb_set_network_header(skb, nh_pos);
+-	skb_set_transport_header(skb, h_pos);
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+ 	memset(info, 0, sizeof(*info));
+@@ -4391,9 +4370,6 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
+ 	int ac = ieee802_1d_to_ac[tid & 7];
+ 
+ 	skb_reset_mac_header(skb);
+-	skb_reset_network_header(skb);
+-	skb_reset_transport_header(skb);
+-
+ 	skb_set_queue_mapping(skb, ac);
+ 	skb->priority = tid;
+ 
 -- 
-Julian Calaby
+2.8.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
