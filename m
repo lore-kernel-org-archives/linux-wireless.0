@@ -1,200 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:33631 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752945AbcGFQUP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 12:20:15 -0400
-Received: by mail-wm0-f50.google.com with SMTP id r190so33275134wmr.0
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 09:20:14 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
-	linux-kernel@vger.kernel.org,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv5 wl-drv-next 1/2] add basic register-field manipulation macros
-Date: Wed,  6 Jul 2016 17:19:36 +0100
-Message-Id: <1467821977-11777-2-git-send-email-jakub.kicinski@netronome.com> (sfid-20160706_182029_877193_79253A34)
-In-Reply-To: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
+Received: from arroyo.ext.ti.com ([198.47.19.12]:58937 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751144AbcGMKLs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2016 06:11:48 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S . Miller" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+CC: "Hahn, Maital" <maitalm@ti.com>
+Subject: RE: [PATCH 1/4] mac80211: mesh: flush stations before beacons are
+ stopped
+Date: Wed, 13 Jul 2016 10:11:25 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101391FC38C@DFRE01.ent.ti.com> (sfid-20160713_121246_720412_499C3C86)
+References: <20160628111307.8784-1-yanivma@ti.com>
+	 <20160628111307.8784-2-yanivma@ti.com>
+	 (sfid-20160628_131058_738638_5F9A964D)
+ <1467184459.2461.1.camel@sipsolutions.net>
+In-Reply-To: <1467184459.2461.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Common approach to accessing register fields is to define
-structures or sets of macros containing mask and shift pair.
-Operations on the register are then performed as follows:
-
- field = (reg >> shift) & mask;
-
- reg &= ~(mask << shift);
- reg |= (field & mask) << shift;
-
-Defining shift and mask separately is tedious.  Ivo van Doorn
-came up with an idea of computing them at compilation time
-based on a single shifted mask (later refined by Felix) which
-can be used like this:
-
- #define REG_FIELD 0x000ff000
-
- field = FIELD_GET(REG_FIELD, reg);
-
- reg &= ~REG_FIELD;
- reg |= FIELD_PUT(REG_FIELD, field);
-
-FIELD_{GET,PUT} macros take care of finding out what the
-appropriate shift is based on compilation time ffs operation.
-
-GENMASK can be used to define registers (which is usually
-less error-prone and easier to match with datasheets).
-
-This approach is the most convenient I've seen so to limit code
-multiplication let's move the macros to a global header file.
-Attempts to use static inlines instead of macros failed due
-to false positive triggering of BUILD_BUG_ON()s, especially with
-GCC < 6.0.
-
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- include/linux/bitfield.h | 109 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/bug.h      |   3 ++
- 2 files changed, 112 insertions(+)
- create mode 100644 include/linux/bitfield.h
-
-diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
-new file mode 100644
-index 000000000000..ff9fd0af2ac7
---- /dev/null
-+++ b/include/linux/bitfield.h
-@@ -0,0 +1,109 @@
-+/*
-+ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ */
-+
-+#ifndef _LINUX_BITFIELD_H
-+#define _LINUX_BITFIELD_H
-+
-+#include <asm/types.h>
-+#include <linux/bug.h>
-+
-+#define _bf_shf(x) (__builtin_ffsll(x) - 1)
-+
-+#define _BF_FIELD_CHECK(_mask, _val)					\
-+	({								\
-+		BUILD_BUG_ON(!(_mask));					\
-+		BUILD_BUG_ON(__builtin_constant_p(_val) ?		\
-+			     ~((_mask) >> _bf_shf(_mask)) & (_val) :	\
-+			     0);					\
-+		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
-+					      (1ULL << _bf_shf(_mask))); \
-+	})
-+
-+/*
-+ * Bitfield access macros
-+ *
-+ * This file contains macros which take as input shifted mask
-+ * from which they extract the base mask and shift amount at
-+ * compilation time.  There are two separate sets of the macros
-+ * one for 32bit registers and one for 64bit ones.
-+ *
-+ * Fields can be defined using GENMASK (which is usually
-+ * less error-prone and easier to match with datasheets).
-+ *
-+ * FIELD_{GET,PUT} macros are designed to be used with masks which
-+ * are compilation time constants.
-+ *
-+ * Example:
-+ *
-+ *  #define REG_FIELD_A  GENMASK(6, 0)
-+ *  #define REG_FIELD_B  BIT(7)
-+ *  #define REG_FIELD_C  GENMASK(15, 8)
-+ *  #define REG_FIELD_D  GENMASK(31, 16)
-+ *
-+ * Get:
-+ *  a = FIELD_GET(REG_FIELD_A, reg);
-+ *  b = FIELD_GET(REG_FIELD_B, reg);
-+ *
-+ * Set:
-+ *  reg = FIELD_PUT(REG_FIELD_A, 1) |
-+ *	  FIELD_PUT(REG_FIELD_B, 0) |
-+ *	  FIELD_PUT(REG_FIELD_C, c) |
-+ *	  FIELD_PUT(REG_FIELD_D, 0x40);
-+ *
-+ * Modify:
-+ *  reg &= ~REG_FIELD_C;
-+ *  reg |= FIELD_PUT(REG_FIELD_C, c);
-+ */
-+
-+/**
-+ * FIELD_PUT() - construct a bitfield element
-+ * @_mask: shifted mask defining the field's length and position
-+ * @_val:  value to put in the field
-+ *
-+ * FIELD_PUT() masks and shifts up the value.  The result should
-+ * be combined with other fields of the bitfield using logical OR.
-+ */
-+#define FIELD_PUT(_mask, _val)					\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, _val);			\
-+		((u32)(_val) << _bf_shf(_mask)) & (_mask);	\
-+	})
-+
-+/**
-+ * FIELD_GET() - extract a bitfield element
-+ * @_mask: shifted mask defining the field's length and position
-+ * @_val:  32bit value of entire bitfield
-+ *
-+ * FIELD_GET() extracts the field specified by @_mask from the
-+ * bitfield passed in as @_val.
-+ */
-+#define FIELD_GET(_mask, _val)					\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, 0);			\
-+		(u32)(((_val) & (_mask)) >> _bf_shf(_mask));	\
-+	})
-+
-+#define FIELD_PUT64(_mask, _val)				\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, _val);			\
-+		((u64)(_val) << _bf_shf(_mask)) & (_mask);	\
-+	})
-+
-+#define FIELD_GET64(_mask, _val)				\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, 0);			\
-+		(u64)(((_val) & (_mask)) >> _bf_shf(_mask));	\
-+	})
-+
-+#endif
-diff --git a/include/linux/bug.h b/include/linux/bug.h
-index e51b0709e78d..bba5bdae1681 100644
---- a/include/linux/bug.h
-+++ b/include/linux/bug.h
-@@ -13,6 +13,7 @@ enum bug_trap_type {
- struct pt_regs;
- 
- #ifdef __CHECKER__
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_ZERO(e) (0)
- #define BUILD_BUG_ON_NULL(e) ((void*)0)
-@@ -24,6 +25,8 @@ struct pt_regs;
- #else /* __CHECKER__ */
- 
- /* Force a compilation error if a constant expression is not a power of 2 */
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) 			\
-+	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
- 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
- 
--- 
-1.9.1
-
+T24gV2VkLCBKdW4gMjksIDIwMTYgYXQgMTA6MTQ6MTksIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+
+IENjOiBIYWhuLCBNYWl0YWwNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAxLzRdIG1hYzgwMjExOiBt
+ZXNoOiBmbHVzaCBzdGF0aW9ucyBiZWZvcmUgYmVhY29ucyANCj4gYXJlIHN0b3BwZWQNCj4gDQo+
+IE9uIFR1ZSwgMjAxNi0wNi0yOCBhdCAxNDoxMyArMDMwMCwgWWFuaXYgTWFjaGFuaSB3cm90ZToN
+Cj4gPiBGcm9tOiBNYWl0YWwgSGFobiA8bWFpdGFsbUB0aS5jb20+DQo+ID4NCj4gPiBTb21lIGRy
+aXZlcnMgKGUuZy4gd2wxOHh4KSBleHBlY3QgdGhhdCB0aGUgbGFzdCBzdGFnZSBpbiB0aGUgDQo+
+ID4gZGUtaW5pdGlhbGl6YXRpb24gcHJvY2VzcyB3aWxsIGJlIHN0b3BwaW5nIHRoZSBiZWFjb25z
+LCBzaW1pbGFyIHRvIGFwLg0KPiA+IFVwZGF0ZSBpZWVlODAyMTFfc3RvcF9tZXNoKCkgZmxvdyBh
+Y2NvcmRpbmdseS4NCj4gPg0KPiBIb3cgd2VsbCBoYXZlIHlvdSB0ZXN0ZWQgdGhhdCB3aXRoIG90
+aGVyIGRyaXZlcnM/DQo+IA0KDQpTb3JyeSBmb3IgdGhlIGRlbGF5ZWQgcmVzcG9uc2UgKEkndmUg
+YmVlbiBvdXQpIGFuZCB0aGFua3MgZm9yIHlvdXIgY29tbWVudHMsDQpJIGhhdmUgdGVzdGVkIGl0
+IHdpdGggUlQzNTcyIGFzIHdlbGwsIGFuZCBkaWRuJ3Qgc2VlIGFueSBpc3N1ZS4NCkknbGwgdXBk
+YXRlIHRoZSBjb21tZW50IHRvIHJlZmxlY3QgdGhhdC4NCg0KVGhhbmtzLA0KWWFuaXYNCg0KPiBD
+aGFuZ2luZyBiZWhhdmlvdXIgdG8gc29tZXRoaW5nIGEgc2luZ2xlIGRyaXZlciBkZXNpcmVzIGlz
+bid0IA0KPiBuZWNlc3NhcmlseSB0aGUgYmVzdCB0aGluZyB0byBkbywgc2luY2UgdGhlcmUgYWx3
+YXlzIGFyZSBtdWx0aXBsZSBkcml2ZXJzLg0KPiANCj4gSWYgeW91J3JlIGFibGUgdG8gZGVtb25z
+dHJhdGUgdGhhdCBpdCB3b3JrcyB3aXRoIHRoZSBvdGhlciBkcml2ZXJzIEknbSANCj4gd2lsbGlu
+ZyB0byB0YWtlIHRoYXQgLSB0aGUgY2hhbmdlIG1ha2VzIHNlbnNlIGFmdGVyIGFsbCwgYW5kIGl0
+IHNlZW1zIA0KPiBkcml2ZXJzIG11c3Qgc3VwcG9ydCB0aGlzIG9yZGVyaW5nIHNpbmNlIHBlZXJz
+IGFyZSBhbHNvIHJlbW92ZWQgDQo+IGR5bmFtaWNhbGx5Li4uIEJ1dCBzdGlsbC4gRG9uJ3QganVz
+dCBtYWtlIGEgY2hhbmdlIGxpa2UgdGhhdCB3aXRob3V0IA0KPiBldmVuIGdpdmluZyBhbnkgaW5k
+aWNhdGlvbiB3aHkgeW91IHRoaW5rIGl0J3MgZmluZSBmb3Igb3RoZXIgZHJpdmVycyENCj4gDQo+
+IGpvaGFubmVzDQoNCg0K
