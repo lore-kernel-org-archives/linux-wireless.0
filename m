@@ -1,69 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipv4.connman.net ([82.165.8.211]:52481 "EHLO mail.holtmann.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752413AbcGKHjl convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36441 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750930AbcGMUUJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 03:39:41 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: [RFC v2 1/3] nl80211: Add nl80211_notify_iface
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <CAGRGNgVxMZ03XCK1h45uwOdLW3g7VQ1nD23PDghJ5jfkkxqetw@mail.gmail.com>
-Date: Mon, 11 Jul 2016 09:39:38 +0200
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	Denis Kenzior <denkenz@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Message-Id: <2BC14E16-4071-443F-9679-55C3BF224380@holtmann.org> (sfid-20160711_093945_633989_FF9913A8)
-References: <1468044967-9236-1-git-send-email-denkenz@gmail.com> <1468044967-9236-2-git-send-email-denkenz@gmail.com> <1601C89F-62D4-42F5-B5A4-2C9E2F02A673@holtmann.org> <ab4b33b0-cc34-80d1-49a0-51846bb7c7f2@broadcom.com> <5DF59CC1-84AA-45EF-B2EF-B16469A9D736@holtmann.org> <CAGRGNgVxMZ03XCK1h45uwOdLW3g7VQ1nD23PDghJ5jfkkxqetw@mail.gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
+	Wed, 13 Jul 2016 16:20:09 -0400
+Received: by mail-wm0-f66.google.com with SMTP id x83so7062260wma.3
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 13:20:08 -0700 (PDT)
+From: Alex Briskin <br.shurik@gmail.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Alex Briskin <br.shurik@gmail.com>
+Subject: [PATCH 3/4 v1] Continue breaking down to smaller functions
+Date: Wed, 13 Jul 2016 23:19:55 +0300
+Message-Id: <1468441196-23503-4-git-send-email-br.shurik@gmail.com> (sfid-20160713_222013_920402_A9810C61)
+In-Reply-To: <1468441196-23503-1-git-send-email-br.shurik@gmail.com>
+References: <1468441196-23503-1-git-send-email-br.shurik@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+This commit contains unhandled checkpatch warnings in code moved from
+ieee80211_iface_work
 
->>>>> This function emits NL80211_CMD_NEW_INTERFACE or
->>>>> NL80211_CMD_DEL_INTERFACE events.  This is meant to be used by the core
->>>>> to notify userspace applications such as wpa_supplicant when a netdev
->>>>> related to a wireless device has been added or removed.
->>>>> 
->>>>> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
->>>>> ---
->>>>> net/wireless/nl80211.c | 28 ++++++++++++++++++++++++++++
->>>>> net/wireless/nl80211.h |  3 +++
->>>>> 2 files changed, 31 insertions(+)
->>>>> 
->>>>> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
->>>>> index f39fd4d..da03e17 100644
->>>>> --- a/net/wireless/nl80211.c
->>>>> +++ b/net/wireless/nl80211.c
->>>>> @@ -11855,6 +11855,34 @@ void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
->>>>>                            NL80211_MCGRP_CONFIG, GFP_KERNEL);
->>>>> }
->>>>> 
->>>>> +void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
->>>>> +                           struct wireless_dev *wdev,
->>>>> +                           enum nl80211_commands cmd)
->>>>> +{
->>>>> +   struct sk_buff *msg;
->>>>> +   bool removal;
->>>>> +
->>>>> +   WARN_ON(cmd != NL80211_CMD_NEW_INTERFACE &&
->>>>> +           cmd != NL80211_CMD_DEL_INTERFACE);
->>>> 
->>>> I would assume that BUILD_BUG_ON does a way job better here.
->>> 
->>> Why? I don't see why the condition would be compile-time constant as it
->>> can be called from outside nl80211.c.
->> 
->> what has that to do with it. No matter who calls it, the point is to ensure that it is called for new/del interface. And if a caller uses it for something else, then it should fail and it should fail loudly.
-> 
-> Let me ask this question another way:
-> 
-> How is BUILD_BUG_ON going to warn about a runtime error?
+Signed-off-by: Alex Briskin <br.shurik@gmail.com>
+---
+ net/mac80211/iface.c | 150 +++++++++++++++++++++++++++------------------------
+ 1 file changed, 81 insertions(+), 69 deletions(-)
 
-how is this a runtime error in the first place? If you call it with any other nl80211_commands than the two explicitly allowed, you are doing something wrong. If BUILD_BUG_ON has limitations, then fine, but please don't tell me this is a runtime error.
-
-Regards
-
-Marcel
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 1793ad2..41c3bd0 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1245,6 +1245,85 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
+ 	return true;
+ }
+ 
++static bool ieee80211_is_handled_by_frame_control(struct sk_buff *skb,
++						  struct ieee80211_sub_if_data
++						  *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++	struct ieee80211_mgmt *mgmt = (void *)skb->data;
++
++	if (ieee80211_is_action(mgmt->frame_control) &&
++	    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
++		int len = skb->len;
++
++		mutex_lock(&local->sta_mtx);
++		sta = sta_info_get_bss(sdata, mgmt->sa);
++		if (sta) {
++			switch (mgmt->u.action.u.addba_req.action_code) {
++			case WLAN_ACTION_ADDBA_REQ:
++				ieee80211_process_addba_request(local, sta,
++								mgmt, len);
++				break;
++			case WLAN_ACTION_ADDBA_RESP:
++				ieee80211_process_addba_resp(local, sta,
++							     mgmt, len);
++				break;
++			case WLAN_ACTION_DELBA:
++				ieee80211_process_delba(sdata, sta, mgmt, len);
++				break;
++			default:
++				WARN_ON(1);
++				break;
++			}
++		}
++		mutex_unlock(&local->sta_mtx);
++	} else if (ieee80211_is_action(mgmt->frame_control) &&
++		   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
++		switch (mgmt->u.action.u.vht_group_notif.action_code) {
++		case WLAN_VHT_ACTION_GROUPID_MGMT:
++			ieee80211_process_mu_groups(sdata, mgmt);
++			break;
++		default:
++			WARN_ON(1);
++			break;
++		}
++	} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
++		struct ieee80211_hdr *hdr = (void *)mgmt;
++		/*
++		 * So the frame isn't mgmt, but frame_control
++		 * is at the right place anyway, of course, so
++		 * the if statement is correct.
++		 *
++		 * Warn if we have other data frame types here,
++		 * they must not get here.
++		 */
++		WARN_ON(hdr->frame_control &
++			cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
++		WARN_ON(!(hdr->seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)));
++		/*
++		 * This was a fragment of a frame, received while
++		 * a block-ack session was active. That cannot be
++		 * right, so terminate the session.
++		 */
++		mutex_lock(&local->sta_mtx);
++		sta = sta_info_get_bss(sdata, mgmt->sa);
++		if (sta) {
++			u16 tid = *ieee80211_get_qos_ctl(hdr) &
++			    IEEE80211_QOS_CTL_TID_MASK;
++
++			__ieee80211_stop_rx_ba_session(sta, tid,
++						       WLAN_BACK_RECIPIENT,
++						       WLAN_REASON_QSTA_REQUIRE_SETUP,
++						       true);
++		}
++		mutex_unlock(&local->sta_mtx);
++	} else {
++		return false;
++	}
++	return true;
++}
++
+ static void ieee80211_iface_work(struct work_struct *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+@@ -1264,77 +1343,10 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 
+ 	/* first process frames */
+ 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
+-		struct ieee80211_mgmt *mgmt = (void *)skb->data;
+-
+ 		if (ieee80211_is_skb_handled_by_pkt_type(skb, sdata)) {
+ 			goto free_skb;
+-		} else if (ieee80211_is_action(mgmt->frame_control) &&
+-			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+-			int len = skb->len;
+-
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, mgmt->sa);
+-			if (sta) {
+-				switch (mgmt->u.action.u.addba_req.action_code) {
+-				case WLAN_ACTION_ADDBA_REQ:
+-					ieee80211_process_addba_request(
+-							local, sta, mgmt, len);
+-					break;
+-				case WLAN_ACTION_ADDBA_RESP:
+-					ieee80211_process_addba_resp(local, sta,
+-								     mgmt, len);
+-					break;
+-				case WLAN_ACTION_DELBA:
+-					ieee80211_process_delba(sdata, sta,
+-								mgmt, len);
+-					break;
+-				default:
+-					WARN_ON(1);
+-					break;
+-				}
+-			}
+-			mutex_unlock(&local->sta_mtx);
+-		} else if (ieee80211_is_action(mgmt->frame_control) &&
+-			   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
+-			switch (mgmt->u.action.u.vht_group_notif.action_code) {
+-			case WLAN_VHT_ACTION_GROUPID_MGMT:
+-				ieee80211_process_mu_groups(sdata, mgmt);
+-				break;
+-			default:
+-				WARN_ON(1);
+-				break;
+-			}
+-		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
+-			struct ieee80211_hdr *hdr = (void *)mgmt;
+-			/*
+-			 * So the frame isn't mgmt, but frame_control
+-			 * is at the right place anyway, of course, so
+-			 * the if statement is correct.
+-			 *
+-			 * Warn if we have other data frame types here,
+-			 * they must not get here.
+-			 */
+-			WARN_ON(hdr->frame_control &
+-					cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
+-			WARN_ON(!(hdr->seq_ctrl &
+-					cpu_to_le16(IEEE80211_SCTL_FRAG)));
+-			/*
+-			 * This was a fragment of a frame, received while
+-			 * a block-ack session was active. That cannot be
+-			 * right, so terminate the session.
+-			 */
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, mgmt->sa);
+-			if (sta) {
+-				u16 tid = *ieee80211_get_qos_ctl(hdr) &
+-						IEEE80211_QOS_CTL_TID_MASK;
+-
+-				__ieee80211_stop_rx_ba_session(
+-					sta, tid, WLAN_BACK_RECIPIENT,
+-					WLAN_REASON_QSTA_REQUIRE_SETUP,
+-					true);
+-			}
+-			mutex_unlock(&local->sta_mtx);
++		} else if (ieee80211_is_handled_by_frame_control(skb, sdata)) {
++			goto free_skb;
+ 		} else switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+ 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
+-- 
+2.5.0
 
