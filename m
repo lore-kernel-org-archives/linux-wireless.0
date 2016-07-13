@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:32946 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753858AbcGSSjb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 14:39:31 -0400
-Date: Tue, 19 Jul 2016 11:39:13 -0700
-From: Brian Norris <computersforpeace@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	"linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
-	Stephen Rothwell <sfr@canb.auug.org.au>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-next <linux-next@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: linux-next: build failure after merge of the
- wireless-drivers-next tree
-Message-ID: <20160719183913.GA88186@google.com> (sfid-20160719_203944_134517_E563203C)
-References: <20160719160831.79c0303f@canb.auug.org.au>
- <8760s2w369.fsf@kamboji.qca.qualcomm.com>
- <CACna6rxVFD1MpAEYP_Zd4W8CvgnxSQpa0wJs83jwDJ5v11gZ=Q@mail.gmail.com>
- <871t2qw1cz.fsf@kamboji.qca.qualcomm.com>
- <CACna6ry6QgrbUoHuJacmr1EhHZyrwqsXfr51gENvY-0zM9L+3Q@mail.gmail.com>
- <87h9blvhxg.fsf@kamboji.qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56561 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751112AbcGMKBj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2016 06:01:39 -0400
+Message-ID: <57861172.30103@redhat.com> (sfid-20160713_120312_261086_BA23158D)
+Date: Wed, 13 Jul 2016 06:01:22 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <87h9blvhxg.fsf@kamboji.qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
+ ucode is loaded
+References: <1468250301-10357-1-git-send-email-prarit@redhat.com>	<CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>	<5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>	<57840214.8000904@redhat.com> <87eg6yav5e.fsf@purkki.adurom.net>
+In-Reply-To: <87eg6yav5e.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just to head this off, since I noticed it...
 
-On Tue, Jul 19, 2016 at 05:08:59PM +0300, Kalle Valo wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
-> > I sent a patch seconds ago, you may just take a look at it. If you
-> > still prefer to revert my commit, go ahead.
+
+On 07/13/2016 02:50 AM, Kalle Valo wrote:
+> Prarit Bhargava <prarit@redhat.com> writes:
 > 
-> Ok, let's try your fix. We still have few days. I applied the patch[1]
-> to the pending branch this morning and if I don't see any errors I apply
-> it later tonight and hopefully it will be in tomorrow's linux-next
-> build. Thanks for the quick fix, very much appreciated.
+>>> We implement thermal zone because we do support it, but the problem is
+>>> that we need the firmware to be loaded for that. So you can argue that
+>>> we should register *later* when the firmware is loaded. But this is
+>>> really not helping all that much because the firmware can also be
+>>> stopped at any time. So you'd want us to register / unregister the
+>>> thermal zone anytime the firmware is loaded / unloaded?
+>>
+>> You might have to do that.  I think that if the firmware enables a feature then
+>> the act of loading the firmware should run the code that enables the feature.
+>> IMO of course.
 > 
-> [1] "mtd: add arch dependency for MTD_BCM47XXSFLASH symbol"
->     https://patchwork.kernel.org/patch/9236053/
+> But I suspect that the iwlwifi firmware is loaded during interface up
+> (and unloaded during interface down) and in that case
+> register/unregister would be happening all the time. 
 
-I applied a trivial change to this same Kconfig entry:
+You make it sound like the interface is coming and going a 1000 times a second.
+ Maybe this happens once during runtime & during suspend/resume cycles?  What
+about the cases when the firmware isn't present (and that's what lead me to this
+bug)?
 
-Subject: mtd: update description of MTD_BCM47XXSFLASH symbol
-http://git.infradead.org/l2-mtd.git/commitdiff/0a526341fee054c1e2b9f0e4b2b424ae81707d4c
+That doesn't sound
+> like a good idea. I would rather try to fix the thermal interface to
+> handle the cases when the measurement is not available.
+> 
 
-It's a trivial conflict, so should we just let Linus work it out? I can
-note it my MTD pull request, if wireless lands first.
+Userspace is broken because of this change.  I've had to make another horrible
+change to cpufreq for a similar change so I don't see the argument here to just
+blame userspace and ignore the outcome of the patch.
 
-Brian
+P.
