@@ -1,65 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:48926 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753454AbcGHBfM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2016 21:35:12 -0400
-Date: Fri, 8 Jul 2016 11:35:09 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	<linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>, <netdev@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avraham Stern <avraham.stern@intel.com>,
-	David Spinadel <david.spinadel@intel.com>,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Subject: Re: linux-next: build warning after merge of the
- wireless-drivers-next tree
-Message-ID: <20160708113509.49c3c62a@canb.auug.org.au> (sfid-20160708_033544_460959_A1612FF2)
-In-Reply-To: <20160708113214.7f371cb3@canb.auug.org.au>
-References: <20160708113214.7f371cb3@canb.auug.org.au>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53919 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752069AbcGMPu3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2016 11:50:29 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH v3 1/2] mwifiex: add manufacturing mode support
+References: <1468417703-32716-1-git-send-email-akarwar@marvell.com>
+Date: Wed, 13 Jul 2016 18:50:11 +0300
+In-Reply-To: <1468417703-32716-1-git-send-email-akarwar@marvell.com>
+	(Amitkumar Karwar's message of "Wed, 13 Jul 2016 19:18:22 +0530")
+Message-ID: <87twfta66k.fsf@purkki.adurom.net> (sfid-20160713_175211_290417_52A553DC)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-On Fri, 8 Jul 2016 11:32:14 +1000 Stephen Rothwell <sfr@canb.auug.org.au> wrote:
+> By default normal mode is chosen when driver is loaded. This patch adds
+> a provision to choose manufacturing mode via module parameters.
 >
-> After merging the wireless-drivers-next tree, today's linux-next build
-> (arm multi_v7_defconfig, x86_64 allmodconfig) produced this warning:
-> 
-> drivers/net/wireless/marvell/mwifiex/scan.c: In function 'mwifiex_cancel_scan':
-> drivers/net/wireless/marvell/mwifiex/scan.c:2031:44: warning: passing argument 2 of 'cfg80211_scan_done' makes pointer from integer without a cast [-Wint-conversion]
->      cfg80211_scan_done(priv->scan_request, 1);
->                                             ^
-> In file included from include/net/mac80211.h:23:0,
->                  from drivers/net/wireless/marvell/mwifiex/decl.h:30,
->                  from drivers/net/wireless/marvell/mwifiex/scan.c:20:
-> include/net/cfg80211.h:4104:6: note: expected 'struct cfg80211_scan_info *' but argument is of type 'int'
->  void cfg80211_scan_done(struct cfg80211_scan_request *request,
->       ^
-> 
-> Introduced by commit
-> 
->   a9c790ba23eb ("mwifiex: factor out mwifiex_cancel_scan")
-> 
-> interacting with commit
-> 
->   1d76250bd34a ("nl80211: support beacon report scanning")
-> 
-> from the net-next (and mac80211-next) tree.
-> 
-> This will need some merge fix patch ... please send me or Dave one.
+> Command to load driver in manufacturing mode
+> insmod mwifiex.ko mfg_mode=1 and mfg_firmware=mrvl/firmware.
+>
+> Tested-by: chunfan chen <jeffc@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Of course, this is the conflict I reported against the mac80211-next
-tree yesterday (the memory fades :-)) ... I will move the merge fix
-patch from that tree to this one.
+Why the mfg_firmware module parameter?
 
 -- 
-Cheers,
-Stephen Rothwell
+Kalle Valo
