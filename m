@@ -1,69 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:7766 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751824AbcGVJnI (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:34646 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752600AbcGMHZ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 05:43:08 -0400
-From: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
-	<usdutt@qti.qualcomm.com>, <ganeshk@qti.qualcomm.com>,
-	<mkalikot@qca.qualcomm.com>, <amarnath@qca.qualcomm.com>,
-	<pkushwah@qti.qualcomm.com>
-Subject: [PATCH v3] cfg80211: Allow different beacon interval if driver supports
-Date: Fri, 22 Jul 2016 15:12:37 +0530
-Message-ID: <1469180557-24210-1-git-send-email-pkushwah@qti.qualcomm.com> (sfid-20160722_114311_757864_1DD842C1)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 13 Jul 2016 03:25:28 -0400
+Message-ID: <1468394693.25088.138.camel@coelho.fi> (sfid-20160713_092651_240509_7370B286)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Prarit Bhargava <prarit@redhat.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Jul 2016 10:24:53 +0300
+In-Reply-To: <87eg6yav5e.fsf@purkki.adurom.net>
+References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
+	<CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
+	<5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>
+	<57840214.8000904@redhat.com> <87eg6yav5e.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
+ ucode is loaded
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver may allow support for different beacon interval on virtual interfaces.
-Allow if such support is advertised by driver. This adds new ext_feature as
-NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL.
+On Wed, 2016-07-13 at 09:50 +0300, Kalle Valo wrote:
+> Prarit Bhargava <prarit@redhat.com> writes:
+> 
+> > > We implement thermal zone because we do support it, but the
+> > > problem is
+> > > that we need the firmware to be loaded for that. So you can argue
+> > > that
+> > > we should register *later* when the firmware is loaded. But this
+> > > is
+> > > really not helping all that much because the firmware can also be
+> > > stopped at any time. So you'd want us to register / unregister
+> > > the
+> > > thermal zone anytime the firmware is loaded / unloaded?
+> > 
+> > You might have to do that.  I think that if the firmware enables a
+> > feature then
+> > the act of loading the firmware should run the code that enables
+> > the feature.
+> > IMO of course.
+> 
+> But I suspect that the iwlwifi firmware is loaded during interface up
+> (and unloaded during interface down) and in that case
+> register/unregister would be happening all the time. That doesn't
+> sound
+> like a good idea. I would rather try to fix the thermal interface to
+> handle the cases when the measurement is not available.
 
-Signed-off-by: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
----
- include/uapi/linux/nl80211.h | 3 +++
- net/wireless/util.c          | 4 ++++
- 2 files changed, 7 insertions(+)
+I totally agree with Emmanuel and Kalle.  We should not change this.
+ It is a design decision to return an error when the interface is down,
+this is very common with other subsystems as well.  The userspace
+should be able to handle errors and report something like "unavailable"
+when this kind of error is returned.
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 2206941..a910d0e 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4551,6 +4551,8 @@ enum nl80211_feature_flags {
-  *	(if available).
-  * @NL80211_EXT_FEATURE_SET_SCAN_DWELL: This driver supports configuration of
-  *	channel dwell time.
-+ * @NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL: This driver supports different
-+ *	beacon interval on virtual interfaces.
-  *
-  * @NUM_NL80211_EXT_FEATURES: number of extended features.
-  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
-@@ -4562,6 +4564,7 @@ enum nl80211_ext_feature_index {
- 	NL80211_EXT_FEATURE_SCAN_START_TIME,
- 	NL80211_EXT_FEATURE_BSS_PARENT_TSF,
- 	NL80211_EXT_FEATURE_SET_SCAN_DWELL,
-+	NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL,
- 
- 	/* add new features before the definition below */
- 	NUM_NL80211_EXT_FEATURES,
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 2443ee3..65eeb23 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1560,6 +1560,10 @@ int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
- 	if (!beacon_int)
- 		return -EINVAL;
- 
-+	if (wiphy_ext_feature_isset(&rdev->wiphy,
-+				    NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL))
-+		return 0;
-+
- 	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
- 		if (!wdev->beacon_interval)
- 			continue;
--- 
-1.9.1
+I'm not sure EIO is the best we can have, but for me that's exactly
+what it is.  The thermal zone *is* there, but cannot be accessed
+because the firmware is not available.  I'm okay to change it to EBUSY,
+if that would help userspace, but I think that's a bit misleading.  The
+device is not busy, on the contrary, it's not even running at all.
 
+Furthermore, I don't think this is "breaking userspace" in the sense of
+being a regression.  The userspace API has always been implemented with
+the possibility of returning errors.  It's not a good design if a
+single device returning an error causes all the other devices to also
+fail.
+
+--
+Cheers,
+Luca.
