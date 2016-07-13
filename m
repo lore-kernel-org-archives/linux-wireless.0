@@ -1,60 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45953 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750960AbcGNMEr (ORCPT
+Received: from mail-lf0-f49.google.com ([209.85.215.49]:36129 "EHLO
+	mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990AbcGMMdh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2016 08:04:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Machani\, Yaniv" <yanivma@ti.com>
-Cc: "linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Hahn\, Maital" <maitalm@ti.com>, Eliad Peller <eliad@wizery.com>,
-	"Mishol\, Guy" <guym@ti.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"Arik Nemtsov" <arik@wizery.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: Re: [PATCH] wlcore/wl18xx: mesh: added initial mesh support for wl8
-References: <20160628104305.4533-1-yanivma@ti.com>
-	<AE1C82FB3D0EC64DB1F752C81CBD1101391FC336@DFRE01.ent.ti.com>
-Date: Thu, 14 Jul 2016 15:04:40 +0300
-In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101391FC336@DFRE01.ent.ti.com>
-	(Yaniv Machani's message of "Wed, 13 Jul 2016 09:53:35 +0000")
-Message-ID: <87k2goxw6f.fsf@kamboji.qca.qualcomm.com> (sfid-20160714_141018_351112_A80077C0)
+	Wed, 13 Jul 2016 08:33:37 -0400
+Received: by mail-lf0-f49.google.com with SMTP id q132so38220919lfe.3
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 05:33:26 -0700 (PDT)
+Subject: Re: [PATCH 3/3] mac80211: mesh: fixed HT ies in beacon template
+To: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org
+References: <20160713114542.24937-1-yanivma@ti.com>
+Cc: Meirav Kama <meiravk@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <8921437c-c599-9ed7-a183-d85b6d90a07c@cogentembedded.com> (sfid-20160713_143351_031143_D7440A43)
+Date: Wed, 13 Jul 2016 15:33:22 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160713114542.24937-1-yanivma@ti.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Machani, Yaniv" <yanivma@ti.com> writes:
+Hello.
 
-> On Tue, Jun 28, 2016 at 13:41:35, Machani, Yaniv wrote:
->> Guy; Johannes Berg; Arik Nemtsov; linux-wireless@vger.kernel.org; 
->> netdev@vger.kernel.org
->> Subject: [PATCH] wlcore/wl18xx: mesh: added initial mesh support for 
->> wl8
->> 
->> From: Maital Hahn <maitalm@ti.com>
->> 
->> 1. Added support for interface and role of mesh type.
->> 2. Enabled enable/start of mesh-point role,
->>    and opening and closing a connection with a mesh peer.
->> 3. Added multirole combination of mesh and ap
->>    under the same limits of dual ap mode.
->> 4. Add support for 'sta_rc_update' opcode for mesh IF.
->>    The 'sta_rc_update' opcode is being used in mesh_plink.c.
->> Add support in wlcore to handle this opcode correctly for mesh (as 
->> opposed to current implementation that handles STA only).
->> 5. Bumped the firmware version to support new Mesh functionality
->> 
->> Signed-off-by: Maital Hahn <maitalm@ti.com>
->> Signed-off-by: Yaniv Machani <yanivma@ti.com>
->> ---
+On 7/13/2016 2:45 PM, Yaniv Machani wrote:
+
+> The HT capab info field inside the HT capab IE of the mesh beacon
+> is incorrect (in the case of 20MHz channel width).
+> To fix this driver will check configuration from cfg and
+> will build it accordingly.
 >
-> Any comments on this patch ? Can this be pulled ?
+> Signed-off-by: Meirav Kama <meiravk@ti.com>
+> Signed-off-by: Yaniv Machani <yanivma@ti.com>
+> ---
+> V3 - Updated comment
+>    - Removed CFG changes, as they are not correct.
+>
+>  net/mac80211/mesh.c | 33 ++++++++++++++++++++++++++++++++-
+>  net/mac80211/util.c |  3 ---
+>  2 files changed, 32 insertions(+), 4 deletions(-)
+>
+> diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+> index 9214bc1..275131d 100644
+> --- a/net/mac80211/mesh.c
+> +++ b/net/mac80211/mesh.c
+> @@ -422,6 +422,8 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
+>  	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
+>  	struct ieee80211_supported_band *sband;
+>  	u8 *pos;
+> +	u16 cap;
+> +
 
-I'm away this week, will look at it next week. But it's on my queue:
+    Why add more empty lines where you already one?
 
-https://patchwork.kernel.org/patch/9202707/
+>
+>  	sband = local->hw.wiphy->bands[band];
+>  	if (!sband->ht_cap.ht_supported ||
+> @@ -430,11 +432,40 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
+>  	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
+>  		return 0;
+>
+> +    /* determine capability flags */
 
--- 
-Kalle Valo
+    Please use tab, not spaces.
+
+> +	cap = sband->ht_cap.cap;
+> +
+> +    /* if channel width is 20MHz - configure HT capab accordingly*/
+
+    Likewise.
+
+> +	if (sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20) {
+> +		cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+> +		cap &= ~IEEE80211_HT_CAP_DSSSCCK40;
+> +	}
+> +
+> +	/* set SM PS mode properly */
+> +	cap &= ~IEEE80211_HT_CAP_SM_PS;
+> +	switch (sdata->smps_mode) {
+> +	case IEEE80211_SMPS_AUTOMATIC:
+> +	case IEEE80211_SMPS_NUM_MODES:
+> +		WARN_ON(1);
+
+    No *break*? You need a comment like /* FALL THRU */ then...
+
+> +	case IEEE80211_SMPS_OFF:
+> +		cap |= WLAN_HT_CAP_SM_PS_DISABLED <<
+> +			IEEE80211_HT_CAP_SM_PS_SHIFT;
+> +		break;
+> +	case IEEE80211_SMPS_STATIC:
+> +		cap |= WLAN_HT_CAP_SM_PS_STATIC <<
+> +			IEEE80211_HT_CAP_SM_PS_SHIFT;
+> +		break;
+> +	case IEEE80211_SMPS_DYNAMIC:
+> +		cap |= WLAN_HT_CAP_SM_PS_DYNAMIC <<
+> +			IEEE80211_HT_CAP_SM_PS_SHIFT;
+> +		break;
+> +	}
+> +
+>  	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
+>  		return -ENOMEM;
+>
+>  	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_cap));
+> -	ieee80211_ie_build_ht_cap(pos, &sband->ht_cap, sband->ht_cap.cap);
+> +	ieee80211_ie_build_ht_cap(pos, &sband->ht_cap, cap);
+>
+>  	return 0;
+>  }
+[...]
+
+MBR, Sergei
+
