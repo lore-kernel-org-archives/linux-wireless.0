@@ -1,153 +1,158 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx.sdf.org ([192.94.73.20]:51537 "EHLO sdf.lonestar.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755236AbcGZE5b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2016 00:57:31 -0400
-From: Alan Curry <rlwinm@sdf.org>
-Message-Id: <201607260457.u6Q4v3pM010082@sdf.org> (sfid-20160726_065749_855892_63EFA560)
-Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
-In-Reply-To: <20160724190237.GP2356@ZenIV.linux.org.uk>
-To: Al Viro <viro@ZenIV.linux.org.uk>
-Date: Tue, 26 Jul 2016 04:57:03 +0000 (UTC)
-CC: Christian Lamparter <chunkeey@googlemail.com>,
-	Alan Curry <rlwinm@sdf.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	alexmcwhirter@triadic.us
+Received: from lists.s-osg.org ([54.187.51.154]:40654 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751139AbcGMKlr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2016 06:41:47 -0400
+Date: Wed, 13 Jul 2016 07:41:14 -0300
+From: Mauro Carvalho Chehab <mchehab@osg.samsung.com>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	Johan Hedberg <johan.hedberg@gmail.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Pavan Savoy <pavan_savoy@ti.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-bluetooth@vger.kernel.org,
+	linux-media@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] drivers: misc: ti-st: Use int instead of fuzzy char for
+ callback status
+Message-ID: <20160713074114.76c35d04@recife.lan> (sfid-20160713_124154_421054_53B6C349)
+In-Reply-To: <1465203723-16928-1-git-send-email-geert@linux-m68k.org>
+References: <1465203723-16928-1-git-send-email-geert@linux-m68k.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Al Viro wrote:
-> On Sun, Jul 24, 2016 at 07:45:13PM +0200, Christian Lamparter wrote:
+Em Mon,  6 Jun 2016 11:02:03 +0200
+Geert Uytterhoeven <geert@linux-m68k.org> escreveu:
+
+> On mips and parisc:
 > 
-> > > The symptom is that downloaded files (http, ftp, and probably other
-> > > protocols) have small corrupted segments (about 1-2 kilobytes long) in
-> > > random locations. Only downloads that sustain a high speed for at least a
-> > > few seconds are corrupted. Anything small enough to be received in less
-> > > than about 5 seconds is not affected.
+>     drivers/bluetooth/btwilink.c: In function 'ti_st_open':
+>     drivers/bluetooth/btwilink.c:174:21: warning: overflow in implicit constant conversion [-Woverflow]
+>        hst->reg_status = -EINPROGRESS;
 > 
-> Can that sucker be reproduced with netcat?  That would eliminate all issues
-> with multi-iovec recvmsg(2), narrowing the things down quite bit.
-
-netcat seems to be immune. Comparing strace results, I didn't see any
-recvmsg() calls in the other programs that have had the problem, but there
-is an interesting difference: netcat calls select() to wait for the socket
-to be ready for reading, where my other test programs just call read() and
-let it block until ready.
-
-So I wrote a small test program to isolate that difference. It downloads
-a file using only read() and write() and a hardcoded HTTP request. It has
-a select mode (main loop alternates read() and select() on the TCP socket)
-and a noselect mode (main loop just read()s the TCP socket).
-
-The program is included at the bottom of this message.
-
-I ran it several times in both modes and got corruption if and only if the
-noselect mode was used.
-
+>     drivers/nfc/nfcwilink.c: In function 'nfcwilink_open':
+>     drivers/nfc/nfcwilink.c:396:31: warning: overflow in implicit constant conversion [-Woverflow]
+>       drv->st_register_cb_status = -EINPROGRESS;
 > 
-> Another thing (and if that works, it's *NOT* a proper fix - it would be
-> papering over the problem, but at least it would show where to look for
-> it) - try (on top of mainline) the following delta:
+> There are actually two issues:
+>   1. Whether "char" is signed or unsigned depends on the architecture.
+>      As the completion callback data is used to pass a (negative) error
+>      code, it should always be signed.
+>   2. EINPROGRESS is 150 on mips, 245 on parisc.
+>      Hence -EINPROGRESS doesn't fit in a signed 8-bit number.
 > 
-> diff --git a/net/core/datagram.c b/net/core/datagram.c
+> Change the callback status from "char" to "int" to fix these.
+> 
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-Will try that patch soon. Meanwhile, here's my test:
+Patch looks sane to me, but who will apply it?
 
-/* Demonstration program "dlbug".
-   Usage: dlbug select > outfile
-          or
-          dlbug noselect > outfile
-   outfile will contain the full HTTP response. Edit out the HTTP headers
-   and what's left should be a valid gzip if the download worked. */
+Anyway:
 
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/select.h>
+Acked-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
 
-int main(int argc, char **argv)
-{
-  const char *request =
-    "GET /debian/dists/stable/main/Contents-amd64.gz HTTP/1.0\r\n"
-    "Host: ftp.us.debian.org\r\n"
-    "\r\n";
-  ssize_t request_len = strlen(request), w, r, copied;
-  struct addrinfo hints, *host;
-  int sock, err, doselect;
-  char buf[10240];
 
-  if(argc!=2 || (!strcmp(argv[1], "select") && !strcmp(argv[1], "noselect"))) {
-    fprintf(stderr, "Usage: %s {select|noselect}\n", argv[0]);
-    return 1;
-  }
+> ---
+> Compile-tested only.
+> ---
+>  drivers/bluetooth/btwilink.c              | 4 ++--
+>  drivers/media/radio/wl128x/fmdrv_common.c | 2 +-
+>  drivers/misc/ti-st/st_core.c              | 2 +-
+>  drivers/nfc/nfcwilink.c                   | 4 ++--
+>  include/linux/ti_wilink_st.h              | 2 +-
+>  5 files changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/bluetooth/btwilink.c b/drivers/bluetooth/btwilink.c
+> index 24a652f9252be899..485281b3f1677678 100644
+> --- a/drivers/bluetooth/btwilink.c
+> +++ b/drivers/bluetooth/btwilink.c
+> @@ -51,7 +51,7 @@
+>   */
+>  struct ti_st {
+>  	struct hci_dev *hdev;
+> -	char reg_status;
+> +	int reg_status;
+>  	long (*st_write) (struct sk_buff *);
+>  	struct completion wait_reg_completion;
+>  };
+> @@ -83,7 +83,7 @@ static inline void ti_st_tx_complete(struct ti_st *hst, int pkt_type)
+>   * status.ti_st_open() function will wait for signal from this
+>   * API when st_register() function returns ST_PENDING.
+>   */
+> -static void st_reg_completion_cb(void *priv_data, char data)
+> +static void st_reg_completion_cb(void *priv_data, int data)
+>  {
+>  	struct ti_st *lhst = priv_data;
+>  
+> diff --git a/drivers/media/radio/wl128x/fmdrv_common.c b/drivers/media/radio/wl128x/fmdrv_common.c
+> index 3f9e6df7d837ac27..642b89c66bcb99eb 100644
+> --- a/drivers/media/radio/wl128x/fmdrv_common.c
+> +++ b/drivers/media/radio/wl128x/fmdrv_common.c
+> @@ -1472,7 +1472,7 @@ static long fm_st_receive(void *arg, struct sk_buff *skb)
+>   * Called by ST layer to indicate protocol registration completion
+>   * status.
+>   */
+> -static void fm_st_reg_comp_cb(void *arg, char data)
+> +static void fm_st_reg_comp_cb(void *arg, int data)
+>  {
+>  	struct fmdev *fmdev;
+>  
+> diff --git a/drivers/misc/ti-st/st_core.c b/drivers/misc/ti-st/st_core.c
+> index dcdbd58672ccc6d2..00051590e00f9647 100644
+> --- a/drivers/misc/ti-st/st_core.c
+> +++ b/drivers/misc/ti-st/st_core.c
+> @@ -141,7 +141,7 @@ static void st_send_frame(unsigned char chnl_id, struct st_data_s *st_gdata)
+>   * This function is being called with spin lock held, protocol drivers are
+>   * only expected to complete their waits and do nothing more than that.
+>   */
+> -static void st_reg_complete(struct st_data_s *st_gdata, char err)
+> +static void st_reg_complete(struct st_data_s *st_gdata, int err)
+>  {
+>  	unsigned char i = 0;
+>  	pr_info(" %s ", __func__);
+> diff --git a/drivers/nfc/nfcwilink.c b/drivers/nfc/nfcwilink.c
+> index f81e500e765061fd..3fbd18b8e473f696 100644
+> --- a/drivers/nfc/nfcwilink.c
+> +++ b/drivers/nfc/nfcwilink.c
+> @@ -94,7 +94,7 @@ struct nfcwilink {
+>  	struct nci_dev			*ndev;
+>  	unsigned long			flags;
+>  
+> -	char				st_register_cb_status;
+> +	int				st_register_cb_status;
+>  	long				(*st_write) (struct sk_buff *);
+>  
+>  	struct completion		completed;
+> @@ -320,7 +320,7 @@ exit:
+>  }
+>  
+>  /* Called by ST when registration is complete */
+> -static void nfcwilink_register_complete(void *priv_data, char data)
+> +static void nfcwilink_register_complete(void *priv_data, int data)
+>  {
+>  	struct nfcwilink *drv = priv_data;
+>  
+> diff --git a/include/linux/ti_wilink_st.h b/include/linux/ti_wilink_st.h
+> index 0a0d56834c8eb412..f2293028ab9d65e6 100644
+> --- a/include/linux/ti_wilink_st.h
+> +++ b/include/linux/ti_wilink_st.h
+> @@ -71,7 +71,7 @@ struct st_proto_s {
+>  	enum proto_type type;
+>  	long (*recv) (void *, struct sk_buff *);
+>  	unsigned char (*match_packet) (const unsigned char *data);
+> -	void (*reg_complete_cb) (void *, char data);
+> +	void (*reg_complete_cb) (void *, int data);
+>  	long (*write) (struct sk_buff *skb);
+>  	void *priv_data;
+>  
 
-  doselect = !strcmp(argv[1], "select");
-
-  memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_INET;
-  hints.ai_socktype = SOCK_STREAM;
-
-  err = getaddrinfo("ftp.us.debian.org", 0, &hints, &host);
-  if(err) {
-    fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(err));
-    return 1;
-  }
-
-  sock = socket(host->ai_family, host->ai_socktype, host->ai_protocol);
-  if(sock < 0) {
-    perror("socket");
-    return 1;
-  }
-
-  ((struct sockaddr_in *)host->ai_addr)->sin_port = htons(80);
-
-  if(connect(sock, host->ai_addr, host->ai_addrlen) < 0) {
-    perror("connect");
-    return 1;
-  }
-
-  while(request_len) {
-    w = write(sock, request, request_len);
-    if(w < 0) {
-      perror("write to socket");
-      return 1;
-    }
-    request += w;
-    request_len -= w;
-  }
-
-  while((r = read(sock, buf, sizeof buf))) {
-    if(r < 0) {
-      perror("read from socket");
-      return 1;
-    }
-
-    copied = 0;
-    while(copied < r) {
-      w = write(1, buf+copied, r-copied);
-      if(w < 0) {
-        perror("write to stdout");
-        return 1;
-      }
-      copied += w;
-    }
-
-    if(doselect) {
-      fd_set rfds;
-      FD_ZERO(&rfds);
-      FD_SET(sock, &rfds);
-      select(sock+1, &rfds, 0, 0, 0);
-    }
-  }
-
-  return 0;
-}
 
 -- 
-Alan Curry
+Thanks,
+Mauro
