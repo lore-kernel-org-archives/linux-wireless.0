@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18512 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754251AbcGHKJ3 convert rfc822-to-8bit (ORCPT
+Received: from comal.ext.ti.com ([198.47.26.152]:56022 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751009AbcGMTzR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 06:09:29 -0400
-From: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Re: ath10k + iw set bitrates is causing FW crash
-Date: Fri, 8 Jul 2016 10:09:21 +0000
-Message-ID: <1467972560885.99812@qti.qualcomm.com> (sfid-20160708_120933_470414_4C9CED03)
-References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>,<CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
-In-Reply-To: <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 13 Jul 2016 15:55:17 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: Bob Copeland <me@bobcopeland.com>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"David S . Miller" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Hahn, Maital" <maitalm@ti.com>
+Subject: RE: [PATCH 1/4] mac80211: mesh: flush stations before beacons are
+ stopped
+Date: Wed, 13 Jul 2016 19:54:51 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101391FCAE3@DFRE01.ent.ti.com> (sfid-20160713_215528_168165_4276974C)
+References: <20160628111307.8784-1-yanivma@ti.com>
+ <20160628111307.8784-2-yanivma@ti.com>
+ <1467184459.2461.1.camel@sipsolutions.net>
+ <AE1C82FB3D0EC64DB1F752C81CBD1101391FC38C@DFRE01.ent.ti.com>
+ <20160713133338.GD7819@localhost>
+In-Reply-To: <20160713133338.GD7819@localhost>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> I am using ath10k driver with qca988x hw2.0 and trying to limit it to use
->> VHT MCS0-7 (iw set bitrates vht-mcs-5 2:0-7).
->>
->> But the command it causing a FW crash, if it disable HW_HAS_RATE_CONTROL
->> no crash is observed but it still uses MCS9.
->>
->> tree: wireless-drivers-next: commit#535633a5ba4ea2504fa6c33176633becf0e59339
->>
->> 1) If i disable HW_RATE_CONTROL, will ath10k honor
->> the mac80211 rates?
->>
->
-Thanks for reporting the issue. Could you please try with below change?
+On Wed, Jul 13, 2016 at 16:33:38, Bob Copeland wrote:
+> linux- wireless@vger.kernel.org; netdev@vger.kernel.org; Hahn, Maital
+> Subject: Re: [PATCH 1/4] mac80211: mesh: flush stations before beacons 
+> are stopped
+> 
+> On Wed, Jul 13, 2016 at 10:11:25AM +0000, Machani, Yaniv wrote:
+> > > > Some drivers (e.g. wl18xx) expect that the last stage in the 
+> > > > de-initialization process will be stopping the beacons, similar to ap.
+> > > > Update ieee80211_stop_mesh() flow accordingly.
+> > > >
+> > > How well have you tested that with other drivers?
+> > >
+> >
+> > Sorry for the delayed response (I've been out) and thanks for your 
+> > comments, I have tested it with RT3572 as well, and didn't see any issue.
+> > I'll update the comment to reflect that.
+> 
+> I'll give this a test on ath10k and wcn36xx as they are the ones most 
+> likely to care about ordering.
+> 
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 5e1cc8f4c43c..cfa7e01a6103 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2812,6 +2812,9 @@ static int ath10k_station_assoc(struct ath10k *ar,
-                return ret;
-        }
+Thank you,
+Yaniv
+> --
+> Bob Copeland %% http://bobcopeland.com/
 
-+       if (vif->type != NL80211_IFTYPE_ADHOC)
-+               peer_arg.peer_reassoc = reassoc;
-+
-        ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
-        if (ret) {
-                ath10k_warn(ar, "failed to run peer assoc for STA %pM vdev %i: %d\n",
+
