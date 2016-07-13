@@ -1,52 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54403 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751305AbcGNJ0r (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2016 05:26:47 -0400
-Date: Thu, 14 Jul 2016 11:24:09 +0200
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "prarit@redhat.com" <prarit@redhat.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Coelho, Luciano" <luciano.coelho@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
- ucode is loaded
-Message-ID: <20160714092408.GA27271@redhat.com> (sfid-20160714_112726_140431_04BEBBF8)
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
- <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
- <5783E33E.7090205@redhat.com>
- <1468261650.20877.14.camel@intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:36560 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751379AbcGMHy5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jul 2016 03:54:57 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	torvalds@linux-foundation.org,
+	"Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
+	linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi 2016-07-11
+References: <1468233921.25088.107.camel@coelho.fi>
+Date: Wed, 13 Jul 2016 10:54:41 +0300
+In-Reply-To: <1468233921.25088.107.camel@coelho.fi> (Luca Coelho's message of
+	"Mon, 11 Jul 2016 13:45:21 +0300")
+Message-ID: <87mvlmynum.fsf@kamboji.qca.qualcomm.com> (sfid-20160713_095500_941300_242B1E30)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1468261650.20877.14.camel@intel.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jul 11, 2016 at 06:27:30PM +0000, Grumbach, Emmanuel wrote:
-> I guess that works, but it seems wrong to me. Usually, registration
-> should happen only upon INIT, and yes, at that time the firmware is not
-> ready to provide the information yet.
-<snip>
-> > 
-> > As can be seen in the current code base, iwl_mvm_tzone_get_temp()
-> > will return
-> > -EIO 100% of the time when the firmware doesn't support reading the
+Luca Coelho <luca@coelho.fi> writes:
 
-If I understad correctly this error happen 100% of the time, not only
-during init. Hence seems there is an issue here, i.e. cur_ucode is not
-marked correctly as IWL_UCODE_REGULAR or iwl_mvm_get_temp() fail
-100% of the time (iwl_mvm_is_tt_in_fw() incorrecly return true on
-Prarit device ? ).
+> This is a fix for a warning that was spotted by Linus.  We already have
+> this patch queued in -next, but it should have gone to -fixes.  I hope
+> it is still possible to send it for 4.7.  And it shouldn't be a problem
+> to have it in both, right? I guess git merge would take care of that.
 
-BTW, you implement thermal_zone device, but do you also need hwmon
-device? Perhaps using theramal_zone_params no_hwmon option would be
-proper here?
+Like we discussed privately, even if iwlwifi was printing warnings the
+connection was still working for Linus so this is not critical enough
+for 4.7 so late in the cycle. So let's drop this and the fix can go to
+4.8 as planned.
 
-Stanislaw
+-- 
+Kalle Valo
