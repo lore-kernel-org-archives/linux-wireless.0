@@ -1,67 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57276 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755366AbcGHNqG (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:34524 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750956AbcGMLmP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 09:46:06 -0400
-Content-Type: text/plain; charset="utf-8"
+	Wed, 13 Jul 2016 07:42:15 -0400
+From: Yaniv Machani <yanivma@ti.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Yaniv Machani <yanivma@ti.com>, Maital Hahn <maitalm@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
+Date: Wed, 13 Jul 2016 14:45:25 +0300
+Message-ID: <20160713114528.24835-1-yanivma@ti.com> (sfid-20160713_134300_961040_111130DC)
 MIME-Version: 1.0
-Subject: Re: [1/2] brcmfmac: delete interface directly in code that sent fw
- request
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1467230067-3302-2-git-send-email-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-	IEEE802.11n WIRELESS DRIVER),
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Message-Id: <20160708134605.3BF7E60260@smtp.codeaurora.org> (sfid-20160708_154631_520398_63FC3969)
-Date: Fri,  8 Jul 2016 13:46:05 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> So far when receiving event about in-firmware-interface removal our
-> event worker was notifying listener and afterwards it was removing Linux
-> interface.
-> 
-> First of all it was resulting in slightly unexpected order. The listener
-> (del_virtual_intf callback) was (usually) returning with success before
-> we even called unregister_netdev(ice).
-> 
-> Please note this couldn't be simply fixed by changing order of calls in
-> brcmf_fweh_handle_if_event as unregistering interface earlier could free
-> struct brcmf_if.
-> 
-> Another problem of current implementation are possible lockups. Focus on
-> the time slot between calling event handler and removing Linux
-> interface. During that time original caller may leave (unlocking rtnl
-> semaphore) *and* another call to the same code may be done (locking it
-> again). If that happens our event handler will stuck at removing Linux
-> interface, it won't handle another event and will block process holding
-> rtnl lock.
-> 
-> This can be simply solved by unregistering interface in a proper
-> callback, right after receiving confirmation event from firmware. This
-> only required modifying worker to don't unregister on its own if there
-> is someone waiting for the event.
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+When a packet is received for transmission,
+a PREQ frame is sent to resolve the appropriate path to the desired destination.
+After path was established, any sequential PREQ will be sent only after
+dot11MeshHWMPpreqMinInterval, which usually set to few seconds.
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+This implementation has an impact in cases where we would like to
+resolve the path quickly.
+A clear example is when a peer was disconnected from us,
+while he acted as a hop to our destination.
+Although the path table will be cleared, the next PREQ frame will be sent only after reaching the MinInterval.
+This will cause unwanted delay, possibly of few seconds until the traffic will resume.
 
-a63b09872c1d brcmfmac: delete interface directly in code that sent fw request
-dba8fbc67ecd brcmfmac: support removing AP interfaces with "interface_remove"
+To improve that, added an 'immediate' flag to be used when the path needs to be resolved.
+Once set, a PREQ frame will be send w/o considering the MinInterval parameter.
 
+Signed-off-by: Maital Hahn <maitalm@ti.com>
+Signed-off-by: Yaniv Machani <yanivma@ti.com>
+---
+v2 - Updated comment to explain the scenario better.
+   - Removed unnccesary changes that was alreay upstreamed.
+   
+ net/mac80211/mesh_hwmp.c | 42 +++++++++++++++++++++++++-----------------
+ 1 file changed, 25 insertions(+), 17 deletions(-)
+
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 8f9c3bd..9783d49 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -19,7 +19,7 @@
+ 
+ #define MAX_PREQ_QUEUE_LEN	64
+ 
+-static void mesh_queue_preq(struct mesh_path *, u8);
++static void mesh_queue_preq(struct mesh_path *, u8, bool);
+ 
+ static inline u32 u32_field_get(const u8 *preq_elem, int offset, bool ae)
+ {
+@@ -830,7 +830,8 @@ static void hwmp_rann_frame_process(struct ieee80211_sub_if_data *sdata,
+ 		mhwmp_dbg(sdata,
+ 			  "time to refresh root mpath %pM\n",
+ 			  orig_addr);
+-		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
++		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH,
++				false);
+ 		mpath->last_preq_to_root = jiffies;
+ 	}
+ 
+@@ -925,7 +926,7 @@ void mesh_rx_path_sel_frame(struct ieee80211_sub_if_data *sdata,
+  * Locking: the function must be called from within a rcu read lock block.
+  *
+  */
+-static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
++static void mesh_queue_preq(struct mesh_path *mpath, u8 flags, bool immediate)
+ {
+ 	struct ieee80211_sub_if_data *sdata = mpath->sdata;
+ 	struct ieee80211_if_mesh *ifmsh = &sdata->u.mesh;
+@@ -964,18 +965,24 @@ static void mesh_queue_preq(struct mesh_path *mpath, u8 flags)
+ 	++ifmsh->preq_queue_len;
+ 	spin_unlock_bh(&ifmsh->mesh_preq_queue_lock);
+ 
+-	if (time_after(jiffies, ifmsh->last_preq + min_preq_int_jiff(sdata)))
++	if (immediate) {
+ 		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
++	} else {
++		if (time_after(jiffies,
++			       ifmsh->last_preq + min_preq_int_jiff(sdata))) {
++			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+ 
+-	else if (time_before(jiffies, ifmsh->last_preq)) {
+-		/* avoid long wait if did not send preqs for a long time
+-		 * and jiffies wrapped around
+-		 */
+-		ifmsh->last_preq = jiffies - min_preq_int_jiff(sdata) - 1;
+-		ieee80211_queue_work(&sdata->local->hw, &sdata->work);
+-	} else
+-		mod_timer(&ifmsh->mesh_path_timer, ifmsh->last_preq +
+-						min_preq_int_jiff(sdata));
++		} else if (time_before(jiffies, ifmsh->last_preq)) {
++			/* avoid long wait if did not send preqs for a long time
++			 * and jiffies wrapped around
++			 */
++			ifmsh->last_preq = jiffies -
++					   min_preq_int_jiff(sdata) - 1;
++			ieee80211_queue_work(&sdata->local->hw, &sdata->work);
++		} else
++			mod_timer(&ifmsh->mesh_path_timer, ifmsh->last_preq +
++				  min_preq_int_jiff(sdata));
++	}
+ }
+ 
+ /**
+@@ -1110,7 +1117,7 @@ int mesh_nexthop_resolve(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (!(mpath->flags & MESH_PATH_RESOLVING))
+-		mesh_queue_preq(mpath, PREQ_Q_F_START);
++		mesh_queue_preq(mpath, PREQ_Q_F_START, true);
+ 
+ 	if (skb_queue_len(&mpath->frame_queue) >= MESH_FRAME_QUEUE_LEN)
+ 		skb_to_free = skb_dequeue(&mpath->frame_queue);
+@@ -1157,8 +1164,9 @@ int mesh_nexthop_lookup(struct ieee80211_sub_if_data *sdata,
+ 		       msecs_to_jiffies(sdata->u.mesh.mshcfg.path_refresh_time)) &&
+ 	    ether_addr_equal(sdata->vif.addr, hdr->addr4) &&
+ 	    !(mpath->flags & MESH_PATH_RESOLVING) &&
+-	    !(mpath->flags & MESH_PATH_FIXED))
+-		mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH);
++	    !(mpath->flags & MESH_PATH_FIXED)) {
++	    mesh_queue_preq(mpath, PREQ_Q_F_START | PREQ_Q_F_REFRESH, false);
++	}
+ 
+ 	next_hop = rcu_dereference(mpath->next_hop);
+ 	if (next_hop) {
+@@ -1192,7 +1200,7 @@ void mesh_path_timer(unsigned long data)
+ 		mpath->discovery_timeout *= 2;
+ 		mpath->flags &= ~MESH_PATH_REQ_QUEUED;
+ 		spin_unlock_bh(&mpath->state_lock);
+-		mesh_queue_preq(mpath, 0);
++		mesh_queue_preq(mpath, 0, false);
+ 	} else {
+ 		mpath->flags &= ~(MESH_PATH_RESOLVING |
+ 				  MESH_PATH_RESOLVED |
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9206157/
+2.9.0
 
