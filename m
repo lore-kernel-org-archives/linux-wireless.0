@@ -1,86 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34826 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932366AbcGOJGt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60337 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751287AbcGMHCp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2016 05:06:49 -0400
-Received: by mail-wm0-f66.google.com with SMTP id i5so1362133wmg.2
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2016 02:06:49 -0700 (PDT)
-From: Alex Briskin <br.shurik@gmail.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: Alex Briskin <br.shurik@gmail.com>
-Subject: [PATCH 4/4 v2 iface_work] Function renaming
-Date: Fri, 15 Jul 2016 12:06:36 +0300
-Message-Id: <1468573596-20055-4-git-send-email-br.shurik@gmail.com> (sfid-20160715_110656_145364_002077C9)
-In-Reply-To: <1468573596-20055-1-git-send-email-br.shurik@gmail.com>
-References: <1468573596-20055-1-git-send-email-br.shurik@gmail.com>
+	Wed, 13 Jul 2016 03:02:45 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	mcgrof@do-not-panic.com, galak@codeaurora.org,
+	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
+	pawel.moll@arm.com, robh+dt@kernel.org, chunkeey@googlemail.com,
+	arend.vanspriel@broadcom.com, julian.calaby@gmail.com
+Subject: Re: [PATCH v4 1/3] Documentation: dt: net: add ath9k wireless device binding
+References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com>
+	<20160709232834.31654-1-martin.blumenstingl@googlemail.com>
+	<20160709232834.31654-2-martin.blumenstingl@googlemail.com>
+Date: Wed, 13 Jul 2016 10:02:39 +0300
+In-Reply-To: <20160709232834.31654-2-martin.blumenstingl@googlemail.com>
+	(Martin Blumenstingl's message of "Sun, 10 Jul 2016 01:28:32 +0200")
+Message-ID: <87a8hmauls.fsf@purkki.adurom.net> (sfid-20160713_090316_941553_EC875C05)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Replace iee80211 prefix with mac80211 prefix as it affects mac80211
-only.
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
 
-* Was unable to fit mac80211_is_skb_handled_by_frame_control function
-signature into 80 char. line, compromised on parenthesis alignment.
+> Add documentation how devicetree can be used to configure ath9k based
+> devices.
+>
+> Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+> ---
+>  .../devicetree/bindings/net/wireless/qca,ath9k.txt | 59 ++++++++++++++++++++++
+>  1 file changed, 59 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+>
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+> new file mode 100644
+> index 0000000..7c62c59
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+> @@ -0,0 +1,59 @@
+> +* Qualcomm Atheros ath9k wireless devices
+> +
+> +This node provides properties for configuring the ath9k wireless device. The
+> +node is expected to be specified as a child node of the PCI controller to
+> +which the wireless chip is connected.
+> +
+> +Required properties:
+> +- compatible: Should be "qca,ath9k"
 
-Signed-off-by: Alex Briskin <br.shurik@gmail.com>
----
- net/mac80211/iface.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+Isn't this supposed to use the chipset name? ath9k is the driver name
+and something like ar9462 is the chip name. I know in ath10k we used
+"qca,ath10k" but I'm starting to suspect that was a mistake.
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 6f55901..bd376e8 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1198,9 +1198,9 @@ static void ieee80211_if_setup(struct net_device *dev)
- 	dev->destructor = ieee80211_if_free;
- }
- 
--static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
--						 struct ieee80211_sub_if_data
--						 *sdata)
-+static bool mac80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
-+						struct ieee80211_sub_if_data
-+						*sdata)
- {
- 	struct ieee80211_ra_tid *ra_tid;
- 	struct ieee80211_rx_agg *rx_agg;
-@@ -1245,9 +1245,8 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
- 	return true;
- }
- 
--static bool ieee80211_is_handled_by_frame_control(struct sk_buff *skb,
--						  struct ieee80211_sub_if_data
--						  *sdata)
-+static bool mac80211_is_skb_handled_by_frame_control(struct sk_buff *skb,
-+			struct ieee80211_sub_if_datai *sdata)
- {
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
-@@ -1324,8 +1323,8 @@ static bool ieee80211_is_handled_by_frame_control(struct sk_buff *skb,
- 	return true;
- }
- 
--static void ieee80211_handle_by_vif_type(struct sk_buff *skb,
--					 struct ieee80211_sub_if_data *sdata)
-+static void mac80211_skb_handle_by_vif_type(struct sk_buff *skb,
-+					    struct ieee80211_sub_if_data *sdata)
- {
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_STATION:
-@@ -1363,9 +1362,9 @@ static void ieee80211_iface_work(struct work_struct *work)
- 
- 	/* first process frames */
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
--		if (!ieee80211_is_skb_handled_by_pkt_type(skb, sdata) &&
--		    !ieee80211_is_handled_by_frame_control(skb, sdata)) {
--			ieee80211_handle_by_vif_type(skb, sdata);
-+		if (!mac80211_is_skb_handled_by_pkt_type(skb, sdata) &&
-+		    !mac80211_is_skb_handled_by_frame_control(skb, sdata)) {
-+			mac80211_skb_handle_by_vif_type(skb, sdata);
- 		}
- 
- 		kfree_skb(skb);
 -- 
-2.5.0
-
+Kalle Valo
