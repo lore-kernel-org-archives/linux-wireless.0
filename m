@@ -1,120 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:34715 "EHLO
-	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751203AbcGKMYm (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:53347 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751253AbcGMUEe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 08:24:42 -0400
-Received: by mail-lf0-f42.google.com with SMTP id h129so71204378lfh.1
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jul 2016 05:24:41 -0700 (PDT)
-Received: from [192.168.10.110] ([147.83.206.88])
-        by smtp.gmail.com with ESMTPSA id j192sm4285344lfg.28.2016.07.11.05.24.36
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 11 Jul 2016 05:24:36 -0700 (PDT)
-To: linux-wireless <linux-wireless@vger.kernel.org>
-From: Joan Josep Aleixendri <jj.aleixendri@gmail.com>
-Subject: A question about MAC80211 (3.9)
-Message-ID: <349f74d9-ee27-8abb-afce-96532fec5e80@gmail.com> (sfid-20160711_142445_986626_7732B830)
-Date: Mon, 11 Jul 2016 14:24:33 +0200
+	Wed, 13 Jul 2016 16:04:34 -0400
+From: Yaniv Machani <yanivma@ti.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Yaniv Machani <yanivma@ti.com>, Meirav Kama <meiravk@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
+Subject: [PATCH v3 3/3] mac80211: mesh: fixed HT ies in beacon template
+Date: Wed, 13 Jul 2016 23:07:48 +0300
+Message-ID: <20160713200755.26839-1-yanivma@ti.com> (sfid-20160713_220440_981319_03829C2B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello everybody!
+The HT capab info field inside the HT capab IE of the mesh beacon
+is incorrect (in the case of 20MHz channel width).
+To fix this driver will check configuration from cfg and
+will build it accordingly.
 
+Signed-off-by: Meirav Kama <meiravk@ti.com>
+Signed-off-by: Yaniv Machani <yanivma@ti.com>
+---
+V3 - Fixes redundant spaces,empty lines and added FALLTHROUGH note.
 
-I'm a student working on a project about mac80211. I'm trying to modify 
-the behaviour of the AC's queues but I could really need some help about 
-this subject.
+ net/mac80211/mesh.c | 33 ++++++++++++++++++++++++++++++++-
+ net/mac80211/util.c |  3 ---
+ 2 files changed, 32 insertions(+), 4 deletions(-)
 
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index 9214bc1..6a67049 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -422,6 +422,7 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
+ 	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
+ 	struct ieee80211_supported_band *sband;
+ 	u8 *pos;
++	u16 cap;
+ 
+ 	sband = local->hw.wiphy->bands[band];
+ 	if (!sband->ht_cap.ht_supported ||
+@@ -430,11 +431,41 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
+ 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
+ 		return 0;
+ 
++	/* determine capability flags */
++	cap = sband->ht_cap.cap;
++
++	/* if channel width is 20MHz - configure HT capab accordingly*/
++	if (sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20) {
++		cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
++		cap &= ~IEEE80211_HT_CAP_DSSSCCK40;
++	}
++
++	/* set SM PS mode properly */
++	cap &= ~IEEE80211_HT_CAP_SM_PS;
++	switch (sdata->smps_mode) {
++	case IEEE80211_SMPS_AUTOMATIC:
++	case IEEE80211_SMPS_NUM_MODES:
++		WARN_ON(1);
++		/* FALLTHROUGH */
++	case IEEE80211_SMPS_OFF:
++		cap |= WLAN_HT_CAP_SM_PS_DISABLED <<
++			IEEE80211_HT_CAP_SM_PS_SHIFT;
++		break;
++	case IEEE80211_SMPS_STATIC:
++		cap |= WLAN_HT_CAP_SM_PS_STATIC <<
++			IEEE80211_HT_CAP_SM_PS_SHIFT;
++		break;
++	case IEEE80211_SMPS_DYNAMIC:
++		cap |= WLAN_HT_CAP_SM_PS_DYNAMIC <<
++			IEEE80211_HT_CAP_SM_PS_SHIFT;
++		break;
++	}
++
+ 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
+ 		return -ENOMEM;
+ 
+ 	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_cap));
+-	ieee80211_ie_build_ht_cap(pos, &sband->ht_cap, sband->ht_cap.cap);
++	ieee80211_ie_build_ht_cap(pos, &sband->ht_cap, cap);
+ 
+ 	return 0;
+ }
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 42bf0b6..5375a82 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2349,10 +2349,7 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+ 	ht_oper->operation_mode = cpu_to_le16(prot_mode);
+ 	ht_oper->stbc_param = 0x0000;
+ 
+-	/* It seems that Basic MCS set and Supported MCS set
+-	   are identical for the first 10 bytes */
+ 	memset(&ht_oper->basic_set, 0, 16);
+-	memcpy(&ht_oper->basic_set, &ht_cap->mcs, 10);
+ 
+ 	return pos + sizeof(struct ieee80211_ht_operation);
+ }
+-- 
+2.9.0
 
-We are implementing a rate control algorithm. To do this we enqueue 
-packets on ieee80211_tx_frags() function, just after we are sure the 
-packet is going to be submitted to the driver under the standard code. 
-You can see the code below
-
-
-The problem is that once we send a packet that was going to the driver 
-to the pending queue (because our custom logic), the tasklet takes over 
-and tries to resubmit the packet to tx_frags(). The result is that we 
-start losing connection and queuing the same packet over and over. Is 
-there a way to stop the tasklet for some defined period of time? Or 
-maybe another advice to implement rate limiting at mac80211?
-
-
-Thanks for your time! And i really appreciate your help!
-
-
-Joan Josep Aleixendri Cruelles
-
-
-Code:
-
-ieee80211_tx_frags():
-
-     spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
-         if (local->queue_stop_reasons[q] ||
-             (!txpending && !skb_queue_empty(&local->pending[q]))) {
-                 if (unlikely(info->flags &
-                         IEEE80211_TX_INTFL_OFFCHAN_TX_OK)) {
-                     if (local->queue_stop_reasons[q] &
-~BIT(IEEE80211_QUEUE_STOP_REASON_OFFCHANNEL)) {
-                          /*
-                          * Drop off-channel frames if queues
-                          * are stopped for any reason other
-                          * than off-channel operation. Never
-                          * queue them.
-                          */
-                          spin_unlock_irqrestore(
-&local->queue_stop_reason_lock,
-                                  flags);
-ieee80211_purge_tx_queue(&local->hw,
-                                  skbs);
-                              return true;
-                          }
-                      } else {
-                          /*
-                          * Since queue is stopped, queue up frames for
-                          * later transmission from the tx-pending
-                          * tasklet when the queue is woken again.
-                          */
-                          if (txpending)
-skb_queue_splice_init(skbs,
-                                  &local->pending[q]);
-                          else
-                              skb_queue_splice_tail_init(skbs,
-&local->pending[q]);
-
-spin_unlock_irqrestore(&local->queue_stop_reason_lock,
-flags);
-                          return false;
-                      }
-                  }
-++           // CUSTOM CODE
-++           if(packet_meets_requirements_to_be_xmitted()){
-++               goto xmit;
-++           }
-++           else{
-++               //Send the packet back to pending
-++               if (txpending)
-++                   skb_queue_splice_init(skbs,
-++                           &local->pending[q]);
-++               else
-++                   skb_queue_splice_tail_init(skbs,
-++                           &local->pending[q]);
-++ spin_unlock_irqrestore(&local->queue_stop_reason_lock,
-++                       flags);
-++               return false;
-++           }
-++           xmit:
-spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
-
-          info->control.vif = vif;
-          control.sta = sta;
-
-          __skb_unlink(skb, skbs);
-          drv_tx(local, &control, skb);
-      }
-
-return true;
