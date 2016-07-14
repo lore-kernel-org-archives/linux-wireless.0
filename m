@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:60672 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751666AbcGFVAS (ORCPT
+Received: from mga03.intel.com ([134.134.136.65]:31977 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750916AbcGNJoi convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 17:00:18 -0400
-From: Kamal Mostafa <kamal@canonical.com>
-To: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	ath9k-devel@lists.ath9k.org,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Kamal Mostafa <kamal@canonical.com>,
-	kernel-team@lists.ubuntu.com
-Subject: [3.19.y-ckt stable] Patch "ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards." has been added to the 3.19.y-ckt tree
-Date: Wed,  6 Jul 2016 14:00:14 -0700
-Message-Id: <1467838814-15240-1-git-send-email-kamal@canonical.com> (sfid-20160706_230024_471894_C26633D5)
+	Thu, 14 Jul 2016 05:44:38 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "prarit@redhat.com" <prarit@redhat.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
+ ucode is loaded
+Date: Thu, 14 Jul 2016 09:44:22 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3466901DA@hasmsx107.ger.corp.intel.com> (sfid-20160714_121546_481099_616C74A1)
+References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
+ <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
+ <5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>
+ <20160714092408.GA27271@redhat.com>
+In-Reply-To: <20160714092408.GA27271@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a note to let you know that I have just added a patch titled
+> 
+> On Mon, Jul 11, 2016 at 06:27:30PM +0000, Grumbach, Emmanuel wrote:
+> > I guess that works, but it seems wrong to me. Usually, registration
+> > should happen only upon INIT, and yes, at that time the firmware is
+> > not ready to provide the information yet.
+> <snip>
+> > >
+> > > As can be seen in the current code base, iwl_mvm_tzone_get_temp()
+> > > will return -EIO 100% of the time when the firmware doesn't support
+> > > reading the
+> 
+> If I understad correctly this error happen 100% of the time, not only during
+> init. Hence seems there is an issue here, i.e. cur_ucode is not marked
+> correctly as IWL_UCODE_REGULAR or iwl_mvm_get_temp() fail 100% of the
+> time (iwl_mvm_is_tt_in_fw() incorrecly return true on Prarit device ? ).
 
-    ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
+Cur_ucode will not be IWL_UCODE_REGULAR until you load the firmware which
+will happen upon ifup.
 
-to the linux-3.19.y-queue branch of the 3.19.y-ckt extended stable tree 
-which can be found at:
+> 
+> BTW, you implement thermal_zone device, but do you also need hwmon
+> device? Perhaps using theramal_zone_params no_hwmon option would be
+> proper here?
 
-    https://git.launchpad.net/~canonical-kernel/linux/+git/linux-stable-ckt/log/?h=linux-3.19.y-queue
+That's an interesting direction. I'd have to check, but TBH, I am not familiar with
+that code. Luca was very involved during the development but he is not available
+right now. I will be back more the less when the merge window will close :)
 
-This patch is scheduled to be released in version 3.19.8-ckt23.
-
-If you, or anyone else, feels it should not be added to this tree, please 
-reply to this email.
-
-For more information about the 3.19.y-ckt tree, see
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
-
-Thanks.
--Kamal
-
----8<------------------------------------------------------------
-
->From 238459db31addda42db12206a3b57a015b56a2da Mon Sep 17 00:00:00 2001
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Date: Mon, 11 Apr 2016 04:48:55 +0200
-Subject: ath9k: Fix LED polarity for some Mini PCI AR9220 MB92 cards.
-
-commit 0f9edcdd88a993914fa1d1dc369b35dc503979db upstream.
-
-The Wistron DNMA-92 and Compex WLM200NX have inverted LED polarity
-(active high instead of active low).
-
-The same PCI Subsystem ID is used by both cards, which are based on
-the same Atheros MB92 design.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Kamal Mostafa <kamal@canonical.com>
----
- drivers/net/wireless/ath/ath9k/pci.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/pci.c b/drivers/net/wireless/ath/ath9k/pci.c
-index f009b5b..b9ec8c7 100644
---- a/drivers/net/wireless/ath/ath9k/pci.c
-+++ b/drivers/net/wireless/ath/ath9k/pci.c
-@@ -28,6 +28,16 @@ static const struct pci_device_id ath_pci_id_table[] = {
- 	{ PCI_VDEVICE(ATHEROS, 0x0024) }, /* PCI-E */
- 	{ PCI_VDEVICE(ATHEROS, 0x0027) }, /* PCI   */
- 	{ PCI_VDEVICE(ATHEROS, 0x0029) }, /* PCI   */
-+
-+#ifdef CONFIG_ATH9K_PCOEM
-+	/* Mini PCI AR9220 MB92 cards: Compex WLM200NX, Wistron DNMA-92 */
-+	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_ATHEROS,
-+			 0x0029,
-+			 PCI_VENDOR_ID_ATHEROS,
-+			 0x2096),
-+	  .driver_data = ATH9K_PCI_LED_ACT_HI },
-+#endif
-+
- 	{ PCI_VDEVICE(ATHEROS, 0x002A) }, /* PCI-E */
-
- #ifdef CONFIG_ATH9K_PCOEM
---
-2.7.4
-
+> 
+> Stanislaw
