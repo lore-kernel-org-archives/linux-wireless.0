@@ -1,170 +1,306 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:47174 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752914AbcGYPvn (ORCPT
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:35990 "EHLO
+	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897AbcGNOb2 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2016 11:51:43 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6PFoG1M031737
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:51:42 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 24c5xkfr0b-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:51:42 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Karthik D A <karthida@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2 1/8] mwifiex: Fixed endianness problem for big endian platform
-Date: Mon, 25 Jul 2016 21:21:04 +0530
-Message-ID: <1469461871-3135-2-git-send-email-akarwar@marvell.com> (sfid-20160725_175145_935501_0BD6A03D)
-In-Reply-To: <1469461871-3135-1-git-send-email-akarwar@marvell.com>
-References: <1469461871-3135-1-git-send-email-akarwar@marvell.com>
+	Thu, 14 Jul 2016 10:31:28 -0400
+Received: by mail-vk0-f65.google.com with SMTP id r135so5220673vkf.3
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2016 07:31:28 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <b8e300a0-b3a5-7a5b-c954-5b55a4426287@broadcom.com>
+References: <1460498140-18874-1-git-send-email-per.forlin@gmail.com>
+ <CAC0pXTLDeiiVma7AGD1XirQG=SqSDht_BA3arQQnvn=ztTLDug@mail.gmail.com>
+ <CAC0pXTJ-hnKgSMwf7KYPwBs7RB2YAgaouOdeJwD2kuLneCGXfA@mail.gmail.com>
+ <38869535-4f77-f6d8-d8d0-cb01b3f9c65b@broadcom.com> <CAC0pXTKPm=Q2__OuYEp0p4RC_Jum_+tuS3-7R-hBcoa8Ka8==Q@mail.gmail.com>
+ <cdb613ba-d2b1-d9eb-9beb-2934cff96aa6@broadcom.com> <CAC0pXTKk1AA5k-i10PKTxHujPG2jPGbWMnNp6y6=v0ngK5+L4Q@mail.gmail.com>
+ <b8e300a0-b3a5-7a5b-c954-5b55a4426287@broadcom.com>
+From: =?UTF-8?Q?Per_F=C3=B6rlin?= <per.forlin@gmail.com>
+Date: Thu, 14 Jul 2016 16:31:25 +0200
+Message-ID: <CAC0pXTLY9irEzf4B7s+2An-cYFCysEEriVb92JnKtV5n+hoo1w@mail.gmail.com> (sfid-20160714_165534_351854_1DB57595)
+Subject: Re: [PATCH v4] brcmfmac: Decrease 8021x_cnt for dropped packets
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, arend@broadcom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karthik D A <karthida@marvell.com>
+2016-07-14 10:57 GMT+02:00 Arend Van Spriel <arend.vanspriel@broadcom.com>:
+> On 13-7-2016 20:52, Per Förlin wrote:
+>> 2016-07-13 13:20 GMT+02:00 Arend Van Spriel <arend.vanspriel@broadcom.com>:
+>>> On 12-7-2016 12:23, Per Förlin wrote:
+>>>> 2016-07-12 11:48 GMT+02:00 Arend Van Spriel <arend.vanspriel@broadcom.com>:
+>>>>>
+>>>>>
+>>>>> On 12-7-2016 10:35, Per Förlin wrote:
+>>>>>> 2016-07-06 11:53 GMT+02:00 Per Förlin <per.forlin@gmail.com>:
+>>>>>>> I have now verified this patch on backports 4.4.
+>>>>>>>
+>>>>>>> 2016-04-12 23:55 GMT+02:00  <per.forlin@gmail.com>:
+>>>>>>>> From: Per Forlin <per.forlin@gmail.com>
+>>>>>>>>
+>>>>>>>> This patch resolves an issue where pend_8021x_cnt was not decreased
+>>>>>>>> on txfinalize. This caused brcmf_netdev_wait_pend8021x to timeout
+>>>>>>>> because the counter indicated pending packets.
+>>>>>>>>
+>>>>>>>> WARNING: at .../brcmfmac/core.c:1289 brcmf_netdev_wait_pend8021x
+>>>>>>>>   (warn_slowpath_common)
+>>>>>>>>   (warn_slowpath_null)
+>>>>>>>>   (brcmf_netdev_wait_pend8021x [brcmfmac])
+>>>>>>>>   (send_key_to_dongle [brcmfmac])
+>>>>>>>>   (brcmf_cfg80211_del_key [brcmfmac])
+>>>>>>>>   (nl80211_del_key [cfg80211])
+>>>>>>>>   (genl_rcv_msg)
+>>>>>>>>   (netlink_rcv_skb)
+>>>>>>>>   (genl_rcv)
+>>>>>>>>   (netlink_unicast)
+>>>>>>>>   (netlink_sendmsg)
+>>>>>>>>   (sock_sendmsg)
+>>>>>>>>   (___sys_sendmsg)
+>>>>>>>>   (__sys_sendmsg)
+>>>>>>>>   (SyS_sendmsg)
+>>>>>>>>
+>>>>>>>> The solution is to pull back the header offset in case
+>>>>>>>> of an error in txdata(), which may happen in case of
+>>>>>> Clarification:
+>>>>>>
+>>>>>> txdata=brcmf_proto_bcdc_txdata()
+>>>>>> brcmf_proto_bcdc_txdata(): Calls brcmf_proto_bcdc_hdrpush()
+>>>>>>
+>>>>>> The header needs to be pulled back in case of error otherwise
+>>>>>> the error handling and cleanup up will fail to decrease the counter
+>>>>>> of pending packets.
+>>>>>
+>>>>> Yes, this part of the patch is clear to me.
+>>>>>
+>>>> Thanks, I wasn't sure.
+>>>>
+>>>>>>>> packet overload in brcmf_sdio_bus_txdata.
+>>>>>>>>
+>>>>>>>> Overloading an WLAN interface is not an unlikely scenario.
+>>>>>
+>>>>> So here is where things start to look suspicious and I have mentioned
+>>>>> this before. My thought here was "How the hell can you end up with a
+>>>>> 2048 packets on the sdio queue", which I mentioned to you before. There
+>>>>> is a high watermark on the queue upon which we do a netif_stop_queue()
+>>>>> so network layer does not keep pushing tx packets our way. Looking
+>>>>> further into this I found that we introduced a bug with commit
+>>>>> 9cd18359d31e ("brcmfmac: Make FWS queueing configurable.") so we ended
+>>>>> up doing nothing except increasing as statistics debug counter :-(
+>>>>>
+>>>> Is there a fix available for the high watermark issue or is it
+>>>> something you will look into?
+>>>>
+>>>> To produce a load on the wlan interface I run
+>>>> iperf -c 239.255.1.3 -u -b 10m -f m -i 60 -t 3000
+>>>> and this is enough in my case to fill up the 2048 queue.
+>>>>
+>>>>>>>> In case of packet overload the error print "out of bus->txq"
+>>>>>>>> is very verbose. To reduce SPAM degrade it to a debug print.
+>>>>>>>>
+>>>>>>>> Signed-off-by: Per Forlin <per.forlin@gmail.com>
+>>>>>>>> ---
+>>>>>>>> Change log:
+>>>>>>>>  v2 - Add variable to know whether the counter is increased or not
+>>>>>>>>  v3 - txfinalize should decrease the counter. Adjust skb header offset
+>>>>>>>>  v4 - Fix build error
+>>>>>>>>
+>>>>>>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 4 ++++
+>>>>>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 4 +++-
+>>>>>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c     | 2 +-
+>>>>>>>>  3 files changed, 8 insertions(+), 2 deletions(-)
+>>>>>>>>
+>>>>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+>>>>>>>> index ed9998b..f342f7c 100644
+>>>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+>>>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+>>>>>>>> @@ -541,6 +541,9 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
+>>>>>>>>         struct ethhdr *eh;
+>>>>>>>>         u16 type;
+>>>>>>>>
+>>>>>>>> +       if (!ifp)
+>>>>>>>> +               goto free;
+>>>>>>>> +
+>>>>>
+>>>>> This may not be needed.
+>>>>>
+>>>> This is not strictly needed. I can remove it.
+>>>>
+>>>>>>>>         eh = (struct ethhdr *)(txp->data);
+>>>>>>>>         type = ntohs(eh->h_proto);
+>>>>>>>>
+>>>>>>>> @@ -553,6 +556,7 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
+>>>>>>>>         if (!success)
+>>>>>>>>                 ifp->stats.tx_errors++;
+>>>>>>>>
+>>>>>>>> +free:
+>>>>>>>>         brcmu_pkt_buf_free_skb(txp);
+>>>>>>>>  }
+>>>>>>>>
+>>>>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+>>>>>>>> index f82c9ab..98cb83f 100644
+>>>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+>>>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+>>>>>>>> @@ -1899,8 +1899,10 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+>>>>>>>>
+>>>>>>>>         if (fws->avoid_queueing) {
+>>>>>>>>                 rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
+>>>>>>>> -               if (rc < 0)
+>>>>>>>> +               if (rc < 0) {
+>>>>>>>> +                       (void)brcmf_proto_hdrpull(drvr, false, skb, &ifp);
+>>>>>
+>>>>> Could it be that the ifp is NULL pointer after brcmf_proto_hdrpull().
+>>>>> Can you check. Better use tmp_ifp variable in this call as you have a
+>>>>> valid ifp before this call for sure.
+>>>>>
+>>>> To be on the safe side I can use NULL as in param like you propose,
+>>>> and use the available ifp.
+>>>>
+>>>>>>>>                         brcmf_txfinalize(ifp, skb, false);
+>>>>>>>> +               }
+>>>>>>>>                 return rc;
+>>>>>>>>         }
+>>>>>>>>
+>>>>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>>>>>>>> index a14d9d9d..485e2ad 100644
+>>>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>>>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+>>>>>>>> @@ -2721,7 +2721,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
+>>>>>>>>         *(u16 *)(pkt->cb) = 0;
+>>>>>>>>         if (!brcmf_sdio_prec_enq(&bus->txq, pkt, prec)) {
+>>>>>>>>                 skb_pull(pkt, bus->tx_hdrlen);
+>>>>>>>> -               brcmf_err("out of bus->txq !!!\n");
+>>>>>>>> +               brcmf_dbg(INFO, "out of bus->txq !!!\n");
+>>>>>
+>>>>> Now that I understand the issue I want to keep this as error print as it
+>>>>> should be very unlikely.
+>>>> I would like to test this patch with the watermark fix to confirm this.
+>>>
+>>> Can you try this?
+>>>
+>>> Regards,
+>>> Arend
+>>>
+>>> ---
+>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+>>> b/drive
+>>> index cd221ab..9f9024a 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+>>> @@ -2469,10 +2469,22 @@ void brcmf_fws_bustxfail(struct brcmf_fws_info
+>>> *fws, str
+>>>  void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked)
+>>>  {
+>>>         struct brcmf_fws_info *fws = drvr->fws;
+>>> +       struct brcmf_if *ifp;
+>>> +       int i;
+>>>
+>>> -       fws->bus_flow_blocked = flow_blocked;
+>>> -       if (!flow_blocked)
+>>> -               brcmf_fws_schedule_deq(fws);
+>>> -       else
+>>> -               fws->stats.bus_flow_block++;
+>>> +       if (fws->avoid_queueing) {
+>>> +               for (i = 0; i < BRCMF_MAX_IFS; i++) {
+>>> +                       ifp = drvr->iflist[i];
+>>> +                       if (!ifp || !ifp->ndev)
+>>> +                               continue;
+>>> +                       brcmf_txflowblock_if(ifp,
+>>> BRCMF_NETIF_STOP_REASON_FLOW,
+>>> +                                            flow_blocked);
+>>> +               }
+>>> +       } else {
+>>> +               fws->bus_flow_blocked = flow_blocked;
+>>> +               if (!flow_blocked)
+>>> +                       brcmf_fws_schedule_deq(fws);
+>>> +               else
+>>> +                       fws->stats.bus_flow_block++;
+>>> +       }
+>>>  }
+>>>
+>> Thanks for the code. I run a quick test and it looks fine.
+>> I added some prints to check the progress:
+>> len - is number of items in the queue
+>> max -  is max number of entries in the queue
+>>
+>> [   89.407856] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1789 max 2048
+>> [   89.414682] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1790 max 2048
+>> [   89.421497] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1791 max 2048
+>> [   93.970466] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1524 max 2048
+>> [   93.977520] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1525 max 2048
+>> [   93.984572] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1526 max 2048
+>>
+>> I will some run more WLAN tests tomorrow to make sure.
+>> When I'm done testing I will update my patch as well and let you know.
+>>
+>> I came across this issue when I tried to connect to my WLAN access
+>> point. The bug was triggered due to a lot of background traffic
+>> (broadcast and multicast) in the network filling up the queue.
+>> It's now fixed so that the queue is not flooded. Now I move on to the
+>> next issue. It's still difficult to connect because the background
+>> eats up all the bandwidth (this is not a constant issue but it happens
+>> from time to time depending on the background load).
+>> For queueing-mode there seems to exist logic for handling multicast
+>> traffic separately but for the SDIO case (no-queueing) normal traffic
+>> gets same precedence as multicast traffic.
+>
+> I am a bit confused by the term "background traffic". There is a
+> specific WMM-AC_BK that I would refer to as background traffic. Most
+> traffic is set to AC_BE regardless of it being unicast or bc/mc.
+> Changing the priority like that for multicast is a very bad idea.
+>
+Sorry for using "background traffic", I simply mean broadcast and
+multicast traffic.
+Normally broadcast traffic and multicast traffic are less time
+critical. In my case
+the broadcast traffic prevents clients to connect to the access point.
+The connection traffic and the broadcast traffic have the same prio.
 
-The driver sends and recives information to and from the firmware.
-Correct endianness should be ensured as firmware follows little
-endian format and host can be little/big endian.
+I will consider other options to improve this. I going away for a
+couple of weeks now
+and I hope to pick up this work again in mid August.
 
-Signed-off-by: Karthik D A <karthida@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/fw.h          | 30 +++++++++++-----------
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 27 ++++++++++---------
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  2 +-
- 3 files changed, 31 insertions(+), 28 deletions(-)
+>> I'm considering something like this:
+>> --- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+>> +++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
+>> @@ -1900,6 +1902,8 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp,
+>> struct sk_buff *skb)
+>>         drvr->tx_multicast += !!multicast;
+>>
+>>         if (fws->avoid_queueing) {
+>> +               if (multicast)
+>> +                       skb->priority = PRIO_8021D_NONE;
+>>                 rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
+>>                 if (rc < 0) {
+>>                         (void)brcmf_proto_hdrpull(drvr, false, skb, NULL);
+>>
+>> It feels a little hacky.
+>>
+>> I would like to use the drvr->tx_multicast instead, if possible.
+>> The problem is that the "drvr" struct is not passed down to the sdio layer.
+>> One could update bcdc.c : brcmf_proto_bcdc_txdata() to pass
+>> "drcr->multicast" to the SDIO layer but not all bus implementations
+>> need this information (USB for instance)
+>>
+>> Any suggestions?
+>
+> I suspect that we fixed your issue with commit 92121e69de8a ("brcmfmac:
+> Properly set carrier state of netdev."). That is if your issue was
+> caused on an older kernel.
+I'm running on 4.4.6 so I should have this patch in place already.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 5596b6b..c46267b 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -1646,7 +1646,7 @@ struct mwifiex_ie_types_sta_info {
- };
- 
- struct host_cmd_ds_sta_list {
--	u16 sta_count;
-+	__le16 sta_count;
- 	u8 tlv[0];
- } __packed;
- 
-@@ -2034,26 +2034,26 @@ struct host_cmd_ds_set_bss_mode {
- 
- struct host_cmd_ds_pcie_details {
- 	/* TX buffer descriptor ring address */
--	u32 txbd_addr_lo;
--	u32 txbd_addr_hi;
-+	__le32 txbd_addr_lo;
-+	__le32 txbd_addr_hi;
- 	/* TX buffer descriptor ring count */
--	u32 txbd_count;
-+	__le32 txbd_count;
- 
- 	/* RX buffer descriptor ring address */
--	u32 rxbd_addr_lo;
--	u32 rxbd_addr_hi;
-+	__le32 rxbd_addr_lo;
-+	__le32 rxbd_addr_hi;
- 	/* RX buffer descriptor ring count */
--	u32 rxbd_count;
-+	__le32 rxbd_count;
- 
- 	/* Event buffer descriptor ring address */
--	u32 evtbd_addr_lo;
--	u32 evtbd_addr_hi;
-+	__le32 evtbd_addr_lo;
-+	__le32 evtbd_addr_hi;
- 	/* Event buffer descriptor ring count */
--	u32 evtbd_count;
-+	__le32 evtbd_count;
- 
- 	/* Sleep cookie buffer physical address */
--	u32 sleep_cookie_addr_lo;
--	u32 sleep_cookie_addr_hi;
-+	__le32 sleep_cookie_addr_lo;
-+	__le32 sleep_cookie_addr_hi;
- } __packed;
- 
- struct mwifiex_ie_types_rssi_threshold {
-@@ -2093,8 +2093,8 @@ struct mwifiex_ie_types_mc_group_info {
- 	u8 chan_buf_weight;
- 	u8 band_config;
- 	u8 chan_num;
--	u32 chan_time;
--	u32 reserved;
-+	__le32 chan_time;
-+	__le32 reserved;
- 	union {
- 		u8 sdio_func_num;
- 		u8 usb_ep_num;
-@@ -2185,7 +2185,7 @@ struct host_cmd_ds_robust_coex {
- } __packed;
- 
- struct host_cmd_ds_wakeup_reason {
--	u16  wakeup_reason;
-+	__le16  wakeup_reason;
- } __packed;
- 
- struct host_cmd_ds_gtk_rekey_params {
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 7897037..108c11c 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1244,20 +1244,23 @@ mwifiex_cmd_pcie_host_spec(struct mwifiex_private *priv,
- 		return 0;
- 
- 	/* Send the ring base addresses and count to firmware */
--	host_spec->txbd_addr_lo = (u32)(card->txbd_ring_pbase);
--	host_spec->txbd_addr_hi = (u32)(((u64)card->txbd_ring_pbase)>>32);
--	host_spec->txbd_count = MWIFIEX_MAX_TXRX_BD;
--	host_spec->rxbd_addr_lo = (u32)(card->rxbd_ring_pbase);
--	host_spec->rxbd_addr_hi = (u32)(((u64)card->rxbd_ring_pbase)>>32);
--	host_spec->rxbd_count = MWIFIEX_MAX_TXRX_BD;
--	host_spec->evtbd_addr_lo = (u32)(card->evtbd_ring_pbase);
--	host_spec->evtbd_addr_hi = (u32)(((u64)card->evtbd_ring_pbase)>>32);
--	host_spec->evtbd_count = MWIFIEX_MAX_EVT_BD;
-+	host_spec->txbd_addr_lo = cpu_to_le32((u32)(card->txbd_ring_pbase));
-+	host_spec->txbd_addr_hi =
-+			cpu_to_le32((u32)(((u64)card->txbd_ring_pbase) >> 32));
-+	host_spec->txbd_count = cpu_to_le32(MWIFIEX_MAX_TXRX_BD);
-+	host_spec->rxbd_addr_lo = cpu_to_le32((u32)(card->rxbd_ring_pbase));
-+	host_spec->rxbd_addr_hi =
-+			cpu_to_le32((u32)(((u64)card->rxbd_ring_pbase) >> 32));
-+	host_spec->rxbd_count = cpu_to_le32(MWIFIEX_MAX_TXRX_BD);
-+	host_spec->evtbd_addr_lo = cpu_to_le32((u32)(card->evtbd_ring_pbase));
-+	host_spec->evtbd_addr_hi =
-+			cpu_to_le32((u32)(((u64)card->evtbd_ring_pbase) >> 32));
-+	host_spec->evtbd_count = cpu_to_le32(MWIFIEX_MAX_EVT_BD);
- 	if (card->sleep_cookie_vbase) {
- 		host_spec->sleep_cookie_addr_lo =
--						(u32)(card->sleep_cookie_pbase);
--		host_spec->sleep_cookie_addr_hi =
--				 (u32)(((u64)(card->sleep_cookie_pbase)) >> 32);
-+				cpu_to_le32((u32)(card->sleep_cookie_pbase));
-+		host_spec->sleep_cookie_addr_hi = cpu_to_le32((u32)(((u64)
-+					(card->sleep_cookie_pbase)) >> 32));
- 		mwifiex_dbg(priv->adapter, INFO,
- 			    "sleep_cook_lo phy addr: 0x%x\n",
- 			    host_spec->sleep_cookie_addr_lo);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index ccf54932..90e191b 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -962,7 +962,7 @@ static int mwifiex_ret_uap_sta_list(struct mwifiex_private *priv,
- 	int i;
- 	struct mwifiex_sta_node *sta_node;
- 
--	for (i = 0; i < sta_list->sta_count; i++) {
-+	for (i = 0; i < (le16_to_cpu(sta_list->sta_count)); i++) {
- 		sta_node = mwifiex_get_sta_entry(priv, sta_info->mac);
- 		if (unlikely(!sta_node))
- 			continue;
--- 
-1.9.1
+About the watermark fix.
+It looks like the fix makes the eviction handling in sdio.c
+brcmf_sdio_prec_enq()
+obsolete. The function evicts packets with lower prio to make way for
+packets with
+higher prio. This only kicks in when the queue is full.
 
+if (pktq_pfull(q, prec) || pktq_full(q))
+  // Give precedence
+If pktq_full(q) is not full, pktq_pfull(q, prec) will not get full either
+
+With the watermark-fix in place the queue never gets full.
+
+>
+> Regards,
+> Arend
