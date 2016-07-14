@@ -1,34 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16949 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756887AbcGJLFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2016 07:05:32 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Niklas Sombert <niklas@ytvwld.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>
-Subject: RE: Problem: iwlwifi: Microcode SW error detected. Restarting
- 0x2000000
-Date: Sun, 10 Jul 2016 11:05:28 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB346689061@hasmsx107.ger.corp.intel.com> (sfid-20160710_130536_020472_71ED948C)
-References: <57820E4A.3010102@ytvwld.de>
- <0BA3FCBA62E2DC44AF3030971E174FB346688F92@hasmsx107.ger.corp.intel.com>
- <57822467.30500@ytvwld.de>
-In-Reply-To: <57822467.30500@ytvwld.de>
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:48614 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750739AbcGNHNM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jul 2016 03:13:12 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Coelho\, Luciano" <luciano.coelho@intel.com>,
+	"Berg\, Johannes" <johannes.berg@intel.com>,
+	"Ivgi\, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon\, Sara" <sara.sharon@intel.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless ucode is loaded
+References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
+	<CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
+	<5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>
+	<57840214.8000904@redhat.com> <87eg6yav5e.fsf@purkki.adurom.net>
+	<57861172.30103@redhat.com>
+Date: Thu, 14 Jul 2016 10:13:04 +0300
+In-Reply-To: <57861172.30103@redhat.com> (Prarit Bhargava's message of "Wed,
+	13 Jul 2016 06:01:22 -0400")
+Message-ID: <87shvcy9of.fsf@kamboji.qca.qualcomm.com> (sfid-20160714_092247_310497_53E0EF0E)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gRW1tYW51ZWwgR3J1bWJhY2ggd3JvdGU6DQo+ID4gQ2FuIHlvdSBwbGVhc2UgdHJ5IHRo
-ZSBuZXdlc3QgZmlybXdhcmU/DQo+ID4gaHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4
-L2tlcm5lbC9naXQvaXdsd2lmaS9saW51eC0NCj4gZmlybXdhcmUuZ2l0L2NvbW1pdC8/aWQ9NzIy
-NjY4NDZmYWE3OGI5MzlhODY0ODQyYTJhYTZlY2Q4ZmU2OTg5Yg0KPiANCj4gWWVzLCBJJ3ZlIHRy
-aWVkIHRoZSBuZXdlc3QgZmlybXdhcmUuIFRoZSBwcm9ibGVtIHN0aWxsIHBlcnNpc3RzLg0KPiAN
-Cj4gPiBZb3Ugc2hvdWxkIHBpY2sgdXAgdGhlIC0xNy51Y29kZSB2ZXJzaW9uLg0KPiA+IE5vdGUg
-dGhhdCBJIGNhbid0IGtub3cgaWYgeW91ciBkZXZpY2UgaXMgNzI2NSBvciA3MjY1RC4gSW4gYWJs
-ZSB0byBkZXRlcm1pbmUsDQo+IHBsZWFzZSBjaGVjazoNCj4gPg0KPiBodHRwczovL3dpcmVsZXNz
-Lndpa2kua2VybmVsLm9yZy9lbi91c2Vycy9kcml2ZXJzL2l3bHdpZmkjYW5kXzcyNjVfc3VwcG9y
-dA0KPiANCj4gWWVzLCBpdCdzIGEgNzI2NUQuDQoNCkluIHRoYXQgY2FzZSwgcGxlYXNlIHRyeSAt
-MjEudWNvZGUgYW5kIHNlbmQgbWUgYWdhaW4gdGhlIG91dHB1dCBvZiB0aGUgZmlybXdhcmUgZXJy
-b3IuDQoNCg0KPiANCj4gPiBUaGFuayB5b3UhDQo+IA0KPiBUaGFuayB5b3UuDQoNCg==
+Prarit Bhargava <prarit@redhat.com> writes:
+
+> On 07/13/2016 02:50 AM, Kalle Valo wrote:
+>> Prarit Bhargava <prarit@redhat.com> writes:
+>> 
+>>>> We implement thermal zone because we do support it, but the problem is
+>>>> that we need the firmware to be loaded for that. So you can argue that
+>>>> we should register *later* when the firmware is loaded. But this is
+>>>> really not helping all that much because the firmware can also be
+>>>> stopped at any time. So you'd want us to register / unregister the
+>>>> thermal zone anytime the firmware is loaded / unloaded?
+>>>
+>>> You might have to do that.  I think that if the firmware enables a feature then
+>>> the act of loading the firmware should run the code that enables the feature.
+>>> IMO of course.
+>> 
+>> But I suspect that the iwlwifi firmware is loaded during interface up
+>> (and unloaded during interface down) and in that case
+>> register/unregister would be happening all the time. 
+>
+> You make it sound like the interface is coming and going a 1000 times a second.
+>  Maybe this happens once during runtime & during suspend/resume
+>  cycles?
+
+Of course it doesn't happen 1000 times a second but it depends on user
+space behaviour. In some cases, when the wlan interface is always up,
+the firmware is loaded only once. But in some cases the user space might
+change the interface state more frequently.
+
+More so registering services like thermal zone should happen during
+driver probe time, not during interface up event.
+
+> What about the cases when the firmware isn't present (and that's what
+> lead me to this bug)?
+
+In that case the kernel could return a predefined error value like
+-EGAIN or -ENOTDOWN so that the user space knows that a value is not
+available at this time (but might be available later).
+
+-- 
+Kalle Valo
