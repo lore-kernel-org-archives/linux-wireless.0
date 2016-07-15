@@ -1,80 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:32890 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751168AbcGEMXV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34023 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932142AbcGOHWc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 08:23:21 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Tue,  5 Jul 2016 15:23:07 +0300
-Message-Id: <1467721394-8195-1-git-send-email-luca@coelho.fi> (sfid-20160705_142325_234148_69051442)
-Subject: [PATCH 0/7] mac80211/cfg80211: a bunch of patches from our internal tree
+	Fri, 15 Jul 2016 03:22:32 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2016-07-13
+References: <87a8hlz91i.fsf@kamboji.qca.qualcomm.com>
+	<20160714.174155.39693398036427861.davem@davemloft.net>
+Date: Fri, 15 Jul 2016 10:22:28 +0300
+In-Reply-To: <20160714.174155.39693398036427861.davem@davemloft.net> (David
+	Miller's message of "Thu, 14 Jul 2016 17:41:55 -0700 (PDT)")
+Message-ID: <87bn1zxt57.fsf@kamboji.qca.qualcomm.com> (sfid-20160715_092301_007365_C80DD45F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+David Miller <davem@davemloft.net> writes:
 
-Hi Johannes,
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Wed, 13 Jul 2016 21:29:13 +0300
+>
+>> here's a pull request for net-next. This time there are few conflicts
+>> due to the cfg80211 scan API changes, and one of them is easy to miss,
+>> so please pay extra attention to them. Otherwise there's not nothing
+>> really out of ordinary. Please note that I also pulled wireless-drivers
+>> to wireless-drivers-next to reduce the amount of conflicts.
+>> 
+>> So about the conflicts, the obvious are notified by git:
+>  ...
+>> I have attached the output from git diff as an example how to resolve
+>> this, hopefully that helps. Please let me know if there are any problems
+>> or if you want to handle these differently.
+>
+> Thanks for all of the conflict resolution info, it really helped.
+>
+> I pushed this all out, please double check my work.
 
-These are some cfg80211/mac80211 patches that were pending upstreaming
-in our internal tree (I think you know about them ;).
-
-Please let me know if everything is okay.
-
-There is a couple of checkpatch >80 chars line warnings, which I
-decided to ignore, since fixing them would make things uglier.
-
-One patch required changes in other drivers.  Those changes are
-compile-tested only.
-
-Cheers,
-Luca.
-
-Aviya Erenfeld (1):
-  nl80211: Add API to support VHT MU-MIMO air sniffer
-
-Avraham Stern (2):
-  nl80211: Add info to scan results to support beacon report
-  mac80211: Add support for beacon report radio measurement
-
-Gregory Greenman (1):
-  cfg80211: handle failed skb allocation
-
-Ilan Peer (1):
-  mac80211_hwsim: Add radar bandwidths to the P2P Device combination
-
-Johannes Berg (2):
-  mac80211: report failure to start (partial) scan as scan abort
-  mac80211: parse wide bandwidth channel switch IE with workaround
-
- drivers/net/wireless/ath/ath10k/mac.c         | 14 ++++--
- drivers/net/wireless/ath/ath9k/channel.c      |  5 +-
- drivers/net/wireless/atmel/at76c50x-usb.c     |  5 +-
- drivers/net/wireless/intel/iwlegacy/common.c  |  6 ++-
- drivers/net/wireless/intel/iwlwifi/dvm/scan.c |  6 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 37 +++++++++++---
- drivers/net/wireless/mac80211_hwsim.c         | 36 ++++++--------
- drivers/net/wireless/st/cw1200/scan.c         |  6 ++-
- drivers/net/wireless/ti/wl1251/event.c        |  6 ++-
- drivers/net/wireless/ti/wl1251/main.c         |  6 ++-
- drivers/net/wireless/ti/wlcore/main.c         | 11 ++++-
- drivers/net/wireless/ti/wlcore/scan.c         |  5 +-
- include/net/cfg80211.h                        | 50 ++++++++++++++++---
- include/net/mac80211.h                        |  5 +-
- include/uapi/linux/nl80211.h                  | 71 +++++++++++++++++++++++++++
- net/mac80211/ieee80211_i.h                    |  1 +
- net/mac80211/scan.c                           | 42 ++++++++++++++--
- net/mac80211/spectmgmt.c                      | 45 +++++++----------
- net/wireless/core.c                           |  4 +-
- net/wireless/core.h                           | 12 +++++
- net/wireless/nl80211.c                        | 63 ++++++++++++++++++++++++
- net/wireless/scan.c                           | 18 ++++---
- net/wireless/trace.h                          | 33 ++++++++++---
- net/wireless/util.c                           |  2 +
- 24 files changed, 386 insertions(+), 103 deletions(-)
+Looks good, thanks!
 
 -- 
-2.8.1
-
+Kalle Valo
