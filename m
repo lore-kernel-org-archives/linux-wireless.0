@@ -1,89 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f44.google.com ([209.85.215.44]:35845 "EHLO
-	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752995AbcGSM6v (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36346 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932312AbcGOJGo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 08:58:51 -0400
-Received: by mail-lf0-f44.google.com with SMTP id g62so13471609lfe.3
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 05:58:50 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [RFC] ath10k: silence firmware file probing warnings
-Date: Tue, 19 Jul 2016 15:00:37 +0200
-Message-Id: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com> (sfid-20160719_145855_080368_9188912A)
+	Fri, 15 Jul 2016 05:06:44 -0400
+Received: by mail-wm0-f66.google.com with SMTP id x83so1354694wma.3
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2016 02:06:43 -0700 (PDT)
+From: Alex Briskin <br.shurik@gmail.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Alex Briskin <br.shurik@gmail.com>
+Subject: [PATCH 2/4 v2 iface_work] Further improve radabilty
+Date: Fri, 15 Jul 2016 12:06:34 +0300
+Message-Id: <1468573596-20055-2-git-send-email-br.shurik@gmail.com> (sfid-20160715_110649_911366_7090FC6A)
+In-Reply-To: <1468573596-20055-1-git-send-email-br.shurik@gmail.com>
+References: <1468573596-20055-1-git-send-email-br.shurik@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware files are versioned to prevent older
-driver instances to load unsupported firmware
-blobs. This is reflected with a fallback logic
-which attempts to load several firmware files.
+Refactor ieee80211_is_skb_handled_by_pkt_typ
+Add ieee80211_is_handled_by_frame_control
 
-This however produced a lot of unnecessary
-warnings sometimes confusing users and leading
-them to rename firmware files making things even
-more confusing.
-
-Hence use request_firmware_direct() which does not
-produce extra warnings. This shouldn't really
-break anything because most modern systems don't
-rely on udev/hotplug helpers to load firmware
-files anymore.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Alex Briskin <br.shurik@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c     | 11 +++++------
- drivers/net/wireless/ath/ath10k/testmode.c |  5 ++++-
- 2 files changed, 9 insertions(+), 7 deletions(-)
+ net/mac80211/iface.c | 166 ++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 91 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index e88982921aa3..81bfb71fe876 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -431,7 +431,10 @@ static const struct firmware *ath10k_fetch_fw_file(struct ath10k *ar,
- 		dir = ".";
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index a68cbac..7756eec 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1207,13 +1207,16 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sta_info *sta;
  
- 	snprintf(filename, sizeof(filename), "%s/%s", dir, file);
--	ret = request_firmware(&fw, filename, ar->dev);
-+	ret = request_firmware_direct(&fw, filename, ar->dev);
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot fw request '%s': %d\n",
-+		   filename, ret);
+-	if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
++	switch (skb->pkt_type) {
++	case IEEE80211_SDATA_QUEUE_AGG_START:
+ 		ra_tid = (void *)&skb->cb;
+ 		ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
+-	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
++		break;
++	case IEEE80211_SDATA_QUEUE_AGG_STOP:
+ 		ra_tid = (void *)&skb->cb;
+ 		ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
+-	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
++		break;
++	case IEEE80211_SDATA_QUEUE_RX_AGG_START:
+ 		rx_agg = (void *)&skb->cb;
+ 		mutex_lock(&local->sta_mtx);
+ 		sta = sta_info_get_bss(sdata, rx_agg->addr);
+@@ -1223,7 +1226,8 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
+ 							IEEE80211_MAX_AMPDU_BUF,
+ 							false, true);
+ 		mutex_unlock(&local->sta_mtx);
+-	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
++		break;
++	case IEEE80211_SDATA_QUEUE_RX_AGG_STOP:
+ 		rx_agg = (void *)&skb->cb;
+ 		mutex_lock(&local->sta_mtx);
+ 		sta = sta_info_get_bss(sdata, rx_agg->addr);
+@@ -1233,20 +1237,99 @@ static bool ieee80211_is_skb_handled_by_pkt_type(struct sk_buff *skb,
+ 						       WLAN_BACK_RECIPIENT, 0,
+ 						       false);
+ 		mutex_unlock(&local->sta_mtx);
+-	} else {
++		break;
++	default:
+ 		return false;
+ 	}
+ 	/*will return true if pkt_type found and handled */
+ 	return true;
+ }
+ 
++static bool ieee80211_is_handled_by_frame_control(struct sk_buff *skb,
++						  struct ieee80211_sub_if_data
++						  *sdata)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++	struct ieee80211_mgmt *mgmt = (void *)skb->data;
 +
- 	if (ret)
- 		return ERR_PTR(ret);
- 
-@@ -1089,12 +1092,8 @@ int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
- 	/* first fetch the firmware file (firmware-*.bin) */
- 	fw_file->firmware = ath10k_fetch_fw_file(ar, ar->hw_params.fw.dir,
- 						 name);
--	if (IS_ERR(fw_file->firmware)) {
--		ath10k_err(ar, "could not fetch firmware file '%s/%s': %ld\n",
--			   ar->hw_params.fw.dir, name,
--			   PTR_ERR(fw_file->firmware));
-+	if (IS_ERR(fw_file->firmware))
- 		return PTR_ERR(fw_file->firmware);
--	}
- 
- 	data = fw_file->firmware->data;
- 	len = fw_file->firmware->size;
-diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
-index 120f4234d3b0..fe49e7a83d00 100644
---- a/drivers/net/wireless/ath/ath10k/testmode.c
-+++ b/drivers/net/wireless/ath/ath10k/testmode.c
-@@ -149,7 +149,10 @@ static int ath10k_tm_fetch_utf_firmware_api_1(struct ath10k *ar,
- 		 ar->hw_params.fw.dir, ATH10K_FW_UTF_FILE);
- 
- 	/* load utf firmware image */
--	ret = request_firmware(&fw_file->firmware, filename, ar->dev);
-+	ret = request_firmware_direct(&fw_file->firmware, filename, ar->dev);
-+	ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode fw request '%s': %d\n",
-+		   filename, ret);
++	if (ieee80211_is_action(mgmt->frame_control) &&
++	    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
++		int len = skb->len;
 +
- 	if (ret) {
- 		ath10k_warn(ar, "failed to retrieve utf firmware '%s': %d\n",
- 			    filename, ret);
++		mutex_lock(&local->sta_mtx);
++		sta = sta_info_get_bss(sdata, mgmt->sa);
++		if (sta) {
++			switch (mgmt->u.action.u.addba_req.action_code) {
++			case WLAN_ACTION_ADDBA_REQ:
++				ieee80211_process_addba_request(local, sta,
++								mgmt, len);
++				break;
++			case WLAN_ACTION_ADDBA_RESP:
++				ieee80211_process_addba_resp(local, sta,
++							     mgmt, len);
++				break;
++			case WLAN_ACTION_DELBA:
++				ieee80211_process_delba(sdata, sta, mgmt, len);
++				break;
++			default:
++				WARN_ON(1);
++				break;
++			}
++		}
++		mutex_unlock(&local->sta_mtx);
++	} else if (ieee80211_is_action(mgmt->frame_control) &&
++		   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
++		switch (mgmt->u.action.u.vht_group_notif.action_code) {
++		case WLAN_VHT_ACTION_GROUPID_MGMT:
++			ieee80211_process_mu_groups(sdata, mgmt);
++			break;
++		default:
++			WARN_ON(1);
++			break;
++		}
++	} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
++		struct ieee80211_hdr *hdr = (void *)mgmt;
++		/*
++		 * So the frame isn't mgmt, but frame_control
++		 * is at the right place anyway, of course, so
++		 * the if statement is correct.
++		 *
++		 * Warn if we have other data frame types here,
++		 * they must not get here.
++		 */
++		WARN_ON(hdr->frame_control &
++			cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
++		WARN_ON(!(hdr->seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)));
++		/*
++		 * This was a fragment of a frame, received while
++		 * a block-ack session was active. That cannot be
++		 * right, so terminate the session.
++		 */
++		mutex_lock(&local->sta_mtx);
++		sta = sta_info_get_bss(sdata, mgmt->sa);
++		if (sta) {
++			u16 tid = *ieee80211_get_qos_ctl(hdr) &
++			    IEEE80211_QOS_CTL_TID_MASK;
++
++			__ieee80211_stop_rx_ba_session(sta, tid,
++						       WLAN_BACK_RECIPIENT,
++						       WLAN_REASON_QSTA_REQUIRE_SETUP,
++						       true);
++		}
++		mutex_unlock(&local->sta_mtx);
++	} else {
++		return false;
++	}
++	return true;
++}
++
+ static void ieee80211_iface_work(struct work_struct *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+ 		container_of(work, struct ieee80211_sub_if_data, work);
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+-	struct sta_info *sta;
+ 
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+@@ -1259,77 +1342,10 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 
+ 	/* first process frames */
+ 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
+-		struct ieee80211_mgmt *mgmt = (void *)skb->data;
+-
+ 		if (ieee80211_is_skb_handled_by_pkt_type(skb, sdata)) {
+ 			goto free_skb;
+-		} else if (ieee80211_is_action(mgmt->frame_control) &&
+-			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+-			int len = skb->len;
+-
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, mgmt->sa);
+-			if (sta) {
+-				switch (mgmt->u.action.u.addba_req.action_code) {
+-				case WLAN_ACTION_ADDBA_REQ:
+-					ieee80211_process_addba_request(
+-							local, sta, mgmt, len);
+-					break;
+-				case WLAN_ACTION_ADDBA_RESP:
+-					ieee80211_process_addba_resp(local, sta,
+-								     mgmt, len);
+-					break;
+-				case WLAN_ACTION_DELBA:
+-					ieee80211_process_delba(sdata, sta,
+-								mgmt, len);
+-					break;
+-				default:
+-					WARN_ON(1);
+-					break;
+-				}
+-			}
+-			mutex_unlock(&local->sta_mtx);
+-		} else if (ieee80211_is_action(mgmt->frame_control) &&
+-			   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
+-			switch (mgmt->u.action.u.vht_group_notif.action_code) {
+-			case WLAN_VHT_ACTION_GROUPID_MGMT:
+-				ieee80211_process_mu_groups(sdata, mgmt);
+-				break;
+-			default:
+-				WARN_ON(1);
+-				break;
+-			}
+-		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
+-			struct ieee80211_hdr *hdr = (void *)mgmt;
+-			/*
+-			 * So the frame isn't mgmt, but frame_control
+-			 * is at the right place anyway, of course, so
+-			 * the if statement is correct.
+-			 *
+-			 * Warn if we have other data frame types here,
+-			 * they must not get here.
+-			 */
+-			WARN_ON(hdr->frame_control &
+-					cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
+-			WARN_ON(!(hdr->seq_ctrl &
+-					cpu_to_le16(IEEE80211_SCTL_FRAG)));
+-			/*
+-			 * This was a fragment of a frame, received while
+-			 * a block-ack session was active. That cannot be
+-			 * right, so terminate the session.
+-			 */
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, mgmt->sa);
+-			if (sta) {
+-				u16 tid = *ieee80211_get_qos_ctl(hdr) &
+-						IEEE80211_QOS_CTL_TID_MASK;
+-
+-				__ieee80211_stop_rx_ba_session(
+-					sta, tid, WLAN_BACK_RECIPIENT,
+-					WLAN_REASON_QSTA_REQUIRE_SETUP,
+-					true);
+-			}
+-			mutex_unlock(&local->sta_mtx);
++		} else if (ieee80211_is_handled_by_frame_control(skb, sdata)) {
++			goto free_skb;
+ 		} else switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_STATION:
+ 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
 -- 
-2.1.4
+2.5.0
 
