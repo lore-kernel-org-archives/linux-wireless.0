@@ -1,69 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54369 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754134AbcGHKdV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 06:33:21 -0400
-Message-ID: <1467973953.4837.3.camel@sipsolutions.net> (sfid-20160708_123325_459115_126EA0D1)
-Subject: Re: [PATCH 0/5] Improve wireless netdev detection
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-Date: Fri, 08 Jul 2016 12:32:33 +0200
-In-Reply-To: <1467875330-7835-1-git-send-email-denkenz@gmail.com> (sfid-20160707_010855_453684_CF867D15)
-References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
-	 (sfid-20160707_010855_453684_CF867D15)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:33917 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752503AbcGOHVc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jul 2016 03:21:32 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, David Miller <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2016-07-13
+References: <201607151143.oxJDgbga%fengguang.wu@intel.com>
+Date: Fri, 15 Jul 2016 10:21:23 +0300
+In-Reply-To: <201607151143.oxJDgbga%fengguang.wu@intel.com> (kbuild test
+	robot's message of "Fri, 15 Jul 2016 11:09:52 +0800")
+Message-ID: <87furbxt70.fsf@kamboji.qca.qualcomm.com> (sfid-20160715_092136_277918_58D04B1C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-07-07 at 02:08 -0500, Denis Kenzior wrote:
-> The current mechanism to detect hot-plug / unplug of wireless devices
-> is
-> somewhat arcane.  One has to listen to NEW_WIPHY/DEL_WIPHY events
-> over
-> nl80211 as well as RTM_NEWLINK / RTM_DELLINK events over rtnl, then
-> somehow find a correlation between these events.  This involves
-> userspace
-> sending GET_INTERFACE or GET_WIPHY commands to the kernel, which
-> incurs
-> additional roundtrips.
-> 
-> This patch series proposes that NEW_INTERFACE and DEL_INTERFACE
-> events are
-> always emitted, regardless of whether a netdev was added/removed by
-> the
-> driver or explicitly via NEW_INTERFACE/DEL_INTERFACE commands.
-> 
-> One side effect of this approach is that multiple
-> NEW_INTERFACE/DEL_INTERFACE
-> events might be generated for P2P interfaces.  Once when a wdev is
-> created
-> or destroyed, and once when the associated p2p netdev is connecte or 
-> disconnected.  
+kbuild test robot <lkp@intel.com> writes:
 
-I think you got some things mixed up. Are you talking of P2P GO/client
-interfaces, which have netdevs, but are really the same as AP/BSS
-client and thus the issue here would affect the others? Or are you
-talking about the P2P-Device wdev? but that has no netdev.
+> Hi,
+>
+> [auto build test ERROR on wireless-drivers-next/master]
+> [cannot apply to v4.7-rc7 next-20160714]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Kalle-Valo/pull-request-wireless-drivers-next-2016-07-13/20160714-023750
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+> config: sparc64-allmodconfig (attached as .config)
+> compiler: sparc64-linux-gnu-gcc (Debian 5.3.1-8) 5.3.1 20160205
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=sparc64 
+>
+> All error/warnings (new ones prefixed by >>):
+>
+>    drivers/net/wireless/marvell/mwifiex/scan.c: In function 'mwifiex_cancel_scan':
+>>> drivers/net/wireless/marvell/mwifiex/scan.c:2024:12: error: variable 'info' has initializer but incomplete type
+>         struct cfg80211_scan_info info = {
 
-> It is likely that only the caller of P2P oriented
-> NEW_INTERFACE / DEL_INTERFACE commands is interested in the status of
-> these
-> operations.  E.g. the caller is / should be using SOCKET_OWNER
-> attribute.
-> Thus one possibility is to not emit NEW_INTERFACE/DEL_INTERFACE
-> events in
-> such cases.
-> 
+The diff was just an example to help Dave fix few conflicts in my pull
+request, it was not meant to be applied directly.
 
-The breaking up of patches is also confusing. You seem to be
-introducing things in the first, then breaking them again, and then
-fixing them?
-
-Couldn't the whole thing be done in one or maybe two (new/del)
-patch(es)?
-
-(You obviously also need to sign off your patches, see the kernel
-Documentation/)
-
-johannes
+-- 
+Kalle Valo
