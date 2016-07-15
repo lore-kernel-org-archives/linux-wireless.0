@@ -1,107 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:53347 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751253AbcGMUEe (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36282 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750996AbcGOTIW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 16:04:34 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Yaniv Machani <yanivma@ti.com>, Meirav Kama <meiravk@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH v3 3/3] mac80211: mesh: fixed HT ies in beacon template
-Date: Wed, 13 Jul 2016 23:07:48 +0300
-Message-ID: <20160713200755.26839-1-yanivma@ti.com> (sfid-20160713_220440_981319_03829C2B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 15 Jul 2016 15:08:22 -0400
+Received: by mail-oi0-f65.google.com with SMTP id u68so9992582oie.3
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2016 12:08:22 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [RFC] rfkill: Add new ACPI device for Realtek serial BT
+Date: Fri, 15 Jul 2016 14:08:16 -0500
+Message-Id: <1468609696-8828-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160715_210832_697016_54F9CDCC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The HT capab info field inside the HT capab IE of the mesh beacon
-is incorrect (in the case of 20MHz channel width).
-To fix this driver will check configuration from cfg and
-will build it accordingly.
+The Realtek RTL8723BS chips, which are connected via SDIO, also contain
+a serial Bluetooth device. In order for BT to work, the device must be
+added to the acpi_device_id table.
 
-Signed-off-by: Meirav Kama <meiravk@ti.com>
-Signed-off-by: Yaniv Machani <yanivma@ti.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
-V3 - Fixes redundant spaces,empty lines and added FALLTHROUGH note.
 
- net/mac80211/mesh.c | 33 ++++++++++++++++++++++++++++++++-
- net/mac80211/util.c |  3 ---
- 2 files changed, 32 insertions(+), 4 deletions(-)
+I have no idea if this device should be added here, or if the device could
+be added to some structure supplied at device startup. If anyone has any
+suggestions, please let me know.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 9214bc1..6a67049 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -422,6 +422,7 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
- 	enum nl80211_band band = ieee80211_get_sdata_band(sdata);
- 	struct ieee80211_supported_band *sband;
- 	u8 *pos;
-+	u16 cap;
- 
- 	sband = local->hw.wiphy->bands[band];
- 	if (!sband->ht_cap.ht_supported ||
-@@ -430,11 +431,41 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
- 	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
- 		return 0;
- 
-+	/* determine capability flags */
-+	cap = sband->ht_cap.cap;
-+
-+	/* if channel width is 20MHz - configure HT capab accordingly*/
-+	if (sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20) {
-+		cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-+		cap &= ~IEEE80211_HT_CAP_DSSSCCK40;
-+	}
-+
-+	/* set SM PS mode properly */
-+	cap &= ~IEEE80211_HT_CAP_SM_PS;
-+	switch (sdata->smps_mode) {
-+	case IEEE80211_SMPS_AUTOMATIC:
-+	case IEEE80211_SMPS_NUM_MODES:
-+		WARN_ON(1);
-+		/* FALLTHROUGH */
-+	case IEEE80211_SMPS_OFF:
-+		cap |= WLAN_HT_CAP_SM_PS_DISABLED <<
-+			IEEE80211_HT_CAP_SM_PS_SHIFT;
-+		break;
-+	case IEEE80211_SMPS_STATIC:
-+		cap |= WLAN_HT_CAP_SM_PS_STATIC <<
-+			IEEE80211_HT_CAP_SM_PS_SHIFT;
-+		break;
-+	case IEEE80211_SMPS_DYNAMIC:
-+		cap |= WLAN_HT_CAP_SM_PS_DYNAMIC <<
-+			IEEE80211_HT_CAP_SM_PS_SHIFT;
-+		break;
-+	}
-+
- 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
- 		return -ENOMEM;
- 
- 	pos = skb_put(skb, 2 + sizeof(struct ieee80211_ht_cap));
--	ieee80211_ie_build_ht_cap(pos, &sband->ht_cap, sband->ht_cap.cap);
-+	ieee80211_ie_build_ht_cap(pos, &sband->ht_cap, cap);
- 
- 	return 0;
- }
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 42bf0b6..5375a82 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2349,10 +2349,7 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
- 	ht_oper->operation_mode = cpu_to_le16(prot_mode);
- 	ht_oper->stbc_param = 0x0000;
- 
--	/* It seems that Basic MCS set and Supported MCS set
--	   are identical for the first 10 bytes */
- 	memset(&ht_oper->basic_set, 0, 16);
--	memcpy(&ht_oper->basic_set, &ht_cap->mcs, 10);
- 
- 	return pos + sizeof(struct ieee80211_ht_operation);
- }
+Thanks,
+
+Larry
+---
+ net/rfkill/rfkill-gpio.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+index 76c01cb..50ca65e 100644
+--- a/net/rfkill/rfkill-gpio.c
++++ b/net/rfkill/rfkill-gpio.c
+@@ -163,6 +163,7 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+ static const struct acpi_device_id rfkill_acpi_match[] = {
+ 	{ "BCM4752", RFKILL_TYPE_GPS },
+ 	{ "LNV4752", RFKILL_TYPE_GPS },
++	{ "OBDA8723", RFKILL_TYPE_BLUETOOTH },
+ 	{ },
+ };
+ MODULE_DEVICE_TABLE(acpi, rfkill_acpi_match);
 -- 
-2.9.0
+2.6.6
 
