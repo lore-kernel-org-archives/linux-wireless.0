@@ -1,39 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:36485 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752117AbcGSCQ1 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33834 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751690AbcGONho (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 22:16:27 -0400
-Received: by mail-pf0-f174.google.com with SMTP id h186so1917967pfg.3
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2016 19:16:27 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: End the MPSP even if EOSP frame was not
- received
-To: Bob Copeland <me@bobcopeland.com>
-References: <1468393475-2483-1-git-send-email-masashi.honma@gmail.com>
- <20160713135021.GE7819@localhost>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org, j@w1.fi
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <3ad771da-f4db-e29d-7b44-7e8a0865e3da@gmail.com> (sfid-20160719_041634_161472_8E7F0E5F)
-Date: Tue, 19 Jul 2016 11:16:24 +0900
+	Fri, 15 Jul 2016 09:37:44 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6FDb6mg011238
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2016 06:37:43 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0b-0016f401.pphosted.com with ESMTP id 246gatm24s-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2016 06:37:43 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/2] mwifiex: update command response skb length correctly
+Date: Fri, 15 Jul 2016 19:07:05 +0530
+Message-ID: <1468589825-9188-2-git-send-email-akarwar@marvell.com> (sfid-20160715_153746_689725_5453E832)
+In-Reply-To: <1468589825-9188-1-git-send-email-akarwar@marvell.com>
+References: <1468589825-9188-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <20160713135021.GE7819@localhost>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016年07月13日 22:50, Bob Copeland wrote:
->
-> Hmm, my recollection on this stuff is a little fuzzy.  So we only get
-> here if the peer sta is in doze state, but it shouldn't do that if we
-> are in an MPSP.
-Yes. In the MPSP, local peer only transmits frame when opposite peer is in
-AWAKE. This patch expects we lost opposite peer accidentally
-(AC adapter unplugged).
+Same skb is being reused for storing command response from firmware
+in PCIe chipsets. There was a bug while updating the skb length.
+This patch ensures skb length correctly gets updated based on rx_len.
 
->    So, is the real problem that we don't wait for an ack
-> from the peer before marking ourselves in a MPSP?
->
-This patch does not fix starting MPSP, this patch fixes ending of MPSP.
-Without this patch, local peer continues MPSP even if we lost opposite peer
-accidentally.
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 38bd62e..a6af85d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -1616,6 +1616,7 @@ static int mwifiex_pcie_process_cmd_complete(struct mwifiex_adapter *adapter)
+ 
+ 	pkt_len = *((__le16 *)skb->data);
+ 	rx_len = le16_to_cpu(pkt_len);
++	skb_put(skb, MWIFIEX_UPLD_SIZE - skb->len);
+ 	skb_trim(skb, rx_len);
+ 	skb_pull(skb, INTF_HEADER_LEN);
+ 
+-- 
+1.9.1
 
