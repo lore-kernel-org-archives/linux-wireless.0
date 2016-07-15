@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58595 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932094AbcFBNOd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 2 Jun 2016 09:14:33 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"leroi.lists@gmail.com" <leroi.lists@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [RFC/RFT] ath10k: disable wake_tx_queue for older devices
-Date: Thu, 2 Jun 2016 13:14:27 +0000
-Message-ID: <87inxrzqa5.fsf@kamboji.qca.qualcomm.com> (sfid-20160602_151437_379955_82D1D760)
-References: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com>
-In-Reply-To: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 17 May 2016 14:47:01 +0200")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:43911 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932764AbcGOMOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jul 2016 08:14:17 -0400
+Message-ID: <5788D397.9030904@redhat.com> (sfid-20160715_141422_394015_B68A9045)
+Date: Fri, 15 Jul 2016 08:14:15 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
+ ucode is loaded
+References: <1468250301-10357-1-git-send-email-prarit@redhat.com> <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com> <5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com> <20160714092408.GA27271@redhat.com> <0BA3FCBA62E2DC44AF3030971E174FB3466901DA@hasmsx107.ger.corp.intel.com> <20160715112552.GB6939@redhat.com>
+In-Reply-To: <20160715112552.GB6939@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
 
-> Some setups suffer performance regressions with
-> current wake_tx_queue implementation.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
-> Hi Roman,
->
-> Can you give this patch a try and see if it helps
-> with your performance problems, please?
 
-Did anyone seeing the performance regression manage to test this? It
-would be good to get feedback, good or bad, before I push this to 4.7.
+On 07/15/2016 07:25 AM, Stanislaw Gruszka wrote:
+> On Thu, Jul 14, 2016 at 09:44:22AM +0000, Grumbach, Emmanuel wrote:
+>>> If I understad correctly this error happen 100% of the time, not only during
+>>> init. Hence seems there is an issue here, i.e. cur_ucode is not marked
+>>> correctly as IWL_UCODE_REGULAR or iwl_mvm_get_temp() fail 100% of the
+>>> time (iwl_mvm_is_tt_in_fw() incorrecly return true on Prarit device ? ).
+>>
+>> Cur_ucode will not be IWL_UCODE_REGULAR until you load the firmware which
+>> will happen upon ifup.
+> 
+> Then creating thermal_device on ifup looks more reasonable to me.
+> Otherwise we can create device that can be non-functional virtually
+> forever, i.e. when soft RFKILL is enabled. However I admit that
+> creating thermal_device when HW is detected has some advantages
+> too.
 
-Full patch here:
+That's my plan right now.  Unfortunately something else in the kernel seems
+recently broken and is preventing me from testing.  I will get back to this
+early next week.
 
-https://patchwork.kernel.org/patch/9111981/
-
--- 
-Kalle Valo
+P.
+> 
+> Stanislaw
+> 
