@@ -1,33 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eng.riverbed.com ([208.70.196.45]:20673 "EHLO
-	smtp1.riverbed.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751214AbcG0NTF (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34055 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751690AbcGONhh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 09:19:05 -0400
-To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Cc: kvalo@qca.qualcomm.com
-From: Eduardo Abinader <eduardo.abinader@riverbed.com>
-Subject: [PATCH 0/1 V3] ath9k: consider return code on
- ar9300_eeprom_restore_flash
-Message-ID: <27296308-1c21-2eb7-f067-d185fcba48a5@riverbed.com> (sfid-20160727_151912_829557_BE7EFD32)
-Date: Wed, 27 Jul 2016 15:19:01 +0200
+	Fri, 15 Jul 2016 09:37:37 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6FDbS7H028969
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2016 06:37:36 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 246garbyv9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Fri, 15 Jul 2016 06:37:36 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/2] mwifiex: fix PCIe legacy interrupt problem
+Date: Fri, 15 Jul 2016 19:07:04 +0530
+Message-ID: <1468589825-9188-1-git-send-email-akarwar@marvell.com> (sfid-20160715_153740_892046_96698CB0)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kale,
+In corner case, we may end up processing same interrupt twice.
+We have a logic to read pending interrupts at the end of interrupt
+processing routine. It has a race with interrupts read in interrupt
+handler. This patch solves the problem by ORing the interrupt bitmap
+in this case.
 
-Just added the two error codes you asked:
-https://lists.ath9k.org/pipermail/ath9k-devel/2016-July/014686.html
+The symptom for this bug is below messages in dmesg log.
 
-Thanks.
+[   11.522123] mwifiex_pcie 0000:01:00.0: CMD_RESP: invalid cmd resp
+[   11.680412] mwifiex_pcie 0000:01:00.0: There is no command but got cmdrsp
 
-Eduardo Abinader (1):
-  ath9k: consider return code on ar9300_eeprom_restore_flash
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=109681
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index d61d4ad..38bd62e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2300,6 +2300,12 @@ static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
+ 			}
+ 
+ 		}
++		if (!card->msi_enable) {
++			spin_lock_irqsave(&adapter->int_lock, flags);
++			pcie_ireg |= adapter->int_status;
++			adapter->int_status = 0;
++			spin_unlock_irqrestore(&adapter->int_lock, flags);
++		}
+ 	}
+ 	mwifiex_dbg(adapter, INTR,
+ 		    "info: cmd_sent=%d data_sent=%d\n",
 -- 
-2.5.0
+1.9.1
+
