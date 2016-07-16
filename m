@@ -1,96 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:36167 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754441AbcGFPZM (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34525 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751685AbcGPRVg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 11:25:12 -0400
-Received: by mail-oi0-f66.google.com with SMTP id x6so32797233oif.3
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 08:25:12 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
-Date: Wed,  6 Jul 2016 18:25:20 -0500
-Message-Id: <1467847520-4026-1-git-send-email-denkenz@gmail.com> (sfid-20160706_172521_400394_B6D85A0E)
+	Sat, 16 Jul 2016 13:21:36 -0400
+Received: by mail-wm0-f68.google.com with SMTP id q128so6411471wma.1
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2016 10:21:36 -0700 (PDT)
+From: Alex Briskin <br.shurik@gmail.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Alex Briskin <br.shurik@gmail.com>
+Subject: [PATCH 3/3 v5] mac80211: Refactor ieee80211_iface_work
+Date: Sat, 16 Jul 2016 20:21:27 +0300
+Message-Id: <1468689687-18943-3-git-send-email-br.shurik@gmail.com> (sfid-20160716_192147_458461_92133FBC)
+In-Reply-To: <1468689687-18943-1-git-send-email-br.shurik@gmail.com>
+References: <1468689687-18943-1-git-send-email-br.shurik@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows GET_INTERFACE dumps to be filtered based on
-NL80211_ATTR_WIPHY or NL80211_ATTR_WDEV.  The documentation for
-GET_INTERFACE mentions that this is possible:
-"Request an interface's configuration; either a dump request on
-a %NL80211_ATTR_WIPHY or ..."
+Added ieee80211_iface_work_handle_vif_type function. Moved the code that
+handles sdata->vif.type from ieee80211_iface_work to the function.
 
-However, this behavior has not been implemented until now.
-
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+Signed-off-by: Alex Briskin <br.shurik@gmail.com>
 ---
- net/wireless/nl80211.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ net/mac80211/iface.c | 44 ++++++++++++++++++++++++--------------------
+ 1 file changed, 24 insertions(+), 20 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5782f71..f39fd4d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2519,15 +2519,47 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 	return -EMSGSIZE;
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c185801..3643430 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1323,6 +1323,27 @@ static int ieee80211_iface_work_handle_frame_control(struct sk_buff *skb,
+ 	return 0;
  }
  
-+static int nl80211_dump_interface_parse(struct sk_buff *skb,
-+				    struct netlink_callback *cb,
-+				    int *filter_wiphy)
++static void ieee80211_iface_work_handle_vif_type(struct sk_buff *skb,
++					 struct ieee80211_sub_if_data *sdata)
 +{
-+	struct nlattr **tb = nl80211_fam.attrbuf;
-+	int ret = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
-+			      tb, nl80211_fam.maxattr, nl80211_policy);
-+	/* ignore parse errors for backward compatibility */
-+	if (ret)
-+		return 0;
-+
-+	if (tb[NL80211_ATTR_WIPHY])
-+		*filter_wiphy = nla_get_u32(tb[NL80211_ATTR_WIPHY]);
-+	if (tb[NL80211_ATTR_WDEV])
-+		*filter_wiphy = nla_get_u64(tb[NL80211_ATTR_WDEV]) >> 32;
-+
-+	return 0;
++	switch (sdata->vif.type) {
++	case NL80211_IFTYPE_STATION:
++		ieee80211_sta_rx_queued_mgmt(sdata, skb);
++		break;
++	case NL80211_IFTYPE_ADHOC:
++		ieee80211_ibss_rx_queued_mgmt(sdata, skb);
++		break;
++	case NL80211_IFTYPE_MESH_POINT:
++		if (!ieee80211_vif_is_mesh(&sdata->vif))
++			break;
++		ieee80211_mesh_rx_queued_mgmt(sdata, skb);
++		break;
++	default:
++		WARN(1, "frame for unexpected interface type");
++		break;
++	}
 +}
 +
- static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *cb)
+ static void ieee80211_iface_work(struct work_struct *work)
  {
- 	int wp_idx = 0;
- 	int if_idx = 0;
- 	int wp_start = cb->args[0];
- 	int if_start = cb->args[1];
-+	int filter_wiphy = cb->args[2];
- 	struct cfg80211_registered_device *rdev;
- 	struct wireless_dev *wdev;
+ 	struct ieee80211_sub_if_data *sdata =
+@@ -1341,28 +1362,11 @@ static void ieee80211_iface_work(struct work_struct *work)
  
-+	if (!wp_start && !if_start && !filter_wiphy) {
-+		int ret;
-+
-+		filter_wiphy = -1;
-+
-+		ret = nl80211_dump_interface_parse(skb, cb, &filter_wiphy);
-+		if (ret)
-+			return ret;
-+
-+		cb->args[2] = filter_wiphy;
-+	}
-+
- 	rtnl_lock();
- 	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
- 		if (!net_eq(wiphy_net(&rdev->wiphy), sock_net(skb->sk)))
-@@ -2536,6 +2568,10 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
- 			wp_idx++;
- 			continue;
+ 	/* first process frames */
+ 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
+-		if (!ieee80211_iface_work_handle_pkt_type(skb, sdata)) {
+-			goto free_skb;
+-		} else if (!ieee80211_iface_work_handle_frame_control(skb, sdata)) {
+-			goto free_skb;
+-		} else switch (sdata->vif.type) {
+-		case NL80211_IFTYPE_STATION:
+-			ieee80211_sta_rx_queued_mgmt(sdata, skb);
+-			break;
+-		case NL80211_IFTYPE_ADHOC:
+-			ieee80211_ibss_rx_queued_mgmt(sdata, skb);
+-			break;
+-		case NL80211_IFTYPE_MESH_POINT:
+-			if (!ieee80211_vif_is_mesh(&sdata->vif))
+-				break;
+-			ieee80211_mesh_rx_queued_mgmt(sdata, skb);
+-			break;
+-		default:
+-			WARN(1, "frame for unexpected interface type");
+-			break;
++		if (ieee80211_iface_work_handle_pkt_type(skb, sdata) ||
++		    ieee80211_iface_work_handle_frame_control(skb, sdata)) {
++			ieee80211_iface_work_handle_vif_type(skb, sdata);
  		}
-+
-+		if (filter_wiphy != -1 && filter_wiphy != rdev->wiphy_idx)
-+			continue;
-+
- 		if_idx = 0;
  
- 		list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
+-free_skb:
+ 		kfree_skb(skb);
+ 	}
+ 
 -- 
-2.7.3
+2.7.4
 
