@@ -1,43 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57330 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755366AbcGHNrF (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35141 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751540AbcGPRGW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 09:47:05 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2] mwifiex: Fix endianness for event TLV type
- TLV_BTCOEX_WL_SCANTIME
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1467275483-24091-1-git-send-email-prasunmaiti87@gmail.com>
-To: Prasun Maiti <prasunmaiti87@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	Linux Next <linux-next@vger.kernel.org>,
-	Linux Kernel <linux-kernel@vger.kernel.org>
-Message-Id: <20160708134703.E88D061154@smtp.codeaurora.org> (sfid-20160708_154709_221141_44CFDB23)
-Date: Fri,  8 Jul 2016 13:47:03 +0000 (UTC)
+	Sat, 16 Jul 2016 13:06:22 -0400
+Received: by mail-wm0-f67.google.com with SMTP id i5so6353261wmg.2
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2016 10:06:21 -0700 (PDT)
+From: Alex Briskin <br.shurik@gmail.com>
+To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
+Cc: Alex Briskin <br.shurik@gmail.com>
+Subject: [PATCH 1/3 v4] mac80211: Refactor ieee80211_iface_work
+Date: Sat, 16 Jul 2016 20:06:09 +0300
+Message-Id: <1468688771-18508-1-git-send-email-br.shurik@gmail.com> (sfid-20160716_190630_152371_8D20BB08)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prasun Maiti <prasunmaiti87@gmail.com> wrote:
-> The two members min_scan_time and max_scan_time of structure
-> "mwifiex_ie_types_btcoex_scan_time" are of two bytes each. The values
-> are assigned directtly from firmware without endian conversion handling.
-> So, wrong datas will get saved in big-endian systems.
-> 
-> This patch converts the values into cpu's byte order before assigning them
-> into the local members.
-> 
-> Signed-off-by: Prasun Maiti <prasunmaiti87@gmail.com>
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+Added ieee80211_iface_work_handle_pkt_type function. Moved part of the
+code that checks skb->pkt_type from ieee80211_iface_work to
+ieee80211_iface_work_handle_pkt_type.
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+Signed-off-by: Alex Briskin <br.shurik@gmail.com>
+---
+ net/mac80211/iface.c | 75 +++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 45 insertions(+), 30 deletions(-)
 
-c18b104dd249 mwifiex: Fix endianness for event TLV type TLV_BTCOEX_WL_SCANTIME
-
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c59af3e..0fc973a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -1198,6 +1198,48 @@ static void ieee80211_if_setup(struct net_device *dev)
+ 	dev->destructor = ieee80211_if_free;
+ }
+ 
++static int ieee80211_iface_work_handle_pkt_type(struct sk_buff *skb,
++						struct ieee80211_sub_if_data
++						*sdata)
++{
++	struct ieee80211_ra_tid *ra_tid;
++	struct ieee80211_rx_agg *rx_agg;
++	struct ieee80211_local *local = sdata->local;
++	struct sta_info *sta;
++
++	if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
++		ra_tid = (void *)&skb->cb;
++		ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
++	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
++		ra_tid = (void *)&skb->cb;
++		ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
++	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
++		rx_agg = (void *)&skb->cb;
++		mutex_lock(&local->sta_mtx);
++		sta = sta_info_get_bss(sdata, rx_agg->addr);
++		if (sta)
++			__ieee80211_start_rx_ba_session(sta,
++							0, 0, 0, 1, rx_agg->tid,
++							IEEE80211_MAX_AMPDU_BUF,
++							false, true);
++		mutex_unlock(&local->sta_mtx);
++	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
++		rx_agg = (void *)&skb->cb;
++		mutex_lock(&local->sta_mtx);
++		sta = sta_info_get_bss(sdata, rx_agg->addr);
++		if (sta)
++			__ieee80211_stop_rx_ba_session(sta,
++						       rx_agg->tid,
++						       WLAN_BACK_RECIPIENT, 0,
++						       false);
++		mutex_unlock(&local->sta_mtx);
++	} else {
++		return -EINVAL;
++	}
++	/*will return 0 if pkt_type found and handled */
++	return 0;
++}
++
+ static void ieee80211_iface_work(struct work_struct *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+@@ -1205,8 +1247,6 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct sta_info *sta;
+-	struct ieee80211_ra_tid *ra_tid;
+-	struct ieee80211_rx_agg *rx_agg;
+ 
+ 	if (!ieee80211_sdata_running(sdata))
+ 		return;
+@@ -1221,34 +1261,8 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
+ 		struct ieee80211_mgmt *mgmt = (void *)skb->data;
+ 
+-		if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
+-			ra_tid = (void *)&skb->cb;
+-			ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra,
+-						 ra_tid->tid);
+-		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
+-			ra_tid = (void *)&skb->cb;
+-			ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra,
+-						ra_tid->tid);
+-		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
+-			rx_agg = (void *)&skb->cb;
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, rx_agg->addr);
+-			if (sta)
+-				__ieee80211_start_rx_ba_session(sta,
+-						0, 0, 0, 1, rx_agg->tid,
+-						IEEE80211_MAX_AMPDU_BUF,
+-						false, true);
+-			mutex_unlock(&local->sta_mtx);
+-		} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
+-			rx_agg = (void *)&skb->cb;
+-			mutex_lock(&local->sta_mtx);
+-			sta = sta_info_get_bss(sdata, rx_agg->addr);
+-			if (sta)
+-				__ieee80211_stop_rx_ba_session(sta,
+-							rx_agg->tid,
+-							WLAN_BACK_RECIPIENT, 0,
+-							false);
+-			mutex_unlock(&local->sta_mtx);
++		if (!ieee80211_iface_work_handle_pkt_type(skb, sdata)) {
++			goto free_skb;
+ 		} else if (ieee80211_is_action(mgmt->frame_control) &&
+ 			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
+ 			int len = skb->len;
+@@ -1333,6 +1347,7 @@ static void ieee80211_iface_work(struct work_struct *work)
+ 			break;
+ 		}
+ 
++free_skb:
+ 		kfree_skb(skb);
+ 	}
+ 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9206939/
+2.7.4
 
