@@ -1,71 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35896 "EHLO
-	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754881AbcGHPOb (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:36750 "EHLO
+	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751345AbcGPNma (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 11:14:31 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM SPECIFIC AMBA DRIVER
-	(BCMA)), linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH V2] bcma: define ChipCommon B MII registers
-Date: Fri,  8 Jul 2016 17:14:18 +0200
-Message-Id: <1467990860-10663-1-git-send-email-zajec5@gmail.com> (sfid-20160708_171435_221004_95F536AD)
-In-Reply-To: <1467970091-8308-1-git-send-email-zajec5@gmail.com>
-References: <1467970091-8308-1-git-send-email-zajec5@gmail.com>
+	Sat, 16 Jul 2016 09:42:30 -0400
+Date: Sat, 16 Jul 2016 08:42:27 -0500
+From: Rob Herring <robh@kernel.org>
+To: "Reizer, Eyal" <eyalr@ti.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
+Subject: Re: [PATCH v5] wlcore: spi: add wl18xx support
+Message-ID: <20160716134227.GA327@rob-hp-laptop> (sfid-20160716_154312_301497_A9252169)
+References: <8665E2433BC68541A24DFFCA87B70F5B36156367@DFRE01.ent.ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B36156367@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We don't have access to datasheets to document all the bits but we can
-name these registers at least.
+On Sun, Jul 10, 2016 at 08:32:40AM +0000, Reizer, Eyal wrote:
+> Add support for using with both wl12xx and wl18xx.
+> 
+> - all wilink family needs special init command for entering wspi mode.
+>   extra clock cycles should be sent after the spi init command while the
+>   cs pin is high.
+> - Use inverted chip select for sending a dummy 4 bytes command that
+>   completes the init stage.
+> 
+> Signed-off-by: Eyal Reizer <eyalr@ti.com>
+> ---
+> v1->v2:update device tree bindings configuration
+> v2->v3:revert from manual gpio manipulation. use inverted chip select instead
+> for sending the extra init cycle which, achieves the same hardware purpose.
+> update device tree bindings docucmentation accordingly
+> v3->v4: Remove redundant data form binding documentation and fix chip select
+> number mismatch in wl1271 example
+> v4->v5: Rebase on top of head of wireless-drivers-next
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
-V2: Fix mistake in V1 that used BCMA_CCB_MII_MNG_CMD_DATA instead of
-    BCMA_CCB_MII_MNG_CTL in the second bcma_wait_reg call.
----
- drivers/bcma/driver_chipcommon_b.c          | 9 +++++----
- include/linux/bcma/bcma_driver_chipcommon.h | 3 +++
- 2 files changed, 8 insertions(+), 4 deletions(-)
+Please add acks when reposting.
 
-diff --git a/drivers/bcma/driver_chipcommon_b.c b/drivers/bcma/driver_chipcommon_b.c
-index c20b5f4..57f10b5 100644
---- a/drivers/bcma/driver_chipcommon_b.c
-+++ b/drivers/bcma/driver_chipcommon_b.c
-@@ -33,11 +33,12 @@ static bool bcma_wait_reg(struct bcma_bus *bus, void __iomem *addr, u32 mask,
- void bcma_chipco_b_mii_write(struct bcma_drv_cc_b *ccb, u32 offset, u32 value)
- {
- 	struct bcma_bus *bus = ccb->core->bus;
-+	void __iomem *mii = ccb->mii;
- 
--	writel(offset, ccb->mii + 0x00);
--	bcma_wait_reg(bus, ccb->mii + 0x00, 0x0100, 0x0000, 100);
--	writel(value, ccb->mii + 0x04);
--	bcma_wait_reg(bus, ccb->mii + 0x00, 0x0100, 0x0000, 100);
-+	writel(offset, mii + BCMA_CCB_MII_MNG_CTL);
-+	bcma_wait_reg(bus, mii + BCMA_CCB_MII_MNG_CTL, 0x0100, 0x0000, 100);
-+	writel(value, mii + BCMA_CCB_MII_MNG_CMD_DATA);
-+	bcma_wait_reg(bus, mii + BCMA_CCB_MII_MNG_CTL, 0x0100, 0x0000, 100);
- }
- EXPORT_SYMBOL_GPL(bcma_chipco_b_mii_write);
- 
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index a5ac2ca..b20e3d5 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -504,6 +504,9 @@
- #define BCMA_CC_PMU1_PLL0_PC2_NDIV_INT_MASK	0x1ff00000
- #define BCMA_CC_PMU1_PLL0_PC2_NDIV_INT_SHIFT	20
- 
-+#define BCMA_CCB_MII_MNG_CTL		0x0000
-+#define BCMA_CCB_MII_MNG_CMD_DATA	0x0004
-+
- /* BCM4331 ChipControl numbers. */
- #define BCMA_CHIPCTL_4331_BT_COEXIST		BIT(0)	/* 0 disable */
- #define BCMA_CHIPCTL_4331_SECI			BIT(1)	/* 0 SECI is disabled (JATG functional) */
--- 
-1.8.4.5
-
+Rob
