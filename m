@@ -1,43 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:63074 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753536AbcGSPeh (ORCPT
+Received: from mga11.intel.com ([192.55.52.93]:47553 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750921AbcGQGNu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 11:34:37 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/3] rtlwifi: don't add include path for rtl8188ee
-Date: Tue, 19 Jul 2016 17:33:00 +0200
-Message-Id: <20160719153403.2967812-1-arnd@arndb.de> (sfid-20160719_173458_853316_8B8D851E)
+	Sun, 17 Jul 2016 02:13:50 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Prarit Bhargava <prarit@redhat.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
+ ucode is loaded
+Date: Sun, 17 Jul 2016 06:13:44 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB3466928D5@hasmsx107.ger.corp.intel.com> (sfid-20160717_081432_722322_C1350AAD)
+References: <1468250301-10357-1-git-send-email-prarit@redhat.com>
+ <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com>
+ <5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com>
+ <20160714092408.GA27271@redhat.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB3466901DA@hasmsx107.ger.corp.intel.com>
+ <20160715112552.GB6939@redhat.com> <5788D397.9030904@redhat.com>
+In-Reply-To: <5788D397.9030904@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For rtl8188ee, we pass -Idrivers/net/wireless/rtlwifi/ to gcc,
-however that directy no longer exists, so evidently this option
-is no longer required here and can be removed to avoid a warning
-when building with 'make W=1' or 'gcc -Wmissing-include-dirs'
+> On 07/15/2016 07:25 AM, Stanislaw Gruszka wrote:
+> > On Thu, Jul 14, 2016 at 09:44:22AM +0000, Grumbach, Emmanuel wrote:
+> >>> If I understad correctly this error happen 100% of the time, not
+> >>> only during init. Hence seems there is an issue here, i.e. cur_ucode
+> >>> is not marked correctly as IWL_UCODE_REGULAR or
+> iwl_mvm_get_temp()
+> >>> fail 100% of the time (iwl_mvm_is_tt_in_fw() incorrecly return true on
+> Prarit device ? ).
+> >>
+> >> Cur_ucode will not be IWL_UCODE_REGULAR until you load the firmware
+> >> which will happen upon ifup.
+> >
+> > Then creating thermal_device on ifup looks more reasonable to me.
+> > Otherwise we can create device that can be non-functional virtually
+> > forever, i.e. when soft RFKILL is enabled. However I admit that
+> > creating thermal_device when HW is detected has some advantages too.
+> 
+> That's my plan right now.  Unfortunately something else in the kernel seems
+> recently broken and is preventing me from testing.  I will get back to this
+> early next week.
+> 
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But we already said that this won't work since you may have the device enabled upon boot and then disabled. So unless you unregister the thermal zone subsystem upon wifi disable, you won't solve the problem. Kalle and Luca already refused that solution.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile
-index a85419a37651..676e7de27f27 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/Makefile
-@@ -12,4 +12,4 @@ rtl8188ee-objs :=		\
- 
- obj-$(CONFIG_RTL8188EE) += rtl8188ee.o
- 
--ccflags-y += -Idrivers/net/wireless/rtlwifi -D__CHECK_ENDIAN__
-+ccflags-y += -D__CHECK_ENDIAN__
--- 
-2.9.0
-
+I glanced (again) at the thermal zone API and since it allows to return an int, the subsystem itself should handle the failures and / or the userspace problems. The API itself is awful, it has no documentation whatsoever, even not variable names, but only types... You can't really blame the subsystem users to assume that a method that can return an int can't fail where the out values is passed by a pointer. Of course, you have to guess that this is the expected behavior, since you don't have any hint about the meaning of the parameters.
+I think that the right place to "fix" this problem is to fix the subsystem. This way, you will fix it for iwlwifi and for any (future) other users that may fall into the trap opened by the API itself.
