@@ -1,93 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:38015 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752087AbcGUSLF convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:32878 "EHLO
+	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751665AbcGRTVQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 14:11:05 -0400
-Received: by mail-wm0-f46.google.com with SMTP id o80so35349564wme.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 11:11:04 -0700 (PDT)
-From: Christopher Williamson <home@chrisaw.com>
-In-Reply-To: <1469115440.29944.1.camel@redhat.com>
-References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
- <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
- <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
- <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
- <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
- <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
- <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
- <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com> <1469115440.29944.1.camel@redhat.com>
+	Mon, 18 Jul 2016 15:21:16 -0400
+Received: by mail-pf0-f179.google.com with SMTP id y134so42568553pfg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2016 12:21:16 -0700 (PDT)
+Subject: Re: [PATCH v2] cfg80211: Allow differnt beacon interval if driver
+ supports
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+References: <1468849985-6881-1-git-send-email-pkushwah@qti.qualcomm.com>
+ <1468868209.2944.1.camel@sipsolutions.net>
+ <9831c426-ae04-a85f-9173-bcea30c489d7@broadcom.com>
+ <1468869356.2944.5.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	usdutt@qti.qualcomm.com, ganeshk@qti.qualcomm.com,
+	mkalikot@qca.qualcomm.com, amarnath@qca.qualcomm.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <fd7fc930-67ab-89bf-5909-0851057e0c84@broadcom.com> (sfid-20160718_212120_366580_A291128C)
+Date: Mon, 18 Jul 2016 21:21:11 +0200
 MIME-Version: 1.0
-Date: Thu, 21 Jul 2016 11:10:56 -0700
-Message-ID: <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com> (sfid-20160721_201110_852821_3C88A856)
-Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1468869356.2944.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sure, here are the results:
+On 18-7-2016 21:15, Johannes Berg wrote:
+> On Mon, 2016-07-18 at 21:13 +0200, Arend Van Spriel wrote:
+>>
+>> On 18-7-2016 20:56, Johannes Berg wrote:
+>>> On Mon, 2016-07-18 at 19:23 +0530, Purushottam Kushwaha wrote:
+>>>> Driver may allow support for different beacon interval on virtual
+>>>> interfaces.
+>>>> Allow if such support is advertised by driver. This adds new
+>>>> ext_feature as NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL.
+>>>
+>>> We have NL80211_IFACE_COMB_STA_AP_BI_MATCH in interface
+>>> combinations,
+>>> perhaps it would make sense to also put this flag there?
+>>
+>> Hi Johannes,
+>>
+>> Was looking at the same thing. The description of that flag was a bit
+>> unclear to me.
+>>
+>> """
+>>  * @beacon_int_infra_match: In this combination, the beacon intervals
+>>  *      between infrastructure and AP types must match. This is
+>> required
+>>  *      only in special cases.
+>> """
+>>
+>> It is not explicitly stated but it implies the STA vif is connected,
+>> right.
+> 
+> Yes.
+> 
+> Forget this flag. I don't think any driver sets it - it was a hack for
+> iwldvm. I also don't think any userspace cares about it, and it likely
+> never really worked. What if the STA vif reconnects anyway?
+> 
+> I was merely pointing this out wrt. the grouping and where to put
+> something new.
+> 
+>> Probably going off-topic here, but I am also wondering about the
+>> use-case of the above patch. I have been looking at M-BSS. Toward
+>> user-space these are AP interfaces, but like described in
+>> hostapd.conf
+>> example a number of AP configuration items are required to be equal.
+>> Now
+>> we also have chipsets with two 802.11 cores and on each an AP could
+>> be
+>> setup with independent beacon interval. So to make the distinction
+>> would
+>> it make sense to introduce MBSS_AP iftype? Or does AP_VLAN cover the
+>> MBSS use-case?
+>>
+> 
+> I don't think AP_VLAN does, but isn't a mesh portal simply a mesh point
+> interface and an AP interface?
 
-http://termbin.com/e8e2
+Whoops. Should not use abbreviations like that. I meant the
+Multiple-BSSID functionality (from hostapd):
 
-Christopher Williamson
+##### Multiple BSSID support
+##################################################
+#
+# Above configuration is using the default interface (wlan#, or
+multi-SSID VLAN
+# interfaces). Other BSSIDs can be added by using separator 'bss' with
+# default interface name to be allocated for the data packets of the new
+BSS.
+#
+# hostapd will generate BSSID mask based on the BSSIDs that are
+# configured. hostapd will verify that dev_addr & MASK == dev_addr. If
+this is
+# not the case, the MAC address of the radio must be changed before starting
+# hostapd (ifconfig wlan0 hw ether <MAC addr>). If a BSSID is configured for
+# every secondary BSS, this limitation is not applied at hostapd and other
+# masks may be used if the driver supports them (e.g., swap the locally
+# administered bit)
+#
+# BSSIDs are assigned in order to each BSS, unless an explicit BSSID is
+# specified using the 'bssid' parameter.
+# If an explicit BSSID is specified, it must be chosen such that it:
+# - results in a valid MASK that covers it and the dev_addr
+# - is not the same as the MAC address of the radio
+# - is not the same as any other explicitly specified BSSID
+#
+# Alternatively, the 'use_driver_iface_addr' parameter can be used to
+request
+# hostapd to use the driver auto-generated interface address (e.g., to
+use the
+# exact MAC addresses allocated to the device).
+#
+# Not all drivers support multiple BSSes. The exact mechanism for
+determining
+# the driver capabilities is driver specific. With the current (i.e., a
+recent
+# kernel) drivers using nl80211, this information can be checked with
+"iw list"
+# (search for "valid interface combinations").
+#
+# Please note that hostapd uses some of the values configured for the
+first BSS
+# as the defaults for the following BSSes. However, it is recommended
+that all
+# BSSes include explicit configuration of all relevant configuration items.
+#
 
-
-On 21 July 2016 at 16:37:24, Dan Williams
-(dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
-
-> On Wed, 2016-07-20 at 15:16 -0700, Christopher Williamson wrote:
-> > I used NetworkManager in the previous test.
-> >
-> > This time around I have used wpa_supplicant directly and get the
-> > following results:
-> >
-> > http://termbin.com/j8ea
-> >
-> > Thought I’d throw them on a pastebin since it’s over 700 lines.
->
-> Can you try with "-D nl80211" instead of using the WEXT supplicant
-> driver? NM is likely going to use nl80211 since the driver has some
-> support for cfg80211/nl80211 and only does WEXT through the glue
-> layer.
->
-> Dan
->
-> > Christopher Williamson
-> >
-> >
-> >
-> >
-> > On 20 July 2016 at 22:50:34, Dan Williams
-> > (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
-> >
-> > >
-> > > On Wed, 2016-07-20 at 13:06 -0700, Christopher Williamson wrote:
-> > > >
-> > > > Hi Dan,
-> > > >
-> > > > Ah - yeah I hadn’t thought it may be a kernel build option. I’ve
-> > > > now
-> > > > built that and dmesg is a much more lively place!
-> > > >
-> > > > I’ve provided output logs for both when the device is connected
-> > > > and
-> > > > when a connection attempt is made - hopefully this is useful.
-> > >
-> > >
-> > > The card is scanning and only finds 'shaunthesheep' 20 seconds
-> > > after
-> > > you "connect for the first time". The logs stop 3 seconds later.
-> > > Are
-> > > you connecting with wicd or something else?
-> > >
-> > > Can you run wpa_supplicant with the "-dddtu" option so we can get
-> > > debug
-> > > log output from it?
-> > >
-> > > Dan
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-
-> > wireless" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+Regards,
+Arend
