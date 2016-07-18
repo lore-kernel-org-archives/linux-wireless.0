@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42146 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932841AbcGLLyL (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57915 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706AbcGRTb3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2016 07:54:11 -0400
-Content-Type: text/plain; charset="utf-8"
+	Mon, 18 Jul 2016 15:31:29 -0400
+Message-ID: <578D2E8A.8090201@candelatech.com> (sfid-20160718_213132_849313_D0D728EC)
+Date: Mon, 18 Jul 2016 12:31:22 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Subject: Re: iwlwifi: add missing type declaration
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160711205020.1587254-1-arnd@arndb.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>,
-	Intel Linux Wireless <linuxwifi@intel.com>,
-	Eliad Peller <eliad@wizery.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <20160712115409.7D7176127F@smtp.codeaurora.org> (sfid-20160712_135432_630405_847F54CB)
-Date: Tue, 12 Jul 2016 11:54:09 +0000 (UTC)
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	usdutt@qti.qualcomm.com, ganeshk@qti.qualcomm.com,
+	mkalikot@qca.qualcomm.com, amarnath@qca.qualcomm.com
+Subject: Re: [PATCH v2] cfg80211: Allow differnt beacon interval if driver
+ supports
+References: <1468849985-6881-1-git-send-email-pkushwah@qti.qualcomm.com>	 <1468868209.2944.1.camel@sipsolutions.net>	 <578D2846.5060600@candelatech.com> <1468869244.2944.3.camel@sipsolutions.net>
+In-Reply-To: <1468869244.2944.3.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
-> The iwl-debug.h header relies in implicit inclusion of linux/device.h and
-> we get a lot of warnings without that:
-> 
-> drivers/net/wireless/intel/iwlwifi/iwl-debug.h:44:23: error: 'struct device' declared inside parameter list will not be visible outside of this definition or declaration [-Werror]
->  void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
->                        ^~~~~~
-> In file included from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.h:66:0,
->                  from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:68:
-> drivers/net/wireless/intel/iwlwifi/iwl-trans.h: In function 'iwl_trans_tx':
-> drivers/net/wireless/intel/iwlwifi/iwl-trans.h:1030:348: error: passing argument 1 of '__iwl_err' from incompatible pointer type [-Werror=incompatible-pointer-types]
->    IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
->                                                                                                                                                                                                                                                                                                                                                             ^
-> In file included from drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.c:67:0:
-> drivers/net/wireless/intel/iwlwifi/iwl-debug.h:44:6: note: expected 'struct device *' but argument is of type 'struct device *'
->  void __iwl_err(struct device *dev, bool rfkill_prefix, bool only_trace,
->       ^~~~~~~~~
-> 
-> The easiest workaround is to just declare 'struct device' before its first use,
-> rather than including the entire header file.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 21cb3222fe56 ("iwlwifi: decouple PCIe transport from mac80211")
-> Acked-by: Luca Coelho <luciano.coelho@intel.com>
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
 
-25f700ef0653 iwlwifi: add missing type declaration
+On 07/18/2016 12:14 PM, Johannes Berg wrote:
+> On Mon, 2016-07-18 at 12:04 -0700, Ben Greear wrote:
+>>
+>> On 07/18/2016 11:56 AM, Johannes Berg wrote:
+>>> On Mon, 2016-07-18 at 19:23 +0530, Purushottam Kushwaha wrote:
+>>>> Driver may allow support for different beacon interval on virtual
+>>>> interfaces.
+>>>> Allow if such support is advertised by driver. This adds new
+>>>> ext_feature as NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL.
+>>>
+>>> We have NL80211_IFACE_COMB_STA_AP_BI_MATCH in interface
+>>> combinations,
+>>> perhaps it would make sense to also put this flag there?
+>>
+>> I was under impression that ath9k had supported this for years,
+>> but I guess I haven't tested it lately....
+>>
+>
+> It may very well have, but if userspace can't rely on it because other
+> drivers don't then it's pretty pointless.
+
+A flag would be nice, but for backwards compat, it could be a negative
+flag.  But, if mac80211 has to be patched to make this work, then maybe
+the ath9k feature has been disabled/broken for some time and wouldn't matter
+anyway.
+
+Also, ath9k had some restrictions about having the timers be certain
+multiples of each other so the hardware could properly service beacons
+for multiple vdevs.  If chip-specific restrictions remain, then it may be almost impossible
+to communicate this properly to the hostapd/userspace.  At best, the driver
+could just fail to start the vdev in case of mismatch?
+
+Thanks,
+Ben
+
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9224105/
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
