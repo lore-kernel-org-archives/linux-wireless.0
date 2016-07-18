@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:53813 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753647AbcGSSAQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41097 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752009AbcGRTra convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 14:00:16 -0400
-Content-Type: text/plain; charset="utf-8"
+	Mon, 18 Jul 2016 15:47:30 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: pull-request: iwlwifi-next 2016-07-11
+References: <1468236322.25088.114.camel@coelho.fi>
+Date: Mon, 18 Jul 2016 22:47:25 +0300
+In-Reply-To: <1468236322.25088.114.camel@coelho.fi> (Luca Coelho's message of
+	"Mon, 11 Jul 2016 14:25:22 +0300")
+Message-ID: <87a8hewwxe.fsf@kamboji.qca.qualcomm.com> (sfid-20160718_214734_160242_FE37FC82)
 MIME-Version: 1.0
-Subject: Re: [1/4] ath9k_hw: fix duplicate (and partially wrong) definition of
- AR_CH0_THERM
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160711100248.68678-1-nbd@nbd.name>
-To: Felix Fietkau <nbd@nbd.name>
-CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>
-Message-ID: <f92d92b631614e0ca0cc9730b14ac795@eusanexr01a.eu.qualcomm.com> (sfid-20160719_200026_788269_D4AC7817)
-Date: Tue, 19 Jul 2016 10:59:57 -0700
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> wrote:
-> AR_PHY_65NM_CH0_THERM and AR_CH0_THERM were supposed to refer to the
-> same register, however they had different SREV checks.
-> 
-> Remove the duplicate and use the checks. Since there were other SREV
-> checks present in the only place that uses this, this will probaby not
-> affect runtime behavior.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+Luca Coelho <luca@coelho.fi> writes:
 
-Thanks, 4 patches applied to ath-next branch of ath.git:
+> Hi Kalle,
+>
+> I have one more patch intended for 4.8.  I had forgotten to bump the FW
+> API version that our driver is now able to load.  I hope there is still
+> time to get it included for 4.8.
+>
+> Let me know if everything's fine (or not). :)
+>
+> Luca.
+>
+>
+> The following changes since commit 6f482e37b75d4e56cdb9b56ae7057f3ce67097bc:
+>
+>   iwlwifi: move iwl_drv to be shared across transports (2016-07-06 10:37:44 +0300)
+>
+> are available in the git repository at:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-07-11
 
-3ff25093cbdd ath9k_hw: fix duplicate (and partially wrong) definition of AR_CH0_THERM
-8f778c72ac8f ath9k_hw: simplify ar9003_hw_per_calibration
-feaacb174892 ath9k_hw: get rid of some duplicate code in calibration init
-171f6402e4aa ath9k_hw: implement temperature compensation support for AR9003+
+Pulled, thanks.
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9223141/
-
+Kalle Valo
