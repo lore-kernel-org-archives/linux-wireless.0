@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:42904 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751119AbcGTHEv convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40424 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752051AbcGRTh7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 03:04:51 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>,
-	Rob Herring <robh@kernel.org>
-Subject: RE: [PATCHv8] wlcore: spi: add wl18xx support
-Date: Wed, 20 Jul 2016 07:04:45 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B36161A17@DFRE01.ent.ti.com> (sfid-20160720_090516_498363_41BB111D)
-References: <1468994768-23609-1-git-send-email-eyalr@ti.com>
-	<8665E2433BC68541A24DFFCA87B70F5B36161990@DFRE01.ent.ti.com>
- <871t2ovll6.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <871t2ovll6.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="Windows-1252"
+	Mon, 18 Jul 2016 15:37:59 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [1/2,
+ v4] wlcore/wl18xx: Add functionality to accept TX rate per link
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160711142251.30443-1-maxim.altshul@ti.com>
+To: Maxim Altshul <maxim.altshul@ti.com>
+Cc: <linux-kernel@vger.kernel.org>,
+	Maxim Altshul <maxim.altshul@ti.com>,
+	Eliad Peller <eliad@wizery.com>, Guy Mishol <guym@ti.com>,
+	"Machani, Yaniv" <yanivma@ti.com>, Arik Nemtsov <arik@wizery.com>,
+	<linux-wireless@vger.kernel.org>
+Message-Id: <20160718193758.D6FDB6037B@smtp.codeaurora.org> (sfid-20160718_213803_362796_2C8EA208)
+Date: Mon, 18 Jul 2016 19:37:58 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Maxim Altshul <maxim.altshul@ti.com> wrote:
+> FW will provide a TX rate per link for each FW status,
+> and wlcore will be able to store the information for
+> the use of the mesh hwmp module.
 > 
-> > Add support for using with both wl12xx and wl18xx.
-> >
-> > - all wilink family needs special init command for entering wspi mode.
-> >   extra clock cycles should be sent after the spi init command while the
-> >   cs pin is high.
-> > - Use inverted chip select for sending a dummy 4 bytes command that
-> >   completes the init stage.
-> >
-> > Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> > Acked-by: Rob Herring <robh@kernel.org>
-> > ---
-> > v1->v2:update device tree bindings configuration
-> > v2->v3:revert from manual gpio manipulation. use inverted chip select
-> instead
-> > for sending the extra init cycle which, achieves the same hardware purpose.
-> > update device tree bindings docucmentation accordingly
-> > v3->v4: Remove redundant data form binding documentation and fix chip
-> select
-> > number mismatch in wl1271 example
-> > v4->v5: Rebase on top of head of wireless-drivers-next
-> > v5->v6: Add ACKs
-> > v6->v7: Mail format issues
-> > v7->v8: Remove redundant varaible from wlcore_probe_of
+> This is used mainly in mesh.
+> Rates are reported when a mesh interface is up.
 > 
-> I have already applied this patch, it's too late to send a new version.
-> Now you need to send a new patch, on top of wireless-drivers-next, which
-> removes the redundant variable.
-> 
-Understood. Will submit shortly
+> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
 
-Best Regards,
-Eyal
+Thanks, 2 patches applied to wireless-drivers-next.git:
+
+88f07e70d1be wlcore/wl18xx: Add functionality to accept TX rate per link
+5634723758a1 wlcore: Add support for get_expected_throughput opcode
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9223705/
+
