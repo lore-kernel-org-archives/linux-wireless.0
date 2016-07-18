@@ -1,142 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34195 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755305AbcGEPIe (ORCPT
+Received: from mail2.tohojo.dk ([77.235.48.147]:45722 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751370AbcGRVtc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 11:08:34 -0400
-Received: by mail-oi0-f65.google.com with SMTP id s17so28015953oih.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 08:08:34 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3 09/10] rtlwifi: rtl8192de: Convert driver to use common hardware info routine
-Date: Tue,  5 Jul 2016 10:08:14 -0500
-Message-Id: <1467731295-25850-10-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160705_170911_559290_CCBA343C)
-In-Reply-To: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 18 Jul 2016 17:49:32 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: TCP performance regression in mac80211 triggered by the fq code
+References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
+	<87shvfujl4.fsf@toke.dk>
+Date: Mon, 18 Jul 2016 23:49:21 +0200
+In-Reply-To: <87shvfujl4.fsf@toke.dk> ("Toke =?utf-8?Q?H=C3=B8iland-J?=
+	=?utf-8?Q?=C3=B8rgensen=22's?= message of
+	"Tue, 12 Jul 2016 14:28:07 +0200")
+Message-ID: <87d1mar50e.fsf@toke.dk> (sfid-20160718_234936_022756_F11A0021)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for RTL8192DE chips is converted to use the common routine
-for getting the hardware information.
+Toke Høiland-Jørgensen <toke@toke.dk> writes:
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnd Bergmann <arnd@arndb.de>
----
-V2 - Fixes bug found after V1 was submitted.
-V3 - No changes.
+> Felix Fietkau <nbd@nbd.name> writes:
+>
+>> Hi,
+>>
+>> With Toke's ath9k txq patch I've noticed a pretty nasty performance
+>> regression when running local iperf on an AP (running the txq stuff) to
+>> a wireless client.
+>>
+>> Here's some things that I found:
+>> - when I use only one TCP stream I get around 90-110 Mbit/s
+>> - when running multiple TCP streams, I get only 35-40 Mbit/s total
+>> - fairness between TCP streams looks completely fine
+>> - there's no big queue buildup, the code never actually drops any packets
+>> - if I put a hack in the fq code to force the hash to a constant value
+>> (effectively disabling fq without disabling codel), the problem
+>> disappears and even multiple streams get proper performance.
+>>
+>> Please let me know if you have any ideas.
+>
+> Hmm, I see two TCP streams get about the same aggregate throughput as
+> one, both when started from the AP and when started one hop away.
 
-This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
-	submitted by Joe Perches.
----
- .../net/wireless/realtek/rtlwifi/rtl8192de/hw.c    | 77 +++++-----------------
- 1 file changed, 15 insertions(+), 62 deletions(-)
+So while I have still not been able to reproduce the issue you
+described, I have seen something else that is at least puzzling, and may
+or may not be related:
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-index 8618c32..b0f6324 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-@@ -1744,71 +1744,26 @@ static void _rtl92de_read_adapter_info(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	struct device *dev = &rtl_pcipriv(hw)->dev.pdev->dev;
--	u16 i, usvalue;
--	u8 hwinfo[HWSET_MAX_SIZE];
--	u16 eeprom_id;
--	unsigned long flags;
-+	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
-+			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR_MAC0_92D,
-+			EEPROM_CHANNEL_PLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
-+			COUNTRY_CODE_WORLD_WIDE_13};
-+	int i;
-+	u16 usvalue;
-+	u8 *hwinfo;
- 
--	switch (rtlefuse->epromtype) {
--	case EEPROM_BOOT_EFUSE:
--		spin_lock_irqsave(&globalmutex_for_power_and_efuse, flags);
--		rtl_efuse_shadow_map_update(hw);
--		_rtl92de_efuse_update_chip_version(hw);
--		spin_unlock_irqrestore(&globalmutex_for_power_and_efuse, flags);
--		break;
--	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
--		return;
--	default:
--		dev_warn(dev, "no efuse data\n");
-+	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
-+	if (!hwinfo)
- 		return;
--	}
--
--	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
--	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_DMESG, "MAP",
--		      hwinfo, HWSET_MAX_SIZE);
- 
--	eeprom_id = *((u16 *)&hwinfo[0]);
--	if (eeprom_id != RTL8190_EEPROM_ID) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_WARNING,
--			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
--		rtlefuse->autoload_failflag = true;
--	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
--		rtlefuse->autoload_failflag = false;
--	}
--	if (rtlefuse->autoload_failflag) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
-+	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
- 		return;
--	}
--	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
--	_rtl92de_read_macphymode_and_bandtype(hw, hwinfo);
- 
--	/* VID, DID  SE     0xA-D */
--	rtlefuse->eeprom_vid = *(u16 *)&hwinfo[EEPROM_VID];
--	rtlefuse->eeprom_did = *(u16 *)&hwinfo[EEPROM_DID];
--	rtlefuse->eeprom_svid = *(u16 *)&hwinfo[EEPROM_SVID];
--	rtlefuse->eeprom_smid = *(u16 *)&hwinfo[EEPROM_SMID];
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "EEPROMId = 0x%4x\n", eeprom_id);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM VID = 0x%4x\n", rtlefuse->eeprom_vid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM DID = 0x%4x\n", rtlefuse->eeprom_did);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SVID = 0x%4x\n", rtlefuse->eeprom_svid);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM SMID = 0x%4x\n", rtlefuse->eeprom_smid);
-+	_rtl92de_efuse_update_chip_version(hw);
-+	_rtl92de_read_macphymode_and_bandtype(hw, hwinfo);
- 
--	/* Read Permanent MAC address */
--	if (rtlhal->interfaceindex == 0) {
--		for (i = 0; i < 6; i += 2) {
--			usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR_MAC0_92D + i];
--			*((u16 *) (&rtlefuse->dev_addr[i])) = usvalue;
--		}
--	} else {
-+	/* Read Permanent MAC address for 2nd interface */
-+	if (rtlhal->interfaceindex != 0) {
- 		for (i = 0; i < 6; i += 2) {
- 			usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR_MAC1_92D + i];
- 			*((u16 *) (&rtlefuse->dev_addr[i])) = usvalue;
-@@ -1834,10 +1789,8 @@ static void _rtl92de_read_adapter_info(struct ieee80211_hw *hw)
- 		rtlefuse->channel_plan = COUNTRY_CODE_FCC;
- 		break;
- 	}
--	rtlefuse->eeprom_version = *(u16 *)&hwinfo[EEPROM_VERSION];
- 	rtlefuse->txpwr_fromeprom = true;
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
--		 "EEPROM Customer ID: 0x%2x\n", rtlefuse->eeprom_oemid);
-+	kfree(hwinfo);
- }
- 
- void rtl92de_read_eeprom_info(struct ieee80211_hw *hw)
--- 
-2.1.4
+When monitoring the output of /sys/kernel/debug/ieee80211/phy0/aqm I see
+that all stations have their queues empty all the way to zero several
+times per second. This is a bit puzzling; the queue should be kept under
+control, but really shouldn't empty completely. I figure this might also
+be the reason why you're seeing degraded performance...
 
+Since the stats output doesn't include a counter for drops, I haven't
+gotten any further with figuring out if it's CoDel that's being too
+aggressive, or what is happening. But will probably add that in and take
+another look.
+
+-Toke
