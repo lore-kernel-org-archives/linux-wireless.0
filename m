@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.47.9]:43033 "EHLO
-	smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753185AbcGFIcF convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40519 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751789AbcGRTjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 04:32:05 -0400
-From: Alexey Brodkin <Alexey.Brodkin@synopsys.com>
-To: "fixed-term.Oleksij.Rempel@de.bosch.com"
-	<fixed-term.Oleksij.Rempel@de.bosch.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"anders.darander@gmail.com" <anders.darander@gmail.com>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"linux@rempel-privat.de" <linux@rempel-privat.de>,
-	"linux-snps-arc@lists.infradead.org"
-	<linux-snps-arc@lists.infradead.org>,
-	"linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>
-Subject: Re: ath9k-htc on OHCI -> bogus usb xfer
-Date: Wed, 6 Jul 2016 08:32:00 +0000
-Message-ID: <1467793848.3086.37.camel@synopsys.com> (sfid-20160706_103212_110577_F5A51E1C)
-References: <1467721137.3144.81.camel@synopsys.com>
-	 <577BED2D.7070209@rempel-privat.de> <1467739821.3086.13.camel@synopsys.com>
-	 <577C041C.7080905@rempel-privat.de> <1467790987.3086.15.camel@synopsys.com>
-	 <577CC035.1000404@de.bosch.com>
-In-Reply-To: <577CC035.1000404@de.bosch.com>
-Content-Type: text/plain; charset="utf-7"
+	Mon, 18 Jul 2016 15:39:31 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
+Subject: Re: [-next] libertas: fix non static symbol warning
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1468323139-1756-1-git-send-email-weiyj_lk@163.com>
+To: weiyj_lk@163.com
+Cc: sudip <sudipm.mukherjee@gmail.com>,
+	Andreas Kemnade <andreas@kemnade.info>,
+	Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org
+Message-Id: <20160718193930.556206043B@smtp.codeaurora.org> (sfid-20160718_213934_481844_D2AD0A00)
+Date: Mon, 18 Jul 2016 19:39:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi+AKA-Oleksij,
+weiyj_lk@163.com wrote:
+> From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+> 
+> Fixes the following sparse warning:
+> 
+> drivers/net/wireless/marvell/libertas/cfg.c:2047:5: warning:
+>  symbol 'lbs_set_power_mgmt' was not declared. Should it be static?
+> 
+> Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-On Wed, 2016-07-06 at 10:24 +-0200, fixed-term.Oleksij.Rempel wrote:
-+AD4AoA-
-+AD4- Hm... this Endpoint should be Interrupt, not Bulk. If you search for
-+AD4- lsusb of this kind of adapter all of them list EP3 and EP4 as Interrupt.
-+AD4- 
-+AD4- what did went wrong here? Is it not working in USB High Speed mode?
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Unfortunately as of now on that board EHCI doesn't work.
+83d58d53e062 libertas: fix non static symbol warning
 
-That's not a problem of a particular USB device but something in either
-ECHI host controller or its integration. I do hope we will fix it sometime soon
-(this is a development board and USB controller is implemented in FPGA so
-there's a chance to fix stuff later on).
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9225147/
 
-So given only OHCI works on the board I went forward and attempted to use it
-with Wi-Fi USB dongle.
-
--Alexey
