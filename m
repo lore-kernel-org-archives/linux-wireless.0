@@ -1,210 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33354 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751832AbcGFKoJ (ORCPT
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:36586 "EHLO
+	mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751265AbcGRNid (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:44:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:50 +0300
-Message-Id: <1467801651-1816-55-git-send-email-luca@coelho.fi> (sfid-20160706_124417_560546_5E19FE65)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 55/56] iwlwifi: pcie: centralize SCD status logging
+	Mon, 18 Jul 2016 09:38:33 -0400
+Received: by mail-qk0-f195.google.com with SMTP id q8so11059978qke.3
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2016 06:38:32 -0700 (PDT)
+Date: Mon, 18 Jul 2016 09:38:24 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Yaniv Machani <yanivma@ti.com>
+Cc: linux-kernel@vger.kernel.org, Meirav Kama <meiravk@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH 3/3] mac80211: mesh: fixed HT ies in beacon template
+Message-ID: <20160718133824.GA11996@localhost> (sfid-20160718_153928_415975_9690F45E)
+References: <20160713114542.24937-1-yanivma@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160713114542.24937-1-yanivma@ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Wed, Jul 13, 2016 at 02:45:40PM +0300, Yaniv Machani wrote:
+> The HT capab info field inside the HT capab IE of the mesh beacon
+> is incorrect (in the case of 20MHz channel width).
+> To fix this driver will check configuration from cfg and
+> will build it accordingly.
 
-Centralize the logging of SCD status. The motivation is
-that for a000 devices we will have new SCD HW, but this
-code was duplicate anyway, so it is a proper cleanup.
+> +    /* determine capability flags */
+> +	cap = sband->ht_cap.cap;
+> +
+> +    /* if channel width is 20MHz - configure HT capab accordingly*/
+> +	if (sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20) {
+> +		cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+> +		cap &= ~IEEE80211_HT_CAP_DSSSCCK40;
+> +	}
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 +
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 82 ++++++++++++----------
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 36 +---------
- 3 files changed, 47 insertions(+), 73 deletions(-)
+Is it required that HT capability match the HT operation in this case?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index c3d8974..e3047f2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -476,6 +476,8 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int queue,
- 				bool configure_scd);
- void iwl_trans_pcie_txq_set_shared_mode(struct iwl_trans *trans, u32 txq_id,
- 					bool shared_mode);
-+void iwl_trans_pcie_log_scd_error(struct iwl_trans *trans,
-+				  struct iwl_txq *txq);
- int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		      struct iwl_device_cmd *dev_cmd, int txq_id);
- void iwl_pcie_txq_check_wrptrs(struct iwl_trans *trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index af04dad..74f2f03 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1950,6 +1950,48 @@ static void iwl_trans_pcie_block_txq_ptrs(struct iwl_trans *trans, bool block)
- 
- #define IWL_FLUSH_WAIT_MS	2000
- 
-+void iwl_trans_pcie_log_scd_error(struct iwl_trans *trans, struct iwl_txq *txq)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	u32 scd_sram_addr;
-+	u8 buf[16];
-+	int cnt;
-+
-+	IWL_ERR(trans, "Current SW read_ptr %d write_ptr %d\n",
-+		txq->q.read_ptr, txq->q.write_ptr);
-+
-+	scd_sram_addr = trans_pcie->scd_base_addr +
-+			SCD_TX_STTS_QUEUE_OFFSET(txq->q.id);
-+	iwl_trans_read_mem_bytes(trans, scd_sram_addr, buf, sizeof(buf));
-+
-+	iwl_print_hex_error(trans, buf, sizeof(buf));
-+
-+	for (cnt = 0; cnt < FH_TCSR_CHNL_NUM; cnt++)
-+		IWL_ERR(trans, "FH TRBs(%d) = 0x%08x\n", cnt,
-+			iwl_read_direct32(trans, FH_TX_TRB_REG(cnt)));
-+
-+	for (cnt = 0; cnt < trans->cfg->base_params->num_of_queues; cnt++) {
-+		u32 status = iwl_read_prph(trans, SCD_QUEUE_STATUS_BITS(cnt));
-+		u8 fifo = (status >> SCD_QUEUE_STTS_REG_POS_TXF) & 0x7;
-+		bool active = !!(status & BIT(SCD_QUEUE_STTS_REG_POS_ACTIVE));
-+		u32 tbl_dw =
-+			iwl_trans_read_mem32(trans, trans_pcie->scd_base_addr +
-+					     SCD_TRANS_TBL_OFFSET_QUEUE(cnt));
-+
-+		if (cnt & 0x1)
-+			tbl_dw = (tbl_dw & 0xFFFF0000) >> 16;
-+		else
-+			tbl_dw = tbl_dw & 0x0000FFFF;
-+
-+		IWL_ERR(trans,
-+			"Q %d is %sactive and mapped to fifo %d ra_tid 0x%04x [%d,%d]\n",
-+			cnt, active ? "" : "in", fifo, tbl_dw,
-+			iwl_read_prph(trans, SCD_QUEUE_RDPTR(cnt)) &
-+				(TFD_QUEUE_SIZE_MAX - 1),
-+			iwl_read_prph(trans, SCD_QUEUE_WRPTR(cnt)));
-+	}
-+}
-+
- static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, u32 txq_bm)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -1957,8 +1999,6 @@ static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, u32 txq_bm)
- 	struct iwl_queue *q;
- 	int cnt;
- 	unsigned long now = jiffies;
--	u32 scd_sram_addr;
--	u8 buf[16];
- 	int ret = 0;
- 
- 	/* waiting for all the tx frames complete might take a while */
-@@ -1998,42 +2038,8 @@ static int iwl_trans_pcie_wait_txq_empty(struct iwl_trans *trans, u32 txq_bm)
- 		IWL_DEBUG_TX_QUEUES(trans, "Queue %d is now empty.\n", cnt);
- 	}
- 
--	if (!ret)
--		return 0;
--
--	IWL_ERR(trans, "Current SW read_ptr %d write_ptr %d\n",
--		txq->q.read_ptr, txq->q.write_ptr);
--
--	scd_sram_addr = trans_pcie->scd_base_addr +
--			SCD_TX_STTS_QUEUE_OFFSET(txq->q.id);
--	iwl_trans_read_mem_bytes(trans, scd_sram_addr, buf, sizeof(buf));
--
--	iwl_print_hex_error(trans, buf, sizeof(buf));
--
--	for (cnt = 0; cnt < FH_TCSR_CHNL_NUM; cnt++)
--		IWL_ERR(trans, "FH TRBs(%d) = 0x%08x\n", cnt,
--			iwl_read_direct32(trans, FH_TX_TRB_REG(cnt)));
--
--	for (cnt = 0; cnt < trans->cfg->base_params->num_of_queues; cnt++) {
--		u32 status = iwl_read_prph(trans, SCD_QUEUE_STATUS_BITS(cnt));
--		u8 fifo = (status >> SCD_QUEUE_STTS_REG_POS_TXF) & 0x7;
--		bool active = !!(status & BIT(SCD_QUEUE_STTS_REG_POS_ACTIVE));
--		u32 tbl_dw =
--			iwl_trans_read_mem32(trans, trans_pcie->scd_base_addr +
--					     SCD_TRANS_TBL_OFFSET_QUEUE(cnt));
--
--		if (cnt & 0x1)
--			tbl_dw = (tbl_dw & 0xFFFF0000) >> 16;
--		else
--			tbl_dw = tbl_dw & 0x0000FFFF;
--
--		IWL_ERR(trans,
--			"Q %d is %sactive and mapped to fifo %d ra_tid 0x%04x [%d,%d]\n",
--			cnt, active ? "" : "in", fifo, tbl_dw,
--			iwl_read_prph(trans, SCD_QUEUE_RDPTR(cnt)) &
--				(TFD_QUEUE_SIZE_MAX - 1),
--			iwl_read_prph(trans, SCD_QUEUE_WRPTR(cnt)));
--	}
-+	if (ret)
-+		iwl_trans_pcie_log_scd_error(trans, txq);
- 
- 	return ret;
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index d88d64c..18650dc 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -155,10 +155,6 @@ static void iwl_pcie_txq_stuck_timer(unsigned long data)
- 	struct iwl_txq *txq = (void *)data;
- 	struct iwl_trans_pcie *trans_pcie = txq->trans_pcie;
- 	struct iwl_trans *trans = iwl_trans_pcie_get_trans(trans_pcie);
--	u32 scd_sram_addr = trans_pcie->scd_base_addr +
--				SCD_TX_STTS_QUEUE_OFFSET(txq->q.id);
--	u8 buf[16];
--	int i;
- 
- 	spin_lock(&txq->lock);
- 	/* check if triggered erroneously */
-@@ -170,38 +166,8 @@ static void iwl_pcie_txq_stuck_timer(unsigned long data)
- 
- 	IWL_ERR(trans, "Queue %d stuck for %u ms.\n", txq->q.id,
- 		jiffies_to_msecs(txq->wd_timeout));
--	IWL_ERR(trans, "Current SW read_ptr %d write_ptr %d\n",
--		txq->q.read_ptr, txq->q.write_ptr);
--
--	iwl_trans_read_mem_bytes(trans, scd_sram_addr, buf, sizeof(buf));
--
--	iwl_print_hex_error(trans, buf, sizeof(buf));
- 
--	for (i = 0; i < FH_TCSR_CHNL_NUM; i++)
--		IWL_ERR(trans, "FH TRBs(%d) = 0x%08x\n", i,
--			iwl_read_direct32(trans, FH_TX_TRB_REG(i)));
--
--	for (i = 0; i < trans->cfg->base_params->num_of_queues; i++) {
--		u32 status = iwl_read_prph(trans, SCD_QUEUE_STATUS_BITS(i));
--		u8 fifo = (status >> SCD_QUEUE_STTS_REG_POS_TXF) & 0x7;
--		bool active = !!(status & BIT(SCD_QUEUE_STTS_REG_POS_ACTIVE));
--		u32 tbl_dw =
--			iwl_trans_read_mem32(trans,
--					     trans_pcie->scd_base_addr +
--					     SCD_TRANS_TBL_OFFSET_QUEUE(i));
--
--		if (i & 0x1)
--			tbl_dw = (tbl_dw & 0xFFFF0000) >> 16;
--		else
--			tbl_dw = tbl_dw & 0x0000FFFF;
--
--		IWL_ERR(trans,
--			"Q %d is %sactive and mapped to fifo %d ra_tid 0x%04x [%d,%d]\n",
--			i, active ? "" : "in", fifo, tbl_dw,
--			iwl_read_prph(trans, SCD_QUEUE_RDPTR(i)) &
--				(TFD_QUEUE_SIZE_MAX - 1),
--			iwl_read_prph(trans, SCD_QUEUE_WRPTR(i)));
--	}
-+	iwl_trans_pcie_log_scd_error(trans, txq);
- 
- 	iwl_force_nmi(trans);
- }
+> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+> index 42bf0b6..5375a82 100644
+> --- a/net/mac80211/util.c
+> +++ b/net/mac80211/util.c
+> @@ -2349,10 +2349,7 @@ u8 *ieee80211_ie_build_ht_oper(u8 *pos, struct ieee80211_sta_ht_cap *ht_cap,
+>  	ht_oper->operation_mode = cpu_to_le16(prot_mode);
+>  	ht_oper->stbc_param = 0x0000;
+>  
+> -	/* It seems that Basic MCS set and Supported MCS set
+> -	   are identical for the first 10 bytes */
+>  	memset(&ht_oper->basic_set, 0, 16);
+> -	memcpy(&ht_oper->basic_set, &ht_cap->mcs, 10);
+
+This change doesn't look right (basic mcs set will be all zeroes) but
+then, neither does the original code.  Basic MCS set for a mesh STA should
+be the mandatory MCSes according to 9.7.4.
+
 -- 
-2.8.1
-
+Bob Copeland %% http://bobcopeland.com/
