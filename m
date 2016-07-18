@@ -1,59 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3481 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750902AbcG0M7z (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57017 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751762AbcGRTEp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 08:59:55 -0400
-From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/4] ath10k: Add provision for Rx descriptor abstraction
-Date: Wed, 27 Jul 2016 12:59:47 +0000
-Message-ID: <5798B042.4070604@qti.qualcomm.com> (sfid-20160727_145958_964595_DE6C8931)
-References: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
- <1469623006-13178-3-git-send-email-vthiagar@qti.qualcomm.com>
- <CA+BoTQ=kUP-Qtw1EWKKfM_aGtJS_4oQdz4tqD5tiJkF_k3-vOA@mail.gmail.com>
-In-Reply-To: <CA+BoTQ=kUP-Qtw1EWKKfM_aGtJS_4oQdz4tqD5tiJkF_k3-vOA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 18 Jul 2016 15:04:45 -0400
+Message-ID: <578D2846.5060600@candelatech.com> (sfid-20160718_210459_173275_4FF515E1)
+Date: Mon, 18 Jul 2016 12:04:38 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+CC: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	usdutt@qti.qualcomm.com, ganeshk@qti.qualcomm.com,
+	mkalikot@qca.qualcomm.com, amarnath@qca.qualcomm.com
+Subject: Re: [PATCH v2] cfg80211: Allow differnt beacon interval if driver
+ supports
+References: <1468849985-6881-1-git-send-email-pkushwah@qti.qualcomm.com> <1468868209.2944.1.camel@sipsolutions.net>
+In-Reply-To: <1468868209.2944.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkbmVzZGF5IDI3IEp1bHkgMjAxNiAwNjoxMyBQTSwgTWljaGFsIEthemlvciB3cm90ZToN
-Cj4gT24gMjcgSnVseSAyMDE2IGF0IDE0OjM2LCBWYXNhbnRoYWt1bWFyIFRoaWFnYXJhamFuDQo+
-IDx2dGhpYWdhckBxdGkucXVhbGNvbW0uY29tPiB3cm90ZToNCj4+IFRoZXJlIGFyZSBzbGlnaHQg
-ZGlmZmVyZW5jZXMgaW4gUnggaHcgZGVzY3JpcHRvciBpbmZvcm1hdGlvbg0KPj4gYW1vbmcgZGlm
-ZmVyZW50IGNoaXBzLiBTbyBmYXIgZHJpdmVyIGRvZXMgbm90IHVzZSB0aG9zZSBuZXcNCj4+IGlu
-Zm9ybWF0aW9uIGZvciBhbnkgZnVuY3Rpb25hbGl0aWVzLCBidXQgdGhlcmUgaXMgb25lIGltcG9y
-dGFudA0KPj4gaW5mb3JtYXRpb24gd2hpY2ggaXMgYXZhaWxhYmxlIGZyb20gUUNBOTlYMCBvbndh
-cmRzIHRvIGluZGljYXRlDQo+PiB0aGUgbnVtYmVyIG9mIGJ5dGVzIHRoYXQgaHcgcGFkZGVkIGF0
-IHRoZSBiZWdpbmluZyBvZiB0aGUgcngNCj4+IHBheWxvYWQgYW5kIHRoaXMgaW5mb3JtYXRpb24g
-aXMgbmVlZGVkIHRvIHVuZGVjYXAgdGhlIHJ4DQo+PiBwYWNrZXQuIEFkZCBhbiBhYnN0cmFjdGlv
-biBmb3IgUnggZGVzYyB0byBtYWtlIHVzZSBvZiB0aGUNCj4+IG5ldyBkZXNjIGluZm9ybWF0aW9u
-IGF2YWlsYWJsZS4gVGhlIGNhbGxiYWNrIHRoYXQgdGhpcyBwYXRjaA0KPj4gZGVmaW5lcyB0byBy
-ZXRyaWV2ZSB0aGUgcGFkZGluZyBieXRlcyB3aWxsIGJlIHVzZWQgaW4gZm9sbG93LXVwDQo+PiBw
-YXRjaC4NCj4+DQo+PiBTaWduZWQtb2ZmLWJ5OiBWYXNhbnRoYWt1bWFyIFRoaWFnYXJhamFuIDx2
-dGhpYWdhckBxdGkucXVhbGNvbW0uY29tPg0KPj4gLS0tDQo+PiAgIGRyaXZlcnMvbmV0L3dpcmVs
-ZXNzL2F0aC9hdGgxMGsvY29yZS5jIHwgMTIgKysrKysrKysrKysrDQo+PiAgIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2F0aC9hdGgxMGsvaHcuYyAgIHwgMTMgKysrKysrKysrKysrKw0KPj4gICBkcml2
-ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL2h3LmggICB8IDEyICsrKysrKysrKysrKw0KPj4g
-ICAzIGZpbGVzIGNoYW5nZWQsIDM3IGluc2VydGlvbnMoKykNCj4+DQo+PiBkaWZmIC0tZ2l0IGEv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEway9jb3JlLmMgYi9kcml2ZXJzL25ldC93aXJl
-bGVzcy9hdGgvYXRoMTBrL2NvcmUuYw0KPj4gaW5kZXggZTg4OTgyOS4uOWM1ZTkzYiAxMDA2NDQN
-Cj4+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGgxMGsvY29yZS5jDQo+PiArKysg
-Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoMTBrL2NvcmUuYw0KPj4gQEAgLTY4LDYgKzY4
-LDcgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBhdGgxMGtfaHdfcGFyYW1zIGF0aDEwa19od19wYXJh
-bXNfbGlzdFtdID0gew0KPj4gICAgICAgICAgICAgICAgICAgICAgICAgIC5ib2FyZF9zaXplID0g
-UUNBOTg4WF9CT0FSRF9EQVRBX1NaLA0KPj4gICAgICAgICAgICAgICAgICAgICAgICAgIC5ib2Fy
-ZF9leHRfc2l6ZSA9IFFDQTk4OFhfQk9BUkRfRVhUX0RBVEFfU1osDQo+PiAgICAgICAgICAgICAg
-ICAgIH0sDQo+PiArICAgICAgICAgICAgICAgLmh3X3J4X2Rlc2Nfb3BzID0gJnFjYTk4OHhfcnhf
-ZGVzY19vcHMsDQo+IFsuLi5dDQo+PiArc3RydWN0IGF0aDEwa19od19yeF9kZXNjX29wcyB7DQo+
-PiArICAgICAgIGludCAoKnJ4X2Rlc2NfZ2V0X2wzX3BhZF9ieXRlcykoc3RydWN0IGh0dF9yeF9k
-ZXNjICpyeGQpOw0KPj4gK307DQo+DQo+IEJlbmphbWluIGlzIHRyeWluZyB0byBpbXBsZW1lbnQg
-Y292ZXJhZ2UgY2xhc3MgYnkgcG9raW5nIGh3IHJlZ2lzdGVycw0KPiBvdmVyIGZpcm13YXJlJ3Mg
-aGVhZCBbMV0uIEknbSB0aGlua2luZyB0aGUgaHdfcnhfZGVzY19vcHMgY291bGQgYmUNCj4gZ2Vu
-ZXJhbGl6ZWQgdG8gaHdfb3BzIHNvIGl0IGNhbiBiZSB1c2VkIGZvciBkb2luZyBody1zcGVjaWZp
-YyBoYWNrcyBhcw0KPiB3ZWxsLiBXaGF0IGRvIHlvdSB0aGluaz8NCg0KU3VyZS4gSW5zdGVhZCBv
-ZiByZXdvcmtpbmcgdGhpcyBwYXRjaCBzZXQsIGNhbiB0aGlzIGJlIGRvbmUgaW4gYSBzZXBhcmF0
-ZSBwYXRjaD8uDQoNClZhc2FudGgNCg==
+
+
+On 07/18/2016 11:56 AM, Johannes Berg wrote:
+> On Mon, 2016-07-18 at 19:23 +0530, Purushottam Kushwaha wrote:
+>> Driver may allow support for different beacon interval on virtual
+>> interfaces.
+>> Allow if such support is advertised by driver. This adds new
+>> ext_feature as NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL.
+>
+> We have NL80211_IFACE_COMB_STA_AP_BI_MATCH in interface combinations,
+> perhaps it would make sense to also put this flag there?
+
+I was under impression that ath9k had supported this for years,
+but I guess I haven't tested it lately....
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
