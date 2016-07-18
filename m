@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f65.google.com ([209.85.214.65]:34231 "EHLO
-	mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088AbcGVEuR (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:35012 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751825AbcGRXYx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 00:50:17 -0400
-Received: by mail-it0-f65.google.com with SMTP id u186so2425745ita.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 21:50:17 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160721163107.686-1-me@bobcopeland.com>
-References: <20160721163107.686-1-me@bobcopeland.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 22 Jul 2016 14:49:57 +1000
-Message-ID: <CAGRGNgVRK_Cz9nFjDGXQWJonKuj-msB2MvS-RaJA1O3DK9fWnA@mail.gmail.com> (sfid-20160722_065037_117321_D33EEBE1)
-Subject: Re: [PATCH] ath9k: fix misleading indent
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 18 Jul 2016 19:24:53 -0400
+Received: by mail-pa0-f65.google.com with SMTP id cf3so110443pad.2
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2016 16:24:53 -0700 (PDT)
+From: Florian Fainelli <f.fainelli@gmail.com>
+To: brcm80211-dev-list.pdl@broadcom.com
+Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
+	kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
+	hante.meuleman@broadcom.com,
+	Florian Fainelli <f.fainelli@gmail.com>
+Subject: [PATCH 2/4] brcmsmac: Free packet if dma_mapping_error() fails in dma_rxfill
+Date: Mon, 18 Jul 2016 16:24:35 -0700
+Message-Id: <1468884277-18606-3-git-send-email-f.fainelli@gmail.com> (sfid-20160719_012459_771675_2455F819)
+In-Reply-To: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
+References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+In case dma_mapping_error() returns an error in dma_rxfill, we would be
+leaking a packet that we allocated with brcmu_pkt_buf_get_skb().
 
-On Fri, Jul 22, 2016 at 2:31 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> Fixes smatch warning:
->
-> ath9k_vif_iter_set_beacon() warn if statement not indented
->
-> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Reported-by: coverity (CID 1081819)
+Fixes: 67d0cf50bd32 ("brcmsmac: Fix WARNING caused by lack of calls to dma_mapping_error()")
+Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Looks right to me.
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->  drivers/net/wireless/ath/ath9k/main.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-
-Thanks,
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c
+index 796f5f9d5d5a..b7df576bb84d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c
+@@ -1079,8 +1079,10 @@ bool dma_rxfill(struct dma_pub *pub)
+ 
+ 		pa = dma_map_single(di->dmadev, p->data, di->rxbufsize,
+ 				    DMA_FROM_DEVICE);
+-		if (dma_mapping_error(di->dmadev, pa))
++		if (dma_mapping_error(di->dmadev, pa)) {
++			brcmu_pkt_buf_free_skb(p);
+ 			return false;
++		}
+ 
+ 		/* save the free packet pointer */
+ 		di->rxp[rxout] = p;
 -- 
-Julian Calaby
+2.7.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
