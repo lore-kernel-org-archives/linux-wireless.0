@@ -1,349 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([198.47.19.12]:57755 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751375AbcGTG6U convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44829 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752891AbcGSOdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 02:58:20 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>,
-	Rob Herring <robh@kernel.org>
-Subject: [PATCHv8] wlcore: spi: add wl18xx support
-Date: Wed, 20 Jul 2016 06:58:12 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B36161990@DFRE01.ent.ti.com> (sfid-20160720_085844_170527_BFB78266)
-References: <1468994768-23609-1-git-send-email-eyalr@ti.com> 
-Content-Type: text/plain; charset="Windows-1252"
+	Tue, 19 Jul 2016 10:33:50 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Michal Marek <mmarek@suse.com>, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	linux-kbuild@vger.kernel.org, akpm <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 05/11] Kbuild: don't add obj tree in additional includes
+References: <20160615154553.3177021-1-arnd@arndb.de>
+	<20160615154553.3177021-6-arnd@arndb.de>
+	<20160718201439.GA9053@sepie.suse.cz> <21521763.EfAflxWUP8@wuerfel>
+Date: Tue, 19 Jul 2016 17:33:44 +0300
+In-Reply-To: <21521763.EfAflxWUP8@wuerfel> (Arnd Bergmann's message of "Tue,
+	19 Jul 2016 10:31:26 +0200")
+Message-ID: <87a8hdae9j.fsf@purkki.adurom.net> (sfid-20160719_163414_291074_5B74A940)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for using with both wl12xx and wl18xx.
+Arnd Bergmann <arnd@arndb.de> writes:
 
-- all wilink family needs special init command for entering wspi mode.
-  extra clock cycles should be sent after the spi init command while the
-  cs pin is high.
-- Use inverted chip select for sending a dummy 4 bytes command that
-  completes the init stage.
+> On Monday, July 18, 2016 10:14:39 PM CEST Michal Marek wrote:
+>> On Wed, Jun 15, 2016 at 05:45:47PM +0200, Arnd Bergmann wrote:
+>> > When building with separate object directories and driver specific
+>> > Makefiles that add additional header include paths, Kbuild adjusts
+>> > the gcc flags so that we include both the directory in the source
+>> > tree and in the object tree.
+>> > 
+>> > However, due to another bug I fixed earlier, this did not actually
+>> > include the correct directory in the object tree, so we know that
+>> > we only really need the source tree here. Also, including the
+>> > object tree sometimes causes warnings about nonexisting directories
+>> > when the include path only exists in the source.
+>> > 
+>> > This changes the logic to only emit the -I argument for the srctree,
+>> > not for objects. We still need both $(srctree)/$(src) and $(obj)
+>> > though, so I'm adding them manually.
+>> > 
+>> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> 
+>> Hi Arnd,
+>> 
+>> I applied the series up to this patch to kbuild.git#kbuild. The rest
+>> seem to be related but not dependent patches, so I'll leave it up to the
+>> respective maintainers to pick them up. Is that OK with you?
+>
+> I think that's fine, a couple were already picked up, and what I have
+> left now is
+>
+> a281bfa5713a [SUBMITTED 20160615] [EXPERIMENTAL] Kbuild: enable -Wmissing-include-dirs by default
+> 83934921e68e [SUBMITTED 20160615] rtlwifi: don't add include path for rtl8188ee
 
-Signed-off-by: Eyal Reizer <eyalr@ti.com>
-Acked-by: Rob Herring <robh@kernel.org>
----
-v1->v2:update device tree bindings configuration
-v2->v3:revert from manual gpio manipulation. use inverted chip select instead
-for sending the extra init cycle which, achieves the same hardware purpose.
-update device tree bindings docucmentation accordingly
-v3->v4: Remove redundant data form binding documentation and fix chip select
-number mismatch in wl1271 example
-v4->v5: Rebase on top of head of wireless-drivers-next
-v5->v6: Add ACKs
-v6->v7: Mail format issues
-v7->v8: Remove redundant varaible from wlcore_probe_of
- .../bindings/net/wireless/ti,wlcore,spi.txt        |  41 +++++--
- drivers/net/wireless/ti/wlcore/spi.c               | 124 +++++++++++++++++----
- 2 files changed, 137 insertions(+), 28 deletions(-)
+Apparently[1] you didn't CC linux-wireless and that's why I didn't see
+the rtlwifi patch in wireless patchwork. Care to resend?
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
-index 9180724..8f9ced0 100644
---- a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
-@@ -1,19 +1,30 @@
--* Texas Instruments wl1271 wireless lan controller
-+* Texas Instruments wl12xx/wl18xx wireless lan controller
- 
--The wl1271 chip can be connected via SPI or via SDIO. This
-+The wl12xx/wl18xx chips can be connected via SPI or via SDIO. This
- document describes the binding for the SPI connected chip.
- 
- Required properties:
--- compatible :          Should be "ti,wl1271"
-+- compatible :          Should be one of the following:
-+    * "ti,wl1271"
-+    * "ti,wl1273"
-+    * "ti,wl1281"
-+    * "ti,wl1283"
-+    * "ti,wl1801"
-+    * "ti,wl1805"
-+    * "ti,wl1807"
-+    * "ti,wl1831"
-+    * "ti,wl1835"
-+    * "ti,wl1837"
- - reg :                 Chip select address of device
- - spi-max-frequency :   Maximum SPI clocking speed of device in Hz
--- ref-clock-frequency : Reference clock frequency
- - interrupt-parent, interrupts :
-                         Should contain parameters for 1 interrupt line.
-                         Interrupt parameters: parent, line number, type.
--- vwlan-supply :        Point the node of the regulator that powers/enable the wl1271 chip
-+- vwlan-supply :        Point the node of the regulator that powers/enable the
-+                        wl12xx/wl18xx chip
- 
- Optional properties:
-+- ref-clock-frequency : Reference clock frequency (should be set for wl12xx)
- - clock-xtal :          boolean, clock is generated from XTAL
- 
- - Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
-@@ -21,16 +32,28 @@ Optional properties:
- 
- Examples:
- 
-+For wl12xx family:
- &spi1 {
--	wl1271@1 {
-+	wlcore: wlcore@1 {
- 		compatible = "ti,wl1271";
--
- 		reg = <1>;
- 		spi-max-frequency = <48000000>;
--		clock-xtal;
--		ref-clock-frequency = <38400000>;
- 		interrupt-parent = <&gpio3>;
- 		interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
- 		vwlan-supply = <&vwlan_fixed>;
-+		clock-xtal;
-+		ref-clock-frequency = <38400000>;
-+	};
-+};
-+
-+For wl18xx family:
-+&spi0 {
-+	wlcore: wlcore@0 {
-+		compatible = "ti,wl1835";
-+		reg = <0>;
-+		spi-max-frequency = <48000000>;
-+		interrupt-parent = <&gpio0>;
-+		interrupts = <27 IRQ_TYPE_EDGE_RISING>;
-+		vwlan-supply = <&vwlan_fixed>;
- 	};
- };
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index cea9443..6d24040 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -70,16 +70,30 @@
- #define WSPI_MAX_CHUNK_SIZE    4092
- 
- /*
-- * only support SPI for 12xx - this code should be reworked when 18xx
-- * support is introduced
-+ * wl18xx driver aggregation buffer size is (13 * PAGE_SIZE) compared to
-+ * (4 * PAGE_SIZE) for wl12xx, so use the larger buffer needed for wl18xx
-  */
--#define SPI_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
-+#define SPI_AGGR_BUFFER_SIZE (13 * PAGE_SIZE)
- 
- /* Maximum number of SPI write chunks */
- #define WSPI_MAX_NUM_OF_CHUNKS \
- 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
- 
- 
-+struct wilink_familiy_data {
-+	char name[8];
-+};
-+
-+const struct wilink_familiy_data *wilink_data;
-+
-+static const struct wilink_familiy_data wl18xx_data = {
-+	.name = "wl18xx",
-+};
-+
-+static const struct wilink_familiy_data wl12xx_data = {
-+	.name = "wl12xx",
-+};
-+
- struct wl12xx_spi_glue {
- 	struct device *dev;
- 	struct platform_device *core;
-@@ -119,6 +133,7 @@ static void wl12xx_spi_init(struct device *child)
- 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
- 	struct spi_transfer t;
- 	struct spi_message m;
-+	struct spi_device *spi = to_spi_device(glue->dev);
- 	u8 *cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
- 
- 	if (!cmd) {
-@@ -151,6 +166,7 @@ static void wl12xx_spi_init(struct device *child)
- 		cmd[6] |= WSPI_INIT_CMD_EN_FIXEDBUSY;
- 
- 	cmd[7] = crc7_be(0, cmd+2, WSPI_INIT_CMD_CRC_LEN) | WSPI_INIT_CMD_END;
-+
- 	/*
- 	 * The above is the logical order; it must actually be stored
- 	 * in the buffer byte-swapped.
-@@ -163,6 +179,28 @@ static void wl12xx_spi_init(struct device *child)
- 	spi_message_add_tail(&t, &m);
- 
- 	spi_sync(to_spi_device(glue->dev), &m);
-+
-+	/* Send extra clocks with inverted CS (high). this is required
-+	 * by the wilink family in order to successfully enter WSPI mode.
-+	 */
-+	spi->mode ^= SPI_CS_HIGH;
-+	memset(&m, 0, sizeof(m));
-+	spi_message_init(&m);
-+
-+	cmd[0] = 0xff;
-+	cmd[1] = 0xff;
-+	cmd[2] = 0xff;
-+	cmd[3] = 0xff;
-+	__swab32s((u32 *)cmd);
-+
-+	t.tx_buf = cmd;
-+	t.len = 4;
-+	spi_message_add_tail(&t, &m);
-+
-+	spi_sync(to_spi_device(glue->dev), &m);
-+
-+	/* Restore chip select configration to normal */
-+	spi->mode ^= SPI_CS_HIGH;
- 	kfree(cmd);
- }
- 
-@@ -270,22 +308,25 @@ static int __must_check wl12xx_spi_raw_read(struct device *child, int addr,
- 	return 0;
- }
- 
--static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
--					     void *buf, size_t len, bool fixed)
-+static int __wl12xx_spi_raw_write(struct device *child, int addr,
-+				  void *buf, size_t len, bool fixed)
- {
- 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
--	/* SPI write buffers - 2 for each chunk */
--	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
-+	struct spi_transfer *t;
- 	struct spi_message m;
- 	u32 commands[WSPI_MAX_NUM_OF_CHUNKS]; /* 1 command per chunk */
- 	u32 *cmd;
- 	u32 chunk_len;
- 	int i;
- 
-+	/* SPI write buffers - 2 for each chunk */
-+	t = kzalloc(sizeof(*t) * 2 * WSPI_MAX_NUM_OF_CHUNKS, GFP_KERNEL);
-+	if (!t)
-+		return -ENOMEM;
-+
- 	WARN_ON(len > SPI_AGGR_BUFFER_SIZE);
- 
- 	spi_message_init(&m);
--	memset(t, 0, sizeof(t));
- 
- 	cmd = &commands[0];
- 	i = 0;
-@@ -318,9 +359,26 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
- 
- 	spi_sync(to_spi_device(glue->dev), &m);
- 
-+	kfree(t);
- 	return 0;
- }
- 
-+static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
-+					     void *buf, size_t len, bool fixed)
-+{
-+	int ret;
-+
-+	/* The ELP wakeup write may fail the first time due to internal
-+	 * hardware latency. It is safer to send the wakeup command twice to
-+	 * avoid unexpected failures.
-+	 */
-+	if (addr == HW_ACCESS_ELP_CTRL_REG)
-+		ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
-+	ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
-+
-+	return ret;
-+}
-+
- /**
-  * wl12xx_spi_set_power - power on/off the wl12xx unit
-  * @child: wl12xx device handle.
-@@ -349,17 +407,38 @@ static int wl12xx_spi_set_power(struct device *child, bool enable)
- 	return ret;
- }
- 
-+/**
-+ * wl12xx_spi_set_block_size
-+ *
-+ * This function is not needed for spi mode, but need to be present.
-+ * Without it defined the wlcore fallback to use the wrong packet
-+ * allignment on tx.
-+ */
-+static void wl12xx_spi_set_block_size(struct device *child,
-+				      unsigned int blksz)
-+{
-+}
-+
- static struct wl1271_if_operations spi_ops = {
- 	.read		= wl12xx_spi_raw_read,
- 	.write		= wl12xx_spi_raw_write,
- 	.reset		= wl12xx_spi_reset,
- 	.init		= wl12xx_spi_init,
- 	.power		= wl12xx_spi_set_power,
--	.set_block_size = NULL,
-+	.set_block_size = wl12xx_spi_set_block_size,
- };
- 
- static const struct of_device_id wlcore_spi_of_match_table[] = {
--	{ .compatible = "ti,wl1271" },
-+	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
-+	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1831", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1835", .data = &wl18xx_data},
-+	{ .compatible = "ti,wl1837", .data = &wl18xx_data},
- 	{ }
- };
- MODULE_DEVICE_TABLE(of, wlcore_spi_of_match_table);
-@@ -375,18 +454,24 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
- 			   struct wlcore_platdev_data *pdev_data)
- {
- 	struct device_node *dt_node = spi->dev.of_node;
--	int ret;
-+	const struct of_device_id *of_id;
-+
-+	of_id = of_match_node(wlcore_spi_of_match_table, dt_node);
-+	if (!of_id)
-+		return -ENODEV;
-+
-+	wilink_data = of_id->data;
-+	dev_info(&spi->dev, "selected chip familiy is %s\n",
-+		 wilink_data->name);
- 
- 	if (of_find_property(dt_node, "clock-xtal", NULL))
- 		pdev_data->ref_clock_xtal = true;
- 
--	ret = of_property_read_u32(dt_node, "ref-clock-frequency",
--				   &pdev_data->ref_clock_freq);
--	if (ret) {
--		dev_err(glue->dev,
--			"can't get reference clock frequency (%d)\n", ret);
--		return ret;
--	}
-+	/* optional clock frequency params */
-+	of_property_read_u32(dt_node, "ref-clock-frequency",
-+			     &pdev_data->ref_clock_freq);
-+	of_property_read_u32(dt_node, "tcxo-clock-frequency",
-+			     &pdev_data->tcxo_clock_freq);
- 
- 	return 0;
- }
-@@ -437,7 +522,8 @@ static int wl1271_probe(struct spi_device *spi)
- 		return ret;
- 	}
- 
--	glue->core = platform_device_alloc("wl12xx", PLATFORM_DEVID_AUTO);
-+	glue->core = platform_device_alloc(wilink_data->name,
-+					   PLATFORM_DEVID_AUTO);
- 	if (!glue->core) {
- 		dev_err(glue->dev, "can't allocate platform_device\n");
- 		return -ENOMEM;
+[1] https://patchwork.kernel.org/patch/9178861/
+
 -- 
-2.7.4
-
+Kalle Valo
