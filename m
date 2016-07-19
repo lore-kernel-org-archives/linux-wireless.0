@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:37969 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754062AbcG0NMH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 09:12:07 -0400
-Received: by mail-wm0-f42.google.com with SMTP id o80so61856117wme.1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2016 06:12:06 -0700 (PDT)
+Received: from ozlabs.org ([103.22.144.67]:35044 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752106AbcGSXgo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2016 19:36:44 -0400
+Date: Wed, 20 Jul 2016 09:36:41 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+To: Brian Norris <computersforpeace@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	"linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-next <linux-next@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: build failure after merge of the
+ wireless-drivers-next tree
+Message-ID: <20160720093641.2dbb1f83@canb.auug.org.au> (sfid-20160720_013704_746639_C8A71D04)
+In-Reply-To: <20160719183913.GA88186@google.com>
+References: <20160719160831.79c0303f@canb.auug.org.au>
+	<8760s2w369.fsf@kamboji.qca.qualcomm.com>
+	<CACna6rxVFD1MpAEYP_Zd4W8CvgnxSQpa0wJs83jwDJ5v11gZ=Q@mail.gmail.com>
+	<871t2qw1cz.fsf@kamboji.qca.qualcomm.com>
+	<CACna6ry6QgrbUoHuJacmr1EhHZyrwqsXfr51gENvY-0zM9L+3Q@mail.gmail.com>
+	<87h9blvhxg.fsf@kamboji.qca.qualcomm.com>
+	<20160719183913.GA88186@google.com>
 MIME-Version: 1.0
-In-Reply-To: <5798B042.4070604@qti.qualcomm.com>
-References: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
- <1469623006-13178-3-git-send-email-vthiagar@qti.qualcomm.com>
- <CA+BoTQ=kUP-Qtw1EWKKfM_aGtJS_4oQdz4tqD5tiJkF_k3-vOA@mail.gmail.com> <5798B042.4070604@qti.qualcomm.com>
-From: Michal Kazior <michal.kazior@tieto.com>
-Date: Wed, 27 Jul 2016 15:12:04 +0200
-Message-ID: <CA+BoTQnc5x1+YoW=n3e+iXg13HwZaP_BOS_mJWzOWBY+9s=dAw@mail.gmail.com> (sfid-20160727_151211_287846_44BBD484)
-Subject: Re: [PATCH 2/4] ath10k: Add provision for Rx descriptor abstraction
-To: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 July 2016 at 14:59, Thiagarajan, Vasanthakumar
-<vthiagar@qti.qualcomm.com> wrote:
-> On Wednesday 27 July 2016 06:13 PM, Michal Kazior wrote:
->> On 27 July 2016 at 14:36, Vasanthakumar Thiagarajan
-[...]
->>> --- a/drivers/net/wireless/ath/ath10k/core.c
->>> +++ b/drivers/net/wireless/ath/ath10k/core.c
->>> @@ -68,6 +68,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
->>>                          .board_size = QCA988X_BOARD_DATA_SZ,
->>>                          .board_ext_size = QCA988X_BOARD_EXT_DATA_SZ,
->>>                  },
->>> +               .hw_rx_desc_ops = &qca988x_rx_desc_ops,
->> [...]
->>> +struct ath10k_hw_rx_desc_ops {
->>> +       int (*rx_desc_get_l3_pad_bytes)(struct htt_rx_desc *rxd);
->>> +};
->>
->> Benjamin is trying to implement coverage class by poking hw registers
->> over firmware's head [1]. I'm thinking the hw_rx_desc_ops could be
->> generalized to hw_ops so it can be used for doing hw-specific hacks as
->> well. What do you think?
+Hi Brian,
+
+On Tue, 19 Jul 2016 11:39:13 -0700 Brian Norris <computersforpeace@gmail.com> wrote:
 >
-> Sure. Instead of reworking this patch set, can this be done in a separate patch?.
+> I applied a trivial change to this same Kconfig entry:
+> 
+> Subject: mtd: update description of MTD_BCM47XXSFLASH symbol
+> http://git.infradead.org/l2-mtd.git/commitdiff/0a526341fee054c1e2b9f0e4b2b424ae81707d4c
+> 
+> It's a trivial conflict, so should we just let Linus work it out? I can
+> note it my MTD pull request, if wireless lands first.
 
-I don't really mind especially since there's not much comments on his work yet.
+Linus and I should be able to cope.  I will send my usual notification today.
 
-
-Michał
+-- 
+Cheers,
+Stephen Rothwell
