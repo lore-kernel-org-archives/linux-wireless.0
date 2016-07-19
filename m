@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:49316 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752355AbcGZAs2 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33845 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752534AbcGSL0K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jul 2016 20:48:28 -0400
-Date: Mon, 25 Jul 2016 17:48:26 -0700 (PDT)
-Message-Id: <20160725.174826.2146830871661675561.davem@davemloft.net> (sfid-20160726_024833_743778_076C9037)
-To: arvind.yadav.cs@gmail.com
-Cc: zajec5@gmail.com, leoli@freescale.com, qiang.zhao@freescale.com,
-	scottwood@freescale.com, viresh.kumar@linaro.org,
-	akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux@roeck-us.net, arnd@arndb.de
-Subject: Re: [v3] UCC_GETH/UCC_FAST: Use IS_ERR_VALUE_U32 API to avoid
- IS_ERR_VALUE abuses.
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 19 Jul 2016 07:26:10 -0400
+Received: by mail-pf0-f196.google.com with SMTP id g202so1239072pfb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 04:26:10 -0700 (PDT)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH] nl80211: Expand max value of NL80211_MESHCONF_HT_OPMODE command
+Date: Tue, 19 Jul 2016 20:25:56 +0900
+Message-Id: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com> (sfid-20160719_132613_968696_23246E93)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Date: Sat, 23 Jul 2016 23:35:51 +0530
+Previously, the max value of NL80211_MESHCONF_HT_OPMODE was 16.
+But it causes EINVAL when IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED
+and IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT bit is enabled.
+So this patch expands the max value.
 
-> However, anything that passes an 'unsigned short' or 'unsigned int'
-> argument into IS_ERR_VALUE() is guaranteed to be broken, as are
-> 8-bit integers and types that are wider than 'unsigned long'.
- ...
-> Passing value in IS_ERR_VALUE() is wrong, as they pass an
-> 'unsigned int' into a function that takes an 'unsigned long'
-> argument.This happens to work because the type is sign-extended
-> on 64-bit architectures before it gets converted into an
-> unsigned type.
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ net/wireless/nl80211.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-This commit log message is a complete mess, you're saying exactly
-the same thing over and over again.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 46417f9..8a00e50 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5471,7 +5471,10 @@ do {									    \
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, -255, 0,
+ 				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
+ 				  nl80211_check_s32);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0,
++				  IEEE80211_HT_OP_MODE_PROTECTION |
++				  IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
++				  IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT,
+ 				  mask, NL80211_MESHCONF_HT_OPMODE,
+ 				  nl80211_check_u16);
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathToRootTimeout,
+-- 
+2.7.4
 
-Also your Subject line is not formatted correctly, do not list
-the subsystem prefix in ALL CAPS.  Just plain "ucc_geth/ucc_fast: "
-would be fine.
