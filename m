@@ -1,123 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33612 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752055AbcGFKqT (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:33753 "EHLO
+	mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752905AbcGSHJM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:46:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:12 +0300
-Message-Id: <1467801651-1816-17-git-send-email-luca@coelho.fi> (sfid-20160706_125023_530483_1DB2EE1D)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 17/56] iwlwifi: mvm: Do not open aggregations for null data packets
+	Tue, 19 Jul 2016 03:09:12 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brian Norris <computersforpeace@gmail.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-mtd@lists.infradead.org (open list:MEMORY TECHNOLOGY DEVICES
+	(MTD)), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] mtd: add arch dependency for MTD_BCM47XXSFLASH symbol
+Date: Tue, 19 Jul 2016 09:08:32 +0200
+Message-Id: <1468912123-14899-1-git-send-email-zajec5@gmail.com> (sfid-20160719_090927_800963_83F4CF9F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+We dropped strict MIPS dependency for bcm47xxsflash driver in:
+commit 5651d6aaf489 ("mtd: bcm47xxsflash: use ioremap_cache() instead of
+KSEG0ADDR()") but using ioremap_cache still limits building it to few
+selected architectures only.
 
-Currently we try to open an aggregation for every packet (given that one
-is not already open).
+A recent commit 57d8f7dd2132 ("bcma: allow enabling serial flash support
+on non-MIPS SoCs") automatically dropped MIPS dependency for
+MTD_BCM47XXSFLASH which broke building e.g. on powerpc and cris.
 
-This causes redundant overhead (addba/delba) for null data packets.
+The bcma change is alright as it doesn't break building bcma code in any
+way. MTD_BCM47XXSFLASH on the other hand should be limited to archs
+which need it and can build it (by providing ioremap_cache).
 
-Do not open an aggregation for null data packets.
-
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Fixes: 57d8f7dd2132 ("bcma: allow enabling serial flash support on non-MIPS SoCs")
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Cc: Brian Norris <computersforpeace@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 13 +++++++------
- drivers/net/wireless/intel/iwlwifi/mvm/rs.h |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c |  2 +-
- 3 files changed, 9 insertions(+), 8 deletions(-)
+That bcma commit breaking building landed in the wireless-drivers-next.
+Is that possible to get this patch through the same tree?
+---
+ drivers/mtd/devices/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 81dd2f6..7aecf46 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -399,7 +399,7 @@ static int iwl_hwrate_to_plcp_idx(u32 rate_n_flags)
- static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 				  struct ieee80211_sta *sta,
- 				  struct iwl_lq_sta *lq_sta,
--				  int tid);
-+				  int tid, bool ndp);
- static void rs_fill_lq_cmd(struct iwl_mvm *mvm,
- 			   struct ieee80211_sta *sta,
- 			   struct iwl_lq_sta *lq_sta,
-@@ -1161,7 +1161,7 @@ static u8 rs_get_tid(struct ieee80211_hdr *hdr)
- }
+diff --git a/drivers/mtd/devices/Kconfig b/drivers/mtd/devices/Kconfig
+index f73c416..64a2485 100644
+--- a/drivers/mtd/devices/Kconfig
++++ b/drivers/mtd/devices/Kconfig
+@@ -114,7 +114,7 @@ config MTD_SST25L
  
- void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
--			  int tid, struct ieee80211_tx_info *info)
-+			  int tid, struct ieee80211_tx_info *info, bool ndp)
- {
- 	int legacy_success;
- 	int retries;
-@@ -1384,7 +1384,7 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- done:
- 	/* See if there's a better rate or modulation mode to try. */
- 	if (sta->supp_rates[info->band])
--		rs_rate_scale_perform(mvm, sta, lq_sta, tid);
-+		rs_rate_scale_perform(mvm, sta, lq_sta, tid, ndp);
- }
- 
- /*
-@@ -1407,7 +1407,8 @@ static void rs_mac80211_tx_status(void *mvm_r,
- 	    info->flags & IEEE80211_TX_CTL_NO_ACK)
- 		return;
- 
--	iwl_mvm_rs_tx_status(mvm, sta, rs_get_tid(hdr), info);
-+	iwl_mvm_rs_tx_status(mvm, sta, rs_get_tid(hdr), info,
-+			     ieee80211_is_qos_nullfunc(hdr->frame_control));
- }
- 
- /*
-@@ -2213,7 +2214,7 @@ static bool rs_tpc_perform(struct iwl_mvm *mvm,
- static void rs_rate_scale_perform(struct iwl_mvm *mvm,
- 				  struct ieee80211_sta *sta,
- 				  struct iwl_lq_sta *lq_sta,
--				  int tid)
-+				  int tid, bool ndp)
- {
- 	int low = IWL_RATE_INVALID;
- 	int high = IWL_RATE_INVALID;
-@@ -2512,7 +2513,7 @@ lq_update:
- 			    (lq_sta->tx_agg_tid_en & (1 << tid)) &&
- 			    (tid != IWL_MAX_TID_COUNT)) {
- 				tid_data = &sta_priv->tid_data[tid];
--				if (tid_data->state == IWL_AGG_OFF) {
-+				if (tid_data->state == IWL_AGG_OFF && !ndp) {
- 					IWL_DEBUG_RATE(mvm,
- 						       "try to aggregate tid %d\n",
- 						       tid);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-index 90d046f..d4a7fe2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.h
-@@ -362,7 +362,7 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 
- /* Notify RS about Tx status */
- void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
--			  int tid, struct ieee80211_tx_info *info);
-+			  int tid, struct ieee80211_tx_info *info, bool ndp);
- 
- /**
-  * iwl_rate_control_register - Register the rate control algorithm callbacks
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 9943013..d91edab 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1660,7 +1660,7 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 		iwl_mvm_tx_info_from_ba_notif(&ba_info, ba_notif, tid_data);
- 
- 		IWL_DEBUG_TX_REPLY(mvm, "No reclaim. Update rs directly\n");
--		iwl_mvm_rs_tx_status(mvm, sta, tid, &ba_info);
-+		iwl_mvm_rs_tx_status(mvm, sta, tid, &ba_info, false);
- 	}
- 
- out:
+ config MTD_BCM47XXSFLASH
+ 	tristate "R/O support for serial flash on BCMA bus"
+-	depends on BCMA_SFLASH
++	depends on BCMA_SFLASH && (MIPS || ARM)
+ 	help
+ 	  BCMA bus can have various flash memories attached, they are
+ 	  registered by bcma as platform devices. This enables driver for
 -- 
-2.8.1
+1.8.4.5
 
