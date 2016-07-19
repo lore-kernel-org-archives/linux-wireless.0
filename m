@@ -1,71 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:34495 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751002AbcGMLle (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:36019 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754001AbcGSS0F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 07:41:34 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Maital Hahn <maitalm@ti.com>, Yaniv Machani <yanivma@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: [PATCH v2 1/3] mac80211: mesh: flush stations before beacons are stopped
-Date: Wed, 13 Jul 2016 14:44:41 +0300
-Message-ID: <20160713114449.24665-1-yanivma@ti.com> (sfid-20160713_134259_331056_2C29E217)
+	Tue, 19 Jul 2016 14:26:05 -0400
+Received: by mail-wm0-f43.google.com with SMTP id q128so28463806wma.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 11:26:04 -0700 (PDT)
+Subject: Re: [PATCH 3/4] brcmsmac: Fix invalid memcpy() size in
+ brcms_c_d11hdrs_mac80211
+To: Florian Fainelli <f.fainelli@gmail.com>,
+	brcm80211-dev-list.pdl@broadcom.com
+References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
+ <1468884277-18606-4-git-send-email-f.fainelli@gmail.com>
+ <685abc5d-2e3d-cdce-4849-f7e5beb3309d@broadcom.com>
+ <578E5864.3040309@gmail.com>
+Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
+	kvalo@codeaurora.org, hante.meuleman@broadcom.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <88b43756-d41e-e7bf-fa91-2a086ee2bce7@broadcom.com> (sfid-20160719_202610_415699_D66E58D4)
+Date: Tue, 19 Jul 2016 20:26:00 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <578E5864.3040309@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Maital Hahn <maitalm@ti.com>
 
-Some drivers (e.g. wl18xx) expect that the last stage in the
-de-initialization process will be stopping the beacons, similar to AP flow.
-Update ieee80211_stop_mesh() flow accordingly.
-As peers can be removed dynamically, this would not impact other drivers.
 
-Tested also on Ralink RT3572 chipset.
+On 19-7-2016 18:42, Florian Fainelli wrote:
+> On 07/19/2016 03:38 AM, Arend Van Spriel wrote:
+>> On 19-7-2016 1:24, Florian Fainelli wrote:
+>>> struct ieee80211_rts::ra is only ETH_ALEN wide, yet we attempt to copy 2
+>>> * ETH_ALEN, which will potentially overrun the destination buffer.
+>>
+>> NACK - this is intentional. Have to admit it is a bit of trickery.
+> 
+> This seems fragile, if there is any kind of re-ordering of fields within
+> that structure your trick breaks apart.
 
-Signed-off-by: Maital Hahn <maitalm@ti.com>
-Signed-off-by: Yaniv Machani <yanivma@ti.com>
----
-V2- updated comment, patch was tested with RT3572
+Well, that would be an 802.11 standard update and given that it would
+break legacy devices I think it is unlikely that reordering would happen
+in this case.
 
- net/mac80211/mesh.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+>> struct ieee80211_rts is mapped over struct d11txh which is sent to
+>> hardware. The struct is used for both RTS and CTS. Transmitting CTS will
+>> only fill 802.11 addr2 in struct ieee80211_rts::ra. Transmitting RTS
+>> fills 802.11 addr1 in ra and 802.11 addr2 in ta using single memcpy().
+>> Not very clear, but your change is not the way to go here.
+> 
+> Fair enough, as Kalle suggested, this deserves a comment explaining why,
+> I would not be surprised other people would trip over that.
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index 21b1fdf..9214bc1 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -896,20 +896,22 @@ void ieee80211_stop_mesh(struct ieee80211_sub_if_data *sdata)
- 
- 	netif_carrier_off(sdata->dev);
- 
-+	/* flush STAs and mpaths on this iface */
-+	sta_info_flush(sdata);
-+	mesh_path_flush_by_iface(sdata);
-+
- 	/* stop the beacon */
- 	ifmsh->mesh_id_len = 0;
- 	sdata->vif.bss_conf.enable_beacon = false;
- 	clear_bit(SDATA_STATE_OFFCHANNEL_BEACON_STOPPED, &sdata->state);
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_BEACON_ENABLED);
-+
-+	/* remove beacon */
- 	bcn = rcu_dereference_protected(ifmsh->beacon,
- 					lockdep_is_held(&sdata->wdev.mtx));
- 	RCU_INIT_POINTER(ifmsh->beacon, NULL);
- 	kfree_rcu(bcn, rcu_head);
- 
--	/* flush STAs and mpaths on this iface */
--	sta_info_flush(sdata);
--	mesh_path_flush_by_iface(sdata);
--
- 	/* free all potentially still buffered group-addressed frames */
- 	local->total_ps_buffered -= skb_queue_len(&ifmsh->ps.bc_buf);
- 	skb_queue_purge(&ifmsh->ps.bc_buf);
--- 
-2.9.0
+Agree. I am also fine with two separate memcpy() statements if that
+gives enough clarification.
 
+Regards,
+Arend
+
+>>
+>> Regards,
+>> Arend
+>>
+>>> Reported-by: coverity (CID 145657)
+>>> Fixes: 5b435de0d7868 ("net: wireless: add brcm80211 drivers")
+>>> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+>>> ---
+>>>  drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
+>>> index c2a938b59044..59813a3666eb 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
+>>> @@ -6671,7 +6671,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
+>>>  			rts->frame_control = cpu_to_le16(IEEE80211_FTYPE_CTL |
+>>>  							 IEEE80211_STYPE_RTS);
+>>>  
+>>> -			memcpy(&rts->ra, &h->addr1, 2 * ETH_ALEN);
+>>> +			memcpy(&rts->ra, &h->addr1, ETH_ALEN);
+>>>  		}
+>>>  
+>>>  		/* mainrate
+>>>
+> 
+> 
