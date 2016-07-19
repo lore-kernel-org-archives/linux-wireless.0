@@ -1,58 +1,344 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3991 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753018AbcGHJP5 (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34482 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752421AbcGSG6Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 05:15:57 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Nestor Machno <nestor.machno89@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
-Date: Fri, 8 Jul 2016 09:15:53 +0000
-Message-ID: <efa3441022124e74af56753a70041eee@SC-EXCH04.marvell.com> (sfid-20160708_111601_173820_A2958E06)
-References: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com>
-In-Reply-To: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 19 Jul 2016 02:58:25 -0400
+From: Eyal Reizer <eyalreizer@gmail.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-spi@vger.kernel.org,
+	robh@kernel.org
+Cc: Eyal Reizer <eyalreizer@gmail.com>, Eyal Reizer <eyalr@ti.com>
+Subject: [PATCH v7] wlcore: spi: add wl18xx support
+Date: Tue, 19 Jul 2016 09:58:02 +0300
+Message-Id: <1468911482-32560-1-git-send-email-eyalr@ti.com> (sfid-20160719_085856_591800_4946252C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51
-eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgTmVzdG9y
-IE1hY2hubw0KPiBTZW50OiBUaHVyc2RheSwgSnVseSAwNywgMjAxNiA2OjA3IEFNDQo+IFRvOiBs
-aW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogRndkOiBtd2lmaWV4K3dw
-YV9zdXBwbGljYW50IGNhbm5vdCBzZXQgdXAgV1BBL1dQQTIgQURIT0MNCj4gDQo+IEhpIEFsbCwN
-Cj4gQW1pdGt1bWFyLCBjYW4geW91IGNvbmZpcm0gaWYgdGhpcyB0aGlzIGlzIGEgYnVnIG9yIHRv
-ZGF5IGlzIGZpeGVkPw0KDQpZZXMuIFRoaXMgaXMgYSBidWcgaW4gb3VyIGZpcm13YXJlLiBBREhP
-QyBpbiBXUEEvV1BBMiBzZWN1cml0eSBpcyBicm9rZW4uIFdlIGhhdmUgYXNrZWQgZmlybXdhcmUg
-ZXhwZXJ0cyB0byBsb29rIGludG8gdGhpcy4gQXMgd2UgaGF2ZSBhIG1pZC15ZWFyIHNodXRkb3du
-IHRoaXMgd2VlaywgdGhleSB3aWxsIGJlIGFibGUgdG8gY2hlY2sgdGhlIHByb2JsZW0gbmV4dCB3
-ZWVrIG9ubHkuIEhvd2V2ZXIgQURIT0MgaW4gb3BlbiBtb2RlIHNob3VsZCB3b3JrIGFzIGV4cGVj
-dGVkDQoNCj4gDQo+IFZpbmNlbnQsIEkgaGFkIGFsc28gZmFjZWQgc2ltaWxhciBpc3N1ZSBvbiBT
-dXJmYWNlIFBybyAyIHdpdGggYmFja3BvcnRzDQo+IGZyb20gNC4xLi4uIFNvIGhlcmUgZmV3IHF1
-ZXN0aW9uOg0KPiANCj4gKiBJIHNhdyBpbiAxc3QgcG9zdCB0aGF0IHlvdSB3aGVyZSB3b3JraW5n
-IHRvIG1ha2Ugd29yayB0aGUNCj4gd3BhX3N1cHBsaWNhbnQgd2l0aCBtaXhlZCBjb25maWd1cmF0
-aW9uIGZvciBhZGhvYyAod3BhLW5vbmUgKyB3cGEtaWJzcyksDQo+IGJ1dCBhbHNvIGluIHJlY2Vu
-dCBwb3N0IHRoYXQgeW91IGZvY3VzIG1vc3RseSBvbiBkZWJ1Z2dpbmcgd3BhLWlic3MuIEkNCj4g
-c3VnZ2VzdCB0byBmb2N1cyB5b3VyIHRlc3Qgb24gb25lIHdwYSBtb2RlIGFuZCBJIHRoaW5rIHdw
-YS1ub25lIGJldHRlcg0KPiBiZWNhdXNlIGl0J3MgZWFzaWVyLi4NCj4gKiBXaHkgeW91IGFyZSBu
-b3QgdGVzdGluZyB0aGUgbGF0ZXN0IGJhY2twb3J0IGZyb20gdXBzdHJlYW0ga2VybmVsPyBhcw0K
-PiB5b3UgY2FuIGtub3cgTWFydmVsbCBpcyBmb2N1cyBtb3N0IHRvIGZpeCBvcGVuIGlzc3VlIG9u
-IGN1cnJlbnQgc3RhYmxlDQo+IHJlbGVhc2UsIEkgc2F3IGZyb20gY29tbWl0IHRoYXQgcmVjZW50
-bHkgdGhleSBmaXggc29tZXRoaW5nIGFib3V0IFdQQSBvbg0KPiBtaXhmbGV4LCBzZWUNCj4gaHR0
-cHM6Ly9iYWNrcG9ydHMud2lraS5rZXJuZWwub3JnL2luZGV4LnBocC9Eb2N1bWVudGF0aW9uL2Nv
-bXBhdC0NCj4gZHJpdmVycy9oYWNraW5nDQo+ICogV291bGQgYmUgZ29vZCBpbmZvcm1hdGlvbiB0
-byBrbm93IGlmIHlvdSB0ZXN0ZWQgYWxzbyBvbiBiYWNrcG9ydCAzLngsDQo+IGRpZCB5b3U/ICBJ
-IGtub3cgbXdpZmlleCdzIFdQQSBzdGFjayBjaGFuZ2VkIGEgbG90IGZyb20gMy54IGtlcm5lbC4N
-Cj4gKiBUbyBzdXBwb3J0IHlvdSBtb3JlLCBjb3VsZCB5b3UgZW5hYmxlIGRlYnVnIGluZm8gYW5k
-IHByb3ZpZGUgZnVsbCBsb2cNCj4gb2YgeW91ciBzZXR1cD8gLmNvbmZpZz8gcGF0Y2g/IGFueXRo
-aW5nIGVsc2U/DQo+ICogQ2FuIHlvdSBzaGFyZSB1cyB5b3VyIGhhY2tlZCBiYWNrcG9ydD8NCj4g
-KiBMYXQgcXVlc3Rpb24gVmluY2VudCwgYXJlIHlvdSB3b3JraW5nIGZvciBBSVJCVVMsIEFDVElB
-IG9yIFRIQUxFUyA/DQo+IDopDQo+IA0KPiBCZXN0IFJlZ2FyZHMNCj4gTmVzdG9yDQo+IA0KPiBP
-biBNb24sIEp1biAxMywgMjAxNiBhdCA3OjQyIEFNLCBWaW5jZW50IENFU1NPTg0KPiA8dmluY2Vu
-dC5jZXNzb25Ac21pbGUuZnI+IHdyb3RlOg0KPiA+IEhpIEFtaXRrdW1hciwNCj4gPg0KPiA+IEhl
-cmUgYXJlIHRoZSB3cGFfc3VwcGxpY2FudCBsb2dzICh3aXRoIENPTkZJR19JQlNTX1JTTj15IGVu
-YWJsZWQpIGZyb20NCj4gPiB0aGUgdHdvIGRldmljZXMuIEJlc2lkZSB3cGFfc3VwcGxpY2FudCwg
-SSBtYW51YWxseSBzZXQgSVBzDQo+ID4gMTkyLjE2OC4xLnh5IHdpdGggY29tbWFuZCAiaWZjb25m
-aWcgbWxhbjAgMTkyLjE2OC4xLnh5IiBhbmQgdGhlbiBJIHRyeQ0KPiA+IHRvIHBpbmcgZWFjaCBv
-dGhlciwgd2l0aG91dCBzdWNjZXNzLg0KPiA+DQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
+From: Eyal Reizer <eyalreizer@gmail.com>
+
+Add support for using with both wl12xx and wl18xx.
+
+- all wilink family needs special init command for entering wspi mode.
+  extra clock cycles should be sent after the spi init command while the
+  cs pin is high.
+- Use inverted chip select for sending a dummy 4 bytes command that
+  completes the init stage.
+
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+v1->v2:update device tree bindings configuration
+v2->v3:revert from manual gpio manipulation. use inverted chip select instead
+for sending the extra init cycle which, achieves the same hardware purpose.
+update device tree bindings docucmentation accordingly
+v3->v4: Remove redundant data form binding documentation and fix chip select
+number mismatch in wl1271 example
+v4->v5: Rebase on top of head of wireless-drivers-next
+v5->v6: Add ACKs
+v6->v7: Mail format issues
+ .../bindings/net/wireless/ti,wlcore,spi.txt        |  41 +++++--
+ drivers/net/wireless/ti/wlcore/spi.c               | 123 ++++++++++++++++++---
+ 2 files changed, 137 insertions(+), 27 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+index 9180724..8f9ced0 100644
+--- a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+@@ -1,19 +1,30 @@
+-* Texas Instruments wl1271 wireless lan controller
++* Texas Instruments wl12xx/wl18xx wireless lan controller
+ 
+-The wl1271 chip can be connected via SPI or via SDIO. This
++The wl12xx/wl18xx chips can be connected via SPI or via SDIO. This
+ document describes the binding for the SPI connected chip.
+ 
+ Required properties:
+-- compatible :          Should be "ti,wl1271"
++- compatible :          Should be one of the following:
++    * "ti,wl1271"
++    * "ti,wl1273"
++    * "ti,wl1281"
++    * "ti,wl1283"
++    * "ti,wl1801"
++    * "ti,wl1805"
++    * "ti,wl1807"
++    * "ti,wl1831"
++    * "ti,wl1835"
++    * "ti,wl1837"
+ - reg :                 Chip select address of device
+ - spi-max-frequency :   Maximum SPI clocking speed of device in Hz
+-- ref-clock-frequency : Reference clock frequency
+ - interrupt-parent, interrupts :
+                         Should contain parameters for 1 interrupt line.
+                         Interrupt parameters: parent, line number, type.
+-- vwlan-supply :        Point the node of the regulator that powers/enable the wl1271 chip
++- vwlan-supply :        Point the node of the regulator that powers/enable the
++                        wl12xx/wl18xx chip
+ 
+ Optional properties:
++- ref-clock-frequency : Reference clock frequency (should be set for wl12xx)
+ - clock-xtal :          boolean, clock is generated from XTAL
+ 
+ - Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
+@@ -21,16 +32,28 @@ Optional properties:
+ 
+ Examples:
+ 
++For wl12xx family:
+ &spi1 {
+-	wl1271@1 {
++	wlcore: wlcore@1 {
+ 		compatible = "ti,wl1271";
+-
+ 		reg = <1>;
+ 		spi-max-frequency = <48000000>;
+-		clock-xtal;
+-		ref-clock-frequency = <38400000>;
+ 		interrupt-parent = <&gpio3>;
+ 		interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
+ 		vwlan-supply = <&vwlan_fixed>;
++		clock-xtal;
++		ref-clock-frequency = <38400000>;
++	};
++};
++
++For wl18xx family:
++&spi0 {
++	wlcore: wlcore@0 {
++		compatible = "ti,wl1835";
++		reg = <0>;
++		spi-max-frequency = <48000000>;
++		interrupt-parent = <&gpio0>;
++		interrupts = <27 IRQ_TYPE_EDGE_RISING>;
++		vwlan-supply = <&vwlan_fixed>;
+ 	};
+ };
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index cea9443..73fbcf1 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -70,16 +70,30 @@
+ #define WSPI_MAX_CHUNK_SIZE    4092
+ 
+ /*
+- * only support SPI for 12xx - this code should be reworked when 18xx
+- * support is introduced
++ * wl18xx driver aggregation buffer size is (13 * PAGE_SIZE) compared to
++ * (4 * PAGE_SIZE) for wl12xx, so use the larger buffer needed for wl18xx
+  */
+-#define SPI_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
++#define SPI_AGGR_BUFFER_SIZE (13 * PAGE_SIZE)
+ 
+ /* Maximum number of SPI write chunks */
+ #define WSPI_MAX_NUM_OF_CHUNKS \
+ 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
+ 
+ 
++struct wilink_familiy_data {
++	char name[8];
++};
++
++const struct wilink_familiy_data *wilink_data;
++
++static const struct wilink_familiy_data wl18xx_data = {
++	.name = "wl18xx",
++};
++
++static const struct wilink_familiy_data wl12xx_data = {
++	.name = "wl12xx",
++};
++
+ struct wl12xx_spi_glue {
+ 	struct device *dev;
+ 	struct platform_device *core;
+@@ -119,6 +133,7 @@ static void wl12xx_spi_init(struct device *child)
+ 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
+ 	struct spi_transfer t;
+ 	struct spi_message m;
++	struct spi_device *spi = to_spi_device(glue->dev);
+ 	u8 *cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
+ 
+ 	if (!cmd) {
+@@ -151,6 +166,7 @@ static void wl12xx_spi_init(struct device *child)
+ 		cmd[6] |= WSPI_INIT_CMD_EN_FIXEDBUSY;
+ 
+ 	cmd[7] = crc7_be(0, cmd+2, WSPI_INIT_CMD_CRC_LEN) | WSPI_INIT_CMD_END;
++
+ 	/*
+ 	 * The above is the logical order; it must actually be stored
+ 	 * in the buffer byte-swapped.
+@@ -163,6 +179,28 @@ static void wl12xx_spi_init(struct device *child)
+ 	spi_message_add_tail(&t, &m);
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
++
++	/* Send extra clocks with inverted CS (high). this is required
++	 * by the wilink family in order to successfully enter WSPI mode.
++	 */
++	spi->mode ^= SPI_CS_HIGH;
++	memset(&m, 0, sizeof(m));
++	spi_message_init(&m);
++
++	cmd[0] = 0xff;
++	cmd[1] = 0xff;
++	cmd[2] = 0xff;
++	cmd[3] = 0xff;
++	__swab32s((u32 *)cmd);
++
++	t.tx_buf = cmd;
++	t.len = 4;
++	spi_message_add_tail(&t, &m);
++
++	spi_sync(to_spi_device(glue->dev), &m);
++
++	/* Restore chip select configration to normal */
++	spi->mode ^= SPI_CS_HIGH;
+ 	kfree(cmd);
+ }
+ 
+@@ -270,22 +308,25 @@ static int __must_check wl12xx_spi_raw_read(struct device *child, int addr,
+ 	return 0;
+ }
+ 
+-static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+-					     void *buf, size_t len, bool fixed)
++static int __wl12xx_spi_raw_write(struct device *child, int addr,
++				  void *buf, size_t len, bool fixed)
+ {
+ 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
+-	/* SPI write buffers - 2 for each chunk */
+-	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
++	struct spi_transfer *t;
+ 	struct spi_message m;
+ 	u32 commands[WSPI_MAX_NUM_OF_CHUNKS]; /* 1 command per chunk */
+ 	u32 *cmd;
+ 	u32 chunk_len;
+ 	int i;
+ 
++	/* SPI write buffers - 2 for each chunk */
++	t = kzalloc(sizeof(*t) * 2 * WSPI_MAX_NUM_OF_CHUNKS, GFP_KERNEL);
++	if (!t)
++		return -ENOMEM;
++
+ 	WARN_ON(len > SPI_AGGR_BUFFER_SIZE);
+ 
+ 	spi_message_init(&m);
+-	memset(t, 0, sizeof(t));
+ 
+ 	cmd = &commands[0];
+ 	i = 0;
+@@ -318,9 +359,26 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
+ 
++	kfree(t);
+ 	return 0;
+ }
+ 
++static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
++					     void *buf, size_t len, bool fixed)
++{
++	int ret;
++
++	/* The ELP wakeup write may fail the first time due to internal
++	 * hardware latency. It is safer to send the wakeup command twice to
++	 * avoid unexpected failures.
++	 */
++	if (addr == HW_ACCESS_ELP_CTRL_REG)
++		ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
++	ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
++
++	return ret;
++}
++
+ /**
+  * wl12xx_spi_set_power - power on/off the wl12xx unit
+  * @child: wl12xx device handle.
+@@ -349,17 +407,38 @@ static int wl12xx_spi_set_power(struct device *child, bool enable)
+ 	return ret;
+ }
+ 
++/**
++ * wl12xx_spi_set_block_size
++ *
++ * This function is not needed for spi mode, but need to be present.
++ * Without it defined the wlcore fallback to use the wrong packet
++ * allignment on tx.
++ */
++static void wl12xx_spi_set_block_size(struct device *child,
++				      unsigned int blksz)
++{
++}
++
+ static struct wl1271_if_operations spi_ops = {
+ 	.read		= wl12xx_spi_raw_read,
+ 	.write		= wl12xx_spi_raw_write,
+ 	.reset		= wl12xx_spi_reset,
+ 	.init		= wl12xx_spi_init,
+ 	.power		= wl12xx_spi_set_power,
+-	.set_block_size = NULL,
++	.set_block_size = wl12xx_spi_set_block_size,
+ };
+ 
+ static const struct of_device_id wlcore_spi_of_match_table[] = {
+-	{ .compatible = "ti,wl1271" },
++	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1831", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1835", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1837", .data = &wl18xx_data},
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, wlcore_spi_of_match_table);
+@@ -376,17 +455,24 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
+ {
+ 	struct device_node *dt_node = spi->dev.of_node;
+ 	int ret;
++	const struct of_device_id *of_id;
++
++	of_id = of_match_node(wlcore_spi_of_match_table, dt_node);
++	if (!of_id)
++		return -ENODEV;
++
++	wilink_data = of_id->data;
++	dev_info(&spi->dev, "selected chip familiy is %s\n",
++		 wilink_data->name);
+ 
+ 	if (of_find_property(dt_node, "clock-xtal", NULL))
+ 		pdev_data->ref_clock_xtal = true;
+ 
+-	ret = of_property_read_u32(dt_node, "ref-clock-frequency",
+-				   &pdev_data->ref_clock_freq);
+-	if (ret) {
+-		dev_err(glue->dev,
+-			"can't get reference clock frequency (%d)\n", ret);
+-		return ret;
+-	}
++	/* optional clock frequency params */
++	of_property_read_u32(dt_node, "ref-clock-frequency",
++			     &pdev_data->ref_clock_freq);
++	of_property_read_u32(dt_node, "tcxo-clock-frequency",
++			     &pdev_data->tcxo_clock_freq);
+ 
+ 	return 0;
+ }
+@@ -437,7 +523,8 @@ static int wl1271_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
+ 
+-	glue->core = platform_device_alloc("wl12xx", PLATFORM_DEVID_AUTO);
++	glue->core = platform_device_alloc(wilink_data->name,
++					   PLATFORM_DEVID_AUTO);
+ 	if (!glue->core) {
+ 		dev_err(glue->dev, "can't allocate platform_device\n");
+ 		return -ENOMEM;
+-- 
+2.7.4
+
