@@ -1,124 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34163 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755305AbcGEPIa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34212 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752420AbcGSSRS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 11:08:30 -0400
-Received: by mail-oi0-f65.google.com with SMTP id s17so28015506oih.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jul 2016 08:08:29 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v3 03/10] rtlwifi: rtl8192cu: Convert driver to use common hardware info routine
-Date: Tue,  5 Jul 2016 10:08:08 -0500
-Message-Id: <1467731295-25850-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160705_170838_976255_626C5966)
-In-Reply-To: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1467731295-25850-1-git-send-email-Larry.Finger@lwfinger.net>
+	Tue, 19 Jul 2016 14:17:18 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mtd: add arch dependency for MTD_BCM47XXSFLASH symbol
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1468912123-14899-1-git-send-email-zajec5@gmail.com>
+To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Brian Norris <computersforpeace@gmail.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-mtd@lists.infradead.org (open list:MEMORY TECHNOLOGY DEVICES
+	(MTD)), linux-kernel@vger.kernel.org (open list)
+Message-Id: <20160719181717.DFF5161267@smtp.codeaurora.org> (sfid-20160719_201737_867612_DE755A17)
+Date: Tue, 19 Jul 2016 18:17:17 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver for RTL8192CU chips is converted to use the common routine
-for getting the hardware information.
+Rafał Miłecki wrote:
+> We dropped strict MIPS dependency for bcm47xxsflash driver in:
+> commit 5651d6aaf489 ("mtd: bcm47xxsflash: use ioremap_cache() instead of
+> KSEG0ADDR()") but using ioremap_cache still limits building it to few
+> selected architectures only.
+> 
+> A recent commit 57d8f7dd2132 ("bcma: allow enabling serial flash support
+> on non-MIPS SoCs") automatically dropped MIPS dependency for
+> MTD_BCM47XXSFLASH which broke building e.g. on powerpc and cris.
+> 
+> The bcma change is alright as it doesn't break building bcma code in any
+> way. MTD_BCM47XXSFLASH on the other hand should be limited to archs
+> which need it and can build it (by providing ioremap_cache).
+> 
+> Fixes: 57d8f7dd2132 ("bcma: allow enabling serial flash support on non-MIPS SoCs")
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> Cc: Brian Norris <computersforpeace@gmail.com>
+> Acked-by: Brian Norris <computersforpeace@gmail.com>
 
-Reported-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Arnd Bergmann <arnd@arndb.de>
----
-V2 - Fixes bug found after V1 was submitted.
-V3 - No changes.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-This patch requires ("rtlwifi: Add missing newlines to RT_TRACE calls")
-	submitted by Joe Perches.
----
- .../net/wireless/realtek/rtlwifi/rtl8192cu/hw.c    | 61 ++++++----------------
- 1 file changed, 15 insertions(+), 46 deletions(-)
+efacc699139e mtd: add arch dependency for MTD_BCM47XXSFLASH symbol
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index ae1129f..8789752 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -347,56 +347,24 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_efuse *rtlefuse = rtl_efuse(rtl_priv(hw));
- 	struct rtl_hal *rtlhal = rtl_hal(rtl_priv(hw));
--	u16 i, usvalue;
--	u8 hwinfo[HWSET_MAX_SIZE] = {0};
--	u16 eeprom_id;
--
--	switch (rtlefuse->epromtype) {
--	case EEPROM_BOOT_EFUSE:
--		rtl_efuse_shadow_map_update(hw);
--		break;
--
--	case EEPROM_93C46:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "RTL819X Not boot from eeprom, check it !!\n");
-+	int params[] = {RTL8190_EEPROM_ID, EEPROM_VID, EEPROM_DID,
-+			EEPROM_SVID, EEPROM_SMID, EEPROM_MAC_ADDR,
-+			EEPROM_CHANNELPLAN, EEPROM_VERSION, EEPROM_CUSTOMER_ID,
-+			0};
-+	u8 *hwinfo;
-+
-+	hwinfo = kzalloc(HWSET_MAX_SIZE, GFP_KERNEL);
-+	if (!hwinfo)
- 		return;
- 
--	default:
--		pr_warn("rtl92cu: no efuse data\n\n");
--		return;
--	}
--	memcpy(hwinfo, &rtlefuse->efuse_map[EFUSE_INIT_MAP][0], HWSET_MAX_SIZE);
--	RT_PRINT_DATA(rtlpriv, COMP_INIT, DBG_LOUD, "MAP",
--		      hwinfo, HWSET_MAX_SIZE);
--	eeprom_id = le16_to_cpu(*((__le16 *)&hwinfo[0]));
--	if (eeprom_id != RTL8190_EEPROM_ID) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "EEPROM ID(%#x) is invalid!!\n", eeprom_id);
--		rtlefuse->autoload_failflag = true;
--	} else {
--		RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "Autoload OK\n");
--		rtlefuse->autoload_failflag = false;
--	}
--	if (rtlefuse->autoload_failflag)
--		return;
--	for (i = 0; i < 6; i += 2) {
--		usvalue = *(u16 *)&hwinfo[EEPROM_MAC_ADDR + i];
--		*((u16 *) (&rtlefuse->dev_addr[i])) = usvalue;
--	}
--	pr_info("MAC address: %pM\n", rtlefuse->dev_addr);
-+	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
-+		goto exit;
-+
- 	_rtl92cu_read_txpower_info_from_hwpg(hw,
- 					   rtlefuse->autoload_failflag, hwinfo);
--	rtlefuse->eeprom_vid = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VID]);
--	rtlefuse->eeprom_did = le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_DID]);
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_DMESG, " VID = 0x%02x PID = 0x%02x\n",
--		 rtlefuse->eeprom_vid, rtlefuse->eeprom_did);
--	rtlefuse->eeprom_channelplan = hwinfo[EEPROM_CHANNELPLAN];
--	rtlefuse->eeprom_version =
--			 le16_to_cpu(*(__le16 *)&hwinfo[EEPROM_VERSION]);
-+	_rtl92cu_read_board_type(hw, hwinfo);
-+
- 	rtlefuse->txpwr_fromeprom = true;
--	rtlefuse->eeprom_oemid = hwinfo[EEPROM_CUSTOMER_ID];
--	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "EEPROM Customer ID: 0x%2x\n",
--		 rtlefuse->eeprom_oemid);
- 	if (rtlhal->oem_id == RT_CID_DEFAULT) {
- 		switch (rtlefuse->eeprom_oemid) {
- 		case EEPROM_CID_DEFAULT:
-@@ -422,7 +390,8 @@ static void _rtl92cu_read_adapter_info(struct ieee80211_hw *hw)
- 			break;
- 		}
- 	}
--	_rtl92cu_read_board_type(hw, hwinfo);
-+exit:
-+	kfree(hwinfo);
- }
- 
- static void _rtl92cu_hal_customized_behavior(struct ieee80211_hw *hw)
 -- 
-2.1.4
+Sent by pwcli
+https://patchwork.kernel.org/patch/9236053/
 
