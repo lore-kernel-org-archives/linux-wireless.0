@@ -1,61 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cit-hm8-mail01.bmw-carit.de ([212.118.206.84]:38313 "EHLO
-	cit-hm8-gw01.bmw-carit.de" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750785AbcG2GNI (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33776 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751953AbcGSTgQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2016 02:13:08 -0400
-Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
- completion
-To: Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
- <1469692512-16863-8-git-send-email-wagi@monom.org>
- <20160728183343.GD16852@dtor-ws> <20160728190151.GV13516@tuxbot>
-CC: Daniel Wagner <wagi@monom.org>, Bastien Nocera <hadess@hadess.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	<linux-input@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-Message-ID: <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de> (sfid-20160729_081327_951938_E0E6A159)
-Date: Fri, 29 Jul 2016 08:13:01 +0200
+	Tue, 19 Jul 2016 15:36:16 -0400
+Received: by mail-pa0-f50.google.com with SMTP id ks6so9920713pab.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 12:36:15 -0700 (PDT)
+Subject: Re: [PATCH 0/4] brcm80211: Misc coverity fixes
+To: Florian Fainelli <f.fainelli@gmail.com>,
+	brcm80211-dev-list.pdl@broadcom.com
+References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
+ <bdbaa850-4ec4-9faf-dbae-e2a6dcc54e7c@broadcom.com>
+ <578E5845.6030100@gmail.com>
+ <53a36e85-37ad-10a5-81fc-40ce4efa6a65@broadcom.com>
+ <578E71C8.1050003@gmail.com>
+Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
+	kvalo@codeaurora.org, hante.meuleman@broadcom.com
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <9774b991-ef09-66c9-c997-b2d043db5f0f@broadcom.com> (sfid-20160719_213621_677701_CE549141)
+Date: Tue, 19 Jul 2016 21:36:09 +0200
 MIME-Version: 1.0
-In-Reply-To: <20160728190151.GV13516@tuxbot>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+In-Reply-To: <578E71C8.1050003@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/28/2016 09:01 PM, Bjorn Andersson wrote:
-> On Thu 28 Jul 11:33 PDT 2016, Dmitry Torokhov wrote:
->
->> On Thu, Jul 28, 2016 at 09:55:11AM +0200, Daniel Wagner wrote:
->>> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+On 19-7-2016 20:30, Florian Fainelli wrote:
+> On 07/19/2016 11:21 AM, Arend Van Spriel wrote:
+>> On 19-7-2016 18:41, Florian Fainelli wrote:
+>>> On 07/19/2016 02:20 AM, Arend Van Spriel wrote:
+>>>> + Bob
+>>>>
+>>>> On 19-7-2016 1:24, Florian Fainelli wrote:
+>>>>> Hi,
+>>>>>
+>>>>> This patch series addresses several coverity issues, they all seemed relevant
+>>>>> to me.
+>>>>
+>>>> Hi Florian,
+>>>>
+>>>> Been a while so nice to see coverity fixes popping up. Actually
+>>>> something that I have on my todo list to add our brcm80211 to coverity
+>>>> within Broadcom. So being curious as to whether this comes from a public
+>>>> coverity server like scan.coverity.com. Maybe bit redundant to setup
+>>>> internally if there is a good coverity analysis publicly available.
 >>>
-> [..]
+>>> This is coming from the public coverity instance, if you create an
+>>> account there I could transfer to you the other bugs that affect the
+>>> brcm80211 drivers (hint: there is a ton of of them because of
+>>> brcmf_fil_iovar_int_get and friends).
 >>
->> Do not quite like it... I'd rather asynchronous request give out a
->> firmware status pointer that could be used later on.
+>> I did create an account and noticed "Broadcom Linux Kernel Open Source
+>> Repository" project. Anyways, let me have it :-p
 >>
->> 	pcu->fw_st = request_firmware_async(IMS_PCU_FIRMWARE_NAME,
->> 					    pcu,
->> 					    ims_pcu_process_async_firmware);
->> 	if (IS_ERR(pcu->fw_st))
->> 		return PTR_ERR(pcu->fw_st);
+>>>>
+>>>>> There is also a ton of warnings in Coverity caused by brcmf_fil_iovar_int_get()
+>>>>> and friends because of the initial access:
+>>>>>
+>>>>> __le32 data_le = cpu_to_le32(*data) which can utilize unitialized memory. I am
+>>>>> not sure if we actually care about any kind of initial, value, but if we don't,
+>>>>> then the fix should be fairly obvious.
+>>>>
+>>>> If we are talking only about "get" variant than we mostly don't care.
+>>>> Some getters support filter variables to be passed towards firmware. I
+>>>> have not looked at the analysis to give any judgement here.
+>>>
+>>> Alright, do you have a good way to test a patch that would just zero
+>>> initialize the data variable in brcmf_fil_iovar_int_get()? If so, I will
+>>> submit one with the appropriate CID references.
 >>
->> 	....
->>
->> 	fw_loading_wait(pcu->fw_st);
->>
->
-> In the remoteproc case (patch 6) this would clean up the code, rather
-> than replacing the completion API 1 to 1. I like it!
+>> But why would we care to zero the data when firmware simply overwrites
+>> it. These control messages are not high-prio so we can burn some cycles
+>> to initialize the variable, but to me this is a false positive.
+> 
+> We have something like this all over the place:
+> 
+> func() {
+> 	u32 val;
+> 
+> 	brcmf_fil_iovar_int_get(..., &val, sizeof(val));
 
-IIRC most drivers do it the same way. So request_firmware_async() indeed 
-would be good thing to have. Let me try that.
+If I am not mistaken the iovar_int_get only passes &val.
 
-Thanks for the excellent feedback.
+> }
+> 
+> brcmf_fil_iovar_int_get(.., const u32 *data, size_t len)
+> {
+> 	__le32 data_le = cpu_to_le32(*data);
+> 	...
+> }
+> 
+> So here data_le also has an uninitialized value, and later on, this:
+> 
+> 
+>         buflen = brcmf_create_iovar(name, data, len, drvr->proto_buf,
+>                                     sizeof(drvr->proto_buf));
 
-cheers,
-daniel
+create_iovar is used for both get and set...
+
+> }
+> 
+> And this function does this:
+> 
+> static u32
+> brcmf_create_iovar(char *name, const char *data, u32 datalen,
+>                    char *buf, u32 buflen)
+> {
+>         u32 len;
+> 
+>         len = strlen(name) + 1;
+> 
+>         if ((len + datalen) > buflen)
+>                 return 0;
+> 
+>         memcpy(buf, name, len);
+> 
+>         /* append data onto the end of the name string */
+>         if (data && datalen)
+>                 memcpy(&buf[len], data, datalen);
+
+but it does not have that info so it does the memcpy. We could add an
+extra parameter to avoid the memcpy for get, but as said there are
+instances where get passes query data to firmware.
+
+>         return len + datalen;
+> }
+> 
+> 
+> We are essentially copying into buf an uninitialized value coming from
+> the stack, which seems like a problem to me.
+
+Functionally I still don't see the problem. For the instances where this
+is true, the buf will be overwritten with data from firmware. It may be
+a security issue as stack content is passed to an external device.
+
+Regards,
+Arend
