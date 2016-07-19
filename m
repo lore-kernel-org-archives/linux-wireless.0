@@ -1,54 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([198.47.19.12]:60537 "EHLO arroyo.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751098AbcGMLPp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 07:15:45 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: "Kama, Meirav" <meiravk@ti.com>
-Subject: RE: [PATCH 3/4] mac80211: mesh: fixed HT ies in beacon template
-Date: Wed, 13 Jul 2016 11:15:35 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101391FC50F@DFRE01.ent.ti.com> (sfid-20160713_131636_820442_004435C2)
-References: <20160628111307.8784-1-yanivma@ti.com>
-	 <20160628111307.8784-2-yanivma@ti.com>
-	 <20160628111307.8784-3-yanivma@ti.com>
-	 <20160628111307.8784-4-yanivma@ti.com>
-	 (sfid-20160628_131116_981554_64C22D92)
- <1467184655.2461.2.camel@sipsolutions.net>
-In-Reply-To: <1467184655.2461.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35153 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753668AbcGSQHB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2016 12:07:01 -0400
+Received: by mail-wm0-f67.google.com with SMTP id i5so3299166wmg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 09:07:00 -0700 (PDT)
+From: Christopher Williamson <home@chrisaw.com>
 MIME-Version: 1.0
+Date: Tue, 19 Jul 2016 12:06:58 -0400
+Message-ID: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com> (sfid-20160719_180705_575089_BDA42A63)
+Subject: Problem connecting to wifi on libertas_cpio (sd8686)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBKdW4gMjksIDIwMTYgYXQgMTA6MTc6MzUsIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+
-IENjOiBLYW1hLCBNZWlyYXYNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAzLzRdIG1hYzgwMjExOiBt
-ZXNoOiBmaXhlZCBIVCBpZXMgaW4gYmVhY29uIA0KPiB0ZW1wbGF0ZQ0KPiANCj4gT24gVHVlLCAy
-MDE2LTA2LTI4IGF0IDE0OjEzICswMzAwLCBZYW5pdiBNYWNoYW5pIHdyb3RlOg0KPiA+DQo+ID4g
-wqBuZXQvbWFjODAyMTEvbWVzaC5jIHwgMzMgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KystDQo+ID4gwqBuZXQvbWFjODAyMTEvdXRpbC5jIHzCoMKgMyAtLS0NCj4gPiDCoG5ldC93aXJl
-bGVzcy9tZXNoLmMgfMKgwqAyICstDQo+IA0KPiBUaGF0J3Mgbm90IGEgZ29vZCBwYXRjaCAtIG9u
-ZSBjaGFuZ2UgaXMgbWFjODAyMTEgYW5kIHRoZSBvdGhlciBjZmc4MDIxMS4NCj4gDQo+ID4gLQku
-aHRfb3Btb2RlID0NCj4gSUVFRTgwMjExX0hUX09QX01PREVfUFJPVEVDVElPTl9OT05IVF9NSVhF
-RCwNCj4gPiArCS5odF9vcG1vZGUgPSBJRUVFODAyMTFfSFRfT1BfTU9ERV9QUk9URUNUSU9OX05P
-TkUsDQo+ID4NCj4gSG93IGFyZSB5b3UgcGxhbm5pbmcgdG8gY29tcGx5IHdpdGggODAyLjExIG5v
-dz8NCg0KR29vZCBwb2ludCwgdGhpcyBjaGFuZ2VkIHNob3VsZCBiZSByZW1vdmVkLg0KVGhlIHJl
-YXNvbiBmb3IgdGhpcyBjaGFuZ2Ugd2FzIHRoYXQgd2UndmUgbm90aWNlZCBhIGRpZmZlcmVuY2Ug
-YmV0d2VlbiBtZXNoIGJlYWNvbiAoYnVpbHQgYnkgdGhlIG1hYzgwMjExKSBhbmQgbWVzaCBhY3Rp
-b25zIChidWlsdCBieSB0aGUgc3VwcGxpY2FudCkgaW4gdGhlIEhUIGluZm9ybWF0aW9uIElFLg0K
-SW4gYmVhY29ucyB0aGUgSFQgb3BlcmF0aW9uYWwgbW9kZSBpcyBNaXhlZCBNb2RlICgweDExKSAg
-d2hpbGUgaW4gYWN0aW9ucyBpdCBpcyBOb25lICgweDAwKS4gDQpBZnRlciBhIHNlY29uZCBsb29r
-LCBpdCBzZWVtcyB0aGF0IGl0J3MgdGhlIFN1cHBsaWNhbnQgdGhhdCBkb2Vzbid0IHNldCB0aGUg
-ZGVmYXVsdCB2YWx1ZSBjb3JyZWN0bHkuDQoNCldlJ2xsIHNlbmQgYW4gdXBkYXRlZCBwYXRjaCBm
-b3IgaXQuDQpUaGFua3MsDQpZYW5pdg0KDQo+IA0KPiBUaGUgSFQgUHJvdGVjdGlvbiBmaWVsZCBp
-biBhIG1lc2ggU1RBIG1heSBiZSBzZXQgdG8gbm8gcHJvdGVjdGlvbiBtb2RlIA0KPiBvbmx5IGlm
-IOKAlCBBbGwgU1RBcyBkZXRlY3RlZCBpbiB0aGUgcHJpbWFyeSBvciB0aGUgc2Vjb25kYXJ5IGNo
-YW5uZWwgDQo+IGFyZSBIVA0KPiDCoCBTVEFzLCBhbmQNCj4g4oCUIEFsbCBtZXNoIFNUQSBtZW1i
-ZXJzIG9mIHRoaXMgTUJTUyB0aGF0IGFyZSBvbmUtaG9wIG5laWdoYm9ycyBvZiB0aGUNCj4gwqAg
-dHJhbnNtaXR0aW5nIG1lc2ggU1RBIGFyZSBlaXRoZXI6DQo+IMKgIOKAlCAyMC80MCBNSHogSFQg
-bWVzaCBTVEFzIGluIGEgMjAvNDAgTUh6IE1CU1MsIG9yDQo+IMKgIOKAlCAyMCBNSHogSFQgbWVz
-aCBTVEFzIGluIGEgMjAgTUh6IE1CU1MuDQo+IA0KPiBqb2hhbm5lcw0KDQoNCg==
+Hi everyone!
+
+I’ve just got myself a Viliv N5 and am trying to get the integrated
+Wifi chipset working on it.
+
+I am able to see networks around me but any attempts to connect them
+appear to time out and fail.
+
+I have filed a linux kernel bug related to this issue:
+https://bugzilla.kernel.org/show_bug.cgi?id=135421
+
+I figured here may be a good place to ask about it and hopefully to
+get to the bottom of why it happens and how I can help to fix it.
+
+Happy to provide any information which may be helpful! :)
+
+Christopher Williamson
+
+Note: Apologies for anyone also on the libertas-dev mailing list - I
+did also post this there but so far haven’t had any response so I
+figured it wouldn’t hurt posting it here too in the hopes someone has
+seen this issue before.
