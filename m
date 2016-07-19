@@ -1,88 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33524 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753894AbcGFKpJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:45:09 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:38 +0300
-Message-Id: <1467801651-1816-43-git-send-email-luca@coelho.fi> (sfid-20160706_124524_574714_15E500BD)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 43/56] iwlwifi: mvm: add RX aggregation prints
+Received: from mx1.redhat.com ([209.132.183.28]:39092 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753219AbcGSPqG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2016 11:46:06 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
+References: <20160719153403.2967812-1-arnd@arndb.de>
+	<20160719153403.2967812-2-arnd@arndb.de>
+Date: Tue, 19 Jul 2016 11:46:04 -0400
+In-Reply-To: <20160719153403.2967812-2-arnd@arndb.de> (Arnd Bergmann's message
+	of "Tue, 19 Jul 2016 17:33:01 +0200")
+Message-ID: <wrfjy44xvdfn.fsf@redhat.com> (sfid-20160719_174637_589974_0A008C44)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Arnd Bergmann <arnd@arndb.de> writes:
+> Compiling the rtlwifi drivers for ARM with gcc -Wextra warns about lots of
+> incorrect code that results from 'char' being unsigned here, e.g.
+>
+> staging/rtl8192e/rtl8192e/r8192E_phy.c:1072:36: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> staging/rtl8192e/rtl8192e/r8192E_phy.c:1104:36: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> staging/rtl8192e/rtl8192e/rtl_core.c:1987:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> staging/rtl8192e/rtl8192e/rtl_dm.c:782:37: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+> staging/rtl8192e/rtl819x_TSProc.c:326:14: error: comparison is always true due to limited range of data type [-Werror=type-limits]
+> staging/rtl8192e/rtllib_softmac_wx.c:465:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+>
+> This patch changes all uses of 'char' in this driver that refer to
+> 8-bit integers to use 's8' instead, which is signed on all architectures.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 8 ++++----
+>  drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c | 2 +-
+>  drivers/staging/rtl8192e/rtl8192e/rtl_core.c   | 6 +++---
+>  drivers/staging/rtl8192e/rtl8192e/rtl_core.h   | 8 ++++----
+>  drivers/staging/rtl8192e/rtl819x_TSProc.c      | 2 +-
+>  5 files changed, 13 insertions(+), 13 deletions(-)
+>
 
-Add some prints to track BAID assignment.
+Most of this looks fine to me. One issue stands out which I don't think
+is right:
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 6 ++++++
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c  | 7 +++++--
- 2 files changed, 11 insertions(+), 2 deletions(-)
+> diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+> index 2c8a526773ed..e0a2fe5e6148 100644
+> --- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
+> +++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+> @@ -323,7 +323,7 @@ bool GetTs(struct rtllib_device *ieee, struct ts_common_info **ppTS,
+>  	if (ieee->current_network.qos_data.supported == 0) {
+>  		UP = 0;
+>  	} else {
+> -		if (!IsACValid(TID)) {
+> +		if (!IsACValid((s8)TID)) {
+>  			netdev_warn(ieee->dev, "%s(): TID(%d) is not valid\n",
+>  				    __func__, TID);
+>  			return false;
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index d13397a..a1cbf48 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -476,6 +476,9 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
- 		rcu_read_lock();
- 		sta = rcu_dereference(buf->mvm->fw_id_to_mac_id[buf->sta_id]);
- 		/* SN is set to the last expired frame + 1 */
-+		IWL_DEBUG_HT(buf->mvm,
-+			     "Releasing expired frames for sta %u, sn %d\n",
-+			     buf->sta_id, sn);
- 		iwl_mvm_release_frames(buf->mvm, sta, NULL, buf, sn);
- 		rcu_read_unlock();
- 	} else if (buf->num_stored) {
-@@ -956,6 +959,9 @@ void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
- 
- 	int baid = release->baid;
- 
-+	IWL_DEBUG_HT(mvm, "Frame release notification for BAID %u, NSSN %d\n",
-+		     release->baid, le16_to_cpu(release->nssn));
-+
- 	if (WARN_ON_ONCE(baid == IWL_RX_REORDER_DATA_INVALID_BAID))
- 		return;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index a6d6df9..c0c2ea3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -1768,8 +1768,8 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 
- 	switch (status & IWL_ADD_STA_STATUS_MASK) {
- 	case ADD_STA_SUCCESS:
--		IWL_DEBUG_INFO(mvm, "RX BA Session %sed in fw\n",
--			       start ? "start" : "stopp");
-+		IWL_DEBUG_HT(mvm, "RX BA Session %sed in fw\n",
-+			     start ? "start" : "stopp");
- 		break;
- 	case ADD_STA_IMMEDIATE_BA_FAILURE:
- 		IWL_WARN(mvm, "RX BA Session refused by fw\n");
-@@ -1824,6 +1824,8 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		 * supposed to happen) and we will free the session data while
- 		 * RX is being processed in parallel
- 		 */
-+		IWL_DEBUG_HT(mvm, "Sta %d(%d) is assigned to BAID %d\n",
-+			     mvm_sta->sta_id, tid, baid);
- 		WARN_ON(rcu_access_pointer(mvm->baid_map[baid]));
- 		rcu_assign_pointer(mvm->baid_map[baid], baid_data);
- 	} else if (mvm->rx_ba_sessions > 0) {
-@@ -1846,6 +1848,7 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 		del_timer_sync(&baid_data->session_timer);
- 		RCU_INIT_POINTER(mvm->baid_map[baid], NULL);
- 		kfree_rcu(baid_data, rcu_head);
-+		IWL_DEBUG_HT(mvm, "BAID %d is free\n", baid);
- 	}
- 	return 0;
- 
--- 
-2.8.1
+TID is a 4-bit field, it should never go negative. The cast to s8 seems
+wrong to me, if anything it should be using u8. I do realize the macro
+IsACValid checks against negative too, but that just looks silly to me.
 
+Cheers,
+Jes
