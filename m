@@ -1,87 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60804 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752856AbcGCTtE (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.135]:50058 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753197AbcGSPxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jul 2016 15:49:04 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun,  3 Jul 2016 22:48:44 +0300
-Message-Id: <1467575332-32112-5-git-send-email-luca@coelho.fi> (sfid-20160703_214918_015056_24180CDA)
-In-Reply-To: <467405215.1837.15.camel@coelho.fi>
-References: <467405215.1837.15.camel@coelho.fi>
-Subject: [PATCH 05/13] iwlwifi: mvm: remove RX_PHY support for 9000 device
+	Tue, 19 Jul 2016 11:53:55 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
+Date: Tue, 19 Jul 2016 17:53:38 +0200
+Message-ID: <3858062.NGQDOLnTj0@wuerfel> (sfid-20160719_175413_805782_8FB75F2C)
+In-Reply-To: <wrfjy44xvdfn.fsf@redhat.com>
+References: <20160719153403.2967812-1-arnd@arndb.de> <20160719153403.2967812-2-arnd@arndb.de> <wrfjy44xvdfn.fsf@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Tuesday, July 19, 2016 11:46:04 AM CEST Jes Sorensen wrote:
+> > diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+> > index 2c8a526773ed..e0a2fe5e6148 100644
+> > --- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
+> > +++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+> > @@ -323,7 +323,7 @@ bool GetTs(struct rtllib_device *ieee, struct ts_common_info **ppTS,
+> >       if (ieee->current_network.qos_data.supported == 0) {
+> >               UP = 0;
+> >       } else {
+> > -             if (!IsACValid(TID)) {
+> > +             if (!IsACValid((s8)TID)) {
+> >                       netdev_warn(ieee->dev, "%s(): TID(%d) is not valid\n",
+> >                                   __func__, TID);
+> >                       return false;
+> 
+> TID is a 4-bit field, it should never go negative. The cast to s8 seems
+> wrong to me, if anything it should be using u8. I do realize the macro
+> IsACValid checks against negative too, but that just looks silly to me.
 
-In multiple RX queues architecture, the RX_PHY notification
-is no longer useful as it is received in the default queue
-even for packets that are received on RSS queue, and cannot
-be accessed without locking.
-All the needed data is in the new RX packet metadata and
-firmware will no longer send this notification for 9000
-devices. Remove support of it.
+Ok, I'll remove the extra comparison then to avoid the warning:
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  1 -
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c  |  2 --
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 13 -------------
- 3 files changed, 16 deletions(-)
+staging/rtl8192e/rtl819x_TSProc.c:326:14: error: comparison is always true due to limited range of data type [-Werror=type-limits]
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 4843e02..dd0b8f8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1321,7 +1321,6 @@ bool iwl_mvm_bcast_filter_build_cmd(struct iwl_mvm *mvm,
- void iwl_mvm_rx_rx_phy_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
- void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			struct iwl_rx_cmd_buffer *rxb);
--void iwl_mvm_rx_phy_cmd_mq(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
- void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			struct iwl_rx_cmd_buffer *rxb, int queue);
- void iwl_mvm_rx_frame_release(struct iwl_mvm *mvm, struct napi_struct *napi,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 64d2b4f..55f114d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -958,8 +958,6 @@ static void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
- 
- 	if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD))
- 		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, 0);
--	else if (pkt->hdr.cmd == REPLY_RX_PHY_CMD)
--		iwl_mvm_rx_phy_cmd_mq(mvm, rxb);
- 	else if (unlikely(pkt->hdr.group_id == DATA_PATH_GROUP &&
- 			  pkt->hdr.cmd == RX_QUEUES_NOTIFICATION))
- 		iwl_mvm_rx_queue_notif(mvm, rxb, 0);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 0f26c70..67924fc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -65,19 +65,6 @@
- #include "fw-api.h"
- #include "fw-dbg.h"
- 
--void iwl_mvm_rx_phy_cmd_mq(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
--{
--	mvm->ampdu_ref++;
--
--#ifdef CONFIG_IWLWIFI_DEBUGFS
--	if (mvm->last_phy_info.phy_flags & cpu_to_le16(RX_RES_PHY_FLAGS_AGG)) {
--		spin_lock(&mvm->drv_stats_lock);
--		mvm->drv_rx_stats.ampdu_count++;
--		spin_unlock(&mvm->drv_stats_lock);
--	}
--#endif
--}
--
- static inline int iwl_mvm_check_pn(struct iwl_mvm *mvm, struct sk_buff *skb,
- 				   int queue, struct ieee80211_sta *sta)
- {
--- 
-2.8.1
+I guess it should be a separate patch. I had just stumbled over the
+same thing before resending the patch but decided not to change it
+to keep the patch simple.
 
+	Arnd
