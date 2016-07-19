@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43218 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751797AbcGHGq4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33404 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753028AbcGSSHt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 02:46:56 -0400
-Content-Type: text/plain; charset="utf-8"
+	Tue, 19 Jul 2016 14:07:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Michal Marek <mmarek@suse.com>, netdev@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	linux-kbuild@vger.kernel.org, akpm <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2 05/11] Kbuild: don't add obj tree in additional includes
+References: <20160615154553.3177021-1-arnd@arndb.de>
+	<21521763.EfAflxWUP8@wuerfel> <87a8hdae9j.fsf@purkki.adurom.net>
+	<3906958.MrNt71DzrU@wuerfel>
+Date: Tue, 19 Jul 2016 21:07:42 +0300
+In-Reply-To: <3906958.MrNt71DzrU@wuerfel> (Arnd Bergmann's message of "Tue, 19
+	Jul 2016 17:38:51 +0200")
+Message-ID: <8760s1v6vl.fsf@kamboji.qca.qualcomm.com> (sfid-20160719_200812_019360_9868E5D9)
 MIME-Version: 1.0
-Subject: Re: ath10k: simplify pktlog htt event processing
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1466592761-6659-1-git-send-email-arnagara@qti.qualcomm.com>
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-	<arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <228b82f3cbc84bf7b217ef50632825cc@euamsexm01a.eu.qualcomm.com> (sfid-20160708_084659_603260_190C231F)
-Date: Fri, 8 Jul 2016 08:46:48 +0200
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
-> It is expected that all pktlog events for 10.4 firmware based solutions
-> should come through CE8 where as in case of 10.2 firmware based solutions,
-> it should come through one of the HTT events (HTT_T2H_MSG_TYPE_PKTLOG).
-> 
-> But from experiments with 10.4 based solutions, it is observed that pktlog
-> event for ATH_PKTLOG_TYPE_TX_MSDU_ID is coming through HTT pktlog event.
-> Currently, we always parse with 10.2 pktlog header which will lead to
-> pktlog decoding issues (payload length mismatch exceptions)
-> 
-> For trace points, it is required to provide only the payload size. So
-> fixing this by simplifying the payload size calculation without the use of
-> ath10k pktlog headers.
-> 
-> While there, remove the unused ath10k pktlog headers.
-> 
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+>> > I think that's fine, a couple were already picked up, and what I have
+>> > left now is
+>> >
+>> > a281bfa5713a [SUBMITTED 20160615] [EXPERIMENTAL] Kbuild: enable -Wmissing-include-dirs by default
+>> > 83934921e68e [SUBMITTED 20160615] rtlwifi: don't add include path for rtl8188ee
+>> 
+>> Apparently[1] you didn't CC linux-wireless and that's why I didn't see
+>> the rtlwifi patch in wireless patchwork. Care to resend?
+>> 
+>> [1] https://patchwork.kernel.org/patch/9178861/
+>> 
+>
+> Done.
 
-34293f75586b ath10k: simplify pktlog htt event processing
+Thanks.
+
+> I've also thrown in two patches for drivers/staging/rtl8*/ that I
+> submitted a while ago, but I'm not sure if they should get merged
+> through the staging tree or the wireless tree. I had previously
+> submitted those two as a combined patch along with a third one that
+> turned out to be unnecessary.
+
+Greg applies drivers/staging patches to his staging tree, but I'll take
+the rtlwifi patch.
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9192399/
-
+Kalle Valo
