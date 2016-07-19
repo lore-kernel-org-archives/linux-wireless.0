@@ -1,66 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:42739 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756828AbcG0Rbf convert rfc822-to-8bit (ORCPT
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:36687 "EHLO
+	mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753666AbcGSNoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 13:31:35 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Felix Fietkau <nbd@nbd.name>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: TCP performance regression in mac80211 triggered by the fq code
-References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
-	<87oa5snzav.fsf@toke.dk> <87fur4nxhn.fsf@toke.dk>
-	<CA+BoTQms1bKrNKgDVdBZYt3HTA3Hdv9tcN6vgnpNOYFHiwDmXw@mail.gmail.com>
-Date: Wed, 27 Jul 2016 19:31:29 +0200
-In-Reply-To: <CA+BoTQms1bKrNKgDVdBZYt3HTA3Hdv9tcN6vgnpNOYFHiwDmXw@mail.gmail.com>
-	(Michal Kazior's message of "Mon, 25 Jul 2016 07:15:01 +0200")
-Message-ID: <8760rrkmxa.fsf@toke.dk> (sfid-20160727_193139_333464_88A18855)
+	Tue, 19 Jul 2016 09:44:05 -0400
+Received: by mail-qk0-f174.google.com with SMTP id x1so15743105qkb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 06:44:04 -0700 (PDT)
+Date: Tue, 19 Jul 2016 09:43:55 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: "Machani, Yaniv" <yanivma@ti.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Hahn, Maital" <maitalm@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Chun-Yeow Yeoh <yeohchunyeow@gmail.com>
+Subject: Re: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
+Message-ID: <20160719134355.GA1833@localhost> (sfid-20160719_154409_452359_7F22C0DD)
+References: <CAEFj987X26u59K32Mt-bKBSTmy3cWvOiNNBG7K4wbdQBAdR97Q@mail.gmail.com>
+ <20160719124456.GD11996@localhost>
+ <AE1C82FB3D0EC64DB1F752C81CBD110139206115@DFRE01.ent.ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD110139206115@DFRE01.ent.ti.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+On Tue, Jul 19, 2016 at 01:02:13PM +0000, Machani, Yaniv wrote:
+> On Tue, Jul 19, 2016 at 15:44:56, Bob Copeland wrote:
+> > > IEEE 802.11-2012 has defined dot11MeshHWMPpreqMinInterval attribute 
+> > > to specify the minimum interval of time during which a mesh STA can 
+> > > send only one Action frame containing a PREQ element. This is to 
+> > > avoid flooding of broadcast PREQ frame especially when the number of 
+> > > mesh STA is increased.
+> > 
+> > Good point, according to 13.10.9.3, conditions for sending PREQ include:
+> > 
+> > "The mesh STA has not sent a PREQ element for the target mesh STAs 
+> > less than dot11MeshHWMPpreqMinInterval TUs ago. If this is the case, 
+> > the transmission of the PREQ has to be postponed until this condition becomes true."
+> > 
+> 
+> As I see it, the key point here is "for the target meh STA", 
+> Today, the code will not send a PREQ to ANY target if
+> dot11MeshHWMPpreqMinInterval didn't passed.
+> The information is saved in the 'ifmsh->last_preq', and not per path.
 
-> On 20 July 2016 at 17:24, Toke Høiland-Jørgensen <toke@toke.dk> wrote:
->> Toke Høiland-Jørgensen <toke@toke.dk> writes:
->>
->>> Felix Fietkau <nbd@nbd.name> writes:
->>>
->>>> - if I put a hack in the fq code to force the hash to a constant value
->>>> (effectively disabling fq without disabling codel), the problem
->>>> disappears and even multiple streams get proper performance.
->>>
->>> There's definitely something iffy about the hashing. Here's the output
->>> relevant line from the aqm debug file after running a single TCP stream
->>> for 60 seconds to that station:
->>>
->>> ifname addr tid ac backlog-bytes backlog-packets flows drops marks overlimit collisions
->>> tx-bytes tx-packets
->>> wlp2s0 04:f0:21:1e:74:20 0 2 0 0 146 16 0 0 0 717758966 467925
->>>
->>> (there are two extra fields here; I added per-txq CoDel stats, will send
->>> a patch later).
->>>
->>> This shows that the txq has 146 flows associated from that one TCP flow.
->>> Looking at this over time, it seems that each time the queue runs empty
->>> (which happens way too often, which is what I was originally
->>> investigating), another flow is assigned.
->>>
->>> Michal, any idea why? :)
->>
->> And to answer this: because the flow is being freed to be reassigned
->> when it runs empty, but the counter is not decremented. Is this
->> deliberate? I.e. is the 'flows' var supposed to be a total 'new_flows'
->> counter and not a measure of the current number of assigned flows?
->
-> Yes, it is deliberate. fq_codel qdisc does the same thing and I just
-> mimicked it.
+The standard also says (which Chun-Yeow partially quoted):
 
-Right. Think it was the name that sent me down the wrong track ('flows'
-instead of 'new_flows'). Especially since the way you structured things,
-having a counter for how many flows are currently assigned each tid
-might actually make sense...
+dot11MeshHWMPpreqMinInterval OBJECT-TYPE
+SYNTAX Unsigned32 (1..65535)
+MAX-ACCESS read-write
+STATUS current
+DESCRIPTION
+"This is a control variable.
+It is written by an external management entity.
+Changes take effect as soon as practical in the implementation.
+This attribute specifies the minimum interval of time (in TUs) during
+which a mesh STA can send only one Action frame containing a PREQ element."
+DEFVAL { 100 }
+::= { dot11MeshHWMPConfigEntry 4}
 
--Toke
+This wording seems to indicate that it is not per path.  Perhaps this
+should be clarified in the standard.  (If the intent turns out to be per
+path, then I guess we should fix it by storing last_preq per path instead.)
+
+Ignoring the standard for a second, let's explore this: can you give
+some idea on how many stations are in your target network, how frequently
+a given pair of nodes unpeer, what sort of improvements you see with the
+patch?  It should then be pretty easy to run some simulations to see the
+scenarios where this helps and where it hurts.
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
