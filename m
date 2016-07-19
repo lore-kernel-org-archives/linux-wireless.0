@@ -1,137 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:48790 "EHLO comal.ext.ti.com"
+Received: from arroyo.ext.ti.com ([198.47.19.12]:39296 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932178AbcGKONa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 10:13:30 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Maxim Altshul <maxim.altshul@ti.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH v3] mac80211: mesh: Add support for HW RC implementation
-Date: Mon, 11 Jul 2016 17:15:24 +0300
-Message-ID: <20160711141539.30281-1-maxim.altshul@ti.com> (sfid-20160711_161413_500429_6555C338)
+	id S1751557AbcGSUBt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2016 16:01:49 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Hahn, Maital" <maitalm@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: RE: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
+Date: Tue, 19 Jul 2016 20:01:38 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD110139206BD6@DFRE01.ent.ti.com> (sfid-20160719_220205_849988_FBE89763)
+References: <CAEFj987X26u59K32Mt-bKBSTmy3cWvOiNNBG7K4wbdQBAdR97Q@mail.gmail.com>
+ <20160719124456.GD11996@localhost>
+ <AE1C82FB3D0EC64DB1F752C81CBD110139206115@DFRE01.ent.ti.com>
+ <20160719134355.GA1833@localhost>
+ <CAEFj987V0r3aVn+JhQOX-40bheKyEJdrppF75OCaLXhU=skmNw@mail.gmail.com>
+In-Reply-To: <CAEFj987V0r3aVn+JhQOX-40bheKyEJdrppF75OCaLXhU=skmNw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mesh HWMP module will be able to rely on the HW
-RC algorithm if it exists, for path metric calculations.
-
-This allows the metric calculation mechanism to calculate
-a correct metric, based on PER and last TX rate both via
-HW RC algorithm if it exists or via parameters collected
-by the SW.
-
-Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
----
-1. Added DIV_ROUND_UP to protect from rate < 100Kbps
-2. Removed redudant initialization
-
- net/mac80211/mesh_hwmp.c | 27 +++++++++++++++++++--------
- net/mac80211/sta_info.c  | 23 +++++++++++++++++++----
- net/mac80211/sta_info.h  |  2 ++
- 3 files changed, 40 insertions(+), 12 deletions(-)
-
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index c6be0b4..befb1e7 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -326,22 +326,33 @@ static u32 airtime_link_metric_get(struct ieee80211_local *local,
- 	u32 tx_time, estimated_retx;
- 	u64 result;
- 
--	if (sta->mesh->fail_avg >= 100)
--		return MAX_METRIC;
-+	/* Try to get rate based on HW/SW RC algorithm.
-+	 * Rate is returned in units of Kbps, correct this
-+	 * to comply with airtime calculation units
-+	 * Round up in case we get rate < 100Kbps
-+	 */
-+	rate = DIV_ROUND_UP(sta_get_expected_throughput(sta), 100);
-+	
-+	if (rate) {
-+		err = 0;
-+	} else {
-+		if (sta->mesh->fail_avg >= 100)
-+			return MAX_METRIC;
- 
--	sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate, &rinfo);
--	rate = cfg80211_calculate_bitrate(&rinfo);
--	if (WARN_ON(!rate))
--		return MAX_METRIC;
-+		sta_set_rate_info_tx(sta, &sta->tx_stats.last_rate, &rinfo);
-+		rate = cfg80211_calculate_bitrate(&rinfo);
-+		if (WARN_ON(!rate))
-+			return MAX_METRIC;
- 
--	err = (sta->mesh->fail_avg << ARITH_SHIFT) / 100;
-+		err = (sta->mesh->fail_avg << ARITH_SHIFT) / 100;
-+	}
- 
- 	/* bitrate is in units of 100 Kbps, while we need rate in units of
- 	 * 1Mbps. This will be corrected on tx_time computation.
- 	 */
- 	tx_time = (device_constant + 10 * test_frame_len / rate);
- 	estimated_retx = ((1 << (2 * ARITH_SHIFT)) / (s_unit - err));
--	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT) ;
-+	result = (tx_time * estimated_retx) >> (2 * ARITH_SHIFT);
- 	return (u32)result;
- }
- 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 63ea6cb..fa2c507 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -2069,14 +2069,29 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
- 	if (test_sta_flag(sta, WLAN_STA_TDLS_PEER))
- 		sinfo->sta_flags.set |= BIT(NL80211_STA_FLAG_TDLS_PEER);
- 
-+	thr = sta_get_expected_throughput(sta);
-+
-+	if (thr != 0) {
-+		sinfo->filled |= BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
-+		sinfo->expected_throughput = thr;
-+	}
-+}
-+
-+u32 sta_get_expected_throughput(struct sta_info *sta)
-+{
-+	struct ieee80211_sub_if_data *sdata = sta->sdata;
-+	struct ieee80211_local *local = sdata->local;
-+	struct rate_control_ref *ref = NULL;
-+	u32 thr = 0;
-+
-+	if (test_sta_flag(sta, WLAN_STA_RATE_CONTROL))
-+		ref = local->rate_ctrl;
-+
- 	/* check if the driver has a SW RC implementation */
- 	if (ref && ref->ops->get_expected_throughput)
- 		thr = ref->ops->get_expected_throughput(sta->rate_ctrl_priv);
- 	else
- 		thr = drv_get_expected_throughput(local, &sta->sta);
- 
--	if (thr != 0) {
--		sinfo->filled |= BIT(NL80211_STA_INFO_EXPECTED_THROUGHPUT);
--		sinfo->expected_throughput = thr;
--	}
-+	return thr;
- }
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 2cafb21..5c9c8be 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -661,6 +661,8 @@ void sta_set_rate_info_tx(struct sta_info *sta,
- 			  struct rate_info *rinfo);
- void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo);
- 
-+u32 sta_get_expected_throughput(struct sta_info *sta);
-+
- void ieee80211_sta_expire(struct ieee80211_sub_if_data *sdata,
- 			  unsigned long exp_time);
- u8 sta_info_tx_streams(struct sta_info *sta);
--- 
-2.9.0
-
+T24gVHVlLCBKdWwgMTksIDIwMTYgYXQgMTk6MDE6NTQsIFllb2ggQ2h1bi1ZZW93IHdyb3RlOg0K
+PiBKb2hhbm5lcyBCZXJnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgMi8zXSBtYWM4MDIxMTog
+bWVzaDogaW1wcm92ZSBwYXRoIHJlc29sdmluZyANCj4gdGltZQ0KPiANCj4gT24gVHVlLCBKdWwg
+MTksIDIwMTYgYXQgOTo0MyBQTSwgQm9iIENvcGVsYW5kIDxtZUBib2Jjb3BlbGFuZC5jb20+DQo+
+IHdyb3RlOg0KPiA+IE9uIFR1ZSwgSnVsIDE5LCAyMDE2IGF0IDAxOjAyOjEzUE0gKzAwMDAsIE1h
+Y2hhbmksIFlhbml2IHdyb3RlOg0KPiA+PiBPbiBUdWUsIEp1bCAxOSwgMjAxNiBhdCAxNTo0NDo1
+NiwgQm9iIENvcGVsYW5kIHdyb3RlOg0KPiA+DQo+ID4gVGhpcyB3b3JkaW5nIHNlZW1zIHRvIGlu
+ZGljYXRlIHRoYXQgaXQgaXMgbm90IHBlciBwYXRoLiAgUGVyaGFwcyANCj4gPiB0aGlzIHNob3Vs
+ZCBiZSBjbGFyaWZpZWQgaW4gdGhlIHN0YW5kYXJkLiAgKElmIHRoZSBpbnRlbnQgdHVybnMgb3V0
+IA0KPiA+IHRvIGJlIHBlciBwYXRoLCB0aGVuIEkgZ3Vlc3Mgd2Ugc2hvdWxkIGZpeCBpdCBieSBz
+dG9yaW5nIGxhc3RfcHJlcSANCj4gPiBwZXIgcGF0aA0KPiA+IGluc3RlYWQuKQ0KPiA+DQo+ID4N
+Cj4gPiBJZ25vcmluZyB0aGUgc3RhbmRhcmQgZm9yIGEgc2Vjb25kLCBsZXQncyBleHBsb3JlIHRo
+aXM6IGNhbiB5b3UgZ2l2ZSANCj4gPiBzb21lIGlkZWEgb24gaG93IG1hbnkgc3RhdGlvbnMgYXJl
+IGluIHlvdXIgdGFyZ2V0IG5ldHdvcmssIGhvdyANCj4gPiBmcmVxdWVudGx5IGEgZ2l2ZW4gcGFp
+ciBvZiBub2RlcyB1bnBlZXIsIHdoYXQgc29ydCBvZiBpbXByb3ZlbWVudHMgDQo+ID4geW91IHNl
+ZSB3aXRoIHRoZSBwYXRjaD8gIEl0IHNob3VsZCB0aGVuIGJlIHByZXR0eSBlYXN5IHRvIHJ1biBz
+b21lIA0KPiA+IHNpbXVsYXRpb25zIHRvIHNlZSB0aGUgc2NlbmFyaW9zIHdoZXJlIHRoaXMgaGVs
+cHMgYW5kIHdoZXJlIGl0IGh1cnRzLg0KPiA+DQo+IA0KDQpCb2IsIENodW4tWWVvdywNClRoYW5r
+cyBmb3IgeW91ciBpbnB1dHMuDQoNCkxldCB0YWtlIGEgc2ltcGxlIHNjZW5hcmlvLCB3aGVyZSB5
+b3UgaGF2ZSBhLGIsYyxkIG5vZGVzIGNvbm5lY3RlZCB0byBlYWNoIG90aGVyIGFzIHNob3duIGJl
+bG93Lg0KDQpBfiB+IH5+fn5DLSAtIC0gRA0KICAgXCAgICAgICAgICAvDQogICAgICBcICAgICAv
+ICAgDQogICAgICAgICBCDQoNCkEgd291bGQgbGlrZSB0byBwYXNzIGRhdGEgdG8gRC4NCkEtQyBt
+YXRyaWMgaXMgd29yc2UgdGhhbiBBLUItQywgc28gcGF0aCBpcyBjb25zdHJ1Y3RlZCB2aWEgQi4N
+CldlIGFyZSBpbiBpZGxlIHN0YXRlLCBhbmQgUFJFUSBhcmUgc2VudCBldmVyeSBkb3QxMU1lc2hI
+V01QcHJlcU1pbkludGVydmFsLg0KTm93LCBub2RlIEIgaGF2ZSBiZWVuIGRpc2Nvbm5lY3RlZCAo
+cmFuIG91dCBvZiBiYXR0ZXJ5L3NodXQgZG93bi9zdWRkZW5seSB3ZW50IG91dCBvZiByYW5nZSkN
+CkFzIEEgaGFzIGEgcGF0aCB0byBEIHZpYSBCLCBoZSBjbGVhbnMgdXAgaGlzIHBhdGggdGFibGUu
+DQpOb3cgaGUgbmVlZHMgdG8gYnVpbGQgYSBuZXcgcGF0aCwgaW4gdGhlIFdDUywgaGUgaGF2ZSBq
+dXN0IHNlbnQgYSBQUkVRLg0KQW5kIG5vdyBoZSBuZWVkcyB0byB3YWl0IGRvdDExTWVzaEhXTVBw
+cmVxTWluSW50ZXJ2YWwgc2Vjb25kcywgdW50aWwgaGUgY2FuIHJlYnVpbGQgdGhlIHBhdGguDQpB
+cyB3ZSB3b3VsZG4ndCBsaWtlIHRvIGZsb29kIHRoZSBuZXR3b3JrIHdpdGggUFJFUSwgd2UgY2Fu
+IGFzc3VtZSB0aGF0IHRoZSBkb3QxMU1lc2hIV01QcHJlcU1pbkludGVydmFsIGlzIGZldyBzZWNv
+bmRzLCBmb3IgdXMsIGl0IHNlZW1lZCB1bi1hY2NlcHRhYmxlLg0KDQpJbiBjYXNlcyB3aGVyZSB5
+b3UgbmVlZCB0byBoYXZlIGEgcmVsaWFibGUgZGF0YSBsaW5rLCBwYXNzaW5nIGF1ZGlvL3ZpZGVv
+IHlvdSB1c3VhbGx5IGNhbid0IGFmZm9yZCBmZXcgc2Vjb25kcyB3L28gdHJhZmZpYy4NCg0KPiBJ
+biBhZGRpdGlvbiB0byBCb2IncyBjb21tZW50LCB5b3UgcHJvYmFibHkgY2FuIHRyeSB0byByZWR1
+Y2UgdGhlIA0KPiBkb3QxMU1lc2hIV01QcHJlcU1pbkludGVydmFsIHRvIDEgVFUgKDFtcykgaW5z
+dGVhZCBvZiBzdGlja2luZyB0byANCj4gZGVmYXVsdCB2YWx1ZSAxMCBUVXMuIEJlc2lkZXMsIHlv
+dSBjYW4gYWxzbyByZWR1Y2UgdGhlIA0KPiBtZXNoX3BhdGhfcmVmcmVzaF90aW1lIHdoaWNoIGlz
+IGN1cnJlbnRseSBkZWZhdWx0IHRvIDEwMDAgbXMgYW5kIGNoZWNrIA0KPiB3aGV0aGVyIHlvdSBj
+YW4gaW1wcm92ZSBvbiB5b3VyIG5ldHdvcmsgc2NlbmFyaW9zLg0KPg0KDQpXZSBkaWQgdHJpZWQg
+dG8gcGxheSB3aXRoIHRoZXNlIHZhbHVlcywgYnV0IGFnYWluLCB3ZSBkb24ndCB3YW50IHRvIGZs
+b29kIHRoZSBuZXR3b3JrLg0KV2UganVzdCB3YW50IHRvIHJlY292ZXIgQVNBUC4NCiANCj4gV2hl
+biB5b3UgbWVudGlvbmVkICJuZXh0IGhvcCBwZWVyIGRpc2Nvbm5lY3QiLCBpdCBjb3VsZCBhbHNv
+IGJlIHRoZSANCj4gdGltZSB0YWtlbiB0byByZS1lc3RhYmxpc2hlZCB0aGUgbWVzaCBwZWVyaW5n
+IGJlZm9yZSB5b3VyIG1lc2ggU1RBIGNhbiANCj4gdHJhbnNtaXQgdGhlIGRhdGEgdG8geW91ciBw
+ZWVyIG1lc2ggU1RBLg0KPiANCg0KTGluayBlc3RhYmxpc2htZW50IHRha2VzIG5vIG1vcmUgdGhh
+biBmZXcgMTAwcyBvZiBtcyB1c3VhbGx5LA0KQW5kIGluIHRoZSBleGFtcGxlIGFib3ZlLCB0aGVy
+ZSBpcyBubyBuZXcgbGluayBlc3RhYmxpc2htZW50LCBqdXN0IHBhdGggZ2VuZXJhdGlvbi4NCg0K
+DQpUaGFua3MsDQpZYW5pdg0KDQo=
