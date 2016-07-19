@@ -1,103 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hotel311.server4you.de ([85.25.146.15]:52505 "EHLO
-	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757036AbcG1IFe (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:34329 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752265AbcGSGvt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 04:05:34 -0400
-From: Daniel Wagner <wagi@monom.org>
-To: Bastien Nocera <hadess@hadess.net>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>
-Subject: [RFC v0 5/8] ath9k_htc: use firmware_stat instead of completion
-Date: Thu, 28 Jul 2016 09:55:09 +0200
-Message-Id: <1469692512-16863-6-git-send-email-wagi@monom.org> (sfid-20160728_100603_022696_D9AF28F7)
-In-Reply-To: <1469692512-16863-1-git-send-email-wagi@monom.org>
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
+	Tue, 19 Jul 2016 02:51:49 -0400
+MIME-Version: 1.0
+In-Reply-To: <8760s2w369.fsf@kamboji.qca.qualcomm.com>
+References: <20160719160831.79c0303f@canb.auug.org.au> <8760s2w369.fsf@kamboji.qca.qualcomm.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 19 Jul 2016 08:51:48 +0200
+Message-ID: <CACna6rxVFD1MpAEYP_Zd4W8CvgnxSQpa0wJs83jwDJ5v11gZ=Q@mail.gmail.com> (sfid-20160719_085217_929442_F816C4E7)
+Subject: Re: linux-next: build failure after merge of the wireless-drivers-next
+ tree
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Brian Norris <computersforpeace@gmail.com>,
+	"linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-next <linux-next@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+On 19 July 2016 at 08:30, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Stephen Rothwell <sfr@canb.auug.org.au> writes:
+>
+>> After merging the wireless-drivers-next tree, today's linux-next build
+>> (powerpc allyesconfig) failed like this:
+>>
+>> drivers/mtd/devices/bcm47xxsflash.c: In function 'bcm47xxsflash_bcma_probe':
+>> drivers/mtd/devices/bcm47xxsflash.c:299:17: error: implicit declaration of function 'ioremap_cache' [-Werror=implicit-function-declaration]
+>>   b47s->window = ioremap_cache(res->start, resource_size(res));
+>>                  ^
+>> drivers/mtd/devices/bcm47xxsflash.c:299:15: warning: assignment makes pointer from integer without a cast [-Wint-conversion]
+>>   b47s->window = ioremap_cache(res->start, resource_size(res));
+>>                ^
+>>
+>> Caused by commit
+>>
+>>   57d8f7dd2132 ("bcma: allow enabling serial flash support on non-MIPS SoCs")
+>>
+>> I have reverted that commit for today.
+>
+> Thanks, kbuild bot also notified about this.
+>
+> Rafał, as the merge window is getting really close I would like to
+> revert this for now and we can reapply it once we the problem is fully
+> solved. And we can use my pending branch for build testing the patch
+> with kbuild bot. What do you think?
 
-Loading firmware is an operation many drivers implement in various ways
-around the completion API. And most of them do it almost in the same
-way. Let's reuse the firmware_stat API which is used also by the
-firmware_class loader. Apart of streamlining the firmware loading states
-we also document it slightly better.
+The simplest fix sounds pretty much as simple as the revert. In the
+seconds thread I was considering two fixes: switching to memremap and
+adding depends on.
 
-Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
----
- drivers/net/wireless/ath/ath9k/hif_usb.c | 10 +++++-----
- drivers/net/wireless/ath/ath9k/hif_usb.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+What about trying a simple "depends on"?
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index e1c338c..0a05d68 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -1067,7 +1067,7 @@ static void ath9k_hif_usb_firmware_fail(struct hif_device_usb *hif_dev)
- 	struct device *dev = &hif_dev->udev->dev;
- 	struct device *parent = dev->parent;
- 
--	complete_all(&hif_dev->fw_done);
-+	fw_loading_abort(hif_dev->fw_st);
- 
- 	if (parent)
- 		device_lock(parent);
-@@ -1192,7 +1192,7 @@ static void ath9k_hif_usb_firmware_cb(const struct firmware *fw, void *context)
- 
- 	release_firmware(fw);
- 	hif_dev->flags |= HIF_USB_READY;
--	complete_all(&hif_dev->fw_done);
-+	fw_loading_done(hif_dev->fw_st);
- 
- 	return;
- 
-@@ -1287,7 +1287,7 @@ static int ath9k_hif_usb_probe(struct usb_interface *interface,
- #endif
- 	usb_set_intfdata(interface, hif_dev);
- 
--	init_completion(&hif_dev->fw_done);
-+	firmware_stat_init(&hif_dev->fw_st);
- 
- 	ret = ath9k_hif_request_firmware(hif_dev, true);
- 	if (ret)
-@@ -1330,7 +1330,7 @@ static void ath9k_hif_usb_disconnect(struct usb_interface *interface)
- 	if (!hif_dev)
- 		return;
- 
--	wait_for_completion(&hif_dev->fw_done);
-+	fw_loading_wait(hif_dev->fw_st);
- 
- 	if (hif_dev->flags & HIF_USB_READY) {
- 		ath9k_htc_hw_deinit(hif_dev->htc_handle, unplugged);
-@@ -1363,7 +1363,7 @@ static int ath9k_hif_usb_suspend(struct usb_interface *interface,
- 	if (!(hif_dev->flags & HIF_USB_START))
- 		ath9k_htc_suspend(hif_dev->htc_handle);
- 
--	wait_for_completion(&hif_dev->fw_done);
-+	fw_loading_wait(hif_dev->fw_st);
- 
- 	if (hif_dev->flags & HIF_USB_READY)
- 		ath9k_hif_usb_dealloc_urbs(hif_dev);
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.h b/drivers/net/wireless/ath/ath9k/hif_usb.h
-index 7c2ef7e..0af9fe4 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.h
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.h
-@@ -111,7 +111,7 @@ struct hif_device_usb {
- 	const struct usb_device_id *usb_device_id;
- 	const void *fw_data;
- 	size_t fw_size;
--	struct completion fw_done;
-+	struct firmware_stat fw_st;
- 	struct htc_target *htc_handle;
- 	struct hif_usb_tx tx;
- 	struct usb_anchor regout_submitted;
 -- 
-2.7.4
+Rafał
