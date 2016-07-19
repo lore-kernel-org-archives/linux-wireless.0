@@ -1,63 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:36998 "EHLO nbd.name"
+Received: from comal.ext.ti.com ([198.47.26.152]:57017 "EHLO comal.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755164AbcGHQKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 12:10:48 -0400
-Subject: Re: [v3] ath9k: Switch to using mac80211 intermediate software
- queues.
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-	Kalle Valo <kvalo@qca.qualcomm.com>
-References: <ac5b5bc6532d4fe7ae3198124ecce7fc@euamsexm01a.eu.qualcomm.com>
- <87wpkwktx9.fsf@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-	Tim Shepard <shep@alum.mit.edu>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <112300e0-7d39-0c4c-45c9-158651f0c0ed@nbd.name> (sfid-20160708_181053_120968_ACAB9452)
-Date: Fri, 8 Jul 2016 18:10:11 +0200
+	id S1753215AbcGSNRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2016 09:17:37 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Bob Copeland <me@bobcopeland.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"Kama, Meirav" <meiravk@ti.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
+Subject: RE: [PATCH 3/3] mac80211: mesh: fixed HT ies in beacon template
+Date: Tue, 19 Jul 2016 13:17:31 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD110139206259@DFRE01.ent.ti.com> (sfid-20160719_151804_950612_14676178)
+References: <20160713114542.24937-1-yanivma@ti.com>
+	 <20160718133824.GA11996@localhost> (sfid-20160718_153832_665157_D129D05B)
+ <1468867942.2944.0.camel@sipsolutions.net>
+In-Reply-To: <1468867942.2944.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87wpkwktx9.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-07-08 17:53, Toke Høiland-Jørgensen wrote:
-> Kalle Valo <kvalo@qca.qualcomm.com> writes:
-> 
->> Toke Høiland-Jørgensen wrote:
->>> This switches ath9k over to using the mac80211 intermediate software
->>> queueing mechanism for data packets. It removes the queueing inside the
->>> driver, except for the retry queue, and instead pulls from mac80211 when
->>> a packet is needed. The retry queue is used to store a packet that was
->>> pulled but can't be sent immediately.
->>> 
->>> The old code path in ath_tx_start that would queue packets has been
->>> removed completely, as has the qlen limit tunables (since there's no
->>> longer a queue in the driver to limit).
->>> 
->>> Based on Tim's original patch set, but reworked quite thoroughly.
->>> 
->>> Cc: Tim Shepard <shep@alum.mit.edu>
->>> Cc: Felix Fietkau <nbd@nbd.name>
->>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
->>
->> Nice work.
-> 
-> Thanks :)
-> 
->> Because this is such a significant change, and to maximise testing
->> time, I'm planning to queue this for 4.9 (so I would apply this to
->> ath-next in 3-4 weeks after the merge window closes). But anyone who
->> wants to test this can use master-pending branch from my ath.git tree
->> (uses wireless-testing as the baseline). Sounds good?
-> 
-> Sounds good to me. I'm planning on backporting this and Michael's
-> mac80211 FQ-CoDel patches to 4.4 and post them for inclusion in LEDE.
-> Hopefully that will get it some more testing as well.
-I've pushed a backport of this into my LEDE staging tree:
-https://git.lede-project.org/?p=lede/nbd/staging.git;a=summary
-
-I don't have time for testing it myself at the moment, but I'll try to
-get some people to do so.
-
-- Felix
+T24gTW9uLCBKdWwgMTgsIDIwMTYgYXQgMjE6NTI6MjIsIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+
+IGxpbnV4LSB3aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcN
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAzLzNdIG1hYzgwMjExOiBtZXNoOiBmaXhlZCBIVCBpZXMg
+aW4gYmVhY29uIA0KPiB0ZW1wbGF0ZQ0KPiANCj4gT24gTW9uLCAyMDE2LTA3LTE4IGF0IDA5OjM4
+IC0wNDAwLCBCb2IgQ29wZWxhbmQgd3JvdGU6DQo+ID4gT24gV2VkLCBKdWwgMTMsIDIwMTYgYXQg
+MDI6NDU6NDBQTSArMDMwMCwgWWFuaXYgTWFjaGFuaSB3cm90ZToNCj4gPiA+IFRoZSBIVCBjYXBh
+YiBpbmZvIGZpZWxkIGluc2lkZSB0aGUgSFQgY2FwYWIgSUUgb2YgdGhlIG1lc2ggYmVhY29uIA0K
+PiA+ID4gaXMgaW5jb3JyZWN0IChpbiB0aGUgY2FzZSBvZiAyME1IeiBjaGFubmVsIHdpZHRoKS4N
+Cj4gPiA+IFRvIGZpeCB0aGlzIGRyaXZlciB3aWxsIGNoZWNrIGNvbmZpZ3VyYXRpb24gZnJvbSBj
+ZmcgYW5kIHdpbGwgDQo+ID4gPiBidWlsZCBpdCBhY2NvcmRpbmdseS4NCj4gPg0KPiA+ID4gK8Kg
+wqDCoMKgLyogZGV0ZXJtaW5lIGNhcGFiaWxpdHkgZmxhZ3MgKi8NCj4gPiA+ICsJY2FwID0gc2Jh
+bmQtPmh0X2NhcC5jYXA7DQo+ID4gPiArDQo+ID4gPiArwqDCoMKgwqAvKiBpZiBjaGFubmVsIHdp
+ZHRoIGlzIDIwTUh6IC0gY29uZmlndXJlIEhUIGNhcGFiDQo+ID4gPiBhY2NvcmRpbmdseSovDQo+
+ID4gPiArCWlmIChzZGF0YS0+dmlmLmJzc19jb25mLmNoYW5kZWYud2lkdGggPT0NCj4gPiA+IE5M
+ODAyMTFfQ0hBTl9XSURUSF8yMCkgew0KPiA+ID4gKwkJY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQ
+X1NVUF9XSURUSF8yMF80MDsNCj4gPiA+ICsJCWNhcCAmPSB+SUVFRTgwMjExX0hUX0NBUF9EU1NT
+Q0NLNDA7DQo+ID4gPiArCX0NCj4gPg0KPiA+IElzIGl0IHJlcXVpcmVkIHRoYXQgSFQgY2FwYWJp
+bGl0eSBtYXRjaCB0aGUgSFQgb3BlcmF0aW9uIGluIHRoaXMgY2FzZT8NCj4gPg0KPiANCj4gSXMg
+dGhlcmUgZXZlciBhIGNhc2UgdGhhdCBIVCAqY2FwYWJpbGl0eSogc2hvdWxkIGJlIHJlc3RyaWN0
+ZWQgDQo+IGFydGlmaWNpYWxseSBsaWtlIHRoYXQ/IEkgY2FuJ3QgcmVtZW1iZXIgYW55IGNhc2Vz
+IC0gd2UgZG8gc29tZXRoaW5nIA0KPiBsaWtlIHRoYXQgdG8gd29yayBhcm91bmQgYnJva2VuIEFQ
+cyBpbiBzb21lIGNhc2VzLCBidXQgaGVyZT8NCj4gDQoNCkl0IHdhcyBkb25lIHRvIG92ZXJjb21l
+IGFub3RoZXIgbWlzbWF0Y2ggd2l0aCB0aGUgZGVmYXVsdHMgb2YgdGhlIGhvc3RhcCBjb25maWd1
+cmF0aW9uLA0KV2UnbGwgaGF2ZSBhbm90aGVyIGxvb2sgb24gaXQuDQoNClRoZXJlIGlzIGFuIElP
+UCBxdWVzdGlvbiBoZXJlLCBob3cgdG8gaGFuZGxlIGEgY2FzZSB3aGVyZSB5b3UgaGF2ZSBtaXhl
+ZCBjYXBhYmlsaXRpZXMgb2YgcGVlcnMuDQppcyBpdCBwb3NzaWJsZSB0byBkeW5hbWljYWxseSBj
+aGFuZ2UgdGhlIGNoYW5uZWwgYmFuZHdpZHRoIHRvIGFsbG93IG5ldyBwZWVycyB0byBqb2luID8N
+Cg0KWWFuaXYNCg0K
