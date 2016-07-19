@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40698 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751852AbcGRTmC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 15:42:02 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: defer DPC processing during probe
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1468579153-14292-1-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Received: from nbd.name ([46.4.11.11]:35318 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753662AbcGSOcO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2016 10:32:14 -0400
+Subject: Re: TCP performance regression in mac80211 triggered by the fq code
+To: Michal Kazior <michal.kazior@tieto.com>
+References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
+ <CA+BoTQ=Bi070XDXNjq6ypzs3w0+9OYM_8tXeikSR_a0TMN2P=g@mail.gmail.com>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20160718194201.A808E6037B@smtp.codeaurora.org> (sfid-20160718_214207_377572_0241BCC6)
-Date: Mon, 18 Jul 2016 19:42:01 +0000 (UTC)
+	=?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <847b99c3-1e68-6d05-e012-24decd8f44b6@nbd.name> (sfid-20160719_163217_991754_E20C93BB)
+Date: Tue, 19 Jul 2016 16:32:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQ=Bi070XDXNjq6ypzs3w0+9OYM_8tXeikSR_a0TMN2P=g@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> The sdio dpc starts processing when in SDIOD_STATE_DATA. This state was
-> entered right after firmware download. This patch moves that transition
-> just before enabling sdio interrupt handling thus avoiding watchdog
-> expiry which would put the bus to sleep while probing.
+On 2016-07-19 15:13, Michal Kazior wrote:
+> On 12 July 2016 at 12:09, Felix Fietkau <nbd@nbd.name> wrote:
+>> Hi,
+>>
+>> With Toke's ath9k txq patch I've noticed a pretty nasty performance
+>> regression when running local iperf on an AP (running the txq stuff) to
+>> a wireless client.
+>>
+>> Here's some things that I found:
+>> - when I use only one TCP stream I get around 90-110 Mbit/s
+>> - when running multiple TCP streams, I get only 35-40 Mbit/s total
 > 
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+> What is the baseline here (i.e. without fq/txq stuff)? Is it ~100mbps?
+Yes.
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+> Did you try running multiple streams, each on separate tids (matching
+> the same AC perhaps) or different clients?
+Not yet.
 
-fd3ed33f51c2 brcmfmac: defer DPC processing during probe
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9231665/
-
+- Felix
