@@ -1,57 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cit-hm8-mail01.bmw-carit.de ([212.118.206.84]:38283 "EHLO
-	cit-hm8-gw01.bmw-carit.de" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751451AbcG2GJB (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23803 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753452AbcGSNTr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2016 02:09:01 -0400
-Subject: Re: [RFC v0 3/8] firmware: Factor out firmware load helpers
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Daniel Wagner <wagi@monom.org>
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
- <1469692512-16863-4-git-send-email-wagi@monom.org>
- <20160728175706.GB16852@dtor-ws>
-CC: Bastien Nocera <hadess@hadess.net>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	<linux-input@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-Message-ID: <956c030c-1847-eb58-c31b-06ad15c551f0@bmw-carit.de> (sfid-20160729_080906_826150_6FCD604C)
-Date: Fri, 29 Jul 2016 08:08:50 +0200
+	Tue, 19 Jul 2016 09:19:47 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20160728175706.GB16852@dtor-ws>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Subject: Re: ath10k: disable wake_tx_queue for older devices
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1467201146-6844-1-git-send-email-michal.kazior@tieto.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	<ath10k@lists.infradead.org>
+Message-ID: <fddd6abaa3394cf5ae8133f627ffd47d@euamsexm01a.eu.qualcomm.com> (sfid-20160719_151951_006284_6B92BF4B)
+Date: Tue, 19 Jul 2016 15:19:39 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/28/2016 07:57 PM, Dmitry Torokhov wrote:
-> On Thu, Jul 28, 2016 at 09:55:07AM +0200, Daniel Wagner wrote:
->> +int __firmware_stat_wait(struct firmware_stat *fwst,
->> +				long timeout)
->> +{
->> +	int err;
->> +	err = swait_event_interruptible_timeout(fwst->wq,
->> +				is_fw_sync_done(READ_ONCE(fwst->status)),
->> +				timeout);
->> +	if (err == 0 && fwst->status == FW_STATUS_ABORT)
->> +		return -ENOENT;
->> +
->> +	return err;
->> +}
->> +EXPORT_SYMBOL(__firmware_stat_wait);
->> +
->> +void __firmware_stat_set(struct firmware_stat *fwst, unsigned long status)
->> +{
->> +	WRITE_ONCE(fwst->status, status);
->> +	swake_up(&fwst->wq);
->
-> Do we need to notify everyone for FW_STATUS_LOADING status?
+Michal Kazior <michal.kazior@tieto.com> wrote:
+> Ideally wake_tx_queue should be used regardless as
+> it is a requirement for reducing bufferbloat and
+> implementing airtime fairness in the future.
+> 
+> However some setups (typically low-end platforms
+> hosting QCA988X) suffer performance regressions
+> with the current wake_tx_queue implementation.
+> Therefore disable it unless it is really
+> beneficial with current codebase (which is when
+> firmware supports smart pull-push tx scheduling).
+> 
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-Hmm, I don't think so. In the end drivers are probably only interested 
-in the final result which is either success or fail.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-cheers,
-daniel
+4ca1807815aa ath10k: disable wake_tx_queue for older devices
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9204997/
+
