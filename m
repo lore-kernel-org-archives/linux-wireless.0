@@ -1,57 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14789 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751641AbcGULBA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56271 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752202AbcGSHlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 07:01:00 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6LAxRqx019541
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 04:00:58 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 24a2c3feeq-2
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 04:00:57 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: fix large amsdu packets causing firmware hang
-Date: Thu, 21 Jul 2016 16:30:24 +0530
-Message-ID: <1469098824-8031-1-git-send-email-akarwar@marvell.com> (sfid-20160721_130121_154292_EED42E60)
+	Tue, 19 Jul 2016 03:41:52 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v8] Add new mac80211 driver mwlwifi.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <72b910b6cca843daaaac0dc8d9fa138e@SC-EXCH02.marvell.com>
+To: David Lin <dlin@marvell.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Message-Id: <20160719074152.3BA9F6120D@smtp.codeaurora.org> (sfid-20160719_094155_477534_06CDFE7C)
+Date: Tue, 19 Jul 2016 07:41:52 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Cathy Luo <cluo@marvell.com>
+David Lin <dlin@marvell.com> wrote:
+> This patch provides the mwlwifi driver for Marvell 8863, 8864 and 8897
+> chipsets.
+> This driver was developed as part of the openwrt.org project to support
+> Linksys WRT1900AC and is maintained on https://github.com/kaloz/mwlwifi.
+> 
+> The mwlwifi driver differs from existing mwifiex driver:
+> o mwlwifi is a "softmac driver" using the kernel mac802.11 subsystem
+> to provide full AP/Wireless Bridge functionality (routers).
+> o mwifiex is a "fullmac driver" which provides a comprehensive set of
+> client functions (laptops/embedded devices)
+> o only mwlwifi supports Marvell AP chip 886X series
+> 
+> NOTE: Users with Marvell 88W8897 chipsets currently should enable
+> (CONFIG=Y or M) either CONFIG_MWIFIEX or CONFIG_MWLWIFI, NOT BOTH.
+> 
+> mwlwifi driver leveraged code from existing MWL8K driver in the
+> following areas:
+> - 802.11n setting for mac80211
+> - Functions needed to hook up to mac80211
+> - Interactions with mac80211 to establish BA streams
+> - Partial firmware APIs, some data fields
+> - Method to pass Rx packets to mac80211 except 11ac rates
+> 
+> In addition, mwlwifi driver supports:
+> - future scalability and future development (refactored source code)
+> - Marvell 802.11ac chipsets, including combo BT devices
+> - 802.11ac related settings and functions
+> - concurrent AP+STA functionalities with single firmware per chip
+> - firmware APIs for the supported chipset
+> - communicating new mac80211 settings to firmware
+> - Different TX/RX datapath where applicable
+> - A-MSDU and A-MPDU
+> - Refined the code to establish BA streams
+> 
+> Signed-off-by: David Lin <dlin@marvell.com>
 
-Sometimes host prepares and downloads a large amsdu packet to firmware
-which leads to a memory corruption in firmware.
-The reason is __dev_alloc_skb() may allocate larger buffer than required
-size. This patch solves the problem by checking "adapter->tx_buf_size"
-instead of relying on skb_tailroom().
+I applied this to the pending branch for kbuild bot to run it's tests.
 
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/11n_aggr.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-index dc49c3d..c47d636 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
-@@ -205,7 +205,8 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
- 
- 	do {
- 		/* Check if AMSDU can accommodate this MSDU */
--		if (skb_tailroom(skb_aggr) < (skb_src->len + LLC_SNAP_LEN))
-+		if ((skb_aggr->len + skb_src->len + LLC_SNAP_LEN) >
-+		    adapter->tx_buf_size)
- 			break;
- 
- 		skb_src = skb_dequeue(&pra_list->skb_head);
 -- 
-1.9.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9201663/
 
