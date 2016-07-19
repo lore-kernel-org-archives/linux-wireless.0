@@ -1,54 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:36804 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750858AbcGHEBP (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:34692 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751421AbcGSUKA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 00:01:15 -0400
-Message-ID: <1467950431.17638.6.camel@edumazet-glaptop3.roam.corp.google.com> (sfid-20160708_060125_070414_75A33625)
-Subject: Re: [RFC 5/7] net: Add allocation flag to rtnl_unicast()
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-	linux-audit@redhat.com, cluster-devel@redhat.com,
-	davem@davemloft.net, johannes@sipsolutions.net,
-	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
-	dledford@redhat.com, sean.hefty@intel.com,
-	hal.rosenstock@gmail.com, paul@paul-moore.com, eparis@redhat.com,
-	zbr@ioremap.net, pshelar@nicira.com, ccaulfie@redhat.com,
-	teigland@redhat.com, bsingharora@gmail.com
-Date: Fri, 08 Jul 2016 06:00:31 +0200
-In-Reply-To: <577F1AD7.8040800@gmail.com>
-References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
-	 <1467764916-4983-6-git-send-email-masashi.honma@gmail.com>
-	 <1467946591.1273.45.camel@edumazet-glaptop3.roam.corp.google.com>
-	 <577F1AD7.8040800@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 19 Jul 2016 16:10:00 -0400
+Received: by mail-pa0-f67.google.com with SMTP id hh10so1888556pac.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 13:10:00 -0700 (PDT)
+Subject: Re: [PATCH 0/4] brcm80211: Misc coverity fixes
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	brcm80211-dev-list.pdl@broadcom.com
+References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
+ <bdbaa850-4ec4-9faf-dbae-e2a6dcc54e7c@broadcom.com>
+ <578E5845.6030100@gmail.com>
+ <53a36e85-37ad-10a5-81fc-40ce4efa6a65@broadcom.com>
+ <578E71C8.1050003@gmail.com>
+ <9774b991-ef09-66c9-c997-b2d043db5f0f@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
+	kvalo@codeaurora.org, hante.meuleman@broadcom.com
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <578E8916.6030601@gmail.com> (sfid-20160719_221005_736073_6D0FB2A3)
+Date: Tue, 19 Jul 2016 13:09:58 -0700
+MIME-Version: 1.0
+In-Reply-To: <9774b991-ef09-66c9-c997-b2d043db5f0f@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-07-08 at 12:15 +0900, Masashi Honma wrote:
-=
-> Thanks for comment.
+On 07/19/2016 12:36 PM, Arend Van Spriel wrote:
+> On 19-7-2016 20:30, Florian Fainelli wrote:
+>> On 07/19/2016 11:21 AM, Arend Van Spriel wrote:
+>>> On 19-7-2016 18:41, Florian Fainelli wrote:
+>>>> On 07/19/2016 02:20 AM, Arend Van Spriel wrote:
+>>>>> + Bob
+>>>>>
+>>>>> On 19-7-2016 1:24, Florian Fainelli wrote:
+>>>>>> Hi,
+>>>>>>
+>>>>>> This patch series addresses several coverity issues, they all seemed relevant
+>>>>>> to me.
+>>>>>
+>>>>> Hi Florian,
+>>>>>
+>>>>> Been a while so nice to see coverity fixes popping up. Actually
+>>>>> something that I have on my todo list to add our brcm80211 to coverity
+>>>>> within Broadcom. So being curious as to whether this comes from a public
+>>>>> coverity server like scan.coverity.com. Maybe bit redundant to setup
+>>>>> internally if there is a good coverity analysis publicly available.
+>>>>
+>>>> This is coming from the public coverity instance, if you create an
+>>>> account there I could transfer to you the other bugs that affect the
+>>>> brcm80211 drivers (hint: there is a ton of of them because of
+>>>> brcmf_fil_iovar_int_get and friends).
+>>>
+>>> I did create an account and noticed "Broadcom Linux Kernel Open Source
+>>> Repository" project. Anyways, let me have it :-p
+>>>
+>>>>>
+>>>>>> There is also a ton of warnings in Coverity caused by brcmf_fil_iovar_int_get()
+>>>>>> and friends because of the initial access:
+>>>>>>
+>>>>>> __le32 data_le = cpu_to_le32(*data) which can utilize unitialized memory. I am
+>>>>>> not sure if we actually care about any kind of initial, value, but if we don't,
+>>>>>> then the fix should be fairly obvious.
+>>>>>
+>>>>> If we are talking only about "get" variant than we mostly don't care.
+>>>>> Some getters support filter variables to be passed towards firmware. I
+>>>>> have not looked at the analysis to give any judgement here.
+>>>>
+>>>> Alright, do you have a good way to test a patch that would just zero
+>>>> initialize the data variable in brcmf_fil_iovar_int_get()? If so, I will
+>>>> submit one with the appropriate CID references.
+>>>
+>>> But why would we care to zero the data when firmware simply overwrites
+>>> it. These control messages are not high-prio so we can burn some cycles
+>>> to initialize the variable, but to me this is a false positive.
+>>
+>> We have something like this all over the place:
+>>
+>> func() {
+>> 	u32 val;
+>>
+>> 	brcmf_fil_iovar_int_get(..., &val, sizeof(val));
 > 
-> I have selected GFP flags based on existing code.
+> If I am not mistaken the iovar_int_get only passes &val.
+
+We pass data and len:
+
+        err = brcmf_fil_iovar_data_get(ifp, name, &data_le,
+sizeof(data_le));
+        if (err == 0)
+
+
+
 > 
-> I have selected GFP_ATOMIC in inet6_netconf_get_devconf() because
-> skb was allocated with GFP_ATOMIC.
+>> }
+>>
+>> brcmf_fil_iovar_int_get(.., const u32 *data, size_t len)
+>> {
+>> 	__le32 data_le = cpu_to_le32(*data);
+>> 	...
+>> }
+>>
+>> So here data_le also has an uninitialized value, and later on, this:
+>>
+>>
+>>         buflen = brcmf_create_iovar(name, data, len, drvr->proto_buf,
+>>                                     sizeof(drvr->proto_buf));
+> 
+> create_iovar is used for both get and set...
+> 
+>> }
+>>
+>> And this function does this:
+>>
+>> static u32
+>> brcmf_create_iovar(char *name, const char *data, u32 datalen,
+>>                    char *buf, u32 buflen)
+>> {
+>>         u32 len;
+>>
+>>         len = strlen(name) + 1;
+>>
+>>         if ((len + datalen) > buflen)
+>>                 return 0;
+>>
+>>         memcpy(buf, name, len);
+>>
+>>         /* append data onto the end of the name string */
+>>         if (data && datalen)
+>>                 memcpy(&buf[len], data, datalen);
+> 
+> but it does not have that info so it does the memcpy. We could add an
+> extra parameter to avoid the memcpy for get, but as said there are
+> instances where get passes query data to firmware.
 
-Point is : we should remove GFP_ATOMIC uses as much as we can.
+OK.
 
-Everytime we see one of them, we should think why it was added
-and if this is really needed.
+> 
+>>         return len + datalen;
+>> }
+>>
+>>
+>> We are essentially copying into buf an uninitialized value coming from
+>> the stack, which seems like a problem to me.
+> 
+> Functionally I still don't see the problem. For the instances where this
+> is true, the buf will be overwritten with data from firmware. It may be
+> a security issue as stack content is passed to an external device.
 
-inet6_netconf_get_devconf() is a perfect example of one careless
-GFP_ATOMIC usage
-
-https://patchwork.ozlabs.org/patch/646291/
-
-
-
-
-
-
+That's the part that I am mostly concerned with, and the fact that this
+is a genuine uninitialized value, not under direct control, but still.
+-- 
+Florian
