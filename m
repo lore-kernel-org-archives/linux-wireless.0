@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:33386 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752217AbcGTHLg (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34023 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752914AbcGSSOi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 03:11:36 -0400
-Received: by mail-pf0-f175.google.com with SMTP id y134so16163442pfg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2016 00:11:36 -0700 (PDT)
-Subject: Re: [PATCH] mac80211: End the MPSP even if EOSP frame was not
- received
-To: Bob Copeland <me@bobcopeland.com>
-References: <1468393475-2483-1-git-send-email-masashi.honma@gmail.com>
- <20160713135021.GE7819@localhost>
- <3ad771da-f4db-e29d-7b44-7e8a0865e3da@gmail.com>
- <20160719104034.GB11996@localhost>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org, j@w1.fi
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <1a324d4c-9a6b-1c0d-c18d-2df207de708c@gmail.com> (sfid-20160720_091139_615426_3783B856)
-Date: Wed, 20 Jul 2016 16:11:33 +0900
+	Tue, 19 Jul 2016 14:14:38 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20160719104034.GB11996@localhost>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Subject: Re: [1/4] brcmfmac: Fix glob_skb leak in brcmf_sdiod_recv_chain
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1468884277-18606-2-git-send-email-f.fainelli@gmail.com>
+To: Florian Fainelli <f.fainelli@gmail.com>
+Cc: brcm80211-dev-list.pdl@broadcom.com,
+	linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
+	arend.vanspriel@broadcom.com, hante.meuleman@broadcom.com,
+	Florian Fainelli <f.fainelli@gmail.com>
+Message-Id: <20160719181437.D7C456037B@smtp.codeaurora.org> (sfid-20160719_201441_882930_7892B0E5)
+Date: Tue, 19 Jul 2016 18:14:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016年07月19日 19:40, Bob Copeland wrote:
->
-> OK, do we need to also clear WLAN_STA_PS_STA flag for the peer in
-> ieee80211_mps_sta_status_update(), or does the node completely repeer?
->
-> ISTR running into a problem where rebooted peer (previously in power-save)
-> would send popen but we would buffer the response due to stale PS sta
-> flag.
->
-Thanks. I have tried your scenario.
+Florian Fainelli <f.fainelli@gmail.com> wrote:
+> In case brcmf_sdiod_recv_chain() cannot complete a succeful call to
+> brcmf_sdiod_buffrw, we would be leaking glom_skb and not free it as we
+> should, fix this.
+> 
+> Reported-by: coverity (CID 1164856)
+> Fixes: a413e39a38573 ("brcmfmac: fix brcmf_sdcard_recv_chain() for host without sg support")
+> Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+> Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 
-I have disconnected remote peer by accidental shutdown.
-(This means local peer does not recognize remote peer left.)
+Thanks, 3 patches applied to wireless-drivers-next.git:
 
-Then remote peer restarted and started to send Mesh Peering Open frames.
+3bdae810721b brcmfmac: Fix glob_skb leak in brcmf_sdiod_recv_chain
+5c5fa1f464ac brcmsmac: Free packet if dma_mapping_error() fails in dma_rxfill
+f823a2aa8f46 brcmsmac: Initialize power in brcms_c_stf_ss_algo_channel_get()
 
-Local peer receives these frames but does not respond to these
-because peer_lid mismatch.
-
-After 3 times retrial, remote peer sent Mesh Peering Close frame
-with reason code = 56(MESH-MAX-RETRIES).
-
-And then, struct sta_info is freed and allocated.
-
-So looks no problem.
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9235673/
 
