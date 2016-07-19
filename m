@@ -1,66 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44829 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53783 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbcGSOdu (ORCPT
+	with ESMTP id S1753183AbcGSHJX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 10:33:50 -0400
+	Tue, 19 Jul 2016 03:09:23 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Michal Marek <mmarek@suse.com>, netdev@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-	linux-kbuild@vger.kernel.org, akpm <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 05/11] Kbuild: don't add obj tree in additional includes
-References: <20160615154553.3177021-1-arnd@arndb.de>
-	<20160615154553.3177021-6-arnd@arndb.de>
-	<20160718201439.GA9053@sepie.suse.cz> <21521763.EfAflxWUP8@wuerfel>
-Date: Tue, 19 Jul 2016 17:33:44 +0300
-In-Reply-To: <21521763.EfAflxWUP8@wuerfel> (Arnd Bergmann's message of "Tue,
-	19 Jul 2016 10:31:26 +0200")
-Message-ID: <87a8hdae9j.fsf@purkki.adurom.net> (sfid-20160719_163414_291074_5B74A940)
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Brian Norris <computersforpeace@gmail.com>,
+	"linux-mtd\@lists.infradead.org" <linux-mtd@lists.infradead.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-next <linux-next@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: build failure after merge of the wireless-drivers-next tree
+References: <20160719160831.79c0303f@canb.auug.org.au>
+	<8760s2w369.fsf@kamboji.qca.qualcomm.com>
+	<CACna6rxVFD1MpAEYP_Zd4W8CvgnxSQpa0wJs83jwDJ5v11gZ=Q@mail.gmail.com>
+Date: Tue, 19 Jul 2016 10:09:16 +0300
+In-Reply-To: <CACna6rxVFD1MpAEYP_Zd4W8CvgnxSQpa0wJs83jwDJ5v11gZ=Q@mail.gmail.com>
+	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Tue, 19 Jul 2016
+ 08:51:48 +0200")
+Message-ID: <871t2qw1cz.fsf@kamboji.qca.qualcomm.com> (sfid-20160719_090948_545633_5E2E1692)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-> On Monday, July 18, 2016 10:14:39 PM CEST Michal Marek wrote:
->> On Wed, Jun 15, 2016 at 05:45:47PM +0200, Arnd Bergmann wrote:
->> > When building with separate object directories and driver specific
->> > Makefiles that add additional header include paths, Kbuild adjusts
->> > the gcc flags so that we include both the directory in the source
->> > tree and in the object tree.
->> > 
->> > However, due to another bug I fixed earlier, this did not actually
->> > include the correct directory in the object tree, so we know that
->> > we only really need the source tree here. Also, including the
->> > object tree sometimes causes warnings about nonexisting directories
->> > when the include path only exists in the source.
->> > 
->> > This changes the logic to only emit the -I argument for the srctree,
->> > not for objects. We still need both $(srctree)/$(src) and $(obj)
->> > though, so I'm adding them manually.
->> > 
->> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> 
->> Hi Arnd,
->> 
->> I applied the series up to this patch to kbuild.git#kbuild. The rest
->> seem to be related but not dependent patches, so I'll leave it up to the
->> respective maintainers to pick them up. Is that OK with you?
+> On 19 July 2016 at 08:30, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Stephen Rothwell <sfr@canb.auug.org.au> writes:
+>>
+>>> After merging the wireless-drivers-next tree, today's linux-next build
+>>> (powerpc allyesconfig) failed like this:
+>>>
+>>> drivers/mtd/devices/bcm47xxsflash.c: In function 'bcm47xxsflash_bcma_probe':
+>>> drivers/mtd/devices/bcm47xxsflash.c:299:17: error: implicit declaration of function 'ioremap_cache' [-Werror=implicit-function-declaration]
+>>>   b47s->window = ioremap_cache(res->start, resource_size(res));
+>>>                  ^
+>>> drivers/mtd/devices/bcm47xxsflash.c:299:15: warning: assignment makes pointer from integer without a cast [-Wint-conversion]
+>>>   b47s->window = ioremap_cache(res->start, resource_size(res));
+>>>                ^
+>>>
+>>> Caused by commit
+>>>
+>>>   57d8f7dd2132 ("bcma: allow enabling serial flash support on non-MIPS SoCs")
+>>>
+>>> I have reverted that commit for today.
+>>
+>> Thanks, kbuild bot also notified about this.
+>>
+>> Rafał, as the merge window is getting really close I would like to
+>> revert this for now and we can reapply it once we the problem is fully
+>> solved. And we can use my pending branch for build testing the patch
+>> with kbuild bot. What do you think?
 >
-> I think that's fine, a couple were already picked up, and what I have
-> left now is
->
-> a281bfa5713a [SUBMITTED 20160615] [EXPERIMENTAL] Kbuild: enable -Wmissing-include-dirs by default
-> 83934921e68e [SUBMITTED 20160615] rtlwifi: don't add include path for rtl8188ee
+> The simplest fix sounds pretty much as simple as the revert.
 
-Apparently[1] you didn't CC linux-wireless and that's why I didn't see
-the rtlwifi patch in wireless patchwork. Care to resend?
-
-[1] https://patchwork.kernel.org/patch/9178861/
+The problem is that I don't have much time, I need to send the pull
+request to Dave within next few days. The fix might create other
+problems so I'm not enthusiastic about iterating with this patch at the
+moment. I think it can wait for 4.9.
 
 -- 
 Kalle Valo
