@@ -1,40 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:13826 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751550AbcGSV3E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 17:29:04 -0400
-Date: Tue, 19 Jul 2016 23:28:58 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Colin King <colin.king@canonical.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	Robert Dolca <robert.dolca@intel.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: null-ify info->ram_patch when firmware is released
-Message-ID: <20160719212858.GA2274@zurbaran.home> (sfid-20160719_232926_195257_5B96AD56)
-References: <1468587633-25766-1-git-send-email-colin.king@canonical.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:62639 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752477AbcGSHyh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2016 03:54:37 -0400
+From: David Lin <dlin@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Chor Teck Law" <ctlaw@marvell.com>, Pete Hsieh <peteh@marvell.com>
+Subject: RE: [v8] Add new mac80211 driver mwlwifi.
+Date: Tue, 19 Jul 2016 07:54:31 +0000
+Message-ID: <b774b1424f8443399153d7f31cc001be@SC-EXCH02.marvell.com> (sfid-20160719_095440_533433_F961F70B)
+References: <72b910b6cca843daaaac0dc8d9fa138e@SC-EXCH02.marvell.com>
+ <20160719074152.73F776043B@smtp.codeaurora.org>
+In-Reply-To: <20160719074152.73F776043B@smtp.codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1468587633-25766-1-git-send-email-colin.king@canonical.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Colin,
-
-On Fri, Jul 15, 2016 at 02:00:33PM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> When the firmware is released for info->ram_patch currently
-> info->otp_patch is being nullified and not info->ram_patch.
-> This looks like a cut-n-paste coding error. Fix this by
-> nullifing the correct field.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/nfc/fdp/fdp.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-Applied to nfc-next, thanks.
-
-Cheers,
-Samuel.
+S2FsbGUgVmFsbyBbbWFpbHRvOmt2YWxvQGNvZGVhdXJvcmEub3JnXSB3cm90ZTouDQo+IA0KPiBE
+YXZpZCBMaW4gPGRsaW5AbWFydmVsbC5jb20+IHdyb3RlOg0KPiA+IFRoaXMgcGF0Y2ggcHJvdmlk
+ZXMgdGhlIG13bHdpZmkgZHJpdmVyIGZvciBNYXJ2ZWxsIDg4NjMsIDg4NjQgYW5kIDg4OTcNCj4g
+PiBjaGlwc2V0cy4NCj4gPiBUaGlzIGRyaXZlciB3YXMgZGV2ZWxvcGVkIGFzIHBhcnQgb2YgdGhl
+IG9wZW53cnQub3JnIHByb2plY3QgdG8NCj4gPiBzdXBwb3J0IExpbmtzeXMgV1JUMTkwMEFDIGFu
+ZCBpcyBtYWludGFpbmVkIG9uDQo+IGh0dHBzOi8vZ2l0aHViLmNvbS9rYWxvei9td2x3aWZpLg0K
+PiA+DQo+ID4gVGhlIG13bHdpZmkgZHJpdmVyIGRpZmZlcnMgZnJvbSBleGlzdGluZyBtd2lmaWV4
+IGRyaXZlcjoNCj4gPiBvIG13bHdpZmkgaXMgYSAic29mdG1hYyBkcml2ZXIiIHVzaW5nIHRoZSBr
+ZXJuZWwgbWFjODAyLjExIHN1YnN5c3RlbQ0KPiA+IHRvIHByb3ZpZGUgZnVsbCBBUC9XaXJlbGVz
+cyBCcmlkZ2UgZnVuY3Rpb25hbGl0eSAocm91dGVycykuDQo+ID4gbyBtd2lmaWV4IGlzIGEgImZ1
+bGxtYWMgZHJpdmVyIiB3aGljaCBwcm92aWRlcyBhIGNvbXByZWhlbnNpdmUgc2V0IG9mDQo+ID4g
+Y2xpZW50IGZ1bmN0aW9ucyAobGFwdG9wcy9lbWJlZGRlZCBkZXZpY2VzKSBvIG9ubHkgbXdsd2lm
+aSBzdXBwb3J0cw0KPiA+IE1hcnZlbGwgQVAgY2hpcCA4ODZYIHNlcmllcw0KPiA+DQo+ID4gTk9U
+RTogVXNlcnMgd2l0aCBNYXJ2ZWxsIDg4Vzg4OTcgY2hpcHNldHMgY3VycmVudGx5IHNob3VsZCBl
+bmFibGUNCj4gPiAoQ09ORklHPVkgb3IgTSkgZWl0aGVyIENPTkZJR19NV0lGSUVYIG9yIENPTkZJ
+R19NV0xXSUZJLCBOT1QNCj4gQk9USC4NCj4gPg0KPiA+IG13bHdpZmkgZHJpdmVyIGxldmVyYWdl
+ZCBjb2RlIGZyb20gZXhpc3RpbmcgTVdMOEsgZHJpdmVyIGluIHRoZQ0KPiA+IGZvbGxvd2luZyBh
+cmVhczoNCj4gPiAtIDgwMi4xMW4gc2V0dGluZyBmb3IgbWFjODAyMTENCj4gPiAtIEZ1bmN0aW9u
+cyBuZWVkZWQgdG8gaG9vayB1cCB0byBtYWM4MDIxMQ0KPiA+IC0gSW50ZXJhY3Rpb25zIHdpdGgg
+bWFjODAyMTEgdG8gZXN0YWJsaXNoIEJBIHN0cmVhbXMNCj4gPiAtIFBhcnRpYWwgZmlybXdhcmUg
+QVBJcywgc29tZSBkYXRhIGZpZWxkcw0KPiA+IC0gTWV0aG9kIHRvIHBhc3MgUnggcGFja2V0cyB0
+byBtYWM4MDIxMSBleGNlcHQgMTFhYyByYXRlcw0KPiA+DQo+ID4gSW4gYWRkaXRpb24sIG13bHdp
+ZmkgZHJpdmVyIHN1cHBvcnRzOg0KPiA+IC0gZnV0dXJlIHNjYWxhYmlsaXR5IGFuZCBmdXR1cmUg
+ZGV2ZWxvcG1lbnQgKHJlZmFjdG9yZWQgc291cmNlIGNvZGUpDQo+ID4gLSBNYXJ2ZWxsIDgwMi4x
+MWFjIGNoaXBzZXRzLCBpbmNsdWRpbmcgY29tYm8gQlQgZGV2aWNlcw0KPiA+IC0gODAyLjExYWMg
+cmVsYXRlZCBzZXR0aW5ncyBhbmQgZnVuY3Rpb25zDQo+ID4gLSBjb25jdXJyZW50IEFQK1NUQSBm
+dW5jdGlvbmFsaXRpZXMgd2l0aCBzaW5nbGUgZmlybXdhcmUgcGVyIGNoaXANCj4gPiAtIGZpcm13
+YXJlIEFQSXMgZm9yIHRoZSBzdXBwb3J0ZWQgY2hpcHNldA0KPiA+IC0gY29tbXVuaWNhdGluZyBu
+ZXcgbWFjODAyMTEgc2V0dGluZ3MgdG8gZmlybXdhcmUNCj4gPiAtIERpZmZlcmVudCBUWC9SWCBk
+YXRhcGF0aCB3aGVyZSBhcHBsaWNhYmxlDQo+ID4gLSBBLU1TRFUgYW5kIEEtTVBEVQ0KPiA+IC0g
+UmVmaW5lZCB0aGUgY29kZSB0byBlc3RhYmxpc2ggQkEgc3RyZWFtcw0KPiA+DQo+ID4gU2lnbmVk
+LW9mZi1ieTogRGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29tPg0KPiANCj4gSSBhcHBsaWVkIHRo
+aXMgdG8gdGhlIHBlbmRpbmcgYnJhbmNoIGZvciBrYnVpbGQgYm90IHRvIHJ1biBpdCdzIHRlc3Rz
+Lg0KPiANCg0KVGhhbmtzLg0KDQo+IC0tDQo+IFNlbnQgYnkgcHdjbGkNCj4gaHR0cHM6Ly9wYXRj
+aHdvcmsua2VybmVsLm9yZy9wYXRjaC85MjAxNjYzLw0KDQo=
