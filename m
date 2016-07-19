@@ -1,99 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:43196 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751425AbcGMJAP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 05:00:15 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: remove skb header offset mangling in ieee80211_build_hdr
-Date: Wed, 13 Jul 2016 11:00:02 +0200
-Message-Id: <20160713090002.51127-1-nbd@nbd.name> (sfid-20160713_110026_870407_78F1A4E0)
+Received: from smtp.codeaurora.org ([198.145.29.96]:42140 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753417AbcGSOJI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2016 10:09:08 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Brian Norris <computersforpeace@gmail.com>,
+	"linux-mtd\@lists.infradead.org" <linux-mtd@lists.infradead.org>,
+	Stephen Rothwell <sfr@canb.auug.org.au>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-next <linux-next@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: build failure after merge of the wireless-drivers-next tree
+References: <20160719160831.79c0303f@canb.auug.org.au>
+	<8760s2w369.fsf@kamboji.qca.qualcomm.com>
+	<CACna6rxVFD1MpAEYP_Zd4W8CvgnxSQpa0wJs83jwDJ5v11gZ=Q@mail.gmail.com>
+	<871t2qw1cz.fsf@kamboji.qca.qualcomm.com>
+	<CACna6ry6QgrbUoHuJacmr1EhHZyrwqsXfr51gENvY-0zM9L+3Q@mail.gmail.com>
+Date: Tue, 19 Jul 2016 17:08:59 +0300
+In-Reply-To: <CACna6ry6QgrbUoHuJacmr1EhHZyrwqsXfr51gENvY-0zM9L+3Q@mail.gmail.com>
+	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Tue, 19 Jul 2016
+ 09:11:11 +0200")
+Message-ID: <87h9blvhxg.fsf@kamboji.qca.qualcomm.com> (sfid-20160719_160926_295459_66E3231D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since the code only touches the MAC headers, the offsets to the
-network/transport headers remain the same throughout this function.
-Remove pointless pieces of code that try to 'preserve' them.
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/tx.c | 28 ++--------------------------
- 1 file changed, 2 insertions(+), 26 deletions(-)
+> On 19 July 2016 at 09:09, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Rafał Miłecki <zajec5@gmail.com> writes:
+>>
+>>> On 19 July 2016 at 08:30, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>> Stephen Rothwell <sfr@canb.auug.org.au> writes:
+>>>>
+>>>>> After merging the wireless-drivers-next tree, today's linux-next build
+>>>>> (powerpc allyesconfig) failed like this:
+>>>>>
+>>>>> drivers/mtd/devices/bcm47xxsflash.c: In function 'bcm47xxsflash_bcma_probe':
+>>>>> drivers/mtd/devices/bcm47xxsflash.c:299:17: error: implicit declaration of function 'ioremap_cache' [-Werror=implicit-function-declaration]
+>>>>>   b47s->window = ioremap_cache(res->start, resource_size(res));
+>>>>>                  ^
+>>>>> drivers/mtd/devices/bcm47xxsflash.c:299:15: warning: assignment makes pointer from integer without a cast [-Wint-conversion]
+>>>>>   b47s->window = ioremap_cache(res->start, resource_size(res));
+>>>>>                ^
+>>>>>
+>>>>> Caused by commit
+>>>>>
+>>>>>   57d8f7dd2132 ("bcma: allow enabling serial flash support on non-MIPS SoCs")
+>>>>>
+>>>>> I have reverted that commit for today.
+>>>>
+>>>> Thanks, kbuild bot also notified about this.
+>>>>
+>>>> Rafał, as the merge window is getting really close I would like to
+>>>> revert this for now and we can reapply it once we the problem is fully
+>>>> solved. And we can use my pending branch for build testing the patch
+>>>> with kbuild bot. What do you think?
+>>>
+>>> The simplest fix sounds pretty much as simple as the revert.
+>>
+>> The problem is that I don't have much time, I need to send the pull
+>> request to Dave within next few days. The fix might create other
+>> problems so I'm not enthusiastic about iterating with this patch at the
+>> moment. I think it can wait for 4.9.
+>
+> I sent a patch seconds ago, you may just take a look at it. If you
+> still prefer to revert my commit, go ahead.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 24ec38a..cc2ca09 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2325,7 +2325,6 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	struct mesh_path __maybe_unused *mppath = NULL, *mpath = NULL;
- 	const u8 *encaps_data;
- 	int encaps_len, skip_header_bytes;
--	int nh_pos, h_pos;
- 	bool wme_sta = false, authorized = false;
- 	bool tdls_peer;
- 	bool multicast;
-@@ -2634,13 +2633,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 		encaps_len = 0;
- 	}
- 
--	nh_pos = skb_network_header(skb) - skb->data;
--	h_pos = skb_transport_header(skb) - skb->data;
--
- 	skb_pull(skb, skip_header_bytes);
--	nh_pos -= skip_header_bytes;
--	h_pos -= skip_header_bytes;
--
- 	head_need = hdrlen + encaps_len + meshhdrlen - skb_headroom(skb);
- 	head_need += padsize;
- 
-@@ -2667,18 +2660,12 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
--	if (encaps_data) {
-+	if (encaps_data)
- 		memcpy(skb_push(skb, encaps_len), encaps_data, encaps_len);
--		nh_pos += encaps_len;
--		h_pos += encaps_len;
--	}
- 
- #ifdef CONFIG_MAC80211_MESH
--	if (meshhdrlen > 0) {
-+	if (meshhdrlen > 0)
- 		memcpy(skb_push(skb, meshhdrlen), &mesh_hdr, meshhdrlen);
--		nh_pos += meshhdrlen;
--		h_pos += meshhdrlen;
--	}
- #endif
- 
- 	if (padsize)
-@@ -2697,15 +2684,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	} else
- 		memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
- 
--	nh_pos += hdrlen + padsize;
--	h_pos += hdrlen + padsize;
--
--	/* Update skb pointers to various headers since this modified frame
--	 * is going to go through Linux networking code that may potentially
--	 * need things like pointer to IP header. */
- 	skb_reset_mac_header(skb);
--	skb_set_network_header(skb, nh_pos);
--	skb_set_transport_header(skb, h_pos);
- 
- 	info = IEEE80211_SKB_CB(skb);
- 	memset(info, 0, sizeof(*info));
-@@ -4391,9 +4370,6 @@ void __ieee80211_tx_skb_tid_band(struct ieee80211_sub_if_data *sdata,
- 	int ac = ieee802_1d_to_ac[tid & 7];
- 
- 	skb_reset_mac_header(skb);
--	skb_reset_network_header(skb);
--	skb_reset_transport_header(skb);
--
- 	skb_set_queue_mapping(skb, ac);
- 	skb->priority = tid;
- 
+Ok, let's try your fix. We still have few days. I applied the patch[1]
+to the pending branch this morning and if I don't see any errors I apply
+it later tonight and hopefully it will be in tomorrow's linux-next
+build. Thanks for the quick fix, very much appreciated.
+
+[1] "mtd: add arch dependency for MTD_BCM47XXSFLASH symbol"
+    https://patchwork.kernel.org/patch/9236053/
+
 -- 
-2.8.4
-
+Kalle Valo
