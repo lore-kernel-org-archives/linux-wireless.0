@@ -1,102 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45555 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751468AbcGUKXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 06:23:13 -0400
-Message-ID: <5790A28F.8030102@redhat.com> (sfid-20160721_122317_289870_E5664AC9)
-Date: Thu, 21 Jul 2016 06:23:11 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:33432 "EHLO
+	mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753176AbcGSQB4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jul 2016 12:01:56 -0400
+Received: by mail-qk0-f173.google.com with SMTP id p74so19985539qka.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 09:01:55 -0700 (PDT)
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-CC: Michal Kazior <michal.kazior@tieto.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com> <20160721070938.GA2658@redhat.com> <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com> <20160721080541.GB2658@redhat.com>
-In-Reply-To: <20160721080541.GB2658@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20160719134355.GA1833@localhost>
+References: <CAEFj987X26u59K32Mt-bKBSTmy3cWvOiNNBG7K4wbdQBAdR97Q@mail.gmail.com>
+ <20160719124456.GD11996@localhost> <AE1C82FB3D0EC64DB1F752C81CBD110139206115@DFRE01.ent.ti.com>
+ <20160719134355.GA1833@localhost>
+From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+Date: Wed, 20 Jul 2016 00:01:54 +0800
+Message-ID: <CAEFj987V0r3aVn+JhQOX-40bheKyEJdrppF75OCaLXhU=skmNw@mail.gmail.com> (sfid-20160719_180159_626793_49E31728)
+Subject: Re: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "Machani, Yaniv" <yanivma@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Hahn, Maital" <maitalm@ti.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 07/21/2016 04:05 AM, Stanislaw Gruszka wrote:
-> On Thu, Jul 21, 2016 at 10:36:42AM +0300, Emmanuel Grumbach wrote:
->> On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
->>> On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
->>>> Firmware files are versioned to prevent older
->>>> driver instances to load unsupported firmware
->>>> blobs. This is reflected with a fallback logic
->>>> which attempts to load several firmware files.
->>>>
->>>> This however produced a lot of unnecessary
->>>> warnings sometimes confusing users and leading
->>>> them to rename firmware files making things even
->>>> more confusing.
->>>
->>> This happens on kernels configured with
->>> CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
->>> but also 60 seconds delay before loading next firmware version.
->>> For some reason RHEL kernel needs above config option, so this
->>> patch is very welcome from my perspective.
->>>
+On Tue, Jul 19, 2016 at 9:43 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Tue, Jul 19, 2016 at 01:02:13PM +0000, Machani, Yaniv wrote:
+>> On Tue, Jul 19, 2016 at 15:44:56, Bob Copeland wrote:
+>> > > IEEE 802.11-2012 has defined dot11MeshHWMPpreqMinInterval attribute
+>> > > to specify the minimum interval of time during which a mesh STA can
+>> > > send only one Action frame containing a PREQ element. This is to
+>> > > avoid flooding of broadcast PREQ frame especially when the number of
+>> > > mesh STA is increased.
+>> >
+>> > Good point, according to 13.10.9.3, conditions for sending PREQ include:
+>> >
+>> > "The mesh STA has not sent a PREQ element for the target mesh STAs
+>> > less than dot11MeshHWMPpreqMinInterval TUs ago. If this is the case,
+>> > the transmission of the PREQ has to be postponed until this condition becomes true."
+>> >
 >>
->> Sorry for my ignorance but how does the firmware loading work if not
->> with udev's help?
-> 
-> I'm not sure exactly, but I think kernel VFS layer is capable to copy
-> file data directly from mounted filesystem without user space helper.
+>> As I see it, the key point here is "for the target meh STA",
+>> Today, the code will not send a PREQ to ANY target if
+>> dot11MeshHWMPpreqMinInterval didn't passed.
+>> The information is saved in the 'ifmsh->last_preq', and not per path.
+>
+> The standard also says (which Chun-Yeow partially quoted):
+>
+> dot11MeshHWMPpreqMinInterval OBJECT-TYPE
+> SYNTAX Unsigned32 (1..65535)
+> MAX-ACCESS read-write
+> STATUS current
+> DESCRIPTION
+> "This is a control variable.
+> It is written by an external management entity.
+> Changes take effect as soon as practical in the implementation.
+> This attribute specifies the minimum interval of time (in TUs) during
+> which a mesh STA can send only one Action frame containing a PREQ element."
+> DEFVAL { 100 }
+> ::= { dot11MeshHWMPConfigEntry 4}
+>
+> This wording seems to indicate that it is not per path.  Perhaps this
+> should be clarified in the standard.  (If the intent turns out to be per
+> path, then I guess we should fix it by storing last_preq per path instead.)
+>
+>
+> Ignoring the standard for a second, let's explore this: can you give
+> some idea on how many stations are in your target network, how frequently
+> a given pair of nodes unpeer, what sort of improvements you see with the
+> patch?  It should then be pretty easy to run some simulations to see the
+> scenarios where this helps and where it hurts.
+>
 
-Here's the situation: request_firmware() waits 60 seconds for udev to do its
-loading magic via a "usermode helper".  This delay is there to allow, for
-example, userspace to unpack or download a new firmware image or verify the
-firmware image *in userspace* before providing it to the driver to apply to the HW.
+In addition to Bob's comment, you probably can try to reduce the
+dot11MeshHWMPpreqMinInterval to 1 TU (1ms) instead of sticking to
+default value 10 TUs. Besides, you can also reduce the
+mesh_path_refresh_time which is currently default to 1000 ms and check
+whether you can improve on your network scenarios.
 
-Why 60 seconds?  It is arbitrary and there is no way for udev & the kernel to
-handshake on completion.
+When you mentioned "next hop peer disconnect", it could also be the
+time taken to re-established the mesh peering before your mesh STA can
+transmit the data to your peer mesh STA.
 
-> 
->> As you can imagine, iwlwifi is suffering from the
->> same problem and I would be interested in applying the same change,
->> but I'd love to understand a bit more :)
-> 
-> Yes, iwlwifi (and some other drivers) suffer from this. However this
-> happen when the newest firmware version is not installed on the system
-> and CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled. What I suppose
-> it's not common.
-
-request_firmware_direct() was introduced at my request because (as you've
-noticed) when CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y drivers may stall for long
-periods of time when starting.  The bug that this introduced was a 60 second
-delay per logical cpu when starting a system.  On a 64 cpu system that meant the
-boot would complete in a little over one hour.
-
-> 
-> I started to see this currently, because that option was enabled on 
-> RHEL kernel. BTW: I think Prarit iwlwifi thermal_zone problem was
-> happened because of that, i.e. thermal device was not functional
-> because f/w wasn't loaded due to big delay.
-> 
-> I'm not sure if replacing to request_firmware_direct() is a good
-> fix though. For example I can see this problem also on brcmfmac, which
-> use request_firmware_nowait(). I think I would rather prefer special
-> helper for firmware drivers that needs user helper and have
-> request_firmware() be direct as default.
-> 
-
-The difference between request_firmware_direct() and request_firmware() is that
-the _direct() version does not wait the 60 seconds for udev interaction.  The
-only userspace check performed is to see if the file is there, and if the file
-does exist it is provided to the driver to be applied to the hardware.
-
-So the real question to ask here is whether or not the ath10k, brcmfmac, and
-iwlwifi require udev to do anything beyond checking for the existence and
-loading the firmware image.  If they don't, then it is better to use
-request_firmware_direct().
-
-P.
-
-> Stanislaw
-> 
+---
+Chun-Yeow
