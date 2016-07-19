@@ -1,243 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 51.19-broadband.acttv.in ([106.51.19.103]:31488 "EHLO
-	arvind-ThinkPad-Edge-E431" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751201AbcGWSOw (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35350 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753261AbcGSSaf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2016 14:14:52 -0400
-From: Arvind Yadav <arvind.yadav.cs@gmail.com>
-To: zajec5@gmail.com, leoli@freescale.com
-Cc: qiang.zhao@freescale.com, scottwood@freescale.com,
-	viresh.kumar@linaro.org, akpm@linux-foundation.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux@roeck-us.net, arnd@arndb.de,
-	Arvind Yadav <arvind.yadav.cs@gmail.com>
-Subject: [v3] UCC_GETH/UCC_FAST: Use IS_ERR_VALUE_U32 API to avoid IS_ERR_VALUE abuses.
-Date: Sat, 23 Jul 2016 23:35:51 +0530
-Message-Id: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20160723_201500_421742_6C4002FB)
+	Tue, 19 Jul 2016 14:30:35 -0400
+Received: by mail-pf0-f194.google.com with SMTP id h186so1826617pfg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 11:30:34 -0700 (PDT)
+Subject: Re: [PATCH 0/4] brcm80211: Misc coverity fixes
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	brcm80211-dev-list.pdl@broadcom.com
+References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
+ <bdbaa850-4ec4-9faf-dbae-e2a6dcc54e7c@broadcom.com>
+ <578E5845.6030100@gmail.com>
+ <53a36e85-37ad-10a5-81fc-40ce4efa6a65@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
+	kvalo@codeaurora.org, hante.meuleman@broadcom.com
+From: Florian Fainelli <f.fainelli@gmail.com>
+Message-ID: <578E71C8.1050003@gmail.com> (sfid-20160719_203038_711101_CAD8F7B5)
+Date: Tue, 19 Jul 2016 11:30:32 -0700
+MIME-Version: 1.0
+In-Reply-To: <53a36e85-37ad-10a5-81fc-40ce4efa6a65@broadcom.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IS_ERR_VALUE() assumes that its parameter is an unsigned long.
-It can not be used to check if an 'unsigned int' reflects an error.
-As they pass an 'unsigned int' into a function that takes an
-'unsigned long' argument. This happens to work because the type
-is sign-extended on 64-bit architectures before it gets converted
-into an unsigned type.
+On 07/19/2016 11:21 AM, Arend Van Spriel wrote:
+> On 19-7-2016 18:41, Florian Fainelli wrote:
+>> On 07/19/2016 02:20 AM, Arend Van Spriel wrote:
+>>> + Bob
+>>>
+>>> On 19-7-2016 1:24, Florian Fainelli wrote:
+>>>> Hi,
+>>>>
+>>>> This patch series addresses several coverity issues, they all seemed relevant
+>>>> to me.
+>>>
+>>> Hi Florian,
+>>>
+>>> Been a while so nice to see coverity fixes popping up. Actually
+>>> something that I have on my todo list to add our brcm80211 to coverity
+>>> within Broadcom. So being curious as to whether this comes from a public
+>>> coverity server like scan.coverity.com. Maybe bit redundant to setup
+>>> internally if there is a good coverity analysis publicly available.
+>>
+>> This is coming from the public coverity instance, if you create an
+>> account there I could transfer to you the other bugs that affect the
+>> brcm80211 drivers (hint: there is a ton of of them because of
+>> brcmf_fil_iovar_int_get and friends).
+> 
+> I did create an account and noticed "Broadcom Linux Kernel Open Source
+> Repository" project. Anyways, let me have it :-p
+> 
+>>>
+>>>> There is also a ton of warnings in Coverity caused by brcmf_fil_iovar_int_get()
+>>>> and friends because of the initial access:
+>>>>
+>>>> __le32 data_le = cpu_to_le32(*data) which can utilize unitialized memory. I am
+>>>> not sure if we actually care about any kind of initial, value, but if we don't,
+>>>> then the fix should be fairly obvious.
+>>>
+>>> If we are talking only about "get" variant than we mostly don't care.
+>>> Some getters support filter variables to be passed towards firmware. I
+>>> have not looked at the analysis to give any judgement here.
+>>
+>> Alright, do you have a good way to test a patch that would just zero
+>> initialize the data variable in brcmf_fil_iovar_int_get()? If so, I will
+>> submit one with the appropriate CID references.
+> 
+> But why would we care to zero the data when firmware simply overwrites
+> it. These control messages are not high-prio so we can burn some cycles
+> to initialize the variable, but to me this is a false positive.
 
-However, anything that passes an 'unsigned short' or 'unsigned int'
-argument into IS_ERR_VALUE() is guaranteed to be broken, as are
-8-bit integers and types that are wider than 'unsigned long'.
+We have something like this all over the place:
 
-It would be nice to any users that are not passing 'unsigned int'
-arguments.
+func() {
+	u32 val;
 
-Passing value in IS_ERR_VALUE() is wrong, as they pass an
-'unsigned int' into a function that takes an 'unsigned long'
-argument.This happens to work because the type is sign-extended
-on 64-bit architectures before it gets converted into an
-unsigned type.
+	brcmf_fil_iovar_int_get(..., &val, sizeof(val));
+}
 
-Passing an 'unsigned short' or 'unsigned int'argument into
-IS_ERR_VALUE() is guaranteed to be broken, as are 8-bit integers
-and types that are wider than 'unsigned long'.
+brcmf_fil_iovar_int_get(.., const u32 *data, size_t len)
+{
+	__le32 data_le = cpu_to_le32(*data);
+	...
+}
 
-Any user will get compilation warning for that do not pass an
-unsigned long' argument.
+So here data_le also has an uninitialized value, and later on, this:
 
-Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
----
- drivers/bcma/scan.c                       |  2 --
- drivers/net/ethernet/freescale/ucc_geth.c | 30 +++++++++++++++---------------
- drivers/soc/fsl/qe/ucc_fast.c             |  4 ++--
- include/linux/err.h                       |  1 +
- 4 files changed, 18 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 4a2d1b2..319d78e 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -272,8 +272,6 @@ static struct bcma_device *bcma_find_core_reverse(struct bcma_bus *bus, u16 core
- 	return NULL;
- }
- 
--#define IS_ERR_VALUE_U32(x) ((x) >= (u32)-MAX_ERRNO)
--
- static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 			      struct bcma_device_id *match, int core_num,
- 			      struct bcma_device *core)
-diff --git a/drivers/net/ethernet/freescale/ucc_geth.c b/drivers/net/ethernet/freescale/ucc_geth.c
-index 5bf1ade..d290dea 100644
---- a/drivers/net/ethernet/freescale/ucc_geth.c
-+++ b/drivers/net/ethernet/freescale/ucc_geth.c
-@@ -289,7 +289,7 @@ static int fill_init_enet_entries(struct ucc_geth_private *ugeth,
- 		else {
- 			init_enet_offset =
- 			    qe_muram_alloc(thread_size, thread_alignment);
--			if (IS_ERR_VALUE(init_enet_offset)) {
-+			if (IS_ERR_VALUE_U32(init_enet_offset)) {
- 				if (netif_msg_ifup(ugeth))
- 					pr_err("Can not allocate DPRAM memory\n");
- 				qe_put_snum((u8) snum);
-@@ -2234,7 +2234,7 @@ static int ucc_geth_alloc_tx(struct ucc_geth_private *ugeth)
- 			ugeth->tx_bd_ring_offset[j] =
- 			    qe_muram_alloc(length,
- 					   UCC_GETH_TX_BD_RING_ALIGNMENT);
--			if (!IS_ERR_VALUE(ugeth->tx_bd_ring_offset[j]))
-+			if (!IS_ERR_VALUE_U32(ugeth->tx_bd_ring_offset[j]))
- 				ugeth->p_tx_bd_ring[j] =
- 				    (u8 __iomem *) qe_muram_addr(ugeth->
- 							 tx_bd_ring_offset[j]);
-@@ -2311,7 +2311,7 @@ static int ucc_geth_alloc_rx(struct ucc_geth_private *ugeth)
- 			ugeth->rx_bd_ring_offset[j] =
- 			    qe_muram_alloc(length,
- 					   UCC_GETH_RX_BD_RING_ALIGNMENT);
--			if (!IS_ERR_VALUE(ugeth->rx_bd_ring_offset[j]))
-+			if (!IS_ERR_VALUE_U32(ugeth->rx_bd_ring_offset[j]))
- 				ugeth->p_rx_bd_ring[j] =
- 				    (u8 __iomem *) qe_muram_addr(ugeth->
- 							 rx_bd_ring_offset[j]);
-@@ -2521,7 +2521,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 	ugeth->tx_glbl_pram_offset =
- 	    qe_muram_alloc(sizeof(struct ucc_geth_tx_global_pram),
- 			   UCC_GETH_TX_GLOBAL_PRAM_ALIGNMENT);
--	if (IS_ERR_VALUE(ugeth->tx_glbl_pram_offset)) {
-+	if (IS_ERR_VALUE_U32(ugeth->tx_glbl_pram_offset)) {
- 		if (netif_msg_ifup(ugeth))
- 			pr_err("Can not allocate DPRAM memory for p_tx_glbl_pram\n");
- 		return -ENOMEM;
-@@ -2541,7 +2541,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 			   sizeof(struct ucc_geth_thread_data_tx) +
- 			   32 * (numThreadsTxNumerical == 1),
- 			   UCC_GETH_THREAD_DATA_ALIGNMENT);
--	if (IS_ERR_VALUE(ugeth->thread_dat_tx_offset)) {
-+	if (IS_ERR_VALUE_U32(ugeth->thread_dat_tx_offset)) {
- 		if (netif_msg_ifup(ugeth))
- 			pr_err("Can not allocate DPRAM memory for p_thread_data_tx\n");
- 		return -ENOMEM;
-@@ -2568,7 +2568,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 	    qe_muram_alloc(ug_info->numQueuesTx *
- 			   sizeof(struct ucc_geth_send_queue_qd),
- 			   UCC_GETH_SEND_QUEUE_QUEUE_DESCRIPTOR_ALIGNMENT);
--	if (IS_ERR_VALUE(ugeth->send_q_mem_reg_offset)) {
-+	if (IS_ERR_VALUE_U32(ugeth->send_q_mem_reg_offset)) {
- 		if (netif_msg_ifup(ugeth))
- 			pr_err("Can not allocate DPRAM memory for p_send_q_mem_reg\n");
- 		return -ENOMEM;
-@@ -2609,7 +2609,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 		ugeth->scheduler_offset =
- 		    qe_muram_alloc(sizeof(struct ucc_geth_scheduler),
- 				   UCC_GETH_SCHEDULER_ALIGNMENT);
--		if (IS_ERR_VALUE(ugeth->scheduler_offset)) {
-+		if (IS_ERR_VALUE_U32(ugeth->scheduler_offset)) {
- 			if (netif_msg_ifup(ugeth))
- 				pr_err("Can not allocate DPRAM memory for p_scheduler\n");
- 			return -ENOMEM;
-@@ -2656,7 +2656,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 		    qe_muram_alloc(sizeof
- 				   (struct ucc_geth_tx_firmware_statistics_pram),
- 				   UCC_GETH_TX_STATISTICS_ALIGNMENT);
--		if (IS_ERR_VALUE(ugeth->tx_fw_statistics_pram_offset)) {
-+		if (IS_ERR_VALUE_U32(ugeth->tx_fw_statistics_pram_offset)) {
- 			if (netif_msg_ifup(ugeth))
- 				pr_err("Can not allocate DPRAM memory for p_tx_fw_statistics_pram\n");
- 			return -ENOMEM;
-@@ -2693,7 +2693,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 	ugeth->rx_glbl_pram_offset =
- 	    qe_muram_alloc(sizeof(struct ucc_geth_rx_global_pram),
- 			   UCC_GETH_RX_GLOBAL_PRAM_ALIGNMENT);
--	if (IS_ERR_VALUE(ugeth->rx_glbl_pram_offset)) {
-+	if (IS_ERR_VALUE_U32(ugeth->rx_glbl_pram_offset)) {
- 		if (netif_msg_ifup(ugeth))
- 			pr_err("Can not allocate DPRAM memory for p_rx_glbl_pram\n");
- 		return -ENOMEM;
-@@ -2712,7 +2712,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 	    qe_muram_alloc(numThreadsRxNumerical *
- 			   sizeof(struct ucc_geth_thread_data_rx),
- 			   UCC_GETH_THREAD_DATA_ALIGNMENT);
--	if (IS_ERR_VALUE(ugeth->thread_dat_rx_offset)) {
-+	if (IS_ERR_VALUE_U32(ugeth->thread_dat_rx_offset)) {
- 		if (netif_msg_ifup(ugeth))
- 			pr_err("Can not allocate DPRAM memory for p_thread_data_rx\n");
- 		return -ENOMEM;
-@@ -2733,7 +2733,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 		    qe_muram_alloc(sizeof
- 				   (struct ucc_geth_rx_firmware_statistics_pram),
- 				   UCC_GETH_RX_STATISTICS_ALIGNMENT);
--		if (IS_ERR_VALUE(ugeth->rx_fw_statistics_pram_offset)) {
-+		if (IS_ERR_VALUE_U32(ugeth->rx_fw_statistics_pram_offset)) {
- 			if (netif_msg_ifup(ugeth))
- 				pr_err("Can not allocate DPRAM memory for p_rx_fw_statistics_pram\n");
- 			return -ENOMEM;
-@@ -2753,7 +2753,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 	    qe_muram_alloc(ug_info->numQueuesRx *
- 			   sizeof(struct ucc_geth_rx_interrupt_coalescing_entry)
- 			   + 4, UCC_GETH_RX_INTERRUPT_COALESCING_ALIGNMENT);
--	if (IS_ERR_VALUE(ugeth->rx_irq_coalescing_tbl_offset)) {
-+	if (IS_ERR_VALUE_U32(ugeth->rx_irq_coalescing_tbl_offset)) {
- 		if (netif_msg_ifup(ugeth))
- 			pr_err("Can not allocate DPRAM memory for p_rx_irq_coalescing_tbl\n");
- 		return -ENOMEM;
-@@ -2819,7 +2819,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 			   (sizeof(struct ucc_geth_rx_bd_queues_entry) +
- 			    sizeof(struct ucc_geth_rx_prefetched_bds)),
- 			   UCC_GETH_RX_BD_QUEUES_ALIGNMENT);
--	if (IS_ERR_VALUE(ugeth->rx_bd_qs_tbl_offset)) {
-+	if (IS_ERR_VALUE_U32(ugeth->rx_bd_qs_tbl_offset)) {
- 		if (netif_msg_ifup(ugeth))
- 			pr_err("Can not allocate DPRAM memory for p_rx_bd_qs_tbl\n");
- 		return -ENOMEM;
-@@ -2905,7 +2905,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 		ugeth->exf_glbl_param_offset =
- 		    qe_muram_alloc(sizeof(struct ucc_geth_exf_global_pram),
- 		UCC_GETH_RX_EXTENDED_FILTERING_GLOBAL_PARAMETERS_ALIGNMENT);
--		if (IS_ERR_VALUE(ugeth->exf_glbl_param_offset)) {
-+		if (IS_ERR_VALUE_U32(ugeth->exf_glbl_param_offset)) {
- 			if (netif_msg_ifup(ugeth))
- 				pr_err("Can not allocate DPRAM memory for p_exf_glbl_param\n");
- 			return -ENOMEM;
-@@ -3039,7 +3039,7 @@ static int ucc_geth_startup(struct ucc_geth_private *ugeth)
- 
- 	/* Allocate InitEnet command parameter structure */
- 	init_enet_pram_offset = qe_muram_alloc(sizeof(struct ucc_geth_init_pram), 4);
--	if (IS_ERR_VALUE(init_enet_pram_offset)) {
-+	if (IS_ERR_VALUE_U32(init_enet_pram_offset)) {
- 		if (netif_msg_ifup(ugeth))
- 			pr_err("Can not allocate DPRAM memory for p_init_enet_pram\n");
- 		return -ENOMEM;
-diff --git a/drivers/soc/fsl/qe/ucc_fast.c b/drivers/soc/fsl/qe/ucc_fast.c
-index a768931..f7fa59f 100644
---- a/drivers/soc/fsl/qe/ucc_fast.c
-+++ b/drivers/soc/fsl/qe/ucc_fast.c
-@@ -268,7 +268,7 @@ int ucc_fast_init(struct ucc_fast_info * uf_info, struct ucc_fast_private ** ucc
- 	/* Allocate memory for Tx Virtual Fifo */
- 	uccf->ucc_fast_tx_virtual_fifo_base_offset =
- 	    qe_muram_alloc(uf_info->utfs, UCC_FAST_VIRT_FIFO_REGS_ALIGNMENT);
--	if (IS_ERR_VALUE(uccf->ucc_fast_tx_virtual_fifo_base_offset)) {
-+	if (IS_ERR_VALUE_U32(uccf->ucc_fast_tx_virtual_fifo_base_offset)) {
- 		printk(KERN_ERR "%s: cannot allocate MURAM for TX FIFO\n",
- 			__func__);
- 		uccf->ucc_fast_tx_virtual_fifo_base_offset = 0;
-@@ -281,7 +281,7 @@ int ucc_fast_init(struct ucc_fast_info * uf_info, struct ucc_fast_private ** ucc
- 		qe_muram_alloc(uf_info->urfs +
- 			   UCC_FAST_RECEIVE_VIRTUAL_FIFO_SIZE_FUDGE_FACTOR,
- 			   UCC_FAST_VIRT_FIFO_REGS_ALIGNMENT);
--	if (IS_ERR_VALUE(uccf->ucc_fast_rx_virtual_fifo_base_offset)) {
-+	if (IS_ERR_VALUE_U32(uccf->ucc_fast_rx_virtual_fifo_base_offset)) {
- 		printk(KERN_ERR "%s: cannot allocate MURAM for RX FIFO\n",
- 			__func__);
- 		uccf->ucc_fast_rx_virtual_fifo_base_offset = 0;
-diff --git a/include/linux/err.h b/include/linux/err.h
-index 1e35588..a42f942 100644
---- a/include/linux/err.h
-+++ b/include/linux/err.h
-@@ -19,6 +19,7 @@
- #ifndef __ASSEMBLY__
- 
- #define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)
-+#define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(x) >= (unsigned int)-MAX_ERRNO)
- 
- static inline void * __must_check ERR_PTR(long error)
- {
+        buflen = brcmf_create_iovar(name, data, len, drvr->proto_buf,
+                                    sizeof(drvr->proto_buf));
+
+}
+
+And this function does this:
+
+static u32
+brcmf_create_iovar(char *name, const char *data, u32 datalen,
+                   char *buf, u32 buflen)
+{
+        u32 len;
+
+        len = strlen(name) + 1;
+
+        if ((len + datalen) > buflen)
+                return 0;
+
+        memcpy(buf, name, len);
+
+        /* append data onto the end of the name string */
+        if (data && datalen)
+                memcpy(&buf[len], data, datalen);
+
+        return len + datalen;
+}
+
+
+We are essentially copying into buf an uninitialized value coming from
+the stack, which seems like a problem to me.
 -- 
-1.9.1
-
+Florian
