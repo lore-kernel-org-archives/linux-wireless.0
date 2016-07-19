@@ -1,68 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:60042 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753732AbcGTP0e (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:53813 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753647AbcGSSAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 11:26:34 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 3/3] staging/rtl8192e: avoid comparing unsigned type >= 0
-Date: Wed, 20 Jul 2016 17:26:06 +0200
-Message-Id: <20160720152606.201775-2-arnd@arndb.de> (sfid-20160720_172713_875357_0B9E5B6D)
-In-Reply-To: <20160720152606.201775-1-arnd@arndb.de>
-References: <20160720151818.4142386-1-arnd@arndb.de>
- <20160720152606.201775-1-arnd@arndb.de>
+	Tue, 19 Jul 2016 14:00:16 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/4] ath9k_hw: fix duplicate (and partially wrong) definition of
+ AR_CH0_THERM
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160711100248.68678-1-nbd@nbd.name>
+To: Felix Fietkau <nbd@nbd.name>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>
+Message-ID: <f92d92b631614e0ca0cc9730b14ac795@eusanexr01a.eu.qualcomm.com> (sfid-20160719_200026_788269_D4AC7817)
+Date: Tue, 19 Jul 2016 10:59:57 -0700
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is one remaining warning about a type limit check in rtl8192e:
+Felix Fietkau <nbd@nbd.name> wrote:
+> AR_PHY_65NM_CH0_THERM and AR_CH0_THERM were supposed to refer to the
+> same register, however they had different SREV checks.
+> 
+> Remove the duplicate and use the checks. Since there were other SREV
+> checks present in the only place that uses this, this will probaby not
+> affect runtime behavior.
+> 
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-staging/rtl8192e/rtl819x_TSProc.c:326:14: error: comparison is always true due to limited range of data type [-Werror=type-limits]
+Thanks, 4 patches applied to ath-next branch of ath.git:
 
-This changes a macro into a local function to clarify the types and simplify
-the check while removing the warning.
+3ff25093cbdd ath9k_hw: fix duplicate (and partially wrong) definition of AR_CH0_THERM
+8f778c72ac8f ath9k_hw: simplify ar9003_hw_per_calibration
+feaacb174892 ath9k_hw: get rid of some duplicate code in calibration init
+171f6402e4aa ath9k_hw: implement temperature compensation support for AR9003+
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/staging/rtl8192e/rtl819x_Qos.h    | 3 ---
- drivers/staging/rtl8192e/rtl819x_TSProc.c | 5 +++++
- 2 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/staging/rtl8192e/rtl819x_Qos.h b/drivers/staging/rtl8192e/rtl819x_Qos.h
-index 463122db6d29..61da8f7475bb 100644
---- a/drivers/staging/rtl8192e/rtl819x_Qos.h
-+++ b/drivers/staging/rtl8192e/rtl819x_Qos.h
-@@ -169,9 +169,6 @@ union qos_tclas {
- 	} TYPE2_8021Q;
- };
- 
--#define IsACValid(ac)		((ac >= 0 && ac <= 7) ? true : false)
--
--
- union aci_aifsn {
- 	u8	charData;
- 
-diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-index 2c8a526773ed..a966a8e490ab 100644
---- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
-+++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
-@@ -306,6 +306,11 @@ static void MakeTSEntry(struct ts_common_info *pTsCommonInfo, u8 *Addr,
- 	pTsCommonInfo->TClasNum = TCLAS_Num;
- }
- 
-+static bool IsACValid(unsigned int tid)
-+{
-+	return tid < 7;
-+}
-+
- bool GetTs(struct rtllib_device *ieee, struct ts_common_info **ppTS,
- 	   u8 *Addr, u8 TID, enum tr_select TxRxSelect, bool bAddNewTs)
- {
 -- 
-2.9.0
+Sent by pwcli
+https://patchwork.kernel.org/patch/9223141/
 
