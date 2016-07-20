@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay4-d.mail.gandi.net ([217.70.183.196]:51686 "EHLO
-	relay4-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757047AbcG1LWo (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:56364 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752189AbcGTSR6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 07:22:44 -0400
-Message-ID: <1469704952.6761.142.camel@hadess.net> (sfid-20160728_132317_836775_4CF58147)
-Subject: Re: [RFC v0 4/8] Input: goodix: use firmware_stat instead of
- completion
-From: Bastien Nocera <hadess@hadess.net>
-To: Daniel Wagner <wagi@monom.org>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-Cc: linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>,
-	irina.tirdea@intel.com, octavian.purdila@intel.com
-Date: Thu, 28 Jul 2016 13:22:32 +0200
-In-Reply-To: <1469692512-16863-5-git-send-email-wagi@monom.org>
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
-	 <1469692512-16863-5-git-send-email-wagi@monom.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Wed, 20 Jul 2016 14:17:58 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+CC: Bob Copeland <me@bobcopeland.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Hahn, Maital" <maitalm@ti.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: RE: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
+Date: Wed, 20 Jul 2016 18:17:51 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101392097ED@DFRE01.ent.ti.com> (sfid-20160720_201813_247551_EFE7A193)
+References: <CAEFj987X26u59K32Mt-bKBSTmy3cWvOiNNBG7K4wbdQBAdR97Q@mail.gmail.com>
+ <20160719124456.GD11996@localhost>
+ <AE1C82FB3D0EC64DB1F752C81CBD110139206115@DFRE01.ent.ti.com>
+ <20160719134355.GA1833@localhost>
+ <CAEFj987V0r3aVn+JhQOX-40bheKyEJdrppF75OCaLXhU=skmNw@mail.gmail.com>
+ <AE1C82FB3D0EC64DB1F752C81CBD110139206BD6@DFRE01.ent.ti.com>
+ <CAEFj986LZ8zjBtyJrRL4GX3S-yTGxL-MJs3S18ze-NNw544OPQ@mail.gmail.com>
+ <AE1C82FB3D0EC64DB1F752C81CBD110139208B47@DFRE01.ent.ti.com>
+ <CAEFj986FX=Gyyadj4n5S6VrYx_D61jJFKjc2GajAVHbXbsVD+Q@mail.gmail.com>
+In-Reply-To: <CAEFj986FX=Gyyadj4n5S6VrYx_D61jJFKjc2GajAVHbXbsVD+Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-07-28 at 09:55 +0200, Daniel Wagner wrote:
-> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-> 
-> Loading firmware is an operation many drivers implement in various
-> ways
-> around the completion API. And most of them do it almost in the same
-> way. Let's reuse the firmware_stat API which is used also by the
-> firmware_class loader. Apart of streamlining the firmware loading
-> states
-> we also document it slightly better.
-> 
-> Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
-
-Irina added and tested that feature, so best for her to comment on
-this, as I don't have any hardware that would use this feature.
-
-Cheers
+T24gV2VkLCBKdWwgMjAsIDIwMTYgYXQgMTk6NDA6NTMsIFllb2ggQ2h1bi1ZZW93IHdyb3RlOg0K
+PiBKb2hhbm5lcyBCZXJnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgMi8zXSBtYWM4MDIxMTog
+bWVzaDogaW1wcm92ZSBwYXRoIHJlc29sdmluZyANCj4gdGltZQ0KPiANCiA+DQo+IA0KPiBJbiBj
+YXNlIHRoYXQgeW91IGhhdmUgYWRkaXRpb25hbCAxIG5vZGUgd2l0aCAzIHBhdGhzIHRvd2FyZCB0
+aGUgDQo+IGRlc3RpbmF0aW9uIChpbnN0ZWFkIG9mIDIgcGF0aHMgbGlrZSB5b3UgaWxsdXN0cmF0
+ZWQpLCBmb3JjaW5nIA0KPiBhZGRpdGlvbmFsIFBSRVEgZG9lc24ndCBndWFyYW50ZWUgdGhhdCB5
+b3Ugd2lsbCBzd2l0Y2ggdG8gdGhlIGZpeGVkIHBhdGggaW4geW91ciAibmV4dCIgYXR0ZW1wdC4N
+Cj4NCg0KSSdtIG5vdCB0cnlpbmcgdG8gZ3VhcmFudGVlIGEgc3BlY2lmaWMgcGF0aCwganVzdCBi
+dWlsZCBhIHBhdGggd2l0aG91dCB3YWl0aW5nIHRoZSBNaW5JbnRlcnZhbA0KICANCj4gSSBqdXN0
+IHRha2UgYW5vdGhlciBsb29rIG9uIHlvdXIgcGF0Y2g6DQo+IA0KPiBAQCAtMTExMCw3ICsxMTE3
+LDcgQEAgaW50IG1lc2hfbmV4dGhvcF9yZXNvbHZlKHN0cnVjdCANCj4gaWVlZTgwMjExX3N1Yl9p
+Zl9kYXRhICpzZGF0YSwgfQ0KPiANCj4gaWYgKCEobXBhdGgtPmZsYWdzICYgTUVTSF9QQVRIX1JF
+U09MVklORykpDQo+IC0gbWVzaF9xdWV1ZV9wcmVxKG1wYXRoLCBQUkVRX1FfRl9TVEFSVCk7DQo+
+ICsgbWVzaF9xdWV1ZV9wcmVxKG1wYXRoLCBQUkVRX1FfRl9TVEFSVCwgdHJ1ZSk7DQo+IA0KPiBp
+ZiAoc2tiX3F1ZXVlX2xlbigmbXBhdGgtPmZyYW1lX3F1ZXVlKSA+PSBNRVNIX0ZSQU1FX1FVRVVF
+X0xFTikgDQo+IHNrYl90b19mcmVlID0gc2tiX2RlcXVldWUoJm1wYXRoLT5mcmFtZV9xdWV1ZSk7
+DQo+IA0KPiBZb3UgbW9kaWZpY2F0aW9uIGlzIGludGVuZGVkIHRvIGFkZCB0aGlzICJpbW1lZGlh
+dGUiIFBSRVEgZ2VuZXJhdGlvbiANCj4gd2hlbmV2ZXIgdGhlIGRhdGEgZnJhbWUgaXMgdHJhbnNt
+aXR0ZWQuIEluIGNhc2UgdGhlIGN1cnJlbnQgcGF0aCBpcyANCj4gaW5kZWVkIHRoZSBiZXN0IG9u
+ZSwgdGhlIFBSRVEgd2lsbCBzdGlsbCBnZW5lcmF0ZSB3aXRob3V0IHdhaXRpbmcgZm9yIA0KPiBk
+b3QxMU1lc2hIV01QcHJlcU1pbkludGVydmFsLiBUaGUgbmV0d29yayBpcyB1bm5lY2Vzc2FyeSBm
+bG9vZGVkIHdpdGggDQo+IFBSRVEuDQoNClRvIG15IHVuZGVyc3RhbmRpbmcsIGlmIHlvdSBhbHJl
+YWR5IGhhdmUgYSBwYXRoIGVzdGFibGlzaGVkLCBpdCB3aWxsIG5vdCBzZW5kIGEgbmV3IFBSRVEg
+KGFzIGl0J3Mgbm90IGluIFJFU09MVklORyBzdGF0ZSkNClNvIGlmIHRoZSBjdXJyZW50IHBhdGgg
+aXMgdGhlIGJlc3QsIG5vIGV4Y2Vzc2l2ZSBQUkVRIGZyYW1lcyB3aWxsIGJlIHNlbnQuDQpJbiBj
+YXNlIHRoZSBwYXRoIGlzIGNsZWFyZWQsIGR1ZSB0byBwZWVyIHJlbW92YWwgYXMgZGVzY3JpYmVk
+IGJlZm9yZS4NCg0KVGhlIHRlc3QgdXNlIGNhc2UgaXMgc2ltcGxlLCBhbmQgZnJvbSBvdXIgdGVz
+dHMgdGhlIGltcGFjdCBvbiBwZXJmb3JtYW5jZSBiaWcgcmVsYXRlZCB0byBvdXIgZXhwZWN0YXRp
+b24sDQpJIGFzc3VtZSB0aGUgcXVlc3Rpb24gaXMsIHdoYXQgYXJlIHRoZSBwZXJmb3JtYW5jZSBl
+eHBlY3RhdGlvbnMvcmVxdWlyZW1lbnRzIGZyb20gdGhlIDgwMi4xMXMgbWVzaCBuZXR3b3JrID8N
+Cg0KUmVnYXJkcywNCllhbml2DQo=
