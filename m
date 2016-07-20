@@ -1,80 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49269 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751511AbcGRTQA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 15:16:00 -0400
-Message-ID: <1468869356.2944.5.camel@sipsolutions.net> (sfid-20160718_211604_265748_95FC39D3)
-Subject: Re: [PATCH v2] cfg80211: Allow differnt beacon interval if driver
- supports
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-	usdutt@qti.qualcomm.com, ganeshk@qti.qualcomm.com,
-	mkalikot@qca.qualcomm.com, amarnath@qca.qualcomm.com
-Date: Mon, 18 Jul 2016 21:15:56 +0200
-In-Reply-To: <9831c426-ae04-a85f-9173-bcea30c489d7@broadcom.com> (sfid-20160718_211359_195109_EC0150EB)
-References: <1468849985-6881-1-git-send-email-pkushwah@qti.qualcomm.com>
- <1468868209.2944.1.camel@sipsolutions.net>
-	 <9831c426-ae04-a85f-9173-bcea30c489d7@broadcom.com>
-	 (sfid-20160718_211359_195109_EC0150EB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:33386 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217AbcGTHLg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2016 03:11:36 -0400
+Received: by mail-pf0-f175.google.com with SMTP id y134so16163442pfg.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2016 00:11:36 -0700 (PDT)
+Subject: Re: [PATCH] mac80211: End the MPSP even if EOSP frame was not
+ received
+To: Bob Copeland <me@bobcopeland.com>
+References: <1468393475-2483-1-git-send-email-masashi.honma@gmail.com>
+ <20160713135021.GE7819@localhost>
+ <3ad771da-f4db-e29d-7b44-7e8a0865e3da@gmail.com>
+ <20160719104034.GB11996@localhost>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org, j@w1.fi
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <1a324d4c-9a6b-1c0d-c18d-2df207de708c@gmail.com> (sfid-20160720_091139_615426_3783B856)
+Date: Wed, 20 Jul 2016 16:11:33 +0900
+MIME-Version: 1.0
+In-Reply-To: <20160719104034.GB11996@localhost>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-07-18 at 21:13 +0200, Arend Van Spriel wrote:
-> 
-> On 18-7-2016 20:56, Johannes Berg wrote:
-> > On Mon, 2016-07-18 at 19:23 +0530, Purushottam Kushwaha wrote:
-> > > Driver may allow support for different beacon interval on virtual
-> > > interfaces.
-> > > Allow if such support is advertised by driver. This adds new
-> > > ext_feature as NL80211_EXT_FEATURE_DIFF_BEACON_INTERVAL.
-> > 
-> > We have NL80211_IFACE_COMB_STA_AP_BI_MATCH in interface
-> > combinations,
-> > perhaps it would make sense to also put this flag there?
-> 
-> Hi Johannes,
-> 
-> Was looking at the same thing. The description of that flag was a bit
-> unclear to me.
-> 
-> """
->  * @beacon_int_infra_match: In this combination, the beacon intervals
->  *      between infrastructure and AP types must match. This is
-> required
->  *      only in special cases.
-> """
-> 
-> It is not explicitly stated but it implies the STA vif is connected,
-> right.
+On 2016年07月19日 19:40, Bob Copeland wrote:
+>
+> OK, do we need to also clear WLAN_STA_PS_STA flag for the peer in
+> ieee80211_mps_sta_status_update(), or does the node completely repeer?
+>
+> ISTR running into a problem where rebooted peer (previously in power-save)
+> would send popen but we would buffer the response due to stale PS sta
+> flag.
+>
+Thanks. I have tried your scenario.
 
-Yes.
+I have disconnected remote peer by accidental shutdown.
+(This means local peer does not recognize remote peer left.)
 
-Forget this flag. I don't think any driver sets it - it was a hack for
-iwldvm. I also don't think any userspace cares about it, and it likely
-never really worked. What if the STA vif reconnects anyway?
+Then remote peer restarted and started to send Mesh Peering Open frames.
 
-I was merely pointing this out wrt. the grouping and where to put
-something new.
+Local peer receives these frames but does not respond to these
+because peer_lid mismatch.
 
-> Probably going off-topic here, but I am also wondering about the
-> use-case of the above patch. I have been looking at M-BSS. Toward
-> user-space these are AP interfaces, but like described in
-> hostapd.conf
-> example a number of AP configuration items are required to be equal.
-> Now
-> we also have chipsets with two 802.11 cores and on each an AP could
-> be
-> setup with independent beacon interval. So to make the distinction
-> would
-> it make sense to introduce MBSS_AP iftype? Or does AP_VLAN cover the
-> MBSS use-case?
-> 
+After 3 times retrial, remote peer sent Mesh Peering Close frame
+with reason code = 56(MESH-MAX-RETRIES).
 
-I don't think AP_VLAN does, but isn't a mesh portal simply a mesh point
-interface and an AP interface?
+And then, struct sta_info is freed and allocated.
 
-johannes
+So looks no problem.
+
