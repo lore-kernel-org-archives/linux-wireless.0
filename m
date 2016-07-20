@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40859 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752059AbcGRTnu (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35616 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754620AbcGTPsa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 15:43:50 -0400
-Content-Type: text/plain; charset="utf-8"
+	Wed, 20 Jul 2016 11:48:30 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	"driverdev-devel@linuxdriverproject.org"
+	<driverdev-devel@linuxdriverproject.org>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
+Date: Wed, 20 Jul 2016 17:48:23 +0200
+Message-ID: <3717687.FpcDfXaOEr@debian64> (sfid-20160720_174835_805353_27E594BB)
+In-Reply-To: <74d0fd1d-8197-1e4a-1ab1-a879d6dcea4e@gmail.com>
+References: <74d0fd1d-8197-1e4a-1ab1-a879d6dcea4e@gmail.com>
 MIME-Version: 1.0
-Subject: Re: bcma: allow enabling serial flash support on non-MIPS SoCs
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1468838054-17014-1-git-send-email-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-kernel@vger.kernel.org (open list)
-Message-Id: <20160718194350.00DA46029F@smtp.codeaurora.org> (sfid-20160718_214358_340289_32F98BC1)
-Date: Mon, 18 Jul 2016 19:43:49 +0000 (UTC)
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> So far we had only MIPS devices with serial flash connected to the SoC's
-> ChipCommon. ARM devices got a separated SPI controller and weere using
-> standard SPI drivers.
-> This has changed with the wireless SoC BCM47189B0. It's ARM based but
-> has serial flash attached just like older devices. This allows using
-> existing driver with these devices.
+On Wednesday, July 20, 2016 5:06:27 PM CEST Xose Vazquez Perez wrote:
+> Arnd Bergmann <arnd@arndb.de> wrote:
 > 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> > rtlwifi, but I found the older r8712u device to work fine with
+> > the staging/rtl8712 driver.
+> 
+> A replacement for "staging/rtl8712", with MAC80211 support, is
+> available at: https://github.com/chunkeey/rtl8192su
+> 
+> Also a fullmac/cfg80211 driver(r92su) is available at the
+> same repository.
+> 
+Yes, it has its problems. The rtl8712/r92su isn't really
+a fullmac device. While the MLME (scan, probe, auth, assoc) is
+done by the firmware. The 802.11 frame creation (from 802.3)
+frames needs to be done by the driver. The rtl8712 firmware
+however has its fair share of issues. Like: no support for
+(tx) fragmentation and ERP is a mystery too. monitor 
+mode is barely working and limited to 20Mhz wide channels.
+There's also limited tx injection support.... and of course
+stability issues (just like with the staging/rtl8712 driver
+or FreeBSD's rsu driver).
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+The rtl8192su driver (based on rtlwifi) in the same repository
+has proper fragmentation support. But it uses the firmware from
+the windows/mac os x driver, which is similar to rtl8192se softmac
+firmware in design. Getting it to work properly in station mode
+however either needs "some magic" or help from Realtek's USB group...
 
-57d8f7dd2132 bcma: allow enabling serial flash support on non-MIPS SoCs
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9234387/
 
