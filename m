@@ -1,63 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:35640 "EHLO
-	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbcF3WV6 (ORCPT
+Received: from mail2.tohojo.dk ([77.235.48.147]:45070 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752761AbcGTPYm convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 30 Jun 2016 18:21:58 -0400
-Received: by mail-pf0-f179.google.com with SMTP id c2so33518418pfa.2
-        for <linux-wireless@vger.kernel.org>; Thu, 30 Jun 2016 15:21:22 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Cc: <linux-kernel@vger.kernel.org>,
-	Doug Anderson <dianders@chromium.org>,
-	Brian Norris <computersforpeace@gmail.com>,
-	Stephen Barber <smbarber@chromium.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Brian Norris <briannorris@chromium.org>
-Subject: [PATCH] mwifiex: mask PCIe interrupts before removal
-Date: Thu, 30 Jun 2016 15:21:02 -0700
-Message-Id: <1467325262-82799-1-git-send-email-briannorris@chromium.org> (sfid-20160701_002243_111414_943E928D)
+	Wed, 20 Jul 2016 11:24:42 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: TCP performance regression in mac80211 triggered by the fq code
+References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
+	<87oa5snzav.fsf@toke.dk>
+Date: Wed, 20 Jul 2016 17:24:36 +0200
+In-Reply-To: <87oa5snzav.fsf@toke.dk> ("Toke =?utf-8?Q?H=C3=B8iland-J?=
+	=?utf-8?Q?=C3=B8rgensen=22's?= message of
+	"Wed, 20 Jul 2016 16:45:28 +0200")
+Message-ID: <87fur4nxhn.fsf@toke.dk> (sfid-20160720_172445_488521_51CDA856)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The PCIe driver didn't mask the host interrupts before trying to tear
-down. This causes lockups at reboot or rmmod when using MSI-X on 8997,
-since the MSI handler gets confused and locks up the system.
+Toke Høiland-Jørgensen <toke@toke.dk> writes:
 
-Also tested on 8897, which does not support MSI-X (and wasn't
-experiencing this same bug). No regressions seen there.
+> Felix Fietkau <nbd@nbd.name> writes:
+>
+>> - if I put a hack in the fq code to force the hash to a constant value
+>> (effectively disabling fq without disabling codel), the problem
+>> disappears and even multiple streams get proper performance.
+>
+> There's definitely something iffy about the hashing. Here's the output
+> relevant line from the aqm debug file after running a single TCP stream
+> for 60 seconds to that station:
+>
+> ifname addr tid ac backlog-bytes backlog-packets flows drops marks overlimit collisions
+> tx-bytes tx-packets
+> wlp2s0 04:f0:21:1e:74:20 0 2 0 0 146 16 0 0 0 717758966 467925
+>
+> (there are two extra fields here; I added per-txq CoDel stats, will send
+> a patch later).
+>
+> This shows that the txq has 146 flows associated from that one TCP flow.
+> Looking at this over time, it seems that each time the queue runs empty
+> (which happens way too often, which is what I was originally
+> investigating), another flow is assigned.
+>
+> Michal, any idea why? :)
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+And to answer this: because the flow is being freed to be reassigned
+when it runs empty, but the counter is not decremented. Is this
+deliberate? I.e. is the 'flows' var supposed to be a total 'new_flows'
+counter and not a measure of the current number of assigned flows?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 0c7937eb6b77..af98371dc2af 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -440,6 +440,11 @@ static int mwifiex_pcie_disable_host_int(struct mwifiex_adapter *adapter)
- 	return 0;
- }
- 
-+static void mwifiex_pcie_disable_host_int_noerr(struct mwifiex_adapter *adapter)
-+{
-+	WARN_ON(mwifiex_pcie_disable_host_int(adapter));
-+}
-+
- /*
-  * This function enables the host interrupt.
-  *
-@@ -2945,6 +2950,7 @@ static struct mwifiex_if_ops pcie_ops = {
- 	.register_dev =			mwifiex_register_dev,
- 	.unregister_dev =		mwifiex_unregister_dev,
- 	.enable_int =			mwifiex_pcie_enable_host_int,
-+	.disable_int =			mwifiex_pcie_disable_host_int_noerr,
- 	.process_int_status =		mwifiex_process_int_status,
- 	.host_to_card =			mwifiex_pcie_host_to_card,
- 	.wakeup =			mwifiex_pm_wakeup_card,
--- 
-2.8.0.rc3.226.g39d4020
-
+-Toke
