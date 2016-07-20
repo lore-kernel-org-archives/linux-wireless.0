@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f47.google.com ([209.85.218.47]:33563 "EHLO
-	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750916AbcGMJOL convert rfc822-to-8bit (ORCPT
+Received: from mail-qt0-f174.google.com ([209.85.216.174]:36794 "EHLO
+	mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753745AbcGTLoW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 05:14:11 -0400
-Received: by mail-oi0-f47.google.com with SMTP id j185so54821261oih.0
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jul 2016 02:14:06 -0700 (PDT)
+	Wed, 20 Jul 2016 07:44:22 -0400
+Received: by mail-qt0-f174.google.com with SMTP id 52so24560036qtq.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2016 04:44:22 -0700 (PDT)
+Date: Wed, 20 Jul 2016 07:44:18 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org, j@w1.fi
+Subject: Re: [PATCH] mac80211: End the MPSP even if EOSP frame was not
+ received
+Message-ID: <20160720114418.GE11996@localhost> (sfid-20160720_134442_145934_6D69CED3)
+References: <1468393475-2483-1-git-send-email-masashi.honma@gmail.com>
+ <20160713135021.GE7819@localhost>
+ <3ad771da-f4db-e29d-7b44-7e8a0865e3da@gmail.com>
+ <20160719104034.GB11996@localhost>
+ <1a324d4c-9a6b-1c0d-c18d-2df207de708c@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <cac14ead-1af5-ff1d-5b35-592933882aae@nbd.name>
-References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
- <CAA93jw6=_pemSUjk3dje1GmnTzrs+=pEdza4j1Wjtrw+VKNdNg@mail.gmail.com>
- <097af8e4-5393-8e1b-1748-36233e605867@nbd.name> <CAA93jw4GQknawtp6Lo3ZM8=qW=p2eTnZ_krC7AvnNbKwp8R5SQ@mail.gmail.com>
- <CAA93jw7y_dp=AMFB3Nj7TK08PXmdypKBnfAZ_FfnWXOt-+aL2Q@mail.gmail.com> <cac14ead-1af5-ff1d-5b35-592933882aae@nbd.name>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Wed, 13 Jul 2016 11:13:54 +0200
-Message-ID: <CAA93jw5caCtm5Wgkp0-mMZmGTtiGty13Yz1ha20LBa43TavZpQ@mail.gmail.com> (sfid-20160713_111416_430392_293FE698)
-Subject: Re: TCP performance regression in mac80211 triggered by the fq code
-To: Felix Fietkau <nbd@nbd.name>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	=?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1a324d4c-9a6b-1c0d-c18d-2df207de708c@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jul 13, 2016 at 10:53 AM, Felix Fietkau <nbd@nbd.name> wrote:
+On Wed, Jul 20, 2016 at 04:11:33PM +0900, Masashi Honma wrote:
+> On 2016年07月19日 19:40, Bob Copeland wrote:
+> >
+> >OK, do we need to also clear WLAN_STA_PS_STA flag for the peer in
+> >ieee80211_mps_sta_status_update(), or does the node completely repeer?
+> >
+> >ISTR running into a problem where rebooted peer (previously in power-save)
+> >would send popen but we would buffer the response due to stale PS sta
+> >flag.
+[...]
+>
+> So looks no problem.
 
->> To me this implies a contending lock issue, too much work in the irq
->> handler or too delayed work in the softirq handler....
->>
->> I thought you were very brave to try and backport this.
-> I don't think this has anything to do with contending locks, CPU
-> utilization, etc. The code does something to the packets that TCP really
-> doesn't like.
+Ok, thanks for testing that - fwiw original patch
 
-With your 70% idle figure, I am inclined to agree... could you get an aircap
-of the two different tests?  - as well as a regular packetcap taken at
-the client or server?
-And put somewhere I can get at them?
-
-What version of OSX are you running?
-
-I will setup an ath9k box shortly...
-
+Acked-by: Bob Copeland <me@bobcopeland.com>
 
 -- 
-Dave Täht
-Let's go make home routers and wifi faster! With better software!
-http://blog.cerowrt.org
+Bob Copeland %% http://bobcopeland.com/
