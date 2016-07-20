@@ -1,46 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33504 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753823AbcGFKpC (ORCPT
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:36348 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751510AbcGTKwv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:45:02 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:31 +0300
-Message-Id: <1467801651-1816-36-git-send-email-luca@coelho.fi> (sfid-20160706_124546_863363_B1B54625)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 36/56] iwlwifi: mvm: fix coex related comments
+	Wed, 20 Jul 2016 06:52:51 -0400
+Received: by mail-yw0-f195.google.com with SMTP id u134so3004891ywg.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jul 2016 03:52:50 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com>
+References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
+ <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
+ <1467972560885.99812@qti.qualcomm.com> <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com>
+ <1467982766213.21223@qti.qualcomm.com> <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com>
+ <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Wed, 20 Jul 2016 16:22:30 +0530
+Message-ID: <CABPxzYKomhw5rF4Crj6sMbmr3VuuDYi=zqN2ky83v-=RJe7Zhg@mail.gmail.com> (sfid-20160720_125254_166293_14DE49FA)
+Subject: Re: ath10k + iw set bitrates is causing FW crash
+To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Fri, Jul 8, 2016 at 9:07 PM, Krishna Chaitanya
+<chaitanya.mgit@gmail.com> wrote:
+>
+> On Fri, Jul 8, 2016 at 8:57 PM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+> > On Fri, Jul 8, 2016 at 6:29 PM, Manoharan, Rajkumar
+> > <rmanohar@qti.qualcomm.com> wrote:
+> >> I think security failures are due to peer unmap & map upon reassoc. Can you please try below change?
+> >>
+> >> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> >> index 5e1cc8f4c43c..f7f04bb46fc8 100644
+> >> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> >> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> >> @@ -5745,8 +5745,9 @@ static void ath10k_sta_rc_update_wk(struct work_struct *wk)
+> >>                                     sta->addr, smps, err);
+> >>         }
+> >>
+> >> -       if (changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
+> >> -           changed & IEEE80211_RC_NSS_CHANGED) {
+> >> +       if ((changed & IEEE80211_RC_SUPP_RATES_CHANGED ||
+> >> +           changed & IEEE80211_RC_NSS_CHANGED) &&
+> >> +           (arvif->vif->type == NL80211_IFTYPE_ADHOC)) {
+> >>                 ath10k_dbg(ar, ATH10K_DBG_MAC, "mac update sta %pM supp rates/nss\n",
+> >>                            sta->addr);
+> >
+> > Bottom posting please. I have tried your change i still see the same issue.
+> > Right after connecting i see that packets are encrypted but once it
+> > unset/set "bitrates" plain packets are seen in sniffer.
+> >
+> > BTW, i am not rebooting for each driver update, just re-inserting the module,
+> > do i need to do a reboot for each driver change?
+>
+> After reboot i dont see the "unencrypted" packet issue, i will do
+> some more testing on limiting the rates, currently in my setup its
+> not reaching MCS9 so cannot verify now.
+>
+> Thanks for the fixes and prompt reply.
 
-Those comments were wrong, fix them.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/coex.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-index a63f5bb..07fc981 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/coex.c
-@@ -615,8 +615,8 @@ static void iwl_mvm_bt_notif_iterator(void *_data, u8 *mac,
- 	 * don't reduce the Tx power if one of these is true:
- 	 *  we are in LOOSE
- 	 *  single share antenna product
--	 *  BT is active
--	 *  we are associated
-+	 *  BT is inactive
-+	 *  we are not associated
- 	 */
- 	if (iwl_get_coex_type(mvm, vif) == BT_COEX_LOOSE_LUT ||
- 	    mvm->cfg->bt_shared_single_ant || !vif->bss_conf.assoc ||
--- 
-2.8.1
+>
+>   ________________________________________
+> >> From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+> >> Sent: Friday, July 8, 2016 5:26 PM
+> >> To: Manoharan, Rajkumar
+> >> Cc: linux-wireless; ath10k
+> >> Subject: Re: ath10k + iw set bitrates is causing FW crash
+> >>
+> >> On Fri, Jul 8, 2016 at 3:39 PM, Manoharan, Rajkumar
+> >> <rmanohar@qti.qualcomm.com> wrote:
+> >>>>> I am using ath10k driver with qca988x hw2.0 and trying to limit it to use
+> >>>>> VHT MCS0-7 (iw set bitrates vht-mcs-5 2:0-7).
+> >>>>>
+> >>>>> But the command it causing a FW crash, if it disable HW_HAS_RATE_CONTROL
+> >>>>> no crash is observed but it still uses MCS9.
+> >>>>>
+> >>>>> tree: wireless-drivers-next: commit#535633a5ba4ea2504fa6c33176633becf0e59339
+> >>>>>
+> >>>>> 1) If i disable HW_RATE_CONTROL, will ath10k honor
+> >>>>> the mac80211 rates?
+> >>>>>
+> >>>>
+> >>> Thanks for reporting the issue. Could you please try with below change?
+> >>>
+> >>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> >>> index 5e1cc8f4c43c..cfa7e01a6103 100644
+> >>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> >>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> >>> @@ -2812,6 +2812,9 @@ static int ath10k_station_assoc(struct ath10k *ar,
+> >>>                 return ret;
+> >>>         }
+> >>>
+> >>> +       if (vif->type != NL80211_IFTYPE_ADHOC)
+> >>> +               peer_arg.peer_reassoc = reassoc;
+> >>> +
+> >>>         ret = ath10k_wmi_peer_assoc(ar, &peer_arg);
+> >>>         if (ret) {
+> >>>                 ath10k_warn(ar, "failed to run peer assoc for STA %pM vdev %i: %d\n",
+> >>
+> >> Thanks Raj, with this fix the rates are 0-7, if i disable then i am
+> >> seeing 0-9, so its
+> >> working.
+> >>
+> >> But i am seeing a weird issues, the moment i give bitrates command,
+> >> ath10k no longer does encryption, link is a WPA2-PSK: AES. Even after
+> >> interface up/down
+> >> it doesn't work.
+Rajkumar,
 
+I am still not able to make mcs9 work, so i have tried to change the Nss to 1
+using iw, but that is not taking affect. This command is not taking effect.
