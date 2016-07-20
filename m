@@ -1,47 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58834 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751653AbcGRRnK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 13:43:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Yaniv Machani <yanivma@ti.com>
-Cc: <linux-kernel@vger.kernel.org>, Maital Hahn <maitalm@ti.com>,
-	Eliad Peller <eliad@wizery.com>, Guy Mishol <guym@ti.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Arik Nemtsov <arik@wizery.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>
-Subject: Re: [PATCH] wlcore/wl18xx: mesh: added initial mesh support for wl8
-References: <20160628104305.4533-1-yanivma@ti.com>
-Date: Mon, 18 Jul 2016 20:42:57 +0300
-In-Reply-To: <20160628104305.4533-1-yanivma@ti.com> (Yaniv Machani's message
-	of "Tue, 28 Jun 2016 13:41:35 +0300")
-Message-ID: <87eg6qx2ou.fsf@kamboji.qca.qualcomm.com> (sfid-20160718_194341_683342_DFD8F7C4)
+Received: from comal.ext.ti.com ([198.47.26.152]:53509 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752526AbcGTMPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2016 08:15:08 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
+CC: Bob Copeland <me@bobcopeland.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Hahn, Maital" <maitalm@ti.com>,
+	"Johannes Berg" <johannes@sipsolutions.net>
+Subject: RE: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
+Date: Wed, 20 Jul 2016 12:15:00 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD110139208B47@DFRE01.ent.ti.com> (sfid-20160720_141516_006918_3C73110B)
+References: <CAEFj987X26u59K32Mt-bKBSTmy3cWvOiNNBG7K4wbdQBAdR97Q@mail.gmail.com>
+ <20160719124456.GD11996@localhost>
+ <AE1C82FB3D0EC64DB1F752C81CBD110139206115@DFRE01.ent.ti.com>
+ <20160719134355.GA1833@localhost>
+ <CAEFj987V0r3aVn+JhQOX-40bheKyEJdrppF75OCaLXhU=skmNw@mail.gmail.com>
+ <AE1C82FB3D0EC64DB1F752C81CBD110139206BD6@DFRE01.ent.ti.com>
+ <CAEFj986LZ8zjBtyJrRL4GX3S-yTGxL-MJs3S18ze-NNw544OPQ@mail.gmail.com>
+In-Reply-To: <CAEFj986LZ8zjBtyJrRL4GX3S-yTGxL-MJs3S18ze-NNw544OPQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Yaniv Machani <yanivma@ti.com> writes:
-
-> From: Maital Hahn <maitalm@ti.com>
->
-> 1. Added support for interface and role of mesh type.
-> 2. Enabled enable/start of mesh-point role,
->    and opening and closing a connection with a mesh peer.
-> 3. Added multirole combination of mesh and ap
->    under the same limits of dual ap mode.
-> 4. Add support for 'sta_rc_update' opcode for mesh IF.
->    The 'sta_rc_update' opcode is being used in mesh_plink.c.
-> Add support in wlcore to handle this opcode correctly for mesh
-> (as opposed to current implementation that handles STA only).
-> 5. Bumped the firmware version to support new Mesh functionality
->
-> Signed-off-by: Maital Hahn <maitalm@ti.com>
-> Signed-off-by: Yaniv Machani <yanivma@ti.com>
-
-Does this depend on any mac80211 patches? To not break anything I can't
-apply this until all the dependencies are in my tree.
-
--- 
-Kalle Valo
+T24gV2VkLCBKdWwgMjAsIDIwMTYgYXQgMDk6NDU6MTYsIFllb2ggQ2h1bi1ZZW93IHdyb3RlOg0K
+PiBKb2hhbm5lcyBCZXJnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgMi8zXSBtYWM4MDIxMTog
+bWVzaDogaW1wcm92ZSBwYXRoIHJlc29sdmluZyANCj4gdGltZQ0KPiANCj4gT24gV2VkLCBKdWwg
+MjAsIDIwMTYgYXQgNDowMSBBTSwgTWFjaGFuaSwgWWFuaXYgPHlhbml2bWFAdGkuY29tPiB3cm90
+ZToNCj4gPiBPbiBUdWUsIEp1bCAxOSwgMjAxNiBhdCAxOTowMTo1NCwgWWVvaCBDaHVuLVllb3cg
+d3JvdGU6DQo+ID4+IEpvaGFubmVzIEJlcmcNCj4gPj4gU3ViamVjdDogUmU6IFtQQVRDSCB2MiAy
+LzNdIG1hYzgwMjExOiBtZXNoOiBpbXByb3ZlIHBhdGggcmVzb2x2aW5nIA0KPiA+PiB0aW1lDQo+
+ID4+DQo+ID4+IE9uIFR1ZSwgSnVsIDE5LCAyMDE2IGF0IDk6NDMgUE0sIEJvYiBDb3BlbGFuZCA8
+bWVAYm9iY29wZWxhbmQuY29tPg0KPiA+PiB3cm90ZToNCj4gPj4gPiBPbiBUdWUsIEp1bCAxOSwg
+MjAxNiBhdCAwMTowMjoxM1BNICswMDAwLCBNYWNoYW5pLCBZYW5pdiB3cm90ZToNCj4gPj4gPj4g
+T24gVHVlLCBKdWwgMTksIDIwMTYgYXQgMTU6NDQ6NTYsIEJvYiBDb3BlbGFuZCB3cm90ZToNCj4g
+Pj4gPg0KPiA+PiA+IFRoaXMgd29yZGluZyBzZWVtcyB0byBpbmRpY2F0ZSB0aGF0IGl0IGlzIG5v
+dCBwZXIgcGF0aC4gIFBlcmhhcHMgDQo+ID4+ID4gdGhpcyBzaG91bGQgYmUgY2xhcmlmaWVkIGlu
+IHRoZSBzdGFuZGFyZC4gIChJZiB0aGUgaW50ZW50IHR1cm5zIA0KPiA+PiA+IG91dCB0byBiZSBw
+ZXIgcGF0aCwgdGhlbiBJIGd1ZXNzIHdlIHNob3VsZCBmaXggaXQgYnkgc3RvcmluZyANCj4gPj4g
+PiBsYXN0X3ByZXEgcGVyIHBhdGgNCj4gPj4gPiBpbnN0ZWFkLikNCj4gPj4gPg0KPiA+PiA+DQo+
+ID4+ID4gSWdub3JpbmcgdGhlIHN0YW5kYXJkIGZvciBhIHNlY29uZCwgbGV0J3MgZXhwbG9yZSB0
+aGlzOiBjYW4geW91IA0KPiA+PiA+IGdpdmUgc29tZSBpZGVhIG9uIGhvdyBtYW55IHN0YXRpb25z
+IGFyZSBpbiB5b3VyIHRhcmdldCBuZXR3b3JrLCANCj4gPj4gPiBob3cgZnJlcXVlbnRseSBhIGdp
+dmVuIHBhaXIgb2Ygbm9kZXMgdW5wZWVyLCB3aGF0IHNvcnQgb2YgDQo+ID4+ID4gaW1wcm92ZW1l
+bnRzIHlvdSBzZWUgd2l0aCB0aGUgcGF0Y2g/ICBJdCBzaG91bGQgdGhlbiBiZSBwcmV0dHkgDQo+
+ID4+ID4gZWFzeSB0byBydW4gc29tZSBzaW11bGF0aW9ucyB0byBzZWUgdGhlIHNjZW5hcmlvcyB3
+aGVyZSB0aGlzIGhlbHBzIGFuZCB3aGVyZSBpdCBodXJ0cy4NCj4gPj4gPg0KPiA+Pg0KPiA+DQo+
+ID4gQm9iLCBDaHVuLVllb3csDQo+ID4gVGhhbmtzIGZvciB5b3VyIGlucHV0cy4NCj4gPg0KPiA+
+IExldCB0YWtlIGEgc2ltcGxlIHNjZW5hcmlvLCB3aGVyZSB5b3UgaGF2ZSBhLGIsYyxkIG5vZGVz
+IGNvbm5lY3RlZCANCj4gPiB0byBlYWNoDQo+IG90aGVyIGFzIHNob3duIGJlbG93Lg0KPiA+DQo+
+ID4gQX4gfiB+fn5+Qy0gLSAtIEQNCj4gPiAgICBcICAgICAgICAgIC8NCj4gPiAgICAgICBcICAg
+ICAvDQo+ID4gICAgICAgICAgQg0KPiA+DQo+ID4gQSB3b3VsZCBsaWtlIHRvIHBhc3MgZGF0YSB0
+byBELg0KPiA+IEEtQyBtYXRyaWMgaXMgd29yc2UgdGhhbiBBLUItQywgc28gcGF0aCBpcyBjb25z
+dHJ1Y3RlZCB2aWEgQi4NCj4gPiBXZSBhcmUgaW4gaWRsZSBzdGF0ZSwgYW5kIFBSRVEgYXJlIHNl
+bnQgZXZlcnkNCj4gZG90MTFNZXNoSFdNUHByZXFNaW5JbnRlcnZhbC4NCj4gPiBOb3csIG5vZGUg
+QiBoYXZlIGJlZW4gZGlzY29ubmVjdGVkIChyYW4gb3V0IG9mIGJhdHRlcnkvc2h1dCANCj4gPiBk
+b3duL3N1ZGRlbmx5IHdlbnQgb3V0IG9mIHJhbmdlKSBBcyBBIGhhcyBhIHBhdGggdG8gRCB2aWEg
+QiwgaGUgDQo+ID4gY2xlYW5zIHVwIGhpcw0KPiBwYXRoIHRhYmxlLg0KPiA+IE5vdyBoZSBuZWVk
+cyB0byBidWlsZCBhIG5ldyBwYXRoLCBpbiB0aGUgV0NTLCBoZSBoYXZlIGp1c3Qgc2VudCBhIFBS
+RVEuDQo+ID4gQW5kIG5vdyBoZSBuZWVkcyB0byB3YWl0IGRvdDExTWVzaEhXTVBwcmVxTWluSW50
+ZXJ2YWwgc2Vjb25kcywgdW50aWwNCj4gaGUgY2FuIHJlYnVpbGQgdGhlIHBhdGguDQo+IA0KPiBE
+aWQgeW91IHJlZHVjZSB0aGUgZG90MTFNZXNoSFdNUGFjdGl2ZVBhdGhUaW1lb3V0IHRvIHNlZSB3
+aGV0aGVyIGl0IA0KPiBwcm9kdWNlcyBwb3NpdGl2ZSBpbXBhY3QgdG8geW91ciBuZXR3b3JrPyBP
+bmNlIHRoZSBwYXRoIHRvIEEgLSBDIC0gRCANCj4gaGFzIGVzdGFibGlzaGVkLCBpdCBuZWVkcyB0
+byB3YWl0IHRpbGwgdGhlIGFjdGl2ZSBwYXRoIHRpbWVyIHRvIGV4cGlyZSANCj4gYmVmb3JlIGVz
+dGFibGlzaGluZyBhIG5ldyBwYXRoLiBUaGlzIGFjdGl2ZSBwYXRoIHRpbWUgaXMgZGVmYXVsdCB0
+bw0KPiA1MDAwIFRVcyAob3IgNXMpLg0KPiANCg0KV2UgZGlkIHRyaWVkIGl0IGFzIHdlbGwsIGJ1
+dCBhZ2FpbiwgdGhpcyB3aWxsIGNhdXNlIHVzIHNlbmRpbmcgUFJFUSBtb3JlIGZyZXF1ZW50bHku
+DQoNCj4gPiBBcyB3ZSB3b3VsZG4ndCBsaWtlIHRvIGZsb29kIHRoZSBuZXR3b3JrIHdpdGggUFJF
+USwgd2UgY2FuIGFzc3VtZSANCj4gPiB0aGF0IHRoZQ0KPiBkb3QxMU1lc2hIV01QcHJlcU1pbklu
+dGVydmFsIGlzIGZldyBzZWNvbmRzLCBmb3IgdXMsIGl0IHNlZW1lZCB1bi0gDQo+IGFjY2VwdGFi
+bGUuDQo+ID4NCj4gDQo+IEJ1dCB5b3VyIHBhdGNoIGlzIGluZGVlZCBnZW5lcmF0aW5nICJtb3Jl
+IiBQUkVRIGZyYW1lLg0KPg0KV2VsbCwgd2UgYXJlIHNlbmRpbmcgbW9yZSwgYnV0IGp1c3QgaW4g
+YSBzcGVjaWZpYyBzY2VuYXJpbyB3aGVyZSBpdCdzIG5lZWRlZCBBU0FQIHRvIGVzdGFibGlzaCBh
+IHBhdGguDQogDQo+ID4gSW4gY2FzZXMgd2hlcmUgeW91IG5lZWQgdG8gaGF2ZSBhIHJlbGlhYmxl
+IGRhdGEgbGluaywgcGFzc2luZyANCj4gPiBhdWRpby92aWRlbyB5b3UNCj4gdXN1YWxseSBjYW4n
+dCBhZmZvcmQgZmV3IHNlY29uZHMgdy9vIHRyYWZmaWMuDQo+ID4NCj4gPj4gSW4gYWRkaXRpb24g
+dG8gQm9iJ3MgY29tbWVudCwgeW91IHByb2JhYmx5IGNhbiB0cnkgdG8gcmVkdWNlIHRoZSANCj4g
+Pj4gZG90MTFNZXNoSFdNUHByZXFNaW5JbnRlcnZhbCB0byAxIFRVICgxbXMpIGluc3RlYWQgb2Yg
+c3RpY2tpbmcgdG8gDQo+ID4+IGRlZmF1bHQgdmFsdWUgMTAgVFVzLiBCZXNpZGVzLCB5b3UgY2Fu
+IGFsc28gcmVkdWNlIHRoZSANCj4gPj4gbWVzaF9wYXRoX3JlZnJlc2hfdGltZSB3aGljaCBpcyBj
+dXJyZW50bHkgZGVmYXVsdCB0byAxMDAwIG1zIGFuZCANCj4gPj4gY2hlY2sgd2hldGhlciB5b3Ug
+Y2FuIGltcHJvdmUgb24geW91ciBuZXR3b3JrIHNjZW5hcmlvcy4NCj4gPj4NCj4gPg0KPiA+IFdl
+IGRpZCB0cmllZCB0byBwbGF5IHdpdGggdGhlc2UgdmFsdWVzLCBidXQgYWdhaW4sIHdlIGRvbid0
+IHdhbnQgdG8gDQo+ID4gZmxvb2QgdGhlDQo+IG5ldHdvcmsuDQo+ID4gV2UganVzdCB3YW50IHRv
+IHJlY292ZXIgQVNBUC4NCj4gPg0KPiA+PiBXaGVuIHlvdSBtZW50aW9uZWQgIm5leHQgaG9wIHBl
+ZXIgZGlzY29ubmVjdCIsIGl0IGNvdWxkIGFsc28gYmUgdGhlIA0KPiA+PiB0aW1lIHRha2VuIHRv
+IHJlLWVzdGFibGlzaGVkIHRoZSBtZXNoIHBlZXJpbmcgYmVmb3JlIHlvdXIgbWVzaCBTVEEgDQo+
+ID4+IGNhbiB0cmFuc21pdCB0aGUgZGF0YSB0byB5b3VyIHBlZXIgbWVzaCBTVEEuDQo+ID4+DQo+
+ID4NCj4gPiBMaW5rIGVzdGFibGlzaG1lbnQgdGFrZXMgbm8gbW9yZSB0aGFuIGZldyAxMDBzIG9m
+IG1zIHVzdWFsbHksIEFuZCBpbiANCj4gPiB0aGUgZXhhbXBsZSBhYm92ZSwgdGhlcmUgaXMgbm8g
+bmV3IGxpbmsgZXN0YWJsaXNobWVudCwganVzdCBwYXRoIGdlbmVyYXRpb24uDQo+ID4NCj4gDQo+
+IFN1Z2dlc3QgdGhhdCB5b3Ugc2ltdWxhdGUgeW91ciBzY2VuYXJpbyBhbmQgdmFsaWRhdGUgdGhl
+IGltcHJvdmVtZW50IGZpcnN0Lg0KPiANCg0KV2UgaGF2ZSBtYWRlIG1hbnkgbGFiIHRlc3RzLCB3
+aXRoIDEwcyBvZiBub2RlcyBpbiBvcGVuIGFpciBhbmQgaW4gYSBjb250cm9sbGVkIGVudmlyb25t
+ZW50Lg0KVGhpcyBwYXRjaCBpcyBqdXN0IG9uZSBvZiB0aGUgaW1wcm92ZW1lbnRzIHdlIHNhdyBu
+ZWNlc3NhcnkgZm9yIHBlcmZvcm1hbmNlLCB3ZSBoYXZlIG11bHRpcGxlIG90aGVycyBmb3IgdGhl
+IG1ldHJpYyBjYWxjdWxhdGlvbiwgYW5kIG1vcmUuIA0KV2UgdW5kZXJzdGFuZCB0aGF0IHRoZSBI
+V01QIGFuZCB0aGUgZ2VuZXJhbCBtZXNoIGltcGxlbWVudGF0aW9uIGlzIG1vcmUgc2Vuc29yIG5l
+dHdvcmsgcmVsYXRlZCwgd2hlcmUgdGhlcmUgaXMgbm8gbmVlZCBmb3Igc3RhYmxlIGhpZ2ggdGhy
+b3VnaHB1dCAxMDAlIG9mIHRoZSB0aW1lLg0KWW91IGNhbiBhbHNvIGhhdmUgYSBsb29rIGluIG91
+ciB3aGl0ZSBwYXBlciwgZGVzY3JpYmluZyBzbWFsbCBwYXJ0cyBvZiB0aGUgdGVzdHMgd2UgaGF2
+ZSBtYWRlIGluIHRoZSBsYXN0IHNlY3Rpb24gLSBodHRwOi8vd3d3LnRpLmNvbS9saXQvd3Avc3dy
+eTAyNC9zd3J5MDI0LnBkZg0KDQpUaGFua3MsDQpZYW5pdg0KDQo=
