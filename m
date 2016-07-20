@@ -1,248 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33480 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751668AbcGPRGX (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.134]:49979 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753618AbcGTP0e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2016 13:06:23 -0400
-Received: by mail-wm0-f65.google.com with SMTP id o80so6354486wme.0
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2016 10:06:23 -0700 (PDT)
-From: Alex Briskin <br.shurik@gmail.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: Alex Briskin <br.shurik@gmail.com>
-Subject: [PATCH 2/3 v4] mac80211: Refactor ieee80211_iface_work
-Date: Sat, 16 Jul 2016 20:06:10 +0300
-Message-Id: <1468688771-18508-2-git-send-email-br.shurik@gmail.com> (sfid-20160716_190634_901643_72F30FD6)
-In-Reply-To: <1468688771-18508-1-git-send-email-br.shurik@gmail.com>
-References: <1468688771-18508-1-git-send-email-br.shurik@gmail.com>
+	Wed, 20 Jul 2016 11:26:34 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
+Date: Wed, 20 Jul 2016 17:26:05 +0200
+Message-Id: <20160720152606.201775-1-arnd@arndb.de> (sfid-20160720_172712_972987_D42C90BE)
+In-Reply-To: <20160720151818.4142386-1-arnd@arndb.de>
+References: <20160720151818.4142386-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactored ieee80211_iface_work_handle_pkt_type - if else if replaced by
-switch case.
+Compiling the rtlwifi drivers for ARM with gcc -Wextra warns about lots of
+incorrect code that results from 'char' being unsigned here, e.g.
 
-Added ieee80211_iface_work_handle_frame_control.
-Moved the code that looks in skb->data (ieee80211_mgmt/ieee80211_hdr) at
-frame_control member(field) from ieee80211_iface_work to the function.
-Signed-off-by: Alex Briskin <br.shurik@gmail.com>
+staging/rtl8192e/rtl8192e/r8192E_phy.c:1072:36: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+staging/rtl8192e/rtl8192e/r8192E_phy.c:1104:36: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+staging/rtl8192e/rtl8192e/rtl_core.c:1987:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+staging/rtl8192e/rtl8192e/rtl_dm.c:782:37: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+staging/rtl8192e/rtllib_softmac_wx.c:465:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+
+This patch changes all uses of 'char' in this driver that refer to
+8-bit integers to use 's8' instead, which is signed on all architectures.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- net/mac80211/iface.c | 165 ++++++++++++++++++++++++++++-----------------------
- 1 file changed, 90 insertions(+), 75 deletions(-)
+ drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 8 ++++----
+ drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c | 2 +-
+ drivers/staging/rtl8192e/rtl8192e/rtl_core.c   | 6 +++---
+ drivers/staging/rtl8192e/rtl8192e/rtl_core.h   | 8 ++++----
+ 4 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 0fc973a..c185801 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1207,13 +1207,16 @@ static int ieee80211_iface_work_handle_pkt_type(struct sk_buff *skb,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
+diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+index ba64a4f1b3a8..8d6bca61e7aa 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
++++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
+@@ -1487,8 +1487,8 @@ static void _rtl92e_query_rxphystatus(
+ 	struct phy_ofdm_rx_status_rxsc_sgien_exintfflag *prxsc;
+ 	u8 *prxpkt;
+ 	u8 i, max_spatial_stream, tmp_rxsnr, tmp_rxevm, rxsc_sgien_exflg;
+-	char rx_pwr[4], rx_pwr_all = 0;
+-	char rx_snrX, rx_evmX;
++	s8 rx_pwr[4], rx_pwr_all = 0;
++	s8 rx_snrX, rx_evmX;
+ 	u8 evm, pwdb_all;
+ 	u32 RSSI, total_rssi = 0;
+ 	u8 is_cck_rate = 0;
+@@ -1613,7 +1613,7 @@ static void _rtl92e_query_rxphystatus(
+ 				     2) - 110;
  
--	if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
-+	switch (skb->pkt_type) {
-+	case IEEE80211_SDATA_QUEUE_AGG_START:
- 		ra_tid = (void *)&skb->cb;
- 		ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
--	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
-+		break;
-+	case IEEE80211_SDATA_QUEUE_AGG_STOP:
- 		ra_tid = (void *)&skb->cb;
- 		ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
--	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
-+		break;
-+	case IEEE80211_SDATA_QUEUE_RX_AGG_START:
- 		rx_agg = (void *)&skb->cb;
- 		mutex_lock(&local->sta_mtx);
- 		sta = sta_info_get_bss(sdata, rx_agg->addr);
-@@ -1223,7 +1226,8 @@ static int ieee80211_iface_work_handle_pkt_type(struct sk_buff *skb,
- 							IEEE80211_MAX_AMPDU_BUF,
- 							false, true);
- 		mutex_unlock(&local->sta_mtx);
--	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
-+		break;
-+	case IEEE80211_SDATA_QUEUE_RX_AGG_STOP:
- 		rx_agg = (void *)&skb->cb;
- 		mutex_lock(&local->sta_mtx);
- 		sta = sta_info_get_bss(sdata, rx_agg->addr);
-@@ -1233,20 +1237,98 @@ static int ieee80211_iface_work_handle_pkt_type(struct sk_buff *skb,
- 						       WLAN_BACK_RECIPIENT, 0,
- 						       false);
- 		mutex_unlock(&local->sta_mtx);
--	} else {
-+		break;
-+	default:
- 		return -EINVAL;
- 	}
- 	/*will return 0 if pkt_type found and handled */
- 	return 0;
+ 			tmp_rxsnr = pofdm_buf->rxsnr_X[i];
+-			rx_snrX = (char)(tmp_rxsnr);
++			rx_snrX = (s8)(tmp_rxsnr);
+ 			rx_snrX /= 2;
+ 			priv->stats.rxSNRdB[i] = (long)rx_snrX;
+ 
+@@ -1643,7 +1643,7 @@ static void _rtl92e_query_rxphystatus(
+ 
+ 		for (i = 0; i < max_spatial_stream; i++) {
+ 			tmp_rxevm = pofdm_buf->rxevm_X[i];
+-			rx_evmX = (char)(tmp_rxevm);
++			rx_evmX = (s8)(tmp_rxevm);
+ 
+ 			rx_evmX /= 2;
+ 
+diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
+index 5e3bbe5c3ca4..0698131e4300 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
++++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
+@@ -630,7 +630,7 @@ void rtl92e_set_tx_power(struct net_device *dev, u8 channel)
+ {
+ 	struct r8192_priv *priv = rtllib_priv(dev);
+ 	u8	powerlevel = 0, powerlevelOFDM24G = 0;
+-	char ant_pwr_diff;
++	s8	ant_pwr_diff;
+ 	u32	u4RegValue;
+ 
+ 	if (priv->epromtype == EEPROM_93C46) {
+diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_core.c b/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
+index 13a5ddc2bea5..41e05f206300 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
++++ b/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
+@@ -1982,7 +1982,7 @@ void rtl92e_update_rx_statistics(struct r8192_priv *priv,
+ 					weighting) / 6;
  }
  
-+static int ieee80211_iface_work_handle_frame_control(struct sk_buff *skb,
-+				struct ieee80211_sub_if_data  *sdata)
-+{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
-+
-+	if (ieee80211_is_action(mgmt->frame_control) &&
-+	    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
-+		int len = skb->len;
-+
-+		mutex_lock(&local->sta_mtx);
-+		sta = sta_info_get_bss(sdata, mgmt->sa);
-+		if (sta) {
-+			switch (mgmt->u.action.u.addba_req.action_code) {
-+			case WLAN_ACTION_ADDBA_REQ:
-+				ieee80211_process_addba_request(local, sta,
-+								mgmt, len);
-+				break;
-+			case WLAN_ACTION_ADDBA_RESP:
-+				ieee80211_process_addba_resp(local, sta,
-+							     mgmt, len);
-+				break;
-+			case WLAN_ACTION_DELBA:
-+				ieee80211_process_delba(sdata, sta, mgmt, len);
-+				break;
-+			default:
-+				WARN_ON(1);
-+				break;
-+			}
-+		}
-+		mutex_unlock(&local->sta_mtx);
-+	} else if (ieee80211_is_action(mgmt->frame_control) &&
-+		   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
-+		switch (mgmt->u.action.u.vht_group_notif.action_code) {
-+		case WLAN_VHT_ACTION_GROUPID_MGMT:
-+			ieee80211_process_mu_groups(sdata, mgmt);
-+			break;
-+		default:
-+			WARN_ON(1);
-+			break;
-+		}
-+	} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
-+		struct ieee80211_hdr *hdr = (void *)mgmt;
-+		/*
-+		 * So the frame isn't mgmt, but frame_control
-+		 * is at the right place anyway, of course, so
-+		 * the if statement is correct.
-+		 *
-+		 * Warn if we have other data frame types here,
-+		 * they must not get here.
-+		 */
-+		WARN_ON(hdr->frame_control &
-+			cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
-+		WARN_ON(!(hdr->seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)));
-+		/*
-+		 * This was a fragment of a frame, received while
-+		 * a block-ack session was active. That cannot be
-+		 * right, so terminate the session.
-+		 */
-+		mutex_lock(&local->sta_mtx);
-+		sta = sta_info_get_bss(sdata, mgmt->sa);
-+		if (sta) {
-+			u16 tid = *ieee80211_get_qos_ctl(hdr) &
-+			    IEEE80211_QOS_CTL_TID_MASK;
-+
-+			__ieee80211_stop_rx_ba_session(sta, tid,
-+						       WLAN_BACK_RECIPIENT,
-+						       WLAN_REASON_QSTA_REQUIRE_SETUP,
-+						       true);
-+		}
-+		mutex_unlock(&local->sta_mtx);
-+	} else {
-+		return -EINVAL;
-+	}
-+	return 0;
-+}
-+
- static void ieee80211_iface_work(struct work_struct *work)
+-u8 rtl92e_rx_db_to_percent(char antpower)
++u8 rtl92e_rx_db_to_percent(s8 antpower)
  {
- 	struct ieee80211_sub_if_data *sdata =
- 		container_of(work, struct ieee80211_sub_if_data, work);
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
--	struct sta_info *sta;
+ 	if ((antpower <= -100) || (antpower >= 20))
+ 		return	0;
+@@ -1993,9 +1993,9 @@ u8 rtl92e_rx_db_to_percent(char antpower)
  
- 	if (!ieee80211_sdata_running(sdata))
- 		return;
-@@ -1259,77 +1341,10 @@ static void ieee80211_iface_work(struct work_struct *work)
+ }	/* QueryRxPwrPercentage */
  
- 	/* first process frames */
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
--		struct ieee80211_mgmt *mgmt = (void *)skb->data;
--
- 		if (!ieee80211_iface_work_handle_pkt_type(skb, sdata)) {
- 			goto free_skb;
--		} else if (ieee80211_is_action(mgmt->frame_control) &&
--			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
--			int len = skb->len;
--
--			mutex_lock(&local->sta_mtx);
--			sta = sta_info_get_bss(sdata, mgmt->sa);
--			if (sta) {
--				switch (mgmt->u.action.u.addba_req.action_code) {
--				case WLAN_ACTION_ADDBA_REQ:
--					ieee80211_process_addba_request(
--							local, sta, mgmt, len);
--					break;
--				case WLAN_ACTION_ADDBA_RESP:
--					ieee80211_process_addba_resp(local, sta,
--								     mgmt, len);
--					break;
--				case WLAN_ACTION_DELBA:
--					ieee80211_process_delba(sdata, sta,
--								mgmt, len);
--					break;
--				default:
--					WARN_ON(1);
--					break;
--				}
--			}
--			mutex_unlock(&local->sta_mtx);
--		} else if (ieee80211_is_action(mgmt->frame_control) &&
--			   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
--			switch (mgmt->u.action.u.vht_group_notif.action_code) {
--			case WLAN_VHT_ACTION_GROUPID_MGMT:
--				ieee80211_process_mu_groups(sdata, mgmt);
--				break;
--			default:
--				WARN_ON(1);
--				break;
--			}
--		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
--			struct ieee80211_hdr *hdr = (void *)mgmt;
--			/*
--			 * So the frame isn't mgmt, but frame_control
--			 * is at the right place anyway, of course, so
--			 * the if statement is correct.
--			 *
--			 * Warn if we have other data frame types here,
--			 * they must not get here.
--			 */
--			WARN_ON(hdr->frame_control &
--					cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
--			WARN_ON(!(hdr->seq_ctrl &
--					cpu_to_le16(IEEE80211_SCTL_FRAG)));
--			/*
--			 * This was a fragment of a frame, received while
--			 * a block-ack session was active. That cannot be
--			 * right, so terminate the session.
--			 */
--			mutex_lock(&local->sta_mtx);
--			sta = sta_info_get_bss(sdata, mgmt->sa);
--			if (sta) {
--				u16 tid = *ieee80211_get_qos_ctl(hdr) &
--						IEEE80211_QOS_CTL_TID_MASK;
--
--				__ieee80211_stop_rx_ba_session(
--					sta, tid, WLAN_BACK_RECIPIENT,
--					WLAN_REASON_QSTA_REQUIRE_SETUP,
--					true);
--			}
--			mutex_unlock(&local->sta_mtx);
-+		} else if (!ieee80211_iface_work_handle_frame_control(skb, sdata)) {
-+			goto free_skb;
- 		} else switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
+-u8 rtl92e_evm_db_to_percent(char value)
++u8 rtl92e_evm_db_to_percent(s8 value)
+ {
+-	char ret_val;
++	s8 ret_val;
+ 
+ 	ret_val = value;
+ 
+diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_core.h b/drivers/staging/rtl8192e/rtl8192e/rtl_core.h
+index f627fdc15a58..6921125c9d35 100644
+--- a/drivers/staging/rtl8192e/rtl8192e/rtl_core.h
++++ b/drivers/staging/rtl8192e/rtl8192e/rtl_core.h
+@@ -503,8 +503,8 @@ struct r8192_priv {
+ 	u32 Pwr_Track;
+ 	u8 CCKPresentAttentuation_20Mdefault;
+ 	u8 CCKPresentAttentuation_40Mdefault;
+-	char CCKPresentAttentuation_difference;
+-	char CCKPresentAttentuation;
++	s8 CCKPresentAttentuation_difference;
++	s8 CCKPresentAttentuation;
+ 	long undecorated_smoothed_pwdb;
+ 
+ 	u32 MCSTxPowerLevelOriginalOffset[6];
+@@ -604,8 +604,8 @@ void rtl92e_update_rx_pkt_timestamp(struct net_device *dev,
+ long rtl92e_translate_to_dbm(struct r8192_priv *priv, u8 signal_strength_index);
+ void rtl92e_update_rx_statistics(struct r8192_priv *priv,
+ 				 struct rtllib_rx_stats *pprevious_stats);
+-u8 rtl92e_evm_db_to_percent(char value);
+-u8 rtl92e_rx_db_to_percent(char antpower);
++u8 rtl92e_evm_db_to_percent(s8 value);
++u8 rtl92e_rx_db_to_percent(s8 antpower);
+ void rtl92e_copy_mpdu_stats(struct rtllib_rx_stats *psrc_stats,
+ 			    struct rtllib_rx_stats *ptarget_stats);
+ bool rtl92e_enable_nic(struct net_device *dev);
 -- 
-2.7.4
+2.9.0
 
