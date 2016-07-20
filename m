@@ -1,53 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:57017 "EHLO comal.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41061 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753215AbcGSNRh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 09:17:37 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Bob Copeland <me@bobcopeland.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"Kama, Meirav" <meiravk@ti.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: [PATCH 3/3] mac80211: mesh: fixed HT ies in beacon template
-Date: Tue, 19 Jul 2016 13:17:31 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD110139206259@DFRE01.ent.ti.com> (sfid-20160719_151804_950612_14676178)
-References: <20160713114542.24937-1-yanivma@ti.com>
-	 <20160718133824.GA11996@localhost> (sfid-20160718_153832_665157_D129D05B)
- <1468867942.2944.0.camel@sipsolutions.net>
-In-Reply-To: <1468867942.2944.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	id S1753492AbcGTLgH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2016 07:36:07 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Colin King <colin.king@canonical.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
+	Bhumika Goyal <bhumirks@gmail.com>,
+	Amitoj Kaur Chawla <amitoj1606@gmail.com>,
+	Shivani Bhardwaj <shivanib134@gmail.com>,
+	Daniil Leshchev <meleodr@gmail.com>,
+	Ksenija Stanojevic <ksenija.stanojevic@gmail.com>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: hal: check BT_Active and BT_State with correct bit pattern
+References: <1468491688-17225-1-git-send-email-colin.king@canonical.com>
+Date: Wed, 20 Jul 2016 07:36:05 -0400
+In-Reply-To: <1468491688-17225-1-git-send-email-colin.king@canonical.com>
+	(Colin King's message of "Thu, 14 Jul 2016 11:21:28 +0100")
+Message-ID: <wrfj8twwsfru.fsf@redhat.com> (sfid-20160720_133614_601853_6DE05D3A)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCBKdWwgMTgsIDIwMTYgYXQgMjE6NTI6MjIsIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+
-IGxpbnV4LSB3aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IG5ldGRldkB2Z2VyLmtlcm5lbC5vcmcN
-Cj4gU3ViamVjdDogUmU6IFtQQVRDSCAzLzNdIG1hYzgwMjExOiBtZXNoOiBmaXhlZCBIVCBpZXMg
-aW4gYmVhY29uIA0KPiB0ZW1wbGF0ZQ0KPiANCj4gT24gTW9uLCAyMDE2LTA3LTE4IGF0IDA5OjM4
-IC0wNDAwLCBCb2IgQ29wZWxhbmQgd3JvdGU6DQo+ID4gT24gV2VkLCBKdWwgMTMsIDIwMTYgYXQg
-MDI6NDU6NDBQTSArMDMwMCwgWWFuaXYgTWFjaGFuaSB3cm90ZToNCj4gPiA+IFRoZSBIVCBjYXBh
-YiBpbmZvIGZpZWxkIGluc2lkZSB0aGUgSFQgY2FwYWIgSUUgb2YgdGhlIG1lc2ggYmVhY29uIA0K
-PiA+ID4gaXMgaW5jb3JyZWN0IChpbiB0aGUgY2FzZSBvZiAyME1IeiBjaGFubmVsIHdpZHRoKS4N
-Cj4gPiA+IFRvIGZpeCB0aGlzIGRyaXZlciB3aWxsIGNoZWNrIGNvbmZpZ3VyYXRpb24gZnJvbSBj
-ZmcgYW5kIHdpbGwgDQo+ID4gPiBidWlsZCBpdCBhY2NvcmRpbmdseS4NCj4gPg0KPiA+ID4gK8Kg
-wqDCoMKgLyogZGV0ZXJtaW5lIGNhcGFiaWxpdHkgZmxhZ3MgKi8NCj4gPiA+ICsJY2FwID0gc2Jh
-bmQtPmh0X2NhcC5jYXA7DQo+ID4gPiArDQo+ID4gPiArwqDCoMKgwqAvKiBpZiBjaGFubmVsIHdp
-ZHRoIGlzIDIwTUh6IC0gY29uZmlndXJlIEhUIGNhcGFiDQo+ID4gPiBhY2NvcmRpbmdseSovDQo+
-ID4gPiArCWlmIChzZGF0YS0+dmlmLmJzc19jb25mLmNoYW5kZWYud2lkdGggPT0NCj4gPiA+IE5M
-ODAyMTFfQ0hBTl9XSURUSF8yMCkgew0KPiA+ID4gKwkJY2FwICY9IH5JRUVFODAyMTFfSFRfQ0FQ
-X1NVUF9XSURUSF8yMF80MDsNCj4gPiA+ICsJCWNhcCAmPSB+SUVFRTgwMjExX0hUX0NBUF9EU1NT
-Q0NLNDA7DQo+ID4gPiArCX0NCj4gPg0KPiA+IElzIGl0IHJlcXVpcmVkIHRoYXQgSFQgY2FwYWJp
-bGl0eSBtYXRjaCB0aGUgSFQgb3BlcmF0aW9uIGluIHRoaXMgY2FzZT8NCj4gPg0KPiANCj4gSXMg
-dGhlcmUgZXZlciBhIGNhc2UgdGhhdCBIVCAqY2FwYWJpbGl0eSogc2hvdWxkIGJlIHJlc3RyaWN0
-ZWQgDQo+IGFydGlmaWNpYWxseSBsaWtlIHRoYXQ/IEkgY2FuJ3QgcmVtZW1iZXIgYW55IGNhc2Vz
-IC0gd2UgZG8gc29tZXRoaW5nIA0KPiBsaWtlIHRoYXQgdG8gd29yayBhcm91bmQgYnJva2VuIEFQ
-cyBpbiBzb21lIGNhc2VzLCBidXQgaGVyZT8NCj4gDQoNCkl0IHdhcyBkb25lIHRvIG92ZXJjb21l
-IGFub3RoZXIgbWlzbWF0Y2ggd2l0aCB0aGUgZGVmYXVsdHMgb2YgdGhlIGhvc3RhcCBjb25maWd1
-cmF0aW9uLA0KV2UnbGwgaGF2ZSBhbm90aGVyIGxvb2sgb24gaXQuDQoNClRoZXJlIGlzIGFuIElP
-UCBxdWVzdGlvbiBoZXJlLCBob3cgdG8gaGFuZGxlIGEgY2FzZSB3aGVyZSB5b3UgaGF2ZSBtaXhl
-ZCBjYXBhYmlsaXRpZXMgb2YgcGVlcnMuDQppcyBpdCBwb3NzaWJsZSB0byBkeW5hbWljYWxseSBj
-aGFuZ2UgdGhlIGNoYW5uZWwgYmFuZHdpZHRoIHRvIGFsbG93IG5ldyBwZWVycyB0byBqb2luID8N
-Cg0KWWFuaXYNCg0K
+Colin King <colin.king@canonical.com> writes:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> BT_Active and BT_State are being masked with 0x00ffffff so it the subsequent
+> comparisons with 0xffffffff are therefore a buggy check.  Instead, check them
+> against 0x00ffffff.
+>
+> Unfortunately I couldn't find a datasheet or hardware to see if 0xffffffff
+> is an expected invalid bit pattern that should be checked before BT_Active and
+> BT_State are masked with 0x00ffffff, so for now, this fix seems like the least
+> risky approach.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+
+I don't really know about the BT parts here, since I never did anything
+with that part of the chip. Larry probably knows more.
+
+The only question is whether fixing this bug changes behavior that has
+unexpected side effects?
+
+Cheers,
+Jes
+
+>
+> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+> index bfcbd7a..6989580 100644
+> --- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+> @@ -9824,7 +9824,7 @@ void BTDM_CheckBTIdleChange1Ant(struct rtw_adapter *padapter)
+>  	BT_Polling = rtl8723au_read32(padapter, regBTPolling);
+>  	RTPRINT(FBT, BT_TRACE, ("[DM][BT], BT_Polling(0x%x) =%x\n", regBTPolling, BT_Polling));
+>  
+> -	if (BT_Active == 0xffffffff && BT_State == 0xffffffff && BT_Polling == 0xffffffff)
+> +	if (BT_Active == 0x00ffffff && BT_State == 0x00ffffff && BT_Polling == 0xffffffff)
+>  		return;
+>  	if (BT_Polling == 0)
+>  		return;
