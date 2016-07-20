@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46323 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752658AbcGUOsm (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:60042 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753732AbcGTP0e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 10:48:42 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [PATCH] mwifiex: fix large amsdu packets causing firmware hang
-References: <1469098824-8031-1-git-send-email-akarwar@marvell.com>
-Date: Thu, 21 Jul 2016 17:48:38 +0300
-In-Reply-To: <1469098824-8031-1-git-send-email-akarwar@marvell.com> (Amitkumar
-	Karwar's message of "Thu, 21 Jul 2016 16:30:24 +0530")
-Message-ID: <8737n39hdl.fsf@purkki.adurom.net> (sfid-20160721_164846_244270_0458B0D1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 20 Jul 2016 11:26:34 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH 3/3] staging/rtl8192e: avoid comparing unsigned type >= 0
+Date: Wed, 20 Jul 2016 17:26:06 +0200
+Message-Id: <20160720152606.201775-2-arnd@arndb.de> (sfid-20160720_172713_875357_0B9E5B6D)
+In-Reply-To: <20160720152606.201775-1-arnd@arndb.de>
+References: <20160720151818.4142386-1-arnd@arndb.de>
+ <20160720152606.201775-1-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> writes:
+There is one remaining warning about a type limit check in rtl8192e:
 
-> From: Cathy Luo <cluo@marvell.com>
->
-> Sometimes host prepares and downloads a large amsdu packet to firmware
-> which leads to a memory corruption in firmware.
-> The reason is __dev_alloc_skb() may allocate larger buffer than required
-> size. This patch solves the problem by checking "adapter->tx_buf_size"
-> instead of relying on skb_tailroom().
->
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+staging/rtl8192e/rtl819x_TSProc.c:326:14: error: comparison is always true due to limited range of data type [-Werror=type-limits]
 
-Should this go to 4.8 as an important fix?
+This changes a macro into a local function to clarify the types and simplify
+the check while removing the warning.
 
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/staging/rtl8192e/rtl819x_Qos.h    | 3 ---
+ drivers/staging/rtl8192e/rtl819x_TSProc.c | 5 +++++
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/staging/rtl8192e/rtl819x_Qos.h b/drivers/staging/rtl8192e/rtl819x_Qos.h
+index 463122db6d29..61da8f7475bb 100644
+--- a/drivers/staging/rtl8192e/rtl819x_Qos.h
++++ b/drivers/staging/rtl8192e/rtl819x_Qos.h
+@@ -169,9 +169,6 @@ union qos_tclas {
+ 	} TYPE2_8021Q;
+ };
+ 
+-#define IsACValid(ac)		((ac >= 0 && ac <= 7) ? true : false)
+-
+-
+ union aci_aifsn {
+ 	u8	charData;
+ 
+diff --git a/drivers/staging/rtl8192e/rtl819x_TSProc.c b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+index 2c8a526773ed..a966a8e490ab 100644
+--- a/drivers/staging/rtl8192e/rtl819x_TSProc.c
++++ b/drivers/staging/rtl8192e/rtl819x_TSProc.c
+@@ -306,6 +306,11 @@ static void MakeTSEntry(struct ts_common_info *pTsCommonInfo, u8 *Addr,
+ 	pTsCommonInfo->TClasNum = TCLAS_Num;
+ }
+ 
++static bool IsACValid(unsigned int tid)
++{
++	return tid < 7;
++}
++
+ bool GetTs(struct rtllib_device *ieee, struct ts_common_info **ppTS,
+ 	   u8 *Addr, u8 TID, enum tr_select TxRxSelect, bool bAddNewTs)
+ {
 -- 
-Kalle Valo
+2.9.0
+
