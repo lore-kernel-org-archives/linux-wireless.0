@@ -1,57 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:45411 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753775AbcGHBcR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2016 21:32:17 -0400
-Date: Fri, 8 Jul 2016 11:32:14 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	<linux-wireless@vger.kernel.org>,
-	David Miller <davem@davemloft.net>, <netdev@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Avraham Stern <avraham.stern@intel.com>,
-	David Spinadel <david.spinadel@intel.com>,
-	Assaf Krauss <assaf.krauss@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Subject: linux-next: build warning after merge of the wireless-drivers-next
- tree
-Message-ID: <20160708113214.7f371cb3@canb.auug.org.au> (sfid-20160708_033249_698594_1331177D)
+Received: from smtp03.smtpout.orange.fr ([80.12.242.125]:53157 "EHLO
+	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751320AbcGTFrR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jul 2016 01:47:17 -0400
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
+	sameo@linux.intel.com, michael.thalmeier@hale.at
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] NFC: pn533: Avoid a double free in error handling code
+Date: Wed, 20 Jul 2016 07:46:51 +0200
+Message-Id: <1468993611-21449-1-git-send-email-christophe.jaillet@wanadoo.fr> (sfid-20160720_074736_034109_6025B6E1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+'phy' has been allocated with 'devm_kzalloc', so we should not free it
+using an explicit 'kfree'. It would result in a double free if the
+allocation of 'in_buf' fails.
 
-After merging the wireless-drivers-next tree, today's linux-next build
-(arm multi_v7_defconfig, x86_64 allmodconfig) produced this warning:
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/nfc/pn533/usb.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-drivers/net/wireless/marvell/mwifiex/scan.c: In function 'mwifiex_cancel_scan':
-drivers/net/wireless/marvell/mwifiex/scan.c:2031:44: warning: passing argument 2 of 'cfg80211_scan_done' makes pointer from integer without a cast [-Wint-conversion]
-     cfg80211_scan_done(priv->scan_request, 1);
-                                            ^
-In file included from include/net/mac80211.h:23:0,
-                 from drivers/net/wireless/marvell/mwifiex/decl.h:30,
-                 from drivers/net/wireless/marvell/mwifiex/scan.c:20:
-include/net/cfg80211.h:4104:6: note: expected 'struct cfg80211_scan_info *' but argument is of type 'int'
- void cfg80211_scan_done(struct cfg80211_scan_request *request,
-      ^
-
-Introduced by commit
-
-  a9c790ba23eb ("mwifiex: factor out mwifiex_cancel_scan")
-
-interacting with commit
-
-  1d76250bd34a ("nl80211: support beacon report scanning")
-
-from the net-next (and mac80211-next) tree.
-
-This will need some merge fix patch ... please send me or Dave one.
-
+diff --git a/drivers/nfc/pn533/usb.c b/drivers/nfc/pn533/usb.c
+index 8ca0603..33ed78b 100644
+--- a/drivers/nfc/pn533/usb.c
++++ b/drivers/nfc/pn533/usb.c
+@@ -464,10 +464,8 @@ static int pn533_usb_probe(struct usb_interface *interface,
+ 		return -ENOMEM;
+ 
+ 	in_buf = kzalloc(in_buf_len, GFP_KERNEL);
+-	if (!in_buf) {
+-		rc = -ENOMEM;
+-		goto out_free_phy;
+-	}
++	if (!in_buf)
++		return -ENOMEM;
+ 
+ 	phy->udev = usb_get_dev(interface_to_usbdev(interface));
+ 	phy->interface = interface;
+@@ -554,8 +552,7 @@ error:
+ 	usb_free_urb(phy->out_urb);
+ 	usb_put_dev(phy->udev);
+ 	kfree(in_buf);
+-out_free_phy:
+-	kfree(phy);
++
+ 	return rc;
+ }
+ 
 -- 
-Cheers,
-Stephen Rothwell
+2.7.4
+
+
+---
+L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
+https://www.avast.com/antivirus
+
