@@ -1,95 +1,168 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20918 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752598AbcGTMHa (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:35218 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753952AbcGUVAF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 08:07:30 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [RESEND PATCH v4] ath10k: Fix sending NULL/ Qos NULL data frames for QCA99X0 and later
-Date: Wed, 20 Jul 2016 17:40:59 +0530
-Message-ID: <1469016659-1887-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160720_140744_328736_A31789DA)
+	Thu, 21 Jul 2016 17:00:05 -0400
+Received: by mail-wm0-f43.google.com with SMTP id f65so34884436wmi.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 14:00:04 -0700 (PDT)
+Date: Thu, 21 Jul 2016 22:00:01 +0100
+From: Christopher Williamson <home@chrisaw.com>
+To: "=?utf-8?Q?linux-wireless=40vger.kernel.org?="
+	<linux-wireless@vger.kernel.org>, Dan Williams <dcbw@redhat.com>
+Message-ID: <etPan.579137d1.40bb3278.381a@chrisaw.com> (sfid-20160721_230011_153243_895D14CA)
+In-Reply-To: <1469133499.18298.8.camel@redhat.com>
+References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
+ <1468946312.5661.2.camel@redhat.com>
+ <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
+ <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
+ <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
+ <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
+ <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
+ <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
+ <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
+ <1469115440.29944.1.camel@redhat.com>
+ <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
+ <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
+ <1469133499.18298.8.camel@redhat.com>
+ <1469133499.18298.8.camel@redhat.com>
+Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Sure! 
 
-For chipsets like QCA99X0, IPQ4019 and later we are not getting proper
-NULL func status (always acked/successs !!) when hostapd does a
-PROBE_CLIENT via nullfunc frames when the station is powered off
-abruptly (inactive timer probes client via null func after the inactive
-time reaches beyond the threshold). Fix this by disabling the workaround
-introduced by the change ("ath10k: fix beacon loss handling ") for
-QCA99X0 and later chipsets. The normal tx path provides the proper
-status for NULL data frames. As of now disable this workaround for
-chipsets QCA99X0 and later, once the 10.1 firmware is obselete we can
-completely get rid of this workaround for all the chipsets
+wpa_supplicant logs: 
+http://termbin.com/z1hg 
 
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 3 +++
- drivers/net/wireless/ath/ath10k/core.h | 1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 1 +
- 3 files changed, 5 insertions(+)
+dmesg logs (grepped for libertas): 
+http://termbin.com/7rt5 
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index dcc76b6..8687aaa 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -181,6 +181,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
- 			.board_size = QCA99X0_BOARD_DATA_SZ,
- 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
-+			.disable_null_func_workaround = true,
- 		},
- 	},
- 	{
-@@ -204,6 +205,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board = QCA9984_HW_1_0_BOARD_DATA_FILE,
- 			.board_size = QCA99X0_BOARD_DATA_SZ,
- 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
-+			.disable_null_func_workaround = true,
- 		},
- 	},
- 	{
-@@ -262,6 +264,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
- 			.board_size = QCA4019_BOARD_DATA_SZ,
- 			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
-+			.disable_null_func_workaround = true,
- 		},
- 	},
- };
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 3da18c9..d3dfda0 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -750,6 +750,7 @@ struct ath10k {
- 			const char *board;
- 			size_t board_size;
- 			size_t board_ext_size;
-+			bool disable_null_func_workaround;
- 		} fw;
- 	} hw_params;
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index d4b7a16..f1e9672 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3236,6 +3236,7 @@ ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
- 	 * mode though because AP don't sleep.
- 	 */
- 	if (ar->htt.target_version_major < 3 &&
-+	    !ar->hw_params.fw.disable_null_func_workaround &&
- 	    (ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc)) &&
- 	    !test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
- 		      ar->running_fw->fw_file.fw_features))
--- 
-1.9.1
+
+Christopher Williamson
+
+
+
+
+On 21 July 2016 at 21:38:26, Dan Williams (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+
+> On Thu, 2016-07-21 at 11:55 -0700, Christopher Williamson wrote:
+> > Just to confirm - I can connect to the same network using the same
+> > configurations using a USB wifi adapter I tried.
+>  
+> Can you grab simultaneous driver debug logging and supplicant debug
+> logging? Unfortunately the 'status 1' is an unspecified failure, which
+> could be from the AP or the firmware.
+>  
+> Dan
+>  
+>  
+> > Unfortunately it’s not ideal since the point of the Viliv N5 is that
+> > it’s ultra portable so I would really like to get the inbuilt wifi
+> > card working.
+> >
+> > It seems odd that wpa_supplicant reports the connection being
+> > “rejected” as seen below:
+> >
+> > wlan0: CTRL-EVENT-ASSOC-REJECT bssid=a0:63:91:1e:ee:43 status_code=1
+> >
+> > Most of the debug output sadly doesn’t mean a great deal to me - wifi
+> > isn’t really my area of expertise.
+> >
+> > On 21 July 2016 at 19:10:56, Christopher Williamson
+> > (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> >
+> > >
+> > >
+> > > Sure, here are the results:
+> > >
+> > > http://termbin.com/e8e2
+> > >
+> > > Christopher Williamson
+> > >
+> > >
+> > > On 21 July 2016 at 16:37:24, Dan Williams (dcbw@redhat.com(mailto:d
+> > > cbw@redhat.com)) wrote:
+> > >
+> > > >
+> > > > On Wed, 2016-07-20 at 15:16 -0700, Christopher Williamson wrote:
+> > > > >
+> > > > > I used NetworkManager in the previous test.
+> > > > >
+> > > > > This time around I have used wpa_supplicant directly and get
+> > > > > the
+> > > > > following results:
+> > > > >
+> > > > > http://termbin.com/j8ea
+> > > > >
+> > > > > Thought I’d throw them on a pastebin since it’s over 700 lines.
+> > > > Can you try with "-D nl80211" instead of using the WEXT
+> > > > supplicant
+> > > > driver? NM is likely going to use nl80211 since the driver has
+> > > > some
+> > > > support for cfg80211/nl80211 and only does WEXT through the glue
+> > > > layer.
+> > > >
+> > > > Dan
+> > > >
+> > > > >
+> > > > > Christopher Williamson
+> > > > >
+> > > > >
+> > > > >
+> > > > >
+> > > > > On 20 July 2016 at 22:50:34, Dan Williams
+> > > > > (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+> > > > >
+> > > > > >
+> > > > > >
+> > > > > > On Wed, 2016-07-20 at 13:06 -0700, Christopher Williamson
+> > > > > > wrote:
+> > > > > > >
+> > > > > > >
+> > > > > > > Hi Dan,
+> > > > > > >
+> > > > > > > Ah - yeah I hadn’t thought it may be a kernel build option.
+> > > > > > > I’ve
+> > > > > > > now
+> > > > > > > built that and dmesg is a much more lively place!
+> > > > > > >
+> > > > > > > I’ve provided output logs for both when the device is
+> > > > > > > connected
+> > > > > > > and
+> > > > > > > when a connection attempt is made - hopefully this is
+> > > > > > > useful.
+> > > > > >
+> > > > > > The card is scanning and only finds 'shaunthesheep' 20
+> > > > > > seconds
+> > > > > > after
+> > > > > > you "connect for the first time". The logs stop 3 seconds
+> > > > > > later.
+> > > > > > Are
+> > > > > > you connecting with wicd or something else?
+> > > > > >
+> > > > > > Can you run wpa_supplicant with the "-dddtu" option so we can
+> > > > > > get
+> > > > > > debug
+> > > > > > log output from it?
+> > > > > >
+> > > > > > Dan
+> > > > > --
+> > > > > To unsubscribe from this list: send the line "unsubscribe
+> > > > > linux-
+> > > > > wireless" in
+> > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > More majordomo info at http://vger.kernel.org/majordomo-info.ht
+> > > > > ml
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-
+> > wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
 
