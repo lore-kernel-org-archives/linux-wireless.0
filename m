@@ -1,86 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:58394 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751199AbcGZG32 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2016 02:29:28 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, benjamin.berg@open-mesh.com
-Subject: [PATCH] ath9k: fix client mode beacon configuration
-Date: Tue, 26 Jul 2016 08:29:23 +0200
-Message-Id: <20160726062923.98555-1-nbd@nbd.name> (sfid-20160726_082931_145680_B81F0B4E)
+Received: from mail-it0-f68.google.com ([209.85.214.68]:36781 "EHLO
+	mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751901AbcGUHgn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 03:36:43 -0400
+Received: by mail-it0-f68.google.com with SMTP id j124so691640ith.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 00:36:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160721070938.GA2658@redhat.com>
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com> <20160721070938.GA2658@redhat.com>
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+Date: Thu, 21 Jul 2016 10:36:42 +0300
+Message-ID: <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com> (sfid-20160721_093659_291841_10DEB5C6)
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For pure station mode, iter_data.primary_beacon_vif was used and passed
-to ath_beacon_config, but not set to the station vif.
-This was causing the following warning:
+On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
+>> Firmware files are versioned to prevent older
+>> driver instances to load unsupported firmware
+>> blobs. This is reflected with a fallback logic
+>> which attempts to load several firmware files.
+>>
+>> This however produced a lot of unnecessary
+>> warnings sometimes confusing users and leading
+>> them to rename firmware files making things even
+>> more confusing.
+>
+> This happens on kernels configured with
+> CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
+> but also 60 seconds delay before loading next firmware version.
+> For some reason RHEL kernel needs above config option, so this
+> patch is very welcome from my perspective.
+>
 
-[  100.310919] ------------[ cut here ]------------
-[  100.315683] WARNING: CPU: 0 PID: 7 at compat-wireless-2016-06-20/drivers/net/wireless/ath/ath9k/beacon.c:642 ath9k_calculate_summary_state+0x250/0x60c [ath9k]()
-[  100.402028] CPU: 0 PID: 7 Comm: kworker/u2:1 Tainted: G        W       4.4.15 #5
-[  100.409676] Workqueue: phy0 ieee80211_ibss_leave [mac80211]
-[  100.415351] Stack : 8736e98c 870b4b20 87a25b54 800a6800 8782a080 80400d63 8039b96c 00000007
-[  100.415351]    803c5edc 87875914 80400000 800a47cc 87a25b54 800a6800 803a0fd8 80400000
-[  100.415351]    00000003 87875914 80400000 80094ae0 87a25b54 8787594c 00000000 801ef308
-[  100.415351]    803ffe70 801ef300 87193d58 87b3a400 87b3ad00 70687930 00000000 00000000
-[  100.415351]    00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-[  100.415351]    ...
-[  100.451703] Call Trace:
-[  100.454235] [<800a6800>] vprintk_default+0x24/0x30
-[  100.459110] [<800a47cc>] printk+0x2c/0x38
-[  100.463190] [<800a6800>] vprintk_default+0x24/0x30
-[  100.468072] [<80094ae0>] print_worker_info+0x148/0x174
-[  100.473378] [<801ef308>] serial8250_console_putchar+0x0/0x44
-[  100.479122] [<801ef300>] wait_for_xmitr+0xc4/0xcc
-[  100.484014] [<87193d58>] ieee80211_ibss_leave+0xb90/0x1900 [mac80211]
-[  100.490590] [<80081604>] warn_slowpath_common+0xa0/0xd0
-[  100.495922] [<801a359c>] dump_stack+0x14/0x28
-[  100.500350] [<80071a00>] show_stack+0x50/0x84
-[  100.504784] [<80081604>] warn_slowpath_common+0xa0/0xd0
-[  100.510106] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
-[  100.517105] [<800816b8>] warn_slowpath_null+0x18/0x24
-[  100.522256] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
-[  100.529273] [<87025418>] ath9k_set_txpower+0x148/0x498 [ath9k]
-[  100.535302] [<871d2c64>] cleanup_module+0xa74/0xd4c [mac80211]
-[  100.541237] [<801ef308>] serial8250_console_putchar+0x0/0x44
-[  100.547042] [<800a5d18>] wake_up_klogd+0x54/0x68
-[  100.551730] [<800a6650>] vprintk_emit+0x404/0x43c
-[  100.556623] [<871b9db8>] ieee80211_sta_rx_notify+0x258/0x32c [mac80211]
-[  100.563475] [<871ba6a4>] ieee80211_sta_rx_queued_mgmt+0x63c/0x734 [mac80211]
-[  100.570693] [<871aa49c>] ieee80211_tx_prepare_skb+0x210/0x230 [mac80211]
-[  100.577609] [<800af5d4>] mod_timer+0x15c/0x190
-[  100.582220] [<871ba8b8>] ieee80211_sta_work+0xfc/0xe1c [mac80211]
-[  100.588539] [<871940b4>] ieee80211_ibss_leave+0xeec/0x1900 [mac80211]
-[  100.595122] [<8009ec84>] dequeue_task_fair+0x44/0x130
-[  100.600281] [<80092a34>] process_one_work+0x1f8/0x334
-[  100.605454] [<80093830>] worker_thread+0x2b4/0x408
-[  100.610317] [<8009357c>] worker_thread+0x0/0x408
-[  100.615019] [<8009357c>] worker_thread+0x0/0x408
-[  100.619705] [<80097b68>] kthread+0xdc/0xe8
-[  100.623886] [<80097a8c>] kthread+0x0/0xe8
-[  100.627961] [<80060878>] ret_from_kernel_thread+0x14/0x1c
-[  100.633448]
-[  100.634956] ---[ end trace aafbe57e9ae6862f ]---
-
-Fixes: cfda2d8e2314 ("ath9k: Fix beacon configuration for addition/removal of interfaces")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/ath/ath9k/main.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 6b68584..439eb06 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1154,6 +1154,7 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
- 		bool changed = (iter_data.primary_sta != ctx->primary_sta);
- 
- 		if (iter_data.primary_sta) {
-+			iter_data.primary_beacon_vif = iter_data.primary_sta;
- 			iter_data.beacons = true;
- 			ath9k_set_assoc_state(sc, iter_data.primary_sta,
- 					      changed);
--- 
-2.8.4
-
+Sorry for my ignorance but how does the firmware loading work if not
+with udev's help? As you can imagine, iwlwifi is suffering from the
+same problem and I would be interested in applying the same change,
+but I'd love to understand a bit more :)
