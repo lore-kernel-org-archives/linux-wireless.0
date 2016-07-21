@@ -1,76 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36835 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932892AbcGFXIj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 19:08:39 -0400
-Received: by mail-oi0-f65.google.com with SMTP id m11so175148oik.3
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 16:08:38 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH 3/5] nl80211: Emit NEW_INTERFACE only in special cases
-Date: Thu,  7 Jul 2016 02:08:48 -0500
-Message-Id: <1467875330-7835-4-git-send-email-denkenz@gmail.com> (sfid-20160707_010855_964627_CA5A76F0)
-In-Reply-To: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
-References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49758 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751462AbcGUJsa convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 05:48:30 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Cathy Luo" <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH 6/9] mwifiex: process rxba_sync event
+Date: Thu, 21 Jul 2016 09:48:26 +0000
+Message-ID: <7fc6db4ae2f64443b863180bf2b90bf8@SC-EXCH04.marvell.com> (sfid-20160721_114833_964260_1A9532BA)
+References: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
+	<1468248832-21969-7-git-send-email-akarwar@marvell.com>
+ <87mvlex3jx.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87mvlex3jx.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-For wireless device objects with an associated netdev, the NEW_INTERFACE
-event is generated inside the netdev notifier.  The event is generated
-regardless of whether it was due to a NL80211_CMD_NEW_INTERFACE call
-from userspace or if the netdev was created implicitly by the driver.
+Hi Kalle,
 
-If NL80211_CMD_NEW_INTERFACE handler is called, then a duplicate
-NEW_INTERFACE event will be multicast.  This change modifies the logic
-inside nl80211_new_interface to avoid this.
----
- net/wireless/nl80211.c | 23 +++++++++--------------
- 1 file changed, 9 insertions(+), 14 deletions(-)
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> Sent: Monday, July 18, 2016 10:54 PM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> Xinming Hu
+> Subject: Re: [PATCH 6/9] mwifiex: process rxba_sync event
+> 
+> Amitkumar Karwar <akarwar@marvell.com> writes:
+> 
+> > From: Xinming Hu <huxm@marvell.com>
+> >
+> > Firmware may filter and drop packets under certain condition, for
+> > example, ARP SA=DA packet. this event will be used to synchronize the
+> > Rx Block Acknowledgment (BA) window bitmap and to fill any holes in
+> > driver side.
+> >
+> > Signed-off-by: Xinming Hu <huxm@marvell.com>
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> [...]
+> 
+> > --- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> > +++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+> > @@ -78,8 +78,15 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct
+> mwifiex_private *priv,
+> >   */
+> >  static int mwifiex_11n_dispatch_pkt(struct mwifiex_private *priv,
+> > void *payload)  {
+> > -	int ret = mwifiex_11n_dispatch_amsdu_pkt(priv, payload);
+> >
+> > +	int ret;
+> > +
+> > +	if (payload == (void *)MWIFIEX_RX_PKT_DROPPED_IN_FW) {
+> > +		mwifiex_dbg(priv->adapter, INFO, "info: fw drop data\n");
+> > +		return 0;
+> > +	}
+> 
+> [...]
+> 
+> > +					mwifiex_dbg(priv->adapter, ERROR,
+> > +						    "drop packet,seq=%d\n",
+> > +						    seq_num);
+> > +
+> > +					ret = mwifiex_11n_rx_reorder_pkt
+> > +					(priv, seq_num, tlv_rxba->tid,
+> > +					 tlv_rxba->mac, 0,
+> > +					 (void *)MWIFIEX_RX_PKT_DROPPED_IN_FW);
+> 
+> [...]
+> 
+> > +/* Indicate packet has been dropped in FW */
+> > +#define MWIFIEX_RX_PKT_DROPPED_IN_FW             0xffffffff
+> 
+> That pointer magic is rather ugly, why not use a proper boolean?
+> 
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index da03e17..ec8eb88 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2787,7 +2787,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
- 	struct vif_params params;
- 	struct wireless_dev *wdev;
--	struct sk_buff *msg, *event;
-+	struct sk_buff *msg;
- 	int err;
- 	enum nl80211_iftype type = NL80211_IFTYPE_UNSPECIFIED;
- 	u32 flags;
-@@ -2891,20 +2891,15 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
- 		return -ENOBUFS;
- 	}
- 
--	event = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
--	if (event) {
--		if (nl80211_send_iface(event, 0, 0, 0,
--				       rdev, wdev, false) < 0) {
--			nlmsg_free(event);
--			goto out;
--		}
--
--		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
--					event, 0, NL80211_MCGRP_CONFIG,
--					GFP_KERNEL);
--	}
-+	/*
-+	 * For wdevs which have no associated netdev object (e.g. of type
-+	 * NL80211_IFTYPE_P2P_DEVICE), emit the NEW_INTERFACE event here.
-+	 * For all other types, the event will be generated from the
-+	 * netdev notifier
-+	 */
-+	if (!wdev->netdev)
-+		nl80211_notify_iface(rdev, wdev, NL80211_CMD_NEW_INTERFACE);
- 
--out:
- 	return genlmsg_reply(msg, info);
- }
- 
--- 
-2.7.3
+Thanks for review. I will get rid of this macro and submit updated version.
 
+Regards,
+Amitkumar
