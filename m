@@ -1,44 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40372 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753878AbcGFNDg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 09:03:36 -0400
-Message-ID: <1467810206.5460.12.camel@sipsolutions.net> (sfid-20160706_150339_725056_8A90653A)
-Subject: Re: [PATCH v2] cfg80211: Add mesh peer AID setting API
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: Masashi Honma <masashi.honma@gmail.com>,
-	linux-wireless@vger.kernel.org, j@w1.fi
-Date: Wed, 06 Jul 2016 15:03:26 +0200
-In-Reply-To: <20160706125826.GA7819@localhost> (sfid-20160706_145831_452947_AB83CB96)
-References: <1467277258-2331-1-git-send-email-masashi.honma@gmail.com>
- <1467335974-2802-1-git-send-email-masashi.honma@gmail.com>
- <1467808954.5460.6.camel@sipsolutions.net>
-	 <20160706125826.GA7819@localhost> (sfid-20160706_145831_452947_AB83CB96)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18273 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752826AbcGUPWY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 11:22:24 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Luana Borgia <luanaborgia1969@gmail.com>
+CC: Nestor Machno <nestor.machno89@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
+Date: Thu, 21 Jul 2016 15:22:19 +0000
+Message-ID: <8b424f138e2e4156be9c3510db9adc3a@SC-EXCH04.marvell.com> (sfid-20160721_172227_369949_9BDC6338)
+References: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com>
+ <efa3441022124e74af56753a70041eee@SC-EXCH04.marvell.com>
+ <CAD3r-iQScbuUiGiF3uDKzMk-0mycG3WVFDGaYCy6aPxAEjq3mg@mail.gmail.com>
+ <c18d3a077345402d83a4d12f1d75f07d@SC-EXCH04.marvell.com>
+ <CAD3r-iSu5TSQxQckp30ZE1cyOC7tsJtmZbQ911bd6KQjOP5CaA@mail.gmail.com>
+In-Reply-To: <CAD3r-iSu5TSQxQckp30ZE1cyOC7tsJtmZbQ911bd6KQjOP5CaA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> > It seems to me that it could just use the
-> > regular NL80211_ATTR_STA_AID
-> > attribute, and the cfg80211 code would already be in place, and
-> > you'd
-> > just need to add a single line to mac80211 and
-> > to cfg80211_check_station_change() to accept that.
-> 
-> We are already using NL80211_ATTR_STA_AID, though -- one is for the
-> station's AID (in our TIM, which is NL80211_ATTR_STA_AID) and the new
-> one
-> is for our AID in the peer's TIM.
-> 
-> There is the NL80211_ATTR_PEER_AID but that seems specific to TDLS
-> and
-> also doesn't appear to be processed in the necessary way (e.g.
-> overrides
-> STA_AID in nl80211_new_station).
-
-Oh, ok. Applied then.
-
-johannes
+PiBGcm9tOiBMdWFuYSBCb3JnaWEgW21haWx0bzpsdWFuYWJvcmdpYTE5NjlAZ21haWwuY29tXQ0K
+PiBTZW50OiBUaHVyc2RheSwgSnVseSAyMSwgMjAxNiA2OjA1IFBNDQo+IFRvOiBBbWl0a3VtYXIg
+S2Fyd2FyDQo+IENjOiBOZXN0b3IgTWFjaG5vOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5v
+cmcNCj4gU3ViamVjdDogUmU6IG13aWZpZXgrd3BhX3N1cHBsaWNhbnQgY2Fubm90IHNldCB1cCBX
+UEEvV1BBMiBBREhPQw0KPiANCj4gSGkgQW1pdGt1bWFyLA0KPiBpZiBJIHVuZGVyc3Rvb2QgY29y
+cmVjdGx5IHlvdSBhcmUgd29ya2luZyB0byBzb2x2ZSB0aGUgaXNzdWUgcmVsYXRlZCB0bw0KPiBp
+YnNzLXJzbiAod3BhMiBpbiBhZGhvYyksIEknbSBJIHJpZ2h0Pw0KPiBXaGF0IGFib3V0IHRoZSBh
+bHRlcm5hdGl2ZSBXUEEgbWVjaGFuaXNtIHdpdGggd3BhLW5vbmUgaW5zdGVhZD8gRml4IGl0DQo+
+IHNob3VsZG4ndCBiZSBzaW1wbGVyIHRoYW4gUlNOPw0KDQpNYWtlcyBzZW5zZS4gSXQgd291bGQg
+YmUgdXNlZnVsIHRvIGhhdmUgc3VjY2Vzc2Z1bCBjYXNlIGxvZyBmb3IgY29tcGFyaXNvbiBhbmQg
+ZnVydGhlciBkZWJ1Z2dpbmcuDQpJcyBpdCBwb3NzaWJsZSBmb3IgeW91IChvciBzb21lb25lIGVs
+c2UpIGNhcHR1cmUgdGhlIHdwYV9zdXBwbGljYW50J3Mgc3VjY2Vzc2Z1bCBjYXNlIGxvZ3MgdXNp
+bmcgb3RoZXIgdmVuZG9yJ3MgY2hpcHNldD8NCldlIHRyaWVkIHdpdGggSW50ZWwgZGV2aWNlcy4g
+SXQgd29ya2VkIHVzaW5nIEdVSSBvbiB3aW5kb3dzIG1hY2hpbmUsIGJ1dCBkaWRuJ3Qgd29yayB1
+c2luZyB3cGFfc3VwcGxpY2FudC4NCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0K
