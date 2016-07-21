@@ -1,102 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33804 "EHLO
-	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbcGSF4K (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 01:56:10 -0400
-Received: by mail-lf0-f65.google.com with SMTP id l69so437946lfg.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2016 22:56:09 -0700 (PDT)
-Subject: Re: [ath6kl:pending 14/24] drivers/mtd/devices/bcm47xxsflash.c:299:2:
- error: implicit declaration of function 'ioremap_cache'
-To: kbuild test robot <fengguang.wu@intel.com>,
-	Brian Norris <computersforpeace@gmail.com>
-References: <201607190916.c8xDOxpA%fengguang.wu@intel.com>
-Cc: kbuild-all@01.org, ath10k@lists.infradead.org,
-	Kalle Valo <kvalo@adurom.com>, linux-mtd@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <b1bcfe6c-6875-b01b-7d10-ea8d1e00adfc@gmail.com> (sfid-20160719_075614_900553_92B23CE0)
-Date: Tue, 19 Jul 2016 07:56:06 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:59171 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752137AbcGULvx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 07:51:53 -0400
+Date: Thu, 21 Jul 2016 13:51:24 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Prarit Bhargava <prarit@redhat.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+Message-ID: <20160721115122.GA31869@redhat.com> (sfid-20160721_135201_351140_D780E727)
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
+ <20160721070938.GA2658@redhat.com>
+ <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
+ <20160721080541.GB2658@redhat.com>
+ <5790A28F.8030102@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <201607190916.c8xDOxpA%fengguang.wu@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5790A28F.8030102@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Resending reply with proper To/Cc.
+(cc: firmware and brcmfmac maintainers)
 
-On 07/19/2016 03:14 AM, kbuild test robot wrote:
-> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/ath.git pending
-> head:   7a1b79bd39dda1f12b9f6708583250f40354c981
-> commit: 57d8f7dd2132df3ac21044e93a8ecdc9744b4459 [14/24] bcma: allow enabling serial flash support on non-MIPS SoCs
-> config: cris-allmodconfig (attached as .config)
-> compiler: cris-linux-gcc (GCC) 4.6.3
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         git checkout 57d8f7dd2132df3ac21044e93a8ecdc9744b4459
->         # save the attached .config to linux build tree
->         make.cross ARCH=cris
->
-> All error/warnings (new ones prefixed by >>):
->
->    drivers/mtd/devices/bcm47xxsflash.c: In function 'bcm47xxsflash_bcma_probe':
->>> drivers/mtd/devices/bcm47xxsflash.c:299:2: error: implicit declaration of function 'ioremap_cache' [-Werror=implicit-function-declaration]
->>> drivers/mtd/devices/bcm47xxsflash.c:299:15: warning: assignment makes pointer from integer without a cast [enabled by default]
->    cc1: some warnings being treated as errors
+On Thu, Jul 21, 2016 at 06:23:11AM -0400, Prarit Bhargava wrote:
+> 
+> 
+> On 07/21/2016 04:05 AM, Stanislaw Gruszka wrote:
+> > On Thu, Jul 21, 2016 at 10:36:42AM +0300, Emmanuel Grumbach wrote:
+> >> On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> >>> On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
+> >>>> Firmware files are versioned to prevent older
+> >>>> driver instances to load unsupported firmware
+> >>>> blobs. This is reflected with a fallback logic
+> >>>> which attempts to load several firmware files.
+> >>>>
+> >>>> This however produced a lot of unnecessary
+> >>>> warnings sometimes confusing users and leading
+> >>>> them to rename firmware files making things even
+> >>>> more confusing.
+> >>>
+> >>> This happens on kernels configured with
+> >>> CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
+> >>> but also 60 seconds delay before loading next firmware version.
+> >>> For some reason RHEL kernel needs above config option, so this
+> >>> patch is very welcome from my perspective.
+> >>>
+> >>
+> >> Sorry for my ignorance but how does the firmware loading work if not
+> >> with udev's help?
+> > 
+> > I'm not sure exactly, but I think kernel VFS layer is capable to copy
+> > file data directly from mounted filesystem without user space helper.
+> 
+> Here's the situation: request_firmware() waits 60 seconds for udev to do its
+> loading magic via a "usermode helper".  This delay is there to allow, for
+> example, userspace to unpack or download a new firmware image or verify the
+> firmware image *in userspace* before providing it to the driver to apply to the HW.
+> 
+> Why 60 seconds?  It is arbitrary and there is no way for udev & the kernel to
+> handshake on completion.
+> 
+> > 
+> >> As you can imagine, iwlwifi is suffering from the
+> >> same problem and I would be interested in applying the same change,
+> >> but I'd love to understand a bit more :)
+> > 
+> > Yes, iwlwifi (and some other drivers) suffer from this. However this
+> > happen when the newest firmware version is not installed on the system
+> > and CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled. What I suppose
+> > it's not common.
+> 
+> request_firmware_direct() was introduced at my request because (as you've
+> noticed) when CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y drivers may stall for long
+> periods of time when starting.  The bug that this introduced was a 60 second
+> delay per logical cpu when starting a system.  On a 64 cpu system that meant the
+> boot would complete in a little over one hour.
+> 
+> > 
+> > I started to see this currently, because that option was enabled on 
+> > RHEL kernel. BTW: I think Prarit iwlwifi thermal_zone problem was
+> > happened because of that, i.e. thermal device was not functional
+> > because f/w wasn't loaded due to big delay.
+> > 
+> > I'm not sure if replacing to request_firmware_direct() is a good
+> > fix though. For example I can see this problem also on brcmfmac, which
+> > use request_firmware_nowait(). I think I would rather prefer special
+> > helper for firmware drivers that needs user helper and have
+> > request_firmware() be direct as default.
+> > 
+> 
+> The difference between request_firmware_direct() and request_firmware() is that
+> the _direct() version does not wait the 60 seconds for udev interaction.  The
+> only userspace check performed is to see if the file is there, and if the file
+> does exist it is provided to the driver to be applied to the hardware.
+> 
+> So the real question to ask here is whether or not the ath10k, brcmfmac, and
+> iwlwifi require udev to do anything beyond checking for the existence and
+> loading the firmware image.  If they don't, then it is better to use
+> request_firmware_direct().
 
-Oh, great :( With commit:
-5651d6aaf489 ("mtd: bcm47xxsflash: use ioremap_cache() instead of KSEG0ADDR()")
-we believed to make this driver compilable on all architectures. It seems that
-ioremap_cache is available only on arm, arm64, ia64, mips, sh, x86 and xtensa.
+They don't need that, like 99% of the drivers I think, hence changing the
+default seems to be more reasonable. However changing 3 drivers would work
+for me as well, and that change do not introduce risk of broking drivers
+that require udev fw download.
 
-I noticed that kernel/memremap.c implements ioremap_cache on its own for archs
-that don't provide it. There is a comment in this file:
-/* temporary while we convert existing ioremap_cache users to memremap */
+iwlwifi and ath10k are trivial, bcrmfmac is a bit more complex as it
+use request_firmware_nowait(), so it first need to be converted to
+ordinary request_firmware(), but this should be doable and I can do
+that.
 
-Should we use memremap? I don't understand this function well, it seems I could
-call it with with MEMREMAP_WB flag (and trigger ioremap_cache call), but is it a
-correct thing to do?
+However I wonder if changing that will not broke the case when
+driver is build-in in the kernel and f/w is not yet available when
+driver start to initialize. Or maybe nowadays this is not the case
+any longer, i.e. the MODULE_FIRMWARE macros assure proper f/w 
+images are build-in in the kernel or copied to initramfs?
 
-Or should we simply make some symbol (CONFIG_MTD_BCM47XXSFLASH?) depend on
-ARM || MIPS?
-
-
-> vim +/ioremap_cache +299 drivers/mtd/devices/bcm47xxsflash.c
->
-> 5fe42d5bf Rafał Miłecki 2012-09-17  283
-> 5651d6aaf Brian Norris  2016-02-26  284  	b47s = devm_kzalloc(dev, sizeof(*b47s), GFP_KERNEL);
-> d2b1bd142 Libo Chen     2013-05-30  285  	if (!b47s)
-> d2b1bd142 Libo Chen     2013-05-30  286  		return -ENOMEM;
-> a2f74a7da Rafał Miłecki 2013-01-06  287  	sflash->priv = b47s;
-> a2f74a7da Rafał Miłecki 2013-01-06  288
-> 5651d6aaf Brian Norris  2016-02-26  289  	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> 5651d6aaf Brian Norris  2016-02-26  290  	if (!res) {
-> 5651d6aaf Brian Norris  2016-02-26  291  		dev_err(dev, "invalid resource\n");
-> 5651d6aaf Brian Norris  2016-02-26  292  		return -EINVAL;
-> 5651d6aaf Brian Norris  2016-02-26  293  	}
-> 5651d6aaf Brian Norris  2016-02-26  294  	if (!devm_request_mem_region(dev, res->start, resource_size(res),
-> 5651d6aaf Brian Norris  2016-02-26  295  				     res->name)) {
-> 5651d6aaf Brian Norris  2016-02-26  296  		dev_err(dev, "can't request region for resource %pR\n", res);
-> 5651d6aaf Brian Norris  2016-02-26  297  		return -EBUSY;
-> 5651d6aaf Brian Norris  2016-02-26  298  	}
-> 5651d6aaf Brian Norris  2016-02-26 @299  	b47s->window = ioremap_cache(res->start, resource_size(res));
-> 5651d6aaf Brian Norris  2016-02-26  300  	if (!b47s->window) {
-> 5651d6aaf Brian Norris  2016-02-26  301  		dev_err(dev, "ioremap failed for resource %pR\n", res);
-> 5651d6aaf Brian Norris  2016-02-26  302  		return -ENOMEM;
-> 5651d6aaf Brian Norris  2016-02-26  303  	}
-> 5651d6aaf Brian Norris  2016-02-26  304
-> 41c81536e Rafał Miłecki 2013-03-06  305  	b47s->bcma_cc = container_of(sflash, struct bcma_drv_cc, sflash);
-> 265dfbd9a Rafał Miłecki 2013-03-24  306  	b47s->cc_read = bcm47xxsflash_bcma_cc_read;
-> 265dfbd9a Rafał Miłecki 2013-03-24  307  	b47s->cc_write = bcm47xxsflash_bcma_cc_write;
->
-> :::::: The code at line 299 was first introduced by commit
-> :::::: 5651d6aaf489d1db48c253cf884b40214e91c2c5 mtd: bcm47xxsflash: use ioremap_cache() instead of KSEG0ADDR()
->
-> :::::: TO: Brian Norris <computersforpeace@gmail.com>
-> :::::: CC: Brian Norris <computersforpeace@gmail.com>
->
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
->
+Thanks
+Stanislaw
