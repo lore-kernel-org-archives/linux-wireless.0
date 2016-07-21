@@ -1,13 +1,13 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:37313 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751751AbcGVVrR convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:37179 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752224AbcGUSzq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 17:47:17 -0400
-Received: by mail-wm0-f49.google.com with SMTP id i5so82796703wmg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 14:47:16 -0700 (PDT)
+	Thu, 21 Jul 2016 14:55:46 -0400
+Received: by mail-wm0-f42.google.com with SMTP id i5so36658105wmg.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 11:55:45 -0700 (PDT)
 From: Christopher Williamson <home@chrisaw.com>
-In-Reply-To: <CANXHH3m2XEjkOfXGhtBUqCfu4Vix365fiRHzHL3DanoVzOsT3w@mail.gmail.com>
+In-Reply-To: <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
 References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
  <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
  <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
@@ -17,156 +17,96 @@ References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
  <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
  <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
  <1469115440.29944.1.camel@redhat.com> <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
- <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
- <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com>
- <etPan.579137d1.40bb3278.381a@chrisaw.com> <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
- <435adbc6-9fa3-e9e3-9815-8cf4b62e5342@broadcom.com> <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
- <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
- <CANXHH3mOsN3-U=BS4fA6iax0ciwbSSywHAgOhHCNj8e7CPCyfQ@mail.gmail.com>
- <1469204186.15064.6.camel@redhat.com> <1469204186.15064.6.camel@redhat.com>
- <CANXHH3nvu7TC=x5RTR_WcgGkd2=_0h4BZrc_Nv74023nrc3P5w@mail.gmail.com>
- <CANXHH3kX-U_CRfBf+DVe7AMpU13fKGG5bRwgLhDqYuGOBF-HBw@mail.gmail.com>
- <CANXHH3nB3BujorAuYRweE=w+n=ESoJod2LFphRrxwXrXUrf_zw@mail.gmail.com>
- <CANXHH3mMnNL5i8SZfm_H-tQWe5tuPM+tMxHH7pgE8zmj5yvNuA@mail.gmail.com> <CANXHH3m2XEjkOfXGhtBUqCfu4Vix365fiRHzHL3DanoVzOsT3w@mail.gmail.com>
 MIME-Version: 1.0
-Date: Fri, 22 Jul 2016 17:47:15 -0400
-Message-ID: <CANXHH3kDVSiLwpKcYwdr4gqOZkgu9Djf=2e8kFpgZT2mT0AmZw@mail.gmail.com> (sfid-20160722_234723_626375_C8C98CCD)
+Date: Thu, 21 Jul 2016 11:55:44 -0700
+Message-ID: <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com> (sfid-20160721_205550_258846_6870EA72)
 Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
 To: Dan Williams <dcbw@redhat.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arend Van Spriel <arend.vanspriel@broadcom.com>
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi all,
+Just to confirm - I can connect to the same network using the same
+configurations using a USB wifi adapter I tried.
 
-So I decided to have another fiddle with this and managed to get the
-WiFi working perfectly first time on an ArchLinux LiveCD so it looks
-like this issue is Ubuntu specific.
+Unfortunately it’s not ideal since the point of the Viliv N5 is that
+it’s ultra portable so I would really like to get the inbuilt wifi
+card working.
 
-I’m going to copy the firmware files and check if they’re responsible
-and work my way through the various differences but at least I know
-this device can work properly on the Linux 4.6.3 (which the livecd is
-based on.)
+It seems odd that wpa_supplicant reports the connection being
+“rejected” as seen below:
 
-I’ll follow up if and when I find out what the cause of the problem was.
+wlan0: CTRL-EVENT-ASSOC-REJECT bssid=a0:63:91:1e:ee:43 status_code=1
 
-Christopher Williamson
+Most of the debug output sadly doesn’t mean a great deal to me - wifi
+isn’t really my area of expertise.
 
-
-
-
-On 22 July 2016 at 22:42:50, Christopher Williamson
+On 21 July 2016 at 19:10:56, Christopher Williamson
 (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
 
-> Hi all,
 >
-> So I decided to have another fiddle with this and managed to get the WiFi working perfectly first time on an ArchLinux LiveCD so it looks like this issue is Ubuntu specific.
+> Sure, here are the results:
 >
-> I’m going to copy the firmware files and check if they’re responsible and work my way through the various differences but at least I know this device can work properly on the Linux 4.6.3 (which the livecd is based on.)
+> http://termbin.com/e8e2
 >
-> I’ll follow up if and when I find out what the cause of the problem was.
 > Christopher Williamson
-> www.chrisaw.com(http://www.chrisaw.com)
 >
 >
+> On 21 July 2016 at 16:37:24, Dan Williams (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
 >
->
-> On 22 July 2016 at 18:17:20, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
->
-> > I haven’t managed to get connected to a WPA network either so it looks like open only at the moment but I fear that may just have been a fluke.
-> >
-> > A big problem I’m facing is that editing /etc/default/crda to REGDOMAIN=GB wasn’t enough to set the wifi regulation mode to GB and I have to set it manually. This sometimes works and sometimes reports the following:
-> >
-> > country 98: DFS-UNSET
-> > (2402 - 2472 @ 40), (N/A, 20), (N/A)
-> > (2457 - 2472 @ 15), (N/A, 20), (N/A), NO-IR
-> > (5170 - 5250 @ 80), (N/A, 17), (N/A), NO-IR
-> > (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, NO-IR
-> > (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, NO-IR
-> > (5735 - 5835 @ 80), (N/A, 20), (N/A), NO-IR
-> > (57240 - 63720 @ 2160), (N/A, 0), (N/A)
-> >
-> > At best this is simply an annoyance but at worst I’m thinking this may be responsible for the issues I’m seeing.
-> >
-> > Is there anywhere else I can force this to be set to GB?
-> >
-> > Christopher Williamson
-> >
-> >
-> > On 22 July 2016 at 17:54:40, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
-> >
-> > > Disregard - I have actually managed to get this to connect to a open network!
+> > On Wed, 2016-07-20 at 15:16 -0700, Christopher Williamson wrote:
+> > > I used NetworkManager in the previous test.
 > > >
-> > > # iw reg set GB
-> > > # iw reg get
-> > > country GB: DFS-ETSI
-> > > (2402 - 2482 @ 40), (N/A, 20), (N/A)
-> > > (5170 - 5250 @ 80), (N/A, 20), (N/A)
-> > > (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS
-> > > (5490 - 5710 @ 160), (N/A, 27), (0 ms), DFS
-> > > (57000 - 66000 @ 2160), (N/A, 40), (N/A)
-> > > # iwconfig wlan0 essid "shaunthesheep-guest”
-> > > # dhclient wlan0
+> > > This time around I have used wpa_supplicant directly and get the
+> > > following results:
 > > >
-> > > It’s good to have some progress - so it looks like the issue preventing the previous connection was the iw reg not being set properly (or possibly just wpa_supplicant borking the connection in some way. I stopped that this time around. I’ll try wpa1 now and report back.
+> > > http://termbin.com/j8ea
 > > >
-> > >
+> > > Thought I’d throw them on a pastebin since it’s over 700 lines.
+> >
+> > Can you try with "-D nl80211" instead of using the WEXT supplicant
+> > driver? NM is likely going to use nl80211 since the driver has some
+> > support for cfg80211/nl80211 and only does WEXT through the glue
+> > layer.
+> >
+> > Dan
+> >
 > > > Christopher Williamson
 > > >
 > > >
 > > >
-> > > On 22 July 2016 at 17:39:50, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> > >
+> > > On 20 July 2016 at 22:50:34, Dan Williams
+> > > (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
 > > >
 > > > >
-> > > > Ok so I created a guest wifi network without any encryption enabled at all and the client still refuses to connect.
-> > > >
-> > > > Again, the connection is made perfectly using the USB dongle I have but not the built in libertas sd8686 chipset.
-> > > >
-> > > > I do currently use pfSense as a firewall box behind my wireless router (acting as an AP) and can see that no DHCP request is making it to the pfSense box. I believe you are right in the point about the firmware being the problem here.
-> > > >
-> > > > I should also confirm - the firmware in use is the latest from the linux-firmware Ubuntu 16.04 package. I did read around the net about being having various issues with various firmware sources and not others but despite trying firmware linked directly from Marvell I seem to always get one of two issues:
-> > > >
-> > > > 1.) I am unable to connect and keep getting asked for passphrases, or:
-> > > > 2.) The system completely freezes up (with the v8 firmwares I tried)
-> > > >
-> > > > I’m not really sure what else to try at this point.
-> > > > Christopher Williamson
-> > > >
-> > > >
-> > > >
-> > > > On 22 July 2016 at 17:24:52, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
-> > > >
+> > > > On Wed, 2016-07-20 at 13:06 -0700, Christopher Williamson wrote:
 > > > > >
 > > > > > Hi Dan,
 > > > > >
-> > > > > I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
+> > > > > Ah - yeah I hadn’t thought it may be a kernel build option. I’ve
+> > > > > now
+> > > > > built that and dmesg is a much more lively place!
 > > > > >
-> > > > > For now though - the iwlist scan results for both a USB device and the
-> > > > > libertas device:
-> > > > >
-> > > > > USB: http://termbin.com/hdwl
-> > > > > Libertas: http://termbin.com/jxh7
-> > > > >
-> > > > > Will follow up shortly with WPA and Open network configs.
-> > > > >
-> > > > > Christopher Williamson
-> > > > >
-> > > > >
-> > > > >
-> > > > > On 22 July 2016 at 17:16:29, Dan Williams (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
-> > > > >
-> > > > > > Hi Dan,
-> > > > > >
-> > > > > > I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
-> > > > > >
-> > > > > > For now though - the iwlist scan results for both a USB device and the
-> > > > > > libertas device:
-> > > > > >
-> > > > > > USB: http://termbin.com/hdwl
-> > > > > > Libertas: http://termbin.com/jxh7
-> > > > > >
-> > > > > > Will follow up shortly with WPA and Open network configs.
-> > > > > >
-> > > > > > *Christopher Williamson*
+> > > > > I’ve provided output logs for both when the device is connected
+> > > > > and
+> > > > > when a connection attempt is made - hopefully this is useful.
+> > > >
+> > > >
+> > > > The card is scanning and only finds 'shaunthesheep' 20 seconds
+> > > > after
+> > > > you "connect for the first time". The logs stop 3 seconds later.
+> > > > Are
+> > > > you connecting with wicd or something else?
+> > > >
+> > > > Can you run wpa_supplicant with the "-dddtu" option so we can get
+> > > > debug
+> > > > log output from it?
+> > > >
+> > > > Dan
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-
+> > > wireless" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at http://vger.kernel.org/majordomo-info.html
