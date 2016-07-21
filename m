@@ -1,40 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51819 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752442AbcGTNPh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 09:15:37 -0400
-From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:43374 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753099AbcGUOz0 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 10:55:26 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
-	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
-	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
-Subject: RE: [PATCH v2] cfg80211: Allow differnt beacon interval if driver
- supports
-Date: Wed, 20 Jul 2016 13:15:28 +0000
-Message-ID: <834c397f94cf4e45bf558eedda8c70d3@aphydexm01f.ap.qualcomm.com> (sfid-20160720_151541_725075_49D5B9A1)
-References: <1468849985-6881-1-git-send-email-pkushwah@qti.qualcomm.com>
-	 <1468868209.2944.1.camel@sipsolutions.net>
-	 <9831c426-ae04-a85f-9173-bcea30c489d7@broadcom.com>
-	 <1468869356.2944.5.camel@sipsolutions.net>
-	 <fd7fc930-67ab-89bf-5909-0851057e0c84@broadcom.com>
-	 (sfid-20160718_212117_571267_7B0E65D8)
- <1468869757.2944.6.camel@sipsolutions.net>
-In-Reply-To: <1468869757.2944.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	"Cathy Luo" <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: RE: [PATCH] mwifiex: fix large amsdu packets causing firmware hang
+Date: Thu, 21 Jul 2016 14:55:22 +0000
+Message-ID: <bed5a4d11d1e4a83811785237c5b90c9@SC-EXCH04.marvell.com> (sfid-20160721_165530_650293_EAF4C12E)
+References: <1469098824-8031-1-git-send-email-akarwar@marvell.com>
+ <8737n39hdl.fsf@purkki.adurom.net>
+In-Reply-To: <8737n39hdl.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PkFoLCBoZWguIFllcywgSSB0aGluayB0aGlzIGlzIGV4YWN0bHkgdGhlIHVzZSBjYXNlIHRoZXkg
-aGF2ZSBpbiBtaW5kLg0KPkVhY2ggb2YgdGhlIG11bHRpcGxlIEJTU2VzIGlzIHJlcHJlc2VudGVk
-IGJ5IGl0cyBvd24gQVAgdHlwZSB2aXJ0dWFsIGludGVyZmFjZS4NClllcyAuIFRoaXMgaXMgdGhl
-IHJlcXVpcmVtZW50IHdlIGFyZSB0YXJnZXRpbmcgLiBUaGUgdXNlIGNhc2UgaXMgYWxzbyB0byBo
-YXZlIGRpZmZlcmVudCBiZWFjb24gaW50ZXJ2YWwgZm9yIHRoZXNlIFZBUCdzIGFuZCBoZW5jZSB0
-aGlzIHBhdGNoLiANClBsZWFzZSBsZXQgdXMga25vdyBpZiB0aGlzIHBhdGNoIHdpdGggdHlwbyBh
-ZGRyZXNzZWQgdG8gImRpZmZlcmVudCIgaXMgYWNjZXB0YWJsZS4gU2hhbGwgcmFpc2UgYW5vdGhl
-ciBwYXRjaCBzZXQgYWNjb3JkaW5nbHkuIA0KDQpSZWdhcmRzLA0KU3VuaWwNCg0K
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] On Behalf Of Kalle Valo
+> Sent: Thursday, July 21, 2016 8:19 PM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam
+> Subject: Re: [PATCH] mwifiex: fix large amsdu packets causing firmware
+> hang
+> 
+> Amitkumar Karwar <akarwar@marvell.com> writes:
+> 
+> > From: Cathy Luo <cluo@marvell.com>
+> >
+> > Sometimes host prepares and downloads a large amsdu packet to firmware
+> > which leads to a memory corruption in firmware.
+> > The reason is __dev_alloc_skb() may allocate larger buffer than
+> > required size. This patch solves the problem by checking "adapter-
+> >tx_buf_size"
+> > instead of relying on skb_tailroom().
+> >
+> > Signed-off-by: Cathy Luo <cluo@marvell.com>
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> Should this go to 4.8 as an important fix?
+> 
+
+Yes. Please.
+
+Regards,
+Amitkumar.
