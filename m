@@ -1,48 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:32963 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752198AbcGRXYy (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:14789 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751641AbcGULBA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 19:24:54 -0400
-Received: by mail-pf0-f195.google.com with SMTP id i6so121762pfe.0
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Jul 2016 16:24:54 -0700 (PDT)
-From: Florian Fainelli <f.fainelli@gmail.com>
-To: brcm80211-dev-list.pdl@broadcom.com
-Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
-	kvalo@codeaurora.org, arend.vanspriel@broadcom.com,
-	hante.meuleman@broadcom.com,
-	Florian Fainelli <f.fainelli@gmail.com>
-Subject: [PATCH 3/4] brcmsmac: Fix invalid memcpy() size in brcms_c_d11hdrs_mac80211
-Date: Mon, 18 Jul 2016 16:24:36 -0700
-Message-Id: <1468884277-18606-4-git-send-email-f.fainelli@gmail.com> (sfid-20160719_012457_991634_40641D5F)
-In-Reply-To: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
-References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
+	Thu, 21 Jul 2016 07:01:00 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6LAxRqx019541
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 04:00:58 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 24a2c3feeq-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 04:00:57 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: fix large amsdu packets causing firmware hang
+Date: Thu, 21 Jul 2016 16:30:24 +0530
+Message-ID: <1469098824-8031-1-git-send-email-akarwar@marvell.com> (sfid-20160721_130121_154292_EED42E60)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct ieee80211_rts::ra is only ETH_ALEN wide, yet we attempt to copy 2
-* ETH_ALEN, which will potentially overrun the destination buffer.
+From: Cathy Luo <cluo@marvell.com>
 
-Reported-by: coverity (CID 145657)
-Fixes: 5b435de0d7868 ("net: wireless: add brcm80211 drivers")
-Signed-off-by: Florian Fainelli <f.fainelli@gmail.com>
+Sometimes host prepares and downloads a large amsdu packet to firmware
+which leads to a memory corruption in firmware.
+The reason is __dev_alloc_skb() may allocate larger buffer than required
+size. This patch solves the problem by checking "adapter->tx_buf_size"
+instead of relying on skb_tailroom().
+
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/11n_aggr.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-index c2a938b59044..59813a3666eb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c
-@@ -6671,7 +6671,7 @@ brcms_c_d11hdrs_mac80211(struct brcms_c_info *wlc, struct ieee80211_hw *hw,
- 			rts->frame_control = cpu_to_le16(IEEE80211_FTYPE_CTL |
- 							 IEEE80211_STYPE_RTS);
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+index dc49c3d..c47d636 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_aggr.c
+@@ -205,7 +205,8 @@ mwifiex_11n_aggregate_pkt(struct mwifiex_private *priv,
  
--			memcpy(&rts->ra, &h->addr1, 2 * ETH_ALEN);
-+			memcpy(&rts->ra, &h->addr1, ETH_ALEN);
- 		}
+ 	do {
+ 		/* Check if AMSDU can accommodate this MSDU */
+-		if (skb_tailroom(skb_aggr) < (skb_src->len + LLC_SNAP_LEN))
++		if ((skb_aggr->len + skb_src->len + LLC_SNAP_LEN) >
++		    adapter->tx_buf_size)
+ 			break;
  
- 		/* mainrate
+ 		skb_src = skb_dequeue(&pra_list->skb_head);
 -- 
-2.7.4
+1.9.1
 
