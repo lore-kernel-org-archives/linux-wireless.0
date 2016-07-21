@@ -1,86 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35612 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756324AbcGHW14 (ORCPT
+Received: from mail-it0-f65.google.com ([209.85.214.65]:35938 "EHLO
+	mail-it0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753217AbcGUQbf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 18:27:56 -0400
-Received: by mail-oi0-f65.google.com with SMTP id e84so8333626oib.2
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 15:27:56 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
+	Thu, 21 Jul 2016 12:31:35 -0400
+Received: by mail-it0-f65.google.com with SMTP id j124so1479330ith.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 09:31:35 -0700 (PDT)
+Received: from hash (CPE0018e7fe5281-CM18593342f28f.cpe.net.cable.rogers.com. [99.254.238.186])
+        by smtp.gmail.com with ESMTPSA id o15sm2103769ith.2.2016.07.21.09.31.33
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 21 Jul 2016 09:31:34 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
 To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RFC v2 1/3] nl80211: Add nl80211_notify_iface
-Date: Sat,  9 Jul 2016 01:16:05 -0500
-Message-Id: <1468044967-9236-2-git-send-email-denkenz@gmail.com> (sfid-20160709_002800_410396_A881790C)
-In-Reply-To: <1468044967-9236-1-git-send-email-denkenz@gmail.com>
-References: <1468044967-9236-1-git-send-email-denkenz@gmail.com>
+Cc: Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath9k: fix misleading indent
+Date: Thu, 21 Jul 2016 12:31:07 -0400
+Message-Id: <20160721163107.686-1-me@bobcopeland.com> (sfid-20160721_183139_412571_F59A23FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function emits NL80211_CMD_NEW_INTERFACE or
-NL80211_CMD_DEL_INTERFACE events.  This is meant to be used by the core
-to notify userspace applications such as wpa_supplicant when a netdev
-related to a wireless device has been added or removed.
+Fixes smatch warning:
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+ath9k_vif_iter_set_beacon() warn if statement not indented
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- net/wireless/nl80211.c | 28 ++++++++++++++++++++++++++++
- net/wireless/nl80211.h |  3 +++
- 2 files changed, 31 insertions(+)
+ drivers/net/wireless/ath/ath9k/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f39fd4d..da03e17 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -11855,6 +11855,34 @@ void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
- 				NL80211_MCGRP_CONFIG, GFP_KERNEL);
- }
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 7594650..70ca746 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -919,7 +919,7 @@ static void ath9k_vif_iter_set_beacon(struct ath9k_vif_iter_data *iter_data,
+ 	} else {
+ 		if (iter_data->primary_beacon_vif->type != NL80211_IFTYPE_AP &&
+ 		    vif->type == NL80211_IFTYPE_AP)
+-		iter_data->primary_beacon_vif = vif;
++			iter_data->primary_beacon_vif = vif;
+ 	}
  
-+void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
-+				struct wireless_dev *wdev,
-+				enum nl80211_commands cmd)
-+{
-+	struct sk_buff *msg;
-+	bool removal;
-+
-+	WARN_ON(cmd != NL80211_CMD_NEW_INTERFACE &&
-+		cmd != NL80211_CMD_DEL_INTERFACE);
-+
-+	if (cmd == NL80211_CMD_DEL_INTERFACE)
-+		removal = true;
-+	else
-+		removal = false;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return;
-+
-+	if (nl80211_send_iface(msg, 0, 0, 0, rdev, wdev, removal) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+				NL80211_MCGRP_CONFIG, GFP_KERNEL);
-+}
-+
- static int nl80211_add_scan_req(struct sk_buff *msg,
- 				struct cfg80211_registered_device *rdev)
- {
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index a63f402..6f6b73c 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -7,6 +7,9 @@ int nl80211_init(void);
- void nl80211_exit(void);
- void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
- 			  enum nl80211_commands cmd);
-+void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
-+				struct wireless_dev *wdev,
-+				enum nl80211_commands cmd);
- void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
- 			     struct wireless_dev *wdev);
- struct sk_buff *nl80211_build_scan_msg(struct cfg80211_registered_device *rdev,
+ 	iter_data->beacons = true;
 -- 
-2.7.3
+2.9.0
 
