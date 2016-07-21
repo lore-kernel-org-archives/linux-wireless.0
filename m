@@ -1,42 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34933 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751271AbcGWVzj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jul 2016 17:55:39 -0400
-Message-ID: <5793E7D9.60707@candelatech.com> (sfid-20160723_235546_975472_4EAC19FC)
-Date: Sat, 23 Jul 2016 14:55:37 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60819 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751462AbcGUMBO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 08:01:14 -0400
+Message-ID: <5790B988.3080600@redhat.com> (sfid-20160721_140118_005581_8BB6F1CD)
+Date: Thu, 21 Jul 2016 08:01:12 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-To: Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org
-CC: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org,
-	Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] ath10k: fix system hang at qca99x0 probe on x86 platform
-References: <20160614061728.570-1-rmanohar@qti.qualcomm.com> <5792A189.5050807@candelatech.com> <6495e664-5da8-a11b-0bd5-15dc24c51edf@dd-wrt.com>
-In-Reply-To: <6495e664-5da8-a11b-0bd5-15dc24c51edf@dd-wrt.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com> <20160721070938.GA2658@redhat.com> <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com> <20160721080541.GB2658@redhat.com> <5790A28F.8030102@redhat.com> <20160721115122.GA31869@redhat.com>
+In-Reply-To: <20160721115122.GA31869@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
 
-On 07/23/2016 02:11 AM, Sebastian Gottschall wrote:
-> from my point of view this patch is just shit. it trunkates the maximum allocated memory to a certain value.
-> so firmware requests 800 kb memory but just gets 256kb. so out of bound memory access is guaranteed at all.
+On 07/21/2016 07:51 AM, Stanislaw Gruszka wrote:
+> (cc: firmware and brcmfmac maintainers)
 
-At least some of the firmware logic attempts to deal with this segmentation.  9984 firmware had bugs in one area that I fixed,
-but probably there are other bugs and that is why it fails for 9980 firmware.
+<snip>
 
-Even if I fix my firmware, that doesn't help everyone else with stock firmware.
+>>>
+>>> I'm not sure if replacing to request_firmware_direct() is a good
+>>> fix though. For example I can see this problem also on brcmfmac, which
+>>> use request_firmware_nowait(). I think I would rather prefer special
+>>> helper for firmware drivers that needs user helper and have
+>>> request_firmware() be direct as default.
+>>>
+>>
+>> The difference between request_firmware_direct() and request_firmware() is that
+>> the _direct() version does not wait the 60 seconds for udev interaction.  The
+>> only userspace check performed is to see if the file is there, and if the file
+>> does exist it is provided to the driver to be applied to the hardware.
+>>
+>> So the real question to ask here is whether or not the ath10k, brcmfmac, and
+>> iwlwifi require udev to do anything beyond checking for the existence and
+>> loading the firmware image.  If they don't, then it is better to use
+>> request_firmware_direct().
+> 
+> They don't need that, like 99% of the drivers I think, hence changing the
+> default seems to be more reasonable. However changing 3 drivers would work
 
-At best, maybe enable this type of logic for only exact firmware with proper feature
-flag showing that it is known to work with it.
+I think I argued for that a while back and changing the default was rejected.
+I can't remember why it was rejected :(.  It may have had something to do with
+the complexity of getting a large number of driver maintainers to ack the change.
 
-Thanks,
-Ben
+> for me as well, and that change do not introduce risk of broking drivers
+> that require udev fw download.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+In my experience, there are very few drivers that actually require userspace
+interaction beyond verifying the image location.  (The one that comes to mind is
+the dell_rbu driver which attempts to download FW images)
+
+> 
+> iwlwifi and ath10k are trivial, bcrmfmac is a bit more complex as it
+> use request_firmware_nowait(), so it first need to be converted to
+> ordinary request_firmware(), but this should be doable and I can do
+> that.
+> 
+> However I wonder if changing that will not broke the case when
+> driver is build-in in the kernel and f/w is not yet available when
+> driver start to initialize. 
+
+As you say below ...
+
+Or maybe nowadays this is not the case
+> any longer, i.e. the MODULE_FIRMWARE macros assure proper f/w 
+> images are build-in in the kernel or copied to initramfs?
+
+This is correct AFAIU.  If MODULE_FIRMWARE=y then the firmware should be loaded
+into the kernel image temp fs and/or initramfs.  This of course assumes that the
+person building the image is smart enough to have installed the FW on their system.
+
+P.
