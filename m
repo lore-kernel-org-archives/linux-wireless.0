@@ -1,56 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33404 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753028AbcGSSHt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 14:07:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Michal Marek <mmarek@suse.com>, netdev@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
-	linux-kbuild@vger.kernel.org, akpm <akpm@linux-foundation.org>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v2 05/11] Kbuild: don't add obj tree in additional includes
-References: <20160615154553.3177021-1-arnd@arndb.de>
-	<21521763.EfAflxWUP8@wuerfel> <87a8hdae9j.fsf@purkki.adurom.net>
-	<3906958.MrNt71DzrU@wuerfel>
-Date: Tue, 19 Jul 2016 21:07:42 +0300
-In-Reply-To: <3906958.MrNt71DzrU@wuerfel> (Arnd Bergmann's message of "Tue, 19
-	Jul 2016 17:38:51 +0200")
-Message-ID: <8760s1v6vl.fsf@kamboji.qca.qualcomm.com> (sfid-20160719_200812_019360_9868E5D9)
+Received: from mx1.redhat.com ([209.132.183.28]:45555 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751468AbcGUKXN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 06:23:13 -0400
+Message-ID: <5790A28F.8030102@redhat.com> (sfid-20160721_122317_289870_E5664AC9)
+Date: Thu, 21 Jul 2016 06:23:11 -0400
+From: Prarit Bhargava <prarit@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com> <20160721070938.GA2658@redhat.com> <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com> <20160721080541.GB2658@redhat.com>
+In-Reply-To: <20160721080541.GB2658@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
 
->> > I think that's fine, a couple were already picked up, and what I have
->> > left now is
->> >
->> > a281bfa5713a [SUBMITTED 20160615] [EXPERIMENTAL] Kbuild: enable -Wmissing-include-dirs by default
->> > 83934921e68e [SUBMITTED 20160615] rtlwifi: don't add include path for rtl8188ee
->> 
->> Apparently[1] you didn't CC linux-wireless and that's why I didn't see
->> the rtlwifi patch in wireless patchwork. Care to resend?
->> 
->> [1] https://patchwork.kernel.org/patch/9178861/
->> 
->
-> Done.
 
-Thanks.
+On 07/21/2016 04:05 AM, Stanislaw Gruszka wrote:
+> On Thu, Jul 21, 2016 at 10:36:42AM +0300, Emmanuel Grumbach wrote:
+>> On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>>> On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
+>>>> Firmware files are versioned to prevent older
+>>>> driver instances to load unsupported firmware
+>>>> blobs. This is reflected with a fallback logic
+>>>> which attempts to load several firmware files.
+>>>>
+>>>> This however produced a lot of unnecessary
+>>>> warnings sometimes confusing users and leading
+>>>> them to rename firmware files making things even
+>>>> more confusing.
+>>>
+>>> This happens on kernels configured with
+>>> CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
+>>> but also 60 seconds delay before loading next firmware version.
+>>> For some reason RHEL kernel needs above config option, so this
+>>> patch is very welcome from my perspective.
+>>>
+>>
+>> Sorry for my ignorance but how does the firmware loading work if not
+>> with udev's help?
+> 
+> I'm not sure exactly, but I think kernel VFS layer is capable to copy
+> file data directly from mounted filesystem without user space helper.
 
-> I've also thrown in two patches for drivers/staging/rtl8*/ that I
-> submitted a while ago, but I'm not sure if they should get merged
-> through the staging tree or the wireless tree. I had previously
-> submitted those two as a combined patch along with a third one that
-> turned out to be unnecessary.
+Here's the situation: request_firmware() waits 60 seconds for udev to do its
+loading magic via a "usermode helper".  This delay is there to allow, for
+example, userspace to unpack or download a new firmware image or verify the
+firmware image *in userspace* before providing it to the driver to apply to the HW.
 
-Greg applies drivers/staging patches to his staging tree, but I'll take
-the rtlwifi patch.
+Why 60 seconds?  It is arbitrary and there is no way for udev & the kernel to
+handshake on completion.
 
--- 
-Kalle Valo
+> 
+>> As you can imagine, iwlwifi is suffering from the
+>> same problem and I would be interested in applying the same change,
+>> but I'd love to understand a bit more :)
+> 
+> Yes, iwlwifi (and some other drivers) suffer from this. However this
+> happen when the newest firmware version is not installed on the system
+> and CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled. What I suppose
+> it's not common.
+
+request_firmware_direct() was introduced at my request because (as you've
+noticed) when CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y drivers may stall for long
+periods of time when starting.  The bug that this introduced was a 60 second
+delay per logical cpu when starting a system.  On a 64 cpu system that meant the
+boot would complete in a little over one hour.
+
+> 
+> I started to see this currently, because that option was enabled on 
+> RHEL kernel. BTW: I think Prarit iwlwifi thermal_zone problem was
+> happened because of that, i.e. thermal device was not functional
+> because f/w wasn't loaded due to big delay.
+> 
+> I'm not sure if replacing to request_firmware_direct() is a good
+> fix though. For example I can see this problem also on brcmfmac, which
+> use request_firmware_nowait(). I think I would rather prefer special
+> helper for firmware drivers that needs user helper and have
+> request_firmware() be direct as default.
+> 
+
+The difference between request_firmware_direct() and request_firmware() is that
+the _direct() version does not wait the 60 seconds for udev interaction.  The
+only userspace check performed is to see if the file is there, and if the file
+does exist it is provided to the driver to be applied to the hardware.
+
+So the real question to ask here is whether or not the ath10k, brcmfmac, and
+iwlwifi require udev to do anything beyond checking for the existence and
+loading the firmware image.  If they don't, then it is better to use
+request_firmware_direct().
+
+P.
+
+> Stanislaw
+> 
