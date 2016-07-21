@@ -1,95 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:38751 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751539AbcGIPo4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2016 11:44:56 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Tim Shepard <shep@alum.mit.edu>
-Cc: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-	Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v3] ath9k: Switch to using mac80211 intermediate software
-	queues.
-References: <E1bLYmw-0004wm-00@www.xplot.org>
-Date: Sat, 09 Jul 2016 17:44:48 +0200
-In-Reply-To: <E1bLYmw-0004wm-00@www.xplot.org> (Tim Shepard's message of "Fri,
-	08 Jul 2016 12:38:02 -0400")
-Message-ID: <874m7ylssv.fsf@toke.dk> (sfid-20160709_174505_900400_A28BAC05)
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:38015 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752087AbcGUSLF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 14:11:05 -0400
+Received: by mail-wm0-f46.google.com with SMTP id o80so35349564wme.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 11:11:04 -0700 (PDT)
+From: Christopher Williamson <home@chrisaw.com>
+In-Reply-To: <1469115440.29944.1.camel@redhat.com>
+References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
+ <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
+ <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
+ <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
+ <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
+ <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
+ <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
+ <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com> <1469115440.29944.1.camel@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Thu, 21 Jul 2016 11:10:56 -0700
+Message-ID: <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com> (sfid-20160721_201110_852821_3C88A856)
+Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tim Shepard <shep@alum.mit.edu> writes:
+Sure, here are the results:
 
->> The old code path in ath_tx_start that would queue packets has been
->> removed completely, 
+http://termbin.com/e8e2
+
+Christopher Williamson
+
+
+On 21 July 2016 at 16:37:24, Dan Williams
+(dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+
+> On Wed, 2016-07-20 at 15:16 -0700, Christopher Williamson wrote:
+> > I used NetworkManager in the previous test.
+> >
+> > This time around I have used wpa_supplicant directly and get the
+> > following results:
+> >
+> > http://termbin.com/j8ea
+> >
+> > Thought I’d throw them on a pastebin since it’s over 700 lines.
 >
-> It seems to me that this breaks the ath9k driver when non-data packets
-> which mac80211 will not queue on the new intermediate queues, see
-> ieee80211_drv_tx( ) in mac80211/tx.c where it says
+> Can you try with "-D nl80211" instead of using the WEXT supplicant
+> driver? NM is likely going to use nl80211 since the driver has some
+> support for cfg80211/nl80211 and only does WEXT through the glue
+> layer.
 >
-> 	if (!ieee80211_is_data(hdr->frame_control))
-> 		goto tx_normal;
+> Dan
 >
-> This means that non-data packets can come down from mac80211 via
-> ath_tx --> ath_tx_start which might be for a vif that is not on the
-> same channel, and so cannot be sent straight away but must be queued.
-> Maybe this problem should be fixed in mac80211, but as of now this is
-> a problem.   It appears to me that your new patch just sends them on
-> the wrong channel.
-
-Well, the idea is that the chanctx code will call ieee80211_stop_queue()
-to make sure that packets for the wrong context are not pushed down to
-the driver.
-
->> as has the qlen limit tunables (since there's no
->> longer a queue in the driver to limit).
->
->> diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
->> index 5294595..daf972c 100644
->> --- a/drivers/net/wireless/ath/ath9k/ath9k.h
->> +++ b/drivers/net/wireless/ath/ath9k/ath9k.h
->> @@ -91,7 +91,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
->>  #define ATH_RXBUF               512
->>  #define ATH_TXBUF               512
->>  #define ATH_TXBUF_RESERVE       5
->> -#define ATH_MAX_QDEPTH          (ATH_TXBUF / 4 - ATH_TXBUF_RESERVE)
->>  #define ATH_TXMAXTRY            13
->>  #define ATH_MAX_SW_RETRIES      30
->
-> I thought the purpose of ATH_MAX_QDEPTH was due to a limit on the
-> depth of a hardware FIFO.
-
-It's not. The limit is way too high for that. I'm a little fuzzy on the
-details, but the hardware queue depth is somewhat lower:
-
-#define ATH_TXFIFO_DEPTH           8
-
-The ATH_MAX_QDEPTH was supposed to keep the number of packets queued in
-the driver under control. And since we're no longer queueing in the
-driver, there's no longer a need for it.
-
-> Not all packets that get handed to the hardware come through a
-> software queue (e.g. those that bypass the intermediate queueing in
-> mac80211 now) and (it seems to me) there needs to be a limit to
-> prevent overflowing a hardware fifo. Yes, normal data packets are
-> (much) further limited as you taught me a few weeks ago, but not all
-> packets are subject to that constraint (as far as I can understand at
-> the moment). I'm not entirely sure of the details, but I think it is
-> the sorts of packets sent directly by hostapd and wpa_supplicant that
-> bypass all the queueing. And maybe those things aren't likely to be
-> sending a burst of hundreds of packets in a very short period of time
-> (where it could overrun the FIFO), but there may be other tools that
-> send raw 802.11 non-data packets which could then overflow the above
-> limit, and it seems you are removing the check. Actually I think my
-> original version of this patch may have had a flaw in that some
-> combination of non-data and data packets could be combined to overflow
-> this limit (since I failed to check overflowing this limit where I
-> pulled from the mac80211 intermediate queue).
-
-Hmm, I'm not sure I can confidently say that what you describe would
-never happen. But I'm pretty sure that ATH_MAX_QDEPTH wasn't what was
-keeping it from happening...
-
--Toke
+> > Christopher Williamson
+> >
+> >
+> >
+> >
+> > On 20 July 2016 at 22:50:34, Dan Williams
+> > (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+> >
+> > >
+> > > On Wed, 2016-07-20 at 13:06 -0700, Christopher Williamson wrote:
+> > > >
+> > > > Hi Dan,
+> > > >
+> > > > Ah - yeah I hadn’t thought it may be a kernel build option. I’ve
+> > > > now
+> > > > built that and dmesg is a much more lively place!
+> > > >
+> > > > I’ve provided output logs for both when the device is connected
+> > > > and
+> > > > when a connection attempt is made - hopefully this is useful.
+> > >
+> > >
+> > > The card is scanning and only finds 'shaunthesheep' 20 seconds
+> > > after
+> > > you "connect for the first time". The logs stop 3 seconds later.
+> > > Are
+> > > you connecting with wicd or something else?
+> > >
+> > > Can you run wpa_supplicant with the "-dddtu" option so we can get
+> > > debug
+> > > log output from it?
+> > >
+> > > Dan
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-
+> > wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
