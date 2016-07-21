@@ -1,61 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:56364 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752189AbcGTSR6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 14:17:58 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-CC: Bob Copeland <me@bobcopeland.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Hahn, Maital" <maitalm@ti.com>,
-	"Johannes Berg" <johannes@sipsolutions.net>
-Subject: RE: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
-Date: Wed, 20 Jul 2016 18:17:51 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101392097ED@DFRE01.ent.ti.com> (sfid-20160720_201813_247551_EFE7A193)
-References: <CAEFj987X26u59K32Mt-bKBSTmy3cWvOiNNBG7K4wbdQBAdR97Q@mail.gmail.com>
- <20160719124456.GD11996@localhost>
- <AE1C82FB3D0EC64DB1F752C81CBD110139206115@DFRE01.ent.ti.com>
- <20160719134355.GA1833@localhost>
- <CAEFj987V0r3aVn+JhQOX-40bheKyEJdrppF75OCaLXhU=skmNw@mail.gmail.com>
- <AE1C82FB3D0EC64DB1F752C81CBD110139206BD6@DFRE01.ent.ti.com>
- <CAEFj986LZ8zjBtyJrRL4GX3S-yTGxL-MJs3S18ze-NNw544OPQ@mail.gmail.com>
- <AE1C82FB3D0EC64DB1F752C81CBD110139208B47@DFRE01.ent.ti.com>
- <CAEFj986FX=Gyyadj4n5S6VrYx_D61jJFKjc2GajAVHbXbsVD+Q@mail.gmail.com>
-In-Reply-To: <CAEFj986FX=Gyyadj4n5S6VrYx_D61jJFKjc2GajAVHbXbsVD+Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:42338 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751373AbcGUIGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 04:06:04 -0400
+Date: Thu, 21 Jul 2016 10:05:42 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>, prarit@redhat.com
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+Message-ID: <20160721080541.GB2658@redhat.com> (sfid-20160721_100610_788813_88801DE9)
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
+ <20160721070938.GA2658@redhat.com>
+ <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBKdWwgMjAsIDIwMTYgYXQgMTk6NDA6NTMsIFllb2ggQ2h1bi1ZZW93IHdyb3RlOg0K
-PiBKb2hhbm5lcyBCZXJnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjIgMi8zXSBtYWM4MDIxMTog
-bWVzaDogaW1wcm92ZSBwYXRoIHJlc29sdmluZyANCj4gdGltZQ0KPiANCiA+DQo+IA0KPiBJbiBj
-YXNlIHRoYXQgeW91IGhhdmUgYWRkaXRpb25hbCAxIG5vZGUgd2l0aCAzIHBhdGhzIHRvd2FyZCB0
-aGUgDQo+IGRlc3RpbmF0aW9uIChpbnN0ZWFkIG9mIDIgcGF0aHMgbGlrZSB5b3UgaWxsdXN0cmF0
-ZWQpLCBmb3JjaW5nIA0KPiBhZGRpdGlvbmFsIFBSRVEgZG9lc24ndCBndWFyYW50ZWUgdGhhdCB5
-b3Ugd2lsbCBzd2l0Y2ggdG8gdGhlIGZpeGVkIHBhdGggaW4geW91ciAibmV4dCIgYXR0ZW1wdC4N
-Cj4NCg0KSSdtIG5vdCB0cnlpbmcgdG8gZ3VhcmFudGVlIGEgc3BlY2lmaWMgcGF0aCwganVzdCBi
-dWlsZCBhIHBhdGggd2l0aG91dCB3YWl0aW5nIHRoZSBNaW5JbnRlcnZhbA0KICANCj4gSSBqdXN0
-IHRha2UgYW5vdGhlciBsb29rIG9uIHlvdXIgcGF0Y2g6DQo+IA0KPiBAQCAtMTExMCw3ICsxMTE3
-LDcgQEAgaW50IG1lc2hfbmV4dGhvcF9yZXNvbHZlKHN0cnVjdCANCj4gaWVlZTgwMjExX3N1Yl9p
-Zl9kYXRhICpzZGF0YSwgfQ0KPiANCj4gaWYgKCEobXBhdGgtPmZsYWdzICYgTUVTSF9QQVRIX1JF
-U09MVklORykpDQo+IC0gbWVzaF9xdWV1ZV9wcmVxKG1wYXRoLCBQUkVRX1FfRl9TVEFSVCk7DQo+
-ICsgbWVzaF9xdWV1ZV9wcmVxKG1wYXRoLCBQUkVRX1FfRl9TVEFSVCwgdHJ1ZSk7DQo+IA0KPiBp
-ZiAoc2tiX3F1ZXVlX2xlbigmbXBhdGgtPmZyYW1lX3F1ZXVlKSA+PSBNRVNIX0ZSQU1FX1FVRVVF
-X0xFTikgDQo+IHNrYl90b19mcmVlID0gc2tiX2RlcXVldWUoJm1wYXRoLT5mcmFtZV9xdWV1ZSk7
-DQo+IA0KPiBZb3UgbW9kaWZpY2F0aW9uIGlzIGludGVuZGVkIHRvIGFkZCB0aGlzICJpbW1lZGlh
-dGUiIFBSRVEgZ2VuZXJhdGlvbiANCj4gd2hlbmV2ZXIgdGhlIGRhdGEgZnJhbWUgaXMgdHJhbnNt
-aXR0ZWQuIEluIGNhc2UgdGhlIGN1cnJlbnQgcGF0aCBpcyANCj4gaW5kZWVkIHRoZSBiZXN0IG9u
-ZSwgdGhlIFBSRVEgd2lsbCBzdGlsbCBnZW5lcmF0ZSB3aXRob3V0IHdhaXRpbmcgZm9yIA0KPiBk
-b3QxMU1lc2hIV01QcHJlcU1pbkludGVydmFsLiBUaGUgbmV0d29yayBpcyB1bm5lY2Vzc2FyeSBm
-bG9vZGVkIHdpdGggDQo+IFBSRVEuDQoNClRvIG15IHVuZGVyc3RhbmRpbmcsIGlmIHlvdSBhbHJl
-YWR5IGhhdmUgYSBwYXRoIGVzdGFibGlzaGVkLCBpdCB3aWxsIG5vdCBzZW5kIGEgbmV3IFBSRVEg
-KGFzIGl0J3Mgbm90IGluIFJFU09MVklORyBzdGF0ZSkNClNvIGlmIHRoZSBjdXJyZW50IHBhdGgg
-aXMgdGhlIGJlc3QsIG5vIGV4Y2Vzc2l2ZSBQUkVRIGZyYW1lcyB3aWxsIGJlIHNlbnQuDQpJbiBj
-YXNlIHRoZSBwYXRoIGlzIGNsZWFyZWQsIGR1ZSB0byBwZWVyIHJlbW92YWwgYXMgZGVzY3JpYmVk
-IGJlZm9yZS4NCg0KVGhlIHRlc3QgdXNlIGNhc2UgaXMgc2ltcGxlLCBhbmQgZnJvbSBvdXIgdGVz
-dHMgdGhlIGltcGFjdCBvbiBwZXJmb3JtYW5jZSBiaWcgcmVsYXRlZCB0byBvdXIgZXhwZWN0YXRp
-b24sDQpJIGFzc3VtZSB0aGUgcXVlc3Rpb24gaXMsIHdoYXQgYXJlIHRoZSBwZXJmb3JtYW5jZSBl
-eHBlY3RhdGlvbnMvcmVxdWlyZW1lbnRzIGZyb20gdGhlIDgwMi4xMXMgbWVzaCBuZXR3b3JrID8N
-Cg0KUmVnYXJkcywNCllhbml2DQo=
+On Thu, Jul 21, 2016 at 10:36:42AM +0300, Emmanuel Grumbach wrote:
+> On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
+> >> Firmware files are versioned to prevent older
+> >> driver instances to load unsupported firmware
+> >> blobs. This is reflected with a fallback logic
+> >> which attempts to load several firmware files.
+> >>
+> >> This however produced a lot of unnecessary
+> >> warnings sometimes confusing users and leading
+> >> them to rename firmware files making things even
+> >> more confusing.
+> >
+> > This happens on kernels configured with
+> > CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
+> > but also 60 seconds delay before loading next firmware version.
+> > For some reason RHEL kernel needs above config option, so this
+> > patch is very welcome from my perspective.
+> >
+> 
+> Sorry for my ignorance but how does the firmware loading work if not
+> with udev's help?
+
+I'm not sure exactly, but I think kernel VFS layer is capable to copy
+file data directly from mounted filesystem without user space helper.
+
+> As you can imagine, iwlwifi is suffering from the
+> same problem and I would be interested in applying the same change,
+> but I'd love to understand a bit more :)
+
+Yes, iwlwifi (and some other drivers) suffer from this. However this
+happen when the newest firmware version is not installed on the system
+and CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled. What I suppose
+it's not common.
+
+I started to see this currently, because that option was enabled on 
+RHEL kernel. BTW: I think Prarit iwlwifi thermal_zone problem was
+happened because of that, i.e. thermal device was not functional
+because f/w wasn't loaded due to big delay.
+
+I'm not sure if replacing to request_firmware_direct() is a good
+fix though. For example I can see this problem also on brcmfmac, which
+use request_firmware_nowait(). I think I would rather prefer special
+helper for firmware drivers that needs user helper and have
+request_firmware() be direct as default.
+
+Stanislaw
