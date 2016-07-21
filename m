@@ -1,52 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.tech.triadic.us ([98.102.61.98]:46355 "EHLO
-	SMTP.Tech.Triadic.US" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758277AbcG1Ahf (ORCPT
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:33487 "EHLO
+	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751126AbcGUH5F (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 20:37:35 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Wed, 27 Jul 2016 20:26:48 -0400
-From: alexmcwhirter@triadic.us
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: David Miller <davem@davemloft.net>, rlwinm@sdf.org,
-	chunkeey@googlemail.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
-In-Reply-To: <20160728003102.GS2356@ZenIV.linux.org.uk>
-References: <201607271032.u6RAWPcS008174@sdf.org>
- <4dbfebe8136bc963b5b51463d6887db4@triadic.us>
- <87c4ed555bcb4229f2334f6f2bb69bcb@triadic.us>
- <20160727.164543.1466564919313003461.davem@davemloft.net>
- <20160728003102.GS2356@ZenIV.linux.org.uk>
-Message-ID: <8b3126f66186015956e0f8090fb70532@triadic.us> (sfid-20160728_023801_344518_09C8F94B)
+	Thu, 21 Jul 2016 03:57:05 -0400
+Received: by mail-pf0-f179.google.com with SMTP id y134so27918850pfg.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 00:57:05 -0700 (PDT)
+From: Binoy Jayan <binoy.jayan@linaro.org>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Binoy Jayan <binoy.jayan@linaro.org>
+Subject: [PATCH] staging: wilc1000: txq_event: Fix coding error
+Date: Thu, 21 Jul 2016 13:26:56 +0530
+Message-Id: <1469087816-16773-1-git-send-email-binoy.jayan@linaro.org> (sfid-20160721_095724_605106_C139E234)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-07-27 20:31, Al Viro wrote:
-> On Wed, Jul 27, 2016 at 04:45:43PM -0700, David Miller wrote:
-> 
->> > I highly expect both my issue and OP's issue to revolve not around
->> > commit e5a4b0bb803b specifically, but around other code that no longer
->> > behaves as expected because of it.
->> 
->> Indeed, and that fault address rounding bug occurs two other times
->> in arch/sparc/lib/user_fixup.c
->> 
->> The mentioned patchwork patch should fix the bug and I'll get that
->> into my sparc tree, merged, and queued up for -stable ASAP.
-> 
-> Plausible for sparc, but I don't see similar __copy_to_user_inatomic()
-> bugs in case of x86_64...
+Fix incorrect usage of completion interface by replacing
+'wait_for_completion' with 'complete'. This error was introduced
+accidentally while replacing semaphores with mutexes.
 
-I'm going to go ahead and say this is where my issue and the op's issue 
-begin to branch apart from one another. He's seeing this on all incoming 
-data, whereas i am only seeing it on ssl data and not on sun4v.
+Reported-by: Jiri Slaby <jslaby@suse.cz>
+Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-At this point i would say data from my issue is only going to cloud this 
-issue as they seem to be two completely different issues revolving 
-around the same commit. If i come across any relevant data for x86_64 
-ill be sure to post it if this isn't resolved by then, but for now i'm 
-going to refrain from submitting anything sparc related.
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3a66255..3221511 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -648,7 +648,7 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 			mutex_unlock(&wl->hif_cs);
+ 		}
+ 		if (&wl->txq_event)
+-			wait_for_completion(&wl->txq_event);
++			complete(&wl->txq_event);
+ 
+ 		wlan_deinitialize_threads(dev);
+ 		deinit_irq(dev);
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
