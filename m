@@ -1,74 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33488 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753777AbcGFKo5 (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:35371 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754572AbcGUWAZ convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:44:57 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	"[4.5+]" <stable@vger.kernel.org>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:23 +0300
-Message-Id: <1467801651-1816-28-git-send-email-luca@coelho.fi> (sfid-20160706_124500_726625_C96D67C0)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 28/56] iwlwifi: pcie: enable interrupts before releasing the NIC's CPU
+	Thu, 21 Jul 2016 18:00:25 -0400
+Received: by mail-wm0-f53.google.com with SMTP id f65so36221799wmi.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 15:00:24 -0700 (PDT)
+From: Christopher Williamson <home@chrisaw.com>
+In-Reply-To: <etPan.579137d1.40bb3278.381a@chrisaw.com>
+References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
+ <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
+ <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
+ <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
+ <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
+ <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
+ <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
+ <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
+ <1469115440.29944.1.camel@redhat.com> <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
+ <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
+ <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com> <etPan.579137d1.40bb3278.381a@chrisaw.com>
+MIME-Version: 1.0
+Date: Thu, 21 Jul 2016 15:00:22 -0700
+Message-ID: <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com> (sfid-20160722_000034_778440_FB18443F)
+Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+I’ve created cleaner logs (particularly the dmesg one) and have added
+timestamps line-by-line to both so it should be easier to track
+between the two log files:
 
-The NIC's CPU gets started after the firmware has been
-written to its memory. The first thing it does is to
-send an interrupt to let the driver know that it is
-running. In order to get that interrupt, the driver needs
-to make sure it is not masked. Of course, the interrupt
-needs to be enabled in the driver before the CPU starts to
-run.
-I mistakenly inversed those two steps leading to races
-which prevented the driver from getting the alive interrupt
-from the firmware.
-Fix that.
+wpa_supplicant:
+http://termbin.com/cx0e
 
-Cc: <stable@vger.kernel.org> [4.5+]
-Fixes: a6bd005fe92 ("iwlwifi: pcie: fix RF-Kill vs. firmware load race")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+dmesg | grep libertas:
+http://termbin.com/bvdj
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 3badebb..ac623c3 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -801,6 +801,8 @@ static int iwl_pcie_load_cpu_sections_8000(struct iwl_trans *trans,
- 
- 	*first_ucode_section = last_read_idx;
- 
-+	iwl_enable_interrupts(trans);
-+
- 	if (cpu == 1)
- 		iwl_write_direct32(trans, FH_UCODE_LOAD_STATUS, 0xFFFF);
- 	else
-@@ -980,6 +982,8 @@ static int iwl_pcie_load_given_ucode(struct iwl_trans *trans,
- 		iwl_pcie_apply_destination(trans);
- 	}
- 
-+	iwl_enable_interrupts(trans);
-+
- 	/* release CPU reset */
- 	iwl_write32(trans, CSR_RESET, 0);
- 
-@@ -1215,7 +1219,6 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
- 		ret = iwl_pcie_load_given_ucode_8000(trans, fw);
- 	else
- 		ret = iwl_pcie_load_given_ucode(trans, fw);
--	iwl_enable_interrupts(trans);
- 
- 	/* re-check RF-Kill state since we may have missed the interrupt */
- 	hw_rfkill = iwl_is_rfkill_set(trans);
--- 
-2.8.1
+Christopher Williamson
 
+
+
+
+On 21 July 2016 at 22:00:02, Christopher Williamson
+(home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+
+> Sure!
+>
+> wpa_supplicant logs:
+> http://termbin.com/z1hg
+>
+> dmesg logs (grepped for libertas):
+> http://termbin.com/7rt5
+>
+>
+> Christopher Williamson
+>
+>
+>
+>
+> On 21 July 2016 at 21:38:26, Dan Williams (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+>
+> > On Thu, 2016-07-21 at 11:55 -0700, Christopher Williamson wrote:
+> > > Just to confirm - I can connect to the same network using the same
+> > > configurations using a USB wifi adapter I tried.
+> >
+> > Can you grab simultaneous driver debug logging and supplicant debug
+> > logging? Unfortunately the 'status 1' is an unspecified failure, which
+> > could be from the AP or the firmware.
+> >
+> > Dan
+> >
+> >
+> > > Unfortunately it’s not ideal since the point of the Viliv N5 is that
+> > > it’s ultra portable so I would really like to get the inbuilt wifi
+> > > card working.
+> > >
+> > > It seems odd that wpa_supplicant reports the connection being
+> > > “rejected” as seen below:
+> > >
+> > > wlan0: CTRL-EVENT-ASSOC-REJECT bssid=a0:63:91:1e:ee:43 status_code=1
+> > >
+> > > Most of the debug output sadly doesn’t mean a great deal to me - wifi
+> > > isn’t really my area of expertise.
+> > >
+> > > On 21 July 2016 at 19:10:56, Christopher Williamson
+> > > (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> > >
+> > > >
+> > > >
+> > > > Sure, here are the results:
+> > > >
+> > > > http://termbin.com/e8e2
+> > > >
+> > > > Christopher Williamson
+> > > >
+> > > >
+> > > > On 21 July 2016 at 16:37:24, Dan Williams (dcbw@redhat.com(mailto:d
+> > > > cbw@redhat.com)) wrote:
+> > > >
+> > > > >
+> > > > > On Wed, 2016-07-20 at 15:16 -0700, Christopher Williamson wrote:
+> > > > > >
+> > > > > > I used NetworkManager in the previous test.
+> > > > > >
+> > > > > > This time around I have used wpa_supplicant directly and get
+> > > > > > the
+> > > > > > following results:
+> > > > > >
+> > > > > > http://termbin.com/j8ea
+> > > > > >
+> > > > > > Thought I’d throw them on a pastebin since it’s over 700 lines.
+> > > > > Can you try with "-D nl80211" instead of using the WEXT
+> > > > > supplicant
+> > > > > driver? NM is likely going to use nl80211 since the driver has
+> > > > > some
+> > > > > support for cfg80211/nl80211 and only does WEXT through the glue
+> > > > > layer.
+> > > > >
+> > > > > Dan
+> > > > >
+> > > > > >
+> > > > > > Christopher Williamson
+> > > > > >
+> > > > > >
+> > > > > >
+> > > > > >
+> > > > > > On 20 July 2016 at 22:50:34, Dan Williams
+> > > > > > (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+> > > > > >
+> > > > > > >
+> > > > > > >
+> > > > > > > On Wed, 2016-07-20 at 13:06 -0700, Christopher Williamson
+> > > > > > > wrote:
+> > > > > > > >
+> > > > > > > >
+> > > > > > > > Hi Dan,
+> > > > > > > >
+> > > > > > > > Ah - yeah I hadn’t thought it may be a kernel build option.
+> > > > > > > > I’ve
+> > > > > > > > now
+> > > > > > > > built that and dmesg is a much more lively place!
+> > > > > > > >
+> > > > > > > > I’ve provided output logs for both when the device is
+> > > > > > > > connected
+> > > > > > > > and
+> > > > > > > > when a connection attempt is made - hopefully this is
+> > > > > > > > useful.
+> > > > > > >
+> > > > > > > The card is scanning and only finds 'shaunthesheep' 20
+> > > > > > > seconds
+> > > > > > > after
+> > > > > > > you "connect for the first time". The logs stop 3 seconds
+> > > > > > > later.
+> > > > > > > Are
+> > > > > > > you connecting with wicd or something else?
+> > > > > > >
+> > > > > > > Can you run wpa_supplicant with the "-dddtu" option so we can
+> > > > > > > get
+> > > > > > > debug
+> > > > > > > log output from it?
+> > > > > > >
+> > > > > > > Dan
+> > > > > > --
+> > > > > > To unsubscribe from this list: send the line "unsubscribe
+> > > > > > linux-
+> > > > > > wireless" in
+> > > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > > More majordomo info at http://vger.kernel.org/majordomo-info.ht
+> > > > > > ml
+> > > --
+> > > To unsubscribe from this list: send the line "unsubscribe linux-
+> > > wireless" in
+> > > the body of a message to majordomo@vger.kernel.org
+> > > More majordomo info at http://vger.kernel.org/majordomo-info.html
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
