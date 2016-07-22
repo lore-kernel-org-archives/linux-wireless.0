@@ -1,95 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:60667 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751629AbcGFVAS (ORCPT
+Received: from mail-yw0-f179.google.com ([209.85.161.179]:34660 "EHLO
+	mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751058AbcGVOsf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 17:00:18 -0400
-From: Kamal Mostafa <kamal@canonical.com>
-To: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	ath9k-devel@lists.ath9k.org,
-	Vittorio Gambaletta <linuxbugs@vittgam.net>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Kamal Mostafa <kamal@canonical.com>,
-	kernel-team@lists.ubuntu.com
-Subject: [3.19.y-ckt stable] Patch "ath9k: Add a module parameter to invert LED polarity." has been added to the 3.19.y-ckt tree
-Date: Wed,  6 Jul 2016 14:00:14 -0700
-Message-Id: <1467838814-15194-1-git-send-email-kamal@canonical.com> (sfid-20160706_230026_477190_6A9FB28B)
+	Fri, 22 Jul 2016 10:48:35 -0400
+Received: by mail-yw0-f179.google.com with SMTP id z8so83436516ywa.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 07:48:34 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <57922074.5060009@candelatech.com>
+References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
+ <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
+ <1467972560885.99812@qti.qualcomm.com> <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com>
+ <1467982766213.21223@qti.qualcomm.com> <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com>
+ <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com>
+ <CABPxzYKomhw5rF4Crj6sMbmr3VuuDYi=zqN2ky83v-=RJe7Zhg@mail.gmail.com>
+ <1469188781289.75799@qti.qualcomm.com> <CABPxzYL2D1b08vOJc9b9WCjjEDtgHW2UQFNVSyxD5wSjidmiQA@mail.gmail.com>
+ <57922074.5060009@candelatech.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 22 Jul 2016 20:18:14 +0530
+Message-ID: <CABPxzYJZ=+ECmM3KUNSAQSKCthxxGYnpDn=p-cmC1qoaoJsc4g@mail.gmail.com> (sfid-20160722_164838_782156_7F935385)
+Subject: Re: ath10k + iw set bitrates is causing FW crash
+To: Ben Greear <greearb@candelatech.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a note to let you know that I have just added a patch titled
-
-    ath9k: Add a module parameter to invert LED polarity.
-
-to the linux-3.19.y-queue branch of the 3.19.y-ckt extended stable tree 
-which can be found at:
-
-    https://git.launchpad.net/~canonical-kernel/linux/+git/linux-stable-ckt/log/?h=linux-3.19.y-queue
-
-This patch is scheduled to be released in version 3.19.8-ckt23.
-
-If you, or anyone else, feels it should not be added to this tree, please 
-reply to this email.
-
-For more information about the 3.19.y-ckt tree, see
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
-
-Thanks.
--Kamal
-
----8<------------------------------------------------------------
-
->From 7ab5b39f6e7c918ea8d2471d8f6d296d04ae72a4 Mon Sep 17 00:00:00 2001
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-Date: Mon, 11 Apr 2016 04:48:54 +0200
-Subject: ath9k: Add a module parameter to invert LED polarity.
-
-commit cd84042ce9040ad038e958bc67a46fcfc015c736 upstream.
-
-The LED can be active high instead of active low on some hardware.
-
-Add the led_active_high module parameter. It defaults to -1 to obey
-platform data as before.
-
-Setting the parameter to 1 or 0 will force the LED respectively
-active high or active low.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
-Signed-off-by: Kamal Mostafa <kamal@canonical.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index a218a00..d7c1a02 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -49,6 +49,10 @@ int led_blink;
- module_param_named(blink, led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
-
-+static int ath9k_led_active_high = -1;
-+module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
-+MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
-+
- static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-@@ -582,6 +586,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		return ret;
-
-+	if (ath9k_led_active_high != -1)
-+		ah->config.led_active_high = ath9k_led_active_high == 1;
-+
- 	/*
- 	 * Enable WLAN/BT RX Antenna diversity only when:
- 	 *
---
-2.7.4
-
+On Fri, Jul 22, 2016 at 7:02 PM, Ben Greear <greearb@candelatech.com> wrote:
+>
+>
+> On 07/22/2016 05:21 AM, Krishna Chaitanya wrote:
+>>
+>> On Fri, Jul 22, 2016 at 5:29 PM, Manoharan, Rajkumar
+>> <rmanohar@qti.qualcomm.com> wrote:
+>>>
+>>> [...]
+>>>>>>
+>>>>>> Thanks Raj, with this fix the rates are 0-7, if i disable then i am
+>>>>>> seeing 0-9, so its
+>>>>>> working.
+>>>>>>
+>>>>>> But i am seeing a weird issues, the moment i give bitrates command,
+>>>>>> ath10k no longer does encryption, link is a WPA2-PSK: AES. Even after
+>>>>>> interface up/down
+>>>>>> it doesn't work.
+>>>>>
+>>>>> After reboot i dont see the "unencrypted" packet issue, i will do
+>>>>> some more testing on limiting the rates, currently in my setup its
+>>>>> not reaching MCS9 so cannot verify now.
+>>>>
+>>>> Rajkumar,
+>>>>
+>>>> I am still not able to make mcs9 work, so i have tried to change the Nss
+>>>> to 1
+>>>> using iw, but that is not taking affect. This command is not taking
+>>>> effect.
+>>>>
+>>> you mean not able to fix VHT rates alone. am i right? By auto rate mode,
+>>> is firmware selecting
+>>> mcs9? What is the command used for fixing vht rate?
+>>
+>> Basically my requirement is to disable MCS8 and 9 for comparison.
+>> to check whether ath10k honors the iw command, i used below
+>> command. changing to 1SS, but i could see that it still transmits
+>> using 2SS. Does your patch ignore these settings except for
+>> adhoc mode?
+>>
+>> iw set bitrates vht-mcs-5 1:0-7
+>
+>
+> You can set the number of spatial streams on the phy device.  Search around
+> for a 'chainmask' configurable.
+>
+> In general, stock ath10k firmware does not have full support for setting
+> arbitrary bitrates options.
+Yes, i know that option but havent tried that. My intention was to limit to MCS7
+so in order to verify that commands i tried to change nss.
