@@ -1,92 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:57307 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751755AbcGMHsh (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:35928 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751750AbcGVQjx convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 03:48:37 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-	ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-	linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	mcgrof@do-not-panic.com, galak@codeaurora.org,
-	ijc+devicetree@hellion.org.uk, mark.rutland@arm.com,
-	pawel.moll@arm.com, robh+dt@kernel.org, chunkeey@googlemail.com,
-	arend.vanspriel@broadcom.com, julian.calaby@gmail.com
-Subject: Re: [PATCH v4 1/3] Documentation: dt: net: add ath9k wireless device binding
-Date: Wed, 13 Jul 2016 09:47:36 +0200
-Message-ID: <4498290.rJrZT5XFlG@wuerfel> (sfid-20160713_094915_321134_FF7A5AAA)
-In-Reply-To: <87a8hmauls.fsf@purkki.adurom.net>
-References: <20160624123430.4097-1-martin.blumenstingl@googlemail.com> <20160709232834.31654-2-martin.blumenstingl@googlemail.com> <87a8hmauls.fsf@purkki.adurom.net>
+	Fri, 22 Jul 2016 12:39:53 -0400
+Received: by mail-wm0-f46.google.com with SMTP id q128so63773251wma.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 09:39:52 -0700 (PDT)
+From: Christopher Williamson <home@chrisaw.com>
+In-Reply-To: <CANXHH3nvu7TC=x5RTR_WcgGkd2=_0h4BZrc_Nv74023nrc3P5w@mail.gmail.com>
+References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
+ <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
+ <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
+ <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
+ <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
+ <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
+ <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
+ <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
+ <1469115440.29944.1.camel@redhat.com> <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
+ <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
+ <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com>
+ <etPan.579137d1.40bb3278.381a@chrisaw.com> <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
+ <435adbc6-9fa3-e9e3-9815-8cf4b62e5342@broadcom.com> <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+ <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+ <CANXHH3mOsN3-U=BS4fA6iax0ciwbSSywHAgOhHCNj8e7CPCyfQ@mail.gmail.com>
+ <1469204186.15064.6.camel@redhat.com> <1469204186.15064.6.camel@redhat.com> <CANXHH3nvu7TC=x5RTR_WcgGkd2=_0h4BZrc_Nv74023nrc3P5w@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Date: Fri, 22 Jul 2016 12:39:50 -0400
+Message-ID: <CANXHH3kX-U_CRfBf+DVe7AMpU13fKGG5bRwgLhDqYuGOBF-HBw@mail.gmail.com> (sfid-20160722_183957_019611_FF540D21)
+Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
+To: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arend Van Spriel <arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, July 13, 2016 10:02:39 AM CEST Kalle Valo wrote:
-> Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
-> 
-> > Add documentation how devicetree can be used to configure ath9k based
-> > devices.
+Ok so I created a guest wifi network without any encryption enabled at
+all and the client still refuses to connect.
+
+Again, the connection is made perfectly using the USB dongle I have
+but not the built in libertas sd8686 chipset.
+
+I do currently use pfSense as a firewall box behind my wireless router
+(acting as an AP) and can see that no DHCP request is making it to the
+pfSense box. I believe you are right in the point about the firmware
+being the problem here.
+
+I should also confirm - the firmware in use is the latest from the
+linux-firmware Ubuntu 16.04 package. I did read around the net about
+being having various issues with various firmware sources and not
+others but despite trying firmware linked directly from Marvell I seem
+to always get one of two issues:
+
+1.) I am unable to connect and keep getting asked for passphrases, or:
+2.) The system completely freezes up (with the v8 firmwares I tried)
+
+I’m not really sure what else to try at this point.
+Christopher Williamson
+
+
+
+On 22 July 2016 at 17:24:52, Christopher Williamson
+(home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+
+>
+> Hi Dan,
+>
+> I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
+>
+> For now though - the iwlist scan results for both a USB device and the
+> libertas device:
+>
+> USB: http://termbin.com/hdwl
+> Libertas: http://termbin.com/jxh7
+>
+> Will follow up shortly with WPA and Open network configs.
+>
+> Christopher Williamson
+>
+>
+>
+> On 22 July 2016 at 17:16:29, Dan Williams (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+>
+> > Hi Dan,
 > >
-> > Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-> > ---
-> >  .../devicetree/bindings/net/wireless/qca,ath9k.txt | 59 ++++++++++++++++++++++
-> >  1 file changed, 59 insertions(+)
-> >  create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+> > I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
 > >
-> > diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> > new file mode 100644
-> > index 0000000..7c62c59
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-> > @@ -0,0 +1,59 @@
-> > +* Qualcomm Atheros ath9k wireless devices
-> > +
-> > +This node provides properties for configuring the ath9k wireless device. The
-> > +node is expected to be specified as a child node of the PCI controller to
-> > +which the wireless chip is connected.
-> > +
-> > +Required properties:
-> > +- compatible: Should be "qca,ath9k"
-> 
-> Isn't this supposed to use the chipset name? ath9k is the driver name
-> and something like ar9462 is the chip name. I know in ath10k we used
-> "qca,ath10k" but I'm starting to suspect that was a mistake.
-> 
-
-You are right, but it's actually more complicated than that. For PCI
-devices, the format of the compatible strings is defined in
-http://www.o3one.org/hwdocs/openfirmware/pci_supplement_2_1.pdf
-and it doesn't use the "vendor,device" syntax at all but instead
-uses pciVVVV,DDDD where VVVV and DDDD are the hexadecimal (without
-leading 0x) vendor and device ID numbers. The document also specifies
-seven other formats and in theory you should list them all, but
-that really only makes sense for Open Firmware that programatically
-creates those strings.
-
-For a hand-written DTS source, I'd just use the shortest one of those.
-Linux actually doesn't care at all, as PCI drivers don't use the
-compatible string but instead look at the config register values
-that were read by the PCI core.
-
-For USB, we do basically the same thing, but have very few examples
-of that as Linux only recently started supporting this.
-
-For SDIO devices we should have done the same thing but screwed up
-when we made the generic binding and we have no policy, the example
-even lists one that makes no sense at all ("brcm,bcm43xx-fmac")
-as it is neither a specific device nor something derived from the IDs.
-
-For on-chip devices, we should follow the common policy for on-chip
-devices and use the "vendor,chip-funcion" with fallbacks for
-compatible devices such as:
-
-	compatible = "tplink,tp9343-wifi", "qca,qca9561-wifi", "atheros,ar9001-wifi";
-
-For a chip that is branded by TP-Link and derived from a Qualcomm Atheros
-chip it is 100% compatible with, and in turn derived from an older
-implementation (just guessing which one was the original ath9k).
-
-
-	Arnd
+> > For now though - the iwlist scan results for both a USB device and the
+> > libertas device:
+> >
+> > USB: http://termbin.com/hdwl
+> > Libertas: http://termbin.com/jxh7
+> >
+> > Will follow up shortly with WPA and Open network configs.
+> >
+> > *Christopher Williamson*
