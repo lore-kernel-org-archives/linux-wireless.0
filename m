@@ -1,39 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33650 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932844AbcGIDwX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 23:52:23 -0400
-Subject: Re: [RFC 0/7] netlink: Add allocation flag to netlink_unicast()
-To: David Teigland <teigland@redhat.com>
-References: <1467764916-4983-1-git-send-email-masashi.honma@gmail.com>
- <577DA3E1.6020103@gmail.com> <20160708160821.GA2048@redhat.com>
-Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-rdma@vger.kernel.org,
-	linux-audit@redhat.com, cluster-devel@redhat.com,
-	johannes@sipsolutions.net, pablo@netfilter.org, kaber@trash.net,
-	kadlec@blackhole.kfki.hu, dledford@redhat.com,
-	sean.hefty@intel.com, hal.rosenstock@gmail.com,
-	paul@paul-moore.com, eparis@redhat.com, zbr@ioremap.net,
-	pshelar@nicira.com, ccaulfie@redhat.com, bsingharora@gmail.com
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <578074F0.9030809@gmail.com> (sfid-20160709_055227_971172_278DD91C)
-Date: Sat, 9 Jul 2016 12:52:16 +0900
+Received: from mout.gmx.net ([212.227.15.15]:60049 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751195AbcGVUwA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2016 16:52:00 -0400
+Date: Fri, 22 Jul 2016 22:51:35 +0200
+From: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
+Message-ID: <20160722225135.2b2dd751@mir> (sfid-20160722_225228_753203_38D1B12F)
+In-Reply-To: <7894919.vMsHjmmMb1@wuerfel>
+References: <20160719153403.2967812-1-arnd@arndb.de>
+	<20160722043922.0a878698@mir>
+	<wrfjoa5phop3.fsf@redhat.com>
+	<7894919.vMsHjmmMb1@wuerfel>
 MIME-Version: 1.0
-In-Reply-To: <20160708160821.GA2048@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016年07月09日 01:08, David Teigland wrote:
-> On Thu, Jul 07, 2016 at 09:35:45AM +0900, Masashi Honma wrote:
->> At the fs/dlm/netlink.c#dlm_timeout_warn(),
->> prepare_data allocates buffer with GFP_NOFS
->> and send_data() sends the buffer.
->>
->> But send_data() uses GFP_KERNEL or GFP_ATOMIC inside it.
->> Should it be replaced by GFP_NOFS ?
-> That's old code that's never been used so it doesn't really matter.
->
-I see. Thank you.
+Hi
 
+On 2016-07-22, Arnd Bergmann wrote:
+> On Friday, July 22, 2016 7:55:36 AM CEST Jes Sorensen wrote:
+> > Stefan Lippers-Hollmann <s.l-h@gmx.de> writes:  
+> > > On 2016-07-20, Arnd Bergmann wrote:  
+> > >> On Wednesday, July 20, 2016 11:33:43 AM CEST Jes Sorensen wrote:  
+> > >> > Arnd Bergmann <arnd@arndb.de> writes:    
+> > >> > > On Wednesday, July 20, 2016 7:25:19 AM CEST Jes Sorensen wrote:    
+> > >> > >> Arnd Bergmann <arnd@arndb.de> writes:  
+[...]
+> > > While probably not overly common, it was/ is (hardware-wise) a pretty
+> > > interesting device due to its support for 5 GHz[1] - actually I hoped
+> > > it to be a (supported-) RTL8192CU variant when I bought it. 
+> > > Unfortunately no driver[2] made it to staging or the proper kernel.  
+> > 
+> > I actually have one of those in my USB dongle box, but as you say, not
+> > overly common so not sure if/when I'll get to it.
+> > 
+> > Adding 8192du support for 2.4GHz to rtl8xxxu probably wouldn't be too
+> > complicated.  
+> 
+> My guess is that these devices have largely been replaced by
+> 802.11ac devices on the market, and whoever has one of the old ones
+> probably bought it because of the 5GHz support, so adding 2.4GHz-only
+> support for it may not help all that much either.
+
+Talking purely for myself, I've certainly bought the rtl8192du device
+because of its 5 GHz support, as I've made it a fairly hard policy for
+me not to buy 2.4 GHz only devices anymore. But this doesn't mean that
+a mainline driver only supporting 2.4 GHz for the time being would not be
+appreciated dearly, given that the current state of the device is pretty 
+much being a doorstop[1] - especially considering that 5 GHz support 
+might even become a possibility at a later time, when 802.11ac devices 
+start demanding most of the functionality for potentially more common 
+newer chipset generations.
+
+So even with my current personal policy of only buying 5 GHz capable 
+devices, in practice you probably won't find 5 GHz only AP installations
+(aside from long range/ outdoor point-to-point connections), be it 
+because of the plethora of existing 2.4 GHz only devices or just because 
+of the longer indoor (walls) range of the 2.4 GHz band. In practice, by 
+far most of my existing wireless devices don't support 5 GHz (the router
+does, of course) because of the reasons mentioned above, but replacing
+older devices takes its time.
+
+Regards
+	Stefan Lippers-Hollmann
+
+[1]	yes, I know about https://github.com/lwfinger/rtl8192du/ and
+	even have a couple of clean-up patches pending[2] for the 
+	kernel-version branch, but those need some further testing.
+[2]	http://aptosid.com/slh/rtl8192du/kernel-version/
