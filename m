@@ -1,60 +1,153 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41824 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750968AbcGLNXi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2016 09:23:38 -0400
-Subject: Re: TCP performance regression in mac80211 triggered by the fq code
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
-References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
- <87shvfujl4.fsf@toke.dk>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <4e942a0d-8a6a-e52d-c5c3-5ee4a54d59ae@nbd.name> (sfid-20160712_152342_230392_9EF5C670)
-Date: Tue, 12 Jul 2016 15:23:36 +0200
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:34176 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753329AbcGVIif (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2016 04:38:35 -0400
+Received: by mail-pf0-f173.google.com with SMTP id p64so39466728pfb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 01:38:35 -0700 (PDT)
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+To: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Prarit Bhargava <prarit@redhat.com>
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
+ <20160721070938.GA2658@redhat.com>
+ <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
+ <20160721080541.GB2658@redhat.com> <5790A28F.8030102@redhat.com>
+ <20160721115122.GA31869@redhat.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com> (sfid-20160722_103842_571732_4FCF90D2)
+Date: Fri, 22 Jul 2016 10:38:24 +0200
 MIME-Version: 1.0
-In-Reply-To: <87shvfujl4.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160721115122.GA31869@redhat.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-07-12 14:28, Toke Høiland-Jørgensen wrote:
-> Felix Fietkau <nbd@nbd.name> writes:
-> 
->> Hi,
->>
->> With Toke's ath9k txq patch I've noticed a pretty nasty performance
->> regression when running local iperf on an AP (running the txq stuff) to
->> a wireless client.
->>
->> Here's some things that I found:
->> - when I use only one TCP stream I get around 90-110 Mbit/s
->> - when running multiple TCP streams, I get only 35-40 Mbit/s total
->> - fairness between TCP streams looks completely fine
->> - there's no big queue buildup, the code never actually drops any packets
->> - if I put a hack in the fq code to force the hash to a constant value
->> (effectively disabling fq without disabling codel), the problem
->> disappears and even multiple streams get proper performance.
->>
->> Please let me know if you have any ideas.
-> 
-> Hmm, I see two TCP streams get about the same aggregate throughput as
-> one, both when started from the AP and when started one hop away.
-> However, do see TCP flows take a while to ramp up when started from the
-> AP - a short test gets ~70Mbps when run from one hop away and ~50Mbps
-> when run from the AP. how long are you running the tests for?
-Long enough to see that it's not ramping up.
++ Luis
 
-> (I seem to recall the ramp-up issue to be there pre-patch as well,
-> though).
+On 21-7-2016 13:51, Stanislaw Gruszka wrote:
+> (cc: firmware and brcmfmac maintainers)
 > 
-> As for why this would happen... There could be a bug in the dequeue code
-> somewhere, but since you get better performance from sticking everything
-> into one queue, my best guess would be that the client is choking on the
-> interleaved packets? I.e. expending more CPU when it can't stick
-> subsequent packets into the same TCP flow?
-Could be. I'll see what the tests show when I push traffic through the
-AP instead of from the AP.
+> On Thu, Jul 21, 2016 at 06:23:11AM -0400, Prarit Bhargava wrote:
+>>
+>>
+>> On 07/21/2016 04:05 AM, Stanislaw Gruszka wrote:
+>>> On Thu, Jul 21, 2016 at 10:36:42AM +0300, Emmanuel Grumbach wrote:
+>>>> On Thu, Jul 21, 2016 at 10:09 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+>>>>> On Tue, Jul 19, 2016 at 03:00:37PM +0200, Michal Kazior wrote:
+>>>>>> Firmware files are versioned to prevent older
+>>>>>> driver instances to load unsupported firmware
+>>>>>> blobs. This is reflected with a fallback logic
+>>>>>> which attempts to load several firmware files.
+>>>>>>
+>>>>>> This however produced a lot of unnecessary
+>>>>>> warnings sometimes confusing users and leading
+>>>>>> them to rename firmware files making things even
+>>>>>> more confusing.
+>>>>>
+>>>>> This happens on kernels configured with
+>>>>> CONFIG_FW_LOADER_USER_HELPER_FALLBACK and cause not only ugly warnings,
+>>>>> but also 60 seconds delay before loading next firmware version.
+>>>>> For some reason RHEL kernel needs above config option, so this
+>>>>> patch is very welcome from my perspective.
+>>>>>
+>>>>
+>>>> Sorry for my ignorance but how does the firmware loading work if not
+>>>> with udev's help?
+>>>
+>>> I'm not sure exactly, but I think kernel VFS layer is capable to copy
+>>> file data directly from mounted filesystem without user space helper.
+>>
+>> Here's the situation: request_firmware() waits 60 seconds for udev to do its
+>> loading magic via a "usermode helper".  This delay is there to allow, for
+>> example, userspace to unpack or download a new firmware image or verify the
+>> firmware image *in userspace* before providing it to the driver to apply to the HW.
+>>
+>> Why 60 seconds?  It is arbitrary and there is no way for udev & the kernel to
+>> handshake on completion.
+>>
+>>>
+>>>> As you can imagine, iwlwifi is suffering from the
+>>>> same problem and I would be interested in applying the same change,
+>>>> but I'd love to understand a bit more :)
+>>>
+>>> Yes, iwlwifi (and some other drivers) suffer from this. However this
+>>> happen when the newest firmware version is not installed on the system
+>>> and CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled. What I suppose
+>>> it's not common.
+>>
+>> request_firmware_direct() was introduced at my request because (as you've
+>> noticed) when CONFIG_FW_LOADER_USER_HELPER_FALLBACK=y drivers may stall for long
+>> periods of time when starting.  The bug that this introduced was a 60 second
+>> delay per logical cpu when starting a system.  On a 64 cpu system that meant the
+>> boot would complete in a little over one hour.
+>>
+>>>
+>>> I started to see this currently, because that option was enabled on 
+>>> RHEL kernel. BTW: I think Prarit iwlwifi thermal_zone problem was
+>>> happened because of that, i.e. thermal device was not functional
+>>> because f/w wasn't loaded due to big delay.
+>>>
+>>> I'm not sure if replacing to request_firmware_direct() is a good
+>>> fix though. For example I can see this problem also on brcmfmac, which
+>>> use request_firmware_nowait(). I think I would rather prefer special
+>>> helper for firmware drivers that needs user helper and have
+>>> request_firmware() be direct as default.
+>>>
+>>
+>> The difference between request_firmware_direct() and request_firmware() is that
+>> the _direct() version does not wait the 60 seconds for udev interaction.  The
+>> only userspace check performed is to see if the file is there, and if the file
+>> does exist it is provided to the driver to be applied to the hardware.
+>>
+>> So the real question to ask here is whether or not the ath10k, brcmfmac, and
+>> iwlwifi require udev to do anything beyond checking for the existence and
+>> loading the firmware image.  If they don't, then it is better to use
+>> request_firmware_direct().
+> 
+> They don't need that, like 99% of the drivers I think, hence changing the
+> default seems to be more reasonable. However changing 3 drivers would work
+> for me as well, and that change do not introduce risk of broking drivers
+> that require udev fw download.
+> 
+> iwlwifi and ath10k are trivial, bcrmfmac is a bit more complex as it
+> use request_firmware_nowait(), so it first need to be converted to
+> ordinary request_firmware(), but this should be doable and I can do
+> that.
 
-- Felix
+I am going bonkers here. This is the Nth time a discussion pops up on
+firmware API usage. I stopped counting N :-( So the first issue was that
+the INIT was taking to long as we were requesting firmware during probe
+which was executed in the INIT context. So we added a worker and
+register the driver from there. There was probably a reason for
+switching to _no_wait() as well, but I do not recall the details. The
+things is I don't know if I need user-space or not. I just need firmware
+to get the device up and running. We have changed our driver a couple of
+times now to accommodate something that in my opinion should have been
+abstracted behind the firmware API in the first place and now here is
+another proposal to change the drivers. Come on!
 
+> However I wonder if changing that will not broke the case when
+> driver is build-in in the kernel and f/w is not yet available when
+> driver start to initialize. Or maybe nowadays this is not the case
+> any longer, i.e. the MODULE_FIRMWARE macros assure proper f/w 
+> images are build-in in the kernel or copied to initramfs?
+
+That is a nice idea, but I have not seen any change in that area. Could
+have missed it.
+
+Regards,
+Arend
+
+> Thanks
+> Stanislaw
+> 
