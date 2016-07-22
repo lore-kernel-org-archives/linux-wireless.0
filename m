@@ -1,280 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:35369 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750883AbcGNI5N (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:37313 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751751AbcGVVrR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jul 2016 04:57:13 -0400
-Received: by mail-pa0-f46.google.com with SMTP id dx3so26879076pab.2
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Jul 2016 01:57:12 -0700 (PDT)
-Subject: Re: [PATCH v4] brcmfmac: Decrease 8021x_cnt for dropped packets
-To: =?UTF-8?Q?Per_F=c3=b6rlin?= <per.forlin@gmail.com>
-References: <1460498140-18874-1-git-send-email-per.forlin@gmail.com>
- <CAC0pXTLDeiiVma7AGD1XirQG=SqSDht_BA3arQQnvn=ztTLDug@mail.gmail.com>
- <CAC0pXTJ-hnKgSMwf7KYPwBs7RB2YAgaouOdeJwD2kuLneCGXfA@mail.gmail.com>
- <38869535-4f77-f6d8-d8d0-cb01b3f9c65b@broadcom.com>
- <CAC0pXTKPm=Q2__OuYEp0p4RC_Jum_+tuS3-7R-hBcoa8Ka8==Q@mail.gmail.com>
- <cdb613ba-d2b1-d9eb-9beb-2934cff96aa6@broadcom.com>
- <CAC0pXTKk1AA5k-i10PKTxHujPG2jPGbWMnNp6y6=v0ngK5+L4Q@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org, arend@broadcom.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <b8e300a0-b3a5-7a5b-c954-5b55a4426287@broadcom.com> (sfid-20160714_105720_270391_9FB80891)
-Date: Thu, 14 Jul 2016 10:57:03 +0200
+	Fri, 22 Jul 2016 17:47:17 -0400
+Received: by mail-wm0-f49.google.com with SMTP id i5so82796703wmg.0
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 14:47:16 -0700 (PDT)
+From: Christopher Williamson <home@chrisaw.com>
+In-Reply-To: <CANXHH3m2XEjkOfXGhtBUqCfu4Vix365fiRHzHL3DanoVzOsT3w@mail.gmail.com>
+References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
+ <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
+ <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
+ <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
+ <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
+ <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
+ <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
+ <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
+ <1469115440.29944.1.camel@redhat.com> <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
+ <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
+ <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com>
+ <etPan.579137d1.40bb3278.381a@chrisaw.com> <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
+ <435adbc6-9fa3-e9e3-9815-8cf4b62e5342@broadcom.com> <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+ <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+ <CANXHH3mOsN3-U=BS4fA6iax0ciwbSSywHAgOhHCNj8e7CPCyfQ@mail.gmail.com>
+ <1469204186.15064.6.camel@redhat.com> <1469204186.15064.6.camel@redhat.com>
+ <CANXHH3nvu7TC=x5RTR_WcgGkd2=_0h4BZrc_Nv74023nrc3P5w@mail.gmail.com>
+ <CANXHH3kX-U_CRfBf+DVe7AMpU13fKGG5bRwgLhDqYuGOBF-HBw@mail.gmail.com>
+ <CANXHH3nB3BujorAuYRweE=w+n=ESoJod2LFphRrxwXrXUrf_zw@mail.gmail.com>
+ <CANXHH3mMnNL5i8SZfm_H-tQWe5tuPM+tMxHH7pgE8zmj5yvNuA@mail.gmail.com> <CANXHH3m2XEjkOfXGhtBUqCfu4Vix365fiRHzHL3DanoVzOsT3w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAC0pXTKk1AA5k-i10PKTxHujPG2jPGbWMnNp6y6=v0ngK5+L4Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Date: Fri, 22 Jul 2016 17:47:15 -0400
+Message-ID: <CANXHH3kDVSiLwpKcYwdr4gqOZkgu9Djf=2e8kFpgZT2mT0AmZw@mail.gmail.com> (sfid-20160722_234723_626375_C8C98CCD)
+Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
+To: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arend Van Spriel <arend.vanspriel@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 13-7-2016 20:52, Per Förlin wrote:
-> 2016-07-13 13:20 GMT+02:00 Arend Van Spriel <arend.vanspriel@broadcom.com>:
->> On 12-7-2016 12:23, Per Förlin wrote:
->>> 2016-07-12 11:48 GMT+02:00 Arend Van Spriel <arend.vanspriel@broadcom.com>:
->>>>
->>>>
->>>> On 12-7-2016 10:35, Per Förlin wrote:
->>>>> 2016-07-06 11:53 GMT+02:00 Per Förlin <per.forlin@gmail.com>:
->>>>>> I have now verified this patch on backports 4.4.
->>>>>>
->>>>>> 2016-04-12 23:55 GMT+02:00  <per.forlin@gmail.com>:
->>>>>>> From: Per Forlin <per.forlin@gmail.com>
->>>>>>>
->>>>>>> This patch resolves an issue where pend_8021x_cnt was not decreased
->>>>>>> on txfinalize. This caused brcmf_netdev_wait_pend8021x to timeout
->>>>>>> because the counter indicated pending packets.
->>>>>>>
->>>>>>> WARNING: at .../brcmfmac/core.c:1289 brcmf_netdev_wait_pend8021x
->>>>>>>   (warn_slowpath_common)
->>>>>>>   (warn_slowpath_null)
->>>>>>>   (brcmf_netdev_wait_pend8021x [brcmfmac])
->>>>>>>   (send_key_to_dongle [brcmfmac])
->>>>>>>   (brcmf_cfg80211_del_key [brcmfmac])
->>>>>>>   (nl80211_del_key [cfg80211])
->>>>>>>   (genl_rcv_msg)
->>>>>>>   (netlink_rcv_skb)
->>>>>>>   (genl_rcv)
->>>>>>>   (netlink_unicast)
->>>>>>>   (netlink_sendmsg)
->>>>>>>   (sock_sendmsg)
->>>>>>>   (___sys_sendmsg)
->>>>>>>   (__sys_sendmsg)
->>>>>>>   (SyS_sendmsg)
->>>>>>>
->>>>>>> The solution is to pull back the header offset in case
->>>>>>> of an error in txdata(), which may happen in case of
->>>>> Clarification:
->>>>>
->>>>> txdata=brcmf_proto_bcdc_txdata()
->>>>> brcmf_proto_bcdc_txdata(): Calls brcmf_proto_bcdc_hdrpush()
->>>>>
->>>>> The header needs to be pulled back in case of error otherwise
->>>>> the error handling and cleanup up will fail to decrease the counter
->>>>> of pending packets.
->>>>
->>>> Yes, this part of the patch is clear to me.
->>>>
->>> Thanks, I wasn't sure.
->>>
->>>>>>> packet overload in brcmf_sdio_bus_txdata.
->>>>>>>
->>>>>>> Overloading an WLAN interface is not an unlikely scenario.
->>>>
->>>> So here is where things start to look suspicious and I have mentioned
->>>> this before. My thought here was "How the hell can you end up with a
->>>> 2048 packets on the sdio queue", which I mentioned to you before. There
->>>> is a high watermark on the queue upon which we do a netif_stop_queue()
->>>> so network layer does not keep pushing tx packets our way. Looking
->>>> further into this I found that we introduced a bug with commit
->>>> 9cd18359d31e ("brcmfmac: Make FWS queueing configurable.") so we ended
->>>> up doing nothing except increasing as statistics debug counter :-(
->>>>
->>> Is there a fix available for the high watermark issue or is it
->>> something you will look into?
->>>
->>> To produce a load on the wlan interface I run
->>> iperf -c 239.255.1.3 -u -b 10m -f m -i 60 -t 3000
->>> and this is enough in my case to fill up the 2048 queue.
->>>
->>>>>>> In case of packet overload the error print "out of bus->txq"
->>>>>>> is very verbose. To reduce SPAM degrade it to a debug print.
->>>>>>>
->>>>>>> Signed-off-by: Per Forlin <per.forlin@gmail.com>
->>>>>>> ---
->>>>>>> Change log:
->>>>>>>  v2 - Add variable to know whether the counter is increased or not
->>>>>>>  v3 - txfinalize should decrease the counter. Adjust skb header offset
->>>>>>>  v4 - Fix build error
->>>>>>>
->>>>>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 4 ++++
->>>>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 4 +++-
->>>>>>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c     | 2 +-
->>>>>>>  3 files changed, 8 insertions(+), 2 deletions(-)
->>>>>>>
->>>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
->>>>>>> index ed9998b..f342f7c 100644
->>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
->>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
->>>>>>> @@ -541,6 +541,9 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
->>>>>>>         struct ethhdr *eh;
->>>>>>>         u16 type;
->>>>>>>
->>>>>>> +       if (!ifp)
->>>>>>> +               goto free;
->>>>>>> +
->>>>
->>>> This may not be needed.
->>>>
->>> This is not strictly needed. I can remove it.
->>>
->>>>>>>         eh = (struct ethhdr *)(txp->data);
->>>>>>>         type = ntohs(eh->h_proto);
->>>>>>>
->>>>>>> @@ -553,6 +556,7 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
->>>>>>>         if (!success)
->>>>>>>                 ifp->stats.tx_errors++;
->>>>>>>
->>>>>>> +free:
->>>>>>>         brcmu_pkt_buf_free_skb(txp);
->>>>>>>  }
->>>>>>>
->>>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
->>>>>>> index f82c9ab..98cb83f 100644
->>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
->>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
->>>>>>> @@ -1899,8 +1899,10 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
->>>>>>>
->>>>>>>         if (fws->avoid_queueing) {
->>>>>>>                 rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
->>>>>>> -               if (rc < 0)
->>>>>>> +               if (rc < 0) {
->>>>>>> +                       (void)brcmf_proto_hdrpull(drvr, false, skb, &ifp);
->>>>
->>>> Could it be that the ifp is NULL pointer after brcmf_proto_hdrpull().
->>>> Can you check. Better use tmp_ifp variable in this call as you have a
->>>> valid ifp before this call for sure.
->>>>
->>> To be on the safe side I can use NULL as in param like you propose,
->>> and use the available ifp.
->>>
->>>>>>>                         brcmf_txfinalize(ifp, skb, false);
->>>>>>> +               }
->>>>>>>                 return rc;
->>>>>>>         }
->>>>>>>
->>>>>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->>>>>>> index a14d9d9d..485e2ad 100644
->>>>>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->>>>>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->>>>>>> @@ -2721,7 +2721,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
->>>>>>>         *(u16 *)(pkt->cb) = 0;
->>>>>>>         if (!brcmf_sdio_prec_enq(&bus->txq, pkt, prec)) {
->>>>>>>                 skb_pull(pkt, bus->tx_hdrlen);
->>>>>>> -               brcmf_err("out of bus->txq !!!\n");
->>>>>>> +               brcmf_dbg(INFO, "out of bus->txq !!!\n");
->>>>
->>>> Now that I understand the issue I want to keep this as error print as it
->>>> should be very unlikely.
->>> I would like to test this patch with the watermark fix to confirm this.
->>
->> Can you try this?
->>
->> Regards,
->> Arend
->>
->> ---
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
->> b/drive
->> index cd221ab..9f9024a 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
->> @@ -2469,10 +2469,22 @@ void brcmf_fws_bustxfail(struct brcmf_fws_info
->> *fws, str
->>  void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked)
->>  {
->>         struct brcmf_fws_info *fws = drvr->fws;
->> +       struct brcmf_if *ifp;
->> +       int i;
->>
->> -       fws->bus_flow_blocked = flow_blocked;
->> -       if (!flow_blocked)
->> -               brcmf_fws_schedule_deq(fws);
->> -       else
->> -               fws->stats.bus_flow_block++;
->> +       if (fws->avoid_queueing) {
->> +               for (i = 0; i < BRCMF_MAX_IFS; i++) {
->> +                       ifp = drvr->iflist[i];
->> +                       if (!ifp || !ifp->ndev)
->> +                               continue;
->> +                       brcmf_txflowblock_if(ifp,
->> BRCMF_NETIF_STOP_REASON_FLOW,
->> +                                            flow_blocked);
->> +               }
->> +       } else {
->> +               fws->bus_flow_blocked = flow_blocked;
->> +               if (!flow_blocked)
->> +                       brcmf_fws_schedule_deq(fws);
->> +               else
->> +                       fws->stats.bus_flow_block++;
->> +       }
->>  }
->>
-> Thanks for the code. I run a quick test and it looks fine.
-> I added some prints to check the progress:
-> len - is number of items in the queue
-> max -  is max number of entries in the queue
-> 
-> [   89.407856] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1789 max 2048
-> [   89.414682] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1790 max 2048
-> [   89.421497] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1791 max 2048
-> [   93.970466] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1524 max 2048
-> [   93.977520] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1525 max 2048
-> [   93.984572] [brcmf_sdio_prec_enq] prec 2 prio 0 len 1526 max 2048
-> 
-> I will some run more WLAN tests tomorrow to make sure.
-> When I'm done testing I will update my patch as well and let you know.
-> 
-> I came across this issue when I tried to connect to my WLAN access
-> point. The bug was triggered due to a lot of background traffic
-> (broadcast and multicast) in the network filling up the queue.
-> It's now fixed so that the queue is not flooded. Now I move on to the
-> next issue. It's still difficult to connect because the background
-> eats up all the bandwidth (this is not a constant issue but it happens
-> from time to time depending on the background load).
-> For queueing-mode there seems to exist logic for handling multicast
-> traffic separately but for the SDIO case (no-queueing) normal traffic
-> gets same precedence as multicast traffic.
+Hi all,
 
-I am a bit confused by the term "background traffic". There is a
-specific WMM-AC_BK that I would refer to as background traffic. Most
-traffic is set to AC_BE regardless of it being unicast or bc/mc.
-Changing the priority like that for multicast is a very bad idea.
+So I decided to have another fiddle with this and managed to get the
+WiFi working perfectly first time on an ArchLinux LiveCD so it looks
+like this issue is Ubuntu specific.
 
-> I'm considering something like this:
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-> @@ -1900,6 +1902,8 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp,
-> struct sk_buff *skb)
->         drvr->tx_multicast += !!multicast;
-> 
->         if (fws->avoid_queueing) {
-> +               if (multicast)
-> +                       skb->priority = PRIO_8021D_NONE;
->                 rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
->                 if (rc < 0) {
->                         (void)brcmf_proto_hdrpull(drvr, false, skb, NULL);
-> 
-> It feels a little hacky.
-> 
-> I would like to use the drvr->tx_multicast instead, if possible.
-> The problem is that the "drvr" struct is not passed down to the sdio layer.
-> One could update bcdc.c : brcmf_proto_bcdc_txdata() to pass
-> "drcr->multicast" to the SDIO layer but not all bus implementations
-> need this information (USB for instance)
-> 
-> Any suggestions?
+I’m going to copy the firmware files and check if they’re responsible
+and work my way through the various differences but at least I know
+this device can work properly on the Linux 4.6.3 (which the livecd is
+based on.)
 
-I suspect that we fixed your issue with commit 92121e69de8a ("brcmfmac:
-Properly set carrier state of netdev."). That is if your issue was
-caused on an older kernel.
+I’ll follow up if and when I find out what the cause of the problem was.
 
-Regards,
-Arend
+Christopher Williamson
+
+
+
+
+On 22 July 2016 at 22:42:50, Christopher Williamson
+(home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+
+> Hi all,
+>
+> So I decided to have another fiddle with this and managed to get the WiFi working perfectly first time on an ArchLinux LiveCD so it looks like this issue is Ubuntu specific.
+>
+> I’m going to copy the firmware files and check if they’re responsible and work my way through the various differences but at least I know this device can work properly on the Linux 4.6.3 (which the livecd is based on.)
+>
+> I’ll follow up if and when I find out what the cause of the problem was.
+> Christopher Williamson
+> www.chrisaw.com(http://www.chrisaw.com)
+>
+>
+>
+>
+> On 22 July 2016 at 18:17:20, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+>
+> > I haven’t managed to get connected to a WPA network either so it looks like open only at the moment but I fear that may just have been a fluke.
+> >
+> > A big problem I’m facing is that editing /etc/default/crda to REGDOMAIN=GB wasn’t enough to set the wifi regulation mode to GB and I have to set it manually. This sometimes works and sometimes reports the following:
+> >
+> > country 98: DFS-UNSET
+> > (2402 - 2472 @ 40), (N/A, 20), (N/A)
+> > (2457 - 2472 @ 15), (N/A, 20), (N/A), NO-IR
+> > (5170 - 5250 @ 80), (N/A, 17), (N/A), NO-IR
+> > (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, NO-IR
+> > (5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, NO-IR
+> > (5735 - 5835 @ 80), (N/A, 20), (N/A), NO-IR
+> > (57240 - 63720 @ 2160), (N/A, 0), (N/A)
+> >
+> > At best this is simply an annoyance but at worst I’m thinking this may be responsible for the issues I’m seeing.
+> >
+> > Is there anywhere else I can force this to be set to GB?
+> >
+> > Christopher Williamson
+> >
+> >
+> > On 22 July 2016 at 17:54:40, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> >
+> > > Disregard - I have actually managed to get this to connect to a open network!
+> > >
+> > > # iw reg set GB
+> > > # iw reg get
+> > > country GB: DFS-ETSI
+> > > (2402 - 2482 @ 40), (N/A, 20), (N/A)
+> > > (5170 - 5250 @ 80), (N/A, 20), (N/A)
+> > > (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS
+> > > (5490 - 5710 @ 160), (N/A, 27), (0 ms), DFS
+> > > (57000 - 66000 @ 2160), (N/A, 40), (N/A)
+> > > # iwconfig wlan0 essid "shaunthesheep-guest”
+> > > # dhclient wlan0
+> > >
+> > > It’s good to have some progress - so it looks like the issue preventing the previous connection was the iw reg not being set properly (or possibly just wpa_supplicant borking the connection in some way. I stopped that this time around. I’ll try wpa1 now and report back.
+> > >
+> > >
+> > > Christopher Williamson
+> > >
+> > >
+> > >
+> > > On 22 July 2016 at 17:39:50, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> > >
+> > > >
+> > > > Ok so I created a guest wifi network without any encryption enabled at all and the client still refuses to connect.
+> > > >
+> > > > Again, the connection is made perfectly using the USB dongle I have but not the built in libertas sd8686 chipset.
+> > > >
+> > > > I do currently use pfSense as a firewall box behind my wireless router (acting as an AP) and can see that no DHCP request is making it to the pfSense box. I believe you are right in the point about the firmware being the problem here.
+> > > >
+> > > > I should also confirm - the firmware in use is the latest from the linux-firmware Ubuntu 16.04 package. I did read around the net about being having various issues with various firmware sources and not others but despite trying firmware linked directly from Marvell I seem to always get one of two issues:
+> > > >
+> > > > 1.) I am unable to connect and keep getting asked for passphrases, or:
+> > > > 2.) The system completely freezes up (with the v8 firmwares I tried)
+> > > >
+> > > > I’m not really sure what else to try at this point.
+> > > > Christopher Williamson
+> > > >
+> > > >
+> > > >
+> > > > On 22 July 2016 at 17:24:52, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> > > >
+> > > > >
+> > > > > Hi Dan,
+> > > > >
+> > > > > I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
+> > > > >
+> > > > > For now though - the iwlist scan results for both a USB device and the
+> > > > > libertas device:
+> > > > >
+> > > > > USB: http://termbin.com/hdwl
+> > > > > Libertas: http://termbin.com/jxh7
+> > > > >
+> > > > > Will follow up shortly with WPA and Open network configs.
+> > > > >
+> > > > > Christopher Williamson
+> > > > >
+> > > > >
+> > > > >
+> > > > > On 22 July 2016 at 17:16:29, Dan Williams (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+> > > > >
+> > > > > > Hi Dan,
+> > > > > >
+> > > > > > I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
+> > > > > >
+> > > > > > For now though - the iwlist scan results for both a USB device and the
+> > > > > > libertas device:
+> > > > > >
+> > > > > > USB: http://termbin.com/hdwl
+> > > > > > Libertas: http://termbin.com/jxh7
+> > > > > >
+> > > > > > Will follow up shortly with WPA and Open network configs.
+> > > > > >
+> > > > > > *Christopher Williamson*
