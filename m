@@ -1,41 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40728 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752391AbcGRTmd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jul 2016 15:42:33 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: mwifiex: Fix request_irq() failure handling
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1468586919-7534-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Karthik D A <karthida@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160718194233.142B7602A9@smtp.codeaurora.org> (sfid-20160718_214249_704473_9EF5EC05)
-Date: Mon, 18 Jul 2016 19:42:33 +0000 (UTC)
+Received: from mx1.redhat.com ([209.132.183.28]:44440 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751244AbcGVQQ3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2016 12:16:29 -0400
+Message-ID: <1469204186.15064.6.camel@redhat.com> (sfid-20160722_181633_769926_96824A4F)
+Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
+From: Dan Williams <dcbw@redhat.com>
+To: Christopher Williamson <home@chrisaw.com>,
+	Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Fri, 22 Jul 2016 11:16:26 -0500
+In-Reply-To: <CANXHH3mOsN3-U=BS4fA6iax0ciwbSSywHAgOhHCNj8e7CPCyfQ@mail.gmail.com>
+References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
+	 <1468946312.5661.2.camel@redhat.com>
+	 <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
+	 <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
+	 <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
+	 <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
+	 <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
+	 <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
+	 <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
+	 <1469115440.29944.1.camel@redhat.com>
+	 <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
+	 <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
+	 <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com>
+	 <etPan.579137d1.40bb3278.381a@chrisaw.com>
+	 <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
+	 <435adbc6-9fa3-e9e3-9815-8cf4b62e5342@broadcom.com>
+	 <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+	 <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+	 <CANXHH3mOsN3-U=BS4fA6iax0ciwbSSywHAgOhHCNj8e7CPCyfQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Karthik D A <karthida@marvell.com>
+On Fri, 2016-07-22 at 01:48 -0700, Christopher Williamson wrote:
+> Looking through the log lines I see gaps between what WPA is doing
+> and what
+> dmesg reports and figured this is because of the libertas debugging
+> level
+> so I’ve set that to 0xfffffff (for libertas) and created a combined
+> log of
+> the events from both sources labelled with either [wpa] or [dmesg]
+> and
+> timestamped which should help to give a much clearer combined
+> picture:
 > 
-> It's been observed that request_irq() failure leads to a system crash
-> due to a bug in mwifiex driver.
-> When this failure happens, mwifiex_add_card() already takes care of
-> clearing and freeing adapter->card pointer. This patch removes the
-> redundant cleanup code causing crash.
+> http://termbin.com/sjqn
 > 
-> Signed-off-by: Karthik D A <karthida@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> I’ll have a look through and see if anything jumps out at me but I
+> wanted
+> to send it out to get expert eyes on it.
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+Thanks.
 
-2af86f9d954e mwifiex: Fix request_irq() failure handling
+The ASSOC command looks OK, but do you have 'iw scan' output for
+shaunthesheep from a different card?  Just to make sure that the
+passed-in rates and RSN IE is correct.
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9231905/
+The ASSOC command completes .5 seconds after it's sent, and the
+firmware returns a result that means "association response timeout".
+ According to the API docs it doesn't look like this status code (1)
+comes from the AP, but from the firmware.
 
+I'm afraid at this point we'd need a second machine to listen on the
+channel and see if we can get the exchange between the marvell device
+and the AP.
+
+Can you test the device with a WPA-only AP, ie one that's not WPA2/RSN?
+ Does it work with an open AP?
+
+Dan
+
+
+> As a side note - I really appreciate all of the help on this so far -
+> there’s a beer in it for all involved! :P
+> 
+> Christopher Williamson
+> 
+> 
+> 
+> On 22 July 2016 at 09:21:44, Christopher Williamson
+> (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> 
+> > 
+> > 
+> > I was thinking about redirecting the wpa logging to syslog but
+> > figured I’d take the lazy way out by abusing curl:
+> > 
+> > curl -s http://termbin.com/cx0e http://termbin.com/bvdj | sort
+> > 
+> > Resulting combined log file:
+> > http://termbin.com/909y
+> > 
+> > Christopher Williamson
+> > 
+> > 
+> > On 22 July 2016 at 09:09:59, Arend Van Spriel (arend.vanspriel@broa
+> > dcom.com(mailto:arend.vanspriel@broadcom.com)) wrote:
+> > 
+> > > 
+> > > On 22-7-2016 0:00, Christopher Williamson wrote:
+> > > > 
+> > > > I’ve created cleaner logs (particularly the dmesg one) and have
+> > > > added
+> > > > timestamps line-by-line to both so it should be easier to track
+> > > > between the two log files:
+> > > > 
+> > > > wpa_supplicant:
+> > > > http://termbin.com/cx0e
+> > > > 
+> > > > dmesg | grep libertas:
+> > > > http://termbin.com/bvdj
+> > > You can make wpa_supplicant log to syslog. That way you get
+> > > kernel and
+> > > wpa_supplicant log in one file.
+> > > 
+> > > Regards,
+> > > Arend
+> > > 
+> > > > 
+> > > > Christopher Williamson
+> > > > 
+> > > > 
+> > > > 
+> > > > 
+> > > > On 21 July 2016 at 22:00:02, Christopher Williamson
+> > > > (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> > > > 
+> > > > > 
+> > > > > Sure!
+> > > > > 
+> > > > > wpa_supplicant logs:
+> > > > > http://termbin.com/z1hg
+> > > > > 
+> > > > > dmesg logs (grepped for libertas):
+> > > > > http://termbin.com/7rt5
+> > > > > 
+> > > > > 
+> > > > > Christopher Williamson
+> > > > > 
+> > > > > 
+> > > > > 
+> > > > > 
+> > > > > On 21 July 2016 at 21:38:26, Dan Williams (dcbw@redhat.com(ma
+> > > > > ilto:dcbw@redhat.com)) wrote:
+> > > > > 
+> > > > > > 
+> > > > > > On Thu, 2016-07-21 at 11:55 -0700, Christopher Williamson
+> > > > > > wrote:
+> > > > > > > 
+> > > > > > > Just to confirm - I can connect to the same network using
+> > > > > > > the same
+> > > > > > > configurations using a USB wifi adapter I tried.
+> > > > > > Can you grab simultaneous driver debug logging and
+> > > > > > supplicant debug
+> > > > > > logging? Unfortunately the 'status 1' is an unspecified
+> > > > > > failure, which
+> > > > > > could be from the AP or the firmware.
+> > > > > > 
+> > > > > > Dan
+> > > > > > 
+> > > > > > 
+> > > > > > > 
+> > > > > > > Unfortunately it’s not ideal since the point of the Viliv
+> > > > > > > N5 is that
+> > > > > > > it’s ultra portable so I would really like to get the
+> > > > > > > inbuilt wifi
+> > > > > > > card working.
+> > > > > > > 
+> > > > > > > It seems odd that wpa_supplicant reports the connection
+> > > > > > > being
+> > > > > > > “rejected” as seen below:
+> > > > > > > 
+> > > > > > > wlan0: CTRL-EVENT-ASSOC-REJECT bssid=a0:63:91:1e:ee:43
+> > > > > > > status_code=1
+> > > > > > > 
+> > > > > > > Most of the debug output sadly doesn’t mean a great deal
+> > > > > > > to me - wifi
+> > > > > > > isn’t really my area of expertise.
+> > > > > > > 
+> > > > > > > On 21 July 2016 at 19:10:56, Christopher Williamson
+> > > > > > > (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> > > > > > > 
+> > > > > > > > 
+> > > > > > > > 
+> > > > > > > > 
+> > > > > > > > Sure, here are the results:
+> > > > > > > > 
+> > > > > > > > http://termbin.com/e8e2
+> > > > > > > > 
+> > > > > > > > Christopher Williamson
+> > > > > > > > 
+> > > > > > > > 
+> > > > > > > > On 21 July 2016 at 16:37:24, Dan Williams (dcbw@redhat.
+> > > > > > > > com(mailto:d
+> > > > > > > > cbw@redhat.com)) wrote:
+> > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > 
+> > > > > > > > > On Wed, 2016-07-20 at 15:16 -0700, Christopher
+> > > > > > > > > Williamson wrote:
+> > > > > > > > > > 
+> > > > > > > > > > 
+> > > > > > > > > > I used NetworkManager in the previous test.
+> > > > > > > > > > 
+> > > > > > > > > > This time around I have used wpa_supplicant
+> > > > > > > > > > directly and get
+> > > > > > > > > > the
+> > > > > > > > > > following results:
+> > > > > > > > > > 
+> > > > > > > > > > http://termbin.com/j8ea
+> > > > > > > > > > 
+> > > > > > > > > > Thought I’d throw them on a pastebin since it’s
+> > > > > > > > > > over 700 lines.
+> > > > > > > > > Can you try with "-D nl80211" instead of using the
+> > > > > > > > > WEXT
+> > > > > > > > > supplicant
+> > > > > > > > > driver? NM is likely going to use nl80211 since the
+> > > > > > > > > driver has
+> > > > > > > > > some
+> > > > > > > > > support for cfg80211/nl80211 and only does WEXT
+> > > > > > > > > through the glue
+> > > > > > > > > layer.
+> > > > > > > > > 
+> > > > > > > > > Dan
+> > > > > > > > > 
+> > > > > > > > > > 
+> > > > > > > > > > 
+> > > > > > > > > > Christopher Williamson
+> > > > > > > > > > 
+> > > > > > > > > > 
+> > > > > > > > > > 
+> > > > > > > > > > 
+> > > > > > > > > > On 20 July 2016 at 22:50:34, Dan Williams
+> > > > > > > > > > (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+> > > > > > > > > > 
+> > > > > > > > > > > 
+> > > > > > > > > > > 
+> > > > > > > > > > > 
+> > > > > > > > > > > On Wed, 2016-07-20 at 13:06 -0700, Christopher
+> > > > > > > > > > > Williamson
+> > > > > > > > > > > wrote:
+> > > > > > > > > > > > 
+> > > > > > > > > > > > 
+> > > > > > > > > > > > 
+> > > > > > > > > > > > Hi Dan,
+> > > > > > > > > > > > 
+> > > > > > > > > > > > Ah - yeah I hadn’t thought it may be a kernel
+> > > > > > > > > > > > build option.
+> > > > > > > > > > > > I’ve
+> > > > > > > > > > > > now
+> > > > > > > > > > > > built that and dmesg is a much more lively
+> > > > > > > > > > > > place!
+> > > > > > > > > > > > 
+> > > > > > > > > > > > I’ve provided output logs for both when the
+> > > > > > > > > > > > device is
+> > > > > > > > > > > > connected
+> > > > > > > > > > > > and
+> > > > > > > > > > > > when a connection attempt is made - hopefully
+> > > > > > > > > > > > this is
+> > > > > > > > > > > > useful.
+> > > > > > > > > > > The card is scanning and only finds
+> > > > > > > > > > > 'shaunthesheep' 20
+> > > > > > > > > > > seconds
+> > > > > > > > > > > after
+> > > > > > > > > > > you "connect for the first time". The logs stop 3
+> > > > > > > > > > > seconds
+> > > > > > > > > > > later.
+> > > > > > > > > > > Are
+> > > > > > > > > > > you connecting with wicd or something else?
+> > > > > > > > > > > 
+> > > > > > > > > > > Can you run wpa_supplicant with the "-dddtu"
+> > > > > > > > > > > option so we can
+> > > > > > > > > > > get
+> > > > > > > > > > > debug
+> > > > > > > > > > > log output from it?
+> > > > > > > > > > > 
+> > > > > > > > > > > Dan
+> > > > > > > > > > --
+> > > > > > > > > > To unsubscribe from this list: send the line
+> > > > > > > > > > "unsubscribe
+> > > > > > > > > > linux-
+> > > > > > > > > > wireless" in
+> > > > > > > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > > > > > > More majordomo info at http://vger.kernel.org/major
+> > > > > > > > > > domo-info.ht
+> > > > > > > > > > ml
+> > > > > > > --
+> > > > > > > To unsubscribe from this list: send the line "unsubscribe
+> > > > > > > linux-
+> > > > > > > wireless" in
+> > > > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > > > More majordomo info at http://vger.kernel.org/majordomo-i
+> > > > > > > nfo.html
+> > > > > > --
+> > > > > > To unsubscribe from this list: send the line "unsubscribe
+> > > > > > linux-wireless" in
+> > > > > > the body of a message to majordomo@vger.kernel.org
+> > > > > > More majordomo info at http://vger.kernel.org/majordomo-inf
+> > > > > > o.html
+> > > > --
+> > > > To unsubscribe from this list: send the line "unsubscribe
+> > > > linux-wireless" in
+> > > > the body of a message to majordomo@vger.kernel.org
+> > > > More majordomo info at http://vger.kernel.org/majordomo-info.ht
+> > > > ml
+> > > > 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-
+> wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
