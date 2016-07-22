@@ -1,85 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52434 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752431AbcGTLZW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 07:25:22 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
-References: <20160719153403.2967812-1-arnd@arndb.de>
-	<3858062.NGQDOLnTj0@wuerfel> <wrfjlh0xvck3.fsf@redhat.com>
-	<4806848.QL77nxBrs4@wuerfel>
-Date: Wed, 20 Jul 2016 07:25:19 -0400
-In-Reply-To: <4806848.QL77nxBrs4@wuerfel> (Arnd Bergmann's message of "Wed, 20
-	Jul 2016 10:25:21 +0200")
-Message-ID: <wrfjlh0wsg9s.fsf@redhat.com> (sfid-20160720_132550_308353_EC982CE0)
+Received: from mail.w1.fi ([212.71.239.96]:56968 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752072AbcGVQzV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2016 12:55:21 -0400
+Date: Fri, 22 Jul 2016 19:55:17 +0300
+From: Jouni Malinen <j@w1.fi>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH 5/9] mwifiex: cfg80211 set_default_mgmt_key handler
+Message-ID: <20160722165517.GA14456@w1.fi> (sfid-20160722_185524_719632_177FE09C)
+References: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
+ <1468248832-21969-6-git-send-email-akarwar@marvell.com>
+ <87r3aqx3sq.fsf@kamboji.qca.qualcomm.com>
+ <33207c0c98c646548bdedf50449719c2@SC-EXCH04.marvell.com>
+ <20160721155131.GA6292@w1.fi>
+ <ab0bb1b790c74675a92b129916662545@SC-EXCH04.marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ab0bb1b790c74675a92b129916662545@SC-EXCH04.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
-> On Tuesday, July 19, 2016 12:05:00 PM CEST Jes Sorensen wrote:
->> Arnd Bergmann <arnd@arndb.de> writes:
->> I think that would be better, albeit not a big issue. 
->
-> Ok, and since Kalle applied the first patch to his tree, I'm now sending
-> a series of three patches that are all for Greg, which also avoids some
-> possible confusion.
+On Fri, Jul 22, 2016 at 03:59:47PM +0000, Amitkumar Karwar wrote:
+> I am trying to understand the problem you mentioned during IGTK rekeying. Today I ran tests with two stations connecting an AP. MFP is enabled on all of them.
+> 
+> On hostapd side, my observation is add_key() is always called followed by set_default_mgmt_key(). set_default_mgmt_key() sets the key added by add_key() as default key.
+> 
+> We are ignoring set_default_mgmt_key() and updating Tx key index during add_key() itself.
+> 
+> Your concerns is we should not update Tx key index during add_key(). Reason is IGTK rekeying is not yet completed with all stations. Right?
 
-Awesome!
+Correct. set_default_mgmt_key() does not have much effect for the very
+first IGTK configuration, but whenever doing IGTK rekeying, hostapd
+behaves just like it does with GTK rekeying. In other words, a different
+Key ID is selected (alternating between 4 and 5), a random new IGTK is
+generated, the new IGTK is configured to the local driver (but the old
+IGTK is still supposed to be used for TX), each associated STA is
+notified of the new IGTK, the new IGTK is taken into use once the group
+key handshake has completed with each associated STA. It is that last
+operation that needs set_default_mgmt_key() to allow this rekeying to
+work correctly. If you update the TX Key ID on add_key(), you'll risk
+sending out frames that some of the associated STAs do not yet have a
+key to validate.
 
->> I'd like to get rid of all the drivers/staging/rtl* drivers eventually 
->
-> That would be great, yes.
->
-> Can you clarify what the long-term plan is? I see that
-> drivers/net/wireless/realtek/rtlwifi/ has most of the PCIe parts
-> and one USB device (rtl8192cu/rtl8188cus) while
-> drivers/net/wireless/rtl8xxx has all the USB parts including
-> that one.
->
-> Does that mean we want the staging drivers for PCIe devices
-> to get merged into rtlwifi, and the remaining USB drivers to get
-> replaced by r8xxxu?
-
-Well it really all depends on how much time I have and how much others
-step up and help contribute to the code. For rtl8xxxu my plans are as
-follows:
-
-1) rtl8188eu support, since this is the most widely distributed USB
-dongle which isn't currently supported by a non staging driver. I am
-currently working on this together with Andrea Merello.
-
-2) Beacon support for IBSS and AP mode - hopefully this should make it
-possible to default rtl8xxxu for rtl8192cu/rtl8188cu devices and disable
-them in rtlwifi.
-
-3) SDIO device support
-
-4) PCI device support
-
-5) 802.11ac device support
-
-3/4/5 not necessarily in that order. There really is no reason why
-rtl8xxxu shouldn't have SDIO and PCI device support added so the core
-code can be shared.
-
-> As one data point that I can provide (but you are probably
-> aware of), I could never get my rtl8188cus stick to work with
-> rtlwifi, but I found the older r8712u device to work fine with
-> the staging/rtl8712 driver.
-
-I'd love to hear if the rtl8188cus works better with rtl8xxxu. For the
-rtl8712 device, rtl8192su?, then potentially that could be added to
-rtl8xxxu as well, but it's not a top priority on my list right now.
-
-Cheers,
-Jes
+-- 
+Jouni Malinen                                            PGP id EFC895FA
