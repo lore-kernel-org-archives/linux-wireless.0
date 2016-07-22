@@ -1,39 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4517 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428AbcGHGlb (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:33232 "EHLO
+	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550AbcGVJxz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 02:41:31 -0400
-Content-Type: text/plain; charset="utf-8"
+	Fri, 22 Jul 2016 05:53:55 -0400
+Received: by mail-io0-f194.google.com with SMTP id y195so7118221iod.0
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 02:53:55 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [v4,1/2] ath10k: Add support for ath10k_sta_statistics support
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1465890866-2390-1-git-send-email-mohammed@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Message-ID: <8a33ff29139b4261936f5d7a5c0d9865@euamsexm01a.eu.qualcomm.com> (sfid-20160708_084135_281089_4439AA27)
-Date: Fri, 8 Jul 2016 08:40:29 +0200
+In-Reply-To: <20160721153948.32171-1-me@bobcopeland.com>
+References: <20160721153948.32171-1-me@bobcopeland.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 22 Jul 2016 19:53:35 +1000
+Message-ID: <CAGRGNgWHJEFBnak-MCK2htkaeQcZ6dmZ=w96omC99G5Z2UJWFg@mail.gmail.com> (sfid-20160722_115400_093481_7F8D4155)
+Subject: Re: [PATCH] iw: display 5/10 MHz channel widths
+To: Bob Copeland <me@bobcopeland.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> Enable support for 'drv_sta_statistics' callback.
-> Export rx_duration support if available to cfg80211/nl80211
-> 
-> This can also act as a placeholder for any new per STA stats support
-> 
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Hi Bob,
 
-Thanks, 2 patches applied to ath-next branch of ath.git:
+On Fri, Jul 22, 2016 at 1:39 AM, Bob Copeland <me@bobcopeland.com> wrote:
+> iw was showing 'width: unknown' for channels on OCB interfaces; teach
+> it the values for 5/10 MHz so it will show the configured width.
+>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> ---
+>  interface.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/interface.c b/interface.c
+> index 209561d..2802235 100644
+> --- a/interface.c
+> +++ b/interface.c
+> @@ -295,6 +295,10 @@ char *channel_width_name(enum nl80211_chan_width width)
+>                 return "80+80 MHz";
+>         case NL80211_CHAN_WIDTH_160:
+>                 return "160 MHz";
+> +       case NL80211_CHAN_WIDTH_5:
+> +               return "5 MHz";
+> +       case NL80211_CHAN_WIDTH_10:
+> +               return "10 MHz";
+>         default:
+>                 return "unknown";
+>         }
 
-120a1f02a5c4 ath10k: add support for ath10k_sta_statistics support
-2ba1f3709452 ath10k: remove debugfs support for Per STA total rx duration
+Judging by the previous two entries, it looks like the case statements
+are sorted, so should these ones therefore be at the top of the list?
+
+Thanks,
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9175135/
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
