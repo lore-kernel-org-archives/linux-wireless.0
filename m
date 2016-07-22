@@ -1,69 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:52905 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751294AbcGVTrc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 15:47:32 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Stefan Lippers-Hollmann <s.l-h@gmx.de>,
-	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
-Date: Fri, 22 Jul 2016 21:47:10 +0200
-Message-ID: <7894919.vMsHjmmMb1@wuerfel> (sfid-20160722_214755_910787_48A10B34)
-In-Reply-To: <wrfjoa5phop3.fsf@redhat.com>
-References: <20160719153403.2967812-1-arnd@arndb.de> <20160722043922.0a878698@mir> <wrfjoa5phop3.fsf@redhat.com>
-MIME-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49884 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752082AbcGVP7x convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2016 11:59:53 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Jouni Malinen <j@w1.fi>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	"Nishant Sarmukadam" <nishants@marvell.com>
+Subject: RE: [PATCH 5/9] mwifiex: cfg80211 set_default_mgmt_key handler
+Date: Fri, 22 Jul 2016 15:59:47 +0000
+Message-ID: <ab0bb1b790c74675a92b129916662545@SC-EXCH04.marvell.com> (sfid-20160722_175956_969357_CBA36F78)
+References: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
+ <1468248832-21969-6-git-send-email-akarwar@marvell.com>
+ <87r3aqx3sq.fsf@kamboji.qca.qualcomm.com>
+ <33207c0c98c646548bdedf50449719c2@SC-EXCH04.marvell.com>
+ <20160721155131.GA6292@w1.fi>
+In-Reply-To: <20160721155131.GA6292@w1.fi>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, July 22, 2016 7:55:36 AM CEST Jes Sorensen wrote:
-> Stefan Lippers-Hollmann <s.l-h@gmx.de> writes:
-> > Hi
-> >
-> > On 2016-07-20, Arnd Bergmann wrote:
-> >> On Wednesday, July 20, 2016 11:33:43 AM CEST Jes Sorensen wrote:
-> >> > Arnd Bergmann <arnd@arndb.de> writes:  
-> >> > > On Wednesday, July 20, 2016 7:25:19 AM CEST Jes Sorensen wrote:  
-> >> > >> Arnd Bergmann <arnd@arndb.de> writes:
-> > [...]
-> >> Yes, I was just agreeing here that it's not worth doing that one.
-> >> As far as I can see, the evolution of these devices is
-> >> 
-> >> RTL81xxU (2008)
-> >> RTL81xxSU (2009)
-> >> RTL81xxCU (2010)
-> >
-> > There is also RTL81xxDU, apparently from 2011, a dualband device
-> > coming in several variants (single MAC + single PHY, double MAC +
-> > double PHY and double PHY); e.g. 0bda:8194 (single PHY + single MAC).
+Hi Jouni,
 
-Right. In my list above I tried to have just the ones that seem 
-to each be 100% supersets of previous generations replacing the
-earlier ones, which isn't true for RTL81xxDU as RTL81xxEU
-reverts to single PHY.
-
-> > While probably not overly common, it was/ is (hardware-wise) a pretty
-> > interesting device due to its support for 5 GHz[1] - actually I hoped
-> > it to be a (supported-) RTL8192CU variant when I bought it. 
-> > Unfortunately no driver[2] made it to staging or the proper kernel.
+> From: Jouni Malinen [mailto:j@w1.fi]
+> Sent: Thursday, July 21, 2016 9:22 PM
+> To: Amitkumar Karwar
+> Cc: Kalle Valo; linux-wireless@vger.kernel.org; Cathy Luo; Nishant
+> Sarmukadam
+> Subject: Re: [PATCH 5/9] mwifiex: cfg80211 set_default_mgmt_key handler
 > 
-> I actually have one of those in my USB dongle box, but as you say, not
-> overly common so not sure if/when I'll get to it.
+> On Thu, Jul 21, 2016 at 09:18:11AM +0000, Amitkumar Karwar wrote:
+> > > From: Kalle Valo [mailto:kvalo@codeaurora.org] Is it correct to
+> > > ignore the key index? I see that brcmfmac ignores it as well but I
+> > > want to still confirm this.
+> > >
+> > > Does this mean that with this patcfh mwifiex properly supports MFP?
+> >
+> > Yes. We do pass MFP tests with this patch.
 > 
-> Adding 8192du support for 2.4GHz to rtl8xxxu probably wouldn't be too
-> complicated.
+> Did you test IGTK rekeying? This patch looks exactly as broken as it did
+> the last time it was proposed more than a year ago and after the same
+> concern not receiving any reaction.. hostapd will configure two
+> different IGTKs with different Key IDs and change the TX key on the AP
+> once all associated STAs have the new key. If the driver does not
+> support updating the TX key index, either the old or the new STAs
+> associated after rekeying will not have the correct key.
+> 
 
-My guess is that these devices have largely been replaced by
-802.11ac devices on the market, and whoever has one of the old ones
-probably bought it because of the 5GHz support, so adding 2.4GHz-only
-support for it may not help all that much either.
+Thanks for your feedback and guidance on this.
 
-	Arnd
+I am trying to understand the problem you mentioned during IGTK rekeying. Today I ran tests with two stations connecting an AP. MFP is enabled on all of them.
+
+On hostapd side, my observation is add_key() is always called followed by set_default_mgmt_key(). set_default_mgmt_key() sets the key added by add_key() as default key.
+
+We are ignoring set_default_mgmt_key() and updating Tx key index during add_key() itself.
+
+Your concerns is we should not update Tx key index during add_key(). Reason is IGTK rekeying is not yet completed with all stations. Right?
+
+Regards,
+Amitkumar
