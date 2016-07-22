@@ -1,115 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:35499 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753876AbcG1Sdr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 14:33:47 -0400
-Date: Thu, 28 Jul 2016 11:33:43 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: Daniel Wagner <wagi@monom.org>
-Cc: Bastien Nocera <hadess@hadess.net>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
+Received: from mout.gmx.net ([212.227.15.19]:58045 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750884AbcGVCjp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jul 2016 22:39:45 -0400
+Date: Fri, 22 Jul 2016 04:39:22 +0200
+From: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	netdev@vger.kernel.org,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>, linux-input@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>
-Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
- completion
-Message-ID: <20160728183343.GD16852@dtor-ws> (sfid-20160728_203404_977898_843176F0)
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
- <1469692512-16863-8-git-send-email-wagi@monom.org>
+	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Andrea Merello <andrea.merello@gmail.com>
+Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
+Message-ID: <20160722043922.0a878698@mir> (sfid-20160722_044009_800865_74B81E19)
+In-Reply-To: <8046944.AyQGVaNKWH@wuerfel>
+References: <20160719153403.2967812-1-arnd@arndb.de>
+	<3876342.AU5AfU16PB@wuerfel>
+	<wrfjk2ggpbmw.fsf@redhat.com>
+	<8046944.AyQGVaNKWH@wuerfel>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1469692512-16863-8-git-send-email-wagi@monom.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/L85adD7xhDL_cl8UJmadEcc"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jul 28, 2016 at 09:55:11AM +0200, Daniel Wagner wrote:
-> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-> 
-> Loading firmware is an operation many drivers implement in various ways
-> around the completion API. And most of them do it almost in the same
-> way. Let's reuse the firmware_stat API which is used also by the
-> firmware_class loader. Apart of streamlining the firmware loading states
-> we also document it slightly better.
-> 
-> Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
-> ---
->  drivers/input/misc/ims-pcu.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/input/misc/ims-pcu.c b/drivers/input/misc/ims-pcu.c
-> index 9c0ea36..cda1fbf 100644
-> --- a/drivers/input/misc/ims-pcu.c
-> +++ b/drivers/input/misc/ims-pcu.c
-> @@ -109,7 +109,7 @@ struct ims_pcu {
->  
->  	u32 fw_start_addr;
->  	u32 fw_end_addr;
-> -	struct completion async_firmware_done;
-> +	struct firmware_stat fw_st;
->  
->  	struct ims_pcu_buttons buttons;
->  	struct ims_pcu_gamepad *gamepad;
-> @@ -940,7 +940,7 @@ static void ims_pcu_process_async_firmware(const struct firmware *fw,
->  	release_firmware(fw);
->  
->  out:
-> -	complete(&pcu->async_firmware_done);
-> +	fw_loading_done(pcu->fw_st);
+--Sig_/L85adD7xhDL_cl8UJmadEcc
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Why does the driver have to do it? If firmware loader manages this, then
-it should let waiters know when callback finishes. 
+Hi
 
->  }
->  
->  /*********************************************************************
-> @@ -1967,7 +1967,7 @@ static int ims_pcu_init_bootloader_mode(struct ims_pcu *pcu)
->  					ims_pcu_process_async_firmware);
->  	if (error) {
->  		/* This error is not fatal, let userspace have another chance */
-> -		complete(&pcu->async_firmware_done);
-> +		fw_loading_abort(pcu->fw_st);
+On 2016-07-20, Arnd Bergmann wrote:
+> On Wednesday, July 20, 2016 11:33:43 AM CEST Jes Sorensen wrote:
+> > Arnd Bergmann <arnd@arndb.de> writes: =20
+> > > On Wednesday, July 20, 2016 7:25:19 AM CEST Jes Sorensen wrote: =20
+> > >> Arnd Bergmann <arnd@arndb.de> writes:
+[...]
+> Yes, I was just agreeing here that it's not worth doing that one.
+> As far as I can see, the evolution of these devices is
+>=20
+> RTL81xxU (2008)
+> RTL81xxSU (2009)
+> RTL81xxCU (2010)
 
-Why should the driver signal abort if it does not manage completion in
-this case?
+There is also RTL81xxDU, apparently from 2011, a dualband device
+coming in several variants (single MAC + single PHY, double MAC +
+double PHY and double PHY); e.g. 0bda:8194 (single PHY + single MAC).
 
->  	}
->  
->  	return 0;
-> @@ -1976,7 +1976,7 @@ static int ims_pcu_init_bootloader_mode(struct ims_pcu *pcu)
->  static void ims_pcu_destroy_bootloader_mode(struct ims_pcu *pcu)
->  {
->  	/* Make sure our initial firmware request has completed */
-> -	wait_for_completion(&pcu->async_firmware_done);
-> +	fw_loading_wait(pcu->fw_st);
->  }
->  
->  #define IMS_PCU_APPLICATION_MODE	0
-> @@ -2000,7 +2000,7 @@ static int ims_pcu_probe(struct usb_interface *intf,
->  	pcu->bootloader_mode = id->driver_info == IMS_PCU_BOOTLOADER_MODE;
->  	mutex_init(&pcu->cmd_mutex);
->  	init_completion(&pcu->cmd_done);
-> -	init_completion(&pcu->async_firmware_done);
-> +	firmware_stat_init(&pcu->fw_st);
+While probably not overly common, it was/ is (hardware-wise) a pretty
+interesting device due to its support for 5 GHz[1] - actually I hoped
+it to be a (supported-) RTL8192CU variant when I bought it.=20
+Unfortunately no driver[2] made it to staging or the proper kernel.
 
-Do not quite like it... I'd rather asynchronous request give out a
-firmware status pointer that could be used later on.
+> RTL81xxEU (2013)
 
-	pcu->fw_st = request_firmware_async(IMS_PCU_FIRMWARE_NAME,
-					    pcu,
-					    ims_pcu_process_async_firmware);
-	if (IS_ERR(pcu->fw_st))
-		return PTR_ERR(pcu->fw_st);
+Regards
+	Stefan Lippers-Hollmann
 
-	....
+[1]	apparently even concurrent operations for the double MAC +=20
+	double PHY variants
+[2]	https://github.com/lwfinger/rtl8192du
 
-	fw_loading_wait(pcu->fw_st);
+--Sig_/L85adD7xhDL_cl8UJmadEcc
+Content-Type: application/pgp-signature
+Content-Description: Digitale Signatur von OpenPGP
 
-Thanks.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
--- 
-Dmitry
+iQIcBAEBCAAGBQJXkYdaAAoJEL/gLWWx0ULtJOAQALth9Ql/gy3Uokmf+DoVE5r0
+Dic6z2BA5lXA3yBGJ2y0CJePEvEJtQHkPON6iAmzw7YCVKbt20/p3KlYvGgdxvAb
+7CWgAvt9GzYEtx5hKg9W8ysY7bLakkYTgCA482yQFXEVxuemjg1M6p5xF8saJSaQ
+eopJu4pjGD/Zo1LA2qREx2qcPZrxCudnoWLpKMz0f5BVMBuTlJY2c6xehDKf7NJI
+XHicnrs2OpiHq9OC8I+pLjaaylZ4HRG24Y1n4sPEQG2z7UT7E0fIH3EXFZalVXKt
+TTP8LjT2p82iUevKUvV3X+xxF5BUWNlxRIIHJUB9CBgxGgRwEvS2bQc4NOyfn+no
+4Z74amAt0GG9/oIlIb5pnLr9QMRGxV7eVYmgodjZtzrppYS3Xe87KYg+AgPOGUxh
+N2+Znf9fjpcxcZ4m+3pwpu5h6Lk3yvzLtQg8SF0M/zKxSPaAh2gO1BFfjsY+Mi1i
+ZUEexeBHRgcN4MCAfb6Y3YMzkv+E/pLnp7SwOx7NdjiHuZ0rqnsSx2IBwCr331oM
+S9TPqFZL+Y3WicxLNftE1EBAFTsRqOmhglU1NiI6wxBHlWNBD0c7Zt+JfJm0OtGs
+N5VF6nQOdxiPDRdJIEaWKLm1tAYckqf0G8fgrKNqxQv6Yt++8rK3Wvt99002CiPC
+PZKGszcGQXsJaZMtoTlK
+=4sxX
+-----END PGP SIGNATURE-----
+
+--Sig_/L85adD7xhDL_cl8UJmadEcc--
