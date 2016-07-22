@@ -1,54 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:33421 "EHLO
-	mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932829AbcGGAhA (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:38519 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752669AbcGVRRX convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 20:37:00 -0400
-Received: by mail-yw0-f196.google.com with SMTP id i12so275064ywa.0
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jul 2016 17:36:59 -0700 (PDT)
+	Fri, 22 Jul 2016 13:17:23 -0400
+Received: by mail-wm0-f41.google.com with SMTP id o80so75405929wme.1
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 10:17:22 -0700 (PDT)
+From: Christopher Williamson <home@chrisaw.com>
+In-Reply-To: <CANXHH3nB3BujorAuYRweE=w+n=ESoJod2LFphRrxwXrXUrf_zw@mail.gmail.com>
+References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
+ <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
+ <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
+ <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
+ <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
+ <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
+ <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
+ <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
+ <1469115440.29944.1.camel@redhat.com> <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
+ <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
+ <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com>
+ <etPan.579137d1.40bb3278.381a@chrisaw.com> <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
+ <435adbc6-9fa3-e9e3-9815-8cf4b62e5342@broadcom.com> <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+ <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+ <CANXHH3mOsN3-U=BS4fA6iax0ciwbSSywHAgOhHCNj8e7CPCyfQ@mail.gmail.com>
+ <1469204186.15064.6.camel@redhat.com> <1469204186.15064.6.camel@redhat.com>
+ <CANXHH3nvu7TC=x5RTR_WcgGkd2=_0h4BZrc_Nv74023nrc3P5w@mail.gmail.com>
+ <CANXHH3kX-U_CRfBf+DVe7AMpU13fKGG5bRwgLhDqYuGOBF-HBw@mail.gmail.com> <CANXHH3nB3BujorAuYRweE=w+n=ESoJod2LFphRrxwXrXUrf_zw@mail.gmail.com>
 MIME-Version: 1.0
-From: Nestor Machno <nestor.machno89@gmail.com>
-Date: Thu, 7 Jul 2016 02:36:58 +0200
-Message-ID: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com> (sfid-20160707_023704_762673_4D25D642)
-Subject: Fwd: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
-To: linux-wireless@vger.kernel.org
+Date: Fri, 22 Jul 2016 13:17:20 -0400
+Message-ID: <CANXHH3mMnNL5i8SZfm_H-tQWe5tuPM+tMxHH7pgE8zmj5yvNuA@mail.gmail.com> (sfid-20160722_191731_418674_C21BBECF)
+Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
+To: Dan Williams <dcbw@redhat.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arend Van Spriel <arend.vanspriel@broadcom.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-Amitkumar, can you confirm if this this is a bug or today is fixed?
+I haven’t managed to get connected to a WPA network either so it looks
+like open only at the moment but I fear that may just have been a
+fluke.
 
-Vincent, I had also faced similar issue on Surface Pro 2 with
-backports from 4.1... So here few question:
+A big problem I’m facing is that editing /etc/default/crda to
+REGDOMAIN=GB wasn’t enough to set the wifi regulation mode to GB and I
+have to set it manually. This sometimes works and sometimes reports
+the following:
 
-* I saw in 1st post that you where working to make work the
-wpa_supplicant with mixed configuration for adhoc (wpa-none +
-wpa-ibss), but also in recent post that you focus mostly on debugging
-wpa-ibss. I suggest to focus your test on one wpa mode and I think
-wpa-none better because it's easier..
-* Why you are not testing the latest backport from upstream kernel? as
-you can know Marvell is focus most to fix open issue on current stable
-release, I saw from commit that recently they fix something about WPA
-on mixflex, see
-https://backports.wiki.kernel.org/index.php/Documentation/compat-drivers/hacking
-* Would be good information to know if you tested also on backport
-3.x, did you?  I know mwifiex's WPA stack changed a lot from 3.x
-kernel.
-* To support you more, could you enable debug info and provide full
-log of your setup? .config? patch? anything else?
-* Can you share us your hacked backport?
-* Lat question Vincent, are you working for AIRBUS, ACTIA or THALES ?  :)
+country 98: DFS-UNSET
+	(2402 - 2472 @ 40), (N/A, 20), (N/A)
+	(2457 - 2472 @ 15), (N/A, 20), (N/A), NO-IR
+	(5170 - 5250 @ 80), (N/A, 17), (N/A), NO-IR
+	(5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS, NO-IR
+	(5490 - 5730 @ 160), (N/A, 20), (0 ms), DFS, NO-IR
+	(5735 - 5835 @ 80), (N/A, 20), (N/A), NO-IR
+	(57240 - 63720 @ 2160), (N/A, 0), (N/A)
 
-Best Regards
-Nestor
+At best this is simply an annoyance but at worst I’m thinking this may
+be responsible for the issues I’m seeing.
 
-On Mon, Jun 13, 2016 at 7:42 AM, Vincent CESSON <vincent.cesson@smile.fr> wrote:
-> Hi Amitkumar,
+Is there anywhere else I can force this to be set to GB?
+
+Christopher Williamson
+
+
+On 22 July 2016 at 17:54:40, Christopher Williamson
+(home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+
+> Disregard - I have actually managed to get this to connect to a open network!
 >
-> Here are the wpa_supplicant logs (with CONFIG_IBSS_RSN=y enabled) from the
-> two devices. Beside wpa_supplicant, I manually set IPs 192.168.1.xy with
-> command "ifconfig mlan0 192.168.1.xy" and then I try to ping each other,
-> without success.
+> # iw reg set GB
+> # iw reg get
+> country GB: DFS-ETSI
+> (2402 - 2482 @ 40), (N/A, 20), (N/A)
+> (5170 - 5250 @ 80), (N/A, 20), (N/A)
+> (5250 - 5330 @ 80), (N/A, 20), (0 ms), DFS
+> (5490 - 5710 @ 160), (N/A, 27), (0 ms), DFS
+> (57000 - 66000 @ 2160), (N/A, 40), (N/A)
+> # iwconfig wlan0 essid "shaunthesheep-guest”
+> # dhclient wlan0
 >
-> Vincent
+> It’s good to have some progress - so it looks like the issue preventing the previous connection was the iw reg not being set properly (or possibly just wpa_supplicant borking the connection in some way. I stopped that this time around. I’ll try wpa1 now and report back.
+>
+>
+> Christopher Williamson
+>
+>
+>
+> On 22 July 2016 at 17:39:50, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+>
+> >
+> > Ok so I created a guest wifi network without any encryption enabled at all and the client still refuses to connect.
+> >
+> > Again, the connection is made perfectly using the USB dongle I have but not the built in libertas sd8686 chipset.
+> >
+> > I do currently use pfSense as a firewall box behind my wireless router (acting as an AP) and can see that no DHCP request is making it to the pfSense box. I believe you are right in the point about the firmware being the problem here.
+> >
+> > I should also confirm - the firmware in use is the latest from the linux-firmware Ubuntu 16.04 package. I did read around the net about being having various issues with various firmware sources and not others but despite trying firmware linked directly from Marvell I seem to always get one of two issues:
+> >
+> > 1.) I am unable to connect and keep getting asked for passphrases, or:
+> > 2.) The system completely freezes up (with the v8 firmwares I tried)
+> >
+> > I’m not really sure what else to try at this point.
+> > Christopher Williamson
+> >
+> >
+> >
+> > On 22 July 2016 at 17:24:52, Christopher Williamson (home@chrisaw.com(mailto:home@chrisaw.com)) wrote:
+> >
+> > >
+> > > Hi Dan,
+> > >
+> > > I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
+> > >
+> > > For now though - the iwlist scan results for both a USB device and the
+> > > libertas device:
+> > >
+> > > USB: http://termbin.com/hdwl
+> > > Libertas: http://termbin.com/jxh7
+> > >
+> > > Will follow up shortly with WPA and Open network configs.
+> > >
+> > > Christopher Williamson
+> > >
+> > >
+> > >
+> > > On 22 July 2016 at 17:16:29, Dan Williams (dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+> > >
+> > > > Hi Dan,
+> > > >
+> > > > I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
+> > > >
+> > > > For now though - the iwlist scan results for both a USB device and the
+> > > > libertas device:
+> > > >
+> > > > USB: http://termbin.com/hdwl
+> > > > Libertas: http://termbin.com/jxh7
+> > > >
+> > > > Will follow up shortly with WPA and Open network configs.
+> > > >
+> > > > *Christopher Williamson*
