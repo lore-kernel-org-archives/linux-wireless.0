@@ -1,89 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:64676 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752005AbcGXUWP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jul 2016 16:22:15 -0400
-Subject: [PATCH 2/3] staging: wilc1000: One function call less in mac_ioctl()
- after error detection
-To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Glen Lee <glen.lee@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>, Leo Kim <leo.kim@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>
-References: <5307CAA2.8060406@users.sourceforge.net>
- <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
- <530A086E.8010901@users.sourceforge.net>
- <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
- <530A72AA.3000601@users.sourceforge.net>
- <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
- <530B5FB6.6010207@users.sourceforge.net>
- <alpine.DEB.2.10.1402241710370.2074@hadrien>
- <530C5E18.1020800@users.sourceforge.net>
- <alpine.DEB.2.10.1402251014170.2080@hadrien>
- <530CD2C4.4050903@users.sourceforge.net>
- <alpine.DEB.2.10.1402251840450.7035@hadrien>
- <530CF8FF.8080600@users.sourceforge.net>
- <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
- <530DD06F.4090703@users.sourceforge.net>
- <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
- <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
- <dbc8c4f3-a234-9b6a-b6a4-9c7ef45d5d31@users.sourceforge.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <590e0614-db41-a193-5463-9e3ad2630489@users.sourceforge.net> (sfid-20160724_222236_584934_A1AAD376)
-Date: Sun, 24 Jul 2016 22:22:06 +0200
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:36894 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751244AbcGVQYz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2016 12:24:55 -0400
+Received: by mail-wm0-f46.google.com with SMTP id i5so73523760wmg.0
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 09:24:54 -0700 (PDT)
+From: Christopher Williamson <home@chrisaw.com>
+In-Reply-To: <1469204186.15064.6.camel@redhat.com>
+References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
+ <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
+ <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
+ <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
+ <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
+ <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
+ <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
+ <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
+ <1469115440.29944.1.camel@redhat.com> <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
+ <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
+ <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com>
+ <etPan.579137d1.40bb3278.381a@chrisaw.com> <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
+ <435adbc6-9fa3-e9e3-9815-8cf4b62e5342@broadcom.com> <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+ <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
+ <CANXHH3mOsN3-U=BS4fA6iax0ciwbSSywHAgOhHCNj8e7CPCyfQ@mail.gmail.com>
+ <1469204186.15064.6.camel@redhat.com> <1469204186.15064.6.camel@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <dbc8c4f3-a234-9b6a-b6a4-9c7ef45d5d31@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+Date: Fri, 22 Jul 2016 12:24:52 -0400
+Message-ID: <CANXHH3nvu7TC=x5RTR_WcgGkd2=_0h4BZrc_Nv74023nrc3P5w@mail.gmail.com> (sfid-20160722_182459_751058_997AABD8)
+Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Dan Williams <dcbw@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 24 Jul 2016 21:15:23 +0200
+Hi Dan,
 
-The kfree() function was called in two cases by the mac_ioctl() function
-during error handling even if the passed variable did not contain a pointer
-for a valid data item.
+I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
 
-Improve this implementation detail by the introduction of another
-jump label.
+For now though - the iwlist scan results for both a USB device and the
+libertas device:
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/staging/wilc1000/linux_wlan.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+USB: http://termbin.com/hdwl
+Libertas: http://termbin.com/jxh7
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index cdef645..7b1ebcc 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1130,7 +1130,7 @@ static int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
- 				if (copy_to_user(wrq->u.data.pointer, buff, size)) {
- 					netdev_err(ndev, "failed to copy\n");
- 					ret = -EFAULT;
--					goto done;
-+					goto free_buffer;
- 				}
- 			}
- 		}
-@@ -1144,11 +1144,9 @@ static int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
- 		goto done;
- 	}
- 	}
--
--done:
--
-+free_buffer:
- 	kfree(buff);
--
-+done:
- 	return ret;
- }
- 
--- 
-2.9.2
+Will follow up shortly with WPA and Open network configs.
 
+Christopher Williamson
+
+
+
+On 22 July 2016 at 17:16:29, Dan Williams
+(dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
+
+> Hi Dan,
+>
+> I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
+>
+> For now though - the iwlist scan results for both a USB device and the
+> libertas device:
+>
+> USB: http://termbin.com/hdwl
+> Libertas: http://termbin.com/jxh7
+>
+> Will follow up shortly with WPA and Open network configs.
+>
+> *Christopher Williamson*
