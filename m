@@ -1,160 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:37827 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752351AbcGAV1Y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jul 2016 17:27:24 -0400
-Received: by mail-wm0-f48.google.com with SMTP id a66so44453647wme.0
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Jul 2016 14:27:23 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, hannes@stressinduktion.org, nbd@nbd.name,
-	linux-kernel@vger.kernel.org,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv3 wl-drv-next 2/2] mt7601u: use linux/bitfield.h
-Date: Fri,  1 Jul 2016 22:26:49 +0100
-Message-Id: <1467408409-24224-3-git-send-email-jakub.kicinski@netronome.com> (sfid-20160701_232750_354269_A0473C98)
-In-Reply-To: <1467408409-24224-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1467408409-24224-1-git-send-email-jakub.kicinski@netronome.com>
+Received: from mail2.tohojo.dk ([77.235.48.147]:42591 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752741AbcGVKvL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jul 2016 06:51:11 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Dave Taht <dave@taht.net>
+Subject: Re: TCP performance regression in mac80211 triggered by the fq code
+References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
+Date: Fri, 22 Jul 2016 12:51:05 +0200
+In-Reply-To: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name> (Felix Fietkau's
+	message of "Tue, 12 Jul 2016 12:09:24 +0200")
+Message-ID: <87twfilzdy.fsf@toke.dk> (sfid-20160722_125114_904548_4AC91274)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the newly added linux/bitfield.h.
+Felix Fietkau <nbd@nbd.name> writes:
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- drivers/net/wireless/mediatek/mt7601u/dma.h     |  2 -
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  5 +-
- drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
- 3 files changed, 4 insertions(+), 80 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+> Please let me know if you have any ideas.
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.h b/drivers/net/wireless/mediatek/mt7601u/dma.h
-index 978e8a90b87f..166ac71905d2 100644
---- a/drivers/net/wireless/mediatek/mt7601u/dma.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/dma.h
-@@ -18,8 +18,6 @@
- #include <asm/unaligned.h>
- #include <linux/skbuff.h>
- 
--#include "util.h"
--
- #define MT_DMA_HDR_LEN			4
- #define MT_RX_INFO_LEN			4
- #define MT_FCE_INFO_LEN			4
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-index 428bd2f10b7b..5ef62e02ce66 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/mt7601u.h
-@@ -15,6 +15,7 @@
- #ifndef MT7601U_H
- #define MT7601U_H
- 
-+#include <linux/bitfield.h>
- #include <linux/kernel.h>
- #include <linux/device.h>
- #include <linux/mutex.h>
-@@ -24,7 +25,6 @@
- #include <linux/debugfs.h>
- 
- #include "regs.h"
--#include "util.h"
- 
- #define MT_CALIBRATE_INTERVAL		(4 * HZ)
- 
-@@ -282,6 +282,9 @@ struct mt7601u_rxwi;
- 
- extern const struct ieee80211_ops mt7601u_ops;
- 
-+#define MT76_SET	FIELD_PUT
-+#define MT76_GET	FIELD_GET
-+
- void mt7601u_init_debugfs(struct mt7601u_dev *dev);
- 
- u32 mt7601u_rr(struct mt7601u_dev *dev, u32 offset);
-diff --git a/drivers/net/wireless/mediatek/mt7601u/util.h b/drivers/net/wireless/mediatek/mt7601u/util.h
-deleted file mode 100644
-index b89140bf1210..000000000000
---- a/drivers/net/wireless/mediatek/mt7601u/util.h
-+++ /dev/null
-@@ -1,77 +0,0 @@
--/*
-- * Copyright (C) 2014 Felix Fietkau <nbd@openwrt.org>
-- * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-- *
-- * This program is free software; you can redistribute it and/or modify
-- * it under the terms of the GNU General Public License version 2
-- * as published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-- * GNU General Public License for more details.
-- */
--
--#ifndef __MT76_UTIL_H
--#define __MT76_UTIL_H
--
--/*
-- * Power of two check, this will check
-- * if the mask that has been given contains and contiguous set of bits.
-- * Note that we cannot use the is_power_of_2() function since this
-- * check must be done at compile-time.
-- */
--#define is_power_of_two(x)	( !((x) & ((x)-1)) )
--#define low_bit_mask(x)		( ((x)-1) & ~(x) )
--#define is_valid_mask(x)	is_power_of_two(1LU + (x) + low_bit_mask(x))
--
--/*
-- * Macros to find first set bit in a variable.
-- * These macros behave the same as the __ffs() functions but
-- * the most important difference that this is done during
-- * compile-time rather then run-time.
-- */
--#define compile_ffs2(__x) \
--	__builtin_choose_expr(((__x) & 0x1), 0, 1)
--
--#define compile_ffs4(__x) \
--	__builtin_choose_expr(((__x) & 0x3), \
--			      (compile_ffs2((__x))), \
--			      (compile_ffs2((__x) >> 2) + 2))
--
--#define compile_ffs8(__x) \
--	__builtin_choose_expr(((__x) & 0xf), \
--			      (compile_ffs4((__x))), \
--			      (compile_ffs4((__x) >> 4) + 4))
--
--#define compile_ffs16(__x) \
--	__builtin_choose_expr(((__x) & 0xff), \
--			      (compile_ffs8((__x))), \
--			      (compile_ffs8((__x) >> 8) + 8))
--
--#define compile_ffs32(__x) \
--	__builtin_choose_expr(((__x) & 0xffff), \
--			      (compile_ffs16((__x))), \
--			      (compile_ffs16((__x) >> 16) + 16))
--
--/*
-- * This macro will check the requirements for the FIELD{8,16,32} macros
-- * The mask should be a constant non-zero contiguous set of bits which
-- * does not exceed the given typelimit.
-- */
--#define FIELD_CHECK(__mask) \
--	BUILD_BUG_ON(!(__mask) || !is_valid_mask(__mask))
--
--#define MT76_SET(_mask, _val)						\
--	({								\
--		FIELD_CHECK(_mask);					\
--		(((u32) (_val)) << compile_ffs32(_mask)) & _mask;	\
--	})
--
--#define MT76_GET(_mask, _val)						\
--	({								\
--		FIELD_CHECK(_mask);					\
--		(u32) (((_val) & _mask) >> compile_ffs32(_mask));	\
--	})
--
--#endif
--- 
-1.9.1
+Two more things to try:
 
+- Andrew McGregor mentioned that some versions of Iperf on OSX has a
+  threading bug when running multiple streams against the same server
+  instance. So try running two separate instances of iperf on the server
+  side, or run netperf instead.
+
+- It could be that HyStart is acting up. You could try disabling it
+  (echo 0 > /sys/module/tcp_cubic/parameters/hystart) and see if that
+  makes a difference.
+
+-Toke
