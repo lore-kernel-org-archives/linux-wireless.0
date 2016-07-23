@@ -1,60 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20145 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755853AbcG1KxF (ORCPT
+Received: from nm.newmedia-net.de ([217.113.179.122]:35010 "EHLO
+	webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbcGWJMP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jul 2016 06:53:05 -0400
-Content-Type: text/plain; charset="utf-8"
+	Sat, 23 Jul 2016 05:12:15 -0400
+To: Ben Greear <greearb@candelatech.com>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org
+References: <20160614061728.570-1-rmanohar@qti.qualcomm.com>
+ <5792A189.5050807@candelatech.com>
+Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org,
+	Felix Fietkau <nbd@nbd.name>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <6495e664-5da8-a11b-0bd5-15dc24c51edf@dd-wrt.com> (sfid-20160723_111227_783847_5A63A039)
+Date: Sat, 23 Jul 2016 11:11:59 +0200
 MIME-Version: 1.0
-Subject: Re: ath10k: fix get rx_status from htt context
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1469551552-845-1-git-send-email-arnagara@qti.qualcomm.com>
-To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-	<arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <23fc0be38ebd49c8a320182cf2d9d7e0@euamsexm01a.eu.qualcomm.com> (sfid-20160728_125309_515666_CC9CCD38)
-Date: Thu, 28 Jul 2016 12:52:56 +0200
+In-Reply-To: <5792A189.5050807@candelatech.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: [PATCH] ath10k: fix system hang at qca99x0 probe on x86 platform
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
-> On handling amsdu on rx path, get the rx_status from htt context. Without this
-> fix, we are seeing warnings when running DBDC traffic like this.
-> 
-> WARNING: CPU: 0 PID: 0 at net/mac80211/rx.c:4105 ieee80211_rx_napi+0x88/0x7d8 [mac80211]()
-> 
-> [ 1715.878248] CPU: 0 PID: 0 Comm: swapper/0 Tainted: G W 3.18.21 #1
-> [ 1715.878273] [<c001d3f4>] (unwind_backtrace) from [<c001a4b0>] (show_stack+0x10/0x14)
-> [ 1715.878293] [<c001a4b0>] (show_stack) from [<c01bee64>] (dump_stack+0x70/0xbc)
-> [ 1715.878315] [<c01bee64>] (dump_stack) from [<c002a61c>] (warn_slowpath_common+0x64/0x88)
-> [ 1715.878339] [<c002a61c>] (warn_slowpath_common) from [<c002a6d0>] (warn_slowpath_null+0x18/0x20)
-> [ 1715.878395] [<c002a6d0>] (warn_slowpath_null) from [<bf4caa98>] (ieee80211_rx_napi+0x88/0x7d8 [mac80211])
-> [ 1715.878474] [<bf4caa98>] (ieee80211_rx_napi [mac80211]) from [<bf568658>] (ath10k_htt_t2h_msg_handler+0xb48/0xbfc [ath10k_core])
-> [ 1715.878535] [<bf568658>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf568708>] (ath10k_htt_t2h_msg_handler+0xbf8/0xbfc [ath10k_core])
-> [ 1715.878597] [<bf568708>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf569160>] (ath10k_htt_txrx_compl_task+0xa54/0x1170 [ath10k_core])
-> [ 1715.878639] [<bf569160>] (ath10k_htt_txrx_compl_task [ath10k_core]) from [<c002db14>] (tasklet_action+0xb4/0x130)
-> [ 1715.878659] [<c002db14>] (tasklet_action) from [<c002d110>] (__do_softirq+0xe0/0x210)
-> [ 1715.878678] [<c002d110>] (__do_softirq) from [<c002d4b4>] (irq_exit+0x84/0xe0)
-> [ 1715.878700] [<c002d4b4>] (irq_exit) from [<c005a544>] (__handle_domain_irq+0x98/0xd0)
-> [ 1715.878722] [<c005a544>] (__handle_domain_irq) from [<c00085f4>] (gic_handle_irq+0x38/0x5c)
-> [ 1715.878741] [<c00085f4>] (gic_handle_irq) from [<c0009680>] (__irq_svc+0x40/0x74)
-> [ 1715.878753] Exception stack(0xc05f9f50 to 0xc05f9f98)
-> [ 1715.878767] 9f40: ffffffed 00000000 00399e1e c000a220
-> [ 1715.878786] 9f60: 00000000 c05f6780 c05f8000 00000000 c05f5db8 ffffffed c05f8000 c04d1980
-> [ 1715.878802] 9f80: 00000000 c05f9f98 c0018110 c0018114 60000013 ffffffff
-> [ 1715.878822] [<c0009680>] (__irq_svc) from [<c0018114>] (arch_cpu_idle+0x2c/0x50)
-> [ 1715.878844] [<c0018114>] (arch_cpu_idle) from [<c00530d4>] (cpu_startup_entry+0x108/0x234)
-> [ 1715.878866] [<c00530d4>] (cpu_startup_entry) from [<c05c7be0>] (start_kernel+0x33c/0x3b8)
-> [ 1715.878879] ---[ end trace 6d5e1cc0fef8ed6a ]---
-> [ 1715.878899] ------------[ cut here ]------------
-> 
-> Fixes: 18235664e7f9 ("ath10k: cleanup amsdu processing for rx indication")
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+from my point of view this patch is just shit. it trunkates the maximum 
+allocated memory to a certain value.
+so firmware requests 800 kb memory but just gets 256kb. so out of bound 
+memory access is guaranteed at all.
 
-I'm planning to push this to 4.8 if no objections.
+
+Am 23.07.2016 um 00:43 schrieb Ben Greear:
+> On 06/13/2016 11:17 PM, Rajkumar Manoharan wrote:
+>> commit b057886524be ("ath10k: do not use coherent memory for allocated
+>> device memory chunks") replaced coherent memory allocation for memory
+>> chunks to fix low memory platforms. Unfortunately this is causing system
+>> freeze on x86 platform while bringing up qca99x0 device. The system
+>> hangs while DMA mapping bigger memory chunks (689816/865444 bytes). Fix
+>> this by limiting maximum memory chunk size to 256 KiB per request.
+>>
+>> Cc: Felix Fietkau <nbd@nbd.name>
+>> Fixes: b057886524be ("ath10k: do not use coherent memory for 
+>> allocated device memory chunks")
+>> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>> ---
+>>   drivers/net/wireless/ath/ath10k/wmi.c | 6 ++++++
+>>   drivers/net/wireless/ath/ath10k/wmi.h | 1 +
+>>   2 files changed, 7 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.c 
+>> b/drivers/net/wireless/ath/ath10k/wmi.c
+>> index 6279ab4a760e..7c15f65fe5ed 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.c
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
+>> @@ -4411,6 +4411,12 @@ static int ath10k_wmi_alloc_chunk(struct 
+>> ath10k *ar, u32 req_id,
+>>           if (!pool_size)
+>>               return -EINVAL;
+>>
+>> +        if (pool_size > WMI_MAX_MEM_CHUNK_SIZE) {
+>> +            num_units = WMI_MAX_MEM_CHUNK_SIZE /
+>> +                    round_up(unit_len, 4);
+>> +            pool_size = num_units * round_up(unit_len, 4);
+>> +        }
+>
+> I started testing my 9980 x86-64 system with VT/d enabled today.
+> With this patch in my tree, it crashes on bootup (with my firmware).
+> Works fine without this patch.
+>
+> I don't see the exact place it is crashing in the firmware, though I 
+> could
+> probably narrow it down with some effort.  It is in the early startup 
+> code,
+> at least, which makes debugging more difficult.
+>
+> This patch works fine with a slightly newer firmware compiled for 
+> 9984.  That
+> same firmware compiled for 9980 crashes, but I am not certain it is 
+> the same issue
+> as the older 9980.  It appears similar, at least.
+>
+> Looks to me like there are lots of variances in how firmware and chip 
+> revisions
+> deal with this particular code, so we are going to have to test on 
+> lots of chips
+> and platforms to know if a 'fix' is really a fix or not.
+>
+> Thanks,
+> Ben
+>
+>
+
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9248457/
+Mit freundlichen Grüssen / Regards
+
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
 
