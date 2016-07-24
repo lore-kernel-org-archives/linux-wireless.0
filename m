@@ -1,63 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59660 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041AbcG0Gjq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jul 2016 02:39:46 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: alexmcwhirter@triadic.us
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	Alan Curry <rlwinm@sdf.org>, Al Viro <viro@zeniv.linux.org.uk>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
-References: <201607260457.u6Q4v3pM010082@sdf.org>
-	<2589898.190WVraD7Z@debian64>
-	<66636d159da5342b1387035fbcfe0d35@triadic.us>
-Date: Wed, 27 Jul 2016 09:39:41 +0300
-In-Reply-To: <66636d159da5342b1387035fbcfe0d35@triadic.us>
-	(alexmcwhirter@triadic.us's message of "Tue, 26 Jul 2016 14:15:55
-	-0400")
-Message-ID: <87popz8tzm.fsf@purkki.adurom.net> (sfid-20160727_084011_204359_90B5B06E)
+Received: from mout.web.de ([212.227.15.4]:64389 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751268AbcGXUQH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jul 2016 16:16:07 -0400
+Subject: [PATCH 0/3] staging: wilc1000: Fine-tuning for two function
+ implementations
+To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Glen Lee <glen.lee@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>
+References: <5307CAA2.8060406@users.sourceforge.net>
+ <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+ <530A086E.8010901@users.sourceforge.net>
+ <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+ <530A72AA.3000601@users.sourceforge.net>
+ <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+ <530B5FB6.6010207@users.sourceforge.net>
+ <alpine.DEB.2.10.1402241710370.2074@hadrien>
+ <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <dbc8c4f3-a234-9b6a-b6a4-9c7ef45d5d31@users.sourceforge.net> (sfid-20160724_221627_807874_D8019E14)
+Date: Sun, 24 Jul 2016 22:15:49 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <558EB32E.6090003@users.sourceforge.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-alexmcwhirter@triadic.us writes:
+From: Markus Elfring <elfring@users.sourceforge.net>
 
-> On 2016-07-26 09:59, Christian Lamparter wrote:
->> Thanks, I gave the program a try with my WNDA3100 and a WN821N v2
->> devices.
->> I did not see any corruptions in any of the tests though. Can you
->> tell me
->> something about your wireless network too? I would like to know what
->> router
->> and firmware are you using? Also important: what's your wireless
->> configuration?
->> (WPA?, CCMP or TKIP? HT40, HT20 or Legacy rates? ...)
->>
->> Probably the quickest and easiest way to get that information is by
->> running
->> the following commands as root, when you are connected to your wifi
->> network
->> and post the results:
->> # iw dev wlan0 link
->> # iw dev wlan0 scan dump
->>
->> (You can of course remove your device's MACs, but please do it
->> consistently).
->>
->> Regards,
->> Christian
->
-> I wonder if this is something that is only affecting certain NIC's?
-> For example, it see this issue on sun4u boxes with tigon3 and hme
-> interfaces. But on my sun4v boxes that have e1000 interfaces
-> everything works fine.
+Further update suggestions were taken into account
+after a patch was applied from static source code analysis.
 
-Kernel configuration might also make a difference. Trying to find an
-Kconfig option which affects this could be useful.
+Markus Elfring (3):
+  Delete an unnecessary check before the function call "release_firmware"
+  One function call less in mac_ioctl() after error detection
+  Reduce scope for a few variables in mac_ioctl()
+
+ drivers/staging/wilc1000/linux_wlan.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
 -- 
-Kalle Valo
+2.9.2
+
