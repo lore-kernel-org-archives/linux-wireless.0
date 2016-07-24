@@ -1,87 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60784 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752848AbcGCTtC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jul 2016 15:49:02 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org
-Date: Sun,  3 Jul 2016 22:48:41 +0300
-Message-Id: <1467575332-32112-2-git-send-email-luca@coelho.fi> (sfid-20160703_214921_095211_F1438F9E)
-In-Reply-To: <467405215.1837.15.camel@coelho.fi>
-References: <467405215.1837.15.camel@coelho.fi>
-Subject: [PATCH 02/13] iwlwifi: mvm: do not trust NSSN for amsdu sub-frames
+Received: from mout.web.de ([212.227.15.4]:55873 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751449AbcGXUUY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jul 2016 16:20:24 -0400
+Subject: [PATCH 1/3] staging: wilc1000: Delete an unnecessary check before the
+ function call "release_firmware"
+To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Glen Lee <glen.lee@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>
+References: <5307CAA2.8060406@users.sourceforge.net>
+ <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+ <530A086E.8010901@users.sourceforge.net>
+ <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+ <530A72AA.3000601@users.sourceforge.net>
+ <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+ <530B5FB6.6010207@users.sourceforge.net>
+ <alpine.DEB.2.10.1402241710370.2074@hadrien>
+ <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <558EB32E.6090003@users.sourceforge.net>
+ <dbc8c4f3-a234-9b6a-b6a4-9c7ef45d5d31@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <97d9e92f-ae7a-1161-c9a2-cb19fb2f2b55@users.sourceforge.net> (sfid-20160724_222044_776550_786EF504)
+Date: Sun, 24 Jul 2016 22:20:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <dbc8c4f3-a234-9b6a-b6a4-9c7ef45d5d31@users.sourceforge.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sun, 24 Jul 2016 21:00:20 +0200
 
-We cannot trust NSSN for AMSDU sub-frames that are not the
-last.
-The reason is that NSSN advances on the first sub-frame,
-and may cause the reorder buffer to advance before all the
-sub-frames arrive.
-Example:
-Reorder buffer contains SN 0 & 2.
-We receive AMSDU with SN 1 and NSSN for first sub frame 3.
-The result us that driver releases SN 0,1, 2.
-When sub-frame 1 arrives - reorder buffer is already ahead and
-it will be dropped.
-If the last sub-frame is not on this queue - we will get frame
-release notification with up to date NSSN.
+The release_firmware() function tests whether its argument is NULL and then
+returns immediately. Thus the test around the call is not needed.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+This issue was detected by using the Coccinelle software.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index ac2c571..0f26c70 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -587,6 +587,8 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 	struct sk_buff *tail;
- 	u32 reorder = le32_to_cpu(desc->reorder_data);
- 	bool amsdu = desc->mac_flags2 & IWL_RX_MPDU_MFLG2_AMSDU;
-+	bool last_subframe =
-+		desc->amsdu_info & IWL_RX_MPDU_AMSDU_LAST_SUBFRAME;
- 	u8 tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
- 	u8 sub_frame_idx = desc->amsdu_info &
- 			   IWL_RX_MPDU_AMSDU_SUBFRAME_IDX_MASK;
-@@ -651,7 +653,8 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 	/* release immediately if allowed by nssn and no stored frames */
- 	if (!buffer->num_stored && ieee80211_sn_less(sn, nssn)) {
- 		if (iwl_mvm_is_sn_less(buffer->head_sn, nssn,
--				       buffer->buf_size))
-+				       buffer->buf_size) &&
-+		   (!amsdu || last_subframe))
- 			buffer->head_sn = nssn;
- 		/* No need to update AMSDU last SN - we are moving the head */
- 		spin_unlock_bh(&buffer->lock);
-@@ -685,7 +688,20 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 		buffer->last_sub_index = sub_frame_idx;
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3a66255..cdef645 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1223,7 +1223,7 @@ void wilc_netdev_cleanup(struct wilc *wilc)
+ 			vif[i] = netdev_priv(wilc->vif[i]->ndev);
  	}
  
--	iwl_mvm_release_frames(mvm, sta, napi, buffer, nssn);
-+	/*
-+	 * We cannot trust NSSN for AMSDU sub-frames that are not the last.
-+	 * The reason is that NSSN advances on the first sub-frame, and may
-+	 * cause the reorder buffer to advance before all the sub-frames arrive.
-+	 * Example: reorder buffer contains SN 0 & 2, and we receive AMSDU with
-+	 * SN 1. NSSN for first sub frame will be 3 with the result of driver
-+	 * releasing SN 0,1, 2. When sub-frame 1 arrives - reorder buffer is
-+	 * already ahead and it will be dropped.
-+	 * If the last sub-frame is not on this queue - we will get frame
-+	 * release notification with up to date NSSN.
-+	 */
-+	if (!amsdu || last_subframe)
-+		iwl_mvm_release_frames(mvm, sta, napi, buffer, nssn);
-+
- 	spin_unlock_bh(&buffer->lock);
- 	return true;
- 
+-	if (wilc && wilc->firmware) {
++	if (wilc) {
+ 		release_firmware(wilc->firmware);
+ 		wilc->firmware = NULL;
+ 	}
 -- 
-2.8.1
+2.9.2
 
