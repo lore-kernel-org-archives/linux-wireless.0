@@ -1,78 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33450 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753651AbcGFKoo (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:25535 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752905AbcGYPvh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:44:44 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:41 +0300
-Message-Id: <1467801651-1816-46-git-send-email-luca@coelho.fi> (sfid-20160706_124448_421502_2CB9C3EC)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 46/56] iwlwifi: tracing: decouple from mac80211
+	Mon, 25 Jul 2016 11:51:37 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6PFoFQa031659
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:51:36 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 24c5xkfr04-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 25 Jul 2016 08:51:36 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v2 0/8] mwifiex patches
+Date: Mon, 25 Jul 2016 21:21:03 +0530
+Message-ID: <1469461871-3135-1-git-send-email-akarwar@marvell.com> (sfid-20160725_175141_282486_854DF11F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch series includes couple of fixes and enhancements.
 
-In order to be able to properly record SKBs that didn't come through
-mac80211, don't rely on the IEEE80211_TX_CTRL_PORT_CTRL_PROTO flag
-but instead check for ETH_P_PAE directly.
+Changes in v2:
+  1) Dropped "[5/9] mwifiex: cfg80211 set_default_mgmt_key handler"
+     patch in v1 series. We are working on review comment from Jouni
+     Malinen.
+  2) Removed MWIFIEX_RX_PKT_DROPPED_IN_FW macro in "[6/9] mwifiex:
+     process rxba_sync event" and used NULL pointer to indicate dropped
+     packet(Kalle Valo).
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h | 25 ++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
+Amitkumar Karwar (2):
+  mwifiex: fix failed to reconnect after interface disabled/enabled
+  mwifiex: remove misleading disconnect message
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h
-index f4d3cd0..545d14b 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.h
-@@ -1,6 +1,7 @@
- /******************************************************************************
-  *
-  * Copyright(c) 2009 - 2014 Intel Corporation. All rights reserved.
-+ * Copyright(C) 2016 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-@@ -33,11 +34,29 @@
- static inline bool iwl_trace_data(struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	__le16 fc = hdr->frame_control;
-+	int offs = 24; /* start with normal header length */
- 
--	if (!ieee80211_is_data(hdr->frame_control))
-+	if (!ieee80211_is_data(fc))
- 		return false;
--	return !(info->control.flags & IEEE80211_TX_CTRL_PORT_CTRL_PROTO);
-+
-+	/* Try to determine if the frame is EAPOL. This might have false
-+	 * positives (if there's no RFC 1042 header and we compare to some
-+	 * payload instead) but since we're only doing tracing that's not
-+	 * a problem.
-+	 */
-+
-+	if (ieee80211_has_a4(fc))
-+		offs += 6;
-+	if (ieee80211_is_data_qos(fc))
-+		offs += 2;
-+	/* don't account for crypto - these are unencrypted */
-+
-+	/* also account for the RFC 1042 header, of course */
-+	offs += 6;
-+
-+	return skb->len > offs + 2 &&
-+	       *(__be16 *)(skb->data + offs) == cpu_to_be16(ETH_P_PAE);
- }
- 
- static inline size_t iwl_rx_trace_len(const struct iwl_trans *trans,
+Ganapathi Bhat (2):
+  mwifiex: support random MAC address for scanning
+  mwifiex: fix radar detection issue
+
+Karthik D A (2):
+  mwifiex: Fixed endianness problem for big endian platform
+  mwifiex: add region code information in debugfs
+
+Xinming Hu (2):
+  mwifiex: process rxba_sync event
+  mwifiex: add HT aggregation support for adhoc mode
+
+ drivers/net/wireless/marvell/mwifiex/11h.c         |  27 ++--
+ drivers/net/wireless/marvell/mwifiex/11n.h         |   7 +-
+ .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |  78 ++++++++++-
+ .../net/wireless/marvell/mwifiex/11n_rxreorder.h   |   3 +-
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    |  19 ++-
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c      |  18 ++-
+ drivers/net/wireless/marvell/mwifiex/debugfs.c     |   2 +
+ drivers/net/wireless/marvell/mwifiex/fw.h          |  58 ++++++---
+ drivers/net/wireless/marvell/mwifiex/main.h        |   1 +
+ drivers/net/wireless/marvell/mwifiex/scan.c        |  16 +++
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  27 ++--
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |   2 +-
+ drivers/net/wireless/marvell/mwifiex/sta_event.c   | 144 ++++++++++++++++++++-
+ drivers/net/wireless/marvell/mwifiex/uap_event.c   |   7 +-
+ 14 files changed, 350 insertions(+), 59 deletions(-)
+
 -- 
-2.8.1
+1.9.1
 
