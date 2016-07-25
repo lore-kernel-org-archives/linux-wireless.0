@@ -1,249 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35316 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751816AbcGPPKs (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:33562 "EHLO
+	mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753470AbcGYSeS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jul 2016 11:10:48 -0400
-Received: by mail-wm0-f67.google.com with SMTP id i5so6061801wmg.2
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jul 2016 08:10:47 -0700 (PDT)
-From: Alex Briskin <br.shurik@gmail.com>
-To: linux-wireless@vger.kernel.org, johannes@sipsolutions.net
-Cc: Alex Briskin <br.shurik@gmail.com>
-Subject: [PATCH 2/3 v3] mac80211: Refactor ieee80211_iface_work
-Date: Sat, 16 Jul 2016 18:10:37 +0300
-Message-Id: <1468681838-16601-2-git-send-email-br.shurik@gmail.com> (sfid-20160716_171059_866532_F53BB35B)
-In-Reply-To: <1468681838-16601-1-git-send-email-br.shurik@gmail.com>
-References: <1468681838-16601-1-git-send-email-br.shurik@gmail.com>
+	Mon, 25 Jul 2016 14:34:18 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-wireless@vger.kernel.org (open list:BROADCOM SPECIFIC AMBA DRIVER
+	(BCMA)), linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH] bcma: support BCM53573 series of wireless SoCs
+Date: Mon, 25 Jul 2016 20:33:56 +0200
+Message-Id: <1469471640-15656-1-git-send-email-zajec5@gmail.com> (sfid-20160725_203438_467336_A5691896)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Refactored ieee80211_iface_work_handle_pkt_type - if else if replaced by
-switch case.
+BCM53573 seems to be the first series of Northstar family with wireless
+on the chip. The base models are BCM53573-s (A0, A1) and there is also
+BCM47189B0 which seems to be some small modification.
 
-Added ieee80211_iface_work_handle_frame_control.
-Moved the code that looks in skb->data (ieee80211_mgmt/ieee80211_hdr) at
-frame_control member(field) from ieee80211_iface_work to the function.
+The only problem with these chipsets seems to be watchdog. It's totally
+unavailable on 53573A0 / 53573A1 and preferable PMU watchdog is broken
+on 53573B0 / 53573B1.
 
-Signed-off-by: Alex Briskin <br.shurik@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- net/mac80211/iface.c | 165 ++++++++++++++++++++++++++++-----------------------
- 1 file changed, 90 insertions(+), 75 deletions(-)
+ drivers/bcma/driver_chipcommon.c | 32 +++++++++++++++++++++++++++++---
+ include/linux/bcma/bcma.h        |  3 +++
+ 2 files changed, 32 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 0fc973a..c185801 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1207,13 +1207,16 @@ static int ieee80211_iface_work_handle_pkt_type(struct sk_buff *skb,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sta_info *sta;
- 
--	if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_START) {
-+	switch (skb->pkt_type) {
-+	case IEEE80211_SDATA_QUEUE_AGG_START:
- 		ra_tid = (void *)&skb->cb;
- 		ieee80211_start_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
--	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_AGG_STOP) {
-+		break;
-+	case IEEE80211_SDATA_QUEUE_AGG_STOP:
- 		ra_tid = (void *)&skb->cb;
- 		ieee80211_stop_tx_ba_cb(&sdata->vif, ra_tid->ra, ra_tid->tid);
--	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_START) {
-+		break;
-+	case IEEE80211_SDATA_QUEUE_RX_AGG_START:
- 		rx_agg = (void *)&skb->cb;
- 		mutex_lock(&local->sta_mtx);
- 		sta = sta_info_get_bss(sdata, rx_agg->addr);
-@@ -1223,7 +1226,8 @@ static int ieee80211_iface_work_handle_pkt_type(struct sk_buff *skb,
- 							IEEE80211_MAX_AMPDU_BUF,
- 							false, true);
- 		mutex_unlock(&local->sta_mtx);
--	} else if (skb->pkt_type == IEEE80211_SDATA_QUEUE_RX_AGG_STOP) {
-+		break;
-+	case IEEE80211_SDATA_QUEUE_RX_AGG_STOP:
- 		rx_agg = (void *)&skb->cb;
- 		mutex_lock(&local->sta_mtx);
- 		sta = sta_info_get_bss(sdata, rx_agg->addr);
-@@ -1233,20 +1237,98 @@ static int ieee80211_iface_work_handle_pkt_type(struct sk_buff *skb,
- 						       WLAN_BACK_RECIPIENT, 0,
- 						       false);
- 		mutex_unlock(&local->sta_mtx);
--	} else {
-+		break;
-+	default:
- 		return -EINVAL;
- 	}
- 	/*will return 0 if pkt_type found and handled */
- 	return 0;
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 921ce18..b4f6520 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -36,12 +36,31 @@ u32 bcma_chipco_get_alp_clock(struct bcma_drv_cc *cc)
  }
+ EXPORT_SYMBOL_GPL(bcma_chipco_get_alp_clock);
  
-+static int ieee80211_iface_work_handle_frame_control(struct sk_buff *skb,
-+				struct ieee80211_sub_if_data  *sdata)
++static bool bcma_core_cc_has_pmu_watchdog(struct bcma_drv_cc *cc)
 +{
-+	struct ieee80211_local *local = sdata->local;
-+	struct sta_info *sta;
-+	struct ieee80211_mgmt *mgmt = (void *)skb->data;
++	struct bcma_bus *bus = cc->core->bus;
 +
-+	if (ieee80211_is_action(mgmt->frame_control) &&
-+	    mgmt->u.action.category == WLAN_CATEGORY_BACK) {
-+		int len = skb->len;
-+
-+		mutex_lock(&local->sta_mtx);
-+		sta = sta_info_get_bss(sdata, mgmt->sa);
-+		if (sta) {
-+			switch (mgmt->u.action.u.addba_req.action_code) {
-+			case WLAN_ACTION_ADDBA_REQ:
-+				ieee80211_process_addba_request(local, sta,
-+								mgmt, len);
-+				break;
-+			case WLAN_ACTION_ADDBA_RESP:
-+				ieee80211_process_addba_resp(local, sta,
-+							     mgmt, len);
-+				break;
-+			case WLAN_ACTION_DELBA:
-+				ieee80211_process_delba(sdata, sta, mgmt, len);
-+				break;
-+			default:
-+				WARN_ON(1);
-+				break;
-+			}
++	if (cc->capabilities & BCMA_CC_CAP_PMU) {
++		if (bus->chipinfo.id == BCMA_CHIP_ID_BCM53573) {
++			WARN(bus->chipinfo.rev <= 1, "No watchdog available\n");
++			/* 53573B0 and 53573B1 have bugged PMU watchdog. It can
++			 * be enabled but timer can't be bumped. Use CC one
++			 * instead.
++			 */
++			return false;
 +		}
-+		mutex_unlock(&local->sta_mtx);
-+	} else if (ieee80211_is_action(mgmt->frame_control) &&
-+		   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
-+		switch (mgmt->u.action.u.vht_group_notif.action_code) {
-+		case WLAN_VHT_ACTION_GROUPID_MGMT:
-+			ieee80211_process_mu_groups(sdata, mgmt);
-+			break;
-+		default:
-+			WARN_ON(1);
-+			break;
-+		}
-+	} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
-+		struct ieee80211_hdr *hdr = (void *)mgmt;
-+		/*
-+		 * So the frame isn't mgmt, but frame_control
-+		 * is at the right place anyway, of course, so
-+		 * the if statement is correct.
-+		 *
-+		 * Warn if we have other data frame types here,
-+		 * they must not get here.
-+		 */
-+		WARN_ON(hdr->frame_control &
-+			cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
-+		WARN_ON(!(hdr->seq_ctrl & cpu_to_le16(IEEE80211_SCTL_FRAG)));
-+		/*
-+		 * This was a fragment of a frame, received while
-+		 * a block-ack session was active. That cannot be
-+		 * right, so terminate the session.
-+		 */
-+		mutex_lock(&local->sta_mtx);
-+		sta = sta_info_get_bss(sdata, mgmt->sa);
-+		if (sta) {
-+			u16 tid = *ieee80211_get_qos_ctl(hdr) &
-+			    IEEE80211_QOS_CTL_TID_MASK;
-+
-+			__ieee80211_stop_rx_ba_session(sta, tid,
-+						       WLAN_BACK_RECIPIENT,
-+						       WLAN_REASON_QSTA_REQUIRE_SETUP,
-+						       true);
-+		}
-+		mutex_unlock(&local->sta_mtx);
++		return true;
 +	} else {
-+		return -EINVAL;
++		return false;
 +	}
-+	return 0;
 +}
 +
- static void ieee80211_iface_work(struct work_struct *work)
+ static u32 bcma_chipco_watchdog_get_max_timer(struct bcma_drv_cc *cc)
  {
- 	struct ieee80211_sub_if_data *sdata =
- 		container_of(work, struct ieee80211_sub_if_data, work);
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
--	struct sta_info *sta;
+ 	struct bcma_bus *bus = cc->core->bus;
+ 	u32 nb;
  
- 	if (!ieee80211_sdata_running(sdata))
- 		return;
-@@ -1259,77 +1341,10 @@ static void ieee80211_iface_work(struct work_struct *work)
+-	if (cc->capabilities & BCMA_CC_CAP_PMU) {
++	if (bcma_core_cc_has_pmu_watchdog(cc)) {
+ 		if (bus->chipinfo.id == BCMA_CHIP_ID_BCM4706)
+ 			nb = 32;
+ 		else if (cc->core->id.rev < 26)
+@@ -95,9 +114,16 @@ static int bcma_chipco_watchdog_ticks_per_ms(struct bcma_drv_cc *cc)
  
- 	/* first process frames */
- 	while ((skb = skb_dequeue(&sdata->skb_queue))) {
--		struct ieee80211_mgmt *mgmt = (void *)skb->data;
--
- 		if (!ieee80211_iface_work_handle_pkt_type(skb, sdata)) {
- 			goto free_skb;
--		} else if (ieee80211_is_action(mgmt->frame_control) &&
--			   mgmt->u.action.category == WLAN_CATEGORY_BACK) {
--			int len = skb->len;
--
--			mutex_lock(&local->sta_mtx);
--			sta = sta_info_get_bss(sdata, mgmt->sa);
--			if (sta) {
--				switch (mgmt->u.action.u.addba_req.action_code) {
--				case WLAN_ACTION_ADDBA_REQ:
--					ieee80211_process_addba_request(
--							local, sta, mgmt, len);
--					break;
--				case WLAN_ACTION_ADDBA_RESP:
--					ieee80211_process_addba_resp(local, sta,
--								     mgmt, len);
--					break;
--				case WLAN_ACTION_DELBA:
--					ieee80211_process_delba(sdata, sta,
--								mgmt, len);
--					break;
--				default:
--					WARN_ON(1);
--					break;
--				}
--			}
--			mutex_unlock(&local->sta_mtx);
--		} else if (ieee80211_is_action(mgmt->frame_control) &&
--			   mgmt->u.action.category == WLAN_CATEGORY_VHT) {
--			switch (mgmt->u.action.u.vht_group_notif.action_code) {
--			case WLAN_VHT_ACTION_GROUPID_MGMT:
--				ieee80211_process_mu_groups(sdata, mgmt);
--				break;
--			default:
--				WARN_ON(1);
--				break;
--			}
--		} else if (ieee80211_is_data_qos(mgmt->frame_control)) {
--			struct ieee80211_hdr *hdr = (void *)mgmt;
--			/*
--			 * So the frame isn't mgmt, but frame_control
--			 * is at the right place anyway, of course, so
--			 * the if statement is correct.
--			 *
--			 * Warn if we have other data frame types here,
--			 * they must not get here.
--			 */
--			WARN_ON(hdr->frame_control &
--					cpu_to_le16(IEEE80211_STYPE_NULLFUNC));
--			WARN_ON(!(hdr->seq_ctrl &
--					cpu_to_le16(IEEE80211_SCTL_FRAG)));
--			/*
--			 * This was a fragment of a frame, received while
--			 * a block-ack session was active. That cannot be
--			 * right, so terminate the session.
--			 */
--			mutex_lock(&local->sta_mtx);
--			sta = sta_info_get_bss(sdata, mgmt->sa);
--			if (sta) {
--				u16 tid = *ieee80211_get_qos_ctl(hdr) &
--						IEEE80211_QOS_CTL_TID_MASK;
--
--				__ieee80211_stop_rx_ba_session(
--					sta, tid, WLAN_BACK_RECIPIENT,
--					WLAN_REASON_QSTA_REQUIRE_SETUP,
--					true);
--			}
--			mutex_unlock(&local->sta_mtx);
-+		} else if (!ieee80211_iface_work_handle_frame_control(skb, sdata)) {
-+			goto free_skb;
- 		} else switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_STATION:
- 			ieee80211_sta_rx_queued_mgmt(sdata, skb);
+ int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc)
+ {
++	struct bcma_bus *bus = cc->core->bus;
+ 	struct bcm47xx_wdt wdt = {};
+ 	struct platform_device *pdev;
+ 
++	if (bus->chipinfo.id == BCMA_CHIP_ID_BCM53573 &&
++	    bus->chipinfo.rev <= 1) {
++		pr_debug("No watchdog on 53573A0 / 53573A1\n");
++		return 0;
++	}
++
+ 	wdt.driver_data = cc;
+ 	wdt.timer_set = bcma_chipco_watchdog_timer_set_wdt;
+ 	wdt.timer_set_ms = bcma_chipco_watchdog_timer_set_ms_wdt;
+@@ -105,7 +131,7 @@ int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc)
+ 		bcma_chipco_watchdog_get_max_timer(cc) / cc->ticks_per_ms;
+ 
+ 	pdev = platform_device_register_data(NULL, "bcm47xx-wdt",
+-					     cc->core->bus->num, &wdt,
++					     bus->num, &wdt,
+ 					     sizeof(wdt));
+ 	if (IS_ERR(pdev))
+ 		return PTR_ERR(pdev);
+@@ -217,7 +243,7 @@ u32 bcma_chipco_watchdog_timer_set(struct bcma_drv_cc *cc, u32 ticks)
+ 	u32 maxt;
+ 
+ 	maxt = bcma_chipco_watchdog_get_max_timer(cc);
+-	if (cc->capabilities & BCMA_CC_CAP_PMU) {
++	if (bcma_core_cc_has_pmu_watchdog(cc)) {
+ 		if (ticks == 1)
+ 			ticks = 2;
+ 		else if (ticks > maxt)
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index e6b41f4..478e5cf 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -204,6 +204,9 @@ struct bcma_host_ops {
+ #define  BCMA_PKG_ID_BCM4709	0
+ #define BCMA_CHIP_ID_BCM47094	53030
+ #define BCMA_CHIP_ID_BCM53018	53018
++#define BCMA_CHIP_ID_BCM53573	53573
++#define  BCMA_PKG_ID_BCM53573	0
++#define  BCMA_PKG_ID_BCM47189	1
+ 
+ /* Board types (on PCI usually equals to the subsystem dev id) */
+ /* BCM4313 */
 -- 
-2.7.4
+1.8.4.5
 
