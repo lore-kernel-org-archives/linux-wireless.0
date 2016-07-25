@@ -1,68 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ipv4.connman.net ([82.165.8.211]:41316 "EHLO mail.holtmann.org"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751145AbcGMK4Q convert rfc822-to-8bit (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:43458 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238AbcGYSKD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 06:56:16 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: [PATCH] drivers: misc: ti-st: Use int instead of fuzzy char for callback status
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <20160713074114.76c35d04@recife.lan>
-Date: Wed, 13 Jul 2016 11:56:02 +0100
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-	"Gustavo F. Padovan" <gustavo@padovan.org>,
-	Johan Hedberg <johan.hedberg@gmail.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Pavan Savoy <pavan_savoy@ti.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"open list:BLUETOOTH DRIVERS" <linux-bluetooth@vger.kernel.org>,
-	linux-media@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-kernel@vger.kernel.org
-Message-Id: <32897348-2AC5-4AB7-BF58-B1E36FC19CF2@holtmann.org> (sfid-20160713_125735_601408_CE273434)
-References: <1465203723-16928-1-git-send-email-geert@linux-m68k.org> <20160713074114.76c35d04@recife.lan>
-To: Mauro Carvalho Chehab <mchehab@osg.samsung.com>
+	Mon, 25 Jul 2016 14:10:03 -0400
+Date: Mon, 25 Jul 2016 11:10:01 -0700 (PDT)
+Message-Id: <20160725.111001.2062566223923183810.davem@davemloft.net> (sfid-20160725_201023_433019_AD511C53)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, computersforpeace@gmail.com
+Subject: Re: pull-request: wireless-drivers-next 2016-07-22
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87fur1rbkz.fsf@kamboji.qca.qualcomm.com>
+References: <87fur1rbkz.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mauro,
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Fri, 22 Jul 2016 17:28:44 +0300
 
->> On mips and parisc:
->> 
->>    drivers/bluetooth/btwilink.c: In function 'ti_st_open':
->>    drivers/bluetooth/btwilink.c:174:21: warning: overflow in implicit constant conversion [-Woverflow]
->>       hst->reg_status = -EINPROGRESS;
->> 
->>    drivers/nfc/nfcwilink.c: In function 'nfcwilink_open':
->>    drivers/nfc/nfcwilink.c:396:31: warning: overflow in implicit constant conversion [-Woverflow]
->>      drv->st_register_cb_status = -EINPROGRESS;
->> 
->> There are actually two issues:
->>  1. Whether "char" is signed or unsigned depends on the architecture.
->>     As the completion callback data is used to pass a (negative) error
->>     code, it should always be signed.
->>  2. EINPROGRESS is 150 on mips, 245 on parisc.
->>     Hence -EINPROGRESS doesn't fit in a signed 8-bit number.
->> 
->> Change the callback status from "char" to "int" to fix these.
->> 
->> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> I'm sick so I have to keep this short, but here's the last pull request
+> to net-next. This time there's a trivial conflict with mtd tree:
 > 
-> Patch looks sane to me, but who will apply it?
+> http://lkml.kernel.org/g/20160720123133.44dab209@canb.auug.org.au
 > 
-> Anyway:
+> We concluded with Brian (CCed) that it's best that we ask Linus to fix
+> this. The patches have been in linux-next for a couple of days. This
+> time I haven't done any merge tests so I don't know if there are any
+> other conflicts etc.
 > 
-> Acked-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+> Please let me know if there are any problems.
 
-I can take it through bluetooth-next if there is no objection.
+Ok, pulled, thanks Kalle.
 
-Samuel, are you fine with that?
-
-Regards
-
-Marcel
-
+Feel better soon.
