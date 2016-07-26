@@ -1,73 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56423 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030314AbcGKKCw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 06:02:52 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 1/4] ath9k_hw: fix duplicate (and partially wrong) definition of AR_CH0_THERM
-Date: Mon, 11 Jul 2016 12:02:45 +0200
-Message-Id: <20160711100248.68678-1-nbd@nbd.name> (sfid-20160711_120450_900453_DE04181D)
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:35814 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753855AbcGZTUa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2016 15:20:30 -0400
+Received: by mail-wm0-f53.google.com with SMTP id f65so186064887wmi.0
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2016 12:20:30 -0700 (PDT)
+Subject: Re: BRCM4339 NVRAM file
+To: Fabio Estevam <festevam@gmail.com>, frankyl@broadcom.com,
+	Arend van Spriel <arend@broadcom.com>, pieterpg@broadcom.com,
+	John Linville <linville@tuxdriver.com>
+References: <CAOMZO5Dto7bScKrz9tmM5TDg8Tss5xGiO77F4u==V4pLgXZZGw@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <5797B7FB.4090707@broadcom.com> (sfid-20160726_212035_116978_16CCB2CE)
+Date: Tue, 26 Jul 2016 21:20:27 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAOMZO5Dto7bScKrz9tmM5TDg8Tss5xGiO77F4u==V4pLgXZZGw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-AR_PHY_65NM_CH0_THERM and AR_CH0_THERM were supposed to refer to the
-same register, however they had different SREV checks.
 
-Remove the duplicate and use the checks. Since there were other SREV
-checks present in the only place that uses this, this will probaby not
-affect runtime behavior.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- drivers/net/wireless/ath/ath9k/ar9003_phy.h | 25 ++++++++++---------------
- 1 file changed, 10 insertions(+), 15 deletions(-)
+On 25-07-16 22:36, Fabio Estevam wrote:
+> Hi,
+> 
+> I am trying to use brcm4339 on a imx6ul-pico board running kernel 4.7.
+> 
+> According to commit bed89b64bcbc7 (" brcmfmac: add firmware and nvram
+> file name for bcm4339") we need to provide brcmfmac4339-sdio.bin and
+> brcmfmac4339-sdio.txt files.
+> 
+> Was able to get the brcmfmac4339-sdio.bin from linux-firmware git
+> tree, but could not find the nvram file: brcmfmac4339-sdio.txt.
+> 
+> Does anyone know where brcmfmac4339-sdio.txt can be found?
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.h b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-index 566da78..a171dbb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.h
-@@ -689,13 +689,6 @@
- #define AR_CH0_TOP_XPABIASLVL (AR_SREV_9550(ah) ? 0x3c0 : 0x300)
- #define AR_CH0_TOP_XPABIASLVL_S (AR_SREV_9550(ah) ? 6 : 8)
- 
--#define AR_CH0_THERM	(AR_SREV_9300(ah) ? 0x16290 : \
--				((AR_SREV_9485(ah) ? 0x1628c : 0x16294)))
--#define AR_CH0_THERM_XPABIASLVL_MSB 0x3
--#define AR_CH0_THERM_XPABIASLVL_MSB_S 0
--#define AR_CH0_THERM_XPASHORT2GND 0x4
--#define AR_CH0_THERM_XPASHORT2GND_S 2
--
- #define AR_SWITCH_TABLE_COM_ALL (0xffff)
- #define AR_SWITCH_TABLE_COM_ALL_S (0)
- #define AR_SWITCH_TABLE_COM_AR9462_ALL (0xffffff)
-@@ -712,15 +705,17 @@
- #define AR_SWITCH_TABLE_ALL (0xfff)
- #define AR_SWITCH_TABLE_ALL_S (0)
- 
--#define AR_PHY_65NM_CH0_THERM       (AR_SREV_9300(ah) ? 0x16290 :\
--				     ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16294 : 0x1628c))
-+#define AR_CH0_THERM       (AR_SREV_9300(ah) ? 0x16290 :\
-+			    ((AR_SREV_9462(ah) || AR_SREV_9565(ah)) ? 0x16294 : 0x1628c))
-+#define AR_CH0_THERM_XPABIASLVL_MSB 0x3
-+#define AR_CH0_THERM_XPABIASLVL_MSB_S 0
-+#define AR_CH0_THERM_XPASHORT2GND 0x4
-+#define AR_CH0_THERM_XPASHORT2GND_S 2
- 
--#define AR_PHY_65NM_CH0_THERM_LOCAL   0x80000000
--#define AR_PHY_65NM_CH0_THERM_LOCAL_S 31
--#define AR_PHY_65NM_CH0_THERM_START   0x20000000
--#define AR_PHY_65NM_CH0_THERM_START_S 29
--#define AR_PHY_65NM_CH0_THERM_SAR_ADC_OUT   0x0000ff00
--#define AR_PHY_65NM_CH0_THERM_SAR_ADC_OUT_S 8
-+#define AR_CH0_THERM_LOCAL   0x80000000
-+#define AR_CH0_THERM_START   0x20000000
-+#define AR_CH0_THERM_SAR_ADC_OUT   0x0000ff00
-+#define AR_CH0_THERM_SAR_ADC_OUT_S 8
- 
- #define AR_CH0_TOP2		(AR_SREV_9300(ah) ? 0x1628c : \
- 					(AR_SREV_9462(ah) ? 0x16290 : 0x16284))
--- 
-2.8.4
+I though it would be mentioned in [1], but unfortunately not (will
+change that). The nvram is board specific so you will have to ask the
+vendor supplying the bcm4339. From what I googled that would be
+TechNexion, right?
 
+Regards,
+Arend
+
+[1] https://wireless.wiki.kernel.org/en/users/drivers/brcm80211
+
+> Thanks,
+> 
+> Fabio Estevam
+> 
