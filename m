@@ -1,94 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53063 "EHLO mx1.redhat.com"
+Received: from mout.web.de ([212.227.17.11]:50277 "EHLO mout.web.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751925AbcGFMhF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 08:37:05 -0400
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>,
-	Intel Linux Wireless <linuxwifi@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-	Sara Sharon <sara.sharon@intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] iwlwifi, Do not implement thermal zone unless ucode is loaded
-Date: Wed,  6 Jul 2016 08:37:03 -0400
-Message-Id: <1467808623-25255-1-git-send-email-prarit@redhat.com> (sfid-20160706_143725_610071_94EF7C66)
+	id S1752969AbcGZG0X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2016 02:26:23 -0400
+Subject: Re: staging: wilc1000: Reduce scope for a few variables in
+ mac_ioctl()
+To: Lino Sanfilippo <LinoSanfilippo@gmx.de>
+References: <1c4cac35-dded-ea88-45aa-3f8ac098289d@gmx.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Steve Caldwell <Steve.Caldwell@microchip.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <d8d9729c-6d65-a901-1b29-c0b031e143d2@users.sourceforge.net> (sfid-20160726_082645_670008_4D312DC8)
+Date: Tue, 26 Jul 2016 08:25:54 +0200
+MIME-Version: 1.0
+In-Reply-To: <1c4cac35-dded-ea88-45aa-3f8ac098289d@gmx.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The iwlwifi driver implements a thermal zone and hwmon device, but
-returns -EIO on temperature reads if the firmware isn't loaded.  This
-results in the error
+>> -			if (strncasecmp(buff, "RSSI", length) == 0) {
+>> +			if (strncasecmp(buff, "RSSI", 0) == 0) {
+>> +				s8 rssi;
+>> +
+> 
+> Um, please think a second about if it makes any sense at all to compare 
+> zero chars of two strings.
 
-iwlwifi-virtual-0
-Adapter: Virtual device
-ERROR: Can't get value of subfeature temp1_input: I/O error
-temp1:            N/A
+Under which circumstances should the variable "length" contain an other
+value than zero?
 
-being output when using sensors from the lm-sensors package.  Since
-the temperature cannot be read unless the ucode is loaded there is no
-reason to add the interface only to have it return an error 100% of
-the time.
+How can this open issue be fixed better?
 
-This patch moves the firmware check to iwl_mvm_thermal_zone_register() and
-stops the thermal zone from being created if the ucode hasn't been loaded.
-
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: Intel Linux Wireless <linuxwifi@intel.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
-Cc: Sara Sharon <sara.sharon@intel.com>
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
----
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c |   13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-index 58fc7b3c711c..64802659711f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-@@ -634,11 +634,6 @@ static int iwl_mvm_tzone_get_temp(struct thermal_zone_device *device,
- 
- 	mutex_lock(&mvm->mutex);
- 
--	if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR)) {
--		ret = -EIO;
--		goto out;
--	}
--
- 	ret = iwl_mvm_get_temp(mvm, &temp);
- 	if (ret)
- 		goto out;
-@@ -684,11 +679,6 @@ static int iwl_mvm_tzone_set_trip_temp(struct thermal_zone_device *device,
- 
- 	mutex_lock(&mvm->mutex);
- 
--	if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR)) {
--		ret = -EIO;
--		goto out;
--	}
--
- 	if (trip < 0 || trip >= IWL_MAX_DTS_TRIPS) {
- 		ret = -EINVAL;
- 		goto out;
-@@ -750,6 +740,9 @@ static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
- 		return;
- 	}
- 
-+	if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR))
-+		return;
-+
- 	BUILD_BUG_ON(ARRAY_SIZE(name) >= THERMAL_NAME_LENGTH);
- 
- 	mvm->tz_device.tzone = thermal_zone_device_register(name,
--- 
-1.7.9.3
-
+Regards,
+Markus
