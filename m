@@ -1,69 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:36894 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751244AbcGVQYz (ORCPT
+Received: from mail-qt0-f170.google.com ([209.85.216.170]:35153 "EHLO
+	mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758077AbcGZTZ4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 12:24:55 -0400
-Received: by mail-wm0-f46.google.com with SMTP id i5so73523760wmg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jul 2016 09:24:54 -0700 (PDT)
-From: Christopher Williamson <home@chrisaw.com>
-In-Reply-To: <1469204186.15064.6.camel@redhat.com>
-References: <CANXHH3n7Gp+0NA8j9ji0S2dsYqbR9SE0MEuB5oKENE6Asz9j=w@mail.gmail.com>
- <1468946312.5661.2.camel@redhat.com> <CANXHH3kKV4m6rw9O=6x_QT2vwr7Tnx9EddpFq1VXfhnVdg9pFg@mail.gmail.com>
- <CANXHH3k4x1QWY9H4n=hDeLmVMxdi4HOuVxHTv1ztX0AhZF7B-Q@mail.gmail.com>
- <CANXHH3k3wSYYc2xS1rk9JqeWmekC+79YCYshMcXA-yz4rX_+Hw@mail.gmail.com>
- <1469033825.3004.8.camel@redhat.com> <1469033825.3004.8.camel@redhat.com>
- <CANXHH3minohF3z9bWc2NAghiU=w4DbsH1jU8iE8=v7H1pGdFcg@mail.gmail.com>
- <1469051432.3286.4.camel@redhat.com> <1469051432.3286.4.camel@redhat.com>
- <CANXHH3n0=dmV+2D9FeOoGuqDvKJHdpnOMdYH1Ecr3TACJ5FXYQ@mail.gmail.com>
- <1469115440.29944.1.camel@redhat.com> <CANXHH3kHFDkRUTMyOheFwpJasqOmtGrQ3dG7LP_L0CBN87Aagw@mail.gmail.com>
- <CANXHH3kwH_A-45D9ZsT3Afz3LxYW6Pgz06qBzfnK+jtcg8FiNg@mail.gmail.com>
- <1469133499.18298.8.camel@redhat.com> <1469133499.18298.8.camel@redhat.com>
- <etPan.579137d1.40bb3278.381a@chrisaw.com> <CANXHH3=852nV-4rjt8bO47Mbt02JNHNFGzytk3kiV1RQ39rLwg@mail.gmail.com>
- <435adbc6-9fa3-e9e3-9815-8cf4b62e5342@broadcom.com> <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
- <CANXHH3mn2U5X5n9OB6+uESDgeRt6r6WyGV5wT0=MQwvuvD870g@mail.gmail.com>
- <CANXHH3mOsN3-U=BS4fA6iax0ciwbSSywHAgOhHCNj8e7CPCyfQ@mail.gmail.com>
- <1469204186.15064.6.camel@redhat.com> <1469204186.15064.6.camel@redhat.com>
+	Tue, 26 Jul 2016 15:25:56 -0400
+Received: by mail-qt0-f170.google.com with SMTP id x25so16733478qtx.2
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2016 12:25:56 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 22 Jul 2016 12:24:52 -0400
-Message-ID: <CANXHH3nvu7TC=x5RTR_WcgGkd2=_0h4BZrc_Nv74023nrc3P5w@mail.gmail.com> (sfid-20160722_182459_751058_997AABD8)
-Subject: Re: Problem connecting to wifi on libertas_cpio (sd8686)
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Dan Williams <dcbw@redhat.com>
+In-Reply-To: <5797B7FB.4090707@broadcom.com>
+References: <CAOMZO5Dto7bScKrz9tmM5TDg8Tss5xGiO77F4u==V4pLgXZZGw@mail.gmail.com>
+ <5797B7FB.4090707@broadcom.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Tue, 26 Jul 2016 16:25:55 -0300
+Message-ID: <CAOMZO5CqJyJxC16aqh-oGJhY=tuaazWmQfe_P0R7kqMpg=1e6w@mail.gmail.com> (sfid-20160726_212600_563441_54B6A516)
+Subject: Re: BRCM4339 NVRAM file
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: frankyl@broadcom.com, Arend van Spriel <arend@broadcom.com>,
+	pieterpg@broadcom.com, John Linville <linville@tuxdriver.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Hi Arend,
 
-I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
+On Tue, Jul 26, 2016 at 4:20 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
 
-For now though - the iwlist scan results for both a USB device and the
-libertas device:
+> I though it would be mentioned in [1], but unfortunately not (will
+> change that). The nvram is board specific so you will have to ask the
+> vendor supplying the bcm4339. From what I googled that would be
+> TechNexion, right?
 
-USB: http://termbin.com/hdwl
-Libertas: http://termbin.com/jxh7
+That's correct.
 
-Will follow up shortly with WPA and Open network configs.
+Thanks for the clarification.
 
-Christopher Williamson
+Regards,
 
-
-
-On 22 July 2016 at 17:16:29, Dan Williams
-(dcbw@redhat.com(mailto:dcbw@redhat.com)) wrote:
-
-> Hi Dan,
->
-> I will check out the WPA2 vs WPA vs open wireless thing in a few mins.
->
-> For now though - the iwlist scan results for both a USB device and the
-> libertas device:
->
-> USB: http://termbin.com/hdwl
-> Libertas: http://termbin.com/jxh7
->
-> Will follow up shortly with WPA and Open network configs.
->
-> *Christopher Williamson*
+Fabio Estevam
