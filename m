@@ -1,101 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:33724 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541AbcGBSUn (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:53335 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754446AbcGZJkE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jul 2016 14:20:43 -0400
-Received: by mail-wm0-f50.google.com with SMTP id r190so14953920wmr.0
-        for <linux-wireless@vger.kernel.org>; Sat, 02 Jul 2016 11:20:42 -0700 (PDT)
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name
- dt property
-To: Jonas Gorski <jonas.gorski@gmail.com>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
- <CAOiHx==82LHOeQMNVD+dybFifXX690Q6AJTcMBMynjSfUOyGUw@mail.gmail.com>
- <8d8bd933-717b-48e4-f002-7b834abed6fd@redhat.com>
- <3960223.GqB9zXL8s8@wuerfel>
- <1f44df41-0111-441b-4671-718eec0c4346@broadcom.com>
- <CAOiHx=m8Zf0T4=BTG6BMRjj3kOHzt4YaQa3yzutmrhFSOyZMmA@mail.gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Hans de Goede <hdegoede@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Priit Laes <plaes@plaes.org>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi@googlegroups.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <ced2a770-2724-bdc9-7e2a-3dc9f76abf29@broadcom.com> (sfid-20160702_202047_267727_F07DD3F8)
-Date: Sat, 2 Jul 2016 20:20:35 +0200
+	Tue, 26 Jul 2016 05:40:04 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u6Q9dvE8031610
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2016 02:39:58 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 24c5xkk7ya-2
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2016 02:39:58 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v4 2/2] mwifiex: add cfg80211 testmode support
+Date: Tue, 26 Jul 2016 15:09:20 +0530
+Message-ID: <1469525960-6643-2-git-send-email-akarwar@marvell.com> (sfid-20160726_114008_234743_1F28501E)
+In-Reply-To: <1469525960-6643-1-git-send-email-akarwar@marvell.com>
+References: <1469525960-6643-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOiHx=m8Zf0T4=BTG6BMRjj3kOHzt4YaQa3yzutmrhFSOyZMmA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1-7-2016 10:58, Jonas Gorski wrote:
-> Hi,
-> 
-> On 30 June 2016 at 21:23, Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
->>
->>
->> On 30-6-2016 13:31, Arnd Bergmann wrote:
->>> On Thursday, June 30, 2016 12:25:15 PM CEST Hans de Goede wrote:
->>>>> So then how about making use of a more specific compatible string?
->>>>>
->>>>> e.g.
->>>>>
->>>>> brcmf {
->>>>>         compatible = "foo,ap6210", "brcm,bcm4329-fmac";
->>>>>         ...
->>>>> };
->>>>>
->>>>> and if the compatible has more than one element you request
->>>>> FW_NAME_<compatible>.txt as the nvram file. Or try each comptible (and
->>>>> lastly no suffix) until you get a match. (AFAICT, this is what the
->>>>> "model" property was originally intended for anyway, but almost nobody
->>>>> did it right, and everyone put a user readable string into "model" for
->>>>> boards instead of the ePAPR defined compatible string).
->>>>
->>>> Hmm, interesting idea. Not sure how easy / hard it will be to implement
->>>> this, but from a dt binding point of view it seems elegant.
->>>>
->>>> Kalle, Arend, what do you think of this ?
->>
->> At first glance I like the suggestion, but this would mean updating the
->> bindings document for each new wifi module that we want to add. Not a
->> big problem, but it makes that I have a slight preference to using a
->> property for it, eg. brcm,module = "ap6210";
-> 
-> If you want a separate property, then I repeat my very first
-> suggestion, the well defined model property.
-> e.g.
-> 
-> brcmf@0 {
->         model = "ampak,ap6210";
->         compatible = "brcm,bcm4329-fmac";
->         ...
-> };
-> 
-> All device nodes may have a model property, not just the top "machine" one.
+From: Xinming Hu <huxm@marvell.com>
 
-I heard you the first time :-p I just was not sure what the implications
-would be to use it. Hence I suggested a vendor specific property.
-However, looking up and reading the definition in ePAPRv1.1 I suppose it
-is fine to use the model property:
+This patch adds cfg80211 testmode support so that userspace tools can
+download necessary commands to firmware during manufacturing mode tests.
 
-Property: model
-Value type: <string>
-Description:
-The model property value is a <string> that specifies the manufacturer’s
-model number of the device.
+Signed-off-by: Xinming <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v4: Used cfg80211 testmode interface instead of wext in 2/2 patch.(Kalle Valo)
+v3: Add "select WIRELESS_EXT" in Kconfig to resolve kbuild test robot errors.
+    WEXT_PRIV seems to have a dependency with WIRELESS_EXT.
+v2: 1) Sequence of these two patches are changed to resolve compilation
+    error seen if only 1/2 is applied.
+    2) Add "select WEXT_PRIV" in Kconfig to resolve warnings reported by
+    kbuild test robot.
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 83 +++++++++++++++++++++++++
+ 1 file changed, 83 insertions(+)
 
-The recommended format is: “manufacturer,model”, where manufacturer is a
-string describing the name of the manufacturer (such as a stock ticker
-symbol), and model specifies the model number.
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 235fb39..86b31b1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3919,6 +3919,88 @@ static int mwifiex_cfg80211_get_channel(struct wiphy *wiphy,
+ 	return ret;
+ }
+ 
++#ifdef CONFIG_NL80211_TESTMODE
++
++enum mwifiex_tm_attr {
++	__MWIFIEX_TM_ATTR_INVALID	= 0,
++	MWIFIEX_TM_ATTR_CMD		= 1,
++	MWIFIEX_TM_ATTR_DATA		= 2,
++
++	/* keep last */
++	__MWIFIEX_TM_ATTR_AFTER_LAST,
++	MWIFIEX_TM_ATTR_MAX		= __MWIFIEX_TM_ATTR_AFTER_LAST - 1,
++};
++
++static const struct nla_policy mwifiex_tm_policy[MWIFIEX_TM_ATTR_MAX + 1] = {
++	[MWIFIEX_TM_ATTR_CMD]		= { .type = NLA_U32 },
++	[MWIFIEX_TM_ATTR_DATA]		= { .type = NLA_BINARY,
++					    .len = MWIFIEX_SIZE_OF_CMD_BUFFER },
++};
++
++enum mwifiex_tm_cmd {
++	MWIFIEX_TM_CMD_HOSTCMD	= 0,
++};
++
++int mwifiex_tm_cmd(struct wiphy *wiphy, struct wireless_dev *wdev,
++		   void *data, int len)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(wdev->netdev);
++	struct mwifiex_ds_misc_cmd *hostcmd;
++	struct nlattr *tb[MWIFIEX_TM_ATTR_MAX + 1];
++	struct mwifiex_adapter *adapter;
++	struct sk_buff *skb;
++	int err;
++
++	if (!priv)
++		return -EINVAL;
++	adapter = priv->adapter;
++
++	err = nla_parse(tb, MWIFIEX_TM_ATTR_MAX, data, len,
++			mwifiex_tm_policy);
++	if (err)
++		return err;
++
++	if (!tb[MWIFIEX_TM_ATTR_CMD])
++		return -EINVAL;
++
++	switch (nla_get_u32(tb[MWIFIEX_TM_ATTR_CMD])) {
++	case MWIFIEX_TM_CMD_HOSTCMD:
++		if (!tb[MWIFIEX_TM_ATTR_DATA])
++			return -EINVAL;
++
++		hostcmd = kzalloc(sizeof(*hostcmd), GFP_KERNEL);
++		if (!hostcmd)
++			return -ENOMEM;
++
++		hostcmd->len = nla_len(tb[MWIFIEX_TM_ATTR_DATA]);
++		memcpy(hostcmd->cmd, nla_data(tb[MWIFIEX_TM_ATTR_DATA]),
++		       hostcmd->len);
++
++		if (mwifiex_send_cmd(priv, 0, 0, 0, hostcmd, true)) {
++			dev_err(priv->adapter->dev, "Failed to process hostcmd\n");
++			return -EFAULT;
++		}
++
++		/* process hostcmd response*/
++		skb = cfg80211_testmode_alloc_reply_skb(wiphy, hostcmd->len);
++		if (!skb)
++			return -ENOMEM;
++		err = nla_put(skb, MWIFIEX_TM_ATTR_DATA,
++			      hostcmd->len, hostcmd->cmd);
++		if (err) {
++			kfree_skb(skb);
++			return -EMSGSIZE;
++		}
++
++		err = cfg80211_testmode_reply(skb);
++		kfree(hostcmd);
++		return err;
++	default:
++		return -EOPNOTSUPP;
++	}
++}
++#endif
++
+ static int
+ mwifiex_cfg80211_start_radar_detection(struct wiphy *wiphy,
+ 				       struct net_device *dev,
+@@ -4031,6 +4113,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.tdls_cancel_channel_switch = mwifiex_cfg80211_tdls_cancel_chan_switch,
+ 	.add_station = mwifiex_cfg80211_add_station,
+ 	.change_station = mwifiex_cfg80211_change_station,
++	CFG80211_TESTMODE_CMD(mwifiex_tm_cmd)
+ 	.get_channel = mwifiex_cfg80211_get_channel,
+ 	.start_radar_detection = mwifiex_cfg80211_start_radar_detection,
+ 	.channel_switch = mwifiex_cfg80211_channel_switch,
+-- 
+1.9.1
 
-Regards,
-Arend
