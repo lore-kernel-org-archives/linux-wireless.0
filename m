@@ -1,81 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.15]:60049 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751195AbcGVUwA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jul 2016 16:52:00 -0400
-Date: Fri, 22 Jul 2016 22:51:35 +0200
-From: Stefan Lippers-Hollmann <s.l-h@gmx.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
-Message-ID: <20160722225135.2b2dd751@mir> (sfid-20160722_225228_753203_38D1B12F)
-In-Reply-To: <7894919.vMsHjmmMb1@wuerfel>
-References: <20160719153403.2967812-1-arnd@arndb.de>
-	<20160722043922.0a878698@mir>
-	<wrfjoa5phop3.fsf@redhat.com>
-	<7894919.vMsHjmmMb1@wuerfel>
+Received: from mout.kundenserver.de ([212.227.17.13]:57677 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbcGZLkO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2016 07:40:14 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>, zajec5@gmail.com,
+	leoli@freescale.com, qiang.zhao@freescale.com,
+	viresh.kumar@linaro.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, scottwood@freescale.com,
+	akpm@linux-foundation.org, linux@roeck-us.net
+Subject: Re: [v3] UCC_GETH/UCC_FAST: Use IS_ERR_VALUE_U32 API to avoid IS_ERR_VALUE abuses.
+Date: Tue, 26 Jul 2016 13:39:15 +0200
+Message-ID: <4175803.I7CDUloLxQ@wuerfel> (sfid-20160726_134019_291530_23CA40AA)
+In-Reply-To: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+On Saturday, July 23, 2016 11:35:51 PM CEST Arvind Yadav wrote:
+> diff --git a/include/linux/err.h b/include/linux/err.h
+> index 1e35588..a42f942 100644
+> --- a/include/linux/err.h
+> +++ b/include/linux/err.h
+> @@ -19,6 +19,7 @@
+>  #ifndef __ASSEMBLY__
+>  
+>  #define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)
+> +#define IS_ERR_VALUE_U32(x) unlikely((unsigned int)(x) >= (unsigned int)-MAX_ERRNO)
+>  
+>  static inline void * __must_check ERR_PTR(long error)
+>  {
 
-On 2016-07-22, Arnd Bergmann wrote:
-> On Friday, July 22, 2016 7:55:36 AM CEST Jes Sorensen wrote:
-> > Stefan Lippers-Hollmann <s.l-h@gmx.de> writes:  
-> > > On 2016-07-20, Arnd Bergmann wrote:  
-> > >> On Wednesday, July 20, 2016 11:33:43 AM CEST Jes Sorensen wrote:  
-> > >> > Arnd Bergmann <arnd@arndb.de> writes:    
-> > >> > > On Wednesday, July 20, 2016 7:25:19 AM CEST Jes Sorensen wrote:    
-> > >> > >> Arnd Bergmann <arnd@arndb.de> writes:  
-[...]
-> > > While probably not overly common, it was/ is (hardware-wise) a pretty
-> > > interesting device due to its support for 5 GHz[1] - actually I hoped
-> > > it to be a (supported-) RTL8192CU variant when I bought it. 
-> > > Unfortunately no driver[2] made it to staging or the proper kernel.  
-> > 
-> > I actually have one of those in my USB dongle box, but as you say, not
-> > overly common so not sure if/when I'll get to it.
-> > 
-> > Adding 8192du support for 2.4GHz to rtl8xxxu probably wouldn't be too
-> > complicated.  
-> 
-> My guess is that these devices have largely been replaced by
-> 802.11ac devices on the market, and whoever has one of the old ones
-> probably bought it because of the 5GHz support, so adding 2.4GHz-only
-> support for it may not help all that much either.
+This doesn't really look like something we want to have as a generic
+interface. The IS_ERR_VALUE() API is rather awkward already, and your
+use seems specific to the cpu_muram_alloc() function.
 
-Talking purely for myself, I've certainly bought the rtl8192du device
-because of its 5 GHz support, as I've made it a fairly hard policy for
-me not to buy 2.4 GHz only devices anymore. But this doesn't mean that
-a mainline driver only supporting 2.4 GHz for the time being would not be
-appreciated dearly, given that the current state of the device is pretty 
-much being a doorstop[1] - especially considering that 5 GHz support 
-might even become a possibility at a later time, when 802.11ac devices 
-start demanding most of the functionality for potentially more common 
-newer chipset generations.
+How about something like
 
-So even with my current personal policy of only buying 5 GHz capable 
-devices, in practice you probably won't find 5 GHz only AP installations
-(aside from long range/ outdoor point-to-point connections), be it 
-because of the plethora of existing 2.4 GHz only devices or just because 
-of the longer indoor (walls) range of the 2.4 GHz band. In practice, by 
-far most of my existing wireless devices don't support 5 GHz (the router
-does, of course) because of the reasons mentioned above, but replacing
-older devices takes its time.
+int cpm_muram_error(unsigned long addr)
+{
+	if (addr >= (unsigned long)-MAX_ERRNO)
+		return addr;
+	else
+		return 0;
+}
 
-Regards
-	Stefan Lippers-Hollmann
+and then use that to check the value returned by the allocation
+that is still an 'unsigned long', before assigning it to a 'u32'.
 
-[1]	yes, I know about https://github.com/lwfinger/rtl8192du/ and
-	even have a couple of clean-up patches pending[2] for the 
-	kernel-version branch, but those need some further testing.
-[2]	http://aptosid.com/slh/rtl8192du/kernel-version/
+	Arnd
