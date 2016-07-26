@@ -1,79 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:13899 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932403AbcGOKQn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2016 06:16:43 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH] brcmfmac: restore stopping netdev queue when bus clogs up
-Date: Fri, 15 Jul 2016 12:16:12 +0200
-Message-Id: <1468577794-12606-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160715_121646_871023_7284CE54)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from nbd.name ([46.4.11.11]:58394 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751199AbcGZG32 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2016 02:29:28 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, benjamin.berg@open-mesh.com
+Subject: [PATCH] ath9k: fix client mode beacon configuration
+Date: Tue, 26 Jul 2016 08:29:23 +0200
+Message-Id: <20160726062923.98555-1-nbd@nbd.name> (sfid-20160726_082931_145680_B81F0B4E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the host-interface bus has hard time handling transmit packets
-it informs higher layer about this and it would stop the netdev
-queue when needed. However, since commit 9cd18359d31e ("brcmfmac:
-Make FWS queueing configurable.") this was broken. With this patch
-the behaviour is restored.
+For pure station mode, iter_data.primary_beacon_vif was used and passed
+to ath_beacon_config, but not set to the station vif.
+This was causing the following warning:
 
-Cc: stable@vger.kernel.org # v4.5, v4.6, v4.7
-Fixes: 9cd18359d31e ("brcmfmac: Make FWS queueing configurable.")
-Tested-by: Per Förlin <per.forlin@gmail.com>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+[  100.310919] ------------[ cut here ]------------
+[  100.315683] WARNING: CPU: 0 PID: 7 at compat-wireless-2016-06-20/drivers/net/wireless/ath/ath9k/beacon.c:642 ath9k_calculate_summary_state+0x250/0x60c [ath9k]()
+[  100.402028] CPU: 0 PID: 7 Comm: kworker/u2:1 Tainted: G        W       4.4.15 #5
+[  100.409676] Workqueue: phy0 ieee80211_ibss_leave [mac80211]
+[  100.415351] Stack : 8736e98c 870b4b20 87a25b54 800a6800 8782a080 80400d63 8039b96c 00000007
+[  100.415351]    803c5edc 87875914 80400000 800a47cc 87a25b54 800a6800 803a0fd8 80400000
+[  100.415351]    00000003 87875914 80400000 80094ae0 87a25b54 8787594c 00000000 801ef308
+[  100.415351]    803ffe70 801ef300 87193d58 87b3a400 87b3ad00 70687930 00000000 00000000
+[  100.415351]    00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+[  100.415351]    ...
+[  100.451703] Call Trace:
+[  100.454235] [<800a6800>] vprintk_default+0x24/0x30
+[  100.459110] [<800a47cc>] printk+0x2c/0x38
+[  100.463190] [<800a6800>] vprintk_default+0x24/0x30
+[  100.468072] [<80094ae0>] print_worker_info+0x148/0x174
+[  100.473378] [<801ef308>] serial8250_console_putchar+0x0/0x44
+[  100.479122] [<801ef300>] wait_for_xmitr+0xc4/0xcc
+[  100.484014] [<87193d58>] ieee80211_ibss_leave+0xb90/0x1900 [mac80211]
+[  100.490590] [<80081604>] warn_slowpath_common+0xa0/0xd0
+[  100.495922] [<801a359c>] dump_stack+0x14/0x28
+[  100.500350] [<80071a00>] show_stack+0x50/0x84
+[  100.504784] [<80081604>] warn_slowpath_common+0xa0/0xd0
+[  100.510106] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
+[  100.517105] [<800816b8>] warn_slowpath_null+0x18/0x24
+[  100.522256] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
+[  100.529273] [<87025418>] ath9k_set_txpower+0x148/0x498 [ath9k]
+[  100.535302] [<871d2c64>] cleanup_module+0xa74/0xd4c [mac80211]
+[  100.541237] [<801ef308>] serial8250_console_putchar+0x0/0x44
+[  100.547042] [<800a5d18>] wake_up_klogd+0x54/0x68
+[  100.551730] [<800a6650>] vprintk_emit+0x404/0x43c
+[  100.556623] [<871b9db8>] ieee80211_sta_rx_notify+0x258/0x32c [mac80211]
+[  100.563475] [<871ba6a4>] ieee80211_sta_rx_queued_mgmt+0x63c/0x734 [mac80211]
+[  100.570693] [<871aa49c>] ieee80211_tx_prepare_skb+0x210/0x230 [mac80211]
+[  100.577609] [<800af5d4>] mod_timer+0x15c/0x190
+[  100.582220] [<871ba8b8>] ieee80211_sta_work+0xfc/0xe1c [mac80211]
+[  100.588539] [<871940b4>] ieee80211_ibss_leave+0xeec/0x1900 [mac80211]
+[  100.595122] [<8009ec84>] dequeue_task_fair+0x44/0x130
+[  100.600281] [<80092a34>] process_one_work+0x1f8/0x334
+[  100.605454] [<80093830>] worker_thread+0x2b4/0x408
+[  100.610317] [<8009357c>] worker_thread+0x0/0x408
+[  100.615019] [<8009357c>] worker_thread+0x0/0x408
+[  100.619705] [<80097b68>] kthread+0xdc/0xe8
+[  100.623886] [<80097a8c>] kthread+0x0/0xe8
+[  100.627961] [<80060878>] ret_from_kernel_thread+0x14/0x1c
+[  100.633448]
+[  100.634956] ---[ end trace aafbe57e9ae6862f ]---
+
+Fixes: cfda2d8e2314 ("ath9k: Fix beacon configuration for addition/removal of interfaces")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
 ---
-Hi Kalle,
+ drivers/net/wireless/ath/ath9k/main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-The issue fixed with this patch does not crash anything so it is
-probably fine for 4.8 after the merge window. So I have marked it
-for 4.7-stable.
-
-Regards,
-Arend
----
- .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 22 +++++++++++++++++-----
- 1 file changed, 17 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index 5b30922..2ce3199 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -2469,10 +2469,22 @@ void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb)
- void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked)
- {
- 	struct brcmf_fws_info *fws = drvr->fws;
-+	struct brcmf_if *ifp;
-+	int i;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 6b68584..439eb06 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1154,6 +1154,7 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 		bool changed = (iter_data.primary_sta != ctx->primary_sta);
  
--	fws->bus_flow_blocked = flow_blocked;
--	if (!flow_blocked)
--		brcmf_fws_schedule_deq(fws);
--	else
--		fws->stats.bus_flow_block++;
-+	if (fws->avoid_queueing) {
-+		for (i = 0; i < BRCMF_MAX_IFS; i++) {
-+			ifp = drvr->iflist[i];
-+			if (!ifp || !ifp->ndev)
-+				continue;
-+			brcmf_txflowblock_if(ifp, BRCMF_NETIF_STOP_REASON_FLOW,
-+					     flow_blocked);
-+		}
-+	} else {
-+		fws->bus_flow_blocked = flow_blocked;
-+		if (!flow_blocked)
-+			brcmf_fws_schedule_deq(fws);
-+		else
-+			fws->stats.bus_flow_block++;
-+	}
- }
+ 		if (iter_data.primary_sta) {
++			iter_data.primary_beacon_vif = iter_data.primary_sta;
+ 			iter_data.beacons = true;
+ 			ath9k_set_assoc_state(sc, iter_data.primary_sta,
+ 					      changed);
 -- 
-1.9.1
+2.8.4
 
