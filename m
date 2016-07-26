@@ -1,51 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:32853 "EHLO
-	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751773AbcGUIad convert rfc822-to-8bit (ORCPT
+Received: from smtp-out4.electric.net ([192.162.216.182]:62970 "EHLO
+	smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753891AbcGZJGp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jul 2016 04:30:33 -0400
-Received: by mail-lf0-f54.google.com with SMTP id b199so55173919lfe.0
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jul 2016 01:30:32 -0700 (PDT)
+	Tue, 26 Jul 2016 05:06:45 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Arvind Yadav' <arvind.yadav.cs@gmail.com>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"leoli@freescale.com" <leoli@freescale.com>
+CC: "qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
+	"scottwood@freescale.com" <scottwood@freescale.com>,
+	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux@roeck-us.net" <linux@roeck-us.net>,
+	"arnd@arndb.de" <arnd@arndb.de>
+Subject: RE: [v3] UCC_GETH/UCC_FAST: Use IS_ERR_VALUE_U32 API to avoid
+ IS_ERR_VALUE abuses.
+Date: Tue, 26 Jul 2016 09:04:33 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D5F5023E2@AcuExch.aculab.com> (sfid-20160726_110706_047292_CAD2C1B5)
+References: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
+In-Reply-To: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-In-Reply-To: <CAD3r-iQScbuUiGiF3uDKzMk-0mycG3WVFDGaYCy6aPxAEjq3mg@mail.gmail.com>
-References: <CAEOnXSfd6K36cOcUfqy8rBT27TbH9PGy7U4z3TU0N2YWc7GXqA@mail.gmail.com>
- <efa3441022124e74af56753a70041eee@SC-EXCH04.marvell.com> <CAD3r-iQScbuUiGiF3uDKzMk-0mycG3WVFDGaYCy6aPxAEjq3mg@mail.gmail.com>
-From: Nestor Machno <nestor.machno89@gmail.com>
-Date: Thu, 21 Jul 2016 10:30:30 +0200
-Message-ID: <CAEOnXSduqnuKU1S4jcxN=K-JxwWfWxG6WWtiGzZvuW_pwWGM+A@mail.gmail.com> (sfid-20160721_103038_792875_83D1852F)
-Subject: Re: mwifiex+wpa_supplicant cannot set up WPA/WPA2 ADHOC
-To: Luana Borgia <luanaborgia1969@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luana,
-as confirmed by Marvell this is a firmware issue and the firmware is
-not free/open so only Marvell is able to fix it.
-At the moment the latest firmware available is still the 15.68.7.p5, aka p5.
-http://git.marvell.com/?p=mwifiex-firmware.git;a=tree;f=mrvl;hb=HEAD
-Unfortunately in this case the community can't give you support..
+From: Arvind Yadav
+> Sent: 23 July 2016 19:06
+> IS_ERR_VALUE() assumes that its parameter is an unsigned long.
+> It can not be used to check if an 'unsigned int' reflects an error.
+> As they pass an 'unsigned int' into a function that takes an
+> 'unsigned long' argument. This happens to work because the type
+> is sign-extended on 64-bit architectures before it gets converted
+> into an unsigned type.
+> 
+> However, anything that passes an 'unsigned short' or 'unsigned int'
+> argument into IS_ERR_VALUE() is guaranteed to be broken, as are
+> 8-bit integers and types that are wider than 'unsigned long'.
+> 
+> It would be nice to any users that are not passing 'unsigned int'
+> arguments.
 
-Regards
-Nestor
+Isn't that a load of bollocks???
+It is certainly very over-wordy.
 
-2016-07-20 15:23 GMT+02:00 Luana Borgia <luanaborgia1969@gmail.com>:
-> Hi Amitkumar,
-> any news about this issue? I've the same problem also..
->
-> Security a part, we can't leave the WIFI open or just with WEP because
-> we get too many not trusted connection that consume a lot of our
-> bandwidth
->
-> Thanks, regards
-> Luana
->
-> 2016-07-08 11:15 GMT+02:00 Amitkumar Karwar <akarwar@marvell.com>:
+IS_ERR_VALUE(x) is ((x) >= (unsigned long)-4096)
 
->> Yes. This is a bug in our firmware. ADHOC in WPA/WPA2 security is broken. We have asked firmware experts to look into this. As we have a mid-year shutdown this week, they will be able to check the problem next week only. However ADHOC in open mode should work as expected
->>
->>
->> Regards,
->> Amitkumar
+Assuming sizeof (short) == 2 && sizeof (int) == 4 && sizeof (long) == 8.
+
+'signed char' and 'signed short' are first sign extended to 'signed int'.
+'unsigned char' and 'unsigned short' are first zero extended to 'signed int'.
+'signed int' is sign extended to 'signed long'.
+'signed long' is converted to 'unsigned long' treating the bit-pattern as 'unsigned long'.
+'unsigned int' is zero extended to 'unsigned long'.
+
+It is probably enough to say that on 64bit systems IS_ERR_VALUE() of unsigned int
+is always false because the 32bit value is zero extended to 64 bits.
+
+A possible 'fix' would be to define IS_ERR_VALUE() as:
+#define IS_ERR_VALUE(x) unlikely(sizeof (x) > sizeof (int) ? (x) > (unsigned long)-MAX_ERRNO : (x) > (unsigned int)-MAX_ERRNO)
+
+However correct analysis of every case might show up real errors.
+So a compilation warning/error might be more appropriate.
+
+	David
+
