@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43911 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932764AbcGOMOR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jul 2016 08:14:17 -0400
-Message-ID: <5788D397.9030904@redhat.com> (sfid-20160715_141422_394015_B68A9045)
-Date: Fri, 15 Jul 2016 08:14:15 -0400
-From: Prarit Bhargava <prarit@redhat.com>
+Received: from smtp.tech.triadic.us ([98.102.61.98]:58171 "EHLO
+	SMTP.Tech.Triadic.US" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757624AbcGZS04 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2016 14:26:56 -0400
 MIME-Version: 1.0
-To: Stanislaw Gruszka <sgruszka@redhat.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linuxwifi <linuxwifi@intel.com>,
-	"Coelho, Luciano" <luciano.coelho@intel.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH RESEND] iwlwifi, Do not implement thermal zone unless
- ucode is loaded
-References: <1468250301-10357-1-git-send-email-prarit@redhat.com> <CANUX_P0AFoM5VEDWDjtvOhNbExu4T1bLWU+uS-EYqoGtu5h2bw@mail.gmail.com> <5783E33E.7090205@redhat.com> <1468261650.20877.14.camel@intel.com> <20160714092408.GA27271@redhat.com> <0BA3FCBA62E2DC44AF3030971E174FB3466901DA@hasmsx107.ger.corp.intel.com> <20160715112552.GB6939@redhat.com>
-In-Reply-To: <20160715112552.GB6939@redhat.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 26 Jul 2016 14:15:55 -0400
+From: alexmcwhirter@triadic.us
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Alan Curry <rlwinm@sdf.org>, Al Viro <viro@zeniv.linux.org.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
+In-Reply-To: <2589898.190WVraD7Z@debian64>
+References: <201607260457.u6Q4v3pM010082@sdf.org>
+ <2589898.190WVraD7Z@debian64>
+Message-ID: <66636d159da5342b1387035fbcfe0d35@triadic.us> (sfid-20160726_202718_851393_6E1DED27)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 07/15/2016 07:25 AM, Stanislaw Gruszka wrote:
-> On Thu, Jul 14, 2016 at 09:44:22AM +0000, Grumbach, Emmanuel wrote:
->>> If I understad correctly this error happen 100% of the time, not only during
->>> init. Hence seems there is an issue here, i.e. cur_ucode is not marked
->>> correctly as IWL_UCODE_REGULAR or iwl_mvm_get_temp() fail 100% of the
->>> time (iwl_mvm_is_tt_in_fw() incorrecly return true on Prarit device ? ).
->>
->> Cur_ucode will not be IWL_UCODE_REGULAR until you load the firmware which
->> will happen upon ifup.
+On 2016-07-26 09:59, Christian Lamparter wrote:
+> Thanks, I gave the program a try with my WNDA3100 and a WN821N v2 
+> devices.
+> I did not see any corruptions in any of the tests though. Can you tell 
+> me
+> something about your wireless network too? I would like to know what 
+> router
+> and firmware are you using? Also important: what's your wireless 
+> configuration?
+> (WPA?, CCMP or TKIP? HT40, HT20 or Legacy rates? ...)
 > 
-> Then creating thermal_device on ifup looks more reasonable to me.
-> Otherwise we can create device that can be non-functional virtually
-> forever, i.e. when soft RFKILL is enabled. However I admit that
-> creating thermal_device when HW is detected has some advantages
-> too.
-
-That's my plan right now.  Unfortunately something else in the kernel seems
-recently broken and is preventing me from testing.  I will get back to this
-early next week.
-
-P.
+> Probably the quickest and easiest way to get that information is by 
+> running
+> the following commands as root, when you are connected to your wifi 
+> network
+> and post the results:
+> # iw dev wlan0 link
+> # iw dev wlan0 scan dump
 > 
-> Stanislaw
+> (You can of course remove your device's MACs, but please do it 
+> consistently).
 > 
+> Regards,
+> Christian
+
+I wonder if this is something that is only affecting certain NIC's? For 
+example, it see this issue on sun4u boxes with tigon3 and hme 
+interfaces. But on my sun4v boxes that have e1000 interfaces everything 
+works fine.
