@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33052 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755737AbcGHPb2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51935 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751261AbcGZPMX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 11:31:28 -0400
-Received: by mail-pf0-f195.google.com with SMTP id c74so8443971pfb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 08:31:28 -0700 (PDT)
-Subject: Re: [PATCH 0/5] Improve wireless netdev detection
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1467875330-7835-1-git-send-email-denkenz@gmail.com>
- <1467973953.4837.3.camel@sipsolutions.net> <577FC51E.7010901@gmail.com>
- <1467991593.4837.7.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <577FC74E.3080903@gmail.com> (sfid-20160708_173135_150419_A2B98746)
-Date: Fri, 8 Jul 2016 10:31:26 -0500
+	Tue, 26 Jul 2016 11:12:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jouni Malinen <j@w1.fi>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [PATCH 5/9] mwifiex: cfg80211 set_default_mgmt_key handler
+References: <1468248832-21969-1-git-send-email-akarwar@marvell.com>
+	<1468248832-21969-6-git-send-email-akarwar@marvell.com>
+	<87r3aqx3sq.fsf@kamboji.qca.qualcomm.com>
+	<33207c0c98c646548bdedf50449719c2@SC-EXCH04.marvell.com>
+	<20160721155131.GA6292@w1.fi>
+Date: Tue, 26 Jul 2016 18:12:17 +0300
+In-Reply-To: <20160721155131.GA6292@w1.fi> (Jouni Malinen's message of "Thu,
+	21 Jul 2016 18:51:31 +0300")
+Message-ID: <87r3agcu26.fsf@kamboji.qca.qualcomm.com> (sfid-20160726_171227_002195_ADD5C876)
 MIME-Version: 1.0
-In-Reply-To: <1467991593.4837.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Jouni Malinen <j@w1.fi> writes:
 
- >> Are you okay with the general approach?
+> On Thu, Jul 21, 2016 at 09:18:11AM +0000, Amitkumar Karwar wrote:
+>> > From: Kalle Valo [mailto:kvalo@codeaurora.org]
+>> > Is it correct to ignore the key index? I see that brcmfmac ignores it as
+>> > well but I want to still confirm this.
+>> > 
+>> > Does this mean that with this patcfh mwifiex properly supports MFP?
+>> 
+>> Yes. We do pass MFP tests with this patch.
 >
-> I see no issues with sending these events out. I'd like them to
-> actually be reliable (if present) though, not double as you'd implied -
-> but I didn't really understand in which cases you were expecting
-> issues, was it only P2P-Device?
->
+> Did you test IGTK rekeying? This patch looks exactly as broken as it did
+> the last time it was proposed more than a year ago and after the same
+> concern not receiving any reaction..
 
-That seems to be the only special case.  At least I didn't find any 
-other situations where a NEW_INTERFACE command can be called without a 
-corresponding net_device being created.
+Indeed, I had already forgetten that this patch was submitted February
+2015:
 
->>   Are there any locking issues I
->> might be overlooking?
->
-> Not that I'm aware of. All of the netdev/wdev handling should be
-> protected by RTNL.
->
+https://patchwork.kernel.org/patch/5819421/
 
-That was my understanding as well.  Thanks.
+Please don't do like this and repost patches without earlier comments
+addressed (or at least document the history).
 
-Okay, let me spin up a v2 with patches 2+3 and 4+5 squished together. 
-Or do you want one big patch?
-
-Regards,
--Denis
+-- 
+Kalle Valo
