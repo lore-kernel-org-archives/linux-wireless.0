@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:60874 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751332AbcGaKap (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jul 2016 06:30:45 -0400
-From: Heinrich Schuchardt <xypron.glpk@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:36155 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752213AbcGZNNw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2016 09:13:52 -0400
+Received: by mail-wm0-f49.google.com with SMTP id q128so172918912wma.1
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2016 06:13:52 -0700 (PDT)
+Date: Tue, 26 Jul 2016 14:13:47 +0100
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Heinrich Schuchardt <xypron.glpk@gmx.de>
-Subject: [PATCH 1/1] rtlwifi: remove superfluous condition
-Date: Sun, 31 Jul 2016 12:30:15 +0200
-Message-Id: <1469961015-1888-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160731_123108_879271_9FBE209C)
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCHv5 wl-drv-next 0/2] register-field manipulation macros
+Message-ID: <20160726141347.19ecd203@jkicinski-Precision-T1700> (sfid-20160726_151421_502508_2F4D7F8C)
+In-Reply-To: <87y44od06j.fsf@kamboji.qca.qualcomm.com>
+References: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
+	<20160725154549.6492cac1@jkicinski-Precision-T1700>
+	<87y44od06j.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If sta == NULL, the changed line will not be reached.
-So no need to check if stat == NULL here.
+On Tue, 26 Jul 2016 16:00:04 +0300, Kalle Valo wrote:
+> Jakub Kicinski <jakub.kicinski@netronome.com> writes:
+> 
+> > On Wed,  6 Jul 2016 17:19:35 +0100, Jakub Kicinski wrote:  
+> >> Hi!
+> >> 
+> >> I've added few lines about the compilation problems in 
+> >> the commit message of patch 1.  I would prefer the mass
+> >> rename of macros in mt7601u not to be part of this series
+> >> so patch 2 is left as it was and I'll follow up once this
+> >> is accepted.  
+> >
+> > Hi Kalle,
+> >
+> > what's the status of this set?  It's marked as 'Deferred' in
+> > linux-wireless patchwork.  
+> 
+> Like I said before, I would prefer to see an ack from someone else like
+> Andrew Morton or Dave Miller. I don't feel comfortable adding new files
+> to include/ without some sort of support from others. Or maybe Andrew
+> could even take these directly to his tree?
 
-Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
----
- drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 41f77f8..7aee5ebb1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -1135,7 +1135,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
- 					mac->mode = WIRELESS_MODE_AC_24G;
- 			}
- 
--			if (vif->type == NL80211_IFTYPE_STATION && sta)
-+			if (vif->type == NL80211_IFTYPE_STATION)
- 				rtlpriv->cfg->ops->update_rate_tbl(hw, sta, 0);
- 			rcu_read_unlock();
- 
--- 
-2.8.1
-
+OK, once the merge window is over I'll repost and TO: some important
+guys.  Hopefully we'll catch someone's attention :)
