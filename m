@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:35456 "EHLO
-	mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579AbcGIQsd (ORCPT
+Received: from mail-yw0-f179.google.com ([209.85.161.179]:36048 "EHLO
+	mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751453AbcGZWfZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jul 2016 12:48:33 -0400
-Received: by mail-qt0-f173.google.com with SMTP id f89so35528916qtd.2
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Jul 2016 09:48:32 -0700 (PDT)
+	Tue, 26 Jul 2016 18:35:25 -0400
+Received: by mail-yw0-f179.google.com with SMTP id u134so37334748ywg.3
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jul 2016 15:35:24 -0700 (PDT)
 MIME-Version: 1.0
-From: Ken Harris <kjh@hokulea.org>
-Date: Sat, 9 Jul 2016 09:41:25 -0700
-Message-ID: <CAK_-F2+JrduJyWtLcLi8q4s9p4apv5bB7Dj1mTKtjgOmQ-Z2NQ@mail.gmail.com> (sfid-20160709_184950_730413_7E17D674)
-Subject: WiFi testing tools
-To: linux-wireless@vger.kernel.org
+From: Fabio Estevam <festevam@gmail.com>
+Date: Tue, 26 Jul 2016 19:35:23 -0300
+Message-ID: <CAOMZO5Cu_UO6L9wYy6eJUJwEE25BN-qeBRAMbFveFrJKHtF=aw@mail.gmail.com> (sfid-20160727_003529_283723_36173D06)
+Subject: brcm4330 fails to load on newer kernels
+To: Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peeps :
+Hi,
 
-I'm trying to test 20 to 200 WiFi "stations" (running OpenWRT) in a warehouse.
+On a imx6sl-warp board with a brcm4330 I get the following results
+depending on the kernel version:
 
-I'd like to find some tools to gather lots of stats about each station
-and access point , such as RSSI, bitrate, etc (similar to "iw $if0
-station dump) and output to CSV (or JSON or YAML). It would also be
-nice to track ping times and speed (like http://flent.org ).
+- Kernel 4.4.15: place brcmfmac4330-sdio.bin and brcmfmac4330-sdio.txt
+in the rootfs and the kernel is able to read them correctly. wlan0 is
+present. All is fine.
 
-I'm using the ath9k driver, so stats specific to the ath9k are also useful.
+- Kernel 4.5.7: place brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt in
+the rootfs and the kernel fails to load them:
 
-I'm also looking for analysis tools.
+brcmfmac mmc1:0001:1: Direct firmware load for
+brcm/brcmfmac4330-sdio.bin failed with error -2
 
-Any suggestions are appreciated.
+Then I build brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt into the
+kernel and then firmware is detected and wlan0 appears.
 
-Thanks
+- Kernel 4.7: I can place the firmware and nvram file into the rootfs
+or built-i and the following error is seen:
+
+brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+
+So wlan0 never appears here.
+
+Does anyone have any suggestions about these different behaviours?
+
+Thanks,
+
+Fabio Estevam
