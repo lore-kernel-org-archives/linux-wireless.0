@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:34624 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932182AbcGDATN (ORCPT
+Received: from shards.monkeyblade.net ([184.105.139.130]:49316 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752355AbcGZAs2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jul 2016 20:19:13 -0400
-MIME-Version: 1.0
-In-Reply-To: <1467401982-18943-1-git-send-email-javier@osg.samsung.com>
-References: <1467401982-18943-1-git-send-email-javier@osg.samsung.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 4 Jul 2016 10:18:52 +1000
-Message-ID: <CAGRGNgUdUf2TC1ix-uZNR+kuNApLXduAivMY=3AmgXKDx-cxyg@mail.gmail.com> (sfid-20160704_021946_441777_DE66202B)
-Subject: Re: [PATCH] mwifiex: fix unconditional error return in
- .add_virtual_intf callback
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	netdev <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 25 Jul 2016 20:48:28 -0400
+Date: Mon, 25 Jul 2016 17:48:26 -0700 (PDT)
+Message-Id: <20160725.174826.2146830871661675561.davem@davemloft.net> (sfid-20160726_024833_743778_076C9037)
+To: arvind.yadav.cs@gmail.com
+Cc: zajec5@gmail.com, leoli@freescale.com, qiang.zhao@freescale.com,
+	scottwood@freescale.com, viresh.kumar@linaro.org,
+	akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	linux@roeck-us.net, arnd@arndb.de
+Subject: Re: [v3] UCC_GETH/UCC_FAST: Use IS_ERR_VALUE_U32 API to avoid
+ IS_ERR_VALUE abuses.
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1469297151-9763-1-git-send-email-arvind.yadav.cs@gmail.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Date: Sat, 23 Jul 2016 23:35:51 +0530
 
-On Sat, Jul 2, 2016 at 5:39 AM, Javier Martinez Canillas
-<javier@osg.samsung.com> wrote:
-> The commit 7311ea850079 ("mwifiex: fix AP start problem for newly added
-> interface") attempted to fix an issue when a new AP interface is added.
->
-> But the patch didn't check the return value of the functions doing the
-> firmware calls and returned an error even if the functions didn't fail.
->
-> This prevents the network device to be registered properly, so fix it.
->
-> Fixes: commit 7311ea850079 ("mwifiex: fix AP start problem for newly added interface")
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+> However, anything that passes an 'unsigned short' or 'unsigned int'
+> argument into IS_ERR_VALUE() is guaranteed to be broken, as are
+> 8-bit integers and types that are wider than 'unsigned long'.
+ ...
+> Passing value in IS_ERR_VALUE() is wrong, as they pass an
+> 'unsigned int' into a function that takes an 'unsigned long'
+> argument.This happens to work because the type is sign-extended
+> on 64-bit architectures before it gets converted into an
+> unsigned type.
 
-Looks correct to me as Dan Carpenter submitted the same fix.
+This commit log message is a complete mess, you're saying exactly
+the same thing over and over again.
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Also your Subject line is not formatted correctly, do not list
+the subsystem prefix in ALL CAPS.  Just plain "ucc_geth/ucc_fast: "
+would be fine.
