@@ -1,142 +1,141 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:49979 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753618AbcGTP0e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 11:26:34 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
-Date: Wed, 20 Jul 2016 17:26:05 +0200
-Message-Id: <20160720152606.201775-1-arnd@arndb.de> (sfid-20160720_172712_972987_D42C90BE)
-In-Reply-To: <20160720151818.4142386-1-arnd@arndb.de>
-References: <20160720151818.4142386-1-arnd@arndb.de>
+Received: from ol.sdf.org ([192.94.73.20]:52740 "EHLO sdf.lonestar.org"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1757869AbcG0BOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jul 2016 21:14:42 -0400
+From: Alan Curry <rlwinm@sdf.org>
+Message-Id: <201607270114.u6R1EPxB018526@sdf.org> (sfid-20160727_031451_518082_633706B9)
+Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
+In-Reply-To: <2589898.190WVraD7Z@debian64>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Date: Wed, 27 Jul 2016 01:14:25 +0000 (UTC)
+CC: Alan Curry <rlwinm@sdf.org>, Al Viro <viro@zeniv.linux.org.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, alexmcwhirter@triadic.us
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Compiling the rtlwifi drivers for ARM with gcc -Wextra warns about lots of
-incorrect code that results from 'char' being unsigned here, e.g.
+Christian Lamparter wrote:
+> Thanks, I gave the program a try with my WNDA3100 and a WN821N v2 devices.
+> I did not see any corruptions in any of the tests though. Can you tell me
+> something about your wireless network too? I would like to know what router
+> and firmware are you using? Also important: what's your wireless configuration?
 
-staging/rtl8192e/rtl8192e/r8192E_phy.c:1072:36: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-staging/rtl8192e/rtl8192e/r8192E_phy.c:1104:36: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-staging/rtl8192e/rtl8192e/rtl_core.c:1987:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-staging/rtl8192e/rtl8192e/rtl_dm.c:782:37: error: comparison is always false due to limited range of data type [-Werror=type-limits]
-staging/rtl8192e/rtllib_softmac_wx.c:465:16: error: comparison is always false due to limited range of data type [-Werror=type-limits]
+The router/access-point is a Comcast-issued Technicolor cable modem, model
+TC8305C. The only thing I can find on it that looks like it might identify
+a firmware version is this:
 
-This patch changes all uses of 'char' in this driver that refer to
-8-bit integers to use 's8' instead, which is signed on all architectures.
+    System Software Version
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c | 8 ++++----
- drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c | 2 +-
- drivers/staging/rtl8192e/rtl8192e/rtl_core.c   | 6 +++---
- drivers/staging/rtl8192e/rtl8192e/rtl_core.h   | 8 ++++----
- 4 files changed, 12 insertions(+), 12 deletions(-)
+    eMTA & DOCSIS Software Version: 01.E6.01.22.25
+    Packet Cable: 2.0
 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-index ba64a4f1b3a8..8d6bca61e7aa 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_dev.c
-@@ -1487,8 +1487,8 @@ static void _rtl92e_query_rxphystatus(
- 	struct phy_ofdm_rx_status_rxsc_sgien_exintfflag *prxsc;
- 	u8 *prxpkt;
- 	u8 i, max_spatial_stream, tmp_rxsnr, tmp_rxevm, rxsc_sgien_exflg;
--	char rx_pwr[4], rx_pwr_all = 0;
--	char rx_snrX, rx_evmX;
-+	s8 rx_pwr[4], rx_pwr_all = 0;
-+	s8 rx_snrX, rx_evmX;
- 	u8 evm, pwdb_all;
- 	u32 RSSI, total_rssi = 0;
- 	u8 is_cck_rate = 0;
-@@ -1613,7 +1613,7 @@ static void _rtl92e_query_rxphystatus(
- 				     2) - 110;
- 
- 			tmp_rxsnr = pofdm_buf->rxsnr_X[i];
--			rx_snrX = (char)(tmp_rxsnr);
-+			rx_snrX = (s8)(tmp_rxsnr);
- 			rx_snrX /= 2;
- 			priv->stats.rxSNRdB[i] = (long)rx_snrX;
- 
-@@ -1643,7 +1643,7 @@ static void _rtl92e_query_rxphystatus(
- 
- 		for (i = 0; i < max_spatial_stream; i++) {
- 			tmp_rxevm = pofdm_buf->rxevm_X[i];
--			rx_evmX = (char)(tmp_rxevm);
-+			rx_evmX = (s8)(tmp_rxevm);
- 
- 			rx_evmX /= 2;
- 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-index 5e3bbe5c3ca4..0698131e4300 100644
---- a/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/r8192E_phy.c
-@@ -630,7 +630,7 @@ void rtl92e_set_tx_power(struct net_device *dev, u8 channel)
- {
- 	struct r8192_priv *priv = rtllib_priv(dev);
- 	u8	powerlevel = 0, powerlevelOFDM24G = 0;
--	char ant_pwr_diff;
-+	s8	ant_pwr_diff;
- 	u32	u4RegValue;
- 
- 	if (priv->epromtype == EEPROM_93C46) {
-diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_core.c b/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
-index 13a5ddc2bea5..41e05f206300 100644
---- a/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
-+++ b/drivers/staging/rtl8192e/rtl8192e/rtl_core.c
-@@ -1982,7 +1982,7 @@ void rtl92e_update_rx_statistics(struct r8192_priv *priv,
- 					weighting) / 6;
- }
- 
--u8 rtl92e_rx_db_to_percent(char antpower)
-+u8 rtl92e_rx_db_to_percent(s8 antpower)
- {
- 	if ((antpower <= -100) || (antpower >= 20))
- 		return	0;
-@@ -1993,9 +1993,9 @@ u8 rtl92e_rx_db_to_percent(char antpower)
- 
- }	/* QueryRxPwrPercentage */
- 
--u8 rtl92e_evm_db_to_percent(char value)
-+u8 rtl92e_evm_db_to_percent(s8 value)
- {
--	char ret_val;
-+	s8 ret_val;
- 
- 	ret_val = value;
- 
-diff --git a/drivers/staging/rtl8192e/rtl8192e/rtl_core.h b/drivers/staging/rtl8192e/rtl8192e/rtl_core.h
-index f627fdc15a58..6921125c9d35 100644
---- a/drivers/staging/rtl8192e/rtl8192e/rtl_core.h
-+++ b/drivers/staging/rtl8192e/rtl8192e/rtl_core.h
-@@ -503,8 +503,8 @@ struct r8192_priv {
- 	u32 Pwr_Track;
- 	u8 CCKPresentAttentuation_20Mdefault;
- 	u8 CCKPresentAttentuation_40Mdefault;
--	char CCKPresentAttentuation_difference;
--	char CCKPresentAttentuation;
-+	s8 CCKPresentAttentuation_difference;
-+	s8 CCKPresentAttentuation;
- 	long undecorated_smoothed_pwdb;
- 
- 	u32 MCSTxPowerLevelOriginalOffset[6];
-@@ -604,8 +604,8 @@ void rtl92e_update_rx_pkt_timestamp(struct net_device *dev,
- long rtl92e_translate_to_dbm(struct r8192_priv *priv, u8 signal_strength_index);
- void rtl92e_update_rx_statistics(struct r8192_priv *priv,
- 				 struct rtllib_rx_stats *pprevious_stats);
--u8 rtl92e_evm_db_to_percent(char value);
--u8 rtl92e_rx_db_to_percent(char antpower);
-+u8 rtl92e_evm_db_to_percent(s8 value);
-+u8 rtl92e_rx_db_to_percent(s8 antpower);
- void rtl92e_copy_mpdu_stats(struct rtllib_rx_stats *psrc_stats,
- 			    struct rtllib_rx_stats *ptarget_stats);
- bool rtl92e_enable_nic(struct net_device *dev);
+I assume Comcast pushes firmware updates whenever they feel like it.
+
+There is possibly another clue. I get this message from the kernel sometimes:
+
+    ieee80211 phy0: invalid plcp cck rate (0).
+
+I had this message appearing long before the data corruption bug started.
+It never correlated with any actual problems, so I turned down the priority
+level of the message to get it off the console, and forgot about it. I
+was unable to discover what a "plcp" or "cck" is so the message means
+nothing to me.
+
+> (WPA?, CCMP or TKIP? HT40, HT20 or Legacy rates? ...)
+> 
+> Probably the quickest and easiest way to get that information is by running
+> the following commands as root, when you are connected to your wifi network
+> and post the results:
+> # iw dev wlan0 link
+> # iw dev wlan0 scan dump
+
+Connected to cc:03:fa:bf:e9:ea (on wlan0)
+	SSID: HOME-E9EA
+	freq: 2462
+	RX: 20726719 bytes (106483 packets)
+	TX: 5902478 bytes (44707 packets)
+	signal: -43 dBm
+	tx bitrate: 54.0 MBit/s
+
+	bss flags:	short-slot-time
+	dtim period:	1
+	beacon int:	100
+
+BSS cc:03:fa:bf:e9:ea(on wlan0) -- associated
+	TSF: 236407205748 usec (2d, 17:40:07)
+	freq: 2462
+	beacon interval: 100 TUs
+	capability: ESS Privacy ShortSlotTime (0x0411)
+	signal: -33.00 dBm
+	last seen: 634452 ms ago
+	Information elements from Probe Response frame:
+	SSID: HOME-E9EA
+	Supported rates: 1.0* 2.0* 5.5* 11.0* 18.0 24.0* 36.0 54.0 
+	DS Parameter set: channel 11
+	ERP: <no flags>
+	ERP D4.0: <no flags>
+	RSN:	 * Version: 1
+		 * Group cipher: TKIP
+		 * Pairwise ciphers: CCMP TKIP
+		 * Authentication suites: PSK
+		 * Capabilities: 16-PTKSA-RC 1-GTKSA-RC (0x000c)
+	Extended supported rates: 6.0* 9.0 12.0* 48.0 
+	HT capabilities:
+		Capabilities: 0x18bd
+			RX LDPC
+			HT20
+			SM Power Save disabled
+			RX Greenfield
+			RX HT20 SGI
+			TX STBC
+			No RX STBC
+			Max AMSDU length: 7935 bytes
+			DSSS/CCK HT40
+		Maximum RX AMPDU length 65535 bytes (exponent: 0x003)
+		Minimum RX AMPDU time spacing: 8 usec (0x06)
+		HT RX MCS rate indexes supported: 0-23
+		HT TX MCS rate indexes are undefined
+	HT operation:
+		 * primary channel: 11
+		 * secondary channel offset: no secondary
+		 * STA channel width: 20 MHz
+		 * RIFS: 1
+		 * HT protection: nonmember
+		 * non-GF present: 1
+		 * OBSS non-GF present: 1
+		 * dual beacon: 0
+		 * dual CTS protection: 0
+		 * STBC beacon: 0
+		 * L-SIG TXOP Prot: 0
+		 * PCO active: 0
+		 * PCO phase: 0
+	WPS:	 * Version: 1.0
+		 * Wi-Fi Protected Setup State: 2 (Configured)
+		 * Response Type: 3 (AP)
+		 * UUID: 6d1b1911-14a9-391c-cdee-89850a5aa1ef
+		 * Manufacturer: Technicolor
+		 * Model: Technicolor
+		 * Model Number: 123456
+		 * Serial Number: 0000001
+		 * Primary Device Type: 6-0050f204-1
+		 * Device name: TechnicolorAP
+		 * Config methods: Display
+		 * RF Bands: 0x1
+		 * Unknown TLV (0x1049, 6 bytes): 00 37 2a 00 01 20
+	WPA:	 * Version: 1
+		 * Group cipher: TKIP
+		 * Pairwise ciphers: CCMP TKIP
+		 * Authentication suites: PSK
+		 * Capabilities: 16-PTKSA-RC 1-GTKSA-RC (0x000c)
+	WMM:	 * Parameter version 1
+		 * u-APSD
+		 * BE: CW 15-1023, AIFSN 3
+		 * BK: CW 15-1023, AIFSN 7
+		 * VI: CW 7-15, AIFSN 2, TXOP 3008 usec
+		 * VO: CW 3-7, AIFSN 2, TXOP 1504 usec
+
 -- 
-2.9.0
-
+Alan Curry
