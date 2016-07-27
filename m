@@ -1,45 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43012 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752213AbcGZNAJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43344 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755771AbcG0MhX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jul 2016 09:00:09 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCHv5 wl-drv-next 0/2] register-field manipulation macros
-References: <1467821977-11777-1-git-send-email-jakub.kicinski@netronome.com>
-	<20160725154549.6492cac1@jkicinski-Precision-T1700>
-Date: Tue, 26 Jul 2016 16:00:04 +0300
-In-Reply-To: <20160725154549.6492cac1@jkicinski-Precision-T1700> (Jakub
-	Kicinski's message of "Mon, 25 Jul 2016 15:45:49 +0100")
-Message-ID: <87y44od06j.fsf@kamboji.qca.qualcomm.com> (sfid-20160726_150014_224100_183CDD31)
+	Wed, 27 Jul 2016 08:37:23 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 1/4] ath10k: Move ath10k_hw_params definition to hw.h
+Date: Wed, 27 Jul 2016 18:06:43 +0530
+Message-ID: <1469623006-13178-2-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160727_143727_041641_5DA61605)
+In-Reply-To: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jakub Kicinski <jakub.kicinski@netronome.com> writes:
+This is to prepare for rx descriptor abstraction where we'll
+be dereferencing ath10k_hw_params member in hw.h. Moreover
+hw.h looks more suitable to house ath10k_hw_params definition
+than core.h
 
-> On Wed,  6 Jul 2016 17:19:35 +0100, Jakub Kicinski wrote:
->> Hi!
->> 
->> I've added few lines about the compilation problems in 
->> the commit message of patch 1.  I would prefer the mass
->> rename of macros in mt7601u not to be part of this series
->> so patch 2 is left as it was and I'll follow up once this
->> is accepted.
->
-> Hi Kalle,
->
-> what's the status of this set?  It's marked as 'Deferred' in
-> linux-wireless patchwork.
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h | 48 +---------------------------------
+ drivers/net/wireless/ath/ath10k/hw.h   | 48 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 49 insertions(+), 47 deletions(-)
 
-Like I said before, I would prefer to see an ack from someone else like
-Andrew Morton or Dave Miller. I don't feel comfortable adding new files
-to include/ without some sort of support from others. Or maybe Andrew
-could even take these directly to his tree?
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 30ae5bf..5ace413 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -715,53 +715,7 @@ struct ath10k {
+ 	struct ath10k_htc htc;
+ 	struct ath10k_htt htt;
+ 
+-	struct ath10k_hw_params {
+-		u32 id;
+-		u16 dev_id;
+-		const char *name;
+-		u32 patch_load_addr;
+-		int uart_pin;
+-		u32 otp_exe_param;
+-
+-		/* Type of hw cycle counter wraparound logic, for more info
+-		 * refer enum ath10k_hw_cc_wraparound_type.
+-		 */
+-		enum ath10k_hw_cc_wraparound_type cc_wraparound_type;
+-
+-		/* Some of chip expects fragment descriptor to be continuous
+-		 * memory for any TX operation. Set continuous_frag_desc flag
+-		 * for the hardware which have such requirement.
+-		 */
+-		bool continuous_frag_desc;
+-
+-		/* CCK hardware rate table mapping for the newer chipsets
+-		 * like QCA99X0, QCA4019 got revised. The CCK h/w rate values
+-		 * are in a proper order with respect to the rate/preamble
+-		 */
+-		bool cck_rate_map_rev2;
+-
+-		u32 channel_counters_freq_hz;
+-
+-		/* Mgmt tx descriptors threshold for limiting probe response
+-		 * frames.
+-		 */
+-		u32 max_probe_resp_desc_thres;
+-
+-		/* The padding bytes's location is different on various chips */
+-		enum ath10k_hw_4addr_pad hw_4addr_pad;
+-
+-		u32 tx_chain_mask;
+-		u32 rx_chain_mask;
+-		u32 max_spatial_stream;
+-		u32 cal_data_len;
+-
+-		struct ath10k_hw_params_fw {
+-			const char *dir;
+-			const char *board;
+-			size_t board_size;
+-			size_t board_ext_size;
+-		} fw;
+-	} hw_params;
++	struct ath10k_hw_params hw_params;
+ 
+ 	/* contains the firmware images used with ATH10K_FIRMWARE_MODE_NORMAL */
+ 	struct ath10k_fw_components normal_mode_fw;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index e014cd7..1315557 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -363,6 +363,54 @@ enum ath10k_hw_cc_wraparound_type {
+ 	ATH10K_HW_CC_WRAP_SHIFTED_EACH = 2,
+ };
+ 
++struct ath10k_hw_params {
++	u32 id;
++	u16 dev_id;
++	const char *name;
++	u32 patch_load_addr;
++	int uart_pin;
++	u32 otp_exe_param;
++
++	/* Type of hw cycle counter wraparound logic, for more info
++	 * refer enum ath10k_hw_cc_wraparound_type.
++	 */
++	enum ath10k_hw_cc_wraparound_type cc_wraparound_type;
++
++	/* Some of chip expects fragment descriptor to be continuous
++	 * memory for any TX operation. Set continuous_frag_desc flag
++	 * for the hardware which have such requirement.
++	 */
++	bool continuous_frag_desc;
++
++	/* CCK hardware rate table mapping for the newer chipsets
++	 * like QCA99X0, QCA4019 got revised. The CCK h/w rate values
++	 * are in a proper order with respect to the rate/preamble
++	 */
++	bool cck_rate_map_rev2;
++
++	u32 channel_counters_freq_hz;
++
++	/* Mgmt tx descriptors threshold for limiting probe response
++	 * frames.
++	 */
++	u32 max_probe_resp_desc_thres;
++
++	/* The padding bytes's location is different on various chips */
++	enum ath10k_hw_4addr_pad hw_4addr_pad;
++
++	u32 tx_chain_mask;
++	u32 rx_chain_mask;
++	u32 max_spatial_stream;
++	u32 cal_data_len;
++
++	struct ath10k_hw_params_fw {
++		const char *dir;
++		const char *board;
++		size_t board_size;
++		size_t board_ext_size;
++	} fw;
++};
++
+ /* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
 -- 
-Kalle Valo
+1.9.1
+
