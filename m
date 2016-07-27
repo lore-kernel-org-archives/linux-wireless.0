@@ -1,104 +1,187 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:37624 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756995AbcGGJRF (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:36821 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755771AbcG0Mhg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jul 2016 05:17:05 -0400
-Received: by mail-wm0-f44.google.com with SMTP id a66so23799378wme.0
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jul 2016 02:17:04 -0700 (PDT)
-Subject: Re: [linux-sunxi] Re: [PATCH 1/4] brcmfmac: Add brcm,nvram_file_name
- dt property
-To: Arnd Bergmann <arnd@arndb.de>
-References: <1467209074-15634-1-git-send-email-hdegoede@redhat.com>
- <3354017.XSBSmHHtrQ@wuerfel>
- <bb1beb8d-652d-aa97-e24b-e3e27397dd2e@broadcom.com>
- <3996482.D5xdKXDiGl@wuerfel>
-Cc: Jonas Gorski <jonas.gorski@gmail.com>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Priit Laes <plaes@plaes.org>,
-	"John W . Linville" <linville@tuxdriver.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Maxime Ripard <maxime.ripard@free-electrons.com>,
-	Chen-Yu Tsai <wens@csie.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	devicetree <devicetree@vger.kernel.org>,
-	linux-sunxi <linux-sunxi@googlegroups.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <27f6d3d3-4bcc-8572-4c7b-b44966ad72f4@broadcom.com> (sfid-20160707_111720_200498_9635891A)
-Date: Thu, 7 Jul 2016 11:16:59 +0200
+	Wed, 27 Jul 2016 08:37:36 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 2/4] ath10k: Add provision for Rx descriptor abstraction
+Date: Wed, 27 Jul 2016 18:06:44 +0530
+Message-ID: <1469623006-13178-3-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160727_143739_544859_EE936DCA)
+In-Reply-To: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <3996482.D5xdKXDiGl@wuerfel>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7-7-2016 10:46, Arnd Bergmann wrote:
-> On Wednesday, July 6, 2016 9:19:41 PM CEST Arend Van Spriel wrote:
->> On 6-7-2016 15:42, Arnd Bergmann wrote:
->>> On Wednesday, July 6, 2016 10:08:55 AM CEST Arend Van Spriel wrote:
->>>> On Tue, Jul 5, 2016 at 3:43 PM, Arnd Bergmann <arnd@arndb.de> wrote:
->>> All existing uses of the model property in arch/arm/boot/dts and most of
->>> the ones in arch/powerpc/boot/dts are against the intended usage in
->>> one way or another, but adding different kind of incorrect usage won't
->>> improve that.
->>>
->>> The only way I can see the model property being used correctly would
->>> be to have it match the first entry in the compatible property, but
->>> that is completely redundant, so we tend to omit it, except for the
->>> root node in which it is required. For the root node however, the
->>> historic practice that has crept in on ARM is to put something completely
->>> different in there, which is a human-readable description of the
->>> machine rather than something we can use as a unique indentifier.
->>>
->>> I'd just consider the "model" property burned, and not use it for anything
->>> that doesn't already use it, just like we handle "device_type": a few
->>> things require it, nothing else should use it.
->>
->> If that is the agreed approach in devicetree arena I am fine with it. I
->> have been unaware of this and just looked at the suggestion from Jonas
->> seeing a solution to the problem at hand.
-> 
-> I don't think it has been discussed or decided before as the question
-> has not come up, so for now this is my personal view. Maybe one of
-> the devicetree maintainers can comment on this.
-> 
->>> I agree with your point that the "compatible" property in case of brcmfmac
->>> is really odd because it is not required to identify the hardware when
->>> the SDIO device identification is sufficient, and we just need it to guard
->>> the definition of the other properties. However it seems that now we
->>> actually do need to identify the hardware because we cannot read the
->>> board ID and revision that is supposed to come from nvram but also needed
->>> to read the nvram contents from a file.
->>
->> The board ID and rev in the nvram may not be used if the device has
->> these stored in OTP. However, the problem is that the device need
->> firmware+nvram loaded into it before we can start the firmware on the
->> device. Now if we were to add boardtype and boardrev properties in the
->> binding to identify the hardware, I suppose a new compatible value would
->> be required.
-> 
-> I'm a bit confused by the interdependencies now. You say that there are
-> board ID/rev values stored in OTP. What exactly prevents us from just
-> using those to generate a file name to look up the nvram file on disk
-> for the remaining values?
-> 
-> Do we require the firmware to be running before we can read the OTP,
-> or are there cases where the board ID in OTP is wrong or missing?
+There are slight differences in Rx hw descriptor information
+among different chips. So far driver does not use those new
+information for any functionalities, but there is one important
+information which is available from QCA99X0 onwards to indicate
+the number of bytes that hw padded at the begining of the rx
+payload and this information is needed to undecap the rx
+packet. Add an abstraction for Rx desc to make use of the
+new desc information available. The callback that this patch
+defines to retrieve the padding bytes will be used in follow-up
+patch.
 
-Well, both. Primarily we need firmware running to get the info. If board
-ID is missing in OTP the value from nvram file is used. If board ID in
-OTP is wrong we are screwed :-p
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 12 ++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.c   | 13 +++++++++++++
+ drivers/net/wireless/ath/ath10k/hw.h   | 12 ++++++++++++
+ 3 files changed, 37 insertions(+)
 
-> If we can't rely on OTP for one of those reasons and instead add two
-> properties for boardtype/boardrev, I don't think that requires a
-> change of the compatible string, we would just document those two
-> as optional properties.
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e889829..9c5e93b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -68,6 +68,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA988X_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA988X_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca988x_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA9887_HW_1_0_VERSION,
+@@ -87,6 +88,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA9887_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA9887_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca988x_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -104,6 +106,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA6174_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca988x_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_2_1_VERSION,
+@@ -122,6 +125,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA6174_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca988x_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_0_VERSION,
+@@ -140,6 +144,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA6174_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca988x_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA6174_HW_3_2_VERSION,
+@@ -159,6 +164,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA6174_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca988x_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA99X0_HW_2_0_DEV_VERSION,
+@@ -182,6 +188,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA99X0_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca99x0_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA9984_HW_1_0_DEV_VERSION,
+@@ -205,6 +212,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA99X0_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca99x0_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA9888_HW_2_0_DEV_VERSION,
+@@ -227,6 +235,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA99X0_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca99x0_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_0_DEV_VERSION,
+@@ -244,6 +253,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA9377_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca988x_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA9377_HW_1_1_DEV_VERSION,
+@@ -261,6 +271,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA9377_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca988x_rx_desc_ops,
+ 	},
+ 	{
+ 		.id = QCA4019_HW_1_0_DEV_VERSION,
+@@ -285,6 +296,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 			.board_size = QCA4019_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
+ 		},
++		.hw_rx_desc_ops = &qca99x0_rx_desc_ops,
+ 	},
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index f903d46..6149aa9 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -219,3 +219,16 @@ void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
+ 	survey->time = CCNT_TO_MSEC(ar, cc);
+ 	survey->time_busy = CCNT_TO_MSEC(ar, rcc);
+ }
++
++const struct ath10k_hw_rx_desc_ops qca988x_rx_desc_ops = {
++};
++
++static int ath10k_qca99x0_rx_desc_get_l3_pad_bytes(struct htt_rx_desc *rxd)
++{
++	return MS(__le32_to_cpu(rxd->msdu_end.qca99x0.info1),
++		  RX_MSDU_END_INFO1_L3_HDR_PAD);
++}
++
++const struct ath10k_hw_rx_desc_ops qca99x0_rx_desc_ops = {
++	.rx_desc_get_l3_pad_bytes = ath10k_qca99x0_rx_desc_get_l3_pad_bytes,
++};
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 1315557..a281544 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -409,8 +409,20 @@ struct ath10k_hw_params {
+ 		size_t board_size;
+ 		size_t board_ext_size;
+ 	} fw;
++
++	const struct ath10k_hw_rx_desc_ops *hw_rx_desc_ops;
+ };
+ 
++struct htt_rx_desc;
++
++/* Defines needed for Rx descriptor abstraction */
++struct ath10k_hw_rx_desc_ops {
++	int (*rx_desc_get_l3_pad_bytes)(struct htt_rx_desc *rxd);
++};
++
++extern const struct ath10k_hw_rx_desc_ops qca988x_rx_desc_ops;
++extern const struct ath10k_hw_rx_desc_ops qca99x0_rx_desc_ops;
++
+ /* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
+-- 
+1.9.1
 
-Right. I suppose the bindings update and driver update should preferably
-be in the same kernel release although bindings are supposedly OS agnostic.
-
-Regards,
-Arend
