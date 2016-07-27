@@ -1,41 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37837 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753265AbcGDLJ0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59660 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041AbcG0Gjq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jul 2016 07:09:26 -0400
-Received: by mail-wm0-f51.google.com with SMTP id a66so110874284wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jul 2016 04:09:25 -0700 (PDT)
-From: lemagoup@gmail.com
-To: kvalo@qca.qualcomm.com
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-	jmassot@aldebaran.com,
-	Pierre Le Magourou <plemagourou@aldebaran.com>
-Subject: [PATCH v2 0/3] ath6kl: Fix tethering problems
-Date: Mon,  4 Jul 2016 13:07:16 +0200
-Message-Id: <20160704110719.7694-1-plemagourou@aldebaran.com> (sfid-20160704_130946_748901_4DFA1C9A)
+	Wed, 27 Jul 2016 02:39:46 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: alexmcwhirter@triadic.us
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	Alan Curry <rlwinm@sdf.org>, Al Viro <viro@zeniv.linux.org.uk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
+References: <201607260457.u6Q4v3pM010082@sdf.org>
+	<2589898.190WVraD7Z@debian64>
+	<66636d159da5342b1387035fbcfe0d35@triadic.us>
+Date: Wed, 27 Jul 2016 09:39:41 +0300
+In-Reply-To: <66636d159da5342b1387035fbcfe0d35@triadic.us>
+	(alexmcwhirter@triadic.us's message of "Tue, 26 Jul 2016 14:15:55
+	-0400")
+Message-ID: <87popz8tzm.fsf@purkki.adurom.net> (sfid-20160727_084011_204359_90B5B06E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pierre Le Magourou <plemagourou@aldebaran.com>
+alexmcwhirter@triadic.us writes:
 
-These 3 patchs fix problems detected when using tethering mode with a
-AR9374 chipset.
+> On 2016-07-26 09:59, Christian Lamparter wrote:
+>> Thanks, I gave the program a try with my WNDA3100 and a WN821N v2
+>> devices.
+>> I did not see any corruptions in any of the tests though. Can you
+>> tell me
+>> something about your wireless network too? I would like to know what
+>> router
+>> and firmware are you using? Also important: what's your wireless
+>> configuration?
+>> (WPA?, CCMP or TKIP? HT40, HT20 or Legacy rates? ...)
+>>
+>> Probably the quickest and easiest way to get that information is by
+>> running
+>> the following commands as root, when you are connected to your wifi
+>> network
+>> and post the results:
+>> # iw dev wlan0 link
+>> # iw dev wlan0 scan dump
+>>
+>> (You can of course remove your device's MACs, but please do it
+>> consistently).
+>>
+>> Regards,
+>> Christian
+>
+> I wonder if this is something that is only affecting certain NIC's?
+> For example, it see this issue on sun4u boxes with tigon3 and hme
+> interfaces. But on my sun4v boxes that have e1000 interfaces
+> everything works fine.
 
-v2:
- * Change "From:" line of the email header
- * Remove locking from "Unset IFF_LOWER_UP flag on AP mode leave" patch
-
-
-Pierre Le Magourou (3):
-  ath6kl: Fix WLAN tethering authentication problem.
-  ath6kl: Fix wrong regulatory domain disconnection.
-  ath6kl: Unset IFF_LOWER_UP flag on AP mode leave.
-
- drivers/net/wireless/ath/ath6kl/cfg80211.c | 4 +++-
- drivers/net/wireless/ath/ath6kl/txrx.c     | 9 +++++----
- 2 files changed, 8 insertions(+), 5 deletions(-)
+Kernel configuration might also make a difference. Trying to find an
+Kconfig option which affects this could be useful.
 
 -- 
-2.9.0
-
+Kalle Valo
