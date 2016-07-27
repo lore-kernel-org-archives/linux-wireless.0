@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:36145 "EHLO
-	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755830AbcGHPt5 (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:33433 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755309AbcG0MnM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 11:49:57 -0400
-Received: by mail-yw0-f195.google.com with SMTP id y188so5338002ywf.3
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Jul 2016 08:49:57 -0700 (PDT)
+	Wed, 27 Jul 2016 08:43:12 -0400
+Received: by mail-wm0-f47.google.com with SMTP id p129so30925859wmp.0
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2016 05:43:11 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <577FCB04.4030905@candelatech.com>
-References: <CABPxzYLwye1t1Ycjr3nO5C18vc7OqS9dbbQ1yJ7B-YN+Bkx_PA@mail.gmail.com>
- <CABPxzYL5DHU7ZE1X1AibygBUz0TJEnNLLTp5_hDivmBBkjnVtg@mail.gmail.com>
- <1467972560885.99812@qti.qualcomm.com> <CABPxzY+8Y-FHUFALGueN1hQwgjJHNpeyy_BRkrM4osguxJZS0Q@mail.gmail.com>
- <1467982766213.21223@qti.qualcomm.com> <CABPxzYLO8rzvOJ_1iqng89kYFS-xqC3qstbgETVRJHDpO4rikQ@mail.gmail.com>
- <CABPxzYJPi4CqO+KUFA7=r=zpq_c2vFtrgBQ+nF_nThO-cYrteg@mail.gmail.com>
- <CABPxzYKOqBmrjRwAyZV9daV8adEhUV71XEAsfrLhtTnKwWzuaw@mail.gmail.com>
- <577FC9D0.2010809@candelatech.com> <CABPxzYLdS-QicOj9AdcubT8uxgw0cqXpzerpuwGcwkSQ7PCiOA@mail.gmail.com>
- <577FCB04.4030905@candelatech.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Fri, 8 Jul 2016 21:19:37 +0530
-Message-ID: <CABPxzYLTg5Y0-m6YNemXAd75s3_6uBCCecbsoJG09jM=vqKTFw@mail.gmail.com> (sfid-20160708_175006_130890_E0000704)
-Subject: Re: ath10k + iw set bitrates is causing FW crash
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>
+In-Reply-To: <1469623006-13178-3-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com> <1469623006-13178-3-git-send-email-vthiagar@qti.qualcomm.com>
+From: Michal Kazior <michal.kazior@tieto.com>
+Date: Wed, 27 Jul 2016 14:43:09 +0200
+Message-ID: <CA+BoTQ=kUP-Qtw1EWKKfM_aGtJS_4oQdz4tqD5tiJkF_k3-vOA@mail.gmail.com> (sfid-20160727_144316_227483_3A0D640B)
+Subject: Re: [PATCH 2/4] ath10k: Add provision for Rx descriptor abstraction
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jul 8, 2016 at 9:17 PM, Ben Greear <greearb@candelatech.com> wrote:
-> On 07/08/2016 08:44 AM, Krishna Chaitanya wrote:
->>
->> On Fri, Jul 8, 2016 at 9:12 PM, Ben Greear <greearb@candelatech.com>
->> wrote:
->>>
->>> On 07/08/2016 08:39 AM, Krishna Chaitanya wrote:
->>>
->>>> Also can you please tell me how to make ath10k use minstrel rc, its
->>>> needed
->>>> for comparative purposes? Is disable HW_RATE_CONTROL enough or does
->>>> it need more changes?
->>>
->>>
->>>
->>> It cannot be done.  You have to use whatever rate-ctrl is baked into the
->>> firmware.
->>
->> Ok, its a good feature to have.
->>
+On 27 July 2016 at 14:36, Vasanthakumar Thiagarajan
+<vthiagar@qti.qualcomm.com> wrote:
+> There are slight differences in Rx hw descriptor information
+> among different chips. So far driver does not use those new
+> information for any functionalities, but there is one important
+> information which is available from QCA99X0 onwards to indicate
+> the number of bytes that hw padded at the begining of the rx
+> payload and this information is needed to undecap the rx
+> packet. Add an abstraction for Rx desc to make use of the
+> new desc information available. The callback that this patch
+> defines to retrieve the padding bytes will be used in follow-up
+> patch.
 >
-> It is unlikely to happen anytime soon.  It requires significant firmware
-> modification (and driver too),
-Ok, I understand.
->and probably you would have to add MU-MIMO
-> support to minstrel if you wanted to support latest ath10k NICs.
-It need not be a full pledged one, but 11ac MIMO works should be
-good enough (for now).
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c | 12 ++++++++++++
+>  drivers/net/wireless/ath/ath10k/hw.c   | 13 +++++++++++++
+>  drivers/net/wireless/ath/ath10k/hw.h   | 12 ++++++++++++
+>  3 files changed, 37 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+> index e889829..9c5e93b 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -68,6 +68,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+>                         .board_size = QCA988X_BOARD_DATA_SZ,
+>                         .board_ext_size = QCA988X_BOARD_EXT_DATA_SZ,
+>                 },
+> +               .hw_rx_desc_ops = &qca988x_rx_desc_ops,
+[...]
+> +struct ath10k_hw_rx_desc_ops {
+> +       int (*rx_desc_get_l3_pad_bytes)(struct htt_rx_desc *rxd);
+> +};
+
+Benjamin is trying to implement coverage class by poking hw registers
+over firmware's head [1]. I'm thinking the hw_rx_desc_ops could be
+generalized to hw_ops so it can be used for doing hw-specific hacks as
+well. What do you think?
+
+[1]: http://lists.infradead.org/pipermail/ath10k/2016-July/008107.html
+
+
+Michał
