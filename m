@@ -1,77 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:57505 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755171AbcGHQ26 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:36843 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755771AbcG0Mht (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 12:28:58 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-	Tim Shepard <shep@alum.mit.edu>
-Subject: Re: [v3] ath9k: Switch to using mac80211 intermediate software queues.
-References: <ac5b5bc6532d4fe7ae3198124ecce7fc@euamsexm01a.eu.qualcomm.com>
-	<87wpkwktx9.fsf@toke.dk>
-	<112300e0-7d39-0c4c-45c9-158651f0c0ed@nbd.name>
-Date: Fri, 08 Jul 2016 18:28:47 +0200
-In-Reply-To: <112300e0-7d39-0c4c-45c9-158651f0c0ed@nbd.name> (Felix Fietkau's
-	message of "Fri, 8 Jul 2016 18:10:11 +0200")
-Message-ID: <87lh1cksao.fsf@toke.dk> (sfid-20160708_182901_980249_44E36EE9)
+	Wed, 27 Jul 2016 08:37:49 -0400
+From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Subject: [PATCH 3/4] ath10k: Properly remove padding from the start of rx payload
+Date: Wed, 27 Jul 2016 18:06:45 +0530
+Message-ID: <1469623006-13178-4-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160727_143752_803456_91EF6414)
+In-Reply-To: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+In QCA99X0 (QCA99X0, QCA9984, QCA9888 and QCA4019) family chips,
+hw adds padding at the begining of the rx payload to make L3
+header 4-byte aligned. In the chips doing this type of padding,
+the number of bytes padded will be indicated through msdu_end:info1.
+Define a hw_rx_desc_ops wrapper to retrieve the number of padded
+bytes and use this while doing undecap. This should fix padding
+related issues with ethernt decap format with QCA99X0, QCA9984,
+QCA9888 and QCA4019 hw.
 
-> On 2016-07-08 17:53, Toke Høiland-Jørgensen wrote:
->> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->> 
->>> Toke Høiland-Jørgensen wrote:
->>>> This switches ath9k over to using the mac80211 intermediate software
->>>> queueing mechanism for data packets. It removes the queueing inside the
->>>> driver, except for the retry queue, and instead pulls from mac80211 when
->>>> a packet is needed. The retry queue is used to store a packet that was
->>>> pulled but can't be sent immediately.
->>>> 
->>>> The old code path in ath_tx_start that would queue packets has been
->>>> removed completely, as has the qlen limit tunables (since there's no
->>>> longer a queue in the driver to limit).
->>>> 
->>>> Based on Tim's original patch set, but reworked quite thoroughly.
->>>> 
->>>> Cc: Tim Shepard <shep@alum.mit.edu>
->>>> Cc: Felix Fietkau <nbd@nbd.name>
->>>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
->>>
->>> Nice work.
->> 
->> Thanks :)
->> 
->>> Because this is such a significant change, and to maximise testing
->>> time, I'm planning to queue this for 4.9 (so I would apply this to
->>> ath-next in 3-4 weeks after the merge window closes). But anyone who
->>> wants to test this can use master-pending branch from my ath.git tree
->>> (uses wireless-testing as the baseline). Sounds good?
->> 
->> Sounds good to me. I'm planning on backporting this and Michael's
->> mac80211 FQ-CoDel patches to 4.4 and post them for inclusion in LEDE.
->> Hopefully that will get it some more testing as well.
-> I've pushed a backport of this into my LEDE staging tree:
-> https://git.lede-project.org/?p=lede/nbd/staging.git;a=summary
+Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 36 +++++++++++++++++++-------------
+ drivers/net/wireless/ath/ath10k/hw.h     |  9 ++++++++
+ 2 files changed, 31 insertions(+), 14 deletions(-)
 
-Awesome! What about the FQ-CoDel mac80211 patches themselves? I have a
-tree where I've separated out the needed patches and rebased them on
-mainline 4.4.9. Can I post that somewhere (or just email you the series)
-and get you to include those as well? Or do I just dump the patch files
-into the LEDE patches dir and send that as a patch to LEDE? (I see your
-patch also refreshed subsequent patches; is there a script to do that
-automatically?)
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 78db5d6..36c4809 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1056,9 +1056,11 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
+ 					  const u8 first_hdr[64])
+ {
+ 	struct ieee80211_hdr *hdr;
++	struct htt_rx_desc *rxd;
+ 	size_t hdr_len;
+ 	u8 da[ETH_ALEN];
+ 	u8 sa[ETH_ALEN];
++	int l3_pad_bytes;
+ 
+ 	/* Delivered decapped frame:
+ 	 * [nwifi 802.11 header] <-- replaced with 802.11 hdr
+@@ -1072,19 +1074,12 @@ static void ath10k_htt_rx_h_undecap_nwifi(struct ath10k *ar,
+ 	 */
+ 
+ 	/* pull decapped header and copy SA & DA */
+-	if ((ar->hw_params.hw_4addr_pad == ATH10K_HW_4ADDR_PAD_BEFORE) &&
+-	    ieee80211_has_a4(((struct ieee80211_hdr *)first_hdr)->frame_control)) {
+-		/* The QCA99X0 4 address mode pad 2 bytes at the
+-		 * beginning of MSDU
+-		 */
+-		hdr = (struct ieee80211_hdr *)(msdu->data + 2);
+-		/* The skb length need be extended 2 as the 2 bytes at the tail
+-		 * be excluded due to the padding
+-		 */
+-		skb_put(msdu, 2);
+-	} else {
+-		hdr = (struct ieee80211_hdr *)(msdu->data);
+-	}
++	rxd = (void *)msdu->data - sizeof(*rxd);
++
++	l3_pad_bytes = ath10k_rx_desc_get_l3_pad_bytes(&ar->hw_params, rxd);
++	skb_put(msdu, l3_pad_bytes);
++
++	hdr = (struct ieee80211_hdr *)(msdu->data + l3_pad_bytes);
+ 
+ 	hdr_len = ath10k_htt_rx_nwifi_hdrlen(ar, hdr);
+ 	ether_addr_copy(da, ieee80211_get_DA(hdr));
+@@ -1151,6 +1146,8 @@ static void ath10k_htt_rx_h_undecap_eth(struct ath10k *ar,
+ 	void *rfc1042;
+ 	u8 da[ETH_ALEN];
+ 	u8 sa[ETH_ALEN];
++	int l3_pad_bytes;
++	struct htt_rx_desc *rxd;
+ 
+ 	/* Delivered decapped frame:
+ 	 * [eth header] <-- replaced with 802.11 hdr & rfc1042/llc
+@@ -1161,6 +1158,11 @@ static void ath10k_htt_rx_h_undecap_eth(struct ath10k *ar,
+ 	if (WARN_ON_ONCE(!rfc1042))
+ 		return;
+ 
++	rxd = (void *)msdu->data - sizeof(*rxd);
++	l3_pad_bytes = ath10k_rx_desc_get_l3_pad_bytes(&ar->hw_params, rxd);
++	skb_put(msdu, l3_pad_bytes);
++	skb_pull(msdu, l3_pad_bytes);
++
+ 	/* pull decapped header and copy SA & DA */
+ 	eth = (struct ethhdr *)msdu->data;
+ 	ether_addr_copy(da, eth->h_dest);
+@@ -1191,6 +1193,8 @@ static void ath10k_htt_rx_h_undecap_snap(struct ath10k *ar,
+ {
+ 	struct ieee80211_hdr *hdr;
+ 	size_t hdr_len;
++	int l3_pad_bytes;
++	struct htt_rx_desc *rxd;
+ 
+ 	/* Delivered decapped frame:
+ 	 * [amsdu header] <-- replaced with 802.11 hdr
+@@ -1198,7 +1202,11 @@ static void ath10k_htt_rx_h_undecap_snap(struct ath10k *ar,
+ 	 * [payload]
+ 	 */
+ 
+-	skb_pull(msdu, sizeof(struct amsdu_subframe_hdr));
++	rxd = (void *)msdu->data - sizeof(*rxd);
++	l3_pad_bytes = ath10k_rx_desc_get_l3_pad_bytes(&ar->hw_params, rxd);
++
++	skb_put(msdu, l3_pad_bytes);
++	skb_pull(msdu, sizeof(struct amsdu_subframe_hdr) + l3_pad_bytes);
+ 
+ 	hdr = (struct ieee80211_hdr *)first_hdr;
+ 	hdr_len = ieee80211_hdrlen(hdr->frame_control);
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index a281544..cdd2ce4 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -423,6 +423,15 @@ struct ath10k_hw_rx_desc_ops {
+ extern const struct ath10k_hw_rx_desc_ops qca988x_rx_desc_ops;
+ extern const struct ath10k_hw_rx_desc_ops qca99x0_rx_desc_ops;
+ 
++static inline int
++ath10k_rx_desc_get_l3_pad_bytes(struct ath10k_hw_params *hw,
++				struct htt_rx_desc *rxd)
++{
++	if (hw->hw_rx_desc_ops->rx_desc_get_l3_pad_bytes)
++		return hw->hw_rx_desc_ops->rx_desc_get_l3_pad_bytes(rxd);
++	return 0;
++}
++
+ /* Target specific defines for MAIN firmware */
+ #define TARGET_NUM_VDEVS			8
+ #define TARGET_NUM_PEER_AST			2
+-- 
+1.9.1
 
-> I don't have time for testing it myself at the moment, but I'll try to
-> get some people to do so.
-
-Awesome :)
-
--Toke
