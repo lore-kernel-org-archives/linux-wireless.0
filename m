@@ -1,73 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55706 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932928AbcGEN3s (ORCPT
+Received: from mail-ua0-f179.google.com ([209.85.217.179]:34111 "EHLO
+	mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751923AbcG0U5L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 09:29:48 -0400
-Content-Type: text/plain; charset="utf-8"
+	Wed, 27 Jul 2016 16:57:11 -0400
+Received: by mail-ua0-f179.google.com with SMTP id 35so26085451uap.1
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jul 2016 13:57:10 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [v2, 1/3] mwifiex: add a cfg80211 .get_tx_power operation callback
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1465232558-31678-2-git-send-email-javier@osg.samsung.com>
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Enric Balletbo i Serra <enric.balletbo@collabora.com>,
-	Javier Martinez Canillas <javier@osg.samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Message-Id: <20160705132947.D4B4060F78@smtp.codeaurora.org> (sfid-20160705_153024_800551_61A5A6A2)
-Date: Tue,  5 Jul 2016 13:29:47 +0000 (UTC)
+In-Reply-To: <57991EE9.30005@broadcom.com>
+References: <CAOMZO5Cu_UO6L9wYy6eJUJwEE25BN-qeBRAMbFveFrJKHtF=aw@mail.gmail.com>
+ <57991EE9.30005@broadcom.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Wed, 27 Jul 2016 17:57:09 -0300
+Message-ID: <CAOMZO5CvuumYQZ92YFCjd7Vrmp4i1T1pdYAmGUvRgjNzVpMWyQ@mail.gmail.com> (sfid-20160727_225714_491802_32DE635C)
+Subject: Re: brcm4330 fails to load on newer kernels
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Javier Martinez Canillas <javier@osg.samsung.com> wrote:
-> The mwifiex driver implements a cfg80211 .set_tx_power operation handler
-> but doesn't have the inverse .get_tx_power callback.
-> 
-> This not only has the effect that the Tx power can't be reported to user
-> space tools such as iwconfig and iwlist but also that the wireless core
-> prints a warning when a new wiphy is created due an cfg80211 operation
-> being implemented without its counterpart.
-> 
-> After this patch, the Tx power is properly reported to user-space tools:
-> 
-> $ iwlist mlan0 txpower
-> mlan0     unknown transmit-power information.
-> 
->           Current Tx-Power=13 dBm       (19 mW)
-> 
-> and also the following warning isn't shown anymore on the driver probe:
-> 
-> WARNING: CPU: 3 PID: 127 at net/wireless/core.c:366 wiphy_new_nm+0x66c/0x6ac
-> Modules linked in: mwifiex_sdio mwifiex
-> CPU: 3 PID: 127 Comm: kworker/3:1 Tainted: G        W       4.7.0-rc1-next-20160531-00006-g569df5b983f3
-> Hardware name: SAMSUNG EXYNOS (Flattened Device Tree)
-> Workqueue: events request_firmware_work_func
-> [<c010e1ac>] (unwind_backtrace) from [<c010af38>] (show_stack+0x10/0x14)
-> [<c010af38>] (show_stack) from [<c0323b9c>] (dump_stack+0x88/0x9c)
-> [<c0323b9c>] (dump_stack) from [<c011a828>] (__warn+0xe8/0x100)
-> [<c011a828>] (__warn) from [<c011a8f0>] (warn_slowpath_null+0x20/0x28)
-> [<c011a8f0>] (warn_slowpath_null) from [<c06a42d4>] (wiphy_new_nm+0x66c/0x6ac)
-> [<c06a42d4>] (wiphy_new_nm) from [<bf1c24cc>] (mwifiex_register_cfg80211+0x28/0x3f0 [mwifiex])
-> [<bf1c24cc>] (mwifiex_register_cfg80211 [mwifiex]) from [<bf1a0018>] (mwifiex_fw_dpc+0x2b0/0x474 [mwifiex])
-> [<bf1a0018>] (mwifiex_fw_dpc [mwifiex]) from [<c040eb74>] (request_firmware_work_func+0x30/0x58)
-> [<c040eb74>] (request_firmware_work_func) from [<c012fe90>] (process_one_work+0x124/0x338)
-> [<c012fe90>] (process_one_work) from [<c01300dc>] (worker_thread+0x38/0x4d4)
-> [<c01300dc>] (worker_thread) from [<c01353b8>] (kthread+0xdc/0xf4)
-> [<c01353b8>] (kthread) from [<c0107978>] (ret_from_fork+0x14/0x3c)
-> 
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-> Tested-by: Enric Balletbo i Serra <enric.balletbo@collabora.com>
+Hi Arend,
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+On Wed, Jul 27, 2016 at 5:51 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 27-07-16 00:35, Fabio Estevam wrote:
+>> Hi,
+>>
+>> On a imx6sl-warp board with a brcm4330 I get the following results
+>> depending on the kernel version:
+>>
+>> - Kernel 4.4.15: place brcmfmac4330-sdio.bin and brcmfmac4330-sdio.txt
+>> in the rootfs and the kernel is able to read them correctly. wlan0 is
+>> present. All is fine.
+>>
+>> - Kernel 4.5.7: place brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt in
+>> the rootfs and the kernel fails to load them:
+>>
+>> brcmfmac mmc1:0001:1: Direct firmware load for
+>> brcm/brcmfmac4330-sdio.bin failed with error -2
+>>
+>> Then I build brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt into the
+>> kernel and then firmware is detected and wlan0 appears.
+>>
+>> - Kernel 4.7: I can place the firmware and nvram file into the rootfs
+>> or built-i and the following error is seen:
+>>
+>> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+>> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+>> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+>>
+>> So wlan0 never appears here.
+>>
+>> Does anyone have any suggestions about these different behaviours?
+>
+> So for all kernel you have brcmfmac built-in the kernel or as a module?
 
-7d54bacadce1 mwifiex: add a cfg80211 .get_tx_power operation callback
-3ee712857958 mwifiex: add get_antenna support for cfg80211
+In all these tests I have brcmfmac built-in the kernel.
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9158855/
+Thanks,
 
+Fabio Estevam
