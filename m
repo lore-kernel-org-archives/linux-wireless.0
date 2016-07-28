@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33350 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751203AbcGFKoH (ORCPT
+Received: from smtp.tech.triadic.us ([98.102.61.98]:46355 "EHLO
+	SMTP.Tech.Triadic.US" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758277AbcG1Ahf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:44:07 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:16 +0300
-Message-Id: <1467801651-1816-21-git-send-email-luca@coelho.fi> (sfid-20160706_124417_010532_DE4DC083)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 21/56] iwlwifi: mvm: fix txq aggregation bug
+	Wed, 27 Jul 2016 20:37:35 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Wed, 27 Jul 2016 20:26:48 -0400
+From: alexmcwhirter@triadic.us
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: David Miller <davem@davemloft.net>, rlwinm@sdf.org,
+	chunkeey@googlemail.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Al Viro <viro@ftp.linux.org.uk>
+Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
+In-Reply-To: <20160728003102.GS2356@ZenIV.linux.org.uk>
+References: <201607271032.u6RAWPcS008174@sdf.org>
+ <4dbfebe8136bc963b5b51463d6887db4@triadic.us>
+ <87c4ed555bcb4229f2334f6f2bb69bcb@triadic.us>
+ <20160727.164543.1466564919313003461.davem@davemloft.net>
+ <20160728003102.GS2356@ZenIV.linux.org.uk>
+Message-ID: <8b3126f66186015956e0f8090fb70532@triadic.us> (sfid-20160728_023801_344518_09C8F94B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+On 2016-07-27 20:31, Al Viro wrote:
+> On Wed, Jul 27, 2016 at 04:45:43PM -0700, David Miller wrote:
+> 
+>> > I highly expect both my issue and OP's issue to revolve not around
+>> > commit e5a4b0bb803b specifically, but around other code that no longer
+>> > behaves as expected because of it.
+>> 
+>> Indeed, and that fault address rounding bug occurs two other times
+>> in arch/sparc/lib/user_fixup.c
+>> 
+>> The mentioned patchwork patch should fix the bug and I'll get that
+>> into my sparc tree, merged, and queued up for -stable ASAP.
+> 
+> Plausible for sparc, but I don't see similar __copy_to_user_inatomic()
+> bugs in case of x86_64...
 
-Fix an issue where nullfunc frames and block ack requests
-had the same tid as aggregation frames and were queued on
-a non aggregation queue. The pending frames counter included
-those frames but the check whether to decrement the pending
-frames counter relied on the tid status and not on the txq id.
-The result was an inconsistent state of the pending frames
-counter followed by a failure to remove the station.
-This failure triggered SYSASSERT 0x3421.
+I'm going to go ahead and say this is where my issue and the op's issue 
+begin to branch apart from one another. He's seeing this on all incoming 
+data, whereas i am only seeing it on ssl data and not on sun4v.
 
-In addition, fix a situation in DQA mode where the number
-of pending frames turned negative. This was due to the TX queue
-being on the IWL_EMPTYING_HW_QUEUE_DELBA state and its frames
-were still decremented.
-
-Even though the SYSASSERT issue is fixed when DQA is disabled,
-the issue is not completely solved when DQA is enabled and
-should still be fixed.
-
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Fixes: cf961e16620f ("iwlwifi: mvm: support dqa-mode agg on non-shared queue")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index d91edab..1f23cee 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1329,7 +1329,15 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
- 			bool send_eosp_ndp = false;
- 
- 			spin_lock_bh(&mvmsta->lock);
--			txq_agg = (mvmsta->tid_data[tid].state == IWL_AGG_ON);
-+			if (iwl_mvm_is_dqa_supported(mvm)) {
-+				enum iwl_mvm_agg_state state;
-+
-+				state = mvmsta->tid_data[tid].state;
-+				txq_agg = (state == IWL_AGG_ON ||
-+					state == IWL_EMPTYING_HW_QUEUE_DELBA);
-+			} else {
-+				txq_agg = txq_id >= mvm->first_agg_queue;
-+			}
- 
- 			if (!is_ndp) {
- 				tid_data->next_reclaimed = next_reclaimed;
--- 
-2.8.1
-
+At this point i would say data from my issue is only going to cloud this 
+issue as they seem to be two completely different issues revolving 
+around the same commit. If i come across any relevant data for x86_64 
+ill be sure to post it if this isn't resolved by then, but for now i'm 
+going to refrain from submitting anything sparc related.
