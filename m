@@ -1,164 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:35345 "EHLO
-	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752587AbcGLJtA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2016 05:49:00 -0400
-Received: by mail-pf0-f170.google.com with SMTP id c2so5409980pfa.2
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jul 2016 02:48:59 -0700 (PDT)
-Subject: Re: [PATCH v4] brcmfmac: Decrease 8021x_cnt for dropped packets
-To: =?UTF-8?Q?Per_F=c3=b6rlin?= <per.forlin@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <1460498140-18874-1-git-send-email-per.forlin@gmail.com>
- <CAC0pXTLDeiiVma7AGD1XirQG=SqSDht_BA3arQQnvn=ztTLDug@mail.gmail.com>
- <CAC0pXTJ-hnKgSMwf7KYPwBs7RB2YAgaouOdeJwD2kuLneCGXfA@mail.gmail.com>
-Cc: arend@broadcom.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <38869535-4f77-f6d8-d8d0-cb01b3f9c65b@broadcom.com> (sfid-20160712_114904_880394_119223BA)
-Date: Tue, 12 Jul 2016 11:48:45 +0200
+Received: from mx2.suse.de ([195.135.220.15]:43680 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751488AbcG1X22 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2016 19:28:28 -0400
+Date: Fri, 29 Jul 2016 01:28:21 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>, mmarek@suse.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Takashi Iwai <tiwai@suse.de>, Tom Gundersen <teg@jklm.no>,
+	Kay Sievers <kay@vrfy.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Jej B <James.Bottomley@hansenpartnership.com>,
+	Kees Cook <keescook@chromium.org>,
+	Fengguang Wu <fengguang.wu@intel.com>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Rusty Russell <rusty@rustcorp.com.au>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Mauro Carvalho Chehab <mchehab@osg.samsung.com>,
+	Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+	Hannes Reinecke <hare@suse.de>,
+	"rafael.j.wysocki" <rafael.j.wysocki@intel.com>
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+Message-ID: <20160728232821.GB3296@wotan.suse.de> (sfid-20160729_012850_072901_C58C2EB0)
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
+ <20160721070938.GA2658@redhat.com>
+ <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
+ <20160721080541.GB2658@redhat.com>
+ <5790A28F.8030102@redhat.com>
+ <20160721115122.GA31869@redhat.com>
+ <a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
+ <20160722220526.GL5537@wotan.suse.de>
+ <c3bbb2f3-f551-41bf-ba29-c75f78b5b9ed@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <CAC0pXTJ-hnKgSMwf7KYPwBs7RB2YAgaouOdeJwD2kuLneCGXfA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c3bbb2f3-f551-41bf-ba29-c75f78b5b9ed@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jul 28, 2016 at 09:23:35PM +0200, Arend van Spriel wrote:
+> On 23-07-16 00:05, Luis R. Rodriguez wrote:
+> > The firmware API is a mess and I've been trying to correct that
+> > with a more flexible API.
 
+<-- snip -->
 
-On 12-7-2016 10:35, Per Förlin wrote:
-> 2016-07-06 11:53 GMT+02:00 Per Förlin <per.forlin@gmail.com>:
->> I have now verified this patch on backports 4.4.
->>
->> 2016-04-12 23:55 GMT+02:00  <per.forlin@gmail.com>:
->>> From: Per Forlin <per.forlin@gmail.com>
->>>
->>> This patch resolves an issue where pend_8021x_cnt was not decreased
->>> on txfinalize. This caused brcmf_netdev_wait_pend8021x to timeout
->>> because the counter indicated pending packets.
->>>
->>> WARNING: at .../brcmfmac/core.c:1289 brcmf_netdev_wait_pend8021x
->>>   (warn_slowpath_common)
->>>   (warn_slowpath_null)
->>>   (brcmf_netdev_wait_pend8021x [brcmfmac])
->>>   (send_key_to_dongle [brcmfmac])
->>>   (brcmf_cfg80211_del_key [brcmfmac])
->>>   (nl80211_del_key [cfg80211])
->>>   (genl_rcv_msg)
->>>   (netlink_rcv_skb)
->>>   (genl_rcv)
->>>   (netlink_unicast)
->>>   (netlink_sendmsg)
->>>   (sock_sendmsg)
->>>   (___sys_sendmsg)
->>>   (__sys_sendmsg)
->>>   (SyS_sendmsg)
->>>
->>> The solution is to pull back the header offset in case
->>> of an error in txdata(), which may happen in case of
-> Clarification:
+> > Extensions to the fw API are IMHO best done through a newer flexible
+> > API, feel free to refer to this development tree if you'd like to
+> > contribute:
+> > 
+> > https://git.kernel.org/cgit/linux/kernel/git/mcgrof/linux-next.git/log/?h=20160616-sysdata-v2
 > 
-> txdata=brcmf_proto_bcdc_txdata()
-> brcmf_proto_bcdc_txdata(): Calls brcmf_proto_bcdc_hdrpush()
-> 
-> The header needs to be pulled back in case of error otherwise
-> the error handling and cleanup up will fail to decrease the counter
-> of pending packets.
+> So I had a look and noticed commit c8df68e83392 ("firmware: annotate
+> thou shalt not request fw on init or probe"). Now this conflicts with
+> our wireless driver. The original suggestion a long, long time ago was
+> to use IFF_UP as trigger to go and request firmware. However, for that
+> we would need to register a netdevice during probe, and consequently we
+> should also have a wiphy instance registered. However, that has all kind
+> of feature flags for which we need firmware running on the device to
+> query what is supported and what not. I can make a fair bet that
+> brcmfmac is not the only driver with such a requirement. So how can we
+> crack that nut.
 
-Yes, this part of the patch is clear to me.
+Glad you asked.
 
->>> packet overload in brcmf_sdio_bus_txdata.
->>>
->>> Overloading an WLAN interface is not an unlikely scenario.
+Despite my latest set of updates on documentation for the firmware_class [0] (not
+yet merged), and it being based on the latest discussed and agreed upon we
+really have nothing well ironed out for what you describe, so let's try
+to figure that out now.
 
-So here is where things start to look suspicious and I have mentioned
-this before. My thought here was "How the hell can you end up with a
-2048 packets on the sdio queue", which I mentioned to you before. There
-is a high watermark on the queue upon which we do a netif_stop_queue()
-so network layer does not keep pushing tx packets our way. Looking
-further into this I found that we introduced a bug with commit
-9cd18359d31e ("brcmfmac: Make FWS queueing configurable.") so we ended
-up doing nothing except increasing as statistics debug counter :-(
+To be clear, folks had originally said using the firmware API on *init* was
+dumb, and some of this came up because of the infamous systemd udev timeout.
+For completeness, I've documented some of the history of this issue
+in great detail [1], mostly because I had to deal with a bug at SUSE about
+this, and find a proper solution. Avoiding re-iterating *exactly why* the
+timeout for kmod was ill-founded, and assuming you all now buy that,
+the summary of facts of the *why* it turns out to be a bad idea to use the
+firmware API on init *or* probe:
 
->>> In case of packet overload the error print "out of bus->txq"
->>> is very verbose. To reduce SPAM degrade it to a debug print.
->>>
->>> Signed-off-by: Per Forlin <per.forlin@gmail.com>
->>> ---
->>> Change log:
->>>  v2 - Add variable to know whether the counter is increased or not
->>>  v3 - txfinalize should decrease the counter. Adjust skb header offset
->>>  v4 - Fix build error
->>>
->>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 4 ++++
->>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 4 +++-
->>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c     | 2 +-
->>>  3 files changed, 8 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
->>> index ed9998b..f342f7c 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
->>> @@ -541,6 +541,9 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
->>>         struct ethhdr *eh;
->>>         u16 type;
->>>
->>> +       if (!ifp)
->>> +               goto free;
->>> +
+  a) by default the driver model actually calls both init and probe serially and
+     synchronously
+  b) we have no deterministic way of being certain we have whatever filesystem
+     the driver needed as ready, the firmware may live in initramfs, or may only
+     be available later on the real filesystem, and even after that the system
+     may be designed to pivot_root.
 
-This may not be needed.
+In terms of solutions, lets discuss, here are a few options I can think of:
 
->>>         eh = (struct ethhdr *)(txp->data);
->>>         type = ntohs(eh->h_proto);
->>>
->>> @@ -553,6 +556,7 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
->>>         if (!success)
->>>                 ifp->stats.tx_errors++;
->>>
->>> +free:
->>>         brcmu_pkt_buf_free_skb(txp);
->>>  }
->>>
->>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
->>> index f82c9ab..98cb83f 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
->>> @@ -1899,8 +1899,10 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
->>>
->>>         if (fws->avoid_queueing) {
->>>                 rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
->>> -               if (rc < 0)
->>> +               if (rc < 0) {
->>> +                       (void)brcmf_proto_hdrpull(drvr, false, skb, &ifp);
+  1) Because of b) if you know you are going to use the firmware API you should
+     just stuff firmware that is needed on init or probe as built-in
+     (CONFIG_EXTRA_FIRMWARE) or stuff it into initramfs. This approach is generally
+     accepted, however there is no systematic approach to ensure this is done. Now
+     that we have coccinelle grammar to find these drivers it should be relatively
+     easy to identify them and require the firmware as part of the distribution's
+     initramfs or peg them as part of CONFIG_EXTRA_FIRMWARE if a distro prefers that.
 
-Could it be that the ifp is NULL pointer after brcmf_proto_hdrpull().
-Can you check. Better use tmp_ifp variable in this call as you have a
-valid ifp before this call for sure.
+     The only issue with this approach is its left up to the distribution to resolve.
 
->>>                         brcmf_txfinalize(ifp, skb, false);
->>> +               }
->>>                 return rc;
->>>         }
->>>
->>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->>> index a14d9d9d..485e2ad 100644
->>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->>> @@ -2721,7 +2721,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
->>>         *(u16 *)(pkt->cb) = 0;
->>>         if (!brcmf_sdio_prec_enq(&bus->txq, pkt, prec)) {
->>>                 skb_pull(pkt, bus->tx_hdrlen);
->>> -               brcmf_err("out of bus->txq !!!\n");
->>> +               brcmf_dbg(INFO, "out of bus->txq !!!\n");
+  2) If the driver *knows* that probe may take a while it can request the driver core
+     to probe the driver asynchronously, it can do so by using:
 
-Now that I understand the issue I want to keep this as error print as it
-should be very unlikely.
+static struct pci_driver foo_pci_driver = {
+      ...
+      .driver.probe_type = PROBE_PREFER_ASYNCHRONOUS,
+};
 
-Regards,
-Arend
+    This would not really resolve the deterministic issues listed in b) and for
+    this reason this is not really a firmware-API-on-probe solution -- its an
+    annotation to help avoid delays boot due to knowing probe may take a while.
 
->>>                 ret = -ENOSR;
->>>         } else {
->>>                 ret = 0;
->>> --
->>> 2.1.4
->>>
+  3) Userspace that loads modules can / should pass the async probe generic
+     module parameter "async_probe" (for instance 'modprobe ath10k async_probe')
+     when loading all modules. This should already be relatively
+     safe when using on modules. This is what systemd long ago assumed was
+     being done anyway. Again, also this is not really a firmware-API-on-probe solution,
+     it can however be used by systemd for instance to help avoid delays on
+     boot due to module lengthy probe calls
+
+As it stands we have no resolution for the deterministic existential issues of
+the firmware but in practice 1-3 should help. 2-3 should probably be done
+regardless. I've been meaning to send patches for 3) but haven't had time.
+
+As far as the deterministic existential firmware issue... Since we're just
+reading files from the filesystem now (there are exceptions to this, but my
+goal is to corner-case this code with the sysdata API), if we really wanted
+something rock solid for these drivers I suppose we could consider implementing
+an event driven probe if a driver requests for async probe. For instance, if
+async probe was requested and the driver has MODULE_FIRMWARE(firmware_name)
+we could add a notifier to probe the driver once the firmware is accessible.
+
+For all intents and purposes though -- although I know the real issue here
+the deterministic way of knowing when firmware is available, in practice
+annotating your driver with PROBE_PREFER_ASYNCHRONOUS should solve most
+races. This would not be a resolution, but rather an annotation to the fact
+your driver probe does take a while -- and should make most folks happy until
+we have a proper deterministic firmware solution, I think.
+
+I welcome other ideas.
+
+[0] https://lkml.kernel.org/r/1466117661-22075-1-git-send-email-mcgrof@kernel.org
+[1] http://www.do-not-panic.com/2015/12/linux-asynchronous-probe.html
+
+  Luis
