@@ -1,183 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:40052 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932515AbcGKS5D (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:35074 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753876AbcG1ShW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jul 2016 14:57:03 -0400
-Date: Mon, 11 Jul 2016 14:57:00 -0400
-From: Kyle McMartin <kyle@infradead.org>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-firmware@kernel.org
-Subject: Re: pull request: new firmware files for all mvm wireless devices
-Message-ID: <20160711185700.GH8680@merlin.infradead.org> (sfid-20160711_205709_021056_4276B23D)
-References: <1468164649.8394.3.camel@intel.com>
+	Thu, 28 Jul 2016 14:37:22 -0400
+Received: by mail-wm0-f48.google.com with SMTP id f65so262880003wmi.0
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2016 11:37:21 -0700 (PDT)
+Subject: Re: brcm4330 fails to load on newer kernels
+To: Fabio Estevam <festevam@gmail.com>
+References: <CAOMZO5Cu_UO6L9wYy6eJUJwEE25BN-qeBRAMbFveFrJKHtF=aw@mail.gmail.com>
+ <57991EE9.30005@broadcom.com>
+ <CAOMZO5CvuumYQZ92YFCjd7Vrmp4i1T1pdYAmGUvRgjNzVpMWyQ@mail.gmail.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <814ae6d0-2375-e8bd-f3e3-98ec5f69b376@broadcom.com> (sfid-20160728_203726_441494_244D9475)
+Date: Thu, 28 Jul 2016 20:37:18 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1468164649.8394.3.camel@intel.com>
+In-Reply-To: <CAOMZO5CvuumYQZ92YFCjd7Vrmp4i1T1pdYAmGUvRgjNzVpMWyQ@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jul 10, 2016 at 03:30:49PM +0000, Grumbach, Emmanuel wrote:
-> Hi Kyle,
+On 27-07-16 22:57, Fabio Estevam wrote:
+> Hi Arend,
 > 
-> Intel is releasing new firmware versions for all its mvm wireless
-> devices.
-> For devices 7260, 7265 and 3160, this is the last firmware updates. We
-> may still have critical bug fixes, but those won't get any new major
-> releases. They will stay with -17.ucode.
-> For 7265D and up, we release here the -22.ucode version.
+> On Wed, Jul 27, 2016 at 5:51 PM, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 27-07-16 00:35, Fabio Estevam wrote:
+>>> Hi,
+>>>
+>>> On a imx6sl-warp board with a brcm4330 I get the following results
+>>> depending on the kernel version:
+>>>
+>>> - Kernel 4.4.15: place brcmfmac4330-sdio.bin and brcmfmac4330-sdio.txt
+>>> in the rootfs and the kernel is able to read them correctly. wlan0 is
+>>> present. All is fine.
+>>>
+>>> - Kernel 4.5.7: place brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt in
+>>> the rootfs and the kernel fails to load them:
+>>>
+>>> brcmfmac mmc1:0001:1: Direct firmware load for
+>>> brcm/brcmfmac4330-sdio.bin failed with error -2
+>>>
+>>> Then I build brcmfmac4330-sdio.bin brcmfmac4330-sdio.txt into the
+>>> kernel and then firmware is detected and wlan0 appears.
+>>>
+>>> - Kernel 4.7: I can place the firmware and nvram file into the rootfs
+>>> or built-i and the following error is seen:
+>>>
+>>> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+>>> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+>>> brcmfmac: brcmf_sdio_htclk: HT Avail timeout (1000000): clkctl 0x50
+>>>
+>>> So wlan0 never appears here.
+>>>
+>>> Does anyone have any suggestions about these different behaviours?
+>>
+>> So for all kernel you have brcmfmac built-in the kernel or as a module?
 > 
-> Please pull.
-> 
-> Thanks!
-> 
-> The following changes since commit a14150061388f4bcbf3c3499f1b12e3f0d5c0e7b:
-> 
->   linux-firmware: Fix the filename for WsP to align with device HW_VARIANT (2016-07-08 18:07:02 -0700)
-> 
-> are available in the git repository at:
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/linux-firmware.git tags/iwlwifi-fw-2016-07-10
+> In all these tests I have brcmfmac built-in the kernel.
 
-Pulled, thanks Emmanuel.
+Hi Fabio,
 
-regards, --Kyle
+So this is another fine example of firmware API not able to deliver. I
+think in all these kernels you have the same issue. The problem is that
+the order of events upon kernel boot is not predictable. In this case
+you have rootfs being mounted and brcmfmac getting probed as the two
+competing events. When rootfs is mounted before brcmfmac is being probed
+it works, but if brcmfmac is probed before rootfs is mounted the
+firmware request will fail. So the only reliable option for built-in
+drivers requiring firmware is to built-in the firmware into the kernel
+as well.
 
-> 
-> for you to fetch changes up to b224bd0c77370a58b996a7be2c322b9fb4849398:
-> 
->   iwlwifi: add new -22 firmware for 7265D and up (2016-07-10 09:41:14 +0300)
-> 
-> ----------------------------------------------------------------
-> Release -21.ucode for 7265D and up
-> Release -17.ucode for 7260 / 7265 and 3160
-> 
-> ----------------------------------------------------------------
-> Emmanuel Grumbach (2):
->       iwlwifi: add new -17 firmware for iwlmvm devices
->       iwlwifi: add new -22 firmware for 7265D and up
-> 
->  WHENCE                 |  24 ++++++++++++++++++++++++
->  iwlwifi-3160-17.ucode  | Bin 0 -> 918268 bytes
->  iwlwifi-3168-22.ucode  | Bin 0 -> 1028032 bytes
->  iwlwifi-7260-17.ucode  | Bin 0 -> 1049340 bytes
->  iwlwifi-7265-17.ucode  | Bin 0 -> 1180412 bytes
->  iwlwifi-7265D-17.ucode | Bin 0 -> 1383604 bytes
->  iwlwifi-7265D-22.ucode | Bin 0 -> 1028316 bytes
->  iwlwifi-8000C-22.ucode | Bin 0 -> 2120860 bytes
->  iwlwifi-8265-22.ucode  | Bin 0 -> 1811984 bytes
->  9 files changed, 24 insertions(+)
->  create mode 100644 iwlwifi-3160-17.ucode
->  create mode 100644 iwlwifi-3168-22.ucode
->  create mode 100644 iwlwifi-7260-17.ucode
->  create mode 100644 iwlwifi-7265-17.ucode
->  create mode 100644 iwlwifi-7265D-17.ucode
->  create mode 100644 iwlwifi-7265D-22.ucode
->  create mode 100644 iwlwifi-8000C-22.ucode
->  create mode 100644 iwlwifi-8265-22.ucode
-> 
-> diff --git a/WHENCE b/WHENCE
-> index c3d98f6..4c41f21 100644
-> --- a/WHENCE
-> +++ b/WHENCE
-> @@ -848,6 +848,9 @@ Version: 25.30.13.0
->  File: iwlwifi-7260-16.ucode
->  Version 16.242414.0
->  
-> +File: iwlwifi-7260-17.ucode
-> +Version 17.352738.0
-> +
->  File: iwlwifi-3160-7.ucode
->  Version: 22.1.7.0
->  
-> @@ -869,6 +872,9 @@ Version: 25.30.13.0
->  File: iwlwifi-3160-16.ucode
->  Version 16.242414.0
->  
-> +File: iwlwifi-3160-17.ucode
-> +Version 17.352738.0
-> +
->  File: iwlwifi-7265-8.ucode
->  Version: 22.24.8.0
->  
-> @@ -887,6 +893,9 @@ Version: 25.30.13.0
->  File: iwlwifi-7265-16.ucode
->  Version 16.242414.0
->  
-> +File: iwlwifi-7265-17.ucode
-> +Version 17.352738.0
-> +
->  File: iwlwifi-7265D-10.ucode
->  Version: 23.15.10.0
->  
-> @@ -899,12 +908,21 @@ Version: 25.30.13.0
->  File: iwlwifi-7265D-16.ucode
->  Version 16.242414.0
->  
-> +File: iwlwifi-7265D-17.ucode
-> +Version 17.352738.0
-> +
->  File: iwlwifi-7265D-21.ucode
->  Version 21.302800.0
->  
-> +File: iwlwifi-7265D-22.ucode
-> +Version 22.361476.0
-> +
->  File: iwlwifi-3168-21.ucode
->  Version 21.302800.0
->  
-> +File: iwlwifi-3168-22.ucode
-> +Version 22.361476.0
-> +
->  File: iwlwifi-8000C-13.ucode
->  Version: 25.30.13.0
->  
-> @@ -914,9 +932,15 @@ Version 16.242414.0
->  File: iwlwifi-8000C-21.ucode
->  Version 21.302800.0
->  
-> +File: iwlwifi-8000C-22.ucode
-> +Version 22.361476.0
-> +
->  File: iwlwifi-8265-21.ucode
->  Version 21.302800.0
->  
-> +File: iwlwifi-8265-22.ucode
-> +Version 22.361476.0
-> +
->  Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
->  
->  Also available from http://wireless.kernel.org/en/users/Drivers/iwlwifi#Firmware
-> diff --git a/iwlwifi-3160-17.ucode b/iwlwifi-3160-17.ucode
-> new file mode 100644
-> index 0000000..e58f715
-> Binary files /dev/null and b/iwlwifi-3160-17.ucode differ
-> diff --git a/iwlwifi-3168-22.ucode b/iwlwifi-3168-22.ucode
-> new file mode 100644
-> index 0000000..d969aed
-> Binary files /dev/null and b/iwlwifi-3168-22.ucode differ
-> diff --git a/iwlwifi-7260-17.ucode b/iwlwifi-7260-17.ucode
-> new file mode 100644
-> index 0000000..6f5d713
-> Binary files /dev/null and b/iwlwifi-7260-17.ucode differ
-> diff --git a/iwlwifi-7265-17.ucode b/iwlwifi-7265-17.ucode
-> new file mode 100644
-> index 0000000..f2bf30e
-> Binary files /dev/null and b/iwlwifi-7265-17.ucode differ
-> diff --git a/iwlwifi-7265D-17.ucode b/iwlwifi-7265D-17.ucode
-> new file mode 100644
-> index 0000000..66940c4
-> Binary files /dev/null and b/iwlwifi-7265D-17.ucode differ
-> diff --git a/iwlwifi-7265D-22.ucode b/iwlwifi-7265D-22.ucode
-> new file mode 100644
-> index 0000000..26ca1bd
-> Binary files /dev/null and b/iwlwifi-7265D-22.ucode differ
-> diff --git a/iwlwifi-8000C-22.ucode b/iwlwifi-8000C-22.ucode
-> new file mode 100644
-> index 0000000..93a828b
-> Binary files /dev/null and b/iwlwifi-8000C-22.ucode differ
-> diff --git a/iwlwifi-8265-22.ucode b/iwlwifi-8265-22.ucode
-> new file mode 100644
-> index 0000000..3dbeb83
-> Binary files /dev/null and b/iwlwifi-8265-22.ucode differ
+Regards,
+Arend
