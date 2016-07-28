@@ -1,68 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f46.google.com ([209.85.215.46]:36102 "EHLO
-	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753104AbcGSJUt (ORCPT
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:35499 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753876AbcG1Sdr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jul 2016 05:20:49 -0400
-Received: by mail-lf0-f46.google.com with SMTP id g62so8335369lfe.3
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jul 2016 02:20:48 -0700 (PDT)
-Subject: Re: [PATCH 0/4] brcm80211: Misc coverity fixes
-To: Florian Fainelli <f.fainelli@gmail.com>,
-	brcm80211-dev-list.pdl@broadcom.com
-References: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
-Cc: linux-wireless@vger.kernel.org, pieterpg@broadcom.com,
-	kvalo@codeaurora.org, hante.meuleman@broadcom.com
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <bdbaa850-4ec4-9faf-dbae-e2a6dcc54e7c@broadcom.com> (sfid-20160719_112109_132275_342D1176)
-Date: Tue, 19 Jul 2016 11:20:45 +0200
+	Thu, 28 Jul 2016 14:33:47 -0400
+Date: Thu, 28 Jul 2016 11:33:43 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Daniel Wagner <wagi@monom.org>
+Cc: Bastien Nocera <hadess@hadess.net>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>, linux-input@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Daniel Wagner <daniel.wagner@bmw-carit.de>
+Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
+ completion
+Message-ID: <20160728183343.GD16852@dtor-ws> (sfid-20160728_203404_977898_843176F0)
+References: <1469692512-16863-1-git-send-email-wagi@monom.org>
+ <1469692512-16863-8-git-send-email-wagi@monom.org>
 MIME-Version: 1.0
-In-Reply-To: <1468884277-18606-1-git-send-email-f.fainelli@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1469692512-16863-8-git-send-email-wagi@monom.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ Bob
-
-On 19-7-2016 1:24, Florian Fainelli wrote:
-> Hi,
+On Thu, Jul 28, 2016 at 09:55:11AM +0200, Daniel Wagner wrote:
+> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
 > 
-> This patch series addresses several coverity issues, they all seemed relevant
-> to me.
-
-Hi Florian,
-
-Been a while so nice to see coverity fixes popping up. Actually
-something that I have on my todo list to add our brcm80211 to coverity
-within Broadcom. So being curious as to whether this comes from a public
-coverity server like scan.coverity.com. Maybe bit redundant to setup
-internally if there is a good coverity analysis publicly available.
-
-> There is also a ton of warnings in Coverity caused by brcmf_fil_iovar_int_get()
-> and friends because of the initial access:
+> Loading firmware is an operation many drivers implement in various ways
+> around the completion API. And most of them do it almost in the same
+> way. Let's reuse the firmware_stat API which is used also by the
+> firmware_class loader. Apart of streamlining the firmware loading states
+> we also document it slightly better.
 > 
-> __le32 data_le = cpu_to_le32(*data) which can utilize unitialized memory. I am
-> not sure if we actually care about any kind of initial, value, but if we don't,
-> then the fix should be fairly obvious.
+> Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
+> ---
+>  drivers/input/misc/ims-pcu.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/input/misc/ims-pcu.c b/drivers/input/misc/ims-pcu.c
+> index 9c0ea36..cda1fbf 100644
+> --- a/drivers/input/misc/ims-pcu.c
+> +++ b/drivers/input/misc/ims-pcu.c
+> @@ -109,7 +109,7 @@ struct ims_pcu {
+>  
+>  	u32 fw_start_addr;
+>  	u32 fw_end_addr;
+> -	struct completion async_firmware_done;
+> +	struct firmware_stat fw_st;
+>  
+>  	struct ims_pcu_buttons buttons;
+>  	struct ims_pcu_gamepad *gamepad;
+> @@ -940,7 +940,7 @@ static void ims_pcu_process_async_firmware(const struct firmware *fw,
+>  	release_firmware(fw);
+>  
+>  out:
+> -	complete(&pcu->async_firmware_done);
+> +	fw_loading_done(pcu->fw_st);
 
-If we are talking only about "get" variant than we mostly don't care.
-Some getters support filter variables to be passed towards firmware. I
-have not looked at the analysis to give any judgement here.
+Why does the driver have to do it? If firmware loader manages this, then
+it should let waiters know when callback finishes. 
 
-Regards,
-Arend
+>  }
+>  
+>  /*********************************************************************
+> @@ -1967,7 +1967,7 @@ static int ims_pcu_init_bootloader_mode(struct ims_pcu *pcu)
+>  					ims_pcu_process_async_firmware);
+>  	if (error) {
+>  		/* This error is not fatal, let userspace have another chance */
+> -		complete(&pcu->async_firmware_done);
+> +		fw_loading_abort(pcu->fw_st);
 
-> Thanks!
-> 
-> 
-> Florian Fainelli (4):
->   brcmfmac: Fix glob_skb leak in brcmf_sdiod_recv_chain
->   brcmsmac: Free packet if dma_mapping_error() fails in dma_rxfill
->   brcmsmac: Fix invalid memcpy() size in brcms_c_d11hdrs_mac80211
->   brcmsmac: Initialize power in brcms_c_stf_ss_algo_channel_get()
-> 
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 4 +++-
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/dma.c    | 4 +++-
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/main.c   | 2 +-
->  drivers/net/wireless/broadcom/brcm80211/brcmsmac/stf.c    | 2 +-
->  4 files changed, 8 insertions(+), 4 deletions(-)
-> 
+Why should the driver signal abort if it does not manage completion in
+this case?
+
+>  	}
+>  
+>  	return 0;
+> @@ -1976,7 +1976,7 @@ static int ims_pcu_init_bootloader_mode(struct ims_pcu *pcu)
+>  static void ims_pcu_destroy_bootloader_mode(struct ims_pcu *pcu)
+>  {
+>  	/* Make sure our initial firmware request has completed */
+> -	wait_for_completion(&pcu->async_firmware_done);
+> +	fw_loading_wait(pcu->fw_st);
+>  }
+>  
+>  #define IMS_PCU_APPLICATION_MODE	0
+> @@ -2000,7 +2000,7 @@ static int ims_pcu_probe(struct usb_interface *intf,
+>  	pcu->bootloader_mode = id->driver_info == IMS_PCU_BOOTLOADER_MODE;
+>  	mutex_init(&pcu->cmd_mutex);
+>  	init_completion(&pcu->cmd_done);
+> -	init_completion(&pcu->async_firmware_done);
+> +	firmware_stat_init(&pcu->fw_st);
+
+Do not quite like it... I'd rather asynchronous request give out a
+firmware status pointer that could be used later on.
+
+	pcu->fw_st = request_firmware_async(IMS_PCU_FIRMWARE_NAME,
+					    pcu,
+					    ims_pcu_process_async_firmware);
+	if (IS_ERR(pcu->fw_st))
+		return PTR_ERR(pcu->fw_st);
+
+	....
+
+	fw_loading_wait(pcu->fw_st);
+
+Thanks.
+
+-- 
+Dmitry
