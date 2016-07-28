@@ -1,33 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33768 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754211AbcGTPGb (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20145 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755853AbcG1KxF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 11:06:31 -0400
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	"driverdev-devel@linuxdriverproject.org"
-	<driverdev-devel@linuxdriverproject.org>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
-Message-ID: <74d0fd1d-8197-1e4a-1ab1-a879d6dcea4e@gmail.com> (sfid-20160720_170653_996205_3051B696)
-Date: Wed, 20 Jul 2016 17:06:27 +0200
+	Thu, 28 Jul 2016 06:53:05 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: ath10k: fix get rx_status from htt context
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1469551552-845-1-git-send-email-arnagara@qti.qualcomm.com>
+To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+	Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+	<arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <23fc0be38ebd49c8a320182cf2d9d7e0@euamsexm01a.eu.qualcomm.com> (sfid-20160728_125309_515666_CC9CCD38)
+Date: Thu, 28 Jul 2016 12:52:56 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> wrote:
+Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
+> On handling amsdu on rx path, get the rx_status from htt context. Without this
+> fix, we are seeing warnings when running DBDC traffic like this.
+> 
+> WARNING: CPU: 0 PID: 0 at net/mac80211/rx.c:4105 ieee80211_rx_napi+0x88/0x7d8 [mac80211]()
+> 
+> [ 1715.878248] CPU: 0 PID: 0 Comm: swapper/0 Tainted: G W 3.18.21 #1
+> [ 1715.878273] [<c001d3f4>] (unwind_backtrace) from [<c001a4b0>] (show_stack+0x10/0x14)
+> [ 1715.878293] [<c001a4b0>] (show_stack) from [<c01bee64>] (dump_stack+0x70/0xbc)
+> [ 1715.878315] [<c01bee64>] (dump_stack) from [<c002a61c>] (warn_slowpath_common+0x64/0x88)
+> [ 1715.878339] [<c002a61c>] (warn_slowpath_common) from [<c002a6d0>] (warn_slowpath_null+0x18/0x20)
+> [ 1715.878395] [<c002a6d0>] (warn_slowpath_null) from [<bf4caa98>] (ieee80211_rx_napi+0x88/0x7d8 [mac80211])
+> [ 1715.878474] [<bf4caa98>] (ieee80211_rx_napi [mac80211]) from [<bf568658>] (ath10k_htt_t2h_msg_handler+0xb48/0xbfc [ath10k_core])
+> [ 1715.878535] [<bf568658>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf568708>] (ath10k_htt_t2h_msg_handler+0xbf8/0xbfc [ath10k_core])
+> [ 1715.878597] [<bf568708>] (ath10k_htt_t2h_msg_handler [ath10k_core]) from [<bf569160>] (ath10k_htt_txrx_compl_task+0xa54/0x1170 [ath10k_core])
+> [ 1715.878639] [<bf569160>] (ath10k_htt_txrx_compl_task [ath10k_core]) from [<c002db14>] (tasklet_action+0xb4/0x130)
+> [ 1715.878659] [<c002db14>] (tasklet_action) from [<c002d110>] (__do_softirq+0xe0/0x210)
+> [ 1715.878678] [<c002d110>] (__do_softirq) from [<c002d4b4>] (irq_exit+0x84/0xe0)
+> [ 1715.878700] [<c002d4b4>] (irq_exit) from [<c005a544>] (__handle_domain_irq+0x98/0xd0)
+> [ 1715.878722] [<c005a544>] (__handle_domain_irq) from [<c00085f4>] (gic_handle_irq+0x38/0x5c)
+> [ 1715.878741] [<c00085f4>] (gic_handle_irq) from [<c0009680>] (__irq_svc+0x40/0x74)
+> [ 1715.878753] Exception stack(0xc05f9f50 to 0xc05f9f98)
+> [ 1715.878767] 9f40: ffffffed 00000000 00399e1e c000a220
+> [ 1715.878786] 9f60: 00000000 c05f6780 c05f8000 00000000 c05f5db8 ffffffed c05f8000 c04d1980
+> [ 1715.878802] 9f80: 00000000 c05f9f98 c0018110 c0018114 60000013 ffffffff
+> [ 1715.878822] [<c0009680>] (__irq_svc) from [<c0018114>] (arch_cpu_idle+0x2c/0x50)
+> [ 1715.878844] [<c0018114>] (arch_cpu_idle) from [<c00530d4>] (cpu_startup_entry+0x108/0x234)
+> [ 1715.878866] [<c00530d4>] (cpu_startup_entry) from [<c05c7be0>] (start_kernel+0x33c/0x3b8)
+> [ 1715.878879] ---[ end trace 6d5e1cc0fef8ed6a ]---
+> [ 1715.878899] ------------[ cut here ]------------
+> 
+> Fixes: 18235664e7f9 ("ath10k: cleanup amsdu processing for rx indication")
+> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
 
-> rtlwifi, but I found the older r8712u device to work fine with
-> the staging/rtl8712 driver.
+I'm planning to push this to 4.8 if no objections.
 
-A replacement for "staging/rtl8712", with MAC80211 support, is
-available at: https://github.com/chunkeey/rtl8192su
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9248457/
 
-Also a fullmac/cfg80211 driver(r92su) is available at the
-same repository.
