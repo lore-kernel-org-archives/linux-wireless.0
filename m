@@ -1,139 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:35019 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990AbcGLOCR convert rfc822-to-8bit (ORCPT
+Received: from zeniv.linux.org.uk ([195.92.253.2]:47268 "EHLO
+	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932335AbcG1AbM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2016 10:02:17 -0400
-Received: by mail-oi0-f41.google.com with SMTP id r2so23627943oih.2
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jul 2016 07:02:16 -0700 (PDT)
+	Wed, 27 Jul 2016 20:31:12 -0400
+Date: Thu, 28 Jul 2016 01:31:02 +0100
+From: Al Viro <viro@ZenIV.linux.org.uk>
+To: David Miller <davem@davemloft.net>
+Cc: alexmcwhirter@triadic.us, rlwinm@sdf.org, chunkeey@googlemail.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
+Message-ID: <20160728003102.GS2356@ZenIV.linux.org.uk> (sfid-20160728_023133_761590_754D7514)
+References: <201607271032.u6RAWPcS008174@sdf.org>
+ <4dbfebe8136bc963b5b51463d6887db4@triadic.us>
+ <87c4ed555bcb4229f2334f6f2bb69bcb@triadic.us>
+ <20160727.164543.1466564919313003461.davem@davemloft.net>
 MIME-Version: 1.0
-In-Reply-To: <097af8e4-5393-8e1b-1748-36233e605867@nbd.name>
-References: <11fa6d16-21e2-2169-8d18-940f6dc11dca@nbd.name>
- <CAA93jw6=_pemSUjk3dje1GmnTzrs+=pEdza4j1Wjtrw+VKNdNg@mail.gmail.com> <097af8e4-5393-8e1b-1748-36233e605867@nbd.name>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Tue, 12 Jul 2016 16:02:15 +0200
-Message-ID: <CAA93jw4GQknawtp6Lo3ZM8=qW=p2eTnZ_krC7AvnNbKwp8R5SQ@mail.gmail.com> (sfid-20160712_160221_350570_C99213AD)
-Subject: Re: TCP performance regression in mac80211 triggered by the fq code
-To: Felix Fietkau <nbd@nbd.name>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	=?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160727.164543.1466564919313003461.davem@davemloft.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jul 12, 2016 at 3:21 PM, Felix Fietkau <nbd@nbd.name> wrote:
-> On 2016-07-12 14:13, Dave Taht wrote:
->> On Tue, Jul 12, 2016 at 12:09 PM, Felix Fietkau <nbd@nbd.name> wrote:
->>> Hi,
->>>
->>> With Toke's ath9k txq patch I've noticed a pretty nasty performance
->>> regression when running local iperf on an AP (running the txq stuff) to
->>> a wireless client.
->>
->> Your kernel? cpu architecture?
-> QCA9558, 720 MHz, running Linux 4.4.14
->
->> What happens when going through the AP to a server from the wireless client?
-> Will test that next.
->
->> Which direction?
-> AP->STA, iperf running on the AP. Client is a regular MacBook Pro
-> (Broadcom).
+On Wed, Jul 27, 2016 at 04:45:43PM -0700, David Miller wrote:
 
-There are always 2 wifi chips in play. Like the Sith.
+> > I highly expect both my issue and OP's issue to revolve not around
+> > commit e5a4b0bb803b specifically, but around other code that no longer
+> > behaves as expected because of it.
+> 
+> Indeed, and that fault address rounding bug occurs two other times
+> in arch/sparc/lib/user_fixup.c
+> 
+> The mentioned patchwork patch should fix the bug and I'll get that
+> into my sparc tree, merged, and queued up for -stable ASAP.
 
->>> Here's some things that I found:
->>> - when I use only one TCP stream I get around 90-110 Mbit/s
->>
->> with how much cpu left over?
-> ~20%
->
->>> - when running multiple TCP streams, I get only 35-40 Mbit/s total
->> with how much cpu left over?
-> ~30%
-
-Hmm.
-
-Care to try netperf?
-
->
->> context switch difference between the two tests?
-> What's the easiest way to track that?
-
-if you have gnu "time" time -v the_process
-
-or:
-
-perf record -e context-switches -ag
-
-or: process /proc/$PID/status for cntx
-
->> tcp_limit_output_bytes is?
-> 262144
-
-I keep hoping to be able to reduce this to something saner like 4096
-one day. It got bumped to 64k based on bad wifi performance once, and
-then to it's current size to make the Xen folk happier.
-
-The other param I'd like to see fiddled with is tcp_notsent_lowat.
-
-In both cases reductions will increase your context switches but
-reduce memory pressure and lead to a more reactive tcp.
-
-And in neither case I think this is the real cause of this problem.
-
-
->> got perf?
-> Need to make a new build for that.
->
->>> - fairness between TCP streams looks completely fine
->>
->> A codel will get to long term fairness pretty fast. Packet captures
->> from a fq will show much more regular interleaving of packets,
->> regardless.
->>
->>> - there's no big queue buildup, the code never actually drops any packets
->>
->> A "trick" I have been using to observe codel behavior has been to
->> enable ecn on server and client, then checking in wireshark for ect(3)
->> marked packets.
-> I verified this with printk. The same issue already appears if I have
-> just the fq patch (with the codel patch reverted).
-
-OK. A four flow test "should" trigger codel....
-
-Running out of cpu (or hitting some other bottleneck), without
-loss/marking "should" result in a tcptrace -G and xplot.org of the
-packet capture showing the window continuing to increase....
-
-
->>> - if I put a hack in the fq code to force the hash to a constant value
->>
->> You could also set "flows" to 1 to keep the hash being generated, but
->> not actually use it.
->>
->>> (effectively disabling fq without disabling codel), the problem
->>> disappears and even multiple streams get proper performance.
->>
->> Meaning you get 90-110Mbits ?
-> Right.
->
->> Do you have a "before toke" figure for this platform?
-> It's quite similar.
->
->>> Please let me know if you have any ideas.
->>
->> I am in berlin, packing hardware...
-> Nice!
->
-> - Felix
->
-
-
-
--- 
-Dave Täht
-Let's go make home routers and wifi faster! With better software!
-http://blog.cerowrt.org
+Plausible for sparc, but I don't see similar __copy_to_user_inatomic()
+bugs in case of x86_64...
