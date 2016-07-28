@@ -1,100 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:50815 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751783AbcGTQAl (ORCPT
+Received: from hotel311.server4you.de ([85.25.146.15]:52506 "EHLO
+	hotel311.server4you.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757132AbcG1IFe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jul 2016 12:00:41 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	netdev@vger.kernel.org,
+	Thu, 28 Jul 2016 04:05:34 -0400
+From: Daniel Wagner <wagi@monom.org>
+To: Bastien Nocera <hadess@hadess.net>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Andrea Merello <andrea.merello@gmail.com>
-Subject: Re: [PATCH 2/3] staging/rtl8192e: use s8 instead of char
-Date: Wed, 20 Jul 2016 18:00:26 +0200
-Message-ID: <8046944.AyQGVaNKWH@wuerfel> (sfid-20160720_180059_322069_B5037560)
-In-Reply-To: <wrfjk2ggpbmw.fsf@redhat.com>
-References: <20160719153403.2967812-1-arnd@arndb.de> <3876342.AU5AfU16PB@wuerfel> <wrfjk2ggpbmw.fsf@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+Cc: linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Daniel Wagner <daniel.wagner@bmw-carit.de>
+Subject: [RFC v0 2/8] selftests: firmware: do not clutter output
+Date: Thu, 28 Jul 2016 09:55:06 +0200
+Message-Id: <1469692512-16863-3-git-send-email-wagi@monom.org> (sfid-20160728_100602_463832_B66A6B13)
+In-Reply-To: <1469692512-16863-1-git-send-email-wagi@monom.org>
+References: <1469692512-16863-1-git-send-email-wagi@monom.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday, July 20, 2016 11:33:43 AM CEST Jes Sorensen wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
-> > On Wednesday, July 20, 2016 7:25:19 AM CEST Jes Sorensen wrote:
-> >> Arnd Bergmann <arnd@arndb.de> writes:
-> >> Well it really all depends on how much time I have and how much others
-> >> step up and help contribute to the code. For rtl8xxxu my plans are as
-> >> follows:
-> >> 
-> >> 1) rtl8188eu support, since this is the most widely distributed USB
-> >> dongle which isn't currently supported by a non staging driver. I am
-> >> currently working on this together with Andrea Merello.
-> >
-> > Ok, cool.
-> >
-> >> 2) Beacon support for IBSS and AP mode - hopefully this should make it
-> >> possible to default rtl8xxxu for rtl8192cu/rtl8188cu devices and disable
-> >> them in rtlwifi.
-> >
-> > Do we have any indication that those two actually work in rtlwifi at the
-> > moment? My experience seems to match the recommendations for all the
-> > raspberry pi users that use yet another (worse looking) driver:
-> >
-> > https://github.com/raspberrypi/linux/commit/9ee31007a5032a3afe2fcb20c36b34f0ad57df56
-> 
-> I am not really authoritative on that one. I tried it in station mode
-> and it didn't work well for me. I never played with AP mode - It may
-> work better in IBSS or AP mode than it does in station mode. I don't
-> like to pull the rug away under people, which is why I haven't pushed
-> for this.
+From: Daniel Wagner <daniel.wagner@bmw-carit.de>
 
-Right. Then again, for AP mode, all information on the web indicates
-similar problems, recommending the out-of-tree driver and a custom
-hostap fork:
+Some of the test are supposed to fail but we get a few ouptput lines:
 
-https://bogeskov.dk/UsbAccessPoint.html
+./fw_filesystem.sh: line 51: printf: write error: Invalid argument
+./fw_filesystem.sh: line 56: printf: write error: No such device
+./fw_filesystem.sh: line 62: echo: write error: No such file or directory
 
-> > throughput for me is 2mbit/s, compared to my intel 2x2 wireless that gets
-> > 5mbit/s on the same network, but I guess that doesn't really mean much
-> > as long as I have problems with the infrastructure.
-> 
->  Note the rtl8xxxu driver doesn't report speeds properly to
-> NetworkMangler or 'iw' as the API for this relies on confirmed TX
-> speeds, and I only have an easy way of retrieving RX speeds from the RTL
-> device. The vendor driver probably fakes it.
+Let's silence them so that the selftest output is clean if all is fine.
 
-This was the rx speed I got from downloading a file from a known server.
-With the rtl8192cu driver, I could get no connection at all today,
-and when I last tried, it stopped working after a few minutes at best.
+Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
+---
+ tools/testing/selftests/firmware/fw_filesystem.sh | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-> > This one:
-> > Bus 001 Device 033: ID 0bda:8171 Realtek Semiconductor Corp. RTL8188SU
-> > 802.11n WLAN Adapter
-> >
-> > I bought the rtl8188su a while ago, while the rtl8188cus (0bda:8176)
-> > is from this year. According to https://wikidevi.com/wiki/Realtek, it
-> > seems to be one year older than the rtl8188cus and was almost as common
-> > in its day. Apparently everyone that used to make ...su device replaced it
-> > with a ...cu or the newer ...eu chips and that is all you can buy these days
-> > on the low end.
-> 
-> Gotcha, 8188su is the 1x1 version of it. I do have a 8192su in the
-> drawer somewhere, but the TODO list is a bit long already 
-
-Yes, I was just agreeing here that it's not worth doing that one.
-As far as I can see, the evolution of these devices is
-
-RTL81xxU (2008)
-RTL81xxSU (2009)
-RTL81xxCU (2010)
-RTL81xxEU (2013)
-
-Clearly there is no use working on the older ones before the latest
-ones work well.
-
-	Arnd
+diff --git a/tools/testing/selftests/firmware/fw_filesystem.sh b/tools/testing/selftests/firmware/fw_filesystem.sh
+index 5c495ad..d8ac9ba 100755
+--- a/tools/testing/selftests/firmware/fw_filesystem.sh
++++ b/tools/testing/selftests/firmware/fw_filesystem.sh
+@@ -48,18 +48,18 @@ echo "ABCD0123" >"$FW"
+ 
+ NAME=$(basename "$FW")
+ 
+-if printf '\000' >"$DIR"/trigger_request; then
++if printf '\000' >"$DIR"/trigger_request 2> /dev/null; then
+ 	echo "$0: empty filename should not succeed" >&2
+ 	exit 1
+ fi
+ 
+-if printf '\000' >"$DIR"/trigger_async_request; then
++if printf '\000' >"$DIR"/trigger_async_request 2> /dev/null; then
+ 	echo "$0: empty filename should not succeed (async)" >&2
+ 	exit 1
+ fi
+ 
+ # Request a firmware that doesn't exist, it should fail.
+-if echo -n "nope-$NAME" >"$DIR"/trigger_request; then
++if echo -n "nope-$NAME" >"$DIR"/trigger_request 2> /dev/null; then
+ 	echo "$0: firmware shouldn't have loaded" >&2
+ 	exit 1
+ fi
+-- 
+2.7.4
