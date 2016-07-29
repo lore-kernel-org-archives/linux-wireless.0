@@ -1,75 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:33530 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932071AbcGFKpL (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:34844 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544AbcG2PJn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 06:45:11 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>
-Date: Wed,  6 Jul 2016 13:40:33 +0300
-Message-Id: <1467801651-1816-38-git-send-email-luca@coelho.fi> (sfid-20160706_124525_233099_065E2595)
-In-Reply-To: <1467801452.25088.20.camel@coelho.fi>
-References: <1467801452.25088.20.camel@coelho.fi>
-Subject: [PATCH 38/56] iwlwifi: remove iwl_ht_params.smps_mode
+	Fri, 29 Jul 2016 11:09:43 -0400
+Subject: Re: [PATCH] ath10k: Allow setting coverage class
+To: Benjamin Berg <benjamin@sipsolutions.net>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+References: <1469608424-11370-1-git-send-email-benjamin@sipsolutions.net>
+ <5798EEC3.5040008@candelatech.com>
+ <1469803947.7306.139.camel@sipsolutions.net>
+Cc: Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
+	Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+	ath10k@lists.infradead.org,
+	Simon Wunderlich <sw@simonwunderlich.de>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <579B71B4.7080206@candelatech.com> (sfid-20160729_170947_408846_FC848D82)
+Date: Fri, 29 Jul 2016 08:09:40 -0700
+MIME-Version: 1.0
+In-Reply-To: <1469803947.7306.139.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 07/29/2016 07:52 AM, Benjamin Berg wrote:
+> On Mi, 2016-07-27 at 10:26 -0700, Ben Greear wrote:
+>> On 07/27/2016 01:33 AM, Benjamin Berg wrote:
+>>>
+>>> Unfortunately ath10k does not generally allow modifying the coverage class
+>>> with the stock firmware and Qualcomm has so far refused to implement this
+>>> feature so that it can be properly supported in ath10k. If we however know
+>>> the registers that need to be modified for proper operation with a higher
+>>> coverage class, then we can do these modifications from the driver.
+>>>
+>>> This patch implements this hack for first generation cards which are based
+>>> on a core that is similar to ath9k. The registers are modified in place and
+>>> need to be re-written every time the firmware sets them. To achieve this
+>>> the register status is verified after any event from the firmware.
+>>>
+>>> The coverage class may not be modified temporarily right after the card
+>>> re-initializes the registers. This is for example the case during scanning.
+>>>
+>>> A warning will be generated if the hack is not supported on the card or
+>>> unexpected values are hit. There is no error reporting for userspace
+>>> applications though (this is a limitation in the mac80211 driver
+>>> interface).
+>>>
+>>>>> Thanks to Sebastian Gottschall <s.gottschall@dd-wrt.com> for initially
+>>> working on a userspace support for this. This patch wouldn't have been
+>>> possible without this documentation.
+>>
+>> I would be concerned about the various resets firmware does to work around
+>> hardware hangs as well.  I don't think any events are generated for these, unless
+>> you count the dbglog messages?
+>
+> Yeah, I am aware of the fact that the firmware may do internal resets
+> from time to time. The interesting question (and one for which I do not
+> know the answer) is whether we get a wmi or other event under all
+> conditions where the register may be rewritten due to a reset.
+>
+> The current code will re-set the register value after any wmi event
+> including debug messages. If this is not enough, then the only solution
+> might be to periodically poll the register values instead of relying on
+> a received event.
 
-This struct member is never set, so remove it.
+You will get a dbglog event at least most of the time, so maybe that
+will be good enough.
 
-Since this is the last thing that needs mac80211.h, also change
-the includes to no longer use mac80211.h
+Someone with src code and that cared could audit the code I guess, but then
+that person could also just implement the feature properly in the firmware
+to begin with...
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/dvm/rxon.c   | 5 -----
- drivers/net/wireless/intel/iwlwifi/iwl-config.h | 6 +++---
- 2 files changed, 3 insertions(+), 8 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c b/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
-index b228552..087e579 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c
-@@ -523,11 +523,6 @@ static int iwlagn_rxon_connect(struct iwl_priv *priv,
- 		return ret;
- 	}
- 
--	if (ctx->vif && ctx->vif->type == NL80211_IFTYPE_STATION &&
--	    priv->cfg->ht_params && priv->cfg->ht_params->smps_mode)
--		ieee80211_request_smps(ctx->vif,
--				       priv->cfg->ht_params->smps_mode);
--
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 122e895..64108cc 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -66,8 +66,9 @@
- #define __IWL_CONFIG_H__
- 
- #include <linux/types.h>
--#include <net/mac80211.h>
--
-+#include <linux/netdevice.h>
-+#include <linux/ieee80211.h>
-+#include <linux/nl80211.h>
- 
- enum iwl_device_family {
- 	IWL_DEVICE_FAMILY_UNDEFINED,
-@@ -192,7 +193,6 @@ struct iwl_base_params {
-  * @ht40_bands: bitmap of bands (using %NL80211_BAND_*) that support HT40
-  */
- struct iwl_ht_params {
--	enum ieee80211_smps_mode smps_mode;
- 	u8 ht_greenfield_support:1,
- 	   stbc:1,
- 	   ldpc:1,
 -- 
-2.8.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
