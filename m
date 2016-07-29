@@ -1,84 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:57669 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755518AbcGHQic convert rfc822-to-8bit (ORCPT
+Received: from cit-hm8-mail01.bmw-carit.de ([212.118.206.84]:38268 "EHLO
+	cit-hm8-gw01.bmw-carit.de" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751368AbcG2GHn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jul 2016 12:38:32 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-	Tim Shepard <shep@alum.mit.edu>
-Subject: Re: [v3] ath9k: Switch to using mac80211 intermediate software queues.
-References: <ac5b5bc6532d4fe7ae3198124ecce7fc@euamsexm01a.eu.qualcomm.com>
-	<87wpkwktx9.fsf@toke.dk>
-	<112300e0-7d39-0c4c-45c9-158651f0c0ed@nbd.name>
-	<87lh1cksao.fsf@toke.dk>
-	<aba77f01-cfee-0e5a-9b84-9d2e0439bb56@nbd.name>
-Date: Fri, 08 Jul 2016 18:38:27 +0200
-In-Reply-To: <aba77f01-cfee-0e5a-9b84-9d2e0439bb56@nbd.name> (Felix Fietkau's
-	message of "Fri, 8 Jul 2016 18:31:11 +0200")
-Message-ID: <87h9c0kruk.fsf@toke.dk> (sfid-20160708_183836_101240_F3F68664)
+	Fri, 29 Jul 2016 02:07:43 -0400
+Subject: Re: [RFC v0 3/8] firmware: Factor out firmware load helpers
+To: Dan Williams <dcbw@redhat.com>, Daniel Wagner <wagi@monom.org>,
+	Bastien Nocera <hadess@hadess.net>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>
+References: <1469692512-16863-1-git-send-email-wagi@monom.org>
+ <1469692512-16863-4-git-send-email-wagi@monom.org>
+ <1469718061.3013.18.camel@redhat.com>
+CC: <linux-input@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+Message-ID: <6361319e-ffaa-4333-6aba-4829a1953c7f@bmw-carit.de> (sfid-20160729_080746_683328_FA96A05E)
+Date: Fri, 29 Jul 2016 08:07:33 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1469718061.3013.18.camel@redhat.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+> It's somewhat odd to me that the structure is "firmware_stat" but most
+> of the functions are "fw_loading_*".  That seems inconsistent for a
+> structure that is (currently) only used by these functions.
 
-> On 2016-07-08 18:28, Toke Høiland-Jørgensen wrote:
->> Felix Fietkau <nbd@nbd.name> writes:
->> 
->>> On 2016-07-08 17:53, Toke Høiland-Jørgensen wrote:
->>>> Kalle Valo <kvalo@qca.qualcomm.com> writes:
->>>> 
->>>>> Toke Høiland-Jørgensen wrote:
->>>>>> This switches ath9k over to using the mac80211 intermediate software
->>>>>> queueing mechanism for data packets. It removes the queueing inside the
->>>>>> driver, except for the retry queue, and instead pulls from mac80211 when
->>>>>> a packet is needed. The retry queue is used to store a packet that was
->>>>>> pulled but can't be sent immediately.
->>>>>> 
->>>>>> The old code path in ath_tx_start that would queue packets has been
->>>>>> removed completely, as has the qlen limit tunables (since there's no
->>>>>> longer a queue in the driver to limit).
->>>>>> 
->>>>>> Based on Tim's original patch set, but reworked quite thoroughly.
->>>>>> 
->>>>>> Cc: Tim Shepard <shep@alum.mit.edu>
->>>>>> Cc: Felix Fietkau <nbd@nbd.name>
->>>>>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
->>>>>
->>>>> Nice work.
->>>> 
->>>> Thanks :)
->>>> 
->>>>> Because this is such a significant change, and to maximise testing
->>>>> time, I'm planning to queue this for 4.9 (so I would apply this to
->>>>> ath-next in 3-4 weeks after the merge window closes). But anyone who
->>>>> wants to test this can use master-pending branch from my ath.git tree
->>>>> (uses wireless-testing as the baseline). Sounds good?
->>>> 
->>>> Sounds good to me. I'm planning on backporting this and Michael's
->>>> mac80211 FQ-CoDel patches to 4.4 and post them for inclusion in LEDE.
->>>> Hopefully that will get it some more testing as well.
->>> I've pushed a backport of this into my LEDE staging tree:
->>> https://git.lede-project.org/?p=lede/nbd/staging.git;a=summary
->> 
->> Awesome! What about the FQ-CoDel mac80211 patches themselves? I have a
->> tree where I've separated out the needed patches and rebased them on
->> mainline 4.4.9. Can I post that somewhere (or just email you the series)
->> and get you to include those as well? Or do I just dump the patch files
->> into the LEDE patches dir and send that as a patch to LEDE? (I see your
->> patch also refreshed subsequent patches; is there a script to do that
->> automatically?)
-> You don't need to do anything here. LEDE does not use mac80211 and
-> drivers from the kernel tree, it's built using backports.
-> It's currently using a backports snapshot that I built myself from
-> wireless-testing 2016-06-20, which already includes FQ-Codel.
+I agree, my proposal is odd.
 
-Ah, didn't know that. Cool; and thanks for taking care of the
-backporting :)
+> I would personally do either:
+>
+> a) "struct fw_load_status" and "fw_load_*()"
+>
+> or
+>
+> b) "struct firmware_load_stat" and "firmware_load_*()"
+>
+> I'd also change the function names from "loading" -> "load", similar to
+> how userland has read(2), not reading(2).
 
--Toke
+a) sounds good to me, because fw_load_ should be long enough prefix.
+
+cheers,
+daniel
