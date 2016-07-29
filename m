@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:50453 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754464AbcGEN0c (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jul 2016 09:26:32 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Krauss, Assaf" <assaf.krauss@intel.com>,
-	"Stern, Avraham" <avraham.stern@intel.com>,
-	"Spinadel, David" <david.spinadel@intel.com>
-Subject: Re: [PATCH 4/7] nl80211: Add info to scan results to support beacon
- report
-Date: Tue, 5 Jul 2016 13:26:28 +0000
-Message-ID: <1467725186.4193.2.camel@intel.com> (sfid-20160705_152635_991373_D5D55F7A)
-References: <1467721394-8195-1-git-send-email-luca@coelho.fi>
-	 <1467721394-8195-5-git-send-email-luca@coelho.fi>
-In-Reply-To: <1467721394-8195-5-git-send-email-luca@coelho.fi>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-ua0-f182.google.com ([209.85.217.182]:34564 "EHLO
+	mail-ua0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752545AbcG2BF1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jul 2016 21:05:27 -0400
+Received: by mail-ua0-f182.google.com with SMTP id 35so51851988uap.1
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jul 2016 18:05:26 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <814ae6d0-2375-e8bd-f3e3-98ec5f69b376@broadcom.com>
+References: <CAOMZO5Cu_UO6L9wYy6eJUJwEE25BN-qeBRAMbFveFrJKHtF=aw@mail.gmail.com>
+ <57991EE9.30005@broadcom.com> <CAOMZO5CvuumYQZ92YFCjd7Vrmp4i1T1pdYAmGUvRgjNzVpMWyQ@mail.gmail.com>
+ <814ae6d0-2375-e8bd-f3e3-98ec5f69b376@broadcom.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Thu, 28 Jul 2016 22:05:25 -0300
+Message-ID: <CAOMZO5BHs1XOX=7Y8Ji7bv3J8LWxiGDqGgyzuEzb2vGroDCmVA@mail.gmail.com> (sfid-20160729_030530_516391_A3B0B733)
+Subject: Re: brcm4330 fails to load on newer kernels
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE2LTA3LTA1IGF0IDE1OjIzICswMzAwLCBMdWNhIENvZWxobyB3cm90ZToNCj4g
-RnJvbTogQXZyYWhhbSBTdGVybiA8YXZyYWhhbS5zdGVybkBpbnRlbC5jb20+DQo+IA0KPiBCZWFj
-b24gcmVwb3J0IHJhZGlvIG1lYXN1cmVtZW50IHJlcXVpcmVzIHJlcG9ydGluZyBvYnNlcnZlZCBC
-U1NzDQo+IG9uIHRoZSBjaGFubmVscyBzcGVjaWZpZWQgaW4gdGhlIGJlYWNvbiByZXF1ZXN0LiBJ
-ZiB0aGUgbWVhc3VyZW1lbnQNCj4gbW9kZSBpcyBzZXQgdG8gcGFzc2l2ZSBvciBhY3RpdmUsIGl0
-IHJlcXVpcmVzIGFjdHVhbGx5IHBlcmZvcm1pbmcgYQ0KPiBzY2FuIChwYXNzaXZlIG9yIGFjdGl2
-ZSwgYWNjb3JkaW5nbHkpLCBhbmQgcmVwb3J0aW5nIHRoZSB0aW1lIHRoYXQNCj4gdGhlIHNjYW4g
-d2FzIHN0YXJ0ZWQgYW5kIHRoZSB0aW1lIGVhY2ggYmVhY29uL3Byb2JlIHdhcyByZWNlaXZlZA0K
-PiAoYm90aCBpbiB0ZXJtcyBvZiBUU0Ygb2YgdGhlIEJTUyBvZiB0aGUgcmVxdWVzdGluZyBBUCku
-IElmIHRoZQ0KPiByZXF1ZXN0IG1vZGUgaXMgdGFibGUsIHRoaXMgaW5mb3JtYXRpb24gaXMgb3B0
-aW9uYWwuDQo+IEluIGFkZGl0aW9uLCB0aGUgcmFkaW8gbWVhc3VyZW1lbnQgcmVxdWVzdCBzcGVj
-aWZpZXMgdGhlIGNoYW5uZWwNCj4gZHdlbGwgdGltZSBmb3IgdGhlIG1lYXN1cmVtZW50Lg0KPiAN
-Cj4gSW4gb3JkZXIgdG8gdXNlIHNjYW4gZm9yIGJlYWNvbiByZXBvcnQgd2hlbiB0aGUgbW9kZSBp
-cyBhY3RpdmUgb3INCj4gcGFzc2l2ZSwgYWRkIGEgcGFyYW1ldGVyIHRvIHNjYW4gcmVxdWVzdCB0
-aGF0IHNwZWNpZmllcyB0aGUNCj4gY2hhbm5lbCBkd2VsbCB0aW1lLCBhbmQgYWRkIHNjYW4gc3Rh
-cnQgdGltZSBhbmQgYmVhY29uIHJlY2VpdmVkIHRpbWUNCj4gdG8gc2NhbiByZXN1bHRzIGluZm9y
-bWF0aW9uLg0KPiANCj4gU3VwcG9ydGluZyBiZWFjb24gcmVwb3J0IGlzIHJlcXVpcmVkIGZvciBN
-dWx0aSBCYW5kIE9wZXJhdGlvbiAoTUJPKS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEFzc2FmIEty
-YXVzcyA8YXNzYWYua3JhdXNzQGludGVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogRGF2aWQgU3Bp
-bmFkZWwgPGRhdmlkLnNwaW5hZGVsQGludGVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogQXZyYWhh
-bSBTdGVybiA8YXZyYWhhbS5zdGVybkBpbnRlbC5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IEx1Y2Eg
-Q29lbGhvIDxsdWNpYW5vLmNvZWxob0BpbnRlbC5jb20+DQo+IC0tLQ0KPsKgDQrCoGluY2x1ZGUv
-bmV0L2NmZzgwMjExLmjCoMKgwqDCoMKgwqDCoHwgNDANCj4gKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysrKysrKystLS0tLQ0KPiDCoGluY2x1ZGUvdWFwaS9saW51eC9ubDgwMjExLmggfCA0
-Mg0KPiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gwqBuZXQv
-bWFjODAyMTEvc2Nhbi5jwqDCoMKgwqDCoMKgwqDCoMKgwqB8wqDCoDkgKysrKysrKy0tDQo+IMKg
-bmV0L3dpcmVsZXNzL2NvcmUuY8KgwqDCoMKgwqDCoMKgwqDCoMKgfMKgwqA0ICsrLS0NCj4gwqBu
-ZXQvd2lyZWxlc3MvY29yZS5owqDCoMKgwqDCoMKgwqDCoMKgwqB8IDEyICsrKysrKysrKysrKw0K
-PiDCoG5ldC93aXJlbGVzcy9ubDgwMjExLmPCoMKgwqDCoMKgwqDCoHwgMjcgKysrKysrKysrKysr
-KysrKysrKysrKysrKysrDQo+IMKgbmV0L3dpcmVsZXNzL3NjYW4uY8KgwqDCoMKgwqDCoMKgwqDC
-oMKgfCAxOCArKysrKysrKysrKystLS0tLS0NCj4gwqBuZXQvd2lyZWxlc3MvdHJhY2UuaMKgwqDC
-oMKgwqDCoMKgwqDCoHwgMzMgKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0tLS0tDQo+IMKg
-OCBmaWxlcyBjaGFuZ2VkLCAxNjIgaW5zZXJ0aW9ucygrKSwgMjMgZGVsZXRpb25zKC0pDQoNCk91
-Y2gsIEkgbWlzc2VkIGNoYW5naW5nIHRoZSBBUElzIG9mIHRoZSBub24tY2ZnODAyMTEgZHJpdmVy
-cyBoZXJlLg0KwqBJJ2xsIGZpeCBhbmQgcmVzZW5kLg0KDQpUaGFua3MgdG8ga2J1aWxkIHRlc3Qg
-cm9ib3QgZm9yIHJlcG9ydGluZy4gOikNCg0KLS0NCkx1Y2Eu
+Hi Arend,
+
+On Thu, Jul 28, 2016 at 3:37 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+
+> Hi Fabio,
+>
+> So this is another fine example of firmware API not able to deliver. I
+> think in all these kernels you have the same issue. The problem is that
+> the order of events upon kernel boot is not predictable. In this case
+> you have rootfs being mounted and brcmfmac getting probed as the two
+> competing events. When rootfs is mounted before brcmfmac is being probed
+> it works, but if brcmfmac is probed before rootfs is mounted the
+> firmware request will fail. So the only reliable option for built-in
+> drivers requiring firmware is to built-in the firmware into the kernel
+> as well.
+
+Thanks for your explanation.
+
+Tried building brcmfmac as module and after doing 'modprobe brcmfmac'
+the firmware is correctly loaded from the rootfs in all the kernels I
+tested.
+
+Now I just need it to load brcmfmac module automatically, but this is
+a a separate issue I will investigate.
+
+Thanks a lot for your help!
+
+Fabio Estevam
