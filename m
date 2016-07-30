@@ -1,103 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:41670 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752012AbcGJPay (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jul 2016 11:30:54 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: new firmware files for all mvm wireless devices
-Date: Sun, 10 Jul 2016 15:30:49 +0000
-Message-ID: <1468164649.8394.3.camel@intel.com> (sfid-20160710_173101_790380_46EF2337)
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:34989 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751520AbcG3Mmt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jul 2016 08:42:49 -0400
+Received: by mail-pa0-f45.google.com with SMTP id iw10so38908120pac.2
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jul 2016 05:42:48 -0700 (PDT)
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
+ completion
+To: Daniel Wagner <daniel.wagner@bmw-carit.de>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>
+References: <1469692512-16863-1-git-send-email-wagi@monom.org>
+ <1469692512-16863-8-git-send-email-wagi@monom.org>
+ <20160728183343.GD16852@dtor-ws> <20160728190151.GV13516@tuxbot>
+ <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de>
+Cc: Daniel Wagner <wagi@monom.org>, Bastien Nocera <hadess@hadess.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>, linux-input@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+Message-ID: <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com> (sfid-20160730_144329_698725_5B1D39F4)
+Date: Sat, 30 Jul 2016 14:42:41 +0200
 MIME-Version: 1.0
+In-Reply-To: <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS3lsZSwNCg0KSW50ZWwgaXMgcmVsZWFzaW5nIG5ldyBmaXJtd2FyZSB2ZXJzaW9ucyBmb3Ig
-YWxsIGl0cyBtdm0gd2lyZWxlc3MNCmRldmljZXMuDQpGb3IgZGV2aWNlcyA3MjYwLCA3MjY1IGFu
-ZCAzMTYwLCB0aGlzIGlzIHRoZSBsYXN0IGZpcm13YXJlIHVwZGF0ZXMuIFdlDQptYXkgc3RpbGwg
-aGF2ZSBjcml0aWNhbCBidWcgZml4ZXMsIGJ1dCB0aG9zZSB3b24ndCBnZXQgYW55IG5ldyBtYWpv
-cg0KcmVsZWFzZXMuIFRoZXkgd2lsbCBzdGF5IHdpdGggLTE3LnVjb2RlLg0KRm9yIDcyNjVEIGFu
-ZCB1cCwgd2UgcmVsZWFzZSBoZXJlIHRoZSAtMjIudWNvZGUgdmVyc2lvbi4NCg0KUGxlYXNlIHB1
-bGwuDQoNClRoYW5rcyENCg0KVGhlIGZvbGxvd2luZyBjaGFuZ2VzIHNpbmNlIGNvbW1pdCBhMTQx
-NTAwNjEzODhmNGJjYmYzYzM0OTlmMWIxMmUzZjBkNWMwZTdiOg0KDQogIGxpbnV4LWZpcm13YXJl
-OiBGaXggdGhlIGZpbGVuYW1lIGZvciBXc1AgdG8gYWxpZ24gd2l0aCBkZXZpY2UgSFdfVkFSSUFO
-VCAoMjAxNi0wNy0wOCAxODowNzowMiAtMDcwMCkNCg0KYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0
-IHJlcG9zaXRvcnkgYXQ6DQoNCiAgZ2l0Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9r
-ZXJuZWwvZ2l0L2l3bHdpZmkvbGludXgtZmlybXdhcmUuZ2l0IHRhZ3MvaXdsd2lmaS1mdy0yMDE2
-LTA3LTEwDQoNCmZvciB5b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byBiMjI0YmQwYzc3MzcwYTU4
-Yjk5NmE3YmUyYzMyMmI5ZmI0ODQ5Mzk4Og0KDQogIGl3bHdpZmk6IGFkZCBuZXcgLTIyIGZpcm13
-YXJlIGZvciA3MjY1RCBhbmQgdXAgKDIwMTYtMDctMTAgMDk6NDE6MTQgKzAzMDApDQoNCi0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0NClJlbGVhc2UgLTIxLnVjb2RlIGZvciA3MjY1RCBhbmQgdXANClJlbGVhc2UgLTE3LnVjb2Rl
-IGZvciA3MjYwIC8gNzI2NSBhbmQgMzE2MA0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQpFbW1hbnVlbCBHcnVtYmFjaCAo
-Mik6DQogICAgICBpd2x3aWZpOiBhZGQgbmV3IC0xNyBmaXJtd2FyZSBmb3IgaXdsbXZtIGRldmlj
-ZXMNCiAgICAgIGl3bHdpZmk6IGFkZCBuZXcgLTIyIGZpcm13YXJlIGZvciA3MjY1RCBhbmQgdXAN
-Cg0KIFdIRU5DRSAgICAgICAgICAgICAgICAgfCAgMjQgKysrKysrKysrKysrKysrKysrKysrKysr
-DQogaXdsd2lmaS0zMTYwLTE3LnVjb2RlICB8IEJpbiAwIC0+IDkxODI2OCBieXRlcw0KIGl3bHdp
-ZmktMzE2OC0yMi51Y29kZSAgfCBCaW4gMCAtPiAxMDI4MDMyIGJ5dGVzDQogaXdsd2lmaS03MjYw
-LTE3LnVjb2RlICB8IEJpbiAwIC0+IDEwNDkzNDAgYnl0ZXMNCiBpd2x3aWZpLTcyNjUtMTcudWNv
-ZGUgIHwgQmluIDAgLT4gMTE4MDQxMiBieXRlcw0KIGl3bHdpZmktNzI2NUQtMTcudWNvZGUgfCBC
-aW4gMCAtPiAxMzgzNjA0IGJ5dGVzDQogaXdsd2lmaS03MjY1RC0yMi51Y29kZSB8IEJpbiAwIC0+
-IDEwMjgzMTYgYnl0ZXMNCiBpd2x3aWZpLTgwMDBDLTIyLnVjb2RlIHwgQmluIDAgLT4gMjEyMDg2
-MCBieXRlcw0KIGl3bHdpZmktODI2NS0yMi51Y29kZSAgfCBCaW4gMCAtPiAxODExOTg0IGJ5dGVz
-DQogOSBmaWxlcyBjaGFuZ2VkLCAyNCBpbnNlcnRpb25zKCspDQogY3JlYXRlIG1vZGUgMTAwNjQ0
-IGl3bHdpZmktMzE2MC0xNy51Y29kZQ0KIGNyZWF0ZSBtb2RlIDEwMDY0NCBpd2x3aWZpLTMxNjgt
-MjIudWNvZGUNCiBjcmVhdGUgbW9kZSAxMDA2NDQgaXdsd2lmaS03MjYwLTE3LnVjb2RlDQogY3Jl
-YXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmktNzI2NS0xNy51Y29kZQ0KIGNyZWF0ZSBtb2RlIDEwMDY0
-NCBpd2x3aWZpLTcyNjVELTE3LnVjb2RlDQogY3JlYXRlIG1vZGUgMTAwNjQ0IGl3bHdpZmktNzI2
-NUQtMjIudWNvZGUNCiBjcmVhdGUgbW9kZSAxMDA2NDQgaXdsd2lmaS04MDAwQy0yMi51Y29kZQ0K
-IGNyZWF0ZSBtb2RlIDEwMDY0NCBpd2x3aWZpLTgyNjUtMjIudWNvZGUNCg0KZGlmZiAtLWdpdCBh
-L1dIRU5DRSBiL1dIRU5DRQ0KaW5kZXggYzNkOThmNi4uNGM0MWYyMSAxMDA2NDQNCi0tLSBhL1dI
-RU5DRQ0KKysrIGIvV0hFTkNFDQpAQCAtODQ4LDYgKzg0OCw5IEBAIFZlcnNpb246IDI1LjMwLjEz
-LjANCiBGaWxlOiBpd2x3aWZpLTcyNjAtMTYudWNvZGUNCiBWZXJzaW9uIDE2LjI0MjQxNC4wDQog
-DQorRmlsZTogaXdsd2lmaS03MjYwLTE3LnVjb2RlDQorVmVyc2lvbiAxNy4zNTI3MzguMA0KKw0K
-IEZpbGU6IGl3bHdpZmktMzE2MC03LnVjb2RlDQogVmVyc2lvbjogMjIuMS43LjANCiANCkBAIC04
-NjksNiArODcyLDkgQEAgVmVyc2lvbjogMjUuMzAuMTMuMA0KIEZpbGU6IGl3bHdpZmktMzE2MC0x
-Ni51Y29kZQ0KIFZlcnNpb24gMTYuMjQyNDE0LjANCiANCitGaWxlOiBpd2x3aWZpLTMxNjAtMTcu
-dWNvZGUNCitWZXJzaW9uIDE3LjM1MjczOC4wDQorDQogRmlsZTogaXdsd2lmaS03MjY1LTgudWNv
-ZGUNCiBWZXJzaW9uOiAyMi4yNC44LjANCiANCkBAIC04ODcsNiArODkzLDkgQEAgVmVyc2lvbjog
-MjUuMzAuMTMuMA0KIEZpbGU6IGl3bHdpZmktNzI2NS0xNi51Y29kZQ0KIFZlcnNpb24gMTYuMjQy
-NDE0LjANCiANCitGaWxlOiBpd2x3aWZpLTcyNjUtMTcudWNvZGUNCitWZXJzaW9uIDE3LjM1Mjcz
-OC4wDQorDQogRmlsZTogaXdsd2lmaS03MjY1RC0xMC51Y29kZQ0KIFZlcnNpb246IDIzLjE1LjEw
-LjANCiANCkBAIC04OTksMTIgKzkwOCwyMSBAQCBWZXJzaW9uOiAyNS4zMC4xMy4wDQogRmlsZTog
-aXdsd2lmaS03MjY1RC0xNi51Y29kZQ0KIFZlcnNpb24gMTYuMjQyNDE0LjANCiANCitGaWxlOiBp
-d2x3aWZpLTcyNjVELTE3LnVjb2RlDQorVmVyc2lvbiAxNy4zNTI3MzguMA0KKw0KIEZpbGU6IGl3
-bHdpZmktNzI2NUQtMjEudWNvZGUNCiBWZXJzaW9uIDIxLjMwMjgwMC4wDQogDQorRmlsZTogaXds
-d2lmaS03MjY1RC0yMi51Y29kZQ0KK1ZlcnNpb24gMjIuMzYxNDc2LjANCisNCiBGaWxlOiBpd2x3
-aWZpLTMxNjgtMjEudWNvZGUNCiBWZXJzaW9uIDIxLjMwMjgwMC4wDQogDQorRmlsZTogaXdsd2lm
-aS0zMTY4LTIyLnVjb2RlDQorVmVyc2lvbiAyMi4zNjE0NzYuMA0KKw0KIEZpbGU6IGl3bHdpZmkt
-ODAwMEMtMTMudWNvZGUNCiBWZXJzaW9uOiAyNS4zMC4xMy4wDQogDQpAQCAtOTE0LDkgKzkzMiwx
-NSBAQCBWZXJzaW9uIDE2LjI0MjQxNC4wDQogRmlsZTogaXdsd2lmaS04MDAwQy0yMS51Y29kZQ0K
-IFZlcnNpb24gMjEuMzAyODAwLjANCiANCitGaWxlOiBpd2x3aWZpLTgwMDBDLTIyLnVjb2RlDQor
-VmVyc2lvbiAyMi4zNjE0NzYuMA0KKw0KIEZpbGU6IGl3bHdpZmktODI2NS0yMS51Y29kZQ0KIFZl
-cnNpb24gMjEuMzAyODAwLjANCiANCitGaWxlOiBpd2x3aWZpLTgyNjUtMjIudWNvZGUNCitWZXJz
-aW9uIDIyLjM2MTQ3Ni4wDQorDQogTGljZW5jZTogUmVkaXN0cmlidXRhYmxlLiBTZWUgTElDRU5D
-RS5pd2x3aWZpX2Zpcm13YXJlIGZvciBkZXRhaWxzDQogDQogQWxzbyBhdmFpbGFibGUgZnJvbSBo
-dHRwOi8vd2lyZWxlc3Mua2VybmVsLm9yZy9lbi91c2Vycy9Ecml2ZXJzL2l3bHdpZmkjRmlybXdh
-cmUNCmRpZmYgLS1naXQgYS9pd2x3aWZpLTMxNjAtMTcudWNvZGUgYi9pd2x3aWZpLTMxNjAtMTcu
-dWNvZGUNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwLi5lNThmNzE1DQpCaW5h
-cnkgZmlsZXMgL2Rldi9udWxsIGFuZCBiL2l3bHdpZmktMzE2MC0xNy51Y29kZSBkaWZmZXINCmRp
-ZmYgLS1naXQgYS9pd2x3aWZpLTMxNjgtMjIudWNvZGUgYi9pd2x3aWZpLTMxNjgtMjIudWNvZGUN
-Cm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwLi5kOTY5YWVkDQpCaW5hcnkgZmls
-ZXMgL2Rldi9udWxsIGFuZCBiL2l3bHdpZmktMzE2OC0yMi51Y29kZSBkaWZmZXINCmRpZmYgLS1n
-aXQgYS9pd2x3aWZpLTcyNjAtMTcudWNvZGUgYi9pd2x3aWZpLTcyNjAtMTcudWNvZGUNCm5ldyBm
-aWxlIG1vZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwLi42ZjVkNzEzDQpCaW5hcnkgZmlsZXMgL2Rl
-di9udWxsIGFuZCBiL2l3bHdpZmktNzI2MC0xNy51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9p
-d2x3aWZpLTcyNjUtMTcudWNvZGUgYi9pd2x3aWZpLTcyNjUtMTcudWNvZGUNCm5ldyBmaWxlIG1v
-ZGUgMTAwNjQ0DQppbmRleCAwMDAwMDAwLi5mMmJmMzBlDQpCaW5hcnkgZmlsZXMgL2Rldi9udWxs
-IGFuZCBiL2l3bHdpZmktNzI2NS0xNy51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZp
-LTcyNjVELTE3LnVjb2RlIGIvaXdsd2lmaS03MjY1RC0xNy51Y29kZQ0KbmV3IGZpbGUgbW9kZSAx
-MDA2NDQNCmluZGV4IDAwMDAwMDAuLjY2OTQwYzQNCkJpbmFyeSBmaWxlcyAvZGV2L251bGwgYW5k
-IGIvaXdsd2lmaS03MjY1RC0xNy51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTcy
-NjVELTIyLnVjb2RlIGIvaXdsd2lmaS03MjY1RC0yMi51Y29kZQ0KbmV3IGZpbGUgbW9kZSAxMDA2
-NDQNCmluZGV4IDAwMDAwMDAuLjI2Y2ExYmQNCkJpbmFyeSBmaWxlcyAvZGV2L251bGwgYW5kIGIv
-aXdsd2lmaS03MjY1RC0yMi51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTgwMDBD
-LTIyLnVjb2RlIGIvaXdsd2lmaS04MDAwQy0yMi51Y29kZQ0KbmV3IGZpbGUgbW9kZSAxMDA2NDQN
-CmluZGV4IDAwMDAwMDAuLjkzYTgyOGINCkJpbmFyeSBmaWxlcyAvZGV2L251bGwgYW5kIGIvaXds
-d2lmaS04MDAwQy0yMi51Y29kZSBkaWZmZXINCmRpZmYgLS1naXQgYS9pd2x3aWZpLTgyNjUtMjIu
-dWNvZGUgYi9pd2x3aWZpLTgyNjUtMjIudWNvZGUNCm5ldyBmaWxlIG1vZGUgMTAwNjQ0DQppbmRl
-eCAwMDAwMDAwLi4zZGJlYjgzDQpCaW5hcnkgZmlsZXMgL2Rldi9udWxsIGFuZCBiL2l3bHdpZmkt
-ODI2NS0yMi51Y29kZSBkaWZmZXI=
++ Luis (again) ;-)
+
+On 29-07-16 08:13, Daniel Wagner wrote:
+> On 07/28/2016 09:01 PM, Bjorn Andersson wrote:
+>> On Thu 28 Jul 11:33 PDT 2016, Dmitry Torokhov wrote:
+>>
+>>> On Thu, Jul 28, 2016 at 09:55:11AM +0200, Daniel Wagner wrote:
+>>>> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+>>>>
+>> [..]
+>>>
+>>> Do not quite like it... I'd rather asynchronous request give out a
+>>> firmware status pointer that could be used later on.
+
+Excellent. Why not get rid of the callback function as well and have
+fw_loading_wait() return result (0 = firmware available, < 0 = fail).
+Just to confirm, you are proposing a new API function next to
+request_firmware_nowait(), right?
+
+>>>     pcu->fw_st = request_firmware_async(IMS_PCU_FIRMWARE_NAME,
+>>> -                       pcu,
+>>> -                       ims_pcu_process_async_firmware);
+    +			    pcu);
+>>>     if (IS_ERR(pcu->fw_st))
+>>>         return PTR_ERR(pcu->fw_st);
+>>>
+>>>     ....
+>>>
+>>>     err = fw_loading_wait(pcu->fw_st);
+	if (err)
+		return err;
+
+	fw = fwstat_get_firmware(pcu->fw_st);
+
+Or whatever consistent prefix it is going to be.
+
+>>>
+>>
+>> In the remoteproc case (patch 6) this would clean up the code, rather
+>> than replacing the completion API 1 to 1. I like it!
+> 
+> IIRC most drivers do it the same way. So request_firmware_async() indeed
+> would be good thing to have. Let me try that.
+
+While the idea behind this series is a good one I am wondering about the
+need for these drivers to use the asynchronous API. The historic reason
+might be to avoid timeout caused by user-mode helper, but that may no
+longer apply and these drivers could be better off using
+request_firmware_direct().
+
+There have been numerous discussions about the firmware API. Here most
+recent one:
+
+http://www.spinics.net/lists/linux-wireless/index.html#152755
+
+Regards,
+Arend
+
+> Thanks for the excellent feedback.
+> 
+> cheers,
+> daniel
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
