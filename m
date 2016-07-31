@@ -1,59 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42434 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750780AbcGLSsK convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34752 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750911AbcGaHRb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jul 2016 14:48:10 -0400
-Date: Tue, 12 Jul 2016 20:48:02 +0200
-From: Igor Mammedov <imammedo@redhat.com>
-To: =?UTF-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Stable <stable@vger.kernel.org>,
-	linux-wireless@vger.kernel.org (open list:BROADCOM SPECIFIC AMBA DRIVER
-	(BCMA)), linux-kernel@vger.kernel.org (open list)
-Subject: Re: [PATCH FIX 4.6+] bcma: add PCI ID for Foxconn's BCM43142 device
-Message-ID: <20160712204803.77bf3c59@igors-macbook-pro.local> (sfid-20160712_204834_720996_93A43EB2)
-In-Reply-To: <1468270896-2988-1-git-send-email-zajec5@gmail.com>
-References: <1468270896-2988-1-git-send-email-zajec5@gmail.com>
+	Sun, 31 Jul 2016 03:17:31 -0400
+In-Reply-To: <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com>
+References: <1469692512-16863-1-git-send-email-wagi@monom.org> <1469692512-16863-8-git-send-email-wagi@monom.org> <20160728183343.GD16852@dtor-ws> <20160728190151.GV13516@tuxbot> <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de> <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of completion
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Date: Sun, 31 Jul 2016 00:17:13 -0700
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Daniel Wagner <daniel.wagner@bmw-carit.de>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>
+CC: Daniel Wagner <wagi@monom.org>, Bastien Nocera <hadess@hadess.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>, linux-input@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+Message-ID: <C94EB729-09A2-4E67-91A2-65551114DFEF@gmail.com> (sfid-20160731_091814_452127_BAB2ED0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 11 Jul 2016 23:01:36 +0200
-Rafał Miłecki <zajec5@gmail.com> wrote:
+On July 30, 2016 5:42:41 AM PDT, Arend van Spriel <arend.vanspriel@broadcom.com> wrote:
+>+ Luis (again) ;-)
+>
+>On 29-07-16 08:13, Daniel Wagner wrote:
+>> On 07/28/2016 09:01 PM, Bjorn Andersson wrote:
+>>> On Thu 28 Jul 11:33 PDT 2016, Dmitry Torokhov wrote:
+>>>
+>>>> On Thu, Jul 28, 2016 at 09:55:11AM +0200, Daniel Wagner wrote:
+>>>>> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+>>>>>
+>>> [..]
+>>>>
+>>>> Do not quite like it... I'd rather asynchronous request give out a
+>>>> firmware status pointer that could be used later on.
+>
+>Excellent. Why not get rid of the callback function as well and have
+>fw_loading_wait() return result (0 = firmware available, < 0 = fail).
+>Just to confirm, you are proposing a new API function next to
+>request_firmware_nowait(), right?
 
-> After discovering there are 2 very different 14e4:4365 PCI devices we
-> made ID tables less generic. Back then we believed there are only 2
-> such devices:
-> 1) 14e4:4365 1028:0016 with SoftMAC BCM43142 chipset
-> 2) 14e4:4365 14e4:4365 with FullMAC BCM4366 chipset
-> 
-> From the recent report it appears there is also 14e4:4365 105b:e092
-> which should be claimed by bcma. Add back support for it.
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=121881
-> Fixes: 515b399c9a20 ("bcma: claim only 14e4:4365 PCI Dell card with
-> SoftMAC BCM43142") Reported-by: Igor Mammedov <imammedo@redhat.com>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> Cc: Stable <stable@vger.kernel.org> [4.6+]
-Tested-by: Igor Mammedov <imammedo@redhat.com>
+Yes, that would be a new API call. Maybe we could replace old API with the new at some point.
 
-> ---
->  drivers/bcma/host_pci.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/bcma/host_pci.c b/drivers/bcma/host_pci.c
-> index cae5385..bd46569 100644
-> --- a/drivers/bcma/host_pci.c
-> +++ b/drivers/bcma/host_pci.c
-> @@ -295,6 +295,7 @@ static const struct pci_device_id
-> bcma_pci_bridge_tbl[] = { { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM,
-> 0x4359) }, { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x4360) },
->  	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_BROADCOM, 0x4365,
-> PCI_VENDOR_ID_DELL, 0x0016) },
-> +	{ PCI_DEVICE_SUB(PCI_VENDOR_ID_BROADCOM, 0x4365,
-> PCI_VENDOR_ID_FOXCONN, 0xe092) },
-> { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a0) },
-> { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43a9) },
-> { PCI_DEVICE(PCI_VENDOR_ID_BROADCOM, 0x43aa) },
 
+>>>>     pcu->fw_st = request_firmware_async(IMS_PCU_FIRMWARE_NAME,
+>>>> -                       pcu,
+>>>> -                       ims_pcu_process_async_firmware);
+>    +			    pcu);
+>>>>     if (IS_ERR(pcu->fw_st))
+>>>>         return PTR_ERR(pcu->fw_st);
+>>>>
+>>>>     ....
+>>>>
+>>>>     err = fw_loading_wait(pcu->fw_st);
+>	if (err)
+>		return err;
+>
+>	fw = fwstat_get_firmware(pcu->fw_st);
+>
+>Or whatever consistent prefix it is going to be.
+>
+>>>>
+>>>
+>>> In the remoteproc case (patch 6) this would clean up the code,
+>rather
+>>> than replacing the completion API 1 to 1. I like it!
+>> 
+>> IIRC most drivers do it the same way. So request_firmware_async()
+>indeed
+>> would be good thing to have. Let me try that.
+>
+>While the idea behind this series is a good one I am wondering about
+>the
+>need for these drivers to use the asynchronous API. The historic reason
+>might be to avoid timeout caused by user-mode helper, but that may no
+>longer apply and these drivers could be better off using
+>request_firmware_direct().
+
+Actually systems using this driver rely on usermode helper to provide necessary delay and load the firmware from storage once root partition is mounted. Converting to request_firmware_direct() would break them.
+
+
+Thanks.
+
+-- 
+Dmitry
