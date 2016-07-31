@@ -1,103 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:58164 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754168AbcGFTIg convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59540 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342AbcGaMDs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jul 2016 15:08:36 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-	Tim Shepard <shep@alum.mit.edu>
-Subject: Re: [PATCH v2] ath9k: Switch to using mac80211 intermediate software
-	queues.
-References: <20160618190505.24038-1-toke@toke.dk>
-	<20160706161612.16597-1-toke@toke.dk>
-	<85779557-6c5a-fcd3-60cf-4d3c79aec652@nbd.name>
-	<87r3b6mwej.fsf@toke.dk>
-	<97e6ac26-6ec0-24ee-2834-33f0c86532f3@nbd.name>
-Date: Wed, 06 Jul 2016 21:08:30 +0200
-In-Reply-To: <97e6ac26-6ec0-24ee-2834-33f0c86532f3@nbd.name> (Felix Fietkau's
-	message of "Wed, 6 Jul 2016 20:59:55 +0200")
-Message-ID: <87mvlumvo1.fsf@toke.dk> (sfid-20160706_210840_534013_31D7ADEF)
+	Sun, 31 Jul 2016 08:03:48 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Heinrich Schuchardt <xypron.glpk@gmx.de>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] mwifiex: remove superfluous condition (2)
+References: <1469962177-2432-1-git-send-email-xypron.glpk@gmx.de>
+Date: Sun, 31 Jul 2016 15:03:03 +0300
+In-Reply-To: <1469962177-2432-1-git-send-email-xypron.glpk@gmx.de> (Heinrich
+	Schuchardt's message of "Sun, 31 Jul 2016 12:49:37 +0200")
+Message-ID: <877fc2816w.fsf@purkki.adurom.net> (sfid-20160731_140411_441297_CEE23E1B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> writes:
+Heinrich Schuchardt <xypron.glpk@gmx.de> writes:
 
-> On 2016-07-06 20:52, Toke Høiland-Jørgensen wrote:
->> Felix Fietkau <nbd@nbd.name> writes:
->> 
->>> On 2016-07-06 18:16, Toke Høiland-Jørgensen wrote:
->>>> This switches ath9k over to using the mac80211 intermediate software
->>>> queueing mechanism for data packets. It removes the queueing inside the
->>>> driver, except for the retry queue, and instead pulls from mac80211 when
->>>> a packet is needed. The retry queue is used to store a packet that was
->>>> pulled but can't be sent immediately.
->>>> 
->>>> The old code path in ath_tx_start that would queue packets has been
->>>> removed completely, as has the qlen limit tunables (since there's no
->>>> longer a queue in the driver to limit).
->>>> 
->>>> Based on Tim's original patch set, but reworked quite thoroughly.
->>>> 
->>>> Cc: Tim Shepard <shep@alum.mit.edu>
->>>> Cc: Felix Fietkau <nbd@nbd.name>
->>>> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
->>>> ---
->>>> Changes since v1:
->>>>   - Remove the old intermediate queueing logic completely instead of
->>>>     just disabling it.
->>>>   - Remove the qlen debug tunables.
->>>>   - Remove the force_channel parameter from struct txctl (since we just
->>>>     removed the code path that was using it).
->>>> 
->>>>  drivers/net/wireless/ath/ath9k/ath9k.h     |  12 +-
->>>>  drivers/net/wireless/ath/ath9k/channel.c   |   2 -
->>>>  drivers/net/wireless/ath/ath9k/debug.c     |  14 +-
->>>>  drivers/net/wireless/ath/ath9k/debug.h     |   2 -
->>>>  drivers/net/wireless/ath/ath9k/debug_sta.c |   4 +-
->>>>  drivers/net/wireless/ath/ath9k/init.c      |   2 +-
->>>>  drivers/net/wireless/ath/ath9k/main.c      |   1 +
->>>>  drivers/net/wireless/ath/ath9k/xmit.c      | 307 +++++++++++------------------
->>>>  8 files changed, 130 insertions(+), 214 deletions(-)
->>> Nice work!
->> 
->> Thanks :)
->> 
->>>> diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
->>>> index fe795fc..4077eeb 100644
->>>> --- a/drivers/net/wireless/ath/ath9k/xmit.c
->>>> +++ b/drivers/net/wireless/ath/ath9k/xmit.c
->>>> @@ -912,8 +923,16 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
->>>>  		seqno = bf->bf_state.seqno;
->>>>  
->>>>  		/* do not step over block-ack window */
->>>> -		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno))
->>>> +		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
->>>> +			__skb_queue_tail(&tid->retry_q, skb);
->>>> +
->>>> +			/* If there are other skbs in the retry q, they are
->>>> +			 * probably within the BAW, so loop immediately to get
->>>> +			 * one of them. Otherwise the queue can get stuck. */
->>>> +			if (!skb_queue_is_first(&tid->retry_q, skb))
->>>> +				continue;
->>> Not sure if this can happen, but if we ever somehow end up with two skbs
->>> in the retry queue that do not fit into the Block-Ack window, there's
->>> potential for an infinite loop here.
->> 
->> Yes, I realise that (v1 contained a comment on that). However, I don't
->> actually think it can happen: The code will only ever put one skb from
->> the intermediate queues on the retry queue (ath_tid_pull() is only
->> called if the retry queue is empty). Everything else on there are actual
->> retries that have been put on there by ath_tx_complete_aggr(). Figure
->> the latter will always be within the BAW?
-> I think it would be a good idea to have a check there (with WARN_ON), in
-> case there's some weird corner case with seqno handling, software retry
-> and aggregation state changes.
+> We are using mac as source address in a memcpy.
+> In the lines below we can assume mac is not NULL.
+>
+> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
 
-Right, can do :)
+Please try to make the commit titles unique, for example you can use
+function names or something else. Adding "(2)" is not the way to do
+that.
 
--Toke
+-- 
+Kalle Valo
