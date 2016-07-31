@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([198.47.19.12]:32821 "EHLO arroyo.ext.ti.com"
+Received: from mout.gmx.net ([212.227.15.15]:60033 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750956AbcGMLlM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jul 2016 07:41:12 -0400
-From: Yaniv Machani <yanivma@ti.com>
-To: <linux-kernel@vger.kernel.org>
-CC: <johannes@sipsolutions.net>, <netdev@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, Yaniv Machani <yanivma@ti.com>
-Subject: [PATCH v2 0/3] Mesh mpm fixes and enhancements
-Date: Wed, 13 Jul 2016 14:44:06 +0300
-Message-ID: <20160713114406.24615-1-yanivma@ti.com> (sfid-20160713_134116_790387_A2F63813)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1750748AbcGaKje (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jul 2016 06:39:34 -0400
+From: Heinrich Schuchardt <xypron.glpk@gmx.de>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Subject: [PATCH 1/1] mwifiex: remove superfluous condition
+Date: Sun, 31 Jul 2016 12:39:15 +0200
+Message-Id: <1469961555-2123-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160731_124011_385832_A5498715)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch set is addressing some issues found in the current 802.11s implementation, specifically when using hostap mpm. 
-It's aligning the beacon format and handling some corner cases.
+for_each_property_of_node is only executed if the
+property prop is not NULL.
 
-V2 - Updated patches following review comments.
-   - Remove unneccary patches (already upsteamed)
+Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Maital Hahn (1):
-  mac80211: mesh: flush stations before beacons are stopped
-
-Yaniv Machani (2):
-  mac80211: mesh: improve path resolving time
-  mac80211: mesh: fixed HT ies in beacon template
-
- net/mac80211/mesh.c      | 43 ++++++++++++++++++++++++++++++++++++++-----
- net/mac80211/mesh_hwmp.c | 42 +++++++++++++++++++++++++-----------------
- net/mac80211/util.c      |  3 ---
- 3 files changed, 63 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 7897037..128add8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1482,7 +1482,7 @@ int mwifiex_dnld_dt_cfgdata(struct mwifiex_private *priv,
+ 			continue;
+ 
+ 		/* property header is 6 bytes, data must fit in cmd buffer */
+-		if (prop && prop->value && prop->length > 6 &&
++		if (prop->value && prop->length > 6 &&
+ 		    prop->length <= MWIFIEX_SIZE_OF_CMD_BUFFER - S_DS_GEN) {
+ 			ret = mwifiex_send_cmd(priv, HostCmd_CMD_CFG_DATA,
+ 					       HostCmd_ACT_GEN_SET, 0,
 -- 
-2.9.0
+2.8.1
 
