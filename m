@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from cit-hm8-mail01.bmw-carit.de ([212.118.206.84]:38268 "EHLO
-	cit-hm8-gw01.bmw-carit.de" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751368AbcG2GHn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jul 2016 02:07:43 -0400
-Subject: Re: [RFC v0 3/8] firmware: Factor out firmware load helpers
-To: Dan Williams <dcbw@redhat.com>, Daniel Wagner <wagi@monom.org>,
-	Bastien Nocera <hadess@hadess.net>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
- <1469692512-16863-4-git-send-email-wagi@monom.org>
- <1469718061.3013.18.camel@redhat.com>
-CC: <linux-input@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-Message-ID: <6361319e-ffaa-4333-6aba-4829a1953c7f@bmw-carit.de> (sfid-20160729_080746_683328_FA96A05E)
-Date: Fri, 29 Jul 2016 08:07:33 +0200
-MIME-Version: 1.0
-In-Reply-To: <1469718061.3013.18.camel@redhat.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Received: from mout.gmx.net ([212.227.15.18]:52841 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752666AbcGaMMB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jul 2016 08:12:01 -0400
+From: Heinrich Schuchardt <xypron.glpk@gmx.de>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Subject: [PATCH 1/1] mwifiex: key_material_v2 remove superfluous condition
+Date: Sun, 31 Jul 2016 14:11:21 +0200
+Message-Id: <1469967081-3937-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160731_141223_616274_C1527FD4)
+In-Reply-To: <877fc2816w.fsf@purkki.adurom.net>
+References: <877fc2816w.fsf@purkki.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> It's somewhat odd to me that the structure is "firmware_stat" but most
-> of the functions are "fw_loading_*".  That seems inconsistent for a
-> structure that is (currently) only used by these functions.
+We are using mac as source address in a memcpy.
+In the lines below we can assume mac is not NULL.
 
-I agree, my proposal is odd.
+Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 11 +++--------
+ 1 file changed, 3 insertions(+), 8 deletions(-)
 
-> I would personally do either:
->
-> a) "struct fw_load_status" and "fw_load_*()"
->
-> or
->
-> b) "struct firmware_load_stat" and "firmware_load_*()"
->
-> I'd also change the function names from "loading" -> "load", similar to
-> how userland has read(2), not reading(2).
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 128add8..0d4f9fe 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -706,15 +706,10 @@ mwifiex_cmd_802_11_key_material_v2(struct mwifiex_private *priv,
+ 				    (priv->wep_key_curr_index & KEY_INDEX_MASK))
+ 					key_info |= KEY_DEFAULT;
+ 			} else {
+-				if (mac) {
+-					if (is_broadcast_ether_addr(mac))
+-						key_info |= KEY_MCAST;
+-					else
+-						key_info |= KEY_UNICAST |
+-							    KEY_DEFAULT;
+-				} else {
++				if (is_broadcast_ether_addr(mac))
+ 					key_info |= KEY_MCAST;
+-				}
++				else
++					key_info |= KEY_UNICAST | KEY_DEFAULT;
+ 			}
+ 		}
+ 		km->key_param_set.key_info = cpu_to_le16(key_info);
+-- 
+2.8.1
 
-a) sounds good to me, because fw_load_ should be long enough prefix.
-
-cheers,
-daniel
