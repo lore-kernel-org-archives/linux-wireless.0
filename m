@@ -1,58 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:61083 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756124AbcHVPcB (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 11:32:01 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org, robh+dt@kernel.org,
-        mark.rutland@arm.com, chunkeey@googlemail.com, nbd@nbd.name
-Subject: Re: [PATCH 2/5] ath9k: Set the "big endian" bit of the AR9003 EEPROM templates
-Date: Mon, 22 Aug 2016 17:31:23 +0200
-Message-ID: <14216135.Y4g7Oly61q@wuerfel> (sfid-20160822_173316_848964_458BD48D)
-In-Reply-To: <CAFBinCBdv9poKwjsDeGue30x0B9aUjxdkb5BHZcBgouOMAGWMQ@mail.gmail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com> <3744898.ltfZjZgAjj@wuerfel> <CAFBinCBdv9poKwjsDeGue30x0B9aUjxdkb5BHZcBgouOMAGWMQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33360 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752616AbcHAJhu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Aug 2016 05:37:50 -0400
+Message-ID: <1470044267.3389.18.camel@sipsolutions.net> (sfid-20160801_113811_607164_8AC4B3B5)
+Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver
+ for Quantenna chipsets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>,
+	kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+	Avinash Patil <avinashp@quantenna.com>,
+	Dmitrii Lebed <dlebed@quantenna.com>,
+	Sergei Maksimenko <smaksimenko@quantenna.com>,
+	Sergey Matyukevich <smatyukevich@quantenna.com>,
+	Bindu Therthala <btherthala@quantenna.com>,
+	Huizhao Wang <hwang@quantenna.com>,
+	Kamlesh Rath <krath@quantenna.com>
+Date: Mon, 01 Aug 2016 11:37:47 +0200
+In-Reply-To: <fd6ee9cd-71fd-352a-e1cd-61d36b296057@quantenna.com> (sfid-20160711_205908_991096_A819A9AD)
+References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+ <1466511726.3170.33.camel@sipsolutions.net>
+	 <fd6ee9cd-71fd-352a-e1cd-61d36b296057@quantenna.com>
+	 (sfid-20160711_205908_991096_A819A9AD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, August 22, 2016 1:56:46 PM CEST Martin Blumenstingl wrote:
-> On Mon, Aug 22, 2016 at 1:47 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Sunday, August 21, 2016 4:49:03 PM CEST Martin Blumenstingl wrote:
-> >> We will default to the system's native endianness for the eepmisc value.
-> >> This may be overwritten by the actual calibration data. If it is not
-> >> overwritten we interpret the template data in it's native endianness,
-> >> meaning that no swapping is required.
-> >
-> > I'm still skeptical about this one. What is the significance of "native
-> > endianess" here? You are keying the endianess of the eeprom tables off the
-> > way the CPU operates, but for a PCI device there is no correlation between
-> > those two.
-> (the ar9003 eeprom format and handling is different compared to 9287,
-> def and 4k)
-> ar9003_eeprom.c contains EEPROM templates -> these are compiled into
-> the ath9k kernel module. Values from these templates can be
-> overwritten by the EEPROM found on the actual hardware.
-> This change tries to handle the case where the values in the hardware
-> EEPROM do not override any of the template values (means final EEPROM
-> data = template data). In this case the we can simply rely on the
-> endianness which was used to compile ath9k.ko.
 
-Ok, I see what you mean now. However, looking at the source now, I
-also see
+> > 
+> > > +	/* bus private data */
+> > > +	char bus_priv[0];
+> > You might want to - for future proofing - add some aligned()
+> > attribute.
+> > Otherwise, if struct mutex doesn't have a size that's a multiple of
+> > the
+> > pointer size, fields in here will not be aligned right.
+> 
+> Right, thanks for pointing this out. Probably even better approach
+> here would be to take an object-oriented approach and make "bus" a
+> base structure with pcie_bus an inheriting structure.
 
-#define LE16(x) cpu_to_le16(x)
-#define LE32(x) cpu_to_le32(x)
-        .baseEepHeader = {
-                .regDmn = { LE16(0), LE16(0x1f) },
+I think both ways to do composition are fine. It depends more on how
+your other code is structured. I think in mac80211/cfg80211 we do both,
+depending on where/how the allocation is done.
 
-suggesting that the fields are meant to be little-endian in object
-code, and your patch does not change that. In fact, Felix's
-ffdc4cbe5b17 ("ath9k_hw: clean up EEPROM endian handling on AR9003")
-seems to have corrected this already.
+> > > +#define QLINK_HT_MCS_MASK_LEN	10
+> > > +#define QLINK_ETH_ALEN		6
+> > > +#define QLINK_MAX_SSID_LEN	32
+> > These seem a bit strange? Why bother? They are standard values.
+> > (not entirely sure what the MCS_MASK_LEN is used for though)
+> 
+> The idea was to make protocol definition an independent entity, which
+> does not depend on actual values which happened to be used in current
+> kernel. And so that we can be sure that both sides of protocol 
+> communication entities use the same length values.
+> 
+> We actually had discussions regarding this locally too: it was not
+> clear whether we should use existing Linux definitions for standard
+> things like MAC length, 802.11 header fields, IEs definitions etc. It
+> does make a lot of sense to think that they will never change and can
+> not be different on opposite sides of protocol, but we went with
+> approach to define everything manually.
 
-	Arnd
+Well, I can kinda see the beginning of that argument "we should own
+everything to make sure", but it doesn't really work that way. The max
+SSID that's passed in, or the ETH_ALEN that's there - you're always
+going to rely on the kernel's definition of this in other ways, say
+when you alloc_ether_dev() [or whatever it's called], etc.
+
+The end result is that you're never going to be able to change one of
+the two and expect the combined system to still work. As a consequence,
+I don't see any point in even trying to separate them.
+
+> > > +struct qlink_vht_cap {
+
+> Ok, that makes sense of course. Will discuss this locally.
+
+Same argument applies here too, btw, and you might even have to
+translate between this version and the one coming from say cfg80211 -
+where the ieee80211.h one is used - and then you can realistically only
+do a memcpy(), so you rely on them being the same anyway.
+
+> > > +	memcpy(&bss_cfg->crypto, &sme->crypto, sizeof(bss_cfg-
+> > > > crypto));
+> > This makes no sense at all - you have to convert the format of this
+> > somehow to make it work - at least endianness has to be fixed, even
+> > if
+> > you copied all of the cfg80211 struct.
+> 
+> In this particular place we're making a local copy of cfg80211 struct
+> to  local data structure (per each virtual interface). Conversion
+> before  sending to another side is done in qtnf_cmd_send_connect(),
+> it is converted into struct qlink_auth_encr.
+
+Ok. Somehow I thought this (bss_cfg) was sent to the device.
+
+
+johannes
