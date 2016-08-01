@@ -1,82 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:33719 "EHLO
-	mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754413AbcHDMDP convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:34863 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751467AbcHAVrN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2016 08:03:15 -0400
-Received: by mail-it0-f68.google.com with SMTP id d65so19521303ith.0
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Aug 2016 05:02:24 -0700 (PDT)
+	Mon, 1 Aug 2016 17:47:13 -0400
+Date: Mon, 1 Aug 2016 14:34:40 -0700
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Daniel Wagner <daniel.wagner@bmw-carit.de>,
+	Daniel Wagner <wagi@monom.org>,
+	Bastien Nocera <hadess@hadess.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>, linux-input@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
+ completion
+Message-ID: <20160801213440.GA28610@dtor-ws> (sfid-20160801_234751_383344_DE631E53)
+References: <1469692512-16863-1-git-send-email-wagi@monom.org>
+ <1469692512-16863-8-git-send-email-wagi@monom.org>
+ <20160728183343.GD16852@dtor-ws>
+ <20160728190151.GV13516@tuxbot>
+ <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de>
+ <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com>
+ <20160730165817.GQ3296@wotan.suse.de>
+ <20160801171951.GC13516@tuxbot>
 MIME-Version: 1.0
-In-Reply-To: <CACiydb+PfbS+Hc79My2HFqdacFtik7_H8d3kFsrST6m1GnSAgA@mail.gmail.com>
-References: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com>
- <1467201146-6844-1-git-send-email-michal.kazior@tieto.com>
- <87zipt1kco.fsf@kamboji.qca.qualcomm.com> <CACiydb+yNc-UKVRFR-UxTq-YFBDpEDsa1qWNBGCHpe=_zv8o7g@mail.gmail.com>
- <CAA93jw6j0pBKnm3Fs=D7V1CUsBnhZKKymbk4=UQuFWKuEAs-+Q@mail.gmail.com> <CACiydb+PfbS+Hc79My2HFqdacFtik7_H8d3kFsrST6m1GnSAgA@mail.gmail.com>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Thu, 4 Aug 2016 14:02:23 +0200
-Message-ID: <CAA93jw6OBQg2NwJGU6kJLM6oc=8zHRR3qgknjNo=8vHETtcU_Q@mail.gmail.com> (sfid-20160804_140321_556815_414BA8C8)
-Subject: Re: [PATCH] ath10k: disable wake_tx_queue for older devices
-To: Roman Yeryomin <leroi.lists@gmail.com>
-Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160801171951.GC13516@tuxbot>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 4, 2016 at 12:07 PM, Roman Yeryomin <leroi.lists@gmail.com> wrote:
-> On 1 August 2016 at 12:04, Dave Taht <dave.taht@gmail.com> wrote:
->> On Mon, Aug 1, 2016 at 1:35 AM, Roman Yeryomin <leroi.lists@gmail.com> wrote:
->>> On 7 July 2016 at 19:30, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->>>> Michal Kazior <michal.kazior@tieto.com> writes:
->>>>
->>>>> Ideally wake_tx_queue should be used regardless as
->>>>> it is a requirement for reducing bufferbloat and
->>>>> implementing airtime fairness in the future.
->>>>>
->>>>> However some setups (typically low-end platforms
->>>>> hosting QCA988X) suffer performance regressions
->>>>> with the current wake_tx_queue implementation.
->>>>> Therefore disable it unless it is really
->>>>> beneficial with current codebase (which is when
->>>>> firmware supports smart pull-push tx scheduling).
->>>>>
->>>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>>>
->>>> I think it's too late to send this to 4.7 anymore (and this due to my
->>>> vacation). So I'm planning to queue this to 4.8, but if the feedback is
->>>> positive we can always send this to a 4.7 stable release.
->>>>
->>>
->>> Sorry guys, drowned.
->>> So, yes, applying this patch does the job. That is gets me to the
->>> results similar to
->>> https://lists.openwrt.org/pipermail/openwrt-devel/2016-May/041448.html
->>>
->>> Going to try latest code on same system...
->>
->> Can you try increasing the quantum to 1514, and reducing the codel
->> target to 5ms? (without this patch?)
->>
->
-> So it was 1514 already...
+On Mon, Aug 01, 2016 at 10:19:51AM -0700, Bjorn Andersson wrote:
+> On Sat 30 Jul 09:58 PDT 2016, Luis R. Rodriguez wrote:
+> 
+> > On Sat, Jul 30, 2016 at 02:42:41PM +0200, Arend van Spriel wrote:
+> > > + Luis (again) ;-)
+> > > 
+> > > On 29-07-16 08:13, Daniel Wagner wrote:
+> > > > On 07/28/2016 09:01 PM, Bjorn Andersson wrote:
+> > > >> On Thu 28 Jul 11:33 PDT 2016, Dmitry Torokhov wrote:
+> > > >>
+> > > >>> On Thu, Jul 28, 2016 at 09:55:11AM +0200, Daniel Wagner wrote:
+> > > >>>> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+> > > >>>>
+> > > >> [..]
+> > > >>>
+> > > >>> Do not quite like it... I'd rather asynchronous request give out a
+> > > >>> firmware status pointer that could be used later on.
+> > > 
+> > > Excellent. Why not get rid of the callback function as well and have
+> > > fw_loading_wait() return result (0 = firmware available, < 0 = fail).
+> > > Just to confirm, you are proposing a new API function next to
+> > > request_firmware_nowait(), right?
+> > 
+> > If proposing new firmware_class patches please bounce / Cc me, I've
+> > recently asked for me to be added to MAINTAINERS so I get these
+> > e-mails as I'm working on a new flexible API which would allow us
+> > to extend the firmware API without having to care about the old
+> > stupid usermode helper at all.
+> > 
+> 
+> In the remoteproc world there are several systems where we see 100+MB of
+> firmware being loaded. It's unfeasible to have these files in an
+> initramfs, so we need a way to indicate to the kernel that the
+> second/primary (or a dedicated firmware partition) is mounted.
+> 
+> We're currently loading these files with request_firmware_nowait(), so
+> either one can either use kernel modules or the user-helper fallback to
+> delay the loading until the files are available. (I don't like to
+> enforce the usage of kernel modules)
+> 
+> I'm open to alternative ways of having firmware loading wait on
+> secondary filesystems to be mounted, but have not yet tried to tackle
+> this problem. I do believe something that waits and retries the firmware
+> load as additional file systems gets mounted would be prettier than
+> forcing user space to tell us it's time to move on.
 
-based on some testing of 20, codel target should be 5ms and isn't.
+Hmm, but when do you stop? How do you know that you are not going to get
+yet another fs mounted and that one will finally have the firmware you
+are looking for? The kernel does now, but distribution/product
+integrator does. That is why I think the most reliable way is to see if
+firmware is built-in, otherwise wait and let userspace do its thing.
 
-https://github.com/torvalds/linux/commit/5caa328e3811b7cfa33fd02c93280ffa622deb0e
-
-> Regards,
-> Roman
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
-
-
+Thanks.
 
 -- 
-Dave Täht
-Let's go make home routers and wifi faster! With better software!
-http://blog.cerowrt.org
+Dmitry
