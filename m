@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from condef002-v.nifty.com ([210.131.4.239]:45388 "EHLO
-        condef002-v.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754600AbcHWQkz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Aug 2016 12:40:55 -0400
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-To: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath10k: replace config_enabled() with IS_REACHABLE()
-Date: Wed, 24 Aug 2016 01:27:26 +0900
-Message-Id: <1471969646-13119-1-git-send-email-yamada.masahiro@socionext.com> (sfid-20160823_184137_307251_515B5D8A)
+Received: from s3.sipsolutions.net ([5.9.151.49]:33866 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753021AbcHALQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Aug 2016 07:16:31 -0400
+Message-ID: <1470045822.3389.24.camel@sipsolutions.net> (sfid-20160801_131757_335784_B3B292FF)
+Subject: Re: [PATCH v3 3/3] mac80211: mesh: fixed HT ies in beacon template
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Masashi Honma <masashi.honma@gmail.com>,
+	Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org
+Cc: Meirav Kama <meiravk@ti.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Mon, 01 Aug 2016 12:03:42 +0200
+In-Reply-To: <40a34537-486e-a466-5a7e-e253f19d81c3@gmail.com> (sfid-20160722_072626_919337_95556AEF)
+References: <20160713200755.26839-1-yanivma@ti.com>
+	 <40a34537-486e-a466-5a7e-e253f19d81c3@gmail.com>
+	 (sfid-20160722_072626_919337_95556AEF)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 97f2645f358b ("tree-wide: replace config_enabled() with
-IS_ENABLED()") mostly did away with config_enabled().
+On Fri, 2016-07-22 at 14:26 +0900, Masashi Honma wrote:
+> On 2016年07月14日 05:07, Yaniv Machani wrote:
+> > +
+> > +	/* if channel width is 20MHz - configure HT capab
+> > accordingly*/
+> > +	if (sdata->vif.bss_conf.chandef.width ==
+> > NL80211_CHAN_WIDTH_20) {
+> > +		cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
+> > +		cap &= ~IEEE80211_HT_CAP_DSSSCCK40;
+> > +	}
+> 
+> I have tested this part of your patch and this works for me.
+> 
+> Previouly, "Supported Channel Width Set bit" in HT Capabilities
+> element was 1 even though disable_ht40=1 existed in
+> wpa_supplicant.conf. After appllication of patch, the bit was 0.
+> 
 
-This is one of the postponed TODO items as config_enabled() is used
-for a tristate option here.  Theoretically, config_enabled() is
-equivalent to IS_BUILTIN(), but I guess IS_REACHABLE() is the best
-fit for this case because both CONFIG_HWMON and CONFIG_ATH10K are
-tristate.
+But why is that behaviour *correct*? We still support 40 MHz bandwidth
+things, we just don't use them if we disable HT40.
 
-Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
----
-
- drivers/net/wireless/ath/ath10k/thermal.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/thermal.c b/drivers/net/wireless/ath/ath10k/thermal.c
-index 444b52c..0a47269 100644
---- a/drivers/net/wireless/ath/ath10k/thermal.c
-+++ b/drivers/net/wireless/ath/ath10k/thermal.c
-@@ -192,7 +192,7 @@ int ath10k_thermal_register(struct ath10k *ar)
- 
- 	/* Avoid linking error on devm_hwmon_device_register_with_groups, I
- 	 * guess linux/hwmon.h is missing proper stubs. */
--	if (!config_enabled(CONFIG_HWMON))
-+	if (!IS_REACHABLE(CONFIG_HWMON))
- 		return 0;
- 
- 	hwmon_dev = devm_hwmon_device_register_with_groups(ar->dev,
--- 
-1.9.1
+johannes
