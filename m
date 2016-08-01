@@ -1,77 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:37819 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752113AbcHLMck (ORCPT
+Received: from mail-db5eur01on0056.outbound.protection.outlook.com ([104.47.2.56]:64520
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754578AbcHASc0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2016 08:32:40 -0400
-From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
-	"Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
-Subject: RE: [PATCH v6] cfg80211: Provision to allow the support for different
- beacon intervals
-Date: Fri, 12 Aug 2016 12:32:32 +0000
-Message-ID: <b13661a358d94e81950f6c4387681bd4@aphydexm01f.ap.qualcomm.com> (sfid-20160812_143244_524084_3BA20CBF)
-References: <1470991178-11024-1-git-send-email-pkushwah@qti.qualcomm.com>
-	 <1470995683.26902.31.camel@sipsolutions.net>
-	 <ba55eb8a461b41a4b7a592ee567d0fbf@aphydexm01f.ap.qualcomm.com>
- <1471002165.26902.35.camel@sipsolutions.net>
-In-Reply-To: <1471002165.26902.35.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 1 Aug 2016 14:32:26 -0400
+From: Scott Wood <scott.wood@nxp.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+CC: Arvind Yadav <arvind.yadav.cs@gmail.com>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"leoli@freescale.com" <leoli@freescale.com>,
+	"qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
+	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"scottwood@freescale.com" <scottwood@freescale.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux@roeck-us.net" <linux@roeck-us.net>
+Subject: Re: [v4] Fix to avoid IS_ERR_VALUE and IS_ERR abuses on 64bit
+ systems.
+Date: Mon, 1 Aug 2016 16:55:43 +0000
+Message-ID: <DB5PR0401MB19280ACA87C7F5EE2822D5FB91040@DB5PR0401MB1928.eurprd04.prod.outlook.com> (sfid-20160801_203234_750531_9ACB3578)
+References: <1469963924-8800-1-git-send-email-arvind.yadav.cs@gmail.com>
+ <1956647.cOmaJREgOE@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBJIHdhcyBqdXN0IHRoaW5raW5nIG91dCBsb3VkIDopDQoNCmNmZzgwMjExX3ZhbGlkYXRlX2Jl
-YWNvbl9pbnQgLT4gY2ZnODAyMTFfaXRlcl9jb21iaW5hdGlvbnMgc2hhbGwgYmUgaW52b2tlZCBm
-b3IgdGhlIGludGVyZmFjZSBjb21iaW5hdGlvbnMgLCBjdXJyZW50bHkuIGRpZmZfYmVhY29uX2lu
-dF9nY2RfbWluIGlzIGFwcGxpY2FibGUgZm9yIHRoZSBpbnRlcmZhY2UgY29tYmluYXRpb25zIGFu
-ZCBhbSBub3Qgc3VyZSBob3cgY2FuIHdlIHZhbGlkYXRlIHRoaXMgZm9yIGEgc2luZ2xlIGludGVy
-ZmFjZSAuIFRoaXMgc3BlY2lmaWMgaW50ZXJmYWNlIGNhbiBiZSBwYXJ0IG9mIHR3byBkaWZmZXJl
-bnQgZ3JvdXBzICggaW50ZXJmYWNlIGNvbWJpbmF0aW9ucykgd2l0aCBkaWZmZXJlbnQgdmFsdWVz
-IGZvciAiZGlmZl9iZWFjb25faW50X2djZF9taW4iLiANCkkgZG9uJ3QgdGhpbmsgd2UgY2FuIGdl
-dCB0aGUgbWF0Y2ggZm9yIHRoZSByaWdodCBzZXQgb2YgY29tYmluYXRpb24gaGVyZSAsIGlzbid0
-ID8gDQoNClRvIG1ha2UgdGhpbmdzIHNpbXBsZSAsIGNhbiB3ZSBpZ25vcmUgdGhlIGZvbGxvd2lu
-ZyBydWxlIA0KIiBXaGVuID4wLCBhbnkgYmVhY29uIGludGVydmFsIG11c3QgYWxzbyBiZSBiaWdn
-ZXIgdGhhbiB0aGlzIHZhbHVlLiIgDQphbmQgcmF0aGVyIGhhdmUgb25seSB0aGUgZm9sbG93aW5n
-IG9uZSA/IA0KIiBXaGVuID4wLCBkaWZmZXJlbnQgYmVhY29uIGludGVydmFscyBtdXN0IGhhdmUg
-YSBHQ0QgdGhhdCdzIGF0IGxlYXN0IGFzIGJpZyBhcyB0aGlzIHZhbHVlLiIgIChUbyBiZSBtb3Jl
-IHByZWNpc2UgLCBhbnkgc2Vjb25kIGludGVyZmFjZSB3aGljaCBkb2VzIG5vdCBtZWV0IHRoaXMg
-cnVsZSAsIHdpbGwgZmFpbCB0byBzdGFydCApIC4NCg0KUmVnYXJkcywNClN1bmlsDQoNCi0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5u
-ZXNAc2lwc29sdXRpb25zLm5ldF0gDQpTZW50OiBGcmlkYXksIEF1Z3VzdCAxMiwgMjAxNiA1OjEz
-IFBNDQpUbzogVW5kZWthcmksIFN1bmlsIER1dHQgPHVzZHV0dEBxdGkucXVhbGNvbW0uY29tPjsg
-S3VzaHdhaGEsIFB1cnVzaG90dGFtIDxwa3VzaHdhaEBxdGkucXVhbGNvbW0uY29tPg0KQ2M6IGxp
-bnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgTWFsaW5lbiwgSm91bmkgPGpvdW5pQHFjYS5x
-dWFsY29tbS5jb20+OyBIdWxsdXIgU3VicmFtYW55YW0sIEFtYXJuYXRoIDxhbWFybmF0aEBxY2Eu
-cXVhbGNvbW0uY29tPjsgS3VtYXIsIERlZXBhayAoUUNBKSA8ZGppbmRhbEBxdGkucXVhbGNvbW0u
-Y29tPg0KU3ViamVjdDogUmU6IFtQQVRDSCB2Nl0gY2ZnODAyMTE6IFByb3Zpc2lvbiB0byBhbGxv
-dyB0aGUgc3VwcG9ydCBmb3IgZGlmZmVyZW50IGJlYWNvbiBpbnRlcnZhbHMNCg0KT24gRnJpLCAy
-MDE2LTA4LTEyIGF0IDExOjM0ICswMDAwLCBVbmRla2FyaSwgU3VuaWwgRHV0dCB3cm90ZToNCj4g
-PiANCj4gPiBUaGUgY2xhcmlmaWNhdGlvbiB0aGF0IGl0IGFsc28gcmVwcmVzZW50cyB0aGUgbWlu
-aW11bSBmb3IgYSBzaW5nbGUgDQo+ID4gYmVhY29uIGludGVydmFsIHdvdWxkIG1ha2Ugc29tZSBz
-ZW5zZSB0byBtZSwgYnV0IGF0IHRoZSBzYW1lIHRpbWUgaXQgDQo+ID4gY2FuJ3QgYmUgdXNlZCBv
-bmx5IGZvciB0aGF0LCBzbyBwZXJoYXBzIHNlcGFyYXRpbmcgYSBtaW5pbXVtIG91dA0KPiA+ID4o
-cmF0aGVyIHRoYW4gdXNpbmcgdGhlIGhhcmQtY29kZWQgbWluaW11bSBvZiAxMCkgd291bGQgbWFr
-ZSBzZW5zZS4NCj4gU29ycnkgLiBDb3VsZCBub3QgZ2V0IHlvdXIgc3RhdGVtZW50IGFib3ZlIC4g
-QXJlIHlvdSBzYXlpbmcgdG8gbm90IA0KPiBjaGVjayBpZiB0aGUgYmVhY29uIGludGVydmFsIGlz
-IDwgMTAgaW4gY2ZnODAyMTFfdmFsaWRhdGVfYmVhY29uX2ludCANCj4gcmF0aGVyIG9ubHkgY29u
-c2lkZXIgPiAxMDAwMCBhbmQgZG8gdGhlIHZhbGlkYXRpb24gaWYgdGhlIGNvbmZpZ3VyZWQgDQo+
-IGJlYWNvbiBpbnRlcnZhbCBpcyBsZXNzIHRoYW4gZGlmZl9iZWFjb25faW50X2djZF9taW4gLCB3
-aGVuIGNvbmZpZ3VyZWQgDQo+ID8NCj4gSWYgeWVzICwgaG93IGRvIHlvdSB3YW50IHRoZSB2YWxp
-ZGF0aW9uIGZvciB0aGUgQkkgKCA8IDEwICkgZm9yIHRoZSANCj4gZmlyc3QgaW50ZXJmYWNlIHRv
-IGhhcHBlbiA/DQoNCkkgd2FzIGp1c3QgdGhpbmtpbmcgb3V0IGxvdWQgOikNCg0KUmlnaHQgbm93
-IHdlIHZlcmlmeSB0aGF0IGl0J3MgPj0xMCwgYnV0IGRvZXMgdGhhdCBtYWtlIHNlbnNlIGlmIHNh
-eSBtaW5fZ2NkIGlzIDIwPyBNYXRoZW1hdGljYWxseSwgZGVmaW5pbmcgZ2NkKG4pPW4gd291bGQg
-bWFrZSBzZW5zZSwgc28gaWYgeW91IGp1c3QgaGFkIGEgc2luZ2xlIGludGVyZmFjZSwgYXBwbHlp
-bmcgdGhlIG1pbl9nY2Qgd291bGQgbWVhbiB0aGF0IHRoaXMgaXMgYWxzbyB0aGUgbWluaW11bSBi
-ZWFjb24gaW50ZXJ2YWwuDQoNCldlIGNhbiBzdGlsbCBsZWF2ZSB0aGUgPDEwIGNoZWNrLCBidXQg
-aWYgdGhlIG1pbl9nY2QgaXMgc2V0IHRyZWF0IGp1c3QgYSBzaW5nbGUgaW50ZXJmYWNlIHdpdGgg
-YmVhY29uaW5nIHdpdGggdGhlIGFib3ZlIGdjZCgpIGRlZmluaXRpb24gYW5kIGNoZWNrIHRoYXQg
-dGhlIGJlYWNvbiBpbnRlcnZhbCBpcyA+PSBtaW5fZ2NkPw0KDQpSZWFsbHkgdGhhdCBqdXN0IG1l
-YW5zIGV4dGVuZGluZyB0aGUgZnVuY3Rpb24gdG8gY2FsY3VsYXRlIHRoZSBHQ0QgdG8gYmUgYWJs
-ZSB0byByZXR1cm4gYSB2YWx1ZSBmb3IgYSBzaW5nbGUgbnVtYmVyLg0KDQpCdXQgbWF5YmUgSSdt
-IG92ZXJkZXNpZ25pbmcgdGhpcyA6KQ0KDQpqb2hhbm5lcw0K
+On 08/01/2016 02:02 AM, Arnd Bergmann wrote:
+> On Sunday, July 31, 2016 4:48:44 PM CEST Arvind Yadav wrote:
+>> IS_ERR_VALUE() assumes that parameter is an unsigned long.
+>> It can not be used to check if 'unsigned int' is passed insted.
+>> Which tends to reflect an error.
+>>
+>> In 64bit architectures sizeof (int) == 4 && sizeof (long) == 8.
+>> IS_ERR_VALUE(x) is ((x) >= (unsigned long)-4095).
+>>
+>> IS_ERR_VALUE() of 'unsigned int' is always false because the 32bit
+>> value is zero extended to 64 bits.
+>>
+>> Value of (unsigned int)-4095 is always less than value of
+>> (unsigned long)-4095.
+>>
+>> Now We are taking only first 32 bit for error checking rest of the 32 bit
+>> we ignore such that we get appropriate comparison on 64bit system as well.
+> 
+> This is completely wrong: if you have a valid 64-bit pointer like
+> 0x00001234ffffff00, this will be interpreted as an error now.
+> 
+>> First 32bit of Value of (unsigned int)-4095 and (unsigned long)-4095 will
+>> be equal.
+>>
+>> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+>> ---
+>>  include/linux/err.h | 12 +++++++++++-
+>>  1 file changed, 11 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/include/linux/err.h b/include/linux/err.h
+>> index 1e35588..c2a2789 100644
+>> --- a/include/linux/err.h
+>> +++ b/include/linux/err.h
+>> @@ -18,7 +18,17 @@
+>>  
+>>  #ifndef __ASSEMBLY__
+>>  
+>> -#define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)
+>> +#define IS_ERR_VALUE(x) unlikely(is_error_check(x))
+>> +
+>> +static inline int is_error_check(unsigned long error)
+> 
+> Please leave the existing macro alone. I think you were looking for
+> something specific to the return code of qe_muram_alloc() function,
+> so please add a helper in that subsystem if you need it, not in
+> the generic header files.
+
+qe_muram_alloc (a.k.a. cpm_muram_alloc) returns unsigned long.  The
+problem is certain callers that store the return value in a u32.  Why
+not just fix those callers to store it in unsigned long (at least until
+error checking is done)?
+
+-Scott
+
