@@ -1,50 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41498 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751802AbcHQNSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2016 09:18:18 -0400
-Message-ID: <1471439894.5173.9.camel@sipsolutions.net> (sfid-20160817_151822_163229_6714D766)
-Subject: Re: [PATCH] mac80211: Move crypto IV generation to after TXQ
- dequeue.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Date: Wed, 17 Aug 2016 15:18:14 +0200
-In-Reply-To: <87h9aj5ydx.fsf@toke.dk>
-References: <20160817125800.19154-1-toke@toke.dk>
-	 <1471439315.5173.7.camel@sipsolutions.net> <87h9aj5ydx.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:56692 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753752AbcHAN1o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Aug 2016 09:27:44 -0400
+Message-ID: <579F4E4E.80103@candelatech.com> (sfid-20160801_152840_436696_15C0FDA5)
+Date: Mon, 01 Aug 2016 06:27:42 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Ashok Raj Nagarajan <arnagara@codeaurora.org>
+CC: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
+Subject: Re: [PATCH 1/2] cfg80211: Add support to set tx power for a station
+ associated
+References: <1465926256-6463-1-git-send-email-arnagara@qti.qualcomm.com> <1467110918.2493.9.camel@sipsolutions.net>	 <1cb3e2cc49b433fe5ed834a33adf64b6@codeaurora.org> <1470043740.3389.10.camel@sipsolutions.net>
+In-Reply-To: <1470043740.3389.10.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-08-17 at 15:16 +0200, Toke Høiland-Jørgensen wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
-> 
-> > 
-> > > 
-> > > @@ -1573,6 +1574,7 @@ struct ieee80211_key_conf {
-> > >  	u8 iv_len;
-> > >  	u8 hw_key_idx;
-> > >  	u8 flags;
-> > > +	u8 pn_offs;
-> > > 
-> > This is completely wrong.
-> 
-> Well, the ieee80211_fast_tx struct is not available in
-> ieee80211_tx_dequeue, and I need the offset there. I thought about
-> sticking it into ieee80211_tx_info, but that is kinda full, and since
-> the ieee80211_key_conf is already available there, carrying it there
-> seems to work.
 
-For very limited testing, perhaps. But this isn't static across all
-usages of the key, so this is still completely broken.
 
-> What would be a better way to do this?
-> 
+On 08/01/2016 02:29 AM, Johannes Berg wrote:
+>
+>> Sure.. First use case will be to help with the problem of legacy
+>> client devices that roam across multiple APs. It is a classic
+>> enterprise Wi-Fi AP problem,  often managed by a "network controller"
+>> unit that is connected to all the APs.
+>> The problem is how to handle seamless handoff of clients between
+>> multiple  APs while maximizing the client throughput and minimizing
+>> disruption of IP application services like VoIP calls and video
+>> streaming. A legacy client will often  hold onto an AP association,
+>> even down to 1 Mbps as it roams away. Instead,  if the AP can
+>> recognise that the client RSSI (and therefore throughput) is poor, it
+>> can "drop" the Tx power significantly (just to that client) such that
+>> it forcesthe client to look for a better, closer, and therefore
+>> higher-throughputassociation. It would "give it a kick" without
+>> blacklisting it. It just needsto hold the power low for the small
+>> amount of time it takes to convince it to go away.
+>
+> Not sure that *works* since implementations may just compare beacon
+> signal strength and hold on to the AP based on that, but it does seem
+> like a reasonable use case.
 
-Some redesign/rearchitecture, probably. Or just do it all in the driver
-like iwlmvm?
+How is that better than just kicking the station deliberately and/or
+refusing to send frames to it at all?
 
-johannes
+Thanks,
+Ben
+
+>
+> How would this interact with automatic adjustment though?
+>
+> johannes
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
