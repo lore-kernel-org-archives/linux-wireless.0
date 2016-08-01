@@ -1,47 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:14951 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934752AbcHBMYu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:24:50 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org,
-	linuxwifi@intel.com, m.chehab@samsung.com, pawel@osciak.com,
-	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
-	k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0789/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:46:37 +0800
-Message-Id: <20160802114637.2423-1-baolex.ni@intel.com> (sfid-20160802_174334_878659_2855B0CC)
+Received: from cataclysm.awful.name ([78.46.181.170]:37964 "EHLO
+	cataclysm.awful.name" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754214AbcHASdm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Aug 2016 14:33:42 -0400
+From: Joshua Houghton <josh@awful.name>
+To: Johnny Kim <johnny.kim@atmel.com>, linux-wireless@vger.kernel.org
+Cc: Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH] drivers: wilc1000: remove references to semaphores
+Date: Mon, 01 Aug 2016 19:17:25 +0000
+Message-ID: <4195523.kKD5sp4Uk6@arch> (sfid-20160801_203347_275408_8D2B5440)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+* Update the comments that refer to semaphores
+* Remove redundant includes to semphore.h
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
+Signed-off-by: Joshua Houghton <josh@awful.name>
 ---
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/TODO                 | 1 -
+ drivers/staging/wilc1000/linux_wlan.c         | 1 -
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.h          | 2 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h       | 1 -
+ 5 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index e436574..b2f3cda 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -27,7 +27,7 @@
- #include "11ac.h"
+diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
+index ec93b2e..ae61b55 100644
+--- a/drivers/staging/wilc1000/TODO
++++ b/drivers/staging/wilc1000/TODO
+@@ -3,7 +3,6 @@ TODO:
+ - remove OS wrapper functions
+ - remove custom debug and tracing functions
+ - rework comments and function headers(also coding style)
+-- replace all semaphores with mutexes or completions
+ - Move handling for each individual members of 'union message_body' out
+   into a separate 'struct work_struct' and completely remove the multiplexer
+   that is currently part of host_if_work(), allowing movement of the
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 3a66255..315ed2e 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -21,7 +21,6 @@
+ #include <linux/kernel.h>
+ #include <linux/skbuff.h>
+ #include <linux/mutex.h>
+-#include <linux/semaphore.h>
+ #include <linux/completion.h>
  
- static bool drcs;
--module_param(drcs, bool, 0644);
-+module_param(drcs, bool, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(drcs, "multi-channel operation:1, single-channel operation:0");
+ static int dev_state_ev_handler(struct notifier_block *this,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 5cc6a82..ec6b167 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -131,7 +131,7 @@ struct wilc_priv {
+ 	struct wilc_wfi_key *wilc_gtk[MAX_NUM_STA];
+ 	struct wilc_wfi_key *wilc_ptk[MAX_NUM_STA];
+ 	u8 wilc_groupkey;
+-	/* semaphores */
++	/* mutexes */
+ 	struct mutex scan_req_lock;
+ 	/*  */
+ 	bool gbAutoRateAdjusted;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 30e5312..739900e 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -192,7 +192,7 @@
  
- static bool disable_auto_ds;
+ #define ENABLE_RX_VMM		(SEL_VMM_TBL1 | EN_VMM)
+ #define ENABLE_TX_VMM		(SEL_VMM_TBL0 | EN_VMM)
+-/*time for expiring the semaphores of cfg packets*/
++/*time for expiring the completion of cfg packets*/
+ #define CFG_PKTS_TIMEOUT	2000
+ /********************************************
+  *
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 410bfc0..439ac6f 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -10,7 +10,6 @@
+ #ifndef WILC_WLAN_IF_H
+ #define WILC_WLAN_IF_H
+ 
+-#include <linux/semaphore.h>
+ #include <linux/netdevice.h>
+ 
+ /********************************************
 -- 
 2.9.2
+
 
