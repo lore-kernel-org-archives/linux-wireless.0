@@ -1,54 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33038 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33283 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750940AbcHPGww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2016 02:52:52 -0400
-Message-ID: <1471330367.16783.23.camel@sipsolutions.net> (sfid-20160816_085255_768522_3BA91654)
-Subject: Re: [PATCH] cfg80211: Add HT and VHT information in start_ap
+	id S1751332AbcHAJQF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Aug 2016 05:16:05 -0400
+Message-ID: <1470042961.3389.6.camel@sipsolutions.net> (sfid-20160801_111609_060141_8DADCA7C)
+Subject: Re: rfkill bound to a switch
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, Peng Xu <pxu@qca.qualcomm.com>
-Date: Tue, 16 Aug 2016 08:52:47 +0200
-In-Reply-To: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
+To: Kai Hendry <hendry@iki.fi>, linux-wireless@vger.kernel.org
+Date: Mon, 01 Aug 2016 11:16:01 +0200
+In-Reply-To: <1469692952.331455.679081257.3C81B1F3@webmail.messagingengine.com> (sfid-20160728_100238_835650_2A9D839C)
+References: <1469692952.331455.679081257.3C81B1F3@webmail.messagingengine.com>
+	 (sfid-20160728_100238_835650_2A9D839C)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-08-15 at 21:07 +0300, Jouni Malinen wrote:
-> From: Peng Xu <pxu@qca.qualcomm.com>
+On Thu, 2016-07-28 at 16:02 +0800, Kai Hendry wrote:
+> Hi there,
 > 
-> Add HT and VHT information in struct cfg80211_ap_settings when
-> starting ap so that driver does not need to parse IE to obtain
-> the information.
+> Since laptops typically have a toggle button for killing and enabled
+> wifi, how does one supposed to bind rfkill like a toggle?
+> 
+> I.e. knowing which state you are in so you can call {block,unblock}
+> accordingly?
+> 
+> Parsing event or list output seems non-trivial.
+> 
 
-> +enum ht_vht_support {
-> +	HT_VHT_DISABLED,
-> +	HT_VHT_ENABLED,
-> +	HT_VHT_NOT_INDICATED
-> +};
-
-So if you get HT_VHT_NOT_INDICATED in the driver, don't you *still*
-have to parse the IEs?
-
-Arguably, cfg80211 could know itself by parsing though, so it could
-already fall back to that, no?
-
-But if you do that, you already need the parsing code, so then perhaps
-it would make sense to just always use the parsing in cfg80211? Or
-export a parsing function to use in driver(s)?
-
-> @@ -719,6 +729,11 @@ struct cfg80211_ap_settings {
->  	bool p2p_opp_ps;
->  	const struct cfg80211_acl_data *acl;
->  	bool pbss;
-> +	enum ht_vht_support ht_enabled;
-> +	enum ht_vht_support vht_enabled;
-> +	enum ht_vht_support require_ht;
-> +	enum ht_vht_support require_vht;
-> +
-
-(nit - extra blank line)
+Don't use the rfkill tool - just open /dev/rfkill yourself, the API is
+really simple.
 
 johannes
