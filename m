@@ -1,38 +1,854 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43701 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933073AbcHaI26 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Aug 2016 04:28:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        Benjamin Berg <benjamin.berg@open-mesh.com>,
-        linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [patch] ath9k: indent an if statement
-References: <20160803184339.GB775@mwanda>
-Date: Wed, 31 Aug 2016 11:28:52 +0300
-In-Reply-To: <20160803184339.GB775@mwanda> (Dan Carpenter's message of "Wed, 3
-        Aug 2016 21:43:39 +0300")
-Message-ID: <87lgzd4a0r.fsf@kamboji.qca.qualcomm.com> (sfid-20160831_103228_052521_40625659)
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:36496 "EHLO
+	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751640AbcHBGzf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 02:55:35 -0400
+Received: by mail-lf0-f46.google.com with SMTP id g62so131096505lfe.3
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2016 23:55:10 -0700 (PDT)
+From: Ilya Tumaykin <itumaykin@gmail.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [Bug][AR9285] WiFi LED stops working after suspend/hibernate cycle with 4.7.0 kernel
+Date: Tue, 02 Aug 2016 08:48:24 +0300
+Message-ID: <1527497.Qs7VGayoiT@photon> (sfid-20160802_085540_669718_7972146F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary="nextPart1922771.uzI0EGDo3r"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
+This is a multi-part message in MIME format.
 
-> It looks like this code is correct, but it just needs to be indented a
-> bit.
->
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+--nextPart1922771.uzI0EGDo3r
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"
 
-Doesn't apply anymore:
+Hello.
 
-Importing patch "ath9k-indent-an-if-statement" ... error: patch failed: drivers/net/wireless/ath/ath9k/main.c:919
-error: drivers/net/wireless/ath/ath9k/main.c: patch does not apply
-stg import: Diff does not apply cleanly
+After kernel upgrade from 4.6.4 to 4.7.0 WiFi LED stops working after 
+suspend/hibernate cycle. LED works properly right after (re)boot. LED worked 
+properly after suspend/hibernate cycle with 4.6.4, thus it's a regression.
+
+My hardware is "Qualcomm Atheros AR9285 Wireless Network Adapter (PCI-Express) 
+[168c:002b] (rev 01)", my OS is Gentoo amd64, my ath9k modprobe configuration 
+is "options ath9k blink=0 btcoex_enable=1 bt_ant_diversity=1 ps_enable=1".
+I've attached my kernel configuration and "lspci -vvv -nn -k" output.
+Please let me know if you need more info.
+
+Steps to reproduce:
+1. Boot computer and connect to WiFi network.
+2. Suspend/hibernate computer.
+3. Resume/thaw computer.
+4. Connect to WiFi network again.
+
+Actual results:
+WiFi LED is off.
+
+Expected results:
+WiFi LED is on.
+
+Please fix.
 
 -- 
-Kalle Valo
+Best regards.
+Ilya Tumaykin.
+--nextPart1922771.uzI0EGDo3r
+Content-Disposition: attachment; filename="config.gz"
+Content-Transfer-Encoding: base64
+Content-Type: application/gzip; name="config.gz"
+
+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
+dYBysA8aJoQWBIxIGcWF4jf/B2nw1GhDdQEA
+
+--nextPart1922771.uzI0EGDo3r
+Content-Disposition: attachment; filename="lspci"
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"; name="lspci"
+
+00:00.0 Host bridge [0600]: Intel Corporation Core Processor DRAM Controller [8086:0044] (rev 02)
+	Subsystem: Acer Incorporated [ALI] Core Processor DRAM Controller [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ >SERR- <PERR- INTx-
+	Latency: 0
+	Capabilities: [e0] Vendor Specific Information: Len=0c <?>
+
+00:02.0 VGA compatible controller [0300]: Intel Corporation Core Processor Integrated Graphics Controller [8086:0046] (rev 02) (prog-if 00 [VGA controller])
+	Subsystem: Acer Incorporated [ALI] Core Processor Integrated Graphics Controller [1025:040e]
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 24
+	Region 0: Memory at d0000000 (64-bit, non-prefetchable) [size=4M]
+	Region 2: Memory at c0000000 (64-bit, prefetchable) [size=256M]
+	Region 4: I/O ports at 3050 [size=8]
+	[virtual] Expansion ROM at 000c0000 [disabled] [size=128K]
+	Capabilities: [90] MSI: Enable+ Count=1/1 Maskable- 64bit-
+		Address: fee0100c  Data: 4181
+	Capabilities: [d0] Power Management version 2
+		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [a4] PCI Advanced Features
+		AFCap: TP+ FLR+
+		AFCtrl: FLR-
+		AFStatus: TP-
+	Kernel driver in use: i915
+
+00:16.0 Communication controller [0780]: Intel Corporation 5 Series/3400 Series Chipset HECI Controller [8086:3b64] (rev 06)
+	Subsystem: Acer Incorporated [ALI] 5 Series/3400 Series Chipset HECI Controller [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 25
+	Region 0: Memory at d4406100 (64-bit, non-prefetchable) [size=16]
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [8c] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 00000000fee0f00c  Data: 41a2
+	Kernel driver in use: mei_me
+
+00:1a.0 USB controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b3c] (rev 05) (prog-if 20 [EHCI])
+	Subsystem: Acer Incorporated [ALI] 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [1025:040e]
+	Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Interrupt: pin A routed to IRQ 16
+	Region 0: Memory at d4405c00 (32-bit, non-prefetchable) [size=1K]
+	Capabilities: [50] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D3 NoSoftRst- PME-Enable+ DSel=0 DScale=0 PME-
+	Capabilities: [58] Debug port: BAR=1 offset=00a0
+	Capabilities: [98] PCI Advanced Features
+		AFCap: TP+ FLR+
+		AFCtrl: FLR-
+		AFStatus: TP-
+	Kernel driver in use: ehci-pci
+
+00:1b.0 Audio device [0403]: Intel Corporation 5 Series/3400 Series Chipset High Definition Audio [8086:3b56] (rev 05)
+	Subsystem: Acer Incorporated [ALI] 5 Series/3400 Series Chipset High Definition Audio [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 27
+	Region 0: Memory at d4400000 (64-bit, non-prefetchable) [size=16K]
+	Capabilities: [50] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=55mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [60] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 00000000fee0f00c  Data: 41b2
+	Capabilities: [70] Express (v1) Root Complex Integrated Endpoint, MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0
+			ExtTag- RBE-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 128 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+	Capabilities: [100 v1] Virtual Channel
+		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
+		Arb:	Fixed- WRR32- WRR64- WRR128-
+		Ctrl:	ArbSelect=Fixed
+		Status:	InProgress-
+		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=01
+			Status:	NegoPending- InProgress-
+		VC1:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+			Ctrl:	Enable+ ID=1 ArbSelect=Fixed TC/VC=02
+			Status:	NegoPending- InProgress-
+	Capabilities: [130 v1] Root Complex Link
+		Desc:	PortNumber=0f ComponentID=00 EltType=Config
+		Link0:	Desc:	TargetPort=00 TargetComponent=00 AssocRCRB- LinkType=MemMapped LinkValid+
+			Addr:	00000000fed1c000
+	Kernel driver in use: snd_hda_intel
+	Kernel modules: snd_hda_intel
+
+00:1c.0 PCI bridge [0604]: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 1 [8086:3b42] (rev 05) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 17
+	Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+	I/O behind bridge: 00002000-00002fff
+	Memory behind bridge: d3400000-d43fffff
+	Prefetchable memory behind bridge: 00000000d0400000-00000000d13fffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0
+			ExtTag- RBE+
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 128 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+		LnkCap:	Port #1, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <256ns, L1 <4us
+			ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp-
+		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+			Slot #0, PowerLimit 10.000W; Interlock- NoCompl+
+		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+			Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+			Changed: MRL- PresDet- LinkState-
+		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+		RootCap: CRSVisible-
+		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+		DevCap2: Completion Timeout: Range BC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+		Address: 00000000  Data: 0000
+	Capabilities: [90] Subsystem: Acer Incorporated [ALI] 5 Series/3400 Series Chipset PCI Express Root Port 1 [1025:040e]
+	Capabilities: [a0] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Kernel driver in use: pcieport
+
+00:1c.1 PCI bridge [0604]: Intel Corporation 5 Series/3400 Series Chipset PCI Express Root Port 2 [8086:3b44] (rev 05) (prog-if 00 [Normal decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin B routed to IRQ 16
+	Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
+	I/O behind bridge: 00001000-00001fff
+	Memory behind bridge: d2400000-d33fffff
+	Prefetchable memory behind bridge: 00000000d1400000-00000000d23fffff
+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0
+			ExtTag- RBE+
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 128 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+		LnkCap:	Port #2, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <256ns, L1 <4us
+			ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
+			Slot #1, PowerLimit 10.000W; Interlock- NoCompl+
+		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+			Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+			Changed: MRL- PresDet- LinkState-
+		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
+		RootCap: CRSVisible-
+		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+		DevCap2: Completion Timeout: Range BC, TimeoutDis+, LTR-, OBFF Not Supported ARIFwd-
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled ARIFwd-
+		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+		Address: 00000000  Data: 0000
+	Capabilities: [90] Subsystem: Acer Incorporated [ALI] 5 Series/3400 Series Chipset PCI Express Root Port 2 [1025:040e]
+	Capabilities: [a0] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Kernel driver in use: pcieport
+
+00:1d.0 USB controller [0c03]: Intel Corporation 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [8086:3b34] (rev 05) (prog-if 20 [EHCI])
+	Subsystem: Acer Incorporated [ALI] 5 Series/3400 Series Chipset USB2 Enhanced Host Controller [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 23
+	Region 0: Memory at d4405800 (32-bit, non-prefetchable) [size=1K]
+	Capabilities: [50] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [58] Debug port: BAR=1 offset=00a0
+	Capabilities: [98] PCI Advanced Features
+		AFCap: TP+ FLR+
+		AFCtrl: FLR-
+		AFStatus: TP-
+	Kernel driver in use: ehci-pci
+
+00:1e.0 PCI bridge [0604]: Intel Corporation 82801 Mobile PCI Bridge [8086:2448] (rev a5) (prog-if 01 [Subtractive decode])
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Bus: primary=00, secondary=03, subordinate=03, sec-latency=32
+	I/O behind bridge: 0000f000-00000fff
+	Memory behind bridge: fff00000-000fffff
+	Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+	Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+	Capabilities: [50] Subsystem: Acer Incorporated [ALI] 82801 Mobile PCI Bridge [1025:040e]
+
+00:1f.0 ISA bridge [0601]: Intel Corporation Mobile 5 Series Chipset LPC Interface Controller [8086:3b09] (rev 05)
+	Subsystem: Acer Incorporated [ALI] Mobile 5 Series Chipset LPC Interface Controller [1025:040e]
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Capabilities: [e0] Vendor Specific Information: Len=10 <?>
+	Kernel driver in use: lpc_ich
+
+00:1f.2 SATA controller [0106]: Intel Corporation 5 Series/3400 Series Chipset 4 port SATA AHCI Controller [8086:3b29] (rev 05) (prog-if 01 [AHCI 1.0])
+	Subsystem: Acer Incorporated [ALI] 5 Series/3400 Series Chipset 4 port SATA AHCI Controller [1025:040e]
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+	Status: Cap+ 66MHz+ UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin B routed to IRQ 26
+	Region 0: I/O ports at 3048 [size=8]
+	Region 1: I/O ports at 305c [size=4]
+	Region 2: I/O ports at 3040 [size=8]
+	Region 3: I/O ports at 3058 [size=4]
+	Region 4: I/O ports at 3020 [size=32]
+	Region 5: Memory at d4405000 (32-bit, non-prefetchable) [size=2K]
+	Capabilities: [80] MSI: Enable+ Count=1/1 Maskable- 64bit-
+		Address: fee0100c  Data: 41b1
+	Capabilities: [70] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [a8] SATA HBA v1.0 BAR4 Offset=00000004
+	Capabilities: [b0] PCI Advanced Features
+		AFCap: TP+ FLR+
+		AFCtrl: FLR-
+		AFStatus: TP-
+	Kernel driver in use: ahci
+
+00:1f.3 SMBus [0c05]: Intel Corporation 5 Series/3400 Series Chipset SMBus Controller [8086:3b30] (rev 05)
+	Subsystem: Acer Incorporated [ALI] 5 Series/3400 Series Chipset SMBus Controller [1025:040e]
+	Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Interrupt: pin C routed to IRQ 19
+	Region 0: Memory at d4406000 (64-bit, non-prefetchable) [size=256]
+	Region 4: I/O ports at 3000 [size=32]
+	Kernel driver in use: i801_smbus
+
+00:1f.6 Signal processing controller [1180]: Intel Corporation 5 Series/3400 Series Chipset Thermal Subsystem [8086:3b32] (rev 05)
+	Subsystem: Acer Incorporated [ALI] 5 Series/3400 Series Chipset Thermal Subsystem [1025:040e]
+	Control: I/O- Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Interrupt: pin A routed to IRQ 21
+	Region 0: Memory at d4404000 (64-bit, non-prefetchable) [size=4K]
+	Capabilities: [50] Power Management version 3
+		Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
+		Address: 00000000  Data: 0000
+	Kernel driver in use: intel ips
+
+01:00.0 Ethernet controller [0200]: Qualcomm Atheros AR8151 v1.0 Gigabit Ethernet [1969:1073] (rev c0)
+	Subsystem: Acer Incorporated [ALI] AR8151 v1.0 Gigabit Ethernet [1025:040e]
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 28
+	Region 0: Memory at d3400000 (64-bit, non-prefetchable) [size=256K]
+	Region 2: I/O ports at 2000 [size=128]
+	Capabilities: [40] Power Management version 3
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
+		Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [48] MSI: Enable+ Count=1/1 Maskable- 64bit+
+		Address: 00000000fee0f00c  Data: 41e2
+	Capabilities: [58] Express (v1) Endpoint, MSI 00
+		DevCap:	MaxPayload 4096 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
+			ExtTag- AttnBtn+ AttnInd+ PwrInd+ RBE+ FLReset- SlotPowerLimit 10.000W
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr+ UncorrErr+ FatalErr- UnsuppReq- AuxPwr+ TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s unlimited, L1 unlimited
+			ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
+		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM+ AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+	Capabilities: [6c] Vital Product Data
+		Not readable
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt+ UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP- SDES+ TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP+ BadDLLP+ Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 0f, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Capabilities: [180 v1] Device Serial Number ff-02-b2-a4-20-6a-8a-ff
+	Kernel driver in use: atl1c
+	Kernel modules: atl1c
+
+02:00.0 Network controller [0280]: Qualcomm Atheros AR9285 Wireless Network Adapter (PCI-Express) [168c:002b] (rev 01)
+	Subsystem: Foxconn International, Inc. AR9285 Wireless Network Adapter (PCI-Express) [105b:e016]
+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0, Cache Line Size: 64 bytes
+	Interrupt: pin A routed to IRQ 17
+	Region 0: Memory at d2400000 (64-bit, non-prefetchable) [size=64K]
+	Capabilities: [40] Power Management version 3
+		Flags: PMEClk- DSI- D1+ D2- AuxCurrent=375mA PME(D0+,D1+,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit-
+		Address: 00000000  Data: 0000
+	Capabilities: [60] Express (v2) Legacy Endpoint, MSI 00
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+		LnkCap:	Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <512ns, L1 <64us
+			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk+
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+		DevCap2: Completion Timeout: Not Supported, TimeoutDis+, LTR-, OBFF Not Supported
+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
+		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+			 Compliance De-emphasis: -6dB
+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
+	Capabilities: [100 v1] Advanced Error Reporting
+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+		UESvrt:	DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
+		AERCap:	First Error Pointer: 00, GenCap+ CGenEn- ChkCap+ ChkEn-
+	Capabilities: [140 v1] Virtual Channel
+		Caps:	LPEVC=0 RefClk=100ns PATEntryBits=1
+		Arb:	Fixed- WRR32- WRR64- WRR128-
+		Ctrl:	ArbSelect=Fixed
+		Status:	InProgress-
+		VC0:	Caps:	PATOffset=00 MaxTimeSlots=1 RejSnoopTrans-
+			Arb:	Fixed- WRR32- WRR64- WRR128- TWRR128- WRR256-
+			Ctrl:	Enable+ ID=0 ArbSelect=Fixed TC/VC=ff
+			Status:	NegoPending- InProgress-
+	Capabilities: [160 v1] Device Serial Number 00-15-17-ff-ff-24-14-12
+	Capabilities: [170 v1] Power Budgeting <?>
+	Kernel driver in use: ath9k
+	Kernel modules: ath9k
+
+ff:00.0 Host bridge [0600]: Intel Corporation Core Processor QuickPath Architecture Generic Non-core Registers [8086:2c62] (rev 05)
+	Subsystem: Acer Incorporated [ALI] Core Processor QuickPath Architecture Generic Non-core Registers [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+
+ff:00.1 Host bridge [0600]: Intel Corporation Core Processor QuickPath Architecture System Address Decoder [8086:2d01] (rev 05)
+	Subsystem: Acer Incorporated [ALI] Core Processor QuickPath Architecture System Address Decoder [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+
+ff:02.0 Host bridge [0600]: Intel Corporation Core Processor QPI Link 0 [8086:2d10] (rev 05)
+	Subsystem: Acer Incorporated [ALI] Core Processor QPI Link 0 [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+
+ff:02.1 Host bridge [0600]: Intel Corporation 1st Generation Core i3/5/7 Processor QPI Physical 0 [8086:2d11] (rev 05)
+	Subsystem: Acer Incorporated [ALI] 1st Generation Core i3/5/7 Processor QPI Physical 0 [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+
+ff:02.2 Host bridge [0600]: Intel Corporation 1st Generation Core i3/5/7 Processor Reserved [8086:2d12] (rev 05)
+	Subsystem: Acer Incorporated [ALI] 1st Generation Core i3/5/7 Processor Reserved [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+
+ff:02.3 Host bridge [0600]: Intel Corporation 1st Generation Core i3/5/7 Processor Reserved [8086:2d13] (rev 05)
+	Subsystem: Acer Incorporated [ALI] 1st Generation Core i3/5/7 Processor Reserved [1025:040e]
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+
+
+--nextPart1922771.uzI0EGDo3r--
+
