@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.zeus03.de ([194.117.254.33]:56583 "EHLO mail.zeus03.de"
+Received: from mga03.intel.com ([134.134.136.65]:3186 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932816AbcHKVNi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 17:13:38 -0400
-From: Wolfram Sang <wsa-dev@sang-engineering.com>
-To: linux-usb@vger.kernel.org
-Cc: Wolfram Sang <wsa-dev@sang-engineering.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 16/16] net: wireless: realtek: rtlwifi: usb: don't print error when allocating urb fails
-Date: Thu, 11 Aug 2016 23:13:08 +0200
-Message-Id: <1470949988-25705-4-git-send-email-wsa-dev@sang-engineering.com> (sfid-20160811_231414_584881_B2AD377C)
-In-Reply-To: <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
-References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
- <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
+	id S965819AbcHBM5R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:57:17 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: johannes@sipsolutions.net, davem@davemloft.net,
+	kadlec@blackhole.kfki.hu, kaber@trash.net,
+	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
+	k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com, aryabinin@virtuozzo.com
+Subject: [PATCH 1133/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 20:19:16 +0800
+Message-Id: <20160802121916.25651-1-baolex.ni@intel.com> (sfid-20160802_155641_422652_4E867152)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kmalloc will print enough information in case of failure.
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/usb.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ net/rfkill/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-index 41617b7b082260..32aa5c1d070a07 100644
---- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-@@ -739,11 +739,8 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
- 	for (i = 0; i < rtlusb->rx_urb_num; i++) {
- 		err = -ENOMEM;
- 		urb = usb_alloc_urb(0, GFP_KERNEL);
--		if (!urb) {
--			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--				 "Failed to alloc URB!!\n");
-+		if (!urb)
- 			goto err_out;
--		}
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 884027f..53bf4f9 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -114,7 +114,7 @@ static DEFINE_MUTEX(rfkill_global_mutex);
+ static LIST_HEAD(rfkill_fds);	/* list of open fds of /dev/rfkill */
  
- 		err = _rtl_prep_rx_urb(hw, rtlusb, urb, GFP_KERNEL);
- 		if (err < 0) {
-@@ -907,15 +904,12 @@ static void _rtl_tx_complete(struct urb *urb)
- static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
- 				struct sk_buff *skb, u32 ep_num)
- {
--	struct rtl_priv *rtlpriv = rtl_priv(hw);
- 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
- 	struct urb *_urb;
+ static unsigned int rfkill_default_state = 1;
+-module_param_named(default_state, rfkill_default_state, uint, 0444);
++module_param_named(default_state, rfkill_default_state, uint, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(default_state,
+ 		 "Default initial state for all radio types, 0 = radio off");
  
- 	WARN_ON(NULL == skb);
- 	_urb = usb_alloc_urb(0, GFP_ATOMIC);
- 	if (!_urb) {
--		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
--			 "Can't allocate URB for bulk out!\n");
- 		kfree_skb(skb);
- 		return NULL;
- 	}
 -- 
-2.8.1
+2.9.2
 
