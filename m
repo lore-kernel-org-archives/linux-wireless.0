@@ -1,94 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:29720 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751799AbcHEKGx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 06:06:53 -0400
-From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-To: bharath yadav <uddandibharath7@gmail.com>
-CC: Archisman Maitra <archisman001@gmail.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 4/4] ath10k: Enable support for QCA9984
-Date: Fri, 5 Aug 2016 10:06:41 +0000
-Message-ID: <57A4652F.9000303@qti.qualcomm.com> (sfid-20160805_120705_125126_350F9B87)
-References: <1461164356-9158-1-git-send-email-vthiagar@qti.qualcomm.com>
- <1461164356-9158-5-git-send-email-vthiagar@qti.qualcomm.com>
- <loom.20160509T113952-8@post.gmane.org> <57306645.2060600@qti.qualcomm.com>
- <CAHyQSvKPo2-Pc9PPVY-mHUK0TX93CzxnwMob125Aruqiem7J7Q@mail.gmail.com>
- <878tzhg61o.fsf@kamboji.qca.qualcomm.com>
- <CAHyQSvLpqRNmTL4Tvb7SDtKptzwejfbB7DeQC3NNMb=qqn06GA@mail.gmail.com>
- <5732DB82.1020007@qti.qualcomm.com>
- <CAH1sOKUgb0pGmzN4pAy5GHseAW4QHHgyqJx4kgze5_27R8SKxg@mail.gmail.com>
-In-Reply-To: <CAH1sOKUgb0pGmzN4pAy5GHseAW4QHHgyqJx4kgze5_27R8SKxg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:40050 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755788AbcHBIb0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 04:31:26 -0400
+Message-ID: <1470123940.2665.11.camel@sipsolutions.net> (sfid-20160802_103142_117094_34FD96CD)
+Subject: Re: [PATCH] mac80211: fix check for buffered powersave frames with
+ txq
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Date: Tue, 02 Aug 2016 09:45:40 +0200
+In-Reply-To: <20160711130915.86284-1-nbd@nbd.name> (sfid-20160711_150917_670422_3ECD3697)
+References: <20160711130915.86284-1-nbd@nbd.name>
+	 (sfid-20160711_150917_670422_3ECD3697)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1cnNkYXkgMDQgQXVndXN0IDIwMTYgMDc6NTAgUE0sIGJoYXJhdGggeWFkYXYgd3JvdGU6
-DQo+IEhpLiwNCj4gSSBhbSB0cnlpbmcgdG8gZW5hYmxlIHN1cHBvcnQgZm9yIFFDQTk5ODQgb24g
-bGF0ZXN0IHN0YWJsZSBiYWNrcG9ydHMtNC40LjItMSB1c2luZyB0aGUgYWJvdmUgcGF0Y2guDQo+
-DQo+IGRvd25sb2FkZWQgImh0dHBzOi8va2VybmVsLmdvb2dsZXNvdXJjZS5jb20vcHViL3NjbS9s
-aW51eC9rZXJuZWwvZ2l0L2t2YWxvL2F0aC8iIChhdGguZ2l0KSBoYXMgdGhlIHBhdGNoDQo+IGFw
-cGxpZWQgZm9yIHFjYTk5ODQgYnV0IGl0IGhhcyBkb3dubG9hZGVkIHRoZSBrZXJuZWwgdHJlZS4N
-Cj4NCj4gcGxlYXNlIGdpdmUgbWUgaW5mbyBvbiB3aGljaCB2ZXJzaW9uIG9mIGJhY2twb3J0cyB3
-ZSBuZWVkIHRvIHVzZSBmb3IgUUNBOTk4NCBvciBob3cgdG8gYnVpbGQgYXRoMTBrIGFsb25lIGZy
-b20NCj4gYXRoLmdpdCBrZXJuZWwgdHJlZS4NCg0KSSBkb250IHRoaW5rIHRoZXJlIGlzIGFueSBu
-ZXcgYmFja3BvcnRzIHRhcmJhbGwgZm9yIHJlY2VudCBhdGguZ2l0IGF2YWlsYWJsZS4gWW91IG1h
-eSBuZWVkIHRvIGNyZWF0ZSBvbmUsDQpwbGVhc2UgcmVmZXIgaHR0cHM6Ly93aXJlbGVzcy53aWtp
-Lmtlcm5lbC5vcmcvZW4vdXNlcnMvZHJpdmVycy9hdGgxMGsvYmFja3BvcnRzIGZvciBpbmZvcm1h
-dGlvbg0KdG8gY3JlYXRlIHlvdXIgb3duIGJhY2twb3J0cyB0YXJiYWxsLg0KDQpWYXNhbnRoDQoN
-Cj4NCj4gT24gV2VkLCBNYXkgMTEsIDIwMTYgYXQgMTI6NDMgUE0sIFRoaWFnYXJhamFuLCBWYXNh
-bnRoYWt1bWFyIDx2dGhpYWdhckBxdGkucXVhbGNvbW0uY29tDQo+IDxtYWlsdG86dnRoaWFnYXJA
-cXRpLnF1YWxjb21tLmNvbT4+IHdyb3RlOg0KPg0KPiAgICAgT24gV2VkbmVzZGF5IDExIE1heSAy
-MDE2IDEyOjIzIFBNLCBBcmNoaXNtYW4gTWFpdHJhIHdyb3RlOg0KPiAgICAgID4gSGksDQo+ICAg
-ICAgPg0KPiAgICAgID4gVGhhbmsgeW91IGZvciBwcm92aWRpbmcgbWUgdGhlIGJpbmFyaWVzLg0K
-PiAgICAgID4NCj4gICAgICA+IEkgaGF2ZSBzdGFydGVkIHdvcmtpbmcgb24gdGhlIG1hYzgwMjEx
-IGRyaXZlciBhbmQgaGF2ZSBzb21lIHF1ZXN0aW9uczotDQo+ICAgICAgPg0KPiAgICAgID4gYSkg
-SSBhbSB3b3JraW5nIHdpdGggT3BlbldSVCBmcmFtZXdvcmssIHdoaWNoIHVzZXMgbWFjODAyMTEg
-ZHJpdmVyIGRhdGVkIDEtMTAtMjAxNi4gSSBoYXZlIG5vdGljZWQgdGhhdCB0aGUNCj4gICAgICA+
-IHBhdGNoIHRoYXQgeW91IGhhdmUgcHJvdmlkZWQsIHVzZXMgYSBkaWZmZXJlbnQgbWFjODAyMTEg
-ZHJpdmVyLiBXb3VsZCB0aGF0IGJlIGEgcHJvYmxlbT8NCj4gICAgICA+DQo+ICAgICAgPiBFeDot
-DQo+ICAgICAgPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gICAg
-ICA+ICAgICAgICAgIC5pZCA9IFFDQTk5ODRfSFdfMV8wX0RFVl9WRVJTSU9OLA0KPiAgICAgID4g
-ICAgICAgICAgLmRldl9pZCA9IFFDQTk5ODRfMV8wX0RFVklDRV9JRCwNCj4gICAgID4gICAgICAg
-ICAgLm5hbWUgPSAicWNhOTk4NC9xY2E5OTk0IGh3MS4wIiwNCj4gICAgICA+ICAgICAgICAgIC5w
-YXRjaF9sb2FkX2FkZHIgPSBRQ0E5OTg0X0hXXzFfMF9QQVRDSF9MT0FEX0FERFIsDQo+ICAgICAg
-PiAgICAgICAgICAudWFydF9waW4gPSA3LA0KPiAgICAgID4gICAgICAgICAgLm90cF9leGVfcGFy
-YW0gPSAweDAwMDAwNzAwLA0KPiAgICAgID4gICAgICAgICAgLmNvbnRpbnVvdXNfZnJhZ19kZXNj
-ID0gdHJ1ZSwNCj4gICAgICA+ICAgICAgICAgIC5jaGFubmVsX2NvdW50ZXJzX2ZyZXFfaHogPSAx
-NTAwMDAsDQo+ICAgICAgPiAgICAgICAgICAubWF4X3Byb2JlX3Jlc3BfZGVzY190aHJlcyA9IDI0
-LA0KPiAgICAgID4gICAgICAgICAgLmh3XzRhZGRyX3BhZCA9IEFUSDEwS19IV180QUREUl9QQURf
-QkVGT1JFLA0KPiAgICAgID4gICAgICAgICAgLyoNCj4gICAgICA+ICAgICAgICAgIC50eF9jaGFp
-bl9tYXNrID0gMHhmLA0KPiAgICAgID4gICAgICAgICAgLnJ4X2NoYWluX21hc2sgPSAweGYsDQo+
-ICAgICAgPiAgICAgICAgICAubWF4X3NwYXRpYWxfc3RyZWFtID0gNCwNCj4gICAgICA+ICAgICAg
-ICAgIC5jYWxfZGF0YV9sZW4gPSAxMjA2NCwgKi8NCj4gICAgICA+ICAgICAgICAgIC5mdyA9IHsN
-Cj4gICAgICA+ICAgICAgICAgICAgICAuZGlyID0gUUNBOTk4NF9IV18xXzBfRldfRElSLA0KPiAg
-ICAgID4gICAgICAgICAgICAgIC5mdyA9IFFDQTk5ODRfSFdfMV8wX0ZXX0ZJTEUsDQo+ICAgICAg
-PiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ICAgICAgPiAgIEhl
-cmUsIHRoZSBjb21tZW50ZWQgb3V0IG1lbWJlcnMgYXJlIG5vdCBwcmVzZW50IGluIG15IGRyaXZl
-ciBzb3VyY2UgY29kZS4NCj4gICAgICA+DQo+ICAgICAgPiBiKSAgImF0aDEwa19wY2kgMDAwMTow
-MTowMC4wOiB1bmFibGUgdG8gcmVhZCBmcm9tIHRoZSBkZXZpY2UiIFRoaXMgaXMgZW5jb3VudGVy
-ZWQgYXQgcnVudGltZS4gVXBvbg0KPiAgICAgID4gaW52ZXN0aWdhdGluZywgaXQgaXMgc2VlbiB0
-aGF0ICBhdGgxMGtfYm1pX2V4ZWN1dGUoYXIsIGFkZHJlc3MsIEJNSV9QQVJBTV9HRVRfRUVQUk9N
-X0JPQVJEX0lELCAmcmVzdWx0KQ0KPiAgICAgID4gcmV0dXJucyAwIGluIGRyaXZlcnMvbmV0L3dp
-cmVsZXNzL2F0aC9hdGgxMGsvY29yZS5jIHdoZW4gY2FsbGVkIGZyb20gYXRoMTBrX2NvcmVfZ2V0
-X2JvYXJkX2lkX2Zyb21fb3RwDQo+ICAgICAgPg0KPiAgICAgID4gT24gYnJvd3NpbmcgdGhlIHNv
-dXJjZSBvZiB0aGUgZXJyb3IgSSBoYXZlIGZvdW5kIHRoZSBjb250cm9sIHRvIGdvIGZyb20gYXRo
-MTBrX2JtaV9leGVjdXRlIC0tLS0+DQo+ICAgICAgPiAgIGF0aDEwa19wY2lfaGlmX2V4Y2hhbmdl
-X2JtaV9tc2cgaW4gZHJpdmVycy9uZXQvd2lyZWxlc3MvYXRoL2F0aDEway9wY2kuYyAtLS0tLS0+
-ICBhdGgxMGtfcGNpX2JtaV93YWl0IGluDQo+ICAgICAgPiBkcml2ZXJzL25ldC93aXJlbGVzcy9h
-dGgvYXRoMTBrL3BjaS5jIHdoZXJlIGl0IHJldHVybnMgIC1FVElNRURPVVQNCj4NCj4gICAgIENh
-biB5b3UgcGxlYXNlIG1vdmUgdG8gdGhlIGxhdGVzdCBhdGgxMGsgc3JjIChhdGguZ2l0KSBhbmQg
-ZW5hYmxlIDB4NDIwIChibWkgYW5kIGJvb3QgcmVsYXRlZCBkZWJ1ZykgYXRoMTBrDQo+ICAgICBk
-ZWJ1ZyBtYXNrPy4NCj4NCj4gICAgIFlvdSBjYW4gZW5hYmxlIHRoZSBkZWJ1ZyB0aHJvdWdoIG1v
-ZHBhcmFtLCBpbnNtb2QgYXRoMTBrX2NvcmUgZGVidWdfbWFzaz0weDQyMC4NCj4NCj4NCj4gICAg
-IFZhc2FudGgNCj4NCj4gICAgIF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fDQo+ICAgICBhdGgxMGsgbWFpbGluZyBsaXN0DQo+ICAgICBhdGgxMGtAbGlzdHMu
-aW5mcmFkZWFkLm9yZyA8bWFpbHRvOmF0aDEwa0BsaXN0cy5pbmZyYWRlYWQub3JnPg0KPiAgICAg
-aHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9hdGgxMGsNCj4NCj4N
-Cg==
+On Mon, 2016-07-11 at 15:09 +0200, Felix Fietkau wrote:
+> The logic was inverted here, set the bit if frames are pending.
+> 
+Applied, thanks.
+
+johannes
