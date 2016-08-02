@@ -1,33 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:34312 "EHLO
-        mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755204AbcHVNKU (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 09:10:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <96ea6e57-79d7-d4ff-1228-6f22addd4996@m4x.org>
-References: <20160805203418.32162-1-nicolas.iooss_linux@m4x.org> <96ea6e57-79d7-d4ff-1228-6f22addd4996@m4x.org>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 22 Aug 2016 15:10:18 +0200
-Message-ID: <CACna6rwxR=LG98jrzM5Uce5q1Cv1xLKhN6m-QaYWC9WSmhm7Uw@mail.gmail.com> (sfid-20160822_151043_596584_4CFF6AF4)
-Subject: Re: [PATCH 1/1] brcmfmac: fix pmksa->bssid usage
-To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:33351 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967751AbcHBPuP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 11:50:15 -0400
+Content-Type: text/plain; charset=gb2312
+Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
+Subject: Re: [PATCH 0786/1285] Replace numeric parameter like 0444 with macro
+From: Shanker Wang <shankerwangmiao@gmail.com>
+In-Reply-To: <20160802114618.2152-1-baolex.ni@intel.com>
+Date: Tue, 2 Aug 2016 23:50:02 +0800
+Cc: kvalo@codeaurora.org, luciano.coelho@intel.com,
+	linuxwifi@intel.com, m.chehab@samsung.com, pawel@osciak.com,
+	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
+	k.kozlowski@samsung.com, libertas-dev@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, chuansheng.liu@intel.com
+Message-Id: <E31420B0-890A-4B6B-99D6-9230924886D6@gmail.com> (sfid-20160802_175031_344544_03CBBCFF)
+References: <20160802114618.2152-1-baolex.ni@intel.com>
+To: Baole Ni <baolex.ni@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 August 2016 at 15:03, Nicolas Iooss <nicolas.iooss_linux@m4x.org> wrote:
-> After I sent the following patch a few weeks ago, I have not received
-> any feedback. Could you please review it and tell me what I may have
-> done wrong?
+I don’t think macros is clearer, and the meaning of those so called 
+“magic numbers” like 0644 is clear enough. People are used to that.
+As a result, it is not meaningful to replace them with macro.
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#checking_state_of_patches_from_patchwork
-https://patchwork.kernel.org/patch/9265733/
+
+> 在 2016年8月2日，19:46，Baole Ni <baolex.ni@intel.com> 写道：
+> 
+> I find that the developers often just specified the numeric value
+> when calling a macro which is defined with a parameter for access permission.
+> As we know, these numeric value for access permission have had the corresponding macro,
+> and that using macro can improve the robustness and readability of the code,
+> thus, I suggest replacing the numeric parameter with the macro.
+> 
+> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+> Signed-off-by: Baole Ni <baolex.ni@intel.com>
+> ---
+> drivers/net/wireless/marvell/libertas/mesh.c | 20 ++++++++++----------
+> 1 file changed, 10 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
+> index d0c881d..ae4f0a5 100644
+> --- a/drivers/net/wireless/marvell/libertas/mesh.c
+> +++ b/drivers/net/wireless/marvell/libertas/mesh.c
+> @@ -297,19 +297,19 @@ static ssize_t lbs_mesh_set(struct device *dev,
+>  * lbs_mesh attribute to be exported per ethX interface
+>  * through sysfs (/sys/class/net/ethX/lbs_mesh)
+>  */
+> -static DEVICE_ATTR(lbs_mesh, 0644, lbs_mesh_get, lbs_mesh_set);
+> +static DEVICE_ATTR(lbs_mesh, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, lbs_mesh_get, lbs_mesh_set);
+> 
+> /*
+>  * anycast_mask attribute to be exported per mshX interface
+>  * through sysfs (/sys/class/net/mshX/anycast_mask)
+>  */
+> -static DEVICE_ATTR(anycast_mask, 0644, lbs_anycast_get, lbs_anycast_set);
+> +static DEVICE_ATTR(anycast_mask, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, lbs_anycast_get, lbs_anycast_set);
+> 
+> /*
+>  * prb_rsp_limit attribute to be exported per mshX interface
+>  * through sysfs (/sys/class/net/mshX/prb_rsp_limit)
+>  */
+> -static DEVICE_ATTR(prb_rsp_limit, 0644, lbs_prb_rsp_limit_get,
+> +static DEVICE_ATTR(prb_rsp_limit, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, lbs_prb_rsp_limit_get,
+> 		lbs_prb_rsp_limit_set);
+> 
+> static struct attribute *lbs_mesh_sysfs_entries[] = {
+> @@ -764,13 +764,13 @@ static ssize_t capability_set(struct device *dev, struct device_attribute *attr,
+> }
+> 
+> 
+> -static DEVICE_ATTR(bootflag, 0644, bootflag_get, bootflag_set);
+> -static DEVICE_ATTR(boottime, 0644, boottime_get, boottime_set);
+> -static DEVICE_ATTR(channel, 0644, channel_get, channel_set);
+> -static DEVICE_ATTR(mesh_id, 0644, mesh_id_get, mesh_id_set);
+> -static DEVICE_ATTR(protocol_id, 0644, protocol_id_get, protocol_id_set);
+> -static DEVICE_ATTR(metric_id, 0644, metric_id_get, metric_id_set);
+> -static DEVICE_ATTR(capability, 0644, capability_get, capability_set);
+> +static DEVICE_ATTR(bootflag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, bootflag_get, bootflag_set);
+> +static DEVICE_ATTR(boottime, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, boottime_get, boottime_set);
+> +static DEVICE_ATTR(channel, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, channel_get, channel_set);
+> +static DEVICE_ATTR(mesh_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, mesh_id_get, mesh_id_set);
+> +static DEVICE_ATTR(protocol_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, protocol_id_get, protocol_id_set);
+> +static DEVICE_ATTR(metric_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, metric_id_get, metric_id_set);
+> +static DEVICE_ATTR(capability, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, capability_get, capability_set);
+> 
+> static struct attribute *boot_opts_attrs[] = {
+> 	&dev_attr_bootflag.attr,
+> -- 
+> 2.9.2
+> 
+
