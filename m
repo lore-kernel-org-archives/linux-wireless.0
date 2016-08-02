@@ -1,63 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40854 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750786AbcH2UZZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 16:25:25 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 29 Aug 2016 23:25:13 +0300
-Message-Id: <1472502319-10847-1-git-send-email-luca@coelho.fi> (sfid-20160829_222529_811919_6EC539F1)
-Subject: [PATCH v2 0/6] some mac80211/cfg80211 patches
+Received: from mga02.intel.com ([134.134.136.20]:13941 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934395AbcHBM0j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:26:39 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org, linuxwifi@intel.com, m.chehab@samsung.com,
+	pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com
+Subject: [PATCH 0800/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:47:47 +0800
+Message-Id: <20160802114747.3286-1-baolex.ni@intel.com> (sfid-20160802_173545_833007_AB85D5EF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-Hi Johannes,
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-Here are a few of the mac80211 and cfg80211 patches that we have in
-our internal tree.
-
-Thanks for pointing out the missing patch.  And please ignore the 5
-patches I sent earlier today.
-
-In v2:
-   * add a cover letter ;)
-   * add a patch that was missing for the MU-MIMO monitor implementation
-
-Cheers,
-Luca.
-
-Aviya Erenfeld (2):
-  mac80211: refactor monitor representation in sdata
-  mac80211: add support for MU-MIMO air sniffer
-
-Emmanuel Grumbach (1):
-  cfg80211: clarify the requirements of .disconnect()
-
-Johannes Berg (3):
-  mac80211: add support for radiotap timestamp field
-  mac80211: send delBA on unexpected BlockAck data frames
-  mac80211: send delBA on unexpected BlockAck Request
-
- include/net/cfg80211.h           |  3 +-
- include/net/ieee80211_radiotap.h | 21 ++++++++++++
- include/net/mac80211.h           | 12 +++++++
- net/mac80211/agg-rx.c            |  4 ++-
- net/mac80211/cfg.c               | 31 +++++++++++++++---
- net/mac80211/driver-ops.c        |  2 +-
- net/mac80211/driver-ops.h        |  3 +-
- net/mac80211/ieee80211_i.h       |  9 ++++--
- net/mac80211/iface.c             | 21 +++++++-----
- net/mac80211/main.c              |  3 ++
- net/mac80211/rx.c                | 70 ++++++++++++++++++++++++++++++++++++++--
- net/mac80211/sta_info.h          |  3 ++
- net/mac80211/status.c            |  2 +-
- net/mac80211/tx.c                |  2 +-
- net/mac80211/util.c              |  2 +-
- 15 files changed, 163 insertions(+), 25 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+index 2101793..530b692 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+@@ -387,15 +387,15 @@ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Realtek 8723BE 802.11n PCI wireless");
+ MODULE_FIRMWARE("rtlwifi/rtl8723befw.bin");
+ 
+-module_param_named(swenc, rtl8723be_mod_params.sw_crypto, bool, 0444);
+-module_param_named(debug, rtl8723be_mod_params.debug, int, 0444);
+-module_param_named(ips, rtl8723be_mod_params.inactiveps, bool, 0444);
+-module_param_named(swlps, rtl8723be_mod_params.swctrl_lps, bool, 0444);
+-module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
+-module_param_named(msi, rtl8723be_mod_params.msi_support, bool, 0444);
++module_param_named(swenc, rtl8723be_mod_params.sw_crypto, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(debug, rtl8723be_mod_params.debug, int, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(ips, rtl8723be_mod_params.inactiveps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(swlps, rtl8723be_mod_params.swctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(msi, rtl8723be_mod_params.msi_support, bool, S_IRUSR | S_IRGRP | S_IROTH);
+ module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
+-		   bool, 0444);
+-module_param_named(ant_sel, rtl8723be_mod_params.ant_sel, int, 0444);
++		   bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(ant_sel, rtl8723be_mod_params.ant_sel, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
 -- 
-2.8.1
+2.9.2
+
