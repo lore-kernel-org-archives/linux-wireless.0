@@ -1,66 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:38392 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752904AbcHSDe0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Aug 2016 23:34:26 -0400
-Message-ID: <57B67CD8.5040009@candelatech.com> (sfid-20160819_053429_498678_54B7EF4C)
-Date: Thu, 18 Aug 2016 20:28:24 -0700
-From: Ben Greear <greearb@candelatech.com>
-MIME-Version: 1.0
-To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/3] ath10k:  Grab rcu_read_lock before the txqs spinlock.
-References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>,<1471569995-10028-2-git-send-email-greearb@candelatech.com> <1471575674214.65791@qti.qualcomm.com>
-In-Reply-To: <1471575674214.65791@qti.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Received: from mga09.intel.com ([134.134.136.24]:41648 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934697AbcHBMYu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:24:50 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: kvalo@codeaurora.org, luciano.coelho@intel.com,
+	linuxwifi@intel.com, m.chehab@samsung.com, pawel@osciak.com,
+	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
+	k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com
+Subject: [PATCH 0787/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:46:25 +0800
+Message-Id: <20160802114625.2222-1-baolex.ni@intel.com> (sfid-20160802_174356_385554_17C93D1A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 08/18/2016 08:01 PM, Manoharan, Rajkumar wrote:
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index 916119c..d96c06e 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -4307,8 +4307,8 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
->>          int max;
->>          int loop_max = 2000;
->>
->> -       spin_lock_bh(&ar->txqs_lock);
->>          rcu_read_lock();
->> +       spin_lock_bh(&ar->txqs_lock);
->>
-> Ben,
->
-> It is quite possible that push_pending can be preempted after acquiring rcu_lock which
-> may lead to deadlock. no? I assume to prevent that spin_lock is taken first.
->
-> Could you please explain how this reordering is fixing dead lock?
-
-It did not obviously fix the spin lock issue, but the issue went away.  Maybe it
-was because I fixed the stale memory access issues at around the same time.
-
-But, I don't think you can deadlock by taking rcu lock first and then the spinlock.
-
-I checked all places where the spinlock is held, and I do not see any way for any of
-them to block forever (In my kernel, I have a 2000 time limit on spinning in the push pending
-method, which can help make sure we don't spin forever).
-
-http://dmz2.candelatech.com/?p=linux-4.7.dev.y/.git;a=commitdiff;h=5d192657269d8e20fce733f894bb1b68df71db00
-
-I was also worried that some calls from mac80211 might be holding rcu_read_lock while calling into
-ath10k code that would grab the spinlock.  If that is the case (and I didn't verify it was), then
-you could have a lock inversion by taking spinlock before rcu read lock in the push-pending method.
-
-Anyway, someone that understands locking subtleties better might have more clue about this code
-than I do.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index 799a2ef..4504f2c 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -27,7 +27,7 @@
+ #define MESSAGE_HEADER_LEN	4
+ 
+ static char *lbtf_fw_name = "lbtf_usb.bin";
+-module_param_named(fw_name, lbtf_fw_name, charp, 0644);
++module_param_named(fw_name, lbtf_fw_name, charp, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+ MODULE_FIRMWARE("lbtf_usb.bin");
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.9.2
+
