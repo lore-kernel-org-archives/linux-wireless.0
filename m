@@ -1,71 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46258 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755445AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 17:47:24 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Hans de Goede <hdegoede@redhat.com>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 20/20] net: wireless: rtl8xxxu: Make rtl8xxxu_ampdu_action less chatty
-Date: Fri, 19 Aug 2016 17:46:42 -0400
-Message-Id: <1471643202-26250-21-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234746_861808_5FE7C0A5)
-In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mga14.intel.com ([192.55.52.115]:14261 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934501AbcHBMWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:22:24 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+	bkenward@solarflare.com, linux-driver@qlogic.com,
+	computersforpeace@gmail.com, m.chehab@samsung.com,
+	pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	chuansheng.liu@intel.com, baolex.ni@intel.com,
+	daniel@iogearbox.net, pabeni@redhat.com
+Subject: [PATCH 0766/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:44:12 +0800
+Message-Id: <20160802114412.727-1-baolex.ni@intel.com> (sfid-20160802_175205_802471_A1F6520B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hans de Goede <hdegoede@redhat.com>
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-On my home network rtl8xxxu is spamming the log with
-IEEE80211_AMPDU_RX_START / IEEE80211_AMPDU_RX_STOP every few seconds
-turn these messages into debug messages.
-
-Signed-off-by: Hans de Goede <hdegoede@redhat.com>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 10 +++++-----
  1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 508d46f..c362083 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5696,7 +5696,7 @@ rtl8xxxu_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index c148c6c..3119d4f 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -27,24 +27,24 @@ module_param_named(debug, ath9k_debug, uint, 0);
+ MODULE_PARM_DESC(debug, "Debugging mask");
  
- 	switch (action) {
- 	case IEEE80211_AMPDU_TX_START:
--		dev_info(dev, "%s: IEEE80211_AMPDU_TX_START\n", __func__);
-+		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_START\n", __func__);
- 		ampdu_factor = sta->ht_cap.ampdu_factor;
- 		ampdu_density = sta->ht_cap.ampdu_density;
- 		rtl8xxxu_set_ampdu_factor(priv, ampdu_factor);
-@@ -5706,21 +5706,21 @@ rtl8xxxu_ampdu_action(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			ampdu_factor, ampdu_density);
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH:
--		dev_info(dev, "%s: IEEE80211_AMPDU_TX_STOP_FLUSH\n", __func__);
-+		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_STOP_FLUSH\n", __func__);
- 		rtl8xxxu_set_ampdu_factor(priv, 0);
- 		rtl8xxxu_set_ampdu_min_space(priv, 0);
- 		break;
- 	case IEEE80211_AMPDU_TX_STOP_FLUSH_CONT:
--		dev_info(dev, "%s: IEEE80211_AMPDU_TX_STOP_FLUSH_CONT\n",
-+		dev_dbg(dev, "%s: IEEE80211_AMPDU_TX_STOP_FLUSH_CONT\n",
- 			 __func__);
- 		rtl8xxxu_set_ampdu_factor(priv, 0);
- 		rtl8xxxu_set_ampdu_min_space(priv, 0);
- 		break;
- 	case IEEE80211_AMPDU_RX_START:
--		dev_info(dev, "%s: IEEE80211_AMPDU_RX_START\n", __func__);
-+		dev_dbg(dev, "%s: IEEE80211_AMPDU_RX_START\n", __func__);
- 		break;
- 	case IEEE80211_AMPDU_RX_STOP:
--		dev_info(dev, "%s: IEEE80211_AMPDU_RX_STOP\n", __func__);
-+		dev_dbg(dev, "%s: IEEE80211_AMPDU_RX_STOP\n", __func__);
- 		break;
- 	default:
- 		break;
+ int htc_modparam_nohwcrypt;
+-module_param_named(nohwcrypt, htc_modparam_nohwcrypt, int, 0444);
++module_param_named(nohwcrypt, htc_modparam_nohwcrypt, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
+ 
+ static int ath9k_htc_btcoex_enable;
+-module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, 0444);
++module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+ 
+ static int ath9k_ps_enable;
+-module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
++module_param_named(ps_enable, ath9k_ps_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+ 
+ int htc_use_dev_fw = 0;
+-module_param_named(use_dev_fw, htc_use_dev_fw, int, 0444);
++module_param_named(use_dev_fw, htc_use_dev_fw, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(use_dev_fw, "Use development FW version");
+ 
+ #ifdef CONFIG_MAC80211_LEDS
+ int ath9k_htc_led_blink = 1;
+-module_param_named(blink, ath9k_htc_led_blink, int, 0444);
++module_param_named(blink, ath9k_htc_led_blink, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+ 
+ static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
 -- 
-2.7.4
+2.9.2
+
