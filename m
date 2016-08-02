@@ -1,47 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:33564 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932179AbcH2IWg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 04:22:36 -0400
-Received: by mail-pf0-f182.google.com with SMTP id y134so49706539pfg.0
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2016 01:22:35 -0700 (PDT)
-From: Baoyou Xie <baoyou.xie@linaro.org>
-To: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        kvalo@codeaurora.org
-Cc: baoyou.xie@linaro.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, arnd@linaro.org,
-        xie.baoyou@zte.com.cn
-Subject: [PATCH v3] brcmfmac: add missing header dependencies
-Date: Mon, 29 Aug 2016 16:14:45 +0800
-Message-Id: <1472458485-24499-1-git-send-email-baoyou.xie@linaro.org> (sfid-20160829_102251_528659_C360922E)
+Received: from mga09.intel.com ([134.134.136.24]:12525 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934776AbcHBMWy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:22:54 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: stas.yakovlev@gmail.com, kvalo@codeaurora.org,
+	bkenward@solarflare.com, linux-driver@qlogic.com,
+	computersforpeace@gmail.com, m.chehab@samsung.com,
+	pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com, lars@metafoo.de, johannes.berg@intel.com
+Subject: [PATCH 0775/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:45:12 +0800
+Message-Id: <20160802114512.1368-1-baolex.ni@intel.com> (sfid-20160802_142455_359003_7D398F89)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We get 1 warning when biuld kernel with W=1:
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c:23:6: warning: no previous prototype for '__brcmf_err' [-Wmissing-prototypes]
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-In fact, this function is declared in brcmfmac/debug.h, so this patch
-add missing header dependencies.
-
-Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
-
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/intel/ipw2x00/ipw2200.c | 38 ++++++++++++++--------------
+ 1 file changed, 19 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-index a10f35c..fe67559 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-@@ -19,6 +19,7 @@
- #ifndef __CHECKER__
- #define CREATE_TRACE_POINTS
- #include "tracepoint.h"
-+#include "debug.h"
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+index 5adb7ce..f02759e 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+@@ -11993,68 +11993,68 @@ static void __exit ipw_exit(void)
+ 	pci_unregister_driver(&ipw_driver);
+ }
  
- void __brcmf_err(const char *func, const char *fmt, ...)
- {
+-module_param(disable, int, 0444);
++module_param(disable, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(disable, "manually disable the radio (default 0 [radio on])");
+ 
+-module_param(associate, int, 0444);
++module_param(associate, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(associate, "auto associate when scanning (default off)");
+ 
+-module_param(auto_create, int, 0444);
++module_param(auto_create, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(auto_create, "auto create adhoc network (default on)");
+ 
+-module_param_named(led, led_support, int, 0444);
++module_param_named(led, led_support, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(led, "enable led control on some systems (default 1 on)");
+ 
+-module_param(debug, int, 0444);
++module_param(debug, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(debug, "debug output mask");
+ 
+-module_param_named(channel, default_channel, int, 0444);
++module_param_named(channel, default_channel, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(channel, "channel to limit associate to (default 0 [ANY])");
+ 
+ #ifdef CONFIG_IPW2200_PROMISCUOUS
+-module_param(rtap_iface, int, 0444);
++module_param(rtap_iface, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(rtap_iface, "create the rtap interface (1 - create, default 0)");
+ #endif
+ 
+ #ifdef CONFIG_IPW2200_QOS
+-module_param(qos_enable, int, 0444);
++module_param(qos_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(qos_enable, "enable all QoS functionalitis");
+ 
+-module_param(qos_burst_enable, int, 0444);
++module_param(qos_burst_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(qos_burst_enable, "enable QoS burst mode");
+ 
+-module_param(qos_no_ack_mask, int, 0444);
++module_param(qos_no_ack_mask, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(qos_no_ack_mask, "mask Tx_Queue to no ack");
+ 
+-module_param(burst_duration_CCK, int, 0444);
++module_param(burst_duration_CCK, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(burst_duration_CCK, "set CCK burst value");
+ 
+-module_param(burst_duration_OFDM, int, 0444);
++module_param(burst_duration_OFDM, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(burst_duration_OFDM, "set OFDM burst value");
+ #endif				/* CONFIG_IPW2200_QOS */
+ 
+ #ifdef CONFIG_IPW2200_MONITOR
+-module_param_named(mode, network_mode, int, 0444);
++module_param_named(mode, network_mode, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(mode, "network mode (0=BSS,1=IBSS,2=Monitor)");
+ #else
+-module_param_named(mode, network_mode, int, 0444);
++module_param_named(mode, network_mode, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(mode, "network mode (0=BSS,1=IBSS)");
+ #endif
+ 
+-module_param(bt_coexist, int, 0444);
++module_param(bt_coexist, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(bt_coexist, "enable bluetooth coexistence (default off)");
+ 
+-module_param(hwcrypto, int, 0444);
++module_param(hwcrypto, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(hwcrypto, "enable hardware crypto (default off)");
+ 
+-module_param(cmdlog, int, 0444);
++module_param(cmdlog, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(cmdlog,
+ 		 "allocate a ring buffer for logging firmware commands");
+ 
+-module_param(roaming, int, 0444);
++module_param(roaming, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(roaming, "enable roaming support (default on)");
+ 
+-module_param(antenna, int, 0444);
++module_param(antenna, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(antenna, "select antenna 1=Main, 3=Aux, default 0 [both], 2=slow_diversity (choose the one with lower background noise)");
+ 
+ module_exit(ipw_exit);
 -- 
-2.7.4
+2.9.2
+
