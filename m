@@ -1,98 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:35237 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751975AbcHMAQL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2016 20:16:11 -0400
-Received: by mail-pa0-f47.google.com with SMTP id i5so550559pat.2
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2016 17:16:11 -0700 (PDT)
-From: Petri Gynther <pgynther@google.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, davem@davemloft.net, joe@perches.com,
-	akarwar@marvell.com, Petri Gynther <pgynther@google.com>
-Subject: [PATCH] Modify is_zero_ether_addr() to handle byte-aligned addresses
-Date: Fri, 12 Aug 2016 17:15:30 -0700
-Message-Id: <1471047330-8153-1-git-send-email-pgynther@google.com> (sfid-20160813_021614_638975_0567168A)
+Received: from mga01.intel.com ([192.55.52.88]:33834 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934740AbcHBMWd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:22:33 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: kvalo@codeaurora.org, bkenward@solarflare.com,
+	linux-driver@qlogic.com, computersforpeace@gmail.com,
+	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	chuansheng.liu@intel.com, baolex.ni@intel.com, lars@metafoo.de,
+	johannes.berg@intel.com
+Subject: [PATCH 0771/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:44:50 +0800
+Message-Id: <20160802114450.1072-1-baolex.ni@intel.com> (sfid-20160802_174547_447816_179C02AF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-$ iwconfig mlan0 essid MySSID
-[   36.930000] Path: /sbin/iwconfig
-[   36.930000] CPU: 0 PID: 203 Comm: iwconfig Not tainted 4.7.0 #2
-[   36.940000] task: 866f83a0 ti: 866a6000 task.ti: 866a6000
-[   36.940000]
-[ECR   ]: 0x00230400 => Misaligned r/w from 0x8677f403
-[   36.960000] [EFA   ]: 0x8677f403
-[   36.960000] [BLINK ]: mwifiex_scan_networks+0x17a/0x198c [mwifiex]
-[   36.960000] [ERET  ]: mwifiex_scan_networks+0x18a/0x198c [mwifiex]
-[   36.980000] [STAT32]: 0x00000206 : K         E2 E1
-[   36.980000] BTA: 0x700736e2   SP: 0x866a7d0c  FP: 0x5faddc84
-[   37.000000] LPS: 0x806a37ec  LPE: 0x806a37fa LPC: 0x00000000
-[   37.000000] r00: 0x8677f401  r01: 0x8668aa08 r02: 0x00000001
-r03: 0x00000000 r04: 0x8668b600 r05: 0x8677f406
-r06: 0x8702b600 r07: 0x00000000 r08: 0x8702b600
-r09: 0x00000000 r10: 0x870b3b00 r11: 0x00000000
-r12: 0x00000000
-[   37.040000]
-[   37.040000] Stack Trace:
-[   37.040000]   mwifiex_scan_networks+0x18a/0x198c [mwifiex]
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-Root cause:
-mwifiex driver calls is_zero_ether_addr() against byte-aligned address:
-
-drivers/net/wireless/marvell/mwifiex/fw.h:
-struct mwifiex_scan_cmd_config {
-        /*
-         *  BSS mode to be sent in the firmware command
-         */
-        u8 bss_mode;
-
-        /* Specific BSSID used to filter scan results in the firmware */
-        u8 specific_bssid[ETH_ALEN];
-
-        ...
-} __packed;
-
-drivers/net/wireless/marvell/mwifiex/scan.c:
-mwifiex_config_scan(..., struct mwifiex_scan_cmd_config *scan_cfg_out, ...)
-        ...
-        if (adapter->ext_scan &&
-            !is_zero_ether_addr(scan_cfg_out->specific_bssid)) {
-            ...
-        }
-
-Since firmware-related struct mwifiex_scan_cmd_config cannot be changed,
-modify is_zero_ether_addr() to handle byte-aligned addresses.
-
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: Joe Perches <joe@perches.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Petri Gynther <pgynther@google.com>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- include/linux/etherdevice.h | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/b43/sysfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
-index 37ff4a6..0cfd243 100644
---- a/include/linux/etherdevice.h
-+++ b/include/linux/etherdevice.h
-@@ -90,11 +90,13 @@ static inline bool is_link_local_ether_addr(const u8 *addr)
-  * @addr: Pointer to a six-byte array containing the Ethernet address
-  *
-  * Return true if the address is all zeroes.
-- *
-- * Please note: addr must be aligned to u16.
-  */
- static inline bool is_zero_ether_addr(const u8 *addr)
- {
-+	if ((u32)addr & 0x1)
-+		return (addr[0] | addr[1] | addr[2] | addr[3] | addr[4] |
-+			addr[5]) == 0;
-+
- #if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
- 	return ((*(const u32 *)addr) | (*(const u16 *)(addr + 4))) == 0;
- #else
+diff --git a/drivers/net/wireless/broadcom/b43/sysfs.c b/drivers/net/wireless/broadcom/b43/sysfs.c
+index 3190493..5b664ff 100644
+--- a/drivers/net/wireless/broadcom/b43/sysfs.c
++++ b/drivers/net/wireless/broadcom/b43/sysfs.c
+@@ -135,7 +135,7 @@ static ssize_t b43_attr_interfmode_store(struct device *dev,
+ 	return err ? err : count;
+ }
+ 
+-static DEVICE_ATTR(interference, 0644,
++static DEVICE_ATTR(interference, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH,
+ 		   b43_attr_interfmode_show, b43_attr_interfmode_store);
+ 
+ int b43_sysfs_register(struct b43_wldev *wldev)
 -- 
-2.8.0.rc3.226.g39d4020
+2.9.2
 
