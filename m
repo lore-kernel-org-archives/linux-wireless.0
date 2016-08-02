@@ -1,59 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:5027 "EHLO mail.neratec.com"
+Received: from mga04.intel.com ([192.55.52.120]:55507 "EHLO mga04.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751143AbcHLIlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2016 04:41:46 -0400
-Subject: Re: [PATCH 1/2] ath9k: use ieee80211_tx_status_noskb where possible
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-References: <20160804214940.78476-1-nbd@nbd.name>
- <8aeb7913-d955-d894-d82c-4614e17d3ee4@neratec.com>
- <9e324227-f105-bc16-f0c0-c2a3a79032e8@nbd.name>
-Cc: kvalo@codeaurora.org
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
-Message-ID: <236fc08a-9474-0917-47f0-756e9136e3b5@neratec.com> (sfid-20160812_104155_949635_B3CCD410)
-Date: Fri, 12 Aug 2016 10:31:32 +0200
-MIME-Version: 1.0
-In-Reply-To: <9e324227-f105-bc16-f0c0-c2a3a79032e8@nbd.name>
-Content-Type: text/plain; charset=utf-8
+	id S964923AbcHBMmX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:42:23 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	gregkh@linuxfoundation.org, m.chehab@samsung.com,
+	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
+	k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com, shivanib134@gmail.com, punitvara@gmail.com,
+	joseph.bisch@gmail.com, bhaktipriya96@gmail.com
+Subject: [PATCH 0954/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 20:02:21 +0800
+Message-Id: <20160802120221.13644-1-baolex.ni@intel.com> (sfid-20160802_144240_814600_724A8931)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/11/2016 09:27 PM, Felix Fietkau wrote:
-> On 2016-08-11 18:05, Zefir Kurtisi wrote:
->> On 08/04/2016 11:49 PM, Felix Fietkau wrote:
->>> It removes the need for undoing the padding changes to skb->data and it
->>> improves performance by eliminating one tx status lookup per MPDU in the
->>> status path. It is also useful for preparing a follow-up fix to better
->>> handle powersave filtering.
->>>
->>
->> For me, this one introduces a regression to the statistics, e.g.
->> 'dot11TransmittedFragmentCount' is now accounted differently since it is not
->> updated from within ieee80211_tx_status_noskb().
-> Is this important? I guess it would be possible to make this more
-> accurate by extending the API, but I wonder if that's worth doing just
-> for these debugfs counters.
-> 
-If you want to support the IEEE802dot11.MIB (dot11mac.dot11CountersTable), they
-are important. Not sure though if it is used by others besides us.
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-I think the real issue here is that those counters are regarded as internal debug
-values (as the comments or e.g. commit c206ca6709 state) instead of general
-purpose statistics that is exposed to SNMP. As such, they should be configurable
-as a feature independent of debug settings in mac80211.
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/staging/rtl8723au/os_dep/os_intfs.c | 66 ++++++++++++++---------------
+ 1 file changed, 33 insertions(+), 33 deletions(-)
 
-
-Aside from that consideration, this patch (with the follow up ones) increased peak
-performance noticeably (we measure some 5%+ higher peak throughput), which for
-sure is worth dropping the counters for most.
-
-I am fine handling this internally. A note in the commit message would be helpful
-that states that counters dot11TransmittedFragmentCount, dot11FrameDuplicateCount,
-dot11ReceivedFragmentCount, and dot11MulticastReceivedFrameCount become invalid.
-
-
-Cheers,
-Zefir
-
-
+diff --git a/drivers/staging/rtl8723au/os_dep/os_intfs.c b/drivers/staging/rtl8723au/os_dep/os_intfs.c
+index b8848c2..eac8edc 100644
+--- a/drivers/staging/rtl8723au/os_dep/os_intfs.c
++++ b/drivers/staging/rtl8723au/os_dep/os_intfs.c
+@@ -53,7 +53,7 @@ static int rtw_ips_mode = IPS_NORMAL;
+ 
+ static int rtw_smart_ps = 2;
+ 
+-module_param(rtw_ips_mode, int, 0644);
++module_param(rtw_ips_mode, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(rtw_ips_mode, "The default IPS mode");
+ 
+ static int rtw_long_retry_lmt = 7;
+@@ -112,62 +112,62 @@ static int rtw_80211d;
+ 
+ static int rtw_regulatory_id = 0xff;/*  Regulatory tab id, 0xff = follow efuse's setting */
+ 
+-module_param(rtw_regulatory_id, int, 0644);
++module_param(rtw_regulatory_id, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+ static char *ifname = "wlan%d";
+-module_param(ifname, charp, 0644);
++module_param(ifname, charp, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(ifname, "The default name to allocate for first interface");
+ 
+ static char *if2name = "wlan%d";
+-module_param(if2name, charp, 0644);
++module_param(if2name, charp, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(if2name, "The default name to allocate for second interface");
+ 
+-module_param(rtw_channel_plan, int, 0644);
+-module_param(rtw_chip_version, int, 0644);
+-module_param(rtw_rfintfs, int, 0644);
+-module_param(rtw_channel, int, 0644);
+-module_param(rtw_wmm_enable, int, 0644);
+-module_param(rtw_vrtl_carrier_sense, int, 0644);
+-module_param(rtw_vcs_type, int, 0644);
+-module_param(rtw_busy_thresh, int, 0644);
+-module_param(rtw_ht_enable, int, 0644);
+-module_param(rtw_cbw40_enable, int, 0644);
+-module_param(rtw_ampdu_enable, int, 0644);
+-module_param(rtw_rx_stbc, int, 0644);
+-module_param(rtw_ampdu_amsdu, int, 0644);
++module_param(rtw_channel_plan, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_chip_version, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_rfintfs, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_channel, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_wmm_enable, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_vrtl_carrier_sense, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_vcs_type, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_busy_thresh, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_ht_enable, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_cbw40_enable, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_ampdu_enable, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_rx_stbc, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_ampdu_amsdu, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+-module_param(rtw_lowrate_two_xmit, int, 0644);
++module_param(rtw_lowrate_two_xmit, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+-module_param(rtw_rf_config, int, 0644);
+-module_param(rtw_power_mgnt, int, 0644);
+-module_param(rtw_smart_ps, int, 0644);
+-module_param(rtw_low_power, int, 0644);
+-module_param(rtw_wifi_spec, int, 0644);
++module_param(rtw_rf_config, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_power_mgnt, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_smart_ps, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_low_power, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_wifi_spec, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+-module_param(rtw_antdiv_cfg, int, 0644);
++module_param(rtw_antdiv_cfg, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+-module_param(rtw_enusbss, int, 0644);
+-module_param(rtw_hwpdn_mode, int, 0644);
+-module_param(rtw_hwpwrp_detect, int, 0644);
++module_param(rtw_enusbss, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_hwpdn_mode, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(rtw_hwpwrp_detect, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+-module_param(rtw_hw_wps_pbc, int, 0644);
++module_param(rtw_hw_wps_pbc, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+ static uint rtw_max_roaming_times = 2;
+-module_param(rtw_max_roaming_times, uint, 0644);
++module_param(rtw_max_roaming_times, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(rtw_max_roaming_times, "The max roaming times to try");
+ 
+-module_param(rtw_80211d, int, 0644);
++module_param(rtw_80211d, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(rtw_80211d, "Enable 802.11d mechanism");
+ 
+ #ifdef CONFIG_8723AU_BT_COEXIST
+-module_param(rtw_btcoex_enable, int, 0644);
++module_param(rtw_btcoex_enable, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(rtw_btcoex_enable, "Enable BT co-existence mechanism");
+ #endif
+ 
+ static uint rtw_notch_filter;
+-module_param(rtw_notch_filter, uint, 0644);
++module_param(rtw_notch_filter, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(rtw_notch_filter, "0:Disable, 1:Enable, 2:Enable only for P2P");
+-module_param_named(debug, rtw_debug, int, 0444);
++module_param_named(debug, rtw_debug, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(debug, "Set debug level (1-9) (default 1)");
+ 
+ static int netdev_close(struct net_device *pnetdev);
+-- 
+2.9.2
 
