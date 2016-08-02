@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13900 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753182AbcH3OTx (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 10:19:53 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "engineering@keppy.com" <engineering@keppy.com>
-CC: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: enable firmware crash dumps on the AR6004
-Date: Tue, 30 Aug 2016 14:19:46 +0000
-Message-ID: <871t16e34f.fsf@qca.qualcomm.com> (sfid-20160830_161957_366353_9EF40576)
-References: <1472566303-32613-1-git-send-email-dan.kephart@lairdtech.com>
-In-Reply-To: <1472566303-32613-1-git-send-email-dan.kephart@lairdtech.com>
-        (engineering@keppy.com's message of "Tue, 30 Aug 2016 10:11:43 -0400")
-Content-Type: text/plain; charset="us-ascii"
+Received: from smtp.codeaurora.org ([198.145.29.96]:36385 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S936036AbcHBRxE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 13:53:04 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Baole Ni <baolex.ni@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0768/1285] Replace numeric parameter like 0444 with macro
+References: <20160802114428.860-1-baolex.ni@intel.com>
+Date: Tue, 02 Aug 2016 20:52:15 +0300
+In-Reply-To: <20160802114428.860-1-baolex.ni@intel.com> (Baole Ni's message of
+	"Tue, 2 Aug 2016 19:44:28 +0800")
+Message-ID: <87k2fz5a9c.fsf@kamboji.qca.qualcomm.com> (sfid-20160802_195405_674586_6AD94B1E)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-engineering@keppy.com writes:
+(Trimming CC)
 
-> From: Dan Kephart <dan.kephart@lairdtech.com>
+Baole Ni <baolex.ni@intel.com> writes:
+
+> I find that the developers often just specified the numeric value
+> when calling a macro which is defined with a parameter for access permission.
+> As we know, these numeric value for access permission have had the corresponding macro,
+> and that using macro can improve the robustness and readability of the code,
+> thus, I suggest replacing the numeric parameter with the macro.
 >
-> The firmware crash dumps on the 6004 are the same as the 6003. Remove the
-> statement guarding it from dumping on the 6004.  Renamed the
-> REG_DUMP_COUNT_AR6003 to reflect support on both chips.
->
-> Signed-off-by: Dan Kephart <dan.kephart@lairdtech.com>
+> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+> Signed-off-by: Baole Ni <baolex.ni@intel.com>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-I have a similar patch already on my queue:
+Over 1000 patches? It's totally inapproriate to spam people's inboxes
+(including mine) like this. PLEASE first study how kernel development
+works and then start with something small, not like this.
 
-https://patchwork.kernel.org/patch/9262289/
+I'm dropping all patches from this patchset.
 
-How does this differ from that? Please _always_ add a changelog so that
-people know what has changed. Also remember to add "[PATCH v2]" to the
-title.
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
-hes#subject_name
-
---=20
-Kalle Valo=
+-- 
+Kalle Valo
