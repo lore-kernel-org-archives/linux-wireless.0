@@ -1,92 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33675 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965004AbcHBMet (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:37515 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753794AbcHBTD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:34:49 -0400
-Received: by mail-pa0-f65.google.com with SMTP id q2so11914021pap.0
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 05:33:14 -0700 (PDT)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: honma@masap.sakura.ne.jp, johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com,
-	Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH v2] nl80211: Receive correct value for NL80211_MESHCONF_HT_OPMODE command
-Date: Tue,  2 Aug 2016 20:41:29 +0900
-Message-Id: <1470138089-6864-1-git-send-email-masashi.honma@gmail.com> (sfid-20160802_143507_374183_5A0CE0CD)
-In-Reply-To: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
-References: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
+	Tue, 2 Aug 2016 15:03:56 -0400
+Received: by mail-wm0-f46.google.com with SMTP id i5so303991178wmg.0
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 12:02:41 -0700 (PDT)
+Subject: Re: [PATCH 0768/1285] Replace numeric parameter like 0444 with macro
+To: Kalle Valo <kvalo@codeaurora.org>, Baole Ni <baolex.ni@intel.com>
+References: <20160802114428.860-1-baolex.ni@intel.com>
+ <87k2fz5a9c.fsf@kamboji.qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <e23f7be7-95f7-18b3-a650-d666d1ef852e@broadcom.com> (sfid-20160802_210416_167865_3CD4AE19)
+Date: Tue, 2 Aug 2016 20:34:33 +0200
+MIME-Version: 1.0
+In-Reply-To: <87k2fz5a9c.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Previously, NL80211_MESHCONF_HT_OPMODE rejected correct flag
-combination, ex) IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED |
-IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT.
 
-This was caused by simple comparison with value 16. This causes setting
-non-existent flag (like 0x08) and invalid flag combinations. So this
-commit implements some checks based on IEEE 802.11 2012 8.4.2.59 HT
-Operation element.
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- net/wireless/nl80211.c | 42 +++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 41 insertions(+), 1 deletion(-)
+On 02-08-16 19:52, Kalle Valo wrote:
+> (Trimming CC)
+> 
+> Baole Ni <baolex.ni@intel.com> writes:
+> 
+>> I find that the developers often just specified the numeric value
+>> when calling a macro which is defined with a parameter for access permission.
+>> As we know, these numeric value for access permission have had the corresponding macro,
+>> and that using macro can improve the robustness and readability of the code,
+>> thus, I suggest replacing the numeric parameter with the macro.
+>>
+>> Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+>> Signed-off-by: Baole Ni <baolex.ni@intel.com>
+>> ---
+>>  drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Over 1000 patches? It's totally inapproriate to spam people's inboxes
+> (including mine) like this. PLEASE first study how kernel development
+> works and then start with something small, not like this.
+> 
+> I'm dropping all patches from this patchset.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 46417f9..b2af600 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -5471,9 +5471,49 @@ do {									    \
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, -255, 0,
- 				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
- 				  nl80211_check_s32);
--	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
-+	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0,
-+				  IEEE80211_HT_OP_MODE_PROTECTION |
-+				  IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
-+				  IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT,
- 				  mask, NL80211_MESHCONF_HT_OPMODE,
- 				  nl80211_check_u16);
-+	if (tb[NL80211_MESHCONF_HT_OPMODE]) {
-+		/*
-+		 * Check HT operation mode based on IEEE 802.11 2012 8.4.2.59
-+		 * HT Operation element.
-+		 */
-+		if (cfg->ht_opmode & (~(IEEE80211_HT_OP_MODE_PROTECTION |
-+		    IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
-+		    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT)))
-+			return -EINVAL;
-+
-+		if ((cfg->ht_opmode & IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT) &&
-+		    (cfg->ht_opmode & IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT))
-+			return -EINVAL;
-+
-+		switch (cfg->ht_opmode & IEEE80211_HT_OP_MODE_PROTECTION) {
-+		case IEEE80211_HT_OP_MODE_PROTECTION_NONE:
-+			if (cfg->ht_opmode &
-+			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT)
-+				return -EINVAL;
-+			break;
-+		case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
-+			if (!(cfg->ht_opmode &
-+			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT))
-+				return -EINVAL;
-+			break;
-+		case IEEE80211_HT_OP_MODE_PROTECTION_20MHZ:
-+			if (cfg->ht_opmode &
-+			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT)
-+				return -EINVAL;
-+			break;
-+		case IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED:
-+			if (!(cfg->ht_opmode &
-+			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT))
-+				return -EINVAL;
-+			break;
-+		}
-+	}
- 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathToRootTimeout,
- 				  1, 65535, mask,
- 				  NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
--- 
-2.7.4
+And this type of change has been tried before and burned by Linus as
+everybody with a bit of *nix background knows the meaning of the
+numerical access permissions.
 
+Regards,
+Arend
