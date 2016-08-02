@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9852 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbcHFVoC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Aug 2016 17:44:02 -0400
-From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
-	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
-	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
-Subject: RE: [PATCH] cfg80211: Add support for user configurable beacon data
- rate
-Date: Sat, 6 Aug 2016 04:38:36 +0000
-Message-ID: <92b06d4df5984e6ea91081126e096a96@aphydexm01f.ap.qualcomm.com> (sfid-20160806_234405_643672_8EDF6E20)
-References: <1470371701-13074-1-git-send-email-pkushwah@qti.qualcomm.com>
- <1470387784.2977.30.camel@sipsolutions.net>
-In-Reply-To: <1470387784.2977.30.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mga14.intel.com ([192.55.52.115]:3264 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934521AbcHBMYw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:24:52 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: kvalo@codeaurora.org, luciano.coelho@intel.com,
+	linuxwifi@intel.com, m.chehab@samsung.com, pawel@osciak.com,
+	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
+	k.kozlowski@samsung.com
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	chuansheng.liu@intel.com, baolex.ni@intel.com
+Subject: [PATCH 0786/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:46:18 +0800
+Message-Id: <20160802114618.2152-1-baolex.ni@intel.com> (sfid-20160802_174411_939692_6FB5DDC5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBEb2Vzbid0IHRoaXMgaGF2ZSB0byBjaGVjayB0aGF0IGl0IGFjdHVhbGx5IGdvdCBpbmZvcm1h
-dGlvbiBmb3IgdGhlIHJpZ2h0IGJhbmQ/DQpIaSBKb2hhbm5lcyAsDQpubDgwMjExX3BhcnNlX3R4
-X2JpdHJhdGVfbWFzayAoIGEgbmV3IHdyYXBwZXIgdG8gdGhlIGV4aXN0aW5nIGZ1bmN0aW9uYWxp
-dHkgaW4gbmw4MDIxMV9zZXRfdHhfYml0cmF0ZV9tYXNrICkgZG9lcyB0aGlzICwgaXNuJ3QgPyAN
-Cg0KUmVnYXJkcywNClN1bmlsDQoNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
-bTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2Vu
-dDogRnJpZGF5LCBBdWd1c3QgNSwgMjAxNiAyOjMzIFBNDQpUbzogS3VzaHdhaGEsIFB1cnVzaG90
-dGFtIDxwa3VzaHdhaEBxdGkucXVhbGNvbW0uY29tPg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIu
-a2VybmVsLm9yZzsgTWFsaW5lbiwgSm91bmkgPGpvdW5pQHFjYS5xdWFsY29tbS5jb20+OyBVbmRl
-a2FyaSwgU3VuaWwgRHV0dCA8dXNkdXR0QHF0aS5xdWFsY29tbS5jb20+OyBLb25kYWJhdHRpbmks
-IEdhbmVzaCA8Z2FuZXNoa0BxdGkucXVhbGNvbW0uY29tPjsgS2FsaWtvdCBWZWV0aWwsIE1haGVz
-aCBLdW1hciA8bWthbGlrb3RAcWNhLnF1YWxjb21tLmNvbT47IEh1bGx1ciBTdWJyYW1hbnlhbSwg
-QW1hcm5hdGggPGFtYXJuYXRoQHFjYS5xdWFsY29tbS5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENI
-XSBjZmc4MDIxMTogQWRkIHN1cHBvcnQgZm9yIHVzZXIgY29uZmlndXJhYmxlIGJlYWNvbiBkYXRh
-IHJhdGUNCg0KT24gRnJpLCAyMDE2LTA4LTA1IGF0IDEwOjA1ICswNTMwLCBQdXJ1c2hvdHRhbSBL
-dXNod2FoYSB3cm90ZToNCj7CoA0KPiArc3RhdGljIGludCBubDgwMjExX3BhcnNlX3R4X2JpdHJh
-dGVfbWFzayhzdHJ1Y3QgZ2VubF9pbmZvICppbmZvLA0KPiArCQkJCQnCoHN0cnVjdCBjZmc4MDIx
-MV9iaXRyYXRlX21hc2sgKm1hc2spOw0KDQpJIHRoaW5rIHlvdSBzaG91bGQgbW92ZSB0aGUgZnVu
-Y3Rpb24gaW5zdGVhZC4NCg0KPiBAQCAtMzQ1Nyw2ICszNDU5LDExIEBAIHN0YXRpYyBpbnQgbmw4
-MDIxMV9zdGFydF9hcChzdHJ1Y3Qgc2tfYnVmZiANCj4gKnNrYiwgc3RydWN0IGdlbmxfaW5mbyAq
-aW5mbykNCj4gwqAJZXJyID0gY2ZnODAyMTFfdmFsaWRhdGVfYmVhY29uX2ludChyZGV2LA0KPiBw
-YXJhbXMuYmVhY29uX2ludGVydmFsKTsNCj4gwqAJaWYgKGVycikNCj4gwqAJCXJldHVybiBlcnI7
-DQo+ICsJaWYgKGluZm8tPmF0dHJzW05MODAyMTFfQVRUUl9UWF9SQVRFU10pIHsNCj4gKwkJZXJy
-ID0gbmw4MDIxMV9wYXJzZV90eF9iaXRyYXRlX21hc2soaW5mbywNCj4gJnBhcmFtcy5iZWFjb25f
-cmF0ZSk7DQo+ICsJCWlmIChlcnIpDQo+ICsJCQlyZXR1cm4gZXJyOw0KPiArCX0NCg0KRG9lc24n
-dCB0aGlzIGhhdmUgdG8gY2hlY2sgdGhhdCBpdCBhY3R1YWxseSBnb3QgaW5mb3JtYXRpb24gZm9y
-IHRoZSByaWdodCBiYW5kPw0KDQpqb2hhbm5lcw0K
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
+
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/net/wireless/marvell/libertas/mesh.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
+index d0c881d..ae4f0a5 100644
+--- a/drivers/net/wireless/marvell/libertas/mesh.c
++++ b/drivers/net/wireless/marvell/libertas/mesh.c
+@@ -297,19 +297,19 @@ static ssize_t lbs_mesh_set(struct device *dev,
+  * lbs_mesh attribute to be exported per ethX interface
+  * through sysfs (/sys/class/net/ethX/lbs_mesh)
+  */
+-static DEVICE_ATTR(lbs_mesh, 0644, lbs_mesh_get, lbs_mesh_set);
++static DEVICE_ATTR(lbs_mesh, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, lbs_mesh_get, lbs_mesh_set);
+ 
+ /*
+  * anycast_mask attribute to be exported per mshX interface
+  * through sysfs (/sys/class/net/mshX/anycast_mask)
+  */
+-static DEVICE_ATTR(anycast_mask, 0644, lbs_anycast_get, lbs_anycast_set);
++static DEVICE_ATTR(anycast_mask, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, lbs_anycast_get, lbs_anycast_set);
+ 
+ /*
+  * prb_rsp_limit attribute to be exported per mshX interface
+  * through sysfs (/sys/class/net/mshX/prb_rsp_limit)
+  */
+-static DEVICE_ATTR(prb_rsp_limit, 0644, lbs_prb_rsp_limit_get,
++static DEVICE_ATTR(prb_rsp_limit, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, lbs_prb_rsp_limit_get,
+ 		lbs_prb_rsp_limit_set);
+ 
+ static struct attribute *lbs_mesh_sysfs_entries[] = {
+@@ -764,13 +764,13 @@ static ssize_t capability_set(struct device *dev, struct device_attribute *attr,
+ }
+ 
+ 
+-static DEVICE_ATTR(bootflag, 0644, bootflag_get, bootflag_set);
+-static DEVICE_ATTR(boottime, 0644, boottime_get, boottime_set);
+-static DEVICE_ATTR(channel, 0644, channel_get, channel_set);
+-static DEVICE_ATTR(mesh_id, 0644, mesh_id_get, mesh_id_set);
+-static DEVICE_ATTR(protocol_id, 0644, protocol_id_get, protocol_id_set);
+-static DEVICE_ATTR(metric_id, 0644, metric_id_get, metric_id_set);
+-static DEVICE_ATTR(capability, 0644, capability_get, capability_set);
++static DEVICE_ATTR(bootflag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, bootflag_get, bootflag_set);
++static DEVICE_ATTR(boottime, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, boottime_get, boottime_set);
++static DEVICE_ATTR(channel, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, channel_get, channel_set);
++static DEVICE_ATTR(mesh_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, mesh_id_get, mesh_id_set);
++static DEVICE_ATTR(protocol_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, protocol_id_get, protocol_id_set);
++static DEVICE_ATTR(metric_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, metric_id_get, metric_id_set);
++static DEVICE_ATTR(capability, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, capability_get, capability_set);
+ 
+ static struct attribute *boot_opts_attrs[] = {
+ 	&dev_attr_bootflag.attr,
+-- 
+2.9.2
+
