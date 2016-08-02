@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33608 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751691AbcH2QkK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 12:40:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <CACna6rytnp7WsrdscwPOTvi=FajAtoF2V2ZKx34RUdjEOiZO1w@mail.gmail.com>
-References: <1472474375-29910-1-git-send-email-baoyou.xie@linaro.org> <CACna6rytnp7WsrdscwPOTvi=FajAtoF2V2ZKx34RUdjEOiZO1w@mail.gmail.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 29 Aug 2016 18:39:25 +0200
-Message-ID: <CACna6rwBrT5Ei8oY1qfcCTa5J+xh9PyZUDwwghcXNX1U0E5vuw@mail.gmail.com> (sfid-20160829_184038_153008_04B92361)
-Subject: Re: [PATCH v4] brcmfmac: add missing header dependencies
-To: Baoyou Xie <baoyou.xie@linaro.org>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, xie.baoyou@zte.com.cn
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33624 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751728AbcHBJL6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 05:11:58 -0400
+Received: by mail-pf0-f193.google.com with SMTP id i6so12081047pfe.0
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 02:11:21 -0700 (PDT)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH v2] mac80211: End the MPSP even if EOSP frame was not acked
+Date: Tue,  2 Aug 2016 17:16:57 +0900
+Message-Id: <1470125817-4461-1-git-send-email-masashi.honma@gmail.com> (sfid-20160802_111500_426701_C48E3DA7)
+In-Reply-To: <1468393475-2483-1-git-send-email-masashi.honma@gmail.com>
+References: <1468393475-2483-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 August 2016 at 17:42, Baoyou Xie <baoyou.xie@linaro.org> wrote:
-> On 29 August 2016 at 23:31, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
-ote:
->>
->> On 29 August 2016 at 14:39, Baoyou Xie <baoyou.xie@linaro.org> wrote:
->> > We get 1 warning when build kernel with W=3D1:
->> > drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c:23:6:
->> > warning: no previous prototype for '__brcmf_err' [-Wmissing-prototypes=
-]
->>
->> building? I'm not native English, but I think so.
->>
->>
->> > In fact, this function is declared in brcmfmac/debug.h, so this patch
->> > add missing header dependencies.
->>
->> adds
->>
->>
->> > Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
->> > Acked-by: Arnd Bergmann <arnd@arndb.de>
->>
->> Please don't resend patches just to add tags like that. This only
->> increases a noise and patchwork handles this just fine, see:
->> https://patchwork.kernel.org/patch/9303285/
->> https://patchwork.kernel.org/patch/9303285/mbox/
->
->
-> it modifies a typo biuld/build.
+If QoS frame with EOSP (end of service period) subfield=1 sent by local
+peer was not acked by remote peer, local peer did not end the MPSP. This
+prevents local peer from going to DOZE state. And if the remote peer
+goes away without closing connection, local peer continues AWAKE state
+and wastes battery.
 
-Please send your replies to all, not privately.
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ net/mac80211/status.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-OK, so you should also include a changelog in the comments part of diff, e.=
-g.:
-V4: Fix typo in "biuld"
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index c6d5c72..a2a6826 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -771,6 +771,13 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			clear_sta_flag(sta, WLAN_STA_SP);
+ 
+ 		acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
++
++		/* mesh Peer Service Period support */
++		if (ieee80211_vif_is_mesh(&sta->sdata->vif) &&
++		    ieee80211_is_data_qos(fc))
++			ieee80211_mpsp_trigger_process(
++				ieee80211_get_qos_ctl(hdr), sta, true, acked);
++
+ 		if (!acked && test_sta_flag(sta, WLAN_STA_PS_STA)) {
+ 			/*
+ 			 * The STA is in power save mode, so assume
+@@ -781,13 +788,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
+ 			return;
+ 		}
+ 
+-		/* mesh Peer Service Period support */
+-		if (ieee80211_vif_is_mesh(&sta->sdata->vif) &&
+-		    ieee80211_is_data_qos(fc))
+-			ieee80211_mpsp_trigger_process(
+-					ieee80211_get_qos_ctl(hdr),
+-					sta, true, acked);
+-
+ 		if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL) &&
+ 		    (ieee80211_is_data(hdr->frame_control)) &&
+ 		    (rates_idx != -1))
+-- 
+2.7.4
+
