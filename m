@@ -1,188 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46623 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758063AbcHCSor (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 14:44:47 -0400
-Date: Wed, 3 Aug 2016 20:40:58 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Daniel Wagner <daniel.wagner@bmw-carit.de>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Tom Gundersen <teg@jklm.no>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	kay@vrfy.org, Hannes Reinecke <hare@suse.de>
-Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jeff Mahoney <jeffm@suse.com>, Daniel Wagner <wagi@monom.org>,
-	Bastien Nocera <hadess@hadess.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	David Howells <dhowells@redhat.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
- completion
-Message-ID: <20160803184058.GS3296@wotan.suse.de> (sfid-20160803_204511_476658_E33D2425)
-References: <20160730165817.GQ3296@wotan.suse.de>
- <C528E404-0CA5-46B4-B551-B1D4B58BC053@gmail.com>
- <37a3cd66-262e-ffbe-ea7a-a6d5b1ca1c8b@bmw-carit.de>
- <20160801194408.GZ3296@wotan.suse.de>
- <0f9350fa-e8b5-9d64-b2d3-afda5e5f6bbf@bmw-carit.de>
- <20160802063419.GG3296@wotan.suse.de>
- <2713d779-ef55-793d-f37e-d1414bb1bfc2@bmw-carit.de>
- <20160802074106.GI3296@wotan.suse.de>
- <ef14dc68-d2f8-0934-7be5-dfb3a4771f27@bmw-carit.de>
- <20160803155540.GL3296@wotan.suse.de>
+Received: from mail-db5eur01on0086.outbound.protection.outlook.com ([104.47.2.86]:49120
+	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751042AbcHBU3V convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 16:29:21 -0400
+From: Scott Wood <scott.wood@nxp.com>
+To: arvind Yadav <arvind.yadav.cs@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+CC: "qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
+	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"scottwood@freescale.com" <scottwood@freescale.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"linux@roeck-us.net" <linux@roeck-us.net>,
+	Li Yang <leoli@freescale.com>
+Subject: Re: [v4] Fix to avoid IS_ERR_VALUE and IS_ERR abuses on 64bit
+ systems.
+Date: Tue, 2 Aug 2016 19:57:48 +0000
+Message-ID: <DB5PR0401MB1928DE1F195A57160DED735D91050@DB5PR0401MB1928.eurprd04.prod.outlook.com> (sfid-20160802_222929_345672_B3B74555)
+References: <1469963924-8800-1-git-send-email-arvind.yadav.cs@gmail.com>
+ <1956647.cOmaJREgOE@wuerfel>
+ <DB5PR0401MB19280ACA87C7F5EE2822D5FB91040@DB5PR0401MB1928.eurprd04.prod.outlook.com>
+ <2484583.95xFmO7xir@wuerfel> <57A0BD8E.9050305@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160803155540.GL3296@wotan.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 03, 2016 at 05:55:40PM +0200, Luis R. Rodriguez wrote:
-> On Wed, Aug 03, 2016 at 08:57:09AM +0200, Daniel Wagner wrote:
-> > On 08/02/2016 09:41 AM, Luis R. Rodriguez wrote:
-> > >On Tue, Aug 02, 2016 at 08:53:55AM +0200, Daniel Wagner wrote:
-> > >>On 08/02/2016 08:34 AM, Luis R. Rodriguez wrote:
-> > >>>On Tue, Aug 02, 2016 at 07:49:19AM +0200, Daniel Wagner wrote:
-> > >>So you argue for the remoteproc use case with 100+ MB firmware that
-> > >>if there is a way to load after pivot_root() (or other additional
-> > >>firmware partition shows up) then there is no need at all for
-> > >>usermode helper?
-> > >
-> > >No, I'm saying I'd like to hear valid uses cases for the usermode helper and so
-> > >far I have only found using coccinelle grammar 2 explicit users, that's it. My
-> > >patch series (not yet merge) then annotates these as valid as I've verified
-> > >through their documentation they have some quirky requirement.
-> > 
-> > I got that question wrong. It should read something like 'for the
-> > remoteproc 100+MB there is no need for the user help?'.
+On 08/02/2016 10:34 AM, arvind Yadav wrote:
 > 
-> That's not a question for me but for those who say that the usermode helper
-> is needed for remoteproc, so far from what folks are saying it seems the only
-> reason for the usermodehelper was to try to avoid the deterministic issue,
-> but I suggested a way to resolve that without the usermode helper now so
-> would be curious to hear if there are any more reasons for it.
 > 
-> > I've gone
-> > through your patches and they make perfectly sense too. Maybe I can
-> > convince you to take a better version of my patch 3 into your queue.
-> > And I help you converting the exiting drivers. Obviously if you like
-> > my help at all.
-> 
-> I accept all help and would be glad to make enhancements instead of
-> the old API through new API. The biggest thing here first I think is
-> adding devm support, that I think should address what seemed to be
-> the need to add more code for a transformation into the API. I'd
-> personally only want to add that and be done with an introduction
-> of the sysdata API. Further changes IMHO are best done atomically
-> after that on top of it, but I'm happy to queue in the changes.
-> 
-> > >Other than these two drivers I'd like hear to valid requirements for it.
-> > >
-> > >The existential issue is a real issue but it does not look impossible to
-> > >resolve. It may be a solution to bloat up the kernel with 100+ MB size just to
-> > >stuff built-in firmware to avoid this issue, but it does not mean a solution
-> > >is not possible.
-> > >
-> > >Remind me -- why can remoteproc not stuff the firmware in initramfs ?
-> > 
-> > I don't know. I was just bringing it up with the hope that Bjorn
-> > will defend it. It seems my tactics didn't work out :)
-> 
-> OK.
-> 
-> > >Anyway, here's a simple suggestion: fs/exec.c gets a sentinel file monitor
-> > >support per enum kernel_read_file_id. For instance we'd have one for
-> > >READING_FIRMWARE, one for READING_KEXEC_IMAGE, perhaps READING_POLICY, and this
-> > >would in turn be used as the system configurable deterministic file for
-> > >which to wait for to be present before enabling each enum kernel_read_file_id
-> > >type read.
-> > >
-> > >Thoughts ?
-> > 
-> > Not sure if I get you here correctly. Is the 'system configurable
-> > deterministic file' is a knob which controlled by user space? Or it
-> > this something you define at compile time?
-> 
-> I meant at compile time on the kernel. So CONFIG_READ_READY_SENTINEL
-> or something like this, and it be a string, which if set then when
-> the kernel read APIs are used, then a new API could be introduced
-> that would *only* enable reading through once that sentinel has
-> been detected by the kernel to allowed through reads. Doing this
-> per mount / target filesystem is rather cumbersome given possible
-> overlaps in mounts and also pivot_root() being possible, so instead
-> targeting simply the fs/exec.c enum kernel_read_file_id would seem
-> more efficient and clean but we would need a decided upon set of
-> paths per enum kernel_read_file_id as base (or just one path per
-> enum kernel_read_file_id). For number of paths I mean the number
-> of target directories to look for the sentinel per enum kernel_read_file_id,
-> so for instance for READING_FIRMWARE perhaps just deciding on /lib/firmware/
-> would suffice, but if this supported multiple paths another option may be
-> for the sentinel to also be looked for in /lib/firmware/updates/,
-> /lib/firmware/" UTS_RELEASE -- etc. It would *stop* after finding one
-> sentinel on any of these paths.
-> 
-> If a system has has CONFIG_READ_READY_SENTINEL it would mean an agreed upon
-> system configuration has been decided so that at any point in time reads
-> against READING_FIRMWARE using a new kernel_read_file_from_path_sentinel()
-> (or something like it) would only allow the read to go through once
-> the sentinel has been found for READING_FIRMWARE on the agreed upon
-> paths.
-> 
-> The benefit of the sentintel approach is it avoids complexities with
-> pivot_root(), and makes the deterministic aspect of the target left
-> only to a system-configuration enabled target path / file.
-> 
-> This is just an idea. I'd like some FS folks to review.
-> 
-> > Hmm, so it would allow to decided to ask a userspace helper or load
-> > the firmware directly (to be more precised the kernel_read_file_id
-> > type). If yes, than it is what currently already have just
-> > integrated nicely into the new sysdata API.
-> 
-> Sorry, no, the above description is better of what I meant. This
-> actually would not need to go into the sysdata API, unless of
-> course we wanted it just as a new "feature" of it, but I don't
-> think that's needed unless it has some implications behind the
-> scenes. Given that firmware_class now uses a common core kernel
-> API for reading files kernel_read_file_from_path() we could
-> for instance add kernel_read_file_from_sentintel() and only
-> if CONFIG_READ_READY_SENTINEL() would it block and wait until
-> the sentinel clears. This should mean being able to make the
-> change for both the old API and the new proposed sysdata API.
-> Likewise for other kernel_read_file*() users -- they'd benefit
-> from it as well.
+> On Tuesday 02 August 2016 01:15 PM, Arnd Bergmann wrote:
+>> On Monday, August 1, 2016 4:55:43 PM CEST Scott Wood wrote:
+>>> On 08/01/2016 02:02 AM, Arnd Bergmann wrote:
+>>>>> diff --git a/include/linux/err.h b/include/linux/err.h
+>>>>> index 1e35588..c2a2789 100644
+>>>>> --- a/include/linux/err.h
+>>>>> +++ b/include/linux/err.h
+>>>>> @@ -18,7 +18,17 @@
+>>>>>  
+>>>>>  #ifndef __ASSEMBLY__
+>>>>>  
+>>>>> -#define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)
+>>>>> +#define IS_ERR_VALUE(x) unlikely(is_error_check(x))
+>>>>> +
+>>>>> +static inline int is_error_check(unsigned long error)
+>>>> Please leave the existing macro alone. I think you were looking for
+>>>> something specific to the return code of qe_muram_alloc() function,
+>>>> so please add a helper in that subsystem if you need it, not in
+>>>> the generic header files.
+>>> qe_muram_alloc (a.k.a. cpm_muram_alloc) returns unsigned long.  The
+>>> problem is certain callers that store the return value in a u32.  Why
+>>> not just fix those callers to store it in unsigned long (at least until
+>>> error checking is done)?
+>>>
+>> Yes, that would also address another problem with code like
+>>
+>>          kfree((void *)ugeth->tx_bd_ring_offset[i]);
+>>
+>> which is not 64-bit safe when tx_bd_ring_offset is a 32-bit value
+>> that also holds the return value of qe_muram_alloc.
 
-A file sentinel would implicate a file namespace thing being used on the
-filesystem -- to me this just means the Linux distribution / system integrator
-would add this per filesystem, but agree this is pretty hacky.  Furthermore
-we'd wait forever if the Linux distribution / system integrator forgot to set
-the sentinel file. That's not good. To avoid that a generic "root fs ready"
-event could be sent from userspace to know when to clear stale reads... but if
-that's going to be done best just replace all sentintels with a simple "root fs
-ready" which would mean all reads from the kernel are ready. If we wanted
-further granularity I suppose we could further have one event per enum
-kernel_read_file_id, and a generic all-is-ready one.
+Well, hopefully it doesn't hold a return of qe_muram_alloc() when it's
+being passed to kfree()...
 
-To start off with then a simple event from userspace should suffice. But do keep
-in mind that granularity might help given that a big iron system might have some
-large array of disks to mount during bootup and that may take a long while, and
-you likely want to read /lib/firmware way before that filesystem is ready.
+There's also the code that casts kmalloc()'s return to u32, etc.
+ucc_geth is not 64-bit clean in general.
 
-Not sure if granularity fixated by enum kernel_read_file_id should suffice,
-perhaps given its also enough for LSMs...
+>>
+>> 	Arnd
+> Yes, we will fix caller. Caller api is not safe on 64bit.
 
-This indeed would mean a kernelspace and userspace change, but it would mean 
-not having to deal with the usermode helper crap anymore.
+The API is fine (or at least, I haven't seen a valid issue pointed out
+yet).  The problem is the ucc_geth driver.
 
-Anyway -- these are just ideas, patches welcomed !
+> Even qe_muram_addr(a.k.a. cpm_muram_addr )passing value unsigned int,
+> but it should be unsigned long.
 
-  Luis
+cpm_muram_addr takes unsigned long as a parameter, not that it matters
+since you can't pass errors into it and a muram offset should never
+exceed 32 bits.
+
+-Scott
+
