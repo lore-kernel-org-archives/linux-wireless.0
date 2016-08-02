@@ -1,42 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:36826 "EHLO
-	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751662AbcHKS6g (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 14:58:36 -0400
-Received: by mail-qk0-f178.google.com with SMTP id l2so4662134qkf.3
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2016 11:58:35 -0700 (PDT)
-Subject: Re: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
-To: Denis Kenzior <denkenz@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1470261735-2977-1-git-send-email-denkenz@gmail.com>
- <1470919643.12075.7.camel@sipsolutions.net> <57ACA9E9.4020507@gmail.com>
- <1470938627.12075.25.camel@sipsolutions.net> <57ACC1F8.6070908@gmail.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <f2fe3568-0b83-9db4-278e-be0a1ad08ae8@broadcom.com> (sfid-20160811_205840_593140_E3DEF7B8)
-Date: Thu, 11 Aug 2016 20:58:28 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:48922 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S968212AbcHBSF1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 14:05:27 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Shiva Kerdel <shiva@exdev.nl>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	geliangtang@163.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] Staging: rtl8723au: rtw_xmit: fixed coding style issues
+References: <20160802175721.2453-1-shiva@exdev.nl>
+Date: Tue, 02 Aug 2016 14:03:01 -0400
+In-Reply-To: <20160802175721.2453-1-shiva@exdev.nl> (Shiva Kerdel's message of
+	"Tue, 2 Aug 2016 19:57:21 +0200")
+Message-ID: <wrfjeg67calm.fsf@redhat.com> (sfid-20160802_200630_570094_FAE284B3)
 MIME-Version: 1.0
-In-Reply-To: <57ACC1F8.6070908@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11-8-2016 20:20, Denis Kenzior wrote:
-> Hi Johannes,
-> 
->>> Speaking of indentation, can you point me to a doc of the rules I
->>> should follow?
->>
->> You've seen Documentation/CodingStyle?
-> 
-> Of course.  But that one doesn't discuss that you want your function
-> parameters to be aligned to the opening '('.  Is there a dialect
-> document specific to linux-wireless?
+Shiva Kerdel <shiva@exdev.nl> writes:
+> Fixed some coding style issues that were detected as errors.
+>
+> Signed-off-by: Shiva Kerdel <shiva@exdev.nl>
 
-You can find it in checkpatch.pl [1] :-p
+You have already been told this once by Greg. Describe what you are
+fixing in the commit message, and don't fix more than one type of bug
+per commit.
 
-Regards,
-Arend
+Jes
 
-[1] http://lxr.free-electrons.com/source/scripts/checkpatch.pl#L2855
+> ---
+>  drivers/staging/rtl8723au/core/rtw_xmit.c | 26 ++++++++++----------------
+>  1 file changed, 10 insertions(+), 16 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
+> index 3de40cf..4ea7c5f 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_xmit.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
+> @@ -174,7 +174,7 @@ int _rtw_init_xmit_priv23a(struct xmit_priv *pxmitpriv,
+>  	rtw_alloc_hwxmits23a(padapter);
+>  	rtw_init_hwxmits23a(pxmitpriv->hwxmits, pxmitpriv->hwxmit_entry);
+>  
+> -	for (i = 0; i < 4; i ++)
+> +	for (i = 0; i < 4; i++)
+>  		pxmitpriv->wmm_para_seq[i] = i;
+>  
+>  	sema_init(&pxmitpriv->tx_retevt, 0);
+> @@ -640,7 +640,7 @@ static int xmitframe_addmic(struct rtw_adapter *padapter,
+>  	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+>  	int curfragnum, length;
+>  	u8 *pframe, *payload, mic[8];
+> -	u8 priority[4]= {0x0, 0x0, 0x0, 0x0};
+> +	u8 priority[4] = {0x0, 0x0, 0x0, 0x0};
+>  	u8 hw_hdr_offset = 0;
+>  	int bmcst = is_multicast_ether_addr(pattrib->ra);
+>  
+> @@ -667,10 +667,10 @@ static int xmitframe_addmic(struct rtw_adapter *padapter,
+>  	if (pattrib->encrypt == WLAN_CIPHER_SUITE_TKIP) {
+>  		/* encode mic code */
+>  		if (stainfo) {
+> -			u8 null_key[16]={0x0, 0x0, 0x0, 0x0,
+> -					 0x0, 0x0, 0x0, 0x0,
+> -					 0x0, 0x0, 0x0, 0x0,
+> -					 0x0, 0x0, 0x0, 0x0};
+> +			u8 null_key[16] = {0x0, 0x0, 0x0, 0x0,
+> +					   0x0, 0x0, 0x0, 0x0,
+> +					   0x0, 0x0, 0x0, 0x0,
+> +					   0x0, 0x0, 0x0, 0x0};
+>  
+>  			pframe = pxmitframe->buf_addr + hw_hdr_offset;
+>  
+> @@ -902,8 +902,7 @@ static int rtw_make_wlanhdr(struct rtw_adapter *padapter, u8 *hdr,
+>  
+>  			if (psta->qos_option)
+>  				qos_option = true;
+> -		}
+> -		else {
+> +		} else {
+>  			RT_TRACE(_module_rtl871x_xmit_c_, _drv_err_,
+>  				 "fw_state:%x is not allowed to xmit frame\n",
+>  				 get_fwstate(pmlmepriv));
+> @@ -1190,7 +1189,7 @@ int rtw_xmitframe_coalesce23a(struct rtw_adapter *padapter, struct sk_buff *skb,
+>  		pdata += mem_sz;
+>  		data_len -= mem_sz;
+>  
+> -		if ((pattrib->icv_len >0) && (pattrib->bswenc)) {
+> +		if ((pattrib->icv_len > 0) && (pattrib->bswenc)) {
+>  			memcpy(pframe, pattrib->icv, pattrib->icv_len);
+>  			pframe += pattrib->icv_len;
+>  		}
+> @@ -1766,7 +1765,6 @@ void rtw_alloc_hwxmits23a(struct rtw_adapter *padapter)
+>  		hwxmits[4] .sta_queue = &pxmitpriv->be_pending;
+>  
+>  	} else if (pxmitpriv->hwxmit_entry == 4) {
+> -
+>  		/* pxmitpriv->vo_txqueue.head = 0; */
+>  		/* hwxmits[0] .phwtxqueue = &pxmitpriv->vo_txqueue; */
+>  		hwxmits[0] .sta_queue = &pxmitpriv->vo_pending;
+> @@ -1952,18 +1950,16 @@ int xmitframe_enqueue_for_sleeping_sta23a(struct rtw_adapter *padapter, struct x
+>  			/* spin_unlock_bh(&psta->sleep_q.lock); */
+>  
+>  			ret = true;
+> -
+>  		}
+>  
+>  		spin_unlock_bh(&psta->sleep_q.lock);
+>  
+>  		return ret;
+> -
+>  	}
+>  
+>  	spin_lock_bh(&psta->sleep_q.lock);
+>  
+> -	if (psta->state&WIFI_SLEEP_STATE) {
+> +	if (psta->state & WIFI_SLEEP_STATE) {
+>  		u8 wmmps_ac = 0;
+>  
+>  		if (pstapriv->sta_dz_bitmap & CHKBIT(psta->aid)) {
+> @@ -2017,9 +2013,7 @@ int xmitframe_enqueue_for_sleeping_sta23a(struct rtw_adapter *padapter, struct x
+>  			/*  */
+>  
+>  			ret = true;
+> -
+>  		}
+> -
+>  	}
+>  
+>  	spin_unlock_bh(&psta->sleep_q.lock);
+> @@ -2159,7 +2153,7 @@ void wakeup_sta_to_xmit23a(struct rtw_adapter *padapter, struct sta_info *psta)
+>  		/* update BCN for TIM IE */
+>  		update_mask = BIT(0);
+>  
+> -		if (psta->state&WIFI_SLEEP_STATE)
+> +		if (psta->state & WIFI_SLEEP_STATE)
+>  			psta->state ^= WIFI_SLEEP_STATE;
+>  
+>  		if (psta->state & WIFI_STA_ALIVE_CHK_STATE) {
