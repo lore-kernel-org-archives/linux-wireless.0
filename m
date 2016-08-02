@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:37701 "EHLO bear.ext.ti.com"
+Received: from mga04.intel.com ([192.55.52.120]:23660 "EHLO mga04.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752537AbcHOISM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2016 04:18:12 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Maxim Altshul <maxim.altshul@ti.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2 v2] wlcore: Remove wl pointer from wl_sta structure
-Date: Mon, 15 Aug 2016 11:23:38 +0300
-Message-ID: <20160815082400.12053-1-maxim.altshul@ti.com> (sfid-20160815_101835_911378_596F2713)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S934779AbcHBMYu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:24:50 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: Jes.Sorensen@redhat.com, kvalo@codeaurora.org, linuxwifi@intel.com,
+	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com
+Subject: [PATCH 0792/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:46:50 +0800
+Message-Id: <20160802114650.2621-1-baolex.ni@intel.com> (sfid-20160802_174401_378768_C103EED7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This field was added to wl_sta struct to get hw in situations
-where it was not given to driver by mac80211.
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-In our case, get_expected_throughput op did not send hw to driver.
-
-This patch reverts the change, as it is no longer needed due to
-get_expected_throughput op change (hw is now sent as a parameter)
-
-Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
-Changed the commit message to better explain the changey
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/ti/wlcore/main.c     | 1 -
- drivers/net/wireless/ti/wlcore/wlcore_i.h | 1 -
- 2 files changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 1ec3545..8589e5a 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5043,7 +5043,6 @@ static int wl12xx_sta_add(struct wl1271 *wl,
- 		return ret;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 9f6dbb4..8800df2 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -58,9 +58,9 @@ MODULE_FIRMWARE("rtlwifi/rtl8192eu_nic.bin");
+ MODULE_FIRMWARE("rtlwifi/rtl8723bu_nic.bin");
+ MODULE_FIRMWARE("rtlwifi/rtl8723bu_bt.bin");
  
- 	wl_sta = (struct wl1271_station *)sta->drv_priv;
--	wl_sta->wl = wl;
- 	hlid = wl_sta->hlid;
+-module_param_named(debug, rtl8xxxu_debug, int, 0600);
++module_param_named(debug, rtl8xxxu_debug, int, S_IRUSR | S_IWUSR);
+ MODULE_PARM_DESC(debug, "Set debug mask");
+-module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, 0600);
++module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, S_IRUSR | S_IWUSR);
+ MODULE_PARM_DESC(ht40_2g, "Enable HT40 support on the 2.4GHz band");
  
- 	ret = wl12xx_cmd_add_peer(wl, wlvif, sta, hlid);
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-index 3875190..8ee5206 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -352,7 +352,6 @@ struct wl1271_station {
- 	 * Used in both AP and STA mode.
- 	 */
- 	u64 total_freed_pkts;
--	struct wl1271 *wl;
- };
- 
- struct wl12xx_vif {
+ #define USB_VENDOR_ID_REALTEK		0x0bda
 -- 
-2.9.0
+2.9.2
 
