@@ -1,59 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47398 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750809AbcHZIHx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Aug 2016 04:07:53 -0400
-Message-ID: <1472198868.390.18.camel@sipsolutions.net> (sfid-20160826_100758_886834_45D10821)
-Subject: Re: [PATCH v6] cfg80211: Provision to allow the support for
- different beacon intervals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
-        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
-        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
-        "Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
-Date: Fri, 26 Aug 2016 10:07:48 +0200
-In-Reply-To: <b13661a358d94e81950f6c4387681bd4@aphydexm01f.ap.qualcomm.com>
-References: <1470991178-11024-1-git-send-email-pkushwah@qti.qualcomm.com>
-         <1470995683.26902.31.camel@sipsolutions.net>
-         <ba55eb8a461b41a4b7a592ee567d0fbf@aphydexm01f.ap.qualcomm.com>
-         <1471002165.26902.35.camel@sipsolutions.net>
-         <b13661a358d94e81950f6c4387681bd4@aphydexm01f.ap.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:33675 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965004AbcHBMet (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:34:49 -0400
+Received: by mail-pa0-f65.google.com with SMTP id q2so11914021pap.0
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 05:33:14 -0700 (PDT)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: honma@masap.sakura.ne.jp, johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH v2] nl80211: Receive correct value for NL80211_MESHCONF_HT_OPMODE command
+Date: Tue,  2 Aug 2016 20:41:29 +0900
+Message-Id: <1470138089-6864-1-git-send-email-masashi.honma@gmail.com> (sfid-20160802_143507_374183_5A0CE0CD)
+In-Reply-To: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
+References: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Previously, NL80211_MESHCONF_HT_OPMODE rejected correct flag
+combination, ex) IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED |
+IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT.
 
-Sorry - missed that mail somehow.
+This was caused by simple comparison with value 16. This causes setting
+non-existent flag (like 0x08) and invalid flag combinations. So this
+commit implements some checks based on IEEE 802.11 2012 8.4.2.59 HT
+Operation element.
 
-> cfg80211_validate_beacon_int -> cfg80211_iter_combinations shall be
-> invoked for the interface combinations , currently.
-> diff_beacon_int_gcd_min is applicable for the interface combinations
-> and am not sure how can we validate this for a single interface .
-> This specific interface can be part of two different groups (
-> interface combinations) with different values for
-> "diff_beacon_int_gcd_min". 
-> I don't think we can get the match for the right set of combination
-> here , isn't ? 
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ net/wireless/nl80211.c | 42 +++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 41 insertions(+), 1 deletion(-)
 
-Well if you have just a single interface, any combination that contains
-it is valid, so you'd just continue?
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 46417f9..b2af600 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5471,9 +5471,49 @@ do {									    \
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, -255, 0,
+ 				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
+ 				  nl80211_check_s32);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
++	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0,
++				  IEEE80211_HT_OP_MODE_PROTECTION |
++				  IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
++				  IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT,
+ 				  mask, NL80211_MESHCONF_HT_OPMODE,
+ 				  nl80211_check_u16);
++	if (tb[NL80211_MESHCONF_HT_OPMODE]) {
++		/*
++		 * Check HT operation mode based on IEEE 802.11 2012 8.4.2.59
++		 * HT Operation element.
++		 */
++		if (cfg->ht_opmode & (~(IEEE80211_HT_OP_MODE_PROTECTION |
++		    IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
++		    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT)))
++			return -EINVAL;
++
++		if ((cfg->ht_opmode & IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT) &&
++		    (cfg->ht_opmode & IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT))
++			return -EINVAL;
++
++		switch (cfg->ht_opmode & IEEE80211_HT_OP_MODE_PROTECTION) {
++		case IEEE80211_HT_OP_MODE_PROTECTION_NONE:
++			if (cfg->ht_opmode &
++			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT)
++				return -EINVAL;
++			break;
++		case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
++			if (!(cfg->ht_opmode &
++			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT))
++				return -EINVAL;
++			break;
++		case IEEE80211_HT_OP_MODE_PROTECTION_20MHZ:
++			if (cfg->ht_opmode &
++			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT)
++				return -EINVAL;
++			break;
++		case IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED:
++			if (!(cfg->ht_opmode &
++			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT))
++				return -EINVAL;
++			break;
++		}
++	}
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathToRootTimeout,
+ 				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
+-- 
+2.7.4
 
-I *think* the code works by checking if any combination applies to the
-currently desired state, and rejects if no combination is possible,
-that would still be perfectly reasonable here, no?
-
-> To make things simple , can we ignore the following rule 
-> " When >0, any beacon interval must also be bigger than this value." 
-> and rather have only the following one ? 
-> " When >0, different beacon intervals must have a GCD that's at least
-> as big as this value."  (To be more precise , any second interface
-> which does not meet this rule , will fail to start ) .
-
-Yeah, I suppose we could, but does that really make sense? If you can
-have a smaller BI, then you could as well have a smaller GCD, no?
-
-johannes
