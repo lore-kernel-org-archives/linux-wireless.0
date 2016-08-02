@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5755 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752777AbcHBLK2 convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61194 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755207AbcHBLn4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 07:10:28 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-CC: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Arend Van Spriel <arend.vanspriel@broadcom.com>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>,
-	"mmarek@suse.com" <mmarek@suse.com>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-Date: Tue, 2 Aug 2016 11:10:22 +0000
-Message-ID: <874m738m02.fsf@kamboji.qca.qualcomm.com> (sfid-20160802_131041_655559_2C863BBD)
-References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
-	<20160721070938.GA2658@redhat.com>
-	<CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
-	<20160721080541.GB2658@redhat.com> <5790A28F.8030102@redhat.com>
-	<20160721115122.GA31869@redhat.com>
-	<a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
-	<20160722102559.GA2662@redhat.com>	<20160722221523.GM5537@wotan.suse.de>
-In-Reply-To: <20160722221523.GM5537@wotan.suse.de> (Luis R. Rodriguez's
-	message of "Sat, 23 Jul 2016 00:15:23 +0200")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 2 Aug 2016 07:43:56 -0400
+Cc: Lazar Alexei <QCA_ailizaro@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 6/8] wil6210: Fix driver down flow
+Date: Tue,  2 Aug 2016 14:42:10 +0300
+Message-Id: <1470138132-18071-7-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160802_194930_975522_64220B40)
+In-Reply-To: <1470138132-18071-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1470138132-18071-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@kernel.org> writes:
+From: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
 
-> I was considering this as a future extension to the firmware API
-> through the new extensible firmware API, the sysdata API.
+Stations disconnection is executed as part of wil_reset so no
+need to do it in wil_down.
+Removal of the disconnect operation will also preserve the lock
+of wil->mutex during the whole reset flow and prevent handling of
+connect event while resetting.
+Set wil_status_resetting in earlier stage in the flow to prevent
+double resetting call in case communication with FW fails while
+bringing the interface down.
 
-I think Linus mentioned this already, but I want to reiterate anyway.
-The name "sysdata" is horrible, I didn't have any idea what it means
-until I read your description. Please continue to use the term
-"firmware", anyone already know what it means.
+Signed-off-by: Lazar Alexei <qca_ailizaro@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c | 16 ++--------------
+ 1 file changed, 2 insertions(+), 14 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index bbc54ee..dd0ee7f 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -1035,10 +1035,10 @@ int wil_up(struct wil6210_priv *wil)
+ 
+ int __wil_down(struct wil6210_priv *wil)
+ {
+-	int rc;
+-
+ 	WARN_ON(!mutex_is_locked(&wil->mutex));
+ 
++	set_bit(wil_status_resetting, wil->status);
++
+ 	if (wil->platform_ops.bus_request)
+ 		wil->platform_ops.bus_request(wil->platform_handle, 0);
+ 
+@@ -1064,18 +1064,6 @@ int __wil_down(struct wil6210_priv *wil)
+ 		wil->scan_request = NULL;
+ 	}
+ 
+-	if (test_bit(wil_status_fwconnected, wil->status) ||
+-	    test_bit(wil_status_fwconnecting, wil->status)) {
+-
+-		mutex_unlock(&wil->mutex);
+-		rc = wmi_call(wil, WMI_DISCONNECT_CMDID, NULL, 0,
+-			      WMI_DISCONNECT_EVENTID, NULL, 0,
+-			      WIL6210_DISCONNECT_TO_MS);
+-		mutex_lock(&wil->mutex);
+-		if (rc)
+-			wil_err(wil, "timeout waiting for disconnect\n");
+-	}
+-
+ 	wil_reset(wil, false);
+ 
+ 	return 0;
 -- 
-Kalle Valo
+1.9.1
+
