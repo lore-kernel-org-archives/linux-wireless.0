@@ -1,98 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:3391 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751396AbcHLHSE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:14700 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065AbcHBKjz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2016 03:18:04 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: Problems with mwifiex_pcie firmware activation
-Date: Fri, 12 Aug 2016 07:17:38 +0000
-Message-ID: <fc70c75bfcab4e0e932274034b5b4493@SC-EXCH04.marvell.com> (sfid-20160812_091807_989640_39538830)
-References: <20160614135015.GB4962@redhat.com>
- <b881b09bf5384169ba1038af71fd435a@SC-EXCH04.marvell.com>
- <20160616115315.GB21199@redhat.com> <20160623120952.GA11157@redhat.com>
- <20160811090113.GA27059@redhat.com>
- <f5b2566be31743809217833e76060d42@SC-EXCH04.marvell.com>
- <20160811122917.GB27059@redhat.com>
-In-Reply-To: <20160811122917.GB27059@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 2 Aug 2016 06:39:55 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Add WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT wmi service
+Date: Tue, 2 Aug 2016 16:13:14 +0530
+Message-ID: <1470134594-10427-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160802_123958_671006_0E3E74C4)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+From: Tamizh chelvam <c_traja@qti.qualcomm.com>
 
-> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
-> Sent: Thursday, August 11, 2016 5:59 PM
-> To: Amitkumar Karwar
-> Cc: Nishant Sarmukadam; linux-wireless@vger.kernel.org
-> Subject: Re: Problems with mwifiex_pcie firmware activation
-> 
-> Hi
-> 
-> On Thu, Aug 11, 2016 at 10:21:58AM +0000, Amitkumar Karwar wrote:
-> > > -----Original Message-----
-> > > From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
-> > > Sent: Thursday, August 11, 2016 2:31 PM
-> > > To: Amitkumar Karwar
-> > > Cc: Nishant Sarmukadam; linux-wireless@vger.kernel.org
-> > > Subject: Re: Problems with mwifiex_pcie firmware activation
-> > >
-> > > On Thu, Jun 23, 2016 at 02:09:52PM +0200, Stanislaw Gruszka wrote:
-> > > > On Thu, Jun 16, 2016 at 01:53:15PM +0200, Stanislaw Gruszka wrote:
-> > > > > On Wed, Jun 15, 2016 at 01:47:53PM +0000, Amitkumar Karwar
-> wrote:
-> > > > > > Could you please share complete dmesg log for failure and
-> > > successful cases?
-> > > > >
-> > > > > Dmesg from failure case is in attachment. I loose access to
-> > > > > system where device initalize, I'll provide missed dmesg when I
-> > > > > get back the access.
-> > > >
-> > > > Have the access now, dmesg is in attachment.
-> > >
-> > > Any news here ?
-> >
-> > Do you have below patch included? It increases poll count which may
-> help in your case.
-> > https://patchwork.kernel.org/patch/7973951/
-> 
-> Yes, I have that patch.
-> 
-> To clarify the issue: reverting above patch seems to helps with the
-> problem. That what I basically did on first of my systems with mwifiex,
-> that did not work similarly like second one. However I did not revert
-> the patch but just comment out check_winner_status:
-> 
-> @@ -755,7 +755,7 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
->         }
-> 
->         /* check if we are the winner for downloading FW */
-> -       if (adapter->if_ops.check_winner_status) {
-> +       if (false) {
->                 adapter->winner = 0;
->                 ret = adapter->if_ops.check_winner_status(adapter);
-> 
-> After running modified kernel once, the problem was gone on unmodified
-> kernel! I suppose that once new firmware was uploaded to the device it
-> somehow modify it (change it's internal firmware?) and make
-> check_winner_status() works correctly. This is strange, but I can not
-> find any other explanation and don't see any other changes in the first
-> system that makes mwifiex suddenly work.
-> 
-> I could be wrong, but I suppose somebody who use pre 4.6 kernel (without
-> the above patch committed as: 2fd5c6ed0b4fbf3c2d9314a24c82862ce5254d42
-> "mwifiex: firmware download enhancements") with new enough mwifiex
-> firmware, will not see the problem even after kernel update. But if
-> somebody install 4.6 or newer kernel on pristine hardware, the device
-> will not work.
-> 
+WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT service has missed in
+the commit 7e247a9e88dc ("ath10k: add dynamic tx mode switch
+config support for qca4019"). This patch adds the service to
+avoid mismatch between host and target.
 
-The problem looks strange. The patch just splits mwifiex_check_fw_status() and increases poll count. It should not have any side-effects.
-Our code used to check winner status before this patch also.
+Fixes:7e247a9e88dc ("ath10k: add dynamic tx mode switch config support for qca4019")
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.h |    5 +++++
+ 1 file changed, 5 insertions(+)
 
-Regards,
-Amitkumar Karwar
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 3ef4688..f67cc19 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -180,6 +180,7 @@ enum wmi_service {
+ 	WMI_SERVICE_MESH_NON_11S,
+ 	WMI_SERVICE_PEER_STATS,
+ 	WMI_SERVICE_RESTRT_CHNL_SUPPORT,
++	WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT,
+ 	WMI_SERVICE_TX_MODE_PUSH_ONLY,
+ 	WMI_SERVICE_TX_MODE_PUSH_PULL,
+ 	WMI_SERVICE_TX_MODE_DYNAMIC,
+@@ -305,6 +306,7 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_RESTRT_CHNL_SUPPORT,
+ 	WMI_10_4_SERVICE_PEER_STATS,
+ 	WMI_10_4_SERVICE_MESH_11S,
++	WMI_10_4_SERVICE_PERIODIC_CHAN_STAT_SUPPORT,
+ 	WMI_10_4_SERVICE_TX_MODE_PUSH_ONLY,
+ 	WMI_10_4_SERVICE_TX_MODE_PUSH_PULL,
+ 	WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
+@@ -402,6 +404,7 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_MESH_NON_11S);
+ 	SVCSTR(WMI_SERVICE_PEER_STATS);
+ 	SVCSTR(WMI_SERVICE_RESTRT_CHNL_SUPPORT);
++	SVCSTR(WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT);
+ 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_ONLY);
+ 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_PULL);
+ 	SVCSTR(WMI_SERVICE_TX_MODE_DYNAMIC);
+@@ -652,6 +655,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_PEER_STATS, len);
+ 	SVCMAP(WMI_10_4_SERVICE_MESH_11S,
+ 	       WMI_SERVICE_MESH_11S, len);
++	SVCMAP(WMI_10_4_SERVICE_PERIODIC_CHAN_STAT_SUPPORT,
++	       WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT, len);
+ 	SVCMAP(WMI_10_4_SERVICE_TX_MODE_PUSH_ONLY,
+ 	       WMI_SERVICE_TX_MODE_PUSH_ONLY, len);
+ 	SVCMAP(WMI_10_4_SERVICE_TX_MODE_PUSH_PULL,
+-- 
+1.7.9.5
+
