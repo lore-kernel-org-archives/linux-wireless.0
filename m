@@ -1,75 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f67.google.com ([209.85.214.67]:35130 "EHLO
-	mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932959AbcHCWx0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 18:53:26 -0400
-Received: by mail-it0-f67.google.com with SMTP id f6so17061992ith.2
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 15:53:21 -0700 (PDT)
-From: engineering@keppy.com
-To: kvalo@qca.qualcomm.com
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] ath6kl: enable firmware crash dumps on the AR6004
-Date: Wed,  3 Aug 2016 16:43:43 -0400
-Message-Id: <1470257023-6747-1-git-send-email-dan.kephart@lairdtech.com> (sfid-20160804_005331_257008_8412C6A4)
+Received: from mga11.intel.com ([192.55.52.93]:20357 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933972AbcHBM0j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:26:39 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: pizza@shaftnet.org, kvalo@codeaurora.org, linuxwifi@intel.com,
+	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com
+Subject: [PATCH 0803/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:48:03 +0800
+Message-Id: <20160802114803.3500-1-baolex.ni@intel.com> (sfid-20160802_173931_898731_09C12641)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Kephart <dan.kephart@lairdtech.com>
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-The firmware crash dumps on the 6004 are the same as the 6003. Remove the
-statement guarding it from dumping on the 6004.  Renamed the
-REG_DUMP_COUNT_AR6003 to reflect support on both chips.
-
-Signed-off-by: Dan Kephart <dan.kephart@lairdtech.com>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- drivers/net/wireless/ath/ath6kl/hif.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+ drivers/net/wireless/st/cw1200/main.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
-index 18c0708..d194253 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/hif.c
-@@ -64,7 +64,7 @@ int ath6kl_hif_rw_comp_handler(void *context, int status)
- }
- EXPORT_SYMBOL(ath6kl_hif_rw_comp_handler);
+diff --git a/drivers/net/wireless/st/cw1200/main.c b/drivers/net/wireless/st/cw1200/main.c
+index dc478ce..c664c21 100644
+--- a/drivers/net/wireless/st/cw1200/main.c
++++ b/drivers/net/wireless/st/cw1200/main.c
+@@ -50,14 +50,14 @@ module_param_array_named(macaddr, cw1200_mac_template, byte, NULL, S_IRUGO);
+ MODULE_PARM_DESC(macaddr, "Override platform_data MAC address");
  
--#define REG_DUMP_COUNT_AR6003   60
-+#define REGISTER_DUMP_COUNT     60
- #define REGISTER_DUMP_LEN_MAX   60
+ static char *cw1200_sdd_path;
+-module_param(cw1200_sdd_path, charp, 0644);
++module_param(cw1200_sdd_path, charp, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(cw1200_sdd_path, "Override platform_data SDD file");
+ static int cw1200_refclk;
+-module_param(cw1200_refclk, int, 0644);
++module_param(cw1200_refclk, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(cw1200_refclk, "Override platform_data reference clock");
  
- static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
-@@ -73,9 +73,6 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
- 	u32 i, address, regdump_addr = 0;
- 	int ret;
+ int cw1200_power_mode = wsm_power_mode_quiescent;
+-module_param(cw1200_power_mode, int, 0644);
++module_param(cw1200_power_mode, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(cw1200_power_mode, "WSM power mode.  0 == active, 1 == doze, 2 == quiescent (default)");
  
--	if (ar->target_type != TARGET_TYPE_AR6003)
--		return;
--
- 	/* the reg dump pointer is copied to the host interest area */
- 	address = ath6kl_get_hi_item_addr(ar, HI_ITEM(hi_failure_state));
- 	address = TARG_VTOP(ar->target_type, address);
-@@ -95,7 +92,7 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
+ #define RATETAB_ENT(_rate, _rateid, _flags)		\
+@@ -239,8 +239,8 @@ static const struct ieee80211_ops cw1200_ops = {
  
- 	/* fetch register dump data */
- 	ret = ath6kl_diag_read(ar, regdump_addr, (u8 *)&regdump_val[0],
--				  REG_DUMP_COUNT_AR6003 * (sizeof(u32)));
-+				  REGISTER_DUMP_COUNT * (sizeof(u32)));
- 	if (ret) {
- 		ath6kl_warn("failed to get register dump: %d\n", ret);
- 		return;
-@@ -105,9 +102,9 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
- 	ath6kl_info("hw 0x%x fw %s\n", ar->wiphy->hw_version,
- 		    ar->wiphy->fw_version);
+ static int cw1200_ba_rx_tids = -1;
+ static int cw1200_ba_tx_tids = -1;
+-module_param(cw1200_ba_rx_tids, int, 0644);
+-module_param(cw1200_ba_tx_tids, int, 0644);
++module_param(cw1200_ba_rx_tids, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(cw1200_ba_tx_tids, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(cw1200_ba_rx_tids, "Block ACK RX TIDs");
+ MODULE_PARM_DESC(cw1200_ba_tx_tids, "Block ACK TX TIDs");
  
--	BUILD_BUG_ON(REG_DUMP_COUNT_AR6003 % 4);
-+	BUILD_BUG_ON(REGISTER_DUMP_COUNT % 4);
- 
--	for (i = 0; i < REG_DUMP_COUNT_AR6003; i += 4) {
-+	for (i = 0; i < REGISTER_DUMP_COUNT; i += 4) {
- 		ath6kl_info("%d: 0x%8.8x 0x%8.8x 0x%8.8x 0x%8.8x\n",
- 			    i,
- 			    le32_to_cpu(regdump_val[i]),
 -- 
-2.4.10
+2.9.2
 
