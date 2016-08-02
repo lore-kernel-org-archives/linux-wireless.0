@@ -1,49 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48590 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756831AbcH3GAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 02:00:21 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: kamil.toman@gmail.com, Arik Nemtsov <arik@wizery.com>
-Subject: [PATCH] mac80211: TDLS: don't require beaconing for AP BW
-Date: Tue, 30 Aug 2016 08:00:12 +0200
-Message-Id: <1472536812-6659-1-git-send-email-johannes@sipsolutions.net> (sfid-20160830_080025_407141_0393906D)
+Received: from mga02.intel.com ([134.134.136.20]:43106 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934707AbcHBMWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:22:23 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
+	bkenward@solarflare.com, linux-driver@qlogic.com,
+	computersforpeace@gmail.com, m.chehab@samsung.com,
+	pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	chuansheng.liu@intel.com, baolex.ni@intel.com,
+	daniel@iogearbox.net, pabeni@redhat.com
+Subject: [PATCH 0767/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:44:23 +0800
+Message-Id: <20160802114423.794-1-baolex.ni@intel.com> (sfid-20160802_175201_901052_666052C0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-Stop downgrading TDLS chandef when reaching the AP BW. The AP provides
-the necessary regulatory protection in this case.
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=153961
-
-Reported-by: Kamil Toman <kamil.toman@gmail.com>
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- net/mac80211/tdls.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath9k/init.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index b5d28f14b9cf..afca7d103684 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -333,10 +333,11 @@ ieee80211_tdls_chandef_vht_upgrade(struct ieee80211_sub_if_data *sdata,
- 	if (!uc.center_freq1)
- 		return;
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 2ee8624..5196633 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -42,33 +42,33 @@ module_param_named(debug, ath9k_debug, uint, 0);
+ MODULE_PARM_DESC(debug, "Debugging mask");
  
--	/* proceed to downgrade the chandef until usable or the same */
-+	/* proceed to downgrade the chandef until usable or the same as AP BW */
- 	while (uc.width > max_width ||
--	       !cfg80211_reg_can_beacon_relax(sdata->local->hw.wiphy, &uc,
--					      sdata->wdev.iftype))
-+	       (uc.width > sta->tdls_chandef.width &&
-+		!cfg80211_reg_can_beacon_relax(sdata->local->hw.wiphy, &uc,
-+					       sdata->wdev.iftype)))
- 		ieee80211_chandef_downgrade(&uc);
+ int ath9k_modparam_nohwcrypt;
+-module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, 0444);
++module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
  
- 	if (!cfg80211_chandef_identical(&uc, &sta->tdls_chandef)) {
+ int ath9k_led_blink;
+-module_param_named(blink, ath9k_led_blink, int, 0444);
++module_param_named(blink, ath9k_led_blink, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+ 
+ static int ath9k_led_active_high = -1;
+-module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
++module_param_named(led_active_high, ath9k_led_active_high, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
+ 
+ static int ath9k_btcoex_enable;
+-module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
++module_param_named(btcoex_enable, ath9k_btcoex_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
+ 
+ static int ath9k_bt_ant_diversity;
+-module_param_named(bt_ant_diversity, ath9k_bt_ant_diversity, int, 0444);
++module_param_named(bt_ant_diversity, ath9k_bt_ant_diversity, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(bt_ant_diversity, "Enable WLAN/BT RX antenna diversity");
+ 
+ static int ath9k_ps_enable;
+-module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
++module_param_named(ps_enable, ath9k_ps_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
+ 
+ #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+ 
+ int ath9k_use_chanctx;
+-module_param_named(use_chanctx, ath9k_use_chanctx, int, 0444);
++module_param_named(use_chanctx, ath9k_use_chanctx, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(use_chanctx, "Enable channel context for concurrency");
+ 
+ #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
 -- 
-2.8.1
+2.9.2
+
