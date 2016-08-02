@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:34921 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932946AbcH2MVg (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 08:21:36 -0400
-Received: by mail-pf0-f182.google.com with SMTP id x72so51761807pfd.2
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Aug 2016 05:21:35 -0700 (PDT)
-From: Baoyou Xie <baoyou.xie@linaro.org>
-To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        arnd@arndb.de, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
-Subject: [PATCH v2] ath9k: mark ath_fill_led_pin() static
-Date: Mon, 29 Aug 2016 20:21:13 +0800
-Message-Id: <1472473273-2972-1-git-send-email-baoyou.xie@linaro.org> (sfid-20160829_142143_012241_44CC9E15)
+Received: from mga11.intel.com ([192.55.52.93]:47940 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934597AbcHBMXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:23:11 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: j@w1.fi, kvalo@codeaurora.org, luciano.coelho@intel.com,
+	linuxwifi@intel.com, m.chehab@samsung.com, pawel@osciak.com,
+	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
+	k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com, lars@metafoo.de, johannes.berg@intel.com
+Subject: [PATCH 0778/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:45:29 +0800
+Message-Id: <20160802114529.1606-1-baolex.ni@intel.com> (sfid-20160802_142406_948412_BC9D9E67)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We get 1 warning about global functions without a declaration
-in the ath9k gpio driver when building with W=1:
-drivers/net/wireless/ath/ath9k/gpio.c:25:6: warning: no previous prototype for 'ath_fill_led_pin' [-Wmissing-prototypes]
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-In fact, this function is only used in the file in which it is declared
-and don't need a declaration, but can be made static.
-so this patch marks it 'static'.
-
-Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/gpio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intersil/hostap/hostap_ap.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 490f74d..ddb2886 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -22,7 +22,7 @@
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_ap.c b/drivers/net/wireless/intersil/hostap/hostap_ap.c
+index c995ace..c0c9f13 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_ap.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_ap.c
+@@ -32,22 +32,22 @@
  
- #ifdef CONFIG_MAC80211_LEDS
+ static int other_ap_policy[MAX_PARM_DEVICES] = { AP_OTHER_AP_SKIP_ALL,
+ 						 DEF_INTS };
+-module_param_array(other_ap_policy, int, NULL, 0444);
++module_param_array(other_ap_policy, int, NULL, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(other_ap_policy, "Other AP beacon monitoring policy (0-3)");
  
--void ath_fill_led_pin(struct ath_softc *sc)
-+static void ath_fill_led_pin(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
+ static int ap_max_inactivity[MAX_PARM_DEVICES] = { AP_MAX_INACTIVITY_SEC,
+ 						   DEF_INTS };
+-module_param_array(ap_max_inactivity, int, NULL, 0444);
++module_param_array(ap_max_inactivity, int, NULL, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(ap_max_inactivity, "AP timeout (in seconds) for station "
+ 		 "inactivity");
+ 
+ static int ap_bridge_packets[MAX_PARM_DEVICES] = { 1, DEF_INTS };
+-module_param_array(ap_bridge_packets, int, NULL, 0444);
++module_param_array(ap_bridge_packets, int, NULL, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(ap_bridge_packets, "Bridge packets directly between "
+ 		 "stations");
+ 
+ static int autom_ap_wds[MAX_PARM_DEVICES] = { 0, DEF_INTS };
+-module_param_array(autom_ap_wds, int, NULL, 0444);
++module_param_array(autom_ap_wds, int, NULL, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(autom_ap_wds, "Add WDS connections to other APs "
+ 		 "automatically");
  
 -- 
-2.7.4
+2.9.2
+
