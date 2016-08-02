@@ -1,90 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.75]:59222 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750929AbcHHU5t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2016 16:57:49 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: David Laight <David.Laight@aculab.com>
-Cc: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	'Arvind Yadav' <arvind.yadav.cs@gmail.com>,
-	"zajec5@gmail.com" <zajec5@gmail.com>,
-	"leoli@freescale.com" <leoli@freescale.com>,
-	"qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
-	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"scottwood@freescale.com" <scottwood@freescale.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"linux@roeck-us.net" <linux@roeck-us.net>
-Subject: Re: [5.3] ucc_geth: Fix to avoid IS_ERR_VALUE abuses and dead code on 64bit systems.
-Date: Mon, 08 Aug 2016 22:49:34 +0200
-Message-ID: <2025175.d8Oyuk2c9k@wuerfel> (sfid-20160808_225755_120447_E724B8D7)
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D5F50C532@AcuExch.aculab.com>
-References: <1470386442-7208-1-git-send-email-arvind.yadav.cs@gmail.com> <2862487.guU7g5Qkfj@wuerfel> <063D6719AE5E284EB5DD2968C1650D6D5F50C532@AcuExch.aculab.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from web01.01d.eu ([5.200.27.195]:33022 "EHLO web01.01d.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756030AbcHBTBa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 15:01:30 -0400
+From: Shiva Kerdel <shiva@exdev.nl>
+To: Larry.Finger@lwfinger.net
+Cc: Jes.Sorensen@redhat.com, gregkh@linuxfoundation.org,
+	geliangtang@163.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Shiva Kerdel <shiva@exdev.nl>
+Subject: [PATCH] Staging: rtl8723au: rtw_xmit: Fixed operators spacing style issues
+Date: Tue,  2 Aug 2016 20:05:30 +0200
+Message-Id: <20160802180530.2594-1-shiva@exdev.nl> (sfid-20160802_210215_141086_F56A0045)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, August 8, 2016 3:49:22 PM CEST David Laight wrote:
-> From: Arnd Bergmann
-> > Sent: 08 August 2016 16:13
-> > 
-> > On Monday, August 8, 2016 2:49:11 PM CEST David Laight wrote:
-> > >
-> > > > If qe_muram_alloc will return any error, Then IS_ERR_VALUE will always
-> > > > return 0. it'll not call ucc_fast_free for any failure. Inside 'if code'
-> > > > will be a dead code on 64bit. Even qe_muram_addr will return wrong
-> > > > virtual address. Which can cause an error.
-> > > >
-> > > >  kfree((void *)ugeth->tx_bd_ring_offset[i]);
-> > >
-> > > Erm, kfree() isn't the right function for things allocated by qe_muram_alloc().
-> > >
-> > > I still thing you need to stop this code using IS_ERR_VALUE() at all.
-> > 
-> > Those are two separate issues:
-> > 
-> > a) The ucc_geth driver mixing kmalloc() memory with muram, and assigning
-> >    the result to "u32" and "void __iomem *" variables, both of which
-> >    are wrong at least half of the time.
-> > 
-> > b) calling conventions of qe_muram_alloc() being defined in a way that
-> >    requires the use of IS_ERR_VALUE(), because '0' is a valid address
-> >    here.
-> 
-> Yep, it is all a big bag of worms...
-> '0' being valid is going to make tidying up after failure 'problematic'.
-> 
-> > The first one can be solved by updating the network driver, ideally
-> > by getting rid of the casts and using proper types and accessors,
-> > while the second would require updating all users of that interface.
-> 
-> It might be worth (at least as a compilation option) of embedding the
-> 'muram offset' in a structure (passed and returned by value).
-> 
-> The compiler can then check that the driver code is never be looking
-> directly at the value.
->
-> For 'b' zero can be made invalid by changing the places where the
-> offset is added/subtracted.
-> It could even be used to offset the saved physical and virtual
-> addresses of the area - so not needing any extra code when the values
-> are converted to physical/virtual addresses.
+Fixed spaces around operators to fix their coding style issues.
 
-Agreed.
+Signed-off-by: Shiva Kerdel <shiva@exdev.nl>
+---
+ drivers/staging/rtl8723au/core/rtw_xmit.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-For this driver, we don't actually seem to use the value returned from
-the allocation function, only the virtual __iomem address we get after
-calling qe_muram_addr(), so it would be a big improvement to just
-store the virtual address as a pointer, and wrap the calls
-to qe_muram_alloc/qe_muram_addr/qe_muram_free with an appropriate
-helper that doesn't even show the offset.
+diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
+index 3de40cf..56228a5 100644
+--- a/drivers/staging/rtl8723au/core/rtw_xmit.c
++++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
+@@ -174,7 +174,7 @@ int _rtw_init_xmit_priv23a(struct xmit_priv *pxmitpriv,
+ 	rtw_alloc_hwxmits23a(padapter);
+ 	rtw_init_hwxmits23a(pxmitpriv->hwxmits, pxmitpriv->hwxmit_entry);
+ 
+-	for (i = 0; i < 4; i ++)
++	for (i = 0; i < 4; i++)
+ 		pxmitpriv->wmm_para_seq[i] = i;
+ 
+ 	sema_init(&pxmitpriv->tx_retevt, 0);
+@@ -421,7 +421,7 @@ static int update_attrib(struct rtw_adapter *padapter,
+ 	struct security_priv *psecuritypriv = &padapter->securitypriv;
+ 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+ 	int res = _SUCCESS;
+-	struct ethhdr *ehdr = (struct ethhdr *) skb->data;
++	struct ethhdr *ehdr = (struct ethhdr *)skb->data;
+ 
+ 	pattrib->ether_type = ntohs(ehdr->h_proto);
+ 
+@@ -640,7 +640,7 @@ static int xmitframe_addmic(struct rtw_adapter *padapter,
+ 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+ 	int curfragnum, length;
+ 	u8 *pframe, *payload, mic[8];
+-	u8 priority[4]= {0x0, 0x0, 0x0, 0x0};
++	u8 priority[4] = {0x0, 0x0, 0x0, 0x0};
+ 	u8 hw_hdr_offset = 0;
+ 	int bmcst = is_multicast_ether_addr(pattrib->ra);
+ 
+@@ -667,10 +667,10 @@ static int xmitframe_addmic(struct rtw_adapter *padapter,
+ 	if (pattrib->encrypt == WLAN_CIPHER_SUITE_TKIP) {
+ 		/* encode mic code */
+ 		if (stainfo) {
+-			u8 null_key[16]={0x0, 0x0, 0x0, 0x0,
+-					 0x0, 0x0, 0x0, 0x0,
+-					 0x0, 0x0, 0x0, 0x0,
+-					 0x0, 0x0, 0x0, 0x0};
++			u8 null_key[16] = {0x0, 0x0, 0x0, 0x0,
++					   0x0, 0x0, 0x0, 0x0,
++					   0x0, 0x0, 0x0, 0x0,
++					   0x0, 0x0, 0x0, 0x0};
+ 
+ 			pframe = pxmitframe->buf_addr + hw_hdr_offset;
+ 
+@@ -961,11 +961,11 @@ static int rtw_make_wlanhdr(struct rtw_adapter *padapter, u8 *hdr,
+ 					/* DBG_8723A("tx ampdu seqnum(%d) < tx_seq(%d)\n", pattrib->seqnum, tx_seq); */
+ 					pattrib->ampdu_en = false;/* AGG BK */
+ 				} else if (SN_EQUAL(pattrib->seqnum, tx_seq)) {
+-					psta->BA_starting_seqctrl[pattrib->priority & 0x0f] = (tx_seq+1)&0xfff;
++					psta->BA_starting_seqctrl[pattrib->priority & 0x0f] = (tx_seq + 1)&0xfff;
+ 					pattrib->ampdu_en = true;/* AGG EN */
+ 				} else {
+ 					/* DBG_8723A("tx ampdu over run\n"); */
+-					psta->BA_starting_seqctrl[pattrib->priority & 0x0f] = (pattrib->seqnum+1)&0xfff;
++					psta->BA_starting_seqctrl[pattrib->priority & 0x0f] = (pattrib->seqnum + 1)&0xfff;
+ 					pattrib->ampdu_en = true;/* AGG EN */
+ 				}
+ 			}
+@@ -1164,8 +1164,8 @@ int rtw_xmitframe_coalesce23a(struct rtw_adapter *padapter, struct sk_buff *skb,
+ 			RT_TRACE(_module_rtl871x_xmit_c_, _drv_notice_,
+ 				 "rtw_xmiaframe_coalesce23a: keyid =%d pattrib->iv[3]=%.2x pframe =%.2x %.2x %.2x %.2x\n",
+ 				 padapter->securitypriv.dot11PrivacyKeyIndex,
+-				 pattrib->iv[3], *pframe, *(pframe+1),
+-				 *(pframe+2), *(pframe+3));
++				 pattrib->iv[3], *pframe, *(pframe + 1),
++				 *(pframe + 2), *(pframe + 3));
+ 			pframe += pattrib->iv_len;
+ 			mpdu_len -= pattrib->iv_len;
+ 		}
+@@ -1190,7 +1190,7 @@ int rtw_xmitframe_coalesce23a(struct rtw_adapter *padapter, struct sk_buff *skb,
+ 		pdata += mem_sz;
+ 		data_len -= mem_sz;
+ 
+-		if ((pattrib->icv_len >0) && (pattrib->bswenc)) {
++		if ((pattrib->icv_len > 0) && (pattrib->bswenc)) {
+ 			memcpy(pframe, pattrib->icv, pattrib->icv_len);
+ 			pframe += pattrib->icv_len;
+ 		}
+-- 
+2.9.2
 
-However, I'd also separate the normal kmalloc pointer from the
-muram_alloc() pointer because only the latter is __iomem, and
-we shouldn't really call MMIO accessor functions on RAM in
-portable code.
-
-	Arnd
