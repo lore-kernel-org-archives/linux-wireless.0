@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f179.google.com ([209.85.217.179]:34379 "EHLO
-        mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753421AbcHXTOM (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Aug 2016 15:14:12 -0400
-Received: by mail-ua0-f179.google.com with SMTP id k90so45742886uak.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2016 12:13:49 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAOMZO5BVB4YTsdzhU2f7jKZop6i1QaGGT2YM3Yw3DbYxeJ-v5w@mail.gmail.com>
-References: <CAOMZO5BVB4YTsdzhU2f7jKZop6i1QaGGT2YM3Yw3DbYxeJ-v5w@mail.gmail.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Wed, 24 Aug 2016 16:13:48 -0300
-Message-ID: <CAOMZO5C-NTppSiZt_Pc5GLrta06zvZiBwTVmpzhLVOR3f-6VbA@mail.gmail.com> (sfid-20160824_211415_640015_BE218E43)
-Subject: Re: brcmfmac43430-sdio.bin in linux-firmware
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-        Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-lf0-f49.google.com ([209.85.215.49]:36297 "EHLO
+	mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934619AbcHBMVG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:21:06 -0400
+Received: by mail-lf0-f49.google.com with SMTP id g62so136906021lfe.3
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 05:21:05 -0700 (PDT)
+From: Bartosz Markowski <bartosz.markowski@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Bartosz Markowski <bartosz.markowski@tieto.com>
+Subject: [PATCH 0/2] platform regulatory support
+Date: Tue,  2 Aug 2016 14:20:52 +0200
+Message-Id: <1470140454-3899-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20160802_175401_485645_6097C5D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Hardware or platform manufacturers may want to use a persistent
+memory storage to program ragulatory settings via e.g. bios, uefi, acpi.
 
-On Sat, Aug 6, 2016 at 12:15 PM, Fabio Estevam <festevam@gmail.com> wrote:
-> Hi,
->
-> I managed to get Wifi working on a imx7 warp board, which has a BCM43430 device.
->
-> I used the firmware from the RaspberryPi repository:
-> https://github.com/RPi-Distro/firmware-nonfree/tree/master/brcm80211/brcm
->
-> Are there any plans to make brcmfmac43430-sdio.bin available in the
-> official linux-firmware repository?
+This patch set implements methods to retrieve the platform regulatory
+settings (via ACPI calls) and use them to override the wifi chip
+eeprom default settings.
 
-Is this something you could help?
+This has been developed and tested on Skylake (Chromebook) platform, where the
+persistent area containing "region" value is called VPD.
 
-Thanks
+Bartosz Markowski (1):
+  ath10k: add platform regulatory domain support
+
+Michal Kazior (1):
+  ath: export alpha2 helper
+
+ drivers/net/wireless/ath/ath10k/core.h |   1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 117 +++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c  |   2 +-
+ drivers/net/wireless/ath/regd.c        |   3 +-
+ drivers/net/wireless/ath/regd.h        |   1 +
+ 5 files changed, 122 insertions(+), 2 deletions(-)
+
+-- 
+2.1.2
+
