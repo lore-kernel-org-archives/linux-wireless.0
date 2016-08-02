@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33370 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:22889 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752199AbcHAJlo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2016 05:41:44 -0400
-Message-ID: <1470044373.3389.20.camel@sipsolutions.net> (sfid-20160801_114210_377428_1D7C5A43)
-Subject: Re: [PATCH v2 1/3] mac80211: mesh: flush stations before beacons
- are stopped
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org
-Cc: Maital Hahn <maitalm@ti.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 01 Aug 2016 11:39:33 +0200
-In-Reply-To: <20160713114449.24665-1-yanivma@ti.com> (sfid-20160713_134104_660515_B2533FBA)
-References: <20160713114449.24665-1-yanivma@ti.com>
-	 (sfid-20160713_134104_660515_B2533FBA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S934749AbcHBM0l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:26:41 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: j@w1.fi, kvalo@codeaurora.org, luciano.coelho@intel.com,
+	linuxwifi@intel.com, m.chehab@samsung.com, pawel@osciak.com,
+	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
+	k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com, lars@metafoo.de, johannes.berg@intel.com
+Subject: [PATCH 0781/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:45:44 +0800
+Message-Id: <20160802114544.1811-1-baolex.ni@intel.com> (sfid-20160802_173931_370726_C418F53B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-07-13 at 14:44 +0300, Yaniv Machani wrote:
-> From: Maital Hahn <maitalm@ti.com>
-> 
-> Some drivers (e.g. wl18xx) expect that the last stage in the
-> de-initialization process will be stopping the beacons, similar to AP
-> flow.
-> Update ieee80211_stop_mesh() flow accordingly.
-> As peers can be removed dynamically, this would not impact other
-> drivers.
-> 
-Ah, I see now that you did :)
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-johannes
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/net/wireless/intersil/hostap/hostap_plx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intersil/hostap/hostap_plx.c b/drivers/net/wireless/intersil/hostap/hostap_plx.c
+index 4901a99..cbdd2c7 100644
+--- a/drivers/net/wireless/intersil/hostap/hostap_plx.c
++++ b/drivers/net/wireless/intersil/hostap/hostap_plx.c
+@@ -34,7 +34,7 @@ MODULE_LICENSE("GPL");
+ 
+ 
+ static int ignore_cis;
+-module_param(ignore_cis, int, 0444);
++module_param(ignore_cis, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(ignore_cis, "Do not verify manfid information in CIS");
+ 
+ 
+-- 
+2.9.2
+
