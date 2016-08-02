@@ -1,44 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0203.hostedemail.com ([216.40.44.203]:35279 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752353AbcHVU4L (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 16:56:11 -0400
-Message-ID: <1471899367.3746.78.camel@perches.com> (sfid-20160822_225635_399244_3B7AF444)
-Subject: Re: [PATCH] checkpatch: See if modified files are marked obsolete
- in MAINTAINERS
-From: Joe Perches <joe@perches.com>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Andy Whitcroft <apw@canonical.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Jouni Malinen <j@w1.fi>, kernel-janitors@vger.kernel.org,
-        Julia Lawall <julia.lawall@lip6.fr>,
-        linux-kernel@vger.kernel.org
-Date: Mon, 22 Aug 2016 13:56:07 -0700
-In-Reply-To: <30522d64-8303-cf13-d967-a5759aeb2278@users.sourceforge.net>
-References: <87shtwvm63.fsf@kamboji.qca.qualcomm.com>
-         <7ceaa510dc9d2df05ec4b456baed7bb1415550b3.1471889575.git.joe@perches.com>
-         <30522d64-8303-cf13-d967-a5759aeb2278@users.sourceforge.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mga14.intel.com ([192.55.52.115]:46503 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965756AbcHBM5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:57:49 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: johannes@sipsolutions.net, davem@davemloft.net,
+	linux-wimax@intel.com, anna.schumaker@netapp.com,
+	kadlec@blackhole.kfki.hu, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com, arnd@arndb.de, aryabinin@virtuozzo.com
+Subject: [PATCH 1141/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 20:19:56 +0800
+Message-Id: <20160802121956.26182-1-baolex.ni@intel.com> (sfid-20160802_145945_795154_BF1F7AB2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-08-22 at 22:50 +0200, SF Markus Elfring wrote:
-> > @@ -2289,6 +2299,10 @@ sub process {
-> >  		}
-> >  
-> >  		if ($found_file) {
-> > +			if (is_maintained_obsolete($realfile)) {
-> > +				WARN("OBSOLETE",
-> > +				     "$realfile is marked as 'obsolete' in the MAINTAINERS hierarchy.  No unnecessary modifications please.\n");
-> > +			}
-> How do you think about to avoid a double negation in such a warning message?
-> 
-> Would a wording like "… Only really necessary modifications please.\n"
-> be more useful here?
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-No, probably not.
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ net/wireless/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index ecca389..711ab8c 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -48,7 +48,7 @@ static struct dentry *ieee80211_debugfs_dir;
+ struct workqueue_struct *cfg80211_wq;
+ 
+ static bool cfg80211_disable_40mhz_24ghz;
+-module_param(cfg80211_disable_40mhz_24ghz, bool, 0644);
++module_param(cfg80211_disable_40mhz_24ghz, bool, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(cfg80211_disable_40mhz_24ghz,
+ 		 "Disable 40MHz support in the 2.4GHz band");
+ 
+-- 
+2.9.2
+
