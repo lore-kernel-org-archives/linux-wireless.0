@@ -1,36 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40013 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932173AbcHOH5C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2016 03:57:02 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Maxim Altshul <maxim.altshul@ti.com>
-Cc: <linux-kernel@vger.kernel.org>, <john.stultz@linaro.org>,
-	Eliad Peller <eliad@wizery.com>,
-	Yaniv Machani <yanivma@ti.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] wlcore: Remove wl pointer from wl_sta structure
-In-Reply-To: <20160804124314.7636-3-maxim.altshul@ti.com> (Maxim Altshul's
-	message of "Thu, 4 Aug 2016 15:43:05 +0300")
-References: <20160804124314.7636-1-maxim.altshul@ti.com>
-	<20160804124314.7636-2-maxim.altshul@ti.com>
-	<20160804124314.7636-3-maxim.altshul@ti.com>
-Date: Mon, 15 Aug 2016 10:56:57 +0300
-Message-ID: <87a8geea7q.fsf@kamboji.qca.qualcomm.com> (sfid-20160815_095711_644916_95BBA1CC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga01.intel.com ([192.55.52.88]:35201 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964792AbcHBMW7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:22:59 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: stas.yakovlev@gmail.com, kvalo@codeaurora.org,
+	bkenward@solarflare.com, linux-driver@qlogic.com,
+	computersforpeace@gmail.com, m.chehab@samsung.com,
+	pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com, lars@metafoo.de, johannes.berg@intel.com
+Subject: [PATCH 0776/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:45:17 +0800
+Message-Id: <20160802114517.1442-1-baolex.ni@intel.com> (sfid-20160802_142342_088420_C49F9293)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Altshul <maxim.altshul@ti.com> writes:
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-> No longer needed due to get_expected_throughput op change
->
-> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/net/wireless/intel/ipw2x00/libipw_module.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The commit log is very vague, please improve it. But most importantly
-you did not CC linux-wireless (adding it now) so lots of wireless people
-missed this patch. Please resend.
-
+diff --git a/drivers/net/wireless/intel/ipw2x00/libipw_module.c b/drivers/net/wireless/intel/ipw2x00/libipw_module.c
+index 60f2874..b8435fe 100644
+--- a/drivers/net/wireless/intel/ipw2x00/libipw_module.c
++++ b/drivers/net/wireless/intel/ipw2x00/libipw_module.c
+@@ -313,7 +313,7 @@ static void __exit libipw_exit(void)
+ 
+ #ifdef CONFIG_LIBIPW_DEBUG
+ #include <linux/moduleparam.h>
+-module_param(debug, int, 0444);
++module_param(debug, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(debug, "debug output mask");
+ #endif				/* CONFIG_LIBIPW_DEBUG */
+ 
 -- 
-Kalle Valo
+2.9.2
+
