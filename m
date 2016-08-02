@@ -1,106 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:46791 "EHLO
-        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755461AbcHVOGp (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 10:06:45 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
-        Maxim Altshul <maxim.altshul@ti.com>
-Subject: [PATCH 1/3 v3] mac80211: RX BA support for sta max_rx_aggregation_subframes
-Date: Mon, 22 Aug 2016 17:14:04 +0300
-Message-ID: <20160822141404.12814-1-maxim.altshul@ti.com> (sfid-20160822_160649_488669_08094CB2)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga11.intel.com ([192.55.52.93]:6235 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934705AbcHBMWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:22:23 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: kvalo@qca.qualcomm.com, linux-wimax@intel.com,
+	bkenward@solarflare.com, linux-driver@qlogic.com,
+	computersforpeace@gmail.com, m.chehab@samsung.com,
+	pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com, daniel@iogearbox.net, pabeni@redhat.com
+Subject: [PATCH 0765/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:44:07 +0800
+Message-Id: <20160802114407.661-1-baolex.ni@intel.com> (sfid-20160802_175141_656506_7A15E813)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ability to change the max_rx_aggregation frames is useful
-in cases of IOP.
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-There exist some devices (latest mobile phones and some AP's)
-that tend to not respect a BA sessions maximum size (in Kbps).
-These devices won't respect the AMPDU size that was negotiated during
-associasion (even though they do respect the maximal number of packets).
-
-This violation is characterized by a valid number of packets in
-a single AMPDU. Even so, the total size will exceed the size negotiated
-during association.
-
-Eventually, this will cause some undefined behavior, which in turn
-causes the hw to drop packets, causing the throughput to plummet.
-
-This patch will make the subframe limitation to be held by each station,
-instead of being held only by hw.
-
-Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
-No need to change the lock, since the driver changes the value of 
-sta->sta.max_rx_aggregation_subframes without locking.
-Add the station's address to debug, and change the commit message
-a little bit.
+ drivers/net/wireless/ath/ath6kl/core.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
- include/net/mac80211.h  | 4 ++++
- net/mac80211/agg-rx.c   | 7 +++++--
- net/mac80211/sta_info.c | 3 +++
- 3 files changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index cca510a..a1457ca 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1735,6 +1735,9 @@ struct ieee80211_sta_rates {
-  * @supp_rates: Bitmap of supported rates (per band)
-  * @ht_cap: HT capabilities of this STA; restricted to our own capabilities
-  * @vht_cap: VHT capabilities of this STA; restricted to our own capabilities
-+ * @max_rx_aggregation_subframes: maximal amount of frames in a single AMPDU
-+ *	that this station is allowed to transmit to us.
-+ *	Can be modified by driver.
-  * @wme: indicates whether the STA supports QoS/WME (if local devices does,
-  *	otherwise always false)
-  * @drv_priv: data area for driver use, will always be aligned to
-@@ -1775,6 +1778,7 @@ struct ieee80211_sta {
- 	u16 aid;
- 	struct ieee80211_sta_ht_cap ht_cap;
- 	struct ieee80211_sta_vht_cap vht_cap;
-+	u8 max_rx_aggregation_subframes;
- 	bool wme;
- 	u8 uapsd_queues;
- 	u8 max_sp;
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index a9aff60..bcf8a7e 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -298,10 +298,13 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		buf_size = IEEE80211_MAX_AMPDU_BUF;
+diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
+index ebb9f16..6b5b18b 100644
+--- a/drivers/net/wireless/ath/ath6kl/core.c
++++ b/drivers/net/wireless/ath/ath6kl/core.c
+@@ -37,15 +37,15 @@ static unsigned int testmode;
+ static unsigned int recovery_enable;
+ static unsigned int heart_beat_poll;
  
- 	/* make sure the size doesn't exceed the maximum supported by the hw */
--	if (buf_size > local->hw.max_rx_aggregation_subframes)
--		buf_size = local->hw.max_rx_aggregation_subframes;
-+	if (buf_size > sta->sta.max_rx_aggregation_subframes)
-+		buf_size = sta->sta.max_rx_aggregation_subframes;
- 	params.buf_size = buf_size;
- 
-+	ht_dbg(sta->sdata, "AddBA Req buf_size=%d for %pM\n",
-+			buf_size, sta->sta.addr);
-+
- 	/* examine state machine */
- 	mutex_lock(&sta->ampdu_mlme.mtx);
- 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 19f14c9..5e70fa5 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -340,6 +340,9 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
- 
- 	memcpy(sta->addr, addr, ETH_ALEN);
- 	memcpy(sta->sta.addr, addr, ETH_ALEN);
-+	sta->sta.max_rx_aggregation_subframes =
-+		local->hw.max_rx_aggregation_subframes;
-+
- 	sta->local = local;
- 	sta->sdata = sdata;
- 	sta->rx_stats.last_rx = jiffies;
+-module_param(debug_mask, uint, 0644);
+-module_param(suspend_mode, uint, 0644);
+-module_param(wow_mode, uint, 0644);
+-module_param(uart_debug, uint, 0644);
+-module_param(uart_rate, uint, 0644);
+-module_param(ath6kl_p2p, uint, 0644);
+-module_param(testmode, uint, 0644);
+-module_param(recovery_enable, uint, 0644);
+-module_param(heart_beat_poll, uint, 0644);
++module_param(debug_mask, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(suspend_mode, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(wow_mode, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(uart_debug, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(uart_rate, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(ath6kl_p2p, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(testmode, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(recovery_enable, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
++module_param(heart_beat_poll, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(recovery_enable, "Enable recovery from firmware error");
+ MODULE_PARM_DESC(heart_beat_poll,
+ 		 "Enable fw error detection periodic polling in msecs - Also set recovery_enable for this to be effective");
 -- 
-2.9.0
+2.9.2
+
