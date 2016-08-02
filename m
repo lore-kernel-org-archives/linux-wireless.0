@@ -1,145 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40972 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756443AbcH2V0i (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 17:26:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 00:26:07 +0300
-Message-Id: <1472505976-21108-7-git-send-email-luca@coelho.fi> (sfid-20160829_232641_553240_0174A5BB)
-In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
-References: <1472505827.27868.41.camel@coelho.fi>
- <1472505976-21108-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 07/16] iwlwifi: mvm: use defines for SCD_CONFIG_CMD enablement
+Received: from mx2.suse.de ([195.135.220.15]:52168 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756189AbcHBGi0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 02:38:26 -0400
+Date: Tue, 2 Aug 2016 08:34:19 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Daniel Wagner <daniel.wagner@bmw-carit.de>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Daniel Wagner <wagi@monom.org>,
+	Bastien Nocera <hadess@hadess.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	David Howells <dhowells@redhat.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
+ completion
+Message-ID: <20160802063419.GG3296@wotan.suse.de> (sfid-20160802_083844_139359_D69AF09D)
+References: <1469692512-16863-8-git-send-email-wagi@monom.org>
+ <20160728183343.GD16852@dtor-ws>
+ <20160728190151.GV13516@tuxbot>
+ <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de>
+ <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com>
+ <20160730165817.GQ3296@wotan.suse.de>
+ <C528E404-0CA5-46B4-B551-B1D4B58BC053@gmail.com>
+ <37a3cd66-262e-ffbe-ea7a-a6d5b1ca1c8b@bmw-carit.de>
+ <20160801194408.GZ3296@wotan.suse.de>
+ <0f9350fa-e8b5-9d64-b2d3-afda5e5f6bbf@bmw-carit.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0f9350fa-e8b5-9d64-b2d3-afda5e5f6bbf@bmw-carit.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Tue, Aug 02, 2016 at 07:49:19AM +0200, Daniel Wagner wrote:
+> >The sysdata API's main goal rather is to provide a flexible API first,
+> >compartamentalizing the usermode helper was secondary. But now it seems
+> >I may just also add devm support too to help simplify code further.
+> 
+> I missed the point that you plan to add usermode helper support to
+> the sysdata API.
 
-Due to the addition of another option in the SCD_CONFIG_CMD's
-%enable field, change the assignment of this field to use
-defines rather than hard-code the value itself.
+I had no such plans, when I have asked folks so far about "hey are you
+really in need for it, OK what for? " and "what extended uses do you
+envision?" so I far I have not gotten any replies at all. So -- instead
+sysdata currently ignores it.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 12 ++++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 13 +++++++------
- 3 files changed, 19 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index 4144623..6b4c63a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -675,13 +675,21 @@ static inline u32 iwl_mvm_get_scd_ssn(struct iwl_mvm_tx_resp *tx_resp)
- 			    tx_resp->frame_count) & 0xfff;
- }
- 
-+/* Available options for the SCD_QUEUE_CFG HCMD */
-+enum iwl_scd_cfg_actions {
-+	SCD_CFG_DISABLE_QUEUE		= 0x0,
-+	SCD_CFG_ENABLE_QUEUE		= 0x1,
-+	SCD_CFG_UPDATE_QUEUE_TID	= 0x2,
-+};
-+
- /**
-  * struct iwl_scd_txq_cfg_cmd - New txq hw scheduler config command
-  * @token:
-  * @sta_id: station id
-  * @tid:
-  * @scd_queue: scheduler queue to confiug
-- * @enable: 1 queue enable, 0 queue disable
-+ * @action: 1 queue enable, 0 queue disable, 2 change txq's tid owner
-+ *	Value is one of %iwl_scd_cfg_actions options
-  * @aggregate: 1 aggregated queue, 0 otherwise
-  * @tx_fifo: %enum iwl_mvm_tx_fifo
-  * @window: BA window size
-@@ -692,7 +700,7 @@ struct iwl_scd_txq_cfg_cmd {
- 	u8 sta_id;
- 	u8 tid;
- 	u8 scd_queue;
--	u8 enable;
-+	u8 action;
- 	u8 aggregate;
- 	u8 tx_fifo;
- 	u8 window;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 305219d..190bf1a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -536,7 +536,7 @@ int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
- {
- 	struct iwl_scd_txq_cfg_cmd cmd = {
- 		.scd_queue = queue,
--		.enable = 0,
-+		.action = SCD_CFG_DISABLE_QUEUE,
- 	};
- 	bool shared_queue;
- 	unsigned long mq;
-@@ -745,7 +745,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	if (using_inactive_queue) {
- 		struct iwl_scd_txq_cfg_cmd cmd = {
- 			.scd_queue = queue,
--			.enable = 0,
-+			.action = SCD_CFG_DISABLE_QUEUE,
- 		};
- 		u8 ac;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 423efab..7c138fe 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -610,7 +610,7 @@ int iwl_mvm_reconfig_scd(struct iwl_mvm *mvm, int queue, int fifo, int sta_id,
- {
- 	struct iwl_scd_txq_cfg_cmd cmd = {
- 		.scd_queue = queue,
--		.enable = 1,
-+		.action = SCD_CFG_ENABLE_QUEUE,
- 		.window = frame_limit,
- 		.sta_id = sta_id,
- 		.ssn = cpu_to_le16(ssn),
-@@ -684,7 +684,7 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 	if (enable_queue) {
- 		struct iwl_scd_txq_cfg_cmd cmd = {
- 			.scd_queue = queue,
--			.enable = 1,
-+			.action = SCD_CFG_ENABLE_QUEUE,
- 			.window = cfg->frame_limit,
- 			.sta_id = cfg->sta_id,
- 			.ssn = cpu_to_le16(ssn),
-@@ -711,7 +711,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- {
- 	struct iwl_scd_txq_cfg_cmd cmd = {
- 		.scd_queue = queue,
--		.enable = 0,
-+		.action = SCD_CFG_DISABLE_QUEUE,
- 	};
- 	bool remove_mac_queue = true;
- 	int ret;
-@@ -746,8 +746,9 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 			~BIT(mac80211_queue);
- 	mvm->queue_info[queue].hw_queue_refcount--;
- 
--	cmd.enable = mvm->queue_info[queue].hw_queue_refcount ? 1 : 0;
--	if (!cmd.enable)
-+	cmd.action = mvm->queue_info[queue].hw_queue_refcount ?
-+		SCD_CFG_ENABLE_QUEUE : SCD_CFG_DISABLE_QUEUE;
-+	if (cmd.action == SCD_CFG_DISABLE_QUEUE)
- 		mvm->queue_info[queue].status = IWL_MVM_QUEUE_FREE;
- 
- 	IWL_DEBUG_TX_QUEUES(mvm,
-@@ -757,7 +758,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 			    mvm->queue_info[queue].hw_queue_to_mac80211);
- 
- 	/* If the queue is still enabled - nothing left to do in this func */
--	if (cmd.enable) {
-+	if (cmd.action == SCD_CFG_ENABLE_QUEUE) {
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 		return;
- 	}
--- 
-2.8.1
+  Luis
