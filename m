@@ -1,116 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:36028 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755097AbcHSTCK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 15:02:10 -0400
-Received: by mail-wm0-f45.google.com with SMTP id q128so45540443wma.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2016 12:02:09 -0700 (PDT)
-Subject: Re: [PATCHv7 4/4] mt7601u: use linux/bitfield.h
-To: Jakub Kicinski <jakub.kicinski@netronome.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>
-References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
- <1471625049-12643-5-git-send-email-jakub.kicinski@netronome.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <161e3391-9a95-6388-6b93-99a5b12a2036@broadcom.com> (sfid-20160819_210220_731276_25C70859)
-Date: Fri, 19 Aug 2016 21:02:02 +0200
-MIME-Version: 1.0
-In-Reply-To: <1471625049-12643-5-git-send-email-jakub.kicinski@netronome.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mga03.intel.com ([134.134.136.65]:43346 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934613AbcHBM0j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:26:39 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: jussi.kivilinna@iki.fi, kvalo@codeaurora.org, linuxwifi@intel.com,
+	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com
+Subject: [PATCH 0802/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:47:58 +0800
+Message-Id: <20160802114758.3433-1-baolex.ni@intel.com> (sfid-20160802_173604_025701_F629E2CE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19-8-2016 18:44, Jakub Kicinski wrote:
-> Use the newly added linux/bitfield.h.
-> 
-> Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
-> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
-> ---
->  drivers/net/wireless/mediatek/mt7601u/dma.c     |  2 +-
->  drivers/net/wireless/mediatek/mt7601u/dma.h     | 10 ++--
->  drivers/net/wireless/mediatek/mt7601u/eeprom.c  | 12 ++--
->  drivers/net/wireless/mediatek/mt7601u/init.c    | 10 ++--
->  drivers/net/wireless/mediatek/mt7601u/mac.c     | 38 ++++++------
->  drivers/net/wireless/mediatek/mt7601u/mcu.c     | 20 +++----
->  drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  4 +-
->  drivers/net/wireless/mediatek/mt7601u/phy.c     | 44 +++++++-------
->  drivers/net/wireless/mediatek/mt7601u/tx.c      | 19 +++---
->  drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
->  10 files changed, 81 insertions(+), 155 deletions(-)
->  delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
-> 
-> diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
-> index 57a80cfa39b1..a8bc064bc14f 100644
-> --- a/drivers/net/wireless/mediatek/mt7601u/dma.c
-> +++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
-> @@ -103,7 +103,7 @@ static void mt7601u_rx_process_seg(struct mt7601u_dev *dev, u8 *data,
->  
->  	if (unlikely(rxwi->zero[0] || rxwi->zero[1] || rxwi->zero[2]))
->  		dev_err_once(dev->dev, "Error: RXWI zero fields are set\n");
-> -	if (unlikely(MT76_GET(MT_RXD_INFO_TYPE, fce_info)))
-> +	if (unlikely(FIELD_GET(MT_RXD_INFO_TYPE, fce_info)))
->  		dev_err_once(dev->dev, "Error: RX path seen a non-pkt urb\n");
->  
->  	trace_mt_rx(dev, rxwi, fce_info);
-> diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.h b/drivers/net/wireless/mediatek/mt7601u/dma.h
-> index 978e8a90b87f..270d126880c0 100644
-> --- a/drivers/net/wireless/mediatek/mt7601u/dma.h
-> +++ b/drivers/net/wireless/mediatek/mt7601u/dma.h
-> @@ -18,8 +18,6 @@
->  #include <asm/unaligned.h>
->  #include <linux/skbuff.h>
->  
-> -#include "util.h"
-> -
->  #define MT_DMA_HDR_LEN			4
->  #define MT_RX_INFO_LEN			4
->  #define MT_FCE_INFO_LEN			4
-> @@ -79,9 +77,9 @@ static inline int mt7601u_dma_skb_wrap(struct sk_buff *skb,
->  	 */
->  
->  	info = flags |
-> -		MT76_SET(MT_TXD_INFO_LEN, round_up(skb->len, 4)) |
-> -		MT76_SET(MT_TXD_INFO_D_PORT, d_port) |
-> -		MT76_SET(MT_TXD_INFO_TYPE, type);
-> +		FIELD_PREP(MT_TXD_INFO_LEN, round_up(skb->len, 4)) |
-> +		FIELD_PREP(MT_TXD_INFO_D_PORT, d_port) |
-> +		FIELD_PREP(MT_TXD_INFO_TYPE, type);
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-So what are those flags? Is there no field definition for those.
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/net/wireless/rndis_wlan.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
->  	put_unaligned_le32(info, skb_push(skb, sizeof(info)));
->  	return skb_put_padto(skb, round_up(skb->len, 4) + 4);
-> @@ -90,7 +88,7 @@ static inline int mt7601u_dma_skb_wrap(struct sk_buff *skb,
->  static inline int
->  mt7601u_dma_skb_wrap_pkt(struct sk_buff *skb, enum mt76_qsel qsel, u32 flags)
->  {
-> -	flags |= MT76_SET(MT_TXD_PKT_INFO_QSEL, qsel);
-> +	flags |= FIELD_PREP(MT_TXD_PKT_INFO_QSEL, qsel);
+diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
+index 569918c..f6317d7 100644
+--- a/drivers/net/wireless/rndis_wlan.c
++++ b/drivers/net/wireless/rndis_wlan.c
+@@ -46,43 +46,43 @@
+ 
+ /* NOTE: All these are settings for Broadcom chipset */
+ static char modparam_country[4] = "EU";
+-module_param_string(country, modparam_country, 4, 0444);
++module_param_string(country, modparam_country, 4, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(country, "Country code (ISO 3166-1 alpha-2), default: EU");
+ 
+ static int modparam_frameburst = 1;
+-module_param_named(frameburst, modparam_frameburst, int, 0444);
++module_param_named(frameburst, modparam_frameburst, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(frameburst, "enable frame bursting (default: on)");
+ 
+ static int modparam_afterburner = 0;
+-module_param_named(afterburner, modparam_afterburner, int, 0444);
++module_param_named(afterburner, modparam_afterburner, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(afterburner,
+ 	"enable afterburner aka '125 High Speed Mode' (default: off)");
+ 
+ static int modparam_power_save = 0;
+-module_param_named(power_save, modparam_power_save, int, 0444);
++module_param_named(power_save, modparam_power_save, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(power_save,
+ 	"set power save mode: 0=off, 1=on, 2=fast (default: off)");
+ 
+ static int modparam_power_output = 3;
+-module_param_named(power_output, modparam_power_output, int, 0444);
++module_param_named(power_output, modparam_power_output, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(power_output,
+ 	"set power output: 0=25%, 1=50%, 2=75%, 3=100% (default: 100%)");
+ 
+ static int modparam_roamtrigger = -70;
+-module_param_named(roamtrigger, modparam_roamtrigger, int, 0444);
++module_param_named(roamtrigger, modparam_roamtrigger, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(roamtrigger,
+ 	"set roaming dBm trigger: -80=optimize for distance, "
+ 				"-60=bandwidth (default: -70)");
+ 
+ static int modparam_roamdelta = 1;
+-module_param_named(roamdelta, modparam_roamdelta, int, 0444);
++module_param_named(roamdelta, modparam_roamdelta, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(roamdelta,
+ 	"set roaming tendency: 0=aggressive, 1=moderate, "
+ 				"2=conservative (default: moderate)");
+ 
+ static int modparam_workaround_interval;
+ module_param_named(workaround_interval, modparam_workaround_interval,
+-							int, 0444);
++							int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(workaround_interval,
+ 	"set stall workaround interval in msecs (0=disabled) (default: 0)");
+ 
+-- 
+2.9.2
 
-Ah. This is the flags being ORed in above. I suppose there are more
-callsites to mt7601u_dma_skb_wrap().
-
->  	return mt7601u_dma_skb_wrap(skb, WLAN_PORT, DMA_PACKET, flags);
->  }
->  
-> diff --git a/drivers/net/wireless/mediatek/mt7601u/eeprom.c b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
-> index 8d8ee0344f7b..da6faea092d6 100644
-> --- a/drivers/net/wireless/mediatek/mt7601u/eeprom.c
-> +++ b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
-> @@ -45,8 +45,8 @@ mt7601u_efuse_read(struct mt7601u_dev *dev, u16 addr, u8 *data,
->  	val = mt76_rr(dev, MT_EFUSE_CTRL);
->  	val &= ~(MT_EFUSE_CTRL_AIN |
->  		 MT_EFUSE_CTRL_MODE);
-> -	val |= MT76_SET(MT_EFUSE_CTRL_AIN, addr & ~0xf) |
-> -	       MT76_SET(MT_EFUSE_CTRL_MODE, mode) |
-> +	val |= FIELD_PREP(MT_EFUSE_CTRL_AIN, addr & ~0xf) |
-> +	       FIELD_PREP(MT_EFUSE_CTRL_MODE, mode) |
->  	       MT_EFUSE_CTRL_KICK;
-
-MT_EFUSE_CTRL_KICK is probably a 1-bit field in MT_EFUSE_CTRL register.
-It looks like you did not want to go all the way although you do give an
-example in bitfield.h, ie. + *  #define REG_FIELD_B  BIT(7).
-
-Regards,
-Arend
