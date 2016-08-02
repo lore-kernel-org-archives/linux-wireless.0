@@ -1,98 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33943 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753148AbcHUOt2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Aug 2016 10:49:28 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org
-Cc: robh+dt@kernel.org, mark.rutland@arm.com, arnd@arndb.de,
-        chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 2/5] ath9k: Set the "big endian" bit of the AR9003 EEPROM templates
-Date: Sun, 21 Aug 2016 16:49:03 +0200
-Message-Id: <20160821144906.30984-3-martin.blumenstingl@googlemail.com> (sfid-20160821_164931_990785_497B15E6)
-In-Reply-To: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+Received: from mga11.intel.com ([192.55.52.93]:47082 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934878AbcHBM3B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:29:01 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org, linuxwifi@intel.com, m.chehab@samsung.com,
+	pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com
+Subject: [PATCH 0797/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:47:23 +0800
+Message-Id: <20160802114723.2972-1-baolex.ni@intel.com> (sfid-20160802_172954_302353_40E773E9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We will default to the system's native endianness for the eepmisc value.
-This may be overwritten by the actual calibration data. If it is not
-overwritten we interpret the template data in it's native endianness,
-meaning that no swapping is required.
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |  6 ++++++
- 2 files changed, 11 insertions(+), 5 deletions(-)
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index ea7b819..6669e36 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -53,7 +53,7 @@ static const struct ar9300_eeprom ar9300_default = {
- 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-@@ -631,7 +631,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
- 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-@@ -1210,7 +1210,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
- 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-@@ -1789,7 +1789,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
- 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-@@ -2367,7 +2367,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
- 		.txrxMask =  0x33, /* 4 bits tx and 4 bits rx */
- 		.opCapFlags = {
- 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
--			.eepMisc = 0,
-+			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
- 		},
- 		.rfSilent = 0,
- 		.blueToothOptions = 0,
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 0a4c736..7e06f12 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -69,6 +69,12 @@
- #define AR9300_BASE_ADDR 0x3ff
- #define AR9300_BASE_ADDR_512 0x1ff
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+index c31c6bf..581af83 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
+@@ -369,14 +369,14 @@ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Realtek 8192EE 802.11n PCI wireless");
+ MODULE_FIRMWARE("rtlwifi/rtl8192eefw.bin");
  
-+#ifdef __BIG_ENDIAN
-+#define AR9300_EEPMISC_DEFAULT_VALUE AR5416_EEPMISC_BIG_ENDIAN
-+#else
-+#define AR9300_EEPMISC_DEFAULT_VALUE 0
-+#endif
-+
- #define AR9300_OTP_BASE \
- 		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x30000 : 0x14000)
- #define AR9300_OTP_STATUS \
+-module_param_named(swenc, rtl92ee_mod_params.sw_crypto, bool, 0444);
+-module_param_named(debug, rtl92ee_mod_params.debug, int, 0444);
+-module_param_named(ips, rtl92ee_mod_params.inactiveps, bool, 0444);
+-module_param_named(swlps, rtl92ee_mod_params.swctrl_lps, bool, 0444);
+-module_param_named(fwlps, rtl92ee_mod_params.fwctrl_lps, bool, 0444);
+-module_param_named(msi, rtl92ee_mod_params.msi_support, bool, 0444);
++module_param_named(swenc, rtl92ee_mod_params.sw_crypto, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(debug, rtl92ee_mod_params.debug, int, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(ips, rtl92ee_mod_params.inactiveps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(swlps, rtl92ee_mod_params.swctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(fwlps, rtl92ee_mod_params.fwctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(msi, rtl92ee_mod_params.msi_support, bool, S_IRUSR | S_IRGRP | S_IROTH);
+ module_param_named(disable_watchdog, rtl92ee_mod_params.disable_watchdog,
+-		   bool, 0444);
++		   bool, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
 -- 
-2.9.3
+2.9.2
+
