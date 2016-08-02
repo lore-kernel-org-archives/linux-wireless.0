@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound1a.ore.mailhop.org ([54.213.22.21]:11220 "EHLO
-	outbound1a.ore.mailhop.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750938AbcHHWE6 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24102 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932497AbcHBLp0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2016 18:04:58 -0400
-Date: Mon, 8 Aug 2016 22:04:52 +0000
-From: Jason Cooper <jason@lakedaemon.net>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Ted Tso <tytso@mit.edu>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
-	"herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH v2] RANDOM: ATH9K RNG delivers zero bits of entropy
-Message-ID: <20160808220452.GA2013@io.lakedaemon.net> (sfid-20160809_000532_349172_632B41D1)
-References: <34197429.2CvoIfft9B@positron.chronox.de>
- <1654172.XfclnXhRmn@positron.chronox.de>
- <657897b90b8344eeab10d7a0f604988d@aptaiexm02f.ap.qualcomm.com>
- <1830987.VF9l4XmGxv@tauon.atsec.com>
- <20160808172930.GD4511@io.lakedaemon.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160808172930.GD4511@io.lakedaemon.net>
+	Tue, 2 Aug 2016 07:45:26 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 0/8] wil6210 pathches
+Date: Tue,  2 Aug 2016 14:42:04 +0300
+Message-Id: <1470138132-18071-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160802_134542_604103_3D079927)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephan,
+The following set of patches include wil6210 bug fixes
 
-On Mon, Aug 08, 2016 at 05:29:30PM +0000, Jason Cooper wrote:
-> On Mon, Aug 08, 2016 at 08:41:36AM +0200, Stephan Mueller wrote:
-...
-> > If you think that this patch is a challenge because your driver starts to 
-> > spin, please help and offer another solution.
-> 
-> Well, I don't buy the reasoning listed above for not using the hwrng
-> framework.  Interrupt timings were never designed to be a source of entropy
-> either.  We need to grab it where ever we can find it, especially on
-> embedded systems.  Documentation/hw_random.txt even says:
-> 
-> """
-> This data is NOT CHECKED by any fitness tests, and could potentially be
-> bogus (if the hardware is faulty or has been tampered with).
-> """
-> 
-> I really don't think there's a problem with adding these sorts of
-> sources under char/hw_random/.  I think the only thing we would be
-> concerned about, other than the already addressed entropy estimation,
-> would be constraining the data rate.
+Lazar Alexei (1):
+  wil6210: Fix driver down flow
 
-Further research yields char/hw_random/timeriomem-rng.c
+Lior David (2):
+  wil6210: change HALP logging category to IRQ
+  wil6210: fix wiphy registration sequence
 
-It could use an update to ->read() vice data_{present,read}(), but it's
-functionally exactly what the ath9k rng is doing. :)
+Maya Erez (5):
+  wil6210: align to latest auto generated wmi.h
+  wil6210: fix HALP handling in case of HALP vote time-out
+  wil6210: support rx key setting for all TIDs
+  wil6210: fix stop p2p device handling
+  wil6210: prevent usage of incorrect TX hwtail
 
-thx,
+ drivers/net/wireless/ath/wil6210/cfg80211.c  | 148 ++++---
+ drivers/net/wireless/ath/wil6210/interrupt.c |  15 +-
+ drivers/net/wireless/ath/wil6210/main.c      |  54 +--
+ drivers/net/wireless/ath/wil6210/netdev.c    |  32 +-
+ drivers/net/wireless/ath/wil6210/p2p.c       |  46 ++
+ drivers/net/wireless/ath/wil6210/pcie_bus.c  |   5 +-
+ drivers/net/wireless/ath/wil6210/txrx.c      |   9 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h   |   2 +
+ drivers/net/wireless/ath/wil6210/wmi.h       | 640 +++++++++++++++++++++++----
+ 9 files changed, 768 insertions(+), 183 deletions(-)
 
-Jason.
+-- 
+1.9.1
+
