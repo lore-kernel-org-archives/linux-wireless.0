@@ -1,69 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:3071 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932195AbcHCOWH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 10:22:07 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] mwifiex: handle edmac vendor command
-Date: Wed, 3 Aug 2016 11:20:57 +0000
-Message-ID: <e2b7d7d9aef1488a97eb7ec44b4c46af@SC-EXCH04.marvell.com> (sfid-20160803_162306_193285_8D26D8DA)
-References: <1461945483-3239-1-git-send-email-akarwar@marvell.com>
-	<cbd542a552db4d368a5b402307976494@SC-EXCH04.marvell.com>
- <87zirg8qxo.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87zirg8qxo.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from nbd.name ([46.4.11.11]:57408 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751385AbcHBJNs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 05:13:48 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: fix purging multicast PS buffer queue
+Date: Tue,  2 Aug 2016 11:13:41 +0200
+Message-Id: <20160802091341.64330-1-nbd@nbd.name> (sfid-20160802_111356_489284_9B44A4D7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+The code currently assumes that buffered multicast PS frames don't have
+a pending ACK frame for tx status reporting.
+However, hostapd sends a broadcast deauth frame on teardown for which tx
+status is requested. This can lead to the "Have pending ack frames"
+warning on module reload.
+Fix this by using ieee80211_free_txskb/ieee80211_purge_tx_queue.
 
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Tuesday, May 24, 2016 1:53 AM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH] mwifiex: handle edmac vendor command
-> 
-> Amitkumar Karwar <akarwar@marvell.com> writes:
-> 
-> > Hi Kalle,
-> >
-> >> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
-> >> Sent: Friday, April 29, 2016 9:28 PM
-> >> To: linux-wireless@vger.kernel.org
-> >> Cc: Jeff CF Chen; Amitkumar Karwar
-> >> Subject: [PATCH] mwifiex: handle edmac vendor command
-> >>
-> >> From: chunfan chen <jeffc@marvell.com>
-> >>
-> >> Userspace can configure edmac values through a custom vendor command.
-> >> They will be used by hardware for adaptivity.
-> >>
-> >> Signed-off-by: chunfan chen <jeffc@marvell.com>
-> >> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> [deleted over 200 lines of unnecessary quotes]
-> 
-> > This patch seems to have deferred. We basically want a way to download
-> > a vendor specific configuration to our firmware. Do you have any
-> > suggestions on how can achieve this in better way?
-> >
-> > I can see below iw command suits our requirement.
-> >
-> > iw dev <devname> vendor send <oui> <subcmd> <filename|-|hex data>
-> >
-> > Please guide.
-> 
-> It was deferred because use of the nl80211 vendor interface (which I
-> don't think belong to upstream drivers). I'll take a look at this patch
-> in detail after the merge window.
-> 
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/cfg.c | 2 +-
+ net/mac80211/tx.c  | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Did you get a chance to check this patch?
-Please let me know if you have any suggestions.
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 47e99ab8..543b1d4 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -869,7 +869,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 
+ 	/* free all potentially still buffered bcast frames */
+ 	local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps.bc_buf);
+-	skb_queue_purge(&sdata->u.ap.ps.bc_buf);
++	ieee80211_purge_tx_queue(&local->hw, &sdata->u.ap.ps.bc_buf);
+ 
+ 	mutex_lock(&local->mtx);
+ 	ieee80211_vif_copy_chanctx_to_vlans(sdata, true);
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 91461c4..5023966 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -368,7 +368,7 @@ static void purge_old_ps_buffers(struct ieee80211_local *local)
+ 		skb = skb_dequeue(&ps->bc_buf);
+ 		if (skb) {
+ 			purged++;
+-			dev_kfree_skb(skb);
++			ieee80211_free_txskb(&local->hw, skb);
+ 		}
+ 		total += skb_queue_len(&ps->bc_buf);
+ 	}
+@@ -451,7 +451,7 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
+ 	if (skb_queue_len(&ps->bc_buf) >= AP_MAX_BC_BUFFER) {
+ 		ps_dbg(tx->sdata,
+ 		       "BC TX buffer full - dropping the oldest frame\n");
+-		dev_kfree_skb(skb_dequeue(&ps->bc_buf));
++		ieee80211_free_txskb(&tx->local->hw, skb_dequeue(&ps->bc_buf));
+ 	} else
+ 		tx->local->total_ps_buffered++;
+ 
+@@ -4275,7 +4275,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
+ 			sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
+ 		if (!ieee80211_tx_prepare(sdata, &tx, NULL, skb))
+ 			break;
+-		dev_kfree_skb_any(skb);
++		ieee80211_free_txskb(hw, skb);
+ 	}
+ 
+ 	info = IEEE80211_SKB_CB(skb);
+-- 
+2.8.4
 
-Regards,
-Amitkumar
