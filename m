@@ -1,47 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:17437 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751059AbcHJSMQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:12:16 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 1/4] cfg80211: rdev-ops: remove callback check from rdev_set_coalesce()
-Date: Wed, 10 Aug 2016 12:33:26 +0200
-Message-Id: <1470825209-10054-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160810_201230_489812_57E3C885)
+Received: from s3.sipsolutions.net ([5.9.151.49]:39527 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752673AbcHBH3N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 03:29:13 -0400
+Message-ID: <1470122837.2665.5.camel@sipsolutions.net> (sfid-20160802_092938_151744_AB03B5A3)
+Subject: Re: [PATCH v3 3/3] mac80211: mesh: fixed HT ies in beacon template
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org,
+	Meirav Kama <meiravk@ti.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Tue, 02 Aug 2016 09:27:17 +0200
+In-Reply-To: <1c2d3cfc-b7fd-c8fd-4f74-14dd3aa3076e@gmail.com> (sfid-20160802_045911_090360_06FDF780)
+References: <20160713200755.26839-1-yanivma@ti.com>
+ <40a34537-486e-a466-5a7e-e253f19d81c3@gmail.com>
+ <1470045822.3389.24.camel@sipsolutions.net>
+ <75fef3ce-41a6-5845-e9be-d7ff052a07da@gmail.com>
+	 <1c2d3cfc-b7fd-c8fd-4f74-14dd3aa3076e@gmail.com>
+	 (sfid-20160802_045911_090360_06FDF780)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wrapper rdev_set_coalesce() checks whether the driver provides
-the set_coalesce callback and returns -ENOTSUPP if not. However, this
-check is already performed in nl80211_set_coalesce() resulting in
--EOPNOTSUPP. This patch removes check from rdev wrapper function.
+On Tue, 2016-08-02 at 11:59 +0900, Masashi Honma wrote:
+> > 
+> > On 2016年08月01日 19:03, Johannes Berg wrote:
+> > > 
+> > > But why is that behaviour *correct*? We still support 40 MHz
+> > > bandwidth
+> > > things, we just don't use them if we disable HT40.
+> 
+> Or do you mean difference between "hardware capability" and "software
+> capability" ?
+> Do you think IEEE80211_HT_CAP_SUP_WIDTH_20_40 bit should be 1 if the 
+> hardware capable of HT40 even though HT40 is disabled by 
+> wpa_supplicant/hostapd ?
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- net/wireless/rdev-ops.h | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+I basically think that the CAP_SUP_WIDTH_20_40 bit shouldn't matter at
+all, so it's not clear to me why there's so much talk about it.
 
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 85ff30b..903b58a 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1063,11 +1063,10 @@ static inline int
- rdev_set_coalesce(struct cfg80211_registered_device *rdev,
- 		  struct cfg80211_coalesce *coalesce)
- {
--	int ret = -ENOTSUPP;
-+	int ret;
- 
- 	trace_rdev_set_coalesce(&rdev->wiphy, coalesce);
--	if (rdev->ops->set_coalesce)
--		ret = rdev->ops->set_coalesce(&rdev->wiphy, coalesce);
-+	ret = rdev->ops->set_coalesce(&rdev->wiphy, coalesce);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
--- 
-1.9.1
+After all, if 40 MHz isn't actually *used* as indicated by the HT
+operation (rather than HT capability) IE, then the fact that the device
+may or may not support 40 MHz is pretty much irrelevant.
 
+> I have tested with hostapd. I compared these 2 configfiles.
+> 
+> hostapd0.conf
+> 	ht_capab=[HT40-]
+> hostapd1.conf
+> 	#ht_capab=[HT40-]
+> 
+
+This explicitly configures *HT capability* though - that's even the
+name of the parameter. If you enable HT40 in the capability, the
+resulting BSS might still not actually *use* 40 MHz bandwidth, as
+required by overlapping BSS detection.
+
+In this patch, they're taking one thing (current HT channel width
+configuration) and applying it to another thing (HT capability), and
+then even selling it as a bugfix - which I simply cannot understand.
+The HT capability shouldn't matter at all, if HT operation is correct.
+
+johannes
