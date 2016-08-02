@@ -1,18 +1,19 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:60228 "EHLO mga14.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:61291 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965823AbcHBM5R (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:57:17 -0400
+	id S934816AbcHBM3B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:29:01 -0400
 From: Baole Ni <baolex.ni@intel.com>
-To: johannes@sipsolutions.net, davem@davemloft.net, jmorris@namei.org,
-	yoshfuji@linux-ipv6.org, kaber@trash.net, m.szyprowski@samsung.com,
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org, linuxwifi@intel.com, m.chehab@samsung.com,
+	pawel@osciak.com, m.szyprowski@samsung.com,
 	kyungmin.park@samsung.com, k.kozlowski@samsung.com
 Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com, aarcange@redhat.com, aryabinin@virtuozzo.com
-Subject: [PATCH 1112/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 20:17:33 +0800
-Message-Id: <20160802121733.24261-1-baolex.ni@intel.com> (sfid-20160802_161036_554001_AC5D93B8)
+	baolex.ni@intel.com
+Subject: [PATCH 0798/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:47:34 +0800
+Message-Id: <20160802114734.3053-1-baolex.ni@intel.com> (sfid-20160802_143229_415597_A63F58EA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
@@ -25,46 +26,30 @@ thus, I suggest replacing the numeric parameter with the macro.
 Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
 Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- net/mac80211/mlme.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index 8d426f6..ca2f846 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -42,12 +42,12 @@
- #define IEEE80211_ASSOC_MAX_TRIES	3
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
+index 31baca41..d543a78 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
+@@ -420,11 +420,11 @@ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Realtek 8192S/8191S 802.11n PCI wireless");
+ MODULE_FIRMWARE("rtlwifi/rtl8192sefw.bin");
  
- static int max_nullfunc_tries = 2;
--module_param(max_nullfunc_tries, int, 0644);
-+module_param(max_nullfunc_tries, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(max_nullfunc_tries,
- 		 "Maximum nullfunc tx tries before disconnecting (reason 4).");
- 
- static int max_probe_tries = 5;
--module_param(max_probe_tries, int, 0644);
-+module_param(max_probe_tries, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(max_probe_tries,
- 		 "Maximum probe tries before disconnecting (reason 4).");
- 
-@@ -60,7 +60,7 @@ MODULE_PARM_DESC(max_probe_tries,
-  * default to what we want.
-  */
- static int beacon_loss_count = 7;
--module_param(beacon_loss_count, int, 0644);
-+module_param(beacon_loss_count, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(beacon_loss_count,
- 		 "Number of beacon intervals before we decide beacon was lost.");
- 
-@@ -75,7 +75,7 @@ MODULE_PARM_DESC(beacon_loss_count,
-  * checking the connection still works.
-  */
- static int probe_wait_ms = 500;
--module_param(probe_wait_ms, int, 0644);
-+module_param(probe_wait_ms, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(probe_wait_ms,
- 		 "Maximum time(ms) to wait for probe response"
- 		 " before disconnecting (reason 4).");
+-module_param_named(swenc, rtl92se_mod_params.sw_crypto, bool, 0444);
+-module_param_named(debug, rtl92se_mod_params.debug, int, 0444);
+-module_param_named(ips, rtl92se_mod_params.inactiveps, bool, 0444);
+-module_param_named(swlps, rtl92se_mod_params.swctrl_lps, bool, 0444);
+-module_param_named(fwlps, rtl92se_mod_params.fwctrl_lps, bool, 0444);
++module_param_named(swenc, rtl92se_mod_params.sw_crypto, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(debug, rtl92se_mod_params.debug, int, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(ips, rtl92se_mod_params.inactiveps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(swlps, rtl92se_mod_params.swctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(fwlps, rtl92se_mod_params.fwctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 1)\n");
 -- 
 2.9.2
 
