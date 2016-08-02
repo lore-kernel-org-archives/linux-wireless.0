@@ -1,103 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41160 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758167AbcH3Ljb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 07:39:31 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 14:38:51 +0300
-Message-Id: <1472557142-14782-5-git-send-email-luca@coelho.fi> (sfid-20160830_133942_868809_1EE2FF8C)
-In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
-References: <1472556999.27868.86.camel@coelho.fi>
- <1472557142-14782-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 05/16] iwlwifi: mvm: keep track of tid associated with each queue
+Received: from mga04.intel.com ([192.55.52.120]:10128 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934503AbcHBM0j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:26:39 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	kvalo@codeaurora.org, linuxwifi@intel.com, m.chehab@samsung.com,
+	pawel@osciak.com, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com
+Subject: [PATCH 0801/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:47:53 +0800
+Message-Id: <20160802114753.3366-1-baolex.ni@intel.com> (sfid-20160802_174024_930938_6084721D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-When sending the SCD_QUEUE_CONFIG command, the queue is
-associated to a specific TID. If later there is a need to
-use this TID on a different queue instead, it first needs to
-be unassociated from the first queue.
-
-Keep track for every queue what TID is associated with it.
-
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   | 1 +
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c   | 7 +++++++
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 3 +++
- 3 files changed, 11 insertions(+)
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index ee5a9ad..1806495 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -772,6 +772,7 @@ struct iwl_mvm {
- 		u8 ra_sta_id; /* The RA this queue is mapped to, if exists */
- 		bool reserved; /* Is this the TXQ reserved for a STA */
- 		u8 mac80211_ac; /* The mac80211 AC this queue is mapped to */
-+		u8 txq_tid; /* The TID "owner" of this queue*/
- 		u16 tid_bitmap; /* Bitmap of the TIDs mapped to this queue */
- 		/* Timestamp for inactivation per TID of this queue */
- 		unsigned long last_frame_time[IWL_MAX_TID_COUNT + 1];
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 1f235e8..730ba78 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -562,6 +562,7 @@ int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+index 4159f9b..fec4969 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c
+@@ -433,15 +433,15 @@ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Realtek 8821ae 802.11ac PCI wireless");
+ MODULE_FIRMWARE("rtlwifi/rtl8821aefw.bin");
  
- 	cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
- 	cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[mvm->queue_info[queue].mac80211_ac];
-+	cmd.tid = mvm->queue_info[queue].txq_tid;
- 	mq = mvm->queue_info[queue].hw_queue_to_mac80211;
- 	shared_queue = (mvm->queue_info[queue].hw_queue_refcount > 1);
- 	spin_unlock_bh(&mvm->queue_info_lock);
-@@ -591,6 +592,11 @@ int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
- 			     cmd.sta_id, tid, LINK_QUAL_AGG_FRAME_LIMIT_DEF,
- 			     ssn, wdg_timeout);
- 
-+	/* Update the TID "owner" of the queue */
-+	spin_lock_bh(&mvm->queue_info_lock);
-+	mvm->queue_info[queue].txq_tid = tid;
-+	spin_unlock_bh(&mvm->queue_info_lock);
-+
- 	/* TODO: Work-around SCD bug when moving back by multiples of 0x40 */
- 
- 	/* Redirect to lower AC */
-@@ -749,6 +755,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 		ac = mvm->queue_info[queue].mac80211_ac;
- 		cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
- 		cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[ac];
-+		cmd.tid = mvm->queue_info[queue].txq_tid;
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 
- 		/* Disable the queue */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index dae64a6..423efab 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -669,6 +669,8 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 				tid_to_mac80211_ac[cfg->tid];
- 		else
- 			mvm->queue_info[queue].mac80211_ac = IEEE80211_AC_VO;
-+
-+		mvm->queue_info[queue].txq_tid = cfg->tid;
- 	}
- 
- 	IWL_DEBUG_TX_QUEUES(mvm,
-@@ -761,6 +763,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 	}
- 
- 	cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
-+	cmd.tid = mvm->queue_info[queue].txq_tid;
- 
- 	/* Make sure queue info is correct even though we overwrite it */
- 	WARN(mvm->queue_info[queue].hw_queue_refcount ||
+-module_param_named(swenc, rtl8821ae_mod_params.sw_crypto, bool, 0444);
+-module_param_named(debug, rtl8821ae_mod_params.debug, int, 0444);
+-module_param_named(ips, rtl8821ae_mod_params.inactiveps, bool, 0444);
+-module_param_named(swlps, rtl8821ae_mod_params.swctrl_lps, bool, 0444);
+-module_param_named(fwlps, rtl8821ae_mod_params.fwctrl_lps, bool, 0444);
+-module_param_named(msi, rtl8821ae_mod_params.msi_support, bool, 0444);
++module_param_named(swenc, rtl8821ae_mod_params.sw_crypto, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(debug, rtl8821ae_mod_params.debug, int, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(ips, rtl8821ae_mod_params.inactiveps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(swlps, rtl8821ae_mod_params.swctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(fwlps, rtl8821ae_mod_params.fwctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(msi, rtl8821ae_mod_params.msi_support, bool, S_IRUSR | S_IRGRP | S_IROTH);
+ module_param_named(disable_watchdog, rtl8821ae_mod_params.disable_watchdog,
+-		   bool, 0444);
+-module_param_named(int_clear, rtl8821ae_mod_params.int_clear, bool, 0444);
++		   bool, S_IRUSR | S_IRGRP | S_IROTH);
++module_param_named(int_clear, rtl8821ae_mod_params.int_clear, bool, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
 -- 
-2.8.1
+2.9.2
+
