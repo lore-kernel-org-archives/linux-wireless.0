@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4675 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758784AbcHaHUD (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Aug 2016 03:20:03 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCHv3,
- 1/3] ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1467356767-31646-1-git-send-email-c_traja@qti.qualcomm.com>
-To: <c_traja@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>,
-        <tamizhchelvam@codeaurora.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <4b5f565d8e124aca9debc00ee47efb2e@euamsexm01a.eu.qualcomm.com> (sfid-20160831_092029_393850_953660F5)
-Date: Wed, 31 Aug 2016 09:19:31 +0200
+Received: from mga03.intel.com ([134.134.136.65]:31498 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966364AbcHBNQr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 09:16:47 -0400
+From: Baole Ni <baolex.ni@intel.com>
+To: johannes@sipsolutions.net, davem@davemloft.net, jmorris@namei.org,
+	yoshfuji@linux-ipv6.org, kaber@trash.net, m.szyprowski@samsung.com,
+	kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
+	baolex.ni@intel.com, aarcange@redhat.com, aryabinin@virtuozzo.com
+Subject: [PATCH 1113/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 20:17:38 +0800
+Message-Id: <20160802121738.24327-1-baolex.ni@intel.com> (sfid-20160802_151706_044442_56FA047A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-c_traja@qti.qualcomm.com wrote:
-> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
-> 
-> Preparation to make use of firmware_swap_code_seg_info for UTF binary.
-> 
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-Thanks, 3 patches applied to ath-next branch of ath.git:
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ net/mac80211/rate.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-5459c5d47608 ath10k: move firmware_swap_code_seg_info to ath10k_fw_file
-d912fc094bc4 ath10k: handle testmode events for 10.2 and 10.4 based firmware
-ebce1a5e3a0e ath10k: add testmode support for 10.4 firmware
-
+diff --git a/net/mac80211/rate.c b/net/mac80211/rate.c
+index 206698b..43bd119 100644
+--- a/net/mac80211/rate.c
++++ b/net/mac80211/rate.c
+@@ -25,7 +25,7 @@ static LIST_HEAD(rate_ctrl_algs);
+ static DEFINE_MUTEX(rate_ctrl_mutex);
+ 
+ static char *ieee80211_default_rc_algo = CONFIG_MAC80211_RC_DEFAULT;
+-module_param(ieee80211_default_rc_algo, charp, 0644);
++module_param(ieee80211_default_rc_algo, charp, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(ieee80211_default_rc_algo,
+ 		 "Default rate control algorithm for mac80211 to use");
+ 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9209331/
+2.9.2
+
