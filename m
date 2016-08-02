@@ -1,63 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42462 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754598AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 17:47:24 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 02/20] rtl8xxxu: Mark 0x2001:0x3308 as tested
-Date: Fri, 19 Aug 2016 17:46:24 -0400
-Message-Id: <1471643202-26250-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234730_086246_989701D5)
-In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mout.gmx.net ([212.227.15.18]:63463 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755752AbcHBT0u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 15:26:50 -0400
+From: Heinrich Schuchardt <xypron.glpk@gmx.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Heinrich Schuchardt <xypron.glpk@gmx.de>
+Subject: [PATCH 1/1 v2] rtlwifi: remove superfluous condition
+Date: Tue,  2 Aug 2016 21:26:21 +0200
+Message-Id: <1470165981-6241-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160802_212715_443202_A601C9E4)
+In-Reply-To: <4e6de16f-b42c-920a-60a2-fcc88e282dc0@lwfinger.net>
+References: <4e6de16f-b42c-920a-60a2-fcc88e282dc0@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+If sta == NULL, the changed line will not be reached.
+So no need to check that sta != NULL here.
 
-D-Link DWA-121 is reported as working.
+v2:
+	fix typo
 
-Reported-by: Stefano Bravi <stefanobravi69@libero.it>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 47d0868..ca4c40d 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5975,6 +5975,10 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 		if (id->idProduct == 0x648b)
- 			untested = 0;
- 		break;
-+	case 0x2001:
-+		if (id->idProduct == 0x3308)
-+			untested = 0;
-+		break;
- 	default:
- 		break;
- 	}
-@@ -6147,6 +6151,9 @@ static struct usb_device_id dev_table[] = {
- /* Tested by Jocelyn Mayer */
- {USB_DEVICE_AND_INTERFACE_INFO(0x20f4, 0x648b, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
-+/* Tested by Stefano Bravi */
-+{USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x3308, 0xff, 0xff, 0xff),
-+	.driver_info = (unsigned long)&rtl8192cu_fops},
- /* Currently untested 8188 series devices */
- {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8191, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
-@@ -6194,8 +6201,6 @@ static struct usb_device_id dev_table[] = {
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
- {USB_DEVICE_AND_INTERFACE_INFO(0x13d3, 0x3357, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
--{USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x3308, 0xff, 0xff, 0xff),
--	.driver_info = (unsigned long)&rtl8192cu_fops},
- {USB_DEVICE_AND_INTERFACE_INFO(0x2001, 0x330b, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192cu_fops},
- {USB_DEVICE_AND_INTERFACE_INFO(0x2019, 0x4902, 0xff, 0xff, 0xff),
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 41f77f8..7aee5ebb1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -1135,7 +1135,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
+ 					mac->mode = WIRELESS_MODE_AC_24G;
+ 			}
+ 
+-			if (vif->type == NL80211_IFTYPE_STATION && sta)
++			if (vif->type == NL80211_IFTYPE_STATION)
+ 				rtlpriv->cfg->ops->update_rate_tbl(hw, sta, 0);
+ 			rcu_read_unlock();
+ 
 -- 
-2.7.4
+2.1.4
+
