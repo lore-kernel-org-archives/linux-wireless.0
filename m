@@ -1,47 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33322 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752405AbcHAJ3L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2016 05:29:11 -0400
-Message-ID: <1470043740.3389.10.camel@sipsolutions.net> (sfid-20160801_112921_391521_38DD5CDB)
-Subject: Re: [PATCH 1/2] cfg80211: Add support to set tx power for a station
- associated
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ashok Raj Nagarajan <arnagara@codeaurora.org>
-Cc: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Date: Mon, 01 Aug 2016 11:29:00 +0200
-In-Reply-To: <1cb3e2cc49b433fe5ed834a33adf64b6@codeaurora.org>
-References: <1465926256-6463-1-git-send-email-arnagara@qti.qualcomm.com>
- <1467110918.2493.9.camel@sipsolutions.net>
-	 <1cb3e2cc49b433fe5ed834a33adf64b6@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5755 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752777AbcHBLK2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 07:10:28 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+CC: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	"mmarek@suse.com" <mmarek@suse.com>,
+	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+Date: Tue, 2 Aug 2016 11:10:22 +0000
+Message-ID: <874m738m02.fsf@kamboji.qca.qualcomm.com> (sfid-20160802_131041_655559_2C863BBD)
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
+	<20160721070938.GA2658@redhat.com>
+	<CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
+	<20160721080541.GB2658@redhat.com> <5790A28F.8030102@redhat.com>
+	<20160721115122.GA31869@redhat.com>
+	<a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
+	<20160722102559.GA2662@redhat.com>	<20160722221523.GM5537@wotan.suse.de>
+In-Reply-To: <20160722221523.GM5537@wotan.suse.de> (Luis R. Rodriguez's
+	message of "Sat, 23 Jul 2016 00:15:23 +0200")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+"Luis R. Rodriguez" <mcgrof@kernel.org> writes:
 
-> Sure.. First use case will be to help with the problem of legacy
-> client devices that roam across multiple APs. It is a classic
-> enterprise Wi-Fi AP problem,  often managed by a "network controller"
-> unit that is connected to all the APs. 
-> The problem is how to handle seamless handoff of clients between
-> multiple  APs while maximizing the client throughput and minimizing
-> disruption of IP application services like VoIP calls and video
-> streaming. A legacy client will often  hold onto an AP association,
-> even down to 1 Mbps as it roams away. Instead,  if the AP can
-> recognise that the client RSSI (and therefore throughput) is poor, it
-> can "drop" the Tx power significantly (just to that client) such that
-> it forcesthe client to look for a better, closer, and therefore
-> higher-throughputassociation. It would "give it a kick" without
-> blacklisting it. It just needsto hold the power low for the small
-> amount of time it takes to convince it to go away.
+> I was considering this as a future extension to the firmware API
+> through the new extensible firmware API, the sysdata API.
 
-Not sure that *works* since implementations may just compare beacon
-signal strength and hold on to the AP based on that, but it does seem
-like a reasonable use case.
+I think Linus mentioned this already, but I want to reiterate anyway.
+The name "sysdata" is horrible, I didn't have any idea what it means
+until I read your description. Please continue to use the term
+"firmware", anyone already know what it means.
 
-How would this interact with automatic adjustment though?
-
-johannes
-
+-- 
+Kalle Valo
