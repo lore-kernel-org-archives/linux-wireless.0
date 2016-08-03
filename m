@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40930 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755547AbcH2V02 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 17:26:28 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 00:26:01 +0300
-Message-Id: <1472505976-21108-1-git-send-email-luca@coelho.fi> (sfid-20160829_232630_850300_1766F14E)
-In-Reply-To: <1472505827.27868.41.camel@coelho.fi>
-References: <1472505827.27868.41.camel@coelho.fi>
-Subject: [PATCH 01/16] iwlwifi: mvm: allow same PN for de-aggregated AMSDU
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:32863 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757357AbcHCCH2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 22:07:28 -0400
+Received: by mail-pf0-f193.google.com with SMTP id i6so13607695pfe.0
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 19:07:23 -0700 (PDT)
+Subject: Re: [PATCH v2] nl80211: Receive correct value for
+ NL80211_MESHCONF_HT_OPMODE command
+References: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
+ <1470138089-6864-1-git-send-email-masashi.honma@gmail.com>
+Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org, j@w1.fi,
+	me@bobcopeland.com
+To: masashi.honma@gmail.com
+From: Masashi Honma <masashi.honma@gmail.com>
+Message-ID: <9967cc0f-777e-31f6-0c4a-a788e92b9049@gmail.com> (sfid-20160803_040736_815133_FD62F2ED)
+Date: Wed, 3 Aug 2016 10:07:35 +0900
+MIME-Version: 1.0
+In-Reply-To: <1470138089-6864-1-git-send-email-masashi.honma@gmail.com>
+Content-Type: text/plain; charset=iso-2022-jp; format=flowed; delsp=yes
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On 2016年08月02日 20:41, Masashi Honma wrote:
+> -	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
+> +	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0,
+> +				  IEEE80211_HT_OP_MODE_PROTECTION |
+> +				  IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
+> +				  IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT,
+>  				  mask, NL80211_MESHCONF_HT_OPMODE,
+>  				  nl80211_check_u16);
 
-The 9000 hardware will de-aggregate AMSDUs. In the process
-it will copy the mac header "as is" to the new MPDUs.
-This means driver should allow the same PN for MPDUs originated
-from the same AMSDU.
-Do that by incrementing the PN only for the last MPDU in the
-sequence.
+This patch could over write cfg->ht_opmode even though EINVAL.
+I will modify this.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index df6c32c..08d8a8a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -132,7 +132,8 @@ static inline int iwl_mvm_check_pn(struct iwl_mvm *mvm, struct sk_buff *skb,
- 		   IEEE80211_CCMP_PN_LEN) <= 0)
- 		return -1;
- 
--	memcpy(ptk_pn->q[queue].pn[tid], pn, IEEE80211_CCMP_PN_LEN);
-+	if (!(stats->flag & RX_FLAG_AMSDU_MORE))
-+		memcpy(ptk_pn->q[queue].pn[tid], pn, IEEE80211_CCMP_PN_LEN);
- 	stats->flag |= RX_FLAG_PN_VALIDATED;
- 
- 	return 0;
-@@ -883,6 +884,9 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 			u8 *qc = ieee80211_get_qos_ctl(hdr);
- 
- 			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-+			if (!(desc->amsdu_info &
-+			      IWL_RX_MPDU_AMSDU_LAST_SUBFRAME))
-+				rx_status->flag |= RX_FLAG_AMSDU_MORE;
- 		}
- 		if (baid != IWL_RX_REORDER_DATA_INVALID_BAID)
- 			iwl_mvm_agg_rx_received(mvm, baid);
--- 
-2.8.1
+Masashi Honma.
