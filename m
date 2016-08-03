@@ -1,70 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.polytechnique.org ([129.104.30.34]:43398 "EHLO
-        mx1.polytechnique.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757368AbcHWJrh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Aug 2016 05:47:37 -0400
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Subject: [PATCH v2 1/1] brcmfmac: fix pmksa->bssid usage
-Date: Tue, 23 Aug 2016 11:37:17 +0200
-Message-Id: <20160823093717.1065-1-nicolas.iooss_linux@m4x.org> (sfid-20160823_114739_968900_B2D4E754)
-In-Reply-To: <7fc849f7-c178-d13e-e9cf-d107a9f73c61@m4x.org>
-References: <7fc849f7-c178-d13e-e9cf-d107a9f73c61@m4x.org>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:34440 "EHLO
+	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758435AbcHCUuX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 16:50:23 -0400
+Received: by mail-pf0-f176.google.com with SMTP id p64so80841098pfb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 13:50:23 -0700 (PDT)
+Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
+ completion
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+References: <20160730165817.GQ3296@wotan.suse.de>
+ <C528E404-0CA5-46B4-B551-B1D4B58BC053@gmail.com>
+ <37a3cd66-262e-ffbe-ea7a-a6d5b1ca1c8b@bmw-carit.de>
+ <20160801194408.GZ3296@wotan.suse.de>
+ <0f9350fa-e8b5-9d64-b2d3-afda5e5f6bbf@bmw-carit.de>
+ <20160802063419.GG3296@wotan.suse.de>
+ <2713d779-ef55-793d-f37e-d1414bb1bfc2@bmw-carit.de>
+ <20160802074106.GI3296@wotan.suse.de>
+ <CAKdAkRR=NC4Agen9ad3CK8hgZh+zbZhzhr2MP169JwisgWvP_w@mail.gmail.com>
+ <0e20a2dc-ed76-b209-5c01-387f1c444b19@broadcom.com>
+ <20160803153506.GC29702@dtor-ws>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Daniel Wagner <daniel.wagner@bmw-carit.de>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Daniel Wagner <wagi@monom.org>,
+	Bastien Nocera <hadess@hadess.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	David Howells <dhowells@redhat.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	linux-kselftest@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <c630b349-3e2e-5a2e-56f9-aaef4893f28e@broadcom.com> (sfid-20160803_225028_619188_D18D1BE9)
+Date: Wed, 3 Aug 2016 22:42:43 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160803153506.GC29702@dtor-ws>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The struct cfg80211_pmksa defines its bssid field as:
 
-    const u8 *bssid;
 
-contrary to struct brcmf_pmksa, which uses:
+On 03-08-16 17:35, Dmitry Torokhov wrote:
+>> In my opinion the kernel should provide functionality to user-space and
+>> > user-space providing functionality to the kernel should be avoided.
+> Why? We have bunch of stuff running in userspace for the kernel. Fuse
+> for example. I am sure there are more.
 
-    u8 bssid[ETH_ALEN];
+To me "running in user-space" is not the same as providing
+functionality, but I see your point given below.
 
-Therefore in brcmf_cfg80211_del_pmksa(), &pmksa->bssid takes the address
-of this field (of type u8**), not the one of its content (which would be
-u8*).  Remove the & operator to make brcmf_dbg("%pM") and memcmp()
-behave as expected.
+>> > 
+>>> > > If we solve waiting for rootfs (or something else that may contain
+>>> > > firmware) then these cases will not need to use usermode helper.
+>> > 
+>> > If firmware (or whatever) API could get notification of mount syscall it
+>> > could be used to retry firmware loading instead of periodic polling.
+>> > That leaves the question raised by you about when to stop trying. The
+>> > initlevel stuff is probably a user-space only concept, right? So no
+>> > ideas how the kernel itself could decide except for a "long" timeout.
+> The kernel really does not know, it can only guess. The firmware may get
+> delivered by motorized carrier pidgeons. But distribution does know how
+> they set up, so they are in position to tell the kernel "go" or "give
+> up".
 
-This bug have been found using a custom static checker (which checks the
-usage of %p... attributes at build time).  It has been introduced in
-commit 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code"),
-which replaced pmksa->bssid by &pmksa->bssid while refactoring the code,
-without modifying struct cfg80211_pmksa definition.
+What distro employs pidgeons. Like to give it a spin ;-)
 
-Replace &pmk[i].bssid with pmk[i].bssid too to make the code clearer,
-this change does not affect the semantic.
+Maybe the latest idea from Luis is a viable option.
 
-Fixes: 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code")
-Cc: stable@vger.kernel.org
-Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 2628d5e12c64..201a98016142 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -3884,11 +3884,11 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
- 	if (!check_vif_up(ifp->vif))
- 		return -EIO;
- 
--	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", &pmksa->bssid);
-+	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", pmksa->bssid);
- 
- 	npmk = le32_to_cpu(cfg->pmk_list.npmk);
- 	for (i = 0; i < npmk; i++)
--		if (!memcmp(&pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
-+		if (!memcmp(pmksa->bssid, pmk[i].bssid, ETH_ALEN))
- 			break;
- 
- 	if ((npmk > 0) && (i < npmk)) {
--- 
-2.9.3
+Regards,
+Arend
