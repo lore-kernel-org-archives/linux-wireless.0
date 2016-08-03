@@ -1,122 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33741 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753171AbcHUOt1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Aug 2016 10:49:27 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org
-Cc: robh+dt@kernel.org, mark.rutland@arm.com, arnd@arndb.de,
-        chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 1/5] ath9k: Add a #define for the EEPROM "eepmisc" endianness bit
-Date: Sun, 21 Aug 2016 16:49:02 +0200
-Message-Id: <20160821144906.30984-2-martin.blumenstingl@googlemail.com> (sfid-20160821_164941_061804_84C40944)
-In-Reply-To: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:35462 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754496AbcHCK0D (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 06:26:03 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Heinrich Schuchardt <xypron.glpk@gmx.de>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1 v2] rtlwifi: remove superfluous condition
+References: <4e6de16f-b42c-920a-60a2-fcc88e282dc0@lwfinger.net>
+	<1470165981-6241-1-git-send-email-xypron.glpk@gmx.de>
+Date: Wed, 03 Aug 2016 09:01:54 +0300
+In-Reply-To: <1470165981-6241-1-git-send-email-xypron.glpk@gmx.de> (Heinrich
+	Schuchardt's message of "Tue, 2 Aug 2016 21:26:21 +0200")
+Message-ID: <8737mm5r1p.fsf@kamboji.qca.qualcomm.com> (sfid-20160803_122625_085737_96735F92)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This replaces a magic number with a named #define. Additionally it
-removes two "eeprom format" specific #defines for the "big endianness"
-bit which are the same on all eeprom formats.
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 3 ++-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h | 1 -
- drivers/net/wireless/ath/ath9k/eeprom.h        | 4 +++-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     | 2 +-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   | 2 +-
- drivers/net/wireless/ath/ath9k/eeprom_def.c    | 2 +-
- 6 files changed, 8 insertions(+), 6 deletions(-)
+Heinrich Schuchardt <xypron.glpk@gmx.de> writes:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 08607d7..ea7b819 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3468,7 +3468,8 @@ static u32 ath9k_hw_ar9003_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 					AR5416_OPFLAGS_N_5G_HT20));
- 	PR_EEP("Disable 5Ghz HT40", !!(pBase->opCapFlags.opFlags &
- 					AR5416_OPFLAGS_N_5G_HT40));
--	PR_EEP("Big Endian", !!(pBase->opCapFlags.eepMisc & 0x01));
-+	PR_EEP("Big Endian", !!(pBase->opCapFlags.eepMisc &
-+				AR5416_EEPMISC_BIG_ENDIAN));
- 	PR_EEP("RF Silent", pBase->rfSilent);
- 	PR_EEP("BT option", pBase->blueToothOptions);
- 	PR_EEP("Device Cap", pBase->deviceCap);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-index 107bcfb..0a4c736 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
-@@ -38,7 +38,6 @@
- #define AR9300_NUM_CTLS_2G           12
- #define AR9300_NUM_BAND_EDGES_5G     8
- #define AR9300_NUM_BAND_EDGES_2G     4
--#define AR9300_EEPMISC_BIG_ENDIAN    0x01
- #define AR9300_EEPMISC_WOW           0x02
- #define AR9300_CUSTOMER_DATA_SIZE    20
- 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index 4465c65..c466ada 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -161,6 +161,9 @@
- #define AR5416_EEP_TXGAIN_ORIGINAL         0
- #define AR5416_EEP_TXGAIN_HIGH_POWER       1
- 
-+/* Endianness of EEPROM content */
-+#define AR5416_EEPMISC_BIG_ENDIAN          0x01
-+
- #define AR5416_EEP4K_START_LOC                64
- #define AR5416_EEP4K_NUM_2G_CAL_PIERS         3
- #define AR5416_EEP4K_NUM_2G_CCK_TARGET_POWERS 3
-@@ -191,7 +194,6 @@
- #define AR9287_NUM_CTLS              	12
- #define AR9287_NUM_BAND_EDGES        	4
- #define AR9287_PD_GAIN_ICEPTS           1
--#define AR9287_EEPMISC_BIG_ENDIAN       0x01
- #define AR9287_EEPMISC_WOW              0x02
- #define AR9287_MAX_CHAINS               2
- #define AR9287_ANT_16S                  32
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 5da0826..780cb49 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -154,7 +154,7 @@ static u32 ath9k_hw_4k_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 					AR5416_OPFLAGS_N_5G_HT20));
- 	PR_EEP("Disable 5Ghz HT40", !!(pBase->opCapFlags &
- 					AR5416_OPFLAGS_N_5G_HT40));
--	PR_EEP("Big Endian", !!(pBase->eepMisc & 0x01));
-+	PR_EEP("Big Endian", !!(pBase->eepMisc & AR5416_EEPMISC_BIG_ENDIAN));
- 	PR_EEP("Cal Bin Major Ver", (pBase->binBuildNumber >> 24) & 0xFF);
- 	PR_EEP("Cal Bin Minor Ver", (pBase->binBuildNumber >> 16) & 0xFF);
- 	PR_EEP("Cal Bin Build", (pBase->binBuildNumber >> 8) & 0xFF);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index 1a019a3..f483ba2 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -150,7 +150,7 @@ static u32 ath9k_hw_ar9287_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 					AR5416_OPFLAGS_N_5G_HT20));
- 	PR_EEP("Disable 5Ghz HT40", !!(pBase->opCapFlags &
- 					AR5416_OPFLAGS_N_5G_HT40));
--	PR_EEP("Big Endian", !!(pBase->eepMisc & 0x01));
-+	PR_EEP("Big Endian", !!(pBase->eepMisc & AR5416_EEPMISC_BIG_ENDIAN));
- 	PR_EEP("Cal Bin Major Ver", (pBase->binBuildNumber >> 24) & 0xFF);
- 	PR_EEP("Cal Bin Minor Ver", (pBase->binBuildNumber >> 16) & 0xFF);
- 	PR_EEP("Cal Bin Build", (pBase->binBuildNumber >> 8) & 0xFF);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 959682f..39b1b27 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -232,7 +232,7 @@ static u32 ath9k_hw_def_dump_eeprom(struct ath_hw *ah, bool dump_base_hdr,
- 					AR5416_OPFLAGS_N_5G_HT20));
- 	PR_EEP("Disable 5Ghz HT40", !!(pBase->opCapFlags &
- 					AR5416_OPFLAGS_N_5G_HT40));
--	PR_EEP("Big Endian", !!(pBase->eepMisc & 0x01));
-+	PR_EEP("Big Endian", !!(pBase->eepMisc & AR5416_EEPMISC_BIG_ENDIAN));
- 	PR_EEP("Cal Bin Major Ver", (pBase->binBuildNumber >> 24) & 0xFF);
- 	PR_EEP("Cal Bin Minor Ver", (pBase->binBuildNumber >> 16) & 0xFF);
- 	PR_EEP("Cal Bin Build", (pBase->binBuildNumber >> 8) & 0xFF);
+> If sta == NULL, the changed line will not be reached.
+> So no need to check that sta != NULL here.
+>
+> v2:
+> 	fix typo
+>
+> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+
+The change log goes under the "---" line so that git can automatically
+strip it away while committing the patch. I can fix it this time but
+please keep this in mind in the future.
+
 -- 
-2.9.3
+Kalle Valo
