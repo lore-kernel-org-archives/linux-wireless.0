@@ -1,73 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.polytechnique.org ([129.104.30.34]:44552 "EHLO
-	mx1.polytechnique.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2996541AbcHEUfH (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35735 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752995AbcHCOKM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 16:35:07 -0400
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Subject: [PATCH 1/1] brcmfmac: fix pmksa->bssid usage
-Date: Fri,  5 Aug 2016 22:34:18 +0200
-Message-Id: <20160805203418.32162-1-nicolas.iooss_linux@m4x.org> (sfid-20160805_223549_861184_76C8D845)
+	Wed, 3 Aug 2016 10:10:12 -0400
+Received: by mail-oi0-f66.google.com with SMTP id w143so20046306oiw.2
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 07:09:50 -0700 (PDT)
+From: Denis Kenzior <denkenz@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Denis Kenzior <denkenz@gmail.com>
+Subject: [PATCH v3 1/3] nl80211: Add nl80211_notify_iface
+Date: Wed,  3 Aug 2016 16:58:33 -0500
+Message-Id: <1470261515-2830-2-git-send-email-denkenz@gmail.com> (sfid-20160803_161045_764360_5843B915)
+In-Reply-To: <1470261515-2830-1-git-send-email-denkenz@gmail.com>
+References: <1470261515-2830-1-git-send-email-denkenz@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The struct cfg80211_pmksa defines its bssid field as:
+This function emits NL80211_CMD_NEW_INTERFACE or
+NL80211_CMD_DEL_INTERFACE events.  This is meant to be used by the core
+to notify userspace applications such as wpa_supplicant when a netdev
+related to a wireless device has been added or removed.
 
-    const u8 *bssid;
-
-contrary to struct brcmf_pmksa, which uses:
-
-    u8 bssid[ETH_ALEN];
-
-Therefore in brcmf_cfg80211_del_pmksa(), &pmksa->bssid takes the address
-of this field (of type u8**), not the one of its content (which would be
-u8*).  Remove the & operator to make brcmf_dbg("%pM") and memcmp()
-behave as expected.
-
-This bug have been found using a custom static checker (which checks the
-usage of %p... attributes at build time).  It has been introduced in
-commit 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code"),
-which replaced pmksa->bssid by &pmksa->bssid while refactoring the code,
-without modifying struct cfg80211_pmksa definition.
-
-Fixes: 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code")
-Cc: stable@ger.kernel.org
-Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Signed-off-by: Denis Kenzior <denkenz@gmail.com>
 ---
+ net/wireless/nl80211.c | 28 ++++++++++++++++++++++++++++
+ net/wireless/nl80211.h |  3 +++
+ 2 files changed, 31 insertions(+)
 
-scripts/checkpatch.pl reports a warning: "Prefer ether_addr_equal() or
-ether_addr_equal_unaligned() over memcmp()".  Because some files in
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/ still use memcmp()
-to compare addresses and because I do not know whether pmksa->bssid is
-always aligned, I did not follow this warning.
-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 2628d5e12c64..aceab77cd95a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -3884,11 +3884,11 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
- 	if (!check_vif_up(ifp->vif))
- 		return -EIO;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ac19eb8..c174770 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -11855,6 +11855,34 @@ void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
+ 				NL80211_MCGRP_CONFIG, GFP_KERNEL);
+ }
  
--	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", &pmksa->bssid);
-+	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", pmksa->bssid);
- 
- 	npmk = le32_to_cpu(cfg->pmk_list.npmk);
- 	for (i = 0; i < npmk; i++)
--		if (!memcmp(&pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
-+		if (!memcmp(pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
- 			break;
- 
- 	if ((npmk > 0) && (i < npmk)) {
++void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
++				struct wireless_dev *wdev,
++				enum nl80211_commands cmd)
++{
++	struct sk_buff *msg;
++	bool removal;
++
++	WARN_ON(cmd != NL80211_CMD_NEW_INTERFACE &&
++		cmd != NL80211_CMD_DEL_INTERFACE);
++
++	if (cmd == NL80211_CMD_DEL_INTERFACE)
++		removal = true;
++	else
++		removal = false;
++
++	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
++	if (!msg)
++		return;
++
++	if (nl80211_send_iface(msg, 0, 0, 0, rdev, wdev, removal) < 0) {
++		nlmsg_free(msg);
++		return;
++	}
++
++	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
++				NL80211_MCGRP_CONFIG, GFP_KERNEL);
++}
++
+ static int nl80211_add_scan_req(struct sk_buff *msg,
+ 				struct cfg80211_registered_device *rdev)
+ {
+diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
+index a63f402..6f6b73c 100644
+--- a/net/wireless/nl80211.h
++++ b/net/wireless/nl80211.h
+@@ -7,6 +7,9 @@ int nl80211_init(void);
+ void nl80211_exit(void);
+ void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
+ 			  enum nl80211_commands cmd);
++void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
++				struct wireless_dev *wdev,
++				enum nl80211_commands cmd);
+ void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
+ 			     struct wireless_dev *wdev);
+ struct sk_buff *nl80211_build_scan_msg(struct cfg80211_registered_device *rdev,
 -- 
-2.9.2
+2.7.3
 
