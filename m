@@ -1,134 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:17060 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751752AbcHFVSQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Aug 2016 17:18:16 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: fix group privacy action frame decryption for qca4019
-Date: Sat, 6 Aug 2016 09:49:36 +0530
-Message-ID: <20160806041936.26924-1-rmanohar@qti.qualcomm.com> (sfid-20160806_231820_713853_A0688692)
+Received: from mx2.suse.de ([195.135.220.15]:44167 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753319AbcHCRno (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 13:43:44 -0400
+Date: Wed, 3 Aug 2016 19:10:44 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	"mmarek@suse.com" <mmarek@suse.com>,
+	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+Message-ID: <20160803171044.GP3296@wotan.suse.de> (sfid-20160803_194351_166219_FA282CB9)
+References: <5790A28F.8030102@redhat.com>
+ <20160721115122.GA31869@redhat.com>
+ <a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
+ <20160722102559.GA2662@redhat.com>
+ <20160722221523.GM5537@wotan.suse.de>
+ <874m738m02.fsf@kamboji.qca.qualcomm.com>
+ <20160802141610.GJ3296@wotan.suse.de>
+ <ae734397-6179-d0ba-3d8a-0cffc63a0fd8@broadcom.com>
+ <20160803142119.GL3296@wotan.suse.de>
+ <87ziot51x9.fsf@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87ziot51x9.fsf@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Recent commit 'mac80211: Encrypt "Group addressed privacy" action frames'
-encrypts group privacy action frames. But qca99x0 family chipset delivers
-broadcast/multicast management frames as encrypted and it should be
-decrypted by mac80211. Setting RX_FLAG_DECRYPTED stats for those frames
-is breaking mesh connection establishment.
+On Wed, Aug 03, 2016 at 03:04:39PM +0000, Valo, Kalle wrote:
+> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
+> 
+> > On Wed, Aug 03, 2016 at 01:33:31PM +0200, Arend van Spriel wrote:
+> >> On 02-08-16 16:16, Luis R. Rodriguez wrote:
+> >> > On Tue, Aug 02, 2016 at 11:10:22AM +0000, Valo, Kalle wrote:
+> >> >> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
+> >> >>
+> >> >>> I was considering this as a future extension to the firmware API
+> >> >>> through the new extensible firmware API, the sysdata API.
+> >> >>
+> >> >> I think Linus mentioned this already, but I want to reiterate anyway.
+> >> >> The name "sysdata" is horrible, I didn't have any idea what it means
+> >> >> until I read your description. Please continue to use the term
+> >> >> "firmware", anyone already know what it means.
+> >> > 
+> >> > We've gone well past using the firmware API for firmware though, if
+> >> > we use it for 802.11 to replace CRDA for instance its really odd to
+> >> > be calling it firmware. But sure... I will rebrand again to firmware...
+> >> 
+> >> I tend to agree. Although some people even call an OpenWrt image
+> >> firmware. Guess it is just in the eye of the beholder.
+> >
+> > Sure...
+> >
+> > Come to think of it I'll still go with "sysdata", this is a very minor
+> > detail, do let me know if there is anything technical rather than
+> > the color of the bikeshed [0] over the patches.
+> 
+> Well, you don't seem to care but I prefer that the terminology is clear
+> and I don't want to waste people's time browsing the source to find out
+> what something means.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |  4 ++++
- drivers/net/wireless/ath/ath10k/core.h |  5 +++++
- drivers/net/wireless/ath/ath10k/wmi.c  | 30 +++++++++++++++++++++++++-----
- 3 files changed, 34 insertions(+), 5 deletions(-)
+Its not that I don't care, its this is a super trivial matter, like the
+color of a bikeshed, and I'd much prefer to put energy and review on
+technical matters.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 0ca58cf0ffea..c4d1a5ba216e 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -182,6 +182,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board_size = QCA99X0_BOARD_DATA_SZ,
- 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
- 		},
-+		.sw_decrypt_mcast_mgmt = true,
- 	},
- 	{
- 		.id = QCA9984_HW_1_0_DEV_VERSION,
-@@ -205,6 +206,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board_size = QCA99X0_BOARD_DATA_SZ,
- 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
- 		},
-+		.sw_decrypt_mcast_mgmt = true,
- 	},
- 	{
- 		.id = QCA9888_HW_2_0_DEV_VERSION,
-@@ -227,6 +229,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board_size = QCA99X0_BOARD_DATA_SZ,
- 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
- 		},
-+		.sw_decrypt_mcast_mgmt = true,
- 	},
- 	{
- 		.id = QCA9377_HW_1_0_DEV_VERSION,
-@@ -285,6 +288,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board_size = QCA4019_BOARD_DATA_SZ,
- 			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
- 		},
-+		.sw_decrypt_mcast_mgmt = true,
- 	},
- };
- 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index f36c2b274ee5..7254bd3e7c82 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -765,6 +765,11 @@ struct ath10k {
- 			size_t board_size;
- 			size_t board_ext_size;
- 		} fw;
-+
-+		/* qca99x0 family chips deliver broadcast/multicast management
-+		 * frames encrypted and expect software do decryption.
-+		 */
-+		bool sw_decrypt_mcast_mgmt;
- 	} hw_params;
- 
- 	/* contains the firmware images used with ATH10K_FIRMWARE_MODE_NORMAL */
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 169cd2e783eb..bced8ac7ed94 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2240,6 +2240,30 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
- 	return 0;
- }
- 
-+static bool ath10k_wmi_rx_is_decrypted(struct ath10k *ar,
-+				       struct ieee80211_hdr *hdr)
-+{
-+	if (!ieee80211_has_protected(hdr->frame_control))
-+		return false;
-+
-+	/* FW delivers WEP Shared Auth frame with Protected Bit set and
-+	 * encrypted payload. However in case of PMF it delivers decrypted
-+	 * frames with Protected Bit set.
-+	 */
-+	if (ieee80211_is_auth(hdr->frame_control))
-+		return false;
-+
-+	/* qca99x0 based FW delivers broadcast or multicast management frames
-+	 * (ex: group privacy action frames in mesh) as encrypted payload.
-+	 */
-+	if ((is_broadcast_ether_addr(ieee80211_get_DA(hdr)) ||
-+	     is_multicast_ether_addr(ieee80211_get_DA(hdr))) &&
-+	    ar->hw_params.sw_decrypt_mcast_mgmt)
-+		return false;
-+
-+	return true;
-+}
-+
- int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct wmi_mgmt_rx_ev_arg arg = {};
-@@ -2326,11 +2350,7 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 
- 	ath10k_wmi_handle_wep_reauth(ar, skb, status);
- 
--	/* FW delivers WEP Shared Auth frame with Protected Bit set and
--	 * encrypted payload. However in case of PMF it delivers decrypted
--	 * frames with Protected Bit set. */
--	if (ieee80211_has_protected(hdr->frame_control) &&
--	    !ieee80211_is_auth(hdr->frame_control)) {
-+	if (ath10k_wmi_rx_is_decrypted(ar, hdr)) {
- 		status->flag |= RX_FLAG_DECRYPTED;
- 
- 		if (!ieee80211_is_action(hdr->frame_control) &&
--- 
-2.9.2
+> Even "driverdata" would be more descriptive for me
+> than "sysdata".
+> 
+> Actually, what does the "sys" refer here, system? And what system is
+> that exactly?
 
+Yes system, so as in system data file. "driver_data" is just as good.
+Although who knows, others may want to paint the bikeshed a different
+color.
+
+The core reason why the name change is to make emphasis of the fact that
+we've gone way past the point where the APIs are used for non-firmware
+and I expect this use will only grow.
+
+  Luis
