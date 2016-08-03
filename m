@@ -1,16 +1,17 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52421 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53148 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754609AbcHCPTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 11:19:17 -0400
-Date: Wed, 3 Aug 2016 17:18:51 +0200
+	id S932518AbcHCUdu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 16:33:50 -0400
+Date: Wed, 3 Aug 2016 20:08:20 +0200
 From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+To: Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Jeff Mahoney <jeffm@suse.com>, Takashi Iwai <tiwai@suse.de>,
 	Andrew Morton <akpm@linux-foundation.org>
-Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>,
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
 	Daniel Wagner <daniel.wagner@bmw-carit.de>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>,
 	Daniel Wagner <wagi@monom.org>,
 	Bastien Nocera <hadess@hadess.net>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -22,14 +23,13 @@ Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
 	Andy Lutomirski <luto@amacapital.net>,
 	David Woodhouse <dwmw2@infradead.org>,
 	Julia Lawall <julia.lawall@lip6.fr>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	linux-kselftest@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>
+	linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
  completion
-Message-ID: <20160803151851.GK3296@wotan.suse.de> (sfid-20160803_171938_577651_86CEA799)
-References: <20160730165817.GQ3296@wotan.suse.de>
+Message-ID: <20160803180820.GR3296@wotan.suse.de> (sfid-20160803_223427_439824_B62E2B2D)
+References: <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com>
+ <20160730165817.GQ3296@wotan.suse.de>
  <C528E404-0CA5-46B4-B551-B1D4B58BC053@gmail.com>
  <37a3cd66-262e-ffbe-ea7a-a6d5b1ca1c8b@bmw-carit.de>
  <20160801194408.GZ3296@wotan.suse.de>
@@ -37,101 +37,117 @@ References: <20160730165817.GQ3296@wotan.suse.de>
  <20160802063419.GG3296@wotan.suse.de>
  <2713d779-ef55-793d-f37e-d1414bb1bfc2@bmw-carit.de>
  <20160802074106.GI3296@wotan.suse.de>
- <CAKdAkRR=NC4Agen9ad3CK8hgZh+zbZhzhr2MP169JwisgWvP_w@mail.gmail.com>
- <0e20a2dc-ed76-b209-5c01-387f1c444b19@broadcom.com>
+ <20160803173955.GD13516@tuxbot>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0e20a2dc-ed76-b209-5c01-387f1c444b19@broadcom.com>
+In-Reply-To: <20160803173955.GD13516@tuxbot>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 03, 2016 at 01:43:31PM +0200, Arend van Spriel wrote:
-> On 03-08-16 09:42, Dmitry Torokhov wrote:
-> > On Tue, Aug 2, 2016 at 12:41 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> >> On Tue, Aug 02, 2016 at 08:53:55AM +0200, Daniel Wagner wrote:
-> >>> On 08/02/2016 08:34 AM, Luis R. Rodriguez wrote:
-> >>>> On Tue, Aug 02, 2016 at 07:49:19AM +0200, Daniel Wagner wrote:
-> >>>>>> The sysdata API's main goal rather is to provide a flexible API first,
-> >>>>>> compartamentalizing the usermode helper was secondary. But now it seems
-> >>>>>> I may just also add devm support too to help simplify code further.
-> >>>>>
-> >>>>> I missed the point that you plan to add usermode helper support to
-> >>>>> the sysdata API.
-> >>>>
-> >>>> I had no such plans, when I have asked folks so far about "hey are you
-> >>>> really in need for it, OK what for? " and "what extended uses do you
-> >>>> envision?" so I far I have not gotten any replies at all. So -- instead
-> >>>> sysdata currently ignores it.
-> >>>
-> >>> So you argue for the remoteproc use case with 100+ MB firmware that
-> >>> if there is a way to load after pivot_root() (or other additional
-> >>> firmware partition shows up) then there is no need at all for
-> >>> usermode helper?
-> >>
-> >> No, I'm saying I'd like to hear valid uses cases for the usermode helper and so
-> >> far I have only found using coccinelle grammar 2 explicit users, that's it. My
-> >> patch series (not yet merge) then annotates these as valid as I've verified
-> >> through their documentation they have some quirky requirement.
+On Wed, Aug 03, 2016 at 10:39:55AM -0700, Bjorn Andersson wrote:
+> On Tue 02 Aug 00:41 PDT 2016, Luis R. Rodriguez wrote:
+> 
+> > On Tue, Aug 02, 2016 at 08:53:55AM +0200, Daniel Wagner wrote:
+> > > On 08/02/2016 08:34 AM, Luis R. Rodriguez wrote:
+> > > >On Tue, Aug 02, 2016 at 07:49:19AM +0200, Daniel Wagner wrote:
+> > > >>>The sysdata API's main goal rather is to provide a flexible API first,
+> > > >>>compartamentalizing the usermode helper was secondary. But now it seems
+> > > >>>I may just also add devm support too to help simplify code further.
+> > > >>
+> > > >>I missed the point that you plan to add usermode helper support to
+> > > >>the sysdata API.
+> > > >
+> > > >I had no such plans, when I have asked folks so far about "hey are you
+> > > >really in need for it, OK what for? " and "what extended uses do you
+> > > >envision?" so I far I have not gotten any replies at all. So -- instead
+> > > >sysdata currently ignores it.
+> > > 
+> > > So you argue for the remoteproc use case with 100+ MB firmware that
+> > > if there is a way to load after pivot_root() (or other additional
+> > > firmware partition shows up) then there is no need at all for
+> > > usermode helper?
 > > 
-> > In certain configurations (embedded) people do not want to use
-> > initramfs nor modules nor embed firmware into the kernel. In this case
-> > usermode helper + firmware calss timeout handling provides necessary
-> > wait for the root filesystem to be mounted.
+> > No, I'm saying I'd like to hear valid uses cases for the usermode helper and so
+> > far I have only found using coccinelle grammar 2 explicit users, that's it. My
+> > patch series (not yet merge) then annotates these as valid as I've verified
+> > through their documentation they have some quirky requirement.
+> > 
 > 
-> And there are people who don't have a usermode helper running at all 
+> I think we're on the same page, but just to make sure; I do not want the
+> usermode helper,
 
-Correction: most Linux distributions these days have
-CONFIG_FW_LOADER_USER_HELPER but disable CONFIG_FW_LOADER_USER_HELPER_FALLBACK.
+Yay.
 
-And then let me re-iterate from my patches then the implications:
+> I only want a way to wait for the firmware files to
+> become available.
 
-+When CONFIG_FW_LOADER_USER_HELPER_FALLBACK is enabled request_firmware()
-+*always* calls the usermode helpers. When CONFIG_FW_LOADER_USER_HELPER is
-+enabled, only if you specifically ask for it will the usermode helper be
-+called. If CONFIG_FW_LOADER_USER_HELPER_FALLBACK is disabled drivers can
-+still require the usermode helper by using request_firmware_nowait().
+Sure.
 
-The issues with CONFIG_FW_LOADER_USER_HELPER_FALLBACK are so much so
-(the kmod timeout was an engineering mishap refer to my post with
-details about it [0]) that these days most distributions disable it
-and there have been huge efforts to ensure its not even called
-explicitly, to the point now we only have TWO explicit users for it.
-Keep in mind as well that in my series of patches to help clarify the
-situation with the usermode helper I also proposed a fix to the firmware_class
-to avoid the usermode helper completely when the firmware cache, this is
-because the firmware cache purposely *kills* any pending usermode helpers
-on the way to suspend anyway, so calling a new instance would be an error
-and just delay suspend further.
-
-[0] http://www.do-not-panic.com/2015/12/linux-asynchronous-probe.html
-
-> in
-> their configuration, but I guess they should disable the helper.
-
-Yes. I have gone to good lengths to ask why the hell its needed and so 
-far I have not gotten any technical reason for it.
-
-> > If we solve waiting for rootfs (or something else that may contain
-> > firmware) then these cases will not need to use usermode helper.
+> > Other than these two drivers I'd like hear to valid requirements for it.
+> > 
+> > The existential issue is a real issue but it does not look impossible to
+> > resolve. It may be a solution to bloat up the kernel with 100+ MB size just to
+> > stuff built-in firmware to avoid this issue, but it does not mean a solution
+> > is not possible.
+> > 
+> > Remind me -- why can remoteproc not stuff the firmware in initramfs ?
+> > 
 > 
-> If firmware (or whatever) API could get notification of mount syscall it
-> could be used to retry firmware loading instead of periodic polling.
-> That leaves the question raised by you about when to stop trying. The
-> initlevel stuff is probably a user-space only concept, right?
+> RAM usage:
+> Storing the files in initramfs would consume 100MB RAM, we would then
+> allocate 100MB RAM for buffers during firmware loading and then we have
+> the reserved 100MB for the peripherals. The buffers could be easily be
+> removed with a mechanism for providing a buffer to the load operation,
+> but we would still double the RAM consumption.
+> 
+> Boot time:
+> Enlarging the kernel by 100MB will give noticeable addition to boot
+> times.
 
-No init levels here refer to include/linux/init.h init calls that one
-wraps the kernel module inits, or subsystem inits. If it wasn't for
-pivot_root() existing and also the fact that systems can be complex
-I would have suggested simply that we make firmware_class move to
-late_initcall() -- this however would not solve all races given how
-complex systems could be set up with a partition.
+Right I see.. Since we read the full kernel...
 
-> So no
-> ideas how the kernel itself could decide except for a "long" timeout.
+> Development issues:
+> I have numerous concerns related to this, e.g. not being able to side
+> load the firmware files without rebuilding the initramfs. But most of
+> these are not technical issues, but rather a matter of convenience.
+> 
+> One large issue would be how to figure out how large to make the boot
+> partition in your Android phone, to cope with potential future growth in
+> firmware size - which has already proven to be a mess.
+> 
+> Legal matters:
+> Some of these firmware files are not redistributable, making it
+> impossible for end users to rebuild their kernel without loosing
+> functionality. There are even cases where these files are not allowed to
+> share partition with GPL binaries.
+> 
+> 
+> Most of these are just a major inconveniences to the developer but some
+> are show stoppers; especially the legal matters. So if we wave this off
+> as something people can live without then every downstream will sit on
+> their own solution to reimplement it.
 
-If we wanted to learn from history -- the timeout for this would be a bad idea
-so this makes it a bit more complex.  I proposed a technical idea here which
-would avoid this and I think enable making this deterministic as well for new
-systems that want that.
+Thanks I'll document these into the firmware_class.
+
+> > Anyway, here's a simple suggestion: fs/exec.c gets a sentinel file monitor
+> > support per enum kernel_read_file_id. For instance we'd have one for
+> > READING_FIRMWARE, one for READING_KEXEC_IMAGE, perhaps READING_POLICY, and this
+> > would in turn be used as the system configurable deterministic file for
+> > which to wait for to be present before enabling each enum kernel_read_file_id
+> > type read.
+> > 
+> > Thoughts ?
+> 
+> That does sound like a good generic solution for our problem and for the
+> other types of files as well. Do you have any ideas (patches?) on how
+> each sentinel would be triggered?
+> 
+> The only concern I can think of right now is that the
+> firmware_class.path might point to a separate partition; but based on
+> how the signaling of the sentinels are implemented this might not be an
+> issue.
+
+There's another simpler suggestion I'm getting too, will post in the other
+thread.
 
   Luis
