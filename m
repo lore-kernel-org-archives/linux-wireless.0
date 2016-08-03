@@ -1,76 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37623 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757345AbcHCPKI convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35690 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752978AbcHCBUB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 11:10:08 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-CC: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>,
-	"mmarek@suse.com" <mmarek@suse.com>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-Date: Wed, 3 Aug 2016 15:04:39 +0000
-Message-ID: <87ziot51x9.fsf@qca.qualcomm.com> (sfid-20160803_171056_458529_CA77E077)
-References: <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
-	<20160721080541.GB2658@redhat.com> <5790A28F.8030102@redhat.com>
-	<20160721115122.GA31869@redhat.com>
-	<a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
-	<20160722102559.GA2662@redhat.com>	<20160722221523.GM5537@wotan.suse.de>
-	<874m738m02.fsf@kamboji.qca.qualcomm.com>
-	<20160802141610.GJ3296@wotan.suse.de>
-	<ae734397-6179-d0ba-3d8a-0cffc63a0fd8@broadcom.com>
-	<20160803142119.GL3296@wotan.suse.de>
-In-Reply-To: <20160803142119.GL3296@wotan.suse.de> (Luis R. Rodriguez's
-	message of "Wed, 3 Aug 2016 16:21:19 +0200")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 2 Aug 2016 21:20:01 -0400
+Received: by mail-pf0-f194.google.com with SMTP id h186so13486252pfg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 18:19:24 -0700 (PDT)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH v3] nl80211: Receive correct value for NL80211_MESHCONF_HT_OPMODE command
+Date: Wed,  3 Aug 2016 10:07:44 +0900
+Message-Id: <1470186464-4224-1-git-send-email-masashi.honma@gmail.com> (sfid-20160803_032008_113318_CCADDFF7)
+In-Reply-To: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
+References: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Luis R. Rodriguez" <mcgrof@kernel.org> writes:
+Previously, NL80211_MESHCONF_HT_OPMODE rejected correct flag
+combination, ex) IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED |
+IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT.
 
-> On Wed, Aug 03, 2016 at 01:33:31PM +0200, Arend van Spriel wrote:
->> On 02-08-16 16:16, Luis R. Rodriguez wrote:
->> > On Tue, Aug 02, 2016 at 11:10:22AM +0000, Valo, Kalle wrote:
->> >> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
->> >>
->> >>> I was considering this as a future extension to the firmware API
->> >>> through the new extensible firmware API, the sysdata API.
->> >>
->> >> I think Linus mentioned this already, but I want to reiterate anyway.
->> >> The name "sysdata" is horrible, I didn't have any idea what it means
->> >> until I read your description. Please continue to use the term
->> >> "firmware", anyone already know what it means.
->> > 
->> > We've gone well past using the firmware API for firmware though, if
->> > we use it for 802.11 to replace CRDA for instance its really odd to
->> > be calling it firmware. But sure... I will rebrand again to firmware...
->> 
->> I tend to agree. Although some people even call an OpenWrt image
->> firmware. Guess it is just in the eye of the beholder.
->
-> Sure...
->
-> Come to think of it I'll still go with "sysdata", this is a very minor
-> detail, do let me know if there is anything technical rather than
-> the color of the bikeshed [0] over the patches.
+This was caused by simple comparison with value 16. This causes setting
+non-existent flag (like 0x08) and invalid flag combinations. So this
+commit implements some checks based on IEEE 802.11 2012 8.4.2.59 HT
+Operation element.
 
-Well, you don't seem to care but I prefer that the terminology is clear
-and I don't want to waste people's time browsing the source to find out
-what something means. Even "driverdata" would be more descriptive for me
-than "sysdata".
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
+---
+ net/wireless/nl80211.c | 42 +++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 39 insertions(+), 3 deletions(-)
 
-Actually, what does the "sys" refer here, system? And what system is
-that exactly?
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 46417f9..7b7530d 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5380,6 +5380,7 @@ static int nl80211_parse_mesh_config(struct genl_info *info,
+ {
+ 	struct nlattr *tb[NL80211_MESHCONF_ATTR_MAX + 1];
+ 	u32 mask = 0;
++	u16 ht_opmode;
+ 
+ #define FILL_IN_MESH_PARAM_IF_SET(tb, cfg, param, min, max, mask, attr, fn) \
+ do {									    \
+@@ -5471,9 +5472,44 @@ do {									    \
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, rssi_threshold, -255, 0,
+ 				  mask, NL80211_MESHCONF_RSSI_THRESHOLD,
+ 				  nl80211_check_s32);
+-	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
+-				  mask, NL80211_MESHCONF_HT_OPMODE,
+-				  nl80211_check_u16);
++	/*
++	 * Check HT operation mode based on
++	 * IEEE 802.11 2012 8.4.2.59 HT Operation element.
++	 */
++	if (tb[NL80211_MESHCONF_HT_OPMODE]) {
++		ht_opmode = nla_get_u16(tb[NL80211_MESHCONF_HT_OPMODE]);
++
++		if (ht_opmode & (~(IEEE80211_HT_OP_MODE_PROTECTION |
++		    IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
++		    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT)))
++			return -EINVAL;
++
++		if ((ht_opmode & IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT) &&
++		    (ht_opmode & IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT))
++			return -EINVAL;
++
++		switch (ht_opmode & IEEE80211_HT_OP_MODE_PROTECTION) {
++		case IEEE80211_HT_OP_MODE_PROTECTION_NONE:
++			if (ht_opmode & IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT)
++				return -EINVAL;
++			break;
++		case IEEE80211_HT_OP_MODE_PROTECTION_NONMEMBER:
++			if (!(ht_opmode &
++			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT))
++				return -EINVAL;
++			break;
++		case IEEE80211_HT_OP_MODE_PROTECTION_20MHZ:
++			if (ht_opmode & IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT)
++				return -EINVAL;
++			break;
++		case IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED:
++			if (!(ht_opmode &
++			    IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT))
++				return -EINVAL;
++			break;
++		}
++		cfg->ht_opmode = ht_opmode;
++	}
+ 	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, dot11MeshHWMPactivePathToRootTimeout,
+ 				  1, 65535, mask,
+ 				  NL80211_MESHCONF_HWMP_PATH_TO_ROOT_TIMEOUT,
 -- 
-Kalle Valo
+2.7.4
+
