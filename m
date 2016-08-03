@@ -1,76 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout02.posteo.de ([185.67.36.142]:60737 "EHLO mout02.posteo.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S2998826AbcHEU52 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 16:57:28 -0400
-Message-ID: <1470429980.29489.10.camel@embedded.rocks> (sfid-20160805_225811_086669_94AF5D07)
-Subject: TCP data throughput for BCM43362
-From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
-To: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>
-Date: Fri, 05 Aug 2016 22:46:20 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33094 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752647AbcHCMof (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 08:44:35 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Alan Curry <rlwinm@sdf.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, alexmcwhirter@triadic.us,
+	David Miller <davem@davemloft.net>, chunkeey@googlemail.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: PROBLEM: network data corruption (bisected to e5a4b0bb803b)
+Date: Wed, 03 Aug 2016 14:43:43 +0200
+Message-ID: <1882749.mb7lsAROoU@debian64> (sfid-20160803_144505_390896_5CF060AA)
+In-Reply-To: <201608030349.u733nRPn000595@sdf.org>
+References: <201608030349.u733nRPn000595@sdf.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wednesday, August 3, 2016 3:49:26 AM CEST Alan Curry wrote:
+> Al Viro wrote:
+> > 
+> > Which just might mean that we have *three* issues here -
+> > 	(1) buggered __copy_to_user_inatomic() (and friends) on some sparcs
+> > 	(2) your ssl-only corruption
+> > 	(3) Alan's x86_64 corruption on plain TCP read - no ssl *or* sparc
+> > anywhere, and no multi-segment recvmsg().  Which would strongly argue in
+> > favour of some kind of copy_page_to_iter() breakage triggered when handling
+> > a fragmented skb, as in (1).  Except that I don't see anything similar in
+> > x86_64 uaccess primitives...
+> > 
+> 
+> I think I've solved (3) at least...
+> 
+> Using the twin weapons of printk and stubbornness, I have built a working
+> theory of the bug. I haven't traced it all the way through, so my explanation
+> may be partly wrong. I do have a patch that eliminates the symptom in all my
+> tests though. Here's what happens:
+> 
+> A corrupted packet somehow arrives in skb_copy_and_csum_datagram_msg().
+> During downloads at reasonably high speed, about 0.1% of my incoming
+> packets are bad. Probably because the access point is that suspicious
+> Comcast thing.
 
-I'm using a custom ARM board with an BCM43362 wifi chip from Broadcom.
-The wifi chip is attached via SDIO to the controller with a clock of
-48MHz. Linux kernel version is 4.7.
+Thanks for being very persistent with this. I think I'm able to reproduce
+this now (on any hardware... like r8169 ethernet) as long as the following 
+"traffic policy" is enacted on the HTTP - Server: 
 
-When measuring the network bandwidth with iperf3 I get a bandwith of
-only around 5 Mbps. I found a similar thread at the Broadcom community
-[1] where the test was done with a M4 CPU + BCM43362 and an average
-result of 3.3 Mbps.
+# tc qdisc add dev eth0 root netem corrupt 0.1%
 
-Interestingly, a BCM43362 Wi-Fi Dev Kit [2] notes a TCP data throughput
-greater than 20 Mbps.
+(This needs the "Network Emulation" Sched CONFIG_NET_SCH_NETEM [0].)
 
-Why is the throughput I measured much lower? Note that I measured
-several times with almost no neighbor devices or networks.
+With your tool (changed to point to my apache local server). I'm seeing 
+corruptions in the "noselect" case. Running it in "select" mode however
+and the resulting files have no corruptions.
 
-This is a test sample measured with iperf3:
+About AR9170 corruption issues: I know of one report that the AR9170's
+Encryption Engine can cause corruptions [1]. In this case outgoing
+data was corrupted which lead to deauths/disassocs since the AP was
+basically sending out multicast deauths/disassocs with bad addresses.
+However, "nohwcrypt" should have made a difference there since the
+software decryption would discard the faulty package due the message
+integrety checks.
 
-    $ iperf3 -c 192.168.2.1 -i 1 -t 10
-    Connecting to host 192.168.2.1, port 5201
-    [  4] local 192.168.2.155 port 36442 connected to 192.168.2.1 port
-    5201
-    [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
-    [  4]   0.00-1.00   sec   615 KBytes  5.04 Mbits/sec    0   56.6
-    KBytes       
-    [  4]   1.00-2.00   sec   622 KBytes  5.10 Mbits/sec    0   84.8
-    KBytes       
-    [  4]   2.00-3.00   sec   625 KBytes  5.12 Mbits/sec    0    113
-    KBytes       
-    [  4]   3.00-4.00   sec   571 KBytes  4.68 Mbits/sec    0    140
-    KBytes       
-    [  4]   4.00-5.00   sec   594 KBytes  4.87 Mbits/sec    0    167
-    KBytes       
-    [  4]   5.00-6.00   sec   628 KBytes  5.14 Mbits/sec    0    195
-    KBytes       
-    [  4]   6.00-7.00   sec   619 KBytes  5.07 Mbits/sec    0    202
-    KBytes       
-    [  4]   7.00-8.00   sec   608 KBytes  4.98 Mbits/sec    0    202
-    KBytes       
-    [  4]   8.00-9.00   sec   602 KBytes  4.93 Mbits/sec    0    202
-    KBytes       
-    [  4]   9.00-10.00  sec   537 KBytes  4.40 Mbits/sec    0    202
-    KBytes       
-    - - - - - - - - - - - - - - - - - - - - - - - - -
-    [ ID] Interval           Transfer     Bandwidth       Retr
-    [  4]   0.00-10.00  sec  5.88 MBytes  4.93
-    Mbits/sec    0             sender
-    [  4]   0.00-10.00  sec  5.68 MBytes  4.76
-    Mbits/sec                  receiver
+Another source for corruptions could be the USB-PHY (FUSB200) in the
+AR9170 [2]. I know it's causing problems for the ath9k_htc. However
+not everyone is affected.
 
-[1] https://community.broadcom.com/thread/3978
-[2] http://www.mouser.de/new/broadcom/broadcom-bcm943362wcd4/
+One thing I noticed in your previous post is that you "might" not have
+draft-802.11n enabled. Do you see any "disabling HT/VHT due to WEP/TKIP use."
+in your dmesg logs? If so, check if you can force your AP to use WPA2
+with CCMP/AES only.
 
-Best regards
-Jörg Krause
+Regards,
+Christian
+
+[0] <http://www.spinics.net/lists/linux-wireless/msg60104.html>
+[1] <https://wiki.linuxfoundation.org/networking/netem>
+[2] <https://github.com/qca/open-ath9k-htc-firmware/wiki/usb-related-issues>
+
