@@ -1,67 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38272 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754043AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 17:47:24 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 05/20] rtl8xxxu: Add TX page defines for 8723b
-Date: Fri, 19 Aug 2016 17:46:27 -0400
-Message-Id: <1471643202-26250-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234843_646114_B9E805F9)
-In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:38674 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757371AbcHCLmU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 07:42:20 -0400
+Received: by mail-wm0-f42.google.com with SMTP id o80so331957132wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 04:41:41 -0700 (PDT)
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
+ <20160721070938.GA2658@redhat.com>
+ <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
+ <20160721080541.GB2658@redhat.com> <5790A28F.8030102@redhat.com>
+ <20160721115122.GA31869@redhat.com>
+ <a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
+ <20160722102559.GA2662@redhat.com> <20160722221523.GM5537@wotan.suse.de>
+ <874m738m02.fsf@kamboji.qca.qualcomm.com>
+ <20160802141610.GJ3296@wotan.suse.de>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	"mmarek@suse.com" <mmarek@suse.com>,
+	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <ae734397-6179-d0ba-3d8a-0cffc63a0fd8@broadcom.com> (sfid-20160803_134225_257664_F85CDB81)
+Date: Wed, 3 Aug 2016 13:33:31 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160802141610.GJ3296@wotan.suse.de>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This switches the 8723b driver to use the new
-rtl8xxxu_init_queue_reserved_page() function.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       | 6 ++++++
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 4 ++++
- 2 files changed, 10 insertions(+)
+On 02-08-16 16:16, Luis R. Rodriguez wrote:
+> On Tue, Aug 02, 2016 at 11:10:22AM +0000, Valo, Kalle wrote:
+>> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
+>>
+>>> I was considering this as a future extension to the firmware API
+>>> through the new extensible firmware API, the sysdata API.
+>>
+>> I think Linus mentioned this already, but I want to reiterate anyway.
+>> The name "sysdata" is horrible, I didn't have any idea what it means
+>> until I read your description. Please continue to use the term
+>> "firmware", anyone already know what it means.
+> 
+> We've gone well past using the firmware API for firmware though, if
+> we use it for 802.11 to replace CRDA for instance its really odd to
+> be calling it firmware. But sure... I will rebrand again to firmware...
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 4341d56..da4f148 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -43,6 +43,7 @@
- 
- #define TX_TOTAL_PAGE_NUM		0xf8
- #define TX_TOTAL_PAGE_NUM_8192E		0xf3
-+#define TX_TOTAL_PAGE_NUM_8723B		0xf7
- /* (HPQ + LPQ + NPQ + PUBQ) = TX_TOTAL_PAGE_NUM */
- #define TX_PAGE_NUM_PUBQ		0xe7
- #define TX_PAGE_NUM_HI_PQ		0x0c
-@@ -54,6 +55,11 @@
- #define TX_PAGE_NUM_LO_PQ_8192E		0x0c
- #define TX_PAGE_NUM_NORM_PQ_8192E	0x00
- 
-+#define TX_PAGE_NUM_PUBQ_8723B		0xe7
-+#define TX_PAGE_NUM_HI_PQ_8723B		0x0c
-+#define TX_PAGE_NUM_LO_PQ_8723B		0x02
-+#define TX_PAGE_NUM_NORM_PQ_8723B	0x02
-+
- #define RTL_FW_PAGE_SIZE		4096
- #define RTL8XXXU_FIRMWARE_POLL_MAX	1000
- 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-index 9d45afb..c1323f0 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-@@ -1674,4 +1674,8 @@ struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.pbp_rx = PBP_PAGE_SIZE_256,
- 	.pbp_tx = PBP_PAGE_SIZE_256,
- 	.mactable = rtl8723b_mac_init_table,
-+	.total_page_num = TX_TOTAL_PAGE_NUM_8723B,
-+	.page_num_hi = TX_PAGE_NUM_HI_PQ_8723B,
-+	.page_num_lo = TX_PAGE_NUM_LO_PQ_8723B,
-+	.page_num_norm = TX_PAGE_NUM_NORM_PQ_8723B,
- };
--- 
-2.7.4
+I tend to agree. Although some people even call an OpenWrt image
+firmware. Guess it is just in the eye of the beholder.
+
+Regards,
+Arend
