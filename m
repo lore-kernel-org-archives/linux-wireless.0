@@ -1,15 +1,19 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38121 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751161AbcHBH5e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 03:57:34 -0400
-Date: Tue, 2 Aug 2016 09:41:06 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Daniel Wagner <daniel.wagner@bmw-carit.de>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:34227 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758388AbcHCWea (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 18:34:30 -0400
+Received: by mail-pa0-f50.google.com with SMTP id fi15so77835516pac.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 15:34:12 -0700 (PDT)
+Date: Wed, 3 Aug 2016 15:26:56 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jeff Mahoney <jeffm@suse.com>,
 	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
 	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
 	Daniel Wagner <wagi@monom.org>,
 	Bastien Nocera <hadess@hadess.net>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -25,64 +29,84 @@ Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
 	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
  completion
-Message-ID: <20160802074106.GI3296@wotan.suse.de> (sfid-20160802_095741_806359_D2FAEBE8)
-References: <20160728190151.GV13516@tuxbot>
- <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de>
- <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com>
- <20160730165817.GQ3296@wotan.suse.de>
+Message-ID: <20160803222656.GG13516@tuxbot> (sfid-20160804_003435_586643_FE421726)
+References: <20160730165817.GQ3296@wotan.suse.de>
  <C528E404-0CA5-46B4-B551-B1D4B58BC053@gmail.com>
  <37a3cd66-262e-ffbe-ea7a-a6d5b1ca1c8b@bmw-carit.de>
  <20160801194408.GZ3296@wotan.suse.de>
  <0f9350fa-e8b5-9d64-b2d3-afda5e5f6bbf@bmw-carit.de>
  <20160802063419.GG3296@wotan.suse.de>
  <2713d779-ef55-793d-f37e-d1414bb1bfc2@bmw-carit.de>
+ <20160802074106.GI3296@wotan.suse.de>
+ <ef14dc68-d2f8-0934-7be5-dfb3a4771f27@bmw-carit.de>
+ <20160803155540.GL3296@wotan.suse.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2713d779-ef55-793d-f37e-d1414bb1bfc2@bmw-carit.de>
+In-Reply-To: <20160803155540.GL3296@wotan.suse.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 02, 2016 at 08:53:55AM +0200, Daniel Wagner wrote:
-> On 08/02/2016 08:34 AM, Luis R. Rodriguez wrote:
-> >On Tue, Aug 02, 2016 at 07:49:19AM +0200, Daniel Wagner wrote:
-> >>>The sysdata API's main goal rather is to provide a flexible API first,
-> >>>compartamentalizing the usermode helper was secondary. But now it seems
-> >>>I may just also add devm support too to help simplify code further.
-> >>
-> >>I missed the point that you plan to add usermode helper support to
-> >>the sysdata API.
-> >
-> >I had no such plans, when I have asked folks so far about "hey are you
-> >really in need for it, OK what for? " and "what extended uses do you
-> >envision?" so I far I have not gotten any replies at all. So -- instead
-> >sysdata currently ignores it.
+On Wed 03 Aug 08:55 PDT 2016, Luis R. Rodriguez wrote:
+
+> On Wed, Aug 03, 2016 at 08:57:09AM +0200, Daniel Wagner wrote:
+> > On 08/02/2016 09:41 AM, Luis R. Rodriguez wrote:
+[..]
+> > Not sure if I get you here correctly. Is the 'system configurable
+> > deterministic file' is a knob which controlled by user space? Or it
+> > this something you define at compile time?
 > 
-> So you argue for the remoteproc use case with 100+ MB firmware that
-> if there is a way to load after pivot_root() (or other additional
-> firmware partition shows up) then there is no need at all for
-> usermode helper?
+> I meant at compile time on the kernel. So CONFIG_READ_READY_SENTINEL
+> or something like this, and it be a string, which if set then when
+> the kernel read APIs are used, then a new API could be introduced
+> that would *only* enable reading through once that sentinel has
+> been detected by the kernel to allowed through reads. Doing this
+> per mount / target filesystem is rather cumbersome given possible
+> overlaps in mounts and also pivot_root() being possible, so instead
+> targeting simply the fs/exec.c enum kernel_read_file_id would seem
+> more efficient and clean but we would need a decided upon set of
+> paths per enum kernel_read_file_id as base (or just one path per
+> enum kernel_read_file_id). For number of paths I mean the number
+> of target directories to look for the sentinel per enum kernel_read_file_id,
+> so for instance for READING_FIRMWARE perhaps just deciding on /lib/firmware/
+> would suffice, but if this supported multiple paths another option may be
+> for the sentinel to also be looked for in /lib/firmware/updates/,
+> /lib/firmware/" UTS_RELEASE -- etc. It would *stop* after finding one
+> sentinel on any of these paths.
+> 
+> If a system has has CONFIG_READ_READY_SENTINEL it would mean an agreed upon
+> system configuration has been decided so that at any point in time reads
+> against READING_FIRMWARE using a new kernel_read_file_from_path_sentinel()
+> (or something like it) would only allow the read to go through once
+> the sentinel has been found for READING_FIRMWARE on the agreed upon
+> paths.
+> 
+> The benefit of the sentintel approach is it avoids complexities with
+> pivot_root(), and makes the deterministic aspect of the target left
+> only to a system-configuration enabled target path / file.
+> 
 
-No, I'm saying I'd like to hear valid uses cases for the usermode helper and so
-far I have only found using coccinelle grammar 2 explicit users, that's it. My
-patch series (not yet merge) then annotates these as valid as I've verified
-through their documentation they have some quirky requirement.
+This sounds reasonable, it could be configured to wait for a certain
+static file or userspace could generate this file once it reaches some
+checkpoint.
 
-Other than these two drivers I'd like hear to valid requirements for it.
 
-The existential issue is a real issue but it does not look impossible to
-resolve. It may be a solution to bloat up the kernel with 100+ MB size just to
-stuff built-in firmware to avoid this issue, but it does not mean a solution
-is not possible.
+Just to provide some additional input to "will rootfs mounted be enough
+of a sentinel".
 
-Remind me -- why can remoteproc not stuff the firmware in initramfs ?
+In an Android device you have a initramfs that will read an fstab file
+and mount /system that holds most firmware, for some platforms
+additional firmware will come from a third partition (in the Qualcomm
+case mounted in /persist by the same mechanism).
 
-Anyway, here's a simple suggestion: fs/exec.c gets a sentinel file monitor
-support per enum kernel_read_file_id. For instance we'd have one for
-READING_FIRMWARE, one for READING_KEXEC_IMAGE, perhaps READING_POLICY, and this
-would in turn be used as the system configurable deterministic file for
-which to wait for to be present before enabling each enum kernel_read_file_id
-type read.
+With the sentinel approach one could configure the system either point
+it at a file in the last file system to be mounted or have init generate
+a file once its done with this; or in the generic configuration just
+wait for /lib/firmware to show up.
 
-Thoughts ?
+I like this approach.
 
-  Luis
+> This is just an idea. I'd like some FS folks to review.
+> 
+
+Regards,
+Bjorn
