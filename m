@@ -1,97 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:37304 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932353AbcHPPTF (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:38088 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753324AbcHCLn5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2016 11:19:05 -0400
-Received: by mail-wm0-f45.google.com with SMTP id i5so175008503wmg.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2016 08:18:54 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	gregkh@linuxfoundation.org, davem@davemloft.net,
-	kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dinan.gunawardena@netronome.com,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv6 0/2] register-field manipulation macros
-Date: Tue, 16 Aug 2016 16:18:22 +0100
-Message-Id: <1471360704-10507-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160816_171927_721651_89913CD2)
+	Wed, 3 Aug 2016 07:43:57 -0400
+Received: by mail-wm0-f41.google.com with SMTP id o80so332024165wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 04:43:34 -0700 (PDT)
+Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
+ completion
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+References: <20160728190151.GV13516@tuxbot>
+ <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de>
+ <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com>
+ <20160730165817.GQ3296@wotan.suse.de>
+ <C528E404-0CA5-46B4-B551-B1D4B58BC053@gmail.com>
+ <37a3cd66-262e-ffbe-ea7a-a6d5b1ca1c8b@bmw-carit.de>
+ <20160801194408.GZ3296@wotan.suse.de>
+ <0f9350fa-e8b5-9d64-b2d3-afda5e5f6bbf@bmw-carit.de>
+ <20160802063419.GG3296@wotan.suse.de>
+ <2713d779-ef55-793d-f37e-d1414bb1bfc2@bmw-carit.de>
+ <20160802074106.GI3296@wotan.suse.de>
+ <CAKdAkRR=NC4Agen9ad3CK8hgZh+zbZhzhr2MP169JwisgWvP_w@mail.gmail.com>
+Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Daniel Wagner <wagi@monom.org>,
+	Bastien Nocera <hadess@hadess.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Ohad Ben-Cohen <ohad@wizery.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	David Howells <dhowells@redhat.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	linux-kselftest@vger.kernel.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	lkml <linux-kernel@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <0e20a2dc-ed76-b209-5c01-387f1c444b19@broadcom.com> (sfid-20160803_134546_398104_048CECBA)
+Date: Wed, 3 Aug 2016 13:43:31 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAKdAkRR=NC4Agen9ad3CK8hgZh+zbZhzhr2MP169JwisgWvP_w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On 03-08-16 09:42, Dmitry Torokhov wrote:
+> On Tue, Aug 2, 2016 at 12:41 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+>> On Tue, Aug 02, 2016 at 08:53:55AM +0200, Daniel Wagner wrote:
+>>> On 08/02/2016 08:34 AM, Luis R. Rodriguez wrote:
+>>>> On Tue, Aug 02, 2016 at 07:49:19AM +0200, Daniel Wagner wrote:
+>>>>>> The sysdata API's main goal rather is to provide a flexible API first,
+>>>>>> compartamentalizing the usermode helper was secondary. But now it seems
+>>>>>> I may just also add devm support too to help simplify code further.
+>>>>>
+>>>>> I missed the point that you plan to add usermode helper support to
+>>>>> the sysdata API.
+>>>>
+>>>> I had no such plans, when I have asked folks so far about "hey are you
+>>>> really in need for it, OK what for? " and "what extended uses do you
+>>>> envision?" so I far I have not gotten any replies at all. So -- instead
+>>>> sysdata currently ignores it.
+>>>
+>>> So you argue for the remoteproc use case with 100+ MB firmware that
+>>> if there is a way to load after pivot_root() (or other additional
+>>> firmware partition shows up) then there is no need at all for
+>>> usermode helper?
+>>
+>> No, I'm saying I'd like to hear valid uses cases for the usermode helper and so
+>> far I have only found using coccinelle grammar 2 explicit users, that's it. My
+>> patch series (not yet merge) then annotates these as valid as I've verified
+>> through their documentation they have some quirky requirement.
+> 
+> In certain configurations (embedded) people do not want to use
+> initramfs nor modules nor embed firmware into the kernel. In this case
+> usermode helper + firmware calss timeout handling provides necessary
+> wait for the root filesystem to be mounted.
 
-This set moves to a global header file macros which I find
-very useful and worth popularising.  The basic problem is
-that since C bitfields are not very dependable accessing
-subfields of registers becomes slightly inconvenient.
-It is nice to have the necessary mask and shift operations
-wrapped in a macro and have that macro compute shift
-at compilation time using FFS.
+And there are people who don't have a usermode helper running at all in
+their configuration, but I guess they should disable the helper.
 
-My implementation follows what Felix Fietkau has done in
-mt76.  Hannes Frederic Sowa suggested more use of standard
-Linux/GCC functions.  Since the RFC I've also added a 
-compile-time check to validate that the value passed to
-setters fits in the mask.
+In my opinion the kernel should provide functionality to user-space and
+user-space providing functionality to the kernel should be avoided.
 
-I attempted the use of static inlines instead of macros
-but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
-I also noticed that forcing arguments to be u32 for inlines
-makes the compiler use 32bit arithmetic where it could
-get away with 64bit before (on 64bit machines, obviously).
-That's a potential performance concern but probably not
-a very practical one today.  Apart from looking "cleaner"
-static inlines would have the advantage that we could #undef
-the auxiliary macros at the end of the header.
+> If we solve waiting for rootfs (or something else that may contain
+> firmware) then these cases will not need to use usermode helper.
 
-Build bot caught a build failure with -Os set.  AFAICT gcc
-did not handle temporary variable I put in the macro
-expression too well.  I work around that by defining
-__BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
-BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
+If firmware (or whatever) API could get notification of mount syscall it
+could be used to retry firmware loading instead of periodic polling.
+That leaves the question raised by you about when to stop trying. The
+initlevel stuff is probably a user-space only concept, right? So no
+ideas how the kernel itself could decide except for a "long" timeout.
 
-I'm planning to use those macros in another driver soon,
-Felix may also use them when upstreaming mt76 if he chooses
-to do so.
-
-IMHO if accepted it would be best to push these through
-Kalle's wireless drivers' tree, since the only existing
-user is in drivers/net/wireless/.
-
-As lowly device driver developers we would greatly
-appreciate an Ack or a nod from the experts.
-
-v6:
-Do a full rename in patch 2.  CC many people.
-
-v4:
- - add documentation in the header.
-v3:
- - don't use variables in statement expressions;
- - use __BUILD_BUG_ON_NOT_POWER_OF_2.
-v2:
- - change Felix's email address.
-
-Jakub Kicinski (2):
-  add basic register-field manipulation macros
-  mt7601u: use linux/bitfield.h
-
- drivers/net/wireless/mediatek/mt7601u/dma.c     |   2 +-
- drivers/net/wireless/mediatek/mt7601u/dma.h     |  10 +--
- drivers/net/wireless/mediatek/mt7601u/eeprom.c  |  12 +--
- drivers/net/wireless/mediatek/mt7601u/init.c    |   9 +-
- drivers/net/wireless/mediatek/mt7601u/mac.c     |  38 ++++-----
- drivers/net/wireless/mediatek/mt7601u/mcu.c     |  18 ++--
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |   4 +-
- drivers/net/wireless/mediatek/mt7601u/phy.c     |  36 ++++----
- drivers/net/wireless/mediatek/mt7601u/tx.c      |  16 ++--
- drivers/net/wireless/mediatek/mt7601u/util.h    |  77 -----------------
- include/linux/bitfield.h                        | 109 ++++++++++++++++++++++++
- include/linux/bug.h                             |   3 +
- 12 files changed, 184 insertions(+), 150 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
- create mode 100644 include/linux/bitfield.h
-
--- 
-1.9.1
+Regards,
+Arend
