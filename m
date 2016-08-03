@@ -1,50 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60703 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751774AbcHVNf7 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 09:35:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Benjamin Berg <benjamin.berg@open-mesh.com>
-Cc: Adi Ratiu <adi@adirat.com>, linux-wireless@vger.kernel.org,
-        ath9k-devel@qca.qualcomm.com, ath9k-devel@lists.ath9k.org,
-        linux-kernel@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Subject: Re: ath9k: Fix beacon configuration assertion failure
-References: <fb48526fcf8f4b6db25c20b727c4a3d5@euamsexm01a.eu.qualcomm.com>
-        <87fuq1yt1x.fsf@kamboji.qca.qualcomm.com>
-        <1471855240.16921.6.camel@open-mesh.com>
-Date: Mon, 22 Aug 2016 16:35:28 +0300
-In-Reply-To: <1471855240.16921.6.camel@open-mesh.com> (Benjamin Berg's message
-        of "Mon, 22 Aug 2016 10:40:40 +0200")
-Message-ID: <87r39h3p0f.fsf@purkki.adurom.net> (sfid-20160822_153617_684704_179D062B)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:37623 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757345AbcHCPKI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 11:10:08 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+CC: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Prarit Bhargava <prarit@redhat.com>,
+	"Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+	Ming Lei <ming.lei@canonical.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>,
+	"mmarek@suse.com" <mmarek@suse.com>,
+	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>
+Subject: Re: [RFC] ath10k: silence firmware file probing warnings
+Date: Wed, 3 Aug 2016 15:04:39 +0000
+Message-ID: <87ziot51x9.fsf@qca.qualcomm.com> (sfid-20160803_171056_458529_CA77E077)
+References: <CANUX_P3ADxi+RHkH=d8Ypcqy9WVKSu4JYH7K3HtTNCuWg3wCeQ@mail.gmail.com>
+	<20160721080541.GB2658@redhat.com> <5790A28F.8030102@redhat.com>
+	<20160721115122.GA31869@redhat.com>
+	<a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
+	<20160722102559.GA2662@redhat.com>	<20160722221523.GM5537@wotan.suse.de>
+	<874m738m02.fsf@kamboji.qca.qualcomm.com>
+	<20160802141610.GJ3296@wotan.suse.de>
+	<ae734397-6179-d0ba-3d8a-0cffc63a0fd8@broadcom.com>
+	<20160803142119.GL3296@wotan.suse.de>
+In-Reply-To: <20160803142119.GL3296@wotan.suse.de> (Luis R. Rodriguez's
+	message of "Wed, 3 Aug 2016 16:21:19 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Benjamin Berg <benjamin.berg@open-mesh.com> writes:
+"Luis R. Rodriguez" <mcgrof@kernel.org> writes:
 
-> On Fr, 2016-08-19 at 13:03 +0300, Kalle Valo wrote:
->> Actually, I see two patches which might be related but not identical:
+> On Wed, Aug 03, 2016 at 01:33:31PM +0200, Arend van Spriel wrote:
+>> On 02-08-16 16:16, Luis R. Rodriguez wrote:
+>> > On Tue, Aug 02, 2016 at 11:10:22AM +0000, Valo, Kalle wrote:
+>> >> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
+>> >>
+>> >>> I was considering this as a future extension to the firmware API
+>> >>> through the new extensible firmware API, the sysdata API.
+>> >>
+>> >> I think Linus mentioned this already, but I want to reiterate anyway.
+>> >> The name "sysdata" is horrible, I didn't have any idea what it means
+>> >> until I read your description. Please continue to use the term
+>> >> "firmware", anyone already know what it means.
+>> > 
+>> > We've gone well past using the firmware API for firmware though, if
+>> > we use it for 802.11 to replace CRDA for instance its really odd to
+>> > be calling it firmware. But sure... I will rebrand again to firmware...
 >> 
->> ath9k: fix client mode beacon configuration
->> https://patchwork.kernel.org/patch/9247699/
->> 
->> ath9k: Fix beacon configuration assertion failure
->> https://patchwork.kernel.org/patch/9281191/
->> 
->> Felix (CCed) & Benjamin: please take a look and advice which one I
->> should take.
+>> I tend to agree. Although some people even call an OpenWrt image
+>> firmware. Guess it is just in the eye of the beholder.
 >
-> Yes, both patches are designed to fix the same issue in my patch.
+> Sure...
 >
-> Felix solution looks entirely correct to me, the second solution seems
-> slightly wrong because it prevents the call to ath9k_beacon_config from
-> happening instead of ensuring the correct parameter value.
-> ath9k_beacon_config needs to be called even if iter_data.beacons is
-> false as it disables the interrupts.
+> Come to think of it I'll still go with "sysdata", this is a very minor
+> detail, do let me know if there is anything technical rather than
+> the color of the bikeshed [0] over the patches.
 
-Ok, I'll the patch from Felix then. Thanks.
+Well, you don't seem to care but I prefer that the terminology is clear
+and I don't want to waste people's time browsing the source to find out
+what something means. Even "driverdata" would be more descriptive for me
+than "sysdata".
+
+Actually, what does the "sys" refer here, system? And what system is
+that exactly?
 
 -- 
 Kalle Valo
