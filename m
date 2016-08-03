@@ -1,57 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:34432 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933276AbcHaLwV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Aug 2016 07:52:21 -0400
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To: akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] mwifiex: scan: Simplify code
-Date: Wed, 31 Aug 2016 13:50:59 +0200
-Message-Id: <1472644259-15605-1-git-send-email-christophe.jaillet@wanadoo.fr> (sfid-20160831_135244_725276_7AD71DB5)
+Received: from aserp1040.oracle.com ([141.146.126.69]:21676 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755698AbcHCSqX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 14:46:23 -0400
+Date: Wed, 3 Aug 2016 21:43:39 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Benjamin Berg <benjamin.berg@open-mesh.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	ath9k-devel@venema.h4ckr.net, kernel-janitors@vger.kernel.org
+Subject: [patch] ath9k: indent an if statement
+Message-ID: <20160803184339.GB775@mwanda> (sfid-20160803_204651_467755_3C4D389B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch:
-   - improves code layout
-   - removes a useless memset(0) for some memory allocated with kzalloc
-   - removes a useless if. We know that 'if (chan_band_tlv)' will succeed
-     because it has been tested a few lines above
+It looks like this code is correct, but it just needs to be indented a
+bit.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/net/wireless/marvell/mwifiex/scan.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index 21ec84794d0c..c29dd958acae 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -2179,18 +2179,14 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a394622..eb00724 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -919,7 +919,7 @@ static void ath9k_vif_iter_set_beacon(struct ath9k_vif_iter_data *iter_data,
+ 	} else {
+ 		if (iter_data->primary_beacon_vif->type != NL80211_IFTYPE_AP &&
+ 		    vif->type == NL80211_IFTYPE_AP)
+-		iter_data->primary_beacon_vif = vif;
++			iter_data->primary_beacon_vif = vif;
+ 	}
  
- 		if (chan_band_tlv && adapter->nd_info) {
- 			adapter->nd_info->matches[idx] =
--				kzalloc(sizeof(*pmatch) +
--				sizeof(u32), GFP_ATOMIC);
-+				kzalloc(sizeof(*pmatch) + sizeof(u32),
-+					GFP_ATOMIC);
- 
- 			pmatch = adapter->nd_info->matches[idx];
- 
- 			if (pmatch) {
--				memset(pmatch, 0, sizeof(*pmatch));
--				if (chan_band_tlv) {
--					pmatch->n_channels = 1;
--					pmatch->channels[0] =
--						chan_band->chan_number;
--				}
-+				pmatch->n_channels = 1;
-+				pmatch->channels[0] = chan_band->chan_number;
- 			}
- 		}
- 
--- 
-2.7.4
+ 	iter_data->beacons = true;
