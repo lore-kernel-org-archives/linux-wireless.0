@@ -1,79 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41032 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756398AbcH2V2T (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 17:28:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 00:26:12 +0300
-Message-Id: <1472505976-21108-12-git-send-email-luca@coelho.fi> (sfid-20160829_232821_942205_13AC3279)
-In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
-References: <1472505827.27868.41.camel@coelho.fi>
- <1472505976-21108-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 12/16] iwlwifi: add the new 9270 series
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35342 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752300AbcHCDKv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Aug 2016 23:10:51 -0400
+Received: by mail-pf0-f194.google.com with SMTP id h186so13647549pfg.2
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 20:10:02 -0700 (PDT)
+From: Masashi Honma <masashi.honma@gmail.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com,
+	Masashi Honma <masashi.honma@gmail.com>
+Subject: [PATCH] mac80211: Include HT Capabilities element if capable
+Date: Wed,  3 Aug 2016 11:54:29 +0900
+Message-Id: <1470192869-4206-1-git-send-email-masashi.honma@gmail.com> (sfid-20160803_051055_572641_21E74AFA)
+In-Reply-To: <1470122837.2665.5.camel@sipsolutions.net>
+References: <1470122837.2665.5.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+Previously, "HT Capabilities element" was not included in beacon and
+Mesh Peering Open/Close frames when wpa_supplicant config file includes
+disable_ht=1 even though HT is capable. But "HT Capabilities element"
+should not be modified because it is defined by hardware and software
+spec of the node.
 
-Add a new config struct for the new 9270 series and add
-the first PCI ID for it.
+We do not change "HT Operation element" code, because it is defined by
+surrounding environment and configuration of the node. So it could be
+vanished by disable_ht=1.
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 10 ++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  1 +
- 3 files changed, 12 insertions(+)
+ net/mac80211/mesh.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-index 5621cf2..e442650 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-@@ -156,6 +156,16 @@ const struct iwl_cfg iwl9260_2ac_cfg = {
- 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
- };
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index c66411d..ebd4159 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -409,10 +409,7 @@ int mesh_add_ht_cap_ie(struct ieee80211_sub_if_data *sdata,
+ 	u8 *pos;
  
-+const struct iwl_cfg iwl9270_2ac_cfg = {
-+	.name = "Intel(R) Dual Band Wireless AC 9270",
-+	.fw_name_pre = IWL9260_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+};
-+
- const struct iwl_cfg iwl9460_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 9460",
- 	.fw_name_pre = IWL9000_FW_PRE,
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index a18b57f..0ab415c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -451,6 +451,7 @@ extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl9000lc_2ac_cfg;
- extern const struct iwl_cfg iwl9260_2ac_cfg;
-+extern const struct iwl_cfg iwl9270_2ac_cfg;
- extern const struct iwl_cfg iwl9460_2ac_cfg;
- extern const struct iwl_cfg iwla000_2ac_cfg;
- #endif /* CONFIG_IWLMVM */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 3e5a11a..1be0ac2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -504,6 +504,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- /* 9000 Series */
- 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
+ 	sband = local->hw.wiphy->bands[band];
+-	if (!sband->ht_cap.ht_supported ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_20_NOHT ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_5 ||
+-	    sdata->vif.bss_conf.chandef.width == NL80211_CHAN_WIDTH_10)
++	if (!sband->ht_cap.ht_supported)
+ 		return 0;
+ 
+ 	if (skb_tailroom(skb) < 2 + sizeof(struct ieee80211_ht_cap))
 -- 
-2.8.1
+2.7.4
+
