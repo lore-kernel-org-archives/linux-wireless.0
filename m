@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40810 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755702AbcH2TkI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 15:40:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 29 Aug 2016 22:39:53 +0300
-Message-Id: <1472499594-3369-3-git-send-email-luca@coelho.fi> (sfid-20160829_214013_148700_04D155DF)
-In-Reply-To: <1472499594-3369-1-git-send-email-luca@coelho.fi>
-References: <1472499451.27868.31.camel@coelho.fi>
- <1472499594-3369-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 3/4] iwlwifi: mvm: don't use ret when not initialised
+Received: from mail-it0-f67.google.com ([209.85.214.67]:35130 "EHLO
+	mail-it0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932959AbcHCWx0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Aug 2016 18:53:26 -0400
+Received: by mail-it0-f67.google.com with SMTP id f6so17061992ith.2
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 15:53:21 -0700 (PDT)
+From: engineering@keppy.com
+To: kvalo@qca.qualcomm.com
+Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: [PATCH] ath6kl: enable firmware crash dumps on the AR6004
+Date: Wed,  3 Aug 2016 16:43:43 -0400
+Message-Id: <1470257023-6747-1-git-send-email-dan.kephart@lairdtech.com> (sfid-20160804_005331_257008_8412C6A4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+From: Dan Kephart <dan.kephart@lairdtech.com>
 
-fw-dbg code return ret but that variable was either 0
-or not initialised. Return 0 always.
+The firmware crash dumps on the 6004 are the same as the 6003. Remove the
+statement guarding it from dumping on the 6004.  Renamed the
+REG_DUMP_COUNT_AR6003 to reflect support on both chips.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Fixes: 6a95126763fb ("iwlwifi: mvm: send dbg config hcmds to fw if set in tlv")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Dan Kephart <dan.kephart@lairdtech.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath6kl/hif.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 1abcabb..46b52bf 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -960,5 +960,6 @@ int iwl_mvm_start_fw_dbg_conf(struct iwl_mvm *mvm, u8 conf_id)
- 	}
- 
- 	mvm->fw_dbg_conf = conf_id;
--	return ret;
-+
-+	return 0;
+diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
+index 18c0708..d194253 100644
+--- a/drivers/net/wireless/ath/ath6kl/hif.c
++++ b/drivers/net/wireless/ath/ath6kl/hif.c
+@@ -64,7 +64,7 @@ int ath6kl_hif_rw_comp_handler(void *context, int status)
  }
+ EXPORT_SYMBOL(ath6kl_hif_rw_comp_handler);
+ 
+-#define REG_DUMP_COUNT_AR6003   60
++#define REGISTER_DUMP_COUNT     60
+ #define REGISTER_DUMP_LEN_MAX   60
+ 
+ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
+@@ -73,9 +73,6 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
+ 	u32 i, address, regdump_addr = 0;
+ 	int ret;
+ 
+-	if (ar->target_type != TARGET_TYPE_AR6003)
+-		return;
+-
+ 	/* the reg dump pointer is copied to the host interest area */
+ 	address = ath6kl_get_hi_item_addr(ar, HI_ITEM(hi_failure_state));
+ 	address = TARG_VTOP(ar->target_type, address);
+@@ -95,7 +92,7 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
+ 
+ 	/* fetch register dump data */
+ 	ret = ath6kl_diag_read(ar, regdump_addr, (u8 *)&regdump_val[0],
+-				  REG_DUMP_COUNT_AR6003 * (sizeof(u32)));
++				  REGISTER_DUMP_COUNT * (sizeof(u32)));
+ 	if (ret) {
+ 		ath6kl_warn("failed to get register dump: %d\n", ret);
+ 		return;
+@@ -105,9 +102,9 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
+ 	ath6kl_info("hw 0x%x fw %s\n", ar->wiphy->hw_version,
+ 		    ar->wiphy->fw_version);
+ 
+-	BUILD_BUG_ON(REG_DUMP_COUNT_AR6003 % 4);
++	BUILD_BUG_ON(REGISTER_DUMP_COUNT % 4);
+ 
+-	for (i = 0; i < REG_DUMP_COUNT_AR6003; i += 4) {
++	for (i = 0; i < REGISTER_DUMP_COUNT; i += 4) {
+ 		ath6kl_info("%d: 0x%8.8x 0x%8.8x 0x%8.8x 0x%8.8x\n",
+ 			    i,
+ 			    le32_to_cpu(regdump_val[i]),
 -- 
-2.8.1
+2.4.10
+
