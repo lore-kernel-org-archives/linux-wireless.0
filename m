@@ -1,37 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:59241 "EHLO bear.ext.ti.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56445 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933587AbcHDMoa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2016 08:44:30 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <johannes@sipsolutions.net>, <kvalo@codeaurora.org>,
-	Maxim Altshul <maxim.altshul@ti.com>
-Subject: [PATCH 0/2] get_expected_throughput interface update
-Date: Thu, 4 Aug 2016 15:48:09 +0300
-Message-ID: <20160804124809.7742-1-maxim.altshul@ti.com> (sfid-20160804_144459_457342_2CF31B58)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1751108AbcHDGaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2016 02:30:19 -0400
+Message-ID: <1470289823.2661.1.camel@sipsolutions.net> (sfid-20160804_083024_316337_1860BE61)
+Subject: Re: [PATCH v2] nl80211: Receive correct value for
+ NL80211_MESHCONF_HT_OPMODE command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com
+Date: Thu, 04 Aug 2016 07:50:23 +0200
+In-Reply-To: <d193404d-8a77-8a8e-10eb-f46bd4008384@gmail.com> (sfid-20160804_023726_609659_1BF1EFA8)
+References: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
+ <1470138089-6864-1-git-send-email-masashi.honma@gmail.com>
+ <9967cc0f-777e-31f6-0c4a-a788e92b9049@gmail.com>
+ <1470207156.2638.9.camel@sipsolutions.net>
+	 <d193404d-8a77-8a8e-10eb-f46bd4008384@gmail.com>
+	 (sfid-20160804_023726_609659_1BF1EFA8)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These two patches are two important patches (mainly 1/2)
-that solve a regression issue that was found in wlcore
-(where wl was found to be null in some cases)
 
-Also, they make it easier for driver to get hw->priv when op is invoked. 
+> And I think checking only in wpa_supplicant is not good idea. Because
+> other user application can access to the kernel API. If invalid flag
+> combination causes kernel panic, it could be kernel vulnerability.
+> 
 
+I don't really see how that should confuse a driver into a panic, but
+fair enough.
 
-Maxim Altshul (2):
-  mac80211/wlcore: Add ieee80211_hw variable to get_expected_throughput
-  wlcore: Remove wl pointer from wl_sta structure
-
- drivers/net/wireless/ti/wlcore/main.c     | 6 +++---
- drivers/net/wireless/ti/wlcore/wlcore_i.h | 1 -
- include/net/mac80211.h                    | 3 ++-
- net/mac80211/driver-ops.h                 | 2 +-
- 4 files changed, 6 insertions(+), 6 deletions(-)
-
--- 
-2.9.0
-
+johannes
