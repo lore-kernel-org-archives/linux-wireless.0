@@ -1,204 +1,322 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:36014 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083AbcHOVqO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2016 17:46:14 -0400
-Received: by mail-wm0-f41.google.com with SMTP id q128so110966927wma.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2016 14:46:13 -0700 (PDT)
-Subject: Re: [BUGFIX PATCH 2/2] brcmfmac: Change vif_event_lock to spinlock
-To: Masami Hiramatsu <mhiramat@kernel.org>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <147125403645.9434.8008546579326856373.stgit@devbox>
- <147125407193.9434.3055117303208933493.stgit@devbox>
-Cc: linux-wireless@vger.kernel.org,
-	brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <97af6a79-1a0a-4a60-6f07-869644f28fcb@broadcom.com> (sfid-20160815_234635_850040_00649E89)
-Date: Mon, 15 Aug 2016 23:46:09 +0200
-MIME-Version: 1.0
-In-Reply-To: <147125407193.9434.3055117303208933493.stgit@devbox>
-Content-Type: text/plain; charset=utf-8
+Received: from nbd.name ([46.4.11.11]:57591 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934199AbcHDVtp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2016 17:49:45 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH 1/2] ath9k: use ieee80211_tx_status_noskb where possible
+Date: Thu,  4 Aug 2016 23:49:39 +0200
+Message-Id: <20160804214940.78476-1-nbd@nbd.name> (sfid-20160804_235000_468178_81A34A36)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15-8-2016 11:41, Masami Hiramatsu wrote:
-> Change vif_event_lock to spinlock from mutex, since this lock is
-> used in wait_event_timeout() via vif_event_equals(). This caused
-> a warning report as below.
-> 
-> As far as I can see, this lock protects regions where updating
-> structure members, not function calls. Also, since those
-> regions are not called from interrupt handlers (of course, it
-> was a mutex), spin_lock is used instead of spin_lock_irqsave.
-> 
-> [  186.678550] ------------[ cut here ]------------
-> [  186.678556] WARNING: CPU: 2 PID: 7140 at /home/mhiramat/ksrc/linux/kernel/sched/core.c:7545 __might_sleep+0x7c/0x80
-> [  186.678560] do not call blocking ops when !TASK_RUNNING; state=2 set at [<ffffffff980d9090>] prepare_to_wait_event+0x60/0x100
-> [  186.678560] Modules linked in: brcmfmac xt_CHECKSUM rfcomm ipt_MASQUERADE nf_nat_masquerade_ipv4 xt_addrtype br_netfilter xt_tcpudp ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_raw ip6table_security ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_filter ip6_tables iptable_raw iptable_security iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_filter ip_tables x_tables bnep nls_iso8859_1 i2c_designware_platform i2c_designware_core snd_hda_codec_hdmi snd_hda_codec_realtek dcdbas snd_hda_codec_generic snd_hda_intel snd_hda_codec intel_rapl snd_hda_core x86_pkg_temp_thermal intel_powerclamp coretemp
-> [  186.678594]  snd_pcm crct10dif_pclmul crc32_pclmul aesni_intel aes_x86_64 joydev glue_helper snd_hwdep lrw gf128mul uvcvideo ablk_helper snd_seq_midi cryptd snd_seq_midi_event snd_rawmidi videobuf2_vmalloc videobuf2_memops snd_seq input_leds videobuf2_v4l2 cfg80211 videobuf2_core snd_timer videodev serio_raw btusb snd_seq_device media btrtl rtsx_pci_ms snd mei_me memstick hid_multitouch mei soundcore brcmutil idma64 virt_dma intel_lpss_pci processor_thermal_device intel_soc_dts_iosf hci_uart btbcm btqca btintel bluetooth int3403_thermal dell_smo8800 intel_lpss_acpi intel_lpss int3402_thermal int340x_thermal_zone intel_hid mac_hid int3400_thermal shpchp sparse_keymap acpi_pad acpi_thermal_rel acpi_als kfifo_buf industrialio kvm_intel kvm irqbypass parport_pc ppdev lp parport autofs4 btrfs xor raid6_pq
-> [  186.678631]  usbhid nouveau ttm i915 rtsx_pci_sdmmc mxm_wmi i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops psmouse drm ahci rtsx_pci nvme nvme_core libahci i2c_hid hid pinctrl_sunrisepoint video wmi pinctrl_intel fjes [last unloaded: brcmfmac]
-> [  186.678646] CPU: 2 PID: 7140 Comm: wpa_supplicant Not tainted 4.8.0-rc1+ #8
-> [  186.678647] Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 01.02.00 04/07/2016
-> [  186.678648]  0000000000000000 ffff9d8c64b5b900 ffffffff98442f23 ffff9d8c64b5b950
-> [  186.678651]  0000000000000000 ffff9d8c64b5b940 ffffffff9808b22b 00001d790000000d
-> [  186.678653]  ffffffff98c75e78 000000000000026c 0000000000000000 ffff9d8c2706d058
-> [  186.678655] Call Trace:
-> [  186.678659]  [<ffffffff98442f23>] dump_stack+0x85/0xc2
-> [  186.678666]  [<ffffffff9808b22b>] __warn+0xcb/0xf0
-> [  186.678668]  [<ffffffff9808b29f>] warn_slowpath_fmt+0x4f/0x60
-> [  186.678671]  [<ffffffff980d9090>] ? prepare_to_wait_event+0x60/0x100
-> [  186.678672]  [<ffffffff980d9090>] ? prepare_to_wait_event+0x60/0x100
-> [  186.678674]  [<ffffffff980b922c>] __might_sleep+0x7c/0x80
-> [  186.678680]  [<ffffffff988b0853>] mutex_lock_nested+0x33/0x3b0
-> [  186.678682]  [<ffffffff980e5d8d>] ? trace_hardirqs_on+0xd/0x10
-> [  186.678689]  [<ffffffffc0c57d2d>] brcmf_cfg80211_wait_vif_event+0xcd/0x130 [brcmfmac]
-> [  186.678691]  [<ffffffff980d9190>] ? wake_atomic_t_function+0x60/0x60
-> [  186.678697]  [<ffffffffc0c628e9>] brcmf_p2p_del_vif+0xf9/0x220 [brcmfmac]
-> [  186.678702]  [<ffffffffc0c57fab>] brcmf_cfg80211_del_iface+0x21b/0x270 [brcmfmac]
-> [  186.678716]  [<ffffffffc0b0539e>] nl80211_del_interface+0xfe/0x3a0 [cfg80211]
-> [  186.678718]  [<ffffffff987ca335>] genl_family_rcv_msg+0x1b5/0x370
-> [  186.678720]  [<ffffffff980e5d8d>] ? trace_hardirqs_on+0xd/0x10
-> [  186.678721]  [<ffffffff987ca56d>] genl_rcv_msg+0x7d/0xb0
-> [  186.678722]  [<ffffffff987ca4f0>] ? genl_family_rcv_msg+0x370/0x370
-> [  186.678724]  [<ffffffff987c9a47>] netlink_rcv_skb+0x97/0xb0
-> [  186.678726]  [<ffffffff987ca168>] genl_rcv+0x28/0x40
-> [  186.678727]  [<ffffffff987c93c3>] netlink_unicast+0x1d3/0x2f0
-> [  186.678729]  [<ffffffff987c933b>] ? netlink_unicast+0x14b/0x2f0
-> [  186.678731]  [<ffffffff987c97cb>] netlink_sendmsg+0x2eb/0x3a0
-> [  186.678733]  [<ffffffff9876dad8>] sock_sendmsg+0x38/0x50
-> [  186.678734]  [<ffffffff9876e4df>] ___sys_sendmsg+0x27f/0x290
-> [  186.678737]  [<ffffffff9828b935>] ? mntput_no_expire+0x5/0x3f0
-> [  186.678739]  [<ffffffff9828b9be>] ? mntput_no_expire+0x8e/0x3f0
-> [  186.678741]  [<ffffffff9828b935>] ? mntput_no_expire+0x5/0x3f0
-> [  186.678743]  [<ffffffff9828bd44>] ? mntput+0x24/0x40
-> [  186.678744]  [<ffffffff98267830>] ? __fput+0x190/0x200
-> [  186.678746]  [<ffffffff9876f125>] __sys_sendmsg+0x45/0x80
-> [  186.678748]  [<ffffffff9876f172>] SyS_sendmsg+0x12/0x20
-> [  186.678749]  [<ffffffff988b5680>] entry_SYSCALL_64_fastpath+0x23/0xc1
-> [  186.678751]  [<ffffffff980e2b8f>] ? trace_hardirqs_off_caller+0x1f/0xc0
-> [  186.678752] ---[ end trace e224d66c5d8408b5 ]---
+It removes the need for undoing the padding changes to skb->data and it
+improves performance by eliminating one tx status lookup per MPDU in the
+status path. It is also useful for preparing a follow-up fix to better
+handle powersave filtering.
 
-Acked-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> Signed-off-by: Masami Hiramatsu <mhiramat@kernel.org>
-> ---
->  .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   26 ++++++++++----------
->  .../broadcom/brcm80211/brcmfmac/cfg80211.h         |    2 +-
->  2 files changed, 14 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index 2628d5e..5db56a7 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -5635,7 +5635,7 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
->  		  ifevent->action, ifevent->flags, ifevent->ifidx,
->  		  ifevent->bsscfgidx);
->  
-> -	mutex_lock(&event->vif_event_lock);
-> +	spin_lock(&event->vif_event_lock);
->  	event->action = ifevent->action;
->  	vif = event->vif;
->  
-> @@ -5643,7 +5643,7 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
->  	case BRCMF_E_IF_ADD:
->  		/* waiting process may have timed out */
->  		if (!cfg->vif_event.vif) {
-> -			mutex_unlock(&event->vif_event_lock);
-> +			spin_unlock(&event->vif_event_lock);
->  			return -EBADF;
->  		}
->  
-> @@ -5654,24 +5654,24 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
->  			ifp->ndev->ieee80211_ptr = &vif->wdev;
->  			SET_NETDEV_DEV(ifp->ndev, wiphy_dev(cfg->wiphy));
->  		}
-> -		mutex_unlock(&event->vif_event_lock);
-> +		spin_unlock(&event->vif_event_lock);
->  		wake_up(&event->vif_wq);
->  		return 0;
->  
->  	case BRCMF_E_IF_DEL:
-> -		mutex_unlock(&event->vif_event_lock);
-> +		spin_unlock(&event->vif_event_lock);
->  		/* event may not be upon user request */
->  		if (brcmf_cfg80211_vif_event_armed(cfg))
->  			wake_up(&event->vif_wq);
->  		return 0;
->  
->  	case BRCMF_E_IF_CHANGE:
-> -		mutex_unlock(&event->vif_event_lock);
-> +		spin_unlock(&event->vif_event_lock);
->  		wake_up(&event->vif_wq);
->  		return 0;
->  
->  	default:
-> -		mutex_unlock(&event->vif_event_lock);
-> +		spin_unlock(&event->vif_event_lock);
->  		break;
->  	}
->  	return -EINVAL;
-> @@ -5792,7 +5792,7 @@ static void wl_deinit_priv(struct brcmf_cfg80211_info *cfg)
->  static void init_vif_event(struct brcmf_cfg80211_vif_event *event)
->  {
->  	init_waitqueue_head(&event->vif_wq);
-> -	mutex_init(&event->vif_event_lock);
-> +	spin_lock_init(&event->vif_event_lock);
->  }
->  
->  static s32 brcmf_dongle_roam(struct brcmf_if *ifp)
-> @@ -6691,9 +6691,9 @@ static inline bool vif_event_equals(struct brcmf_cfg80211_vif_event *event,
->  {
->  	u8 evt_action;
->  
-> -	mutex_lock(&event->vif_event_lock);
-> +	spin_lock(&event->vif_event_lock);
->  	evt_action = event->action;
-> -	mutex_unlock(&event->vif_event_lock);
-> +	spin_unlock(&event->vif_event_lock);
->  	return evt_action == action;
->  }
->  
-> @@ -6702,10 +6702,10 @@ void brcmf_cfg80211_arm_vif_event(struct brcmf_cfg80211_info *cfg,
->  {
->  	struct brcmf_cfg80211_vif_event *event = &cfg->vif_event;
->  
-> -	mutex_lock(&event->vif_event_lock);
-> +	spin_lock(&event->vif_event_lock);
->  	event->vif = vif;
->  	event->action = 0;
-> -	mutex_unlock(&event->vif_event_lock);
-> +	spin_unlock(&event->vif_event_lock);
->  }
->  
->  bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg)
-> @@ -6713,9 +6713,9 @@ bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg)
->  	struct brcmf_cfg80211_vif_event *event = &cfg->vif_event;
->  	bool armed;
->  
-> -	mutex_lock(&event->vif_event_lock);
-> +	spin_lock(&event->vif_event_lock);
->  	armed = event->vif != NULL;
-> -	mutex_unlock(&event->vif_event_lock);
-> +	spin_unlock(&event->vif_event_lock);
->  
->  	return armed;
->  }
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-> index 7d77f86..8889832 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
-> @@ -227,7 +227,7 @@ struct escan_info {
->   */
->  struct brcmf_cfg80211_vif_event {
->  	wait_queue_head_t vif_wq;
-> -	struct mutex vif_event_lock;
-> +	spinlock_t vif_event_lock;
->  	u8 action;
->  	struct brcmf_cfg80211_vif *vif;
->  };
-> 
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ drivers/net/wireless/ath/ath9k/xmit.c | 94 +++++++++++++++++++++++------------
+ 1 file changed, 62 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
+index 39d9383..5693558 100644
+--- a/drivers/net/wireless/ath/ath9k/xmit.c
++++ b/drivers/net/wireless/ath/ath9k/xmit.c
+@@ -50,9 +50,11 @@ static u16 bits_per_symbol[][2] = {
+ static void ath_tx_send_normal(struct ath_softc *sc, struct ath_txq *txq,
+ 			       struct ath_atx_tid *tid, struct sk_buff *skb);
+ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+-			    int tx_flags, struct ath_txq *txq);
++			    int tx_flags, struct ath_txq *txq,
++			    struct ieee80211_sta *sta);
+ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 				struct ath_txq *txq, struct list_head *bf_q,
++				struct ieee80211_sta *sta,
+ 				struct ath_tx_status *ts, int txok);
+ static void ath_tx_txqaddbuf(struct ath_softc *sc, struct ath_txq *txq,
+ 			     struct list_head *head, bool internal);
+@@ -77,6 +79,22 @@ enum {
+ /* Aggregation logic */
+ /*********************/
+ 
++static void ath_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
++{
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_sta *sta = info->status.status_driver_data[0];
++
++	if (info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
++		ieee80211_tx_status(hw, skb);
++		return;
++	}
++
++	if (sta)
++		ieee80211_tx_status_noskb(hw, sta, info);
++
++	dev_kfree_skb(skb);
++}
++
+ void ath_txq_lock(struct ath_softc *sc, struct ath_txq *txq)
+ 	__acquires(&txq->axq_lock)
+ {
+@@ -92,6 +110,7 @@ void ath_txq_unlock(struct ath_softc *sc, struct ath_txq *txq)
+ void ath_txq_unlock_complete(struct ath_softc *sc, struct ath_txq *txq)
+ 	__releases(&txq->axq_lock)
+ {
++	struct ieee80211_hw *hw = sc->hw;
+ 	struct sk_buff_head q;
+ 	struct sk_buff *skb;
+ 
+@@ -100,7 +119,7 @@ void ath_txq_unlock_complete(struct ath_softc *sc, struct ath_txq *txq)
+ 	spin_unlock_bh(&txq->axq_lock);
+ 
+ 	while ((skb = __skb_dequeue(&q)))
+-		ieee80211_tx_status(sc->hw, skb);
++		ath_tx_status(hw, skb);
+ }
+ 
+ static void ath_tx_queue_tid(struct ath_softc *sc, struct ath_txq *txq,
+@@ -268,7 +287,7 @@ static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
+ 		}
+ 
+ 		list_add_tail(&bf->list, &bf_head);
+-		ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
++		ath_tx_complete_buf(sc, bf, txq, &bf_head, NULL, &ts, 0);
+ 	}
+ 
+ 	if (sendbar) {
+@@ -333,12 +352,12 @@ static void ath_tid_drain(struct ath_softc *sc, struct ath_txq *txq,
+ 		bf = fi->bf;
+ 
+ 		if (!bf) {
+-			ath_tx_complete(sc, skb, ATH_TX_ERROR, txq);
++			ath_tx_complete(sc, skb, ATH_TX_ERROR, txq, NULL);
+ 			continue;
+ 		}
+ 
+ 		list_add_tail(&bf->list, &bf_head);
+-		ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
++		ath_tx_complete_buf(sc, bf, txq, &bf_head, NULL, &ts, 0);
+ 	}
+ }
+ 
+@@ -441,12 +460,11 @@ static void ath_tx_count_frames(struct ath_softc *sc, struct ath_buf *bf,
+ 
+ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 				 struct ath_buf *bf, struct list_head *bf_q,
++				 struct ieee80211_sta *sta,
+ 				 struct ath_tx_status *ts, int txok)
+ {
+ 	struct ath_node *an = NULL;
+ 	struct sk_buff *skb;
+-	struct ieee80211_sta *sta;
+-	struct ieee80211_hw *hw = sc->hw;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_tx_info *tx_info;
+ 	struct ath_atx_tid *tid = NULL;
+@@ -475,12 +493,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 	for (i = 0; i < ts->ts_rateindex; i++)
+ 		retries += rates[i].count;
+ 
+-	rcu_read_lock();
+-
+-	sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr1, hdr->addr2);
+ 	if (!sta) {
+-		rcu_read_unlock();
+-
+ 		INIT_LIST_HEAD(&bf_head);
+ 		while (bf) {
+ 			bf_next = bf->bf_next;
+@@ -488,7 +501,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 			if (!bf->bf_state.stale || bf_next != NULL)
+ 				list_move_tail(&bf->list, &bf_head);
+ 
+-			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts, 0);
++			ath_tx_complete_buf(sc, bf, txq, &bf_head, NULL, ts, 0);
+ 
+ 			bf = bf_next;
+ 		}
+@@ -598,7 +611,7 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 								ts);
+ 			}
+ 
+-			ath_tx_complete_buf(sc, bf, txq, &bf_head, ts,
++			ath_tx_complete_buf(sc, bf, txq, &bf_head, sta, ts,
+ 				!txfail);
+ 		} else {
+ 			if (tx_info->flags & IEEE80211_TX_STATUS_EOSP) {
+@@ -619,7 +632,8 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 					ath_tx_update_baw(sc, tid, seqno);
+ 
+ 					ath_tx_complete_buf(sc, bf, txq,
+-							    &bf_head, ts, 0);
++							    &bf_head, NULL, ts,
++							    0);
+ 					bar_index = max_t(int, bar_index,
+ 						ATH_BA_INDEX(seq_first, seqno));
+ 					break;
+@@ -663,8 +677,6 @@ static void ath_tx_complete_aggr(struct ath_softc *sc, struct ath_txq *txq,
+ 		ath_txq_lock(sc, txq);
+ 	}
+ 
+-	rcu_read_unlock();
+-
+ 	if (needreset)
+ 		ath9k_queue_reset(sc, RESET_TYPE_TX_ERROR);
+ }
+@@ -679,7 +691,10 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 				  struct ath_tx_status *ts, struct ath_buf *bf,
+ 				  struct list_head *bf_head)
+ {
++	struct ieee80211_hw *hw = sc->hw;
+ 	struct ieee80211_tx_info *info;
++	struct ieee80211_sta *sta;
++	struct ieee80211_hdr *hdr;
+ 	bool txok, flush;
+ 
+ 	txok = !(ts->ts_status & ATH9K_TXERR_MASK);
+@@ -692,6 +707,10 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 
+ 	ts->duration = ath9k_hw_get_duration(sc->sc_ah, bf->bf_desc,
+ 					     ts->ts_rateindex);
++
++	hdr = (struct ieee80211_hdr *) bf->bf_mpdu->data;
++	sta = ieee80211_find_sta_by_ifaddr(hw, hdr->addr1, hdr->addr2);
++
+ 	if (!bf_isampdu(bf)) {
+ 		if (!flush) {
+ 			info = IEEE80211_SKB_CB(bf->bf_mpdu);
+@@ -700,9 +719,9 @@ static void ath_tx_process_buffer(struct ath_softc *sc, struct ath_txq *txq,
+ 			ath_tx_rc_status(sc, bf, ts, 1, txok ? 0 : 1, txok);
+ 			ath_dynack_sample_tx_ts(sc->sc_ah, bf->bf_mpdu, ts);
+ 		}
+-		ath_tx_complete_buf(sc, bf, txq, bf_head, ts, txok);
++		ath_tx_complete_buf(sc, bf, txq, bf_head, sta, ts, txok);
+ 	} else
+-		ath_tx_complete_aggr(sc, txq, bf, bf_head, ts, txok);
++		ath_tx_complete_aggr(sc, txq, bf, bf_head, sta, ts, txok);
+ 
+ 	if (!flush)
+ 		ath_txq_schedule(sc, txq);
+@@ -938,7 +957,7 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
+ 			list_add(&bf->list, &bf_head);
+ 			__skb_unlink(skb, *q);
+ 			ath_tx_update_baw(sc, tid, seqno);
+-			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
++			ath_tx_complete_buf(sc, bf, txq, &bf_head, NULL, &ts, 0);
+ 			continue;
+ 		}
+ 
+@@ -1847,6 +1866,7 @@ static void ath_drain_txq_list(struct ath_softc *sc, struct ath_txq *txq,
+  */
+ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq)
+ {
++	rcu_read_lock();
+ 	ath_txq_lock(sc, txq);
+ 
+ 	if (sc->sc_ah->caps.hw_caps & ATH9K_HW_CAP_EDMA) {
+@@ -1865,6 +1885,7 @@ void ath_draintxq(struct ath_softc *sc, struct ath_txq *txq)
+ 	ath_drain_txq_list(sc, txq, &txq->axq_q);
+ 
+ 	ath_txq_unlock_complete(sc, txq);
++	rcu_read_unlock();
+ }
+ 
+ bool ath_drain_all_txq(struct ath_softc *sc)
+@@ -2487,7 +2508,8 @@ void ath_tx_cabq(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ /*****************/
+ 
+ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+-			    int tx_flags, struct ath_txq *txq)
++			    int tx_flags, struct ath_txq *txq,
++			    struct ieee80211_sta *sta)
+ {
+ 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
+ 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
+@@ -2507,15 +2529,17 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 			tx_info->flags |= IEEE80211_TX_STAT_ACK;
+ 	}
+ 
+-	padpos = ieee80211_hdrlen(hdr->frame_control);
+-	padsize = padpos & 3;
+-	if (padsize && skb->len>padpos+padsize) {
+-		/*
+-		 * Remove MAC header padding before giving the frame back to
+-		 * mac80211.
+-		 */
+-		memmove(skb->data + padsize, skb->data, padpos);
+-		skb_pull(skb, padsize);
++	if (tx_info->flags & IEEE80211_TX_CTL_REQ_TX_STATUS) {
++		padpos = ieee80211_hdrlen(hdr->frame_control);
++		padsize = padpos & 3;
++		if (padsize && skb->len>padpos+padsize) {
++			/*
++			 * Remove MAC header padding before giving the frame back to
++			 * mac80211.
++			 */
++			memmove(skb->data + padsize, skb->data, padpos);
++			skb_pull(skb, padsize);
++		}
+ 	}
+ 
+ 	spin_lock_irqsave(&sc->sc_pm_lock, flags);
+@@ -2530,12 +2554,14 @@ static void ath_tx_complete(struct ath_softc *sc, struct sk_buff *skb,
+ 	}
+ 	spin_unlock_irqrestore(&sc->sc_pm_lock, flags);
+ 
+-	__skb_queue_tail(&txq->complete_q, skb);
+ 	ath_txq_skb_done(sc, txq, skb);
++	tx_info->status.status_driver_data[0] = sta;
++	__skb_queue_tail(&txq->complete_q, skb);
+ }
+ 
+ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 				struct ath_txq *txq, struct list_head *bf_q,
++				struct ieee80211_sta *sta,
+ 				struct ath_tx_status *ts, int txok)
+ {
+ 	struct sk_buff *skb = bf->bf_mpdu;
+@@ -2563,7 +2589,7 @@ static void ath_tx_complete_buf(struct ath_softc *sc, struct ath_buf *bf,
+ 			complete(&sc->paprd_complete);
+ 	} else {
+ 		ath_debug_stat_tx(sc, bf, ts, txq, tx_flags);
+-		ath_tx_complete(sc, skb, tx_flags, txq);
++		ath_tx_complete(sc, skb, tx_flags, txq, sta);
+ 	}
+ skip_tx_complete:
+ 	/* At this point, skb (bf->bf_mpdu) is consumed...make sure we don't
+@@ -2715,10 +2741,12 @@ void ath_tx_tasklet(struct ath_softc *sc)
+ 	u32 qcumask = ((1 << ATH9K_NUM_TX_QUEUES) - 1) & ah->intr_txqs;
+ 	int i;
+ 
++	rcu_read_lock();
+ 	for (i = 0; i < ATH9K_NUM_TX_QUEUES; i++) {
+ 		if (ATH_TXQ_SETUP(sc, i) && (qcumask & (1 << i)))
+ 			ath_tx_processq(sc, &sc->tx.txq[i]);
+ 	}
++	rcu_read_unlock();
+ }
+ 
+ void ath_tx_edma_tasklet(struct ath_softc *sc)
+@@ -2732,6 +2760,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 	struct list_head *fifo_list;
+ 	int status;
+ 
++	rcu_read_lock();
+ 	for (;;) {
+ 		if (test_bit(ATH_OP_HW_RESET, &common->op_flags))
+ 			break;
+@@ -2802,6 +2831,7 @@ void ath_tx_edma_tasklet(struct ath_softc *sc)
+ 		ath_tx_process_buffer(sc, txq, &ts, bf, &bf_head);
+ 		ath_txq_unlock_complete(sc, txq);
+ 	}
++	rcu_read_unlock();
+ }
+ 
+ /*****************/
+-- 
+2.8.4
+
