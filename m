@@ -1,71 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14700 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752065AbcHBKjz (ORCPT
+Received: from broadband.actcorp.in ([106.51.140.156]:14180 "EHLO
+	arvind-ThinkPad-Edge-E431" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752128AbcHHPeN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 06:39:55 -0400
-From: <c_traja@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Tamizh chelvam <c_traja@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Add WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT wmi service
-Date: Tue, 2 Aug 2016 16:13:14 +0530
-Message-ID: <1470134594-10427-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160802_123958_671006_0E3E74C4)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 8 Aug 2016 11:34:13 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: zajec5@gmail.com, leoli@freescale.com
+Cc: qiang.zhao@freescale.com, scottwood@freescale.com,
+	viresh.kumar@linaro.org, akpm@linux-foundation.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux@roeck-us.net, arnd@arndb.de,
+	Arvind Yadav <arvind.yadav.cs@gmail.com>
+Subject: [v5.1] ucc_fast: Fix to avoid IS_ERR_VALUE abuses and dead code on 64bit systems.
+Date: Thu,  4 Aug 2016 22:22:43 +0530
+Message-Id: <1470329563-5464-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20160808_173416_426951_0F87F0B6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+IS_ERR_VALUE() assumes that parameter is an unsigned long.
+It can not be used to check if 'unsigned int' is passed insted.
+Which tends to reflect an error.
+In 64bit architectures sizeof (int) == 4 && sizeof (long) == 8.
+IS_ERR_VALUE(x) is ((x) >= (unsigned long)-4095).
+IS_ERR_VALUE() of 'unsigned int' is always false because the 32bit
+value is zero extended to 64 bits.
 
-WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT service has missed in
-the commit 7e247a9e88dc ("ath10k: add dynamic tx mode switch
-config support for qca4019"). This patch adds the service to
-avoid mismatch between host and target.
+Now Problem In UCC fast protocols -: drivers/soc/fsl/qe/ucc_fast.c
 
-Fixes:7e247a9e88dc ("ath10k: add dynamic tx mode switch config support for qca4019")
-Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+        /* Allocate memory for Tx Virtual Fifo */
+        uccf->ucc_fast_tx_virtual_fifo_base_offset =
+          qe_muram_alloc(uf_info->utfs, UCC_FAST_VIRT_FIFO_REGS_ALIGNMENT);
+        if (IS_ERR_VALUE(uccf->ucc_fast_tx_virtual_fifo_base_offset)) {
+                printk(KERN_ERR "%s: cannot allocate MURAM for TX FIFO\n",
+                        __func__);
+                uccf->ucc_fast_tx_virtual_fifo_base_offset = 0;
+                ucc_fast_free(uccf);
+                return -ENOMEM;
+        }
+
+        /* Allocate memory for Rx Virtual Fifo */
+        uccf->ucc_fast_rx_virtual_fifo_base_offset =
+           qe_muram_alloc(uf_info->urfs +
+                           UCC_FAST_RECEIVE_VIRTUAL_FIFO_SIZE_FUDGE_FACTOR,
+                           UCC_FAST_VIRT_FIFO_REGS_ALIGNMENT);
+        if (IS_ERR_VALUE(uccf->ucc_fast_rx_virtual_fifo_base_offset)) {
+                printk(KERN_ERR "%s: cannot allocate MURAM for RX FIFO\n",
+                        __func__);
+                uccf->ucc_fast_rx_virtual_fifo_base_offset = 0;
+                ucc_fast_free(uccf);
+                return -ENOMEM;
+        }
+
+qe_muram_alloc (a.k.a. cpm_muram_alloc) returns unsigned long.
+Return value store in a u32 (ucc_fast_tx_virtual_fifo_base_offset
+and ucc_fast_rx_virtual_fifo_base_offset).If qe_muram_alloc will
+return any error, Then IS_ERR_VALUE will always return 0. it'll not
+call ucc_fast_free for any failure. Inside 'if code' will be a dead
+code on 64bit.
+This patch is to avoid this problem on 64bit machine.
+
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.h |    5 +++++
- 1 file changed, 5 insertions(+)
+ include/soc/fsl/qe/ucc_fast.h | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 3ef4688..f67cc19 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -180,6 +180,7 @@ enum wmi_service {
- 	WMI_SERVICE_MESH_NON_11S,
- 	WMI_SERVICE_PEER_STATS,
- 	WMI_SERVICE_RESTRT_CHNL_SUPPORT,
-+	WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT,
- 	WMI_SERVICE_TX_MODE_PUSH_ONLY,
- 	WMI_SERVICE_TX_MODE_PUSH_PULL,
- 	WMI_SERVICE_TX_MODE_DYNAMIC,
-@@ -305,6 +306,7 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_RESTRT_CHNL_SUPPORT,
- 	WMI_10_4_SERVICE_PEER_STATS,
- 	WMI_10_4_SERVICE_MESH_11S,
-+	WMI_10_4_SERVICE_PERIODIC_CHAN_STAT_SUPPORT,
- 	WMI_10_4_SERVICE_TX_MODE_PUSH_ONLY,
- 	WMI_10_4_SERVICE_TX_MODE_PUSH_PULL,
- 	WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
-@@ -402,6 +404,7 @@ static inline char *wmi_service_name(int service_id)
- 	SVCSTR(WMI_SERVICE_MESH_NON_11S);
- 	SVCSTR(WMI_SERVICE_PEER_STATS);
- 	SVCSTR(WMI_SERVICE_RESTRT_CHNL_SUPPORT);
-+	SVCSTR(WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT);
- 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_ONLY);
- 	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_PULL);
- 	SVCSTR(WMI_SERVICE_TX_MODE_DYNAMIC);
-@@ -652,6 +655,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_PEER_STATS, len);
- 	SVCMAP(WMI_10_4_SERVICE_MESH_11S,
- 	       WMI_SERVICE_MESH_11S, len);
-+	SVCMAP(WMI_10_4_SERVICE_PERIODIC_CHAN_STAT_SUPPORT,
-+	       WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT, len);
- 	SVCMAP(WMI_10_4_SERVICE_TX_MODE_PUSH_ONLY,
- 	       WMI_SERVICE_TX_MODE_PUSH_ONLY, len);
- 	SVCMAP(WMI_10_4_SERVICE_TX_MODE_PUSH_PULL,
+diff --git a/include/soc/fsl/qe/ucc_fast.h b/include/soc/fsl/qe/ucc_fast.h
+index df8ea79..ada9070 100644
+--- a/include/soc/fsl/qe/ucc_fast.h
++++ b/include/soc/fsl/qe/ucc_fast.h
+@@ -165,10 +165,12 @@ struct ucc_fast_private {
+ 	int stopped_tx;		/* Whether channel has been stopped for Tx
+ 				   (STOP_TX, etc.) */
+ 	int stopped_rx;		/* Whether channel has been stopped for Rx */
+-	u32 ucc_fast_tx_virtual_fifo_base_offset;/* pointer to base of Tx
+-						    virtual fifo */
+-	u32 ucc_fast_rx_virtual_fifo_base_offset;/* pointer to base of Rx
+-						    virtual fifo */
++	unsigned long ucc_fast_tx_virtual_fifo_base_offset;/* pointer to base of
++							    * Tx virtual fifo
++							    */
++	unsigned long ucc_fast_rx_virtual_fifo_base_offset;/* pointer to base of
++							    * Rx virtual fifo
++							    */
+ #ifdef STATISTICS
+ 	u32 tx_frames;		/* Transmitted frames counter. */
+ 	u32 rx_frames;		/* Received frames counter (only frames
 -- 
-1.7.9.5
+1.9.1
 
