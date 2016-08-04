@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:63463 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755752AbcHBT0u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 15:26:50 -0400
-From: Heinrich Schuchardt <xypron.glpk@gmx.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Heinrich Schuchardt <xypron.glpk@gmx.de>
-Subject: [PATCH 1/1 v2] rtlwifi: remove superfluous condition
-Date: Tue,  2 Aug 2016 21:26:21 +0200
-Message-Id: <1470165981-6241-1-git-send-email-xypron.glpk@gmx.de> (sfid-20160802_212715_443202_A601C9E4)
-In-Reply-To: <4e6de16f-b42c-920a-60a2-fcc88e282dc0@lwfinger.net>
-References: <4e6de16f-b42c-920a-60a2-fcc88e282dc0@lwfinger.net>
+Received: from helcar.hengli.com.au ([209.40.204.226]:48098 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752312AbcHDHqG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2016 03:46:06 -0400
+Date: Thu, 4 Aug 2016 15:45:46 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>,
+	linux-wireless@vger.kernel.org
+Cc: Thomas Graf <tgraf@suug.ch>, tom@herbertland.com
+Subject: Re: Buggy rhashtable walking
+Message-ID: <20160804074546.GA996@gondor.apana.org.au> (sfid-20160804_094611_627754_FBB091B2)
+References: <20160804071846.GA773@gondor.apana.org.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160804071846.GA773@gondor.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If sta == NULL, the changed line will not be reached.
-So no need to check that sta != NULL here.
+On Thu, Aug 04, 2016 at 03:18:46PM +0800, Herbert Xu wrote:
+> 
+> So the question is can wireless handle seeing an entry multiple
+> times? In particular, __ieee80211_rx_handle_packet would appear
+> to process the same packet multiple times if this were to happen.
 
-v2:
-	fix typo
+It's worse than I thought.  In fact it's not walking the table
+at all, rather it's doing a hash lookup by hand!
 
-Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtlwifi/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This cannot possibly work given that rhashtable makes use of
+multiple hash tables.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 41f77f8..7aee5ebb1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -1135,7 +1135,7 @@ static void rtl_op_bss_info_changed(struct ieee80211_hw *hw,
- 					mac->mode = WIRELESS_MODE_AC_24G;
- 			}
- 
--			if (vif->type == NL80211_IFTYPE_STATION && sta)
-+			if (vif->type == NL80211_IFTYPE_STATION)
- 				rtlpriv->cfg->ops->update_rate_tbl(hw, sta, 0);
- 			rcu_read_unlock();
- 
+In fact this also demonstrates why putting multiple identical
+objects into the same table is crap.  Because there is no sane
+way of returning all objects corresponding to a single key, given
+that they may be spread over multiple tables.
+
+So I'm going to fix this by consolidating identical objects into
+a single rhashtable entry which also lets us get rid of the
+insecure_elasticity setting.
+
+So the next time someone comes along and wants to add multiple
+objects with the same key to one table, please just say no.
+
+Thanks,
 -- 
-2.1.4
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
