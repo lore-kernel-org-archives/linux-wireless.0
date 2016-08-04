@@ -1,47 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40890 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755599AbcH2UZ3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 16:25:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 29 Aug 2016 23:25:19 +0300
-Message-Id: <1472502319-10847-7-git-send-email-luca@coelho.fi> (sfid-20160829_222535_738972_9C7A140E)
-In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
-References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 6/6] mac80211: send delBA on unexpected BlockAck Request
+Received: from mout.kundenserver.de ([212.227.17.24]:54344 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759014AbcHDUde (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2016 16:33:34 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>, zajec5@gmail.com,
+	leoli@freescale.com, qiang.zhao@freescale.com,
+	viresh.kumar@linaro.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, scottwood@freescale.com,
+	akpm@linux-foundation.org, linux@roeck-us.net
+Subject: Re: [v5.1] ucc_fast: Fix to avoid IS_ERR_VALUE abuses and dead code on 64bit systems.
+Date: Thu, 04 Aug 2016 22:31:30 +0200
+Message-ID: <2376517.GXv6XVOdDd@wuerfel> (sfid-20160804_223402_564875_BAD51E2B)
+In-Reply-To: <1470329563-5464-1-git-send-email-arvind.yadav.cs@gmail.com>
+References: <1470329563-5464-1-git-send-email-arvind.yadav.cs@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Thursday, August 4, 2016 10:22:43 PM CEST Arvind Yadav wrote:
+> index df8ea79..ada9070 100644
+> --- a/include/soc/fsl/qe/ucc_fast.h
+> +++ b/include/soc/fsl/qe/ucc_fast.h
+> @@ -165,10 +165,12 @@ struct ucc_fast_private {
+>         int stopped_tx;         /* Whether channel has been stopped for Tx
+>                                    (STOP_TX, etc.) */
+>         int stopped_rx;         /* Whether channel has been stopped for Rx */
+> -       u32 ucc_fast_tx_virtual_fifo_base_offset;/* pointer to base of Tx
+> -                                                   virtual fifo */
+> -       u32 ucc_fast_rx_virtual_fifo_base_offset;/* pointer to base of Rx
+> -                                                   virtual fifo */
+> +       unsigned long ucc_fast_tx_virtual_fifo_base_offset;/* pointer to base of
+> +                                                           * Tx virtual fifo
+> +                                                           */
+> +       unsigned long ucc_fast_rx_virtual_fifo_base_offset;/* pointer to base of
+> +                                                           * Rx virtual fifo
+> +                                                           */
+>  #ifdef STATISTICS
+>         u32 tx_frames;          /* Transmitted frames counter. */
+>         u32 rx_frames;          /* Received frames counter (only frames
+> 
 
-If we don't have a BA session, send delBA, as requested by the
-IEEE 802.11 spec. Apply the same limit of sending such a delBA
-only once as in the previous patch.
+This change seems ok, but what about the other u32 variables in ucc_geth.c
+that get checked for IS_ERR_VALUE?
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+	Arnd
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 27b58f3..29f9669 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2593,6 +2593,12 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx, struct sk_buff_head *frames)
- 
- 		tid = le16_to_cpu(bar_data.control) >> 12;
- 
-+		if (!test_bit(tid, rx->sta->ampdu_mlme.agg_session_valid) &&
-+		    !test_and_set_bit(tid, rx->sta->ampdu_mlme.unexpected_agg))
-+			ieee80211_send_delba(rx->sdata, rx->sta->sta.addr, tid,
-+					     WLAN_BACK_RECIPIENT,
-+					     WLAN_REASON_QSTA_REQUIRE_SETUP);
-+
- 		tid_agg_rx = rcu_dereference(rx->sta->ampdu_mlme.tid_rx[tid]);
- 		if (!tid_agg_rx)
- 			return RX_DROP_MONITOR;
--- 
-2.8.1
+
