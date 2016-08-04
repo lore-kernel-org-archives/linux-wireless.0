@@ -1,54 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f67.google.com ([209.85.213.67]:34860 "EHLO
-	mail-vk0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751199AbcGaXtw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jul 2016 19:49:52 -0400
-Received: by mail-vk0-f67.google.com with SMTP id x130so5152450vkc.2
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Jul 2016 16:48:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <87zipt1kco.fsf@kamboji.qca.qualcomm.com>
-References: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com>
- <1467201146-6844-1-git-send-email-michal.kazior@tieto.com> <87zipt1kco.fsf@kamboji.qca.qualcomm.com>
-From: Roman Yeryomin <leroi.lists@gmail.com>
-Date: Mon, 1 Aug 2016 02:35:36 +0300
-Message-ID: <CACiydb+yNc-UKVRFR-UxTq-YFBDpEDsa1qWNBGCHpe=_zv8o7g@mail.gmail.com> (sfid-20160801_014956_052597_EBCAB58F)
-Subject: Re: [PATCH] ath10k: disable wake_tx_queue for older devices
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:32884 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933733AbcHDRdC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2016 13:33:02 -0400
+Message-ID: <1470331975.29954.9.camel@sipsolutions.net> (sfid-20160804_193325_168400_FAF2E39F)
+Subject: Re: Wireless Workshop accepted into the 2016 Linux Kernel Summit
+ and Linux Plumbers Conference
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 04 Aug 2016 19:32:55 +0200
+In-Reply-To: <20160802084542.75cd47c2@redtail.lan> (sfid-20160802_171326_600881_B04D22BD)
+References: <20160802084542.75cd47c2@redtail.lan>
+	 (sfid-20160802_171326_600881_B04D22BD)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 7 July 2016 at 19:30, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
->
->> Ideally wake_tx_queue should be used regardless as
->> it is a requirement for reducing bufferbloat and
->> implementing airtime fairness in the future.
->>
->> However some setups (typically low-end platforms
->> hosting QCA988X) suffer performance regressions
->> with the current wake_tx_queue implementation.
->> Therefore disable it unless it is really
->> beneficial with current codebase (which is when
->> firmware supports smart pull-push tx scheduling).
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->
-> I think it's too late to send this to 4.7 anymore (and this due to my
-> vacation). So I'm planning to queue this to 4.8, but if the feedback is
-> positive we can always send this to a 4.7 stable release.
->
 
-Sorry guys, drowned.
-So, yes, applying this patch does the job. That is gets me to the
-results similar to
-https://lists.openwrt.org/pipermail/openwrt-devel/2016-May/041448.html
+> Please join us for a timely and important discussion [4]!
+> 
+> KS [5] will be held October 31-November 1 and LPC [6] will be held
+> November 1-4, both in Santa Fe, New Mexico, US.
 
-Going to try latest code on same system...
+The workshop is going to be on November 1st, the combined day.
 
-Regards,
-Roman
+I've put up a new wiki page here:
+
+https://wireless.wiki.kernel.org/en/developers/summits/santa-fe-2016
+
+Please consider adding yourself, I have a number of free/reduced passes
+to hand out so I'll assign those maybe next week. You do need to be
+registered for LPC, which is currently closed for registrations, but
+I'm trying to see if we can get reservations or maybe workshop-only
+tickets.
+
+Please add yourself if you are considering attending, so I can get a
+better idea of the numbers.
+
+johannes
