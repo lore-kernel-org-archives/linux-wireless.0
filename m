@@ -1,46 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37753 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752156AbcHIH4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 03:56:37 -0400
-Message-ID: <1470729393.28531.11.camel@sipsolutions.net> (sfid-20160809_095640_686085_07C122B5)
-Subject: Re: [PATCH v4] cfg80211: Provision to allow the support for
- different beacon intervals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
-	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
-	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
-	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
-	"Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
-Date: Tue, 09 Aug 2016 09:56:33 +0200
-In-Reply-To: <9513d3caf9354aeda408f65128b4a079@aphydexm01f.ap.qualcomm.com>
-References: <1470374768-22297-1-git-send-email-pkushwah@qti.qualcomm.com>
- <1470386912.2977.28.camel@sipsolutions.net>
-	 <9513d3caf9354aeda408f65128b4a079@aphydexm01f.ap.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from userp1040.oracle.com ([156.151.31.81]:39352 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446AbcHDFFz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Aug 2016 01:05:55 -0400
+Subject: Re: [PATCH] wl3501_cs: Add spinlock to wl3501_reset
+To: Pavel Andrianov <andrianov@ispras.ru>,
+	Arnaldo Carvalho de Melo <acme@redhat.com>
+References: <1470130913-5218-1-git-send-email-andrianov@ispras.ru>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ldv-project@linuxtesting.org
+From: Vaishali Thakkar <vaishali.thakkar@oracle.com>
+Message-ID: <57A2CC35.60808@oracle.com> (sfid-20160804_070603_383032_11309A50)
+Date: Thu, 4 Aug 2016 10:31:41 +0530
+MIME-Version: 1.0
+In-Reply-To: <1470130913-5218-1-git-send-email-andrianov@ispras.ru>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> I guess , we can extend this to mesh and IBSS as well. 
 
-I don't know what your firmware/hardware capabilities are :)
-
-> > It seems to me that if I were to specify beacon intervals which
-> > have a very small GCD, you'll run into trouble when actually
-> > sending beacons.
-> > Perhaps there should be a requirement on the GCD?
-> Can we have this published by the host drivers through a new wiphy
-> parameter , say "min_diff_beacon_interval_multiplier". This set's the
-> expectation that any different beacon intervals on the wiphy  shall
-> be a multiple of this parameter which is advertised by the host
-> driver , isn't ?
+On Tuesday 02 August 2016 03:11 PM, Pavel Andrianov wrote:
+> Likely wl3501_reset should acquire spinlock as wl3501_{open, close}.
+> One of calls of wl3501_reset has been already protected.
+> The others were unprotected and might lead to a race condition.
+> The patch adds spinlock into the wl3501_reset and removes it from 
+> wl3501_tx_timeout.
 > 
-I'd argue that instead of having the interface combinations flag, that
-nl80211 attribute could carry the GCD?
+> Found by Linux Driver Verification project (linuxtesting.org)
+> 
+> Signed-off-by: Pavel Andrianov <andrianov@ispras.ru>
 
-johannes
+Acked-by: Vaishali Thakkar <vaishali.thakkar@oracle.com>
+
+> ---
+>  drivers/net/wireless/wl3501_cs.c | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/wl3501_cs.c b/drivers/net/wireless/wl3501_cs.c
+> index 13fd734..196f13c 100644
+> --- a/drivers/net/wireless/wl3501_cs.c
+> +++ b/drivers/net/wireless/wl3501_cs.c
+> @@ -1247,7 +1247,9 @@ static int wl3501_reset(struct net_device *dev)
+>  {
+>  	struct wl3501_card *this = netdev_priv(dev);
+>  	int rc = -ENODEV;
+> +	unsigned long flags;
+>  
+> +	spin_lock_irqsave(&this->lock, flags);
+>  	wl3501_block_interrupt(this);
+>  
+>  	if (wl3501_init_firmware(this)) {
+> @@ -1269,20 +1271,17 @@ static int wl3501_reset(struct net_device *dev)
+>  	pr_debug("%s: device reset", dev->name);
+>  	rc = 0;
+>  out:
+> +	spin_unlock_irqrestore(&this->lock, flags);
+>  	return rc;
+>  }
+>  
+>  static void wl3501_tx_timeout(struct net_device *dev)
+>  {
+> -	struct wl3501_card *this = netdev_priv(dev);
+>  	struct net_device_stats *stats = &dev->stats;
+> -	unsigned long flags;
+>  	int rc;
+>  
+>  	stats->tx_errors++;
+> -	spin_lock_irqsave(&this->lock, flags);
+>  	rc = wl3501_reset(dev);
+> -	spin_unlock_irqrestore(&this->lock, flags);
+>  	if (rc)
+>  		printk(KERN_ERR "%s: Error %d resetting card on Tx timeout!\n",
+>  		       dev->name, rc);
+> 
+
+-- 
+Vaishali
