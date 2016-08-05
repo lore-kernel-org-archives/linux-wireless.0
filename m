@@ -1,81 +1,243 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:58304 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754533AbcHVQF0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 12:05:26 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:16277 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750773AbcHEEfe (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2016 00:35:34 -0400
+From: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
+	<usdutt@qti.qualcomm.com>, <ganeshk@qti.qualcomm.com>,
+	<mkalikot@qca.qualcomm.com>, <amarnath@qca.qualcomm.com>,
+	<pkushwah@qti.qualcomm.com>
+Subject: [PATCH] cfg80211: Add support for user configurable beacon data rate
+Date: Fri, 5 Aug 2016 10:05:01 +0530
+Message-ID: <1470371701-13074-1-git-send-email-pkushwah@qti.qualcomm.com> (sfid-20160805_063539_145131_AAF73DCA)
 MIME-Version: 1.0
-Subject: Re: ath9k: fix client mode beacon configuration
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160726062923.98555-1-nbd@nbd.name>
-To: Felix Fietkau <nbd@nbd.name>
-CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>,
-        <benjamin.berg@open-mesh.com>
-Message-ID: <c6de307a53fa4059b76356f63ffeb39b@euamsexm01a.eu.qualcomm.com> (sfid-20160822_180800_993401_EECD6A5D)
-Date: Mon, 22 Aug 2016 18:05:17 +0200
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> wrote:
-> For pure station mode, iter_data.primary_beacon_vif was used and passed
-> to ath_beacon_config, but not set to the station vif.
-> This was causing the following warning:
-> 
-> [  100.310919] ------------[ cut here ]------------
-> [  100.315683] WARNING: CPU: 0 PID: 7 at compat-wireless-2016-06-20/drivers/net/wireless/ath/ath9k/beacon.c:642 ath9k_calculate_summary_state+0x250/0x60c [ath9k]()
-> [  100.402028] CPU: 0 PID: 7 Comm: kworker/u2:1 Tainted: G        W       4.4.15 #5
-> [  100.409676] Workqueue: phy0 ieee80211_ibss_leave [mac80211]
-> [  100.415351] Stack : 8736e98c 870b4b20 87a25b54 800a6800 8782a080 80400d63 8039b96c 00000007
-> [  100.415351]    803c5edc 87875914 80400000 800a47cc 87a25b54 800a6800 803a0fd8 80400000
-> [  100.415351]    00000003 87875914 80400000 80094ae0 87a25b54 8787594c 00000000 801ef308
-> [  100.415351]    803ffe70 801ef300 87193d58 87b3a400 87b3ad00 70687930 00000000 00000000
-> [  100.415351]    00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> [  100.415351]    ...
-> [  100.451703] Call Trace:
-> [  100.454235] [<800a6800>] vprintk_default+0x24/0x30
-> [  100.459110] [<800a47cc>] printk+0x2c/0x38
-> [  100.463190] [<800a6800>] vprintk_default+0x24/0x30
-> [  100.468072] [<80094ae0>] print_worker_info+0x148/0x174
-> [  100.473378] [<801ef308>] serial8250_console_putchar+0x0/0x44
-> [  100.479122] [<801ef300>] wait_for_xmitr+0xc4/0xcc
-> [  100.484014] [<87193d58>] ieee80211_ibss_leave+0xb90/0x1900 [mac80211]
-> [  100.490590] [<80081604>] warn_slowpath_common+0xa0/0xd0
-> [  100.495922] [<801a359c>] dump_stack+0x14/0x28
-> [  100.500350] [<80071a00>] show_stack+0x50/0x84
-> [  100.504784] [<80081604>] warn_slowpath_common+0xa0/0xd0
-> [  100.510106] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
-> [  100.517105] [<800816b8>] warn_slowpath_null+0x18/0x24
-> [  100.522256] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
-> [  100.529273] [<87025418>] ath9k_set_txpower+0x148/0x498 [ath9k]
-> [  100.535302] [<871d2c64>] cleanup_module+0xa74/0xd4c [mac80211]
-> [  100.541237] [<801ef308>] serial8250_console_putchar+0x0/0x44
-> [  100.547042] [<800a5d18>] wake_up_klogd+0x54/0x68
-> [  100.551730] [<800a6650>] vprintk_emit+0x404/0x43c
-> [  100.556623] [<871b9db8>] ieee80211_sta_rx_notify+0x258/0x32c [mac80211]
-> [  100.563475] [<871ba6a4>] ieee80211_sta_rx_queued_mgmt+0x63c/0x734 [mac80211]
-> [  100.570693] [<871aa49c>] ieee80211_tx_prepare_skb+0x210/0x230 [mac80211]
-> [  100.577609] [<800af5d4>] mod_timer+0x15c/0x190
-> [  100.582220] [<871ba8b8>] ieee80211_sta_work+0xfc/0xe1c [mac80211]
-> [  100.588539] [<871940b4>] ieee80211_ibss_leave+0xeec/0x1900 [mac80211]
-> [  100.595122] [<8009ec84>] dequeue_task_fair+0x44/0x130
-> [  100.600281] [<80092a34>] process_one_work+0x1f8/0x334
-> [  100.605454] [<80093830>] worker_thread+0x2b4/0x408
-> [  100.610317] [<8009357c>] worker_thread+0x0/0x408
-> [  100.615019] [<8009357c>] worker_thread+0x0/0x408
-> [  100.619705] [<80097b68>] kthread+0xdc/0xe8
-> [  100.623886] [<80097a8c>] kthread+0x0/0xe8
-> [  100.627961] [<80060878>] ret_from_kernel_thread+0x14/0x1c
-> [  100.633448]
-> [  100.634956] ---[ end trace aafbe57e9ae6862f ]---
-> 
-> Fixes: cfda2d8e2314 ("ath9k: Fix beacon configuration for addition/removal of interfaces")
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+This will allow user to configure beacon tx rate (u8) from userspace.
 
-Thanks, 1 patch applied to ath-current branch of ath.git:
+Signed-off-by: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+---
+ include/net/cfg80211.h | 25 +++++++++++---------
+ net/wireless/nl80211.c | 62 +++++++++++++++++++++++++++++++++-----------------
+ 2 files changed, 55 insertions(+), 32 deletions(-)
 
-05860bed491b ath9k: fix client mode beacon configuration
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9c23f4d3..dd900de 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -676,6 +676,18 @@ struct cfg80211_acl_data {
+ 	struct mac_address mac_addrs[];
+ };
+ 
++/*
++ * cfg80211_bitrate_mask - masks for bitrate control
++ */
++struct cfg80211_bitrate_mask {
++	struct {
++		u32 legacy;
++		u8 ht_mcs[IEEE80211_HT_MCS_MASK_LEN];
++		u16 vht_mcs[NL80211_VHT_NSS_MAX];
++		enum nl80211_txrate_gi gi;
++	} control[NUM_NL80211_BANDS];
++};
++
+ /**
+  * struct cfg80211_ap_settings - AP configuration
+  *
+@@ -700,6 +712,7 @@ struct cfg80211_acl_data {
+  *	MAC address based access control
+  * @pbss: If set, start as a PCP instead of AP. Relevant for DMG
+  *	networks.
++ * @beacon_rate: masks for setting user configured beacon tx rate.
+  */
+ struct cfg80211_ap_settings {
+ 	struct cfg80211_chan_def chandef;
+@@ -719,6 +732,7 @@ struct cfg80211_ap_settings {
+ 	bool p2p_opp_ps;
+ 	const struct cfg80211_acl_data *acl;
+ 	bool pbss;
++	struct cfg80211_bitrate_mask beacon_rate;
+ };
+ 
+ /**
+@@ -2001,17 +2015,6 @@ enum wiphy_params_flags {
+ 	WIPHY_PARAM_DYN_ACK		= 1 << 5,
+ };
+ 
+-/*
+- * cfg80211_bitrate_mask - masks for bitrate control
+- */
+-struct cfg80211_bitrate_mask {
+-	struct {
+-		u32 legacy;
+-		u8 ht_mcs[IEEE80211_HT_MCS_MASK_LEN];
+-		u16 vht_mcs[NL80211_VHT_NSS_MAX];
+-		enum nl80211_txrate_gi gi;
+-	} control[NUM_NL80211_BANDS];
+-};
+ /**
+  * struct cfg80211_pmksa - PMK Security Association
+  *
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 46417f9..53e7bf5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -36,6 +36,8 @@ static int nl80211_pre_doit(const struct genl_ops *ops, struct sk_buff *skb,
+ 			    struct genl_info *info);
+ static void nl80211_post_doit(const struct genl_ops *ops, struct sk_buff *skb,
+ 			      struct genl_info *info);
++static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
++					 struct cfg80211_bitrate_mask *mask);
+ 
+ /* the netlink family */
+ static struct genl_family nl80211_fam = {
+@@ -3457,6 +3459,11 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+ 	err = cfg80211_validate_beacon_int(rdev, params.beacon_interval);
+ 	if (err)
+ 		return err;
++	if (info->attrs[NL80211_ATTR_TX_RATES]) {
++		err = nl80211_parse_tx_bitrate_mask(info, &params.beacon_rate);
++		if (err)
++			return err;
++	}
+ 
+ 	/*
+ 	 * In theory, some of these attributes should be required here
+@@ -8696,22 +8703,17 @@ static const struct nla_policy nl80211_txattr_policy[NL80211_TXRATE_MAX + 1] = {
+ 	[NL80211_TXRATE_GI] = { .type = NLA_U8 },
+ };
+ 
+-static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+-				       struct genl_info *info)
++static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
++					 struct cfg80211_bitrate_mask *mask)
+ {
+ 	struct nlattr *tb[NL80211_TXRATE_MAX + 1];
+ 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
+-	struct cfg80211_bitrate_mask mask;
+ 	int rem, i;
+-	struct net_device *dev = info->user_ptr[1];
+ 	struct nlattr *tx_rates;
+ 	struct ieee80211_supported_band *sband;
+ 	u16 vht_tx_mcs_map;
+ 
+-	if (!rdev->ops->set_bitrate_mask)
+-		return -EOPNOTSUPP;
+-
+-	memset(&mask, 0, sizeof(mask));
++	memset(mask, 0, sizeof(*mask));
+ 	/* Default to all rates enabled */
+ 	for (i = 0; i < NUM_NL80211_BANDS; i++) {
+ 		sband = rdev->wiphy.bands[i];
+@@ -8719,16 +8721,16 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 		if (!sband)
+ 			continue;
+ 
+-		mask.control[i].legacy = (1 << sband->n_bitrates) - 1;
+-		memcpy(mask.control[i].ht_mcs,
++		mask->control[i].legacy = (1 << sband->n_bitrates) - 1;
++		memcpy(mask->control[i].ht_mcs,
+ 		       sband->ht_cap.mcs.rx_mask,
+-		       sizeof(mask.control[i].ht_mcs));
++		       sizeof(mask->control[i].ht_mcs));
+ 
+ 		if (!sband->vht_cap.vht_supported)
+ 			continue;
+ 
+ 		vht_tx_mcs_map = le16_to_cpu(sband->vht_cap.vht_mcs.tx_mcs_map);
+-		vht_build_mcs_mask(vht_tx_mcs_map, mask.control[i].vht_mcs);
++		vht_build_mcs_mask(vht_tx_mcs_map, mask->control[i].vht_mcs);
+ 	}
+ 
+ 	/* if no rates are given set it back to the defaults */
+@@ -8754,11 +8756,11 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 		if (err)
+ 			return err;
+ 		if (tb[NL80211_TXRATE_LEGACY]) {
+-			mask.control[band].legacy = rateset_to_mask(
++			mask->control[band].legacy = rateset_to_mask(
+ 				sband,
+ 				nla_data(tb[NL80211_TXRATE_LEGACY]),
+ 				nla_len(tb[NL80211_TXRATE_LEGACY]));
+-			if ((mask.control[band].legacy == 0) &&
++			if ((mask->control[band].legacy == 0) &&
+ 			    nla_len(tb[NL80211_TXRATE_LEGACY]))
+ 				return -EINVAL;
+ 		}
+@@ -8767,24 +8769,24 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 					sband,
+ 					nla_data(tb[NL80211_TXRATE_HT]),
+ 					nla_len(tb[NL80211_TXRATE_HT]),
+-					mask.control[band].ht_mcs))
++					mask->control[band].ht_mcs))
+ 				return -EINVAL;
+ 		}
+ 		if (tb[NL80211_TXRATE_VHT]) {
+ 			if (!vht_set_mcs_mask(
+ 					sband,
+ 					nla_data(tb[NL80211_TXRATE_VHT]),
+-					mask.control[band].vht_mcs))
++					mask->control[band].vht_mcs))
+ 				return -EINVAL;
+ 		}
+ 		if (tb[NL80211_TXRATE_GI]) {
+-			mask.control[band].gi =
++			mask->control[band].gi =
+ 				nla_get_u8(tb[NL80211_TXRATE_GI]);
+-			if (mask.control[band].gi > NL80211_TXRATE_FORCE_LGI)
++			if (mask->control[band].gi > NL80211_TXRATE_FORCE_LGI)
+ 				return -EINVAL;
+ 		}
+ 
+-		if (mask.control[band].legacy == 0) {
++		if (mask->control[band].legacy == 0) {
+ 			/* don't allow empty legacy rates if HT or VHT
+ 			 * are not even supported.
+ 			 */
+@@ -8793,11 +8795,11 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 				return -EINVAL;
+ 
+ 			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
+-				if (mask.control[band].ht_mcs[i])
++				if (mask->control[band].ht_mcs[i])
+ 					goto out;
+ 
+ 			for (i = 0; i < NL80211_VHT_NSS_MAX; i++)
+-				if (mask.control[band].vht_mcs[i])
++				if (mask->control[band].vht_mcs[i])
+ 					goto out;
+ 
+ 			/* legacy and mcs rates may not be both empty */
+@@ -8806,6 +8808,24 @@ static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
+ 	}
+ 
+ out:
++	return 0;
++}
++
++static int nl80211_set_tx_bitrate_mask(struct sk_buff *skb,
++				       struct genl_info *info)
++{
++	struct cfg80211_bitrate_mask mask;
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct net_device *dev = info->user_ptr[1];
++	int err;
++
++	if (!rdev->ops->set_bitrate_mask)
++		return -EOPNOTSUPP;
++
++	err = nl80211_parse_tx_bitrate_mask(info, &mask);
++	if (err)
++		return err;
++
+ 	return rdev_set_bitrate_mask(rdev, dev, NULL, &mask);
+ }
+ 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9247699/
+1.9.1
+
