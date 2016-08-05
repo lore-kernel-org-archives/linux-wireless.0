@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52567 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37695 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751148AbcHKMW5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 08:22:57 -0400
-Message-ID: <1470918167.12075.2.camel@sipsolutions.net> (sfid-20160811_142301_026660_E7A4C73D)
-Subject: Re: [PATCH] mac80211: Keep CoDel stats per txq, export them in
- debugfs.
+	id S935000AbcHEMPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2016 08:15:19 -0400
+Message-ID: <1470399313.2977.38.camel@sipsolutions.net> (sfid-20160805_141522_323119_B583A910)
+Subject: Re: [PATCH v3] nl80211: Receive correct value for
+ NL80211_MESHCONF_HT_OPMODE command
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-	make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless@vger.kernel.org
-Cc: Michal Kazior <michal.kazior@tieto.com>
-Date: Thu, 11 Aug 2016 14:22:47 +0200
-In-Reply-To: <20160720145442.1098-1-toke@toke.dk> (sfid-20160720_165542_917420_468D4AF0)
-References: <20160720145442.1098-1-toke@toke.dk>
-	 (sfid-20160720_165542_917420_468D4AF0)
+To: Masashi Honma <masashi.honma@gmail.com>
+Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com
+Date: Fri, 05 Aug 2016 14:15:13 +0200
+In-Reply-To: <1470186464-4224-1-git-send-email-masashi.honma@gmail.com> (sfid-20160803_030806_642959_7FAC2A1C)
+References: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
+	 <1470186464-4224-1-git-send-email-masashi.honma@gmail.com>
+	 (sfid-20160803_030806_642959_7FAC2A1C)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> @@ -137,18 +137,20 @@ static int aqm_open(struct inode *inode, struct
-> file *file)
->  	len += scnprintf(info->buf + len,
->  			 info->size - len,
->  			 "* vif\n"
-> -			 "ifname addr ac backlog-bytes backlog-
-> packets flows overlimit collisions tx-bytes tx-packets\n");
-> +			 "ifname addr ac backlog-bytes backlog-
-> packets flows drops marks overlimit collisions tx-bytes tx-
-> packets\n");
-
-It seems to me that you have to change the buffer length to take this
-into account?
- 
->  	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
->  		txqi = to_txq_info(sdata->vif.txq);
->  		len += scnprintf(info->buf + len, info->size - len,
-> -				 "%s %pM %u %u %u %u %u %u %u %u\n",
-> +				 "%s %pM %u %u %u %u %u %u %u %u %u
-> %u\n",
->  				 sdata->name,
-
-Why is it this way anyway? It'd seem nicer to move the content of this
-into the per-netdev subdirectories, and then it becomes a lot simpler
-code too (yes, at the expense of some userspace, but still)
-
->  				 sdata->vif.addr,
-
-This is also kinda pointless since it's easy to get elsewhere.
-
->  				 txqi->txq.ac,
->  				 txqi->tin.backlog_bytes,
->  				 txqi->tin.backlog_packets,
->  				 txqi->tin.flows,
-> +				 txqi->cstats.drop_count,
-> +				 txqi->cstats.ecn_mark,
->  				 txqi->tin.overlimit,
->  				 txqi->tin.collisions,
->  				 txqi->tin.tx_bytes,
-
-Do you really want to add these in the middle? Seems that if you add
-them at the end, you at least have *some* way of keeping this working
-with older versions?
+On Wed, 2016-08-03 at 10:07 +0900, Masashi Honma wrote:
+> Previously, NL80211_MESHCONF_HT_OPMODE rejected correct flag
+> combination, ex) IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED |
+> IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT.
+> 
+> This was caused by simple comparison with value 16. This causes
+> setting
+> non-existent flag (like 0x08) and invalid flag combinations. So this
+> commit implements some checks based on IEEE 802.11 2012 8.4.2.59 HT
+> Operation element.
+> 
+Applied, with some minor changes.
 
 johannes
