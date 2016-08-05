@@ -1,137 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40125 "EHLO comal.ext.ti.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755690AbcHXLaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Aug 2016 07:30:02 -0400
-Received: from dflxv15.itg.ti.com ([128.247.5.124])
-        by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id u7OBRuIN021175
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2016 06:27:56 -0500
-Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
-        by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id u7OBRtjt028199
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2016 06:27:55 -0500
-From: Guy Mishol <guym@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Guy Mishol <guym@ti.com>
-Subject: [PATCH] wl18xx: add time sync configuration api
-Date: Wed, 24 Aug 2016 14:35:27 +0300
-Message-ID: <20160824113527.5040-1-guym@ti.com> (sfid-20160824_133006_291361_4B8BD023)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from web01.01d.eu ([5.200.27.195]:50913 "EHLO web01.01d.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S942603AbcHEUPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2016 16:15:19 -0400
+From: Shiva Kerdel <shiva@exdev.nl>
+To: Larry.Finger@lwfinger.net
+Cc: Jes.Sorensen@redhat.com, gregkh@linuxfoundation.org,
+	amsfield22@gmail.com, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Shiva Kerdel <shiva@exdev.nl>
+Subject: [PATCH] Staging: rtl8723au: rtw_ieee80211: Fixed operators spacing style issues
+Date: Fri,  5 Aug 2016 22:14:41 +0200
+Message-Id: <20160805201441.4269-1-shiva@exdev.nl> (sfid-20160805_221600_779467_ABFABA5C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add time sync configuration api.
-The new api allows to configure the synchronization
-mode (STA/AP/MESH) and (in case of Mesh mode) the
-master address of each zone.
+Fixed spaces around operators to fix their coding style issues.
 
-Signed-off-by: Guy Mishol <guym@ti.com>
+Signed-off-by: Shiva Kerdel <shiva@exdev.nl>
 ---
- drivers/net/wireless/ti/wl18xx/acx.c    | 29 +++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/acx.h    | 13 +++++++++++++
- drivers/net/wireless/ti/wl18xx/event.c  |  1 +
- drivers/net/wireless/ti/wlcore/wlcore.h |  3 +++
- 4 files changed, 46 insertions(+)
+ drivers/staging/rtl8723au/core/rtw_ieee80211.c | 80 +++++++++++++-------------
+ 1 file changed, 40 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-index 4be0409..b5525a3 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.c
-+++ b/drivers/net/wireless/ti/wl18xx/acx.c
-@@ -309,3 +309,32 @@ out:
- 	kfree(acx);
- 	return ret;
+diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+index 07a6490..9fa0ef1 100644
+--- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
++++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+@@ -65,7 +65,7 @@ static u8 WIFI_OFDMRATES[] = {
+ 
+ int rtw_get_bit_value_from_ieee_value23a(u8 val)
+ {
+-	unsigned char dot11_rate_table[]=
++	unsigned char dot11_rate_table[] =
+ 		{2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0};
+ 
+ 	int i = 0;
+@@ -140,7 +140,7 @@ u8 *rtw_set_ie23a(u8 *pbuf, int index, uint len, const u8 *source, uint *frlen)
+ 	return pbuf + len + 2;
  }
-+
-+int wl18xx_acx_time_sync_cfg(struct wl1271 *wl)
-+{
-+	struct acx_time_sync_cfg *acx;
-+	int ret;
-+
-+	wl1271_debug(DEBUG_ACX, "acx time sync cfg: mode %d, addr: %pM",
-+		     wl->conf.sg.params[WL18XX_CONF_SG_TIME_SYNC],
-+		     wl->zone_master_mac_addr);
-+
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
-+
-+	acx->sync_mode = wl->conf.sg.params[WL18XX_CONF_SG_TIME_SYNC];
-+	memcpy(acx->zone_mac_addr, wl->zone_master_mac_addr, ETH_ALEN);
-+
-+	ret = wl1271_cmd_configure(wl, ACX_TIME_SYNC_CFG,
-+				   acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx time sync cfg failed: %d", ret);
-+		goto out;
-+	}
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-index 342a299..2edbbbf 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.h
-+++ b/drivers/net/wireless/ti/wl18xx/acx.h
-@@ -37,6 +37,7 @@ enum {
- 	ACX_RX_BA_FILTER		 = 0x0058,
- 	ACX_AP_SLEEP_CFG                 = 0x0059,
- 	ACX_DYNAMIC_TRACES_CFG		 = 0x005A,
-+	ACX_TIME_SYNC_CFG		 = 0x005B,
- };
  
- /* numbers of bits the length field takes (add 1 for the actual number) */
-@@ -388,6 +389,17 @@ struct acx_dynamic_fw_traces_cfg {
- 	__le32 dynamic_fw_traces;
- } __packed;
+-inline u8 *rtw_set_ie23a_ch_switch (u8 *buf, u32 *buf_len, u8 ch_switch_mode,
++inline u8 *rtw_set_ie23a_ch_switch(u8 *buf, u32 *buf_len, u8 ch_switch_mode,
+ 				u8 new_ch, u8 ch_switch_cnt)
+ {
+ 	u8 ie_data[3];
+@@ -230,14 +230,14 @@ u8 *rtw_get_ie23a_ex(u8 *in_ie, uint in_len, u8 eid, u8 *oui, u8 oui_len,
  
-+/*
-+ * ACX_TIME_SYNC_CFG
-+ * configure the time sync parameters
-+ */
-+struct acx_time_sync_cfg {
-+	struct acx_header header;
-+	u8 sync_mode;
-+	u8 zone_mac_addr[ETH_ALEN];
-+	u8 padding[1];
-+} __packed;
-+
- int wl18xx_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap,
- 				  u32 sdio_blk_size, u32 extra_mem_blks,
- 				  u32 len_field_size);
-@@ -402,5 +414,6 @@ int wl18xx_acx_interrupt_notify_config(struct wl1271 *wl, bool action);
- int wl18xx_acx_rx_ba_filter(struct wl1271 *wl, bool action);
- int wl18xx_acx_ap_sleep(struct wl1271 *wl);
- int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl);
-+int wl18xx_acx_time_sync_cfg(struct wl1271 *wl);
+ 	while (cnt < in_len) {
+ 		if (eid == in_ie[cnt] &&
+-		    (!oui || !memcmp(&in_ie[cnt+2], oui, oui_len))) {
++		    (!oui || !memcmp(&in_ie[cnt + 2], oui, oui_len))) {
+ 			target_ie = &in_ie[cnt];
  
- #endif /* __WL18XX_ACX_H__ */
-diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
-index 2c5df43..b36ce18 100644
---- a/drivers/net/wireless/ti/wl18xx/event.c
-+++ b/drivers/net/wireless/ti/wl18xx/event.c
-@@ -22,6 +22,7 @@
- #include <net/genetlink.h>
- #include "event.h"
- #include "scan.h"
-+#include "conf.h"
- #include "../wlcore/cmd.h"
- #include "../wlcore/debug.h"
- #include "../wlcore/vendor_cmd.h"
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 8f28aa0..1827546 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -501,6 +501,9 @@ struct wl1271 {
+ 			if (ie)
+-				memcpy(ie, &in_ie[cnt], in_ie[cnt+1]+2);
++				memcpy(ie, &in_ie[cnt], in_ie[cnt + 1] + 2);
  
- 	/* dynamic fw traces */
- 	u32 dynamic_fw_traces;
-+
-+	/* time sync zone master */
-+	u8 zone_master_mac_addr[ETH_ALEN];
- };
+ 			if (ielen)
+-				*ielen = in_ie[cnt+1]+2;
++				*ielen = in_ie[cnt + 1] + 2;
+ 			break;
+ 		} else {
+ 			cnt += in_ie[cnt + 1] + 2; /* goto next */
+@@ -331,7 +331,7 @@ uint rtw_get_rateset_len23a(u8 *rateset)
+ {
+ 	uint i = 0;
  
- int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
+-	while(1) {
++	while (1) {
+ 		if (rateset[i] == 0)
+ 			break;
+ 
+@@ -378,7 +378,7 @@ int rtw_generate_ie23a(struct registry_priv *pregistrypriv)
+ 		wireless_mode = pregistrypriv->wireless_mode;
+ 	}
+ 
+-	rtw_set_supported_rate23a(pdev_network->SupportedRates, wireless_mode) ;
++	rtw_set_supported_rate23a(pdev_network->SupportedRates, wireless_mode);
+ 
+ 	rateLen = rtw_get_rateset_len23a(pdev_network->SupportedRates);
+ 
+@@ -533,7 +533,7 @@ int rtw_parse_wpa2_ie23a(const u8 *rsn_ie, int rsn_ie_len, int *group_cipher,
+ 		return _FAIL;
+ 	}
+ 
+-	if (*rsn_ie != WLAN_EID_RSN || *(rsn_ie+1) != (u8)(rsn_ie_len - 2)) {
++	if (*rsn_ie != WLAN_EID_RSN || *(rsn_ie + 1) != (u8)(rsn_ie_len - 2)) {
+ 		return _FAIL;
+ 	}
+ 
+@@ -791,64 +791,64 @@ u16 rtw_mcs_rate23a(u8 rf_type, u8 bw_40MHz, u8 short_GI_20, u8 short_GI_40,
+ 
+ 	if (rf_type == RF_1T1R) {
+ 		if (mcs->rx_mask[0] & BIT(7))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):
+-				((short_GI_20)?722:650);
++			max_rate = (bw_40MHz) ? ((short_GI_40) ? 1500 : 1350) :
++				((short_GI_20) ? 722 : 650);
+ 		else if (mcs->rx_mask[0] & BIT(6))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?1350:1215):
+-				((short_GI_20)?650:585);
++			max_rate = (bw_40MHz) ? ((short_GI_40) ? 1350 : 1215) :
++				((short_GI_20) ? 650 : 585);
+ 		else if (mcs->rx_mask[0] & BIT(5))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):
+-				((short_GI_20)?578:520);
++			max_rate = (bw_40MHz) ? ((short_GI_40) ? 1200 : 1080) :
++				((short_GI_20) ? 578 : 520);
+ 		else if (mcs->rx_mask[0] & BIT(4))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):
+-				((short_GI_20)?433:390);
++			max_rate = (bw_40MHz) ? ((short_GI_40) ? 900 : 810) :
++				((short_GI_20) ? 433 : 390);
+ 		else if (mcs->rx_mask[0] & BIT(3))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):
+-				((short_GI_20)?289:260);
++			max_rate = (bw_40MHz) ? ((short_GI_40) ? 600 : 540) :
++				((short_GI_20) ? 289 : 260);
+ 		else if (mcs->rx_mask[0] & BIT(2))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?450:405):
+-				((short_GI_20)?217:195);
++			max_rate = (bw_40MHz) ? ((short_GI_40) ? 450 : 405) :
++				((short_GI_20) ? 217 : 195);
+ 		else if (mcs->rx_mask[0] & BIT(1))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):
+-				((short_GI_20)?144:130);
++			max_rate = (bw_40MHz) ? ((short_GI_40) ? 300 : 270) :
++				((short_GI_20) ? 144 : 130);
+ 		else if (mcs->rx_mask[0] & BIT(0))
+-			max_rate = (bw_40MHz) ? ((short_GI_40)?150:135):
+-				((short_GI_20)?72:65);
++			max_rate = (bw_40MHz) ? ((short_GI_40) ? 150 : 135) :
++				((short_GI_20) ? 72 : 65);
+ 	} else {
+ 		if (mcs->rx_mask[1]) {
+ 			if (mcs->rx_mask[1] & BIT(7))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?3000:2700):((short_GI_20)?1444:1300);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 3000 : 2700) : ((short_GI_20) ? 1444 : 1300);
+ 			else if (mcs->rx_mask[1] & BIT(6))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?2700:2430):((short_GI_20)?1300:1170);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 2700 : 2430) : ((short_GI_20) ? 1300 : 1170);
+ 			else if (mcs->rx_mask[1] & BIT(5))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?2400:2160):((short_GI_20)?1156:1040);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 2400 : 2160) : ((short_GI_20) ? 1156 : 1040);
+ 			else if (mcs->rx_mask[1] & BIT(4))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1800:1620):((short_GI_20)?867:780);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 1800 : 1620) : ((short_GI_20) ? 867 : 780);
+ 			else if (mcs->rx_mask[1] & BIT(3))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):((short_GI_20)?578:520);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 1200 : 1080) : ((short_GI_20) ? 578 : 520);
+ 			else if (mcs->rx_mask[1] & BIT(2))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):((short_GI_20)?433:390);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 900 : 810) : ((short_GI_20) ? 433 : 390);
+ 			else if (mcs->rx_mask[1] & BIT(1))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):((short_GI_20)?289:260);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 600 : 540) : ((short_GI_20) ? 289 : 260);
+ 			else if (mcs->rx_mask[1] & BIT(0))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):((short_GI_20)?144:130);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 300 : 270) : ((short_GI_20) ? 144 : 130);
+ 		} else {
+ 			if (mcs->rx_mask[0] & BIT(7))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1500:1350):((short_GI_20)?722:650);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 1500 : 1350) : ((short_GI_20) ? 722 : 650);
+ 			else if (mcs->rx_mask[0] & BIT(6))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1350:1215):((short_GI_20)?650:585);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 1350 : 1215) : ((short_GI_20) ? 650 : 585);
+ 			else if (mcs->rx_mask[0] & BIT(5))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?1200:1080):((short_GI_20)?578:520);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 1200 : 1080) : ((short_GI_20) ? 578 : 520);
+ 			else if (mcs->rx_mask[0] & BIT(4))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?900:810):((short_GI_20)?433:390);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 900 : 810) : ((short_GI_20) ? 433 : 390);
+ 			else if (mcs->rx_mask[0] & BIT(3))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?600:540):((short_GI_20)?289:260);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 600 : 540) : ((short_GI_20) ? 289 : 260);
+ 			else if (mcs->rx_mask[0] & BIT(2))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?450:405):((short_GI_20)?217:195);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 450 : 405) : ((short_GI_20) ? 217 : 195);
+ 			else if (mcs->rx_mask[0] & BIT(1))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?300:270):((short_GI_20)?144:130);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 300 : 270) : ((short_GI_20) ? 144 : 130);
+ 			else if (mcs->rx_mask[0] & BIT(0))
+-				max_rate = (bw_40MHz) ? ((short_GI_40)?150:135):((short_GI_20)?72:65);
++				max_rate = (bw_40MHz) ? ((short_GI_40) ? 150 : 135) : ((short_GI_20) ? 72 : 65);
+ 		}
+ 	}
+ 	return max_rate;
 -- 
-2.6.4
+2.9.2
+
