@@ -1,128 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41148 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758003AbcH3Lja (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 07:39:30 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 14:38:49 +0300
-Message-Id: <1472557142-14782-3-git-send-email-luca@coelho.fi> (sfid-20160830_133935_074895_0F8877A9)
-In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
-References: <1472556999.27868.86.camel@coelho.fi>
- <1472557142-14782-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 03/16] iwlwifi: mvm: support new paging command format
+Received: from mout02.posteo.de ([185.67.36.142]:50701 "EHLO mout02.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1427543AbcHEV3u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2016 17:29:50 -0400
+In-Reply-To: <CAF7Mx6o+WuQqtzuApMWQ8YAkLSX7xQ_H06xmO--RxFdwHwzLdQ@mail.gmail.com>
+References: <1470429980.29489.10.camel@embedded.rocks> <CAF7Mx6o+WuQqtzuApMWQ8YAkLSX7xQ_H06xmO--RxFdwHwzLdQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: TCP data throughput for BCM43362
+From: =?ISO-8859-1?Q?J=F6rg_Krause?= <joerg.krause@embedded.rocks>
+Date: Fri, 05 Aug 2016 23:29:34 +0200
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+CC: Brett Rudley <brudley@broadcom.com>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>
+Message-ID: <1BCE83A1-AA47-438D-BC47-05AE53D40121@embedded.rocks> (sfid-20160805_233001_311108_0A9DD761)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
 
-For a000 devices there is a support of 64 bit DMA addressing.
-The paging command was changed accordingly - support it.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h |  8 +++++--
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c     | 28 ++++++++++++++++++-------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    |  6 ++++++
- 3 files changed, 32 insertions(+), 10 deletions(-)
+Am 5. August 2016 23:01:10 MESZ, schrieb Arend Van Spriel <arend.vanspriel@broadcom.com>:
+>Op 5 aug. 2016 22:46 schreef "Jörg Krause"
+><joerg.krause@embedded.rocks>:
+>>
+>> Hi,
+>>
+>> I'm using a custom ARM board with an BCM43362 wifi chip from
+>Broadcom.
+>> The wifi chip is attached via SDIO to the controller with a clock of
+>> 48MHz. Linux kernel version is 4.7.
+>>
+>> When measuring the network bandwidth with iperf3 I get a bandwith of
+>> only around 5 Mbps. I found a similar thread at the Broadcom
+>community
+>> [1] where the test was done with a M4 CPU + BCM43362 and an average
+>> result of 3.3 Mbps.
+>>
+>> Interestingly, a BCM43362 Wi-Fi Dev Kit [2] notes a TCP data
+>throughput
+>> greater than 20 Mbps.
+>>
+>> Why is the throughput I measured much lower? Note that I measured
+>> several times with almost no neighbor devices or networks.
+>>
+>> This is a test sample measured with iperf3:
+>>
+>>     $ iperf3 -c 192.168.2.1 -i 1 -t 10
+>>     Connecting to host 192.168.2.1, port 5201
+>>     [  4] local 192.168.2.155 port 36442 connected to 192.168.2.1
+>port
+>>     5201
+>>     [ ID] Interval           Transfer     Bandwidth       Retr  Cwnd
+>>     [  4]   0.00-1.00   sec   615 KBytes  5.04 Mbits/sec    0   56.6
+>>     KBytes
+>>     [  4]   1.00-2.00   sec   622 KBytes  5.10 Mbits/sec    0   84.8
+>>     KBytes
+>>     [  4]   2.00-3.00   sec   625 KBytes  5.12 Mbits/sec    0    113
+>>     KBytes
+>>     [  4]   3.00-4.00   sec   571 KBytes  4.68 Mbits/sec    0    140
+>>     KBytes
+>>     [  4]   4.00-5.00   sec   594 KBytes  4.87 Mbits/sec    0    167
+>>     KBytes
+>>     [  4]   5.00-6.00   sec   628 KBytes  5.14 Mbits/sec    0    195
+>>     KBytes
+>>     [  4]   6.00-7.00   sec   619 KBytes  5.07 Mbits/sec    0    202
+>>     KBytes
+>>     [  4]   7.00-8.00   sec   608 KBytes  4.98 Mbits/sec    0    202
+>>     KBytes
+>>     [  4]   8.00-9.00   sec   602 KBytes  4.93 Mbits/sec    0    202
+>>     KBytes
+>>     [  4]   9.00-10.00  sec   537 KBytes  4.40 Mbits/sec    0    202
+>>     KBytes
+>>     - - - - - - - - - - - - - - - - - - - - - - - - -
+>>     [ ID] Interval           Transfer     Bandwidth       Retr
+>>     [  4]   0.00-10.00  sec  5.88 MBytes  4.93
+>>     Mbits/sec    0             sender
+>>     [  4]   0.00-10.00  sec  5.68 MBytes  4.76
+>>     Mbits/sec                  receiver
+>
+>Not overly familiar with iperf3. Do these lines mean you are doing
+>bidirectional test, ie. upstream and downstream at the same time.
+>Another
+>thing affecting tput could be power-save.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 71076f0..57b574b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -482,13 +482,17 @@ struct iwl_nvm_access_cmd {
-  * @block_size: the block size in powers of 2
-  * @block_num: number of blocks specified in the command.
-  * @device_phy_addr: virtual addresses from device side
-+ *	32 bit address for API version 1, 64 bit address for API version 2.
- */
- struct iwl_fw_paging_cmd {
- 	__le32 flags;
- 	__le32 block_size;
- 	__le32 block_num;
--	__le32 device_phy_addr[NUM_OF_FW_PAGING_BLOCKS];
--} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_1 */
-+	union {
-+		__le32 addr32[NUM_OF_FW_PAGING_BLOCKS];
-+		__le64 addr64[NUM_OF_FW_PAGING_BLOCKS];
-+	} device_phy_addr;
-+} __packed; /* FW_PAGING_BLOCK_CMD_API_S_VER_2 */
- 
- /*
-  * Fw items ID's
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 7e0cdbf..47e8e70 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -385,9 +385,7 @@ static int iwl_save_fw_paging(struct iwl_mvm *mvm,
- /* send paging cmd to FW in case CPU2 has paging image */
- static int iwl_send_paging_cmd(struct iwl_mvm *mvm, const struct fw_img *fw)
- {
--	int blk_idx;
--	__le32 dev_phy_addr;
--	struct iwl_fw_paging_cmd fw_paging_cmd = {
-+	struct iwl_fw_paging_cmd paging_cmd = {
- 		.flags =
- 			cpu_to_le32(PAGING_CMD_IS_SECURED |
- 				    PAGING_CMD_IS_ENABLED |
-@@ -396,18 +394,32 @@ static int iwl_send_paging_cmd(struct iwl_mvm *mvm, const struct fw_img *fw)
- 		.block_size = cpu_to_le32(BLOCK_2_EXP_SIZE),
- 		.block_num = cpu_to_le32(mvm->num_of_paging_blk),
- 	};
-+	int blk_idx, size = sizeof(paging_cmd);
-+
-+	/* A bit hard coded - but this is the old API and will be deprecated */
-+	if (!iwl_mvm_has_new_tx_api(mvm))
-+		size -= NUM_OF_FW_PAGING_BLOCKS * 4;
- 
- 	/* loop for for all paging blocks + CSS block */
- 	for (blk_idx = 0; blk_idx < mvm->num_of_paging_blk + 1; blk_idx++) {
--		dev_phy_addr =
--			cpu_to_le32(mvm->fw_paging_db[blk_idx].fw_paging_phys >>
--				    PAGE_2_EXP_SIZE);
--		fw_paging_cmd.device_phy_addr[blk_idx] = dev_phy_addr;
-+		dma_addr_t addr = mvm->fw_paging_db[blk_idx].fw_paging_phys;
-+
-+		addr = addr >> PAGE_2_EXP_SIZE;
-+
-+		if (iwl_mvm_has_new_tx_api(mvm)) {
-+			__le64 phy_addr = cpu_to_le64(addr);
-+
-+			paging_cmd.device_phy_addr.addr64[blk_idx] = phy_addr;
-+		} else {
-+			__le32 phy_addr = cpu_to_le32(addr);
-+
-+			paging_cmd.device_phy_addr.addr32[blk_idx] = phy_addr;
-+		}
- 	}
- 
- 	return iwl_mvm_send_cmd_pdu(mvm, iwl_cmd_id(FW_PAGING_BLOCK_CMD,
- 						    IWL_ALWAYS_LONG_GROUP, 0),
--				    0, sizeof(fw_paging_cmd), &fw_paging_cmd);
-+				    0, size, &paging_cmd);
- }
- 
- /*
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 0b0855a..28ebc12 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1192,6 +1192,12 @@ static inline bool iwl_mvm_has_new_rx_api(struct iwl_mvm *mvm)
- 			   IWL_UCODE_TLV_CAPA_MULTI_QUEUE_RX_SUPPORT);
- }
- 
-+static inline bool iwl_mvm_has_new_tx_api(struct iwl_mvm *mvm)
-+{
-+	/* TODO - replace with TLV once defined */
-+	return mvm->trans->cfg->use_tfh;
-+}
-+
- static inline bool iwl_mvm_is_tt_in_fw(struct iwl_mvm *mvm)
- {
- #ifdef CONFIG_THERMAL
--- 
-2.8.1
+No, iperf3 does not support bidrectional test. Power-save is turned off.
+
