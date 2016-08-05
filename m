@@ -1,65 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.zeus03.de ([194.117.254.33]:56431 "EHLO mail.zeus03.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932671AbcHKVMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 17:12:37 -0400
-From: Wolfram Sang <wsa-dev@sang-engineering.com>
-To: linux-usb@vger.kernel.org
-Cc: Wolfram Sang <wsa-dev@sang-engineering.com>,
-	Pontus Fuchs <pontus.fuchs@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 11/16] net: wireless: ath: ar5523: ar5523: don't print error when allocating urb fails
-Date: Thu, 11 Aug 2016 23:05:30 +0200
-Message-Id: <1470949539-25392-12-git-send-email-wsa-dev@sang-engineering.com> (sfid-20160811_231302_192604_FE908F8D)
-In-Reply-To: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
-References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
+Received: from broadband.actcorp.in ([106.51.140.228]:20352 "EHLO
+	arvind-ThinkPad-Edge-E431" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S934745AbcHEKdn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2016 06:33:43 -0400
+From: Arvind Yadav <arvind.yadav.cs@gmail.com>
+To: zajec5@gmail.com, leoli@freescale.com
+Cc: qiang.zhao@freescale.com, scottwood@freescale.com,
+	viresh.kumar@linaro.org, akpm@linux-foundation.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux@roeck-us.net, arnd@arndb.de,
+	Arvind Yadav <arvind.yadav.cs@gmail.com>
+Subject: [v5.2] ucc_slow: Fix to avoid IS_ERR_VALUE abuses and dead code on 64bit systems.
+Date: Fri,  5 Aug 2016 14:10:52 +0530
+Message-Id: <1470386452-7263-1-git-send-email-arvind.yadav.cs@gmail.com> (sfid-20160805_123350_683038_FFF72CCC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kmalloc will print enough information in case of failure.
+IS_ERR_VALUE() assumes that parameter is an unsigned long.
+It can not be used to check if 'unsigned int' is passed insted.
+Which tends to reflect an error.
+In 64bit architectures sizeof (int) == 4 && sizeof (long) == 8.
+IS_ERR_VALUE(x) is ((x) >= (unsigned long)-4095).
+IS_ERR_VALUE() of 'unsigned int' is always false because the 32bit
+value is zero extended to 64 bits.
 
-Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
+Now Problem In UCC slow protocols -: drivers/soc/fsl/qe/ucc_slow.c
+
+        /* Get PRAM base */
+        uccs->us_pram_offset =
+           qe_muram_alloc(UCC_SLOW_PRAM_SIZE, ALIGNMENT_OF_UCC_SLOW_PRAM);
+        if (IS_ERR_VALUE(uccs->us_pram_offset)) {
+           printk(KERN_ERR "%s: cannot allocate MURAM for PRAM", __func__);
+           ucc_slow_free(uccs);
+           return -ENOMEM;
+        }
+        id = ucc_slow_get_qe_cr_subblock(us_info->ucc_num);
+        qe_issue_cmd(QE_ASSIGN_PAGE_TO_DEVICE, id, us_info->protocol,
+                     uccs->us_pram_offset);
+
+        uccs->us_pram = qe_muram_addr(uccs->us_pram_offset);
+
+        /* Allocate BDs. */
+        uccs->rx_base_offset =
+            qe_muram_alloc(us_info->rx_bd_ring_len * sizeof(struct qe_bd),
+                                QE_ALIGNMENT_OF_BD);
+        if (IS_ERR_VALUE(uccs->rx_base_offset)) {
+            printk(KERN_ERR "%s: cannot allocate %u RX BDs\n", __func__,
+                        us_info->rx_bd_ring_len);
+            uccs->rx_base_offset = 0;
+            ucc_slow_free(uccs);
+            return -ENOMEM;
+        }
+
+        uccs->tx_base_offset =
+             qe_muram_alloc(us_info->tx_bd_ring_len * sizeof(struct qe_bd),
+                        QE_ALIGNMENT_OF_BD);
+        if (IS_ERR_VALUE(uccs->tx_base_offset)) {
+             printk(KERN_ERR "%s: cannot allocate TX BDs", __func__);
+             uccs->tx_base_offset = 0;
+             ucc_slow_free(uccs);
+             return -ENOMEM;
+        }
+
+qe_muram_alloc (a.k.a. cpm_muram_alloc) returns unsigned long.
+Return value store in a u32 (us_pram_offset, rx_base_offset
+and tx_base_offset).If qe_muram_alloc will return any error,
+Then IS_ERR_VALUE will always return 0. it'll not call ucc_fast_free
+for any failure. Inside 'if code' will be a dead code on 64bit.
+Even  qe_muram_addr will return wrong virtual address. Which
+can cause an error.
+This patch is to avoid this problem on 64bit machine.
+
+Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 ---
- drivers/net/wireless/ath/ar5523/ar5523.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ include/soc/fsl/qe/ucc_slow.h | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
-index 8aded24bcdf49e..7a60d2e652dad6 100644
---- a/drivers/net/wireless/ath/ar5523/ar5523.c
-+++ b/drivers/net/wireless/ath/ar5523/ar5523.c
-@@ -706,10 +706,8 @@ static int ar5523_alloc_rx_bufs(struct ar5523 *ar)
- 
- 		data->ar = ar;
- 		data->urb = usb_alloc_urb(0, GFP_KERNEL);
--		if (!data->urb) {
--			ar5523_err(ar, "could not allocate rx data urb\n");
-+		if (!data->urb)
- 			goto err;
--		}
- 		list_add_tail(&data->list, &ar->rx_data_free);
- 		atomic_inc(&ar->rx_data_free_cnt);
- 	}
-@@ -824,7 +822,6 @@ static void ar5523_tx_work_locked(struct ar5523 *ar)
- 
- 		urb = usb_alloc_urb(0, GFP_KERNEL);
- 		if (!urb) {
--			ar5523_err(ar, "Failed to allocate TX urb\n");
- 			ieee80211_free_txskb(ar->hw, skb);
- 			continue;
- 		}
-@@ -949,10 +946,8 @@ static int ar5523_alloc_tx_cmd(struct ar5523 *ar)
- 	init_completion(&cmd->done);
- 
- 	cmd->urb_tx = usb_alloc_urb(0, GFP_KERNEL);
--	if (!cmd->urb_tx) {
--		ar5523_err(ar, "could not allocate urb\n");
-+	if (!cmd->urb_tx)
- 		return -ENOMEM;
--	}
- 	cmd->buf_tx = usb_alloc_coherent(ar->dev, AR5523_MAX_TXCMDSZ,
- 					 GFP_KERNEL,
- 					 &cmd->urb_tx->transfer_dma);
+diff --git a/include/soc/fsl/qe/ucc_slow.h b/include/soc/fsl/qe/ucc_slow.h
+index 6c0573a..fca30a1 100644
+--- a/include/soc/fsl/qe/ucc_slow.h
++++ b/include/soc/fsl/qe/ucc_slow.h
+@@ -189,7 +189,7 @@ struct ucc_slow_private {
+ 	struct ucc_slow_info *us_info;
+ 	struct ucc_slow __iomem *us_regs; /* Ptr to memory map of UCC regs */
+ 	struct ucc_slow_pram *us_pram;	/* a pointer to the parameter RAM */
+-	u32 us_pram_offset;
++	unsigned long us_pram_offset;
+ 	int enabled_tx;		/* Whether channel is enabled for Tx (ENT) */
+ 	int enabled_rx;		/* Whether channel is enabled for Rx (ENR) */
+ 	int stopped_tx;		/* Whether channel has been stopped for Tx
+@@ -198,8 +198,12 @@ struct ucc_slow_private {
+ 	struct list_head confQ;	/* frames passed to chip waiting for tx */
+ 	u32 first_tx_bd_mask;	/* mask is used in Tx routine to save status
+ 				   and length for first BD in a frame */
+-	u32 tx_base_offset;	/* first BD in Tx BD table offset (In MURAM) */
+-	u32 rx_base_offset;	/* first BD in Rx BD table offset (In MURAM) */
++	unsigned long tx_base_offset;	/* first BD in Tx BD table offset
++					 * (In MURAM)
++					 */
++	unsigned long rx_base_offset;	/* first BD in Rx BD table offset
++					 * (In MURAM)
++					 */
+ 	struct qe_bd *confBd;	/* next BD for confirm after Tx */
+ 	struct qe_bd *tx_bd;	/* next BD for new Tx request */
+ 	struct qe_bd *rx_bd;	/* next BD to collect after Rx */
 -- 
-2.8.1
+1.9.1
 
