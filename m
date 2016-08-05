@@ -1,73 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39822 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755223AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 17:47:24 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 12/20] rtl8xxxu: Use flag to indicate whether device has TX report timer support
-Date: Fri, 19 Aug 2016 17:46:34 -0400
-Message-Id: <1471643202-26250-13-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234845_256637_B4A3398E)
-In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mx1.polytechnique.org ([129.104.30.34]:44552 "EHLO
+	mx1.polytechnique.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2996541AbcHEUfH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2016 16:35:07 -0400
+From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Subject: [PATCH 1/1] brcmfmac: fix pmksa->bssid usage
+Date: Fri,  5 Aug 2016 22:34:18 +0200
+Message-Id: <20160805203418.32162-1-nicolas.iooss_linux@m4x.org> (sfid-20160805_223549_861184_76C8D845)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+The struct cfg80211_pmksa defines its bssid field as:
 
-Use a fileops flag to indicate whether the device has TX report timer
-support. This will make it easier to include future devices such as
-8188eu to use the TX report timer.
+    const u8 *bssid;
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+contrary to struct brcmf_pmksa, which uses:
+
+    u8 bssid[ETH_ALEN];
+
+Therefore in brcmf_cfg80211_del_pmksa(), &pmksa->bssid takes the address
+of this field (of type u8**), not the one of its content (which would be
+u8*).  Remove the & operator to make brcmf_dbg("%pM") and memcmp()
+behave as expected.
+
+This bug have been found using a custom static checker (which checks the
+usage of %p... attributes at build time).  It has been introduced in
+commit 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code"),
+which replaced pmksa->bssid by &pmksa->bssid while refactoring the code,
+without modifying struct cfg80211_pmksa definition.
+
+Fixes: 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code")
+Cc: stable@ger.kernel.org
+Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h       | 1 +
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 1 +
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 5 ++---
- 3 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index da4f148..c8d7075 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1341,6 +1341,7 @@ struct rtl8xxxu_fileops {
- 	char tx_desc_size;
- 	char rx_desc_size;
- 	char has_s0s1;
-+	char has_tx_report;
- 	u32 adda_1t_init;
- 	u32 adda_1t_path_on;
- 	u32 adda_2t_path_on_a;
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-index c1323f0..0b6a6ca 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-@@ -1666,6 +1666,7 @@ struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
- 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
- 	.has_s0s1 = 1,
-+	.has_tx_report = 1,
- 	.adda_1t_init = 0x01c00014,
- 	.adda_1t_path_on = 0x01c00014,
- 	.adda_2t_path_on_a = 0x01c00014,
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 7a697c0..81b9582 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4000,10 +4000,9 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		priv->fops->usb_quirks(priv);
+scripts/checkpatch.pl reports a warning: "Prefer ether_addr_equal() or
+ether_addr_equal_unaligned() over memcmp()".  Because some files in
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/ still use memcmp()
+to compare addresses and because I do not know whether pmksa->bssid is
+always aligned, I did not follow this warning.
+
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 2628d5e12c64..aceab77cd95a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3884,11 +3884,11 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
  
- 		/*
--		 * Presumably this is for 8188EU as well
--		 * Enable TX report and TX report timer
-+		 * Enable TX report and TX report timer for 8723bu/8188eu/...
- 		 */
--		if (priv->rtl_chip == RTL8723B) {
-+		if (priv->fops->has_tx_report) {
- 			val8 = rtl8xxxu_read8(priv, REG_TX_REPORT_CTRL);
- 			val8 |= TX_REPORT_CTRL_TIMER_ENABLE;
- 			rtl8xxxu_write8(priv, REG_TX_REPORT_CTRL, val8);
+-	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", &pmksa->bssid);
++	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", pmksa->bssid);
+ 
+ 	npmk = le32_to_cpu(cfg->pmk_list.npmk);
+ 	for (i = 0; i < npmk; i++)
+-		if (!memcmp(&pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
++		if (!memcmp(pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
+ 			break;
+ 
+ 	if ((npmk > 0) && (i < npmk)) {
 -- 
-2.7.4
+2.9.2
+
