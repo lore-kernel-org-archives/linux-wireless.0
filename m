@@ -1,36 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39989 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752289AbcHOH4t (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2016 03:56:49 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Maxim Altshul <maxim.altshul@ti.com>
-Cc: <linux-kernel@vger.kernel.org>, <john.stultz@linaro.org>,
-	Eliad Peller <eliad@wizery.com>,
-	Yaniv Machani <yanivma@ti.com>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 2/2] wlcore: Remove wl pointer from wl_sta structure
-References: <20160804124314.7636-1-maxim.altshul@ti.com>
-	<20160804124314.7636-2-maxim.altshul@ti.com>
-	<20160804124314.7636-3-maxim.altshul@ti.com>
-Date: Mon, 15 Aug 2016 10:56:43 +0300
-In-Reply-To: <20160804124314.7636-3-maxim.altshul@ti.com> (Maxim Altshul's
-	message of "Thu, 4 Aug 2016 15:43:05 +0300")
-Message-ID: <87bn0uea84.fsf@kamboji.qca.qualcomm.com> (sfid-20160815_095711_103353_4F4DA53F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:37805 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752543AbcHEMcQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Aug 2016 08:32:16 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2016-08-05
+Date: Fri,  5 Aug 2016 14:32:08 +0200
+Message-Id: <1470400329-23256-1-git-send-email-johannes@sipsolutions.net> (sfid-20160805_143231_516679_202A0463)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Altshul <maxim.altshul@ti.com> writes:
+Hi Dave,
 
-> No longer needed due to get_expected_throughput op change
->
-> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+Here's a first set of fixes for the current cycle. See the tag message
+for more information.
 
-The commit log is very vague, please improve it. But most importantly
-you did not CC linux-wireless (adding it now) so lots of wireless people
-missed this patch. Please resend.
+I'll probably have a follow-up fix for the real problem in mac80211
+that caused the crash later, but for now we have this patch and it
+makes sense and fixes the crash, even if the behaviour isn't quite
+right (afaict.)
 
--- 
-Kalle Valo
+Let me know if there's any problem.
+
+Thanks,
+johannes
+
+
+
+The following changes since commit ecd5a32318280133e8ae93f10ea693293a04a786:
+
+  phy/micrel: Change phy_id_mask for KSZ8721 (2016-07-31 20:37:12 -0700)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-08-05
+
+for you to fetch changes up to 2439ca0402091badb24415e1b073ba12b34ba423:
+
+  mac80211: Add ieee80211_hw pointer to get_expected_throughput (2016-08-05 14:23:25 +0200)
+
+----------------------------------------------------------------
+First set of fixes for the current cycle:
+ * fix 80+80 bandwidth warning
+ * fix powersave with mac80211 TXQ implementation
+ * use correct way to free SKBs from multicast buffering
+ * mesh: fix operation ordering to work with all drivers
+ * mesh: end service period even when peer goes away
+ * mesh: correct HT opmode validity checks
+ * pass hw pointer from mac80211 to driver in TPT method,
+   fixing a bug (in a bit the wrong way, but that's what
+   we have right now)
+
+----------------------------------------------------------------
+Colin Ian King (1):
+      cfg80211: fix missing break in NL8211_CHAN_WIDTH_80P80 case
+
+Felix Fietkau (2):
+      mac80211: fix check for buffered powersave frames with txq
+      mac80211: fix purging multicast PS buffer queue
+
+Maital Hahn (1):
+      mac80211: mesh: flush stations before beacons are stopped
+
+Masashi Honma (2):
+      mac80211: End the MPSP even if EOSP frame was not acked
+      nl80211: correct checks for NL80211_MESHCONF_HT_OPMODE value
+
+Maxim Altshul (1):
+      mac80211: Add ieee80211_hw pointer to get_expected_throughput
+
+ drivers/net/wireless/ti/wlcore/main.c |  5 +++--
+ include/net/mac80211.h                |  3 ++-
+ net/mac80211/cfg.c                    |  2 +-
+ net/mac80211/driver-ops.h             |  2 +-
+ net/mac80211/mesh.c                   | 10 ++++++----
+ net/mac80211/rx.c                     |  2 +-
+ net/mac80211/status.c                 | 14 +++++++-------
+ net/mac80211/tx.c                     |  6 +++---
+ net/wireless/chan.c                   |  1 +
+ net/wireless/nl80211.c                | 34 +++++++++++++++++++++++++++++++---
+ 10 files changed, 56 insertions(+), 23 deletions(-)
