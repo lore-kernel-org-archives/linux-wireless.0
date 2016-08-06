@@ -1,81 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27171 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932127AbcHaHEy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Aug 2016 03:04:54 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: "Raja, Tamizh Chelvam" <c_traja@qti.qualcomm.com>,
-        "tamizhchelvam@codeaurora.org" <tamizhchelvam@codeaurora.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCHv3 1/3] ath10k: move firmware_swap_code_seg_info to
- ath10k_fw_file
-Date: Wed, 31 Aug 2016 07:04:42 +0000
-Message-ID: <87poop4dx2.fsf@kamboji.qca.qualcomm.com> (sfid-20160831_090459_846120_3661ED54)
-References: <1467356767-31646-1-git-send-email-c_traja@qti.qualcomm.com>
-        <CAGRGNgWd-5ef5bxOkthpfH1hjqO4HJuWuBA=jNRAr=geQDH1zA@mail.gmail.com>
-In-Reply-To: <CAGRGNgWd-5ef5bxOkthpfH1hjqO4HJuWuBA=jNRAr=geQDH1zA@mail.gmail.com>       (Julian
- Calaby's message of "Mon, 4 Jul 2016 10:49:55 +1000")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.eperm.de ([89.247.134.16]:34174 "EHLO mail.eperm.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751059AbcHFUEF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Aug 2016 16:04:05 -0400
+From: Stephan Mueller <smueller@chronox.de>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: Ted Tso <tytso@mit.edu>, herbert@gondor.apana.org.au,
+	linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [RFC][PATCH] RANDOM: ATH9K RNG delivers zero bits of entropy
+Date: Sat, 06 Aug 2016 22:03:58 +0200
+Message-ID: <6481670.KeU7RXkv1k@myon.chronox.de> (sfid-20160806_220427_397099_41916199)
+In-Reply-To: <20160806194551.GA4511@io.lakedaemon.net>
+References: <34197429.2CvoIfft9B@positron.chronox.de> <20160806194551.GA4511@io.lakedaemon.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian Calaby <julian.calaby@gmail.com> writes:
+Am Samstag, 6. August 2016, 19:45:51 CEST schrieb Jason Cooper:
 
-> Hi Tamizh,
->
-> On Fri, Jul 1, 2016 at 5:06 PM,  <c_traja@qti.qualcomm.com> wrote:
->> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
->>
->> Preparation to make use of firmware_swap_code_seg_info for UTF binary.
->>
->> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
->> ---
->>  drivers/net/wireless/ath/ath10k/core.c |    6 +++---
->>  drivers/net/wireless/ath/ath10k/core.h |    6 ++----
->>  drivers/net/wireless/ath/ath10k/swap.c |   26 ++++++++++++++-----------=
--
->>  drivers/net/wireless/ath/ath10k/swap.h |   11 ++++++++---
->>  4 files changed, 27 insertions(+), 22 deletions(-)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wirele=
-ss/ath/ath10k/core.h
->> index 3da18c9..e69e7e7 100644
->> --- a/drivers/net/wireless/ath/ath10k/core.h
->> +++ b/drivers/net/wireless/ath/ath10k/core.h
->> @@ -654,6 +654,8 @@ struct ath10k_fw_file {
->>
->>         const void *codeswap_data;
->>         size_t codeswap_len;
->> +       /* FIXME: add a comment */
->> +       struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
->
-> Why not just add a comment? Adding FIXMEs makes the patch look incomplete=
- to me.
+Hi Jason,
 
-Actually I'm here to blame, I asked Tamizh to add the fixme so I can add
-a proper comment. I did it now:
+> Hi Stephan,
+> 
+> On Fri, Aug 05, 2016 at 05:08:14PM +0200, Stephan Mueller wrote:
+> > Hi Ted, Herbert,
+> > 
+> > I sent a question to the ATH9K RNG some time ago to the developers.
+> > See
+> > https://www.mail-archive.com/linux-crypto@vger.kernel.org/msg19115.html
+> > 
+> > I have not yet received a word and I think this issue should be resolved.
+> > 
+> > Thanks
+> > Stephan
+> > 
+> > ---8<---
+> 
+> If the above text is placed below the three dashes, "---", below ...
+> 
+> > The ATH9K driver implements an RNG which is completely bypassing the
+> > standard Linux HW generator logic.
+> > 
+> > The RNG may or may not deliver entropy. Considering the conservative
+> > approach in treating entropy with respect to non-auditable sources, this
+> > patch changes the delivered entropy value to zero. The RNG still feeds
+> > data into the input_pool but it is assumed to have no entropy.
+> > 
+> > When the ATH9K RNG changes to use the HW RNG framework, it may re-enable
+> > the entropy estimation considering that a user can change that value at
+> > boot and runtime.
+> > 
+> > Signed-off-by: Stephan Mueller <smueller@chronox.de>
+> > ---
+> 
+> here, then the mail can be applied directly without editing.
 
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -663,7 +663,14 @@ struct ath10k_fw_file {
-=20
-        const void *codeswap_data;
-        size_t codeswap_len;
--       /* FIXME: add a comment */
-+
-+       /* The original idea of struct ath10k_fw_file was that it only
-+        * contains struct firmware and pointers to various parts (actual
-+        * firmware binary, otp, metadata etc) of the file. This seg_info
-+        * is actually created separate but as this is used similarly as
-+        * the other firmware components it's more convenient to have it
-+        * here.
-+        */
-        struct ath10k_swap_code_seg_info *firmware_swap_code_seg_info;
- };
+Thank you for the hint. I will resend the patch that can be applied.
+> 
+> >  drivers/net/wireless/ath/ath9k/rng.c | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/net/wireless/ath/ath9k/rng.c
+> > b/drivers/net/wireless/ath/ath9k/rng.c index d38e50f..d63dc48 100644
+> > --- a/drivers/net/wireless/ath/ath9k/rng.c
+> > +++ b/drivers/net/wireless/ath/ath9k/rng.c
+> > @@ -92,8 +92,7 @@ static int ath9k_rng_kthread(void *data)
+> > 
+> >  		fail_stats = 0;
+> >  		
+> >  		/* sleep until entropy bits under write_wakeup_threshold */
+> > 
+> > -		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
+> > -					   ATH9K_RNG_ENTROPY(bytes_read));
+> 
+> This is the only use of this macro.  I'd remove the #define on line 25
+> as well.
 
---=20
-Kalle Valo=
+My idea for leaving it was that folks who would bring the RNG into the 
+hwrandom framework could reuse the ideas from the original authors.
+
+What about commenting it out with #if 0 ?
+> 
+> > +		add_hwgenerator_randomness((void *)rng_buf, bytes_read, 0);
+> > 
+> >  	}
+> >  	
+> >  	kfree(rng_buf);
+> 
+> Other than that,
+> 
+> Reviewed-by: Jason Cooper <jason@lakedaemon.net>
+
+Thank you.
+> 
+> thx,
+> 
+> Jason.
+
+
+
+-- 
+Ciao
+Stephan
