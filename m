@@ -1,45 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33866 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753021AbcHALQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2016 07:16:31 -0400
-Message-ID: <1470045822.3389.24.camel@sipsolutions.net> (sfid-20160801_131757_335784_B3B292FF)
-Subject: Re: [PATCH v3 3/3] mac80211: mesh: fixed HT ies in beacon template
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>,
-	Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org
-Cc: Meirav Kama <meiravk@ti.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Mon, 01 Aug 2016 12:03:42 +0200
-In-Reply-To: <40a34537-486e-a466-5a7e-e253f19d81c3@gmail.com> (sfid-20160722_072626_919337_95556AEF)
-References: <20160713200755.26839-1-yanivma@ti.com>
-	 <40a34537-486e-a466-5a7e-e253f19d81c3@gmail.com>
-	 (sfid-20160722_072626_919337_95556AEF)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9852 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110AbcHFVoC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Aug 2016 17:44:02 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
+	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
+Subject: RE: [PATCH] cfg80211: Add support for user configurable beacon data
+ rate
+Date: Sat, 6 Aug 2016 04:38:36 +0000
+Message-ID: <92b06d4df5984e6ea91081126e096a96@aphydexm01f.ap.qualcomm.com> (sfid-20160806_234405_643672_8EDF6E20)
+References: <1470371701-13074-1-git-send-email-pkushwah@qti.qualcomm.com>
+ <1470387784.2977.30.camel@sipsolutions.net>
+In-Reply-To: <1470387784.2977.30.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-07-22 at 14:26 +0900, Masashi Honma wrote:
-> On 2016年07月14日 05:07, Yaniv Machani wrote:
-> > +
-> > +	/* if channel width is 20MHz - configure HT capab
-> > accordingly*/
-> > +	if (sdata->vif.bss_conf.chandef.width ==
-> > NL80211_CHAN_WIDTH_20) {
-> > +		cap &= ~IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-> > +		cap &= ~IEEE80211_HT_CAP_DSSSCCK40;
-> > +	}
-> 
-> I have tested this part of your patch and this works for me.
-> 
-> Previouly, "Supported Channel Width Set bit" in HT Capabilities
-> element was 1 even though disable_ht40=1 existed in
-> wpa_supplicant.conf. After appllication of patch, the bit was 0.
-> 
-
-But why is that behaviour *correct*? We still support 40 MHz bandwidth
-things, we just don't use them if we disable HT40.
-
-johannes
+PiBEb2Vzbid0IHRoaXMgaGF2ZSB0byBjaGVjayB0aGF0IGl0IGFjdHVhbGx5IGdvdCBpbmZvcm1h
+dGlvbiBmb3IgdGhlIHJpZ2h0IGJhbmQ/DQpIaSBKb2hhbm5lcyAsDQpubDgwMjExX3BhcnNlX3R4
+X2JpdHJhdGVfbWFzayAoIGEgbmV3IHdyYXBwZXIgdG8gdGhlIGV4aXN0aW5nIGZ1bmN0aW9uYWxp
+dHkgaW4gbmw4MDIxMV9zZXRfdHhfYml0cmF0ZV9tYXNrICkgZG9lcyB0aGlzICwgaXNuJ3QgPyAN
+Cg0KUmVnYXJkcywNClN1bmlsDQoNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
+bTogSm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2Vu
+dDogRnJpZGF5LCBBdWd1c3QgNSwgMjAxNiAyOjMzIFBNDQpUbzogS3VzaHdhaGEsIFB1cnVzaG90
+dGFtIDxwa3VzaHdhaEBxdGkucXVhbGNvbW0uY29tPg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIu
+a2VybmVsLm9yZzsgTWFsaW5lbiwgSm91bmkgPGpvdW5pQHFjYS5xdWFsY29tbS5jb20+OyBVbmRl
+a2FyaSwgU3VuaWwgRHV0dCA8dXNkdXR0QHF0aS5xdWFsY29tbS5jb20+OyBLb25kYWJhdHRpbmks
+IEdhbmVzaCA8Z2FuZXNoa0BxdGkucXVhbGNvbW0uY29tPjsgS2FsaWtvdCBWZWV0aWwsIE1haGVz
+aCBLdW1hciA8bWthbGlrb3RAcWNhLnF1YWxjb21tLmNvbT47IEh1bGx1ciBTdWJyYW1hbnlhbSwg
+QW1hcm5hdGggPGFtYXJuYXRoQHFjYS5xdWFsY29tbS5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENI
+XSBjZmc4MDIxMTogQWRkIHN1cHBvcnQgZm9yIHVzZXIgY29uZmlndXJhYmxlIGJlYWNvbiBkYXRh
+IHJhdGUNCg0KT24gRnJpLCAyMDE2LTA4LTA1IGF0IDEwOjA1ICswNTMwLCBQdXJ1c2hvdHRhbSBL
+dXNod2FoYSB3cm90ZToNCj7CoA0KPiArc3RhdGljIGludCBubDgwMjExX3BhcnNlX3R4X2JpdHJh
+dGVfbWFzayhzdHJ1Y3QgZ2VubF9pbmZvICppbmZvLA0KPiArCQkJCQnCoHN0cnVjdCBjZmc4MDIx
+MV9iaXRyYXRlX21hc2sgKm1hc2spOw0KDQpJIHRoaW5rIHlvdSBzaG91bGQgbW92ZSB0aGUgZnVu
+Y3Rpb24gaW5zdGVhZC4NCg0KPiBAQCAtMzQ1Nyw2ICszNDU5LDExIEBAIHN0YXRpYyBpbnQgbmw4
+MDIxMV9zdGFydF9hcChzdHJ1Y3Qgc2tfYnVmZiANCj4gKnNrYiwgc3RydWN0IGdlbmxfaW5mbyAq
+aW5mbykNCj4gwqAJZXJyID0gY2ZnODAyMTFfdmFsaWRhdGVfYmVhY29uX2ludChyZGV2LA0KPiBw
+YXJhbXMuYmVhY29uX2ludGVydmFsKTsNCj4gwqAJaWYgKGVycikNCj4gwqAJCXJldHVybiBlcnI7
+DQo+ICsJaWYgKGluZm8tPmF0dHJzW05MODAyMTFfQVRUUl9UWF9SQVRFU10pIHsNCj4gKwkJZXJy
+ID0gbmw4MDIxMV9wYXJzZV90eF9iaXRyYXRlX21hc2soaW5mbywNCj4gJnBhcmFtcy5iZWFjb25f
+cmF0ZSk7DQo+ICsJCWlmIChlcnIpDQo+ICsJCQlyZXR1cm4gZXJyOw0KPiArCX0NCg0KRG9lc24n
+dCB0aGlzIGhhdmUgdG8gY2hlY2sgdGhhdCBpdCBhY3R1YWxseSBnb3QgaW5mb3JtYXRpb24gZm9y
+IHRoZSByaWdodCBiYW5kPw0KDQpqb2hhbm5lcw0K
