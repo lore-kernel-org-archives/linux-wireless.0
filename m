@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:40324 "EHLO comal.ext.ti.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932281AbcH1HeS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Aug 2016 03:34:18 -0400
-From: "Mishol, Guy" <guym@ti.com>
-To: "Pedersen, Thomas" <twp@qca.qualcomm.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] wlcore: mesh: add zone time sync support
-Date: Sun, 28 Aug 2016 07:34:10 +0000
-Message-ID: <97207D90F0289D498537011312FCAD1138F60850@DFRE01.ent.ti.com> (sfid-20160828_093422_541642_D5655864)
-References: <20160808085706.22668-1-guym@ti.com>
-         <1471538527.3432.21.camel@qca.qualcomm.com>
-         <874m6h5bex.fsf@purkki.adurom.net>
-         <97207D90F0289D498537011312FCAD1138F55E66@DFRE01.ent.ti.com>
- <1472151013.3432.33.camel@qca.qualcomm.com>
-In-Reply-To: <1472151013.3432.33.camel@qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from pmta2.delivery5.ore.mailhop.org ([54.186.218.12]:51652 "EHLO
+	pmta2.delivery5.ore.mailhop.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750980AbcHFUQH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Aug 2016 16:16:07 -0400
+Date: Sat, 6 Aug 2016 20:16:02 +0000
+From: Jason Cooper <jason@lakedaemon.net>
+To: Stephan Mueller <smueller@chronox.de>
+Cc: Ted Tso <tytso@mit.edu>, herbert@gondor.apana.org.au,
+	linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [RFC][PATCH] RANDOM: ATH9K RNG delivers zero bits of entropy
+Message-ID: <20160806201602.GB4511@io.lakedaemon.net> (sfid-20160806_221644_181484_92D341C9)
+References: <34197429.2CvoIfft9B@positron.chronox.de>
+ <20160806194551.GA4511@io.lakedaemon.net>
+ <6481670.KeU7RXkv1k@myon.chronox.de>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6481670.KeU7RXkv1k@myon.chronox.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCBBdWcgMjUsIDIwMTYgYXQgMjE6NTA6NTksIFBlZGVyc2VuLCBUaG9tYXMgd3JvdGU6
-DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIHdsY29yZTogbWVzaDogYWRkIHpvbmUgdGltZSBzeW5j
-IHN1cHBvcnQNCj4gDQo+IE9uIFN1biwgMjAxNi0wOC0yMSBhdCAxMDoxMyArMDAwMCwgTWlzaG9s
-LCBHdXkgd3JvdGU6DQo+ID4gS2FsbGUvVGhvbWFzLA0KPiA+IFRoYW5rcyBmb3IgeW91ciBmZWVk
-YmFjay4NCj4gPg0KPiA+IFRoaXMgdGltZSBzeW5jIHN1cHBvcnQgaXMgZGlmZmVyZW50IGZyb20g
-dGhlIG9uZSB0aGF0IG1hYzgwMjExIA0KPiA+IG1haW50YWlucw0KPiB3aXRoIG1lc2ggcGVlcnMu
-DQo+ID4gVGhpcyB0aW1lIHN5bmMgaXMgbW9zdGx5IHVzZWQgYnkgdXBwZXIgbGF5ZXJzIGZvciBz
-ZXZlcmFsIA0KPiA+IGFwcGxpY2F0aW9ucyAobGlrZQ0KPiBhdWRpbykuDQo+ID4gSW4gdGhpcyBj
-YXNlIHdlIGFsbG93IHRoZSB1c2VyIHRvIGNvbmZpZ3VyZSBmb3IgZWFjaCB6b25lIHdobyB3aWxs
-IA0KPiA+IGJlIHRoZQ0KPiBzeW5jaHJvbml6ZXIuDQo+ID4gWW91IGNhbiByZWZlciB0byB0aGUg
-Zm9sbG93aW5nIEFwcGxpY2F0aW9uIFJlcG9ydCAoY2hhcHRlciA2KSBmb3IgDQo+ID4gbW9yZQ0K
-PiA+IGluZm9ybWF0aW9uOiBodHRwOi8vd3d3LnRpLmNvbS9saXQvYW4vc3dhYTE2Ni9zd2FhMTY2
-LnBkZg0KPiANCj4gU28gaXQgYnJlYWtzIHJlZ3VsYXIgbWVzaCBzeW5jaHJvbml6YXRpb24/IFBv
-d2VyIFNhdmUsIGFuZCBpbiB0aGUgDQo+IGZ1dHVyZSBwb3NzaWJseSBERlMgYW5kIE1DQ0EgcmVs
-eSBvbiB0aGlzIHRvIHdvcmsuDQo+IA0KPiBJdCBzb3VuZHMgbGlrZSB5b3Ugd2FudCBzb21lIGFi
-c29sdXRlIFRTRiB0aW1lIHN5bmNocm9uaXplZCB3aXRoaW4gMjB1cy4NCj4gTWVzaCBUU0Ygc3lu
-Y2hyb25pemF0aW9uIGNhbiBwcm92aWRlIHRoaXMsIGl0J3MganVzdCBhIGxpdHRsZSBtb3JlIA0K
-PiBjb21wbGljYXRlZCBhcyB5b3UnbGwgbmVlZCB0byBjb21wdXRlIGF0IHRoZSBhcHBsaWNhdGlv
-biBsZXZlbCB1c2luZyB0aGUgcGVyLXN0YSBvZmZzZXRzLg0KPiBNZXNoIHN5bmNocm9uaXphdGlv
-biBhY2N1cmFjeSB3YXMgcHJldHR5IGdvb2QgSUlSQywgdW5mb3J0dW5hdGVseSBJIA0KPiBkb24n
-dCBoYXZlIGFueSB0ZXN0IGRhdGEgdG8gc2hhcmUgOigNCg0KWWVzLiBUaGlzIGZlYXR1cmUgY2Fu
-IGhpdCB0aW1lIGFjY3VyYWN5IG9mIGxlc3MgdGhhbiAyMHVzIHdoZW4gdXNpbmcgd2wxOHh4IGRl
-dmljZXMuDQpJdCBpcyBub3QgYnVpbHQgZm9yIG1lc2ggcm9sZSBzcGVjaWZpY2FsbHkgYnV0IGZv
-ciBTVEEgYW5kIEFQIGFzIHdlbGwuDQpVbmxpa2UgU1RBIGFuZCBBUCBtb2RlcyB3aGVyZSB0aGUg
-dG9wb2xvZ3kgaXMgd2VsbCBkZWZpbmVkIHdoZW4gcnVubmluZyBtZXNoDQp5b3UgaGF2ZSBzZXZl
-cmFsIHpvbmVzIHRoYXQgY2FuIGJlIHRyZWF0ZWQgYXMgU1RBLUFQIHRvcG9sb2d5Lg0KVGhpcyBw
-YXRjaCBqdXN0IGFkZCB0aGUgQVBJIGZvciBjb25maWd1cmluZyB3aGljaCBtZXNoIHBlZXIgd2ls
-bCBhY3QgYXMgQVAgb24gaXRzIHpvbmUNCkZvciB0aGUgdGltZSBzeW5jaHJvbml6YXRpb24gbWF0
-dGVyLg0KSXQgaGFzIG5vdGhpbmcgdG8gZG8gd2l0aCBNZXNoIFRTRiBzeW5jaHJvbml6YXRpb24g
-c3BlY2lmaWNhbGx5IHNvIGl0IHNob3VsZG7igJl0IGJyZWFrIGFueXRoaW5nLg0KDQpHdXkNCg==
+Hi Stephan,
+
+On Sat, Aug 06, 2016 at 10:03:58PM +0200, Stephan Mueller wrote:
+> Am Samstag, 6. August 2016, 19:45:51 CEST schrieb Jason Cooper:
+> > On Fri, Aug 05, 2016 at 05:08:14PM +0200, Stephan Mueller wrote:
+...
+> > > diff --git a/drivers/net/wireless/ath/ath9k/rng.c
+> > > b/drivers/net/wireless/ath/ath9k/rng.c index d38e50f..d63dc48 100644
+> > > --- a/drivers/net/wireless/ath/ath9k/rng.c
+> > > +++ b/drivers/net/wireless/ath/ath9k/rng.c
+> > > @@ -92,8 +92,7 @@ static int ath9k_rng_kthread(void *data)
+> > > 
+> > >  		fail_stats = 0;
+> > >  		
+> > >  		/* sleep until entropy bits under write_wakeup_threshold */
+> > > 
+> > > -		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
+> > > -					   ATH9K_RNG_ENTROPY(bytes_read));
+> > 
+> > This is the only use of this macro.  I'd remove the #define on line 25
+> > as well.
+> 
+> My idea for leaving it was that folks who would bring the RNG into the 
+> hwrandom framework could reuse the ideas from the original authors.
+> 
+> What about commenting it out with #if 0 ?
+
+#if 0 is frowned upon.  If that calculation is documented somewhere,
+then it can be redone from the spec.  If it isn't, then I'd be curious
+to know where it came from.
+
+Perhaps one of the ath9k devs can point to a document containing the
+formula?  We could put the reference in a comment.
+
+thx,
+
+Jason.
