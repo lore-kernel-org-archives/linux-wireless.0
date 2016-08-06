@@ -1,102 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:37831 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752939AbcHCTT5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 15:19:57 -0400
-Received: by mail-wm0-f52.google.com with SMTP id i5so350339219wmg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 12:19:18 -0700 (PDT)
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <5790A28F.8030102@redhat.com> <20160721115122.GA31869@redhat.com>
- <a264e995-fc46-7fcd-69f9-80992385b6b1@broadcom.com>
- <20160722102559.GA2662@redhat.com> <20160722221523.GM5537@wotan.suse.de>
- <874m738m02.fsf@kamboji.qca.qualcomm.com>
- <20160802141610.GJ3296@wotan.suse.de>
- <ae734397-6179-d0ba-3d8a-0cffc63a0fd8@broadcom.com>
- <20160803142119.GL3296@wotan.suse.de> <87ziot51x9.fsf@qca.qualcomm.com>
- <20160803171044.GP3296@wotan.suse.de>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Prarit Bhargava <prarit@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Ming Lei <ming.lei@canonical.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k <ath10k@lists.infradead.org>,
-	"mmarek@suse.com" <mmarek@suse.com>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <6fb6f394-83fe-87e6-ef49-9fa854899721@broadcom.com> (sfid-20160803_212021_872449_083AF5A9)
-Date: Wed, 3 Aug 2016 21:19:14 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160803171044.GP3296@wotan.suse.de>
-Content-Type: text/plain; charset=windows-1252
+Received: from mout02.posteo.de ([185.67.36.142]:56398 "EHLO mout02.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751623AbcHFUTB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Aug 2016 16:19:01 -0400
+Message-ID: <1470470838.3433.1.camel@embedded.rocks> (sfid-20160806_221905_170000_6043FECD)
+Subject: Re: TCP data throughput for BCM43362
+From: =?ISO-8859-1?Q?J=F6rg?= Krause <joerg.krause@embedded.rocks>
+To: Franky Lin <franky.lin@broadcom.com>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>
+Date: Sat, 06 Aug 2016 10:07:18 +0200
+In-Reply-To: <CA+8PC_f7VQMwBfQmZZ_vUtYtNJKVYzmFmxziAwoG8-iRUeW9Jw@mail.gmail.com>
+References: <1470429980.29489.10.camel@embedded.rocks>
+	 <CAF7Mx6o+WuQqtzuApMWQ8YAkLSX7xQ_H06xmO--RxFdwHwzLdQ@mail.gmail.com>
+	 <1BCE83A1-AA47-438D-BC47-05AE53D40121@embedded.rocks>
+	 <CA+8PC_f7VQMwBfQmZZ_vUtYtNJKVYzmFmxziAwoG8-iRUeW9Jw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Franky,
 
-
-On 03-08-16 19:10, Luis R. Rodriguez wrote:
-> On Wed, Aug 03, 2016 at 03:04:39PM +0000, Valo, Kalle wrote:
->> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
->>
->>> On Wed, Aug 03, 2016 at 01:33:31PM +0200, Arend van Spriel wrote:
->>>> On 02-08-16 16:16, Luis R. Rodriguez wrote:
->>>>> On Tue, Aug 02, 2016 at 11:10:22AM +0000, Valo, Kalle wrote:
->>>>>> "Luis R. Rodriguez" <mcgrof@kernel.org> writes:
->>>>>>
->>>>>>> I was considering this as a future extension to the firmware API
->>>>>>> through the new extensible firmware API, the sysdata API.
->>>>>>
->>>>>> I think Linus mentioned this already, but I want to reiterate anyway.
->>>>>> The name "sysdata" is horrible, I didn't have any idea what it means
->>>>>> until I read your description. Please continue to use the term
->>>>>> "firmware", anyone already know what it means.
->>>>>
->>>>> We've gone well past using the firmware API for firmware though, if
->>>>> we use it for 802.11 to replace CRDA for instance its really odd to
->>>>> be calling it firmware. But sure... I will rebrand again to firmware...
->>>>
->>>> I tend to agree. Although some people even call an OpenWrt image
->>>> firmware. Guess it is just in the eye of the beholder.
->>>
->>> Sure...
->>>
->>> Come to think of it I'll still go with "sysdata", this is a very minor
->>> detail, do let me know if there is anything technical rather than
->>> the color of the bikeshed [0] over the patches.
->>
->> Well, you don't seem to care but I prefer that the terminology is clear
->> and I don't want to waste people's time browsing the source to find out
->> what something means.
+On Fr, 2016-08-05 at 17:56 -0700, Franky Lin wrote:
+> On Fri, Aug 5, 2016 at 2:29 PM, Jörg Krause <joerg.krause@embedded.ro
+> cks>
+> wrote:
 > 
-> Its not that I don't care, its this is a super trivial matter, like the
-> color of a bikeshed, and I'd much prefer to put energy and review on
-> technical matters.
-> 
->> Even "driverdata" would be more descriptive for me
->> than "sysdata".
->>
->> Actually, what does the "sys" refer here, system? And what system is
->> that exactly?
-> 
-> Yes system, so as in system data file. "driver_data" is just as good.
-> Although who knows, others may want to paint the bikeshed a different
-> color.
-> 
-> The core reason why the name change is to make emphasis of the fact that
-> we've gone way past the point where the APIs are used for non-firmware
-> and I expect this use will only grow.
+> > 
+> > 
+> > 
+> > Am 5. August 2016 23:01:10 MESZ, schrieb Arend Van Spriel <
+> > arend.vanspriel@broadcom.com>:
+> > > 
+> > > Op 5 aug. 2016 22:46 schreef "Jörg Krause"
+> > > <joerg.krause@embedded.rocks>:
+> > > > 
+> > > > 
+> > > > Hi,
+> > > > 
+> > > > I'm using a custom ARM board with an BCM43362 wifi chip from
+> > > Broadcom.
+> > > > 
+> > > > The wifi chip is attached via SDIO to the controller with a
+> > > > clock of
+> > > > 48MHz. Linux kernel version is 4.7.
+> > > > 
+> > > > When measuring the network bandwidth with iperf3 I get a
+> > > > bandwith of
+> > > > only around 5 Mbps. I found a similar thread at the Broadcom
+> > > community
+> > > > 
+> > > > [1] where the test was done with a M4 CPU + BCM43362 and an
+> > > > average
+> > > > result of 3.3 Mbps.
+> > > > 
+> > > > Interestingly, a BCM43362 Wi-Fi Dev Kit [2] notes a TCP data
+> > > throughput
+> > > > 
+> > > > greater than 20 Mbps.
+> > > > 
+> > > > Why is the throughput I measured much lower? Note that I
+> > > > measured
+> > > > several times with almost no neighbor devices or networks.
+> > > > 
+> > > > This is a test sample measured with iperf3:
+> > > > 
+> > > >     $ iperf3 -c 192.168.2.1 -i 1 -t 10
+> > > >     Connecting to host 192.168.2.1, port 5201
+> > > >     [  4] local 192.168.2.155 port 36442 connected to
+> > > > 192.168.2.1
+> > > port
+> > > > 
+> > > >     5201
+> > > >     [ ID]
+> > > > Interval           Transfer     Bandwidth       Retr  Cwnd
+> > > >     [  4]   0.00-1.00   sec   615 KBytes  5.04
+> > > > Mbits/sec    0   56.6
+> > > >     KBytes
+> > > >     [  4]   1.00-2.00   sec   622 KBytes  5.10
+> > > > Mbits/sec    0   84.8
+> > > >     KBytes
+> > > >     [  4]   2.00-3.00   sec   625 KBytes  5.12
+> > > > Mbits/sec    0    113
+> > > >     KBytes
+> > > >     [  4]   3.00-4.00   sec   571 KBytes  4.68
+> > > > Mbits/sec    0    140
+> > > >     KBytes
+> > > >     [  4]   4.00-5.00   sec   594 KBytes  4.87
+> > > > Mbits/sec    0    167
+> > > >     KBytes
+> > > >     [  4]   5.00-6.00   sec   628 KBytes  5.14
+> > > > Mbits/sec    0    195
+> > > >     KBytes
+> > > >     [  4]   6.00-7.00   sec   619 KBytes  5.07
+> > > > Mbits/sec    0    202
+> > > >     KBytes
+> > > >     [  4]   7.00-8.00   sec   608 KBytes  4.98
+> > > > Mbits/sec    0    202
+> > > >     KBytes
+> > > >     [  4]   8.00-9.00   sec   602 KBytes  4.93
+> > > > Mbits/sec    0    202
+> > > >     KBytes
+> > > >     [  4]   9.00-10.00  sec   537 KBytes  4.40
+> > > > Mbits/sec    0    202
+> > > >     KBytes
+> > > >     - - - - - - - - - - - - - - - - - - - - - - - - -
+> > > >     [ ID] Interval           Transfer     Bandwidth       Retr
+> > > >     [  4]   0.00-10.00  sec  5.88 MBytes  4.93
+> > > >     Mbits/sec    0             sender
+> > > >     [  4]   0.00-10.00  sec  5.68 MBytes  4.76
+> > > >     Mbits/sec                  receiver
+> > > 
+> > > Not overly familiar with iperf3. Do these lines mean you are
+> > > doing
+> > > bidirectional test, ie. upstream and downstream at the same time.
+> > > Another
+> > > thing affecting tput could be power-save.
+> > 
+> > No, iperf3 does not support bidrectional test. Power-save is turned
+> > off.
+> > 
+> > What does iw link say?
 
-Here some colors to add to the palet with "color code" in brackets:
-- device specific data (dsd): although if CRDA stuff is loaded it is no
-	longer tied to a device.
-- eXtensible firmware API (xfw): the ever popular x factor :-p
-- binary blob loader (bbl): just popped up in me head.
+It says:
 
-Need more beer to go on.
+# iw dev wlan0 link
+Connected to xx:xx:xx:xx:xx (on wlan0)
+	SSID: xxx
+	freq: 2437
+	signal: -60 dBm
+	tx bitrate: 58.5 MBit/s
 
-Regards,
-Arend
+	bss flags:	short-preamble short-slot-time
+	dtim period:	1
+	beacon int:	100
+
+Best regards
+Jörg Krause
