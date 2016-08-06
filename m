@@ -1,85 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33773 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753290AbcHUOtc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Aug 2016 10:49:32 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org
-Cc: robh+dt@kernel.org, mark.rutland@arm.com, arnd@arndb.de,
-        chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 5/5] ath9k: Make EEPROM endianness swapping configurable via devicetree
-Date: Sun, 21 Aug 2016 16:49:06 +0200
-Message-Id: <20160821144906.30984-6-martin.blumenstingl@googlemail.com> (sfid-20160821_164939_103365_5D827E86)
-In-Reply-To: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+Received: from outbound1a.ore.mailhop.org ([54.213.22.21]:49030 "EHLO
+	outbound1a.ore.mailhop.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752070AbcHFUCC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Aug 2016 16:02:02 -0400
+Date: Sat, 6 Aug 2016 19:45:51 +0000
+From: Jason Cooper <jason@lakedaemon.net>
+To: Stephan Mueller <smueller@chronox.de>
+Cc: Ted Tso <tytso@mit.edu>, herbert@gondor.apana.org.au,
+	linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [RFC][PATCH] RANDOM: ATH9K RNG delivers zero bits of entropy
+Message-ID: <20160806194551.GA4511@io.lakedaemon.net> (sfid-20160806_220223_608152_AE55D59A)
+References: <34197429.2CvoIfft9B@positron.chronox.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <34197429.2CvoIfft9B@positron.chronox.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The endianness swapping is disabled by default since many devices have
-EEPROMs with incorrect endianness magic bytes (at the beginning).
-Devices where the EEPROM is known to indicate the correct endianness
-can enable the new flag to enable swapping when required.
-This behavior is consistent with ath9k_platform_data where the endian
-check also has to be enabled explicitly.
----
- .../devicetree/bindings/net/wireless/qca,ath9k.txt       | 16 ++++++++++++++++
- drivers/net/wireless/ath/ath9k/init.c                    |  6 +++++-
- 2 files changed, 21 insertions(+), 1 deletion(-)
+Hi Stephan,
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-index 98065ad..05c54c4 100644
---- a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-@@ -17,6 +17,22 @@ Optional properties:
- 			ath9k wireless chip (in this case the calibration /
- 			EEPROM data will be loaded from userspace using the
- 			kernel firmware loader).
-+- qca,check-eeprom-endianness: When enabled, the driver checks if the
-+				endianness of the EEPROM (using two checks,
-+				one is based on the two magic bytes at the
-+				start of the EEPROM and a second one which
-+				relies on a flag within the EEPROM data)
-+				matches the host system's native endianness.
-+				The data will be swapped accordingly if there
-+				is a mismatch.
-+				Leaving this disabled means that the EEPROM
-+				data will always be interpreted in the
-+				system's native endianness.
-+				Enable this option only when the EEPROMs
-+				endianness identifiers are known to be
-+				correct, because otherwise the EEPROM data
-+				may be swapped and thus interpreted
-+				incorrectly.
- - qca,disable-2ghz: Overrides the settings from the EEPROM and disables the
- 			2.4GHz band. Setting this property is only needed
- 			when the RF circuit does not support the 2.4GHz band
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index c123145..d123977 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -581,6 +581,11 @@ static int ath9k_of_init(struct ath_softc *sc)
- 	if (of_property_read_bool(np, "qca,disable-5ghz"))
- 		ah->disable_5ghz = true;
- 
-+	if (of_property_read_bool(np, "qca,check-eeprom-endianness"))
-+		ah->ah_flags &= ~AH_NO_EEP_SWAP;
-+	else
-+		ah->ah_flags |= AH_NO_EEP_SWAP;
-+
- 	if (of_property_read_bool(np, "qca,no-eeprom")) {
- 		/* ath9k-eeprom-<bus>-<id>.bin */
- 		scnprintf(eeprom_name, sizeof(eeprom_name),
-@@ -597,7 +602,6 @@ static int ath9k_of_init(struct ath_softc *sc)
- 		ether_addr_copy(common->macaddr, mac);
- 
- 	ah->ah_flags &= ~AH_USE_EEPROM;
--	ah->ah_flags |= AH_NO_EEP_SWAP;
- 
- 	return 0;
- }
--- 
-2.9.3
+On Fri, Aug 05, 2016 at 05:08:14PM +0200, Stephan Mueller wrote:
+> Hi Ted, Herbert,
+> 
+> I sent a question to the ATH9K RNG some time ago to the developers.
+> See https://www.mail-archive.com/linux-crypto@vger.kernel.org/msg19115.html
+> 
+> I have not yet received a word and I think this issue should be resolved.
+> 
+> Thanks
+> Stephan
+> 
+> ---8<---
+
+If the above text is placed below the three dashes, "---", below ...
+
+> The ATH9K driver implements an RNG which is completely bypassing the
+> standard Linux HW generator logic.
+> 
+> The RNG may or may not deliver entropy. Considering the conservative
+> approach in treating entropy with respect to non-auditable sources, this
+> patch changes the delivered entropy value to zero. The RNG still feeds
+> data into the input_pool but it is assumed to have no entropy.
+> 
+> When the ATH9K RNG changes to use the HW RNG framework, it may re-enable
+> the entropy estimation considering that a user can change that value at
+> boot and runtime.
+> 
+> Signed-off-by: Stephan Mueller <smueller@chronox.de>
+> ---
+
+here, then the mail can be applied directly without editing.
+
+>  drivers/net/wireless/ath/ath9k/rng.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
+> index d38e50f..d63dc48 100644
+> --- a/drivers/net/wireless/ath/ath9k/rng.c
+> +++ b/drivers/net/wireless/ath/ath9k/rng.c
+> @@ -92,8 +92,7 @@ static int ath9k_rng_kthread(void *data)
+>  		fail_stats = 0;
+>  
+>  		/* sleep until entropy bits under write_wakeup_threshold */
+> -		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
+> -					   ATH9K_RNG_ENTROPY(bytes_read));
+
+This is the only use of this macro.  I'd remove the #define on line 25
+as well.
+
+> +		add_hwgenerator_randomness((void *)rng_buf, bytes_read, 0);
+>  	}
+>  
+>  	kfree(rng_buf);
+
+Other than that,
+
+Reviewed-by: Jason Cooper <jason@lakedaemon.net>
+
+thx,
+
+Jason.
