@@ -1,72 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:36343 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbcHKVfy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 17:35:54 -0400
-Subject: Re: [PATCH 16/16] net: wireless: realtek: rtlwifi: usb: don't print
- error when allocating urb fails
-To: Wolfram Sang <wsa-dev@sang-engineering.com>,
-	linux-usb@vger.kernel.org
-References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
- <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
- <1470949988-25705-4-git-send-email-wsa-dev@sang-engineering.com>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <47932679-21ea-18ba-d918-715dc2fe5e96@lwfinger.net> (sfid-20160811_233600_076485_A3FCCDF0)
-Date: Thu, 11 Aug 2016 16:35:51 -0500
-MIME-Version: 1.0
-In-Reply-To: <1470949988-25705-4-git-send-email-wsa-dev@sang-engineering.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:48996 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751356AbcHFUaT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Aug 2016 16:30:19 -0400
+Message-ID: <1470513454.3374.1.camel@sipsolutions.net> (sfid-20160806_223024_031700_35D299F0)
+Subject: Re: [PATCH] cfg80211: Add support for user configurable beacon data
+ rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
+	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
+	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
+Date: Sat, 06 Aug 2016 21:57:34 +0200
+In-Reply-To: <92b06d4df5984e6ea91081126e096a96@aphydexm01f.ap.qualcomm.com>
+References: <1470371701-13074-1-git-send-email-pkushwah@qti.qualcomm.com>
+ <1470387784.2977.30.camel@sipsolutions.net>
+	 <92b06d4df5984e6ea91081126e096a96@aphydexm01f.ap.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/11/2016 04:13 PM, Wolfram Sang wrote:
-> kmalloc will print enough information in case of failure.
->
-> Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
-> ---
->  drivers/net/wireless/realtek/rtlwifi/usb.c | 8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
+On Sat, 2016-08-06 at 04:38 +0000, Undekari, Sunil Dutt wrote:
+> > 
+> > Doesn't this have to check that it actually got information for the
+> > right band?
+> Hi Johannes ,
+> nl80211_parse_tx_bitrate_mask ( a new wrapper to the existing
+> functionality in nl80211_set_tx_bitrate_mask ) does this , isn't ? 
+> 
+It checks that everything matches up with capabilities, but it doesn't
+check that if you specified NL80211_ATTR_TX_RATES you didn't do
+something stupid like specifying it for 2.4GHz while your AP is
+starting up on 5GHz.
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+It also doesn't check that you specified exactly one rate, but it's not
+clear how else this would work?
 
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
-> index 41617b7b082260..32aa5c1d070a07 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
-> @@ -739,11 +739,8 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
->  	for (i = 0; i < rtlusb->rx_urb_num; i++) {
->  		err = -ENOMEM;
->  		urb = usb_alloc_urb(0, GFP_KERNEL);
-> -		if (!urb) {
-> -			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
-> -				 "Failed to alloc URB!!\n");
-> +		if (!urb)
->  			goto err_out;
-> -		}
->
->  		err = _rtl_prep_rx_urb(hw, rtlusb, urb, GFP_KERNEL);
->  		if (err < 0) {
-> @@ -907,15 +904,12 @@ static void _rtl_tx_complete(struct urb *urb)
->  static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
->  				struct sk_buff *skb, u32 ep_num)
->  {
-> -	struct rtl_priv *rtlpriv = rtl_priv(hw);
->  	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
->  	struct urb *_urb;
->
->  	WARN_ON(NULL == skb);
->  	_urb = usb_alloc_urb(0, GFP_ATOMIC);
->  	if (!_urb) {
-> -		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
-> -			 "Can't allocate URB for bulk out!\n");
->  		kfree_skb(skb);
->  		return NULL;
->  	}
->
-
+johannes
