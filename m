@@ -1,79 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37871 "EHLO nbd.name"
+Received: from mga11.intel.com ([192.55.52.93]:40752 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750747AbcHQESN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2016 00:18:13 -0400
-Subject: Re: On the ath9k performance regression with FQ and crypto
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-	make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless@vger.kernel.org
-References: <87pop85tvr.fsf@toke.dk>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Dave Taht <dave.taht@gmail.com>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <6d471495-fa0f-f750-a4a4-f467205b94bd@nbd.name> (sfid-20160817_062243_753990_2434DBA7)
-Date: Wed, 17 Aug 2016 06:18:09 +0200
+	id S1750715AbcHGEfX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Aug 2016 00:35:23 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2016-04-12
+Date: Sun, 7 Aug 2016 04:35:18 +0000
+Message-ID: <1460448559.2630.8.camel@intel.com> (sfid-20160807_063532_481859_469A2412)
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87pop85tvr.fsf@toke.dk>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-08-16 22:41, Toke Høiland-Jørgensen wrote:
-> So Dave and I have been spending the last couple of days trying to
-> narrow down why there's a performance regression in some cases on ath9k
-> with the softq-FQ patches. Felix first noticed this regression, and LEDE
-> currently carries a patch [1] to disable the FQ portion of the softq
-> patches to avoid it.
-> 
-> While we have been able to narrow it down a little bit, no solution has
-> been forthcoming, so this is an attempt to describe the bug in the hope
-> that someone else will have an idea about what could be causing it.
-> 
-> What we're seeing is the following (when the access point is running
-> ath9k with the softq patches):
-> 
-> When running two or more flows to a station, their combined throughput
-> will be roughly 20-30% lower than the throughput of a single flow to the
-> same station. This happens:
-> 
-> - for both TCP and UDP traffic.
-> - independent of the base rate (i.e. signal quality).
-> - but only with crypto enabled (WPA2 CCMP in this case).
-> 
-> However, the regression completely disappears if either of the
-> following is true:
-> 
-> - no crypto is enabled.
-> - the FQ part of mac80211 is disabled (as in [1]).
-> 
-> We have been able to reproduce this behaviour on two different ath9k
-> hardware chips and two different architectures.
-> 
-> The cause of the regression seems to be that the aggregates are smaller
-> when there are two flows than when there is only one. Adding debug
-> statements to the aggregate forming code indicates that this is because
-> no more packets are available when the aggregates are built (i.e.
-> ieee80211_tx_dequeue() returns NULL).
-> 
-> We have not been able to determine why the queues run empty when this
-> combination of circumstances arise. Since we easily get upwards of 120
-> Mbps of TCP throughput without crypto but with full FQ, it's clearly not
-> the hashing overhead in itself that does it (and the hashing also
-> happens with just one flow, so the overhead is still there). And the
-> crypto itself should be offloaded to hardware (shouldn't it? we do see a
-> marked drop in overall throughput from just enabling crypto), so how
-> would the queueing (say, mixing of packets from different flows)
-> influence that?
-> 
-> Does anyone have any ideas? We are stumped...
-I have not done any further tests, but based on your analysis, I think I
-finally understand what's causing this issue:
-The CCMP PN (crypto IV) is assigned in the tx path before a packet is
-put into the txq. It is also used to protect against replay attacks, so
-it is sensitive to reordering. The receiver is simply dropping any
-packet where the PN value is lower than the highest PN received so far.
-To fix this, we will have to move the IV/PN assignment to
-ieee80211_tx_dequeue.
-
-- Felix
+SGkgS2FsbGUsDQoNCkhlcmUgaXMgYSBwdWxsIHJlcXVlc3QgZm9yIDQuNi4gSSBoYXZlIGhlcmUg
+YSBwYXRjaCB0aGF0IHdhcyBtZXJnZWQgdG8gDQotbmV4dCBhbHJlYWR5LCBidXQgY2xlYXJseSwg
+aXQgc2hvdWxkIGhhdmUgYmVlbiByb3V0ZWQgdGhyb3VnaCB0aGUNCmN1cnJlbnQgY3ljbGUncyB0
+cmVlcy4gU29ycnkgYWJvdXQgdGhhdC4NClRoZSBwYXRjaCBpczoNCg0KY29tbWl0IGNkNDk3Mjdl
+MWEyYmNjYzRmZjAwOGRkZTI0YzJmODQzMGRkOWUzNjgNCkF1dGhvcjogQXlhbGEgQmVrZXIgPGF5
+YWxhLmJla2VyQGludGVsLmNvbT4NCkRhdGU6ICAgV2VkIEZlYiAzIDE1OjM2OjUyIDIwMTYgKzAy
+MDANCg0KICAgIGl3bHdpZmk6IG12bTogYXZvaWQgdG8gV0FSTiBhYm91dCBnc2NhbiBjYXBhYmls
+aXRpZXMNCiAgICANCiAgICBHc2NhbiBjYXBhYmlsaXRpZXMgd2VyZSB1cGRhdGVkIHdpdGggbmV3
+IGNhcGFiaWxpdGllcyBzdXBwb3J0ZWQNCiAgICBieSB0aGUgZGV2aWNlLiBVcGRhdGUgR1NDQU4g
+Y2FwYWJpbGl0aWVzIFRMViBhbmQgYXZvaWQgdG8gV0FSTg0KICAgIGlmIHRoZSBmaXJtd2FyZSBk
+b2VzIG5vdCBoYXZlIHRoZSBuZXcgY2FwYWJpbGl0aWVzLg0KDQpJdCBhcHBlYXJzIGluIC1uZXh0
+IGFzOg0KDQpjb21taXQgYTBiMDlmMTMwMzZjZWRmZDY3YzljYjRiOWQwNTEzOGU3MDIyNzIzZA0K
+QXV0aG9yOiBBeWFsYSBCZWtlciA8YXlhbGEuYmVrZXJAaW50ZWwuY29tPg0KRGF0ZTogICBXZWQg
+RmViIDMgMTU6MzY6NTIgMjAxNiArMDIwMA0KDQogICAgaXdsd2lmaTogbXZtOiB1cGRhdGUgR1ND
+QU4gY2FwYWJpbGl0aWVzDQogICAgDQogICAgR3NjYW4gY2FwYWJpbGl0aWVzIHdlcmUgdXBkYXRl
+ZCB3aXRoIG5ldyBjYXBhYmlsaXRpZXMgc3VwcG9ydGVkDQogICAgYnkgdGhlIGRldmljZS4gVXBk
+YXRlIEdTQ0FOIGNhcGFiaWxpdGllcyBUTFYuDQoNClRoZSBjb21taXQgbWVzc2FnZSB3YXNuJ3Qg
+Z29vZCBlbm91Z2ggZm9yIHRoZSBjdXJyZW50IGN5Y2xlLCBzbyBJDQpyZXdyb3RlIGl0LiBCZXNp
+ZGVzIHRoYXQgb25lLCBhbGwgaXMgZmFpcmx5IG5vcm1hbC4NCkxldCBtZSBrbm93IGlmIHlvdSBo
+YXZlIGlzc3VlcyENCg0KVGhhbmtzLg0KDQoNClRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBj
+b21taXQgN2ZkZjk2NjMyNjFjYzc3YTUxNjM5NmZlYzgyY2VlOGE4ZWEwN2U3NjoNCg0KICBpd2x3
+aWZpOiBtdm06IGZpeCBtZW1vcnkgbGVhayBpbiBwYWdpbmcgKDIwMTYtMDMtMjAgMjM6MDE6NTQg
+KzAyMDApDQoNCmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KDQogIGh0
+dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXds
+d2lmaS1maXhlcy5naXQgdGFncy9pd2x3aWZpLWZvci1rYWxsZS0yMDE2LTA0LTEyDQoNCmZvciB5
+b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byAyZDI1ZmI4YjNhMTM4NzA2YjYzYmQyNmFkNzJhOTVj
+NTgwMjk5NTRhOg0KDQogIGl3bHdpZmk6IG12bTogZml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIg
+ZHVyaW5nIGZ3IGR1bXAgY29sbGVjdGlvbiAoMjAxNi0wNC0xMiAxMDowMzoxNyArMDMwMCkNCg0K
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLQ0KKiBhZGQgbmV3IGRldmljZSBJRHMgZm9yIDgyNjUNCiogZml4IGEgTlVMTCBwb2lu
+dGVyIGRlcmVmZXJlbmNlIHdoZW4gcGFnaW5nIGZpcm13YXJlIGFzc2VydHMNCiogcmVtb3ZlIGEg
+V0FSTklORyBvbiBnc2NhbiBjYXBhYmlsaXRpZXMNCiogZml4IE1PRFVMRV9GSVJNV0FSRSBmb3Ig
+ODI2MA0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tDQpBeWFsYSBCZWtlciAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06IGF2
+b2lkIHRvIFdBUk4gYWJvdXQgZ3NjYW4gY2FwYWJpbGl0aWVzDQoNCk1hdHRpIEdvdHRsaWViICgx
+KToNCiAgICAgIGl3bHdpZmk6IG12bTogZml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgZHVyaW5n
+IGZ3IGR1bXAgY29sbGVjdGlvbg0KDQpPcmVuIEdpdm9uICgxKToNCiAgICAgIGl3bHdpZmk6IGFk
+ZCBkZXZpY2UgSURzIGZvciB0aGUgODI2NSBkZXZpY2UNCg0KU2FyYSBTaGFyb24gKDEpOg0KICAg
+ICAgaXdsd2lmaTogODAwMDogZml4IE1PRFVMRV9GSVJNV0FSRSBpbnB1dA0KDQogZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9pd2wtODAwMC5jICAgfCAgMiArLQ0KIGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLWRydi5jICAgIHwgMjYgKysrKysrKysrKy0t
+LS0tLS0tLS0tLS0tLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS9m
+dy1kYmcuYyB8ICA2ICsrKystLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkv
+bXZtL2Z3LmMgICAgIHwgIDIgKysNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZp
+L3BjaWUvZHJ2LmMgICB8IDEwICsrKysrKysrKysNCiA1IGZpbGVzIGNoYW5nZWQsIDI3IGluc2Vy
+dGlvbnMoKyksIDE5IGRlbGV0aW9ucygtKQ==
