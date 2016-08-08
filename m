@@ -1,60 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47082 "EHLO mga11.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58938 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934878AbcHBM3B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:29:01 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org, linuxwifi@intel.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0797/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:47:23 +0800
-Message-Id: <20160802114723.2972-1-baolex.ni@intel.com> (sfid-20160802_172954_302353_40E773E9)
+	id S1750846AbcHHGuP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2016 02:50:15 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Ben Hutchings <ben@decadent.org.uk>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] Revert "wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel"
+Date: Mon,  8 Aug 2016 08:50:12 +0200
+Message-Id: <1470639012-7658-1-git-send-email-johannes@sipsolutions.net> (sfid-20160808_085018_690947_EAEBEB9A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
+This reverts commit 3d5fdff46c4b2b9534fa2f9fc78e90a48e0ff724.
+
+Ben Hutchings pointed out that the commit isn't safe since it assumes
+that the structure used by the driver is iw_point, when in fact there's
+no way to know about that.
+
+Fortunately, the only driver in the tree that ever runs this code path
+is the wilc1000 staging driver, so it doesn't really matter.
+
+Clearly I should have investigated this better before applying, sorry.
+
+Reported-by: Ben Hutchings <ben@decadent.org.uk>
+Cc: stable@vger.kernel.org [though I guess it doesn't matter much]
+Fixes: 3d5fdff46c4b ("wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ net/wireless/wext-core.c | 25 ++-----------------------
+ 1 file changed, 2 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-index c31c6bf..581af83 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c
-@@ -369,14 +369,14 @@ MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Realtek 8192EE 802.11n PCI wireless");
- MODULE_FIRMWARE("rtlwifi/rtl8192eefw.bin");
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index dbb2738e356a..6250b1cfcde5 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -958,29 +958,8 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
+ 			return private(dev, iwr, cmd, info, handler);
+ 	}
+ 	/* Old driver API : call driver ioctl handler */
+-	if (dev->netdev_ops->ndo_do_ioctl) {
+-#ifdef CONFIG_COMPAT
+-		if (info->flags & IW_REQUEST_FLAG_COMPAT) {
+-			int ret = 0;
+-			struct iwreq iwr_lcl;
+-			struct compat_iw_point *iwp_compat = (void *) &iwr->u.data;
+-
+-			memcpy(&iwr_lcl, iwr, sizeof(struct iwreq));
+-			iwr_lcl.u.data.pointer = compat_ptr(iwp_compat->pointer);
+-			iwr_lcl.u.data.length = iwp_compat->length;
+-			iwr_lcl.u.data.flags = iwp_compat->flags;
+-
+-			ret = dev->netdev_ops->ndo_do_ioctl(dev, (void *) &iwr_lcl, cmd);
+-
+-			iwp_compat->pointer = ptr_to_compat(iwr_lcl.u.data.pointer);
+-			iwp_compat->length = iwr_lcl.u.data.length;
+-			iwp_compat->flags = iwr_lcl.u.data.flags;
+-
+-			return ret;
+-		} else
+-#endif
+-			return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
+-	}
++	if (dev->netdev_ops->ndo_do_ioctl)
++		return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
+ 	return -EOPNOTSUPP;
+ }
  
--module_param_named(swenc, rtl92ee_mod_params.sw_crypto, bool, 0444);
--module_param_named(debug, rtl92ee_mod_params.debug, int, 0444);
--module_param_named(ips, rtl92ee_mod_params.inactiveps, bool, 0444);
--module_param_named(swlps, rtl92ee_mod_params.swctrl_lps, bool, 0444);
--module_param_named(fwlps, rtl92ee_mod_params.fwctrl_lps, bool, 0444);
--module_param_named(msi, rtl92ee_mod_params.msi_support, bool, 0444);
-+module_param_named(swenc, rtl92ee_mod_params.sw_crypto, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(debug, rtl92ee_mod_params.debug, int, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(ips, rtl92ee_mod_params.inactiveps, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(swlps, rtl92ee_mod_params.swctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(fwlps, rtl92ee_mod_params.fwctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(msi, rtl92ee_mod_params.msi_support, bool, S_IRUSR | S_IRGRP | S_IROTH);
- module_param_named(disable_watchdog, rtl92ee_mod_params.disable_watchdog,
--		   bool, 0444);
-+		   bool, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
 -- 
-2.9.2
+2.8.1
 
