@@ -1,42 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:42079 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755273AbcH1LaA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Aug 2016 07:30:00 -0400
-From: Colin King <colin.king@canonical.com>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: fix spelling mistake: "retyring" -> "retrying"
-Date: Sun, 28 Aug 2016 12:28:41 +0100
-Message-Id: <20160828112841.10919-1-colin.king@canonical.com> (sfid-20160828_133021_561795_9329D550)
+Received: from smtp03.smtpout.orange.fr ([80.12.242.125]:23975 "EHLO
+	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751150AbcHHHjB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2016 03:39:01 -0400
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: akarwar@marvell.com, nishants@marvell.com,
+	linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH 1/2] mwifiex: fix the length parameter of a memset
+Date: Mon,  8 Aug 2016 09:38:48 +0200
+Message-Id: <1470641928-26616-1-git-send-email-christophe.jaillet@wanadoo.fr> (sfid-20160808_093953_218015_45C416A9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+In 'mwifiex_get_ver_ext', we have:
+   struct mwifiex_ver_ext ver_ext;
 
-trivial fix to spelling mistake in dev_err message
+   memset(&ver_ext, 0, sizeof(struct host_cmd_ds_version_ext));
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+This is likely that memset'ing sizeof(struct mwifiex_ver_ext) was expected.
+Remove the ambiguity by using the variable name directly instead of its
+type.
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- drivers/staging/wilc1000/wilc_spi.c | 2 +-
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 22cf4b7..0f8d625 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -871,7 +871,7 @@ static int wilc_spi_init(struct wilc *wilc, bool resume)
- 		/* Read failed. Try with CRC off. This might happen when module
- 		 * is removed but chip isn't reset*/
- 		g_spi.crc_off = 1;
--		dev_err(&spi->dev, "Failed internal read protocol with CRC on, retyring with CRC off...\n");
-+		dev_err(&spi->dev, "Failed internal read protocol with CRC on, retrying with CRC off...\n");
- 		if (!spi_internal_read(wilc, WILC_SPI_PROTOCOL_OFFSET, &reg)) {
- 			/* Reaad failed with both CRC on and off, something went bad */
- 			dev_err(&spi->dev,
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index e06647a..78819e8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -1180,7 +1180,7 @@ mwifiex_get_ver_ext(struct mwifiex_private *priv, u32 version_str_sel)
+ {
+ 	struct mwifiex_ver_ext ver_ext;
+ 
+-	memset(&ver_ext, 0, sizeof(struct host_cmd_ds_version_ext));
++	memset(&ver_ext, 0, sizeof(ver_ext));
+ 	ver_ext.version_str_sel = version_str_sel;
+ 	if (mwifiex_send_cmd(priv, HostCmd_CMD_VERSION_EXT,
+ 			     HostCmd_ACT_GEN_GET, 0, &ver_ext, true))
 -- 
-2.9.3
+2.7.4
+
+
+---
+L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
+https://www.avast.com/antivirus
+
