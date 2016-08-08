@@ -1,77 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59612 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755137AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 17:47:24 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 08/20] rtl8xxxu: Remove now obsolete rtl8xxxu_old_init_queue_reserved_page()
-Date: Fri, 19 Aug 2016 17:46:30 -0400
-Message-Id: <1471643202-26250-9-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234819_303757_88619874)
-In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from smtp-out4.electric.net ([192.162.216.194]:63319 "EHLO
+	smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752504AbcHHPv1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2016 11:51:27 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Arnd Bergmann' <arnd@arndb.de>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+CC: 'Arvind Yadav' <arvind.yadav.cs@gmail.com>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"leoli@freescale.com" <leoli@freescale.com>,
+	"qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
+	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"scottwood@freescale.com" <scottwood@freescale.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"linux@roeck-us.net" <linux@roeck-us.net>
+Subject: RE: [5.3] ucc_geth: Fix to avoid IS_ERR_VALUE abuses and dead code
+ on 64bit systems.
+Date: Mon, 8 Aug 2016 15:49:22 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D5F50C532@AcuExch.aculab.com> (sfid-20160808_175134_305382_D26BC215)
+References: <1470386442-7208-1-git-send-email-arvind.yadav.cs@gmail.com>
+ <063D6719AE5E284EB5DD2968C1650D6D5F50C493@AcuExch.aculab.com>
+ <2862487.guU7g5Qkfj@wuerfel>
+In-Reply-To: <2862487.guU7g5Qkfj@wuerfel>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Arnd Bergmann
+> Sent: 08 August 2016 16:13
+> 
+> On Monday, August 8, 2016 2:49:11 PM CEST David Laight wrote:
+> >
+> > > If qe_muram_alloc will return any error, Then IS_ERR_VALUE will always
+> > > return 0. it'll not call ucc_fast_free for any failure. Inside 'if code'
+> > > will be a dead code on 64bit. Even qe_muram_addr will return wrong
+> > > virtual address. Which can cause an error.
+> > >
+> > >  kfree((void *)ugeth->tx_bd_ring_offset[i]);
+> >
+> > Erm, kfree() isn't the right function for things allocated by qe_muram_alloc().
+> >
+> > I still thing you need to stop this code using IS_ERR_VALUE() at all.
+> 
+> Those are two separate issues:
+> 
+> a) The ucc_geth driver mixing kmalloc() memory with muram, and assigning
+>    the result to "u32" and "void __iomem *" variables, both of which
+>    are wrong at least half of the time.
+> 
+> b) calling conventions of qe_muram_alloc() being defined in a way that
+>    requires the use of IS_ERR_VALUE(), because '0' is a valid address
+>    here.
 
-Switching over the old devices to use the new function allows us to
-get rid of this legacy.
+Yep, it is all a big bag of worms...
+'0' being valid is going to make tidying up after failure 'problematic'.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 30 ++--------------------
- 1 file changed, 2 insertions(+), 28 deletions(-)
+> The first one can be solved by updating the network driver, ideally
+> by getting rid of the casts and using proper types and accessors,
+> while the second would require updating all users of that interface.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 948f153..efe24a6 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -3847,28 +3847,6 @@ void rtl8xxxu_gen2_disable_rf(struct rtl8xxxu_priv *priv)
- 	rtl8xxxu_write32(priv, REG_RX_WAIT_CCA, val32);
- }
- 
--static void rtl8xxxu_old_init_queue_reserved_page(struct rtl8xxxu_priv *priv)
--{
--	u8 val8;
--	u32 val32;
--
--	if (priv->ep_tx_normal_queue)
--		val8 = TX_PAGE_NUM_NORM_PQ;
--	else
--		val8 = 0;
--
--	rtl8xxxu_write8(priv, REG_RQPN_NPQ, val8);
--
--	val32 = (TX_PAGE_NUM_PUBQ << RQPN_PUB_PQ_SHIFT) | RQPN_LOAD;
--
--	if (priv->ep_tx_high_queue)
--		val32 |= (TX_PAGE_NUM_HI_PQ << RQPN_HI_PQ_SHIFT);
--	if (priv->ep_tx_low_queue)
--		val32 |= (TX_PAGE_NUM_LO_PQ << RQPN_LO_PQ_SHIFT);
--
--	rtl8xxxu_write32(priv, REG_RQPN, val32);
--}
--
- static void rtl8xxxu_init_queue_reserved_page(struct rtl8xxxu_priv *priv)
- {
- 	struct rtl8xxxu_fileops *fops = priv->fops;
-@@ -3929,12 +3907,8 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		goto exit;
- 	}
- 
--	if (!macpower) {
--		if (priv->fops->total_page_num)
--			rtl8xxxu_init_queue_reserved_page(priv);
--		else
--			rtl8xxxu_old_init_queue_reserved_page(priv);
--	}
-+	if (!macpower)
-+		rtl8xxxu_init_queue_reserved_page(priv);
- 
- 	ret = rtl8xxxu_init_queue_priority(priv);
- 	dev_dbg(dev, "%s: init_queue_priority %i\n", __func__, ret);
--- 
-2.7.4
+It might be worth (at least as a compilation option) of embedding the
+'muram offset' in a structure (passed and returned by value).
+
+The compiler can then check that the driver code is never be looking
+directly at the value.
+
+For 'b' zero can be made invalid by changing the places where the
+offset is added/subtracted.
+It could even be used to offset the saved physical and virtual
+addresses of the area - so not needing any extra code when the values
+are converted to physical/virtual addresses.
+
+	David
+
