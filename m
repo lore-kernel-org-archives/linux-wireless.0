@@ -1,112 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound1.eu.mailhop.org ([52.28.251.132]:18260 "EHLO
-	outbound1.eu.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752305AbcHHR3w (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.75]:59222 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750929AbcHHU5t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2016 13:29:52 -0400
-Date: Mon, 8 Aug 2016 17:29:30 +0000
-From: Jason Cooper <jason@lakedaemon.net>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Ted Tso <tytso@mit.edu>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
-	"herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	Mon, 8 Aug 2016 16:57:49 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: David Laight <David.Laight@aculab.com>
+Cc: "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	'Arvind Yadav' <arvind.yadav.cs@gmail.com>,
+	"zajec5@gmail.com" <zajec5@gmail.com>,
+	"leoli@freescale.com" <leoli@freescale.com>,
+	"qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
+	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH v2] RANDOM: ATH9K RNG delivers zero bits of entropy
-Message-ID: <20160808172930.GD4511@io.lakedaemon.net> (sfid-20160808_193021_875483_8009E55D)
-References: <34197429.2CvoIfft9B@positron.chronox.de>
- <1654172.XfclnXhRmn@positron.chronox.de>
- <657897b90b8344eeab10d7a0f604988d@aptaiexm02f.ap.qualcomm.com>
- <1830987.VF9l4XmGxv@tauon.atsec.com>
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"scottwood@freescale.com" <scottwood@freescale.com>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"linux@roeck-us.net" <linux@roeck-us.net>
+Subject: Re: [5.3] ucc_geth: Fix to avoid IS_ERR_VALUE abuses and dead code on 64bit systems.
+Date: Mon, 08 Aug 2016 22:49:34 +0200
+Message-ID: <2025175.d8Oyuk2c9k@wuerfel> (sfid-20160808_225755_120447_E724B8D7)
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D5F50C532@AcuExch.aculab.com>
+References: <1470386442-7208-1-git-send-email-arvind.yadav.cs@gmail.com> <2862487.guU7g5Qkfj@wuerfel> <063D6719AE5E284EB5DD2968C1650D6D5F50C532@AcuExch.aculab.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1830987.VF9l4XmGxv@tauon.atsec.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephan, Miaoqing Pan,
-
-On Mon, Aug 08, 2016 at 08:41:36AM +0200, Stephan Mueller wrote:
-> Am Montag, 8. August 2016, 02:03:36 CEST schrieb Pan, Miaoqing:
-> > The entropy was evaluated by crypto expert,  the analysis report show the
-> > ADC with at least 10bits and up to 22 bits of min-entropy for a 32 bits
-> > value, we conservatively assume the min-entropy is 10 bits out of 32 bits,
-> > so that's why set entropy quality  to  320/1024 = 10/32.
-
-Ok, so the relevant commit is:
-
-  ed14dc0af7cce ath9k: feeding entropy in kernel from ADC capture
-
-Which refers to a previous commit:
-
-  6301566e0b2d ath9k: export HW random number generator
-
-> > Also we have explained in the commit message why can't use the HW
-> > RNG framework.
-
->From ed14dc0af7cce:
-
-"""
-Since ADC was not designed to be a dedicated HW RNG, we do not want to
-bind it to /dev/hwrng framework directly.
-"""
-
-> Where is the description of the RNG, where is the test implementation? 
+On Monday, August 8, 2016 3:49:22 PM CEST David Laight wrote:
+> From: Arnd Bergmann
+> > Sent: 08 August 2016 16:13
 > > 
-> > Otherwise, your patch will cause high CPU load,  as continuously read ADC
-> > data if entropy bits under write_wakeup_threshold.
+> > On Monday, August 8, 2016 2:49:11 PM CEST David Laight wrote:
+> > >
+> > > > If qe_muram_alloc will return any error, Then IS_ERR_VALUE will always
+> > > > return 0. it'll not call ucc_fast_free for any failure. Inside 'if code'
+> > > > will be a dead code on 64bit. Even qe_muram_addr will return wrong
+> > > > virtual address. Which can cause an error.
+> > > >
+> > > >  kfree((void *)ugeth->tx_bd_ring_offset[i]);
+> > >
+> > > Erm, kfree() isn't the right function for things allocated by qe_muram_alloc().
+> > >
+> > > I still thing you need to stop this code using IS_ERR_VALUE() at all.
+> > 
+> > Those are two separate issues:
+> > 
+> > a) The ucc_geth driver mixing kmalloc() memory with muram, and assigning
+> >    the result to "u32" and "void __iomem *" variables, both of which
+> >    are wrong at least half of the time.
+> > 
+> > b) calling conventions of qe_muram_alloc() being defined in a way that
+> >    requires the use of IS_ERR_VALUE(), because '0' is a valid address
+> >    here.
 > 
-> The issue is that although you may have analyzed it, others are unable to 
-> measure the quality of the RNG and assess the design as well as the 
-> implementation of the RNG. This RNG is the only implementation of a hardware 
-> RNG that per default and without being able to change it at runtime injects 
-> data into the input_pool where the noise source cannot be audited. Note, even 
-> other respected RNG noise sources like the Intel RDRAND will not feed into /
-> dev/random per default in a way that dominates all other noise sources.
+> Yep, it is all a big bag of worms...
+> '0' being valid is going to make tidying up after failure 'problematic'.
 > 
-> I would like to be able to deactivate that noise source to the extent that it 
-> does not cause /dev/random to unblock. The reason is that your noise source 
-> starts to dominate all other noise sources.
+> > The first one can be solved by updating the network driver, ideally
+> > by getting rid of the casts and using proper types and accessors,
+> > while the second would require updating all users of that interface.
+> 
+> It might be worth (at least as a compilation option) of embedding the
+> 'muram offset' in a structure (passed and returned by value).
+> 
+> The compiler can then check that the driver code is never be looking
+> directly at the value.
+>
+> For 'b' zero can be made invalid by changing the places where the
+> offset is added/subtracted.
+> It could even be used to offset the saved physical and virtual
+> addresses of the area - so not needing any extra code when the values
+> are converted to physical/virtual addresses.
 
-I think the short-term problem here is the config logic:
+Agreed.
 
-config ATH9K_HWRNG
-       bool "Random number generator support"
-       depends on ATH9K && (HW_RANDOM = y || HW_RANDOM = ATH9K)
-       default y
+For this driver, we don't actually seem to use the value returned from
+the allocation function, only the virtual __iomem address we get after
+calling qe_muram_addr(), so it would be a big improvement to just
+store the virtual address as a pointer, and wrap the calls
+to qe_muram_alloc/qe_muram_addr/qe_muram_free with an appropriate
+helper that doesn't even show the offset.
 
-If you have *any* hwrngs you want to use and you have an ath9k card
-(HW_RANDOM = y and ATH9K != n), you get the behavior Stephan is pointing
-out.
+However, I'd also separate the normal kmalloc pointer from the
+muram_alloc() pointer because only the latter is __iomem, and
+we shouldn't really call MMIO accessor functions on RAM in
+portable code.
 
-Short term, we should just default no here.
-
-> If you think that this patch is a challenge because your driver starts to 
-> spin, please help and offer another solution.
-
-Well, I don't buy the reasoning listed above for not using the hwrng
-framework.  Interrupt timings were never designed to be a source of entropy
-either.  We need to grab it where ever we can find it, especially on
-embedded systems.  Documentation/hw_random.txt even says:
-
-"""
-This data is NOT CHECKED by any fitness tests, and could potentially be
-bogus (if the hardware is faulty or has been tampered with).
-"""
-
-I really don't think there's a problem with adding these sorts of
-sources under char/hw_random/.  I think the only thing we would be
-concerned about, other than the already addressed entropy estimation,
-would be constraining the data rate.
-
-Is ath9k the only wireless card that exposes ADC registers?  What about
-sound cards?
-
-thx,
-
-Jason.
+	Arnd
