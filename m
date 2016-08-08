@@ -1,45 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47667 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755400AbcH3JF2 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 05:05:28 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi-next 2016-08-30
-References: <1472505827.27868.41.camel@coelho.fi>
-        <1472547143.27868.73.camel@coelho.fi>
-Date: Tue, 30 Aug 2016 12:05:22 +0300
-In-Reply-To: <1472547143.27868.73.camel@coelho.fi> (Luca Coelho's message of
-        "Tue, 30 Aug 2016 11:52:23 +0300")
-Message-ID: <87y43e4ofh.fsf@kamboji.qca.qualcomm.com> (sfid-20160830_110532_419075_21B0D3A1)
+Received: from outbound1a.ore.mailhop.org ([54.213.22.21]:11220 "EHLO
+	outbound1a.ore.mailhop.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750938AbcHHWE6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2016 18:04:58 -0400
+Date: Mon, 8 Aug 2016 22:04:52 +0000
+From: Jason Cooper <jason@lakedaemon.net>
+To: Stephan Mueller <smueller@chronox.de>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Ted Tso <tytso@mit.edu>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
+	"herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH v2] RANDOM: ATH9K RNG delivers zero bits of entropy
+Message-ID: <20160808220452.GA2013@io.lakedaemon.net> (sfid-20160809_000532_349172_632B41D1)
+References: <34197429.2CvoIfft9B@positron.chronox.de>
+ <1654172.XfclnXhRmn@positron.chronox.de>
+ <657897b90b8344eeab10d7a0f604988d@aptaiexm02f.ap.qualcomm.com>
+ <1830987.VF9l4XmGxv@tauon.atsec.com>
+ <20160808172930.GD4511@io.lakedaemon.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160808172930.GD4511@io.lakedaemon.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Hi Stephan,
 
-> On Tue, 2016-08-30 at 00:23 +0300, Luca Coelho wrote:
->> Hi Kalle,
->> 
->> Another pull request, this time intended for 4.9.  I have a lot of
->> patches to send, but I'll send smaller batches this time. :)
->> 
->> These patches contain mostly preparation for new HW, but also some
->> improvements in the dynamic queue allocation code and the
->> implementation to support GMAC.
->> 
->> Let me know if everything's fine (or not). :)
->
-> Kalle,
->
-> The kbuild bot warning is valid.  I'll fix it and send a v2 of this
-> pull request, so please hold it back for now.
+On Mon, Aug 08, 2016 at 05:29:30PM +0000, Jason Cooper wrote:
+> On Mon, Aug 08, 2016 at 08:41:36AM +0200, Stephan Mueller wrote:
+...
+> > If you think that this patch is a challenge because your driver starts to 
+> > spin, please help and offer another solution.
+> 
+> Well, I don't buy the reasoning listed above for not using the hwrng
+> framework.  Interrupt timings were never designed to be a source of entropy
+> either.  We need to grab it where ever we can find it, especially on
+> embedded systems.  Documentation/hw_random.txt even says:
+> 
+> """
+> This data is NOT CHECKED by any fitness tests, and could potentially be
+> bogus (if the hardware is faulty or has been tampered with).
+> """
+> 
+> I really don't think there's a problem with adding these sorts of
+> sources under char/hw_random/.  I think the only thing we would be
+> concerned about, other than the already addressed entropy estimation,
+> would be constraining the data rate.
 
-Ok, I dropped this pull request. Please submit new one when it's ready.
+Further research yields char/hw_random/timeriomem-rng.c
 
--- 
-Kalle Valo
+It could use an update to ->read() vice data_{present,read}(), but it's
+functionally exactly what the ath9k rng is doing. :)
+
+thx,
+
+Jason.
