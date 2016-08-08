@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:61291 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934816AbcHBM3B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:29:01 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org, linuxwifi@intel.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0798/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:47:34 +0800
-Message-Id: <20160802114734.3053-1-baolex.ni@intel.com> (sfid-20160802_143229_415597_A63F58EA)
+Received: from helcar.hengli.com.au ([209.40.204.226]:43521 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752118AbcHHP0N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2016 11:26:13 -0400
+Date: Mon, 8 Aug 2016 23:26:03 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+	tom@herbertland.com
+Subject: Re: Buggy rhashtable walking
+Message-ID: <20160808152603.GB31570@gondor.apana.org.au> (sfid-20160808_172617_468279_3E12CA4B)
+References: <20160804071846.GA773@gondor.apana.org.au>
+ <20160804074546.GA996@gondor.apana.org.au>
+ <1470377813.2977.14.camel@sipsolutions.net>
+ <20160805104858.GA9297@gondor.apana.org.au>
+ <1470394233.2977.37.camel@sipsolutions.net>
+ <57A47CA3.4010101@candelatech.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <57A47CA3.4010101@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Fri, Aug 05, 2016 at 04:46:43AM -0700, Ben Greear wrote:
+>
+> It would not be fun to have to revert to the old way of hashing
+> stations in mac80211...
+> 
+> I'll be happy to test the patches when you have them ready.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Thanks for the offer.  Unfortunately it'll be a few days before
+I'm ready because I need to work through some crypto patches first.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-index 31baca41..d543a78 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-@@ -420,11 +420,11 @@ MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Realtek 8192S/8191S 802.11n PCI wireless");
- MODULE_FIRMWARE("rtlwifi/rtl8192sefw.bin");
- 
--module_param_named(swenc, rtl92se_mod_params.sw_crypto, bool, 0444);
--module_param_named(debug, rtl92se_mod_params.debug, int, 0444);
--module_param_named(ips, rtl92se_mod_params.inactiveps, bool, 0444);
--module_param_named(swlps, rtl92se_mod_params.swctrl_lps, bool, 0444);
--module_param_named(fwlps, rtl92se_mod_params.fwctrl_lps, bool, 0444);
-+module_param_named(swenc, rtl92se_mod_params.sw_crypto, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(debug, rtl92se_mod_params.debug, int, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(ips, rtl92se_mod_params.inactiveps, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(swlps, rtl92se_mod_params.swctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(fwlps, rtl92se_mod_params.fwctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 1)\n");
+Cheers,
 -- 
-2.9.2
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
