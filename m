@@ -1,37 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21676 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755698AbcHCSqX (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42648 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752458AbcHHR7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 14:46:23 -0400
-Date: Wed, 3 Aug 2016 21:43:39 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Benjamin Berg <benjamin.berg@open-mesh.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@venema.h4ckr.net, kernel-janitors@vger.kernel.org
-Subject: [patch] ath9k: indent an if statement
-Message-ID: <20160803184339.GB775@mwanda> (sfid-20160803_204651_467755_3C4D389B)
+	Mon, 8 Aug 2016 13:59:07 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
+	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
+	"Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
+Subject: RE: [PATCH v4] cfg80211: Provision to allow the support for different
+ beacon intervals
+Date: Mon, 8 Aug 2016 17:58:59 +0000
+Message-ID: <9513d3caf9354aeda408f65128b4a079@aphydexm01f.ap.qualcomm.com> (sfid-20160808_195911_677813_CE335192)
+References: <1470374768-22297-1-git-send-email-pkushwah@qti.qualcomm.com>
+ <1470386912.2977.28.camel@sipsolutions.net>
+In-Reply-To: <1470386912.2977.28.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It looks like this code is correct, but it just needs to be indented a
-bit.
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index a394622..eb00724 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -919,7 +919,7 @@ static void ath9k_vif_iter_set_beacon(struct ath9k_vif_iter_data *iter_data,
- 	} else {
- 		if (iter_data->primary_beacon_vif->type != NL80211_IFTYPE_AP &&
- 		    vif->type == NL80211_IFTYPE_AP)
--		iter_data->primary_beacon_vif = vif;
-+			iter_data->primary_beacon_vif = vif;
- 	}
- 
- 	iter_data->beacons = true;
+PldoYXQgaWYgeW91IGhhdmUgQVAsR08sbWVzaCBpbiB0aGUgc2FtZSBpbnRlcmZhY2UgY29tYmlu
+YXRpb24/IEVpdGhlciB5b3VyIGRvY3VtZW50YXRpb24gbmVlZHMgdG8gdmVyeSB2ZXJ5IGNsZWFy
+bHkgc3RhdGUgdGhhdCB0aGUgbWVzaCBtdXN0IG1hdGNoIChlaXRoZXIgb25lIG9mIHRoZW0/KSBh
+bmQgSSdkIGdvIGFzIGZhciBhcyA+cmVuYW1pbmcgdGhlIEFQSXMsIG9yIHlvdSBzaG91bGRuJ3Qg
+cmVxdWlyZSBtdWx0aXBsZSBBUHMgYW5kIG1ha2UgdGhpcyBhcHBseSBvbiBtZXNoIGFuZCBJQlNT
+IGFzIHdlbGwuDQpJIGd1ZXNzICwgd2UgY2FuIGV4dGVuZCB0aGlzIHRvIG1lc2ggYW5kIElCU1Mg
+YXMgd2VsbC4gDQoNCj5JdCBzZWVtcyB0byBtZSB0aGF0IGlmIEkgd2VyZSB0byBzcGVjaWZ5IGJl
+YWNvbiBpbnRlcnZhbHMgd2hpY2ggaGF2ZSBhIHZlcnkgc21hbGwgR0NELCB5b3UnbGwgcnVuIGlu
+dG8gdHJvdWJsZSB3aGVuIGFjdHVhbGx5IHNlbmRpbmcgYmVhY29ucy4NCj5QZXJoYXBzIHRoZXJl
+IHNob3VsZCBiZSBhIHJlcXVpcmVtZW50IG9uIHRoZSBHQ0Q/DQpDYW4gd2UgaGF2ZSB0aGlzIHB1
+Ymxpc2hlZCBieSB0aGUgaG9zdCBkcml2ZXJzIHRocm91Z2ggYSBuZXcgd2lwaHkgcGFyYW1ldGVy
+ICwgc2F5ICJtaW5fZGlmZl9iZWFjb25faW50ZXJ2YWxfbXVsdGlwbGllciIuIFRoaXMgc2V0J3Mg
+dGhlIGV4cGVjdGF0aW9uIHRoYXQgYW55IGRpZmZlcmVudCBiZWFjb24gaW50ZXJ2YWxzIG9uIHRo
+ZSB3aXBoeSAgc2hhbGwgYmUgYSBtdWx0aXBsZSBvZiB0aGlzIHBhcmFtZXRlciB3aGljaCBpcyBh
+ZHZlcnRpc2VkIGJ5IHRoZSBob3N0IGRyaXZlciAsIGlzbid0ID8NCg0KUmVnYXJkcywNClN1bmls
+DQoNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21h
+aWx0bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IEZyaWRheSwgQXVndXN0IDUs
+IDIwMTYgMjoxOSBQTQ0KVG86IEt1c2h3YWhhLCBQdXJ1c2hvdHRhbSA8cGt1c2h3YWhAcXRpLnF1
+YWxjb21tLmNvbT4NCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IE1hbGluZW4s
+IEpvdW5pIDxqb3VuaUBxY2EucXVhbGNvbW0uY29tPjsgVW5kZWthcmksIFN1bmlsIER1dHQgPHVz
+ZHV0dEBxdGkucXVhbGNvbW0uY29tPjsgS29uZGFiYXR0aW5pLCBHYW5lc2ggPGdhbmVzaGtAcXRp
+LnF1YWxjb21tLmNvbT47IEthbGlrb3QgVmVldGlsLCBNYWhlc2ggS3VtYXIgPG1rYWxpa290QHFj
+YS5xdWFsY29tbS5jb20+OyBIdWxsdXIgU3VicmFtYW55YW0sIEFtYXJuYXRoIDxhbWFybmF0aEBx
+Y2EucXVhbGNvbW0uY29tPg0KU3ViamVjdDogUmU6IFtQQVRDSCB2NF0gY2ZnODAyMTE6IFByb3Zp
+c2lvbiB0byBhbGxvdyB0aGUgc3VwcG9ydCBmb3IgZGlmZmVyZW50IGJlYWNvbiBpbnRlcnZhbHMN
+Cg0KT24gRnJpLCAyMDE2LTA4LTA1IGF0IDEwOjU2ICswNTMwLCBQdXJ1c2hvdHRhbSBLdXNod2Fo
+YSB3cm90ZToNCj4gVGhpcyBjb21taXQgcHJvdmlkZXMgdGhlIG9wdGlvbiBmb3IgdGhlIGhvc3Qg
+ZHJpdmVycyB0byBhZHZlcnRpc2UgdGhlIA0KPiBzdXBwb3J0IGZvciBkaWZmZXJlbnQgYmVhY29u
+IGludGVydmFscyBhbW9uZyB0aGUgcmVzcGVjdGl2ZSBpbnRlcmZhY2UgDQo+IGNvbWJpbmF0aW9u
+cywgdGhyb3VnaCBzdXBwX2RpZmZfYmVhY29uX2ludCAoYm9vbCkuDQoNCk5laXRoZXIgeW91ciBj
+b21taXQgbWVzc2FnZSBub3IgdGhlIGRvY3VtZW50YXRpb24gbWFrZXMgYSBkaXJlY3QgcmVmZXJl
+bmNlIHRvIHRoaXMgYWZmZWN0aW5nIG9ubHkgQVAvR08gaW50ZXJmYWNlLiBIb3dldmVyLCB5b3Ug
+dGhlbiBnbyBhbmQgcmVxdWlyZSB0aGF0IGF0IGxlYXN0IDIgaW50ZXJmYWNlcyB3aXRoIEFQL0dP
+IGFyZSBwcmVzZW50Lg0KDQpXaGF0IGlmIHlvdSBoYXZlIEFQLEdPLG1lc2ggaW4gdGhlIHNhbWUg
+aW50ZXJmYWNlIGNvbWJpbmF0aW9uPyBFaXRoZXIgeW91ciBkb2N1bWVudGF0aW9uIG5lZWRzIHRv
+IHZlcnkgdmVyeSBjbGVhcmx5IHN0YXRlIHRoYXQgdGhlIG1lc2ggbXVzdCBtYXRjaCAoZWl0aGVy
+IG9uZSBvZiB0aGVtPykgYW5kIEknZCBnbyBhcyBmYXIgYXMgcmVuYW1pbmcgdGhlIEFQSXMsIG9y
+IHlvdSBzaG91bGRuJ3QgcmVxdWlyZSBtdWx0aXBsZSBBUHMgYW5kIG1ha2UgdGhpcyBhcHBseSBv
+biBtZXNoIGFuZCBJQlNTIGFzIHdlbGwuDQoNCkFyZSB0aGVyZSByZWFsbHkgbm8gcmVzdHJpY3Rp
+b25zIHdoYXRzb2V2ZXIsIGJ0dz8NCg0KSXQgc2VlbXMgdG8gbWUgdGhhdCBpZiBJIHdlcmUgdG8g
+c3BlY2lmeSBiZWFjb24gaW50ZXJ2YWxzIHdoaWNoIGhhdmUgYSB2ZXJ5IHNtYWxsIEdDRCwgeW91
+J2xsIHJ1biBpbnRvIHRyb3VibGUgd2hlbiBhY3R1YWxseSBzZW5kaW5nIGJlYWNvbnMuDQpQZXJo
+YXBzIHRoZXJlIHNob3VsZCBiZSBhIHJlcXVpcmVtZW50IG9uIHRoZSBHQ0Q/DQoNCmpvaGFubmVz
+DQo=
