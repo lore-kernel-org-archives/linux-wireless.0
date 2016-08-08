@@ -1,49 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28659 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750830AbcH3Emf (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 00:42:35 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Eric Bentley <eric.bentley@lairdtech.com>
-CC: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] Allow the radio to report 0 dbm txpower without timing
- out
-Date: Tue, 30 Aug 2016 04:42:26 +0000
-Message-ID: <87d1kqj2a6.fsf@kamboji.qca.qualcomm.com> (sfid-20160830_064247_617327_4A43C823)
-References: <1472531450-19115-1-git-send-email-eric.bentley@lairdtech.com>
-In-Reply-To: <1472531450-19115-1-git-send-email-eric.bentley@lairdtech.com>
-        (Eric Bentley's message of "Tue, 30 Aug 2016 00:30:50 -0400")
-Content-Type: text/plain; charset="us-ascii"
+Received: from outbound1.eu.mailhop.org ([52.28.251.132]:18260 "EHLO
+	outbound1.eu.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752305AbcHHR3w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Aug 2016 13:29:52 -0400
+Date: Mon, 8 Aug 2016 17:29:30 +0000
+From: Jason Cooper <jason@lakedaemon.net>
+To: Stephan Mueller <smueller@chronox.de>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Ted Tso <tytso@mit.edu>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
+	"herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH v2] RANDOM: ATH9K RNG delivers zero bits of entropy
+Message-ID: <20160808172930.GD4511@io.lakedaemon.net> (sfid-20160808_193021_875483_8009E55D)
+References: <34197429.2CvoIfft9B@positron.chronox.de>
+ <1654172.XfclnXhRmn@positron.chronox.de>
+ <657897b90b8344eeab10d7a0f604988d@aptaiexm02f.ap.qualcomm.com>
+ <1830987.VF9l4XmGxv@tauon.atsec.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1830987.VF9l4XmGxv@tauon.atsec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eric Bentley <eric.bentley@lairdtech.com> writes:
+Hi Stephan, Miaoqing Pan,
 
-> The ath6kl driver attempts to get the txpower from the radio by first
-> clearing the existing stored value and then watching the value to become
-> non-zero. However, this value is in dbm and 0 is a valid value.
->
-> APs allow setting client power to values from -127..127. However, The rad=
-io
-> is not capable of setting values less then 0 and so will report txpower
-> as 0 for both negative and 0 client power.
->
-> The 6004 defaults to 63dbm which is then limited by regulatory and
-> hardware limits with max of 18dbm (6003 max is 16dbm), therefore we can
-> use values larger then this to be able to determine when the value has
-> been updated.
->
-> Set the value to a nonsensical value (255) and wait for it to change.
+On Mon, Aug 08, 2016 at 08:41:36AM +0200, Stephan Mueller wrote:
+> Am Montag, 8. August 2016, 02:03:36 CEST schrieb Pan, Miaoqing:
+> > The entropy was evaluated by crypto expert,  the analysis report show the
+> > ADC with at least 10bits and up to 22 bits of min-entropy for a 32 bits
+> > value, we conservatively assume the min-entropy is 10 bits out of 32 bits,
+> > so that's why set entropy quality  to  320/1024 = 10/32.
 
-Please prefix the title with "ath6kl: ". Also Signed-off-by is missing.
+Ok, so the relevant commit is:
 
-In the title you mention a bit about the bug you are fixing, but it
-would be useful to describe more about it in the commit log. From user's
-point of view, how did ath6kl behave before your patch and how will it
-change after your patch?
+  ed14dc0af7cce ath9k: feeding entropy in kernel from ADC capture
 
---=20
-Kalle Valo=
+Which refers to a previous commit:
+
+  6301566e0b2d ath9k: export HW random number generator
+
+> > Also we have explained in the commit message why can't use the HW
+> > RNG framework.
+
+>From ed14dc0af7cce:
+
+"""
+Since ADC was not designed to be a dedicated HW RNG, we do not want to
+bind it to /dev/hwrng framework directly.
+"""
+
+> Where is the description of the RNG, where is the test implementation? 
+> > 
+> > Otherwise, your patch will cause high CPU load,  as continuously read ADC
+> > data if entropy bits under write_wakeup_threshold.
+> 
+> The issue is that although you may have analyzed it, others are unable to 
+> measure the quality of the RNG and assess the design as well as the 
+> implementation of the RNG. This RNG is the only implementation of a hardware 
+> RNG that per default and without being able to change it at runtime injects 
+> data into the input_pool where the noise source cannot be audited. Note, even 
+> other respected RNG noise sources like the Intel RDRAND will not feed into /
+> dev/random per default in a way that dominates all other noise sources.
+> 
+> I would like to be able to deactivate that noise source to the extent that it 
+> does not cause /dev/random to unblock. The reason is that your noise source 
+> starts to dominate all other noise sources.
+
+I think the short-term problem here is the config logic:
+
+config ATH9K_HWRNG
+       bool "Random number generator support"
+       depends on ATH9K && (HW_RANDOM = y || HW_RANDOM = ATH9K)
+       default y
+
+If you have *any* hwrngs you want to use and you have an ath9k card
+(HW_RANDOM = y and ATH9K != n), you get the behavior Stephan is pointing
+out.
+
+Short term, we should just default no here.
+
+> If you think that this patch is a challenge because your driver starts to 
+> spin, please help and offer another solution.
+
+Well, I don't buy the reasoning listed above for not using the hwrng
+framework.  Interrupt timings were never designed to be a source of entropy
+either.  We need to grab it where ever we can find it, especially on
+embedded systems.  Documentation/hw_random.txt even says:
+
+"""
+This data is NOT CHECKED by any fitness tests, and could potentially be
+bogus (if the hardware is faulty or has been tampered with).
+"""
+
+I really don't think there's a problem with adding these sorts of
+sources under char/hw_random/.  I think the only thing we would be
+concerned about, other than the already addressed entropy estimation,
+would be constraining the data rate.
+
+Is ath9k the only wireless card that exposes ADC registers?  What about
+sound cards?
+
+thx,
+
+Jason.
