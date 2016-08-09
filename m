@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:33834 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934740AbcHBMWd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:22:33 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: kvalo@codeaurora.org, bkenward@solarflare.com,
-	linux-driver@qlogic.com, computersforpeace@gmail.com,
-	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com, baolex.ni@intel.com, lars@metafoo.de,
-	johannes.berg@intel.com
-Subject: [PATCH 0771/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:44:50 +0800
-Message-Id: <20160802114450.1072-1-baolex.ni@intel.com> (sfid-20160802_174547_447816_179C02AF)
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:35845 "EHLO
+	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932324AbcHIVDZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 17:03:25 -0400
+Received: by mail-pf0-f180.google.com with SMTP id h186so8379450pfg.3
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2016 14:03:24 -0700 (PDT)
+Subject: Re: Google Summer of Code 2016 - Who wants to attend the Mentor
+ Summit
+To: Till Kamppeter <till.kamppeter@gmail.com>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>,
+	=?UTF-8?Q?Jan-Simon_M=c3=b6ller?= <jsmoeller@linuxfoundation.org>
+References: <9556e237-4936-98d3-ec27-9976577ed55e@gmail.com>
+From: chris holcombe <chris.holcombe@canonical.com>
+Message-ID: <57AA4505.5050806@canonical.com> (sfid-20160809_230329_408495_60CBA791)
+Date: Tue, 9 Aug 2016 14:03:01 -0700
+MIME-Version: 1.0
+In-Reply-To: <9556e237-4936-98d3-ec27-9976577ed55e@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+Hey Till,
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/broadcom/b43/sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'm likely available and it's a short 2hr flight for me.  I'd like attend :)
 
-diff --git a/drivers/net/wireless/broadcom/b43/sysfs.c b/drivers/net/wireless/broadcom/b43/sysfs.c
-index 3190493..5b664ff 100644
---- a/drivers/net/wireless/broadcom/b43/sysfs.c
-+++ b/drivers/net/wireless/broadcom/b43/sysfs.c
-@@ -135,7 +135,7 @@ static ssize_t b43_attr_interfmode_store(struct device *dev,
- 	return err ? err : count;
- }
- 
--static DEVICE_ATTR(interference, 0644,
-+static DEVICE_ATTR(interference, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH,
- 		   b43_attr_interfmode_show, b43_attr_interfmode_store);
- 
- int b43_sysfs_register(struct b43_wldev *wldev)
--- 
-2.9.2
+-Chris
 
+On 08/09/2016 01:55 PM, Till Kamppeter wrote:
+> Hi,
+> 
+> as every year there is a Mentor Summit at Google in Mountain View,
+> California. Two of the mentors or org admins of each organization can
+> participate and Google pays the hotel plus 2200 USD (in total for the
+> two) to cover travel expenses.
+> 
+> So please tell if you want to attand. Thanks.
+> 
+>    Till
+> 
