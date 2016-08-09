@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:6235 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934705AbcHBMWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:22:23 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: kvalo@qca.qualcomm.com, linux-wimax@intel.com,
-	bkenward@solarflare.com, linux-driver@qlogic.com,
-	computersforpeace@gmail.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com, daniel@iogearbox.net, pabeni@redhat.com
-Subject: [PATCH 0765/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:44:07 +0800
-Message-Id: <20160802114407.661-1-baolex.ni@intel.com> (sfid-20160802_175141_656506_7A15E813)
+Received: from smtp.codeaurora.org ([198.145.29.96]:33158 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbcHIHCj (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 03:02:39 -0400
+From: miaoqing@codeaurora.org
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	linux-crypto@vger.kernel.org, smueller@chronox.de,
+	jason@lakedaemon.net, pouyans@qti.qualcomm.com,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 1/2] ath9k: change entropy formula for easier understanding
+Date: Tue,  9 Aug 2016 15:02:26 +0800
+Message-Id: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160809_090243_455911_0E5E2BDE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
+The quality of ADC entropy is 10 bits of min-entropy for
+a 32-bit value, change '(((x) * 8 * 320) >> 10)' to
+'(((x) * 8 * 10) >> 5)' for easier understanding.
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath6kl/core.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/ath/ath9k/rng.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/core.c b/drivers/net/wireless/ath/ath6kl/core.c
-index ebb9f16..6b5b18b 100644
---- a/drivers/net/wireless/ath/ath6kl/core.c
-+++ b/drivers/net/wireless/ath/ath6kl/core.c
-@@ -37,15 +37,15 @@ static unsigned int testmode;
- static unsigned int recovery_enable;
- static unsigned int heart_beat_poll;
+diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
+index d38e50f..568b1c6 100644
+--- a/drivers/net/wireless/ath/ath9k/rng.c
++++ b/drivers/net/wireless/ath/ath9k/rng.c
+@@ -22,7 +22,7 @@
+ #include "ar9003_phy.h"
  
--module_param(debug_mask, uint, 0644);
--module_param(suspend_mode, uint, 0644);
--module_param(wow_mode, uint, 0644);
--module_param(uart_debug, uint, 0644);
--module_param(uart_rate, uint, 0644);
--module_param(ath6kl_p2p, uint, 0644);
--module_param(testmode, uint, 0644);
--module_param(recovery_enable, uint, 0644);
--module_param(heart_beat_poll, uint, 0644);
-+module_param(debug_mask, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-+module_param(suspend_mode, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-+module_param(wow_mode, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-+module_param(uart_debug, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-+module_param(uart_rate, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-+module_param(ath6kl_p2p, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-+module_param(testmode, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-+module_param(recovery_enable, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-+module_param(heart_beat_poll, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(recovery_enable, "Enable recovery from firmware error");
- MODULE_PARM_DESC(heart_beat_poll,
- 		 "Enable fw error detection periodic polling in msecs - Also set recovery_enable for this to be effective");
+ #define ATH9K_RNG_BUF_SIZE	320
+-#define ATH9K_RNG_ENTROPY(x)	(((x) * 8 * 320) >> 10) /* quality: 320/1024 */
++#define ATH9K_RNG_ENTROPY(x)	(((x) * 8 * 10) >> 5) /* quality: 10/32 */
+ 
+ static int ath9k_rng_data_read(struct ath_softc *sc, u32 *buf, u32 buf_size)
+ {
 -- 
-2.9.2
+1.9.1
 
