@@ -1,52 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:33948 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752163AbcHQRQK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2016 13:16:10 -0400
-MIME-Version: 1.0
-In-Reply-To: <20160817181109.080edf7a@jkicinski-Precision-T1700>
-References: <1471360704-10507-1-git-send-email-jakub.kicinski@netronome.com>
- <1471360704-10507-2-git-send-email-jakub.kicinski@netronome.com>
- <8737m3bsau.fsf@kamboji.qca.qualcomm.com> <CA+55aFwSUKorb-jho0eHzdzGNKr4c1UO8d0CRe=fsLPmUheKeg@mail.gmail.com>
- <20160817181109.080edf7a@jkicinski-Precision-T1700>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 17 Aug 2016 10:16:08 -0700
-Message-ID: <CA+55aFz_MUXQjWjbQzb7f=+cQLtxQsba1azmbEVZOgy5Y7wfdQ@mail.gmail.com> (sfid-20160817_191627_939264_682B5696)
-Subject: Re: [PATCHv6 1/2] add basic register-field manipulation macros
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	David Miller <davem@davemloft.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	dinan.gunawardena@netronome.com
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:37753 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752156AbcHIH4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 03:56:37 -0400
+Message-ID: <1470729393.28531.11.camel@sipsolutions.net> (sfid-20160809_095640_686085_07C122B5)
+Subject: Re: [PATCH v4] cfg80211: Provision to allow the support for
+ different beacon intervals
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
+	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
+	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
+	"Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
+Date: Tue, 09 Aug 2016 09:56:33 +0200
+In-Reply-To: <9513d3caf9354aeda408f65128b4a079@aphydexm01f.ap.qualcomm.com>
+References: <1470374768-22297-1-git-send-email-pkushwah@qti.qualcomm.com>
+ <1470386912.2977.28.camel@sipsolutions.net>
+	 <9513d3caf9354aeda408f65128b4a079@aphydexm01f.ap.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 17, 2016 at 10:11 AM, Jakub Kicinski
-<jakub.kicinski@netronome.com> wrote:
-> On Wed, 17 Aug 2016 09:33:26 -0700, Linus Torvalds wrote:
->>
->> I'm not a huge fan, since the interface fundamentally seems to be
->> oddly designed (why pass in the mask rather than "start bit +
->> length"?).
->
-> Would that not require start and length to have separate defines?
 
-Yeah.
+> I guess , we can extend this to mesh and IBSS as well. 
 
-> I assume doing:
->
->     #define REG_BLA_FIELD_FOO  3, 4
->     val = FIELD_GET(REG_BLA_FIELD_FOO, reg);
->
-> is not acceptable.  Attempts to define a single value brought us to the
-> shifted mask.
+I don't know what your firmware/hardware capabilities are :)
 
-Agreed. Maybe the mask with the complexity to then undo it (at compile
-time) is the better approach.
+> > It seems to me that if I were to specify beacon intervals which
+> > have a very small GCD, you'll run into trouble when actually
+> > sending beacons.
+> > Perhaps there should be a requirement on the GCD?
+> Can we have this published by the host drivers through a new wiphy
+> parameter , say "min_diff_beacon_interval_multiplier". This set's the
+> expectation that any different beacon intervals on the wiphy  shall
+> be a multiple of this parameter which is advertised by the host
+> driver , isn't ?
+> 
+I'd argue that instead of having the interface combinations flag, that
+nl80211 attribute could carry the GCD?
 
-            Linus
+johannes
