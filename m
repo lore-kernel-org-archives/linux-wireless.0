@@ -1,66 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33624 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751728AbcHBJL6 (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:41356 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198AbcHIJrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 05:11:58 -0400
-Received: by mail-pf0-f193.google.com with SMTP id i6so12081047pfe.0
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 02:11:21 -0700 (PDT)
-From: Masashi Honma <masashi.honma@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com,
-	Masashi Honma <masashi.honma@gmail.com>
-Subject: [PATCH v2] mac80211: End the MPSP even if EOSP frame was not acked
-Date: Tue,  2 Aug 2016 17:16:57 +0900
-Message-Id: <1470125817-4461-1-git-send-email-masashi.honma@gmail.com> (sfid-20160802_111500_426701_C48E3DA7)
-In-Reply-To: <1468393475-2483-1-git-send-email-masashi.honma@gmail.com>
-References: <1468393475-2483-1-git-send-email-masashi.honma@gmail.com>
+	Tue, 9 Aug 2016 05:47:49 -0400
+Date: Tue, 9 Aug 2016 17:46:56 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Stephan Mueller <smueller@chronox.de>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Message-ID: <20160809094656.GB6529@gondor.apana.org.au> (sfid-20160809_114752_953969_461928CA)
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
+ <2569442.q63FVBJjUH@tauon.atsec.com>
+ <20160809091755.GA6370@gondor.apana.org.au>
+ <1645997.7cVzaEi3NG@tauon.atsec.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1645997.7cVzaEi3NG@tauon.atsec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If QoS frame with EOSP (end of service period) subfield=1 sent by local
-peer was not acked by remote peer, local peer did not end the MPSP. This
-prevents local peer from going to DOZE state. And if the remote peer
-goes away without closing connection, local peer continues AWAKE state
-and wastes battery.
+On Tue, Aug 09, 2016 at 11:37:39AM +0200, Stephan Mueller wrote:
+> Am Dienstag, 9. August 2016, 17:17:55 CEST schrieb Herbert Xu:
+> 
+> Hi Herbert,
+> 
+> > On Tue, Aug 09, 2016 at 11:02:58AM +0200, Stephan Mueller wrote:
+> > > But shouldn't the default of the rngd then be adjusted a bit?
+> > 
+> > Please elaborate.
+> 
+> in rngd_linux.c:random_add_entropy(void *buf, size_t size):
+> 
+>         entropy.ent_count = size * 8;
+>         entropy.size = size;
+>         memcpy(entropy.data, buf, size);
+> 
+>         if (ioctl(random_fd, RNDADDENTROPY, &entropy) != 0) {
+> 
+> ...
+> 
+> 
+> in rngd.c:do_loop():
+> 
+>                         retval = iter->xread(buf, sizeof buf, iter);
+> ...
+>                         rc = update_kernel_random(random_step,
+>                                              buf, iter->fipsctx);
+> 
+> where update_kernel_random simply invokes random_add_entropy in chunks.
+> 
+> Hence, the rngd reads some bytes from /dev/hwrand and injects it into /dev/
+> random with an entropy estimate that is equal to the read bytes.
+> 
+> With less than perfect noise sources, entropy.ent_count should be much 
+> smaller.
 
-Signed-off-by: Masashi Honma <masashi.honma@gmail.com>
----
- net/mac80211/status.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+You're supposed to tweak the quality of the input.  In any case,
+this is not affected by whether we whiten the result.
 
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index c6d5c72..a2a6826 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -771,6 +771,13 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			clear_sta_flag(sta, WLAN_STA_SP);
- 
- 		acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
-+
-+		/* mesh Peer Service Period support */
-+		if (ieee80211_vif_is_mesh(&sta->sdata->vif) &&
-+		    ieee80211_is_data_qos(fc))
-+			ieee80211_mpsp_trigger_process(
-+				ieee80211_get_qos_ctl(hdr), sta, true, acked);
-+
- 		if (!acked && test_sta_flag(sta, WLAN_STA_PS_STA)) {
- 			/*
- 			 * The STA is in power save mode, so assume
-@@ -781,13 +788,6 @@ void ieee80211_tx_status(struct ieee80211_hw *hw, struct sk_buff *skb)
- 			return;
- 		}
- 
--		/* mesh Peer Service Period support */
--		if (ieee80211_vif_is_mesh(&sta->sdata->vif) &&
--		    ieee80211_is_data_qos(fc))
--			ieee80211_mpsp_trigger_process(
--					ieee80211_get_qos_ctl(hdr),
--					sta, true, acked);
--
- 		if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL) &&
- 		    (ieee80211_is_data(hdr->frame_control)) &&
- 		    (rates_idx != -1))
+Cheers,
 -- 
-2.7.4
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
