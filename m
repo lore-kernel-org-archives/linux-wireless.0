@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:17085 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934839AbcHBM3B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:29:01 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
-	kvalo@codeaurora.org, linuxwifi@intel.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0799/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:47:40 +0800
-Message-Id: <20160802114740.3183-1-baolex.ni@intel.com> (sfid-20160802_143318_516878_2560ED0B)
+Received: from helcar.hengli.com.au ([209.40.204.226]:36445 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932187AbcHIJAS (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 05:00:18 -0400
+Date: Tue, 9 Aug 2016 16:58:58 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Stephan Mueller <smueller@chronox.de>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Message-ID: <20160809085858.GA6172@gondor.apana.org.au> (sfid-20160809_110023_515840_C9D1741B)
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
+ <4627645.oz3l49ICL3@tauon.atsec.com>
+ <69af156ac93a4fe6ab1844dfcc35c266@aptaiexm02f.ap.qualcomm.com>
+ <4731753.YZZKimtrHM@tauon.atsec.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4731753.YZZKimtrHM@tauon.atsec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Tue, Aug 09, 2016 at 10:07:29AM +0200, Stephan Mueller wrote:
+> 
+> Herbert, Matt, should such noise sources be added to the HW random framework? 
+> The thing is that the in-kernel HW random to input_pool link per default uses 
+> a more conservative entropy estimate than the user space rngd. I would think 
+> that the in-kernel link would appropriate for that rng. But the user space 
+> rngd tool with its default behavior is not really suited here.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Yes hwrng would be the best fit, with a quality of zero to be safe.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-index ff49a8c..8d7f581 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c
-@@ -385,14 +385,14 @@ MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Realtek 8723E 802.11n PCI wireless");
- MODULE_FIRMWARE("rtlwifi/rtl8723efw.bin");
- 
--module_param_named(swenc, rtl8723e_mod_params.sw_crypto, bool, 0444);
--module_param_named(debug, rtl8723e_mod_params.debug, int, 0444);
--module_param_named(ips, rtl8723e_mod_params.inactiveps, bool, 0444);
--module_param_named(swlps, rtl8723e_mod_params.swctrl_lps, bool, 0444);
--module_param_named(fwlps, rtl8723e_mod_params.fwctrl_lps, bool, 0444);
--module_param_named(msi, rtl8723e_mod_params.msi_support, bool, 0444);
-+module_param_named(swenc, rtl8723e_mod_params.sw_crypto, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(debug, rtl8723e_mod_params.debug, int, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(ips, rtl8723e_mod_params.inactiveps, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(swlps, rtl8723e_mod_params.swctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(fwlps, rtl8723e_mod_params.fwctrl_lps, bool, S_IRUSR | S_IRGRP | S_IROTH);
-+module_param_named(msi, rtl8723e_mod_params.msi_support, bool, S_IRUSR | S_IRGRP | S_IROTH);
- module_param_named(disable_watchdog, rtl8723e_mod_params.disable_watchdog,
--		   bool, 0444);
-+		   bool, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+Contrary to the quoted thread, there is no need to whiten the output
+/dev/hw_random.  It was always meant to go through some intermediate
+processing such as rngd before it is used.
+
+Cheers,
 -- 
-2.9.2
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
