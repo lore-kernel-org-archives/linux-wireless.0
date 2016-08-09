@@ -1,72 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33465 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932581AbcHKQiE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 12:38:04 -0400
-Received: by mail-pa0-f65.google.com with SMTP id vy10so40703pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2016 09:38:03 -0700 (PDT)
-Subject: Re: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
-To: Johannes Berg <johannes@sipsolutions.net>,
+Received: from s3.sipsolutions.net ([5.9.151.49]:37264 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751020AbcHIGhY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 02:37:24 -0400
+Message-ID: <1470724641.28531.6.camel@sipsolutions.net> (sfid-20160809_083727_581274_539DA8D2)
+Subject: Re: [BUG] 4.8-rc1: wlcore: NULL pointer dereference in
+ wlcore_op_get_expected_throughput
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "H. Nikolaus Schaller" <hns@goldelico.com>,
 	linux-wireless@vger.kernel.org
-References: <1470261735-2977-1-git-send-email-denkenz@gmail.com>
- <1470919643.12075.7.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <57ACA9E9.4020507@gmail.com> (sfid-20160811_183839_738308_37F600C8)
-Date: Thu, 11 Aug 2016 11:38:01 -0500
-MIME-Version: 1.0
-In-Reply-To: <1470919643.12075.7.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Discussions about the Letux Kernel
+	<letux-kernel@openphoenux.org>
+Date: Tue, 09 Aug 2016 08:37:21 +0200
+In-Reply-To: <4FEB5780-826B-49C3-81E9-D361CD12DD4A@goldelico.com> (sfid-20160808_232959_664351_C51374E0)
+References: <4FEB5780-826B-49C3-81E9-D361CD12DD4A@goldelico.com>
+	 (sfid-20160808_232959_664351_C51374E0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+On Mon, 2016-08-08 at 23:26 +0200, H. Nikolaus Schaller wrote:
+> Here is what I see in 4.8-rc1 on Pyra device after typing "poweroff".
+> I hope someone knows what it means.
+> 
+> BR and thanks,
+> Nikolaus
 
-On 08/11/2016 07:47 AM, Johannes Berg wrote:
-> On Wed, 2016-08-03 at 17:02 -0500, Denis Kenzior wrote:
->>
->> +static int nl80211_dump_interface_parse(struct sk_buff *skb,
->> +				    struct netlink_callback *cb,
->> +				    int *filter_wiphy)
->
-> Wrong indentation :)
+[snip]
 
-Sorry :)
+> [  616.041894] [<bf4de050>] (wlcore_op_get_expected_throughput
+> [wlcore]) from [<bf40cf20>] (sta_set_sinfo+0xc18/0x1110 [mac80211])
+> [  616.054542] [<bf40cf20>] (sta_set_sinfo [mac80211]) from 
+[snip]
 
-Speaking of indentation, can you point me to a doc of the rules I should 
-follow?
+This is already fixed by 2439ca0402091badb24415e1b073ba12b34ba423
 
->
->>   static int nl80211_dump_interface(struct sk_buff *skb, struct
->> netlink_callback *cb)
->>   {
->>   	int wp_idx = 0;
->>   	int if_idx = 0;
->>   	int wp_start = cb->args[0];
->>   	int if_start = cb->args[1];
->> +	int filter_wiphy = cb->args[2];
->>   	struct cfg80211_registered_device *rdev;
->>   	struct wireless_dev *wdev;
->>
->> +	if (!wp_start && !if_start && !filter_wiphy) {
->
-> This seems incorrect - you're setting
->
->> +		int ret;
->> +
->> +		filter_wiphy = -1;
->> +
->> +		ret = nl80211_dump_interface_parse(skb, cb,
->> &filter_wiphy);
->
-> it here, but it can take the value 0, so !filter_wiphy seems wrong?
->
-
-I can confirm that I sanity checked this patch. Both ATTR_WIPHY, 
-ATTR_WDEV and wildcard dumps seemed to produce expected results.
-
-I noticed you applied this patch.  Is there a particular scenario where 
-it goes wrong or did you convince yourself it is correct?
-
-Regards,
--Denis
+johannes
+> 
