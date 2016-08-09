@@ -1,77 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33610 "EHLO mail.kernel.org"
+Received: from mail.eperm.de ([89.247.134.16]:34302 "EHLO mail.eperm.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752131AbcHOJkx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2016 05:40:53 -0400
-From: Masami Hiramatsu <mhiramat@kernel.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [BUGFIX PATCH 0/2] Bugfixes for brcmfmac
-Date: Mon, 15 Aug 2016 18:40:41 +0900
-Message-Id: <147125403645.9434.8008546579326856373.stgit@devbox> (sfid-20160815_114119_164272_40E9BCEF)
+	id S1752360AbcHIJho (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 05:37:44 -0400
+From: Stephan Mueller <smueller@chronox.de>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Date: Tue, 09 Aug 2016 11:37:39 +0200
+Message-ID: <1645997.7cVzaEi3NG@tauon.atsec.com> (sfid-20160809_113747_784363_DCADA41B)
+In-Reply-To: <20160809091755.GA6370@gondor.apana.org.au>
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <2569442.q63FVBJjUH@tauon.atsec.com> <20160809091755.GA6370@gondor.apana.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Am Dienstag, 9. August 2016, 17:17:55 CEST schrieb Herbert Xu:
 
-Here are 2 patches for fixing bugs which I recently faced on my PC.
+Hi Herbert,
 
-There are 2 bugs I've hit on brcmfmac, one issue was critical,
-the other was just found when I investigated the first issue.
+> On Tue, Aug 09, 2016 at 11:02:58AM +0200, Stephan Mueller wrote:
+> > But shouldn't the default of the rngd then be adjusted a bit?
+> 
+> Please elaborate.
 
-1) when I shutdown or reboot my pc with wifi, it always stopped
- when disabling networking. I tried to just disable wifi and saw
- task hung up messages on dmesg.
- All those taskes were blocked on rtnl_lock according to the
- stacktrace, and found a suspicious task in the list. Actually
- the wpa_supplicant is blocked while stopping the interface.
+in rngd_linux.c:random_add_entropy(void *buf, size_t size):
 
-2) I also tried to get more information about that and enabled
- DEBUG_ATOMIC_SLEEP and got another warning in brcmfmac. That
- warned a mutex (which can yeild/sleep) is held in !TASK_RUNNING
- state. I've found a mutex is held when in wait_event_timeout()
- condition parameter.
+        entropy.ent_count = size * 8;
+        entropy.size = size;
+        memcpy(entropy.data, buf, size);
 
-I traced the source code and found that #1 was caused by double
-locking of rtnl_lock in brcmfmac driver, because it doesn't
-check the rtnl_lock is already held in a path (actually, other
-paths checked that). So I fixed it by checking rtnl_locked and
-skip locking rtnl_lock. It works, but not seems the best way
-to fix, since original code (rtnl_lock locking around
-cfg80211_unregister_wdev) itself looks add-hoc. Anyway, since
-I don't have any knowladge of this subsystem, I'd like to ask
-maintainer's help.
+        if (ioctl(random_fd, RNDADDENTROPY, &entropy) != 0) {
 
-To fix #2 issue, I've checked the mutex (vif_event_lock) in
-struct brcmf_cfg80211_vif_event just protect updating other
-members and can be replaced by a spinlock because in the
-protected regions are not involving any scheduler related
-code.
+...
 
 
-Thank you,
----
+in rngd.c:do_loop():
 
-Masami Hiramatsu (2):
-      brcmfmac: Check rtnl_lock is locked when removing interface
-      brcmfmac: Change vif_event_lock to spinlock
+                        retval = iter->xread(buf, sizeof buf, iter);
+...
+                        rc = update_kernel_random(random_step,
+                                             buf, iter->fipsctx);
+
+where update_kernel_random simply invokes random_add_entropy in chunks.
+
+Hence, the rngd reads some bytes from /dev/hwrand and injects it into /dev/
+random with an entropy estimate that is equal to the read bytes.
+
+With less than perfect noise sources, entropy.ent_count should be much 
+smaller.
+> 
+> Thanks,
 
 
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   26 ++++++++++----------
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |    2 +-
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |    2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |    8 ++++--
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.h |    2 +-
- 5 files changed, 21 insertions(+), 19 deletions(-)
 
---
-Masami Hiramatsu <mhiramat@kernel.org>
+Ciao
+Stephan
