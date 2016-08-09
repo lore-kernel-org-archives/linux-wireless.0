@@ -1,55 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34810 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754530AbcHSBdE (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Aug 2016 21:33:04 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>
-Subject: [PATCH 2/3] ath10k:  Grab rcu_read_lock before the txqs spinlock.
-Date: Thu, 18 Aug 2016 18:26:34 -0700
-Message-Id: <1471569995-10028-2-git-send-email-greearb@candelatech.com> (sfid-20160819_033758_807905_5AF27B2F)
-In-Reply-To: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
-References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
+Received: from mail-yb0-f195.google.com ([209.85.213.195]:33396 "EHLO
+	mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932324AbcHIVOz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 17:14:55 -0400
+Received: by mail-yb0-f195.google.com with SMTP id e125so593747ybc.0
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2016 14:13:55 -0700 (PDT)
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Subject: Google Summer of Code 2016 - Who wants to attend the Mentor Summit
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>,
+	=?UTF-8?Q?Jan-Simon_M=c3=b6ller?= <jsmoeller@linuxfoundation.org>
+Message-ID: <9556e237-4936-98d3-ec27-9976577ed55e@gmail.com> (sfid-20160809_231500_727500_4BEEAE1B)
+Date: Tue, 9 Aug 2016 17:55:39 -0300
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Hi,
 
-I was seeing some spin-lock hangs in this area of the code,
-and it seems more proper to do the rcu-read-lock outside of
-the spin lock.  I am not sure how much this matters, however.
+as every year there is a Mentor Summit at Google in Mountain View, 
+California. Two of the mentors or org admins of each organization can 
+participate and Google pays the hotel plus 2200 USD (in total for the 
+two) to cover travel expenses.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+So please tell if you want to attand. Thanks.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 916119c..d96c06e 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4307,8 +4307,8 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
- 	int max;
- 	int loop_max = 2000;
- 
--	spin_lock_bh(&ar->txqs_lock);
- 	rcu_read_lock();
-+	spin_lock_bh(&ar->txqs_lock);
- 
- 	last = list_last_entry(&ar->txqs, struct ath10k_txq, list);
- 	while (!list_empty(&ar->txqs)) {
-@@ -4342,8 +4342,8 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
- 			break;
- 	}
- 
--	rcu_read_unlock();
- 	spin_unlock_bh(&ar->txqs_lock);
-+	rcu_read_unlock();
- }
- 
- /************/
--- 
-2.4.11
+    Till
+
