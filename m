@@ -1,90 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:60064 "EHLO
-        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752408AbcH3Ovz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 10:51:55 -0400
-Message-ID: <1472568698.25374.9.camel@decadent.org.uk> (sfid-20160830_165202_935069_F43F59DC)
-Subject: Re: [PATCH] rtl_bt: Add firmware and config file for RTL8822BE
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>, linux-firmware@kernel.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        =?UTF-8?Q?=E9=99=86=E6=9C=B1=E4=BC=9F?= <alex_lu@realsil.com.cn>,
-        linux-bluetooth@vger.kernel.org
-Date: Tue, 30 Aug 2016 15:51:38 +0100
-In-Reply-To: <1472566081-1072-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1472566081-1072-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-BIi4uSpmmt1zprnli1nK"
-Mime-Version: 1.0
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:35026 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932207AbcHISoM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 14:44:12 -0400
+Received: by mail-pa0-f41.google.com with SMTP id iw10so7725535pac.2
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2016 11:44:12 -0700 (PDT)
+Date: Tue, 9 Aug 2016 11:44:08 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: mwifiex: PCIe8997 chip specific handling
+Message-ID: <20160809184406.GA12186@localhost> (sfid-20160809_204416_708670_2BAC7947)
+References: <1469788731-5361-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1469788731-5361-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi,
 
---=-BIi4uSpmmt1zprnli1nK
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2016-08-30 at 09:08 -0500, Larry Finger wrote:
-> This device is a new model from Realtek. Updates to driver btrtl will
-> soon be submitted to the kernel.
->=20
-> These files were provided by the Realtek developer.
->=20
-> Signed-off-by: =E9=99=86=E6=9C=B1=E4=BC=9F <alex_lu@realsil.com.cn>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: linux-bluetooth@vger.kernel.org
+On Fri, Jul 29, 2016 at 04:08:51PM +0530, Amitkumar Karwar wrote:
+> The patch corrects the revision id register and uses it along with
+> magic value and chip version registers to download appropriate firmware
+> image.
+> 
+> PCIe8997 Z chipset variant code has been removed, as it won't be used in
+> production.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 > ---
-> =C2=A0WHENCE=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0|=C2=A0=
-=C2=A0=C2=A03 +++
-> =C2=A0rtl_bt/rtl8822b_config.bin | Bin 0 -> 32 bytes
-> =C2=A0rtl_bt/rtl8822b_fw.bin=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0| Bin 0 -> 5175=
-6 bytes
-> =C2=A03 files changed, 3 insertions(+)
-> =C2=A0create mode 100644 rtl_bt/rtl8822b_config.bin
-> =C2=A0create mode 100644 rtl_bt/rtl8822b_fw.bin
->=20
-> diff --git a/WHENCE b/WHENCE
-> index d0bef0d..a9d7c97 100644
-> --- a/WHENCE
-> +++ b/WHENCE
-> @@ -2755,11 +2755,14 @@ File: rtl_bt/rtl8723b_fw.bin
-> =C2=A0File: rtl_bt/rtl8761a_fw.bin
-> =C2=A0File: rtl_bt/rtl8812ae_fw.bin
-> =C2=A0File: rtl_bt/rtl8821a_fw.bin
-> +File: rtl_bt/rtl8822e_fw.bin
-> +File: rtl_bt/rtl8822e_config.bin
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 35 ++++++++++-------------------
+>  drivers/net/wireless/marvell/mwifiex/pcie.h | 14 +++++-------
+>  2 files changed, 18 insertions(+), 31 deletions(-)
+
 [...]
 
-Should the filenames begin with "rtl822b" or "rtl822e"?
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+> index f6992f0..46f99ca 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+> @@ -32,12 +32,9 @@
+>  #define PCIE8897_DEFAULT_FW_NAME "mrvl/pcie8897_uapsta.bin"
+>  #define PCIE8897_A0_FW_NAME "mrvl/pcie8897_uapsta_a0.bin"
+>  #define PCIE8897_B0_FW_NAME "mrvl/pcie8897_uapsta.bin"
+> -#define PCIE8997_DEFAULT_FW_NAME "mrvl/pcieusb8997_combo_v2.bin"
+> -#define PCIEUART8997_FW_NAME_Z "mrvl/pcieuart8997_combo.bin"
+> -#define PCIEUART8997_FW_NAME_V2 "mrvl/pcieuart8997_combo_v2.bin"
+> -#define PCIEUSB8997_FW_NAME_Z "mrvl/pcieusb8997_combo.bin"
+> -#define PCIEUSB8997_FW_NAME_V2 "mrvl/pcieusb8997_combo_v2.bin"
+> -#define PCIE8997_DEFAULT_WIFIFW_NAME "mrvl/pcie8997_wlan.bin"
+> +#define PCIEUART8997_FW_NAME_V4 "mrvl/pcieuart8997_combo_v4.bin"
+> +#define PCIEUSB8997_FW_NAME_V4 "mrvl/pcieusb8997_combo_v4.bin"
+> +#define PCIE8997_DEFAULT_WIFIFW_NAME "mrvl/pcie8997_wlan_v4.bin"
 
-Ben.
+Why do version bumps require firmware renames? Is this just to make sure
+you don't load the new firmware on old chip revs that you don't plan to
+support for production (i.e., only early revs like the _Z you're
+dropping)? This doesn't seems like a good long-term solution, at least
+once you start getting this silicon out in the wild. At some point, I'd
+expect to see a stable file name.
 
---=20
-Ben Hutchings
-All the simple programs have been written, and all the good names
-taken.
+Brian
 
---=-BIi4uSpmmt1zprnli1nK
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCgAGBQJXxZ17AAoJEOe/yOyVhhEJ8H4P+wSbYmV/m1C6pLHGzahc9v5X
-a2y3C2eVRmzWUMM4aQcI1V/25kqG4UI6t9BLSMki7vhyYfy3Fsov4uX7aatBoDTH
-o95HlbolaPOK9+OcIzLA3F4cv6u7xdse8nxzTdn01PK6gOmtEgeYleur2FfvDrFH
-XNUxudOqbbQ0INlh9KPen5n36zSr0XO9VpN/bYBpEb2N7DqK3RVbkUOJIxgE8b/c
-fn2VQIREIPKU3zDjScSrMtgdOQmHsaNym6nDhrO9iy3llQ3PTrzd5ocX+iZkBAkC
-CHmYekMeA3xkrQvW9P61p5r03gsm3/I/Rt31Hoe1RPieUen3Essm4HfUTAJgocwG
-DPBBNBLu0bArI5lnQnOyb8HPWMh1fVmtwaKEzxIgkKGrQ52EYVcNu9MrIcMM6AED
-VFqgNyZR8yJiiFdzrxutKb7qu0BaDLk6VWgu1knKDj5E49npuwuX9IU9xrjWhUhf
-s8LGD29qQ6O/mEtYj9LbXbw5eeLbmn5hWrZANZHnXmyTufbSV7+ozWdFfcxJNSVZ
-P28fMe3aiZPw8KZ0aH0Ucomg2oUcVYg8exEaLb8b1wuWKBzF8CZuZ7gQMI/tuNVN
-4Hw9nvO5akj9T8JkXHxySSWP4zo9OwlG4W2jMp4GwqHRu1W9MN4J9r3y1UxiodwA
-beh99KiYVvOqKyRmlprV
-=dGP7
------END PGP SIGNATURE-----
-
---=-BIi4uSpmmt1zprnli1nK--
+>  
+>  #define PCIE_VENDOR_ID_MARVELL              (0x11ab)
+>  #define PCIE_VENDOR_ID_V2_MARVELL           (0x1b4b)
+> @@ -47,9 +44,10 @@
+>  
+>  #define PCIE8897_A0	0x1100
+>  #define PCIE8897_B0	0x1200
+> -#define PCIE8997_Z	0x0
+> -#define PCIE8997_V2	0x471
+> +#define PCIE8997_A0	0x10
+> +#define PCIE8997_A1	0x11
+>  #define CHIP_VER_PCIEUART	0x3
+> +#define CHIP_MAGIC_VALUE	0x24
+>  
+>  /* Constants for Buffer Descriptor (BD) rings */
+>  #define MWIFIEX_MAX_TXRX_BD			0x20
