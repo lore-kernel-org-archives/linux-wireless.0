@@ -1,111 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34665 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752464AbcHUOb3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Aug 2016 10:31:29 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
-        kvalo@codeaurora.org, chunkeey@googlemail.com,
-        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
-        bjorn@mork.no, linux@rempel-privat.de,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v5 3/3] ath9k: parse the device configuration from an OF node
-Date: Sun, 21 Aug 2016 16:31:05 +0200
-Message-Id: <20160821143105.27487-4-martin.blumenstingl@googlemail.com> (sfid-20160821_163132_247668_9DA67542)
-In-Reply-To: <20160821143105.27487-1-martin.blumenstingl@googlemail.com>
-References: <20160709232834.31654-1-martin.blumenstingl@googlemail.com>
- <20160821143105.27487-1-martin.blumenstingl@googlemail.com>
+Received: from mail.eperm.de ([89.247.134.16]:34274 "EHLO mail.eperm.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751414AbcHIIHc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 04:07:32 -0400
+From: Stephan Mueller <smueller@chronox.de>
+To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	herbert@gondor.apana.org.au, Matt Mackall <mpm@selenic.com>
+Cc: "miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Date: Tue, 09 Aug 2016 10:07:29 +0200
+Message-ID: <4731753.YZZKimtrHM@tauon.atsec.com> (sfid-20160809_100737_687259_378D2DA9)
+In-Reply-To: <69af156ac93a4fe6ab1844dfcc35c266@aptaiexm02f.ap.qualcomm.com>
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <4627645.oz3l49ICL3@tauon.atsec.com> <69af156ac93a4fe6ab1844dfcc35c266@aptaiexm02f.ap.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows configuring ath9k based PCI devices using devicetree.
-There is some out-of-tree code to "convert devicetree to
-ath9k_platform_data" (for example in OpenWrt and LEDE) which becomes
-obsolete with this patch.
+Am Dienstag, 9. August 2016, 07:35:33 CEST schrieb Pan, Miaoqing:
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 51 +++++++++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+Hi Miaoqing, Herbert, Matt,
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index cfa3fe8..c123145 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -20,6 +20,8 @@
- #include <linux/slab.h>
- #include <linux/ath9k_platform.h>
- #include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_net.h>
- #include <linux/relay.h>
- #include <net/ieee80211_radiotap.h>
- 
-@@ -555,6 +557,51 @@ static int ath9k_init_platform(struct ath_softc *sc)
- 	return 0;
- }
- 
-+static int ath9k_of_init(struct ath_softc *sc)
-+{
-+	struct device_node *np = sc->dev->of_node;
-+	struct ath_hw *ah = sc->sc_ah;
-+	struct ath_common *common = ath9k_hw_common(ah);
-+	enum ath_bus_type bus_type = common->bus_ops->ath_bus_type;
-+	const char *mac;
-+	char eeprom_name[100];
-+	int ret;
-+
-+	if (!of_device_is_available(np))
-+		return 0;
-+
-+	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
-+
-+	if (of_property_read_bool(np, "qca,clk-25mhz"))
-+		ah->is_clk_25mhz = true;
-+
-+	if (of_property_read_bool(np, "qca,disable-2ghz"))
-+		ah->disable_2ghz = true;
-+
-+	if (of_property_read_bool(np, "qca,disable-5ghz"))
-+		ah->disable_5ghz = true;
-+
-+	if (of_property_read_bool(np, "qca,no-eeprom")) {
-+		/* ath9k-eeprom-<bus>-<id>.bin */
-+		scnprintf(eeprom_name, sizeof(eeprom_name),
-+			  "ath9k-eeprom-%s-%s.bin",
-+			  ath_bus_type_to_string(bus_type), dev_name(ah->dev));
-+
-+		ret = ath9k_eeprom_request(sc, eeprom_name);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	mac = of_get_mac_address(np);
-+	if (mac)
-+		ether_addr_copy(common->macaddr, mac);
-+
-+	ah->ah_flags &= ~AH_USE_EEPROM;
-+	ah->ah_flags |= AH_NO_EEP_SWAP;
-+
-+	return 0;
-+}
-+
- static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 			    const struct ath_bus_ops *bus_ops)
- {
-@@ -611,6 +658,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		return ret;
- 
-+	ret = ath9k_of_init(sc);
-+	if (ret)
-+		return ret;
-+
- 	if (ath9k_led_active_high != -1)
- 		ah->config.led_active_high = ath9k_led_active_high == 1;
- 
--- 
-2.9.3
+> Hi Stephan,
+> 
+> So your suggestion is to use HW Random framework ?   Actually, which was
+> done by the commit 6301566e0b2d ("ath9k: export HW random number
+> generator"), but it was reverted, you can refer to
+> https://www.mail-archive.com/linux-crypto%40vger.kernel.org/msg15483.html
+> for more information.
+
+I see, it is the same RNG we talked about earlier. The issue is that the 
+suggested rngd per default assumes one bit of entropy with every data bit. 
+This is not given with this noise source. This is the basis of my reply last 
+time.
+
+Herbert, Matt, should such noise sources be added to the HW random framework? 
+The thing is that the in-kernel HW random to input_pool link per default uses 
+a more conservative entropy estimate than the user space rngd. I would think 
+that the in-kernel link would appropriate for that rng. But the user space 
+rngd tool with its default behavior is not really suited here.
+
+Thanks
+Stephan
