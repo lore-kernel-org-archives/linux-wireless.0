@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:35788 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759624AbcHELqp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 07:46:45 -0400
-Message-ID: <57A47CA3.4010101@candelatech.com> (sfid-20160805_134652_065556_CC0CE652)
-Date: Fri, 05 Aug 2016 04:46:43 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from mail.eperm.de ([89.247.134.16]:34288 "EHLO mail.eperm.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751914AbcHIJDC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 05:03:02 -0400
+From: Stephan Mueller <smueller@chronox.de>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Date: Tue, 09 Aug 2016 11:02:58 +0200
+Message-ID: <2569442.q63FVBJjUH@tauon.atsec.com> (sfid-20160809_110305_816940_805319C1)
+In-Reply-To: <20160809085858.GA6172@gondor.apana.org.au>
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <4731753.YZZKimtrHM@tauon.atsec.com> <20160809085858.GA6172@gondor.apana.org.au>
 MIME-Version: 1.0
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Herbert Xu <herbert@gondor.apana.org.au>
-CC: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-	tom@herbertland.com
-Subject: Re: Buggy rhashtable walking
-References: <20160804071846.GA773@gondor.apana.org.au> <20160804074546.GA996@gondor.apana.org.au> <1470377813.2977.14.camel@sipsolutions.net>	 <20160805104858.GA9297@gondor.apana.org.au> <1470394233.2977.37.camel@sipsolutions.net>
-In-Reply-To: <1470394233.2977.37.camel@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Am Dienstag, 9. August 2016, 16:58:58 CEST schrieb Herbert Xu:
+
+Hi Herbert,
+
+> On Tue, Aug 09, 2016 at 10:07:29AM +0200, Stephan Mueller wrote:
+> > Herbert, Matt, should such noise sources be added to the HW random
+> > framework? The thing is that the in-kernel HW random to input_pool link
+> > per default uses a more conservative entropy estimate than the user space
+> > rngd. I would think that the in-kernel link would appropriate for that
+> > rng. But the user space rngd tool with its default behavior is not really
+> > suited here.
+> 
+> Yes hwrng would be the best fit, with a quality of zero to be safe.
+> 
+> Contrary to the quoted thread, there is no need to whiten the output
+> /dev/hw_random.  It was always meant to go through some intermediate
+> processing such as rngd before it is used.
+
+But shouldn't the default of the rngd then be adjusted a bit?
+> 
+> Cheers,
 
 
-On 08/05/2016 03:50 AM, Johannes Berg wrote:
-> On Fri, 2016-08-05 at 18:48 +0800, Herbert Xu wrote:
->> On Fri, Aug 05, 2016 at 08:16:53AM +0200, Johannes Berg wrote:
->>>
->>> Hm. Would you rather allocate a separate head entry for the
->>> hashtable,
->>> or chain the entries?
->>
->> My plan is to build support for this directly into rhashtable.
->> So I'm adding a struct rhlist_head that would be used in place
->> of rhash_head for these cases and it'll carry an extra pointer
->> for the list of identical entries.
->>
->> I will then add an additional layer of insert/lookup interfaces
->> for rhlist_head.
 
-Herbert, thank you for fixing this!
-
-It would not be fun to have to revert to the old way of hashing
-stations in mac80211...
-
-I'll be happy to test the patches when you have them ready.
-
-Ben
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Ciao
+Stephan
