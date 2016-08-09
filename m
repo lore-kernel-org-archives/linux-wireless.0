@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12252 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934759AbcHBMWq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:22:46 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
-	bkenward@solarflare.com, linux-driver@qlogic.com,
-	computersforpeace@gmail.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com, baolex.ni@intel.com, lars@metafoo.de,
-	johannes.berg@intel.com
-Subject: [PATCH 0773/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:45:01 +0800
-Message-Id: <20160802114501.1214-1-baolex.ni@intel.com> (sfid-20160802_174426_306496_770F6412)
+Received: from outbound1.eu.mailhop.org ([52.28.251.132]:60353 "EHLO
+	outbound1.eu.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932275AbcHIRxT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 13:53:19 -0400
+Date: Tue, 9 Aug 2016 17:51:08 +0000
+From: Jason Cooper <jason@lakedaemon.net>
+To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Cc: Stephan Mueller <smueller@chronox.de>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	"Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Message-ID: <20160809175108.GE2013@io.lakedaemon.net> (sfid-20160809_195322_830747_184073EB)
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
+ <12791731.pG3fmEhvyp@tauon.atsec.com>
+ <20160809095657.GB6618@gondor.apana.org.au>
+ <11316081.S4pPZmZMrt@tauon.atsec.com>
+ <20160809102458.GA20214@khazad-dum.debian.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160809102458.GA20214@khazad-dum.debian.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+Hi Henrique,
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/broadcom/b43legacy/sysfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+On Tue, Aug 09, 2016 at 07:24:58AM -0300, Henrique de Moraes Holschuh wrote:
+> On Tue, 09 Aug 2016, Stephan Mueller wrote:
+> > RHEL 7 and Fedora do not adjust it. So, shall we consider those rng-tools then 
+> > broken (at least in those large distros)?
+> 
+> Might I humbly suggest that the kernel start providing some metatada
+> about the quality of the random source that userspace can consume?
+> Preferably by a new ioctl, so that it will fit naturally if we ever
+> extend /dev/hwrng to support more than one source?
+> 
+> That would allow for auto tunning to be implemented in userspace...
 
-diff --git a/drivers/net/wireless/broadcom/b43legacy/sysfs.c b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
-index 2a1da15..e6543ff 100644
---- a/drivers/net/wireless/broadcom/b43legacy/sysfs.c
-+++ b/drivers/net/wireless/broadcom/b43legacy/sysfs.c
-@@ -150,7 +150,7 @@ static ssize_t b43legacy_attr_interfmode_store(struct device *dev,
- 	return err ? err : count;
- }
- 
--static DEVICE_ATTR(interference, 0644,
-+static DEVICE_ATTR(interference, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH,
- 		   b43legacy_attr_interfmode_show,
- 		   b43legacy_attr_interfmode_store);
- 
-@@ -203,7 +203,7 @@ static ssize_t b43legacy_attr_preamble_store(struct device *dev,
- 	return count;
- }
- 
--static DEVICE_ATTR(shortpreamble, 0644,
-+static DEVICE_ATTR(shortpreamble, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH,
- 		   b43legacy_attr_preamble_show,
- 		   b43legacy_attr_preamble_store);
- 
--- 
-2.9.2
+See my reply to Keith Packard's proposed multi-device hw_random patch:
 
+  https://lkml.kernel.org/r/20160809165710.GC2013@io.lakedaemon.net
+
+and top of thread:
+
+  https://lkml.kernel.org/r/1469477255-26824-1-git-send-email-keithp@keithp.com
+
+thx,
+
+Jason.
