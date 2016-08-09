@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:46503 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965756AbcHBM5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:57:49 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: johannes@sipsolutions.net, davem@davemloft.net,
-	linux-wimax@intel.com, anna.schumaker@netapp.com,
-	kadlec@blackhole.kfki.hu, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com, arnd@arndb.de, aryabinin@virtuozzo.com
-Subject: [PATCH 1141/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 20:19:56 +0800
-Message-Id: <20160802121956.26182-1-baolex.ni@intel.com> (sfid-20160802_145945_795154_BF1F7AB2)
+Received: from helcar.hengli.com.au ([209.40.204.226]:38743 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932165AbcHIJ5x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 05:57:53 -0400
+Date: Tue, 9 Aug 2016 17:56:57 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Stephan Mueller <smueller@chronox.de>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Message-ID: <20160809095657.GB6618@gondor.apana.org.au> (sfid-20160809_115756_902985_4E0AB2EC)
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
+ <1645997.7cVzaEi3NG@tauon.atsec.com>
+ <20160809094656.GB6529@gondor.apana.org.au>
+ <12791731.pG3fmEhvyp@tauon.atsec.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <12791731.pG3fmEhvyp@tauon.atsec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Tue, Aug 09, 2016 at 11:56:08AM +0200, Stephan Mueller wrote:
+> Am Dienstag, 9. August 2016, 17:46:56 CEST schrieb Herbert Xu:
+> 
+> Hi Herbert,
+> > 
+> > You're supposed to tweak the quality of the input.  In any case,
+> 
+> How is that tweak supposed to happen? The rngd does not allow changing the 
+> amount of read data relative to the assumed entropy.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- net/wireless/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hmm, I guess it depends on your distro.  Some do.
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index ecca389..711ab8c 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -48,7 +48,7 @@ static struct dentry *ieee80211_debugfs_dir;
- struct workqueue_struct *cfg80211_wq;
- 
- static bool cfg80211_disable_40mhz_24ghz;
--module_param(cfg80211_disable_40mhz_24ghz, bool, 0644);
-+module_param(cfg80211_disable_40mhz_24ghz, bool, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(cfg80211_disable_40mhz_24ghz,
- 		 "Disable 40MHz support in the 2.4GHz band");
- 
+Cheers,
 -- 
-2.9.2
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
