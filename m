@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57480 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752762AbcHOLBQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2016 07:01:16 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Pan\, Miaoqing" <miaoqing@qti.qualcomm.com>
-Cc: Stephan Mueller <smueller@chronox.de>, Ted Tso <tytso@mit.edu>,
-	"Sepehrdad\, Pouyan" <pouyans@qti.qualcomm.com>,
-	"herbert\@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"linux-crypto\@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+Received: from mail.eperm.de ([89.247.134.16]:34318 "EHLO mail.eperm.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752365AbcHIJ4O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 05:56:14 -0400
+From: Stephan Mueller <smueller@chronox.de>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
 	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel\@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"Jason Cooper" <jason@lakedaemon.net>
-Subject: Re: [PATCH v2] RANDOM: ATH9K RNG delivers zero bits of entropy
-References: <34197429.2CvoIfft9B@positron.chronox.de>
-	<1654172.XfclnXhRmn@positron.chronox.de>
-	<657897b90b8344eeab10d7a0f604988d@aptaiexm02f.ap.qualcomm.com>
-Date: Mon, 15 Aug 2016 14:01:09 +0300
-In-Reply-To: <657897b90b8344eeab10d7a0f604988d@aptaiexm02f.ap.qualcomm.com>
-	(Miaoqing Pan's message of "Mon, 8 Aug 2016 02:03:36 +0000")
-Message-ID: <87wpji70ui.fsf@purkki.adurom.net> (sfid-20160815_130136_664707_5D8B424D)
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Date: Tue, 09 Aug 2016 11:56:08 +0200
+Message-ID: <12791731.pG3fmEhvyp@tauon.atsec.com> (sfid-20160809_115616_946854_46D905B2)
+In-Reply-To: <20160809094656.GB6529@gondor.apana.org.au>
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <1645997.7cVzaEi3NG@tauon.atsec.com> <20160809094656.GB6529@gondor.apana.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Pan, Miaoqing" <miaoqing@qti.qualcomm.com> writes:
+Am Dienstag, 9. August 2016, 17:46:56 CEST schrieb Herbert Xu:
 
-> The entropy was evaluated by crypto expert, the analysis report show
-> the ADC with at least 10bits and up to 22 bits of min-entropy for a 32
-> bits value, we conservatively assume the min-entropy is 10 bits out of
-> 32 bits, so that's why set entropy quality to 320/1024 = 10/32. Also
-> we have explained in the commit message why can't use the HW RNG
-> framework.
->
-> Otherwise, your patch will cause high CPU load, as continuously read
-> ADC data if entropy bits under write_wakeup_threshold.
+Hi Herbert,
+> 
+> You're supposed to tweak the quality of the input.  In any case,
 
-Please don't top post, it breaks patchwork which is extremely annoying
-for me:
+How is that tweak supposed to happen? The rngd does not allow changing the 
+amount of read data relative to the assumed entropy.
 
-https://patchwork.kernel.org/patch/9266265/
+> this is not affected by whether we whiten the result.
 
-https://patchwork.kernel.org/patch/9266617/
+I understand that.
 
--- 
-Kalle Valo
+Ciao
+Stephan
