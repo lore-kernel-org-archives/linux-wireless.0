@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f53.google.com ([209.85.214.53]:37089 "EHLO
-	mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752080AbcHAJ7h convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2016 05:59:37 -0400
-Received: by mail-it0-f53.google.com with SMTP id f6so165295328ith.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Aug 2016 02:59:37 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACiydb+yNc-UKVRFR-UxTq-YFBDpEDsa1qWNBGCHpe=_zv8o7g@mail.gmail.com>
-References: <1463489221-24989-1-git-send-email-michal.kazior@tieto.com>
- <1467201146-6844-1-git-send-email-michal.kazior@tieto.com>
- <87zipt1kco.fsf@kamboji.qca.qualcomm.com> <CACiydb+yNc-UKVRFR-UxTq-YFBDpEDsa1qWNBGCHpe=_zv8o7g@mail.gmail.com>
-From: Dave Taht <dave.taht@gmail.com>
-Date: Mon, 1 Aug 2016 11:04:56 +0200
-Message-ID: <CAA93jw6j0pBKnm3Fs=D7V1CUsBnhZKKymbk4=UQuFWKuEAs-+Q@mail.gmail.com> (sfid-20160801_120253_514618_0C0DEA22)
-Subject: Re: [PATCH] ath10k: disable wake_tx_queue for older devices
-To: Roman Yeryomin <leroi.lists@gmail.com>
-Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+Received: from imap.thunk.org ([74.207.234.97]:35410 "EHLO imap.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752046AbcHIL4e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 07:56:34 -0400
+Date: Tue, 9 Aug 2016 07:56:22 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+Cc: Jason Cooper <jason@lakedaemon.net>,
+	Stephan Mueller <smueller@chronox.de>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
+	"herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH v2] RANDOM: ATH9K RNG delivers zero bits of entropy
+Message-ID: <20160809115622.GG9515@thunk.org> (sfid-20160809_135653_626824_DFFAC493)
+References: <34197429.2CvoIfft9B@positron.chronox.de>
+ <1654172.XfclnXhRmn@positron.chronox.de>
+ <657897b90b8344eeab10d7a0f604988d@aptaiexm02f.ap.qualcomm.com>
+ <1830987.VF9l4XmGxv@tauon.atsec.com>
+ <20160808172930.GD4511@io.lakedaemon.net>
+ <99963d34acea47bbacb3ca73b18fed9f@aptaiexm02f.ap.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <99963d34acea47bbacb3ca73b18fed9f@aptaiexm02f.ap.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 1, 2016 at 1:35 AM, Roman Yeryomin <leroi.lists@gmail.com> wrote:
-> On 7 July 2016 at 19:30, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> Ideally wake_tx_queue should be used regardless as
->>> it is a requirement for reducing bufferbloat and
->>> implementing airtime fairness in the future.
->>>
->>> However some setups (typically low-end platforms
->>> hosting QCA988X) suffer performance regressions
->>> with the current wake_tx_queue implementation.
->>> Therefore disable it unless it is really
->>> beneficial with current codebase (which is when
->>> firmware supports smart pull-push tx scheduling).
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>
->> I think it's too late to send this to 4.7 anymore (and this due to my
->> vacation). So I'm planning to queue this to 4.8, but if the feedback is
->> positive we can always send this to a 4.7 stable release.
->>
->
-> Sorry guys, drowned.
-> So, yes, applying this patch does the job. That is gets me to the
-> results similar to
-> https://lists.openwrt.org/pipermail/openwrt-devel/2016-May/041448.html
->
-> Going to try latest code on same system...
+On Tue, Aug 09, 2016 at 06:30:03AM +0000, Pan, Miaoqing wrote:
+> Agree with Jason's point, also understand Stephan's concern.  The
+> date rate can be roughly estimated by 'cat /dev/random |rngtest -c
+> 1000', the average speed is 1111.294Kibits/s. I will sent the patch
+> to disable ath9k RNG by default.
 
-Can you try increasing the quantum to 1514, and reducing the codel
-target to 5ms? (without this patch?)
+If the ATH9K is generating some random amount of data, but you don't
+know how random, and you're gathering it opportunistically --- for
+example, suppose a wireless driver gets the radio's signal strength
+through the normal course of its operation, and while there might not
+be that much randomness for someone who can observe the exact details
+of how the phone is positioned in the room --- but for which the
+analyst sitting in Fort Meade won't know whether or not the phone is
+on the desk, or in a knapsack under the table, the right interface to
+use is:
 
->
-> Regards,
-> Roman
->
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
+   void add_device_randomness(const void *buf, unsigned int size);
+	
+This won't increase the entropy count, but if you have the bit of
+potential randomness "for free", you might as well contribute it to
+the entropy pool.  If it turns out that the chip was manufactured in
+China, and the MSS has backdoored it out the wazoo, it won't do any
+harm --- where as using the hwrng framework would be disastrous.
 
+Cheerfs,
 
-
--- 
-Dave Täht
-Let's go make home routers and wifi faster! With better software!
-http://blog.cerowrt.org
+						- Ted
