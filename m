@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40860 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751378AbcH2UZ0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 16:25:26 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 29 Aug 2016 23:25:14 +0300
-Message-Id: <1472502319-10847-2-git-send-email-luca@coelho.fi> (sfid-20160829_222530_636330_749E11C2)
-In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
-References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 1/6] cfg80211: clarify the requirements of .disconnect()
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:41680 "EHLO
+	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751020AbcHIKZC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Aug 2016 06:25:02 -0400
+Date: Tue, 9 Aug 2016 07:24:58 -0300
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+To: Stephan Mueller <smueller@chronox.de>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	"Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Message-ID: <20160809102458.GA20214@khazad-dum.debian.net> (sfid-20160809_122507_251384_C80662FB)
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
+ <12791731.pG3fmEhvyp@tauon.atsec.com>
+ <20160809095657.GB6618@gondor.apana.org.au>
+ <11316081.S4pPZmZMrt@tauon.atsec.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <11316081.S4pPZmZMrt@tauon.atsec.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+On Tue, 09 Aug 2016, Stephan Mueller wrote:
+> RHEL 7 and Fedora do not adjust it. So, shall we consider those rng-tools then 
+> broken (at least in those large distros)?
 
-cfg80211 expects the .disconnect() handler to call
-cfg80211_disconnect() when done. Make this requirement
-more explicit.
+Might I humbly suggest that the kernel start providing some metatada
+about the quality of the random source that userspace can consume?
+Preferably by a new ioctl, so that it will fit naturally if we ever
+extend /dev/hwrng to support more than one source?
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/cfg80211.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+That would allow for auto tunning to be implemented in userspace...
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9c23f4d3..d5e7f69 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2423,7 +2423,8 @@ struct cfg80211_qos_map {
-  *	cases, the result of roaming is indicated with a call to
-  *	cfg80211_roamed() or cfg80211_roamed_bss().
-  *	(invoked with the wireless_dev mutex held)
-- * @disconnect: Disconnect from the BSS/ESS.
-+ * @disconnect: Disconnect from the BSS/ESS. Once done, call
-+ *	cfg80211_disconnected().
-  *	(invoked with the wireless_dev mutex held)
-  *
-  * @join_ibss: Join the specified IBSS (or create if necessary). Once done, call
 -- 
-2.8.1
+  Henrique Holschuh
