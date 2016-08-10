@@ -1,72 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iodev.co.uk ([82.211.30.53]:60326 "EHLO iodev.co.uk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754721AbcHVWk2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 18:40:28 -0400
-From: Ismael Luceno <ismael@iodev.co.uk>
-To: linux-wireless@vger.kernel.org
-Cc: Ismael Luceno <ismael@iodev.co.uk>,
-        brcm80211-dev-list@broadcom.com,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH v2] brcmfmac: Add USB ID for Cisco Linksys AE1200
-Date: Mon, 22 Aug 2016 19:40:07 -0300
-Message-Id: <20160822224007.300-1-ismael@iodev.co.uk> (sfid-20160823_004032_007231_23E78B11)
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:36236 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934593AbcHJTxV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2016 15:53:21 -0400
+Received: by mail-pa0-f42.google.com with SMTP id pp5so18556844pac.3
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2016 12:53:21 -0700 (PDT)
+Subject: Re: [PATCH] brcmfmac: shut down AP and set IBSS mode only on primary
+ interface
+To: Wright Feng <wright.feng@cypress.com>,
+	brcm80211-dev-list.pdl@broadcom.com, franky.lin@broadcom.com,
+	hante.meuleman@broadcom.com, pieterpg@broadcom.com,
+	chln@cypress.com, linux-wireless@vger.kernel.org,
+	kvalo@codeaurora.org
+References: <20160810080100.GA10783@cypress.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <4d60ec5e-6462-372a-2d3c-5770493e7e98@broadcom.com> (sfid-20160810_215332_799994_EF9601D9)
+Date: Wed, 10 Aug 2016 10:26:16 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160810080100.GA10783@cypress.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The AE1200 comes with different revisions of the BCM43235 chipset,
-but all have the same USB ID. Only revision 3 can be supported.
+On 10-8-2016 10:01, Wright Feng wrote:
+> When stopping hostap on virtual interface, driver will set INFRA and AP
+> mode that may affect the functionality on primary interface. For example,
+> if we create and stop hostapd on virtual interface then association
+> cannot work on primary interface because INFRA mode has been set to IBSS.
+> Hence we shut down AP and set IBSS mode only on primary interface.
 
-Signed-off-by: Ismael Luceno <ismael@iodev.co.uk>
----
-Changes since v1:
- - Keep the long device ID in a single line.
- - Added desc. about supported devices.
+What is actually the use-case here. Can you elaborate? BRCMF_C_DOWN
+command turns out to be effectively bring the whole stack down and not
+just the supplied interface. I suppose you are hitting that issue here
+as well, right?
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c        | 4 ++++
- drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h | 2 ++
- 2 files changed, 6 insertions(+)
+Regards,
+Arend
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 66c26a92b29c..5ec005e9f9d7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1447,11 +1447,15 @@ static int brcmf_usb_reset_resume(struct usb_interface *intf)
- #define BRCMF_USB_DEVICE(dev_id)	\
- 	{ USB_DEVICE(BRCM_USB_VENDOR_ID_BROADCOM, dev_id) }
- 
-+#define LINKSYS_USB_DEVICE(dev_id)	\
-+	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LINKSYS, dev_id) }
-+
- static struct usb_device_id brcmf_usb_devid_table[] = {
- 	BRCMF_USB_DEVICE(BRCM_USB_43143_DEVICE_ID),
- 	BRCMF_USB_DEVICE(BRCM_USB_43236_DEVICE_ID),
- 	BRCMF_USB_DEVICE(BRCM_USB_43242_DEVICE_ID),
- 	BRCMF_USB_DEVICE(BRCM_USB_43569_DEVICE_ID),
-+	LINKSYS_USB_DEVICE(BRCM_USB_43235_LINKSYS_DEVICE_ID),
- 	{ USB_DEVICE(BRCM_USB_VENDOR_ID_LG, BRCM_USB_43242_LG_DEVICE_ID) },
- 	/* special entry for device with firmware loaded and running */
- 	BRCMF_USB_DEVICE(BRCM_USB_BCMFW_DEVICE_ID),
-diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-index 699f2c2782ee..f207c2693877 100644
---- a/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/include/brcm_hw_ids.h
-@@ -22,6 +22,7 @@
- 
- #define BRCM_USB_VENDOR_ID_BROADCOM	0x0a5c
- #define BRCM_USB_VENDOR_ID_LG		0x043e
-+#define BRCM_USB_VENDOR_ID_LINKSYS	0x13b1
- #define BRCM_PCIE_VENDOR_ID_BROADCOM	PCI_VENDOR_ID_BROADCOM
- 
- /* Chipcommon Core Chip IDs */
-@@ -56,6 +57,7 @@
- 
- /* USB Device IDs */
- #define BRCM_USB_43143_DEVICE_ID	0xbd1e
-+#define BRCM_USB_43235_LINKSYS_DEVICE_ID	0x0039
- #define BRCM_USB_43236_DEVICE_ID	0xbd17
- #define BRCM_USB_43242_DEVICE_ID	0xbd1f
- #define BRCM_USB_43242_LG_DEVICE_ID	0x3101
--- 
-2.9.2
+> Signed-off-by: Wright Feng <wright.feng@cypress.com>
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 2628d5e..0687ab9 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -4716,6 +4716,8 @@ exit:
+> 
+>  static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+>  {
+> +       struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+> +       struct net_device *primary_ndev = cfg_to_ndev(cfg);
+>         struct brcmf_if *ifp = netdev_priv(ndev);
+>         s32 err;
+>         struct brcmf_fil_bss_enable_le bss_enable;
+> @@ -4723,7 +4725,8 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+> 
+>         brcmf_dbg(TRACE, "Enter\n");
+> 
+> -       if (ifp->vif->wdev.iftype == NL80211_IFTYPE_AP) {
+> +       if ((ifp->vif->wdev.iftype == NL80211_IFTYPE_AP) &&
+> +           (ndev == primary_ndev)) {
+>                 /* Due to most likely deauths outstanding we sleep */
+>                 /* first to make sure they get processed by fw. */
+>                 msleep(400);
+> --
+> 1.9.1
+> 
+> 
+> This message and any attachments may contain Cypress (or its subsidiaries) confidential information. If it has been received in error, please advise the sender and immediately delete this message.
+> 
