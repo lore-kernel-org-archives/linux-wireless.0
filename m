@@ -1,81 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:43106 "EHLO mga02.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:46771 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934707AbcHBMWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:22:23 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-	bkenward@solarflare.com, linux-driver@qlogic.com,
-	computersforpeace@gmail.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com, baolex.ni@intel.com,
-	daniel@iogearbox.net, pabeni@redhat.com
-Subject: [PATCH 0767/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:44:23 +0800
-Message-Id: <20160802114423.794-1-baolex.ni@intel.com> (sfid-20160802_175201_901052_666052C0)
+	id S938894AbcHJTkU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2016 15:40:20 -0400
+Date: Wed, 10 Aug 2016 21:40:14 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Daniel Wagner <daniel.wagner@bmw-carit.de>,
+	Jeff Mahoney <jeffm@suse.com>, Takashi Iwai <tiwai@suse.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Vikram Mulukutla <markivx@codeaurora.org>,
+	Stephen Boyd <stephen.boyd@linaro.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Julia Lawall <Julia.Lawall@lip6.fr>,
+	Tom Gundersen <teg@jklm.no>, Kay Sievers <kay@vrfy.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tejun Heo <tj@kernel.org>,
+	Josh Boyer <jwboyer@fedoraproject.org>,
+	Michal Marek <mmarek@suse.com>,
+	David Howells <dhowells@redhat.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>, Abhay_Salunke@dell.com,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Wu Fengguang <fengguang.wu@intel.com>,
+	Kees Cook <keescook@chromium.org>,
+	Jiri Slaby <jslaby@suse.com>, Gilles.Muller@lip6.fr,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
+	Richard Purdie <rpurdie@rpsys.net>, nicolas.palix@imag.fr
+Subject: Re: [PATCH v2 8/8] p54: convert to sysdata API
+Message-ID: <20160810194014.GO3296@wotan.suse.de> (sfid-20160810_214129_410405_C3C51D7A)
+References: <1466121559-22363-1-git-send-email-mcgrof@kernel.org>
+ <1466121559-22363-9-git-send-email-mcgrof@kernel.org>
+ <CA+55aFyD+Xa2auP05=pBSxQc2qcuR858syMW5fiQKowbqbkDzQ@mail.gmail.com>
+ <20160617013657.GH11948@wotan.suse.de>
+ <CA+55aFycG-YfukKpP3x7kbBpCzXGwg35SdTU2r4wBbxrfROLtQ@mail.gmail.com>
+ <20160617183503.GV11948@wotan.suse.de>
+ <20160810183211.GL3296@wotan.suse.de>
+ <7451c96a-b4f5-e629-a4a7-76d6fe1772e9@broadcom.com>
+ <20160810191708.GO9347@sirena.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160810191708.GO9347@sirena.org.uk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Wed, Aug 10, 2016 at 08:17:08PM +0100, Mark Brown wrote:
+> On Wed, Aug 10, 2016 at 09:04:38PM +0200, Arend Van Spriel wrote:
+> 
+> > So why would drivers want the devm solution anyway. Once firmware is
+> > loaded in the device it can be freed or do you expect device drivers to
+> > keep the firmware/sysdata for suspend/resume scenario as some do because
+> > of firmware cache behaviour. Does the "rootfs ready" event cover
+> > suspend/resume?
+> 
+> There are classes of devices that spend a large proportion of their time
+> powered off and are only powered up and have firmware loaded when they
+> are actively in use.  DSPs used in audio systems are one example of
+> this, I'd not be surprised to learn that similar things are done with
+> video.  It's too expensive to keep the device powered up and you may be
+> swapping between firmwares depending on use case anyway for a lot of
+> these devices.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/ath/ath9k/init.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+devm use and probe is orthogonal to this use case and suspend/resume.
+In any case the proposed new API simply allows the driver caller to
+either free the firmware after the consumer callback or to keep it.
+It does this without devm, so allows this feature without the API
+being used on probe. The point about devm was that it would only
+beneficial to us if most users for the API were on probe. Clearly
+that's not the case and in fact unless async probe is used that use
+is likely buggy as it would delay boot further.
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 2ee8624..5196633 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -42,33 +42,33 @@ module_param_named(debug, ath9k_debug, uint, 0);
- MODULE_PARM_DESC(debug, "Debugging mask");
- 
- int ath9k_modparam_nohwcrypt;
--module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, 0444);
-+module_param_named(nohwcrypt, ath9k_modparam_nohwcrypt, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
- int ath9k_led_blink;
--module_param_named(blink, ath9k_led_blink, int, 0444);
-+module_param_named(blink, ath9k_led_blink, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
- static int ath9k_led_active_high = -1;
--module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
-+module_param_named(led_active_high, ath9k_led_active_high, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
- 
- static int ath9k_btcoex_enable;
--module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
-+module_param_named(btcoex_enable, ath9k_btcoex_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
- 
- static int ath9k_bt_ant_diversity;
--module_param_named(bt_ant_diversity, ath9k_bt_ant_diversity, int, 0444);
-+module_param_named(bt_ant_diversity, ath9k_bt_ant_diversity, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(bt_ant_diversity, "Enable WLAN/BT RX antenna diversity");
- 
- static int ath9k_ps_enable;
--module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
-+module_param_named(ps_enable, ath9k_ps_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
- 
- #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
- 
- int ath9k_use_chanctx;
--module_param_named(use_chanctx, ath9k_use_chanctx, int, 0444);
-+module_param_named(use_chanctx, ath9k_use_chanctx, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(use_chanctx, "Enable channel context for concurrency");
- 
- #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
--- 
-2.9.2
+If having a local cache of firmware *beyond* the suspend / resume
+case is an optimization that can help we should look into that, but
+my preference would be to peg this onto the API through an optional
+setting in the request passed.
 
+  Luis
