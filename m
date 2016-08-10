@@ -1,130 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from web01.01d.eu ([5.200.27.195]:54581 "EHLO web01.01d.eu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757443AbcHBVBi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 17:01:38 -0400
-From: Shiva Kerdel <shiva@exdev.nl>
-To: Larry.Finger@lwfinger.net
-Cc: Jes.Sorensen@redhat.com, gregkh@linuxfoundation.org,
-	geliangtang@163.com, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	Shiva Kerdel <shiva@exdev.nl>
-Subject: [PATCH] Staging: rtl8723au: rtw_xmit: fixed coding style issues
-Date: Tue,  2 Aug 2016 19:57:21 +0200
-Message-Id: <20160802175721.2453-1-shiva@exdev.nl> (sfid-20160802_230143_147453_8BC189F8)
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:23255 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933689AbcHJSUC convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2016 14:20:02 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Brian Norris <briannorris@chromium.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Cathy Luo" <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Wei-Ning Huang <wnhuang@google.com>
+Subject: RE: mwifiex: PCIe8997 chip specific handling
+Date: Wed, 10 Aug 2016 07:07:33 +0000
+Message-ID: <9bc980fff61541c2879d5d1dacda7462@SC-EXCH04.marvell.com> (sfid-20160810_222640_923678_300F3C68)
+References: <1469788731-5361-1-git-send-email-akarwar@marvell.com>
+ <20160809184406.GA12186@localhost>
+In-Reply-To: <20160809184406.GA12186@localhost>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed some coding style issues that were detected as errors.
+Hi Brian,
 
-Signed-off-by: Shiva Kerdel <shiva@exdev.nl>
----
- drivers/staging/rtl8723au/core/rtw_xmit.c | 26 ++++++++++----------------
- 1 file changed, 10 insertions(+), 16 deletions(-)
+> From: Brian Norris [mailto:briannorris@chromium.org]
+> Sent: Wednesday, August 10, 2016 12:14 AM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+> linux-kernel@vger.kernel.org
+> Subject: Re: mwifiex: PCIe8997 chip specific handling
+> 
+> Hi,
+> 
+> On Fri, Jul 29, 2016 at 04:08:51PM +0530, Amitkumar Karwar wrote:
+> > The patch corrects the revision id register and uses it along with
+> > magic value and chip version registers to download appropriate
+> > firmware image.
+> >
+> > PCIe8997 Z chipset variant code has been removed, as it won't be used
+> > in production.
+> >
+> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> > ---
+> >  drivers/net/wireless/marvell/mwifiex/pcie.c | 35
+> > ++++++++++-------------------
+> > drivers/net/wireless/marvell/mwifiex/pcie.h | 14 +++++-------
+> >  2 files changed, 18 insertions(+), 31 deletions(-)
+> 
+> [...]
+> 
+> > diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h
+> > b/drivers/net/wireless/marvell/mwifiex/pcie.h
+> > index f6992f0..46f99ca 100644
+> > --- a/drivers/net/wireless/marvell/mwifiex/pcie.h
+> > +++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+> > @@ -32,12 +32,9 @@
+> >  #define PCIE8897_DEFAULT_FW_NAME "mrvl/pcie8897_uapsta.bin"
+> >  #define PCIE8897_A0_FW_NAME "mrvl/pcie8897_uapsta_a0.bin"
+> >  #define PCIE8897_B0_FW_NAME "mrvl/pcie8897_uapsta.bin"
+> > -#define PCIE8997_DEFAULT_FW_NAME "mrvl/pcieusb8997_combo_v2.bin"
+> > -#define PCIEUART8997_FW_NAME_Z "mrvl/pcieuart8997_combo.bin"
+> > -#define PCIEUART8997_FW_NAME_V2 "mrvl/pcieuart8997_combo_v2.bin"
+> > -#define PCIEUSB8997_FW_NAME_Z "mrvl/pcieusb8997_combo.bin"
+> > -#define PCIEUSB8997_FW_NAME_V2 "mrvl/pcieusb8997_combo_v2.bin"
+> > -#define PCIE8997_DEFAULT_WIFIFW_NAME "mrvl/pcie8997_wlan.bin"
+> > +#define PCIEUART8997_FW_NAME_V4 "mrvl/pcieuart8997_combo_v4.bin"
+> > +#define PCIEUSB8997_FW_NAME_V4 "mrvl/pcieusb8997_combo_v4.bin"
+> > +#define PCIE8997_DEFAULT_WIFIFW_NAME "mrvl/pcie8997_wlan_v4.bin"
+> 
+> Why do version bumps require firmware renames? Is this just to make sure
+> you don't load the new firmware on old chip revs that you don't plan to
+> support for production (i.e., only early revs like the _Z you're
+> dropping)? This doesn't seems like a good long-term solution, at least
+> once you start getting this silicon out in the wild. At some point, I'd
+> expect to see a stable file name.
+> 
+> Brian
+> 
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
-index 3de40cf..4ea7c5f 100644
---- a/drivers/staging/rtl8723au/core/rtw_xmit.c
-+++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
-@@ -174,7 +174,7 @@ int _rtw_init_xmit_priv23a(struct xmit_priv *pxmitpriv,
- 	rtw_alloc_hwxmits23a(padapter);
- 	rtw_init_hwxmits23a(pxmitpriv->hwxmits, pxmitpriv->hwxmit_entry);
- 
--	for (i = 0; i < 4; i ++)
-+	for (i = 0; i < 4; i++)
- 		pxmitpriv->wmm_para_seq[i] = i;
- 
- 	sema_init(&pxmitpriv->tx_retevt, 0);
-@@ -640,7 +640,7 @@ static int xmitframe_addmic(struct rtw_adapter *padapter,
- 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
- 	int curfragnum, length;
- 	u8 *pframe, *payload, mic[8];
--	u8 priority[4]= {0x0, 0x0, 0x0, 0x0};
-+	u8 priority[4] = {0x0, 0x0, 0x0, 0x0};
- 	u8 hw_hdr_offset = 0;
- 	int bmcst = is_multicast_ether_addr(pattrib->ra);
- 
-@@ -667,10 +667,10 @@ static int xmitframe_addmic(struct rtw_adapter *padapter,
- 	if (pattrib->encrypt == WLAN_CIPHER_SUITE_TKIP) {
- 		/* encode mic code */
- 		if (stainfo) {
--			u8 null_key[16]={0x0, 0x0, 0x0, 0x0,
--					 0x0, 0x0, 0x0, 0x0,
--					 0x0, 0x0, 0x0, 0x0,
--					 0x0, 0x0, 0x0, 0x0};
-+			u8 null_key[16] = {0x0, 0x0, 0x0, 0x0,
-+					   0x0, 0x0, 0x0, 0x0,
-+					   0x0, 0x0, 0x0, 0x0,
-+					   0x0, 0x0, 0x0, 0x0};
- 
- 			pframe = pxmitframe->buf_addr + hw_hdr_offset;
- 
-@@ -902,8 +902,7 @@ static int rtw_make_wlanhdr(struct rtw_adapter *padapter, u8 *hdr,
- 
- 			if (psta->qos_option)
- 				qos_option = true;
--		}
--		else {
-+		} else {
- 			RT_TRACE(_module_rtl871x_xmit_c_, _drv_err_,
- 				 "fw_state:%x is not allowed to xmit frame\n",
- 				 get_fwstate(pmlmepriv));
-@@ -1190,7 +1189,7 @@ int rtw_xmitframe_coalesce23a(struct rtw_adapter *padapter, struct sk_buff *skb,
- 		pdata += mem_sz;
- 		data_len -= mem_sz;
- 
--		if ((pattrib->icv_len >0) && (pattrib->bswenc)) {
-+		if ((pattrib->icv_len > 0) && (pattrib->bswenc)) {
- 			memcpy(pframe, pattrib->icv, pattrib->icv_len);
- 			pframe += pattrib->icv_len;
- 		}
-@@ -1766,7 +1765,6 @@ void rtw_alloc_hwxmits23a(struct rtw_adapter *padapter)
- 		hwxmits[4] .sta_queue = &pxmitpriv->be_pending;
- 
- 	} else if (pxmitpriv->hwxmit_entry == 4) {
--
- 		/* pxmitpriv->vo_txqueue.head = 0; */
- 		/* hwxmits[0] .phwtxqueue = &pxmitpriv->vo_txqueue; */
- 		hwxmits[0] .sta_queue = &pxmitpriv->vo_pending;
-@@ -1952,18 +1950,16 @@ int xmitframe_enqueue_for_sleeping_sta23a(struct rtw_adapter *padapter, struct x
- 			/* spin_unlock_bh(&psta->sleep_q.lock); */
- 
- 			ret = true;
--
- 		}
- 
- 		spin_unlock_bh(&psta->sleep_q.lock);
- 
- 		return ret;
--
- 	}
- 
- 	spin_lock_bh(&psta->sleep_q.lock);
- 
--	if (psta->state&WIFI_SLEEP_STATE) {
-+	if (psta->state & WIFI_SLEEP_STATE) {
- 		u8 wmmps_ac = 0;
- 
- 		if (pstapriv->sta_dz_bitmap & CHKBIT(psta->aid)) {
-@@ -2017,9 +2013,7 @@ int xmitframe_enqueue_for_sleeping_sta23a(struct rtw_adapter *padapter, struct x
- 			/*  */
- 
- 			ret = true;
--
- 		}
--
- 	}
- 
- 	spin_unlock_bh(&psta->sleep_q.lock);
-@@ -2159,7 +2153,7 @@ void wakeup_sta_to_xmit23a(struct rtw_adapter *padapter, struct sta_info *psta)
- 		/* update BCN for TIM IE */
- 		update_mask = BIT(0);
- 
--		if (psta->state&WIFI_SLEEP_STATE)
-+		if (psta->state & WIFI_SLEEP_STATE)
- 			psta->state ^= WIFI_SLEEP_STATE;
- 
- 		if (psta->state & WIFI_STA_ALIVE_CHK_STATE) {
--- 
-2.9.2
+We haven't yet submitted any firmware image upstream for 8997 chipset.
+pcieuart8997_combo_v4.bin/pcieusb8997_combo_v4.bin would be our firmware candidate for upstream submission. The filename would remain same hereafter.
 
+pcie*8997_combo_v2.bin had support only for A0 chipset
+pcie*8997_combo_v3.bin was our internal development version which had support for A1 chipset
+pcie*8997_combo_v4.bin has support for both A0 and A1 chipsets and this is the version that shall be released to customers/upstream from now on.
+
+Regards,
+Amitkumar Karwar
