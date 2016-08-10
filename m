@@ -1,110 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:57872 "EHLO bear.ext.ti.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751694AbcHULRK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Aug 2016 07:17:10 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
-        Maxim Altshul <maxim.altshul@ti.com>
-Subject: [PATCH 1/3 v2] mac80211: RX BA support for sta max_rx_aggregation_subframes
-Date: Sun, 21 Aug 2016 14:24:23 +0300
-Message-ID: <20160821112425.11302-1-maxim.altshul@ti.com> (sfid-20160821_131718_993574_4B8311A3)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:36659 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753100AbcHJSOp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2016 14:14:45 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 3/4] cfg80211: rdev-ops: remove callback check from rdev_start_radar_detection()
+Date: Wed, 10 Aug 2016 12:33:28 +0200
+Message-Id: <1470825209-10054-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160810_223953_436651_5C90E64F)
+In-Reply-To: <1470825209-10054-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1470825209-10054-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ability to change the max_rx_aggregation frames is useful
-in cases of IOP.
+The wrapper rdev_start_radar_detection() checks whether the driver provides
+the start_radar_detection callback and returns -ENOTSUPP if not. However,
+this check is already performed in nl80211_start_radar_detection() resulting
+in -EOPNOTSUPP. This patch removes check from rdev wrapper function and move
+the callback checking in nl80211_start_radar_detection() before the other
+checks.
 
-There exist some devices (latest mobile phones and some AP's)
-that tend to not respect a BA sessions maximum size (in Kbps).
-These devices won't respect the AMPDU size that was negotiated during
-associasion (even though they do respect the maximal number of packets).
-
-This violation is characterized by a valid number of packets in
-a single AMPDU. Even so, the total size will exceed the size negotiated
-during association.
-
-Eventually, this will cause some undefined behavior, which in turn
-causes the hw to drop packets, causing the throughput to plummet.
-
-This patch will:
-a. Make the subframe limitation to be held by each station,
-instead of being held only by hw.
-b. Create an api for the driver to call which will remove violating
-BA sessions with a specific peer. When the session is reopened, it
-will use the new size, limiting the aggregation.
-
-Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
-Change documentation and removed unnecessary function
+ net/wireless/nl80211.c  | 7 ++++---
+ net/wireless/rdev-ops.h | 7 +++----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
- include/net/mac80211.h  |  4 ++++
- net/mac80211/agg-rx.c   | 10 ++++++----
- net/mac80211/sta_info.c |  3 +++
- 3 files changed, 13 insertions(+), 4 deletions(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index cca510a..a1457ca 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1735,6 +1735,9 @@ struct ieee80211_sta_rates {
-  * @supp_rates: Bitmap of supported rates (per band)
-  * @ht_cap: HT capabilities of this STA; restricted to our own capabilities
-  * @vht_cap: VHT capabilities of this STA; restricted to our own capabilities
-+ * @max_rx_aggregation_subframes: maximal amount of frames in a single AMPDU
-+ *	that this station is allowed to transmit to us.
-+ *	Can be modified by driver.
-  * @wme: indicates whether the STA supports QoS/WME (if local devices does,
-  *	otherwise always false)
-  * @drv_priv: data area for driver use, will always be aligned to
-@@ -1775,6 +1778,7 @@ struct ieee80211_sta {
- 	u16 aid;
- 	struct ieee80211_sta_ht_cap ht_cap;
- 	struct ieee80211_sta_vht_cap vht_cap;
-+	u8 max_rx_aggregation_subframes;
- 	bool wme;
- 	u8 uapsd_queues;
- 	u8 max_sp;
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index a9aff60..8532e36 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -297,13 +297,15 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	if (buf_size == 0)
- 		buf_size = IEEE80211_MAX_AMPDU_BUF;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index f02653a..8ab63b5 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6826,6 +6826,9 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	unsigned int cac_time_ms;
+ 	int err;
  
-+	/* examine state machine */
-+	mutex_lock(&sta->ampdu_mlme.mtx);
++	if (!rdev->ops->start_radar_detection)
++		return -EOPNOTSUPP;
 +
- 	/* make sure the size doesn't exceed the maximum supported by the hw */
--	if (buf_size > local->hw.max_rx_aggregation_subframes)
--		buf_size = local->hw.max_rx_aggregation_subframes;
-+	if (buf_size > sta->sta.max_rx_aggregation_subframes)
-+		buf_size = sta->sta.max_rx_aggregation_subframes;
- 	params.buf_size = buf_size;
+ 	dfs_region = reg_get_dfs_region(wdev->wiphy);
+ 	if (dfs_region == NL80211_DFS_UNSET)
+ 		return -EINVAL;
+@@ -6845,15 +6848,13 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
+ 	if (err < 0)
+ 		return err;
  
--	/* examine state machine */
--	mutex_lock(&sta->ampdu_mlme.mtx);
-+	ht_dbg(sta->sdata, "AddBA Req buf_size=%d\n", buf_size);
++	/* 0 value means no dfs is required so bail out */
+ 	if (err == 0)
+ 		return -EINVAL;
  
- 	if (test_bit(tid, sta->ampdu_mlme.agg_session_valid)) {
- 		tid_agg_rx = rcu_dereference_protected(
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 19f14c9..5e70fa5 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -340,6 +340,9 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub_if_data *sdata,
+ 	if (!cfg80211_chandef_dfs_usable(wdev->wiphy, &chandef))
+ 		return -EINVAL;
  
- 	memcpy(sta->addr, addr, ETH_ALEN);
- 	memcpy(sta->sta.addr, addr, ETH_ALEN);
-+	sta->sta.max_rx_aggregation_subframes =
-+		local->hw.max_rx_aggregation_subframes;
-+
- 	sta->local = local;
- 	sta->sdata = sdata;
- 	sta->rx_stats.last_rx = jiffies;
+-	if (!rdev->ops->start_radar_detection)
+-		return -EOPNOTSUPP;
+-
+ 	cac_time_ms = cfg80211_chandef_dfs_cac_time(&rdev->wiphy, &chandef);
+ 	if (WARN_ON(!cac_time_ms))
+ 		cac_time_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index d002415..2020606 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -1034,13 +1034,12 @@ rdev_start_radar_detection(struct cfg80211_registered_device *rdev,
+ 			   struct cfg80211_chan_def *chandef,
+ 			   u32 cac_time_ms)
+ {
+-	int ret = -ENOTSUPP;
++	int ret;
+ 
+ 	trace_rdev_start_radar_detection(&rdev->wiphy, dev, chandef,
+ 					 cac_time_ms);
+-	if (rdev->ops->start_radar_detection)
+-		ret = rdev->ops->start_radar_detection(&rdev->wiphy, dev,
+-						       chandef, cac_time_ms);
++	ret = rdev->ops->start_radar_detection(&rdev->wiphy, dev,
++					       chandef, cac_time_ms);
+ 	trace_rdev_return_int(&rdev->wiphy, ret);
+ 	return ret;
+ }
 -- 
-2.9.0
+1.9.1
+
