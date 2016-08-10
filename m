@@ -1,173 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:36544 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753806AbcHSD7V (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Aug 2016 23:59:21 -0400
-Received: by mail-wm0-f46.google.com with SMTP id q128so18843393wma.1
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Aug 2016 20:58:54 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
-        davem@davemloft.net, kvalo@codeaurora.org,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        dinan.gunawardena@netronome.com,
-        Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [RFC (v7)] add basic register-field manipulation macros
-Date: Thu, 18 Aug 2016 18:11:57 +0100
-Message-Id: <1471540317-14823-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160819_055927_563707_B50A27EC)
-In-Reply-To: <CA+55aFz_MUXQjWjbQzb7f=+cQLtxQsba1azmbEVZOgy5Y7wfdQ@mail.gmail.com>
-References: <CA+55aFz_MUXQjWjbQzb7f=+cQLtxQsba1azmbEVZOgy5Y7wfdQ@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:46077 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934300AbcHJTfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2016 15:35:31 -0400
+Date: Wed, 10 Aug 2016 21:34:28 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Daniel Vetter <daniel.vetter@intel.com>,
+	Kalle Valo <kvalo@qca.qualcomm.com>,
+	Ming Lei <ming.lei@canonical.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Daniel Wagner <daniel.wagner@bmw-carit.de>,
+	Jeff Mahoney <jeffm@suse.com>, Takashi Iwai <tiwai@suse.de>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Vikram Mulukutla <markivx@codeaurora.org>,
+	Stephen Boyd <stephen.boyd@linaro.org>,
+	Christian Lamparter <chunkeey@googlemail.com>,
+	Andy Lutomirski <luto@amacapital.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Julia Lawall <Julia.Lawall@lip6.fr>,
+	Tom Gundersen <teg@jklm.no>, Kay Sievers <kay@vrfy.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Tejun Heo <tj@kernel.org>,
+	Josh Boyer <jwboyer@fedoraproject.org>,
+	Michal Marek <mmarek@suse.com>,
+	David Howells <dhowells@redhat.com>,
+	Mimi Zohar <zohar@linux.vnet.ibm.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Daniel Vetter <daniel.vetter@ffwll.ch>, Abhay_Salunke@dell.com,
+	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+	Wu Fengguang <fengguang.wu@intel.com>,
+	Mark Brown <broonie@kernel.org>,
+	Kees Cook <keescook@chromium.org>,
+	Jiri Slaby <jslaby@suse.com>, Gilles.Muller@lip6.fr,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	linux-wireless@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
+	Richard Purdie <rpurdie@rpsys.net>, nicolas.palix@imag.fr
+Subject: Re: [PATCH v2 8/8] p54: convert to sysdata API
+Message-ID: <20160810193428.GN3296@wotan.suse.de> (sfid-20160810_213610_659164_2D474DD7)
+References: <1466121559-22363-1-git-send-email-mcgrof@kernel.org>
+ <1466121559-22363-9-git-send-email-mcgrof@kernel.org>
+ <CA+55aFyD+Xa2auP05=pBSxQc2qcuR858syMW5fiQKowbqbkDzQ@mail.gmail.com>
+ <20160617013657.GH11948@wotan.suse.de>
+ <CA+55aFycG-YfukKpP3x7kbBpCzXGwg35SdTU2r4wBbxrfROLtQ@mail.gmail.com>
+ <20160617183503.GV11948@wotan.suse.de>
+ <20160810183211.GL3296@wotan.suse.de>
+ <7451c96a-b4f5-e629-a4a7-76d6fe1772e9@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7451c96a-b4f5-e629-a4a7-76d6fe1772e9@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+On Wed, Aug 10, 2016 at 09:04:38PM +0200, Arend Van Spriel wrote:
+> On 10-8-2016 20:32, Luis R. Rodriguez wrote:
+> > On Fri, Jun 17, 2016 at 08:35:03PM +0200, Luis R. Rodriguez wrote:
+> >> On Thu, Jun 16, 2016 at 05:09:30PM -1000, Linus Torvalds wrote:
+> >>> On Thu, Jun 16, 2016 at 3:36 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
+> >>>>
+> >>>> Reason this could not wait is folks seem to want to keep extending the API,
+> >>>> which is another reason for this, do we want to put an end to an unflexible
+> >>>> API now or should we wait ?
+> 
+> [big snip]
+> 
+> > 
+> > Regarding this -- Dmitry recenlty noted devm only works if used on the probe
+> > path, and as we now determined, we don't want firmware loading on probe [3], unless
+> > async probe is used, so this would make a devm solution here not ideal for
+> > freeing the firmware. Even if you use async probe -- that seems very special
+> > use case and adding devm support for the firmware API just for that seems silly.
+> 
+> So why would drivers want the devm solution anyway.
 
-This is what I came up with.  Changes:
- - drop the explicit type marking (u32/u64) - depend on the type
-   of the mask instead;
- - only allow compilation time constant masks;
- - barf at "type of register too small to ever match mask" on get;
- - rename PUT -> PREP.
+It depends on the use case, some may want to keep the firmware around,
+some may not, but by default the new API ssumes you will not (keep = false)
+and we free it. My point above was that using devm will not typically
+be the most fruitful solution to free the firmware givne that there are only
+a few drivers that should need it upon probe, and drivers using firmware
+APIs on probe shoudld be using async probe anyway to delay avoid delaying
+boot as processing the firmware can take time.
 
-I did not put the new marcos in bitops.h (where GENMASK lives)
-because of the dependency on bug.h.  If I did there would be
-a circular dependency like this:
+> Once firmware is
+> loaded in the device it can be freed or do you expect device drivers to
+> keep the firmware/sysdata for suspend/resume scenario as some do because
+> of firmware cache behaviour.
 
-bitops.h -> linux/bug.h -> asm-generic/bug.h -> kernel.h -> bitops.h
+You would think! Upon careful inspection there are tons of odd things drivers
+do, some modify the firmware and therefore have their own reasons to keep
+it. Whatever the reasons are -- I recall seeing a few well justified uses.
 
-Which makes things really ugly.  I tried to remove the kernel.h
-include from bug.h by separating panic-related definitions into
-a new header.  There were still cycles coming from the notifier.h
-which I had to include for panic notifier...
+> Does the "rootfs ready" event cover
+> suspend/resume?
 
-Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- include/linux/bitfield.h | 93 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/bug.h      |  3 ++
- 2 files changed, 96 insertions(+)
- create mode 100644 include/linux/bitfield.h
+The "rootfs ready" is orthogonal to suspend/resume case given the firmware_class
+cache firmware feature.
 
-diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
-new file mode 100644
-index 000000000000..32ca8863e66d
---- /dev/null
-+++ b/include/linux/bitfield.h
-@@ -0,0 +1,93 @@
-+/*
-+ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ */
-+
-+#ifndef _LINUX_BITFIELD_H
-+#define _LINUX_BITFIELD_H
-+
-+#include <linux/bug.h>
-+
-+/*
-+ * Bitfield access macros
-+ *
-+ * FIELD_{GET,PREP} macros take as first parameter shifted mask
-+ * from which they extract the base mask and shift amount.
-+ * Mask must be a compilation time constant.
-+ *
-+ * Example:
-+ *
-+ *  #define REG_FIELD_A  GENMASK(6, 0)
-+ *  #define REG_FIELD_B  BIT(7)
-+ *  #define REG_FIELD_C  GENMASK(15, 8)
-+ *  #define REG_FIELD_D  GENMASK(31, 16)
-+ *
-+ * Get:
-+ *  a = FIELD_GET(REG_FIELD_A, reg);
-+ *  b = FIELD_GET(REG_FIELD_B, reg);
-+ *
-+ * Set:
-+ *  reg = FIELD_PREP(REG_FIELD_A, 1) |
-+ *	  FIELD_PREP(REG_FIELD_B, 0) |
-+ *	  FIELD_PREP(REG_FIELD_C, c) |
-+ *	  FIELD_PREP(REG_FIELD_D, 0x40);
-+ *
-+ * Modify:
-+ *  reg &= ~REG_FIELD_C;
-+ *  reg |= FIELD_PREP(REG_FIELD_C, c);
-+ */
-+
-+#define _bf_shf(x) (__builtin_ffsll(x) - 1)
-+
-+#define _BF_FIELD_CHECK(_mask, _reg, _val, _pfx)			\
-+	({								\
-+		BUILD_BUG_ON_MSG(!__builtin_constant_p(_mask),		\
-+				 _pfx "mask is not constant");		\
-+		BUILD_BUG_ON_MSG(!(_mask), _pfx "mask is zero");	\
-+		BUILD_BUG_ON_MSG(__builtin_constant_p(_val) ?		\
-+				 ~((_mask) >> _bf_shf(_mask)) & (_val) : 0, \
-+				 _pfx "value too large for the field"); \
-+		BUILD_BUG_ON_MSG((_mask) > (typeof(_reg))~0ull,		\
-+				 _pfx "type of reg too small for mask"); \
-+		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
-+					      (1ULL << _bf_shf(_mask))); \
-+	})
-+
-+/**
-+ * FIELD_PREP() - prepare a bitfield element
-+ * @_mask: shifted mask defining the field's length and position
-+ * @_val:  value to put in the field
-+ *
-+ * FIELD_PREP() masks and shifts up the value.  The result should
-+ * be combined with other fields of the bitfield using logical OR.
-+ */
-+#define FIELD_PREP(_mask, _val)						\
-+	({								\
-+		_BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ");	\
-+		((typeof(_mask))(_val) << _bf_shf(_mask)) & (_mask);	\
-+	})
-+
-+/**
-+ * FIELD_GET() - extract a bitfield element
-+ * @_mask: shifted mask defining the field's length and position
-+ * @_reg:  32bit value of entire bitfield
-+ *
-+ * FIELD_GET() extracts the field specified by @_mask from the
-+ * bitfield passed in as @_reg by masking and shifting it down.
-+ */
-+#define FIELD_GET(_mask, _reg)						\
-+	({								\
-+		_BF_FIELD_CHECK(_mask, _reg, 0U, "FIELD_GET: ");	\
-+		(typeof(_mask))(((_reg) & (_mask)) >> _bf_shf(_mask));	\
-+	})
-+
-+#endif
-diff --git a/include/linux/bug.h b/include/linux/bug.h
-index e51b0709e78d..292d6a10b0c2 100644
---- a/include/linux/bug.h
-+++ b/include/linux/bug.h
-@@ -13,6 +13,7 @@ enum bug_trap_type {
- struct pt_regs;
- 
- #ifdef __CHECKER__
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_ZERO(e) (0)
- #define BUILD_BUG_ON_NULL(e) ((void*)0)
-@@ -24,6 +25,8 @@ struct pt_regs;
- #else /* __CHECKER__ */
- 
- /* Force a compilation error if a constant expression is not a power of 2 */
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n)	\
-+	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
- 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
- 
--- 
-1.9.1
+The firmware API as-is upstream already has a cache firmware solution added
+a long time ago, as reflected by a resent patch set (before this one) I
+updated documentation for this given its not clearly well known and people
+keep adding their own caching solutions, the firmware API requests firmware
+prior to suspend so that upon resume the firmware is present, precisely to
+avoid race issues. I will note that this feature is only for non-usermode helper
+firmware API, upon suspend we *kill* any pending user mode helper requests
+given that this can delay suspend, as such drivers using or relying (only
+2) on the user mode helper for firmware have no solution built in for
+the cache stuff and I can't say I care given there seems to be no valid
+modern use case given as a requirement for it yet. In fact there was a bug
+in the firmware_class code that *allows* the cache call to request the
+usermode helper, obviously that's buggy if we are trying to kill the
+usermode helper upon suspend...  so a pending patch fixes that. That's been
+a long standing bug and surprised no one ever picked up on it.
+
+> > As such the current devised solution in the sysdata API is called for, given
+> > if you indicated that keep = false, you are explicitly telling the firmware
+> > API that your firmware will certainly not be needed after the callback is
+> > called.
+> > 
+> > So for the sync case, a new callback is needed, and that explains the extra
+> > bit of code if someone conerts from the old API to the new one.
+> > 
+> > [3] https://lkml.kernel.org/r/20160803161821.GB32965@dtor-ws
+> > 
+> >>> or a magical "sysdata_desc" descriptor,
+> >>
+> >> This is one way to make a flexible and extensible API without affecting drivers
+> >> with further collateral evolutions as it gets extended. Its no different than
+> >> the "flags" lesson learned from writing system calls, for instance.
+> >>
+> >> Descriptor seemed, fitting, let me know if you have any other preference.
+> > 
+> > I haven't heard otherwise so will be sticking to that.
+> 
+> How about sysdata_req{,uest}_params?
+
+Thanks will go with that.
+
+> >>> and having a new name ("sysdata") that is less descriptive than the old one
+> >>> ("firmware")
+> >>
+> >> Well no, the APIs are used in *a lot* of cases for things that are not firmware
+> >> already, and let's recall I originally started working on this to replace CRDA
+> >> from userspace to be able to just fetch the signed regulatory database file
+> >> from the kernel. Calling it firmware simply makes no sense anymore.
+> > 
+> > So help me bike shed. This seems to be sticking point and I frankly don't
+> > care what we call it. I've asked others for name suggestions and here are
+> > a few suggestions:
+> > 
+> >  o driver_data
+> >  o dsd: device specific data
+> >  o xfw - eXtensible firmware API
+> >  o bbl - binary blob loader
+> > 
+> > Can someone just pick something? I really, really do not care.
+> > 
+> > If I don't hear anything concrete I will go with driver_data.
+> 
+> bit of skin crawling here, but not enough to care.
+
+Bike shedding is so much fun. Not.
+
+> >>> are all in my opinion making the example patch be a
+> >>> step _backwards_ rather than an improvement. It does not look like a
+> >>> simpler or more natural interface for a driver.
+> >>
+> >> Hope the above explains the current state. Feedback on desirable changes
+> >> welcomed.
+> >>
+> >> [0] https://lkml.kernel.org/r/1466117661-22075-5-git-send-email-mcgrof@kernel.org
+> > 
+> > All this said, this series is still justified, the extra code only comes in
+> > place when porting the sync requests due to the callback stuff described above
+> > and the inability to use devm there. As far as I can tell, just the bike
+> > shedding is left.
+> > 
+> > As it stands then, unless I hear back, I'll roll Daniel Wagner's changes into
+> > my series to be applied first, then rename sysdata driver_data, rebase all this
+> > and shoot it out again.
+> > 
+> > Only a few drivers will be converted over as demos. The SmPL grammar can be used
+> > by those who do want a change due to the few features added. Long term we'll
+> > add more features to the new API:
+> > 
+> >  o the whole ihex conversion is crap, we should do this within the API and
+> >    this can just be specified as a descriptor preference, then drivers
+> >    don't have to deal with the ihex crap themselves.
+> > 
+> >  o firmware singing - this lets us kill CRDA as a requirement
+> 
+> Strongly suspect a typo here :-p
+
+Indeed, thanks :)
+
+  Luis
