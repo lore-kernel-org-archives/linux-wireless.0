@@ -1,12 +1,11 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:43768 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753396AbcHJSbv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:31:51 -0400
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: Stephan Mueller <smueller@chronox.de>
-CC: Herbert Xu <herbert@gondor.apana.org.au>,
+Received: from mail.eperm.de ([89.247.134.16]:34716 "EHLO mail.eperm.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932444AbcHJSDR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2016 14:03:17 -0400
+From: Stephan Mueller <smueller@chronox.de>
+To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
 	Matt Mackall <mpm@selenic.com>,
 	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
 	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
@@ -15,47 +14,15 @@ CC: Herbert Xu <herbert@gondor.apana.org.au>,
 	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
 	"jason@lakedaemon.net" <jason@lakedaemon.net>,
 	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: RE: [PATCH 2/2] ath9k: disable RNG by default
-Date: Wed, 10 Aug 2016 07:43:45 +0000
-Message-ID: <389c3c1fdde2447aacf31a8b4aadfc08@aptaiexm02f.ap.qualcomm.com> (sfid-20160810_220336_475149_7FB6277E)
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
- <1526134.1iUazSISyZ@positron.chronox.de>
- <c0951e085764481d8d85637734e2e14b@aptaiexm02f.ap.qualcomm.com>
- <4321952.1nMxxDi7Wz@positron.chronox.de>
- <1e8e88ad7de64c528f08c75ff9176ab8@aptaiexm02f.ap.qualcomm.com>
-In-Reply-To: <1e8e88ad7de64c528f08c75ff9176ab8@aptaiexm02f.ap.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Date: Wed, 10 Aug 2016 09:27:06 +0200
+Message-ID: <4321952.1nMxxDi7Wz@positron.chronox.de> (sfid-20160810_232649_879788_FE53D5F9)
+In-Reply-To: <c0951e085764481d8d85637734e2e14b@aptaiexm02f.ap.qualcomm.com>
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <1526134.1iUazSISyZ@positron.chronox.de> <c0951e085764481d8d85637734e2e14b@aptaiexm02f.ap.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
-
-Hi Stephan,
-
-The problem with using the add_device_randomness is that we do not know when to call that API, and we have to make our solution either timer-based or interrupt based, which is not really the correct way of implementing this feature.
-
-Thanks,
-Miaoqing
-
------Original Message-----
-From: Pan, Miaoqing 
-Sent: Wednesday, August 10, 2016 3:41 PM
-To: Stephan Mueller <smueller@chronox.de>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>; Matt Mackall <mpm@selenic.com>; miaoqing@codeaurora.org; Valo, Kalle <kvalo@qca.qualcomm.com>; linux-wireless@vger.kernel.org; ath9k-devel <ath9k-devel@qca.qualcomm.com>; linux-crypto@vger.kernel.org; jason@lakedaemon.net; Sepehrdad, Pouyan <pouyans@qti.qualcomm.com>
-Subject: RE: [PATCH 2/2] ath9k: disable RNG by default
-
-Hi Stephan,
-
-That is set as "optional but highly recommended" in the FIPS doc, plus the fact that we do not have a requirement to have a FIP-approved RNG in our case. Although FIPS might impose higher and stronger requirements on the source of entropy, but not passing those tests does not mean the source of entropy is of bad quality. As I mentioned earlier, we just need to evaluate the amount of entropy it provides correctly and use it accordingly. If we are dealing with a chip which has a HW RNG, we expect extremely high entropy close to full from our source, but this patch is for chips which do not have a dedicated HW RNG in place to improve the quality of random number generation on the platform.
-
-Thanks,
-Miaoqing
-
------Original Message-----
-From: Stephan Mueller [mailto:smueller@chronox.de]
-Sent: Wednesday, August 10, 2016 3:27 PM
-To: Pan, Miaoqing <miaoqing@qti.qualcomm.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>; Matt Mackall <mpm@selenic.com>; miaoqing@codeaurora.org; Valo, Kalle <kvalo@qca.qualcomm.com>; linux-wireless@vger.kernel.org; ath9k-devel <ath9k-devel@qca.qualcomm.com>; linux-crypto@vger.kernel.org; jason@lakedaemon.net; Sepehrdad, Pouyan <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
 
 Am Mittwoch, 10. August 2016, 07:15:49 CEST schrieb Pan, Miaoqing:
 
@@ -63,16 +30,18 @@ Hi Miaoqing,
 
 > Hi Stephan,
 > 
-> NIST SP 800-22-rev1a and NIST SP 800-90B are used together to evaluate 
-> the amount of min entropy the source provides, and not to decide if 
-> the source has passed the tests or failed. See
+> NIST SP 800-22-rev1a and NIST SP 800-90B are used together to evaluate the
+> amount of min entropy the source provides, and not to decide if the source
+> has passed the tests or failed. See
 > 
 > https://github.com/usnistgov/SP800-90B_EntropyAssessment
 > 
-> The goal is often to make sure the input entropy is more than the 
-> entropy we expect from the output.
+> The goal is often to make sure the input entropy is more than the entropy we
+> expect from the output.
 
-You are correct on the SP800-90B tests (hence I did not refer to them for the binary decision). Yet, SP800-22 with the associated tool delivers a binary decision.
+You are correct on the SP800-90B tests (hence I did not refer to them for the 
+binary decision). Yet, SP800-22 with the associated tool delivers a binary 
+decision.
 
 Ciao
 Stephan
