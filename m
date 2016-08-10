@@ -1,122 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40978 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756080AbcH2V0i (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 17:26:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 00:26:08 +0300
-Message-Id: <1472505976-21108-8-git-send-email-luca@coelho.fi> (sfid-20160829_233017_558876_E2CDC00E)
-In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
-References: <1472505827.27868.41.camel@coelho.fi>
- <1472505976-21108-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 08/16] iwlwifi: mvm: support txq tid owner change
+Received: from imap.thunk.org ([74.207.234.97]:42664 "EHLO imap.thunk.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752224AbcHJXog (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2016 19:44:36 -0400
+Date: Wed, 10 Aug 2016 19:44:25 -0400
+From: Theodore Ts'o <tytso@mit.edu>
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Stephan Mueller <smueller@chronox.de>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>,
+	"herbert@gondor.apana.org.au" <herbert@gondor.apana.org.au>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH v2] RANDOM: ATH9K RNG delivers zero bits of entropy
+Message-ID: <20160810234425.GG10523@thunk.org> (sfid-20160811_014605_658130_6AD2CFB1)
+References: <34197429.2CvoIfft9B@positron.chronox.de>
+ <1654172.XfclnXhRmn@positron.chronox.de>
+ <657897b90b8344eeab10d7a0f604988d@aptaiexm02f.ap.qualcomm.com>
+ <1830987.VF9l4XmGxv@tauon.atsec.com>
+ <20160808172930.GD4511@io.lakedaemon.net>
+ <99963d34acea47bbacb3ca73b18fed9f@aptaiexm02f.ap.qualcomm.com>
+ <20160809115622.GG9515@thunk.org>
+ <20160809140444.GB2013@io.lakedaemon.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160809140444.GB2013@io.lakedaemon.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Tue, Aug 09, 2016 at 02:04:44PM +0000, Jason Cooper wrote:
+> 
+> iiuc, Ted, you're saying using the hw_random framework would be
+> disasterous because despite most drivers having a default quality of 0,
+> rngd assumes 1 bit of entropy for every bit read?
 
-Every active TXQ is assigned to a TID given through the
-SCD_CONFIG_CMD, and acts as an identifier in the FW. However,
-there may be cases this ownership needs to be changed.
+Sorry, what I was trying to say (but failed) was that bypassing the
+hwrng framework and injecting entropy directly the entropy pool was
+disatrous.
 
-For example, in the following scenario:
- 1. TID x is owner of a queue
- 2. Due to a shortage of queues, TID y and z share with x
- 3. TID x becomes inactive and needs to be removed from the
-    shared queue.
-In this scenario, if another queue is freed and traffic on x
-continues, we can't allocate it a new queue as long as it is
-the owner of the first queue.
+> Thankfully, most hw_random drivers don't set the quality.  So unless the
+> user sets the default_quality param, it's zero.
 
-Support moving ownership of a TXQ to a different TID (same
-STA) without stopping the queue.
+The fact that this is "most" and not "all" does scare me a little.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 51 ++++++++++++++++++++++++++++
- 1 file changed, 51 insertions(+)
+As far as I'm concerned *all* hw_random drivers should set quality to
+zero, since it should be up to the system administrator.  Perhaps the
+one exception is virtio_rng, since if you don't trust the hypvervisor,
+the security of the VM is hopeless.  That being said, I have seen
+configurations of KVM which use:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 190bf1a..e52c46b 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -850,6 +850,41 @@ out_err:
- 	return ret;
- }
- 
-+static void iwl_mvm_change_queue_owner(struct iwl_mvm *mvm, int queue)
-+{
-+	struct iwl_scd_txq_cfg_cmd cmd = {
-+		.scd_queue = queue,
-+		.action = SCD_CFG_UPDATE_QUEUE_TID,
-+	};
-+	s8 sta_id;
-+	int tid;
-+	unsigned long tid_bitmap;
-+	int ret;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+
-+	spin_lock_bh(&mvm->queue_info_lock);
-+	sta_id = mvm->queue_info[queue].ra_sta_id;
-+	tid_bitmap = mvm->queue_info[queue].tid_bitmap;
-+	spin_unlock_bh(&mvm->queue_info_lock);
-+
-+	if (WARN(!tid_bitmap, "TXQ %d has no tids assigned to it\n", queue))
-+		return;
-+
-+	/* Find any TID for queue */
-+	tid = find_first_bit(&tid_bitmap, IWL_MAX_TID_COUNT + 1);
-+	cmd.tid = tid;
-+	cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[tid_to_mac80211_ac[tid]];
-+
-+	ret = iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd), &cmd);
-+	if (ret)
-+		IWL_ERR(mvm, "Failed to update owner of TXQ %d (ret=%d)\n",
-+			queue, ret);
-+	else
-+		IWL_DEBUG_TX_QUEUES(mvm, "Changed TXQ %d ownership to tid %d\n",
-+				    queue, tid);
-+}
-+
- static void iwl_mvm_unshare_queue(struct iwl_mvm *mvm, int queue)
- {
- 	struct ieee80211_sta *sta;
-@@ -1005,14 +1040,30 @@ void iwl_mvm_add_new_dqa_stream_wk(struct work_struct *wk)
- 	/* Reconfigure queues requiring reconfiguation */
- 	for (queue = 0; queue < IWL_MAX_HW_QUEUES; queue++) {
- 		bool reconfig;
-+		bool change_owner;
- 
- 		spin_lock_bh(&mvm->queue_info_lock);
- 		reconfig = (mvm->queue_info[queue].status ==
- 			    IWL_MVM_QUEUE_RECONFIGURING);
-+
-+		/*
-+		 * We need to take into account a situation in which a TXQ was
-+		 * allocated to TID x, and then turned shared by adding TIDs y
-+		 * and z. If TID x becomes inactive and is removed from the TXQ,
-+		 * ownership must be given to one of the remaining TIDs.
-+		 * This is mainly because if TID x continues - a new queue can't
-+		 * be allocated for it as long as it is an owner of another TXQ.
-+		 */
-+		change_owner = !(mvm->queue_info[queue].tid_bitmap &
-+				 BIT(mvm->queue_info[queue].txq_tid)) &&
-+			       (mvm->queue_info[queue].status ==
-+				IWL_MVM_QUEUE_SHARED);
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 
- 		if (reconfig)
- 			iwl_mvm_unshare_queue(mvm, queue);
-+		else if (change_owner)
-+			iwl_mvm_change_queue_owner(mvm, queue);
- 	}
- 
- 	/* Go over all stations with deferred traffic */
--- 
-2.8.1
+	-object rng-random,filename=/dev/urandom,id=rng0 \
+	-device virtio-rng-pci,rng=rng0
+
+Which is somewhat non-ideal.  (Try running od -x /dev/random on such a
+guest system....)
+
+					- Ted
+
