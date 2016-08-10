@@ -1,44 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:52946 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753564AbcH2V0I (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 17:26:08 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: Re: [PATCH 5/5] ath9k: Make EEPROM endianness swapping configurable via devicetree
-Date: Mon, 29 Aug 2016 23:25:37 +0200
-Cc: nbd@nbd.name, kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org, mark.rutland@arm.com,
-        chunkeey@googlemail.com, robh+dt@kernel.org
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com> <201608291410.44338.arnd@arndb.de> <CAFBinCCSBE8KsLgP3t=FzB-2jgjfQBtuF+EjqQEk-7mmmps_Pg@mail.gmail.com>
-In-Reply-To: <CAFBinCCSBE8KsLgP3t=FzB-2jgjfQBtuF+EjqQEk-7mmmps_Pg@mail.gmail.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:29459 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935270AbcHJTnb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2016 15:43:31 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
+	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
+	"Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
+Subject: RE: [PATCH v4] cfg80211: Provision to allow the support for different
+ beacon intervals
+Date: Wed, 10 Aug 2016 14:53:51 +0000
+Message-ID: <33789175707446c89435264aa54f7474@APSANEXR01F.ap.qualcomm.com> (sfid-20160810_214341_766945_D59B3CE4)
+References: <1470374768-22297-1-git-send-email-pkushwah@qti.qualcomm.com>
+	 <1470386912.2977.28.camel@sipsolutions.net>
+	 <9513d3caf9354aeda408f65128b4a079@aphydexm01f.ap.qualcomm.com>
+ <1470729393.28531.11.camel@sipsolutions.net>
+In-Reply-To: <1470729393.28531.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201608292325.38091.arnd@arndb.de> (sfid-20160829_232611_441510_D2FE635F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 29 August 2016, Martin Blumenstingl wrote:
-> > and then do a swab32() on them. I suspect these should just be __le32
-> > (and __le16, respectively where needed), using appropriate accessors
-> > everywhere that those fields are being read instead of having one function
-> > that tries to turn them into cpu-native ordering.
-> I'm not sure if we want those fields to be __le32:
-> BIT(0) in the eepMisc field indicates whether to interpret the data as
-> big or little endian.
-> When this bit is set we would want these fields to be __be32 instead -
-> so I guess the current implementation is "OK" for this specific
-> use-case.
-
-Ok, I see. It's still confusing because it's different from how other
-drivers handle this (case in point: I was very confused by this). 
-
-Do you see any downsides in changing the code to consistently annotate
-the eeprom as either __le or __be (whichever is more common), using
-the respective endianess accessors, and then doing the swap if the
-data we read is the opposite way?
-
-	Arnd
+PiBJIGRvbid0IGtub3cgd2hhdCB5b3VyIGZpcm13YXJlL2hhcmR3YXJlIGNhcGFiaWxpdGllcyBh
+cmUgOikNCkkgd2FzIG5vdCByZWZlcnJpbmcgdG8gYW55IHNwZWNpZmljIGFyY2hpdGVjdHVyZSBo
+ZXJlLiAgV2l0aCB0aGUgMiBjaG9pY2VzIHlvdSBoYWQgbWVudGlvbmVkIChtZXNoIG11c3QgbWF0
+Y2ggZWl0aGVyIG9uZSBvZiB0aGVtIC8gbWFrZSB0aGlzIGFwcGx5IG9uIG1lc2ggYW5kIElCU1Mg
+YXMgd2VsbCApIHdlIHNlZSB0aGF0IHRoaXMgbmV3IGZsYWcgYmVpbmcgZGVmaW5lZCBpbiB0aGUg
+aW50ZXJmYWNlIGNvbWJpbmF0aW9ucyBjb3VsZCBiZXR0ZXIgYmUgYXBwbGljYWJsZSBmb3IgYWxs
+IHRoZSBiZWFjb25pbmcgaW50ZXJmYWNlcy4gDQpJZiB3ZSBoYWQgcmVzdHJpY3RlZCB0aGlzIHRv
+IEFQIC8gUDJQIEdPIGFuZCBoYXZlIE1lc2ggbWF0Y2ggZWl0aGVyIG9mIHRoZW0gLCBhIG5ldyBy
+ZXF1ZXN0ICggaW4gZnV0dXJlID8gKSB0byBoYXZlIGEgZGlmZmVyZW50IGludGVydmFsIGZvciBN
+ZXNoLCBJTU8gIHdvdWxkIGFzayBhIG5lZWQgZm9yIG5ldyBmbGFnICwgaXNuJ3QgPyAgT3VyIGlu
+dGVudGlvbiBoZXJlIHdhcyB0byBhdm9pZCB0aGlzIGJ5IGVuc3VyaW5nIHRoYXQgdGhpcyBmbGFn
+IGlzIGFwcGxpY2FibGUgZm9yIGFsbCB0aGUgYmVhY29uaW5nIGludGVyZmFjZSBjb21iaW5hdGlv
+bnMuIA0KDQo+SSdkIGFyZ3VlIHRoYXQgaW5zdGVhZCBvZiBoYXZpbmcgdGhlIGludGVyZmFjZSBj
+b21iaW5hdGlvbnMgZmxhZywgdGhhdA0KPm5sODAyMTEgYXR0cmlidXRlIGNvdWxkIGNhcnJ5IHRo
+ZSBHQ0Q/DQpJZiB5b3VyIHNheSBoZXJlIGlzIHRvIGp1c3QgdXNlIHRoZSB3aXBoeSBwYXJhbWV0
+ZXIgcmF0aGVyIHRoYW4gaGF2aW5nIHRoZSBmbGFnIGluIHRoZSBpbnRlcmZhY2UgY29tYmluYXRp
+b25zLCBzaWduaWZ5aW5nIHRoZSBzdXBwb3J0IGZvciBkaWZmZXJlbnQgYmVhY29uIGludGVydmFs
+cyAsIFllcyB3ZSB0b28gYWdyZWUgdG8geW91ciBwb2ludC4gDQpUaGlzIGlzIGNvbnNpZGVyaW5n
+IHRoZSBmYWN0IHRoYXQgdGhlIGN1cnJlbnQgaW1wbGVtZW50YXRpb24gcmVzdHJpY3RzIHRoZSB2
+YWxpZGF0aW9uIG9mIHRoZSBiZWFjb24gaW50ZXJ2YWwgKGNmZzgwMjExX3ZhbGlkYXRlX2JlYWNv
+bl9pbnQgKSB0byBvbmx5IEFQIC8gUDJQIEdPLiANCk5laXRoZXIgdGhlIE1lc2ggLyBJQlNTICgg
+am9pbiApIGhhdmUgdGhpcyByZXN0cmljdGlvbiAuIE5vdCBzdXJlIHdoeSB0aGlzIGlzIG5vdCBp
+bXBvc2VkIGZvciBNZXNoIC8gSUJTUyB0aG91Z2guIA0KQWZ0ZXIgaW50cm9kdWNpbmcgdGhpcyBm
+bGFnIGluIHRoZSBpbnRlcmZhY2UgY29tYmluYXRpb25zLCB3ZSBkbyBmZWVsIHRoYXQgY3VycmVu
+dGx5IGl0IGlzIG5vdCBnb2luZyB0byBhcHBseSBmb3IgTWVzaCAvIElCU1MgLCB1bmxlc3MgdGhl
+cmUgaXMgYSBmdXR1cmUgbmVlZCB0byBkbyBzbyAsIHdoaWNoIHdlIGFyZSBub3QgYXdhcmUgb2Yg
+LiANCldpdGggdGhlIGN1cnJlbnQgcmVzdHJpY3Rpb24gb2YgdmFsaWRhdGluZyB0aGUgYmVhY29u
+IGludGVydmFsIG9ubHkgZm9yIEFQIC8gUDJQIEdPICwgd2UgZG8gYWdyZWUgdG8gaGF2ZSBhIHNp
+bmdsZSBwYXJhbWV0ZXIgYWR2ZXJ0aXNlZCBieSB0aGUgZHJpdmVycyBpbnRlbmRpbmcgYm90aCAt
+IHN1cHBvcnQgdGhlIGRpZmZlcmVudCBiZWFjb24gaW50ZXJ2YWxzIGFuZCBhbHNvIHNpZ25pZnkg
+dGhlIEdDRCBhbW9uZyB0aGVtIChhIG5vbi16ZXJvIHZhbHVlIGZvciAibWluX2RpZmZfYmVhY29u
+X2ludGVydmFsX211bHRpcGxpZXIiIHNob3VsZCBhZGRyZXNzIHRoaXMgLCBpc24ndCApLiANCg0K
+UmVnYXJkcywNClN1bmlsDQoNCg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTog
+Sm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2VudDog
+VHVlc2RheSwgQXVndXN0IDksIDIwMTYgMToyNyBQTQ0KVG86IFVuZGVrYXJpLCBTdW5pbCBEdXR0
+IDx1c2R1dHRAcXRpLnF1YWxjb21tLmNvbT47IEt1c2h3YWhhLCBQdXJ1c2hvdHRhbSA8cGt1c2h3
+YWhAcXRpLnF1YWxjb21tLmNvbT4NCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7
+IE1hbGluZW4sIEpvdW5pIDxqb3VuaUBxY2EucXVhbGNvbW0uY29tPjsgS29uZGFiYXR0aW5pLCBH
+YW5lc2ggPGdhbmVzaGtAcXRpLnF1YWxjb21tLmNvbT47IEthbGlrb3QgVmVldGlsLCBNYWhlc2gg
+S3VtYXIgPG1rYWxpa290QHFjYS5xdWFsY29tbS5jb20+OyBIdWxsdXIgU3VicmFtYW55YW0sIEFt
+YXJuYXRoIDxhbWFybmF0aEBxY2EucXVhbGNvbW0uY29tPjsgS3VtYXIsIERlZXBhayAoUUNBKSA8
+ZGppbmRhbEBxdGkucXVhbGNvbW0uY29tPg0KU3ViamVjdDogUmU6IFtQQVRDSCB2NF0gY2ZnODAy
+MTE6IFByb3Zpc2lvbiB0byBhbGxvdyB0aGUgc3VwcG9ydCBmb3IgZGlmZmVyZW50IGJlYWNvbiBp
+bnRlcnZhbHMNCg0KDQo+IEkgZ3Vlc3MgLCB3ZSBjYW4gZXh0ZW5kIHRoaXMgdG8gbWVzaCBhbmQg
+SUJTUyBhcyB3ZWxsLg0KDQpJIGRvbid0IGtub3cgd2hhdCB5b3VyIGZpcm13YXJlL2hhcmR3YXJl
+IGNhcGFiaWxpdGllcyBhcmUgOikNCg0KPiA+IEl0IHNlZW1zIHRvIG1lIHRoYXQgaWYgSSB3ZXJl
+IHRvIHNwZWNpZnkgYmVhY29uIGludGVydmFscyB3aGljaCBoYXZlIA0KPiA+IGEgdmVyeSBzbWFs
+bCBHQ0QsIHlvdSdsbCBydW4gaW50byB0cm91YmxlIHdoZW4gYWN0dWFsbHkgc2VuZGluZyANCj4g
+PiBiZWFjb25zLg0KPiA+IFBlcmhhcHMgdGhlcmUgc2hvdWxkIGJlIGEgcmVxdWlyZW1lbnQgb24g
+dGhlIEdDRD8NCj4gQ2FuIHdlIGhhdmUgdGhpcyBwdWJsaXNoZWQgYnkgdGhlIGhvc3QgZHJpdmVy
+cyB0aHJvdWdoIGEgbmV3IHdpcGh5IA0KPiBwYXJhbWV0ZXIgLCBzYXkgIm1pbl9kaWZmX2JlYWNv
+bl9pbnRlcnZhbF9tdWx0aXBsaWVyIi4gVGhpcyBzZXQncyB0aGUgDQo+IGV4cGVjdGF0aW9uIHRo
+YXQgYW55IGRpZmZlcmVudCBiZWFjb24gaW50ZXJ2YWxzIG9uIHRoZSB3aXBoecKgwqBzaGFsbCBi
+ZSANCj4gYSBtdWx0aXBsZSBvZiB0aGlzIHBhcmFtZXRlciB3aGljaCBpcyBhZHZlcnRpc2VkIGJ5
+IHRoZSBob3N0IGRyaXZlciAsIA0KPiBpc24ndCA/DQo+IA0KSSdkIGFyZ3VlIHRoYXQgaW5zdGVh
+ZCBvZiBoYXZpbmcgdGhlIGludGVyZmFjZSBjb21iaW5hdGlvbnMgZmxhZywgdGhhdA0Kbmw4MDIx
+MSBhdHRyaWJ1dGUgY291bGQgY2FycnkgdGhlIEdDRD8NCg0Kam9oYW5uZXMNCg==
