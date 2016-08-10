@@ -1,180 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atlantic540.startdedicated.de ([188.138.9.77]:35476 "EHLO
-	atlantic540.startdedicated.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752435AbcHRNi1 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:43768 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753396AbcHJSbv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2016 09:38:27 -0400
-From: Daniel Wagner <wagi@monom.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	"Luis R . Rodriguez" <mcgrof@kernel.org>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>
-Subject: [PATCH 2/2] ath10k: use complete() instead complete_all()
-Date: Thu, 18 Aug 2016 15:12:06 +0200
-Message-Id: <1471525926-20384-3-git-send-email-wagi@monom.org> (sfid-20160818_153916_990762_98EB0921)
-In-Reply-To: <1471525926-20384-1-git-send-email-wagi@monom.org>
-References: <1471525926-20384-1-git-send-email-wagi@monom.org>
+	Wed, 10 Aug 2016 14:31:51 -0400
+From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+To: Stephan Mueller <smueller@chronox.de>
+CC: Herbert Xu <herbert@gondor.apana.org.au>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: RE: [PATCH 2/2] ath9k: disable RNG by default
+Date: Wed, 10 Aug 2016 07:43:45 +0000
+Message-ID: <389c3c1fdde2447aacf31a8b4aadfc08@aptaiexm02f.ap.qualcomm.com> (sfid-20160810_220336_475149_7FB6277E)
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
+ <1526134.1iUazSISyZ@positron.chronox.de>
+ <c0951e085764481d8d85637734e2e14b@aptaiexm02f.ap.qualcomm.com>
+ <4321952.1nMxxDi7Wz@positron.chronox.de>
+ <1e8e88ad7de64c528f08c75ff9176ab8@aptaiexm02f.ap.qualcomm.com>
+In-Reply-To: <1e8e88ad7de64c528f08c75ff9176ab8@aptaiexm02f.ap.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+Hi Stephan,
 
-There is only one waiter for the completion, therefore there
-is no need to use complete_all(). Let's make that clear by
-using complete() instead of complete_all().
+The problem with using the add_device_randomness is that we do not know when to call that API, and we have to make our solution either timer-based or interrupt based, which is not really the correct way of implementing this feature.
 
-The usage pattern of the completion is:
+Thanks,
+Miaoqing
 
-waiter context                          waker context
+-----Original Message-----
+From: Pan, Miaoqing 
+Sent: Wednesday, August 10, 2016 3:41 PM
+To: Stephan Mueller <smueller@chronox.de>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>; Matt Mackall <mpm@selenic.com>; miaoqing@codeaurora.org; Valo, Kalle <kvalo@qca.qualcomm.com>; linux-wireless@vger.kernel.org; ath9k-devel <ath9k-devel@qca.qualcomm.com>; linux-crypto@vger.kernel.org; jason@lakedaemon.net; Sepehrdad, Pouyan <pouyans@qti.qualcomm.com>
+Subject: RE: [PATCH 2/2] ath9k: disable RNG by default
 
-scan.started
-------------
+Hi Stephan,
 
-ath10k_start_scan()
-  lockdep_assert_held(conf_mutex)
-  auth10k_wmi_start_scan()
-  wait_for_completion_timeout(scan.started)
+That is set as "optional but highly recommended" in the FIPS doc, plus the fact that we do not have a requirement to have a FIP-approved RNG in our case. Although FIPS might impose higher and stronger requirements on the source of entropy, but not passing those tests does not mean the source of entropy is of bad quality. As I mentioned earlier, we just need to evaluate the amount of entropy it provides correctly and use it accordingly. If we are dealing with a chip which has a HW RNG, we expect extremely high entropy close to full from our source, but this patch is for chips which do not have a dedicated HW RNG in place to improve the quality of random number generation on the platform.
 
-					ath10k_wmi_event_scan_start_failed()
-					  complete(scan.started)
+Thanks,
+Miaoqing
 
-					ath10k_wmi_event_scan_started()
-					  complete(scan.started)
+-----Original Message-----
+From: Stephan Mueller [mailto:smueller@chronox.de]
+Sent: Wednesday, August 10, 2016 3:27 PM
+To: Pan, Miaoqing <miaoqing@qti.qualcomm.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>; Matt Mackall <mpm@selenic.com>; miaoqing@codeaurora.org; Valo, Kalle <kvalo@qca.qualcomm.com>; linux-wireless@vger.kernel.org; ath9k-devel <ath9k-devel@qca.qualcomm.com>; linux-crypto@vger.kernel.org; jason@lakedaemon.net; Sepehrdad, Pouyan <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
 
-scan.completed
---------------
+Am Mittwoch, 10. August 2016, 07:15:49 CEST schrieb Pan, Miaoqing:
 
-ath10k_scan_stop()
-  lockdep_assert_held(conf_mutex)
-  ath10k_wmi_stop_scan()
-  wait_for_completion_timeout(scan.completed)
+Hi Miaoqing,
 
-					__ath10k_scan_finish()
-					  complete(scan.completed)
+> Hi Stephan,
+> 
+> NIST SP 800-22-rev1a and NIST SP 800-90B are used together to evaluate 
+> the amount of min entropy the source provides, and not to decide if 
+> the source has passed the tests or failed. See
+> 
+> https://github.com/usnistgov/SP800-90B_EntropyAssessment
+> 
+> The goal is often to make sure the input entropy is more than the 
+> entropy we expect from the output.
 
-scan.on_channel
----------------
+You are correct on the SP800-90B tests (hence I did not refer to them for the binary decision). Yet, SP800-22 with the associated tool delivers a binary decision.
 
-ath10k_remain_on_channel()
-  mutex_lock(conf_mutex)
-  ath10k_start_scan()
-  wait_for_completion_timeout(scan.on_channel)
-
-					ath10k_wmi_event_scan_foreign_chan()
-					  complete(scan.on_channel)
-
-offchan_tx_completed
---------------------
-
-ath10k_offchan_tx_work()
-  mutex_lock(conf_mutex)
-  reinit_completion(offchan_tx_completed)
-  wait_for_completion_timeout(offchan_tx_completed)
-
-					ath10k_report_offchain_tx()
-					  complete(offchan_tx_completed)
-
-install_key_done
-----------------
-ath10k_install_key()
-  lockep_assert_held(conf_mutex)
-  reinit_completion(install_key_done)
-  wait_for_completion_timeout(install_key_done)
-
-				        ath10k_htt_t2h_msg_handler()
-					  complete(install_key_done)
-
-vdev_setup_done
----------------
-
-ath10k_monitor_vdev_start()
-  lockdep_assert_held(conf_mutex)
-   reinit_completion(vdev_setup_done)
-  ath10k_vdev_setup_sync()
-    wait_for_completion_timeout(vdev_setup_done)
-
-					ath10k_wmi_event_vdev_start_resp()
-					  complete(vdev_setup_done)
-
-ath10k_monitor_vdev_stop()
-  lockdep_assert_held(conf_mutex)
-  reinit_completion(vdev_setup_done()
-  ath10k_vdev_setup_sync()
-    wait_for_completion_timeout(vdev_setup_done)
-
-					ath10k_wmi_event_vdev_stopped()
-					 complete(vdev_setup_done)
-
-thermal.wmi_sync
-----------------
-ath10k_thermal_show_temp()
-  mutex_lock(conf_mutex)
-  reinit_completion(thermal.wmi_sync)
-  wait_for_completion_timeout(thermal.wmi_sync)
-
-					ath10k_thermal_event_temperature()
-					  complete(thermal.wmi_sync)
-
-bss_survey_done
----------------
-ath10k_mac_update_bss_chan_survey
-  lockdep_assert_held(conf_mutex)
-  reinit_completion(bss_survey_done)
-  wait_for_completion_timeout(bss_survey_done)
-
-					ath10k_wmi_event_pdev_bss_chan_info()
-					  complete(bss_survey_done)
-
-All complete() calls happen while the conf_mutex is taken. That means
-at max one waiter is possible.
-
-Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
----
- drivers/net/wireless/ath/ath10k/core.c | 16 ++++++++--------
- drivers/net/wireless/ath/ath10k/mac.c  |  2 +-
- 2 files changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index e889829..ed76601 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1497,14 +1497,14 @@ static void ath10k_core_restart(struct work_struct *work)
- 
- 	ieee80211_stop_queues(ar->hw);
- 	ath10k_drain_tx(ar);
--	complete_all(&ar->scan.started);
--	complete_all(&ar->scan.completed);
--	complete_all(&ar->scan.on_channel);
--	complete_all(&ar->offchan_tx_completed);
--	complete_all(&ar->install_key_done);
--	complete_all(&ar->vdev_setup_done);
--	complete_all(&ar->thermal.wmi_sync);
--	complete_all(&ar->bss_survey_done);
-+	complete(&ar->scan.started);
-+	complete(&ar->scan.completed);
-+	complete(&ar->scan.on_channel);
-+	complete(&ar->offchan_tx_completed);
-+	complete(&ar->install_key_done);
-+	complete(&ar->vdev_setup_done);
-+	complete(&ar->thermal.wmi_sync);
-+	complete(&ar->bss_survey_done);
- 	wake_up(&ar->htt.empty_tx_wq);
- 	wake_up(&ar->wmi.tx_credits_wq);
- 	wake_up(&ar->peer_mapping_wq);
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 0bbd0a0..c3c1c25 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3894,7 +3894,7 @@ void __ath10k_scan_finish(struct ath10k *ar)
- 		ar->scan.roc_freq = 0;
- 		ath10k_offchan_tx_purge(ar);
- 		cancel_delayed_work(&ar->scan.timeout);
--		complete_all(&ar->scan.completed);
-+		complete(&ar->scan.completed);
- 		break;
- 	}
- }
--- 
-2.7.4
+Ciao
+Stephan
