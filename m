@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54122 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753709AbcHSBAV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Aug 2016 21:00:21 -0400
-Message-ID: <1471555383.28620.5.camel@sipsolutions.net> (sfid-20160819_031515_602892_D123D791)
-Subject: Re: [PATCH 2/3] wlcore: Pass win_size taken from ieee80211_sta to FW
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Altshul <maxim.altshul@ti.com>,
-        linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Date: Thu, 18 Aug 2016 23:23:03 +0200
-In-Reply-To: <20160818073627.30972-3-maxim.altshul@ti.com>
-References: <20160818073627.30972-1-maxim.altshul@ti.com>
-         <20160818073627.30972-2-maxim.altshul@ti.com>
-         <20160818073627.30972-3-maxim.altshul@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.eperm.de ([89.247.134.16]:34728 "EHLO mail.eperm.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936493AbcHJSiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Aug 2016 14:38:17 -0400
+From: Stephan Mueller <smueller@chronox.de>
+To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+Cc: Herbert Xu <herbert@gondor.apana.org.au>,
+	Matt Mackall <mpm@selenic.com>,
+	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+	"jason@lakedaemon.net" <jason@lakedaemon.net>,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+Date: Wed, 10 Aug 2016 08:51:50 +0200
+Message-ID: <1526134.1iUazSISyZ@positron.chronox.de> (sfid-20160810_203903_657131_8A09EEA6)
+In-Reply-To: <82844e4b56c9475fabf22b3fe12b53bb@aptaiexm02f.ap.qualcomm.com>
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <14565196.xaXq375WQg@tauon.atsec.com> <82844e4b56c9475fabf22b3fe12b53bb@aptaiexm02f.ap.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-08-18 at 10:36 +0300, Maxim Altshul wrote:
-> When starting a new BA session, we must pass the win_size to the FW.
+Am Mittwoch, 10. August 2016, 06:46:31 CEST schrieb Pan, Miaoqing:
+
+Hi Miaoqing,
+
+> Hi Stephan,
 > 
-> To do this we take max_rx_aggregation_subframes (BA RX win size)
-> which is stored in ieee80211_sta structure (e.g per link and not per
-> HW)
+> Would you please provide a recent NIST document which asks the entropy
+> source to pass the NIST randomness tests ?
 
-I believe this is wrong, and you should use the struct
-ieee80211_ampdu_params::buf_size value that's passed to ampdu_action
-when the action is IEEE80211_AMPDU_RX_START.
+See FIPS 140-2 IG 7.15 which explicitly references SP800-22.
 
-johannes
+Ciao
+Stephan
