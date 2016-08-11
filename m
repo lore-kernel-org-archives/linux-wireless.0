@@ -1,69 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:33463 "EHLO
-	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934624AbcHBMVH (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:33465 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932581AbcHKQiE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:21:07 -0400
-Received: by mail-lf0-f54.google.com with SMTP id b199so137141028lfe.0
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 05:21:06 -0700 (PDT)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 1/2] ath: export alpha2 helper
-Date: Tue,  2 Aug 2016 14:20:53 +0200
-Message-Id: <1470140454-3899-2-git-send-email-bartosz.markowski@tieto.com> (sfid-20160802_175400_802839_03B46CA1)
-In-Reply-To: <1470140454-3899-1-git-send-email-bartosz.markowski@tieto.com>
-References: <1470140454-3899-1-git-send-email-bartosz.markowski@tieto.com>
+	Thu, 11 Aug 2016 12:38:04 -0400
+Received: by mail-pa0-f65.google.com with SMTP id vy10so40703pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2016 09:38:03 -0700 (PDT)
+Subject: Re: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1470261735-2977-1-git-send-email-denkenz@gmail.com>
+ <1470919643.12075.7.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <57ACA9E9.4020507@gmail.com> (sfid-20160811_183839_738308_37F600C8)
+Date: Thu, 11 Aug 2016 11:38:01 -0500
+MIME-Version: 1.0
+In-Reply-To: <1470919643.12075.7.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Michal Kazior <michal.kazior@tieto.com>
+Hi Johannes,
 
-This will be helpful for drivers that can acquire
-alpha2 regulatory codes.
+On 08/11/2016 07:47 AM, Johannes Berg wrote:
+> On Wed, 2016-08-03 at 17:02 -0500, Denis Kenzior wrote:
+>>
+>> +static int nl80211_dump_interface_parse(struct sk_buff *skb,
+>> +				    struct netlink_callback *cb,
+>> +				    int *filter_wiphy)
+>
+> Wrong indentation :)
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
----
- drivers/net/wireless/ath/regd.c | 3 ++-
- drivers/net/wireless/ath/regd.h | 1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+Sorry :)
 
-diff --git a/drivers/net/wireless/ath/regd.c b/drivers/net/wireless/ath/regd.c
-index 7e15ed9ed31f..820bf880ada3 100644
---- a/drivers/net/wireless/ath/regd.c
-+++ b/drivers/net/wireless/ath/regd.c
-@@ -449,7 +449,7 @@ static void ath_reg_apply_world_flags(struct wiphy *wiphy,
- 	}
- }
- 
--static u16 ath_regd_find_country_by_name(char *alpha2)
-+u16 ath_regd_find_country_by_name(char *alpha2)
- {
- 	unsigned int i;
- 
-@@ -460,6 +460,7 @@ static u16 ath_regd_find_country_by_name(char *alpha2)
- 
- 	return -1;
- }
-+EXPORT_SYMBOL(ath_regd_find_country_by_name);
- 
- static int __ath_reg_dyn_country(struct wiphy *wiphy,
- 				 struct ath_regulatory *reg,
-diff --git a/drivers/net/wireless/ath/regd.h b/drivers/net/wireless/ath/regd.h
-index 565d3075f06e..5d80be213fac 100644
---- a/drivers/net/wireless/ath/regd.h
-+++ b/drivers/net/wireless/ath/regd.h
-@@ -251,6 +251,7 @@ enum CountryCode {
- 
- bool ath_is_world_regd(struct ath_regulatory *reg);
- bool ath_is_49ghz_allowed(u16 redomain);
-+u16 ath_regd_find_country_by_name(char *alpha2);
- int ath_regd_init(struct ath_regulatory *reg, struct wiphy *wiphy,
- 		  void (*reg_notifier)(struct wiphy *wiphy,
- 				       struct regulatory_request *request));
--- 
-2.1.2
+Speaking of indentation, can you point me to a doc of the rules I should 
+follow?
 
+>
+>>   static int nl80211_dump_interface(struct sk_buff *skb, struct
+>> netlink_callback *cb)
+>>   {
+>>   	int wp_idx = 0;
+>>   	int if_idx = 0;
+>>   	int wp_start = cb->args[0];
+>>   	int if_start = cb->args[1];
+>> +	int filter_wiphy = cb->args[2];
+>>   	struct cfg80211_registered_device *rdev;
+>>   	struct wireless_dev *wdev;
+>>
+>> +	if (!wp_start && !if_start && !filter_wiphy) {
+>
+> This seems incorrect - you're setting
+>
+>> +		int ret;
+>> +
+>> +		filter_wiphy = -1;
+>> +
+>> +		ret = nl80211_dump_interface_parse(skb, cb,
+>> &filter_wiphy);
+>
+> it here, but it can take the value 0, so !filter_wiphy seems wrong?
+>
+
+I can confirm that I sanity checked this patch. Both ATTR_WIPHY, 
+ATTR_WDEV and wildcard dumps seemed to produce expected results.
+
+I noticed you applied this patch.  Is there a particular scenario where 
+it goes wrong or did you convince yourself it is correct?
+
+Regards,
+-Denis
