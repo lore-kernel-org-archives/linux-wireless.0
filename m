@@ -1,76 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37996 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757618AbcHCLki (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 07:40:38 -0400
-Date: Wed, 3 Aug 2016 14:40:23 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: thierry.escande@collabora.com
-Cc: linux-wireless@vger.kernel.org
-Subject: [bug report] NFC: nfcsim: Make use of the Digital layer
-Message-ID: <20160803114023.GA23064@mwanda> (sfid-20160803_134045_273689_4C535F24)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from www.zeus03.de ([194.117.254.33]:56563 "EHLO mail.zeus03.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932624AbcHKVNh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 17:13:37 -0400
+From: Wolfram Sang <wsa-dev@sang-engineering.com>
+To: linux-usb@vger.kernel.org
+Cc: Wolfram Sang <wsa-dev@sang-engineering.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 14/16] net: wireless: marvell: libertas_tf: if_usb: don't print error when allocating urb fails
+Date: Thu, 11 Aug 2016 23:13:06 +0200
+Message-Id: <1470949988-25705-2-git-send-email-wsa-dev@sang-engineering.com> (sfid-20160811_231454_616013_85A69452)
+In-Reply-To: <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
+References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
+ <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Thierry Escande,
+kmalloc will print enough information in case of failure.
 
-The patch 204bddcb508f: "NFC: nfcsim: Make use of the Digital layer"
-from Jun 23, 2016, leads to the following static checker warning:
+Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
+---
+ drivers/net/wireless/marvell/libertas_tf/if_usb.c | 12 +++---------
+ 1 file changed, 3 insertions(+), 9 deletions(-)
 
-	drivers/nfc/nfcsim.c:485 nfcsim_init()
-	error: we previously assumed 'link0' could be null (see line 457)
+diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+index 799a2efe579372..e0ade40d9497d7 100644
+--- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
+@@ -198,22 +198,16 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	}
+ 
+ 	cardp->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
+-	if (!cardp->rx_urb) {
+-		lbtf_deb_usbd(&udev->dev, "Rx URB allocation failed\n");
++	if (!cardp->rx_urb)
+ 		goto dealloc;
+-	}
+ 
+ 	cardp->tx_urb = usb_alloc_urb(0, GFP_KERNEL);
+-	if (!cardp->tx_urb) {
+-		lbtf_deb_usbd(&udev->dev, "Tx URB allocation failed\n");
++	if (!cardp->tx_urb)
+ 		goto dealloc;
+-	}
+ 
+ 	cardp->cmd_urb = usb_alloc_urb(0, GFP_KERNEL);
+-	if (!cardp->cmd_urb) {
+-		lbtf_deb_usbd(&udev->dev, "Cmd URB allocation failed\n");
++	if (!cardp->cmd_urb)
+ 		goto dealloc;
+-	}
+ 
+ 	cardp->ep_out_buf = kmalloc(MRVDRV_ETH_TX_PACKET_BUFFER_SIZE,
+ 				    GFP_KERNEL);
+-- 
+2.8.1
 
-drivers/nfc/nfcsim.c
-   450  static int __init nfcsim_init(void)
-   451  {
-   452          struct nfcsim_link *link0, *link1;
-   453          int rc;
-   454  
-   455          link0 = nfcsim_link_new();
-   456          link1 = nfcsim_link_new();
-   457          if (!link0 || !link1) {
-
-Say link0 is NULL here.
-
-   458                  rc = -ENOMEM;
-   459                  goto exit_err;
-   460          }
-   461  
-   462          nfcsim_debugfs_init();
-   463  
-   464          dev0 = nfcsim_device_new(link0, link1);
-   465          if (IS_ERR(dev0)) {
-   466                  rc = PTR_ERR(dev0);
-   467                  goto exit_err;
-   468          }
-   469  
-   470          dev1 = nfcsim_device_new(link1, link0);
-   471          if (IS_ERR(dev1)) {
-   472                  nfcsim_device_free(dev0);
-   473  
-   474                  rc = PTR_ERR(dev1);
-   475                  goto exit_err;
-   476          }
-   477  
-   478          pr_info("nfcsim " NFCSIM_VERSION " initialized\n");
-   479  
-   480          return 0;
-   481  
-   482  exit_err:
-   483          pr_err("Failed to initialize nfcsim driver (%d)\n", rc);
-   484  
-   485          nfcsim_link_free(link0);
-
-We oops inside the call to nfcsim_link_free().
-
-   486          nfcsim_link_free(link1);
-   487  
-   488          return rc;
-   489  }
-
-
-regards,
-dan carpenter
