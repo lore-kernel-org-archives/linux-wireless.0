@@ -1,52 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57614 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751187AbcHYNdH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Aug 2016 09:33:07 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Lobachevskii Vitalii <silverunicorn2011@yandex.ru>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce
-References: <321381b3-5dea-f16a-56cb-11120d4a38ef@yandex.ru>
-        <72b958e1-0200-cd6f-2012-e04ff6fb74cb@yandex.ru>
-Date: Thu, 25 Aug 2016 09:17:54 -0400
-In-Reply-To: <72b958e1-0200-cd6f-2012-e04ff6fb74cb@yandex.ru> (Lobachevskii
-        Vitalii's message of "Thu, 25 Aug 2016 14:23:12 +0300")
-Message-ID: <wrfjmvk1asxp.fsf@redhat.com> (sfid-20160825_153311_135027_CAF0516F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from www.zeus03.de ([194.117.254.33]:56431 "EHLO mail.zeus03.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932671AbcHKVMh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 17:12:37 -0400
+From: Wolfram Sang <wsa-dev@sang-engineering.com>
+To: linux-usb@vger.kernel.org
+Cc: Wolfram Sang <wsa-dev@sang-engineering.com>,
+	Pontus Fuchs <pontus.fuchs@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH 11/16] net: wireless: ath: ar5523: ar5523: don't print error when allocating urb fails
+Date: Thu, 11 Aug 2016 23:05:30 +0200
+Message-Id: <1470949539-25392-12-git-send-email-wsa-dev@sang-engineering.com> (sfid-20160811_231302_192604_FE908F8D)
+In-Reply-To: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
+References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Lobachevskii Vitalii <silverunicorn2011@yandex.ru> writes:
-> Hello,
->
-> The RTL8192CE device seems to work fine without any firmware, so you may
-> make it fully optional, removing dependency on FW_LOADER. Of course that
-> require some patching, but if I understood the driver internals
-> correctly, simple complete(&rtlpriv->firmware_loading_complete); would
-> be enough when firmware loading machinery is unavailable, that is, when
-> request_firmware_nowait returns -EINVAL (currently that may only happen
-> in improperly configured or patched kernels, like Linux-libre; see
-> attached messages for more information)
->
-> Of course I will try to fix Linux-libre “deblobbing” technique, as it
-> should never break anything that may work without a firmware. But
-> anyway, if a device and its driver may work without a certain kernel
-> feature, that feature should not be selected, I think.
+kmalloc will print enough information in case of failure.
 
-The realtek devices all require firmwere to operate correctly,
-including the 8192c series. There are a bunch of commands flying back
-and forth between the driver and the firmware.
+Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
+---
+ drivers/net/wireless/ath/ar5523/ar5523.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-If your device happens to work without loading the firmware then you
-have an old firmware blob loaded.
+diff --git a/drivers/net/wireless/ath/ar5523/ar5523.c b/drivers/net/wireless/ath/ar5523/ar5523.c
+index 8aded24bcdf49e..7a60d2e652dad6 100644
+--- a/drivers/net/wireless/ath/ar5523/ar5523.c
++++ b/drivers/net/wireless/ath/ar5523/ar5523.c
+@@ -706,10 +706,8 @@ static int ar5523_alloc_rx_bufs(struct ar5523 *ar)
+ 
+ 		data->ar = ar;
+ 		data->urb = usb_alloc_urb(0, GFP_KERNEL);
+-		if (!data->urb) {
+-			ar5523_err(ar, "could not allocate rx data urb\n");
++		if (!data->urb)
+ 			goto err;
+-		}
+ 		list_add_tail(&data->list, &ar->rx_data_free);
+ 		atomic_inc(&ar->rx_data_free_cnt);
+ 	}
+@@ -824,7 +822,6 @@ static void ar5523_tx_work_locked(struct ar5523 *ar)
+ 
+ 		urb = usb_alloc_urb(0, GFP_KERNEL);
+ 		if (!urb) {
+-			ar5523_err(ar, "Failed to allocate TX urb\n");
+ 			ieee80211_free_txskb(ar->hw, skb);
+ 			continue;
+ 		}
+@@ -949,10 +946,8 @@ static int ar5523_alloc_tx_cmd(struct ar5523 *ar)
+ 	init_completion(&cmd->done);
+ 
+ 	cmd->urb_tx = usb_alloc_urb(0, GFP_KERNEL);
+-	if (!cmd->urb_tx) {
+-		ar5523_err(ar, "could not allocate urb\n");
++	if (!cmd->urb_tx)
+ 		return -ENOMEM;
+-	}
+ 	cmd->buf_tx = usb_alloc_coherent(ar->dev, AR5523_MAX_TXCMDSZ,
+ 					 GFP_KERNEL,
+ 					 &cmd->urb_tx->transfer_dma);
+-- 
+2.8.1
 
-At least this is the case for the USB version of the device, and I find
-it highly unlikely the PCIe version is any different.
-
-Trying to remove the firmware loading error is just plain silly.
-
-Jes
