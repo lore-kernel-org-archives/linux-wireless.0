@@ -1,47 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:38743 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932165AbcHIJ5x (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 05:57:53 -0400
-Date: Tue, 9 Aug 2016 17:56:57 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Message-ID: <20160809095657.GB6618@gondor.apana.org.au> (sfid-20160809_115756_902985_4E0AB2EC)
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
- <1645997.7cVzaEi3NG@tauon.atsec.com>
- <20160809094656.GB6529@gondor.apana.org.au>
- <12791731.pG3fmEhvyp@tauon.atsec.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <12791731.pG3fmEhvyp@tauon.atsec.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:52828 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751264AbcHKNIk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 09:08:40 -0400
+Message-ID: <1470920916.12075.15.camel@sipsolutions.net> (sfid-20160811_150843_767640_44A237C9)
+Subject: Re: [PATCH v5] cfg80211: Provision to allow the support for
+ different beacon intervals
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	usdutt@qti.qualcomm.com, amarnath@qca.qualcomm.com,
+	djindal@qti.qualcomm.com
+Date: Thu, 11 Aug 2016 15:08:36 +0200
+In-Reply-To: <1470916154-18821-1-git-send-email-pkushwah@qti.qualcomm.com>
+References: <1470916154-18821-1-git-send-email-pkushwah@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 09, 2016 at 11:56:08AM +0200, Stephan Mueller wrote:
-> Am Dienstag, 9. August 2016, 17:46:56 CEST schrieb Herbert Xu:
-> 
-> Hi Herbert,
-> > 
-> > You're supposed to tweak the quality of the input.  In any case,
-> 
-> How is that tweak supposed to happen? The rngd does not allow changing the 
-> amount of read data relative to the assumed entropy.
 
-Hmm, I guess it depends on your distro.  Some do.
+> +static bool diff_beacon_interval_supported(struct wiphy *wiphy, u16
+> types,
+> +					   u32 beacon_int)
+> +{
+> +	const struct ieee80211_iface_combination *c;
+> +	u16 all_types;
+> +	int i, j;
+> +
+> +	for (i = 0; i < wiphy->n_iface_combinations; i++) {
+> +		c = &wiphy->iface_combinations[i];
+> +
+> +		if (!c->diff_beacon_int_gcd ||
+> +		    (beacon_int % c->diff_beacon_int_gcd))
+> +			continue;
+> +
+> +		all_types = 0;
+> +		for (j = 0; j < c->n_limits; j++)
+> +			all_types |= c->limits[j].types;
+> +
+> +		if (all_types & types)
+> +			return true;
+> +	}
+> +
+> +	return false;
+> +}
 
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+This seems odd. Shouldn't it use cfg80211_iter_combinations()? Might
+need some additional helper to understand which interface types are
+used right now - seems we mostly moved that to mac80211, but for this
+case it should probably stay in cfg80211? Or should it?
+
+johannes
