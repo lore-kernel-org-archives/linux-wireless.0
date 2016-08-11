@@ -1,60 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35056 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755316AbcHVTXy (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 15:23:54 -0400
-Subject: Re: [PATCH] rtlwifi: Fix missing country code for Great Britain
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1471619674-29439-1-git-send-email-Larry.Finger@lwfinger.net>
- <87wpj8vmqs.fsf@kamboji.qca.qualcomm.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-        Stable <stable@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <71332954-2da8-ae90-0305-deede823f317@lwfinger.net> (sfid-20160822_212431_638757_C1A75AE9)
-Date: Mon, 22 Aug 2016 14:23:29 -0500
-MIME-Version: 1.0
-In-Reply-To: <87wpj8vmqs.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from www.zeus03.de ([194.117.254.33]:56583 "EHLO mail.zeus03.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932816AbcHKVNi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 17:13:38 -0400
+From: Wolfram Sang <wsa-dev@sang-engineering.com>
+To: linux-usb@vger.kernel.org
+Cc: Wolfram Sang <wsa-dev@sang-engineering.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 16/16] net: wireless: realtek: rtlwifi: usb: don't print error when allocating urb fails
+Date: Thu, 11 Aug 2016 23:13:08 +0200
+Message-Id: <1470949988-25705-4-git-send-email-wsa-dev@sang-engineering.com> (sfid-20160811_231414_584881_B2AD377C)
+In-Reply-To: <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
+References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
+ <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/22/2016 10:36 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> Some RTL8821AE devices sold in Great Britain have the country code of
->> 0x25 encoded in their EEPROM. This value is not tested in the routine
->> that establishes the regulatory info for the chip. The fix is to set
->> this code to have the same capabilities as the EU countries.
->>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@vger.kernel.org>
->
-> [...]
->
->> --- a/drivers/net/wireless/realtek/rtlwifi/regd.c
->> +++ b/drivers/net/wireless/realtek/rtlwifi/regd.c
->> @@ -345,9 +345,9 @@ static const struct ieee80211_regdomain *_rtl_regdomain_select(
->>  		return &rtl_regdom_no_midband;
->>  	case COUNTRY_CODE_IC:
->>  		return &rtl_regdom_11;
->> -	case COUNTRY_CODE_ETSI:
->>  	case COUNTRY_CODE_TELEC_NETGEAR:
->>  		return &rtl_regdom_60_64;
->> +	case COUNTRY_CODE_ETSI:
->>  	case COUNTRY_CODE_SPAIN:
->>  	case COUNTRY_CODE_FRANCE:
->>  	case COUNTRY_CODE_ISRAEL:
->
-> I didn't check the full source, but here you seem to be changing also
-> the content of ETSI regdomain. The commit log doesn't mention anything
-> about that so I want to double check that this is really intentionally.
+kmalloc will print enough information in case of failure.
 
-Yes, I did intend to change all of ETSI. It was previously allowing channels 
-appropriate for China and Israel.
+Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/usb.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-I will resubmit with an improved commit message.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+index 41617b7b082260..32aa5c1d070a07 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/usb.c
++++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+@@ -739,11 +739,8 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
+ 	for (i = 0; i < rtlusb->rx_urb_num; i++) {
+ 		err = -ENOMEM;
+ 		urb = usb_alloc_urb(0, GFP_KERNEL);
+-		if (!urb) {
+-			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
+-				 "Failed to alloc URB!!\n");
++		if (!urb)
+ 			goto err_out;
+-		}
+ 
+ 		err = _rtl_prep_rx_urb(hw, rtlusb, urb, GFP_KERNEL);
+ 		if (err < 0) {
+@@ -907,15 +904,12 @@ static void _rtl_tx_complete(struct urb *urb)
+ static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
+ 				struct sk_buff *skb, u32 ep_num)
+ {
+-	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
+ 	struct urb *_urb;
+ 
+ 	WARN_ON(NULL == skb);
+ 	_urb = usb_alloc_urb(0, GFP_ATOMIC);
+ 	if (!_urb) {
+-		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
+-			 "Can't allocate URB for bulk out!\n");
+ 		kfree_skb(skb);
+ 		return NULL;
+ 	}
+-- 
+2.8.1
 
-Thanks,
-
-Larry
