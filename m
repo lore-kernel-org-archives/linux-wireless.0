@@ -1,69 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f182.google.com ([209.85.217.182]:34294 "EHLO
-	mail-ua0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248AbcHMDoM (ORCPT
+Received: from mail2.tohojo.dk ([77.235.48.147]:35246 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752041AbcHKMeu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2016 23:44:12 -0400
-Received: by mail-ua0-f182.google.com with SMTP id k90so6675332uak.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2016 20:44:11 -0700 (PDT)
+	Thu, 11 Aug 2016 08:34:50 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+	linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: Re: [PATCH] mac80211: Keep CoDel stats per txq,
+	export them in debugfs.
+References: <20160720145442.1098-1-toke@toke.dk>
+	<1470918167.12075.2.camel@sipsolutions.net>
+Date: Thu, 11 Aug 2016 14:34:44 +0200
+In-Reply-To: <1470918167.12075.2.camel@sipsolutions.net> (Johannes Berg's
+	message of "Thu, 11 Aug 2016 14:22:47 +0200")
+Message-ID: <87popf8owr.fsf@toke.dk> (sfid-20160811_143453_969636_1705B51E)
 MIME-Version: 1.0
-In-Reply-To: <20160812.202613.197744153887748230.davem@davemloft.net>
-References: <1471047330-8153-1-git-send-email-pgynther@google.com> <20160812.202613.197744153887748230.davem@davemloft.net>
-From: Petri Gynther <pgynther@google.com>
-Date: Fri, 12 Aug 2016 20:44:10 -0700
-Message-ID: <CAGXr9JEvGDFU2rsWf4N6uM1JTE0W7eBT+7+6Jj-zqEydxyvrWA@mail.gmail.com> (sfid-20160813_054416_033624_C4A8D7AA)
-Subject: Re: [PATCH] Modify is_zero_ether_addr() to handle byte-aligned addresses
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-	Joe Perches <joe@perches.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 12, 2016 at 8:26 PM, David Miller <davem@davemloft.net> wrote:
-> From: Petri Gynther <pgynther@google.com>
-> Date: Fri, 12 Aug 2016 17:15:30 -0700
+Johannes Berg <johannes@sipsolutions.net> writes:
+
+>> @@ -137,18 +137,20 @@ static int aqm_open(struct inode *inode, struct
+>> file *file)
+>>  	len += scnprintf(info->buf + len,
+>>  			 info->size - len,
+>>  			 "* vif\n"
+>> -			 "ifname addr ac backlog-bytes backlog-
+>> packets flows overlimit collisions tx-bytes tx-packets\n");
+>> +			 "ifname addr ac backlog-bytes backlog-
+>> packets flows drops marks overlimit collisions tx-bytes tx-
+>> packets\n");
 >
->> Root cause:
->> mwifiex driver calls is_zero_ether_addr() against byte-aligned address:
+> It seems to me that you have to change the buffer length to take this
+> into account?
+
+Haven't run into issues with running out of buffer space in my testing.
+But yeah, guess that could become an issue.
+
+>>  	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+>>  		txqi = to_txq_info(sdata->vif.txq);
+>>  		len += scnprintf(info->buf + len, info->size - len,
+>> -				 "%s %pM %u %u %u %u %u %u %u %u\n",
+>> +				 "%s %pM %u %u %u %u %u %u %u %u %u
+>> %u\n",
+>>  				 sdata->name,
 >
-> MAC addresses really must be 16-bit aligned to be used with any of the
-> ethernet address manipulation and test interfaces.
+> Why is it this way anyway? It'd seem nicer to move the content of this
+> into the per-netdev subdirectories, and then it becomes a lot simpler
+> code too (yes, at the expense of some userspace, but still)
+
+Yeah, makes sense. Can do a larger reorg moving things into the
+per-netdev and per-station directories instead.
+
+>>  				 txqi->txq.ac,
+>>  				 txqi->tin.backlog_bytes,
+>>  				 txqi->tin.backlog_packets,
+>>  				 txqi->tin.flows,
+>> +				 txqi->cstats.drop_count,
+>> +				 txqi->cstats.ecn_mark,
+>>  				 txqi->tin.overlimit,
+>>  				 txqi->tin.collisions,
+>>  				 txqi->tin.tx_bytes,
 >
-> Therefore this driver should do whatever it takes to avoid passing
-> a byte-aligned MAC address anywhere.
->
-> We _SHOULD NOT_ add support for byte aligned addresses to these
-> interfaces, nor add routines which by-name can handle them.
->
+> Do you really want to add these in the middle? Seems that if you add
+> them at the end, you at least have *some* way of keeping this working
+> with older versions?
 
-ether_addr_equal_unaligned() exists.
+Well I though they should be logically grouped with overlimits, and was
+counting on no one actually parsing these yet. Guess if the information
+is moved that becomes moot.
 
-commit 73eaef87e98a96fe8b8a586f916b2721bf512efa
-Author: Joe Perches <joe@perches.com>
-Date:   Fri Dec 6 14:21:01 2013 -0800
 
-    etherdevice: Add ether_addr_equal_unaligned
+Will re-send; thanks for the feedback :)
 
-    Add a generic routine to test if possibly unaligned
-    to u16 Ethernet addresses are equal.
-
-    If CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS is set,
-    this uses the slightly faster generic routine
-    ether_addr_equal, otherwise this uses memcmp.
-
-    Signed-off-by: Joe Perches <joe@perches.com>
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-
-> Fix this driver instead of polluting out common interfaces
-> unnecessarily.
->
-
-Amitkumar -- is this fixable in mwifiex driver and firmware? It looks
-like your firmware expects u8 specific_bssid[ETH_ALEN] at byte offset
-1, per struct mwifiex_scan_cmd_config definition.
-
-I'll let Marvell take it from here.
-
-> Thanks.
+-Toke
