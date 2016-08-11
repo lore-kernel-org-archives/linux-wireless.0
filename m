@@ -1,70 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.zeus03.de ([194.117.254.33]:56404 "EHLO mail.zeus03.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932273AbcHKVM2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 17:12:28 -0400
-From: Wolfram Sang <wsa-dev@sang-engineering.com>
-To: linux-usb@vger.kernel.org
-Cc: Wolfram Sang <wsa-dev@sang-engineering.com>,
-	brcm80211-dev-list.pdl@broadcom.com, linux-can@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH 00/16] net: don't print error when allocating urb fails
-Date: Thu, 11 Aug 2016 23:05:19 +0200
-Message-Id: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com> (sfid-20160811_231323_272573_7BF9E30A)
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:36466 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbcHKTFn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 15:05:43 -0400
+Received: by mail-pa0-f47.google.com with SMTP id pp5so1182565pac.3
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2016 12:05:43 -0700 (PDT)
+Subject: Re: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1470261735-2977-1-git-send-email-denkenz@gmail.com>
+ <1470919643.12075.7.camel@sipsolutions.net> <57ACA9E9.4020507@gmail.com>
+ <1470938627.12075.25.camel@sipsolutions.net> <57ACC1F8.6070908@gmail.com>
+ <f2fe3568-0b83-9db4-278e-be0a1ad08ae8@broadcom.com>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <57ACCC84.8090104@gmail.com> (sfid-20160811_210546_267999_2C480C19)
+Date: Thu, 11 Aug 2016 14:05:40 -0500
+MIME-Version: 1.0
+In-Reply-To: <f2fe3568-0b83-9db4-278e-be0a1ad08ae8@broadcom.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This per-subsystem series is part of a tree wide cleanup. usb_alloc_urb() uses
-kmalloc which already prints enough information on failure. So, let's simply
-remove those "allocation failed" messages from drivers like we did already for
-other -ENOMEM cases. gkh acked this approach when we talked about it at LCJ in
-Tokyo a few weeks ago.
+Hi Arend,
 
+ >
+> You can find it in checkpatch.pl [1] :-p
+>
 
-Wolfram Sang (16):
-  net: can: usb: ems_usb: don't print error when allocating urb fails
-  net: can: usb: esd_usb2: don't print error when allocating urb fails
-  net: can: usb: gs_usb: don't print error when allocating urb fails
-  net: can: usb: kvaser_usb: don't print error when allocating urb fails
-  net: can: usb: peak_usb: pcan_usb_core: don't print error when
-    allocating urb fails
-  net: can: usb: usb_8dev: don't print error when allocating urb fails
-  net: usb: hso: don't print error when allocating urb fails
-  net: usb: lan78xx: don't print error when allocating urb fails
-  net: usb: usbnet: don't print error when allocating urb fails
-  net: wimax: i2400m: usb-notif: don't print error when allocating urb
-    fails
-  net: wireless: ath: ar5523: ar5523: don't print error when allocating
-    urb fails
-  net: wireless: broadcom: brcm80211: brcmfmac: usb: don't print error
-    when allocating urb fails
-  net: wireless: intersil: orinoco: orinoco_usb: don't print error when
-    allocating urb fails
-  net: wireless: marvell: libertas_tf: if_usb: don't print error when
-    allocating urb fails
-  net: wireless: marvell: mwifiex: usb: don't print error when
-    allocating urb fails
-  net: wireless: realtek: rtlwifi: usb: don't print error when
-    allocating urb fails
+Aha!  Will use that one next time.  Thanks.
 
- drivers/net/can/usb/ems_usb.c                        |  9 ++-------
- drivers/net/can/usb/esd_usb2.c                       |  3 ---
- drivers/net/can/usb/gs_usb.c                         |  9 ++-------
- drivers/net/can/usb/kvaser_usb.c                     |  7 +------
- drivers/net/can/usb/peak_usb/pcan_usb_core.c         |  6 +-----
- drivers/net/can/usb/usb_8dev.c                       |  5 +----
- drivers/net/usb/hso.c                                | 20 +++++---------------
- drivers/net/usb/lan78xx.c                            |  4 +---
- drivers/net/usb/usbnet.c                             |  5 +----
- drivers/net/wimax/i2400m/usb-notif.c                 |  1 -
- drivers/net/wireless/ath/ar5523/ar5523.c             |  9 ++-------
- .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c   |  8 ++------
- drivers/net/wireless/intersil/orinoco/orinoco_usb.c  |  4 +---
- drivers/net/wireless/marvell/libertas_tf/if_usb.c    | 12 +++---------
- drivers/net/wireless/marvell/mwifiex/usb.c           | 19 ++++---------------
- drivers/net/wireless/realtek/rtlwifi/usb.c           |  8 +-------
- 16 files changed, 27 insertions(+), 102 deletions(-)
-
--- 
-2.8.1
-
+Regards,
+-Denis
