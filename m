@@ -1,145 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35689 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753148AbcHUOtb (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Aug 2016 10:49:31 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org
-Cc: robh+dt@kernel.org, mark.rutland@arm.com, arnd@arndb.de,
-        chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 4/5] ath9k: Make the EEPROM swapping check use the eepmisc register
-Date: Sun, 21 Aug 2016 16:49:05 +0200
-Message-Id: <20160821144906.30984-5-martin.blumenstingl@googlemail.com> (sfid-20160821_164937_593400_9E3DC529)
-In-Reply-To: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+Received: from [220.194.60.87] ([220.194.60.87]:57164 "EHLO
+	mail.redflag-linux.com" rhost-flags-FAIL-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752015AbcHKWug (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 18:50:36 -0400
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
+Subject: Re: [PATCH] Staging: rtl8723au: os_intfs: fixed case statement is variable issue
+From: sunbing <sunbing@redflag-linux.com>
+In-Reply-To: <wrfja8gje395.fsf@redhat.com>
+Date: Fri, 12 Aug 2016 06:50:03 +0800
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, sunbing.linux@gmail.com
+Message-Id: <7FC388BC-FD87-44C6-87D3-AC041F1393DB@redflag-linux.com> (sfid-20160812_005055_213136_C3C34F4E)
+References: <1470924695-14931-1-git-send-email-sunbing@redflag-linux.com> <wrfja8gje395.fsf@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are two ways of swapping the EEPROM data in the ath9k driver:
-1) swab16 based on the first two EEPROM "magic" bytes (same for all
-   EEPROM formats)
-2) field and EEPROM format specific swab16/swab32 (different for
-   eeprom_def, eeprom_4k and eeprom_9287)
 
-The result of the first check was used to also enable the second swap.
-This behavior seems incorrect, since the data may only be byte-swapped
-(afterwards the data could be in the correct endianness).
-Thus we introduce a separate check based on the "eepmisc" register
-(which is part of the EEPROM data). When bit 0 is set, then the EEPROM
-format specific values are in "big endian". This is also done by the
-FreeBSD kernel, see [0] for example.
+On Aug 11, 2016, at 23:25, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
 
-This allows us to parse EEPROMs with the "correct" magic bytes but
-swapped EEPROM format specific values. These EEPROMs (mostly found in
-lantiq and broadcom based big endian MIPS based devices) only worked
-due to platform specific "hacks" which swapped the EEPROM so the
-magic was inverted, which also enabled the format specific swapping.
-With this patch the old behavior is still supported, but neither
-recommended nor needed anymore.
+> Bing Sun <sunbing@redflag-linux.com> writes:
+>> Fixed sparse parse error:
+>> Expected constant expression in case statement.
+>> 
+>> Signed-off-by: Bing Sun <sunbing@redflag-linux.com>
+>> ---
+>> drivers/staging/rtl8723au/os_dep/os_intfs.c | 11 +++++------
+>> 1 file changed, 5 insertions(+), 6 deletions(-)
+>> 
+>> diff --git a/drivers/staging/rtl8723au/os_dep/os_intfs.c b/drivers/staging/rtl8723au/os_dep/os_intfs.c
+>> index b8848c2..f30d5d2 100644
+>> --- a/drivers/staging/rtl8723au/os_dep/os_intfs.c
+>> +++ b/drivers/staging/rtl8723au/os_dep/os_intfs.c
+>> @@ -283,14 +283,13 @@ static u32 rtw_classify8021d(struct sk_buff *skb)
+>> 	 */
+>> 	if (skb->priority >= 256 && skb->priority <= 263)
+>> 		return skb->priority - 256;
+>> -	switch (skb->protocol) {
+>> -	case htons(ETH_P_IP):
+>> +
+>> +	if (skb->protocol == htons(ETH_P_IP)) {
+>> 		dscp = ip_hdr(skb)->tos & 0xfc;
+>> -		break;
+>> -	default:
+>> -		return 0;
+>> +		return dscp >> 5;
+>> 	}
+>> -	return dscp >> 5;
+>> +
+>> +	return 0;
+>> }
+> 
+> Pardon me here, but I find it really hard to see how this change is an
+> improvement over the old code in any shape or form.
+> 
+> Jes
 
-[0]
-https://github.com/freebsd/freebsd/blob/50719b56d9ce8d7d4beb53b16e9edb2e9a4a7a18/sys/dev/ath/ath_hal/ah_eeprom_9287.c#L351
----
- drivers/net/wireless/ath/ath9k/eeprom.c | 57 ++++++++++++++++++++++++---------
- 1 file changed, 41 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index a449588..8138a1d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -155,11 +155,19 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
- 	return ret;
- }
- 
-+#ifdef __BIG_ENDIAN
-+#define EXPECTED_EEPMISC_VAL AR5416_EEPMISC_BIG_ENDIAN
-+#else
-+#define EXPECTED_EEPMISC_VAL 0
-+#endif
-+
- int ath9k_hw_nvram_swap_data(struct ath_hw *ah, bool *swap_needed, int size)
- {
- 	u16 magic;
- 	u16 *eepdata;
-+	u8 eepmisc;
- 	int i;
-+	bool needs_byteswap = false;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
- 	if (!ath9k_hw_nvram_read(ah, AR5416_EEPROM_MAGIC_OFFSET, &magic)) {
-@@ -167,36 +175,53 @@ int ath9k_hw_nvram_swap_data(struct ath_hw *ah, bool *swap_needed, int size)
- 		return -EIO;
- 	}
- 
--	*swap_needed = false;
- 	if (swab16(magic) == AR5416_EEPROM_MAGIC) {
-+		needs_byteswap = true;
-+		ath_dbg(common, EEPROM,
-+			"EEPROM needs byte-swapping to correct endianness.\n");
-+	} else if (magic != AR5416_EEPROM_MAGIC) {
-+		if (ath9k_hw_use_flash(ah)) {
-+			ath_dbg(common, EEPROM,
-+				"Ignoring invalid EEPROM magic (0x%04x).\n",
-+				magic);
-+		} else {
-+			ath_err(common,
-+				"Invalid EEPROM magic (0x%04x).\n", magic);
-+			return -EINVAL;
-+		}
-+	}
-+
-+	if (needs_byteswap) {
- 		if (ah->ah_flags & AH_NO_EEP_SWAP) {
- 			ath_info(common,
- 				 "Ignoring endianness difference in EEPROM magic bytes.\n");
- 		} else {
--			*swap_needed = true;
--		}
--	} else if (magic != AR5416_EEPROM_MAGIC) {
--		if (ath9k_hw_use_flash(ah))
--			return 0;
-+			eepdata = (u16 *)(&ah->eeprom);
- 
--		ath_err(common,
--			"Invalid EEPROM Magic (0x%04x).\n", magic);
--		return -EINVAL;
-+			for (i = 0; i < size; i++)
-+				eepdata[i] = swab16(eepdata[i]);
-+		}
- 	}
- 
--	eepdata = (u16 *)(&ah->eeprom);
--
--	if (*swap_needed) {
--		ath_dbg(common, EEPROM,
--			"EEPROM Endianness is not native.. Changing.\n");
-+	*swap_needed = false;
- 
--		for (i = 0; i < size; i++)
--			eepdata[i] = swab16(eepdata[i]);
-+	eepmisc = ah->eep_ops->get_eepmisc(ah);
-+	if ((eepmisc & AR5416_EEPMISC_BIG_ENDIAN) != EXPECTED_EEPMISC_VAL) {
-+		if (ah->ah_flags & AH_NO_EEP_SWAP) {
-+			ath_info(common,
-+				 "Ignoring endianness difference in eepmisc register.\n");
-+		} else {
-+			*swap_needed = true;
-+			ath_dbg(common, EEPROM,
-+				"EEPROM needs swapping according to the eepmisc register.\n");
-+		}
- 	}
- 
- 	return 0;
- }
- 
-+#undef EXPECTED_EEPMISC_VAL
-+
- bool ath9k_hw_nvram_validate_checksum(struct ath_hw *ah, int size)
- {
- 	u32 i, sum = 0;
--- 
-2.9.3
+There is no functional improvement. 
+But before this patch, when we do: make C=1 M=drivers/staging/rtl8723au/
+An error output: 
+drivers/staging/rtl8723au//os_dep/os_intfs.c:287:14: error: Expected constant expression in case statement
+To avoid sparse parse error, a case statement converts to an if statement.
+So we got this patch.
+
+
+
