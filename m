@@ -1,53 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:33398 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750788AbcHBELW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 00:11:22 -0400
-Subject: Re: [PATCH v3 3/3] mac80211: mesh: fixed HT ies in beacon template
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <20160713200755.26839-1-yanivma@ti.com>
- <40a34537-486e-a466-5a7e-e253f19d81c3@gmail.com>
- <1470045822.3389.24.camel@sipsolutions.net>
- <75fef3ce-41a6-5845-e9be-d7ff052a07da@gmail.com>
-Cc: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org,
-	Meirav Kama <meiravk@ti.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <1c2d3cfc-b7fd-c8fd-4f74-14dd3aa3076e@gmail.com> (sfid-20160802_061150_191787_D40E0B10)
-Date: Tue, 2 Aug 2016 11:59:04 +0900
+Received: from mx1.redhat.com ([209.132.183.28]:35002 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751722AbcHKMcS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 08:32:18 -0400
+Date: Thu, 11 Aug 2016 14:29:18 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: Problems with mwifiex_pcie firmware activation
+Message-ID: <20160811122917.GB27059@redhat.com> (sfid-20160811_143222_092573_F82C5CF5)
+References: <20160614135015.GB4962@redhat.com>
+ <b881b09bf5384169ba1038af71fd435a@SC-EXCH04.marvell.com>
+ <20160616115315.GB21199@redhat.com>
+ <20160623120952.GA11157@redhat.com>
+ <20160811090113.GA27059@redhat.com>
+ <f5b2566be31743809217833e76060d42@SC-EXCH04.marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <75fef3ce-41a6-5845-e9be-d7ff052a07da@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <f5b2566be31743809217833e76060d42@SC-EXCH04.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On 2016年08月01日 19:03, Johannes Berg wrote:
->>
->> But why is that behaviour *correct*? We still support 40 MHz bandwidth
->> things, we just don't use them if we disable HT40.
+Hi
 
-Or do you mean difference between "hardware capability" and "software 
-capability" ?
-Do you think IEEE80211_HT_CAP_SUP_WIDTH_20_40 bit should be 1 if the 
-hardware capable of HT40 even though HT40 is disabled by 
-wpa_supplicant/hostapd ?
+On Thu, Aug 11, 2016 at 10:21:58AM +0000, Amitkumar Karwar wrote:
+> > -----Original Message-----
+> > From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+> > Sent: Thursday, August 11, 2016 2:31 PM
+> > To: Amitkumar Karwar
+> > Cc: Nishant Sarmukadam; linux-wireless@vger.kernel.org
+> > Subject: Re: Problems with mwifiex_pcie firmware activation
+> > 
+> > On Thu, Jun 23, 2016 at 02:09:52PM +0200, Stanislaw Gruszka wrote:
+> > > On Thu, Jun 16, 2016 at 01:53:15PM +0200, Stanislaw Gruszka wrote:
+> > > > On Wed, Jun 15, 2016 at 01:47:53PM +0000, Amitkumar Karwar wrote:
+> > > > > Could you please share complete dmesg log for failure and
+> > successful cases?
+> > > >
+> > > > Dmesg from failure case is in attachment. I loose access to system
+> > > > where device initalize, I'll provide missed dmesg when I get back
+> > > > the access.
+> > >
+> > > Have the access now, dmesg is in attachment.
+> > 
+> > Any news here ?
+> 
+> Do you have below patch included? It increases poll count which may help in your case.
+> https://patchwork.kernel.org/patch/7973951/
 
-I have tested with hostapd. I compared these 2 configfiles.
+Yes, I have that patch. 
 
-hostapd0.conf
-	ht_capab=[HT40-]
-hostapd1.conf
-	#ht_capab=[HT40-]
+To clarify the issue: reverting above patch seems to helps with the
+problem. That what I basically did on first of my systems with mwifiex,
+that did not work similarly like second one. However I did not revert
+the patch but just comment out check_winner_status: 
 
-The IEEE80211_HT_CAP_SUP_WIDTH_20_40 bit in beacon was below.
+@@ -755,7 +755,7 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
+        }
+ 
+        /* check if we are the winner for downloading FW */
+-       if (adapter->if_ops.check_winner_status) {
++       if (false) {
+                adapter->winner = 0;
+                ret = adapter->if_ops.check_winner_status(adapter);
+ 
+After running modified kernel once, the problem was gone on
+unmodified kernel! I suppose that once new firmware was uploaded to
+the device it somehow modify it (change it's internal firmware?) and make
+check_winner_status() works correctly. This is strange, but I can not
+find any other explanation and don't see any other changes in the
+first system that makes mwifiex suddenly work.
 
-hostapd0.conf
-	IEEE80211_HT_CAP_SUP_WIDTH_20_40 = 1
-hostapd1.conf
-	IEEE80211_HT_CAP_SUP_WIDTH_20_40 = 0
+I could be wrong, but I suppose somebody who use pre 4.6 kernel (without
+the above patch committed as: 2fd5c6ed0b4fbf3c2d9314a24c82862ce5254d42
+"mwifiex: firmware download enhancements") with new enough mwifiex
+firmware, will not see the problem even after kernel update. But if
+somebody install 4.6 or newer kernel on pristine hardware, the device
+will not work.
 
-So I think the bit should be zero if disabled also for mesh peer.
-
-Masashi Honma.
+Thanks
+Stanislaw
