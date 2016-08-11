@@ -1,59 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.eperm.de ([89.247.134.16]:34726 "EHLO mail.eperm.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54493 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934982AbcHJS2l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:28:41 -0400
-From: Stephan Mueller <smueller@chronox.de>
-To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Date: Wed, 10 Aug 2016 07:29:26 +0200
-Message-ID: <1543667.vXsZDTRgbm@positron.chronox.de> (sfid-20160810_221349_518653_E56645A6)
-In-Reply-To: <1470796501856.53342@qti.qualcomm.com>
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <1645997.7cVzaEi3NG@tauon.atsec.com> <1470796501856.53342@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	id S1751088AbcHKSDv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 14:03:51 -0400
+Message-ID: <1470938627.12075.25.camel@sipsolutions.net> (sfid-20160811_200354_722106_FC417916)
+Subject: Re: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Thu, 11 Aug 2016 20:03:47 +0200
+In-Reply-To: <57ACA9E9.4020507@gmail.com> (sfid-20160811_183804_837759_60BA2092)
+References: <1470261735-2977-1-git-send-email-denkenz@gmail.com>
+	 <1470919643.12075.7.camel@sipsolutions.net> <57ACA9E9.4020507@gmail.com>
+	 (sfid-20160811_183804_837759_60BA2092)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 10. August 2016, 02:35:04 CEST schrieb Pan, Miaoqing:
-
-Hi Miaoqing,
-
-> Hi Stephan,
+On Thu, 2016-08-11 at 11:38 -0500, Denis Kenzior wrote:
+> Hi Johannes,
 > 
-> For those less perfect noise source, can't pass the FIPS test.
+> On 08/11/2016 07:47 AM, Johannes Berg wrote:
+> > 
+> > On Wed, 2016-08-03 at 17:02 -0500, Denis Kenzior wrote:
+> > > 
+> > > 
+> > > +static int nl80211_dump_interface_parse(struct sk_buff *skb,
+> > > +				    struct netlink_callback *cb,
+> > > +				    int *filter_wiphy)
+> > 
+> > Wrong indentation :)
 > 
-> static int update_kernel_random(int random_step,
->         unsigned char *buf, fips_ctx_t *fipsctx_in)
-> {
->         unsigned char *p;
->         int fips;
+> Sorry :)
 > 
->         fips = fips_run_rng_test(fipsctx_in, buf);
->         if (fips)
->                 return 1;
+> Speaking of indentation, can you point me to a doc of the rules I
+> should follow?
+
+You've seen Documentation/CodingStyle?
+
+> I can confirm that I sanity checked this patch. Both ATTR_WIPHY, 
+> ATTR_WDEV and wildcard dumps seemed to produce expected results.
+
+I think it probably works due to the other conditions?
+
+> I noticed you applied this patch.  Is there a particular scenario
+> where it goes wrong or did you convince yourself it is correct?
 > 
->         for (p = buf; p + random_step <= &buf[FIPS_RNG_BUFFER_SIZE];
->                  p += random_step) {
->                 random_add_entropy(p, random_step);
->                 random_sleep();
->         }
->         return 0;
-> }
 
-Not even the poor cheap AIS20 statistical tests from rngd pass?
+No, that was a mistake :( I've removed it now.
 
-I guess the only sensible solution is what Ted suggested to use 
-add_device_randomness.
-
-Ciao
-Stephan
+johannes
