@@ -1,91 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40884 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751378AbcH2UZ3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 16:25:29 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 29 Aug 2016 23:25:18 +0300
-Message-Id: <1472502319-10847-6-git-send-email-luca@coelho.fi> (sfid-20160829_222532_417867_7C746F43)
-In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
-References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 5/6] mac80211: send delBA on unexpected BlockAck data frames
+Received: from s3.sipsolutions.net ([5.9.151.49]:51226 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750856AbcHKH6U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 03:58:20 -0400
+Message-ID: <1470902295.5266.8.camel@sipsolutions.net> (sfid-20160811_095827_021780_F351A9D7)
+Subject: Re: pull-request: mac80211 2016-08-05
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Date: Thu, 11 Aug 2016 09:58:15 +0200
+In-Reply-To: <1470400329-23256-1-git-send-email-johannes@sipsolutions.net> (sfid-20160805_143231_516679_202A0463)
+References: <1470400329-23256-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20160805_143231_516679_202A0463)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, 2016-08-05 at 14:32 +0200, Johannes Berg wrote:
+> Hi Dave,
+> 
+> Here's a first set of fixes for the current cycle. See the tag
+> message
+> for more information.
+> 
+> I'll probably have a follow-up fix for the real problem in mac80211
+> that caused the crash later, but for now we have this patch and it
+> makes sense and fixes the crash, even if the behaviour isn't quite
+> right (afaict.)
+> 
 
-When we receive data frames with ACK policy BlockAck, send
-delBA as requested by the 802.11 spec. Since this would be
-happening for every frame inside an A-MPDU if it's really
-received outside a session, limit it to a single attempt.
+Just FYI, I'm going to "defer" the fix for the wrong behaviour to
+mac80211-next since no driver is affected by it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/agg-rx.c   | 4 +++-
- net/mac80211/rx.c       | 9 ++++++++-
- net/mac80211/sta_info.h | 3 +++
- 3 files changed, 14 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index a9aff60..4d05acc 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -406,8 +406,10 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 	}
- 
- end:
--	if (status == WLAN_STATUS_SUCCESS)
-+	if (status == WLAN_STATUS_SUCCESS) {
- 		__set_bit(tid, sta->ampdu_mlme.agg_session_valid);
-+		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
-+	}
- 	mutex_unlock(&sta->ampdu_mlme.mtx);
- 
- end_no_lock:
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 268eeb7..27b58f3 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1123,8 +1123,15 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
- 	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
- 
- 	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
--	if (!tid_agg_rx)
-+	if (!tid_agg_rx) {
-+		if (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK &&
-+		    !test_bit(tid, rx->sta->ampdu_mlme.agg_session_valid) &&
-+		    !test_and_set_bit(tid, rx->sta->ampdu_mlme.unexpected_agg))
-+			ieee80211_send_delba(rx->sdata, rx->sta->sta.addr, tid,
-+					     WLAN_BACK_RECIPIENT,
-+					     WLAN_REASON_QSTA_REQUIRE_SETUP);
- 		goto dont_reorder;
-+	}
- 
- 	/* qos null data frames are excluded */
- 	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 0556be3..530231b 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -230,6 +230,8 @@ struct tid_ampdu_rx {
-  * @tid_rx_stop_requested:  bitmap indicating which BA sessions per TID the
-  *	driver requested to close until the work for it runs
-  * @agg_session_valid: bitmap indicating which TID has a rx BA session open on
-+ * @unexpected_agg: bitmap indicating which TID already sent a delBA due to
-+ *	unexpected aggregation related frames outside a session
-  * @work: work struct for starting/stopping aggregation
-  * @tid_tx: aggregation info for Tx per TID
-  * @tid_start_tx: sessions where start was requested
-@@ -244,6 +246,7 @@ struct sta_ampdu_mlme {
- 	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
- 	unsigned long tid_rx_stop_requested[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
- 	unsigned long agg_session_valid[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
-+	unsigned long unexpected_agg[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
- 	/* tx */
- 	struct work_struct work;
- 	struct tid_ampdu_tx __rcu *tid_tx[IEEE80211_NUM_TIDS];
--- 
-2.8.1
+johannes
