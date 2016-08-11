@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:45426 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752342AbcHIJSM (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:36826 "EHLO
+	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751662AbcHKS6g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 05:18:12 -0400
-Date: Tue, 9 Aug 2016 17:17:55 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Message-ID: <20160809091755.GA6370@gondor.apana.org.au> (sfid-20160809_111816_212896_748FEA9D)
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
- <4731753.YZZKimtrHM@tauon.atsec.com>
- <20160809085858.GA6172@gondor.apana.org.au>
- <2569442.q63FVBJjUH@tauon.atsec.com>
+	Thu, 11 Aug 2016 14:58:36 -0400
+Received: by mail-qk0-f178.google.com with SMTP id l2so4662134qkf.3
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2016 11:58:35 -0700 (PDT)
+Subject: Re: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
+To: Denis Kenzior <denkenz@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1470261735-2977-1-git-send-email-denkenz@gmail.com>
+ <1470919643.12075.7.camel@sipsolutions.net> <57ACA9E9.4020507@gmail.com>
+ <1470938627.12075.25.camel@sipsolutions.net> <57ACC1F8.6070908@gmail.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <f2fe3568-0b83-9db4-278e-be0a1ad08ae8@broadcom.com> (sfid-20160811_205840_593140_E3DEF7B8)
+Date: Thu, 11 Aug 2016 20:58:28 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2569442.q63FVBJjUH@tauon.atsec.com>
+In-Reply-To: <57ACC1F8.6070908@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 09, 2016 at 11:02:58AM +0200, Stephan Mueller wrote:
+On 11-8-2016 20:20, Denis Kenzior wrote:
+> Hi Johannes,
 > 
-> But shouldn't the default of the rngd then be adjusted a bit?
+>>> Speaking of indentation, can you point me to a doc of the rules I
+>>> should follow?
+>>
+>> You've seen Documentation/CodingStyle?
+> 
+> Of course.  But that one doesn't discuss that you want your function
+> parameters to be aligned to the opening '('.  Is there a dialect
+> document specific to linux-wireless?
 
-Please elaborate.
+You can find it in checkpatch.pl [1] :-p
 
-Thanks,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Regards,
+Arend
+
+[1] http://lxr.free-electrons.com/source/scripts/checkpatch.pl#L2855
