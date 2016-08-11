@@ -1,86 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:36659 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753100AbcHJSOp (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35244 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932203AbcHKCzG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:14:45 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 3/4] cfg80211: rdev-ops: remove callback check from rdev_start_radar_detection()
-Date: Wed, 10 Aug 2016 12:33:28 +0200
-Message-Id: <1470825209-10054-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160810_223953_436651_5C90E64F)
-In-Reply-To: <1470825209-10054-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1470825209-10054-1-git-send-email-arend.vanspriel@broadcom.com>
+	Wed, 10 Aug 2016 22:55:06 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Thu, 11 Aug 2016 10:54:11 +0800
+From: miaoqing@codeaurora.org
+To: Jason Cooper <jason@lakedaemon.net>
+Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
+	Stephan Mueller <smueller@chronox.de>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Matt Mackall <mpm@selenic.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	linux-crypto@vger.kernel.org,
+	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
+Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+In-Reply-To: <20160810132449.GH2013@io.lakedaemon.net>
+References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
+ <1526134.1iUazSISyZ@positron.chronox.de>
+ <c0951e085764481d8d85637734e2e14b@aptaiexm02f.ap.qualcomm.com>
+ <4321952.1nMxxDi7Wz@positron.chronox.de>
+ <1e8e88ad7de64c528f08c75ff9176ab8@aptaiexm02f.ap.qualcomm.com>
+ <389c3c1fdde2447aacf31a8b4aadfc08@aptaiexm02f.ap.qualcomm.com>
+ <20160810132449.GH2013@io.lakedaemon.net>
+Message-ID: <14a3879458f3bfc36068c2e8294ca448@codeaurora.org> (sfid-20160811_045511_269452_D8886762)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wrapper rdev_start_radar_detection() checks whether the driver provides
-the start_radar_detection callback and returns -ENOTSUPP if not. However,
-this check is already performed in nl80211_start_radar_detection() resulting
-in -EOPNOTSUPP. This patch removes check from rdev wrapper function and move
-the callback checking in nl80211_start_radar_detection() before the other
-checks.
+Hi Jason,
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- net/wireless/nl80211.c  | 7 ++++---
- net/wireless/rdev-ops.h | 7 +++----
- 2 files changed, 7 insertions(+), 7 deletions(-)
+On 2016-08-10 21:24, Jason Cooper wrote:
+> *gentle reminder: others are reading which may not be directly included
+> in the conversation.  Including the archives.  Please avoid top 
+> posting.
+> :)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f02653a..8ab63b5 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -6826,6 +6826,9 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	unsigned int cac_time_ms;
- 	int err;
- 
-+	if (!rdev->ops->start_radar_detection)
-+		return -EOPNOTSUPP;
-+
- 	dfs_region = reg_get_dfs_region(wdev->wiphy);
- 	if (dfs_region == NL80211_DFS_UNSET)
- 		return -EINVAL;
-@@ -6845,15 +6848,13 @@ static int nl80211_start_radar_detection(struct sk_buff *skb,
- 	if (err < 0)
- 		return err;
- 
-+	/* 0 value means no dfs is required so bail out */
- 	if (err == 0)
- 		return -EINVAL;
- 
- 	if (!cfg80211_chandef_dfs_usable(wdev->wiphy, &chandef))
- 		return -EINVAL;
- 
--	if (!rdev->ops->start_radar_detection)
--		return -EOPNOTSUPP;
--
- 	cac_time_ms = cfg80211_chandef_dfs_cac_time(&rdev->wiphy, &chandef);
- 	if (WARN_ON(!cac_time_ms))
- 		cac_time_ms = IEEE80211_DFS_MIN_CAC_TIME_MS;
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index d002415..2020606 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1034,13 +1034,12 @@ rdev_start_radar_detection(struct cfg80211_registered_device *rdev,
- 			   struct cfg80211_chan_def *chandef,
- 			   u32 cac_time_ms)
- {
--	int ret = -ENOTSUPP;
-+	int ret;
- 
- 	trace_rdev_start_radar_detection(&rdev->wiphy, dev, chandef,
- 					 cac_time_ms);
--	if (rdev->ops->start_radar_detection)
--		ret = rdev->ops->start_radar_detection(&rdev->wiphy, dev,
--						       chandef, cac_time_ms);
-+	ret = rdev->ops->start_radar_detection(&rdev->wiphy, dev,
-+					       chandef, cac_time_ms);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
--- 
-1.9.1
+Thanks:)
 
+> The fact is, barring userspace expectations of /dev/hwrng, hw_random is
+> the appropriate place for it.  It's not a devicetree blob, mac address,
+> or pci config space.  Which are things we feed in once for the heck of
+> it.  This is a *continuous* source or questionable quality.
+> 
+> I'm seriously considering putting this and timeriomem-rng into a
+> subdirectory under hw_random/, maybe environ/.  Anything in there gets
+> quality=0 for default, and *doesn't* contribute to /dev/hwrng.
+> 
+> Regardless which path we take, I think we should include 'adc' in the
+> name.  I've heard countless times about "Atheros cards come with an rng
+> on board". :-/
+
+If I understand correctly, you want to bind the ADC source to 
+/dev/hwrng,
+and then change rng-tools to set the entropy to zero in the ioctl call ?
+There are two major problems with that approach,
+
+1) We already tried once before to bind our solution to /dev/hwrng, and 
+got
+so much complaints. The conclusion was that maybe we know that the 
+output of
+/dev/hwrng does not have perfect entropy, but a normal user does not 
+know and
+will misuse it. You mentioned in 
+https://www.kernel.org/doc/Documentation/hw_random.txt
+we have
+
+"This data is NOT CHECKED by any
+	fitness tests, and could potentially be bogus (if the
+	hardware is faulty or has been tampered with).  Data is only
+	output if the hardware "has-data" flag is set, but nevertheless
+	a security-conscious person would run fitness tests on the
+	data before assuming it is truly random."
+
+But this is not enough to convince upstream to switch to /dev/hwrng. I 
+think the
+concern of users misusing the solution is a very valid concern.
+
+2) If we set the entropy to zero in rng-tools, we cannot tolerate the 
+load.
+Rng-tools is not a timer-based solution. Similar to our solution, it is 
+based on
+/proc/sys/kernel/random/write_wakeup_threshold. If we do not increase 
+the entropy
+counter, rng-tools keep writing into the pool, and both rng-tools and 
+WiFi chip will
+be overloaded.
+
+
+Thanks,
+Miaoqing
