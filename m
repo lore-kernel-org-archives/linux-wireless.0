@@ -1,65 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.amrita.ac.in ([103.10.24.206]:58612 "EHLO
-	mailsecurity.amrita.ac.in" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752436AbcHPMZE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2016 08:25:04 -0400
-Received: from durga.amrita.ac.in ([10.0.0.3])
-	by mailsecurity.amrita.ac.in  with ESMTP id u7GC9ngO011652-u7GC9ngQ011652
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2016 17:39:49 +0530
-Received: from durga.amrita.ac.in (localhost [127.0.0.1])
-	by durga.amrita.ac.in (Postfix) with ESMTPS id 69BA638C57D2
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2016 17:39:38 +0530 (IST)
-Received: from localhost (localhost [127.0.0.1])
-	by durga.amrita.ac.in (Postfix) with ESMTP id 5BFF438C57AD
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2016 17:39:38 +0530 (IST)
-Received: from durga.amrita.ac.in ([127.0.0.1])
-	by localhost (durga.amrita.ac.in [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id THkR4tBOZ8iY for <linux-wireless@vger.kernel.org>;
-	Tue, 16 Aug 2016 17:39:38 +0530 (IST)
-Received: from durga.amrita.ac.in (durga.amrita.ac.in [10.0.0.3])
-	by durga.amrita.ac.in (Postfix) with ESMTP id 4861038C57A7
-	for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2016 17:39:38 +0530 (IST)
-Date: Tue, 16 Aug 2016 17:39:38 +0530 (IST)
-From: Sambhu R <rsambhu@am.amrita.edu>
-To: linux-wireless@vger.kernel.org
-Message-ID: <1902731527.3857839.1471349378230.JavaMail.zimbra@am.amrita.edu> (sfid-20160816_142510_392928_DBE814E0)
-Subject: regarding RTL8188SU
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from [157.95.53.9] ([157.95.53.9]:56086 "HELO twsta8-Latitude-E6420"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1750708AbcHKGI6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 02:08:58 -0400
+From: Wright Feng <wright.feng@cypress.com>
+To: brcm80211-dev-list.pdl@broadcom.com, arend.vanspriel@broadcom.com,
+	kvalo@codeaurora.org, franky.lin@broadcom.com,
+	hante.meuleman@broadcom.com, pieterpg@broadcom.com,
+	linux-wireless@vger.kernel.org, chln@cypress.com
+Cc: Wright Feng <wright.feng@cypress.com>
+Subject: [PATCH v2] brcmfmac: shut down AP and set IBSS mode only on primary interface
+Date: Thu, 11 Aug 2016 13:44:20 +0800
+Message-Id: <1470894260-18128-1-git-send-email-wright.feng@cypress.com> (sfid-20160811_080901_872980_A7034F4F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+When stopping hostap on virtual interface, driver will set INFRA and AP
+mode that may affect the functionality on primary interface. For example,
+if we create and stop hostapd on virtual interface then association
+cannot work on primary interface because INFRA mode has been set to IBSS.
+Hence we shut down AP and set IBSS mode only on primary interface.
 
-I was following your--> https://github.com/chunkeey/rtl8192su but i couldn't install. When i execute ./install.sh i'm getting the following error.
+Signed-off-by: Wright Feng <wright.feng@cypress.com>
+---
+V2:Remove the footnote from the mail.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-make[1]: Entering directory '/usr/src/linux-headers-3.4.112-sun8i'
-Makefile:568: /usr/src/linux-headers-3.4.112-sun8i/arch/armv7l/Makefile: No such file or directory
-make[1]: *** No rule to make target '/usr/src/linux-headers-3.4.112-sun8i/arch/armv7l/Makefile'.  Stop.
-make[1]: Leaving directory '/usr/src/linux-headers-3.4.112-sun8i'
-Makefile:220: recipe for target 'modules' failed
-make: *** [modules] Error 2
-##################################################
-Compile make driver error: 2
-Please check error Mesg
-##################################################
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 2628d5e..0687ab9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -4716,6 +4716,8 @@ exit:
+ 
+ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+ {
++	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
++	struct net_device *primary_ndev = cfg_to_ndev(cfg);
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	s32 err;
+ 	struct brcmf_fil_bss_enable_le bss_enable;
+@@ -4723,7 +4725,8 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 
+-	if (ifp->vif->wdev.iftype == NL80211_IFTYPE_AP) {
++	if ((ifp->vif->wdev.iftype == NL80211_IFTYPE_AP) &&
++	    (ndev == primary_ndev)) {
+ 		/* Due to most likely deauths outstanding we sleep */
+ 		/* first to make sure they get processed by fw. */
+ 		msleep(400);
+-- 
+1.9.1
 
-please help..
-
-OS details:
-Distributor ID:	Debian
-Description:	Debian GNU/Linux 8.5 (jessie)
-Release:	8.5
-Codename:	jessie
-Linux orangePi1 3.4.112-sun8i #8 SMP PREEMPT  armv7l GNU/Linux
-
-
-
-
-
-
-
-
--- Disclaimer:     The information transmitted in this email, including attachments, is intended only for the person(s) or entity to which it is addressed and may contain confidential and/or privileged material. Any review, retransmission, dissemination or other use of, or taking of any action in reliance upon this information by persons or entities other than the intended recipient is prohibited.Any views expressed in any message are those of the individual sender and may not necessarily reflect the views of Amrita University. If you received this in error, please contact the sender and destroy any copies of this information. 
