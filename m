@@ -1,56 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [157.95.53.9] ([157.95.53.9]:56086 "HELO twsta8-Latitude-E6420"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1750708AbcHKGI6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 02:08:58 -0400
-From: Wright Feng <wright.feng@cypress.com>
-To: brcm80211-dev-list.pdl@broadcom.com, arend.vanspriel@broadcom.com,
-	kvalo@codeaurora.org, franky.lin@broadcom.com,
-	hante.meuleman@broadcom.com, pieterpg@broadcom.com,
-	linux-wireless@vger.kernel.org, chln@cypress.com
-Cc: Wright Feng <wright.feng@cypress.com>
-Subject: [PATCH v2] brcmfmac: shut down AP and set IBSS mode only on primary interface
-Date: Thu, 11 Aug 2016 13:44:20 +0800
-Message-Id: <1470894260-18128-1-git-send-email-wright.feng@cypress.com> (sfid-20160811_080901_872980_A7034F4F)
+Received: from s3.sipsolutions.net ([5.9.151.49]:52912 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751427AbcHKNWU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 09:22:20 -0400
+Message-ID: <1470921732.12075.18.camel@sipsolutions.net> (sfid-20160811_152239_857928_42BD2817)
+Subject: Re: [PATCH v2 2/3] mac80211: mesh: improve path resolving time
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>, Yaniv Machani <yanivma@ti.com>
+Cc: linux-kernel@vger.kernel.org, Maital Hahn <maitalm@ti.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Thu, 11 Aug 2016 15:22:12 +0200
+In-Reply-To: <20160719123648.GC11996@localhost> (sfid-20160719_143659_093323_398D42D9)
+References: <20160713114528.24835-1-yanivma@ti.com>
+	 <20160719123648.GC11996@localhost> (sfid-20160719_143659_093323_398D42D9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When stopping hostap on virtual interface, driver will set INFRA and AP
-mode that may affect the functionality on primary interface. For example,
-if we create and stop hostapd on virtual interface then association
-cannot work on primary interface because INFRA mode has been set to IBSS.
-Hence we shut down AP and set IBSS mode only on primary interface.
+On Tue, 2016-07-19 at 08:36 -0400, Bob Copeland wrote:
+> On Wed, Jul 13, 2016 at 02:45:25PM +0300, Yaniv Machani wrote:
+> > 
+> > When a packet is received for transmission,
+> > a PREQ frame is sent to resolve the appropriate path to the desired
+> > destination.
+> > After path was established, any sequential PREQ will be sent only
+> > after
+> > dot11MeshHWMPpreqMinInterval, which usually set to few seconds.
+> > 
+> > This implementation has an impact in cases where we would like to
+> > resolve the path quickly.
+> > A clear example is when a peer was disconnected from us,
+> > while he acted as a hop to our destination.
+> > Although the path table will be cleared, the next PREQ frame will
+> > be sent only after reaching the MinInterval.
+> > This will cause unwanted delay, possibly of few seconds until the
+> > traffic will resume.
+> > 
+> >  	if (!(mpath->flags & MESH_PATH_RESOLVING))
+> > -		mesh_queue_preq(mpath, PREQ_Q_F_START);
+> > +		mesh_queue_preq(mpath, PREQ_Q_F_START, true);
+> 
+> What about something like this here instead:
+> 
+>     if (!(mpath->flags & MESH_PATH_RESOLVING)) {
+>         /* force next preq to be sent without delay */
+>         ifmsh->last_preq = jiffies - min_preq_int_jiff(sdata) - 1;
+>         mesh_queue_preq(mpath, PREQ_Q_F_START);
+>     }
+> 
 
-Signed-off-by: Wright Feng <wright.feng@cypress.com>
----
-V2:Remove the footnote from the mail.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+Yaniv, did you disagree with this for some strong reason, or were you
+going to resend?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 2628d5e..0687ab9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -4716,6 +4716,8 @@ exit:
- 
- static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
- {
-+	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
-+	struct net_device *primary_ndev = cfg_to_ndev(cfg);
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	s32 err;
- 	struct brcmf_fil_bss_enable_le bss_enable;
-@@ -4723,7 +4725,8 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
- 
- 	brcmf_dbg(TRACE, "Enter\n");
- 
--	if (ifp->vif->wdev.iftype == NL80211_IFTYPE_AP) {
-+	if ((ifp->vif->wdev.iftype == NL80211_IFTYPE_AP) &&
-+	    (ndev == primary_ndev)) {
- 		/* Due to most likely deauths outstanding we sleep */
- 		/* first to make sure they get processed by fw. */
- 		msleep(400);
--- 
-1.9.1
+Having a smaller patch seems nicer too.
 
+johannes
