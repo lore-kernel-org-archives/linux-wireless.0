@@ -1,79 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41020 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755475AbcH2V2N (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 17:28:13 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 00:26:13 +0300
-Message-Id: <1472505976-21108-13-git-send-email-luca@coelho.fi> (sfid-20160829_232817_800700_AAAA9BBC)
-In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
-References: <1472505827.27868.41.camel@coelho.fi>
- <1472505976-21108-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 13/16] iwlwifi: add the new 9170 series
+Received: from s3.sipsolutions.net ([5.9.151.49]:52754 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932233AbcHKMr1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 08:47:27 -0400
+Message-ID: <1470919643.12075.7.camel@sipsolutions.net> (sfid-20160811_144730_779957_D1BCBA5A)
+Subject: Re: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Thu, 11 Aug 2016 14:47:23 +0200
+In-Reply-To: <1470261735-2977-1-git-send-email-denkenz@gmail.com> (sfid-20160803_180614_643489_B91CE333)
+References: <1470261735-2977-1-git-send-email-denkenz@gmail.com>
+	 (sfid-20160803_180614_643489_B91CE333)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+On Wed, 2016-08-03 at 17:02 -0500, Denis Kenzior wrote:
+> 
+> +static int nl80211_dump_interface_parse(struct sk_buff *skb,
+> +				    struct netlink_callback *cb,
+> +				    int *filter_wiphy)
 
-Add a new config struct for the new 9170 series and add
-the first PCI ID for it.
+Wrong indentation :)
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 10 ++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  1 +
- 3 files changed, 12 insertions(+)
+>  static int nl80211_dump_interface(struct sk_buff *skb, struct
+> netlink_callback *cb)
+>  {
+>  	int wp_idx = 0;
+>  	int if_idx = 0;
+>  	int wp_start = cb->args[0];
+>  	int if_start = cb->args[1];
+> +	int filter_wiphy = cb->args[2];
+>  	struct cfg80211_registered_device *rdev;
+>  	struct wireless_dev *wdev;
+>  
+> +	if (!wp_start && !if_start && !filter_wiphy) {
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-index e442650..1fec6af 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-@@ -146,6 +146,16 @@ static const struct iwl_tt_params iwl9000_tt_params = {
- 	.mac_addr_from_csr = true,					\
- 	.rf_id = true
- 
-+const struct iwl_cfg iwl9160_2ac_cfg = {
-+	.name = "Intel(R) Dual Band Wireless AC 9160",
-+	.fw_name_pre = IWL9260_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+};
-+
- const struct iwl_cfg iwl9260_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 9260",
- 	.fw_name_pre = IWL9260_FW_PRE,
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 0ab415c..7008319 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -450,6 +450,7 @@ extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl9000lc_2ac_cfg;
-+extern const struct iwl_cfg iwl9160_2ac_cfg;
- extern const struct iwl_cfg iwl9260_2ac_cfg;
- extern const struct iwl_cfg iwl9270_2ac_cfg;
- extern const struct iwl_cfg iwl9460_2ac_cfg;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 1be0ac2..c6e24fb 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -502,6 +502,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24FD, 0x0850, iwl8265_2ac_cfg)},
- 
- /* 9000 Series */
-+	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
--- 
-2.8.1
+This seems incorrect - you're setting
+
+> +		int ret;
+> +
+> +		filter_wiphy = -1;
+> +
+> +		ret = nl80211_dump_interface_parse(skb, cb,
+> &filter_wiphy);
+
+it here, but it can take the value 0, so !filter_wiphy seems wrong?
+
+johannes
