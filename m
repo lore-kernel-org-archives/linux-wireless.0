@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:14261 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934501AbcHBMWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:22:24 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org,
-	bkenward@solarflare.com, linux-driver@qlogic.com,
-	computersforpeace@gmail.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com, baolex.ni@intel.com,
-	daniel@iogearbox.net, pabeni@redhat.com
-Subject: [PATCH 0766/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:44:12 +0800
-Message-Id: <20160802114412.727-1-baolex.ni@intel.com> (sfid-20160802_175205_802471_A1F6520B)
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:36343 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900AbcHKVfy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 17:35:54 -0400
+Subject: Re: [PATCH 16/16] net: wireless: realtek: rtlwifi: usb: don't print
+ error when allocating urb fails
+To: Wolfram Sang <wsa-dev@sang-engineering.com>,
+	linux-usb@vger.kernel.org
+References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
+ <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
+ <1470949988-25705-4-git-send-email-wsa-dev@sang-engineering.com>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <47932679-21ea-18ba-d918-715dc2fe5e96@lwfinger.net> (sfid-20160811_233600_076485_A3FCCDF0)
+Date: Thu, 11 Aug 2016 16:35:51 -0500
+MIME-Version: 1.0
+In-Reply-To: <1470949988-25705-4-git-send-email-wsa-dev@sang-engineering.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On 08/11/2016 04:13 PM, Wolfram Sang wrote:
+> kmalloc will print enough information in case of failure.
+>
+> Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/usb.c | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/ath/ath9k/htc_drv_init.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-index c148c6c..3119d4f 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
-@@ -27,24 +27,24 @@ module_param_named(debug, ath9k_debug, uint, 0);
- MODULE_PARM_DESC(debug, "Debugging mask");
- 
- int htc_modparam_nohwcrypt;
--module_param_named(nohwcrypt, htc_modparam_nohwcrypt, int, 0444);
-+module_param_named(nohwcrypt, htc_modparam_nohwcrypt, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption");
- 
- static int ath9k_htc_btcoex_enable;
--module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, 0444);
-+module_param_named(btcoex_enable, ath9k_htc_btcoex_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
- 
- static int ath9k_ps_enable;
--module_param_named(ps_enable, ath9k_ps_enable, int, 0444);
-+module_param_named(ps_enable, ath9k_ps_enable, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(ps_enable, "Enable WLAN PowerSave");
- 
- int htc_use_dev_fw = 0;
--module_param_named(use_dev_fw, htc_use_dev_fw, int, 0444);
-+module_param_named(use_dev_fw, htc_use_dev_fw, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(use_dev_fw, "Use development FW version");
- 
- #ifdef CONFIG_MAC80211_LEDS
- int ath9k_htc_led_blink = 1;
--module_param_named(blink, ath9k_htc_led_blink, int, 0444);
-+module_param_named(blink, ath9k_htc_led_blink, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
- 
- static const struct ieee80211_tpt_blink ath9k_htc_tpt_blink[] = {
--- 
-2.9.2
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/usb.c b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> index 41617b7b082260..32aa5c1d070a07 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/usb.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/usb.c
+> @@ -739,11 +739,8 @@ static int _rtl_usb_receive(struct ieee80211_hw *hw)
+>  	for (i = 0; i < rtlusb->rx_urb_num; i++) {
+>  		err = -ENOMEM;
+>  		urb = usb_alloc_urb(0, GFP_KERNEL);
+> -		if (!urb) {
+> -			RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
+> -				 "Failed to alloc URB!!\n");
+> +		if (!urb)
+>  			goto err_out;
+> -		}
+>
+>  		err = _rtl_prep_rx_urb(hw, rtlusb, urb, GFP_KERNEL);
+>  		if (err < 0) {
+> @@ -907,15 +904,12 @@ static void _rtl_tx_complete(struct urb *urb)
+>  static struct urb *_rtl_usb_tx_urb_setup(struct ieee80211_hw *hw,
+>  				struct sk_buff *skb, u32 ep_num)
+>  {
+> -	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>  	struct rtl_usb *rtlusb = rtl_usbdev(rtl_usbpriv(hw));
+>  	struct urb *_urb;
+>
+>  	WARN_ON(NULL == skb);
+>  	_urb = usb_alloc_urb(0, GFP_ATOMIC);
+>  	if (!_urb) {
+> -		RT_TRACE(rtlpriv, COMP_USB, DBG_EMERG,
+> -			 "Can't allocate URB for bulk out!\n");
+>  		kfree_skb(skb);
+>  		return NULL;
+>  	}
+>
 
