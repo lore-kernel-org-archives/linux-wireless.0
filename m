@@ -1,60 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from linuxhacker.ru ([217.76.32.60]:43224 "EHLO fiona.linuxhacker.ru"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751277AbcH0EJF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Aug 2016 00:09:05 -0400
-From: Oleg Drokin <green@linuxhacker.ru>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Oleg Drokin <green@linuxhacker.ru>
-Subject: [PATCH] rtlwifi/rtl8192de: Fix print format string
-Date: Fri, 26 Aug 2016 23:12:23 -0400
-Message-Id: <1472267543-810602-1-git-send-email-green@linuxhacker.ru> (sfid-20160827_060909_282557_EDCCD9BD)
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35257 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932301AbcHKQbt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 12:31:49 -0400
+Received: by mail-pf0-f193.google.com with SMTP id h186so30789pfg.2
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2016 09:31:49 -0700 (PDT)
+Subject: Re: [PATCH v3 0/3] Improve wireless netdev detection
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1470261515-2830-1-git-send-email-denkenz@gmail.com>
+ <1470919457.12075.5.camel@sipsolutions.net>
+From: Denis Kenzior <denkenz@gmail.com>
+Message-ID: <57ACA872.5080502@gmail.com> (sfid-20160811_183153_775357_5BE0A7FB)
+Date: Thu, 11 Aug 2016 11:31:46 -0500
+MIME-Version: 1.0
+In-Reply-To: <1470919457.12075.5.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-%ul was likely meant as %lu to print an unsigned long,
-not an unsigned with a letter l at the end.
-But in fact the value printed is u32 anyway, so just drop
-the l completely.
+Hi Johannes,
 
-Signed-off-by: Oleg Drokin <green@linuxhacker.ru>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ >
+> Applied. I squashed 1/2 since it's kinda pointless to have a patch
+> introducing infrastructure that's not used.
+>
+> I also made some minor cleanups - please check (both that it's right,
+> and for next time)
+>
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index d334d2a..2a4810d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -588,7 +588,7 @@ static bool _rtl92d_phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
- 				 * setting. */
- 				udelay(1);
- 				RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--					 "The Rtl819XAGCTAB_Array_Table[0] is %ul Rtl819XPHY_REGArray[1] is %ul\n",
-+					 "The Rtl819XAGCTAB_Array_Table[0] is %u Rtl819XPHY_REGArray[1] is %u\n",
- 					 agctab_array_table[i],
- 					 agctab_array_table[i + 1]);
- 			}
-@@ -604,7 +604,7 @@ static bool _rtl92d_phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
- 					 * setting. */
- 					udelay(1);
- 					RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--						 "The Rtl819XAGCTAB_Array_Table[0] is %ul Rtl819XPHY_REGArray[1] is %ul\n",
-+						 "The Rtl819XAGCTAB_Array_Table[0] is %u Rtl819XPHY_REGArray[1] is %u\n",
- 						 agctab_array_table[i],
- 						 agctab_array_table[i + 1]);
- 				}
-@@ -620,7 +620,7 @@ static bool _rtl92d_phy_config_bb_with_headerfile(struct ieee80211_hw *hw,
- 					 * setting. */
- 					udelay(1);
- 					RT_TRACE(rtlpriv, COMP_INIT, DBG_TRACE,
--						 "The Rtl819XAGCTAB_5GArray_Table[0] is %ul Rtl819XPHY_REGArray[1] is %ul\n",
-+						 "The Rtl819XAGCTAB_5GArray_Table[0] is %u Rtl819XPHY_REGArray[1] is %u\n",
- 						 agctab_5garray_table[i],
- 						 agctab_5garray_table[i + 1]);
- 				}
--- 
-2.7.4
+Your changes look fine to me.  Thanks for taking these.
+
+Regards,
+-Denis
+
