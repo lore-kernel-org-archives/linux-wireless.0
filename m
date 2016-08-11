@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33158 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751220AbcHIHCj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 03:02:39 -0400
-From: miaoqing@codeaurora.org
-To: kvalo@qca.qualcomm.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	linux-crypto@vger.kernel.org, smueller@chronox.de,
-	jason@lakedaemon.net, pouyans@qti.qualcomm.com,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 1/2] ath9k: change entropy formula for easier understanding
-Date: Tue,  9 Aug 2016 15:02:26 +0800
-Message-Id: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160809_090243_455911_0E5E2BDE)
+Received: from s3.sipsolutions.net ([5.9.151.49]:52954 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752071AbcHKNaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Aug 2016 09:30:18 -0400
+Message-ID: <1470919928.12075.9.camel@sipsolutions.net> (sfid-20160811_153021_990346_97EF2A0F)
+Subject: Re: [PATCH] cfg80211: validate beacon interval for MESH/IBSS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
+	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
+	"Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
+Date: Thu, 11 Aug 2016 14:52:08 +0200
+In-Reply-To: <99a970ef2b8f4d41b757c4e6b65648ac@aphydexm01b.ap.qualcomm.com>
+References: <1470908642-13535-1-git-send-email-pkushwah@qti.qualcomm.com>
+	 <99a970ef2b8f4d41b757c4e6b65648ac@aphydexm01b.ap.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+On Thu, 2016-08-11 at 09:56 +0000, Kushwaha, Purushottam wrote:
+> Johannes , 
+> While addressing this change, we could notice that the minimum
+> boundary for beacon interval for the case of IBSS is 1 but for Mesh
+> it is 10. Also this check is not done for AP/P2P GO . 
+> Any reason why there is a discrepancy among them ? These
+> configurations should be aligned , I guess. 
+> Shouldn't the minimum value be 10 ? If yes , the boundary check
+> should be moved to cfg80211_validate_beacon_int ? 
+> 
 
-The quality of ADC entropy is 10 bits of min-entropy for
-a 32-bit value, change '(((x) * 8 * 320) >> 10)' to
-'(((x) * 8 * 10) >> 5)' for easier understanding.
+Yeah, I've applied the patch and moved the range checks in as well.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/rng.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
-index d38e50f..568b1c6 100644
---- a/drivers/net/wireless/ath/ath9k/rng.c
-+++ b/drivers/net/wireless/ath/ath9k/rng.c
-@@ -22,7 +22,7 @@
- #include "ar9003_phy.h"
- 
- #define ATH9K_RNG_BUF_SIZE	320
--#define ATH9K_RNG_ENTROPY(x)	(((x) * 8 * 320) >> 10) /* quality: 320/1024 */
-+#define ATH9K_RNG_ENTROPY(x)	(((x) * 8 * 10) >> 5) /* quality: 10/32 */
- 
- static int ath9k_rng_data_read(struct ath_softc *sc, u32 *buf, u32 buf_size)
- {
--- 
-1.9.1
-
+johannes
