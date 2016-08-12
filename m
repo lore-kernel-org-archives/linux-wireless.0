@@ -1,169 +1,233 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from forward3j.cmail.yandex.net ([5.255.227.21]:39309 "EHLO
-        forward3j.cmail.yandex.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1757363AbcHYL0w (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Aug 2016 07:26:52 -0400
-Subject: rtl8192ce
-References: <321381b3-5dea-f16a-56cb-11120d4a38ef@yandex.ru>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: linux-wireless@vger.kernel.org
-From: Lobachevskii Vitalii <silverunicorn2011@yandex.ru>
-Message-ID: <72b958e1-0200-cd6f-2012-e04ff6fb74cb@yandex.ru> (sfid-20160825_132717_693025_B2227D56)
-Date: Thu, 25 Aug 2016 14:23:12 +0300
+Received: from mout02.posteo.de ([185.67.36.142]:50986 "EHLO mout02.posteo.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751035AbcHLJ0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2016 05:26:20 -0400
+In-Reply-To: <6cdbbae7-8a56-6778-e886-68eeea7add15@broadcom.com>
+References: <1470429980.29489.10.camel@embedded.rocks> <CAF7Mx6o+WuQqtzuApMWQ8YAkLSX7xQ_H06xmO--RxFdwHwzLdQ@mail.gmail.com> <1BCE83A1-AA47-438D-BC47-05AE53D40121@embedded.rocks> <CA+8PC_f7VQMwBfQmZZ_vUtYtNJKVYzmFmxziAwoG8-iRUeW9Jw@mail.gmail.com> <1470492734.2120.0.camel@embedded.rocks> <6cdbbae7-8a56-6778-e886-68eeea7add15@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <321381b3-5dea-f16a-56cb-11120d4a38ef@yandex.ru>
-Content-Type: multipart/mixed;
- boundary="------------960417583D6938E647FDB9A6"
+Content-Type: text/plain;
+ charset=UTF-8
+Subject: Re: TCP data throughput for BCM43362
+From: =?ISO-8859-1?Q?J=F6rg_Krause?= <joerg.krause@embedded.rocks>
+Date: Fri, 12 Aug 2016 11:25:57 +0200
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>
+CC: Brett Rudley <brudley@broadcom.com>,
+	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Arend van Spriel <arend@broadcom.com>,
+	=?ISO-8859-1?Q?J=F6rg_Krause?= <joerg.krause@embedded.rocks>
+Message-ID: <4DC05A04-B8AB-497B-B835-2CBB63082CD5@embedded.rocks> (sfid-20160812_112625_135057_658D5A32)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------960417583D6938E647FDB9A6
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-
-Hello,
-
-The RTL8192CE device seems to work fine without any firmware, so you may
-make it fully optional, removing dependency on FW_LOADER. Of course that
-require some patching, but if I understood the driver internals
-correctly, simple complete(&rtlpriv->firmware_loading_complete); would
-be enough when firmware loading machinery is unavailable, that is, when
-request_firmware_nowait returns -EINVAL (currently that may only happen
-in improperly configured or patched kernels, like Linux-libre; see
-attached messages for more information)
-
-Of course I will try to fix Linux-libre =E2=80=9Cdeblobbing=E2=80=9D tech=
-nique, as it
-should never break anything that may work without a firmware. But
-anyway, if a device and its driver may work without a certain kernel
-feature, that feature should not be selected, I think.
-
-Lobachevskii Vitalii
 
 
---------------960417583D6938E647FDB9A6
-Content-Type: message/rfc822;
- name="Attached Message"
-Content-Transfer-Encoding: 8bit
-Content-Disposition: attachment;
- filename="Attached Message"
+Am 7. August 2016 13:41:04 MESZ, schrieb Arend van Spriel <arend.vanspriel@broadcom.com>:
+>On 06-08-16 16:12, Jörg Krause wrote:
+>> Hi all,
+>
+>A bit weird email format making it a bit hard to determine where your
+>last reply starts...
 
-Received: from fastsrv.yandex.ru ([84.201.187.240])
-	by mxback8h.mail.yandex.net with LMTP id UFfnnq42XGk1
-	for <silverunicorn2011@yandex.ru>; Sun, 14 Aug 2016 01:15:30 +0300
-X-Yandex-Uniq: 124cf733-eade-4ab2-a34c-1aa1cd76be98
-To: linux-libre@fsfla.org
-From: number Zero <silverunicorn2011@yandex.ru>
-Subject: Inaccurate deblobbing breaks rtl8192ce
-Message-ID: <321381b3-5dea-f16a-56cb-11120d4a38ef@yandex.ru>
-Date: Sun, 14 Aug 2016 01:16:48 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101
- Icedove/45.1.0
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Sorry for my bad mobile mail client. I hope this one can handle in line comments. 
 
-The rtl8192ce driver as present in linux-libre don’t work for me at all.
-However, after I made it to ignore the EINVAL error from the
-reject_firmware_nowait function (in
-drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c), it works fine.
-I could send you the patch, but don’t think that’s the right solution.
-Really, are there any reasons for reject_firmware_nowait to return
--EINVAL? Original function, request_firmware_nowait, returns non-zero
-only in extreme conditions, like out-of-memory or module being unloaded.
-Unlike request_firmware, it doesn’t fail when firmware is absent. So
-shouldn’t the reject_firmware_nowait function behave as if the requested
-firmware merely absent?
+>
+>> On Fr, 2016-08-05 at 17:56 -0700, Franky Lin wrote:
+>> 
+>> On Fri, Aug 5, 2016 at 2:29 PM, Jörg Krause <joerg.krause@embedded.ro
+>> cks>
+>> wrote:
+>> 
+>> 
+>> 
+>> 
+>> 
+>> Am 5. August 2016 23:01:10 MESZ, schrieb Arend Van Spriel <
+>> arend.vanspriel@broadcom.com>:
+>> 
+>> 
+>> Op 5 aug. 2016 22:46 schreef "Jörg Krause"
+>> <joerg.krause@embedded.rocks>:
+>> 
+>> 
+>> 
+>> Hi,
+>> 
+>> I'm using a custom ARM board with an BCM43362 wifi chip from
+>> 
+>> Broadcom.
+>> 
+>> 
+>> The wifi chip is attached via SDIO to the controller with a
+>> clock of
+>> 48MHz. Linux kernel version is 4.7.
+>> 
+>> When measuring the network bandwidth with iperf3 I get a
+>> bandwith of
+>> only around 5 Mbps. I found a similar thread at the Broadcom
+>> 
+>> community
+>> 
+>> 
+>> [1] where the test was done with a M4 CPU + BCM43362 and an
+>> average
+>> result of 3.3 Mbps.
+>> 
+>> Interestingly, a BCM43362 Wi-Fi Dev Kit [2] notes a TCP data
+>> 
+>> throughput
+>> 
+>> 
+>> greater than 20 Mbps.
+>> 
+>> Why is the throughput I measured much lower? Note that I
+>> measured
+>> several times with almost no neighbor devices or networks.
+>> 
+>> This is a test sample measured with iperf3:
+>> 
+>>     $ iperf3 -c 192.168.2.1 -i 1 -t 10
+>>     Connecting to host 192.168.2.1, port 5201
+>>     [  4] local 192.168.2.155 port 36442 connected to
+>> 192.168.2.1
+>> 
+>> port
+>> 
+>> 
+>>     5201
+>>     [ ID]
+>> Interval           Transfer     Bandwidth       Retr  Cwnd
+>>     [  4]   0.00-1.00   sec   615 KBytes  5.04
+>> Mbits/sec    0   56.6
+>>     KBytes
+>>     [  4]   1.00-2.00   sec   622 KBytes  5.10
+>> Mbits/sec    0   84.8
+>>     KBytes
+>>     [  4]   2.00-3.00   sec   625 KBytes  5.12
+>> Mbits/sec    0    113
+>>     KBytes
+>>     [  4]   3.00-4.00   sec   571 KBytes  4.68
+>> Mbits/sec    0    140
+>>     KBytes
+>>     [  4]   4.00-5.00   sec   594 KBytes  4.87
+>> Mbits/sec    0    167
+>>     KBytes
+>>     [  4]   5.00-6.00   sec   628 KBytes  5.14
+>> Mbits/sec    0    195
+>>     KBytes
+>>     [  4]   6.00-7.00   sec   619 KBytes  5.07
+>> Mbits/sec    0    202
+>>     KBytes
+>>     [  4]   7.00-8.00   sec   608 KBytes  4.98
+>> Mbits/sec    0    202
+>>     KBytes
+>>     [  4]   8.00-9.00   sec   602 KBytes  4.93
+>> Mbits/sec    0    202
+>>     KBytes
+>>     [  4]   9.00-10.00  sec   537 KBytes  4.40
+>> Mbits/sec    0    202
+>>     KBytes
+>>     - - - - - - - - - - - - - - - - - - - - - - - - -
+>>     [ ID] Interval           Transfer     Bandwidth       Retr
+>>     [  4]   0.00-10.00  sec  5.88 MBytes  4.93
+>>     Mbits/sec    0             sender
+>>     [  4]   0.00-10.00  sec  5.68 MBytes  4.76
+>>     Mbits/sec                  receiver
+>> 
+>> 
+>> Not overly familiar with iperf3. Do these lines mean you are
+>> doing
+>> bidirectional test, ie. upstream and downstream at the same time.
+>> Another
+>> thing affecting tput could be power-save.
+>> 
+>> 
+>> No, iperf3 does not support bidrectional test. Power-save is turned
+>> off.
+>> 
+>> What does iw link say?
+>> 
+>
+>but I guess it starts here!
+>
+>> I compared the results with a Cubietruck I have:
+>> 
+>> # iperf3 -s
+>> -----------------------------------------------------------
+>> Server listening on 5201
+>> -----------------------------------------------------------
+>> Accepted connection from 192.168.178.46, port 42906
+>> [  5] local 192.168.178.38 port 5201 connected to 192.168.178.46 port
+>> 42908
+>> [ ID] Interval           Transfer     Bandwidth
+>> [  5]   0.00-1.00   sec  2.29 MBytes  19.2 Mbits/sec                 
+>
+>> [  5]   1.00-2.00   sec  2.21 MBytes  18.5 Mbits/sec                 
+>
+>> [  5]   2.00-3.00   sec  2.17 MBytes  18.2 Mbits/sec                 
+>
+>> [  5]   3.00-4.00   sec  2.09 MBytes  17.6 Mbits/sec                 
+>
+>> [  5]   4.00-5.00   sec  2.20 MBytes  18.5 Mbits/sec                 
+>
+>> [  5]   5.00-6.00   sec  2.64 MBytes  22.1 Mbits/sec                 
+>
+>> [  5]   6.00-7.00   sec  2.67 MBytes  22.4 Mbits/sec                 
+>
+>> [  5]   7.00-8.00   sec  2.62 MBytes  22.0 Mbits/sec                 
+>
+>> [  5]   8.00-9.00   sec  2.35 MBytes  19.8 Mbits/sec                 
+>
+>> [  5]   9.00-10.00  sec  2.30 MBytes  19.3 Mbits/sec                 
+>
+>> [  5]  10.00-10.03  sec  83.4 KBytes  23.5 Mbits/sec                 
+>
+>> - - - - - - - - - - - - - - - - - - - - - - - - -
+>> [ ID] Interval           Transfer     Bandwidth       Retr
+>> [  5]   0.00-10.03  sec  23.9 MBytes  20.0
+>> Mbits/sec    0             sender
+>> [  5]   0.00-10.03  sec  23.6 MBytes  19.8
+>> Mbits/sec                  receiver
+>> 
+>> # iw dev wlan0 link
+>> Connected to xx:xx:xx:xx:xx (on wlan0)
+>> 	SSID: xxx
+>> 	freq: 2437
+>> 	tx bitrate: 65.0 MBit/s
+>> 
+>> 	bss flags:	short-preamble short-slot-time
+>> 	dtim period:	1
+>> 	beacon int:	100
+>
+>Too bad RSSI is not in the output above. That may be due to a
+>regression
+>in our driver which has been fixed by commit 94abd778a7bb ("brcmfmac:
+>add fallback for devices that do not report per-chain values").
+>However,
+>the tx bitrate seems within the same range as the other platform.
+>
+>> The Cubietruck works also with the brcmfmac driver.
+>> 
+>> May it depend on the NVRAM file?
+>
+>Not sure. Can you tell me a bit more about the custom ARM board. Does
+>it
+>use the same wifi module as Cubietruck, ie. the AMPAK AP6210? If you
+>can
+>make a wireshark sniff we can check the actual bitrate and medium
+>density in terms of packets. Another thing to look at is the SDIO host
+>controller. In brcmf_sdiod_sgtable_alloc() some key values are used
+>from
+>the host controller. It only logs the number of entries of the
+>scatter-gather table, but could you add the other values in this
+>function that are used to determine the number of entries.
 
+Many thanks for your conclusions! I am on vacation right now and I will investigate this issue further when I am back.
 
---------------960417583D6938E647FDB9A6
-Content-Type: message/rfc822;
- name="Attached Message"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="Attached Message"
+Best regards,
+Jörg Krause
 
-Received: from mxfront5h.mail.yandex.net ([127.0.0.1])
-	by mxfront5h.mail.yandex.net with LMTP id jTMqxza4
-	for <silverunicorn2011@yandex.ru>; Thu, 18 Aug 2016 22:14:26 +0300
-Received: from linux-libre.fsfla.org (linux-libre.fsfla.org [208.118.235.54])
-	by mxfront5h.mail.yandex.net (nwsmtp/Yandex) with ESMTPS id K9FoJjjWki-EPGq8KKQ;
-	Thu, 18 Aug 2016 22:14:25 +0300
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(Client certificate not present)
-Return-Path: lxoliva@fsfla.org
-Received: from freie.home (home.lxoliva.fsfla.org [172.31.160.22])
-	by linux-libre.fsfla.org (8.14.4/8.14.4/Debian-4.1ubuntu1) with ESMTP id u7IJEIDu021008;
-	Thu, 18 Aug 2016 19:14:19 GMT
-Received: from livre.home (livre.home [172.31.160.2])
-	by freie.home (8.15.2/8.15.2) with ESMTP id u7IJE1o3024623;
-	Thu, 18 Aug 2016 16:14:01 -0300
-From: Alexandre Oliva <lxoliva@fsfla.org>
-To: number Zero <silverunicorn2011@yandex.ru>
-Cc: linux-libre@fsfla.org
-Subject: Re: Inaccurate deblobbing breaks rtl8192ce
-Organization: Free thinker, not speaking for FSF Latin America
-References: <321381b3-5dea-f16a-56cb-11120d4a38ef@yandex.ru>
-Errors-To: aoliva@lxoliva.fsfla.org
-Date: Thu, 18 Aug 2016 16:14:01 -0300
-In-Reply-To: <321381b3-5dea-f16a-56cb-11120d4a38ef@yandex.ru> (number Zero's
-	message of "Sun, 14 Aug 2016 01:16:48 +0300")
-Message-ID: <ortwehao06.fsf@livre.home>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/24.5 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-X-Yandex-Forward: 1a71aadb444e5aa7f049850513799f43
-
-Hi,
-
-Thanks for your report!
-
-On Aug 13, 2016, number Zero <silverunicorn2011@yandex.ru> wrote:
-
-> However, after I made it to ignore the EINVAL error from the
-> reject_firmware_nowait function (in
-> drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c), it works fine.
-
-Interesting.  Can you check that this remains true even after a full
-power cycle, as in, that it's not a blob loaded by a previous blobbed
-kernel that remains it to work in your setting?  (if you never had the
-blob around, or never used a blobbed kernel, just say so, and I'll be
-happy enough about the conclusion ;-)
-
-> Really, are there any reasons for reject_firmware_nowait to return
-> -EINVAL?
-
-Yes.  It the error code to indicate to the caller that the firmware
-loading functionality is not avaialble.  It indicates the callback
-supplied by the caller will not be called, so the caller itself should
-take care of e.g. returning any temporary memory the callback would have
-released.
-
-If the driver works even if request_firmware_nowait returns such an
-error, then it ought to tolerate this return code.
-
-> So shouldn=E2=80=99t the reject_firmware_nowait function behave as if the
-> requested firmware merely absent?
-
-Given the multiple cases in which drivers were "surprised" by this
-return code, I guess we could try to rework reject_firmware_nowait so as
-to actually call the callback, signalling the unsuccessful completion of
-the request.  Would you like to give that a try?
-
-Or perhaps you'd prefer to report the bug to the rtl8192ce maintainers,
-so that they could fix their driver so as to work (as it should) even
-when the firmware loading configuration option is disabled?
-
-Thanks,
-
---=20
-Alexandre Oliva, freedom fighter    http://FSFLA.org/~lxoliva/
-You must be the change you wish to see in the world. -- Gandhi
-Be Free! -- http://FSFLA.org/   FSF Latin America board member
-Free Software Evangelist|Red Hat Brasil GNU Toolchain Engineer
-
---------------960417583D6938E647FDB9A6--
