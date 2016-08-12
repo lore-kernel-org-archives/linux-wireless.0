@@ -1,91 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-db5eur01on0086.outbound.protection.outlook.com ([104.47.2.86]:49120
-	"EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751042AbcHBU3V convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:37088 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753044AbcHLOgD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 16:29:21 -0400
-From: Scott Wood <scott.wood@nxp.com>
-To: arvind Yadav <arvind.yadav.cs@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-CC: "qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
-	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
-	"zajec5@gmail.com" <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"David.Laight@aculab.com" <David.Laight@aculab.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"scottwood@freescale.com" <scottwood@freescale.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux@roeck-us.net" <linux@roeck-us.net>,
-	Li Yang <leoli@freescale.com>
-Subject: Re: [v4] Fix to avoid IS_ERR_VALUE and IS_ERR abuses on 64bit
- systems.
-Date: Tue, 2 Aug 2016 19:57:48 +0000
-Message-ID: <DB5PR0401MB1928DE1F195A57160DED735D91050@DB5PR0401MB1928.eurprd04.prod.outlook.com> (sfid-20160802_222929_345672_B3B74555)
-References: <1469963924-8800-1-git-send-email-arvind.yadav.cs@gmail.com>
- <1956647.cOmaJREgOE@wuerfel>
- <DB5PR0401MB19280ACA87C7F5EE2822D5FB91040@DB5PR0401MB1928.eurprd04.prod.outlook.com>
- <2484583.95xFmO7xir@wuerfel> <57A0BD8E.9050305@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 12 Aug 2016 10:36:03 -0400
+Received: from [192.168.100.149] (firewall.candelatech.com [50.251.239.81])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by mail2.candelatech.com (Postfix) with ESMTPSA id 5F87440AC0B
+	for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2016 07:36:01 -0700 (PDT)
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: ath10k crash due to bad memory access in 4.7
+Message-ID: <57ADDED1.1090502@candelatech.com> (sfid-20160812_163655_262241_F4447D7D)
+Date: Fri, 12 Aug 2016 07:36:01 -0700
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/02/2016 10:34 AM, arvind Yadav wrote:
-> 
-> 
-> On Tuesday 02 August 2016 01:15 PM, Arnd Bergmann wrote:
->> On Monday, August 1, 2016 4:55:43 PM CEST Scott Wood wrote:
->>> On 08/01/2016 02:02 AM, Arnd Bergmann wrote:
->>>>> diff --git a/include/linux/err.h b/include/linux/err.h
->>>>> index 1e35588..c2a2789 100644
->>>>> --- a/include/linux/err.h
->>>>> +++ b/include/linux/err.h
->>>>> @@ -18,7 +18,17 @@
->>>>>  
->>>>>  #ifndef __ASSEMBLY__
->>>>>  
->>>>> -#define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)
->>>>> +#define IS_ERR_VALUE(x) unlikely(is_error_check(x))
->>>>> +
->>>>> +static inline int is_error_check(unsigned long error)
->>>> Please leave the existing macro alone. I think you were looking for
->>>> something specific to the return code of qe_muram_alloc() function,
->>>> so please add a helper in that subsystem if you need it, not in
->>>> the generic header files.
->>> qe_muram_alloc (a.k.a. cpm_muram_alloc) returns unsigned long.  The
->>> problem is certain callers that store the return value in a u32.  Why
->>> not just fix those callers to store it in unsigned long (at least until
->>> error checking is done)?
->>>
->> Yes, that would also address another problem with code like
->>
->>          kfree((void *)ugeth->tx_bd_ring_offset[i]);
->>
->> which is not 64-bit safe when tx_bd_ring_offset is a 32-bit value
->> that also holds the return value of qe_muram_alloc.
+I am seeing this in my 4.7 kernel while debugging QCA 9884 firmware that
+is crashing very often.  Looks like this must exacerbate some race condition,
+as ar->txqs appears to have entries in it that have been deleted already.
 
-Well, hopefully it doesn't hold a return of qe_muram_alloc() when it's
-being passed to kfree()...
+Just in case someone has already worked on this, please let me know.  I'll
+keep hacking on the problem in the meantime...
 
-There's also the code that casts kmalloc()'s return to u32, etc.
-ucc_geth is not 64-bit clean in general.
+(gdb) l *(ath10k_mac_tx_push_pending+0x143)
+0x147e3 is in ath10k_mac_tx_push_pending (/home/greearb/git/linux-4.7.dev.y/drivers/net/wireless/ath/ath10k/mac.c:4230).
+4225			return true;
+4226	
+4227		if (ar->htt.num_pending_tx < ar->htt.tx_q_state.num_push_allowed)
+4228			return true;
+4229	
+4230		if (artxq->num_fw_queued < artxq->num_push_allowed)
+4231			return true;
+4232	
+4233		return false;
+4234	}
 
->>
->> 	Arnd
-> Yes, we will fix caller. Caller api is not safe on 64bit.
 
-The API is fine (or at least, I haven't seen a valid issue pointed out
-yet).  The problem is the ucc_geth driver.
+==================================================================
+BUG: KASAN: use-after-free in ath10k_mac_tx_push_pending+0x143/0x310 [ath10k_core] at addr ffff8801d3137130
+Read of size 8 by task ksoftirqd/0/3
+=============================================================================
+BUG kmalloc-2048 (Tainted: G        W      ): kasan: bad access detected
+-----------------------------------------------------------------------------
+INFO: Allocated in sta_info_alloc+0x33c/0x820 [mac80211] age=12766 cpu=1 pid=3548
+	___slab_alloc+0x480/0x4b0
+	__slab_alloc.isra.62+0x26/0x40
+	__kmalloc+0x17c/0x1e0
+	sta_info_alloc+0x33c/0x820 [mac80211]
+	ieee80211_prep_connection+0x140/0xf80 [mac80211]
+	ieee80211_mgd_auth+0x3d2/0x670 [mac80211]
+	ieee80211_auth+0x13/0x20 [mac80211]
+	cfg80211_mlme_auth+0x1db/0x380 [cfg80211]
+	nl80211_authenticate+0x54b/0x5f0 [cfg80211]
+	genl_family_rcv_msg+0x3b7/0x600
+	genl_rcv_msg+0xbf/0xf0
+	netlink_rcv_skb+0x14d/0x180
+	genl_rcv+0x23/0x40
+	netlink_unicast+0x2ce/0x390
+	netlink_sendmsg+0x54c/0x680
+	sock_sendmsg+0x6f/0x80
+INFO: Freed in sta_info_free+0xbb/0x120 [mac80211] age=409 cpu=4 pid=291
+	__slab_free+0x17a/0x2d0
+	kfree+0x18d/0x1a0
+	sta_info_free+0xbb/0x120 [mac80211]
+	__sta_info_destroy_part2+0x1eb/0x2b0 [mac80211]
+	__sta_info_flush+0x1fb/0x2f0 [mac80211]
+	ieee80211_set_disassoc+0x103/0x480 [mac80211]
+	ieee80211_sta_connection_lost+0x8b/0xe0 [mac80211]
+	ieee80211_sta_work+0xb3a/0x22e0 [mac80211]
+	ieee80211_iface_work+0x466/0x500 [mac80211]
+	process_one_work+0x2b8/0x7f0
+	worker_thread+0x87/0x820
+	kthread+0x164/0x190
+	ret_from_fork+0x1f/0x40
 
-> Even qe_muram_addr(a.k.a. cpm_muram_addr )passing value unsigned int,
-> but it should be unsigned long.
+Thanks,
+Ben
 
-cpm_muram_addr takes unsigned long as a parameter, not that it matters
-since you can't pass errors into it and a muram offset should never
-exceed 32 bits.
-
--Scott
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
