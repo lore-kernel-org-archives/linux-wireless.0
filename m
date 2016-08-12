@@ -1,53 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:35239 "EHLO
-	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751284AbcHKSUn (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:23021 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752505AbcHLLhn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 14:20:43 -0400
-Received: by mail-pf0-f181.google.com with SMTP id x72so981120pfd.2
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Aug 2016 11:20:42 -0700 (PDT)
-Subject: Re: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
+	Fri, 12 Aug 2016 07:37:43 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1470261735-2977-1-git-send-email-denkenz@gmail.com>
- <1470919643.12075.7.camel@sipsolutions.net> <57ACA9E9.4020507@gmail.com>
- <1470938627.12075.25.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <57ACC1F8.6070908@gmail.com> (sfid-20160811_202047_945640_A7B748DB)
-Date: Thu, 11 Aug 2016 13:20:40 -0500
+	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
+	"Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
+Subject: RE: [PATCH v6] cfg80211: Provision to allow the support for different
+ beacon intervals
+Date: Fri, 12 Aug 2016 11:34:31 +0000
+Message-ID: <ba55eb8a461b41a4b7a592ee567d0fbf@aphydexm01f.ap.qualcomm.com> (sfid-20160812_133748_209672_61162F5B)
+References: <1470991178-11024-1-git-send-email-pkushwah@qti.qualcomm.com>
+ <1470995683.26902.31.camel@sipsolutions.net>
+In-Reply-To: <1470995683.26902.31.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1470938627.12075.25.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
- >> Speaking of indentation, can you point me to a doc of the rules I
->> should follow?
->
-> You've seen Documentation/CodingStyle?
-
-Of course.  But that one doesn't discuss that you want your function 
-parameters to be aligned to the opening '('.  Is there a dialect 
-document specific to linux-wireless?
-
->
->> I can confirm that I sanity checked this patch. Both ATTR_WIPHY,
->> ATTR_WDEV and wildcard dumps seemed to produce expected results.
->
-> I think it probably works due to the other conditions?
-
-The initial conditions are that:
-cb->args[0..2] == 0.
-
-So on the first iteration we set filter_wiphy == -1 and check the filter 
-attributes.  If set, we modify filter_wiphy accordingly.
-
-Even if filter_wiphy is set to 0, the if statement should still never be 
-entered afterwards since wp_start and if_start are incremented.
-
-Is this what you're worried about? Do you see a fault in my logic?
-
-Regards,
--Denis
+PlRoZSBjbGFyaWZpY2F0aW9uIHRoYXQgaXQgYWxzbyByZXByZXNlbnRzIHRoZSBtaW5pbXVtIGZv
+ciBhIHNpbmdsZSBiZWFjb24gaW50ZXJ2YWwgd291bGQgbWFrZSBzb21lIHNlbnNlIHRvIG1lLCBi
+dXQgYXQgdGhlIHNhbWUgdGltZSBpdCBjYW4ndCBiZSB1c2VkIG9ubHkgZm9yIHRoYXQsIHNvIHBl
+cmhhcHMgc2VwYXJhdGluZyBhIG1pbmltdW0gb3V0ID4ocmF0aGVyIHRoYW4gdXNpbmcgdGhlIGhh
+cmQtY29kZWQgbWluaW11bSBvZiAxMCkgd291bGQgbWFrZSBzZW5zZS4NClNvcnJ5IC4gQ291bGQg
+bm90IGdldCB5b3VyIHN0YXRlbWVudCBhYm92ZSAuIA0KQXJlIHlvdSBzYXlpbmcgdG8gbm90IGNo
+ZWNrIGlmIHRoZSBiZWFjb24gaW50ZXJ2YWwgaXMgPCAxMCBpbiBjZmc4MDIxMV92YWxpZGF0ZV9i
+ZWFjb25faW50IHJhdGhlciBvbmx5IGNvbnNpZGVyID4gMTAwMDAgYW5kIGRvIHRoZSB2YWxpZGF0
+aW9uIGlmIHRoZSBjb25maWd1cmVkIGJlYWNvbiBpbnRlcnZhbCBpcyBsZXNzIHRoYW4gZGlmZl9i
+ZWFjb25faW50X2djZF9taW4gLCB3aGVuIGNvbmZpZ3VyZWQgPyANCklmIHllcyAsIGhvdyBkbyB5
+b3Ugd2FudCB0aGUgdmFsaWRhdGlvbiBmb3IgdGhlIEJJICggPCAxMCApIGZvciB0aGUgZmlyc3Qg
+aW50ZXJmYWNlIHRvIGhhcHBlbiA/DQoNClJlZ2FyZHMsDQpTdW5pbA0KDQoNCg0KLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0bzpqb2hhbm5lc0Bz
+aXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IEZyaWRheSwgQXVndXN0IDEyLCAyMDE2IDM6MjUgUE0N
+ClRvOiBLdXNod2FoYSwgUHVydXNob3R0YW0gPHBrdXNod2FoQHF0aS5xdWFsY29tbS5jb20+DQpD
+YzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnOyBNYWxpbmVuLCBKb3VuaSA8am91bmlA
+cWNhLnF1YWxjb21tLmNvbT47IFVuZGVrYXJpLCBTdW5pbCBEdXR0IDx1c2R1dHRAcXRpLnF1YWxj
+b21tLmNvbT47IEh1bGx1ciBTdWJyYW1hbnlhbSwgQW1hcm5hdGggPGFtYXJuYXRoQHFjYS5xdWFs
+Y29tbS5jb20+OyBLdW1hciwgRGVlcGFrIChRQ0EpIDxkamluZGFsQHF0aS5xdWFsY29tbS5jb20+
+DQpTdWJqZWN0OiBSZTogW1BBVENIIHY2XSBjZmc4MDIxMTogUHJvdmlzaW9uIHRvIGFsbG93IHRo
+ZSBzdXBwb3J0IGZvciBkaWZmZXJlbnQgYmVhY29uIGludGVydmFscw0KDQpPbiBGcmksIDIwMTYt
+MDgtMTIgYXQgMTQ6MDkgKzA1MzAsIFB1cnVzaG90dGFtIEt1c2h3YWhhIHdyb3RlOg0KPsKgDQo+
+IMKgICogQHJhZGFyX2RldGVjdF9yZWdpb25zOiBiaXRtYXAgb2YgcmVnaW9ucyBzdXBwb3J0ZWQg
+Zm9yIHJhZGFyIA0KPiBkZXRlY3Rpb24NCj4gKyAqIEBkaWZmX2JlYWNvbl9pbnRfZ2NkOiBUaGlz
+IGludGVyZmFjZSBjb21iaW5hdGlvbiBzdXBwb3J0cw0KPiBkaWZmZXJlbnQgYmVhY29uDQo+ICsg
+KglpbnRlcnZhbHMgaW4gbXVsdGlwbGUgb2YgR0NEIHZhbHVlLg0KDQpJIHRoaW5rIHlvdSBzaG91
+bGQgYWRkICJMZWF2ZSB0aGlzIHNldCB0byAwIHRvIHJlcXVpcmUgYWxsIGJlYWNvbiBpbnRlcnZh
+bHMgdG8gbWF0Y2ggZXhhY3RseS4iDQoNCkFuZCBhbm90aGVyIHRoaW5nIEkganVzdCByZWFsaXpl
+ZDogUGVyaGFwcyBzb21lYm9keSBtaWdodCBub3QganVzdCBoYXZlIGEgR0NEIHJlcXVpcmVtZW50
+LCBidXQgYWxzbyByZXF1aXJlIHRoYXQgYWxsIGJlYWNvbiBpbnRlcnZhbHMgYXJlIGFuIGV4YWN0
+IG11bHRpcGxlIG9mIHRoZSBzbWFsbGVzdCBvZiB0aGVtPyBJLmUuIHRoYXQgdGhlIEdDRChhbGwg
+b2YgdGhlbSkgPT0gbWluKGFsbCBvZiB0aGVtKT8NCg0KQW55d2F5LCBpZiB5b3UgZG9uJ3QgaGF2
+ZSBzdWNoIGEgcmVxdWlyZW1lbnQgbm93LCB0aGVyZSdzIG5vIHJlYXNvbiB0byBhZGQgaXQgbm93
+IGVpdGhlci4NCg0KPiDCoCAqIFdpdGggdGhpcyBzdHJ1Y3R1cmUgdGhlIGRyaXZlciBjYW4gZGVz
+Y3JpYmUgd2hpY2ggaW50ZXJmYWNlDQo+IMKgICogY29tYmluYXRpb25zIGl0IHN1cHBvcnRzIGNv
+bmN1cnJlbnRseS4NCj4gQEAgLTI5NzAsNiArMjk3Miw3IEBAIHN0cnVjdCBpZWVlODAyMTFfaWZh
+Y2VfbGltaXQgew0KPiDCoCAqCS5uX2xpbWl0cyA9IEFSUkFZX1NJWkUobGltaXRzMiksDQo+IMKg
+ICoJLm1heF9pbnRlcmZhY2VzID0gOCwNCj4gwqAgKgkubnVtX2RpZmZlcmVudF9jaGFubmVscyA9
+IDEsDQo+ICsgKgkuZGlmZl9iZWFjb25faW50X2djZCA9IDEwMCwNCj4gwqAgKsKgwqB9Ow0KDQpU
+aGlzIGJlY29tZXMgc29tZXdoYXQgY3VyaW91cy4gRG9lcyBpdCBhbHNvIG1lYW4gdGhhdCB5b3Ug
+Y2FuIG9ubHkgc3VwcG9ydCBiZWFjb24gaW50ZXJ2YWxzIHRoYXQgYXJlIG11bHRpcGxlcyBvZiAx
+MDA/DQoNClRoaXMgYmVpbmcgeW91ciBleGFtcGxlIGtpbmRhIG1ha2VzIG1lIHRoaW5rIHRoYXQg
+eW91ICpkbyogd2FudCB0byBoYXZlIGl0IG11bHRpcGxlcyBvZiB0aGUgc21hbGxlc3QsIGxpa2Ug
+SSB3YXMgb3V0bGluaW5nIGJlbG93Pw0KDQpBc3N1bWluZyB5b3VyIGRyaXZlciB3b3VsZCBhZHZl
+cnRpc2UgaXQgdGhpcyB3YXksIHdvdWxkIHlvdSBhY3R1YWxseSBiZSBhYmxlIHRvIGRvIEJJcyBv
+ZiAyMDAgYW5kIDMwMCBvbiB0d28gaW50ZXJmYWNlcz8NCg0KUmVnYXJkbGVzcywgYWR2ZXJ0aXNp
+bmcgMTAwIHdvdWxkIG1lYW4gbm90IHN1cHBvcnRpbmcgYSBiZWFjb24gaW50ZXJ2YWwgb2YgNTAg
+YXQgYWxsLCB3aGljaCBzZWVtcyBvZGQuDQoNCg0KSSB0aGluayB0aGUgR0NEIHJlcXVpcmVtZW50
+IHNob3VsZCBiZSByZXBocmFzZWQgKGFuZCBteSBvcmlnaW5hbCBtZW50aW9uIG9mIHRoaXMgd2Fz
+bid0IHZlcnkgcHJlY2lzZSkgLSBJIHRoaW5rIGl0IHJlYWxseSBzaG91bGRuJ3QgYmUgYW4gZXhh
+Y3QgR0NEIHJlcXVpcmVtZW50IGxpa2UgeW91IGRpZCBub3csIGJ1dCBhIHJlcXVpcmVtZW50ICpv
+biogdGhlIEdDRCwgbGlrZQ0KDQrCoEBkaWZmX2JlYWNvbl9pbnRfZ2NkX21pbjogV2hlbiAwLCBh
+bGwgYmVhY29uIGludGVydmFscyBtdXN0IG1hdGNoLg0KCVdoZW4gPjAsIGRpZmZlcmVudCBiZWFj
+b24gaW50ZXJ2YWxzIG11c3QgaGF2ZSBhIEdDRCB0aGF0J3MgYXQNCglsZWFzdCBhcyBiaWcgYXMg
+dGhpcyB2YWx1ZS4NCg0KbWF5YmUgYWxzbyBhZGQsIHNpbmNlIHRoZSBHQ0Qgb2YgYSBzaW5nbGUg
+dmFsdWUgaXMgZmlzaHk6DQoNCglXaGVuID4wLCBhbnkgYmVhY29uIGludGVydmFsIG11c3QgYWxz
+byBiZSBiaWdnZXIgdGhhbiB0aGlzDQoJdmFsdWUuDQoNCldpdGggYSBkaWZmX2JlYWNvbl9pbnRf
+Z2NkX21pbj01MCwgdGhpcyB3b3VsZCBzdGlsbCBhbGxvdyBiZWFjb24gaW50ZXJ2YWxzIDEwMiwx
+NTMgKEdDRCA1MSksIHdoaWNoIHNlZW1zIG11Y2ggbW9yZSBmbGV4aWJsZS4NCg0KVGhlIGNsYXJp
+ZmljYXRpb24gdGhhdCBpdCBhbHNvIHJlcHJlc2VudHMgdGhlIG1pbmltdW0gZm9yIGEgc2luZ2xl
+IGJlYWNvbiBpbnRlcnZhbCB3b3VsZCBtYWtlIHNvbWUgc2Vuc2UgdG8gbWUsIGJ1dCBhdCB0aGUg
+c2FtZSB0aW1lIGl0IGNhbid0IGJlIHVzZWQgb25seSBmb3IgdGhhdCwgc28gcGVyaGFwcyBzZXBh
+cmF0aW5nIGEgbWluaW11bSBvdXQgKHJhdGhlciB0aGFuIHVzaW5nIHRoZSBoYXJkLWNvZGVkIG1p
+bmltdW0gb2YgMTApIHdvdWxkIG1ha2Ugc2Vuc2UuDQoNCj4gKyAqIEBOTDgwMjExX0lGQUNFX0NP
+TUJfRElGRl9CSV9HQ0Q6IHUzMiBhdHRyaWJ1dGUgc3BlY2lmeWluZyB0aGUgR0NEDQo+IG9mDQo+
+ICsgKglkaWZmZXJlbnQgYmVhY29uIGludGVydmFscyBzdXBwb3J0ZWQgYnkgYWxsIHRoZSBpbnRl
+cmZhY2UNCj4gY29tYmluYXRpb25zDQo+ICsgKglpbiB0aGlzIGdyb3VwIChub3QgcHJlc2VudCBp
+ZiBhbGwgYmVhY29uIGludGVydmFsIG11c3QNCj4gbWF0Y2gpLg0KDQpJJ2QgdHVybiB0aGF0IGFy
+b3VuZDogIihpZiBub3QgcHJlc2VudCwgYWxsIGJlYWNvbiBpbnRlcnZhbHMgbXVzdCBtYXRjaCki
+DQoNCj4gK3N0cnVjdCBkaWZmX2JlYWNvbl9pbnQgew0KPiA+ICsJdTMyIGJlYWNvbl9pbnQ7DQo+
+ID4gKwlib29sIHZhbGlkOw0KPiArfTsNCj4gKw0KPiArc3RhdGljIHZvaWQNCj4gK2NmZzgwMjEx
+X3ZhbGlkYXRlX2RpZmZfYmVhY29uX2ludChjb25zdCBzdHJ1Y3QgDQo+ICtpZWVlODAyMTFfaWZh
+Y2VfY29tYmluYXRpb24gKmMsDQo+ID4gKwkJCQnCoMKgdm9pZCAqZGF0YSkNCj4gK3sNCj4gPiAr
+CXN0cnVjdCBkaWZmX2JlYWNvbl9pbnQgKmRpZmZfYmkgPSBkYXRhOw0KPiArDQo+ID4gKwlpZiAo
+Yy0+ZGlmZl9iZWFjb25faW50X2djZCAmJg0KPiA+ICsJwqDCoMKgwqAhKGRpZmZfYmktPmJlYWNv
+bl9pbnQgJSBjLT5kaWZmX2JlYWNvbl9pbnRfZ2NkKSkNCj4gPiArCQlkaWZmX2JpLT52YWxpZCA9
+IHRydWU7DQo+ICt9DQo+ID4gDQoNCk9idmlvdXNseSwgdGhpcyB2YWxpZGF0aW9uIGlzIGZhciBl
+YXNpZXIgdGhhbiBjYWxjdWxhdGluZyB0aGUgR0NEIGZpcnN0LCBidXQgSSB0aGluayBpdCdzIHdv
+cnRod2hpbGUgZG9pbmcgaXQgdGhlIG90aGVyIHdheS4NCg0Kam9oYW5uZXMNCg0K
