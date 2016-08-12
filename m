@@ -1,84 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37805 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752543AbcHEMcQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 08:32:16 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-08-05
-Date: Fri,  5 Aug 2016 14:32:08 +0200
-Message-Id: <1470400329-23256-1-git-send-email-johannes@sipsolutions.net> (sfid-20160805_143231_516679_202A0463)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:3391 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751396AbcHLHSE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2016 03:18:04 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: Problems with mwifiex_pcie firmware activation
+Date: Fri, 12 Aug 2016 07:17:38 +0000
+Message-ID: <fc70c75bfcab4e0e932274034b5b4493@SC-EXCH04.marvell.com> (sfid-20160812_091807_989640_39538830)
+References: <20160614135015.GB4962@redhat.com>
+ <b881b09bf5384169ba1038af71fd435a@SC-EXCH04.marvell.com>
+ <20160616115315.GB21199@redhat.com> <20160623120952.GA11157@redhat.com>
+ <20160811090113.GA27059@redhat.com>
+ <f5b2566be31743809217833e76060d42@SC-EXCH04.marvell.com>
+ <20160811122917.GB27059@redhat.com>
+In-Reply-To: <20160811122917.GB27059@redhat.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Hi Stanislaw,
 
-Here's a first set of fixes for the current cycle. See the tag message
-for more information.
+> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+> Sent: Thursday, August 11, 2016 5:59 PM
+> To: Amitkumar Karwar
+> Cc: Nishant Sarmukadam; linux-wireless@vger.kernel.org
+> Subject: Re: Problems with mwifiex_pcie firmware activation
+> 
+> Hi
+> 
+> On Thu, Aug 11, 2016 at 10:21:58AM +0000, Amitkumar Karwar wrote:
+> > > -----Original Message-----
+> > > From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
+> > > Sent: Thursday, August 11, 2016 2:31 PM
+> > > To: Amitkumar Karwar
+> > > Cc: Nishant Sarmukadam; linux-wireless@vger.kernel.org
+> > > Subject: Re: Problems with mwifiex_pcie firmware activation
+> > >
+> > > On Thu, Jun 23, 2016 at 02:09:52PM +0200, Stanislaw Gruszka wrote:
+> > > > On Thu, Jun 16, 2016 at 01:53:15PM +0200, Stanislaw Gruszka wrote:
+> > > > > On Wed, Jun 15, 2016 at 01:47:53PM +0000, Amitkumar Karwar
+> wrote:
+> > > > > > Could you please share complete dmesg log for failure and
+> > > successful cases?
+> > > > >
+> > > > > Dmesg from failure case is in attachment. I loose access to
+> > > > > system where device initalize, I'll provide missed dmesg when I
+> > > > > get back the access.
+> > > >
+> > > > Have the access now, dmesg is in attachment.
+> > >
+> > > Any news here ?
+> >
+> > Do you have below patch included? It increases poll count which may
+> help in your case.
+> > https://patchwork.kernel.org/patch/7973951/
+> 
+> Yes, I have that patch.
+> 
+> To clarify the issue: reverting above patch seems to helps with the
+> problem. That what I basically did on first of my systems with mwifiex,
+> that did not work similarly like second one. However I did not revert
+> the patch but just comment out check_winner_status:
+> 
+> @@ -755,7 +755,7 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
+>         }
+> 
+>         /* check if we are the winner for downloading FW */
+> -       if (adapter->if_ops.check_winner_status) {
+> +       if (false) {
+>                 adapter->winner = 0;
+>                 ret = adapter->if_ops.check_winner_status(adapter);
+> 
+> After running modified kernel once, the problem was gone on unmodified
+> kernel! I suppose that once new firmware was uploaded to the device it
+> somehow modify it (change it's internal firmware?) and make
+> check_winner_status() works correctly. This is strange, but I can not
+> find any other explanation and don't see any other changes in the first
+> system that makes mwifiex suddenly work.
+> 
+> I could be wrong, but I suppose somebody who use pre 4.6 kernel (without
+> the above patch committed as: 2fd5c6ed0b4fbf3c2d9314a24c82862ce5254d42
+> "mwifiex: firmware download enhancements") with new enough mwifiex
+> firmware, will not see the problem even after kernel update. But if
+> somebody install 4.6 or newer kernel on pristine hardware, the device
+> will not work.
+> 
 
-I'll probably have a follow-up fix for the real problem in mac80211
-that caused the crash later, but for now we have this patch and it
-makes sense and fixes the crash, even if the behaviour isn't quite
-right (afaict.)
+The problem looks strange. The patch just splits mwifiex_check_fw_status() and increases poll count. It should not have any side-effects.
+Our code used to check winner status before this patch also.
 
-Let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit ecd5a32318280133e8ae93f10ea693293a04a786:
-
-  phy/micrel: Change phy_id_mask for KSZ8721 (2016-07-31 20:37:12 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-08-05
-
-for you to fetch changes up to 2439ca0402091badb24415e1b073ba12b34ba423:
-
-  mac80211: Add ieee80211_hw pointer to get_expected_throughput (2016-08-05 14:23:25 +0200)
-
-----------------------------------------------------------------
-First set of fixes for the current cycle:
- * fix 80+80 bandwidth warning
- * fix powersave with mac80211 TXQ implementation
- * use correct way to free SKBs from multicast buffering
- * mesh: fix operation ordering to work with all drivers
- * mesh: end service period even when peer goes away
- * mesh: correct HT opmode validity checks
- * pass hw pointer from mac80211 to driver in TPT method,
-   fixing a bug (in a bit the wrong way, but that's what
-   we have right now)
-
-----------------------------------------------------------------
-Colin Ian King (1):
-      cfg80211: fix missing break in NL8211_CHAN_WIDTH_80P80 case
-
-Felix Fietkau (2):
-      mac80211: fix check for buffered powersave frames with txq
-      mac80211: fix purging multicast PS buffer queue
-
-Maital Hahn (1):
-      mac80211: mesh: flush stations before beacons are stopped
-
-Masashi Honma (2):
-      mac80211: End the MPSP even if EOSP frame was not acked
-      nl80211: correct checks for NL80211_MESHCONF_HT_OPMODE value
-
-Maxim Altshul (1):
-      mac80211: Add ieee80211_hw pointer to get_expected_throughput
-
- drivers/net/wireless/ti/wlcore/main.c |  5 +++--
- include/net/mac80211.h                |  3 ++-
- net/mac80211/cfg.c                    |  2 +-
- net/mac80211/driver-ops.h             |  2 +-
- net/mac80211/mesh.c                   | 10 ++++++----
- net/mac80211/rx.c                     |  2 +-
- net/mac80211/status.c                 | 14 +++++++-------
- net/mac80211/tx.c                     |  6 +++---
- net/wireless/chan.c                   |  1 +
- net/wireless/nl80211.c                | 34 +++++++++++++++++++++++++++++++---
- 10 files changed, 56 insertions(+), 23 deletions(-)
+Regards,
+Amitkumar Karwar
