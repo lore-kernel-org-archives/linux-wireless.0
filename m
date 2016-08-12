@@ -1,95 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16211 "EHLO mga09.intel.com"
+Received: from mail.neratec.com ([46.140.151.2]:5027 "EHLO mail.neratec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934712AbcHBMWY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:22:24 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: kvalo@codeaurora.org, bkenward@solarflare.com,
-	linux-driver@qlogic.com, computersforpeace@gmail.com,
-	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	zajec5@gmail.com, baijiaju1990@163.com, lars@metafoo.de,
-	johannes.berg@intel.com, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0770/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:44:42 +0800
-Message-Id: <20160802114442.999-1-baolex.ni@intel.com> (sfid-20160802_175220_656917_3C66D191)
+	id S1751143AbcHLIlq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2016 04:41:46 -0400
+Subject: Re: [PATCH 1/2] ath9k: use ieee80211_tx_status_noskb where possible
+To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+References: <20160804214940.78476-1-nbd@nbd.name>
+ <8aeb7913-d955-d894-d82c-4614e17d3ee4@neratec.com>
+ <9e324227-f105-bc16-f0c0-c2a3a79032e8@nbd.name>
+Cc: kvalo@codeaurora.org
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Message-ID: <236fc08a-9474-0917-47f0-756e9136e3b5@neratec.com> (sfid-20160812_104155_949635_B3CCD410)
+Date: Fri, 12 Aug 2016 10:31:32 +0200
+MIME-Version: 1.0
+In-Reply-To: <9e324227-f105-bc16-f0c0-c2a3a79032e8@nbd.name>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On 08/11/2016 09:27 PM, Felix Fietkau wrote:
+> On 2016-08-11 18:05, Zefir Kurtisi wrote:
+>> On 08/04/2016 11:49 PM, Felix Fietkau wrote:
+>>> It removes the need for undoing the padding changes to skb->data and it
+>>> improves performance by eliminating one tx status lookup per MPDU in the
+>>> status path. It is also useful for preparing a follow-up fix to better
+>>> handle powersave filtering.
+>>>
+>>
+>> For me, this one introduces a regression to the statistics, e.g.
+>> 'dot11TransmittedFragmentCount' is now accounted differently since it is not
+>> updated from within ieee80211_tx_status_noskb().
+> Is this important? I guess it would be possible to make this more
+> accurate by extending the API, but I wonder if that's worth doing just
+> for these debugfs counters.
+> 
+If you want to support the IEEE802dot11.MIB (dot11mac.dot11CountersTable), they
+are important. Not sure though if it is used by others besides us.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/broadcom/b43/main.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+I think the real issue here is that those counters are regarded as internal debug
+values (as the comments or e.g. commit c206ca6709 state) instead of general
+purpose statistics that is exposed to SNMP. As such, they should be configurable
+as a feature independent of debug settings in mac80211.
 
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index 4ee5c58..cadd5bd 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -76,44 +76,44 @@ MODULE_FIRMWARE("b43/ucode5.fw");
- MODULE_FIRMWARE("b43/ucode9.fw");
- 
- static int modparam_bad_frames_preempt;
--module_param_named(bad_frames_preempt, modparam_bad_frames_preempt, int, 0444);
-+module_param_named(bad_frames_preempt, modparam_bad_frames_preempt, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(bad_frames_preempt,
- 		 "enable(1) / disable(0) Bad Frames Preemption");
- 
- static char modparam_fwpostfix[16];
--module_param_string(fwpostfix, modparam_fwpostfix, 16, 0444);
-+module_param_string(fwpostfix, modparam_fwpostfix, 16, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(fwpostfix, "Postfix for the .fw files to load.");
- 
- static int modparam_hwpctl;
--module_param_named(hwpctl, modparam_hwpctl, int, 0444);
-+module_param_named(hwpctl, modparam_hwpctl, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(hwpctl, "Enable hardware-side power control (default off)");
- 
- static int modparam_nohwcrypt;
--module_param_named(nohwcrypt, modparam_nohwcrypt, int, 0444);
-+module_param_named(nohwcrypt, modparam_nohwcrypt, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(nohwcrypt, "Disable hardware encryption.");
- 
- static int modparam_hwtkip;
--module_param_named(hwtkip, modparam_hwtkip, int, 0444);
-+module_param_named(hwtkip, modparam_hwtkip, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(hwtkip, "Enable hardware tkip.");
- 
- static int modparam_qos = 1;
--module_param_named(qos, modparam_qos, int, 0444);
-+module_param_named(qos, modparam_qos, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(qos, "Enable QOS support (default on)");
- 
- static int modparam_btcoex = 1;
--module_param_named(btcoex, modparam_btcoex, int, 0444);
-+module_param_named(btcoex, modparam_btcoex, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(btcoex, "Enable Bluetooth coexistence (default on)");
- 
- int b43_modparam_verbose = B43_VERBOSITY_DEFAULT;
--module_param_named(verbose, b43_modparam_verbose, int, 0644);
-+module_param_named(verbose, b43_modparam_verbose, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(verbose, "Log message verbosity: 0=error, 1=warn, 2=info(default), 3=debug");
- 
- static int b43_modparam_pio = 0;
--module_param_named(pio, b43_modparam_pio, int, 0644);
-+module_param_named(pio, b43_modparam_pio, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(pio, "Use PIO accesses by default: 0=DMA, 1=PIO");
- 
- static int modparam_allhwsupport = !IS_ENABLED(CONFIG_BRCMSMAC);
--module_param_named(allhwsupport, modparam_allhwsupport, int, 0444);
-+module_param_named(allhwsupport, modparam_allhwsupport, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(allhwsupport, "Enable support for all hardware (even it if overlaps with the brcmsmac driver)");
- 
- #ifdef CONFIG_B43_BCMA
--- 
-2.9.2
+
+Aside from that consideration, this patch (with the follow up ones) increased peak
+performance noticeably (we measure some 5%+ higher peak throughput), which for
+sure is worth dropping the counters for most.
+
+I am fine handling this internally. A note in the commit message would be helpful
+that states that counters dot11TransmittedFragmentCount, dot11FrameDuplicateCount,
+dot11ReceivedFragmentCount, and dot11MulticastReceivedFrameCount become invalid.
+
+
+Cheers,
+Zefir
+
+
 
