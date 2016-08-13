@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:49231 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934750AbcHBMYu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:24:50 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org,
-	linuxwifi@intel.com, m.chehab@samsung.com, pawel@osciak.com,
-	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
-	k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0790/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:46:41 +0800
-Message-Id: <20160802114641.2489-1-baolex.ni@intel.com> (sfid-20160802_174357_012384_42E441B6)
+Received: from smtprelay0154.hostedemail.com ([216.40.44.154]:41583 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751299AbcHMEAh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2016 00:00:37 -0400
+Message-ID: <1471060827.3467.5.camel@perches.com> (sfid-20160813_060107_489755_34A4D2FB)
+Subject: Re: [PATCH] Modify is_zero_ether_addr() to handle byte-aligned
+ addresses
+From: Joe Perches <joe@perches.com>
+To: David Miller <davem@davemloft.net>, pgynther@google.com
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	akarwar@marvell.com
+Date: Fri, 12 Aug 2016 21:00:27 -0700
+In-Reply-To: <20160812.202613.197744153887748230.davem@davemloft.net>
+References: <1471047330-8153-1-git-send-email-pgynther@google.com>
+	 <20160812.202613.197744153887748230.davem@davemloft.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Fri, 2016-08-12 at 20:26 -0700, David Miller wrote:
+> From: Petri Gynther <pgynther@google.com>
+> Date: Fri, 12 Aug 2016 17:15:30 -0700
+> 
+> > Root cause:
+> > mwifiex driver calls is_zero_ether_addr() against byte-aligned address:
+> 
+> MAC addresses really must be 16-bit aligned to be used with any of the
+> ethernet address manipulation and test interfaces.
+> 
+> Therefore this driver should do whatever it takes to avoid passing
+> a byte-aligned MAC address anywhere.
+> 
+> We _SHOULD NOT_ add support for byte aligned addresses to these
+> interfaces, nor add routines which by-name can handle them.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+My recollection is that batman uses unaligned addresses
+and some form of _unaligned tests are required there.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 8e08626..efeeee3 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -27,7 +27,7 @@
- #include "cfg80211.h"
- 
- static int disconnect_on_suspend;
--module_param(disconnect_on_suspend, int, 0644);
-+module_param(disconnect_on_suspend, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- 
- /*
-  * Copies the multicast address list from device to driver.
--- 
-2.9.2
+It seems that other wireless drivers also use _unaligned
+in various forms.
 
+> Fix this driver instead of polluting out common interfaces
+> unnecessarily.
+
+One solution might be to copy a hardware interface structure
+to another struct with appropriate alignment.
