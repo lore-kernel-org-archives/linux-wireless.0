@@ -1,45 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36928 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751799AbcHEJDM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 05:03:12 -0400
-Message-ID: <1470387784.2977.30.camel@sipsolutions.net> (sfid-20160805_110316_589014_292F07A4)
-Subject: Re: [PATCH] cfg80211: Add support for user configurable beacon data
- rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-	usdutt@qti.qualcomm.com, ganeshk@qti.qualcomm.com,
-	mkalikot@qca.qualcomm.com, amarnath@qca.qualcomm.com
-Date: Fri, 05 Aug 2016 11:03:04 +0200
-In-Reply-To: <1470371701-13074-1-git-send-email-pkushwah@qti.qualcomm.com>
-References: <1470371701-13074-1-git-send-email-pkushwah@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:35237 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975AbcHMAQL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Aug 2016 20:16:11 -0400
+Received: by mail-pa0-f47.google.com with SMTP id i5so550559pat.2
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2016 17:16:11 -0700 (PDT)
+From: Petri Gynther <pgynther@google.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, davem@davemloft.net, joe@perches.com,
+	akarwar@marvell.com, Petri Gynther <pgynther@google.com>
+Subject: [PATCH] Modify is_zero_ether_addr() to handle byte-aligned addresses
+Date: Fri, 12 Aug 2016 17:15:30 -0700
+Message-Id: <1471047330-8153-1-git-send-email-pgynther@google.com> (sfid-20160813_021614_638975_0567168A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-08-05 at 10:05 +0530, Purushottam Kushwaha wrote:
-> 
-> +static int nl80211_parse_tx_bitrate_mask(struct genl_info *info,
-> +					 struct cfg80211_bitrate_mask *mask);
+$ iwconfig mlan0 essid MySSID
+[   36.930000] Path: /sbin/iwconfig
+[   36.930000] CPU: 0 PID: 203 Comm: iwconfig Not tainted 4.7.0 #2
+[   36.940000] task: 866f83a0 ti: 866a6000 task.ti: 866a6000
+[   36.940000]
+[ECR   ]: 0x00230400 => Misaligned r/w from 0x8677f403
+[   36.960000] [EFA   ]: 0x8677f403
+[   36.960000] [BLINK ]: mwifiex_scan_networks+0x17a/0x198c [mwifiex]
+[   36.960000] [ERET  ]: mwifiex_scan_networks+0x18a/0x198c [mwifiex]
+[   36.980000] [STAT32]: 0x00000206 : K         E2 E1
+[   36.980000] BTA: 0x700736e2   SP: 0x866a7d0c  FP: 0x5faddc84
+[   37.000000] LPS: 0x806a37ec  LPE: 0x806a37fa LPC: 0x00000000
+[   37.000000] r00: 0x8677f401  r01: 0x8668aa08 r02: 0x00000001
+r03: 0x00000000 r04: 0x8668b600 r05: 0x8677f406
+r06: 0x8702b600 r07: 0x00000000 r08: 0x8702b600
+r09: 0x00000000 r10: 0x870b3b00 r11: 0x00000000
+r12: 0x00000000
+[   37.040000]
+[   37.040000] Stack Trace:
+[   37.040000]   mwifiex_scan_networks+0x18a/0x198c [mwifiex]
 
-I think you should move the function instead.
+Root cause:
+mwifiex driver calls is_zero_ether_addr() against byte-aligned address:
 
-> @@ -3457,6 +3459,11 @@ static int nl80211_start_ap(struct sk_buff
-> *skb, struct genl_info *info)
->  	err = cfg80211_validate_beacon_int(rdev,
-> params.beacon_interval);
->  	if (err)
->  		return err;
-> +	if (info->attrs[NL80211_ATTR_TX_RATES]) {
-> +		err = nl80211_parse_tx_bitrate_mask(info,
-> &params.beacon_rate);
-> +		if (err)
-> +			return err;
-> +	}
+drivers/net/wireless/marvell/mwifiex/fw.h:
+struct mwifiex_scan_cmd_config {
+        /*
+         *  BSS mode to be sent in the firmware command
+         */
+        u8 bss_mode;
 
-Doesn't this have to check that it actually got information for the
-right band?
+        /* Specific BSSID used to filter scan results in the firmware */
+        u8 specific_bssid[ETH_ALEN];
 
-johannes
+        ...
+} __packed;
+
+drivers/net/wireless/marvell/mwifiex/scan.c:
+mwifiex_config_scan(..., struct mwifiex_scan_cmd_config *scan_cfg_out, ...)
+        ...
+        if (adapter->ext_scan &&
+            !is_zero_ether_addr(scan_cfg_out->specific_bssid)) {
+            ...
+        }
+
+Since firmware-related struct mwifiex_scan_cmd_config cannot be changed,
+modify is_zero_ether_addr() to handle byte-aligned addresses.
+
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Joe Perches <joe@perches.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Petri Gynther <pgynther@google.com>
+---
+ include/linux/etherdevice.h | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
+index 37ff4a6..0cfd243 100644
+--- a/include/linux/etherdevice.h
++++ b/include/linux/etherdevice.h
+@@ -90,11 +90,13 @@ static inline bool is_link_local_ether_addr(const u8 *addr)
+  * @addr: Pointer to a six-byte array containing the Ethernet address
+  *
+  * Return true if the address is all zeroes.
+- *
+- * Please note: addr must be aligned to u16.
+  */
+ static inline bool is_zero_ether_addr(const u8 *addr)
+ {
++	if ((u32)addr & 0x1)
++		return (addr[0] | addr[1] | addr[2] | addr[3] | addr[4] |
++			addr[5]) == 0;
++
+ #if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
+ 	return ((*(const u32 *)addr) | (*(const u16 *)(addr + 4))) == 0;
+ #else
+-- 
+2.8.0.rc3.226.g39d4020
+
