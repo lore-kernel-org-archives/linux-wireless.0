@@ -1,72 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33056 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934611AbcHBPsx (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:35491 "EHLO
+	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986AbcHMDAN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 11:48:53 -0400
-Subject: Re: [v4] Fix to avoid IS_ERR_VALUE and IS_ERR abuses on 64bit
- systems.
-To: Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
-References: <1469963924-8800-1-git-send-email-arvind.yadav.cs@gmail.com>
- <1956647.cOmaJREgOE@wuerfel>
- <DB5PR0401MB19280ACA87C7F5EE2822D5FB91040@DB5PR0401MB1928.eurprd04.prod.outlook.com>
- <2484583.95xFmO7xir@wuerfel>
-Cc: Scott Wood <scott.wood@nxp.com>,
-	"qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
-	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
-	"zajec5@gmail.com" <zajec5@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"David.Laight@aculab.com" <David.Laight@aculab.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"scottwood@freescale.com" <scottwood@freescale.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"davem@davemloft.net" <davem@davemloft.net>,
-	"linux@roeck-us.net" <linux@roeck-us.net>
-From: arvind Yadav <arvind.yadav.cs@gmail.com>
-Message-ID: <57A0C0DE.3090706@gmail.com> (sfid-20160802_174909_227723_6DDF141C)
-Date: Tue, 2 Aug 2016 21:18:46 +0530
-MIME-Version: 1.0
-In-Reply-To: <2484583.95xFmO7xir@wuerfel>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Fri, 12 Aug 2016 23:00:13 -0400
+Received: by mail-pf0-f180.google.com with SMTP id x72so1407707pfd.2
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2016 20:00:13 -0700 (PDT)
+From: Petri Gynther <pgynther@google.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, davem@davemloft.net, joe@perches.com,
+	akarwar@marvell.com, Petri Gynther <pgynther@google.com>
+Subject: [PATCH 1/2] etherdevice: add is_zero_ether_addr_unaligned()
+Date: Fri, 12 Aug 2016 19:59:59 -0700
+Message-Id: <1471057200-58166-1-git-send-email-pgynther@google.com> (sfid-20160813_050050_355197_C6FDDE9B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add a generic routine to test if possibly unaligned to u16
+Ethernet address is a zero address.
 
+If CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS is set, use
+slightly faster generic routine is_zero_ether_addr(),
+otherwise use byte accesses.
 
-On Tuesday 02 August 2016 01:15 PM, Arnd Bergmann wrote:
-> On Monday, August 1, 2016 4:55:43 PM CEST Scott Wood wrote:
->> On 08/01/2016 02:02 AM, Arnd Bergmann wrote:
->>>> diff --git a/include/linux/err.h b/include/linux/err.h
->>>> index 1e35588..c2a2789 100644
->>>> --- a/include/linux/err.h
->>>> +++ b/include/linux/err.h
->>>> @@ -18,7 +18,17 @@
->>>>   
->>>>   #ifndef __ASSEMBLY__
->>>>   
->>>> -#define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)
->>>> +#define IS_ERR_VALUE(x) unlikely(is_error_check(x))
->>>> +
->>>> +static inline int is_error_check(unsigned long error)
->>> Please leave the existing macro alone. I think you were looking for
->>> something specific to the return code of qe_muram_alloc() function,
->>> so please add a helper in that subsystem if you need it, not in
->>> the generic header files.
->> qe_muram_alloc (a.k.a. cpm_muram_alloc) returns unsigned long.  The
->> problem is certain callers that store the return value in a u32.  Why
->> not just fix those callers to store it in unsigned long (at least until
->> error checking is done)?
->>
-> Yes, that would also address another problem with code like
->
->           kfree((void *)ugeth->tx_bd_ring_offset[i]);
->
-> which is not 64-bit safe when tx_bd_ring_offset is a 32-bit value
-> that also holds the return value of qe_muram_alloc.
->
-> 	Arnd
-Yes, we will fix caller. Caller api is not safe on 64bit.
-Even qe_muram_addr(a.k.a. cpm_muram_addr )passing value unsigned int,
-but it should be unsigned long. Need to work on it.
+This is v2 of the original patch:
+[PATCH] Modify is_zero_ether_addr() to handle byte-aligned addresses
 
-Arvind
+Per Joe's suggestion -- instead of modifying is_zero_ether_addr() --
+add is_zero_ether_addr_unaligned() and use it where needed.
+
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: Joe Perches <joe@perches.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Petri Gynther <pgynther@google.com>
+---
+ include/linux/etherdevice.h | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
+index 37ff4a6..f609691 100644
+--- a/include/linux/etherdevice.h
++++ b/include/linux/etherdevice.h
+@@ -105,6 +105,21 @@ static inline bool is_zero_ether_addr(const u8 *addr)
+ }
+ 
+ /**
++ * is_zero_ether_addr_unaligned - Determine if given Ethernet address is all zeros.
++ * @addr: Pointer to a six-byte array containing the Ethernet address
++ *
++ * Return true if the address is all zeroes.
++ */
++static inline bool is_zero_ether_addr_unaligned(const u8 *addr)
++{
++#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
++	return is_zero_ether_addr(addr);
++#else
++	return (addr[0] | addr[1] | addr[2] | addr[3] | addr[4] | addr[5]) == 0;
++#endif
++}
++
++/**
+  * is_multicast_ether_addr - Determine if the Ethernet address is a multicast.
+  * @addr: Pointer to a six-byte array containing the Ethernet address
+  *
+-- 
+2.8.0.rc3.226.g39d4020
+
