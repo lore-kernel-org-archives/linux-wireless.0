@@ -1,46 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:36019 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754959AbcHSQon (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 12:44:43 -0400
-Received: by mail-wm0-f50.google.com with SMTP id q128so41478367wma.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2016 09:44:42 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>
-Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv7 2/4] mt7601u: remove redefinition of GENMASK
-Date: Fri, 19 Aug 2016 17:44:07 +0100
-Message-Id: <1471625049-12643-3-git-send-email-jakub.kicinski@netronome.com> (sfid-20160819_184448_278305_C5E2625E)
-In-Reply-To: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
+Received: from smtprelay0064.hostedemail.com ([216.40.44.64]:37496 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751418AbcHME7d (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 13 Aug 2016 00:59:33 -0400
+Message-ID: <1471064367.3467.8.camel@perches.com> (sfid-20160813_065936_945237_763DE5F5)
+Subject: Re: [PATCH 1/2] etherdevice: add is_zero_ether_addr_unaligned()
+From: Joe Perches <joe@perches.com>
+To: Petri Gynther <pgynther@google.com>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+	David Miller <davem@davemloft.net>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Date: Fri, 12 Aug 2016 21:59:27 -0700
+In-Reply-To: <CAGXr9JHXdQxObUJC_=4ZaJKmvFS+QygK8ytMtXCJJws62a8S7A@mail.gmail.com>
+References: <1471057200-58166-1-git-send-email-pgynther@google.com>
+	 <1471061519.3467.7.camel@perches.com>
+	 <CAGXr9JHXdQxObUJC_=4ZaJKmvFS+QygK8ytMtXCJJws62a8S7A@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove redefinition of GENMASK which should not be there
-in the upstream version of the code.
+On Fri, 2016-08-12 at 21:40 -0700, Petri Gynther wrote:
+> But, we need to return true (1) when the bitwise OR result is zero.
+> Same logic as in is_zero_ether_addr().
 
-Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- drivers/net/wireless/mediatek/mt7601u/regs.h | 4 ----
- 1 file changed, 4 deletions(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt7601u/regs.h b/drivers/net/wireless/mediatek/mt7601u/regs.h
-index afd8978e83fa..27a429d90cec 100644
---- a/drivers/net/wireless/mediatek/mt7601u/regs.h
-+++ b/drivers/net/wireless/mediatek/mt7601u/regs.h
-@@ -17,10 +17,6 @@
- 
- #include <linux/bitops.h>
- 
--#ifndef GENMASK
--#define GENMASK(h, l)       (((U32_C(1) << ((h) - (l) + 1)) - 1) << (l))
--#endif
--
- #define MT_ASIC_VERSION			0x0000
- 
- #define MT76XX_REV_E3		0x22
--- 
-1.9.1
+right.
