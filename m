@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:34684 "EHLO
-        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750798AbcH0GOJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Aug 2016 02:14:09 -0400
-Received: by mail-pf0-f170.google.com with SMTP id p64so35132181pfb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2016 23:14:08 -0700 (PDT)
-From: Baoyou Xie <baoyou.xie@linaro.org>
-To: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
-        kvalo@codeaurora.org
-Cc: baoyou.xie@linaro.org, linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, arnd@linaro.org,
-        xie.baoyou@zte.com.cn
-Subject: [PATCH v2] fix:brcmfmac: add missing header dependencies
-Date: Sat, 27 Aug 2016 14:08:23 +0800
-Message-Id: <1472278103-28320-1-git-send-email-baoyou.xie@linaro.org> (sfid-20160827_081436_583793_923234D5)
+Received: from s3.sipsolutions.net ([5.9.151.49]:46983 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751900AbcHNMQL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Aug 2016 08:16:11 -0400
+Message-ID: <1471176951.5903.6.camel@sipsolutions.net> (sfid-20160814_141633_000031_E5E87217)
+Subject: Re: [PATCH] Staging: rtl8723au: os_intfs: fixed case statement is
+ variable issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Joe Perches <joe@perches.com>, sunbing <sunbing@redflag-linux.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, sunbing.linux@gmail.com
+Date: Sun, 14 Aug 2016 14:15:51 +0200
+In-Reply-To: <1471176423.5201.7.camel@perches.com>
+References: <1470924695-14931-1-git-send-email-sunbing@redflag-linux.com>
+	 <wrfja8gje395.fsf@redhat.com>
+	 <7FC388BC-FD87-44C6-87D3-AC041F1393DB@redflag-linux.com>
+	 <wrfj7fbmawl1.fsf@redhat.com>
+	 <E0CA1BD5-A2ED-4FDC-8E58-8024E2F3C24C@redflag-linux.com>
+	 <1471176423.5201.7.camel@perches.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We get 1 warning when biuld kernel with W=1:
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c:23:6: warning: no previous prototype for '__brcmf_err' [-Wmissing-
-prototypes]
 
-In fact, this function is declared in brcmfmac/debug.h, so this patch
-add missing header dependencies
+> It's a sparse defect.
+> 
+> Try again after patching sparse with Jes' patch:
+> http://marc.info/?l=linux-sparse&m=147091200720267&w=3
 
-Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 1 +
- 1 file changed, 1 insertion(+)
+Mine, not Jes's ;-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-index a10f35c..fe67559 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
-@@ -19,6 +19,7 @@
- #ifndef __CHECKER__
- #define CREATE_TRACE_POINTS
- #include "tracepoint.h"
-+#include "debug.h"
- 
- void __brcmf_err(const char *func, const char *fmt, ...)
- {
--- 
-2.7.4
+But there's another patch going into the kernel to fix it:
+
+https://www.ozlabs.org/~akpm/mmotm/broken-out/byteswap-dont-use-__builtin_bswap-with-sparse.patch
+
+johannes
