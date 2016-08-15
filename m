@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:40752 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750715AbcHGEfX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Aug 2016 00:35:23 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2016-04-12
-Date: Sun, 7 Aug 2016 04:35:18 +0000
-Message-ID: <1460448559.2630.8.camel@intel.com> (sfid-20160807_063532_481859_469A2412)
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:37424 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752887AbcHOVoK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2016 17:44:10 -0400
+Received: by mail-wm0-f48.google.com with SMTP id i5so128776671wmg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2016 14:44:09 -0700 (PDT)
+Subject: Re: [BUGFIX PATCH 1/2] brcmfmac: Check rtnl_lock is locked when
+ removing interface
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <147125403645.9434.8008546579326856373.stgit@devbox>
+ <147125405701.9434.12911635695339175773.stgit@devbox>
+ <5bb6e373-e110-b1ac-6f65-fdf2f9f059fc@gmail.com>
+ <87wpjib8pb.fsf@kamboji.qca.qualcomm.com>
+ <CACna6ryuN_qDrVwAbS5P9mfhjMwv2hNeTqEzTQ=WxvP1V=zHXA@mail.gmail.com>
+Cc: Masami Hiramatsu <mhiramat@kernel.org>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+	<brcm80211-dev-list.pdl@broadcom.com>,
+	Network Development <netdev@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <15e43df4-b8cc-8612-472e-80634cf27cac@broadcom.com> (sfid-20160815_234433_193884_2F07EBA5)
+Date: Mon, 15 Aug 2016 23:44:05 +0200
 MIME-Version: 1.0
+In-Reply-To: <CACna6ryuN_qDrVwAbS5P9mfhjMwv2hNeTqEzTQ=WxvP1V=zHXA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCkhlcmUgaXMgYSBwdWxsIHJlcXVlc3QgZm9yIDQuNi4gSSBoYXZlIGhlcmUg
-YSBwYXRjaCB0aGF0IHdhcyBtZXJnZWQgdG8gDQotbmV4dCBhbHJlYWR5LCBidXQgY2xlYXJseSwg
-aXQgc2hvdWxkIGhhdmUgYmVlbiByb3V0ZWQgdGhyb3VnaCB0aGUNCmN1cnJlbnQgY3ljbGUncyB0
-cmVlcy4gU29ycnkgYWJvdXQgdGhhdC4NClRoZSBwYXRjaCBpczoNCg0KY29tbWl0IGNkNDk3Mjdl
-MWEyYmNjYzRmZjAwOGRkZTI0YzJmODQzMGRkOWUzNjgNCkF1dGhvcjogQXlhbGEgQmVrZXIgPGF5
-YWxhLmJla2VyQGludGVsLmNvbT4NCkRhdGU6ICAgV2VkIEZlYiAzIDE1OjM2OjUyIDIwMTYgKzAy
-MDANCg0KICAgIGl3bHdpZmk6IG12bTogYXZvaWQgdG8gV0FSTiBhYm91dCBnc2NhbiBjYXBhYmls
-aXRpZXMNCiAgICANCiAgICBHc2NhbiBjYXBhYmlsaXRpZXMgd2VyZSB1cGRhdGVkIHdpdGggbmV3
-IGNhcGFiaWxpdGllcyBzdXBwb3J0ZWQNCiAgICBieSB0aGUgZGV2aWNlLiBVcGRhdGUgR1NDQU4g
-Y2FwYWJpbGl0aWVzIFRMViBhbmQgYXZvaWQgdG8gV0FSTg0KICAgIGlmIHRoZSBmaXJtd2FyZSBk
-b2VzIG5vdCBoYXZlIHRoZSBuZXcgY2FwYWJpbGl0aWVzLg0KDQpJdCBhcHBlYXJzIGluIC1uZXh0
-IGFzOg0KDQpjb21taXQgYTBiMDlmMTMwMzZjZWRmZDY3YzljYjRiOWQwNTEzOGU3MDIyNzIzZA0K
-QXV0aG9yOiBBeWFsYSBCZWtlciA8YXlhbGEuYmVrZXJAaW50ZWwuY29tPg0KRGF0ZTogICBXZWQg
-RmViIDMgMTU6MzY6NTIgMjAxNiArMDIwMA0KDQogICAgaXdsd2lmaTogbXZtOiB1cGRhdGUgR1ND
-QU4gY2FwYWJpbGl0aWVzDQogICAgDQogICAgR3NjYW4gY2FwYWJpbGl0aWVzIHdlcmUgdXBkYXRl
-ZCB3aXRoIG5ldyBjYXBhYmlsaXRpZXMgc3VwcG9ydGVkDQogICAgYnkgdGhlIGRldmljZS4gVXBk
-YXRlIEdTQ0FOIGNhcGFiaWxpdGllcyBUTFYuDQoNClRoZSBjb21taXQgbWVzc2FnZSB3YXNuJ3Qg
-Z29vZCBlbm91Z2ggZm9yIHRoZSBjdXJyZW50IGN5Y2xlLCBzbyBJDQpyZXdyb3RlIGl0LiBCZXNp
-ZGVzIHRoYXQgb25lLCBhbGwgaXMgZmFpcmx5IG5vcm1hbC4NCkxldCBtZSBrbm93IGlmIHlvdSBo
-YXZlIGlzc3VlcyENCg0KVGhhbmtzLg0KDQoNClRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBj
-b21taXQgN2ZkZjk2NjMyNjFjYzc3YTUxNjM5NmZlYzgyY2VlOGE4ZWEwN2U3NjoNCg0KICBpd2x3
-aWZpOiBtdm06IGZpeCBtZW1vcnkgbGVhayBpbiBwYWdpbmcgKDIwMTYtMDMtMjAgMjM6MDE6NTQg
-KzAyMDApDQoNCmFyZSBhdmFpbGFibGUgaW4gdGhlIGdpdCByZXBvc2l0b3J5IGF0Og0KDQogIGh0
-dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L2l3bHdpZmkvaXds
-d2lmaS1maXhlcy5naXQgdGFncy9pd2x3aWZpLWZvci1rYWxsZS0yMDE2LTA0LTEyDQoNCmZvciB5
-b3UgdG8gZmV0Y2ggY2hhbmdlcyB1cCB0byAyZDI1ZmI4YjNhMTM4NzA2YjYzYmQyNmFkNzJhOTVj
-NTgwMjk5NTRhOg0KDQogIGl3bHdpZmk6IG12bTogZml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIg
-ZHVyaW5nIGZ3IGR1bXAgY29sbGVjdGlvbiAoMjAxNi0wNC0xMiAxMDowMzoxNyArMDMwMCkNCg0K
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLQ0KKiBhZGQgbmV3IGRldmljZSBJRHMgZm9yIDgyNjUNCiogZml4IGEgTlVMTCBwb2lu
-dGVyIGRlcmVmZXJlbmNlIHdoZW4gcGFnaW5nIGZpcm13YXJlIGFzc2VydHMNCiogcmVtb3ZlIGEg
-V0FSTklORyBvbiBnc2NhbiBjYXBhYmlsaXRpZXMNCiogZml4IE1PRFVMRV9GSVJNV0FSRSBmb3Ig
-ODI2MA0KDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tDQpBeWFsYSBCZWtlciAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06IGF2
-b2lkIHRvIFdBUk4gYWJvdXQgZ3NjYW4gY2FwYWJpbGl0aWVzDQoNCk1hdHRpIEdvdHRsaWViICgx
-KToNCiAgICAgIGl3bHdpZmk6IG12bTogZml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgZHVyaW5n
-IGZ3IGR1bXAgY29sbGVjdGlvbg0KDQpPcmVuIEdpdm9uICgxKToNCiAgICAgIGl3bHdpZmk6IGFk
-ZCBkZXZpY2UgSURzIGZvciB0aGUgODI2NSBkZXZpY2UNCg0KU2FyYSBTaGFyb24gKDEpOg0KICAg
-ICAgaXdsd2lmaTogODAwMDogZml4IE1PRFVMRV9GSVJNV0FSRSBpbnB1dA0KDQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9pd2wtODAwMC5jICAgfCAgMiArLQ0KIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLWRydi5jICAgIHwgMjYgKysrKysrKysrKy0t
-LS0tLS0tLS0tLS0tLS0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS9m
-dy1kYmcuYyB8ICA2ICsrKystLQ0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkv
-bXZtL2Z3LmMgICAgIHwgIDIgKysNCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZp
-L3BjaWUvZHJ2LmMgICB8IDEwICsrKysrKysrKysNCiA1IGZpbGVzIGNoYW5nZWQsIDI3IGluc2Vy
-dGlvbnMoKyksIDE5IGRlbGV0aW9ucygtKQ==
+
+
+On 15-8-2016 13:52, Rafał Miłecki wrote:
+> On 15 August 2016 at 12:57, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Rafał Miłecki <zajec5@gmail.com> writes:
+>>
+>>>> Signed-off-by: Masami Hiramatsu <mhiramat@kernel.org>
+>>>
+>>> Fixes: a63b09872c1d ("brcmfmac: delete interface directly in code that sent fw request")
+>>> Acked-by: Rafał Miłecki <rafal@milecki.pl>
+>>>
+>>> Kalle: I'm acking this as bugfix for 4.8 release.
+>>
+>> Ok. I'll wait few days for more comments before I apply this.
+> 
+> Sure.
+> 
+> 
+>> (I assume you are talking only about patch 1)
+> 
+> Yes, I'll leave mutex vs. spinlock to the experts :)
+
+Don't know who the experts are. Surely not me :-p
+
+I made an uneducated design decision using a mutex for this. The
+reasoning for using a regular spinlock make sense. So I will go and ack
+that patch.
+
+Regards,
+Arend
