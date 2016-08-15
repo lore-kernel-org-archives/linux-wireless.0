@@ -1,145 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41174 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1754327AbcH3Ljd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 07:39:33 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 14:38:53 +0300
-Message-Id: <1472557142-14782-7-git-send-email-luca@coelho.fi> (sfid-20160830_133948_591958_9B4D63BD)
-In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
-References: <1472556999.27868.86.camel@coelho.fi>
- <1472557142-14782-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 07/16] iwlwifi: mvm: use defines for SCD_CONFIG_CMD enablement
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:46595 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753023AbcHOKRE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2016 06:17:04 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "miaoqing@codeaurora.org" <miaoqing@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
+	"s.l-h@gmx.de" <s.l-h@gmx.de>
+Subject: Re: [PATCH] ath9k: fix AR5416 access GPIO warning
+Date: Mon, 15 Aug 2016 10:16:50 +0000
+Message-ID: <877fbicp67.fsf@kamboji.qca.qualcomm.com> (sfid-20160815_121709_482897_AB1D6CE5)
+References: <1470296914-9152-1-git-send-email-miaoqing@codeaurora.org>
+In-Reply-To: <1470296914-9152-1-git-send-email-miaoqing@codeaurora.org>
+	(miaoqing@codeaurora.org's message of "Thu, 4 Aug 2016 15:48:34	+0800")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+<miaoqing@codeaurora.org> writes:
 
-Due to the addition of another option in the SCD_CONFIG_CMD's
-%enable field, change the assignment of this field to use
-defines rather than hard-code the value itself.
+> From: Miaoqing Pan <miaoqing@codeaurora.org>
+>
+> The warning was seen on AR5416 chip, which invoke ath9k_hw_gio_get()
+> before the GPIO initialized correctly.
+>
+>     WARNING: CPU: 1 PID: 1159 at ~/drivers/net/wireless/ath/ath9k/hw.c:2776 ath9k_hw_gpio_get+0x148/0x1a0 [ath9k_hw]
+>     ...
+>     CPU: 1 PID: 1159 Comm: systemd-udevd Not tainted 4.7.0-rc7-aptosid-amd64 #1 aptosid 4.7~rc7-1~git92.slh.3
+>     Hardware name:                  /DH67CL, BIOS BLH6710H.86A.0160.2012.1204.1156 12/04/2012
+>       0000000000000286 00000000f912d633 ffffffff81290fd3 0000000000000000
+>       0000000000000000 ffffffff81063fd4 ffff88040c6dc018 0000000000000000
+>       0000000000000002 0000000000000000 0000000000000100 ffff88040c6dc018
+>     Call Trace:
+>       [<ffffffff81290fd3>] ? dump_stack+0x5c/0x79
+>       [<ffffffff81063fd4>] ? __warn+0xb4/0xd0
+>       [<ffffffffa0668fb8>] ? ath9k_hw_gpio_get+0x148/0x1a0 [ath9k_hw]
+>
+> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 12 ++++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 13 +++++++------
- 3 files changed, 19 insertions(+), 10 deletions(-)
+As discussed in the previous thread I'll add:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index 4144623..6b4c63a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -675,13 +675,21 @@ static inline u32 iwl_mvm_get_scd_ssn(struct iwl_mvm_tx_resp *tx_resp)
- 			    tx_resp->frame_count) & 0xfff;
- }
- 
-+/* Available options for the SCD_QUEUE_CFG HCMD */
-+enum iwl_scd_cfg_actions {
-+	SCD_CFG_DISABLE_QUEUE		= 0x0,
-+	SCD_CFG_ENABLE_QUEUE		= 0x1,
-+	SCD_CFG_UPDATE_QUEUE_TID	= 0x2,
-+};
-+
- /**
-  * struct iwl_scd_txq_cfg_cmd - New txq hw scheduler config command
-  * @token:
-  * @sta_id: station id
-  * @tid:
-  * @scd_queue: scheduler queue to confiug
-- * @enable: 1 queue enable, 0 queue disable
-+ * @action: 1 queue enable, 0 queue disable, 2 change txq's tid owner
-+ *	Value is one of %iwl_scd_cfg_actions options
-  * @aggregate: 1 aggregated queue, 0 otherwise
-  * @tx_fifo: %enum iwl_mvm_tx_fifo
-  * @window: BA window size
-@@ -692,7 +700,7 @@ struct iwl_scd_txq_cfg_cmd {
- 	u8 sta_id;
- 	u8 tid;
- 	u8 scd_queue;
--	u8 enable;
-+	u8 action;
- 	u8 aggregate;
- 	u8 tx_fifo;
- 	u8 window;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 1ddcbea..e87473a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -536,7 +536,7 @@ int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
- {
- 	struct iwl_scd_txq_cfg_cmd cmd = {
- 		.scd_queue = queue,
--		.enable = 0,
-+		.action = SCD_CFG_DISABLE_QUEUE,
- 	};
- 	bool shared_queue;
- 	unsigned long mq;
-@@ -745,7 +745,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	if (using_inactive_queue) {
- 		struct iwl_scd_txq_cfg_cmd cmd = {
- 			.scd_queue = queue,
--			.enable = 0,
-+			.action = SCD_CFG_DISABLE_QUEUE,
- 		};
- 		u8 ac;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 423efab..7c138fe 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -610,7 +610,7 @@ int iwl_mvm_reconfig_scd(struct iwl_mvm *mvm, int queue, int fifo, int sta_id,
- {
- 	struct iwl_scd_txq_cfg_cmd cmd = {
- 		.scd_queue = queue,
--		.enable = 1,
-+		.action = SCD_CFG_ENABLE_QUEUE,
- 		.window = frame_limit,
- 		.sta_id = sta_id,
- 		.ssn = cpu_to_le16(ssn),
-@@ -684,7 +684,7 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 	if (enable_queue) {
- 		struct iwl_scd_txq_cfg_cmd cmd = {
- 			.scd_queue = queue,
--			.enable = 1,
-+			.action = SCD_CFG_ENABLE_QUEUE,
- 			.window = cfg->frame_limit,
- 			.sta_id = cfg->sta_id,
- 			.ssn = cpu_to_le16(ssn),
-@@ -711,7 +711,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- {
- 	struct iwl_scd_txq_cfg_cmd cmd = {
- 		.scd_queue = queue,
--		.enable = 0,
-+		.action = SCD_CFG_DISABLE_QUEUE,
- 	};
- 	bool remove_mac_queue = true;
- 	int ret;
-@@ -746,8 +746,9 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 			~BIT(mac80211_queue);
- 	mvm->queue_info[queue].hw_queue_refcount--;
- 
--	cmd.enable = mvm->queue_info[queue].hw_queue_refcount ? 1 : 0;
--	if (!cmd.enable)
-+	cmd.action = mvm->queue_info[queue].hw_queue_refcount ?
-+		SCD_CFG_ENABLE_QUEUE : SCD_CFG_DISABLE_QUEUE;
-+	if (cmd.action == SCD_CFG_DISABLE_QUEUE)
- 		mvm->queue_info[queue].status = IWL_MVM_QUEUE_FREE;
- 
- 	IWL_DEBUG_TX_QUEUES(mvm,
-@@ -757,7 +758,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
- 			    mvm->queue_info[queue].hw_queue_to_mac80211);
- 
- 	/* If the queue is still enabled - nothing left to do in this func */
--	if (cmd.enable) {
-+	if (cmd.action == SCD_CFG_ENABLE_QUEUE) {
- 		spin_unlock_bh(&mvm->queue_info_lock);
- 		return;
- 	}
+Reported-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+Tested-by: Stefan Lippers-Hollmann <s.l-h@gmx.de>
+Cc: <stable@vger.kernel.org> # 4.7+
+
+I'm also planning to queue this to 4.8.
+
 -- 
-2.8.1
+Kalle Valo
