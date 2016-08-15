@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:33678 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751710AbcHWSue (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Aug 2016 14:50:34 -0400
-Subject: [PATCH 0/6] linux-firmware: ath10k: update and add various firmware
- files
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <linux-firmware@kernel.org>
-CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
-Date: Tue, 23 Aug 2016 21:47:19 +0300
-Message-ID: <20160823184644.21587.95655.stgit@potku.adurom.net> (sfid-20160823_205123_388029_CF807618)
+Received: from bear.ext.ti.com ([198.47.19.11]:37701 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752537AbcHOISM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2016 04:18:12 -0400
+From: Maxim Altshul <maxim.altshul@ti.com>
+To: <linux-kernel@vger.kernel.org>
+CC: Maxim Altshul <maxim.altshul@ti.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	<linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2 v2] wlcore: Remove wl pointer from wl_sta structure
+Date: Mon, 15 Aug 2016 11:23:38 +0300
+Message-ID: <20160815082400.12053-1-maxim.altshul@ti.com> (sfid-20160815_101835_911378_596F2713)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+This field was added to wl_sta struct to get hw in situations
+where it was not given to driver by mac80211.
 
-here's a bigger ath10k firmware update. Support for four new hardware
-and smaller updates for existing hardware.
+In our case, get_expected_throughput op did not send hw to driver.
 
-Kalle
+This patch reverts the change, as it is no longer needed due to
+get_expected_throughput op change (hw is now sent as a parameter)
 
+Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
 ---
+Changed the commit message to better explain the changey
 
-Kalle Valo (6):
-      ath10k: QCA4019 hw1.0: add firmware and board files
-      ath10k: QCA9887 hw1.0: add firmware and board files
-      ath10k: QCA9888 hw2.0: add firmware and board files
-      ath10k: QCA9984 hw1.0: add firmware and board files
-      ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.54
-      ath10k: QCA6174: update board files
+ drivers/net/wireless/ti/wlcore/main.c     | 1 -
+ drivers/net/wireless/ti/wlcore/wlcore_i.h | 1 -
+ 2 files changed, 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 1ec3545..8589e5a 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5043,7 +5043,6 @@ static int wl12xx_sta_add(struct wl1271 *wl,
+ 		return ret;
+ 
+ 	wl_sta = (struct wl1271_station *)sta->drv_priv;
+-	wl_sta->wl = wl;
+ 	hlid = wl_sta->hlid;
+ 
+ 	ret = wl12xx_cmd_add_peer(wl, wlvif, sta, hlid);
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+index 3875190..8ee5206 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
+@@ -352,7 +352,6 @@ struct wl1271_station {
+ 	 * Used in both AP and STA mode.
+ 	 */
+ 	u64 total_freed_pkts;
+-	struct wl1271 *wl;
+ };
+ 
+ struct wl12xx_vif {
+-- 
+2.9.0
 
- WHENCE                                            |   18 +
- ath10k/QCA4019/hw1.0/board-2.bin                  |  Bin
- ath10k/QCA4019/hw1.0/firmware-5.bin               |  Bin
- ath10k/QCA4019/hw1.0/notice_ath10k_firmware-5.txt |  589 +++++++++++++++++++++
- ath10k/QCA6174/hw2.1/board-2.bin                  |  Bin
- ath10k/QCA6174/hw3.0/board-2.bin                  |  Bin
- ath10k/QCA9887/hw1.0/board.bin                    |  Bin
- ath10k/QCA9887/hw1.0/firmware-5.bin               |  Bin
- ath10k/QCA9887/hw1.0/notice_ath10k_firmware-5.txt |  328 ++++++++++++
- ath10k/QCA9888/hw2.0/board-2.bin                  |  Bin
- ath10k/QCA9888/hw2.0/firmware-5.bin               |  Bin
- ath10k/QCA9888/hw2.0/notice_ath10k_firmware-5.txt |  589 +++++++++++++++++++++
- ath10k/QCA988X/hw2.0/firmware-5.bin               |  Bin
- ath10k/QCA988X/hw2.0/notice_ath10k_firmware-5.txt |   44 +-
- ath10k/QCA9984/hw1.0/board-2.bin                  |  Bin
- ath10k/QCA9984/hw1.0/firmware-5.bin               |  Bin
- ath10k/QCA9984/hw1.0/notice_ath10k_firmware-5.txt |  589 +++++++++++++++++++++
- 17 files changed, 2134 insertions(+), 23 deletions(-)
- create mode 100644 ath10k/QCA4019/hw1.0/board-2.bin
- create mode 100644 ath10k/QCA4019/hw1.0/firmware-5.bin
- create mode 100644 ath10k/QCA4019/hw1.0/notice_ath10k_firmware-5.txt
- create mode 100644 ath10k/QCA9887/hw1.0/board.bin
- create mode 100644 ath10k/QCA9887/hw1.0/firmware-5.bin
- create mode 100644 ath10k/QCA9887/hw1.0/notice_ath10k_firmware-5.txt
- create mode 100644 ath10k/QCA9888/hw2.0/board-2.bin
- create mode 100644 ath10k/QCA9888/hw2.0/firmware-5.bin
- create mode 100644 ath10k/QCA9888/hw2.0/notice_ath10k_firmware-5.txt
- create mode 100644 ath10k/QCA9984/hw1.0/board-2.bin
- create mode 100644 ath10k/QCA9984/hw1.0/firmware-5.bin
- create mode 100644 ath10k/QCA9984/hw1.0/notice_ath10k_firmware-5.txt
