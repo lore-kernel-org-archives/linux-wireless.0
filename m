@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:57719 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750716AbcHAHE1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2016 03:04:27 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: Arvind Yadav <arvind.yadav.cs@gmail.com>, zajec5@gmail.com,
-	leoli@freescale.com, qiang.zhao@freescale.com,
-	viresh.kumar@linaro.org, linux-wireless@vger.kernel.org,
-	David.Laight@aculab.com, netdev@vger.kernel.org,
-	scottwood@freescale.com, akpm@linux-foundation.org,
-	davem@davemloft.net, linux@roeck-us.net
-Subject: Re: [v4] Fix to avoid IS_ERR_VALUE and IS_ERR abuses on 64bit systems.
-Date: Mon, 01 Aug 2016 09:02:21 +0200
-Message-ID: <1956647.cOmaJREgOE@wuerfel> (sfid-20160801_090610_288704_8EBD9BC9)
-In-Reply-To: <1469963924-8800-1-git-send-email-arvind.yadav.cs@gmail.com>
-References: <1469963924-8800-1-git-send-email-arvind.yadav.cs@gmail.com>
-MIME-Version: 1.0
+Received: from mail-by2nam01on0121.outbound.protection.outlook.com ([104.47.34.121]:35584
+	"EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752073AbcHOIny (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2016 04:43:54 -0400
+From: Wright Feng <wefe@cypress.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Arend Van Spriel <arend.vanspriel@broadcom.com>
+CC: "brcm80211-dev-list.pdl@broadcom.com"
+	<brcm80211-dev-list.pdl@broadcom.com>,
+	"franky.lin@broadcom.com" <franky.lin@broadcom.com>,
+	"hante.meuleman@broadcom.com" <hante.meuleman@broadcom.com>,
+	"pieterpg@broadcom.com" <pieterpg@broadcom.com>,
+	"Chi-Hsien Lin" <chln@cypress.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] brcmfmac: shut down AP and set IBSS mode only on primary
+ interface
+Date: Mon, 15 Aug 2016 08:11:07 +0000
+Message-ID: <DM5PR06MB28259759C91C4ACBDB719EF9D9120@DM5PR06MB2825.namprd06.prod.outlook.com> (sfid-20160815_104400_531728_E3DBD173)
+References: <20160810080100.GA10783@cypress.com>
+	<4d60ec5e-6462-372a-2d3c-5770493e7e98@broadcom.com>
+	<DM5PR06MB28258E50D25AE4221558BA28D91D0@DM5PR06MB2825.namprd06.prod.outlook.com>
+	<cab5a204-3487-ebe6-7e82-ca6dbb04ff40@broadcom.com>
+ <871t1qe9u3.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <871t1qe9u3.fsf@kamboji.qca.qualcomm.com>
 Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday, July 31, 2016 4:48:44 PM CEST Arvind Yadav wrote:
-> IS_ERR_VALUE() assumes that parameter is an unsigned long.
-> It can not be used to check if 'unsigned int' is passed insted.
-> Which tends to reflect an error.
-> 
-> In 64bit architectures sizeof (int) == 4 && sizeof (long) == 8.
-> IS_ERR_VALUE(x) is ((x) >= (unsigned long)-4095).
-> 
-> IS_ERR_VALUE() of 'unsigned int' is always false because the 32bit
-> value is zero extended to 64 bits.
-> 
-> Value of (unsigned int)-4095 is always less than value of
-> (unsigned long)-4095.
-> 
-> Now We are taking only first 32 bit for error checking rest of the 32 bit
-> we ignore such that we get appropriate comparison on 64bit system as well.
+Hi Kalle and Arend,
 
-This is completely wrong: if you have a valid 64-bit pointer like
-0x00001234ffffff00, this will be interpreted as an error now.
+> -----Original Message-----
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> Sent: Monday, August 15, 2016 4:05 PM
+> To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+> Cc: Wright Feng <wefe@cypress.com>; brcm80211-dev-
+> list.pdl@broadcom.com; franky.lin@broadcom.com;
+> hante.meuleman@broadcom.com; pieterpg@broadcom.com; Chi-Hsien Lin
+> <chln@cypress.com>; linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH] brcmfmac: shut down AP and set IBSS mode only on
+> primary interface
+>
+> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+>
+> >> This message and any attachments may contain Cypress (or its
+> >> subsidiaries) confidential information. If it has been received in
+> >> error, please advise the sender and immediately delete this message.
+> >
+> > Is there any way for you to get rid of this foot note. It may keep
+> > Kalle from taking this patch.
+>
+> Correct. I'll automatically drop patches with these kind of notices.
+I've removed the foot note and sent the [PATCH v2] to you on 8/11.
+Is that okay to you?
+>
+> --
+> Kalle Valo
 
-> First 32bit of Value of (unsigned int)-4095 and (unsigned long)-4095 will
-> be equal.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
-> ---
->  include/linux/err.h | 12 +++++++++++-
->  1 file changed, 11 insertions(+), 1 deletion(-)
-> 
-> diff --git a/include/linux/err.h b/include/linux/err.h
-> index 1e35588..c2a2789 100644
-> --- a/include/linux/err.h
-> +++ b/include/linux/err.h
-> @@ -18,7 +18,17 @@
->  
->  #ifndef __ASSEMBLY__
->  
-> -#define IS_ERR_VALUE(x) unlikely((unsigned long)(void *)(x) >= (unsigned long)-MAX_ERRNO)
-> +#define IS_ERR_VALUE(x) unlikely(is_error_check(x))
-> +
-> +static inline int is_error_check(unsigned long error)
-
-Please leave the existing macro alone. I think you were looking for
-something specific to the return code of qe_muram_alloc() function,
-so please add a helper in that subsystem if you need it, not in
-the generic header files.
-
-	Arnd
+This message and any attachments may contain Cypress (or its subsidiaries) confidential information. If it has been received in error, please advise the sender and immediately delete this message.
