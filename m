@@ -1,39 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36276 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965694AbcHEGRC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 02:17:02 -0400
-Message-ID: <1470377813.2977.14.camel@sipsolutions.net> (sfid-20160805_081711_412329_AC757484)
-Subject: Re: Buggy rhashtable walking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Cc: Thomas Graf <tgraf@suug.ch>, tom@herbertland.com
-Date: Fri, 05 Aug 2016 08:16:53 +0200
-In-Reply-To: <20160804074546.GA996@gondor.apana.org.au> (sfid-20160804_094611_627754_FBB091B2)
-References: <20160804071846.GA773@gondor.apana.org.au>
-	 <20160804074546.GA996@gondor.apana.org.au>
-	 (sfid-20160804_094611_627754_FBB091B2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:40013 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932173AbcHOH5C (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2016 03:57:02 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Maxim Altshul <maxim.altshul@ti.com>
+Cc: <linux-kernel@vger.kernel.org>, <john.stultz@linaro.org>,
+	Eliad Peller <eliad@wizery.com>,
+	Yaniv Machani <yanivma@ti.com>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/2] wlcore: Remove wl pointer from wl_sta structure
+In-Reply-To: <20160804124314.7636-3-maxim.altshul@ti.com> (Maxim Altshul's
+	message of "Thu, 4 Aug 2016 15:43:05 +0300")
+References: <20160804124314.7636-1-maxim.altshul@ti.com>
+	<20160804124314.7636-2-maxim.altshul@ti.com>
+	<20160804124314.7636-3-maxim.altshul@ti.com>
+Date: Mon, 15 Aug 2016 10:56:57 +0300
+Message-ID: <87a8geea7q.fsf@kamboji.qca.qualcomm.com> (sfid-20160815_095711_644916_95BBA1CC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Maxim Altshul <maxim.altshul@ti.com> writes:
 
-> So I'm going to fix this by consolidating identical objects into
-> a single rhashtable entry which also lets us get rid of the
-> insecure_elasticity setting.
+> No longer needed due to get_expected_throughput op change
+>
+> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
 
-Hm. Would you rather allocate a separate head entry for the hashtable,
-or chain the entries?
+The commit log is very vague, please improve it. But most importantly
+you did not CC linux-wireless (adding it now) so lots of wireless people
+missed this patch. Please resend.
 
-(Luckily) the colliding key case practically never happens, and some
-drivers don't even allow it, so that's perhaps something to keep in
-mind for this. Perhaps we should just generally disallow it - but a few
-people (hi Ben) would be really unhappy about that I guess.
-
-I think this might affect more than one use of rhashtable in mac80211
-now, since the mesh paths also use it.
-
-johannes
+-- 
+Kalle Valo
