@@ -1,61 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32084 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751035AbcH3G25 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 02:28:57 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Eric Bentley <eric.bentley@lairdtech.com>
-CC: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Allow the radio to report 0 dbm txpower without
- timing out
-Date: Tue, 30 Aug 2016 06:28:39 +0000
-Message-ID: <871t16ahyh.fsf@kamboji.qca.qualcomm.com> (sfid-20160830_082901_891762_10BA0DD0)
-References: <1472537779-3723-1-git-send-email-eric.bentley@lairdtech.com>
-In-Reply-To: <1472537779-3723-1-git-send-email-eric.bentley@lairdtech.com>
-        (Eric Bentley's message of "Tue, 30 Aug 2016 02:16:19 -0400")
-Content-Type: text/plain; charset="us-ascii"
+Received: from nm.newmedia-net.de ([217.113.179.122]:50195 "EHLO
+	webmail.newmedia-net.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752419AbcHOVsl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2016 17:48:41 -0400
+To: Mike Mu <mikemu@google.com>, linux-wireless@vger.kernel.org
+References: <CAGTDyhHOxwTiXtsWuy1cLq+eraikTs9McS0kUBXS2W6B09CwgQ@mail.gmail.com>
+Cc: Stanley Mui <stanleymui@google.com>
+From: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Message-ID: <f32852ed-0fee-1711-e26d-5a41f831267a@dd-wrt.com> (sfid-20160815_234844_769414_DA3F6382)
+Date: Mon, 15 Aug 2016 23:48:35 +0200
 MIME-Version: 1.0
+In-Reply-To: <CAGTDyhHOxwTiXtsWuy1cLq+eraikTs9McS0kUBXS2W6B09CwgQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: Configuring Minstrel-Blues
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eric Bentley <eric.bentley@lairdtech.com> writes:
+Am 15.08.2016 um 23:41 schrieb Mike Mu:
+> Hi Linux-Wireless,
+>
+> I am trying to enable Minstrel-Blues for the ath9k chipset that's used
+> in Google Fiber's access points. I applied the patches in
+> https://github.com/thuehn/Minstrel-Blues/tree/master/src onto our
+> backports-20160122 tree, with some unsuspicious merge conflicts, and
+> built an image.
+>
+> To test, I ran iperf from the AP to a station very close by. I
+> captured the packets to look at the RSSI with and without the
+> Minstrel-Blues patches applied, but did not see any difference in
+> RSSI.
+why do you think that a rate control algorithm will change the rssi?
+> Is there anything I need to configure first to make it work? Is it
+> possible that I'm missing a patch that's not in backports-20160122?
+>
+> Thanks!
+> Mike
+>
 
-> The ath6kl driver attempts to get the txpower value from the radio by fir=
-st
-> clearing the existing stored value and then watching the value to become
-> non-zero.
->
-> APs allow setting client power to values from -127..127, but this radio
-> is not capable of setting values less then 0 and so will report txpower
-> as 0dbm for both negative and 0 client power values.
->
-> When the radio has txpower set to 0dbm txpower (equivalent to 1mw) the
-> ath6kl_cfg80211_get_txpower() function will remain in the
-> wait_event_interruptible_timeout() loop waiting for the value to be
-> non-zero, and will eventually timeout. This results in a 5 second delay i=
-n
-> response. However, the correct value of zero is eventually returned.
->
-> The 6004 defaults to 63dbm which is then limited by regulatory and
-> hardware limits with max of 18dbm (6003 max is 16dbm), therefore we can
-> use values larger then these to be able to determine when the value has
-> been updated.
->
-> To correct the issue, set the value to a nonsensical value (255) and wait
-> for it to change to the valid value.
->
-> --
-> Tested on both 6003 and 6004 based radios.  Return value of zero is
-> correctly returned in an expected amount of time (similar to when
-> returning non-zero values) when AP client power is set to both 0 and
-> negative values.
->
-> Signed-off-by: Eric Bentley <eric.bentley@lairdtech.com>
 
-This is perfect now, thanks. I'll just remove the "--" line from the
-commit log, that looks a bit weird.
+-- 
+Mit freundlichen Grüssen / Regards
 
---=20
-Kalle Valo=
+Sebastian Gottschall / CTO
+
+NewMedia-NET GmbH - DD-WRT
+Firmensitz:  Berliner Ring 101, 64625 Bensheim
+Registergericht: Amtsgericht Darmstadt, HRB 25473
+Geschäftsführer: Peter Steinhäuser, Christian Scheele
+http://www.dd-wrt.com
+email: s.gottschall@dd-wrt.com
+Tel.: +496251-582650 / Fax: +496251-5826565
