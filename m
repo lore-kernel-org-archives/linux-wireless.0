@@ -1,112 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:38441 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754172AbcHSQol (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 12:44:41 -0400
-Received: by mail-wm0-f49.google.com with SMTP id o80so49385070wme.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2016 09:44:40 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>
-Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv7 0/4] register-field manipulation macros
-Date: Fri, 19 Aug 2016 17:44:05 +0100
-Message-Id: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160819_184445_365215_C2B156F4)
+Received: from mail.kernel.org ([198.145.29.136]:33806 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932232AbcHOJlY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Aug 2016 05:41:24 -0400
+From: Masami Hiramatsu <mhiramat@kernel.org>
+To: Arend van Spriel <arend.vanspriel@broadcom.com>,
+	Franky Lin <franky.lin@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [BUGFIX PATCH 2/2] brcmfmac: Change vif_event_lock to spinlock
+Date: Mon, 15 Aug 2016 18:41:12 +0900
+Message-Id: <147125407193.9434.3055117303208933493.stgit@devbox> (sfid-20160815_114158_294736_E90F767C)
+In-Reply-To: <147125403645.9434.8008546579326856373.stgit@devbox>
+References: <147125403645.9434.8008546579326856373.stgit@devbox>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+Change vif_event_lock to spinlock from mutex, since this lock is
+used in wait_event_timeout() via vif_event_equals(). This caused
+a warning report as below.
 
-Looks like we're good to go :)
+As far as I can see, this lock protects regions where updating
+structure members, not function calls. Also, since those
+regions are not called from interrupt handlers (of course, it
+was a mutex), spin_lock is used instead of spin_lock_irqsave.
 
-I've thrown in two mt7601u cleanups, macros are as approved
-by Linus in the RFC.  I'm posting this already to give build
-bot a head start while we wait for any additional feedback
-on LKML.
+[  186.678550] ------------[ cut here ]------------
+[  186.678556] WARNING: CPU: 2 PID: 7140 at /home/mhiramat/ksrc/linux/kernel/sched/core.c:7545 __might_sleep+0x7c/0x80
+[  186.678560] do not call blocking ops when !TASK_RUNNING; state=2 set at [<ffffffff980d9090>] prepare_to_wait_event+0x60/0x100
+[  186.678560] Modules linked in: brcmfmac xt_CHECKSUM rfcomm ipt_MASQUERADE nf_nat_masquerade_ipv4 xt_addrtype br_netfilter xt_tcpudp ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_raw ip6table_security ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_filter ip6_tables iptable_raw iptable_security iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_filter ip_tables x_tables bnep nls_iso8859_1 i2c_designware_platform i2c_designware_core snd_hda_codec_hdmi snd_hda_codec_realtek dcdbas snd_hda_codec_generic snd_hda_intel snd_hda_codec intel_rapl snd_hda_core x86_pkg_temp_thermal intel_powerclamp coretemp
+[  186.678594]  snd_pcm crct10dif_pclmul crc32_pclmul aesni_intel aes_x86_64 joydev glue_helper snd_hwdep lrw gf128mul uvcvideo ablk_helper snd_seq_midi cryptd snd_seq_midi_event snd_rawmidi videobuf2_vmalloc videobuf2_memops snd_seq input_leds videobuf2_v4l2 cfg80211 videobuf2_core snd_timer videodev serio_raw btusb snd_seq_device media btrtl rtsx_pci_ms snd mei_me memstick hid_multitouch mei soundcore brcmutil idma64 virt_dma intel_lpss_pci processor_thermal_device intel_soc_dts_iosf hci_uart btbcm btqca btintel bluetooth int3403_thermal dell_smo8800 intel_lpss_acpi intel_lpss int3402_thermal int340x_thermal_zone intel_hid mac_hid int3400_thermal shpchp sparse_keymap acpi_pad acpi_thermal_rel acpi_als kfifo_buf industrialio kvm_intel kvm irqbypass parport_pc ppdev lp parport autofs4 btrfs xor raid6_pq
+[  186.678631]  usbhid nouveau ttm i915 rtsx_pci_sdmmc mxm_wmi i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops psmouse drm ahci rtsx_pci nvme nvme_core libahci i2c_hid hid pinctrl_sunrisepoint video wmi pinctrl_intel fjes [last unloaded: brcmfmac]
+[  186.678646] CPU: 2 PID: 7140 Comm: wpa_supplicant Not tainted 4.8.0-rc1+ #8
+[  186.678647] Hardware name: Dell Inc. XPS 15 9550/0N7TVV, BIOS 01.02.00 04/07/2016
+[  186.678648]  0000000000000000 ffff9d8c64b5b900 ffffffff98442f23 ffff9d8c64b5b950
+[  186.678651]  0000000000000000 ffff9d8c64b5b940 ffffffff9808b22b 00001d790000000d
+[  186.678653]  ffffffff98c75e78 000000000000026c 0000000000000000 ffff9d8c2706d058
+[  186.678655] Call Trace:
+[  186.678659]  [<ffffffff98442f23>] dump_stack+0x85/0xc2
+[  186.678666]  [<ffffffff9808b22b>] __warn+0xcb/0xf0
+[  186.678668]  [<ffffffff9808b29f>] warn_slowpath_fmt+0x4f/0x60
+[  186.678671]  [<ffffffff980d9090>] ? prepare_to_wait_event+0x60/0x100
+[  186.678672]  [<ffffffff980d9090>] ? prepare_to_wait_event+0x60/0x100
+[  186.678674]  [<ffffffff980b922c>] __might_sleep+0x7c/0x80
+[  186.678680]  [<ffffffff988b0853>] mutex_lock_nested+0x33/0x3b0
+[  186.678682]  [<ffffffff980e5d8d>] ? trace_hardirqs_on+0xd/0x10
+[  186.678689]  [<ffffffffc0c57d2d>] brcmf_cfg80211_wait_vif_event+0xcd/0x130 [brcmfmac]
+[  186.678691]  [<ffffffff980d9190>] ? wake_atomic_t_function+0x60/0x60
+[  186.678697]  [<ffffffffc0c628e9>] brcmf_p2p_del_vif+0xf9/0x220 [brcmfmac]
+[  186.678702]  [<ffffffffc0c57fab>] brcmf_cfg80211_del_iface+0x21b/0x270 [brcmfmac]
+[  186.678716]  [<ffffffffc0b0539e>] nl80211_del_interface+0xfe/0x3a0 [cfg80211]
+[  186.678718]  [<ffffffff987ca335>] genl_family_rcv_msg+0x1b5/0x370
+[  186.678720]  [<ffffffff980e5d8d>] ? trace_hardirqs_on+0xd/0x10
+[  186.678721]  [<ffffffff987ca56d>] genl_rcv_msg+0x7d/0xb0
+[  186.678722]  [<ffffffff987ca4f0>] ? genl_family_rcv_msg+0x370/0x370
+[  186.678724]  [<ffffffff987c9a47>] netlink_rcv_skb+0x97/0xb0
+[  186.678726]  [<ffffffff987ca168>] genl_rcv+0x28/0x40
+[  186.678727]  [<ffffffff987c93c3>] netlink_unicast+0x1d3/0x2f0
+[  186.678729]  [<ffffffff987c933b>] ? netlink_unicast+0x14b/0x2f0
+[  186.678731]  [<ffffffff987c97cb>] netlink_sendmsg+0x2eb/0x3a0
+[  186.678733]  [<ffffffff9876dad8>] sock_sendmsg+0x38/0x50
+[  186.678734]  [<ffffffff9876e4df>] ___sys_sendmsg+0x27f/0x290
+[  186.678737]  [<ffffffff9828b935>] ? mntput_no_expire+0x5/0x3f0
+[  186.678739]  [<ffffffff9828b9be>] ? mntput_no_expire+0x8e/0x3f0
+[  186.678741]  [<ffffffff9828b935>] ? mntput_no_expire+0x5/0x3f0
+[  186.678743]  [<ffffffff9828bd44>] ? mntput+0x24/0x40
+[  186.678744]  [<ffffffff98267830>] ? __fput+0x190/0x200
+[  186.678746]  [<ffffffff9876f125>] __sys_sendmsg+0x45/0x80
+[  186.678748]  [<ffffffff9876f172>] SyS_sendmsg+0x12/0x20
+[  186.678749]  [<ffffffff988b5680>] entry_SYSCALL_64_fastpath+0x23/0xc1
+[  186.678751]  [<ffffffff980e2b8f>] ? trace_hardirqs_off_caller+0x1f/0xc0
+[  186.678752] ---[ end trace e224d66c5d8408b5 ]---
 
--- v6 blurb:
+Signed-off-by: Masami Hiramatsu <mhiramat@kernel.org>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   26 ++++++++++----------
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |    2 +-
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-This set moves to a global header file macros which I find
-very useful and worth popularising.  The basic problem is
-that since C bitfields are not very dependable accessing
-subfields of registers becomes slightly inconvenient.
-It is nice to have the necessary mask and shift operations
-wrapped in a macro and have that macro compute shift
-at compilation time using FFS.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 2628d5e..5db56a7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5635,7 +5635,7 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
+ 		  ifevent->action, ifevent->flags, ifevent->ifidx,
+ 		  ifevent->bsscfgidx);
+ 
+-	mutex_lock(&event->vif_event_lock);
++	spin_lock(&event->vif_event_lock);
+ 	event->action = ifevent->action;
+ 	vif = event->vif;
+ 
+@@ -5643,7 +5643,7 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
+ 	case BRCMF_E_IF_ADD:
+ 		/* waiting process may have timed out */
+ 		if (!cfg->vif_event.vif) {
+-			mutex_unlock(&event->vif_event_lock);
++			spin_unlock(&event->vif_event_lock);
+ 			return -EBADF;
+ 		}
+ 
+@@ -5654,24 +5654,24 @@ static s32 brcmf_notify_vif_event(struct brcmf_if *ifp,
+ 			ifp->ndev->ieee80211_ptr = &vif->wdev;
+ 			SET_NETDEV_DEV(ifp->ndev, wiphy_dev(cfg->wiphy));
+ 		}
+-		mutex_unlock(&event->vif_event_lock);
++		spin_unlock(&event->vif_event_lock);
+ 		wake_up(&event->vif_wq);
+ 		return 0;
+ 
+ 	case BRCMF_E_IF_DEL:
+-		mutex_unlock(&event->vif_event_lock);
++		spin_unlock(&event->vif_event_lock);
+ 		/* event may not be upon user request */
+ 		if (brcmf_cfg80211_vif_event_armed(cfg))
+ 			wake_up(&event->vif_wq);
+ 		return 0;
+ 
+ 	case BRCMF_E_IF_CHANGE:
+-		mutex_unlock(&event->vif_event_lock);
++		spin_unlock(&event->vif_event_lock);
+ 		wake_up(&event->vif_wq);
+ 		return 0;
+ 
+ 	default:
+-		mutex_unlock(&event->vif_event_lock);
++		spin_unlock(&event->vif_event_lock);
+ 		break;
+ 	}
+ 	return -EINVAL;
+@@ -5792,7 +5792,7 @@ static void wl_deinit_priv(struct brcmf_cfg80211_info *cfg)
+ static void init_vif_event(struct brcmf_cfg80211_vif_event *event)
+ {
+ 	init_waitqueue_head(&event->vif_wq);
+-	mutex_init(&event->vif_event_lock);
++	spin_lock_init(&event->vif_event_lock);
+ }
+ 
+ static s32 brcmf_dongle_roam(struct brcmf_if *ifp)
+@@ -6691,9 +6691,9 @@ static inline bool vif_event_equals(struct brcmf_cfg80211_vif_event *event,
+ {
+ 	u8 evt_action;
+ 
+-	mutex_lock(&event->vif_event_lock);
++	spin_lock(&event->vif_event_lock);
+ 	evt_action = event->action;
+-	mutex_unlock(&event->vif_event_lock);
++	spin_unlock(&event->vif_event_lock);
+ 	return evt_action == action;
+ }
+ 
+@@ -6702,10 +6702,10 @@ void brcmf_cfg80211_arm_vif_event(struct brcmf_cfg80211_info *cfg,
+ {
+ 	struct brcmf_cfg80211_vif_event *event = &cfg->vif_event;
+ 
+-	mutex_lock(&event->vif_event_lock);
++	spin_lock(&event->vif_event_lock);
+ 	event->vif = vif;
+ 	event->action = 0;
+-	mutex_unlock(&event->vif_event_lock);
++	spin_unlock(&event->vif_event_lock);
+ }
+ 
+ bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg)
+@@ -6713,9 +6713,9 @@ bool brcmf_cfg80211_vif_event_armed(struct brcmf_cfg80211_info *cfg)
+ 	struct brcmf_cfg80211_vif_event *event = &cfg->vif_event;
+ 	bool armed;
+ 
+-	mutex_lock(&event->vif_event_lock);
++	spin_lock(&event->vif_event_lock);
+ 	armed = event->vif != NULL;
+-	mutex_unlock(&event->vif_event_lock);
++	spin_unlock(&event->vif_event_lock);
+ 
+ 	return armed;
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 7d77f86..8889832 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -227,7 +227,7 @@ struct escan_info {
+  */
+ struct brcmf_cfg80211_vif_event {
+ 	wait_queue_head_t vif_wq;
+-	struct mutex vif_event_lock;
++	spinlock_t vif_event_lock;
+ 	u8 action;
+ 	struct brcmf_cfg80211_vif *vif;
+ };
 
-My implementation follows what Felix Fietkau has done in
-mt76.  Hannes Frederic Sowa suggested more use of standard
-Linux/GCC functions.  Since the RFC I've also added a 
-compile-time check to validate that the value passed to
-setters fits in the mask.
-
-I attempted the use of static inlines instead of macros
-but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
-I also noticed that forcing arguments to be u32 for inlines
-makes the compiler use 32bit arithmetic where it could
-get away with 64bit before (on 64bit machines, obviously).
-That's a potential performance concern but probably not
-a very practical one today.  Apart from looking "cleaner"
-static inlines would have the advantage that we could #undef
-the auxiliary macros at the end of the header.
-
-Build bot caught a build failure with -Os set.  AFAICT gcc
-did not handle temporary variable I put in the macro
-expression too well.  I work around that by defining
-__BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
-BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
-
-I'm planning to use those macros in another driver soon,
-Felix may also use them when upstreaming mt76 if he chooses
-to do so.
-
-IMHO if accepted it would be best to push these through
-Kalle's wireless drivers' tree, since the only existing
-user is in drivers/net/wireless/.
-
-v7:
- - drop the explicit type marking (u32/u64) - depend on the type
-   of the mask instead;
- - only allow compilation time constant masks;
- - barf at "type of register too small to ever match mask" on get;
- - rename PUT -> PREP.
-v6:
- - do a full rename in patch 2;
- - CC many people.
-v5:
- - repost.
-v4:
- - add documentation in the header.
-v3:
- - don't use variables in statement expressions;
- - use __BUILD_BUG_ON_NOT_POWER_OF_2.
-v2:
- - change Felix's email address.
-
-Jakub Kicinski (4):
-  add basic register-field manipulation macros
-  mt7601u: remove redefinition of GENMASK
-  mt7601u: remove unnecessary include
-  mt7601u: use linux/bitfield.h
-
- drivers/net/wireless/mediatek/mt7601u/dma.c     |  2 +-
- drivers/net/wireless/mediatek/mt7601u/dma.h     | 10 ++-
- drivers/net/wireless/mediatek/mt7601u/eeprom.c  | 12 ++--
- drivers/net/wireless/mediatek/mt7601u/init.c    | 10 +--
- drivers/net/wireless/mediatek/mt7601u/mac.c     | 38 +++++-----
- drivers/net/wireless/mediatek/mt7601u/main.c    |  1 -
- drivers/net/wireless/mediatek/mt7601u/mcu.c     | 20 +++---
- drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  4 +-
- drivers/net/wireless/mediatek/mt7601u/phy.c     | 44 ++++++------
- drivers/net/wireless/mediatek/mt7601u/regs.h    |  4 --
- drivers/net/wireless/mediatek/mt7601u/tx.c      | 19 ++---
- drivers/net/wireless/mediatek/mt7601u/util.h    | 77 --------------------
- include/linux/bitfield.h                        | 93 +++++++++++++++++++++++++
- include/linux/bug.h                             |  3 +
- 14 files changed, 177 insertions(+), 160 deletions(-)
- delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
- create mode 100644 include/linux/bitfield.h
-
--- 
-1.9.1
