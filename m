@@ -1,734 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24102 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932503AbcHBLp2 (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35500 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752821AbcHOPAW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 07:45:28 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 1/8] wil6210: align to latest auto generated wmi.h
-Date: Tue,  2 Aug 2016 14:42:05 +0300
-Message-Id: <1470138132-18071-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160802_192432_275638_BB0D27F5)
-In-Reply-To: <1470138132-18071-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1470138132-18071-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Mon, 15 Aug 2016 11:00:22 -0400
+Received: by mail-wm0-f66.google.com with SMTP id i5so11557337wmg.2
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Aug 2016 08:00:21 -0700 (PDT)
+From: Ioan-Adrian Ratiu <adi@adirat.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+	ath9k-devel@lists.ath9k.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath9k: Fix beacon configuration assertion failure
+Date: Mon, 15 Aug 2016 18:00:28 +0300
+Message-Id: <20160815150028.7909-1-adi@adirat.com> (sfid-20160815_170055_766002_8B1E53EE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Align to latest version of the auto generated wmi file
-describing the interface with FW.
+commit cfda2d8e2314 ("ath9k: Fix beacon configuration for
+addition/removal of interfaces") reworked beacon configs to happen at
+IF changes and missed cases when NL80211_IFTYPE_STATION has no beacons
+with the corresponding values iter_data.primary_beacon_vif == 0 and
+iter_data.nbcnvifs == 0 in ath9k_calculate_summary_state(), thus
+calling ath9k_beacon_config() with null and giving the below warning.
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Fix this by calling beacon config only when a beacon actually exists,
+i.e. by checking iter_data.beacons which should be set only inside
+ath9k_vif_iter_set_beacon() (the line "iter_data.beacons = true;" in
+ath9k_calculate_summary_state() is a bug in above rework commit).
+
+[   16.910537] ------------[ cut here ]------------
+[   16.910549] WARNING: CPU: 2 PID: 6 at drivers/net/wireless/ath/ath9k/beacon.c:642 ath9k_beacon_config+0x12c/0x130 [ath9k]
+[   16.910551] Modules linked in: intel_rapl x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel hid_generic aesni_intel usbhid hid aes_x86_64 joydev mousedev arc4 lrw ath9k dell_laptop ath9k_common ath9k_hw ath mac80211 gf128mul glue_helper ablk_helper dell_smbios input_leds cryptd led_class snd_hda_codec_hdmi psmouse cfg80211 serio_raw atkbd snd_hda_codec_realtek libps2 rfkill r8169 sr_mod snd_hda_codec_generic dcdbas cdrom mii snd_hda_intel snd_hda_codec snd_hwdep snd_hda_core i8042 snd_pcm snd_timer serio ac xhci_pci xhci_hcd battery i2c_i801 tpm_tis pcspkr tpm_tis_core evdev shpchp lpc_ich i2c_smbus tpm sch_fq_codel ip_tables x_tables
+[   16.910620] CPU: 2 PID: 6 Comm: kworker/u16:0 Not tainted 4.8.0-rc1-next-20160815-g118253a #1
+[   16.910621] Hardware name: Dell Inc. Inspiron 3521/018DYG, BIOS A14 07/31/2015
+[   16.910648] Workqueue: phy0 ieee80211_iface_work [mac80211]
+[   16.910652]  0000000000000000 ffff880159f13630 ffffffff813140f0 0000000000000000
+[   16.910657]  0000000000000000 ffff880159f13670 ffffffff8106b22b 0000028200000202
+[   16.910661]  ffff880156bc1500 0000000000000000 ffff880153cc8018 ffff880153cc8018
+[   16.910666] Call Trace:
+[   16.910674]  [<ffffffff813140f0>] dump_stack+0x63/0x83
+[   16.910678]  [<ffffffff8106b22b>] __warn+0xcb/0xf0
+[   16.910682]  [<ffffffff8106b31d>] warn_slowpath_null+0x1d/0x20
+[   16.910690]  [<ffffffffa02fceec>] ath9k_beacon_config+0x12c/0x130 [ath9k]
+[   16.910696]  [<ffffffffa03010f6>] ath9k_calculate_summary_state+0xf6/0x350 [ath9k]
+[   16.910703]  [<ffffffffa0301b46>] ath9k_bss_info_changed+0x186/0x1a0 [ath9k]
+[   16.910720]  [<ffffffffa025dd71>] ieee80211_bss_info_change_notify+0xb1/0x200 [mac80211]
+[   16.910737]  [<ffffffffa02c088c>] ieee80211_assoc_success+0x677/0xdeb [mac80211]
+[   16.910746]  [<ffffffff810adea2>] ? up+0x32/0x50
+[   16.910751]  [<ffffffff810bcf3b>] ? wake_up_klogd+0x3b/0x50
+[   16.910755]  [<ffffffff810bd489>] ? console_unlock+0x539/0x5f0
+[   16.910760]  [<ffffffff810bd794>] ? vprintk_emit+0x254/0x490
+[   16.910765]  [<ffffffff810bdb3f>] ? vprintk_default+0x1f/0x30
+[   16.910769]  [<ffffffff8114854d>] ? printk+0x48/0x50
+[   16.910788]  [<ffffffffa02ad0c2>] ieee80211_rx_mgmt_assoc_resp+0x152/0x4c0 [mac80211]
+[   16.910807]  [<ffffffffa02ade3f>] ieee80211_sta_rx_queued_mgmt+0x18f/0x840 [mac80211]
+[   16.910813]  [<ffffffff810d0a40>] ? lock_timer_base.isra.2+0x80/0xa0
+[   16.910817]  [<ffffffff810ad896>] ? cpuacct_charge+0x86/0xa0
+[   16.910822]  [<ffffffff8109d8e7>] ? update_curr+0xb7/0x160
+[   16.910827]  [<ffffffff8109e54c>] ? dequeue_entity+0x24c/0xa20
+[   16.910831]  [<ffffffff8109f2e3>] ? dequeue_task_fair+0x5c3/0x960
+[   16.910848]  [<ffffffffa02735b4>] ? ieee80211_iface_work+0xd4/0x410 [mac80211]
+[   16.910865]  [<ffffffffa0273775>] ieee80211_iface_work+0x295/0x410 [mac80211]
+[   16.910870]  [<ffffffff81090537>] ? finish_task_switch+0x77/0x1e0
+[   16.910875]  [<ffffffff810832d5>] process_one_work+0x1e5/0x470
+[   16.910880]  [<ffffffff810835a8>] worker_thread+0x48/0x4e0
+[   16.910885]  [<ffffffff81083560>] ? process_one_work+0x470/0x470
+[   16.910888]  [<ffffffff81088f09>] kthread+0xc9/0xe0
+[   16.910894]  [<ffffffff81028723>] ? __switch_to+0x2c3/0x610
+[   16.910899]  [<ffffffff8173a67f>] ret_from_fork+0x1f/0x40
+[   16.910902]  [<ffffffff81088e40>] ? kthread_create_on_node+0x40/0x40
+[   16.910904] ---[ end trace aa169ad4461f2f18 ]---
+
+Signed-off-by: Ioan-Adrian Ratiu <adi@adirat.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.h | 640 +++++++++++++++++++++++++++++----
- 1 file changed, 561 insertions(+), 79 deletions(-)
+ drivers/net/wireless/ath/ath9k/main.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
-index 685fe0d..349510c 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.h
-+++ b/drivers/net/wireless/ath/wil6210/wmi.h
-@@ -120,6 +120,8 @@ enum wmi_command_id {
- 	WMI_BF_SM_MGMT_CMDID			= 0x838,
- 	WMI_BF_RXSS_MGMT_CMDID			= 0x839,
- 	WMI_BF_TRIG_CMDID			= 0x83A,
-+	WMI_LINK_MAINTAIN_CFG_WRITE_CMDID	= 0x842,
-+	WMI_LINK_MAINTAIN_CFG_READ_CMDID	= 0x843,
- 	WMI_SET_SECTORS_CMDID			= 0x849,
- 	WMI_MAINTAIN_PAUSE_CMDID		= 0x850,
- 	WMI_MAINTAIN_RESUME_CMDID		= 0x851,
-@@ -134,10 +136,15 @@ enum wmi_command_id {
- 	WMI_BF_CTRL_CMDID			= 0x862,
- 	WMI_NOTIFY_REQ_CMDID			= 0x863,
- 	WMI_GET_STATUS_CMDID			= 0x864,
-+	WMI_GET_RF_STATUS_CMDID			= 0x866,
-+	WMI_GET_BASEBAND_TYPE_CMDID		= 0x867,
- 	WMI_UNIT_TEST_CMDID			= 0x900,
- 	WMI_HICCUP_CMDID			= 0x901,
- 	WMI_FLASH_READ_CMDID			= 0x902,
- 	WMI_FLASH_WRITE_CMDID			= 0x903,
-+	/* Power management */
-+	WMI_TRAFFIC_DEFERRAL_CMDID		= 0x904,
-+	WMI_TRAFFIC_RESUME_CMDID		= 0x905,
- 	/* P2P */
- 	WMI_P2P_CFG_CMDID			= 0x910,
- 	WMI_PORT_ALLOCATE_CMDID			= 0x911,
-@@ -150,6 +157,19 @@ enum wmi_command_id {
- 	WMI_PCP_START_CMDID			= 0x918,
- 	WMI_PCP_STOP_CMDID			= 0x919,
- 	WMI_GET_PCP_FACTOR_CMDID		= 0x91B,
-+	/* Power Save Configuration Commands */
-+	WMI_PS_DEV_PROFILE_CFG_CMDID		= 0x91C,
-+	/* Not supported yet */
-+	WMI_PS_DEV_CFG_CMDID			= 0x91D,
-+	/* Not supported yet */
-+	WMI_PS_DEV_CFG_READ_CMDID		= 0x91E,
-+	/* Per MAC Power Save Configuration commands
-+	 * Not supported yet
-+	 */
-+	WMI_PS_MID_CFG_CMDID			= 0x91F,
-+	/* Not supported yet */
-+	WMI_PS_MID_CFG_READ_CMDID		= 0x920,
-+	WMI_RS_CFG_CMDID			= 0x921,
- 	WMI_SET_MAC_ADDRESS_CMDID		= 0xF003,
- 	WMI_ABORT_SCAN_CMDID			= 0xF007,
- 	WMI_SET_PROMISCUOUS_MODE_CMDID		= 0xF041,
-@@ -291,9 +311,8 @@ enum wmi_scan_type {
- /* WMI_START_SCAN_CMDID */
- struct wmi_start_scan_cmd {
- 	u8 direct_scan_mac_addr[WMI_MAC_LEN];
--	/* DMG Beacon frame is transmitted during active scanning */
-+	/* run scan with discovery beacon. Relevant for ACTIVE scan only. */
- 	u8 discovery_mode;
--	/* reserved */
- 	u8 reserved;
- 	/* Max duration in the home channel(ms) */
- 	__le32 dwell_time;
-@@ -453,6 +472,12 @@ struct wmi_port_delete_cmd {
- 	u8 reserved[3];
- } __packed;
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index a394622..3c6f413 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -1154,7 +1154,6 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 		bool changed = (iter_data.primary_sta != ctx->primary_sta);
  
-+/* WMI_TRAFFIC_DEFERRAL_CMDID */
-+struct wmi_traffic_deferral_cmd {
-+	/* Bit vector: bit[0] - wake on Unicast, bit[1] - wake on Broadcast */
-+	u8 wakeup_trigger;
-+} __packed;
+ 		if (iter_data.primary_sta) {
+-			iter_data.beacons = true;
+ 			ath9k_set_assoc_state(sc, iter_data.primary_sta,
+ 					      changed);
+ 			ctx->primary_sta = iter_data.primary_sta;
+@@ -1166,10 +1165,12 @@ void ath9k_calculate_summary_state(struct ath_softc *sc,
+ 			if (ath9k_hw_mci_is_enabled(sc->sc_ah))
+ 				ath9k_mci_update_wlan_channels(sc, true);
+ 		}
++	} else if (iter_data.beacons) {
++		sc->nbcnvifs = iter_data.nbcnvifs;
++		ath9k_beacon_config(sc, iter_data.primary_beacon_vif,
++				    iter_data.beacons);
+ 	}
+-	sc->nbcnvifs = iter_data.nbcnvifs;
+-	ath9k_beacon_config(sc, iter_data.primary_beacon_vif,
+-			    iter_data.beacons);
 +
- /* WMI_P2P_CFG_CMDID */
- enum wmi_discovery_mode {
- 	WMI_DISCOVERY_MODE_NON_OFFLOAD	= 0x00,
-@@ -822,81 +847,99 @@ struct wmi_pmc_cmd {
-  * List of Events (target to host)
-  */
- enum wmi_event_id {
--	WMI_READY_EVENTID			= 0x1001,
--	WMI_CONNECT_EVENTID			= 0x1002,
--	WMI_DISCONNECT_EVENTID			= 0x1003,
--	WMI_SCAN_COMPLETE_EVENTID		= 0x100A,
--	WMI_REPORT_STATISTICS_EVENTID		= 0x100B,
--	WMI_RD_MEM_RSP_EVENTID			= 0x1800,
--	WMI_FW_READY_EVENTID			= 0x1801,
--	WMI_EXIT_FAST_MEM_ACC_MODE_EVENTID	= 0x200,
--	WMI_ECHO_RSP_EVENTID			= 0x1803,
--	WMI_FS_TUNE_DONE_EVENTID		= 0x180A,
--	WMI_CORR_MEASURE_EVENTID		= 0x180B,
--	WMI_READ_RSSI_EVENTID			= 0x180C,
--	WMI_TEMP_SENSE_DONE_EVENTID		= 0x180E,
--	WMI_DC_CALIB_DONE_EVENTID		= 0x180F,
--	WMI_IQ_TX_CALIB_DONE_EVENTID		= 0x1811,
--	WMI_IQ_RX_CALIB_DONE_EVENTID		= 0x1812,
--	WMI_SET_WORK_MODE_DONE_EVENTID		= 0x1815,
--	WMI_LO_LEAKAGE_CALIB_DONE_EVENTID	= 0x1816,
--	WMI_MARLON_R_READ_DONE_EVENTID		= 0x1818,
--	WMI_MARLON_R_WRITE_DONE_EVENTID		= 0x1819,
--	WMI_MARLON_R_TXRX_SEL_DONE_EVENTID	= 0x181A,
--	WMI_SILENT_RSSI_CALIB_DONE_EVENTID	= 0x181D,
--	WMI_RF_RX_TEST_DONE_EVENTID		= 0x181E,
--	WMI_CFG_RX_CHAIN_DONE_EVENTID		= 0x1820,
--	WMI_VRING_CFG_DONE_EVENTID		= 0x1821,
--	WMI_BA_STATUS_EVENTID			= 0x1823,
--	WMI_RCP_ADDBA_REQ_EVENTID		= 0x1824,
--	WMI_RCP_ADDBA_RESP_SENT_EVENTID		= 0x1825,
--	WMI_DELBA_EVENTID			= 0x1826,
--	WMI_GET_SSID_EVENTID			= 0x1828,
--	WMI_GET_PCP_CHANNEL_EVENTID		= 0x182A,
--	WMI_SW_TX_COMPLETE_EVENTID		= 0x182B,
--	WMI_READ_MAC_RXQ_EVENTID		= 0x1830,
--	WMI_READ_MAC_TXQ_EVENTID		= 0x1831,
--	WMI_WRITE_MAC_RXQ_EVENTID		= 0x1832,
--	WMI_WRITE_MAC_TXQ_EVENTID		= 0x1833,
--	WMI_WRITE_MAC_XQ_FIELD_EVENTID		= 0x1834,
--	WMI_BEAMFORMING_MGMT_DONE_EVENTID	= 0x1836,
--	WMI_BF_TXSS_MGMT_DONE_EVENTID		= 0x1837,
--	WMI_BF_RXSS_MGMT_DONE_EVENTID		= 0x1839,
--	WMI_RS_MGMT_DONE_EVENTID		= 0x1852,
--	WMI_RF_MGMT_STATUS_EVENTID		= 0x1853,
--	WMI_THERMAL_THROTTLING_STATUS_EVENTID	= 0x1855,
--	WMI_BF_SM_MGMT_DONE_EVENTID		= 0x1838,
--	WMI_RX_MGMT_PACKET_EVENTID		= 0x1840,
--	WMI_TX_MGMT_PACKET_EVENTID		= 0x1841,
--	WMI_OTP_READ_RESULT_EVENTID		= 0x1856,
--	WMI_LED_CFG_DONE_EVENTID		= 0x1858,
-+	WMI_READY_EVENTID				= 0x1001,
-+	WMI_CONNECT_EVENTID				= 0x1002,
-+	WMI_DISCONNECT_EVENTID				= 0x1003,
-+	WMI_SCAN_COMPLETE_EVENTID			= 0x100A,
-+	WMI_REPORT_STATISTICS_EVENTID			= 0x100B,
-+	WMI_RD_MEM_RSP_EVENTID				= 0x1800,
-+	WMI_FW_READY_EVENTID				= 0x1801,
-+	WMI_EXIT_FAST_MEM_ACC_MODE_EVENTID		= 0x200,
-+	WMI_ECHO_RSP_EVENTID				= 0x1803,
-+	WMI_FS_TUNE_DONE_EVENTID			= 0x180A,
-+	WMI_CORR_MEASURE_EVENTID			= 0x180B,
-+	WMI_READ_RSSI_EVENTID				= 0x180C,
-+	WMI_TEMP_SENSE_DONE_EVENTID			= 0x180E,
-+	WMI_DC_CALIB_DONE_EVENTID			= 0x180F,
-+	WMI_IQ_TX_CALIB_DONE_EVENTID			= 0x1811,
-+	WMI_IQ_RX_CALIB_DONE_EVENTID			= 0x1812,
-+	WMI_SET_WORK_MODE_DONE_EVENTID			= 0x1815,
-+	WMI_LO_LEAKAGE_CALIB_DONE_EVENTID		= 0x1816,
-+	WMI_MARLON_R_READ_DONE_EVENTID			= 0x1818,
-+	WMI_MARLON_R_WRITE_DONE_EVENTID			= 0x1819,
-+	WMI_MARLON_R_TXRX_SEL_DONE_EVENTID		= 0x181A,
-+	WMI_SILENT_RSSI_CALIB_DONE_EVENTID		= 0x181D,
-+	WMI_RF_RX_TEST_DONE_EVENTID			= 0x181E,
-+	WMI_CFG_RX_CHAIN_DONE_EVENTID			= 0x1820,
-+	WMI_VRING_CFG_DONE_EVENTID			= 0x1821,
-+	WMI_BA_STATUS_EVENTID				= 0x1823,
-+	WMI_RCP_ADDBA_REQ_EVENTID			= 0x1824,
-+	WMI_RCP_ADDBA_RESP_SENT_EVENTID			= 0x1825,
-+	WMI_DELBA_EVENTID				= 0x1826,
-+	WMI_GET_SSID_EVENTID				= 0x1828,
-+	WMI_GET_PCP_CHANNEL_EVENTID			= 0x182A,
-+	WMI_SW_TX_COMPLETE_EVENTID			= 0x182B,
-+	WMI_READ_MAC_RXQ_EVENTID			= 0x1830,
-+	WMI_READ_MAC_TXQ_EVENTID			= 0x1831,
-+	WMI_WRITE_MAC_RXQ_EVENTID			= 0x1832,
-+	WMI_WRITE_MAC_TXQ_EVENTID			= 0x1833,
-+	WMI_WRITE_MAC_XQ_FIELD_EVENTID			= 0x1834,
-+	WMI_BEAMFORMING_MGMT_DONE_EVENTID		= 0x1836,
-+	WMI_BF_TXSS_MGMT_DONE_EVENTID			= 0x1837,
-+	WMI_BF_RXSS_MGMT_DONE_EVENTID			= 0x1839,
-+	WMI_RS_MGMT_DONE_EVENTID			= 0x1852,
-+	WMI_RF_MGMT_STATUS_EVENTID			= 0x1853,
-+	WMI_THERMAL_THROTTLING_STATUS_EVENTID		= 0x1855,
-+	WMI_BF_SM_MGMT_DONE_EVENTID			= 0x1838,
-+	WMI_RX_MGMT_PACKET_EVENTID			= 0x1840,
-+	WMI_TX_MGMT_PACKET_EVENTID			= 0x1841,
-+	WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENTID	= 0x1842,
-+	WMI_LINK_MAINTAIN_CFG_READ_DONE_EVENTID		= 0x1843,
-+	WMI_OTP_READ_RESULT_EVENTID			= 0x1856,
-+	WMI_LED_CFG_DONE_EVENTID			= 0x1858,
- 	/* Performance monitoring events */
--	WMI_DATA_PORT_OPEN_EVENTID		= 0x1860,
--	WMI_WBE_LINK_DOWN_EVENTID		= 0x1861,
--	WMI_BF_CTRL_DONE_EVENTID		= 0x1862,
--	WMI_NOTIFY_REQ_DONE_EVENTID		= 0x1863,
--	WMI_GET_STATUS_DONE_EVENTID		= 0x1864,
--	WMI_VRING_EN_EVENTID			= 0x1865,
--	WMI_UNIT_TEST_EVENTID			= 0x1900,
--	WMI_FLASH_READ_DONE_EVENTID		= 0x1902,
--	WMI_FLASH_WRITE_DONE_EVENTID		= 0x1903,
-+	WMI_DATA_PORT_OPEN_EVENTID			= 0x1860,
-+	WMI_WBE_LINK_DOWN_EVENTID			= 0x1861,
-+	WMI_BF_CTRL_DONE_EVENTID			= 0x1862,
-+	WMI_NOTIFY_REQ_DONE_EVENTID			= 0x1863,
-+	WMI_GET_STATUS_DONE_EVENTID			= 0x1864,
-+	WMI_VRING_EN_EVENTID				= 0x1865,
-+	WMI_GET_RF_STATUS_EVENTID			= 0x1866,
-+	WMI_GET_BASEBAND_TYPE_EVENTID			= 0x1867,
-+	WMI_UNIT_TEST_EVENTID				= 0x1900,
-+	WMI_FLASH_READ_DONE_EVENTID			= 0x1902,
-+	WMI_FLASH_WRITE_DONE_EVENTID			= 0x1903,
-+	/* Power management */
-+	WMI_TRAFFIC_DEFERRAL_EVENTID			= 0x1904,
-+	WMI_TRAFFIC_RESUME_EVENTID			= 0x1905,
- 	/* P2P */
--	WMI_P2P_CFG_DONE_EVENTID		= 0x1910,
--	WMI_PORT_ALLOCATED_EVENTID		= 0x1911,
--	WMI_PORT_DELETED_EVENTID		= 0x1912,
--	WMI_LISTEN_STARTED_EVENTID		= 0x1914,
--	WMI_SEARCH_STARTED_EVENTID		= 0x1915,
--	WMI_DISCOVERY_STARTED_EVENTID		= 0x1916,
--	WMI_DISCOVERY_STOPPED_EVENTID		= 0x1917,
--	WMI_PCP_STARTED_EVENTID			= 0x1918,
--	WMI_PCP_STOPPED_EVENTID			= 0x1919,
--	WMI_PCP_FACTOR_EVENTID			= 0x191A,
--	WMI_SET_CHANNEL_EVENTID			= 0x9000,
--	WMI_ASSOC_REQ_EVENTID			= 0x9001,
--	WMI_EAPOL_RX_EVENTID			= 0x9002,
--	WMI_MAC_ADDR_RESP_EVENTID		= 0x9003,
--	WMI_FW_VER_EVENTID			= 0x9004,
--	WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID	= 0x9005,
-+	WMI_P2P_CFG_DONE_EVENTID			= 0x1910,
-+	WMI_PORT_ALLOCATED_EVENTID			= 0x1911,
-+	WMI_PORT_DELETED_EVENTID			= 0x1912,
-+	WMI_LISTEN_STARTED_EVENTID			= 0x1914,
-+	WMI_SEARCH_STARTED_EVENTID			= 0x1915,
-+	WMI_DISCOVERY_STARTED_EVENTID			= 0x1916,
-+	WMI_DISCOVERY_STOPPED_EVENTID			= 0x1917,
-+	WMI_PCP_STARTED_EVENTID				= 0x1918,
-+	WMI_PCP_STOPPED_EVENTID				= 0x1919,
-+	WMI_PCP_FACTOR_EVENTID				= 0x191A,
-+	/* Power Save Configuration Events */
-+	WMI_PS_DEV_PROFILE_CFG_EVENTID			= 0x191C,
-+	/* Not supported yet */
-+	WMI_PS_DEV_CFG_EVENTID				= 0x191D,
-+	/* Not supported yet */
-+	WMI_PS_DEV_CFG_READ_EVENTID			= 0x191E,
-+	/* Not supported yet */
-+	WMI_PS_MID_CFG_EVENTID				= 0x191F,
-+	/* Not supported yet */
-+	WMI_PS_MID_CFG_READ_EVENTID			= 0x1920,
-+	WMI_RS_CFG_DONE_EVENTID				= 0x1921,
-+	WMI_SET_CHANNEL_EVENTID				= 0x9000,
-+	WMI_ASSOC_REQ_EVENTID				= 0x9001,
-+	WMI_EAPOL_RX_EVENTID				= 0x9002,
-+	WMI_MAC_ADDR_RESP_EVENTID			= 0x9003,
-+	WMI_FW_VER_EVENTID				= 0x9004,
-+	WMI_ACS_PASSIVE_SCAN_COMPLETE_EVENTID		= 0x9005,
- };
+ 	ath9k_hw_set_interrupts(ah);
  
- /* Events data structures */
-@@ -943,10 +986,78 @@ struct wmi_get_status_done_event {
- 
- /* WMI_FW_VER_EVENTID */
- struct wmi_fw_ver_event {
--	u8 major;
--	u8 minor;
--	__le16 subminor;
--	__le16 build;
-+	/* FW image version */
-+	__le32 fw_major;
-+	__le32 fw_minor;
-+	__le32 fw_subminor;
-+	__le32 fw_build;
-+	/* FW image build time stamp */
-+	__le32 hour;
-+	__le32 minute;
-+	__le32 second;
-+	__le32 day;
-+	__le32 month;
-+	__le32 year;
-+	/* Boot Loader image version */
-+	__le32 bl_major;
-+	__le32 bl_minor;
-+	__le32 bl_subminor;
-+	__le32 bl_build;
-+} __packed;
-+
-+/* WMI_GET_RF_STATUS_EVENTID */
-+enum rf_type {
-+	RF_UNKNOWN	= 0x00,
-+	RF_MARLON	= 0x01,
-+	RF_SPARROW	= 0x02,
-+};
-+
-+/* WMI_GET_RF_STATUS_EVENTID */
-+enum board_file_rf_type {
-+	BF_RF_MARLON	= 0x00,
-+	BF_RF_SPARROW	= 0x01,
-+};
-+
-+/* WMI_GET_RF_STATUS_EVENTID */
-+enum rf_status {
-+	RF_OK			= 0x00,
-+	RF_NO_COMM		= 0x01,
-+	RF_WRONG_BOARD_FILE	= 0x02,
-+};
-+
-+/* WMI_GET_RF_STATUS_EVENTID */
-+struct wmi_get_rf_status_event {
-+	/* enum rf_type */
-+	__le32 rf_type;
-+	/* attached RFs bit vector */
-+	__le32 attached_rf_vector;
-+	/* enabled RFs bit vector */
-+	__le32 enabled_rf_vector;
-+	/* enum rf_status, refers to enabled RFs */
-+	u8 rf_status[32];
-+	/* enum board file RF type */
-+	__le32 board_file_rf_type;
-+	/* board file platform type */
-+	__le32 board_file_platform_type;
-+	/* board file version */
-+	__le32 board_file_version;
-+	__le32 reserved[2];
-+} __packed;
-+
-+/* WMI_GET_BASEBAND_TYPE_EVENTID */
-+enum baseband_type {
-+	BASEBAND_UNKNOWN	= 0x00,
-+	BASEBAND_SPARROW_M_A0	= 0x03,
-+	BASEBAND_SPARROW_M_A1	= 0x04,
-+	BASEBAND_SPARROW_M_B0	= 0x05,
-+	BASEBAND_SPARROW_M_C0	= 0x06,
-+	BASEBAND_SPARROW_M_D0	= 0x07,
-+};
-+
-+/* WMI_GET_BASEBAND_TYPE_EVENTID */
-+struct wmi_get_baseband_type_event {
-+	/* enum baseband_type */
-+	__le32 baseband_type;
- } __packed;
- 
- /* WMI_MAC_ADDR_RESP_EVENTID */
-@@ -1410,4 +1521,375 @@ struct wmi_led_cfg_done_event {
- 	__le32 status;
- } __packed;
- 
-+#define WMI_NUM_MCS	(13)
-+
-+/* Rate search parameters configuration per connection */
-+struct wmi_rs_cfg {
-+	/* The maximal allowed PER for each MCS
-+	 * MCS will be considered as failed if PER during RS is higher
-+	 */
-+	u8 per_threshold[WMI_NUM_MCS];
-+	/* Number of MPDUs for each MCS
-+	 * this is the minimal statistic required to make an educated
-+	 * decision
-+	 */
-+	u8 min_frame_cnt[WMI_NUM_MCS];
-+	/* stop threshold [0-100] */
-+	u8 stop_th;
-+	/* MCS1 stop threshold [0-100] */
-+	u8 mcs1_fail_th;
-+	u8 max_back_failure_th;
-+	/* Debug feature for disabling internal RS trigger (which is
-+	 * currently triggered by BF Done)
-+	 */
-+	u8 dbg_disable_internal_trigger;
-+	__le32 back_failure_mask;
-+	__le32 mcs_en_vec;
-+} __packed;
-+
-+/* WMI_RS_CFG_CMDID */
-+struct wmi_rs_cfg_cmd {
-+	/* connection id */
-+	u8 cid;
-+	/* enable or disable rate search */
-+	u8 rs_enable;
-+	/* rate search configuration */
-+	struct wmi_rs_cfg rs_cfg;
-+} __packed;
-+
-+/* WMI_RS_CFG_DONE_EVENTID */
-+struct wmi_rs_cfg_done_event {
-+	u8 cid;
-+	/* enum wmi_fw_status */
-+	u8 status;
-+	u8 reserved[2];
-+} __packed;
-+
-+/* broadcast connection ID */
-+#define WMI_LINK_MAINTAIN_CFG_CID_BROADCAST	(0xFFFFFFFF)
-+
-+/* Types wmi_link_maintain_cfg presets for WMI_LINK_MAINTAIN_CFG_WRITE_CMD */
-+enum wmi_link_maintain_cfg_type {
-+	/* AP/PCP default normal (non-FST) configuration settings */
-+	WMI_LINK_MAINTAIN_CFG_TYPE_DEFAULT_NORMAL_AP	= 0x00,
-+	/* AP/PCP  default FST configuration settings */
-+	WMI_LINK_MAINTAIN_CFG_TYPE_DEFAULT_FST_AP	= 0x01,
-+	/* STA default normal (non-FST) configuration settings */
-+	WMI_LINK_MAINTAIN_CFG_TYPE_DEFAULT_NORMAL_STA	= 0x02,
-+	/* STA default FST configuration settings */
-+	WMI_LINK_MAINTAIN_CFG_TYPE_DEFAULT_FST_STA	= 0x03,
-+	/* custom configuration settings */
-+	WMI_LINK_MAINTAIN_CFG_TYPE_CUSTOM		= 0x04,
-+	/* number of defined configuration types */
-+	WMI_LINK_MAINTAIN_CFG_TYPES_NUM			= 0x05,
-+};
-+
-+/* Response status codes for WMI_LINK_MAINTAIN_CFG_WRITE/READ commands */
-+enum wmi_link_maintain_cfg_response_status {
-+	/* WMI_LINK_MAINTAIN_CFG_WRITE/READ command successfully accomplished
-+	 */
-+	WMI_LINK_MAINTAIN_CFG_RESPONSE_STATUS_OK		= 0x00,
-+	/* ERROR due to bad argument in WMI_LINK_MAINTAIN_CFG_WRITE/READ
-+	 * command request
-+	 */
-+	WMI_LINK_MAINTAIN_CFG_RESPONSE_STATUS_BAD_ARGUMENT	= 0x01,
-+};
-+
-+/* Link Loss and Keep Alive configuration */
-+struct wmi_link_maintain_cfg {
-+	/* link_loss_enable_detectors_vec */
-+	__le32 link_loss_enable_detectors_vec;
-+	/* detectors check period usec */
-+	__le32 check_link_loss_period_usec;
-+	/* max allowed tx ageing */
-+	__le32 tx_ageing_threshold_usec;
-+	/* keep alive period for high SNR */
-+	__le32 keep_alive_period_usec_high_snr;
-+	/* keep alive period for low SNR */
-+	__le32 keep_alive_period_usec_low_snr;
-+	/* lower snr limit for keep alive period update */
-+	__le32 keep_alive_snr_threshold_low_db;
-+	/* upper snr limit for keep alive period update */
-+	__le32 keep_alive_snr_threshold_high_db;
-+	/* num of successive bad bcons causing link-loss */
-+	__le32 bad_beacons_num_threshold;
-+	/* SNR limit for bad_beacons_detector */
-+	__le32 bad_beacons_snr_threshold_db;
-+} __packed;
-+
-+/* WMI_LINK_MAINTAIN_CFG_WRITE_CMDID */
-+struct wmi_link_maintain_cfg_write_cmd {
-+	/* enum wmi_link_maintain_cfg_type_e - type of requested default
-+	 * configuration to be applied
-+	 */
-+	__le32 cfg_type;
-+	/* requested connection ID or WMI_LINK_MAINTAIN_CFG_CID_BROADCAST */
-+	__le32 cid;
-+	/* custom configuration settings to be applied (relevant only if
-+	 * cfg_type==WMI_LINK_MAINTAIN_CFG_TYPE_CUSTOM)
-+	 */
-+	struct wmi_link_maintain_cfg lm_cfg;
-+} __packed;
-+
-+/* WMI_LINK_MAINTAIN_CFG_READ_CMDID */
-+struct wmi_link_maintain_cfg_read_cmd {
-+	/* connection ID which configuration settings are requested */
-+	__le32 cid;
-+} __packed;
-+
-+/* WMI_LINK_MAINTAIN_CFG_WRITE_DONE_EVENTID */
-+struct wmi_link_maintain_cfg_write_done_event {
-+	/* requested connection ID */
-+	__le32 cid;
-+	/* wmi_link_maintain_cfg_response_status_e - write status */
-+	__le32 status;
-+} __packed;
-+
-+/* \WMI_LINK_MAINTAIN_CFG_READ_DONE_EVENT */
-+struct wmi_link_maintain_cfg_read_done_event {
-+	/* requested connection ID */
-+	__le32 cid;
-+	/* wmi_link_maintain_cfg_response_status_e - read status */
-+	__le32 status;
-+	/* Retrieved configuration settings */
-+	struct wmi_link_maintain_cfg lm_cfg;
-+} __packed;
-+
-+enum wmi_traffic_deferral_status {
-+	WMI_TRAFFIC_DEFERRAL_APPROVED	= 0x0,
-+	WMI_TRAFFIC_DEFERRAL_REJECTED	= 0x1,
-+};
-+
-+/* WMI_TRAFFIC_DEFERRAL_EVENTID */
-+struct wmi_traffic_deferral_event {
-+	/* enum wmi_traffic_deferral_status_e */
-+	u8 status;
-+} __packed;
-+
-+enum wmi_traffic_resume_status {
-+	WMI_TRAFFIC_RESUME_SUCCESS	= 0x0,
-+	WMI_TRAFFIC_RESUME_FAILED	= 0x1,
-+};
-+
-+/* WMI_TRAFFIC_RESUME_EVENTID */
-+struct wmi_traffic_resume_event {
-+	/* enum wmi_traffic_resume_status_e */
-+	u8 status;
-+} __packed;
-+
-+/* Power Save command completion status codes */
-+enum wmi_ps_cfg_cmd_status {
-+	WMI_PS_CFG_CMD_STATUS_SUCCESS	= 0x00,
-+	WMI_PS_CFG_CMD_STATUS_BAD_PARAM	= 0x01,
-+	/* other error */
-+	WMI_PS_CFG_CMD_STATUS_ERROR	= 0x02,
-+};
-+
-+/* Device Power Save Profiles */
-+enum wmi_ps_profile_type {
-+	WMI_PS_PROFILE_TYPE_DEFAULT		= 0x00,
-+	WMI_PS_PROFILE_TYPE_PS_DISABLED		= 0x01,
-+	WMI_PS_PROFILE_TYPE_MAX_PS		= 0x02,
-+	WMI_PS_PROFILE_TYPE_LOW_LATENCY_PS	= 0x03,
-+};
-+
-+/* WMI_PS_DEV_PROFILE_CFG_CMDID
-+ *
-+ * Power save profile to be used by the device
-+ *
-+ * Returned event:
-+ * - WMI_PS_DEV_PROFILE_CFG_EVENTID
-+ */
-+struct wmi_ps_dev_profile_cfg_cmd {
-+	/* wmi_ps_profile_type_e */
-+	u8 ps_profile;
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_PS_DEV_PROFILE_CFG_EVENTID */
-+struct wmi_ps_dev_profile_cfg_event {
-+	/* wmi_ps_cfg_cmd_status_e */
-+	__le32 status;
-+} __packed;
-+
-+enum wmi_ps_level {
-+	WMI_PS_LEVEL_DEEP_SLEEP		= 0x00,
-+	WMI_PS_LEVEL_SHALLOW_SLEEP	= 0x01,
-+	/* awake = all PS mechanisms are disabled */
-+	WMI_PS_LEVEL_AWAKE		= 0x02,
-+};
-+
-+enum wmi_ps_deep_sleep_clk_level {
-+	/* 33k */
-+	WMI_PS_DEEP_SLEEP_CLK_LEVEL_RTC		= 0x00,
-+	/* 10k */
-+	WMI_PS_DEEP_SLEEP_CLK_LEVEL_OSC		= 0x01,
-+	/* @RTC Low latency */
-+	WMI_PS_DEEP_SLEEP_CLK_LEVEL_RTC_LT	= 0x02,
-+	WMI_PS_DEEP_SLEEP_CLK_LEVEL_XTAL	= 0x03,
-+	WMI_PS_DEEP_SLEEP_CLK_LEVEL_SYSCLK	= 0x04,
-+	/* Not Applicable */
-+	WMI_PS_DEEP_SLEEP_CLK_LEVEL_N_A		= 0xFF,
-+};
-+
-+/* Response by the FW to a D3 entry request */
-+enum wmi_ps_d3_resp_policy {
-+	WMI_PS_D3_RESP_POLICY_DEFAULT	= 0x00,
-+	/* debug -D3 req is always denied */
-+	WMI_PS_D3_RESP_POLICY_DENIED	= 0x01,
-+	/* debug -D3 req is always approved */
-+	WMI_PS_D3_RESP_POLICY_APPROVED	= 0x02,
-+};
-+
-+/* Device common power save configurations */
-+struct wmi_ps_dev_cfg {
-+	/* lowest level of PS allowed while unassociated, enum wmi_ps_level_e
-+	 */
-+	u8 ps_unassoc_min_level;
-+	/* lowest deep sleep clock level while nonassoc, enum
-+	 * wmi_ps_deep_sleep_clk_level_e
-+	 */
-+	u8 ps_unassoc_deep_sleep_min_level;
-+	/* lowest level of PS allowed while associated, enum wmi_ps_level_e */
-+	u8 ps_assoc_min_level;
-+	/* lowest deep sleep clock level while assoc, enum
-+	 * wmi_ps_deep_sleep_clk_level_e
-+	 */
-+	u8 ps_assoc_deep_sleep_min_level;
-+	/* enum wmi_ps_deep_sleep_clk_level_e */
-+	u8 ps_assoc_low_latency_ds_min_level;
-+	/* enum wmi_ps_d3_resp_policy_e */
-+	u8 ps_D3_response_policy;
-+	/* BOOL */
-+	u8 ps_D3_pm_pme_enabled;
-+	/* BOOL */
-+	u8 ps_halp_enable;
-+	u8 ps_deep_sleep_enter_thresh_msec;
-+	/* BOOL */
-+	u8 ps_voltage_scaling_en;
-+} __packed;
-+
-+/* WMI_PS_DEV_CFG_CMDID
-+ *
-+ * Configure common Power Save parameters of the device and all MIDs.
-+ *
-+ * Returned event:
-+ * - WMI_PS_DEV_CFG_EVENTID
-+ */
-+struct wmi_ps_dev_cfg_cmd {
-+	/* Device Power Save configuration to be applied */
-+	struct wmi_ps_dev_cfg ps_dev_cfg;
-+	/* alignment to 32b */
-+	u8 reserved[2];
-+} __packed;
-+
-+/* WMI_PS_DEV_CFG_EVENTID */
-+struct wmi_ps_dev_cfg_event {
-+	/* wmi_ps_cfg_cmd_status_e */
-+	__le32 status;
-+} __packed;
-+
-+/* WMI_PS_DEV_CFG_READ_CMDID
-+ *
-+ * request to retrieve  device Power Save configuration
-+ * (WMI_PS_DEV_CFG_CMD params)
-+ *
-+ * Returned event:
-+ * - WMI_PS_DEV_CFG_READ_EVENTID
-+ */
-+struct wmi_ps_dev_cfg_read_cmd {
-+	__le32 reserved;
-+} __packed;
-+
-+/* WMI_PS_DEV_CFG_READ_EVENTID */
-+struct wmi_ps_dev_cfg_read_event {
-+	/* wmi_ps_cfg_cmd_status_e */
-+	__le32 status;
-+	/* Retrieved device Power Save configuration (WMI_PS_DEV_CFG_CMD
-+	 * params)
-+	 */
-+	struct wmi_ps_dev_cfg dev_ps_cfg;
-+	/* alignment to 32b */
-+	u8 reserved[2];
-+} __packed;
-+
-+/* Per Mac Power Save configurations */
-+struct wmi_ps_mid_cfg {
-+	/* Low power RX in BTI is enabled, BOOL */
-+	u8 beacon_lprx_enable;
-+	/* Sync to sector ID enabled, BOOL */
-+	u8 beacon_sync_to_sectorId_enable;
-+	/* Low power RX in DTI is enabled, BOOL */
-+	u8 frame_exchange_lprx_enable;
-+	/* Sleep Cycle while in scheduled PS, 1-31 */
-+	u8 scheduled_sleep_cycle_pow2;
-+	/* Stay Awake for k BIs every (sleep_cycle - k) BIs, 1-31 */
-+	u8 scheduled_num_of_awake_bis;
-+	u8 am_to_traffic_load_thresh_mbp;
-+	u8 traffic_to_am_load_thresh_mbps;
-+	u8 traffic_to_am_num_of_no_traffic_bis;
-+	/* BOOL */
-+	u8 continuous_traffic_psm;
-+	__le16 no_traffic_to_min_usec;
-+	__le16 no_traffic_to_max_usec;
-+	__le16 snoozing_sleep_interval_milisec;
-+	u8 max_no_data_awake_events;
-+	/* Trigger WEB after k failed beacons */
-+	u8 num_of_failed_beacons_rx_to_trigger_web;
-+	/* Trigger BF after k failed beacons */
-+	u8 num_of_failed_beacons_rx_to_trigger_bf;
-+	/* Trigger SOB after k successful beacons */
-+	u8 num_of_successful_beacons_rx_to_trigger_sob;
-+} __packed;
-+
-+/* WMI_PS_MID_CFG_CMDID
-+ *
-+ * Configure Power Save parameters of a specific MID.
-+ * These parameters are relevant for the specific BSS this MID belongs to.
-+ *
-+ * Returned event:
-+ * - WMI_PS_MID_CFG_EVENTID
-+ */
-+struct wmi_ps_mid_cfg_cmd {
-+	/* MAC ID */
-+	u8 mid;
-+	/* mid PS configuration to be applied */
-+	struct wmi_ps_mid_cfg ps_mid_cfg;
-+} __packed;
-+
-+/* WMI_PS_MID_CFG_EVENTID */
-+struct wmi_ps_mid_cfg_event {
-+	/* MAC ID */
-+	u8 mid;
-+	/* alignment to 32b */
-+	u8 reserved[3];
-+	/* wmi_ps_cfg_cmd_status_e */
-+	__le32 status;
-+} __packed;
-+
-+/* WMI_PS_MID_CFG_READ_CMDID
-+ *
-+ * request to retrieve Power Save configuration of mid
-+ * (WMI_PS_MID_CFG_CMD params)
-+ *
-+ * Returned event:
-+ * - WMI_PS_MID_CFG_READ_EVENTID
-+ */
-+struct wmi_ps_mid_cfg_read_cmd {
-+	/* MAC ID */
-+	u8 mid;
-+	/* alignment to 32b */
-+	u8 reserved[3];
-+} __packed;
-+
-+/* WMI_PS_MID_CFG_READ_EVENTID */
-+struct wmi_ps_mid_cfg_read_event {
-+	/* MAC ID */
-+	u8 mid;
-+	/* Retrieved MID Power Save configuration(WMI_PS_MID_CFG_CMD params) */
-+	struct wmi_ps_mid_cfg mid_ps_cfg;
-+	/* wmi_ps_cfg_cmd_status_e */
-+	__le32 status;
-+} __packed;
-+
- #endif /* __WILOCITY_WMI_H__ */
+ 	if (ah->slottime != iter_data.slottime) {
 -- 
-1.9.1
+2.9.2
 
