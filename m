@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:36445 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932187AbcHIJAS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 05:00:18 -0400
-Date: Tue, 9 Aug 2016 16:58:58 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Message-ID: <20160809085858.GA6172@gondor.apana.org.au> (sfid-20160809_110023_515840_C9D1741B)
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
- <4627645.oz3l49ICL3@tauon.atsec.com>
- <69af156ac93a4fe6ab1844dfcc35c266@aptaiexm02f.ap.qualcomm.com>
- <4731753.YZZKimtrHM@tauon.atsec.com>
+Received: from narfation.org ([79.140.41.39]:60976 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753682AbcHPMIK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2016 08:08:10 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Cc: Mike Mu <mikemu@google.com>, linux-wireless@vger.kernel.org,
+	Stanley Mui <stanleymui@google.com>,
+	Thomas =?ISO-8859-1?Q?H=FChn?= <Thomas.Huehn@dai-labor.de>
+Subject: Re: Configuring Minstrel-Blues
+Date: Tue, 16 Aug 2016 14:08:03 +0200
+Message-ID: <15996481.7X86eO74tG@bentobox> (sfid-20160816_140825_317460_C95990C3)
+In-Reply-To: <f32852ed-0fee-1711-e26d-5a41f831267a@dd-wrt.com>
+References: <CAGTDyhHOxwTiXtsWuy1cLq+eraikTs9McS0kUBXS2W6B09CwgQ@mail.gmail.com> <f32852ed-0fee-1711-e26d-5a41f831267a@dd-wrt.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4731753.YZZKimtrHM@tauon.atsec.com>
+Content-Type: multipart/signed; boundary="nextPart2013595.6mZgYOhit1"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 09, 2016 at 10:07:29AM +0200, Stephan Mueller wrote:
+--nextPart2013595.6mZgYOhit1
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+
+On Monday, August 15, 2016 11:48:35 PM CEST Sebastian Gottschall wrote:
+[...]
+> > To test, I ran iperf from the AP to a station very close by. I
+> > captured the packets to look at the RSSI with and without the
+> > Minstrel-Blues patches applied, but did not see any difference in
+> > RSSI.
 > 
-> Herbert, Matt, should such noise sources be added to the HW random framework? 
-> The thing is that the in-kernel HW random to input_pool link per default uses 
-> a more conservative entropy estimate than the user space rngd. I would think 
-> that the in-kernel link would appropriate for that rng. But the user space 
-> rngd tool with its default behavior is not really suited here.
+> why do you think that a rate control algorithm will change the rssi?
 
-Yes hwrng would be the best fit, with a quality of zero to be safe.
+https://www.linuxplumbersconf.org/2014/ocw/system/presentations/2439/original/Minstrel-Blues%20@LinuxPlumbers%202014.pdf
 
-Contrary to the quoted thread, there is no need to whiten the output
-/dev/hw_random.  It was always meant to go through some intermediate
-processing such as rngd before it is used.
+Kind regards,
+	Sven
+--nextPart2013595.6mZgYOhit1
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJXswIjAAoJEF2HCgfBJntGtFUQAIT9sUpxQexnf19tI7y7pzno
+X0w3rQUoAMsOozFXxsmulM3bq1u7datn4sXuC9Q+MSIaGt97UKI3UbNVRLjyZMv9
+G5XrT1/zDcg3l5kt0wiVMjHLSwCwbAlzdNierBzevq+0tCDHrp5MEhGf4trpvjcW
+OLON64E3HVlPzcYnhz8L1T8Q6YsCutyMFzf5y9BDX/XJ9YSaHMwOSf8yXmeaT0J9
+Hre9RocG/eWmdfnTU34aP/KExnYx3f1Zq9RuurkCcIEg3+C4koh8K57CaMrr1NP3
+HHMAzujWjDpS1T2tg+DQXymMLflHqUwHOX0eH+jdQ8/Am+/RdE4d3n2yBtcin3On
+BPEnxg07CzeYCdpsNY963Y9qTWDn20r1wOptd0pQbtp8WUpLnQB8gTeYUoEdXN3o
++hbA3UO9qHix6MlPVWZJdX17qIPKsl/NzvzJJMUwNxfHihrIwmlDGD51iZ/1wAby
+sO6/cWChYXInzPo8yLSCgRXL6RlIbClatDoNwdIy5PVlQRR9DM+o/x0/BYSpYjM+
+1SiUurfD2GpPG4yHEt3nD0bOFvL1KEzHUcqqql0zWj3Jf5CDxyjM2qVypvNHrbmO
+y5WSgwv1q/TKm4PFMVsR3g+1+E8TTMQM9r2gfbL+1OZlxFav6kdz46CTrOIrNXI0
+dYmLzm6jLImOvxphxCdN
+=j6lh
+-----END PGP SIGNATURE-----
+
+--nextPart2013595.6mZgYOhit1--
