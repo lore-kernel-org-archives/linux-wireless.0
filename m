@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.net.t-labs.tu-berlin.de ([130.149.220.242]:49138 "EHLO
-	mail.net.t-labs.tu-berlin.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750919AbcHQL6T (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32646 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752214AbcHPMer (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2016 07:58:19 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: Configuring Minstrel-Blues
-From: =?utf-8?Q?Thomas_H=C3=BChn?= <thomas@inet.tu-berlin.de>
-In-Reply-To: <CAGTDyhHOxwTiXtsWuy1cLq+eraikTs9McS0kUBXS2W6B09CwgQ@mail.gmail.com>
-Date: Wed, 17 Aug 2016 13:52:42 +0200
-Cc: linux-wireless ??? <linux-wireless@vger.kernel.org>,
-	Stanley Mui <stanleymui@google.com>
-Message-Id: <B3898E11-6D02-4B21-B795-D7DF7CB6F576@inet.tu-berlin.de> (sfid-20160817_135822_317371_E50BE022)
-References: <CAGTDyhHOxwTiXtsWuy1cLq+eraikTs9McS0kUBXS2W6B09CwgQ@mail.gmail.com>
-To: Mike Mu <mikemu@google.com>
+	Tue, 16 Aug 2016 08:34:47 -0400
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Xu, Peng" <pxu@qca.qualcomm.com>
+Subject: Re: [PATCH] cfg80211: Add HT and VHT information in start_ap
+Date: Tue, 16 Aug 2016 12:34:43 +0000
+Message-ID: <20160816123441.GA3678@jouni.qca.qualcomm.com> (sfid-20160816_143450_251454_26813F27)
+References: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
+ <1471330367.16783.23.camel@sipsolutions.net>
+In-Reply-To: <1471330367.16783.23.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mike,
+On Tue, Aug 16, 2016 at 08:52:47AM +0200, Johannes Berg wrote:
+> On Mon, 2016-08-15 at 21:07 +0300, Jouni Malinen wrote:
+> > From: Peng Xu <pxu@qca.qualcomm.com>
+> > Add HT and VHT information in struct cfg80211_ap_settings when
+> > starting ap so that driver does not need to parse IE to obtain
+> > the information.
+>=20
+> > +enum ht_vht_support {
+> > +	HT_VHT_DISABLED,
+> > +	HT_VHT_ENABLED,
+> > +	HT_VHT_NOT_INDICATED
+> > +};
+>=20
+> So if you get HT_VHT_NOT_INDICATED in the driver, don't you *still*
+> have to parse the IEs?
 
-I am working on the Minstrel-Blues part to get it integrated into minstrel_ht. My working demo is with ath5k an legacy minstrel.
-As soon as I have a testing patch, I am going to announce it here.
+Well.. Yes, I guess one would need to do that for some time until
+relevant user space is expected to have been updated to support the new
+attribute.
 
-Greetings from Berlin
-Thomas
+> Arguably, cfg80211 could know itself by parsing though, so it could
+> already fall back to that, no?
+>=20
+> But if you do that, you already need the parsing code, so then perhaps
+> it would make sense to just always use the parsing in cfg80211? Or
+> export a parsing function to use in driver(s)?
 
-> On 15 Aug 2016, at 23:41, Mike Mu <mikemu@google.com> wrote:
-> 
-> Hi Linux-Wireless,
-> 
-> I am trying to enable Minstrel-Blues for the ath9k chipset that's used
-> in Google Fiber's access points. I applied the patches in
-> https://github.com/thuehn/Minstrel-Blues/tree/master/src onto our
-> backports-20160122 tree, with some unsuspicious merge conflicts, and
-> built an image.
-> 
-> To test, I ran iperf from the AP to a station very close by. I
-> captured the packets to look at the RSSI with and without the
-> Minstrel-Blues patches applied, but did not see any difference in
-> RSSI.
-> 
-> Is there anything I need to configure first to make it work? Is it
-> possible that I'm missing a patch that's not in backports-20160122?
-> 
-> Thanks!
-> Mike
+I guess that could be considered reasonable approach for the existing
+HT and VHT cases and new attributes would obviously be significantly
+easier to introduce with new extensions (need to remember to do this for
+HE from the beginning..).
+
+The parsing for these HT/VHT enabled/required is a bit strange
+combination having to go over three IEs. I'm not sure a parsing function
+to do so would be that nice.. The parsing code could indeed be moved to
+cfg80211 so that it would not need to be duplicated into each driver
+needing this, though.
+
+--=20
+Jouni Malinen                                            PGP id EFC895FA=
