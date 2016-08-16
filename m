@@ -1,98 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arroyo.ext.ti.com ([198.47.19.12]:49430 "EHLO arroyo.ext.ti.com"
+Received: from mail2.tohojo.dk ([77.235.48.147]:37747 "EHLO mail2.tohojo.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753591AbcHRH3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2016 03:29:41 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
-	Maxim Altshul <maxim.altshul@ti.com>
-Subject: [PATCH 2/3] wlcore: Pass win_size taken from ieee80211_sta to FW
-Date: Thu, 18 Aug 2016 10:36:26 +0300
-Message-ID: <20160818073627.30972-3-maxim.altshul@ti.com> (sfid-20160818_092944_379738_DBC1FD23)
-In-Reply-To: <20160818073627.30972-2-maxim.altshul@ti.com>
-References: <20160818073627.30972-1-maxim.altshul@ti.com>
- <20160818073627.30972-2-maxim.altshul@ti.com>
+	id S1752422AbcHPUui (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2016 16:50:38 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: make-wifi-fast@lists.bufferbloat.net,
+	linux-wireless@vger.kernel.org
+Cc: Felix Fietkau <nbd@nbd.name>,
+	Michal Kazior <michal.kazior@tieto.com>,
+	Dave Taht <dave.taht@gmail.com>
+Subject: On the ath9k performance regression with FQ and crypto
+Date: Tue, 16 Aug 2016 22:41:28 +0200
+Message-ID: <87pop85tvr.fsf@toke.dk> (sfid-20160816_225058_637673_0A7B846A)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When starting a new BA session, we must pass the win_size to the FW.
+So Dave and I have been spending the last couple of days trying to
+narrow down why there's a performance regression in some cases on ath9k
+with the softq-FQ patches. Felix first noticed this regression, and LEDE
+currently carries a patch [1] to disable the FQ portion of the softq
+patches to avoid it.
 
-To do this we take max_rx_aggregation_subframes (BA RX win size)
-which is stored in ieee80211_sta structure (e.g per link and not per HW)
+While we have been able to narrow it down a little bit, no solution has
+been forthcoming, so this is an attempt to describe the bug in the hope
+that someone else will have an idea about what could be causing it.
 
-We will use the value stored per link when passing the win_size to
-firmware through the ACX_BA_SESSION_RX_SETUP command.
+What we're seeing is the following (when the access point is running
+ath9k with the softq patches):
 
-Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
----
- drivers/net/wireless/ti/wlcore/acx.c  | 5 +++--
- drivers/net/wireless/ti/wlcore/acx.h  | 3 ++-
- drivers/net/wireless/ti/wlcore/main.c | 6 ++++--
- 3 files changed, 9 insertions(+), 5 deletions(-)
+When running two or more flows to a station, their combined throughput
+will be roughly 20-30% lower than the throughput of a single flow to the
+same station. This happens:
 
-diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
-index 26cc23f..a485999 100644
---- a/drivers/net/wireless/ti/wlcore/acx.c
-+++ b/drivers/net/wireless/ti/wlcore/acx.c
-@@ -1419,7 +1419,8 @@ out:
- 
- /* setup BA session receiver setting in the FW. */
- int wl12xx_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
--				       u16 ssn, bool enable, u8 peer_hlid)
-+				       u16 ssn, bool enable, u8 peer_hlid,
-+				       u8 win_size)
- {
- 	struct wl1271_acx_ba_receiver_setup *acx;
- 	int ret;
-@@ -1435,7 +1436,7 @@ int wl12xx_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
- 	acx->hlid = peer_hlid;
- 	acx->tid = tid_index;
- 	acx->enable = enable;
--	acx->win_size = wl->conf.ht.rx_ba_win_size;
-+	acx->win_size =	win_size;
- 	acx->ssn = ssn;
- 
- 	ret = wlcore_cmd_configure_failsafe(wl, ACX_BA_SESSION_RX_SETUP, acx,
-diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
-index 6321ed4..f46d7fd 100644
---- a/drivers/net/wireless/ti/wlcore/acx.h
-+++ b/drivers/net/wireless/ti/wlcore/acx.h
-@@ -1113,7 +1113,8 @@ int wl1271_acx_set_ht_information(struct wl1271 *wl,
- int wl12xx_acx_set_ba_initiator_policy(struct wl1271 *wl,
- 				       struct wl12xx_vif *wlvif);
- int wl12xx_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
--				       u16 ssn, bool enable, u8 peer_hlid);
-+				       u16 ssn, bool enable, u8 peer_hlid,
-+				       u8 win_size);
- int wl12xx_acx_tsf_info(struct wl1271 *wl, struct wl12xx_vif *wlvif,
- 			u64 *mactime);
- int wl1271_acx_ps_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif,
-diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
-index 9e1f2d9..9ea477e 100644
---- a/drivers/net/wireless/ti/wlcore/main.c
-+++ b/drivers/net/wireless/ti/wlcore/main.c
-@@ -5286,7 +5286,9 @@ static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
- 		}
- 
- 		ret = wl12xx_acx_set_ba_receiver_session(wl, tid, *ssn, true,
--							 hlid);
-+				hlid,
-+				sta->max_rx_aggregation_subframes);
-+
- 		if (!ret) {
- 			*ba_bitmap |= BIT(tid);
- 			wl->ba_rx_session_count++;
-@@ -5307,7 +5309,7 @@ static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
- 		}
- 
- 		ret = wl12xx_acx_set_ba_receiver_session(wl, tid, 0, false,
--							 hlid);
-+							 hlid, 0);
- 		if (!ret) {
- 			*ba_bitmap &= ~BIT(tid);
- 			wl->ba_rx_session_count--;
--- 
-2.9.0
+- for both TCP and UDP traffic.
+- independent of the base rate (i.e. signal quality).
+- but only with crypto enabled (WPA2 CCMP in this case).
+
+However, the regression completely disappears if either of the
+following is true:
+
+- no crypto is enabled.
+- the FQ part of mac80211 is disabled (as in [1]).
+
+We have been able to reproduce this behaviour on two different ath9k
+hardware chips and two different architectures.
+
+The cause of the regression seems to be that the aggregates are smaller
+when there are two flows than when there is only one. Adding debug
+statements to the aggregate forming code indicates that this is because
+no more packets are available when the aggregates are built (i.e.
+ieee80211_tx_dequeue() returns NULL).
+
+We have not been able to determine why the queues run empty when this
+combination of circumstances arise. Since we easily get upwards of 120
+Mbps of TCP throughput without crypto but with full FQ, it's clearly not
+the hashing overhead in itself that does it (and the hashing also
+happens with just one flow, so the overhead is still there). And the
+crypto itself should be offloaded to hardware (shouldn't it? we do see a
+marked drop in overall throughput from just enabling crypto), so how
+would the queueing (say, mixing of packets from different flows)
+influence that?
+
+Does anyone have any ideas? We are stumped...
+
+-Toke
+
+[1] https://git.lede-project.org/?p=lede/nbd/staging.git;a=blob;f=package/kernel/mac80211/patches/220-fq_disable_hack.patch;h=7f420beea56335d5043de6fd71b5febae3e9bd79;hb=HEAD
