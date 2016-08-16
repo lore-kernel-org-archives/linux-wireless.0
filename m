@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:33244 "EHLO
-        mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751702AbcH3TFL (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 15:05:11 -0400
-Date: Wed, 31 Aug 2016 00:35:07 +0530
-From: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>
-Cc: Tejun Heo <tj@kernel.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] cfg80211: Remove deprecated create_singlethread_workqueue
-Message-ID: <20160830190507.GA11493@Karyakshetra> (sfid-20160830_210621_737718_A87F4A30)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:33038 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750940AbcHPGww (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2016 02:52:52 -0400
+Message-ID: <1471330367.16783.23.camel@sipsolutions.net> (sfid-20160816_085255_768522_3BA91654)
+Subject: Re: [PATCH] cfg80211: Add HT and VHT information in start_ap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, Peng Xu <pxu@qca.qualcomm.com>
+Date: Tue, 16 Aug 2016 08:52:47 +0200
+In-Reply-To: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The workqueue "cfg80211_wq" is involved in cleanup, scan and event related
-works. It queues multiple work items &rdev->event_work,
-&rdev->dfs_update_channels_wk,
-&wiphy_to_rdev(request->wiphy)->scan_done_wk,
-&wiphy_to_rdev(wiphy)->sched_scan_results_wk, which require strict
-execution ordering.
-Hence, an ordered dedicated workqueue has been used.
+On Mon, 2016-08-15 at 21:07 +0300, Jouni Malinen wrote:
+> From: Peng Xu <pxu@qca.qualcomm.com>
+> 
+> Add HT and VHT information in struct cfg80211_ap_settings when
+> starting ap so that driver does not need to parse IE to obtain
+> the information.
 
-Since it's a wireless driver, WQ_MEM_RECLAIM has been set to ensure
-forward progress under memory pressure.
+> +enum ht_vht_support {
+> +	HT_VHT_DISABLED,
+> +	HT_VHT_ENABLED,
+> +	HT_VHT_NOT_INDICATED
+> +};
 
-Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
----
- net/wireless/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+So if you get HT_VHT_NOT_INDICATED in the driver, don't you *still*
+have to parse the IEs?
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index d25c82b..2cd4563 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -1218,7 +1218,7 @@ static int __init cfg80211_init(void)
- 	if (err)
- 		goto out_fail_reg;
+Arguably, cfg80211 could know itself by parsing though, so it could
+already fall back to that, no?
 
--	cfg80211_wq = create_singlethread_workqueue("cfg80211");
-+	cfg80211_wq = alloc_ordered_workqueue("cfg80211", WQ_MEM_RECLAIM);
- 	if (!cfg80211_wq) {
- 		err = -ENOMEM;
- 		goto out_fail_wq;
---
-2.1.4
+But if you do that, you already need the parsing code, so then perhaps
+it would make sense to just always use the parsing in cfg80211? Or
+export a parsing function to use in driver(s)?
+
+> @@ -719,6 +729,11 @@ struct cfg80211_ap_settings {
+>  	bool p2p_opp_ps;
+>  	const struct cfg80211_acl_data *acl;
+>  	bool pbss;
+> +	enum ht_vht_support ht_enabled;
+> +	enum ht_vht_support vht_enabled;
+> +	enum ht_vht_support require_ht;
+> +	enum ht_vht_support require_vht;
+> +
+
+(nit - extra blank line)
+
+johannes
