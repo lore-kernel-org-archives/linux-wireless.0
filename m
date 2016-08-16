@@ -1,39 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.eperm.de ([89.247.134.16]:34728 "EHLO mail.eperm.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936493AbcHJSiR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:38:17 -0400
-From: Stephan Mueller <smueller@chronox.de>
-To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Date: Wed, 10 Aug 2016 08:51:50 +0200
-Message-ID: <1526134.1iUazSISyZ@positron.chronox.de> (sfid-20160810_203903_657131_8A09EEA6)
-In-Reply-To: <82844e4b56c9475fabf22b3fe12b53bb@aptaiexm02f.ap.qualcomm.com>
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <14565196.xaXq375WQg@tauon.atsec.com> <82844e4b56c9475fabf22b3fe12b53bb@aptaiexm02f.ap.qualcomm.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34559 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751852AbcHPSO6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Aug 2016 14:14:58 -0400
+Received: by mail-wm0-f66.google.com with SMTP id q128so17765397wma.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2016 11:14:39 -0700 (PDT)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Sambhu R <rsambhu@am.amrita.edu>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: regarding RTL8188SU
+Date: Tue, 16 Aug 2016 20:14:36 +0200
+Message-ID: <3253531.4E4A9cUeqj@debian64> (sfid-20160816_201543_419437_E54EDB4C)
+In-Reply-To: <1902731527.3857839.1471349378230.JavaMail.zimbra@am.amrita.edu>
+References: <1902731527.3857839.1471349378230.JavaMail.zimbra@am.amrita.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 10. August 2016, 06:46:31 CEST schrieb Pan, Miaoqing:
+Hello,
 
-Hi Miaoqing,
+On Tuesday, August 16, 2016 5:39:38 PM CEST Sambhu R wrote:
+> I was following your--> https://github.com/chunkeey/rtl8192su but i couldn't
+> install. When i execute ./install.sh i'm getting the following error.
 
-> Hi Stephan,
+There's no install.sh file in this repository?! 
+
 > 
-> Would you please provide a recent NIST document which asks the entropy
-> source to pass the NIST randomness tests ?
+> make[1]: Entering directory '/usr/src/linux-headers-3.4.112-sun8i'
+> Makefile:568: /usr/src/linux-headers-3.4.112-sun8i/arch/armv7l/Makefile: No such file or directory
+> make[1]: *** No rule to make target '/usr/src/linux-headers-3.4.112-sun8i/arch/armv7l/Makefile'.  Stop.
+> make[1]: Leaving directory '/usr/src/linux-headers-3.4.112-sun8i'
+> Makefile:220: recipe for target 'modules' failed
+> make: *** [modules] Error 2
+> ##################################################
+> Compile make driver error: 2
+> Please check error Mesg
+> ##################################################
+> 
+> please help..
+Please look at the project's README.md [0].
 
-See FIPS 140-2 IG 7.15 which explicitly references SP800-22.
+"This is "a" driver repository for the WIP rtl8192su for any
+interested developer.
 
-Ciao
-Stephan
+To build the driver you will need to have a recent and compatible kernel
+source. Currently, only kernels built from the latest wireless-testing.git
+are supported. If you want to know more about wireless-testing.git then
+visit Linux wireless wiki's Git-Guide [1]."
+
+[0] <https://github.com/chunkeey/rtl8192su#readme>
+[1] <https://wireless.wiki.kernel.org/en/developers/Documentation/git-guide>
