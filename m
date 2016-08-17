@@ -1,44 +1,204 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f49.google.com ([209.85.215.49]:36297 "EHLO
-	mail-lf0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934619AbcHBMVG (ORCPT
+Received: from mail-lf0-f67.google.com ([209.85.215.67]:36578 "EHLO
+	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753135AbcHQVBw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:21:06 -0400
-Received: by mail-lf0-f49.google.com with SMTP id g62so136906021lfe.3
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 05:21:05 -0700 (PDT)
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Bartosz Markowski <bartosz.markowski@tieto.com>
-Subject: [PATCH 0/2] platform regulatory support
-Date: Tue,  2 Aug 2016 14:20:52 +0200
-Message-Id: <1470140454-3899-1-git-send-email-bartosz.markowski@tieto.com> (sfid-20160802_175401_485645_6097C5D0)
+	Wed, 17 Aug 2016 17:01:52 -0400
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Jon Mason <jon.mason@broadcom.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Florian Fainelli <f.fainelli@gmail.com>,
+	Philippe Reynes <tremyfr@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-kernel@vger.kernel.org (open list),
+	linux-wireless@vger.kernel.org (open list:BROADCOM SPECIFIC AMBA DRIVER
+	(BCMA))
+Subject: [PATCH net-next] net: bgmac: support Ethernet core on BCM53573 SoCs
+Date: Wed, 17 Aug 2016 23:00:30 +0200
+Message-Id: <1471467662-18319-1-git-send-email-zajec5@gmail.com> (sfid-20160817_230215_307362_B7948DD7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hardware or platform manufacturers may want to use a persistent
-memory storage to program ragulatory settings via e.g. bios, uefi, acpi.
+From: Rafał Miłecki <rafal@milecki.pl>
 
-This patch set implements methods to retrieve the platform regulatory
-settings (via ACPI calls) and use them to override the wifi chip
-eeprom default settings.
+BCM53573 is a new series of Broadcom's SoCs. It's based on ARM and can
+be found in two packages (versions): BCM53573 and BCM47189. It shares
+some code with the Northstar family, but also requires some new quirks.
 
-This has been developed and tested on Skylake (Chromebook) platform, where the
-persistent area containing "region" value is called VPD.
+First of all there can be up to 2 Ethernet cores on this SoC. If that is
+the case, they are connected to two different switch ports allowing some
+more complex/optimized setups. It seems the second unit doesn't come
+fully configured and requires some IRQ quirk.
 
-Bartosz Markowski (1):
-  ath10k: add platform regulatory domain support
+Other than that only the first core is connected to the PHY. For the
+second one we have to register fixed PHY (similarly to the Northstar),
+otherwise generic PHY driver would get some invalid info.
 
-Michal Kazior (1):
-  ath: export alpha2 helper
+This has been successfully tested on Tenda AC9 (BCM47189B0).
 
- drivers/net/wireless/ath/ath10k/core.h |   1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 117 +++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c  |   2 +-
- drivers/net/wireless/ath/regd.c        |   3 +-
- drivers/net/wireless/ath/regd.h        |   1 +
- 5 files changed, 122 insertions(+), 2 deletions(-)
+Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+---
+ drivers/net/ethernet/broadcom/bgmac-bcma.c | 19 ++++++++++++++++++-
+ drivers/net/ethernet/broadcom/bgmac.c      | 25 +++++++++++++++++++++++++
+ drivers/net/ethernet/broadcom/bgmac.h      | 19 +++++++++++++++++++
+ include/linux/bcma/bcma.h                  |  3 +++
+ include/linux/bcma/bcma_regs.h             |  1 +
+ 5 files changed, 66 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/ethernet/broadcom/bgmac-bcma.c b/drivers/net/ethernet/broadcom/bgmac-bcma.c
+index 9a9745c4..3bc0a04 100644
+--- a/drivers/net/ethernet/broadcom/bgmac-bcma.c
++++ b/drivers/net/ethernet/broadcom/bgmac-bcma.c
+@@ -92,6 +92,7 @@ MODULE_DEVICE_TABLE(bcma, bgmac_bcma_tbl);
+ /* http://bcm-v4.sipsolutions.net/mac-gbit/gmac/chipattach */
+ static int bgmac_probe(struct bcma_device *core)
+ {
++	struct bcma_chipinfo *ci = &core->bus->chipinfo;
+ 	struct ssb_sprom *sprom = &core->bus->sprom;
+ 	struct mii_bus *mii_bus;
+ 	struct bgmac *bgmac;
+@@ -157,7 +158,8 @@ static int bgmac_probe(struct bcma_device *core)
+ 	dev_info(bgmac->dev, "Found PHY addr: %d%s\n", bgmac->phyaddr,
+ 		 bgmac->phyaddr == BGMAC_PHY_NOREGS ? " (NOREGS)" : "");
+ 
+-	if (!bgmac_is_bcm4707_family(core)) {
++	if (!bgmac_is_bcm4707_family(core) &&
++	    !(ci->id == BCMA_CHIP_ID_BCM53573 && core->core_unit == 1)) {
+ 		mii_bus = bcma_mdio_mii_register(core, bgmac->phyaddr);
+ 		if (!IS_ERR(mii_bus)) {
+ 			err = PTR_ERR(mii_bus);
+@@ -230,6 +232,21 @@ static int bgmac_probe(struct bcma_device *core)
+ 		bgmac->feature_flags |= BGMAC_FEAT_NO_RESET;
+ 		bgmac->feature_flags |= BGMAC_FEAT_FORCE_SPEED_2500;
+ 		break;
++	case BCMA_CHIP_ID_BCM53573:
++		bgmac->feature_flags |= BGMAC_FEAT_CLKCTLST;
++		bgmac->feature_flags |= BGMAC_FEAT_SET_RXQ_CLK;
++		if (ci->pkg == BCMA_PKG_ID_BCM47189)
++			bgmac->feature_flags |= BGMAC_FEAT_IOST_ATTACHED;
++		if (core->core_unit == 0) {
++			bgmac->feature_flags |= BGMAC_FEAT_CC4_IF_SW_TYPE;
++			if (ci->pkg == BCMA_PKG_ID_BCM47189)
++				bgmac->feature_flags |=
++					BGMAC_FEAT_CC4_IF_SW_TYPE_RGMII;
++		} else if (core->core_unit == 1) {
++			bgmac->feature_flags |= BGMAC_FEAT_IRQ_ID_OOB_6;
++			bgmac->feature_flags |= BGMAC_FEAT_CC7_IF_TYPE_RGMII;
++		}
++		break;
+ 	default:
+ 		bgmac->feature_flags |= BGMAC_FEAT_CLKCTLST;
+ 		bgmac->feature_flags |= BGMAC_FEAT_SET_RXQ_CLK;
+diff --git a/drivers/net/ethernet/broadcom/bgmac.c b/drivers/net/ethernet/broadcom/bgmac.c
+index c4751ec..63ef7235 100644
+--- a/drivers/net/ethernet/broadcom/bgmac.c
++++ b/drivers/net/ethernet/broadcom/bgmac.c
+@@ -940,6 +940,27 @@ static void bgmac_chip_reset(struct bgmac *bgmac)
+ 		bgmac_cco_ctl_maskset(bgmac, 1, ~(BGMAC_CHIPCTL_1_IF_TYPE_MASK |
+ 						  BGMAC_CHIPCTL_1_SW_TYPE_MASK),
+ 				      sw_type);
++	} else if (bgmac->feature_flags & BGMAC_FEAT_CC4_IF_SW_TYPE) {
++		u32 sw_type = BGMAC_CHIPCTL_4_IF_TYPE_MII |
++			      BGMAC_CHIPCTL_4_SW_TYPE_EPHY;
++		u8 et_swtype = 0;
++		char buf[4];
++
++		if (bcm47xx_nvram_getenv("et_swtype", buf, sizeof(buf)) > 0) {
++			if (kstrtou8(buf, 0, &et_swtype))
++				dev_err(bgmac->dev, "Failed to parse et_swtype (%s)\n",
++					buf);
++			sw_type = (et_swtype & 0x0f) << 12;
++		} else if (bgmac->feature_flags & BGMAC_FEAT_CC4_IF_SW_TYPE_RGMII) {
++			sw_type = BGMAC_CHIPCTL_4_IF_TYPE_RGMII |
++				  BGMAC_CHIPCTL_4_SW_TYPE_RGMII;
++		}
++		bgmac_cco_ctl_maskset(bgmac, 4, ~(BGMAC_CHIPCTL_4_IF_TYPE_MASK |
++						  BGMAC_CHIPCTL_4_SW_TYPE_MASK),
++				      sw_type);
++	} else if (bgmac->feature_flags & BGMAC_FEAT_CC7_IF_TYPE_RGMII) {
++		bgmac_cco_ctl_maskset(bgmac, 7, ~BGMAC_CHIPCTL_7_IF_TYPE_MASK,
++				      BGMAC_CHIPCTL_7_IF_TYPE_RGMII);
+ 	}
+ 
+ 	if (iost & BGMAC_BCMA_IOST_ATTACHED && !bgmac->has_robosw)
+@@ -1467,6 +1488,10 @@ int bgmac_enet_probe(struct bgmac *info)
+ 	 */
+ 	bgmac_clk_enable(bgmac, 0);
+ 
++	/* This seems to be fixing IRQ by assigning OOB #6 to the core */
++	if (bgmac->feature_flags & BGMAC_FEAT_IRQ_ID_OOB_6)
++		bgmac_idm_write(bgmac, BCMA_OOB_SEL_OUT_A30, 0x86);
++
+ 	bgmac_chip_reset(bgmac);
+ 
+ 	err = bgmac_dma_alloc(bgmac);
+diff --git a/drivers/net/ethernet/broadcom/bgmac.h b/drivers/net/ethernet/broadcom/bgmac.h
+index 24a2502..80836b4 100644
+--- a/drivers/net/ethernet/broadcom/bgmac.h
++++ b/drivers/net/ethernet/broadcom/bgmac.h
+@@ -369,6 +369,21 @@
+ #define BGMAC_CHIPCTL_1_SW_TYPE_RGMII		0x000000C0
+ #define BGMAC_CHIPCTL_1_RXC_DLL_BYPASS		0x00010000
+ 
++#define BGMAC_CHIPCTL_4_IF_TYPE_MASK		0x00003000
++#define BGMAC_CHIPCTL_4_IF_TYPE_RMII		0x00000000
++#define BGMAC_CHIPCTL_4_IF_TYPE_MII		0x00001000
++#define BGMAC_CHIPCTL_4_IF_TYPE_RGMII		0x00002000
++#define BGMAC_CHIPCTL_4_SW_TYPE_MASK		0x0000C000
++#define BGMAC_CHIPCTL_4_SW_TYPE_EPHY		0x00000000
++#define BGMAC_CHIPCTL_4_SW_TYPE_EPHYMII		0x00004000
++#define BGMAC_CHIPCTL_4_SW_TYPE_EPHYRMII	0x00008000
++#define BGMAC_CHIPCTL_4_SW_TYPE_RGMII		0x0000C000
++
++#define BGMAC_CHIPCTL_7_IF_TYPE_MASK		0x000000C0
++#define BGMAC_CHIPCTL_7_IF_TYPE_RMII		0x00000000
++#define BGMAC_CHIPCTL_7_IF_TYPE_MII		0x00000040
++#define BGMAC_CHIPCTL_7_IF_TYPE_RGMII		0x00000080
++
+ #define BGMAC_WEIGHT	64
+ 
+ #define ETHER_MAX_LEN   1518
+@@ -390,6 +405,10 @@
+ #define BGMAC_FEAT_NO_CLR_MIB		BIT(13)
+ #define BGMAC_FEAT_FORCE_SPEED_2500	BIT(14)
+ #define BGMAC_FEAT_CMDCFG_SR_REV4	BIT(15)
++#define BGMAC_FEAT_IRQ_ID_OOB_6		BIT(16)
++#define BGMAC_FEAT_CC4_IF_SW_TYPE	BIT(17)
++#define BGMAC_FEAT_CC4_IF_SW_TYPE_RGMII	BIT(18)
++#define BGMAC_FEAT_CC7_IF_TYPE_RGMII	BIT(19)
+ 
+ struct bgmac_slot_info {
+ 	union {
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 3db25df..8eeedb2 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -205,6 +205,9 @@ struct bcma_host_ops {
+ #define  BCMA_PKG_ID_BCM4709	0
+ #define BCMA_CHIP_ID_BCM47094	53030
+ #define BCMA_CHIP_ID_BCM53018	53018
++#define BCMA_CHIP_ID_BCM53573	53573
++#define  BCMA_PKG_ID_BCM53573	0
++#define  BCMA_PKG_ID_BCM47189	1
+ 
+ /* Board types (on PCI usually equals to the subsystem dev id) */
+ /* BCM4313 */
+diff --git a/include/linux/bcma/bcma_regs.h b/include/linux/bcma/bcma_regs.h
+index ebd5c1f..c607fce 100644
+--- a/include/linux/bcma/bcma_regs.h
++++ b/include/linux/bcma/bcma_regs.h
+@@ -23,6 +23,7 @@
+ #define  BCMA_CLKCTLST_4328A0_HAVEALP	0x00020000 /* 4328a0 has reversed bits */
+ 
+ /* Agent registers (common for every core) */
++#define BCMA_OOB_SEL_OUT_A30		0x0100
+ #define BCMA_IOCTL			0x0408 /* IO control */
+ #define  BCMA_IOCTL_CLK			0x0001
+ #define  BCMA_IOCTL_FGC			0x0002
 -- 
-2.1.2
-
+1.8.4.5
