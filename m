@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:59536 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752279AbcHQNYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2016 09:24:11 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH] mac80211: Move crypto IV generation to after TXQ dequeue.
-References: <20160817125800.19154-1-toke@toke.dk>
-	<1471439315.5173.7.camel@sipsolutions.net> <87h9aj5ydx.fsf@toke.dk>
-	<1471439894.5173.9.camel@sipsolutions.net>
-Date: Wed, 17 Aug 2016 15:23:28 +0200
-In-Reply-To: <1471439894.5173.9.camel@sipsolutions.net> (Johannes Berg's
-	message of "Wed, 17 Aug 2016 15:18:14 +0200")
-Message-ID: <87d1l75y27.fsf@toke.dk> (sfid-20160817_152414_787440_3C4E60E9)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27159 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752824AbcHQPdN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2016 11:33:13 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: improve wake_tx_queue ops performance
+Date: Wed, 17 Aug 2016 21:02:53 +0530
+Message-ID: <20160817153253.6615-1-rmanohar@qti.qualcomm.com> (sfid-20160817_173328_485262_DC1EF39C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+txqs_lock is interfering with wake_tx_queue submitting more frames.
+so queues don't get filled in and don't keep firmware/hardware busy
+enough. This change helps to reduce the txqs_lock contention and
+wake_tx_queue() blockage to being possible in txrx_unref().
 
-> On Wed, 2016-08-17 at 15:16 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
->> Johannes Berg <johannes@sipsolutions.net> writes:
->>=20
->> >=20
->> > >=20
->> > > @@ -1573,6 +1574,7 @@ struct ieee80211_key_conf {
->> > > =C2=A0	u8 iv_len;
->> > > =C2=A0	u8 hw_key_idx;
->> > > =C2=A0	u8 flags;
->> > > +	u8 pn_offs;
->> > >=20
->> > This is completely wrong.
->>=20
->> Well, the ieee80211_fast_tx struct is not available in
->> ieee80211_tx_dequeue, and I need the offset there. I thought about
->> sticking it into ieee80211_tx_info, but that is kinda full, and since
->> the ieee80211_key_conf is already available there, carrying it there
->> seems to work.
->
-> For very limited testing, perhaps. But this isn't static across all
-> usages of the key, so this is still completely broken.
+To reduce turn around time of wake_tx_queue ops and to maintain fairness
+among all txqs, the callback is updated to push first txq alone from
+pending list for every wake_tx_queue call. Remaining txqs will be
+processed later upon tx completion.
 
-OK, noted.
+Below improvements are observed in push-only mode and validated on
+IPQ4019 platform. With this change, in AP mode ~10Mbps increase is
+observed in downlink (AP -> STA) traffic and approx. 5-10% of CPU
+usage is reduced.
 
->> What would be a better way to do this?
->>=20
->
-> Some redesign/rearchitecture, probably. Or just do it all in the driver
-> like iwlmvm?
+Major improvement is observed in 1-hop Mesh mode topology in 11ACVHT80.
+Compared to Infra mode, CPU overhead is higher in Mesh mode due to path
+lookup and no fast-xmit support. So reducing spin lock contention is
+helping in Mesh.
 
-Will look it over again. Should be possible to re-calculate the offset,
-I guess.
+             TOT       +change
+           --------    --------
+TCP DL     545 Mbps    595 Mbps
+TCP UL     555 Mbps    585 Mbps
 
--Toke
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index c7c7ceb9be73..93465ffec2eb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4106,13 +4106,29 @@ static void ath10k_mac_op_wake_tx_queue(struct ieee80211_hw *hw,
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_txq *artxq = (void *)txq->drv_priv;
++	struct ieee80211_txq *f_txq;
++	struct ath10k_txq *f_artxq;
++	int ret = 0;
++	int max = 16;
+ 
+ 	spin_lock_bh(&ar->txqs_lock);
+ 	if (list_empty(&artxq->list))
+ 		list_add_tail(&artxq->list, &ar->txqs);
++
++	f_artxq = list_first_entry(&ar->txqs, struct ath10k_txq, list);
++	f_txq = container_of((void *)f_artxq, struct ieee80211_txq, drv_priv);
++	list_del_init(&f_artxq->list);
++
++	while (ath10k_mac_tx_can_push(hw, f_txq) && max--) {
++		ret = ath10k_mac_tx_push_txq(hw, f_txq);
++		if (ret)
++			break;
++	}
++	if (ret != -ENOENT)
++		list_add_tail(&f_artxq->list, &ar->txqs);
+ 	spin_unlock_bh(&ar->txqs_lock);
+ 
+-	ath10k_mac_tx_push_pending(ar);
++	ath10k_htt_tx_txq_update(hw, f_txq);
+ 	ath10k_htt_tx_txq_update(hw, txq);
+ }
+ 
+-- 
+2.9.2
