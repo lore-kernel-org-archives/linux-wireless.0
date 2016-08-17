@@ -1,42 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:38213
-	"EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1768091AbcHROSF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2016 10:18:05 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Javier Martinez Canillas <javier@osg.samsung.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwifiex: propagate error if IRQ request fails in mwifiex_sdio_of()
-Date: Thu, 18 Aug 2016 10:17:48 -0400
-Message-Id: <1471529868-13669-1-git-send-email-javier@osg.samsung.com> (sfid-20160818_162132_485592_1108F040)
+Received: from mail2.tohojo.dk ([77.235.48.147]:59302 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751774AbcHQNQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2016 09:16:31 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] mac80211: Move crypto IV generation to after TXQ dequeue.
+References: <20160817125800.19154-1-toke@toke.dk>
+	<1471439315.5173.7.camel@sipsolutions.net>
+Date: Wed, 17 Aug 2016 15:16:26 +0200
+In-Reply-To: <1471439315.5173.7.camel@sipsolutions.net> (Johannes Berg's
+	message of "Wed, 17 Aug 2016 15:08:35 +0200")
+Message-ID: <87h9aj5ydx.fsf@toke.dk> (sfid-20160817_151634_334227_C864B1F0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If request_irq() fails in mwifiex_sdio_probe_of(), only an error message
-is printed but the actual error is not propagated to the caller function.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
----
+>> @@ -1573,6 +1574,7 @@ struct ieee80211_key_conf {
+>> =C2=A0	u8 iv_len;
+>> =C2=A0	u8 hw_key_idx;
+>> =C2=A0	u8 flags;
+>> +	u8 pn_offs;
+>>=20
+> This is completely wrong.
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
- 1 file changed, 1 insertion(+)
+Well, the ieee80211_fast_tx struct is not available in
+ieee80211_tx_dequeue, and I need the offset there. I thought about
+sticking it into ieee80211_tx_info, but that is kinda full, and since
+the ieee80211_key_conf is already available there, carrying it there
+seems to work.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index d3e1561ca075..00727936ad6e 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -125,6 +125,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 				dev_err(dev,
- 					"Failed to request irq_wifi %d (%d)\n",
- 					cfg->irq_wifi, ret);
-+				return ret;
- 			}
- 			disable_irq(cfg->irq_wifi);
- 		}
--- 
-2.5.5
+What would be a better way to do this?
+
+-Toke
