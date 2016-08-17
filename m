@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:12252 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:41498 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934725AbcHBMW1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:22:27 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: k.eugene.e@gmail.com, kvalo@codeaurora.org,
-	bkenward@solarflare.com, linux-driver@qlogic.com,
-	computersforpeace@gmail.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com, baolex.ni@intel.com,
-	daniel@iogearbox.net, pabeni@redhat.com
-Subject: [PATCH 0768/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:44:28 +0800
-Message-Id: <20160802114428.860-1-baolex.ni@intel.com> (sfid-20160802_174641_739424_F8E5213C)
+	id S1751802AbcHQNSS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2016 09:18:18 -0400
+Message-ID: <1471439894.5173.9.camel@sipsolutions.net> (sfid-20160817_151822_163229_6714D766)
+Subject: Re: [PATCH] mac80211: Move crypto IV generation to after TXQ
+ dequeue.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
+Date: Wed, 17 Aug 2016 15:18:14 +0200
+In-Reply-To: <87h9aj5ydx.fsf@toke.dk>
+References: <20160817125800.19154-1-toke@toke.dk>
+	 <1471439315.5173.7.camel@sipsolutions.net> <87h9aj5ydx.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Wed, 2016-08-17 at 15:16 +0200, Toke Høiland-Jørgensen wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+> 
+> > 
+> > > 
+> > > @@ -1573,6 +1574,7 @@ struct ieee80211_key_conf {
+> > >  	u8 iv_len;
+> > >  	u8 hw_key_idx;
+> > >  	u8 flags;
+> > > +	u8 pn_offs;
+> > > 
+> > This is completely wrong.
+> 
+> Well, the ieee80211_fast_tx struct is not available in
+> ieee80211_tx_dequeue, and I need the offset there. I thought about
+> sticking it into ieee80211_tx_info, but that is kinda full, and since
+> the ieee80211_key_conf is already available there, carrying it there
+> seems to work.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+For very limited testing, perhaps. But this isn't static across all
+usages of the key, so this is still completely broken.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index a920d70..477f2b2 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -22,7 +22,7 @@
- #include "wcn36xx.h"
- 
- unsigned int wcn36xx_dbg_mask;
--module_param_named(debug_mask, wcn36xx_dbg_mask, uint, 0644);
-+module_param_named(debug_mask, wcn36xx_dbg_mask, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
- 
- #define CHAN2G(_freq, _idx) { \
--- 
-2.9.2
+> What would be a better way to do this?
+> 
 
+Some redesign/rearchitecture, probably. Or just do it all in the driver
+like iwlmvm?
+
+johannes
