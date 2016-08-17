@@ -1,81 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:12727 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751130AbcHIHfj convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51464 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752769AbcHQKb2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 03:35:39 -0400
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: Stephan Mueller <smueller@chronox.de>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>
-CC: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: RE: [PATCH 2/2] ath9k: disable RNG by default
-Date: Tue, 9 Aug 2016 07:35:33 +0000
-Message-ID: <69af156ac93a4fe6ab1844dfcc35c266@aptaiexm02f.ap.qualcomm.com> (sfid-20160809_093544_568374_9AC07BB9)
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
- <1470726147-30095-2-git-send-email-miaoqing@codeaurora.org>
- <4627645.oz3l49ICL3@tauon.atsec.com>
-In-Reply-To: <4627645.oz3l49ICL3@tauon.atsec.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 17 Aug 2016 06:31:28 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: torvalds@linux-foundation.org, akpm@linux-foundation.org,
+	gregkh@linuxfoundation.org, davem@davemloft.net
+Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dinan.gunawardena@netronome.com,
+	Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: Re: [PATCHv6 1/2] add basic register-field manipulation macros
+References: <1471360704-10507-1-git-send-email-jakub.kicinski@netronome.com>
+	<1471360704-10507-2-git-send-email-jakub.kicinski@netronome.com>
+Date: Wed, 17 Aug 2016 13:31:21 +0300
+In-Reply-To: <1471360704-10507-2-git-send-email-jakub.kicinski@netronome.com>
+	(Jakub Kicinski's message of "Tue, 16 Aug 2016 16:18:23 +0100")
+Message-ID: <8737m3bsau.fsf@kamboji.qca.qualcomm.com> (sfid-20160817_123201_762066_2679F75F)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephan,
+Jakub Kicinski <jakub.kicinski@netronome.com> writes:
 
-So your suggestion is to use HW Random framework ?   Actually, which was done by the commit 6301566e0b2d ("ath9k: export HW random number generator"), but it was reverted, you can refer to https://www.mail-archive.com/linux-crypto%40vger.kernel.org/msg15483.html for more information.
+> Common approach to accessing register fields is to define
+> structures or sets of macros containing mask and shift pair.
+> Operations on the register are then performed as follows:
+>
+>  field = (reg >> shift) & mask;
+>
+>  reg &= ~(mask << shift);
+>  reg |= (field & mask) << shift;
+>
+> Defining shift and mask separately is tedious.  Ivo van Doorn
+> came up with an idea of computing them at compilation time
+> based on a single shifted mask (later refined by Felix) which
+> can be used like this:
+>
+>  #define REG_FIELD 0x000ff000
+>
+>  field = FIELD_GET(REG_FIELD, reg);
+>
+>  reg &= ~REG_FIELD;
+>  reg |= FIELD_PUT(REG_FIELD, field);
+>
+> FIELD_{GET,PUT} macros take care of finding out what the
+> appropriate shift is based on compilation time ffs operation.
+>
+> GENMASK can be used to define registers (which is usually
+> less error-prone and easier to match with datasheets).
+>
+> This approach is the most convenient I've seen so to limit code
+> multiplication let's move the macros to a global header file.
+> Attempts to use static inlines instead of macros failed due
+> to false positive triggering of BUILD_BUG_ON()s, especially with
+> GCC < 6.0.
+>
+> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+> Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
 
---
-Miaoqing
+Are people ok with this? I think they are useful and I can take these
+through my tree, but I would prefer to get an ack from other maintainers
+first. Dave? Andrew?
 
+Full patches here:
 
------Original Message-----
-From: Stephan Mueller [mailto:smueller@chronox.de] 
-Sent: Tuesday, August 09, 2016 3:15 PM
-To: miaoqing@codeaurora.org
-Cc: Valo, Kalle <kvalo@qca.qualcomm.com>; linux-wireless@vger.kernel.org; ath9k-devel <ath9k-devel@qca.qualcomm.com>; linux-crypto@vger.kernel.org; jason@lakedaemon.net; Sepehrdad, Pouyan <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
+https://patchwork.kernel.org/patch/9284153/
 
-Am Dienstag, 9. August 2016, 15:02:27 CEST schrieb miaoqing@codeaurora.org:
+https://patchwork.kernel.org/patch/9284155/
 
-Hi Miaoqing,
-
-> From: Miaoqing Pan <miaoqing@codeaurora.org>
-> 
-> ath9k RNG will dominates all the noise sources from the real HW RNG, 
-> disable it by default. But we strongly recommand to enable it if the 
-> system without HW RNG, especially on embedded systems.
-> 
-> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
-
-As a short term solution:
-
-Acked-by: Stephan Mueller <smueller@chronox.de>
-
-But as Jason outlined, there should be nothing that prevents using this code with the HW Random framework. This framework also has logic to limit the rate of injection and allows the setting of the entropy threshold at runtime.
-
-> ---
->  drivers/net/wireless/ath/ath9k/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/Kconfig
-> b/drivers/net/wireless/ath/ath9k/Kconfig index f68cb00..8f231c6 100644
-> --- a/drivers/net/wireless/ath/ath9k/Kconfig
-> +++ b/drivers/net/wireless/ath/ath9k/Kconfig
-> @@ -180,7 +180,7 @@ config ATH9K_HTC_DEBUGFS  config ATH9K_HWRNG
->  	bool "Random number generator support"
->  	depends on ATH9K && (HW_RANDOM = y || HW_RANDOM = ATH9K)
-> -	default y
-> +	default n
->  	---help---
->  	  This option incorporates the ADC register output as a source of
->  	  randomness into Linux entropy pool (/dev/urandom and /dev/random)
-
-
-
-Ciao
-Stephan
+-- 
+Kalle Valo
