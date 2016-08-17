@@ -1,133 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33728 "EHLO mail.kernel.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:43959 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752894AbcHOJlI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2016 05:41:08 -0400
-From: Masami Hiramatsu <mhiramat@kernel.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [BUGFIX PATCH 1/2] brcmfmac: Check rtnl_lock is locked when removing interface
-Date: Mon, 15 Aug 2016 18:40:57 +0900
-Message-Id: <147125405701.9434.12911635695339175773.stgit@devbox> (sfid-20160815_114136_021394_7ECC8FF6)
-In-Reply-To: <147125403645.9434.8008546579326856373.stgit@devbox>
-References: <147125403645.9434.8008546579326856373.stgit@devbox>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	id S1752545AbcHQUnY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2016 16:43:24 -0400
+Message-ID: <1471466600.5173.21.camel@sipsolutions.net> (sfid-20160817_224339_019640_5262FDF5)
+Subject: Re: [Make-wifi-fast] [PATCH v2] mac80211: Move crypto IV generation
+ to after TXQ dequeue.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+	make-wifi-fast@lists.bufferbloat.net,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@nbd.name>
+Date: Wed, 17 Aug 2016 22:43:20 +0200
+In-Reply-To: <CAA93jw4+WTiFAdUJkPaf5aRDy81vMW34TPQt7xSgv95tsXU=cA@mail.gmail.com> (sfid-20160817_220750_313180_B51CF7A4)
+References: <20160817125800.19154-1-toke@toke.dk>
+	 <20160817144531.4285-1-toke@toke.dk>
+	 <1471463348.5173.16.camel@sipsolutions.net>
+	 <CAA93jw4+WTiFAdUJkPaf5aRDy81vMW34TPQt7xSgv95tsXU=cA@mail.gmail.com>
+	 (sfid-20160817_220750_313180_B51CF7A4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check rtnl_lock is locked in brcmf_p2p_ifp_removed() by passing
-rtnl_locked flag. Actually the caller brcmf_del_if() checks whether
-the rtnl_lock is locked, but doesn't pass it to brcmf_p2p_ifp_removed().
 
-Without this fix, wpa_supplicant goes softlockup with rtnl_lock
-holding (this means all other process using netlink are locked up too)
+> well, we're getting there. the results of both patch attempts were
+> really nice, and brought encrypted performance with fq back into line
+> with unencrypted. Still running crypted tests as I write...
+> 
+> So fixing TKIP would be next, forcing the AP to use that? What other
+> scenarios do we have to worry about? WDS?
+> 
 
-e.g.
-[ 4495.876627] INFO: task wpa_supplicant:7307 blocked for more than 10 seconds.
-[ 4495.876632]       Tainted: G        W       4.8.0-rc1+ #8
-[ 4495.876635] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[ 4495.876638] wpa_supplicant  D ffff974c647b39a0     0  7307      1 0x00000000
-[ 4495.876644]  ffff974c647b39a0 0000000000000000 ffff974c00000000 ffff974c7dc59c58
-[ 4495.876651]  ffff974c6b7417c0 ffff974c645017c0 ffff974c647b4000 ffffffff86f16c08
-[ 4495.876657]  ffff974c645017c0 0000000000000246 00000000ffffffff ffff974c647b39b8
-[ 4495.876664] Call Trace:
-[ 4495.876671]  [<ffffffff868aeccc>] schedule+0x3c/0x90
-[ 4495.876676]  [<ffffffff868af065>] schedule_preempt_disabled+0x15/0x20
-[ 4495.876682]  [<ffffffff868b0996>] mutex_lock_nested+0x176/0x3b0
-[ 4495.876686]  [<ffffffff867a2067>] ? rtnl_lock+0x17/0x20
-[ 4495.876690]  [<ffffffff867a2067>] rtnl_lock+0x17/0x20
-[ 4495.876720]  [<ffffffffc0ae9a5d>] brcmf_p2p_ifp_removed+0x4d/0x70 [brcmfmac]
-[ 4495.876741]  [<ffffffffc0aebde6>] brcmf_remove_interface+0x196/0x1b0 [brcmfmac]
-[ 4495.876760]  [<ffffffffc0ae9901>] brcmf_p2p_del_vif+0x111/0x220 [brcmfmac]
-[ 4495.876777]  [<ffffffffc0adefab>] brcmf_cfg80211_del_iface+0x21b/0x270 [brcmfmac]
-[ 4495.876820]  [<ffffffffc097b39e>] nl80211_del_interface+0xfe/0x3a0 [cfg80211]
-[ 4495.876825]  [<ffffffff867ca335>] genl_family_rcv_msg+0x1b5/0x370
-[ 4495.876832]  [<ffffffff860e5d8d>] ? trace_hardirqs_on+0xd/0x10
-[ 4495.876836]  [<ffffffff867ca56d>] genl_rcv_msg+0x7d/0xb0
-[ 4495.876839]  [<ffffffff867ca4f0>] ? genl_family_rcv_msg+0x370/0x370
-[ 4495.876846]  [<ffffffff867c9a47>] netlink_rcv_skb+0x97/0xb0
-[ 4495.876849]  [<ffffffff867ca168>] genl_rcv+0x28/0x40
-[ 4495.876854]  [<ffffffff867c93c3>] netlink_unicast+0x1d3/0x2f0
-[ 4495.876860]  [<ffffffff867c933b>] ? netlink_unicast+0x14b/0x2f0
-[ 4495.876866]  [<ffffffff867c97cb>] netlink_sendmsg+0x2eb/0x3a0
-[ 4495.876870]  [<ffffffff8676dad8>] sock_sendmsg+0x38/0x50
-[ 4495.876874]  [<ffffffff8676e4df>] ___sys_sendmsg+0x27f/0x290
-[ 4495.876882]  [<ffffffff8628b935>] ? mntput_no_expire+0x5/0x3f0
-[ 4495.876888]  [<ffffffff8628b9be>] ? mntput_no_expire+0x8e/0x3f0
-[ 4495.876894]  [<ffffffff8628b935>] ? mntput_no_expire+0x5/0x3f0
-[ 4495.876899]  [<ffffffff8628bd44>] ? mntput+0x24/0x40
-[ 4495.876904]  [<ffffffff86267830>] ? __fput+0x190/0x200
-[ 4495.876909]  [<ffffffff8676f125>] __sys_sendmsg+0x45/0x80
-[ 4495.876914]  [<ffffffff8676f172>] SyS_sendmsg+0x12/0x20
-[ 4495.876918]  [<ffffffff868b5680>] entry_SYSCALL_64_fastpath+0x23/0xc1
-[ 4495.876924]  [<ffffffff860e2b8f>] ? trace_hardirqs_off_caller+0x1f/0xc0
+I don't think there's anything else, I just don't really feel it's
+getting anywhere. This is a mere symptom of the design.
 
-Signed-off-by: Masami Hiramatsu <mhiramat@kernel.org>
----
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |    2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |    8 +++++---
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.h |    2 +-
- 3 files changed, 7 insertions(+), 5 deletions(-)
+Felix had worked around the SN assignment in a similar way, but I feel
+that perhaps the whole thing isn't quite the right architecture. Why
+are we applying FQ after the wifi conversion, when clearly that doesn't
+work well? Seems to me that it would make more sense to let the frames
+sit on the queues as they come in, and do most of the wifi handling
+only when needed (obviously, things like control port would still have
+to be done).
+We even count those packets that are dropped for TX statistics, which
+would seem to be a big behavioural difference vs. applying a qdisc.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 8d16f02..65e8c87 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -743,7 +743,7 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bsscfgidx,
- 		 * serious troublesome side effects. The p2p module will clean
- 		 * up the ifp if needed.
- 		 */
--		brcmf_p2p_ifp_removed(ifp);
-+		brcmf_p2p_ifp_removed(ifp, rtnl_locked);
- 		kfree(ifp);
- 	}
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index 66f942f..de19c7c 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -2297,7 +2297,7 @@ int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	return err;
- }
- 
--void brcmf_p2p_ifp_removed(struct brcmf_if *ifp)
-+void brcmf_p2p_ifp_removed(struct brcmf_if *ifp, bool rtnl_locked)
- {
- 	struct brcmf_cfg80211_info *cfg;
- 	struct brcmf_cfg80211_vif *vif;
-@@ -2306,9 +2306,11 @@ void brcmf_p2p_ifp_removed(struct brcmf_if *ifp)
- 	vif = ifp->vif;
- 	cfg = wdev_to_cfg(&vif->wdev);
- 	cfg->p2p.bss_idx[P2PAPI_BSSCFG_DEVICE].vif = NULL;
--	rtnl_lock();
-+	if (!rtnl_locked)
-+		rtnl_lock();
- 	cfg80211_unregister_wdev(&vif->wdev);
--	rtnl_unlock();
-+	if (!rtnl_locked)
-+		rtnl_unlock();
- 	brcmf_free_vif(vif);
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h
-index a3bd18c..8ce9447 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.h
-@@ -155,7 +155,7 @@ struct wireless_dev *brcmf_p2p_add_vif(struct wiphy *wiphy, const char *name,
- int brcmf_p2p_del_vif(struct wiphy *wiphy, struct wireless_dev *wdev);
- int brcmf_p2p_ifchange(struct brcmf_cfg80211_info *cfg,
- 		       enum brcmf_fil_p2p_if_types if_type);
--void brcmf_p2p_ifp_removed(struct brcmf_if *ifp);
-+void brcmf_p2p_ifp_removed(struct brcmf_if *ifp, bool rtnl_locked);
- int brcmf_p2p_start_device(struct wiphy *wiphy, struct wireless_dev *wdev);
- void brcmf_p2p_stop_device(struct wiphy *wiphy, struct wireless_dev *wdev);
- int brcmf_p2p_scan_prep(struct wiphy *wiphy,
+Now, it's unlikely to be that simple - fragmentation, for example,
+might mess this up.
 
+Overall though, I'm definitely wondering if it should be this way,
+since all the special cases just add complexity.
+
+johannes
