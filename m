@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:23660 "EHLO mga04.intel.com"
+Received: from mail2.tohojo.dk ([77.235.48.147]:59536 "EHLO mail2.tohojo.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934779AbcHBMYu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:24:50 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: Jes.Sorensen@redhat.com, kvalo@codeaurora.org, linuxwifi@intel.com,
-	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0792/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:46:50 +0800
-Message-Id: <20160802114650.2621-1-baolex.ni@intel.com> (sfid-20160802_174401_378768_C103EED7)
+	id S1752279AbcHQNYL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Aug 2016 09:24:11 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH] mac80211: Move crypto IV generation to after TXQ dequeue.
+References: <20160817125800.19154-1-toke@toke.dk>
+	<1471439315.5173.7.camel@sipsolutions.net> <87h9aj5ydx.fsf@toke.dk>
+	<1471439894.5173.9.camel@sipsolutions.net>
+Date: Wed, 17 Aug 2016 15:23:28 +0200
+In-Reply-To: <1471439894.5173.9.camel@sipsolutions.net> (Johannes Berg's
+	message of "Wed, 17 Aug 2016 15:18:14 +0200")
+Message-ID: <87d1l75y27.fsf@toke.dk> (sfid-20160817_152414_787440_3C4E60E9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> On Wed, 2016-08-17 at 15:16 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> Johannes Berg <johannes@sipsolutions.net> writes:
+>>=20
+>> >=20
+>> > >=20
+>> > > @@ -1573,6 +1574,7 @@ struct ieee80211_key_conf {
+>> > > =C2=A0	u8 iv_len;
+>> > > =C2=A0	u8 hw_key_idx;
+>> > > =C2=A0	u8 flags;
+>> > > +	u8 pn_offs;
+>> > >=20
+>> > This is completely wrong.
+>>=20
+>> Well, the ieee80211_fast_tx struct is not available in
+>> ieee80211_tx_dequeue, and I need the offset there. I thought about
+>> sticking it into ieee80211_tx_info, but that is kinda full, and since
+>> the ieee80211_key_conf is already available there, carrying it there
+>> seems to work.
+>
+> For very limited testing, perhaps. But this isn't static across all
+> usages of the key, so this is still completely broken.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 9f6dbb4..8800df2 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -58,9 +58,9 @@ MODULE_FIRMWARE("rtlwifi/rtl8192eu_nic.bin");
- MODULE_FIRMWARE("rtlwifi/rtl8723bu_nic.bin");
- MODULE_FIRMWARE("rtlwifi/rtl8723bu_bt.bin");
- 
--module_param_named(debug, rtl8xxxu_debug, int, 0600);
-+module_param_named(debug, rtl8xxxu_debug, int, S_IRUSR | S_IWUSR);
- MODULE_PARM_DESC(debug, "Set debug mask");
--module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, 0600);
-+module_param_named(ht40_2g, rtl8xxxu_ht40_2g, bool, S_IRUSR | S_IWUSR);
- MODULE_PARM_DESC(ht40_2g, "Enable HT40 support on the 2.4GHz band");
- 
- #define USB_VENDOR_ID_REALTEK		0x0bda
--- 
-2.9.2
+OK, noted.
 
+>> What would be a better way to do this?
+>>=20
+>
+> Some redesign/rearchitecture, probably. Or just do it all in the driver
+> like iwlmvm?
+
+Will look it over again. Should be possible to re-calculate the offset,
+I guess.
+
+-Toke
