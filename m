@@ -1,35 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37695 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S935000AbcHEMPT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 08:15:19 -0400
-Message-ID: <1470399313.2977.38.camel@sipsolutions.net> (sfid-20160805_141522_323119_B583A910)
-Subject: Re: [PATCH v3] nl80211: Receive correct value for
- NL80211_MESHCONF_HT_OPMODE command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: linux-wireless@vger.kernel.org, j@w1.fi, me@bobcopeland.com
-Date: Fri, 05 Aug 2016 14:15:13 +0200
-In-Reply-To: <1470186464-4224-1-git-send-email-masashi.honma@gmail.com> (sfid-20160803_030806_642959_7FAC2A1C)
-References: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
-	 <1470186464-4224-1-git-send-email-masashi.honma@gmail.com>
-	 (sfid-20160803_030806_642959_7FAC2A1C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from atlantic540.startdedicated.de ([188.138.9.77]:35477 "EHLO
+	atlantic540.startdedicated.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753186AbcHRNi1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Aug 2016 09:38:27 -0400
+From: Daniel Wagner <wagi@monom.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"Luis R . Rodriguez" <mcgrof@kernel.org>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Daniel Wagner <daniel.wagner@bmw-carit.de>
+Subject: [PATCH 0/2] wireless: Use complete() instead complete_all()
+Date: Thu, 18 Aug 2016 15:12:04 +0200
+Message-Id: <1471525926-20384-1-git-send-email-wagi@monom.org> (sfid-20160818_153915_881858_91C07E53)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-08-03 at 10:07 +0900, Masashi Honma wrote:
-> Previously, NL80211_MESHCONF_HT_OPMODE rejected correct flag
-> combination, ex) IEEE80211_HT_OP_MODE_PROTECTION_NONHT_MIXED |
-> IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT.
-> 
-> This was caused by simple comparison with value 16. This causes
-> setting
-> non-existent flag (like 0x08) and invalid flag combinations. So this
-> commit implements some checks based on IEEE 802.11 2012 8.4.2.59 HT
-> Operation element.
-> 
-Applied, with some minor changes.
+From: Daniel Wagner <daniel.wagner@bmw-carit.de>
 
-johannes
+Hi,
+
+Using complete_all() is not wrong per se but it suggest that there
+might be more than one reader. For -rt I am reviewing all
+complete_all() users and would like to leave only the real ones in the
+tree. The main problem for -rt about complete_all() is that it can be
+uses inside IRQ context and that can lead to unbounded amount work
+inside the interrupt handler. That is a no no for -rt.
+
+The patches grouped per subsystem and in small batches to allow
+reviewing.
+
+This series ignores all complete_all() usages in the firmware loading
+path. They will be hopefully address by Luis' sysdata patches [0].
+That leaves a couple of complete_all() calls.
+
+The first patch fixes a real glitch for the carl9170 driver. I was
+able to test it because I have the hardware. For the second one I
+haven't found any dongle with that chip in my drawers. 
+
+This series against net-next of today.
+
+cheers,
+daniel
+
+[0] https://lkml.kernel.org/r/1466117661-22075-1-git-send-email-mcgrof@kernel.org
+
+Daniel Wagner (2):
+  carl9170: Fix wrong completion usage
+  ath10k: use complete() instead complete_all()
+
+ drivers/net/wireless/ath/ath10k/core.c  | 16 ++++++++--------
+ drivers/net/wireless/ath/ath10k/mac.c   |  2 +-
+ drivers/net/wireless/ath/carl9170/usb.c |  6 ++----
+ 3 files changed, 11 insertions(+), 13 deletions(-)
+
+-- 
+2.7.4
