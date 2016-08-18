@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51405 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753022AbcHSGfW (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:34645 "EHLO
+        mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754011AbcHSCbW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 02:35:22 -0400
-Date: Fri, 19 Aug 2016 12:05:11 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: greearb@candelatech.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 3/3] ath10k:  Improve logging message.
-Message-ID: <20160819063511.GA16230@atheros-ThinkPad-T61> (sfid-20160819_083525_927022_C0462FAA)
-References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
- <1471569995-10028-3-git-send-email-greearb@candelatech.com>
+        Thu, 18 Aug 2016 22:31:22 -0400
+Received: by mail-pa0-f52.google.com with SMTP id fi15so11284140pac.1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Aug 2016 19:31:21 -0700 (PDT)
+Subject: Re: [PATCH] mwifiex: propagate error if IRQ request fails in
+ mwifiex_sdio_of()
+To: Javier Martinez Canillas <javier@osg.samsung.com>,
+        linux-kernel@vger.kernel.org
+References: <1471529868-13669-1-git-send-email-javier@osg.samsung.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <10fb1110-4c0b-00a2-522c-7011ca397b8c@broadcom.com> (sfid-20160819_043142_359674_0432B285)
+Date: Thu, 18 Aug 2016 21:14:35 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1471569995-10028-3-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1471529868-13669-1-git-send-email-javier@osg.samsung.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+On 18-08-16 16:17, Javier Martinez Canillas wrote:
+> If request_irq() fails in mwifiex_sdio_probe_of(), only an error message
+> is printed but the actual error is not propagated to the caller function.
 
-On Thu, Aug 18, 2016 at 06:26:35PM -0700, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Helps to know the sta pointer.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+Hmm. The caller function, ie. mwifiex_sdio_probe(), does not seem to care.
+
+The device may still function without this wake interrupt.
+
+Regards,
+Arend
+
+> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 > ---
->  drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index d96c06e..82bc0da 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -6491,8 +6491,8 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
->  		 * Existing station deletion.
->  		 */
->  		ath10k_dbg(ar, ATH10K_DBG_MAC,
-> -			   "mac vdev %d peer delete %pM (sta gone)\n",
-> -			   arvif->vdev_id, sta->addr);
-> +			   "mac vdev %d peer delete %pM (sta gone) sta: %p\n",
-> +			   arvif->vdev_id, sta->addr, sta);
-
-good to rebase over Maharaja's change (%p to %pK) 
-https://patchwork.kernel.org/patch/9263691/
-
->  
->  		ret = ath10k_peer_delete(ar, arvif->vdev_id, sta->addr);
->  		if (ret)
-> -- 
-> 2.4.11
+>  drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> index d3e1561ca075..00727936ad6e 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> @@ -125,6 +125,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
+>  				dev_err(dev,
+>  					"Failed to request irq_wifi %d (%d)\n",
+>  					cfg->irq_wifi, ret);
+> +				return ret;
+>  			}
+>  			disable_irq(cfg->irq_wifi);
+>  		}
 > 
-> _______________________________________________
-> ath10k mailing list
-> ath10k@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/ath10k
