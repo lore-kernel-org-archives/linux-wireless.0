@@ -1,76 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([217.72.192.78]:62784 "EHLO mout.web.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752844AbcHTQsR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Aug 2016 12:48:17 -0400
-Subject: [PATCH 3/3] hostap: Delete unnecessary initialisations for the
- variable "ret"
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <f0cd7a82-e603-6a91-0afd-33bbd1658cab@users.sourceforge.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org,
-        Julia Lawall <julia.lawall@lip6.fr>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <f1de4eb1-42e7-0124-89a2-c1e7fdf7053c@users.sourceforge.net> (sfid-20160820_184839_731501_0266B6F7)
-Date: Sat, 20 Aug 2016 18:48:13 +0200
+Received: from arroyo.ext.ti.com ([198.47.19.12]:49430 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753591AbcHRH3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Aug 2016 03:29:41 -0400
+From: Maxim Altshul <maxim.altshul@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
+	Maxim Altshul <maxim.altshul@ti.com>
+Subject: [PATCH 2/3] wlcore: Pass win_size taken from ieee80211_sta to FW
+Date: Thu, 18 Aug 2016 10:36:26 +0300
+Message-ID: <20160818073627.30972-3-maxim.altshul@ti.com> (sfid-20160818_092944_379738_DBC1FD23)
+In-Reply-To: <20160818073627.30972-2-maxim.altshul@ti.com>
+References: <20160818073627.30972-1-maxim.altshul@ti.com>
+ <20160818073627.30972-2-maxim.altshul@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <f0cd7a82-e603-6a91-0afd-33bbd1658cab@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 20 Aug 2016 18:23:14 +0200
+When starting a new BA session, we must pass the win_size to the FW.
 
-The local variable "ret" will be set to an appropriate value a bit later.
-Thus omit the explicit initialisation at the beginning of four functions.
+To do this we take max_rx_aggregation_subframes (BA RX win size)
+which is stored in ieee80211_sta structure (e.g per link and not per HW)
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+We will use the value stored per link when passing the win_size to
+firmware through the ACX_BA_SESSION_RX_SETUP command.
+
+Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
 ---
- drivers/net/wireless/intersil/hostap/hostap_ioctl.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ti/wlcore/acx.c  | 5 +++--
+ drivers/net/wireless/ti/wlcore/acx.h  | 3 ++-
+ drivers/net/wireless/ti/wlcore/main.c | 6 ++++--
+ 3 files changed, 9 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-index 5942917..c37b0bb 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-@@ -2895,7 +2895,7 @@ static int prism2_ioctl_priv_monitor(struct net_device *dev, int *i)
+diff --git a/drivers/net/wireless/ti/wlcore/acx.c b/drivers/net/wireless/ti/wlcore/acx.c
+index 26cc23f..a485999 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.c
++++ b/drivers/net/wireless/ti/wlcore/acx.c
+@@ -1419,7 +1419,8 @@ out:
+ 
+ /* setup BA session receiver setting in the FW. */
+ int wl12xx_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+-				       u16 ssn, bool enable, u8 peer_hlid)
++				       u16 ssn, bool enable, u8 peer_hlid,
++				       u8 win_size)
  {
- 	struct hostap_interface *iface;
- 	local_info_t *local;
--	int ret = 0;
-+	int ret;
- 	u32 mode;
+ 	struct wl1271_acx_ba_receiver_setup *acx;
+ 	int ret;
+@@ -1435,7 +1436,7 @@ int wl12xx_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+ 	acx->hlid = peer_hlid;
+ 	acx->tid = tid_index;
+ 	acx->enable = enable;
+-	acx->win_size = wl->conf.ht.rx_ba_win_size;
++	acx->win_size =	win_size;
+ 	acx->ssn = ssn;
  
- 	iface = netdev_priv(dev);
-@@ -3035,7 +3035,7 @@ static int ap_mac_cmd_ioctl(local_info_t *local, int *cmd)
- static int prism2_ioctl_priv_download(local_info_t *local, struct iw_point *p)
- {
- 	struct prism2_download_param *param;
--	int ret = 0;
-+	int ret;
+ 	ret = wlcore_cmd_configure_failsafe(wl, ACX_BA_SESSION_RX_SETUP, acx,
+diff --git a/drivers/net/wireless/ti/wlcore/acx.h b/drivers/net/wireless/ti/wlcore/acx.h
+index 6321ed4..f46d7fd 100644
+--- a/drivers/net/wireless/ti/wlcore/acx.h
++++ b/drivers/net/wireless/ti/wlcore/acx.h
+@@ -1113,7 +1113,8 @@ int wl1271_acx_set_ht_information(struct wl1271 *wl,
+ int wl12xx_acx_set_ba_initiator_policy(struct wl1271 *wl,
+ 				       struct wl12xx_vif *wlvif);
+ int wl12xx_acx_set_ba_receiver_session(struct wl1271 *wl, u8 tid_index,
+-				       u16 ssn, bool enable, u8 peer_hlid);
++				       u16 ssn, bool enable, u8 peer_hlid,
++				       u8 win_size);
+ int wl12xx_acx_tsf_info(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+ 			u64 *mactime);
+ int wl1271_acx_ps_rx_streaming(struct wl1271 *wl, struct wl12xx_vif *wlvif,
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index 9e1f2d9..9ea477e 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5286,7 +5286,9 @@ static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
+ 		}
  
- 	if (p->length < sizeof(struct prism2_download_param) ||
- 	    p->length > 1024 || !p->pointer)
-@@ -3791,7 +3791,7 @@ static int prism2_ioctl_scan_req(local_info_t *local,
- static int prism2_ioctl_priv_hostapd(local_info_t *local, struct iw_point *p)
- {
- 	struct prism2_hostapd_param *param;
--	int ret = 0;
-+	int ret;
- 	int ap_ioctl = 0;
+ 		ret = wl12xx_acx_set_ba_receiver_session(wl, tid, *ssn, true,
+-							 hlid);
++				hlid,
++				sta->max_rx_aggregation_subframes);
++
+ 		if (!ret) {
+ 			*ba_bitmap |= BIT(tid);
+ 			wl->ba_rx_session_count++;
+@@ -5307,7 +5309,7 @@ static int wl1271_op_ampdu_action(struct ieee80211_hw *hw,
+ 		}
  
- 	if (p->length < sizeof(struct prism2_hostapd_param) ||
-@@ -3954,7 +3954,7 @@ int hostap_ioctl(struct net_device *dev, struct ifreq *ifr, int cmd)
- 	struct iwreq *wrq = (struct iwreq *) ifr;
- 	struct hostap_interface *iface;
- 	local_info_t *local;
--	int ret = 0;
-+	int ret;
- 
- 	iface = netdev_priv(dev);
- 	local = iface->local;
+ 		ret = wl12xx_acx_set_ba_receiver_session(wl, tid, 0, false,
+-							 hlid);
++							 hlid, 0);
+ 		if (!ret) {
+ 			*ba_bitmap &= ~BIT(tid);
+ 			wl->ba_rx_session_count--;
 -- 
-2.9.3
+2.9.0
