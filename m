@@ -1,101 +1,173 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59609 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753127AbcHZQIL (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:36544 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753806AbcHSD7V (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Aug 2016 12:08:11 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Fri, 26 Aug 2016 21:37:32 +0530
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-        ath10k <ath10k@lists.infradead.org>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: implement NAPI support
-In-Reply-To: <CAA93jw5mEMbUVs-i-Bpjkv6tX-umsO=9ZKPEnFcEj=22yjWX1g@mail.gmail.com>
-References: <20160826102250.24174-1-rmanohar@qti.qualcomm.com>
- <CAA93jw7vHWROH9Ymq1UoOKA5kw+fDbCM=vJehs8J=QP2PVs_RA@mail.gmail.com>
- <1472209920.390.34.camel@sipsolutions.net>
- <CAA93jw5mEMbUVs-i-Bpjkv6tX-umsO=9ZKPEnFcEj=22yjWX1g@mail.gmail.com>
-Message-ID: <ca7f8cbdeeb259f5550e17a8f2a22e4f@codeaurora.org> (sfid-20160826_180816_060078_A4D15139)
+        Thu, 18 Aug 2016 23:59:21 -0400
+Received: by mail-wm0-f46.google.com with SMTP id q128so18843393wma.1
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Aug 2016 20:58:54 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, gregkh@linuxfoundation.org,
+        davem@davemloft.net, kvalo@codeaurora.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        dinan.gunawardena@netronome.com,
+        Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [RFC (v7)] add basic register-field manipulation macros
+Date: Thu, 18 Aug 2016 18:11:57 +0100
+Message-Id: <1471540317-14823-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160819_055927_563707_B50A27EC)
+In-Reply-To: <CA+55aFz_MUXQjWjbQzb7f=+cQLtxQsba1azmbEVZOgy5Y7wfdQ@mail.gmail.com>
+References: <CA+55aFz_MUXQjWjbQzb7f=+cQLtxQsba1azmbEVZOgy5Y7wfdQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-08-26 17:19, Dave Taht wrote:
-> On Fri, Aug 26, 2016 at 4:12 AM, Johannes Berg
-> <johannes@sipsolutions.net> wrote:
->> On Fri, 2016-08-26 at 03:48 -0700, Dave Taht wrote:
->>> I'm always rather big on people testing latency under load, and napi
->>> tends to add some.
->> 
->> That's a completely useless comment.
->> 
->> Obviously, everybody uses NAPI; it's necessary for system load and 
->> thus
->> performance, and lets drivers take advantage of TCP merging to reduce
->> ACKs, which is tremendously helpful (over wifi in particular.)
->> 
->> Please stop making such drive-by comments that focus only on the 
->> single
->> thing you find important above all; not all people can care only about
->> that single thing, and unconstructively reiterating it over and over
->> doesn't help.
-> 
-> Well, I apologize for being testy. It is  I spent a lot of time
-> testing michal's patchset for the ath10k back in may, and I *will* go
-> and retest ath10k, when these patches land. My principal concern with
-> using napi is at lower rates than the maxes typically reported in a
-> patchset.
-> 
+Hi!
 
-You are always welcome to validate this change and share your feedback.
+This is what I came up with.  Changes:
+ - drop the explicit type marking (u32/u64) - depend on the type
+   of the mask instead;
+ - only allow compilation time constant masks;
+ - barf at "type of register too small to ever match mask" on get;
+ - rename PUT -> PREP.
 
->  But it would be nice if people always did test for latency under load
-> when making improvements, before getting to me, and despite having
-> helped make a very comprehensive test suite available (flent) that
-> tests all sorts of things for wifi, getting people to actually use it
-> to see real problems, (in addition to latency under load!) while their
-> fingers are still hot in the codebase, and track/plot their results,
-> remains an ongoing issue across the entire industry.
-> 
-> http://blog.cerowrt.org/post/fq_codel_on_ath10k/
-> 
-As you know, NAPI is designed to improve performance of high speed n/w 
-devices. From LWN: "NAPI is a proven 
-(www.cyberus.ca/~hadi/usenix-paper.tgz) technique to improve network 
-performance on Linux." Even most of Gig-speed network drivers were 
-already migrated to NAPI. Tasklets are heavy CPU consumers and it will 
-impact performance of other low priority tasks. The article[1] explains 
-the problems of tasklet.
+I did not put the new marcos in bitops.h (where GENMASK lives)
+because of the dependency on bug.h.  If I did there would be
+a circular dependency like this:
 
- From my observations, average CPU usage got reduced by 10% under heavy 
-data traffic against same peak throughput. I validated this change on 
-both IPQ4019 platform (Quad-Core ARM Cortex A7 processor) and AP135 
-platform (uni-core MIPS 720 MHz processor). I did not observe any 
-regression.
+bitops.h -> linux/bug.h -> asm-generic/bug.h -> kernel.h -> bitops.h
 
-> There are many other problems in wifi, of course, that could use
-> engineering mental internalization, like airtime fairness, and the
-> mis-behavior of the hardware queues,
-> 
-> http://blog.cerowrt.org/post/cs5_lockout/
-> 
-> wifi channel scans
-> 
-> http://blog.cerowrt.org/post/disabling_channel_scans/
-> 
-> and so on.
-> 
-> I have a ton more datasets and blog entries left to write up from the
-> ath9k work thus far which point to some other issues (minstrel,
-> aggregation, retries)
-> 
-your data are really impressive. Once again, feel free to validate this 
-change and share your inputs.
+Which makes things really ugly.  I tried to remove the kernel.h
+include from bug.h by separating panic-related definitions into
+a new header.  There were still cycles coming from the notifier.h
+which I had to include for panic notifier...
 
-[1] http://lwn.net/Articles/239633/
+Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+---
+ include/linux/bitfield.h | 93 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/bug.h      |  3 ++
+ 2 files changed, 96 insertions(+)
+ create mode 100644 include/linux/bitfield.h
 
--Rajkumar
+diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
+new file mode 100644
+index 000000000000..32ca8863e66d
+--- /dev/null
++++ b/include/linux/bitfield.h
+@@ -0,0 +1,93 @@
++/*
++ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
++ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#ifndef _LINUX_BITFIELD_H
++#define _LINUX_BITFIELD_H
++
++#include <linux/bug.h>
++
++/*
++ * Bitfield access macros
++ *
++ * FIELD_{GET,PREP} macros take as first parameter shifted mask
++ * from which they extract the base mask and shift amount.
++ * Mask must be a compilation time constant.
++ *
++ * Example:
++ *
++ *  #define REG_FIELD_A  GENMASK(6, 0)
++ *  #define REG_FIELD_B  BIT(7)
++ *  #define REG_FIELD_C  GENMASK(15, 8)
++ *  #define REG_FIELD_D  GENMASK(31, 16)
++ *
++ * Get:
++ *  a = FIELD_GET(REG_FIELD_A, reg);
++ *  b = FIELD_GET(REG_FIELD_B, reg);
++ *
++ * Set:
++ *  reg = FIELD_PREP(REG_FIELD_A, 1) |
++ *	  FIELD_PREP(REG_FIELD_B, 0) |
++ *	  FIELD_PREP(REG_FIELD_C, c) |
++ *	  FIELD_PREP(REG_FIELD_D, 0x40);
++ *
++ * Modify:
++ *  reg &= ~REG_FIELD_C;
++ *  reg |= FIELD_PREP(REG_FIELD_C, c);
++ */
++
++#define _bf_shf(x) (__builtin_ffsll(x) - 1)
++
++#define _BF_FIELD_CHECK(_mask, _reg, _val, _pfx)			\
++	({								\
++		BUILD_BUG_ON_MSG(!__builtin_constant_p(_mask),		\
++				 _pfx "mask is not constant");		\
++		BUILD_BUG_ON_MSG(!(_mask), _pfx "mask is zero");	\
++		BUILD_BUG_ON_MSG(__builtin_constant_p(_val) ?		\
++				 ~((_mask) >> _bf_shf(_mask)) & (_val) : 0, \
++				 _pfx "value too large for the field"); \
++		BUILD_BUG_ON_MSG((_mask) > (typeof(_reg))~0ull,		\
++				 _pfx "type of reg too small for mask"); \
++		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
++					      (1ULL << _bf_shf(_mask))); \
++	})
++
++/**
++ * FIELD_PREP() - prepare a bitfield element
++ * @_mask: shifted mask defining the field's length and position
++ * @_val:  value to put in the field
++ *
++ * FIELD_PREP() masks and shifts up the value.  The result should
++ * be combined with other fields of the bitfield using logical OR.
++ */
++#define FIELD_PREP(_mask, _val)						\
++	({								\
++		_BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ");	\
++		((typeof(_mask))(_val) << _bf_shf(_mask)) & (_mask);	\
++	})
++
++/**
++ * FIELD_GET() - extract a bitfield element
++ * @_mask: shifted mask defining the field's length and position
++ * @_reg:  32bit value of entire bitfield
++ *
++ * FIELD_GET() extracts the field specified by @_mask from the
++ * bitfield passed in as @_reg by masking and shifting it down.
++ */
++#define FIELD_GET(_mask, _reg)						\
++	({								\
++		_BF_FIELD_CHECK(_mask, _reg, 0U, "FIELD_GET: ");	\
++		(typeof(_mask))(((_reg) & (_mask)) >> _bf_shf(_mask));	\
++	})
++
++#endif
+diff --git a/include/linux/bug.h b/include/linux/bug.h
+index e51b0709e78d..292d6a10b0c2 100644
+--- a/include/linux/bug.h
++++ b/include/linux/bug.h
+@@ -13,6 +13,7 @@ enum bug_trap_type {
+ struct pt_regs;
+ 
+ #ifdef __CHECKER__
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_ZERO(e) (0)
+ #define BUILD_BUG_ON_NULL(e) ((void*)0)
+@@ -24,6 +25,8 @@ struct pt_regs;
+ #else /* __CHECKER__ */
+ 
+ /* Force a compilation error if a constant expression is not a power of 2 */
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n)	\
++	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
+ 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
+ 
+-- 
+1.9.1
