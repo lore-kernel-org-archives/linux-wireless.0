@@ -1,994 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:52512 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759807AbcHEQFd convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 12:05:33 -0400
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
-	Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
-Subject: [PATCH v4] ath9k: Switch to using mac80211 intermediate software
-	queues.
-Date: Fri,  5 Aug 2016 18:03:46 +0200
-Message-Id: <20160805160346.10545-1-toke@toke.dk> (sfid-20160805_180538_884976_0F4548BD)
-In-Reply-To: <20160706193417.13080-1-toke@toke.dk>
-References: <20160706193417.13080-1-toke@toke.dk>
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10463 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754000AbcHSD4m (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Aug 2016 23:56:42 -0400
+From: "Pedersen, Thomas" <twp@qca.qualcomm.com>
+To: Guy Mishol <guym@ti.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wlcore: mesh: add zone time sync support
+Date: Thu, 18 Aug 2016 16:42:41 +0000
+Message-ID: <1471538527.3432.21.camel@qca.qualcomm.com> (sfid-20160819_055707_187644_58281E2E)
+References: <20160808085706.22668-1-guym@ti.com>
+In-Reply-To: <20160808085706.22668-1-guym@ti.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This switches ath9k over to using the mac80211 intermediate software
-queueing mechanism for data packets. It removes the queueing inside the
-driver, except for the retry queue, and instead pulls from mac80211 when
-a packet is needed. The retry queue is used to store a packet that was
-pulled but can't be sent immediately.
-
-The old code path in ath_tx_start that would queue packets has been
-removed completely, as has the qlen limit tunables (since there's no
-longer a queue in the driver to limit).
-
-Based on Tim's original patch set, but reworked quite thoroughly.
-
-Cc: Tim Shepard <shep@alum.mit.edu>
-Cc: Felix Fietkau <nbd@nbd.name>
-Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
----
-Changes since v3 (most due to Felix; thanks!):
-  - Correctly notify mac80211 when there are packets in the retry queue
-    on powersave start/stop.
-  - Get rid of ath_tx_aggr_resume().
-  - Some readability changes and additional WARN_ON/BUG_ON in
-    appropriate places.
-    
- drivers/net/wireless/ath/ath9k/ath9k.h     |  27 ++-
- drivers/net/wireless/ath/ath9k/channel.c   |   2 -
- drivers/net/wireless/ath/ath9k/debug.c     |  14 +-
- drivers/net/wireless/ath/ath9k/debug.h     |   2 -
- drivers/net/wireless/ath/ath9k/debug_sta.c |   4 +-
- drivers/net/wireless/ath/ath9k/init.c      |   2 +-
- drivers/net/wireless/ath/ath9k/main.c      |   9 +-
- drivers/net/wireless/ath/ath9k/xmit.c      | 332 +++++++++++------------------
- 8 files changed, 157 insertions(+), 235 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5294595..7e0a976 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -91,7 +91,6 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- #define ATH_RXBUF               512
- #define ATH_TXBUF               512
- #define ATH_TXBUF_RESERVE       5
--#define ATH_MAX_QDEPTH          (ATH_TXBUF / 4 - ATH_TXBUF_RESERVE)
- #define ATH_TXMAXTRY            13
- #define ATH_MAX_SW_RETRIES      30
- 
-@@ -145,7 +144,7 @@ int ath_descdma_setup(struct ath_softc *sc, struct ath_descdma *dd,
- #define BAW_WITHIN(_start, _bawsz, _seqno) \
- 	((((_seqno) - (_start)) & 4095) < (_bawsz))
- 
--#define ATH_AN_2_TID(_an, _tidno)  (&(_an)->tid[(_tidno)])
-+#define ATH_AN_2_TID(_an, _tidno) ath_node_to_tid(_an, _tidno)
- 
- #define IS_HT_RATE(rate)   (rate & 0x80)
- #define IS_CCK_RATE(rate)  ((rate >= 0x18) && (rate <= 0x1e))
-@@ -164,7 +163,6 @@ struct ath_txq {
- 	spinlock_t axq_lock;
- 	u32 axq_depth;
- 	u32 axq_ampdu_depth;
--	bool stopped;
- 	bool axq_tx_inprogress;
- 	struct list_head txq_fifo[ATH_TXFIFO_DEPTH];
- 	u8 txq_headidx;
-@@ -232,7 +230,6 @@ struct ath_buf {
- 
- struct ath_atx_tid {
- 	struct list_head list;
--	struct sk_buff_head buf_q;
- 	struct sk_buff_head retry_q;
- 	struct ath_node *an;
- 	struct ath_txq *txq;
-@@ -247,13 +244,13 @@ struct ath_atx_tid {
- 	s8 bar_index;
- 	bool active;
- 	bool clear_ps_filter;
-+	bool has_queued;
- };
- 
- struct ath_node {
- 	struct ath_softc *sc;
- 	struct ieee80211_sta *sta; /* station struct we're part of */
- 	struct ieee80211_vif *vif; /* interface with which we're associated */
--	struct ath_atx_tid tid[IEEE80211_NUM_TIDS];
- 
- 	u16 maxampdu;
- 	u8 mpdudensity;
-@@ -276,7 +273,6 @@ struct ath_tx_control {
- 	struct ath_node *an;
- 	struct ieee80211_sta *sta;
- 	u8 paprd;
--	bool force_channel;
- };
- 
- 
-@@ -293,7 +289,6 @@ struct ath_tx {
- 	struct ath_descdma txdma;
- 	struct ath_txq *txq_map[IEEE80211_NUM_ACS];
- 	struct ath_txq *uapsdq;
--	u32 txq_max_pending[IEEE80211_NUM_ACS];
- 	u16 max_aggr_framelen[IEEE80211_NUM_ACS][4][32];
- };
- 
-@@ -421,6 +416,22 @@ struct ath_offchannel {
- 	int duration;
- };
- 
-+static inline struct ath_atx_tid *
-+ath_node_to_tid(struct ath_node *an, u8 tidno)
-+{
-+	struct ieee80211_sta *sta = an->sta;
-+	struct ieee80211_vif *vif = an->vif;
-+	struct ieee80211_txq *txq;
-+
-+	BUG_ON(!vif);
-+	if (sta)
-+		txq = sta->txq[tidno % ARRAY_SIZE(sta->txq)];
-+	else
-+		txq = vif->txq;
-+
-+	return (struct ath_atx_tid *) txq->drv_priv;
-+}
-+
- #define case_rtn_string(val) case val: return #val
- 
- #define ath_for_each_chanctx(_sc, _ctx)                             \
-@@ -575,7 +586,6 @@ void ath_tx_edma_tasklet(struct ath_softc *sc);
- int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 		      u16 tid, u16 *ssn);
- void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
--void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid);
- 
- void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an);
- void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
-@@ -585,6 +595,7 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 				   u16 tids, int nframes,
- 				   enum ieee80211_frame_release_type reason,
- 				   bool more_data);
-+void ath9k_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *queue);
- 
- /********/
- /* VIFs */
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 319cb5f..a5ce016 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1007,7 +1007,6 @@ static void ath_scan_send_probe(struct ath_softc *sc,
- 		goto error;
- 
- 	txctl.txq = sc->tx.txq_map[IEEE80211_AC_VO];
--	txctl.force_channel = true;
- 	if (ath_tx_start(sc->hw, skb, &txctl))
- 		goto error;
- 
-@@ -1130,7 +1129,6 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
- 	memset(&txctl, 0, sizeof(txctl));
- 	txctl.txq = sc->tx.txq_map[IEEE80211_AC_VO];
- 	txctl.sta = sta;
--	txctl.force_channel = true;
- 	if (ath_tx_start(sc->hw, skb, &txctl)) {
- 		ieee80211_free_txskb(sc->hw, skb);
- 		return false;
-diff --git a/drivers/net/wireless/ath/ath9k/debug.c b/drivers/net/wireless/ath/ath9k/debug.c
-index 6de64cf..48b181d 100644
---- a/drivers/net/wireless/ath/ath9k/debug.c
-+++ b/drivers/net/wireless/ath/ath9k/debug.c
-@@ -600,7 +600,6 @@ static int read_file_xmit(struct seq_file *file, void *data)
- 	PR("MPDUs XRetried:  ", xretries);
- 	PR("Aggregates:      ", a_aggr);
- 	PR("AMPDUs Queued HW:", a_queued_hw);
--	PR("AMPDUs Queued SW:", a_queued_sw);
- 	PR("AMPDUs Completed:", a_completed);
- 	PR("AMPDUs Retried:  ", a_retries);
- 	PR("AMPDUs XRetried: ", a_xretries);
-@@ -629,8 +628,7 @@ static void print_queue(struct ath_softc *sc, struct ath_txq *txq,
- 	seq_printf(file, "%s: %d ", "qnum", txq->axq_qnum);
- 	seq_printf(file, "%s: %2d ", "qdepth", txq->axq_depth);
- 	seq_printf(file, "%s: %2d ", "ampdu-depth", txq->axq_ampdu_depth);
--	seq_printf(file, "%s: %3d ", "pending", txq->pending_frames);
--	seq_printf(file, "%s: %d\n", "stopped", txq->stopped);
-+	seq_printf(file, "%s: %3d\n", "pending", txq->pending_frames);
- 
- 	ath_txq_unlock(sc, txq);
- }
-@@ -1190,7 +1188,6 @@ static const char ath9k_gstrings_stats[][ETH_GSTRING_LEN] = {
- 	AMKSTR(d_tx_mpdu_xretries),
- 	AMKSTR(d_tx_aggregates),
- 	AMKSTR(d_tx_ampdus_queued_hw),
--	AMKSTR(d_tx_ampdus_queued_sw),
- 	AMKSTR(d_tx_ampdus_completed),
- 	AMKSTR(d_tx_ampdu_retries),
- 	AMKSTR(d_tx_ampdu_xretries),
-@@ -1270,7 +1267,6 @@ void ath9k_get_et_stats(struct ieee80211_hw *hw,
- 	AWDATA(xretries);
- 	AWDATA(a_aggr);
- 	AWDATA(a_queued_hw);
--	AWDATA(a_queued_sw);
- 	AWDATA(a_completed);
- 	AWDATA(a_retries);
- 	AWDATA(a_xretries);
-@@ -1328,14 +1324,6 @@ int ath9k_init_debug(struct ath_hw *ah)
- 				    read_file_xmit);
- 	debugfs_create_devm_seqfile(sc->dev, "queues", sc->debug.debugfs_phy,
- 				    read_file_queues);
--	debugfs_create_u32("qlen_bk", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
--			   &sc->tx.txq_max_pending[IEEE80211_AC_BK]);
--	debugfs_create_u32("qlen_be", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
--			   &sc->tx.txq_max_pending[IEEE80211_AC_BE]);
--	debugfs_create_u32("qlen_vi", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
--			   &sc->tx.txq_max_pending[IEEE80211_AC_VI]);
--	debugfs_create_u32("qlen_vo", S_IRUSR | S_IWUSR, sc->debug.debugfs_phy,
--			   &sc->tx.txq_max_pending[IEEE80211_AC_VO]);
- 	debugfs_create_devm_seqfile(sc->dev, "misc", sc->debug.debugfs_phy,
- 				    read_file_misc);
- 	debugfs_create_devm_seqfile(sc->dev, "reset", sc->debug.debugfs_phy,
-diff --git a/drivers/net/wireless/ath/ath9k/debug.h b/drivers/net/wireless/ath/ath9k/debug.h
-index cd68c5f..a078cdd 100644
---- a/drivers/net/wireless/ath/ath9k/debug.h
-+++ b/drivers/net/wireless/ath/ath9k/debug.h
-@@ -147,7 +147,6 @@ struct ath_interrupt_stats {
-  * @completed: Total MPDUs (non-aggr) completed
-  * @a_aggr: Total no. of aggregates queued
-  * @a_queued_hw: Total AMPDUs queued to hardware
-- * @a_queued_sw: Total AMPDUs queued to software queues
-  * @a_completed: Total AMPDUs completed
-  * @a_retries: No. of AMPDUs retried (SW)
-  * @a_xretries: No. of AMPDUs dropped due to xretries
-@@ -174,7 +173,6 @@ struct ath_tx_stats {
- 	u32 xretries;
- 	u32 a_aggr;
- 	u32 a_queued_hw;
--	u32 a_queued_sw;
- 	u32 a_completed;
- 	u32 a_retries;
- 	u32 a_xretries;
-diff --git a/drivers/net/wireless/ath/ath9k/debug_sta.c b/drivers/net/wireless/ath/ath9k/debug_sta.c
-index c2ca57a..2e8371a 100644
---- a/drivers/net/wireless/ath/ath9k/debug_sta.c
-+++ b/drivers/net/wireless/ath/ath9k/debug_sta.c
-@@ -52,8 +52,8 @@ static ssize_t read_file_node_aggr(struct file *file, char __user *user_buf,
- 			 "TID", "SEQ_START", "SEQ_NEXT", "BAW_SIZE",
- 			 "BAW_HEAD", "BAW_TAIL", "BAR_IDX", "SCHED", "PAUSED");
- 
--	for (tidno = 0, tid = &an->tid[tidno];
--	     tidno < IEEE80211_NUM_TIDS; tidno++, tid++) {
-+	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
-+		tid = ath_node_to_tid(an, tidno);
- 		txq = tid->txq;
- 		ath_txq_lock(sc, txq);
- 		if (tid->active) {
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 1c226d6..752cacb 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -354,7 +354,6 @@ static int ath9k_init_queues(struct ath_softc *sc)
- 	for (i = 0; i < IEEE80211_NUM_ACS; i++) {
- 		sc->tx.txq_map[i] = ath_txq_setup(sc, ATH9K_TX_QUEUE_DATA, i);
- 		sc->tx.txq_map[i]->mac80211_qnum = i;
--		sc->tx.txq_max_pending[i] = ATH_MAX_QDEPTH;
- 	}
- 	return 0;
- }
-@@ -867,6 +866,7 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 	hw->max_rate_tries = 10;
- 	hw->sta_data_size = sizeof(struct ath_node);
- 	hw->vif_data_size = sizeof(struct ath_vif);
-+	hw->txq_data_size = sizeof(struct ath_atx_tid);
- 	hw->extra_tx_headroom = 4;
- 
- 	hw->wiphy->available_antennas_rx = BIT(ah->caps.max_rxchains) - 1;
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 3aed43a..eb48f91 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1874,9 +1874,11 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 	bool flush = false;
- 	int ret = 0;
- 	struct ieee80211_sta *sta = params->sta;
-+	struct ath_node *an = (struct ath_node *)sta->drv_priv;
- 	enum ieee80211_ampdu_mlme_action action = params->action;
- 	u16 tid = params->tid;
- 	u16 *ssn = &params->ssn;
-+	struct ath_atx_tid *atid;
- 
- 	mutex_lock(&sc->mutex);
- 
-@@ -1909,9 +1911,9 @@ static int ath9k_ampdu_action(struct ieee80211_hw *hw,
- 		ath9k_ps_restore(sc);
- 		break;
- 	case IEEE80211_AMPDU_TX_OPERATIONAL:
--		ath9k_ps_wakeup(sc);
--		ath_tx_aggr_resume(sc, sta, tid);
--		ath9k_ps_restore(sc);
-+		atid = ath_node_to_tid(an, tid);
-+		atid->baw_size = IEEE80211_MIN_AMPDU_BUF <<
-+			        sta->ht_cap.ampdu_factor;
- 		break;
- 	default:
- 		ath_err(ath9k_hw_common(sc->sc_ah), "Unknown AMPDU action\n");
-@@ -2673,4 +2675,5 @@ struct ieee80211_ops ath9k_ops = {
- 	.sw_scan_start	    = ath9k_sw_scan_start,
- 	.sw_scan_complete   = ath9k_sw_scan_complete,
- 	.get_txpower        = ath9k_get_txpower,
-+	.wake_tx_queue      = ath9k_wake_tx_queue,
- };
-diff --git a/drivers/net/wireless/ath/ath9k/xmit.c b/drivers/net/wireless/ath/ath9k/xmit.c
-index fe795fc..8103954 100644
---- a/drivers/net/wireless/ath/ath9k/xmit.c
-+++ b/drivers/net/wireless/ath/ath9k/xmit.c
-@@ -65,6 +65,8 @@ static struct ath_buf *ath_tx_setup_buffer(struct ath_softc *sc,
- 					   struct ath_txq *txq,
- 					   struct ath_atx_tid *tid,
- 					   struct sk_buff *skb);
-+static int ath_tx_prepare(struct ieee80211_hw *hw, struct sk_buff *skb,
-+			  struct ath_tx_control *txctl);
- 
- enum {
- 	MCS_HT20,
-@@ -118,6 +120,26 @@ static void ath_tx_queue_tid(struct ath_softc *sc, struct ath_txq *txq,
- 		list_add_tail(&tid->list, list);
- }
- 
-+void ath9k_wake_tx_queue(struct ieee80211_hw *hw, struct ieee80211_txq *queue)
-+{
-+	struct ath_softc *sc = hw->priv;
-+	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
-+	struct ath_atx_tid *tid = (struct ath_atx_tid *) queue->drv_priv;
-+	struct ath_txq *txq = tid->txq;
-+
-+	ath_dbg(common, QUEUE, "Waking TX queue: %pM (%d)\n",
-+		queue->sta ? queue->sta->addr : queue->vif->addr,
-+		tid->tidno);
-+
-+	ath_txq_lock(sc, txq);
-+
-+	tid->has_queued = true;
-+	ath_tx_queue_tid(sc, txq, tid);
-+	ath_txq_schedule(sc, txq);
-+
-+	ath_txq_unlock(sc, txq);
-+}
-+
- static struct ath_frame_info *get_frame_info(struct sk_buff *skb)
- {
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
-@@ -145,7 +167,6 @@ static void ath_set_rates(struct ieee80211_vif *vif, struct ieee80211_sta *sta,
- static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
- 			     struct sk_buff *skb)
- {
--	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ath_frame_info *fi = get_frame_info(skb);
- 	int q = fi->txq;
- 
-@@ -156,14 +177,6 @@ static void ath_txq_skb_done(struct ath_softc *sc, struct ath_txq *txq,
- 	if (WARN_ON(--txq->pending_frames < 0))
- 		txq->pending_frames = 0;
- 
--	if (txq->stopped &&
--	    txq->pending_frames < sc->tx.txq_max_pending[q]) {
--		if (ath9k_is_chanctx_enabled())
--			ieee80211_wake_queue(sc->hw, info->hw_queue);
--		else
--			ieee80211_wake_queue(sc->hw, q);
--		txq->stopped = false;
--	}
- }
- 
- static struct ath_atx_tid *
-@@ -173,9 +186,48 @@ ath_get_skb_tid(struct ath_softc *sc, struct ath_node *an, struct sk_buff *skb)
- 	return ATH_AN_2_TID(an, tidno);
- }
- 
-+static struct sk_buff *
-+ath_tid_pull(struct ath_atx_tid *tid)
-+{
-+	struct ieee80211_txq *txq = container_of((void*)tid, struct ieee80211_txq, drv_priv);
-+	struct ath_softc *sc = tid->an->sc;
-+	struct ieee80211_hw *hw = sc->hw;
-+	struct ath_tx_control txctl = {
-+		.txq = tid->txq,
-+		.sta = tid->an->sta,
-+	};
-+	struct sk_buff *skb;
-+	struct ath_frame_info *fi;
-+	int q;
-+
-+	if (!tid->has_queued)
-+		return NULL;
-+
-+	skb = ieee80211_tx_dequeue(hw, txq);
-+	if (!skb) {
-+		tid->has_queued = false;
-+		return NULL;
-+	}
-+
-+	if (ath_tx_prepare(hw, skb, &txctl)) {
-+		ieee80211_free_txskb(hw, skb);
-+		return NULL;
-+	}
-+
-+	q = skb_get_queue_mapping(skb);
-+	if (tid->txq == sc->tx.txq_map[q]) {
-+		fi = get_frame_info(skb);
-+		fi->txq = q;
-+		++tid->txq->pending_frames;
-+	}
-+
-+	return skb;
-+ }
-+
-+
- static bool ath_tid_has_buffered(struct ath_atx_tid *tid)
- {
--	return !skb_queue_empty(&tid->buf_q) || !skb_queue_empty(&tid->retry_q);
-+	return !skb_queue_empty(&tid->retry_q) || tid->has_queued;
- }
- 
- static struct sk_buff *ath_tid_dequeue(struct ath_atx_tid *tid)
-@@ -184,46 +236,11 @@ static struct sk_buff *ath_tid_dequeue(struct ath_atx_tid *tid)
- 
- 	skb = __skb_dequeue(&tid->retry_q);
- 	if (!skb)
--		skb = __skb_dequeue(&tid->buf_q);
-+		skb = ath_tid_pull(tid);
- 
- 	return skb;
- }
- 
--/*
-- * ath_tx_tid_change_state:
-- * - clears a-mpdu flag of previous session
-- * - force sequence number allocation to fix next BlockAck Window
-- */
--static void
--ath_tx_tid_change_state(struct ath_softc *sc, struct ath_atx_tid *tid)
--{
--	struct ath_txq *txq = tid->txq;
--	struct ieee80211_tx_info *tx_info;
--	struct sk_buff *skb, *tskb;
--	struct ath_buf *bf;
--	struct ath_frame_info *fi;
--
--	skb_queue_walk_safe(&tid->buf_q, skb, tskb) {
--		fi = get_frame_info(skb);
--		bf = fi->bf;
--
--		tx_info = IEEE80211_SKB_CB(skb);
--		tx_info->flags &= ~IEEE80211_TX_CTL_AMPDU;
--
--		if (bf)
--			continue;
--
--		bf = ath_tx_setup_buffer(sc, txq, tid, skb);
--		if (!bf) {
--			__skb_unlink(skb, &tid->buf_q);
--			ath_txq_skb_done(sc, txq, skb);
--			ieee80211_free_txskb(sc->hw, skb);
--			continue;
--		}
--	}
--
--}
--
- static void ath_tx_flush_tid(struct ath_softc *sc, struct ath_atx_tid *tid)
- {
- 	struct ath_txq *txq = tid->txq;
-@@ -858,20 +875,16 @@ static int ath_compute_num_delims(struct ath_softc *sc, struct ath_atx_tid *tid,
- 
- static struct ath_buf *
- ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
--			struct ath_atx_tid *tid, struct sk_buff_head **q)
-+			struct ath_atx_tid *tid)
- {
- 	struct ieee80211_tx_info *tx_info;
- 	struct ath_frame_info *fi;
--	struct sk_buff *skb;
-+	struct sk_buff *skb, *first_skb = NULL;
- 	struct ath_buf *bf;
- 	u16 seqno;
- 
- 	while (1) {
--		*q = &tid->retry_q;
--		if (skb_queue_empty(*q))
--			*q = &tid->buf_q;
--
--		skb = skb_peek(*q);
-+		skb = ath_tid_dequeue(tid);
- 		if (!skb)
- 			break;
- 
-@@ -883,7 +896,6 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 			bf->bf_state.stale = false;
- 
- 		if (!bf) {
--			__skb_unlink(skb, *q);
- 			ath_txq_skb_done(sc, txq, skb);
- 			ieee80211_free_txskb(sc->hw, skb);
- 			continue;
-@@ -912,8 +924,20 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 		seqno = bf->bf_state.seqno;
- 
- 		/* do not step over block-ack window */
--		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno))
-+		if (!BAW_WITHIN(tid->seq_start, tid->baw_size, seqno)) {
-+			__skb_queue_tail(&tid->retry_q, skb);
-+
-+			/* If there are other skbs in the retry q, they are
-+			 * probably within the BAW, so loop immediately to get
-+			 * one of them. Otherwise the queue can get stuck. */
-+			if (!skb_queue_is_first(&tid->retry_q, skb) &&
-+			    !WARN_ON(skb == first_skb)) {
-+				if(!first_skb) /* infinite loop prevention */
-+					first_skb = skb;
-+				continue;
-+			}
- 			break;
-+		}
- 
- 		if (tid->bar_index > ATH_BA_INDEX(tid->seq_start, seqno)) {
- 			struct ath_tx_status ts = {};
-@@ -921,7 +945,6 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 
- 			INIT_LIST_HEAD(&bf_head);
- 			list_add(&bf->list, &bf_head);
--			__skb_unlink(skb, *q);
- 			ath_tx_update_baw(sc, tid, seqno);
- 			ath_tx_complete_buf(sc, bf, txq, &bf_head, &ts, 0);
- 			continue;
-@@ -933,11 +956,10 @@ ath_tx_get_tid_subframe(struct ath_softc *sc, struct ath_txq *txq,
- 	return NULL;
- }
- 
--static bool
-+static int
- ath_tx_form_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		 struct ath_atx_tid *tid, struct list_head *bf_q,
--		 struct ath_buf *bf_first, struct sk_buff_head *tid_q,
--		 int *aggr_len)
-+		 struct ath_buf *bf_first)
- {
- #define PADBYTES(_len) ((4 - ((_len) % 4)) % 4)
- 	struct ath_buf *bf = bf_first, *bf_prev = NULL;
-@@ -947,12 +969,13 @@ ath_tx_form_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 	struct ieee80211_tx_info *tx_info;
- 	struct ath_frame_info *fi;
- 	struct sk_buff *skb;
--	bool closed = false;
-+
- 
- 	bf = bf_first;
- 	aggr_limit = ath_lookup_rate(sc, bf, tid);
- 
--	do {
-+	while (bf)
-+	{
- 		skb = bf->bf_mpdu;
- 		fi = get_frame_info(skb);
- 
-@@ -961,12 +984,12 @@ ath_tx_form_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		if (nframes) {
- 			if (aggr_limit < al + bpad + al_delta ||
- 			    ath_lookup_legacy(bf) || nframes >= h_baw)
--				break;
-+				goto stop;
- 
- 			tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
- 			if ((tx_info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE) ||
- 			    !(tx_info->flags & IEEE80211_TX_CTL_AMPDU))
--				break;
-+				goto stop;
- 		}
- 
- 		/* add padding for previous frame to aggregation length */
-@@ -988,20 +1011,18 @@ ath_tx_form_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 			ath_tx_addto_baw(sc, tid, bf);
- 		bf->bf_state.ndelim = ndelim;
- 
--		__skb_unlink(skb, tid_q);
- 		list_add_tail(&bf->list, bf_q);
- 		if (bf_prev)
- 			bf_prev->bf_next = bf;
- 
- 		bf_prev = bf;
- 
--		bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
--		if (!bf) {
--			closed = true;
--			break;
--		}
--	} while (ath_tid_has_buffered(tid));
--
-+		bf = ath_tx_get_tid_subframe(sc, txq, tid);
-+	}
-+	goto finish;
-+stop:
-+	__skb_queue_tail(&tid->retry_q, bf->bf_mpdu);
-+finish:
- 	bf = bf_first;
- 	bf->bf_lastbf = bf_prev;
- 
-@@ -1012,9 +1033,7 @@ ath_tx_form_aggr(struct ath_softc *sc, struct ath_txq *txq,
- 		TX_STAT_INC(txq->axq_qnum, a_aggr);
- 	}
- 
--	*aggr_len = al;
--
--	return closed;
-+	return al;
- #undef PADBYTES
- }
- 
-@@ -1391,18 +1410,15 @@ static void ath_tx_fill_desc(struct ath_softc *sc, struct ath_buf *bf,
- static void
- ath_tx_form_burst(struct ath_softc *sc, struct ath_txq *txq,
- 		  struct ath_atx_tid *tid, struct list_head *bf_q,
--		  struct ath_buf *bf_first, struct sk_buff_head *tid_q)
-+		  struct ath_buf *bf_first)
- {
- 	struct ath_buf *bf = bf_first, *bf_prev = NULL;
--	struct sk_buff *skb;
- 	int nframes = 0;
- 
- 	do {
- 		struct ieee80211_tx_info *tx_info;
--		skb = bf->bf_mpdu;
- 
- 		nframes++;
--		__skb_unlink(skb, tid_q);
- 		list_add_tail(&bf->list, bf_q);
- 		if (bf_prev)
- 			bf_prev->bf_next = bf;
-@@ -1411,13 +1427,15 @@ ath_tx_form_burst(struct ath_softc *sc, struct ath_txq *txq,
- 		if (nframes >= 2)
- 			break;
- 
--		bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
-+		bf = ath_tx_get_tid_subframe(sc, txq, tid);
- 		if (!bf)
- 			break;
- 
- 		tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
--		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU)
-+		if (tx_info->flags & IEEE80211_TX_CTL_AMPDU) {
-+			__skb_queue_tail(&tid->retry_q, bf->bf_mpdu);
- 			break;
-+		}
- 
- 		ath_set_rates(tid->an->vif, tid->an->sta, bf);
- 	} while (1);
-@@ -1428,34 +1446,33 @@ static bool ath_tx_sched_aggr(struct ath_softc *sc, struct ath_txq *txq,
- {
- 	struct ath_buf *bf;
- 	struct ieee80211_tx_info *tx_info;
--	struct sk_buff_head *tid_q;
- 	struct list_head bf_q;
- 	int aggr_len = 0;
--	bool aggr, last = true;
-+	bool aggr;
- 
- 	if (!ath_tid_has_buffered(tid))
- 		return false;
- 
- 	INIT_LIST_HEAD(&bf_q);
- 
--	bf = ath_tx_get_tid_subframe(sc, txq, tid, &tid_q);
-+	bf = ath_tx_get_tid_subframe(sc, txq, tid);
- 	if (!bf)
- 		return false;
- 
- 	tx_info = IEEE80211_SKB_CB(bf->bf_mpdu);
- 	aggr = !!(tx_info->flags & IEEE80211_TX_CTL_AMPDU);
- 	if ((aggr && txq->axq_ampdu_depth >= ATH_AGGR_MIN_QDEPTH) ||
--		(!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH)) {
-+	    (!aggr && txq->axq_depth >= ATH_NON_AGGR_MIN_QDEPTH)) {
-+		__skb_queue_tail(&tid->retry_q, bf->bf_mpdu);
- 		*stop = true;
- 		return false;
- 	}
- 
- 	ath_set_rates(tid->an->vif, tid->an->sta, bf);
- 	if (aggr)
--		last = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf,
--					tid_q, &aggr_len);
-+		aggr_len = ath_tx_form_aggr(sc, txq, tid, &bf_q, bf);
- 	else
--		ath_tx_form_burst(sc, txq, tid, &bf_q, bf, tid_q);
-+		ath_tx_form_burst(sc, txq, tid, &bf_q, bf);
- 
- 	if (list_empty(&bf_q))
- 		return false;
-@@ -1498,9 +1515,6 @@ int ath_tx_aggr_start(struct ath_softc *sc, struct ieee80211_sta *sta,
- 		an->mpdudensity = density;
- 	}
- 
--	/* force sequence number allocation for pending frames */
--	ath_tx_tid_change_state(sc, txtid);
--
- 	txtid->active = true;
- 	*ssn = txtid->seq_start = txtid->seq_next;
- 	txtid->bar_index = -1;
-@@ -1525,7 +1539,6 @@ void ath_tx_aggr_stop(struct ath_softc *sc, struct ieee80211_sta *sta, u16 tid)
- 	ath_txq_lock(sc, txq);
- 	txtid->active = false;
- 	ath_tx_flush_tid(sc, txtid);
--	ath_tx_tid_change_state(sc, txtid);
- 	ath_txq_unlock_complete(sc, txq);
- }
- 
-@@ -1535,14 +1548,12 @@ void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	struct ath_atx_tid *tid;
- 	struct ath_txq *txq;
--	bool buffered;
- 	int tidno;
- 
- 	ath_dbg(common, XMIT, "%s called\n", __func__);
- 
--	for (tidno = 0, tid = &an->tid[tidno];
--	     tidno < IEEE80211_NUM_TIDS; tidno++, tid++) {
--
-+	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
-+		tid = ath_node_to_tid(an, tidno);
- 		txq = tid->txq;
- 
- 		ath_txq_lock(sc, txq);
-@@ -1552,13 +1563,12 @@ void ath_tx_aggr_sleep(struct ieee80211_sta *sta, struct ath_softc *sc,
- 			continue;
- 		}
- 
--		buffered = ath_tid_has_buffered(tid);
-+		if (!skb_queue_empty(&tid->retry_q))
-+			ieee80211_sta_set_buffered(sta, tid->tidno, true);
- 
- 		list_del_init(&tid->list);
- 
- 		ath_txq_unlock(sc, txq);
--
--		ieee80211_sta_set_buffered(sta, tidno, buffered);
- 	}
- }
- 
-@@ -1571,49 +1581,20 @@ void ath_tx_aggr_wakeup(struct ath_softc *sc, struct ath_node *an)
- 
- 	ath_dbg(common, XMIT, "%s called\n", __func__);
- 
--	for (tidno = 0, tid = &an->tid[tidno];
--	     tidno < IEEE80211_NUM_TIDS; tidno++, tid++) {
--
-+	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
-+		tid = ath_node_to_tid(an, tidno);
- 		txq = tid->txq;
- 
- 		ath_txq_lock(sc, txq);
- 		tid->clear_ps_filter = true;
--
- 		if (ath_tid_has_buffered(tid)) {
- 			ath_tx_queue_tid(sc, txq, tid);
- 			ath_txq_schedule(sc, txq);
- 		}
--
- 		ath_txq_unlock_complete(sc, txq);
- 	}
- }
- 
--void ath_tx_aggr_resume(struct ath_softc *sc, struct ieee80211_sta *sta,
--			u16 tidno)
--{
--	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
--	struct ath_atx_tid *tid;
--	struct ath_node *an;
--	struct ath_txq *txq;
--
--	ath_dbg(common, XMIT, "%s called\n", __func__);
--
--	an = (struct ath_node *)sta->drv_priv;
--	tid = ATH_AN_2_TID(an, tidno);
--	txq = tid->txq;
--
--	ath_txq_lock(sc, txq);
--
--	tid->baw_size = IEEE80211_MIN_AMPDU_BUF << sta->ht_cap.ampdu_factor;
--
--	if (ath_tid_has_buffered(tid)) {
--		ath_tx_queue_tid(sc, txq, tid);
--		ath_txq_schedule(sc, txq);
--	}
--
--	ath_txq_unlock_complete(sc, txq);
--}
--
- void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 				   struct ieee80211_sta *sta,
- 				   u16 tids, int nframes,
-@@ -1626,7 +1607,6 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *info;
- 	struct list_head bf_q;
- 	struct ath_buf *bf_tail = NULL, *bf;
--	struct sk_buff_head *tid_q;
- 	int sent = 0;
- 	int i;
- 
-@@ -1641,11 +1621,10 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 
- 		ath_txq_lock(sc, tid->txq);
- 		while (nframes > 0) {
--			bf = ath_tx_get_tid_subframe(sc, sc->tx.uapsdq, tid, &tid_q);
-+			bf = ath_tx_get_tid_subframe(sc, sc->tx.uapsdq, tid);
- 			if (!bf)
- 				break;
- 
--			__skb_unlink(bf->bf_mpdu, tid_q);
- 			list_add_tail(&bf->list, &bf_q);
- 			ath_set_rates(tid->an->vif, tid->an->sta, bf);
- 			if (bf_isampdu(bf)) {
-@@ -1660,7 +1639,7 @@ void ath9k_release_buffered_frames(struct ieee80211_hw *hw,
- 			sent++;
- 			TX_STAT_INC(txq->axq_qnum, a_queued_hw);
- 
--			if (an->sta && !ath_tid_has_buffered(tid))
-+			if (an->sta && skb_queue_empty(&tid->retry_q))
- 				ieee80211_sta_set_buffered(an->sta, i, false);
- 		}
- 		ath_txq_unlock_complete(sc, tid->txq);
-@@ -1887,13 +1866,7 @@ bool ath_drain_all_txq(struct ath_softc *sc)
- 		if (!ATH_TXQ_SETUP(sc, i))
- 			continue;
- 
--		/*
--		 * The caller will resume queues with ieee80211_wake_queues.
--		 * Mark the queue as not stopped to prevent ath_tx_complete
--		 * from waking the queue too early.
--		 */
- 		txq = &sc->tx.txq[i];
--		txq->stopped = false;
- 		ath_draintxq(sc, txq);
- 	}
- 
-@@ -2293,15 +2266,12 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 	struct ath_txq *txq = txctl->txq;
- 	struct ath_atx_tid *tid = NULL;
- 	struct ath_buf *bf;
--	bool queue, skip_uapsd = false, ps_resp;
-+	bool ps_resp;
- 	int q, ret;
- 
- 	if (vif)
- 		avp = (void *)vif->drv_priv;
- 
--	if (info->flags & IEEE80211_TX_CTL_TX_OFFCHAN)
--		txctl->force_channel = true;
--
- 	ps_resp = !!(info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE);
- 
- 	ret = ath_tx_prepare(hw, skb, txctl);
-@@ -2316,63 +2286,13 @@ int ath_tx_start(struct ieee80211_hw *hw, struct sk_buff *skb,
- 
- 	q = skb_get_queue_mapping(skb);
- 
-+	if (ps_resp)
-+		txq = sc->tx.uapsdq;
-+
- 	ath_txq_lock(sc, txq);
- 	if (txq == sc->tx.txq_map[q]) {
- 		fi->txq = q;
--		if (++txq->pending_frames > sc->tx.txq_max_pending[q] &&
--		    !txq->stopped) {
--			if (ath9k_is_chanctx_enabled())
--				ieee80211_stop_queue(sc->hw, info->hw_queue);
--			else
--				ieee80211_stop_queue(sc->hw, q);
--			txq->stopped = true;
--		}
--	}
--
--	queue = ieee80211_is_data_present(hdr->frame_control);
--
--	/* If chanctx, queue all null frames while NOA could be there */
--	if (ath9k_is_chanctx_enabled() &&
--	    ieee80211_is_nullfunc(hdr->frame_control) &&
--	    !txctl->force_channel)
--		queue = true;
--
--	/* Force queueing of all frames that belong to a virtual interface on
--	 * a different channel context, to ensure that they are sent on the
--	 * correct channel.
--	 */
--	if (((avp && avp->chanctx != sc->cur_chan) ||
--	     sc->cur_chan->stopped) && !txctl->force_channel) {
--		if (!txctl->an)
--			txctl->an = &avp->mcast_node;
--		queue = true;
--		skip_uapsd = true;
--	}
--
--	if (txctl->an && queue)
--		tid = ath_get_skb_tid(sc, txctl->an, skb);
--
--	if (!skip_uapsd && ps_resp) {
--		ath_txq_unlock(sc, txq);
--		txq = sc->tx.uapsdq;
--		ath_txq_lock(sc, txq);
--	} else if (txctl->an && queue) {
--		WARN_ON(tid->txq != txctl->txq);
--
--		if (info->flags & IEEE80211_TX_CTL_CLEAR_PS_FILT)
--			tid->clear_ps_filter = true;
--
--		/*
--		 * Add this frame to software queue for scheduling later
--		 * for aggregation.
--		 */
--		TX_STAT_INC(txq->axq_qnum, a_queued_sw);
--		__skb_queue_tail(&tid->buf_q, skb);
--		if (!txctl->an->sleeping)
--			ath_tx_queue_tid(sc, txq, tid);
--
--		ath_txq_schedule(sc, txq);
--		goto out;
-+		++txq->pending_frames;
- 	}
- 
- 	bf = ath_tx_setup_buffer(sc, txq, tid, skb);
-@@ -2856,9 +2776,8 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
- 	struct ath_atx_tid *tid;
- 	int tidno, acno;
- 
--	for (tidno = 0, tid = &an->tid[tidno];
--	     tidno < IEEE80211_NUM_TIDS;
--	     tidno++, tid++) {
-+	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
-+		tid = ath_node_to_tid(an, tidno);
- 		tid->an        = an;
- 		tid->tidno     = tidno;
- 		tid->seq_start = tid->seq_next = 0;
-@@ -2866,11 +2785,14 @@ void ath_tx_node_init(struct ath_softc *sc, struct ath_node *an)
- 		tid->baw_head  = tid->baw_tail = 0;
- 		tid->active	   = false;
- 		tid->clear_ps_filter = true;
--		__skb_queue_head_init(&tid->buf_q);
-+		tid->has_queued  = false;
- 		__skb_queue_head_init(&tid->retry_q);
- 		INIT_LIST_HEAD(&tid->list);
- 		acno = TID_TO_WME_AC(tidno);
- 		tid->txq = sc->tx.txq_map[acno];
-+
-+		if (!an->sta)
-+			break; /* just one multicast ath_atx_tid */
- 	}
- }
- 
-@@ -2880,9 +2802,8 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
- 	struct ath_txq *txq;
- 	int tidno;
- 
--	for (tidno = 0, tid = &an->tid[tidno];
--	     tidno < IEEE80211_NUM_TIDS; tidno++, tid++) {
--
-+	for (tidno = 0; tidno < IEEE80211_NUM_TIDS; tidno++) {
-+		tid = ath_node_to_tid(an, tidno);
- 		txq = tid->txq;
- 
- 		ath_txq_lock(sc, txq);
-@@ -2894,6 +2815,9 @@ void ath_tx_node_cleanup(struct ath_softc *sc, struct ath_node *an)
- 		tid->active = false;
- 
- 		ath_txq_unlock(sc, txq);
-+
-+		if (!an->sta)
-+			break; /* just one multicast ath_atx_tid */
- 	}
- }
- 
--- 
-2.9.2
+T24gTW9uLCAyMDE2LTA4LTA4IGF0IDExOjU3ICswMzAwLCBHdXkgTWlzaG9sIHdyb3RlOg0KPiBB
+ZGQgem9uZSB0aW1lIHN5bmMgc3VwcG9ydCBmb3IgbWVzaCByb2xlLg0KPiBUaGlzIGFsbG93cyB0
+byBjb25maWd1cmUgdGhlIG1lc2ggcGVlcg0KPiBtYXN0ZXIgb2YgZWFjaCB6b25lIGZvciB0aW1l
+IHN5bmNocm9uaXphdGlvbi4NCg0KV2hhdCBpcyB0aGlzPyBtYWM4MDIxMSBhbHJlYWR5IHRyaWVz
+IHRvIG1haW50YWluIFRTRiBzeW5jIHdpdGggbWVzaA0KcGVlcnMgaWYgZ2V0L3NldCBUU0Ygb3Bz
+IGFyZSBzdXBwb3J0ZWQgYnkgdGhlIGRyaXZlci4NCg0KPiBTaWduZWQtb2ZmLWJ5OiBHdXkgTWlz
+aG9sIDxndXltQHRpLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy90aS93bDE4
+eHgvYWN4LmMgICAgIHwgMjkgKysrKysrKysrKysrKysrKw0KPiAgZHJpdmVycy9uZXQvd2lyZWxl
+c3MvdGkvd2wxOHh4L2FjeC5oICAgICB8IDEzICsrKysrKysNCj4gIGRyaXZlcnMvbmV0L3dpcmVs
+ZXNzL3RpL3dsMTh4eC9kZWJ1Z2ZzLmMgfCA1OSArKysrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKw0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wxOHh4L2V2ZW50LmMgICB8ICAxICsN
+Cj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsY29yZS93bGNvcmUuaCAgfCAgMyArKw0KPiAg
+NSBmaWxlcyBjaGFuZ2VkLCAxMDUgaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2Ry
+aXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsMTh4eC9hY3guYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L3RpL3dsMTh4eC9hY3guYw0KPiBpbmRleCA0YmUwNDA5Li5iNTUyNWEzIDEwMDY0NA0KPiAtLS0g
+YS9kcml2ZXJzL25ldC93aXJlbGVzcy90aS93bDE4eHgvYWN4LmMNCj4gKysrIGIvZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvdGkvd2wxOHh4L2FjeC5jDQo+IEBAIC0zMDksMyArMzA5LDMyIEBAIG91dDoN
+Cj4gIAlrZnJlZShhY3gpOw0KPiAgCXJldHVybiByZXQ7DQo+ICB9DQo+ICsNCj4gK2ludCB3bDE4
+eHhfYWN4X3RpbWVfc3luY19jZmcoc3RydWN0IHdsMTI3MSAqd2wpDQo+ICt7DQo+ICsJc3RydWN0
+IGFjeF90aW1lX3N5bmNfY2ZnICphY3g7DQo+ICsJaW50IHJldDsNCj4gKw0KPiArCXdsMTI3MV9k
+ZWJ1ZyhERUJVR19BQ1gsICJhY3ggdGltZSBzeW5jIGNmZzogbW9kZSAlZCwgYWRkcjogJXBNIiwN
+Cj4gKwkJICAgICB3bC0+Y29uZi5zZy5wYXJhbXNbV0wxOFhYX0NPTkZfU0dfVElNRV9TWU5DXSwN
+Cj4gKwkJICAgICB3bC0+em9uZV9tYXN0ZXJfbWFjX2FkZHIpOw0KPiArDQo+ICsJYWN4ID0ga3ph
+bGxvYyhzaXplb2YoKmFjeCksIEdGUF9LRVJORUwpOw0KPiArCWlmICghYWN4KSB7DQo+ICsJCXJl
+dCA9IC1FTk9NRU07DQo+ICsJCWdvdG8gb3V0Ow0KPiArCX0NCj4gKw0KPiArCWFjeC0+c3luY19t
+b2RlID0gd2wtPmNvbmYuc2cucGFyYW1zW1dMMThYWF9DT05GX1NHX1RJTUVfU1lOQ107DQo+ICsJ
+bWVtY3B5KGFjeC0+em9uZV9tYWNfYWRkciwgd2wtPnpvbmVfbWFzdGVyX21hY19hZGRyLCBFVEhf
+QUxFTik7DQo+ICsNCj4gKwlyZXQgPSB3bDEyNzFfY21kX2NvbmZpZ3VyZSh3bCwgQUNYX1RJTUVf
+U1lOQ19DRkcsDQo+ICsJCQkJICAgYWN4LCBzaXplb2YoKmFjeCkpOw0KPiArCWlmIChyZXQgPCAw
+KSB7DQo+ICsJCXdsMTI3MV93YXJuaW5nKCJhY3ggdGltZSBzeW5jIGNmZyBmYWlsZWQ6ICVkIiwg
+cmV0KTsNCj4gKwkJZ290byBvdXQ7DQo+ICsJfQ0KPiArb3V0Og0KPiArCWtmcmVlKGFjeCk7DQo+
+ICsJcmV0dXJuIHJldDsNCj4gK30NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L3RpL3dsMTh4eC9hY3guaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsMTh4eC9hY3guaA0K
+PiBpbmRleCAzNDJhMjk5Li4yZWRiYmJmIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJl
+bGVzcy90aS93bDE4eHgvYWN4LmgNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wx
+OHh4L2FjeC5oDQo+IEBAIC0zNyw2ICszNyw3IEBAIGVudW0gew0KPiAgCUFDWF9SWF9CQV9GSUxU
+RVIJCSA9IDB4MDA1OCwNCj4gIAlBQ1hfQVBfU0xFRVBfQ0ZHICAgICAgICAgICAgICAgICA9IDB4
+MDA1OSwNCj4gIAlBQ1hfRFlOQU1JQ19UUkFDRVNfQ0ZHCQkgPSAweDAwNUEsDQo+ICsJQUNYX1RJ
+TUVfU1lOQ19DRkcJCSA9IDB4MDA1QiwNCj4gIH07DQo+ICANCj4gIC8qIG51bWJlcnMgb2YgYml0
+cyB0aGUgbGVuZ3RoIGZpZWxkIHRha2VzIChhZGQgMSBmb3IgdGhlIGFjdHVhbCBudW1iZXIpICov
+DQo+IEBAIC0zODgsNiArMzg5LDE3IEBAIHN0cnVjdCBhY3hfZHluYW1pY19md190cmFjZXNfY2Zn
+IHsNCj4gIAlfX2xlMzIgZHluYW1pY19md190cmFjZXM7DQo+ICB9IF9fcGFja2VkOw0KPiAgDQo+
+ICsvKg0KPiArICogQUNYX1RJTUVfU1lOQ19DRkcNCj4gKyAqIGNvbmZpZ3VyZSB0aGUgdGltZSBz
+eW5jIHBhcmFtZXRlcnMNCj4gKyAqLw0KPiArc3RydWN0IGFjeF90aW1lX3N5bmNfY2ZnIHsNCj4g
+KwlzdHJ1Y3QgYWN4X2hlYWRlciBoZWFkZXI7DQo+ICsJdTggc3luY19tb2RlOw0KPiArCXU4IHpv
+bmVfbWFjX2FkZHJbRVRIX0FMRU5dOw0KPiArCXU4IHBhZGRpbmdbMV07DQo+ICt9IF9fcGFja2Vk
+Ow0KPiArDQo+ICBpbnQgd2wxOHh4X2FjeF9ob3N0X2lmX2NmZ19iaXRtYXAoc3RydWN0IHdsMTI3
+MSAqd2wsIHUzMiBob3N0X2NmZ19iaXRtYXAsDQo+ICAJCQkJICB1MzIgc2Rpb19ibGtfc2l6ZSwg
+dTMyIGV4dHJhX21lbV9ibGtzLA0KPiAgCQkJCSAgdTMyIGxlbl9maWVsZF9zaXplKTsNCj4gQEAg
+LTQwMiw1ICs0MTQsNiBAQCBpbnQgd2wxOHh4X2FjeF9pbnRlcnJ1cHRfbm90aWZ5X2NvbmZpZyhz
+dHJ1Y3Qgd2wxMjcxICp3bCwgYm9vbCBhY3Rpb24pOw0KPiAgaW50IHdsMTh4eF9hY3hfcnhfYmFf
+ZmlsdGVyKHN0cnVjdCB3bDEyNzEgKndsLCBib29sIGFjdGlvbik7DQo+ICBpbnQgd2wxOHh4X2Fj
+eF9hcF9zbGVlcChzdHJ1Y3Qgd2wxMjcxICp3bCk7DQo+ICBpbnQgd2wxOHh4X2FjeF9keW5hbWlj
+X2Z3X3RyYWNlcyhzdHJ1Y3Qgd2wxMjcxICp3bCk7DQo+ICtpbnQgd2wxOHh4X2FjeF90aW1lX3N5
+bmNfY2ZnKHN0cnVjdCB3bDEyNzEgKndsKTsNCj4gIA0KPiAgI2VuZGlmIC8qIF9fV0wxOFhYX0FD
+WF9IX18gKi8NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsMTh4eC9k
+ZWJ1Z2ZzLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy90aS93bDE4eHgvZGVidWdmcy5jDQo+IGlu
+ZGV4IDg2Y2NmODQuLjllMjg3NDggMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L3RpL3dsMTh4eC9kZWJ1Z2ZzLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wx
+OHh4L2RlYnVnZnMuYw0KPiBAQCAtNDA4LDYgKzQwOCw2NCBAQCBzdGF0aWMgY29uc3Qgc3RydWN0
+IGZpbGVfb3BlcmF0aW9ucyByYWRhcl9kZWJ1Z19tb2RlX29wcyA9IHsNCj4gIH07DQo+ICAjZW5k
+aWYgLyogQ0ZHODAyMTFfQ0VSVElGSUNBVElPTl9PTlVTICovDQo+ICANCj4gK3N0YXRpYyBzc2l6
+ZV90IHRpbWVfc3luY196b25lX2FkZHJfd3JpdGUoc3RydWN0IGZpbGUgKmZpbGUsDQo+ICsJCQkJ
+CSBjb25zdCBjaGFyIF9fdXNlciAqdXNlcl9idWYsDQo+ICsJCQkJCSBzaXplX3QgY291bnQsIGxv
+ZmZfdCAqcHBvcykgew0KPiArCXN0cnVjdCB3bDEyNzEgKndsID0gZmlsZS0+cHJpdmF0ZV9kYXRh
+Ow0KPiArCWNoYXIgYnVmWyhFVEhfQUxFTiAqIDIpXTsNCj4gKwlpbnQgcmV0Ow0KPiArDQo+ICsJ
+aWYgKGNvdW50IDwgKEVUSF9BTEVOICogMiArIDEpKSB7DQo+ICsJCXdsMTI3MV93YXJuaW5nKCJJ
+bGxlZ2FsIE1BQyBhZGRyZXNzOiB3cm9uZyBzaXplIik7DQo+ICsJCXJldHVybiAtRUlOVkFMOw0K
+PiArCX0NCj4gKw0KPiArCXJldCA9IGNvcHlfZnJvbV91c2VyKGJ1ZiwgdXNlcl9idWYsIChFVEhf
+QUxFTiAqIDIpKTsNCj4gKwlpZiAocmV0IDwgMCkNCj4gKwkJcmV0dXJuIHJldDsNCj4gKw0KPiAr
+CXJldCA9IGhleDJiaW4od2wtPnpvbmVfbWFzdGVyX21hY19hZGRyLCBidWYsIEVUSF9BTEVOKTsN
+Cj4gKwlpZiAocmV0IDwgMCkgew0KPiArCQl3bDEyNzFfd2FybmluZygiSWxsZWdhbCBNQUMgYWRk
+cmVzczogaW52YWxpZCBjaGFyYWN0ZXJzIik7DQo+ICsJCXJldHVybiByZXQ7DQo+ICsJfQ0KPiAr
+DQo+ICsJbXV0ZXhfbG9jaygmd2wtPm11dGV4KTsNCj4gKw0KPiArCWlmICh1bmxpa2VseSh3bC0+
+c3RhdGUgIT0gV0xDT1JFX1NUQVRFX09OKSkNCj4gKwkJZ290byBvdXQ7DQo+ICsNCj4gKwlyZXQg
+PSB3bDEyNzFfcHNfZWxwX3dha2V1cCh3bCk7DQo+ICsJaWYgKHJldCA8IDApDQo+ICsJCWdvdG8g
+b3V0Ow0KPiArDQo+ICsJcmV0ID0gd2wxOHh4X2FjeF90aW1lX3N5bmNfY2ZnKHdsKTsNCj4gKwlp
+ZiAocmV0IDwgMCkNCj4gKwkJY291bnQgPSByZXQ7DQo+ICsNCj4gKwl3bDEyNzFfcHNfZWxwX3Ns
+ZWVwKHdsKTsNCj4gK291dDoNCj4gKwltdXRleF91bmxvY2soJndsLT5tdXRleCk7DQo+ICsJcmV0
+dXJuIGNvdW50Ow0KPiArfQ0KPiArDQo+ICtzdGF0aWMgc3NpemVfdCB0aW1lX3N5bmNfem9uZV9h
+ZGRyX3JlYWQoc3RydWN0IGZpbGUgKmZpbGUsDQo+ICsJCQkJCWNoYXIgX191c2VyICp1c2VyYnVm
+LA0KPiArCQkJCQlzaXplX3QgY291bnQsIGxvZmZfdCAqcHBvcykNCj4gK3sNCj4gKwlzdHJ1Y3Qg
+d2wxMjcxICp3bCA9IGZpbGUtPnByaXZhdGVfZGF0YTsNCj4gKw0KPiArCXJldHVybiB3bDEyNzFf
+Zm9ybWF0X2J1ZmZlcih1c2VyYnVmLCBjb3VudCwgcHBvcywNCj4gKwkJCQkgICAgIiVwTVxuIiwg
+d2wtPnpvbmVfbWFzdGVyX21hY19hZGRyKTsNCj4gK30NCj4gKw0KPiArc3RhdGljIGNvbnN0IHN0
+cnVjdCBmaWxlX29wZXJhdGlvbnMgdGltZV9zeW5jX3pvbmVfYWRkcl9vcHMgPSB7DQo+ICsJLndy
+aXRlICA9IHRpbWVfc3luY196b25lX2FkZHJfd3JpdGUsDQo+ICsJLnJlYWQgPSB0aW1lX3N5bmNf
+em9uZV9hZGRyX3JlYWQsDQo+ICsJLm9wZW4gICA9IHNpbXBsZV9vcGVuLA0KPiArCS5sbHNlZWsg
+PSBkZWZhdWx0X2xsc2VlaywNCj4gK307DQo+ICsNCj4gIGludCB3bDE4eHhfZGVidWdmc19hZGRf
+ZmlsZXMoc3RydWN0IHdsMTI3MSAqd2wsDQo+ICAJCQkgICAgIHN0cnVjdCBkZW50cnkgKnJvb3Rk
+aXIpDQo+ICB7DQo+IEBAIC01NzYsNiArNjM0LDcgQEAgaW50IHdsMTh4eF9kZWJ1Z2ZzX2FkZF9m
+aWxlcyhzdHJ1Y3Qgd2wxMjcxICp3bCwNCj4gICNpZmRlZiBDT05GSUdfQ0ZHODAyMTFfQ0VSVElG
+SUNBVElPTl9PTlVTDQo+ICAJREVCVUdGU19BREQocmFkYXJfZGVidWdfbW9kZSwgbW9kZGlyKTsN
+Cj4gICNlbmRpZg0KPiArCURFQlVHRlNfQUREKHRpbWVfc3luY196b25lX2FkZHIsIG1vZGRpcik7
+DQo+ICAJREVCVUdGU19BREQoZHluYW1pY19md190cmFjZXMsIG1vZGRpcik7DQo+ICANCj4gIAly
+ZXR1cm4gMDsNCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsMTh4eC9l
+dmVudC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wxOHh4L2V2ZW50LmMNCj4gaW5kZXgg
+MmM1ZGY0My4uYjM2Y2UxOCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkv
+d2wxOHh4L2V2ZW50LmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wxOHh4L2V2
+ZW50LmMNCj4gQEAgLTIyLDYgKzIyLDcgQEANCj4gICNpbmNsdWRlIDxuZXQvZ2VuZXRsaW5rLmg+
+DQo+ICAjaW5jbHVkZSAiZXZlbnQuaCINCj4gICNpbmNsdWRlICJzY2FuLmgiDQo+ICsjaW5jbHVk
+ZSAiY29uZi5oIg0KPiAgI2luY2x1ZGUgIi4uL3dsY29yZS9jbWQuaCINCj4gICNpbmNsdWRlICIu
+Li93bGNvcmUvZGVidWcuaCINCj4gICNpbmNsdWRlICIuLi93bGNvcmUvdmVuZG9yX2NtZC5oIg0K
+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2xjb3JlL3dsY29yZS5oIGIv
+ZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2xjb3JlL3dsY29yZS5oDQo+IGluZGV4IDhmMjhhYTAu
+LjE4Mjc1NDYgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsY29yZS93
+bGNvcmUuaA0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy90aS93bGNvcmUvd2xjb3JlLmgN
+Cj4gQEAgLTUwMSw2ICs1MDEsOSBAQCBzdHJ1Y3Qgd2wxMjcxIHsNCj4gIA0KPiAgCS8qIGR5bmFt
+aWMgZncgdHJhY2VzICovDQo+ICAJdTMyIGR5bmFtaWNfZndfdHJhY2VzOw0KPiArDQo+ICsJLyog
+dGltZSBzeW5jIHpvbmUgbWFzdGVyICovDQo+ICsJdTggem9uZV9tYXN0ZXJfbWFjX2FkZHJbRVRI
+X0FMRU5dOw0KPiAgfTsNCj4gIA0KPiAgaW50IHdsY29yZV9wcm9iZShzdHJ1Y3Qgd2wxMjcxICp3
+bCwgc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldik7DQoNCg0K
