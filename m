@@ -1,99 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:38088 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753324AbcHCLn5 (ORCPT
+Received: from atlantic540.startdedicated.de ([188.138.9.77]:35475 "EHLO
+	atlantic540.startdedicated.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752696AbcHRNi1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 07:43:57 -0400
-Received: by mail-wm0-f41.google.com with SMTP id o80so332024165wme.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 04:43:34 -0700 (PDT)
-Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
- completion
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>
-References: <20160728190151.GV13516@tuxbot>
- <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de>
- <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com>
- <20160730165817.GQ3296@wotan.suse.de>
- <C528E404-0CA5-46B4-B551-B1D4B58BC053@gmail.com>
- <37a3cd66-262e-ffbe-ea7a-a6d5b1ca1c8b@bmw-carit.de>
- <20160801194408.GZ3296@wotan.suse.de>
- <0f9350fa-e8b5-9d64-b2d3-afda5e5f6bbf@bmw-carit.de>
- <20160802063419.GG3296@wotan.suse.de>
- <2713d779-ef55-793d-f37e-d1414bb1bfc2@bmw-carit.de>
- <20160802074106.GI3296@wotan.suse.de>
- <CAKdAkRR=NC4Agen9ad3CK8hgZh+zbZhzhr2MP169JwisgWvP_w@mail.gmail.com>
-Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Daniel Wagner <wagi@monom.org>,
-	Bastien Nocera <hadess@hadess.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	David Howells <dhowells@redhat.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-	linux-kselftest@vger.kernel.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	lkml <linux-kernel@vger.kernel.org>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <0e20a2dc-ed76-b209-5c01-387f1c444b19@broadcom.com> (sfid-20160803_134546_398104_048CECBA)
-Date: Wed, 3 Aug 2016 13:43:31 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAKdAkRR=NC4Agen9ad3CK8hgZh+zbZhzhr2MP169JwisgWvP_w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Thu, 18 Aug 2016 09:38:27 -0400
+From: Daniel Wagner <wagi@monom.org>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+	"Luis R . Rodriguez" <mcgrof@kernel.org>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Daniel Wagner <daniel.wagner@bmw-carit.de>
+Subject: [PATCH 1/2] carl9170: Fix wrong completion usage
+Date: Thu, 18 Aug 2016 15:12:05 +0200
+Message-Id: <1471525926-20384-2-git-send-email-wagi@monom.org> (sfid-20160818_153837_116836_090081BF)
+In-Reply-To: <1471525926-20384-1-git-send-email-wagi@monom.org>
+References: <1471525926-20384-1-git-send-email-wagi@monom.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03-08-16 09:42, Dmitry Torokhov wrote:
-> On Tue, Aug 2, 2016 at 12:41 AM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
->> On Tue, Aug 02, 2016 at 08:53:55AM +0200, Daniel Wagner wrote:
->>> On 08/02/2016 08:34 AM, Luis R. Rodriguez wrote:
->>>> On Tue, Aug 02, 2016 at 07:49:19AM +0200, Daniel Wagner wrote:
->>>>>> The sysdata API's main goal rather is to provide a flexible API first,
->>>>>> compartamentalizing the usermode helper was secondary. But now it seems
->>>>>> I may just also add devm support too to help simplify code further.
->>>>>
->>>>> I missed the point that you plan to add usermode helper support to
->>>>> the sysdata API.
->>>>
->>>> I had no such plans, when I have asked folks so far about "hey are you
->>>> really in need for it, OK what for? " and "what extended uses do you
->>>> envision?" so I far I have not gotten any replies at all. So -- instead
->>>> sysdata currently ignores it.
->>>
->>> So you argue for the remoteproc use case with 100+ MB firmware that
->>> if there is a way to load after pivot_root() (or other additional
->>> firmware partition shows up) then there is no need at all for
->>> usermode helper?
->>
->> No, I'm saying I'd like to hear valid uses cases for the usermode helper and so
->> far I have only found using coccinelle grammar 2 explicit users, that's it. My
->> patch series (not yet merge) then annotates these as valid as I've verified
->> through their documentation they have some quirky requirement.
-> 
-> In certain configurations (embedded) people do not want to use
-> initramfs nor modules nor embed firmware into the kernel. In this case
-> usermode helper + firmware calss timeout handling provides necessary
-> wait for the root filesystem to be mounted.
+From: Daniel Wagner <daniel.wagner@bmw-carit.de>
 
-And there are people who don't have a usermode helper running at all in
-their configuration, but I guess they should disable the helper.
+carl9170_usb_stop() is used from several places to flush and cleanup any
+pending work. The normal pattern is to send a request and wait for the
+irq handler to call complete(). The completion is not reinitialized
+during normal operation and as the old comment indicates it is important
+to keep calls to wait_for_completion_timeout() and complete() balanced.
 
-In my opinion the kernel should provide functionality to user-space and
-user-space providing functionality to the kernel should be avoided.
+Calling complete_all() brings this equilibirum out of balance and needs
+to be fixed by a reinit_completion(). But that opens a small race
+window. It is possible that the sequence of complete_all(),
+reinit_completion() is faster than the wait_for_completion_timeout() can
+do its work. The wake up is not lost but the done counter test is after
+reinit_completion() has been executed. The only reason we don't see
+carl9170_exec_cmd() hang forever is we use the timeout version of
+wait_for_copletion().
 
-> If we solve waiting for rootfs (or something else that may contain
-> firmware) then these cases will not need to use usermode helper.
+Let's fix this by reinitializing the completion (that is just setting
+done counter to 0) just before we send out an request. Now,
+carl9170_usb_stop() can be sure a complete() call is enough to make
+progess since there is only one waiter at max. This is a common pattern
+also seen in various drivers which use completion.
 
-If firmware (or whatever) API could get notification of mount syscall it
-could be used to retry firmware loading instead of periodic polling.
-That leaves the question raised by you about when to stop trying. The
-initlevel stuff is probably a user-space only concept, right? So no
-ideas how the kernel itself could decide except for a "long" timeout.
+Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
+---
+ drivers/net/wireless/ath/carl9170/usb.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/net/wireless/ath/carl9170/usb.c b/drivers/net/wireless/ath/carl9170/usb.c
+index 76842e6..99ab203 100644
+--- a/drivers/net/wireless/ath/carl9170/usb.c
++++ b/drivers/net/wireless/ath/carl9170/usb.c
+@@ -670,6 +670,7 @@ int carl9170_exec_cmd(struct ar9170 *ar, const enum carl9170_cmd_oids cmd,
+ 	ar->readlen = outlen;
+ 	spin_unlock_bh(&ar->cmd_lock);
+ 
++	reinit_completion(&ar->cmd_wait);
+ 	err = __carl9170_exec_cmd(ar, &ar->cmd, false);
+ 
+ 	if (!(cmd & CARL9170_CMD_ASYNC_FLAG)) {
+@@ -778,10 +779,7 @@ void carl9170_usb_stop(struct ar9170 *ar)
+ 	spin_lock_bh(&ar->cmd_lock);
+ 	ar->readlen = 0;
+ 	spin_unlock_bh(&ar->cmd_lock);
+-	complete_all(&ar->cmd_wait);
+-
+-	/* This is required to prevent an early completion on _start */
+-	reinit_completion(&ar->cmd_wait);
++	complete(&ar->cmd_wait);
+ 
+ 	/*
+ 	 * Note:
+-- 
+2.7.4
