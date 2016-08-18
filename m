@@ -1,54 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.zeus03.de ([194.117.254.33]:56439 "EHLO mail.zeus03.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932750AbcHKVMj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 17:12:39 -0400
-From: Wolfram Sang <wsa-dev@sang-engineering.com>
-To: linux-usb@vger.kernel.org
-Cc: Wolfram Sang <wsa-dev@sang-engineering.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
+Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:38213
+	"EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1768091AbcHROSF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Aug 2016 10:18:05 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Javier Martinez Canillas <javier@osg.samsung.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
 	linux-wireless@vger.kernel.org,
-	brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org
-Subject: [PATCH 12/16] net: wireless: broadcom: brcm80211: brcmfmac: usb: don't print error when allocating urb fails
-Date: Thu, 11 Aug 2016 23:05:31 +0200
-Message-Id: <1470949539-25392-13-git-send-email-wsa-dev@sang-engineering.com> (sfid-20160811_231251_512870_7454AD6D)
-In-Reply-To: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
-References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
+	Nishant Sarmukadam <nishants@marvell.com>
+Subject: [PATCH] mwifiex: propagate error if IRQ request fails in mwifiex_sdio_of()
+Date: Thu, 18 Aug 2016 10:17:48 -0400
+Message-Id: <1471529868-13669-1-git-send-email-javier@osg.samsung.com> (sfid-20160818_162132_485592_1108F040)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kmalloc will print enough information in case of failure.
+If request_irq() fails in mwifiex_sdio_probe_of(), only an error message
+is printed but the actual error is not propagated to the caller function.
 
-Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
+Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-index 98b15a9a2779f4..fa26619a7945d9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/usb.c
-@@ -1099,15 +1099,11 @@ struct brcmf_usbdev *brcmf_usb_attach(struct brcmf_usbdev_info *devinfo,
- 	devinfo->tx_freecount = ntxq;
- 
- 	devinfo->ctl_urb = usb_alloc_urb(0, GFP_ATOMIC);
--	if (!devinfo->ctl_urb) {
--		brcmf_err("usb_alloc_urb (ctl) failed\n");
-+	if (!devinfo->ctl_urb)
- 		goto error;
--	}
- 	devinfo->bulk_urb = usb_alloc_urb(0, GFP_ATOMIC);
--	if (!devinfo->bulk_urb) {
--		brcmf_err("usb_alloc_urb (bulk) failed\n");
-+	if (!devinfo->bulk_urb)
- 		goto error;
--	}
- 
- 	return &devinfo->bus_pub;
- 
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index d3e1561ca075..00727936ad6e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -125,6 +125,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
+ 				dev_err(dev,
+ 					"Failed to request irq_wifi %d (%d)\n",
+ 					cfg->irq_wifi, ret);
++				return ret;
+ 			}
+ 			disable_irq(cfg->irq_wifi);
+ 		}
 -- 
-2.8.1
-
+2.5.5
