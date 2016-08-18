@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46618 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755273AbcH1LKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Aug 2016 07:10:48 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: fix tim recalculation after PS response
-Date: Sun, 28 Aug 2016 13:10:37 +0200
-Message-Id: <20160828111037.46801-1-nbd@nbd.name> (sfid-20160828_131052_076308_52755F86)
+Received: from arroyo.ext.ti.com ([198.47.19.12]:49427 "EHLO arroyo.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750776AbcHRH3k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Aug 2016 03:29:40 -0400
+From: Maxim Altshul <maxim.altshul@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
+	Maxim Altshul <maxim.altshul@ti.com>
+Subject: [PATCH 0/3] IOP RX BA session issues
+Date: Thu, 18 Aug 2016 10:36:24 +0300
+Message-ID: <20160818073627.30972-1-maxim.altshul@ti.com> (sfid-20160818_092943_235565_9AFD6E6E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handle the case where the mac80211 intermediate queues are empty and the
-driver has buffered frames
+Some background: 
 
-Fixes: ba8c3d6f16a1 ("mac80211: add an intermediate software queue implementation")
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
----
- net/mac80211/sta_info.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+There exist some devices (latest mobile phones and some AP's e.g LG G4 H815, 
+Samsung Galaxy S5 G900H) that tend to not respect a BA 
+sessions maximum size (in Kbps). 
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 19f14c9..251e14e 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1616,7 +1616,6 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 
- 		sta_info_recalc_tim(sta);
- 	} else {
--		unsigned long tids = sta->txq_buffered_tids & driver_release_tids;
- 		int tid;
- 
- 		/*
-@@ -1648,7 +1647,8 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
- 		for (tid = 0; tid < ARRAY_SIZE(sta->sta.txq); tid++) {
- 			struct txq_info *txqi = to_txq_info(sta->sta.txq[tid]);
- 
--			if (!(tids & BIT(tid)) || txqi->tin.backlog_packets)
-+			if (!(driver_release_tids & BIT(tid)) ||
-+			    txqi->tin.backlog_packets)
- 				continue;
- 
- 			sta_info_recalc_tim(sta);
+These devices won't respect the AMPDU size that was negotiated 
+during associasion (even though they do respect the maximal number of packets).
+
+This violation is characterized by a valid number of 
+packets in a single AMPDU who all have the same size.
+Even so, the total size will exceed the size negotiated during association.
+
+Eventually, this will cause some undefined behavior, 
+which in turn causes the hw to drop packets, causing the throughput to plummet.
+
+The fix is separated to 3 patches:
+wlcore patches (patches 2+3):
+Add a functionality in which the firmware is able 
+to notify the driver that the aggregation window size 
+must be changed, and in turn the driver will notify mac80211.
+
+mac80211 patch (patch 1) which will:
+a. Make the subframe limitation to be held by each station, 
+instead of being held only by hw.
+b. Create an api for the driver to call which will remove all violating
+BA sessions with a specific peer.
+
+Reopening the BA sessions with a different size will limit the aggregation 
+window size, which will in turn limit the maximum size in bytes of the whole aggregation.
+
+I hope that the commit messages are clear enough, and if not then I will change them upon request.
+
+Maxim Altshul (3):
+  mac80211: RX BA support for sta max_rx_aggregation_subframes
+  wlcore: Pass win_size taken from ieee80211_sta to FW
+  wlcore: Add RX_BA_WIN_SIZE_CHANGE_EVENT event
+
+ drivers/net/wireless/ti/wl18xx/event.c | 22 ++++++++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/event.h |  1 +
+ drivers/net/wireless/ti/wl18xx/main.c  |  3 ++-
+ drivers/net/wireless/ti/wlcore/acx.c   |  5 +++--
+ drivers/net/wireless/ti/wlcore/acx.h   |  3 ++-
+ drivers/net/wireless/ti/wlcore/main.c  |  6 ++++--
+ include/net/mac80211.h                 | 22 ++++++++++++++++++++++
+ net/mac80211/agg-rx.c                  | 31 +++++++++++++++++++++++++++----
+ net/mac80211/ht.c                      | 18 ++++++++++++++++++
+ net/mac80211/sta_info.c                |  3 +++
+ 10 files changed, 104 insertions(+), 10 deletions(-)
+
 -- 
-2.8.4
+2.9.0
