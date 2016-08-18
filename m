@@ -1,31 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51448 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753140AbcHWTNq (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Aug 2016 15:13:46 -0400
-Subject: Re: [PATCH 4/6] ath10k: QCA9984 hw1.0: add firmware and board files
-To: Kalle Valo <kvalo@qca.qualcomm.com>, linux-firmware@kernel.org
-References: <20160823184644.21587.95655.stgit@potku.adurom.net>
- <20160823184847.21587.65336.stgit@potku.adurom.net>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <60cf498d-162e-6b5a-25b7-627949033f85@candelatech.com> (sfid-20160823_211351_961049_4F92A740)
-Date: Tue, 23 Aug 2016 12:07:31 -0700
+Received: from smtp.codeaurora.org ([198.145.29.96]:41141 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946825AbcHRN0M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Aug 2016 09:26:12 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20160823184847.21587.65336.stgit@potku.adurom.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Subject: Re: mwifiex: fix large amsdu packets causing firmware hang
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1469098824-8031-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160818130223.AE95961C2C@smtp.codeaurora.org> (sfid-20160818_152649_551418_36AB5803)
+Date: Thu, 18 Aug 2016 13:02:23 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/23/2016 11:48 AM, Kalle Valo wrote:
-> QCA9884 is a new chip supported by ath10k. Firmware version is 10.4-3.2-00072.
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Cathy Luo <cluo@marvell.com>
+> 
+> Sometimes host prepares and downloads a large amsdu packet to firmware
+> which leads to a memory corruption in firmware.
+> The reason is __dev_alloc_skb() may allocate larger buffer than required
+> size. This patch solves the problem by checking "adapter->tx_buf_size"
+> instead of relying on skb_tailroom().
+> 
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Typo in the '9884' string I think.  Should be 9984?
+Thanks, 1 patch applied to wireless-drivers.git:
 
-Thanks,
-Ben
+c81396f3da22 mwifiex: fix large amsdu packets causing firmware hang
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Sent by pwcli
+https://patchwork.kernel.org/patch/9241469/
