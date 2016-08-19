@@ -1,45 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv-hp10-72.netsons.net ([94.141.22.72]:36897 "EHLO
-        srv-hp10.netsons.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751195AbcH0NVN (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:36028 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755097AbcHSTCK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Aug 2016 09:21:13 -0400
-From: Luca Ceresoli <luca@lucaceresoli.net>
-To: devel@driverdev.osuosl.org
-Cc: Luca Ceresoli <luca@lucaceresoli.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/6] rtl8723au: remove declaration of unimplemented functions
-Date: Sat, 27 Aug 2016 14:40:44 +0200
-Message-Id: <1472301649-18694-1-git-send-email-luca@lucaceresoli.net> (sfid-20160827_152158_558617_AC8D64FD)
+        Fri, 19 Aug 2016 15:02:10 -0400
+Received: by mail-wm0-f45.google.com with SMTP id q128so45540443wma.1
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2016 12:02:09 -0700 (PDT)
+Subject: Re: [PATCHv7 4/4] mt7601u: use linux/bitfield.h
+To: Jakub Kicinski <jakub.kicinski@netronome.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>
+References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
+ <1471625049-12643-5-git-send-email-jakub.kicinski@netronome.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <161e3391-9a95-6388-6b93-99a5b12a2036@broadcom.com> (sfid-20160819_210220_731276_25C70859)
+Date: Fri, 19 Aug 2016 21:02:02 +0200
+MIME-Version: 1.0
+In-Reply-To: <1471625049-12643-5-git-send-email-jakub.kicinski@netronome.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
----
- drivers/staging/rtl8723au/include/recv_osdep.h | 3 ---
- 1 file changed, 3 deletions(-)
+On 19-8-2016 18:44, Jakub Kicinski wrote:
+> Use the newly added linux/bitfield.h.
+> 
+> Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
+> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+> ---
+>  drivers/net/wireless/mediatek/mt7601u/dma.c     |  2 +-
+>  drivers/net/wireless/mediatek/mt7601u/dma.h     | 10 ++--
+>  drivers/net/wireless/mediatek/mt7601u/eeprom.c  | 12 ++--
+>  drivers/net/wireless/mediatek/mt7601u/init.c    | 10 ++--
+>  drivers/net/wireless/mediatek/mt7601u/mac.c     | 38 ++++++------
+>  drivers/net/wireless/mediatek/mt7601u/mcu.c     | 20 +++----
+>  drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  4 +-
+>  drivers/net/wireless/mediatek/mt7601u/phy.c     | 44 +++++++-------
+>  drivers/net/wireless/mediatek/mt7601u/tx.c      | 19 +++---
+>  drivers/net/wireless/mediatek/mt7601u/util.h    | 77 -------------------------
+>  10 files changed, 81 insertions(+), 155 deletions(-)
+>  delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+> 
+> diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.c b/drivers/net/wireless/mediatek/mt7601u/dma.c
+> index 57a80cfa39b1..a8bc064bc14f 100644
+> --- a/drivers/net/wireless/mediatek/mt7601u/dma.c
+> +++ b/drivers/net/wireless/mediatek/mt7601u/dma.c
+> @@ -103,7 +103,7 @@ static void mt7601u_rx_process_seg(struct mt7601u_dev *dev, u8 *data,
+>  
+>  	if (unlikely(rxwi->zero[0] || rxwi->zero[1] || rxwi->zero[2]))
+>  		dev_err_once(dev->dev, "Error: RXWI zero fields are set\n");
+> -	if (unlikely(MT76_GET(MT_RXD_INFO_TYPE, fce_info)))
+> +	if (unlikely(FIELD_GET(MT_RXD_INFO_TYPE, fce_info)))
+>  		dev_err_once(dev->dev, "Error: RX path seen a non-pkt urb\n");
+>  
+>  	trace_mt_rx(dev, rxwi, fce_info);
+> diff --git a/drivers/net/wireless/mediatek/mt7601u/dma.h b/drivers/net/wireless/mediatek/mt7601u/dma.h
+> index 978e8a90b87f..270d126880c0 100644
+> --- a/drivers/net/wireless/mediatek/mt7601u/dma.h
+> +++ b/drivers/net/wireless/mediatek/mt7601u/dma.h
+> @@ -18,8 +18,6 @@
+>  #include <asm/unaligned.h>
+>  #include <linux/skbuff.h>
+>  
+> -#include "util.h"
+> -
+>  #define MT_DMA_HDR_LEN			4
+>  #define MT_RX_INFO_LEN			4
+>  #define MT_FCE_INFO_LEN			4
+> @@ -79,9 +77,9 @@ static inline int mt7601u_dma_skb_wrap(struct sk_buff *skb,
+>  	 */
+>  
+>  	info = flags |
+> -		MT76_SET(MT_TXD_INFO_LEN, round_up(skb->len, 4)) |
+> -		MT76_SET(MT_TXD_INFO_D_PORT, d_port) |
+> -		MT76_SET(MT_TXD_INFO_TYPE, type);
+> +		FIELD_PREP(MT_TXD_INFO_LEN, round_up(skb->len, 4)) |
+> +		FIELD_PREP(MT_TXD_INFO_D_PORT, d_port) |
+> +		FIELD_PREP(MT_TXD_INFO_TYPE, type);
 
-diff --git a/drivers/staging/rtl8723au/include/recv_osdep.h b/drivers/staging/rtl8723au/include/recv_osdep.h
-index c2d3f1bd5948..c159dbc5c752 100644
---- a/drivers/staging/rtl8723au/include/recv_osdep.h
-+++ b/drivers/staging/rtl8723au/include/recv_osdep.h
-@@ -26,9 +26,6 @@ int rtw_recv_indicatepkt23a(struct rtw_adapter *adapter, struct recv_frame *prec
- 
- void rtw_handle_tkip_mic_err23a(struct rtw_adapter *padapter, u8 bgroup);
- 
--int	rtw_init_recv_priv(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
--void rtw_free_recv_priv (struct recv_priv *precvpriv);
--
- int rtw_os_recv_resource_init(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
- 
- void rtw_init_recv_timer23a(struct recv_reorder_ctrl *preorder_ctrl);
--- 
-2.7.4
+So what are those flags? Is there no field definition for those.
+
+>  	put_unaligned_le32(info, skb_push(skb, sizeof(info)));
+>  	return skb_put_padto(skb, round_up(skb->len, 4) + 4);
+> @@ -90,7 +88,7 @@ static inline int mt7601u_dma_skb_wrap(struct sk_buff *skb,
+>  static inline int
+>  mt7601u_dma_skb_wrap_pkt(struct sk_buff *skb, enum mt76_qsel qsel, u32 flags)
+>  {
+> -	flags |= MT76_SET(MT_TXD_PKT_INFO_QSEL, qsel);
+> +	flags |= FIELD_PREP(MT_TXD_PKT_INFO_QSEL, qsel);
+
+Ah. This is the flags being ORed in above. I suppose there are more
+callsites to mt7601u_dma_skb_wrap().
+
+>  	return mt7601u_dma_skb_wrap(skb, WLAN_PORT, DMA_PACKET, flags);
+>  }
+>  
+> diff --git a/drivers/net/wireless/mediatek/mt7601u/eeprom.c b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
+> index 8d8ee0344f7b..da6faea092d6 100644
+> --- a/drivers/net/wireless/mediatek/mt7601u/eeprom.c
+> +++ b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
+> @@ -45,8 +45,8 @@ mt7601u_efuse_read(struct mt7601u_dev *dev, u16 addr, u8 *data,
+>  	val = mt76_rr(dev, MT_EFUSE_CTRL);
+>  	val &= ~(MT_EFUSE_CTRL_AIN |
+>  		 MT_EFUSE_CTRL_MODE);
+> -	val |= MT76_SET(MT_EFUSE_CTRL_AIN, addr & ~0xf) |
+> -	       MT76_SET(MT_EFUSE_CTRL_MODE, mode) |
+> +	val |= FIELD_PREP(MT_EFUSE_CTRL_AIN, addr & ~0xf) |
+> +	       FIELD_PREP(MT_EFUSE_CTRL_MODE, mode) |
+>  	       MT_EFUSE_CTRL_KICK;
+
+MT_EFUSE_CTRL_KICK is probably a 1-bit field in MT_EFUSE_CTRL register.
+It looks like you did not want to go all the way although you do give an
+example in bitfield.h, ie. + *  #define REG_FIELD_B  BIT(7).
+
+Regards,
+Arend
