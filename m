@@ -1,48 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59618 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755205AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 17:47:24 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 09/20] rtl8xxxu: Simplify code setting TX buffer boundary
-Date: Fri, 19 Aug 2016 17:46:31 -0400
-Message-Id: <1471643202-26250-10-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234840_201587_0D50A723)
-In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:60073 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751332AbcHSKK5 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 06:10:57 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [4.8] ath9k: fix using sta->drv_priv before initializing it
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160802110322.38359-1-nbd@nbd.name>
+To: Felix Fietkau <nbd@nbd.name>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>
+Message-ID: <eff1c1ab007d448b823b0c3e5ac98864@euamsexm01a.eu.qualcomm.com> (sfid-20160819_121100_449246_1867FC1D)
+Date: Fri, 19 Aug 2016 12:09:51 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Felix Fietkau <nbd@nbd.name> wrote:
+> A station pointer can be passed to the driver on tx, before it has been
+> marked as associated. Since ath9k_sta_state was initializing the entry
+> too late, it resulted in some spurious crashes.
+> 
+> Fixes: df3c6eb34da5 ("ath9k: Use sta_state() callback")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-With all devices now offering fops->total_page_num, get rid of the
-if mess for setting the TX buffer boundary.
+I'm planning to queue this for 4.8.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index efe24a6..7a697c0 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -3968,13 +3968,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		/*
- 		 * Set TX buffer boundary
- 		 */
--		if (priv->rtl_chip == RTL8192E)
--			val8 = TX_TOTAL_PAGE_NUM_8192E + 1;
--		else
--			val8 = TX_TOTAL_PAGE_NUM + 1;
--
--		if (priv->rtl_chip == RTL8723B)
--			val8 -= 1;
-+		val8 = priv->fops->total_page_num + 1;
- 
- 		rtl8xxxu_write8(priv, REG_TXPKTBUF_BCNQ_BDNY, val8);
- 		rtl8xxxu_write8(priv, REG_TXPKTBUF_MGQ_BDNY, val8);
 -- 
-2.7.4
+Sent by pwcli
+https://patchwork.kernel.org/patch/9255463/
