@@ -1,74 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:38296 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751610AbcH1UwR (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 28 Aug 2016 16:52:17 -0400
-MIME-Version: 1.0
-In-Reply-To: <2913835.hr5kg63Vcv@wuerfel>
-References: <20160709232834.31654-1-martin.blumenstingl@googlemail.com>
- <20160821143105.27487-1-martin.blumenstingl@googlemail.com>
- <20160821143105.27487-2-martin.blumenstingl@googlemail.com> <2913835.hr5kg63Vcv@wuerfel>
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Date: Sun, 28 Aug 2016 22:51:54 +0200
-Message-ID: <CAFBinCAj0gFnKkqBrmUxCwXjsv6NY4KuWGRA4_mnXjq_boYx8w@mail.gmail.com> (sfid-20160828_225221_471129_9172CB3C)
-Subject: Re: [PATCH v5 1/3] Documentation: dt: net: add ath9k wireless device binding
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
-        kvalo@codeaurora.org, chunkeey@googlemail.com,
-        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
-        bjorn@mork.no, linux@rempel-privat.de
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:59606 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754967AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 17:47:24 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 07/20] rtl8xxxu: Switch 8192cu/8188cu devices to use rtl8xxxu_init_queue_reserved_page()
+Date: Fri, 19 Aug 2016 17:46:29 -0400
+Message-Id: <1471643202-26250-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234846_997320_C9BA8720)
+In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 22, 2016 at 11:08 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Sunday, August 21, 2016 4:31:03 PM CEST Martin Blumenstingl wrote:
->> +pci {
->> +       pcie@0 {
->> +               reg = <0 0 0 0 0>;
->
-> It's not clear what these two nodes refer to in the example. Is the top-level
-> node the PCI host bridge, and the second node the first PCIe port?
->
-> Maybe add the properties from a real system here to make this a little
-> clearer.
->
-> The unit address for the slot should be "00,0", not "0" here.
-good point - I'll skip the part where I am describing the bridge as
-well and keep it simple.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
->> +               ath9k@0,0 {
->
-> According to the PCI binding, the name should be the same as the
-> compatible string here, or match the class code in the table.
-The original example was from an actual system (where an ath9k is
-connected to the PCIe bug). Unfortunately the PCIe driver contains
-some hacks, so I'm not sure if these values serve as a good example.
-Thus I took an example from a device where the ath9k chip is connected
-via PCI (no "express" - found in sysfs at:
-/sys/bus/pci/devices/0000:00:0e.0):
-&pci0 {
-    ath9k@168c,002d {
-        compatible = "pci168c,002d";
-        reg = <0x7000 0 0 0 0>;
-        qca,disable-5ghz;
-    };
-};
+This was the last user of the old
+rtl8xxxu_old_init_queue_reserved_page() which can now be removed.
 
->> +                       compatible = "pci168c,0030";
->> +                       reg = <0 0 0 0 0>;
->
-> Are the device/fn numbers all zero on your system? This is a bit
-> confusing, as it's not immediately clear what the reg properties
-> refers to. Also, I think the length should reflect the actual length
-> of the config space, either 0x100 or 0x1000.
-The first issue is solved with the updated example (see above).
-Where would the size go (is it the second-last or last value)?
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-
-Thanks for your patience!
-Regards,
-Martin
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+index 69d1a14..cd13c25 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+@@ -579,5 +579,9 @@ struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.pbp_rx = PBP_PAGE_SIZE_128,
+ 	.pbp_tx = PBP_PAGE_SIZE_128,
+ 	.mactable = rtl8xxxu_gen1_mac_init_table,
++	.total_page_num = TX_TOTAL_PAGE_NUM,
++	.page_num_hi = TX_PAGE_NUM_HI_PQ,
++	.page_num_lo = TX_PAGE_NUM_LO_PQ,
++	.page_num_norm = TX_PAGE_NUM_NORM_PQ,
+ };
+ #endif
+-- 
+2.7.4
