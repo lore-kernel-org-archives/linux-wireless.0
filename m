@@ -1,43 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40758 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328AbcHOIO7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2016 04:14:59 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Emmanuel Grumbach <egrumbach@gmail.com>
-Cc: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2016-04-12
-References: <1460448559.2630.8.camel@intel.com>
-	<CANUX_P27s1jzXfLzBca19db10c9yo1MKQ6T9b=pw-ZQLZ0KKVQ@mail.gmail.com>
-Date: Mon, 15 Aug 2016 11:14:54 +0300
-In-Reply-To: <CANUX_P27s1jzXfLzBca19db10c9yo1MKQ6T9b=pw-ZQLZ0KKVQ@mail.gmail.com>
-	(Emmanuel Grumbach's message of "Sun, 7 Aug 2016 07:38:19 +0300")
-Message-ID: <87wpjicutd.fsf@kamboji.qca.qualcomm.com> (sfid-20160815_101504_767076_E771C8C4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35503 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754140AbcHSP2r (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 11:28:47 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Stable <stable@vger.kernel.org>
+Subject: [PATCH] rtlwifi: Fix missing country code for Great Britain
+Date: Fri, 19 Aug 2016 10:14:34 -0500
+Message-Id: <1471619674-29439-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160819_172909_364743_FE3D2044)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <egrumbach@gmail.com> writes:
+Some RTL8821AE devices sold in Great Britain have the country code of
+0x25 encoded in their EEPROM. This value is not tested in the routine
+that establishes the regulatory info for the chip. The fix is to set
+this code to have the same capabilities as the EU countries.
 
-> On Sun, Aug 7, 2016 at 7:35 AM, Grumbach, Emmanuel
-> <emmanuel.grumbach@intel.com> wrote:
->>
->> Hi Kalle,
->>
->> Here is a pull request for 4.6. I have here a patch that was merged to
->> -next already, but clearly, it should have been routed through the
->> current cycle's trees. Sorry about that.
->> The patch is:
->
->
-> Wow.. I knew evolution was sometimes stupid, but this is new to me..
-> Obviously you should ignore that.
-> Sorry...
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org>
+---
+ drivers/net/wireless/realtek/rtlwifi/regd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Ok, I dropped this :)
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/regd.c b/drivers/net/wireless/realtek/rtlwifi/regd.c
+index 3524441..6ee6bf8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/regd.c
++++ b/drivers/net/wireless/realtek/rtlwifi/regd.c
+@@ -345,9 +345,9 @@ static const struct ieee80211_regdomain *_rtl_regdomain_select(
+ 		return &rtl_regdom_no_midband;
+ 	case COUNTRY_CODE_IC:
+ 		return &rtl_regdom_11;
+-	case COUNTRY_CODE_ETSI:
+ 	case COUNTRY_CODE_TELEC_NETGEAR:
+ 		return &rtl_regdom_60_64;
++	case COUNTRY_CODE_ETSI:
+ 	case COUNTRY_CODE_SPAIN:
+ 	case COUNTRY_CODE_FRANCE:
+ 	case COUNTRY_CODE_ISRAEL:
+@@ -406,6 +406,8 @@ static u8 channel_plan_to_country_code(u8 channelplan)
+ 		return COUNTRY_CODE_WORLD_WIDE_13;
+ 	case 0x22:
+ 		return COUNTRY_CODE_IC;
++	case 0x25:
++		return COUNTRY_CODE_ETSI;
+ 	case 0x32:
+ 		return COUNTRY_CODE_TELEC_NETGEAR;
+ 	case 0x41:
 -- 
-Kalle Valo
+2.6.6
