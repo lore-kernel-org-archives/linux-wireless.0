@@ -1,65 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47940 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934597AbcHBMXL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:23:11 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: j@w1.fi, kvalo@codeaurora.org, luciano.coelho@intel.com,
-	linuxwifi@intel.com, m.chehab@samsung.com, pawel@osciak.com,
-	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
-	k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com, lars@metafoo.de, johannes.berg@intel.com
-Subject: [PATCH 0778/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:45:29 +0800
-Message-Id: <20160802114529.1606-1-baolex.ni@intel.com> (sfid-20160802_142406_948412_BC9D9E67)
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:36019 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754959AbcHSQon (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 12:44:43 -0400
+Received: by mail-wm0-f50.google.com with SMTP id q128so41478367wma.1
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2016 09:44:42 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>
+Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv7 2/4] mt7601u: remove redefinition of GENMASK
+Date: Fri, 19 Aug 2016 17:44:07 +0100
+Message-Id: <1471625049-12643-3-git-send-email-jakub.kicinski@netronome.com> (sfid-20160819_184448_278305_C5E2625E)
+In-Reply-To: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
+References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+Remove redefinition of GENMASK which should not be there
+in the upstream version of the code.
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
+Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
 ---
- drivers/net/wireless/intersil/hostap/hostap_ap.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/mediatek/mt7601u/regs.h | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_ap.c b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-index c995ace..c0c9f13 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_ap.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_ap.c
-@@ -32,22 +32,22 @@
+diff --git a/drivers/net/wireless/mediatek/mt7601u/regs.h b/drivers/net/wireless/mediatek/mt7601u/regs.h
+index afd8978e83fa..27a429d90cec 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/regs.h
++++ b/drivers/net/wireless/mediatek/mt7601u/regs.h
+@@ -17,10 +17,6 @@
  
- static int other_ap_policy[MAX_PARM_DEVICES] = { AP_OTHER_AP_SKIP_ALL,
- 						 DEF_INTS };
--module_param_array(other_ap_policy, int, NULL, 0444);
-+module_param_array(other_ap_policy, int, NULL, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(other_ap_policy, "Other AP beacon monitoring policy (0-3)");
+ #include <linux/bitops.h>
  
- static int ap_max_inactivity[MAX_PARM_DEVICES] = { AP_MAX_INACTIVITY_SEC,
- 						   DEF_INTS };
--module_param_array(ap_max_inactivity, int, NULL, 0444);
-+module_param_array(ap_max_inactivity, int, NULL, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(ap_max_inactivity, "AP timeout (in seconds) for station "
- 		 "inactivity");
+-#ifndef GENMASK
+-#define GENMASK(h, l)       (((U32_C(1) << ((h) - (l) + 1)) - 1) << (l))
+-#endif
+-
+ #define MT_ASIC_VERSION			0x0000
  
- static int ap_bridge_packets[MAX_PARM_DEVICES] = { 1, DEF_INTS };
--module_param_array(ap_bridge_packets, int, NULL, 0444);
-+module_param_array(ap_bridge_packets, int, NULL, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(ap_bridge_packets, "Bridge packets directly between "
- 		 "stations");
- 
- static int autom_ap_wds[MAX_PARM_DEVICES] = { 0, DEF_INTS };
--module_param_array(autom_ap_wds, int, NULL, 0444);
-+module_param_array(autom_ap_wds, int, NULL, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(autom_ap_wds, "Add WDS connections to other APs "
- 		 "automatically");
- 
+ #define MT76XX_REV_E3		0x22
 -- 
-2.9.2
-
+1.9.1
