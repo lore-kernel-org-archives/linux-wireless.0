@@ -1,200 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46077 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934300AbcHJTfb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 15:35:31 -0400
-Date: Wed, 10 Aug 2016 21:34:28 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Daniel Vetter <daniel.vetter@intel.com>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	Ming Lei <ming.lei@canonical.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>,
-	Jeff Mahoney <jeffm@suse.com>, Takashi Iwai <tiwai@suse.de>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Vikram Mulukutla <markivx@codeaurora.org>,
-	Stephen Boyd <stephen.boyd@linaro.org>,
-	Christian Lamparter <chunkeey@googlemail.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Julia Lawall <Julia.Lawall@lip6.fr>,
-	Tom Gundersen <teg@jklm.no>, Kay Sievers <kay@vrfy.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Tejun Heo <tj@kernel.org>,
-	Josh Boyer <jwboyer@fedoraproject.org>,
-	Michal Marek <mmarek@suse.com>,
-	David Howells <dhowells@redhat.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Daniel Vetter <daniel.vetter@ffwll.ch>, Abhay_Salunke@dell.com,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Wu Fengguang <fengguang.wu@intel.com>,
-	Mark Brown <broonie@kernel.org>,
-	Kees Cook <keescook@chromium.org>,
-	Jiri Slaby <jslaby@suse.com>, Gilles.Muller@lip6.fr,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux-wireless@vger.kernel.org, Borislav Petkov <bp@alien8.de>,
-	Richard Purdie <rpurdie@rpsys.net>, nicolas.palix@imag.fr
-Subject: Re: [PATCH v2 8/8] p54: convert to sysdata API
-Message-ID: <20160810193428.GN3296@wotan.suse.de> (sfid-20160810_213610_659164_2D474DD7)
-References: <1466121559-22363-1-git-send-email-mcgrof@kernel.org>
- <1466121559-22363-9-git-send-email-mcgrof@kernel.org>
- <CA+55aFyD+Xa2auP05=pBSxQc2qcuR858syMW5fiQKowbqbkDzQ@mail.gmail.com>
- <20160617013657.GH11948@wotan.suse.de>
- <CA+55aFycG-YfukKpP3x7kbBpCzXGwg35SdTU2r4wBbxrfROLtQ@mail.gmail.com>
- <20160617183503.GV11948@wotan.suse.de>
- <20160810183211.GL3296@wotan.suse.de>
- <7451c96a-b4f5-e629-a4a7-76d6fe1772e9@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7451c96a-b4f5-e629-a4a7-76d6fe1772e9@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:47594 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755321AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 17:47:24 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 11/20] rtl8xxxu: Add interrupt bit definitions for gen2 parts
+Date: Fri, 19 Aug 2016 17:46:33 -0400
+Message-Id: <1471643202-26250-12-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234840_759069_661C2AB7)
+In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 10, 2016 at 09:04:38PM +0200, Arend Van Spriel wrote:
-> On 10-8-2016 20:32, Luis R. Rodriguez wrote:
-> > On Fri, Jun 17, 2016 at 08:35:03PM +0200, Luis R. Rodriguez wrote:
-> >> On Thu, Jun 16, 2016 at 05:09:30PM -1000, Linus Torvalds wrote:
-> >>> On Thu, Jun 16, 2016 at 3:36 PM, Luis R. Rodriguez <mcgrof@kernel.org> wrote:
-> >>>>
-> >>>> Reason this could not wait is folks seem to want to keep extending the API,
-> >>>> which is another reason for this, do we want to put an end to an unflexible
-> >>>> API now or should we wait ?
-> 
-> [big snip]
-> 
-> > 
-> > Regarding this -- Dmitry recenlty noted devm only works if used on the probe
-> > path, and as we now determined, we don't want firmware loading on probe [3], unless
-> > async probe is used, so this would make a devm solution here not ideal for
-> > freeing the firmware. Even if you use async probe -- that seems very special
-> > use case and adding devm support for the firmware API just for that seems silly.
-> 
-> So why would drivers want the devm solution anyway.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-It depends on the use case, some may want to keep the firmware around,
-some may not, but by default the new API ssumes you will not (keep = false)
-and we free it. My point above was that using devm will not typically
-be the most fruitful solution to free the firmware givne that there are only
-a few drivers that should need it upon probe, and drivers using firmware
-APIs on probe shoudld be using async probe anyway to delay avoid delaying
-boot as processing the firmware can take time.
+These are primarily needed for SDIO/PCI parts, but the vendor driver
+still sets them for some USB devices.
 
-> Once firmware is
-> loaded in the device it can be freed or do you expect device drivers to
-> keep the firmware/sysdata for suspend/resume scenario as some do because
-> of firmware cache behaviour.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  | 56 ++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
 
-You would think! Upon careful inspection there are tons of odd things drivers
-do, some modify the firmware and therefore have their own reasons to keep
-it. Whatever the reasons are -- I recall seeing a few well justified uses.
-
-> Does the "rootfs ready" event cover
-> suspend/resume?
-
-The "rootfs ready" is orthogonal to suspend/resume case given the firmware_class
-cache firmware feature.
-
-The firmware API as-is upstream already has a cache firmware solution added
-a long time ago, as reflected by a resent patch set (before this one) I
-updated documentation for this given its not clearly well known and people
-keep adding their own caching solutions, the firmware API requests firmware
-prior to suspend so that upon resume the firmware is present, precisely to
-avoid race issues. I will note that this feature is only for non-usermode helper
-firmware API, upon suspend we *kill* any pending user mode helper requests
-given that this can delay suspend, as such drivers using or relying (only
-2) on the user mode helper for firmware have no solution built in for
-the cache stuff and I can't say I care given there seems to be no valid
-modern use case given as a requirement for it yet. In fact there was a bug
-in the firmware_class code that *allows* the cache call to request the
-usermode helper, obviously that's buggy if we are trying to kill the
-usermode helper upon suspend...  so a pending patch fixes that. That's been
-a long standing bug and surprised no one ever picked up on it.
-
-> > As such the current devised solution in the sysdata API is called for, given
-> > if you indicated that keep = false, you are explicitly telling the firmware
-> > API that your firmware will certainly not be needed after the callback is
-> > called.
-> > 
-> > So for the sync case, a new callback is needed, and that explains the extra
-> > bit of code if someone conerts from the old API to the new one.
-> > 
-> > [3] https://lkml.kernel.org/r/20160803161821.GB32965@dtor-ws
-> > 
-> >>> or a magical "sysdata_desc" descriptor,
-> >>
-> >> This is one way to make a flexible and extensible API without affecting drivers
-> >> with further collateral evolutions as it gets extended. Its no different than
-> >> the "flags" lesson learned from writing system calls, for instance.
-> >>
-> >> Descriptor seemed, fitting, let me know if you have any other preference.
-> > 
-> > I haven't heard otherwise so will be sticking to that.
-> 
-> How about sysdata_req{,uest}_params?
-
-Thanks will go with that.
-
-> >>> and having a new name ("sysdata") that is less descriptive than the old one
-> >>> ("firmware")
-> >>
-> >> Well no, the APIs are used in *a lot* of cases for things that are not firmware
-> >> already, and let's recall I originally started working on this to replace CRDA
-> >> from userspace to be able to just fetch the signed regulatory database file
-> >> from the kernel. Calling it firmware simply makes no sense anymore.
-> > 
-> > So help me bike shed. This seems to be sticking point and I frankly don't
-> > care what we call it. I've asked others for name suggestions and here are
-> > a few suggestions:
-> > 
-> >  o driver_data
-> >  o dsd: device specific data
-> >  o xfw - eXtensible firmware API
-> >  o bbl - binary blob loader
-> > 
-> > Can someone just pick something? I really, really do not care.
-> > 
-> > If I don't hear anything concrete I will go with driver_data.
-> 
-> bit of skin crawling here, but not enough to care.
-
-Bike shedding is so much fun. Not.
-
-> >>> are all in my opinion making the example patch be a
-> >>> step _backwards_ rather than an improvement. It does not look like a
-> >>> simpler or more natural interface for a driver.
-> >>
-> >> Hope the above explains the current state. Feedback on desirable changes
-> >> welcomed.
-> >>
-> >> [0] https://lkml.kernel.org/r/1466117661-22075-5-git-send-email-mcgrof@kernel.org
-> > 
-> > All this said, this series is still justified, the extra code only comes in
-> > place when porting the sync requests due to the callback stuff described above
-> > and the inability to use devm there. As far as I can tell, just the bike
-> > shedding is left.
-> > 
-> > As it stands then, unless I hear back, I'll roll Daniel Wagner's changes into
-> > my series to be applied first, then rename sysdata driver_data, rebase all this
-> > and shoot it out again.
-> > 
-> > Only a few drivers will be converted over as demos. The SmPL grammar can be used
-> > by those who do want a change due to the few features added. Long term we'll
-> > add more features to the new API:
-> > 
-> >  o the whole ihex conversion is crap, we should do this within the API and
-> >    this can just be specified as a descriptor preference, then drivers
-> >    don't have to deal with the ihex crap themselves.
-> > 
-> >  o firmware singing - this lets us kill CRDA as a requirement
-> 
-> Strongly suspect a typo here :-p
-
-Indeed, thanks :)
-
-  Luis
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index a338890..3555a2f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -213,10 +213,66 @@
+ #define REG_HMBOX_EXT_1			0x008a
+ #define REG_HMBOX_EXT_2			0x008c
+ #define REG_HMBOX_EXT_3			0x008e
++
+ /* Interrupt registers for 8192e/8723bu/8812 */
+ #define REG_HIMR0			0x00b0
++#define	 IMR0_TXCCK			BIT(30)	/* TXRPT interrupt when CCX bit
++						   of the packet is set */
++#define	 IMR0_PSTIMEOUT			BIT(29)	/* Power Save Time Out Int */
++#define	 IMR0_GTINT4			BIT(28)	/* Set when GTIMER4 expires */
++#define	 IMR0_GTINT3			BIT(27)	/* Set when GTIMER3 expires */
++#define	 IMR0_TBDER			BIT(26)	/* Transmit Beacon0 Error */
++#define	 IMR0_TBDOK			BIT(25)	/* Transmit Beacon0 OK */
++#define	 IMR0_TSF_BIT32_TOGGLE		BIT(24)	/* TSF Timer BIT32 toggle
++						   indication interrupt */
++#define	 IMR0_BCNDMAINT0		BIT(20)	/* Beacon DMA Interrupt 0 */
++#define	 IMR0_BCNDERR0			BIT(16)	/* Beacon Queue DMA Error 0 */
++#define	 IMR0_HSISR_IND_ON_INT		BIT(15)	/* HSISR Indicator (HSIMR &
++						   HSISR is true) */
++#define	 IMR0_BCNDMAINT_E		BIT(14)	/* Beacon DMA Interrupt
++						   Extension for Win7 */
++#define	 IMR0_ATIMEND			BIT(12)	/* CTWidnow End or
++						   ATIM Window End */
++#define	 IMR0_HISR1_IND_INT		BIT(11)	/* HISR1 Indicator
++						   (HISR1 & HIMR1 is true) */
++#define	 IMR0_C2HCMD			BIT(10)	/* CPU to Host Command INT
++						   Status, Write 1 to clear */
++#define	 IMR0_CPWM2			BIT(9)	/* CPU power Mode exchange INT
++						   Status, Write 1 to clear */
++#define	 IMR0_CPWM			BIT(8)	/* CPU power Mode exchange INT
++						   Status, Write 1 to clear */
++#define	 IMR0_HIGHDOK			BIT(7)	/* High Queue DMA OK */
++#define	 IMR0_MGNTDOK			BIT(6)	/* Management Queue DMA OK */
++#define	 IMR0_BKDOK			BIT(5)	/* AC_BK DMA OK */
++#define	 IMR0_BEDOK			BIT(4)	/* AC_BE DMA OK */
++#define	 IMR0_VIDOK			BIT(3)	/* AC_VI DMA OK */
++#define	 IMR0_VODOK			BIT(2)	/* AC_VO DMA OK */
++#define	 IMR0_RDU			BIT(1)	/* Rx Descriptor Unavailable */
++#define	 IMR0_ROK			BIT(0)	/* Receive DMA OK */
+ #define REG_HISR0			0x00b4
+ #define REG_HIMR1			0x00b8
++#define	 IMR1_BCNDMAINT7		BIT(27)	/* Beacon DMA Interrupt 7 */
++#define	 IMR1_BCNDMAINT6		BIT(26)	/* Beacon DMA Interrupt 6 */
++#define	 IMR1_BCNDMAINT5		BIT(25)	/* Beacon DMA Interrupt 5 */
++#define	 IMR1_BCNDMAINT4		BIT(24)	/* Beacon DMA Interrupt 4 */
++#define	 IMR1_BCNDMAINT3		BIT(23)	/* Beacon DMA Interrupt 3 */
++#define	 IMR1_BCNDMAINT2		BIT(22)	/* Beacon DMA Interrupt 2 */
++#define	 IMR1_BCNDMAINT1		BIT(21)	/* Beacon DMA Interrupt 1 */
++#define	 IMR1_BCNDERR7			BIT(20)	/* Beacon Queue DMA Err Int 7 */
++#define	 IMR1_BCNDERR6			BIT(19)	/* Beacon Queue DMA Err Int 6 */
++#define	 IMR1_BCNDERR5			BIT(18)	/* Beacon Queue DMA Err Int 5 */
++#define	 IMR1_BCNDERR4			BIT(17)	/* Beacon Queue DMA Err Int 4 */
++#define	 IMR1_BCNDERR3			BIT(16)	/* Beacon Queue DMA Err Int 3 */
++#define	 IMR1_BCNDERR2			BIT(15)	/* Beacon Queue DMA Err Int 2 */
++#define	 IMR1_BCNDERR1			BIT(14)	/* Beacon Queue DMA Err Int 1 */
++#define	 IMR1_ATIMEND_E			BIT(13)	/* ATIM Window End Extension
++						   for Win7 */
++#define	 IMR1_TXERR			BIT(11)	/* Tx Error Flag Int Status,
++						   write 1 to clear */
++#define	 IMR1_RXERR			BIT(10)	/* Rx Error Flag Int Status,
++						   write 1 to clear */
++#define	 IMR1_TXFOVW			BIT(9)	/* Transmit FIFO Overflow */
++#define	 IMR1_RXFOVW			BIT(8)	/* Receive FIFO Overflow */
+ #define REG_HISR1			0x00bc
+ 
+ /*  Host suspend counter on FPGA platform */
+-- 
+2.7.4
