@@ -1,45 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.zeus03.de ([194.117.254.33]:56559 "EHLO mail.zeus03.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932366AbcHKVNf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 17:13:35 -0400
-From: Wolfram Sang <wsa-dev@sang-engineering.com>
-To: linux-usb@vger.kernel.org
-Cc: Wolfram Sang <wsa-dev@sang-engineering.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 13/16] net: wireless: intersil: orinoco: orinoco_usb: don't print error when allocating urb fails
-Date: Thu, 11 Aug 2016 23:13:05 +0200
-Message-Id: <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com> (sfid-20160811_231439_337122_CBC29A50)
-In-Reply-To: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
-References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:38392 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752904AbcHSDe0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Aug 2016 23:34:26 -0400
+Message-ID: <57B67CD8.5040009@candelatech.com> (sfid-20160819_053429_498678_54B7EF4C)
+Date: Thu, 18 Aug 2016 20:28:24 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] ath10k:  Grab rcu_read_lock before the txqs spinlock.
+References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>,<1471569995-10028-2-git-send-email-greearb@candelatech.com> <1471575674214.65791@qti.qualcomm.com>
+In-Reply-To: <1471575674214.65791@qti.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kmalloc will print enough information in case of failure.
 
-Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
----
- drivers/net/wireless/intersil/orinoco/orinoco_usb.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-index 56f109bc83945d..bca6935a94db9a 100644
---- a/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-+++ b/drivers/net/wireless/intersil/orinoco/orinoco_usb.c
-@@ -1613,10 +1613,8 @@ static int ezusb_probe(struct usb_interface *interface,
- 			}
- 
- 			upriv->read_urb = usb_alloc_urb(0, GFP_KERNEL);
--			if (!upriv->read_urb) {
--				err("No free urbs available");
-+			if (!upriv->read_urb)
- 				goto error;
--			}
- 			if (le16_to_cpu(ep->wMaxPacketSize) != 64)
- 				pr_warn("bulk in: wMaxPacketSize!= 64\n");
- 			if (ep->bEndpointAddress != (2 | USB_DIR_IN))
+On 08/18/2016 08:01 PM, Manoharan, Rajkumar wrote:
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 916119c..d96c06e 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -4307,8 +4307,8 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
+>>          int max;
+>>          int loop_max = 2000;
+>>
+>> -       spin_lock_bh(&ar->txqs_lock);
+>>          rcu_read_lock();
+>> +       spin_lock_bh(&ar->txqs_lock);
+>>
+> Ben,
+>
+> It is quite possible that push_pending can be preempted after acquiring rcu_lock which
+> may lead to deadlock. no? I assume to prevent that spin_lock is taken first.
+>
+> Could you please explain how this reordering is fixing dead lock?
+
+It did not obviously fix the spin lock issue, but the issue went away.  Maybe it
+was because I fixed the stale memory access issues at around the same time.
+
+But, I don't think you can deadlock by taking rcu lock first and then the spinlock.
+
+I checked all places where the spinlock is held, and I do not see any way for any of
+them to block forever (In my kernel, I have a 2000 time limit on spinning in the push pending
+method, which can help make sure we don't spin forever).
+
+http://dmz2.candelatech.com/?p=linux-4.7.dev.y/.git;a=commitdiff;h=5d192657269d8e20fce733f894bb1b68df71db00
+
+I was also worried that some calls from mac80211 might be holding rcu_read_lock while calling into
+ath10k code that would grab the spinlock.  If that is the case (and I didn't verify it was), then
+you could have a lock inversion by taking spinlock before rcu read lock in the push-pending method.
+
+Anyway, someone that understands locking subtleties better might have more clue about this code
+than I do.
+
+Thanks,
+Ben
+
 -- 
-2.8.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
