@@ -1,67 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:32882 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751549AbcHUBqE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2850 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753571AbcHSJNz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Aug 2016 21:46:04 -0400
+        Fri, 19 Aug 2016 05:13:55 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <65ed528f-7ec5-a0f2-6219-3e63a78ca0ee@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net> <f0cd7a82-e603-6a91-0afd-33bbd1658cab@users.sourceforge.net>
- <65ed528f-7ec5-a0f2-6219-3e63a78ca0ee@users.sourceforge.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sun, 21 Aug 2016 11:45:13 +1000
-Message-ID: <CAGRGNgW3tCpLqs56DXW65_Du8HD+oYt-St3Oc6C6WLeungM51g@mail.gmail.com> (sfid-20160821_034630_720906_18364064)
-Subject: Re: [PATCH 2/3] hostap: Delete an unnecessary jump label in prism2_ioctl_priv_hostapd()
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors <kernel-janitors@vger.kernel.org>,
-        Julia Lawall <julia.lawall@lip6.fr>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: ath9k: Fix beacon configuration assertion failure
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160815150028.7909-1-adi@adirat.com>
+To: Adi Ratiu <adi@adirat.com>,
+        Benjamin Berg <benjamin.berg@open-mesh.com>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>,
+        <ath9k-devel@qca.qualcomm.com>, <ath9k-devel@lists.ath9k.org>,
+        <linux-kernel@vger.kernel.org>
+Message-ID: <fb48526fcf8f4b6db25c20b727c4a3d5@euamsexm01a.eu.qualcomm.com> (sfid-20160819_111418_987798_4ACC78D2)
+Date: Fri, 19 Aug 2016 11:13:47 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Marcus,
+Adi Ratiu <adi@adirat.com> wrote:
+> commit cfda2d8e2314 ("ath9k: Fix beacon configuration for
+> addition/removal of interfaces") reworked beacon configs to happen at
+> IF changes and missed cases when NL80211_IFTYPE_STATION has no beacons
+> with the corresponding values iter_data.primary_beacon_vif == 0 and
+> iter_data.nbcnvifs == 0 in ath9k_calculate_summary_state(), thus
+> calling ath9k_beacon_config() with null and giving the below warning.
+> 
+> Fix this by calling beacon config only when a beacon actually exists,
+> i.e. by checking iter_data.beacons which should be set only inside
+> ath9k_vif_iter_set_beacon() (the line "iter_data.beacons = true;" in
+> ath9k_calculate_summary_state() is a bug in above rework commit).
+> 
+> [   16.910537] ------------[ cut here ]------------
+> [   16.910549] WARNING: CPU: 2 PID: 6 at drivers/net/wireless/ath/ath9k/beacon.c:642 ath9k_beacon_config+0x12c/0x130 [ath9k]
+> [   16.910551] Modules linked in: intel_rapl x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel hid_generic aesni_intel usbhid hid aes_x86_64 joydev mousedev arc4 lrw ath9k dell_laptop ath9k_common ath9k_hw ath mac80211 gf128mul glue_helper ablk_helper dell_smbios input_leds cryptd led_class snd_hda_codec_hdmi psmouse cfg80211 serio_raw atkbd snd_hda_codec_realtek libps2 rfkill r8169 sr_mod snd_hda_codec_generic dcdbas cdrom mii snd_hda_intel snd_hda_codec snd_hwdep snd_hda_core i8042 snd_pcm snd_timer serio ac xhci_pci xhci_hcd battery i2c_i801 tpm_tis pcspkr tpm_tis_core evdev shpchp lpc_ich i2c_smbus tpm sch_fq_codel ip_tables x_tables
+> [   16.910620] CPU: 2 PID: 6 Comm: kworker/u16:0 Not tainted 4.8.0-rc1-next-20160815-g118253a #1
+> [   16.910621] Hardware name: Dell Inc. Inspiron 3521/018DYG, BIOS A14 07/31/2015
+> [   16.910648] Workqueue: phy0 ieee80211_iface_work [mac80211]
+> [   16.910652]  0000000000000000 ffff880159f13630 ffffffff813140f0 0000000000000000
+> [   16.910657]  0000000000000000 ffff880159f13670 ffffffff8106b22b 0000028200000202
+> [   16.910661]  ffff880156bc1500 0000000000000000 ffff880153cc8018 ffff880153cc8018
+> [   16.910666] Call Trace:
+> [   16.910674]  [<ffffffff813140f0>] dump_stack+0x63/0x83
+> [   16.910678]  [<ffffffff8106b22b>] __warn+0xcb/0xf0
+> [   16.910682]  [<ffffffff8106b31d>] warn_slowpath_null+0x1d/0x20
+> [   16.910690]  [<ffffffffa02fceec>] ath9k_beacon_config+0x12c/0x130 [ath9k]
+> [   16.910696]  [<ffffffffa03010f6>] ath9k_calculate_summary_state+0xf6/0x350 [ath9k]
+> [   16.910703]  [<ffffffffa0301b46>] ath9k_bss_info_changed+0x186/0x1a0 [ath9k]
+> [   16.910720]  [<ffffffffa025dd71>] ieee80211_bss_info_change_notify+0xb1/0x200 [mac80211]
+> [   16.910737]  [<ffffffffa02c088c>] ieee80211_assoc_success+0x677/0xdeb [mac80211]
+> [   16.910746]  [<ffffffff810adea2>] ? up+0x32/0x50
+> [   16.910751]  [<ffffffff810bcf3b>] ? wake_up_klogd+0x3b/0x50
+> [   16.910755]  [<ffffffff810bd489>] ? console_unlock+0x539/0x5f0
+> [   16.910760]  [<ffffffff810bd794>] ? vprintk_emit+0x254/0x490
+> [   16.910765]  [<ffffffff810bdb3f>] ? vprintk_default+0x1f/0x30
+> [   16.910769]  [<ffffffff8114854d>] ? printk+0x48/0x50
+> [   16.910788]  [<ffffffffa02ad0c2>] ieee80211_rx_mgmt_assoc_resp+0x152/0x4c0 [mac80211]
+> [   16.910807]  [<ffffffffa02ade3f>] ieee80211_sta_rx_queued_mgmt+0x18f/0x840 [mac80211]
+> [   16.910813]  [<ffffffff810d0a40>] ? lock_timer_base.isra.2+0x80/0xa0
+> [   16.910817]  [<ffffffff810ad896>] ? cpuacct_charge+0x86/0xa0
+> [   16.910822]  [<ffffffff8109d8e7>] ? update_curr+0xb7/0x160
+> [   16.910827]  [<ffffffff8109e54c>] ? dequeue_entity+0x24c/0xa20
+> [   16.910831]  [<ffffffff8109f2e3>] ? dequeue_task_fair+0x5c3/0x960
+> [   16.910848]  [<ffffffffa02735b4>] ? ieee80211_iface_work+0xd4/0x410 [mac80211]
+> [   16.910865]  [<ffffffffa0273775>] ieee80211_iface_work+0x295/0x410 [mac80211]
+> [   16.910870]  [<ffffffff81090537>] ? finish_task_switch+0x77/0x1e0
+> [   16.910875]  [<ffffffff810832d5>] process_one_work+0x1e5/0x470
+> [   16.910880]  [<ffffffff810835a8>] worker_thread+0x48/0x4e0
+> [   16.910885]  [<ffffffff81083560>] ? process_one_work+0x470/0x470
+> [   16.910888]  [<ffffffff81088f09>] kthread+0xc9/0xe0
+> [   16.910894]  [<ffffffff81028723>] ? __switch_to+0x2c3/0x610
+> [   16.910899]  [<ffffffff8173a67f>] ret_from_fork+0x1f/0x40
+> [   16.910902]  [<ffffffff81088e40>] ? kthread_create_on_node+0x40/0x40
+> [   16.910904] ---[ end trace aa169ad4461f2f18 ]---
+> 
+> Signed-off-by: Ioan-Adrian Ratiu <adi@adirat.com>
 
-On Sun, Aug 21, 2016 at 2:46 AM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Sat, 20 Aug 2016 18:21:29 +0200
->
-> Remove a jump label which is unneeded in this function at the end.
->
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/net/wireless/intersil/hostap/hostap_ioctl.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-> index 4e271f9..5942917 100644
-> --- a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-> +++ b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
-> @@ -3835,14 +3835,12 @@ static int prism2_ioctl_priv_hostapd(local_info_t *local, struct iw_point *p)
->         }
->
->         if (ret == 1 || !ap_ioctl) {
-> -               if (copy_to_user(p->pointer, param, p->length)) {
-> +               if (copy_to_user(p->pointer, param, p->length))
->                         ret = -EFAULT;
-> -                       goto out;
-> -               } else if (ap_ioctl)
-> +               else if (ap_ioctl)
->                         ret = 0;
->         }
->
-> - out:
-
-Does this change make any difference to the compiled code?
-
-Thanks,
+Benjamin, does this look reasonable to you? I'm planning to queue this for 4.8.
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Sent by pwcli
+https://patchwork.kernel.org/patch/9281191/
