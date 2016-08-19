@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yb0-f195.google.com ([209.85.213.195]:33396 "EHLO
-	mail-yb0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932324AbcHIVOz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 17:14:55 -0400
-Received: by mail-yb0-f195.google.com with SMTP id e125so593747ybc.0
-        for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2016 14:13:55 -0700 (PDT)
-From: Till Kamppeter <till.kamppeter@gmail.com>
-Subject: Google Summer of Code 2016 - Who wants to attend the Mentor Summit
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	chris holcombe <chris.holcombe@canonical.com>,
-	Chris MacNaughton <chris.macnaughton@canonical.com>,
-	=?UTF-8?Q?Jan-Simon_M=c3=b6ller?= <jsmoeller@linuxfoundation.org>
-Message-ID: <9556e237-4936-98d3-ec27-9976577ed55e@gmail.com> (sfid-20160809_231500_727500_4BEEAE1B)
-Date: Tue, 9 Aug 2016 17:55:39 -0300
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mail2.candelatech.com ([208.74.158.173]:34808 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754555AbcHSBdE (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 18 Aug 2016 21:33:04 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+        Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 1/3] ath10k:  Ensure there are no stale ar->txqs entries.
+Date: Thu, 18 Aug 2016 18:26:33 -0700
+Message-Id: <1471569995-10028-1-git-send-email-greearb@candelatech.com> (sfid-20160819_033759_419781_7AD9F4DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Ben Greear <greearb@candelatech.com>
 
-as every year there is a Mentor Summit at Google in Mountain View, 
-California. Two of the mentors or org admins of each organization can 
-participate and Google pays the hotel plus 2200 USD (in total for the 
-two) to cover travel expenses.
+I was seeing kernel crashes due to accessing freed memory
+while debugging a 9984 firmware that was crashing often.
 
-So please tell if you want to attand. Thanks.
+This patch fixes the crashes.  I am not certain if there
+is a better way or not.
 
-    Till
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 5659ef1..916119c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4172,8 +4172,10 @@ static void ath10k_mac_txq_init(struct ieee80211_txq *txq)
+ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
+ {
+ 	struct ath10k_txq *artxq = (void *)txq->drv_priv;
++	struct ath10k_txq *tmp, *walker;
+ 	struct ath10k_skb_cb *cb;
+ 	struct sk_buff *msdu;
++	struct ieee80211_txq *txq_tmp;
+ 	int msdu_id;
+ 
+ 	if (!txq)
+@@ -4182,6 +4184,14 @@ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
+ 	spin_lock_bh(&ar->txqs_lock);
+ 	if (!list_empty(&artxq->list))
+ 		list_del_init(&artxq->list);
++
++	/* Remove from ar->txqs in case it still exists there. */
++	list_for_each_entry_safe(walker, tmp, &ar->txqs, list) {
++		txq_tmp = container_of((void *)walker, struct ieee80211_txq,
++				       drv_priv);
++		if (txq_tmp == txq)
++			list_del(&walker->list);
++	}
+ 	spin_unlock_bh(&ar->txqs_lock);
+ 
+ 	spin_lock_bh(&ar->htt.tx_lock);
+-- 
+2.4.11
