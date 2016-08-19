@@ -1,71 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.194]:57544 "EHLO
-	smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751479AbcHHOvL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2016 10:51:11 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Arvind Yadav' <arvind.yadav.cs@gmail.com>,
-	"zajec5@gmail.com" <zajec5@gmail.com>,
-	"leoli@freescale.com" <leoli@freescale.com>
-CC: "qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
-	"scottwood@freescale.com" <scottwood@freescale.com>,
-	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux@roeck-us.net" <linux@roeck-us.net>,
-	"arnd@arndb.de" <arnd@arndb.de>
-Subject: RE: [5.3] ucc_geth: Fix to avoid IS_ERR_VALUE abuses and dead code
- on 64bit systems.
-Date: Mon, 8 Aug 2016 14:49:11 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6D5F50C493@AcuExch.aculab.com> (sfid-20160808_165116_504163_506D5017)
-References: <1470386442-7208-1-git-send-email-arvind.yadav.cs@gmail.com>
-In-Reply-To: <1470386442-7208-1-git-send-email-arvind.yadav.cs@gmail.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:38441 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754172AbcHSQol (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 12:44:41 -0400
+Received: by mail-wm0-f49.google.com with SMTP id o80so49385070wme.1
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2016 09:44:40 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>
+Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv7 0/4] register-field manipulation macros
+Date: Fri, 19 Aug 2016 17:44:05 +0100
+Message-Id: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com> (sfid-20160819_184445_365215_C2B156F4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: netdev-owner@vger.kernel.org [mailto:netdev-owner@vger.kernel.org] On Behalf Of Arvind Yadav
-> IS_ERR_VALUE() assumes that parameter is an unsigned long.
-> It can not be used to check if 'unsigned int' is passed insted.
-> Which tends to reflect an error.
-> In 64bit architectures sizeof (int) == 4 && sizeof (long) == 8.
-> IS_ERR_VALUE(x) is ((x) >= (unsigned long)-4095).
-> IS_ERR_VALUE() of 'unsigned int' is always false because the 32bit
-> value is zero extended to 64 bits.
+Hi!
 
-You are being far too wordy above, and definitely below.
+Looks like we're good to go :)
 
-> 
-> Now problem in Freescale QEGigabit Ethernet-:
->                                  drivers/net/ethernet/freescale/ucc_geth.c
-> 
-...
->          qe_muram_addr(init_enet_pram_offset);
-> 
-> qe_muram_alloc (a.k.a. cpm_muram_alloc) returns unsigned long.
-> Return value store in a u32 (init_enet_offset, exf_glbl_param_offset,
-> rx_glbl_pram_offset, tx_glbl_pram_offset, send_q_mem_reg_offset,
-> thread_dat_tx_offset, thread_dat_rx_offset, scheduler_offset,
-> tx_fw_statistics_pram_offset, rx_fw_statistics_pram_offset,
-> rx_irq_coalescing_tbl_offset, rx_bd_qs_tbl_offset, tx_bd_ring_offset,
-> init_enet_pram_offset and rx_bd_ring_offset).
+I've thrown in two mt7601u cleanups, macros are as approved
+by Linus in the RFC.  I'm posting this already to give build
+bot a head start while we wait for any additional feedback
+on LKML.
 
-Inpenetrable...
+-- v6 blurb:
 
-> If qe_muram_alloc will return any error, Then IS_ERR_VALUE will always
-> return 0. it'll not call ucc_fast_free for any failure. Inside 'if code'
-> will be a dead code on 64bit. Even qe_muram_addr will return wrong
-> virtual address. Which can cause an error.
-> 
->  kfree((void *)ugeth->tx_bd_ring_offset[i]);
+This set moves to a global header file macros which I find
+very useful and worth popularising.  The basic problem is
+that since C bitfields are not very dependable accessing
+subfields of registers becomes slightly inconvenient.
+It is nice to have the necessary mask and shift operations
+wrapped in a macro and have that macro compute shift
+at compilation time using FFS.
 
-Erm, kfree() isn't the right function for things allocated by qe_muram_alloc().
+My implementation follows what Felix Fietkau has done in
+mt76.  Hannes Frederic Sowa suggested more use of standard
+Linux/GCC functions.  Since the RFC I've also added a 
+compile-time check to validate that the value passed to
+setters fits in the mask.
 
-I still thing you need to stop this code using IS_ERR_VALUE() at all.
+I attempted the use of static inlines instead of macros
+but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
+I also noticed that forcing arguments to be u32 for inlines
+makes the compiler use 32bit arithmetic where it could
+get away with 64bit before (on 64bit machines, obviously).
+That's a potential performance concern but probably not
+a very practical one today.  Apart from looking "cleaner"
+static inlines would have the advantage that we could #undef
+the auxiliary macros at the end of the header.
 
-	David
+Build bot caught a build failure with -Os set.  AFAICT gcc
+did not handle temporary variable I put in the macro
+expression too well.  I work around that by defining
+__BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
+BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
 
+I'm planning to use those macros in another driver soon,
+Felix may also use them when upstreaming mt76 if he chooses
+to do so.
+
+IMHO if accepted it would be best to push these through
+Kalle's wireless drivers' tree, since the only existing
+user is in drivers/net/wireless/.
+
+v7:
+ - drop the explicit type marking (u32/u64) - depend on the type
+   of the mask instead;
+ - only allow compilation time constant masks;
+ - barf at "type of register too small to ever match mask" on get;
+ - rename PUT -> PREP.
+v6:
+ - do a full rename in patch 2;
+ - CC many people.
+v5:
+ - repost.
+v4:
+ - add documentation in the header.
+v3:
+ - don't use variables in statement expressions;
+ - use __BUILD_BUG_ON_NOT_POWER_OF_2.
+v2:
+ - change Felix's email address.
+
+Jakub Kicinski (4):
+  add basic register-field manipulation macros
+  mt7601u: remove redefinition of GENMASK
+  mt7601u: remove unnecessary include
+  mt7601u: use linux/bitfield.h
+
+ drivers/net/wireless/mediatek/mt7601u/dma.c     |  2 +-
+ drivers/net/wireless/mediatek/mt7601u/dma.h     | 10 ++-
+ drivers/net/wireless/mediatek/mt7601u/eeprom.c  | 12 ++--
+ drivers/net/wireless/mediatek/mt7601u/init.c    | 10 +--
+ drivers/net/wireless/mediatek/mt7601u/mac.c     | 38 +++++-----
+ drivers/net/wireless/mediatek/mt7601u/main.c    |  1 -
+ drivers/net/wireless/mediatek/mt7601u/mcu.c     | 20 +++---
+ drivers/net/wireless/mediatek/mt7601u/mt7601u.h |  4 +-
+ drivers/net/wireless/mediatek/mt7601u/phy.c     | 44 ++++++------
+ drivers/net/wireless/mediatek/mt7601u/regs.h    |  4 --
+ drivers/net/wireless/mediatek/mt7601u/tx.c      | 19 ++---
+ drivers/net/wireless/mediatek/mt7601u/util.h    | 77 --------------------
+ include/linux/bitfield.h                        | 93 +++++++++++++++++++++++++
+ include/linux/bug.h                             |  3 +
+ 14 files changed, 177 insertions(+), 160 deletions(-)
+ delete mode 100644 drivers/net/wireless/mediatek/mt7601u/util.h
+ create mode 100644 include/linux/bitfield.h
+
+-- 
+1.9.1
