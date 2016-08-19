@@ -1,52 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.eperm.de ([89.247.134.16]:34288 "EHLO mail.eperm.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751914AbcHIJDC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 05:03:02 -0400
-From: Stephan Mueller <smueller@chronox.de>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Date: Tue, 09 Aug 2016 11:02:58 +0200
-Message-ID: <2569442.q63FVBJjUH@tauon.atsec.com> (sfid-20160809_110305_816940_805319C1)
-In-Reply-To: <20160809085858.GA6172@gondor.apana.org.au>
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <4731753.YZZKimtrHM@tauon.atsec.com> <20160809085858.GA6172@gondor.apana.org.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:54756 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755283AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 17:47:24 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 06/20] rtl8xxxu: Switch 8723a to use new rtl8xxxu_init_queue_reserved_page() routine
+Date: Fri, 19 Aug 2016 17:46:28 -0400
+Message-Id: <1471643202-26250-7-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234842_533385_B26DA597)
+In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 9. August 2016, 16:58:58 CEST schrieb Herbert Xu:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Hi Herbert,
+This changes the pub-queue value written to REQ_RQPN, however the old
+code used a hard coded minimum value assuming there would always be an
+active lo-queue, even when no USB EP was found for it.
 
-> On Tue, Aug 09, 2016 at 10:07:29AM +0200, Stephan Mueller wrote:
-> > Herbert, Matt, should such noise sources be added to the HW random
-> > framework? The thing is that the in-kernel HW random to input_pool link
-> > per default uses a more conservative entropy estimate than the user space
-> > rngd. I would think that the in-kernel link would appropriate for that
-> > rng. But the user space rngd tool with its default behavior is not really
-> > suited here.
-> 
-> Yes hwrng would be the best fit, with a quality of zero to be safe.
-> 
-> Contrary to the quoted thread, there is no need to whiten the output
-> /dev/hw_random.  It was always meant to go through some intermediate
-> processing such as rngd before it is used.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-But shouldn't the default of the rngd then be adjusted a bit?
-> 
-> Cheers,
-
-
-
-Ciao
-Stephan
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+index 686c551..d6f4968 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+@@ -396,4 +396,8 @@ struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.pbp_rx = PBP_PAGE_SIZE_128,
+ 	.pbp_tx = PBP_PAGE_SIZE_128,
+ 	.mactable = rtl8xxxu_gen1_mac_init_table,
++	.total_page_num = TX_TOTAL_PAGE_NUM,
++	.page_num_hi = TX_PAGE_NUM_HI_PQ,
++	.page_num_lo = TX_PAGE_NUM_LO_PQ,
++	.page_num_norm = TX_PAGE_NUM_NORM_PQ,
+ };
+-- 
+2.7.4
