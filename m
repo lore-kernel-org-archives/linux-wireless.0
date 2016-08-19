@@ -1,33 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34150 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752702AbcHAMUJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2016 08:20:09 -0400
-Message-ID: <1470054005.17912.4.camel@sipsolutions.net> (sfid-20160801_142012_862648_08D10AB3)
-Subject: Re: [PATCH 1/3 v6] mac80211: Refactor ieee80211_iface_work
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Alex Briskin <br.shurik@gmail.com>, linux-wireless@vger.kernel.org
-Date: Mon, 01 Aug 2016 14:20:05 +0200
-In-Reply-To: <1468693140-19483-1-git-send-email-br.shurik@gmail.com> (sfid-20160716_201936_943619_6A75EF74)
-References: <1468693140-19483-1-git-send-email-br.shurik@gmail.com>
-	 (sfid-20160716_201936_943619_6A75EF74)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:39832 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755534AbcHSVrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 17:47:25 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 15/20] rtl8xxxu: Simplify calculating of hw value used for setting TX rate
+Date: Fri, 19 Aug 2016 17:46:37 -0400
+Message-Id: <1471643202-26250-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234744_642517_52167845)
+In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Please don't submit three patches with identical subject.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> Added ieee80211_iface_work_handle_pkt_type function. Moved part of
+Calculating the value in one place rather than using one calculation
+in one place and a different one for management frames in another
+location makes little sense.
 
-Should also use present tense here - "Add ... function, move [...]".
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-This also applies to the other patches.
-
-The if/else if/... -> switch change should also be part of this patch,
-or separate, but not squashed together with a different unrelated
-change. Might be worth moving "return 0" into each of the cases and
-return an error in the fall-through, but it doesn't really matter.
-
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 6de5b8f..2f951cf 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4848,7 +4848,8 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 		}
+ 	}
+ 
+-	if (rate_flag & IEEE80211_TX_RC_MCS)
++	if (rate_flag & IEEE80211_TX_RC_MCS &&
++	    !ieee80211_is_mgmt(hdr->frame_control))
+ 		rate = tx_info->control.rates[0].idx + DESC_RATE_MCS0;
+ 	else
+ 		rate = tx_rate->hw_value;
+@@ -4869,7 +4870,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 			tx_desc->txdw1 |= cpu_to_le32(TXDESC32_AGG_BREAK);
+ 
+ 		if (ieee80211_is_mgmt(hdr->frame_control)) {
+-			tx_desc->txdw5 = cpu_to_le32(tx_rate->hw_value);
++			tx_desc->txdw5 = cpu_to_le32(rate);
+ 			tx_desc->txdw4 |=
+ 				cpu_to_le32(TXDESC32_USE_DRIVER_RATE);
+ 			tx_desc->txdw5 |=
+@@ -4923,7 +4924,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 			tx_desc40->txdw2 |= cpu_to_le32(TXDESC40_AGG_BREAK);
+ 
+ 		if (ieee80211_is_mgmt(hdr->frame_control)) {
+-			tx_desc40->txdw4 = cpu_to_le32(tx_rate->hw_value);
++			tx_desc40->txdw4 = cpu_to_le32(rate);
+ 			tx_desc40->txdw3 |=
+ 				cpu_to_le32(TXDESC40_USE_DRIVER_RATE);
+ 			tx_desc40->txdw4 |=
+-- 
+2.7.4
