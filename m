@@ -1,72 +1,341 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59445 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755160AbcHWHAS (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 23 Aug 2016 03:00:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Cc: linux-wireless@vger.kernel.org,
-        make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
-        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v4] ath9k: Switch to using mac80211 intermediate software queues.
-References: <20160706193417.13080-1-toke@toke.dk>
-        <20160805160346.10545-1-toke@toke.dk>
-        <87mvk44xmt.fsf@purkki.adurom.net> <87bn0k4w4d.fsf@toke.dk>
-        <87fupwvisn.fsf@kamboji.qca.qualcomm.com> <871t1g4thz.fsf@toke.dk>
-Date: Tue, 23 Aug 2016 09:59:42 +0300
-In-Reply-To: <871t1g4thz.fsf@toke.dk> ("Toke =?utf-8?Q?H=C3=B8iland-J?=
- =?utf-8?Q?=C3=B8rgensen=22's?= message of
-        "Mon, 22 Aug 2016 19:13:12 +0200")
-Message-ID: <877fb8ug0x.fsf@kamboji.qca.qualcomm.com> (sfid-20160823_090127_337498_5BAD61BB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:35862 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755411AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 17:47:24 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 18/20] rtl8xxxu: Split filling of TX descriptors into separate functions
+Date: Fri, 19 Aug 2016 17:46:40 -0400
+Message-Id: <1471643202-26250-19-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234814_567019_C63DE46C)
+In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Toke Høiland-Jørgensen <toke@toke.dk> writes:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
->>>> This is great work but due to the regressions I'm not sure if this
->>>> will be ready for 4.9. To get more testing time I wonder if we should
->>>> wait for 4.10? IMHO applying this in the end of the cycle is too risky
->>>> and we should try to maximise the time linux-next by applying this
->>>> just after -rc1 is released.
->>>>
->>>> Thoughts?
->>>
->>> Well, now that we understand what is causing the throughput regressions,
->>> fixing them should be fairly straight forward (yeah, famous last words,
->>> but still...). I already have a patch for the fast path and will go poke
->>> at the slow path next. It'll probably require another workaround or two,
->>> so I guess it won't be the architecturally clean ideal solution; but it
->>> would make it possible to have something that works for 4.9 and then
->>> iterate for a cleaner design for 4.10.
->>
->> But if we try to rush this to 4.9 it won't be in linux-next for long. We
->> are now in -rc3 and let's say that the patches are ready to apply in two
->> weeks. That would leave us only two weeks of -next time before the merge
->> window, which I think is not enough for a controversial patch like this
->> one. There might be other bugs lurking which haven't been found yet.
->
-> What, other hidden bugs? Unpossible! :)
+Split the filling of TX descriptors into a generic portion used on all
+devices, and format specific helper functions provided in the fops
+structure.
 
-Yeah, right ;)
+This also cleaned up some mess, even if non harmful, in the handling
+of txdesc40 descriptors, where the code randomly would switch between
+the pointer to tx_desc and tx_desc40.
 
-> Would it be possible to merge the partial solution (which is ready now,
-> basically) and fix the slow path in a separate patch later?
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  12 ++
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c |   1 +
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c |   1 +
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c |   1 +
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c |   1 +
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 198 ++++++++++++---------
+ 6 files changed, 125 insertions(+), 89 deletions(-)
 
-What do you mean with partial solution? You mean ath9k users would
-suffer from regressions until they are fixed? We can't do that.
-
-> (Just spit-balling here; I'm still fairly new to this process. But I am
-> concerned that we'll hit a catch-22 where we can't get wider testing
-> before it's "ready" and we can't prove that it's "ready" until we've had
-> wider testing...)
-
-I understand your point, but I don't want to rush this to 4.9 and then
-start getting lots of bug reports and eventually forced to revert it. If
-we just found a new serious regression the chances are that there are
-more lurking somewhere and this patch is just not ready yet.
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 68d80c4..1f54b89 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1336,6 +1336,10 @@ struct rtl8xxxu_fileops {
+ 				  u32 ramask, int sgi);
+ 	void (*report_connect) (struct rtl8xxxu_priv *priv,
+ 				u8 macid, bool connect);
++	void (*fill_txdesc) (struct ieee80211_hdr *hdr,
++			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
++			     u16 rate_flag, bool sgi, bool short_preamble,
++			     bool ampdu_enable);
+ 	int writeN_block_size;
+ 	int rx_agg_buf_size;
+ 	char tx_desc_size;
+@@ -1429,6 +1433,14 @@ int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv, struct sk_buff *skb);
+ int rtl8xxxu_gen2_channel_to_group(int channel);
+ bool rtl8xxxu_gen2_simularity_compare(struct rtl8xxxu_priv *priv,
+ 				      int result[][8], int c1, int c2);
++void rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
++			     struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
++			     u16 rate_flag, bool sgi, bool short_preamble,
++			     bool ampdu_enable);
++void rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
++			     struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
++			     u16 rate_flag, bool sgi, bool short_preamble,
++			     bool ampdu_enable);
+ 
+ extern struct rtl8xxxu_fileops rtl8192cu_fops;
+ extern struct rtl8xxxu_fileops rtl8192eu_fops;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+index cd13c25..f9e2050 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192c.c
+@@ -567,6 +567,7 @@ struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.set_tx_power = rtl8xxxu_gen1_set_tx_power,
+ 	.update_rate_mask = rtl8xxxu_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen1_report_connect,
++	.fill_txdesc = rtl8xxxu_fill_txdesc_v1,
+ 	.writeN_block_size = 128,
+ 	.rx_agg_buf_size = 16000,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index 9901199..841522e 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1501,6 +1501,7 @@ struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.set_tx_power = rtl8192e_set_tx_power,
+ 	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen2_report_connect,
++	.fill_txdesc = rtl8xxxu_fill_txdesc_v2,
+ 	.writeN_block_size = 128,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
+ 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+index d6f4968..aef3730 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723a.c
+@@ -384,6 +384,7 @@ struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.set_tx_power = rtl8xxxu_gen1_set_tx_power,
+ 	.update_rate_mask = rtl8xxxu_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen1_report_connect,
++	.fill_txdesc = rtl8xxxu_fill_txdesc_v1,
+ 	.writeN_block_size = 1024,
+ 	.rx_agg_buf_size = 16000,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+index dd2c0f0..6c086b5 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
+@@ -1662,6 +1662,7 @@ struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.set_tx_power = rtl8723b_set_tx_power,
+ 	.update_rate_mask = rtl8xxxu_gen2_update_rate_mask,
+ 	.report_connect = rtl8xxxu_gen2_report_connect,
++	.fill_txdesc = rtl8xxxu_fill_txdesc_v2,
+ 	.writeN_block_size = 1024,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
+ 	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index cfb2dfd..e02fab0 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4750,6 +4750,113 @@ static void rtl8xxxu_dump_action(struct device *dev,
+ 	}
+ }
+ 
++/*
++ * Fill in v1 (gen1) specific TX descriptor bits.
++ * This format is used on 8188cu/8192cu/8723au
++ */
++void
++rtl8xxxu_fill_txdesc_v1(struct ieee80211_hdr *hdr,
++			struct rtl8xxxu_txdesc32 *tx_desc, u32 rate,
++			u16 rate_flag, bool sgi, bool short_preamble,
++			bool ampdu_enable)
++{
++	u16 seq_number;
++
++	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
++
++	tx_desc->txdw5 = cpu_to_le32(rate);
++
++	if (ieee80211_is_data(hdr->frame_control))
++		tx_desc->txdw5 |= cpu_to_le32(0x0001ff00);
++
++	tx_desc->txdw3 = cpu_to_le32((u32)seq_number << TXDESC32_SEQ_SHIFT);
++
++	if (ampdu_enable)
++		tx_desc->txdw1 |= cpu_to_le32(TXDESC32_AGG_ENABLE);
++	else
++		tx_desc->txdw1 |= cpu_to_le32(TXDESC32_AGG_BREAK);
++
++	if (ieee80211_is_mgmt(hdr->frame_control)) {
++		tx_desc->txdw5 = cpu_to_le32(rate);
++		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_USE_DRIVER_RATE);
++		tx_desc->txdw5 |= cpu_to_le32(6 << TXDESC32_RETRY_LIMIT_SHIFT);
++		tx_desc->txdw5 |= cpu_to_le32(TXDESC32_RETRY_LIMIT_ENABLE);
++	}
++
++	if (ieee80211_is_data_qos(hdr->frame_control))
++		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_QOS);
++
++	if (short_preamble)
++		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_SHORT_PREAMBLE);
++
++	if (sgi)
++		tx_desc->txdw5 |= cpu_to_le32(TXDESC32_SHORT_GI);
++
++	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
++		/*
++		 * Use RTS rate 24M - does the mac80211 tell
++		 * us which to use?
++		 */
++		tx_desc->txdw4 |= cpu_to_le32(DESC_RATE_24M <<
++					      TXDESC32_RTS_RATE_SHIFT);
++		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_RTS_CTS_ENABLE);
++		tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
++	}
++}
++
++/*
++ * Fill in v2 (gen2) specific TX descriptor bits.
++ * This format is used on 8192eu/8723bu
++ */
++void
++rtl8xxxu_fill_txdesc_v2(struct ieee80211_hdr *hdr,
++			struct rtl8xxxu_txdesc32 *tx_desc32, u32 rate,
++			u16 rate_flag, bool sgi, bool short_preamble,
++			bool ampdu_enable)
++{
++	struct rtl8xxxu_txdesc40 *tx_desc40;
++	u16 seq_number;
++
++	tx_desc40 = (struct rtl8xxxu_txdesc40 *)tx_desc32;
++
++	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
++
++	tx_desc40->txdw4 = cpu_to_le32(rate);
++	if (ieee80211_is_data(hdr->frame_control)) {
++		tx_desc40->txdw4 |= cpu_to_le32(0x1f <<
++						TXDESC40_DATA_RATE_FB_SHIFT);
++	}
++
++	tx_desc40->txdw9 = cpu_to_le32((u32)seq_number << TXDESC40_SEQ_SHIFT);
++
++	if (ampdu_enable)
++		tx_desc40->txdw2 |= cpu_to_le32(TXDESC40_AGG_ENABLE);
++	else
++		tx_desc40->txdw2 |= cpu_to_le32(TXDESC40_AGG_BREAK);
++
++	if (ieee80211_is_mgmt(hdr->frame_control)) {
++		tx_desc40->txdw4 = cpu_to_le32(rate);
++		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_USE_DRIVER_RATE);
++		tx_desc40->txdw4 |=
++			cpu_to_le32(6 << TXDESC40_RETRY_LIMIT_SHIFT);
++		tx_desc40->txdw4 |= cpu_to_le32(TXDESC40_RETRY_LIMIT_ENABLE);
++	}
++
++	if (short_preamble)
++		tx_desc40->txdw5 |= cpu_to_le32(TXDESC40_SHORT_PREAMBLE);
++
++	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
++		/*
++		 * Use RTS rate 24M - does the mac80211 tell
++		 * us which to use?
++		 */
++		tx_desc40->txdw4 |= cpu_to_le32(DESC_RATE_24M <<
++						TXDESC40_RTS_RATE_SHIFT);
++		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_RTS_CTS_ENABLE);
++		tx_desc40->txdw3 |= cpu_to_le32(TXDESC40_HW_RTS_ENABLE);
++	}
++}
++
+ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 			struct ieee80211_tx_control *control,
+ 			struct sk_buff *skb)
+@@ -4759,7 +4866,6 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	struct rtl8xxxu_txdesc32 *tx_desc;
+-	struct rtl8xxxu_txdesc40 *tx_desc40;
+ 	struct rtl8xxxu_tx_urb *tx_urb;
+ 	struct ieee80211_sta *sta = NULL;
+ 	struct ieee80211_vif *vif = tx_info->control.vif;
+@@ -4865,95 +4971,9 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 		short_preamble = true;
+ 
+ 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+-	if (!usedesc40) {
+-		tx_desc->txdw5 = cpu_to_le32(rate);
+-
+-		if (ieee80211_is_data(hdr->frame_control))
+-			tx_desc->txdw5 |= cpu_to_le32(0x0001ff00);
+-
+-		tx_desc->txdw3 =
+-			cpu_to_le32((u32)seq_number << TXDESC32_SEQ_SHIFT);
+-
+-		if (ampdu_enable)
+-			tx_desc->txdw1 |= cpu_to_le32(TXDESC32_AGG_ENABLE);
+-		else
+-			tx_desc->txdw1 |= cpu_to_le32(TXDESC32_AGG_BREAK);
+-
+-		if (ieee80211_is_mgmt(hdr->frame_control)) {
+-			tx_desc->txdw5 = cpu_to_le32(rate);
+-			tx_desc->txdw4 |=
+-				cpu_to_le32(TXDESC32_USE_DRIVER_RATE);
+-			tx_desc->txdw5 |=
+-				cpu_to_le32(6 << TXDESC32_RETRY_LIMIT_SHIFT);
+-			tx_desc->txdw5 |=
+-				cpu_to_le32(TXDESC32_RETRY_LIMIT_ENABLE);
+-		}
+-
+-		if (ieee80211_is_data_qos(hdr->frame_control))
+-			tx_desc->txdw4 |= cpu_to_le32(TXDESC32_QOS);
+ 
+-		if (short_preamble)
+-			tx_desc->txdw4 |= cpu_to_le32(TXDESC32_SHORT_PREAMBLE);
+-
+-		if (sgi)
+-			tx_desc->txdw5 |= cpu_to_le32(TXDESC32_SHORT_GI);
+-
+-		if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
+-			/*
+-			 * Use RTS rate 24M - does the mac80211 tell
+-			 * us which to use?
+-			 */
+-			tx_desc->txdw4 |=
+-				cpu_to_le32(DESC_RATE_24M <<
+-					    TXDESC32_RTS_RATE_SHIFT);
+-			tx_desc->txdw4 |=
+-				cpu_to_le32(TXDESC32_RTS_CTS_ENABLE);
+-			tx_desc->txdw4 |= cpu_to_le32(TXDESC32_HW_RTS_ENABLE);
+-		}
+-	} else {
+-		tx_desc40 = (struct rtl8xxxu_txdesc40 *)tx_desc;
+-
+-		tx_desc40->txdw4 = cpu_to_le32(rate);
+-		if (ieee80211_is_data(hdr->frame_control)) {
+-			tx_desc->txdw4 |=
+-				cpu_to_le32(0x1f <<
+-					    TXDESC40_DATA_RATE_FB_SHIFT);
+-		}
+-
+-		tx_desc40->txdw9 =
+-			cpu_to_le32((u32)seq_number << TXDESC40_SEQ_SHIFT);
+-
+-		if (ampdu_enable)
+-			tx_desc40->txdw2 |= cpu_to_le32(TXDESC40_AGG_ENABLE);
+-		else
+-			tx_desc40->txdw2 |= cpu_to_le32(TXDESC40_AGG_BREAK);
+-
+-		if (ieee80211_is_mgmt(hdr->frame_control)) {
+-			tx_desc40->txdw4 = cpu_to_le32(rate);
+-			tx_desc40->txdw3 |=
+-				cpu_to_le32(TXDESC40_USE_DRIVER_RATE);
+-			tx_desc40->txdw4 |=
+-				cpu_to_le32(6 << TXDESC40_RETRY_LIMIT_SHIFT);
+-			tx_desc40->txdw4 |=
+-				cpu_to_le32(TXDESC40_RETRY_LIMIT_ENABLE);
+-		}
+-
+-		if (short_preamble)
+-			tx_desc40->txdw5 |=
+-				cpu_to_le32(TXDESC40_SHORT_PREAMBLE);
+-
+-		if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
+-			/*
+-			 * Use RTS rate 24M - does the mac80211 tell
+-			 * us which to use?
+-			 */
+-			tx_desc->txdw4 |=
+-				cpu_to_le32(DESC_RATE_24M <<
+-					    TXDESC40_RTS_RATE_SHIFT);
+-			tx_desc->txdw3 |= cpu_to_le32(TXDESC40_RTS_CTS_ENABLE);
+-			tx_desc->txdw3 |= cpu_to_le32(TXDESC40_HW_RTS_ENABLE);
+-		}
+-	}
++	priv->fops->fill_txdesc(hdr, tx_desc, rate, rate_flag,
++				sgi, short_preamble, ampdu_enable);
+ 
+ 	rtl8xxxu_calc_tx_desc_csum(tx_desc);
+ 
 -- 
-Kalle Valo
+2.7.4
