@@ -1,41 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32884 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933733AbcHDRdC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Aug 2016 13:33:02 -0400
-Message-ID: <1470331975.29954.9.camel@sipsolutions.net> (sfid-20160804_193325_168400_FAF2E39F)
-Subject: Re: Wireless Workshop accepted into the 2016 Linux Kernel Summit
- and Linux Plumbers Conference
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 04 Aug 2016 19:32:55 +0200
-In-Reply-To: <20160802084542.75cd47c2@redtail.lan> (sfid-20160802_171326_600881_B04D22BD)
-References: <20160802084542.75cd47c2@redtail.lan>
-	 (sfid-20160802_171326_600881_B04D22BD)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:42478 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755458AbcHSVrZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 17:47:25 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Wei Yongjun <yongjun_wei@trendmicro.com.cn>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 19/20] rtl8xxxu: gen1: Fix non static symbol warning
+Date: Fri, 19 Aug 2016 17:46:41 -0400
+Message-Id: <1471643202-26250-20-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234745_226044_BDB091C5)
+In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
 
-> Please join us for a timely and important discussion [4]!
-> 
-> KS [5] will be held October 31-November 1 and LPC [6] will be held
-> November 1-4, both in Santa Fe, New Mexico, US.
+Fixes the following sparse warning:
 
-The workshop is going to be on November 1st, the combined day.
+drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:898:1: warning:
+ symbol 'rtl8xxxu_gen1_h2c_cmd' was not declared. Should it be static?
 
-I've put up a new wiki page here:
+Signed-off-by: Wei Yongjun <yongjun_wei@trendmicro.com.cn>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-https://wireless.wiki.kernel.org/en/developers/summits/santa-fe-2016
-
-Please consider adding yourself, I have a number of free/reduced passes
-to hand out so I'll assign those maybe next week. You do need to be
-registered for LPC, which is currently closed for registrations, but
-I'm trying to see if we can get reservations or maybe workshop-only
-tickets.
-
-Please add yourself if you are considering attending, so I can get a
-better idea of the numbers.
-
-johannes
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index e02fab0..508d46f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -894,7 +894,7 @@ int rtl8xxxu_write_rfreg(struct rtl8xxxu_priv *priv,
+ 	return retval;
+ }
+ 
+-int
++static int
+ rtl8xxxu_gen1_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
+ {
+ 	struct device *dev = &priv->udev->dev;
+-- 
+2.7.4
