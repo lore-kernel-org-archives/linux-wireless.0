@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51474 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757183AbcH2L2b (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:59115 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754580AbcHSDCD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 07:28:31 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-firmware@kernel.org,
-        Xose Vazquez Perez <xose.vazquez@gmail.com>,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH linux-firmware] rt2870sta: Update rt3071.bin to match rt2870.bin
-References: <20160828223730.GD10601@decadent.org.uk>
-Date: Mon, 29 Aug 2016 14:28:27 +0300
-In-Reply-To: <20160828223730.GD10601@decadent.org.uk> (Ben Hutchings's message
-        of "Sun, 28 Aug 2016 23:37:30 +0100")
-Message-ID: <87zinv3jc4.fsf@purkki.adurom.net> (sfid-20160829_132853_078334_014F08CF)
+        Thu, 18 Aug 2016 23:02:03 -0400
+From: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+To: "greearb@candelatech.com" <greearb@candelatech.com>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] ath10k:  Grab rcu_read_lock before the txqs spinlock.
+Date: Fri, 19 Aug 2016 03:01:14 +0000
+Message-ID: <1471575674214.65791@qti.qualcomm.com> (sfid-20160819_050210_524850_C92502C0)
+References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>,<1471569995-10028-2-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1471569995-10028-2-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Hutchings <ben@decadent.org.uk> writes:
-
-> rt3071.bin is a copy of the second firmware image in rt2870.bin,
-> used only by the old rt2870sta driver.
->
-> Update it to version 0.36.
->
-> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-> ---
-> The rt2870sta driver used rt3070.bin and rt3071.bin from version
-> 2.6.34 to 2.6.38 inclusive.  But that might be old enough that we
-> could reasonably remove them now.
->
-> If I don't hear objections, I'll apply this in a few days.
->
-> Ben.
->
->  rt3071.bin | Bin 4096 -> 4096 bytes
->  1 file changed, 0 insertions(+), 0 deletions(-)
-
-Please CC linux-wireless on wireless related changes. Not everyone
-follow lkml.
-
--- 
-Kalle Valo
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless=
+/ath/ath10k/mac.c=0A=
+> index 916119c..d96c06e 100644=0A=
+> --- a/drivers/net/wireless/ath/ath10k/mac.c=0A=
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c=0A=
+> @@ -4307,8 +4307,8 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)=
+=0A=
+>         int max;=0A=
+>         int loop_max =3D 2000;=0A=
+> =0A=
+> -       spin_lock_bh(&ar->txqs_lock);=0A=
+>         rcu_read_lock();=0A=
+> +       spin_lock_bh(&ar->txqs_lock);=0A=
+>=0A=
+Ben,=0A=
+=0A=
+It is quite possible that push_pending can be preempted after acquiring rcu=
+_lock which=0A=
+may lead to deadlock. no? I assume to prevent that spin_lock is taken first=
+. =0A=
+=0A=
+Could you please explain how this reordering is fixing dead lock?=0A=
+=0A=
+-Rajkumar=
