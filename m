@@ -1,60 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.zeus03.de ([194.117.254.33]:56563 "EHLO mail.zeus03.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932624AbcHKVNh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 17:13:37 -0400
-From: Wolfram Sang <wsa-dev@sang-engineering.com>
-To: linux-usb@vger.kernel.org
-Cc: Wolfram Sang <wsa-dev@sang-engineering.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 14/16] net: wireless: marvell: libertas_tf: if_usb: don't print error when allocating urb fails
-Date: Thu, 11 Aug 2016 23:13:06 +0200
-Message-Id: <1470949988-25705-2-git-send-email-wsa-dev@sang-engineering.com> (sfid-20160811_231454_616013_85A69452)
-In-Reply-To: <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
-References: <1470949539-25392-1-git-send-email-wsa-dev@sang-engineering.com>
- <1470949988-25705-1-git-send-email-wsa-dev@sang-engineering.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43650 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755372AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 19 Aug 2016 17:47:24 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 17/20] rtl8xxxu: Determine need for shore preamble before updating TX descriptors
+Date: Fri, 19 Aug 2016 17:46:39 -0400
+Message-Id: <1471643202-26250-18-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234839_635638_72C01637)
+In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kmalloc will print enough information in case of failure.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Wolfram Sang <wsa-dev@sang-engineering.com>
+Another patch to move this detection out of the code handling the TX
+descriptor update.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/marvell/libertas_tf/if_usb.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas_tf/if_usb.c b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-index 799a2efe579372..e0ade40d9497d7 100644
---- a/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-+++ b/drivers/net/wireless/marvell/libertas_tf/if_usb.c
-@@ -198,22 +198,16 @@ static int if_usb_probe(struct usb_interface *intf,
- 	}
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 6dc3f52..cfb2dfd 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -4770,7 +4770,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 	u16 rate_flag = tx_info->control.rates[0].flags;
+ 	int tx_desc_size = priv->fops->tx_desc_size;
+ 	int ret;
+-	bool usedesc40, ampdu_enable, sgi = false;
++	bool usedesc40, ampdu_enable, sgi = false, short_preamble = false;
  
- 	cardp->rx_urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!cardp->rx_urb) {
--		lbtf_deb_usbd(&udev->dev, "Rx URB allocation failed\n");
-+	if (!cardp->rx_urb)
- 		goto dealloc;
--	}
+ 	if (skb_headroom(skb) < tx_desc_size) {
+ 		dev_warn(dev,
+@@ -4860,6 +4860,10 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 	     (IEEE80211_HT_CAP_SGI_40 | IEEE80211_HT_CAP_SGI_20)))
+ 		sgi = true;
  
- 	cardp->tx_urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!cardp->tx_urb) {
--		lbtf_deb_usbd(&udev->dev, "Tx URB allocation failed\n");
-+	if (!cardp->tx_urb)
- 		goto dealloc;
--	}
++	if (rate_flag & IEEE80211_TX_RC_USE_SHORT_PREAMBLE ||
++	    (sta && vif && vif->bss_conf.use_short_preamble))
++		short_preamble = true;
++
+ 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
+ 	if (!usedesc40) {
+ 		tx_desc->txdw5 = cpu_to_le32(rate);
+@@ -4888,8 +4892,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 		if (ieee80211_is_data_qos(hdr->frame_control))
+ 			tx_desc->txdw4 |= cpu_to_le32(TXDESC32_QOS);
  
- 	cardp->cmd_urb = usb_alloc_urb(0, GFP_KERNEL);
--	if (!cardp->cmd_urb) {
--		lbtf_deb_usbd(&udev->dev, "Cmd URB allocation failed\n");
-+	if (!cardp->cmd_urb)
- 		goto dealloc;
--	}
+-		if (rate_flag & IEEE80211_TX_RC_USE_SHORT_PREAMBLE ||
+-		    (sta && vif && vif->bss_conf.use_short_preamble))
++		if (short_preamble)
+ 			tx_desc->txdw4 |= cpu_to_le32(TXDESC32_SHORT_PREAMBLE);
  
- 	cardp->ep_out_buf = kmalloc(MRVDRV_ETH_TX_PACKET_BUFFER_SIZE,
- 				    GFP_KERNEL);
+ 		if (sgi)
+@@ -4935,8 +4938,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 				cpu_to_le32(TXDESC40_RETRY_LIMIT_ENABLE);
+ 		}
+ 
+-		if (rate_flag & IEEE80211_TX_RC_USE_SHORT_PREAMBLE ||
+-		    (sta && vif && vif->bss_conf.use_short_preamble))
++		if (short_preamble)
+ 			tx_desc40->txdw5 |=
+ 				cpu_to_le32(TXDESC40_SHORT_PREAMBLE);
+ 
 -- 
-2.8.1
-
+2.7.4
