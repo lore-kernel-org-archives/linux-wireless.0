@@ -1,60 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33600 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752809AbcHAKQd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2016 06:16:33 -0400
-Message-ID: <1470044330.3389.19.camel@sipsolutions.net> (sfid-20160801_121708_671659_B84D7674)
-Subject: Re: [PATCH 1/4] mac80211: mesh: flush stations before beacons are
- stopped
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Machani, Yaniv" <yanivma@ti.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"David S . Miller" <davem@davemloft.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Cc: "Hahn, Maital" <maitalm@ti.com>
-Date: Mon, 01 Aug 2016 11:38:50 +0200
-In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101391FC38C@DFRE01.ent.ti.com> (sfid-20160713_121132_350432_32DE2AAC)
-References: <20160628111307.8784-1-yanivma@ti.com>
-	 <20160628111307.8784-2-yanivma@ti.com>
-	 (sfid-20160628_131058_738638_5F9A964D)
- <1467184459.2461.1.camel@sipsolutions.net>
-	 <AE1C82FB3D0EC64DB1F752C81CBD1101391FC38C@DFRE01.ent.ti.com>
-	 (sfid-20160713_121132_350432_32DE2AAC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:36159 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751003AbcHTT0o (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 20 Aug 2016 15:26:44 -0400
+Received: by mail-wm0-f43.google.com with SMTP id q128so72466908wma.1
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Aug 2016 12:26:44 -0700 (PDT)
+Subject: Re: [PATCH 0/3] hostap: Fine-tuning for a few functions
+To: SF Markus Elfring <elfring@users.sourceforge.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <f0cd7a82-e603-6a91-0afd-33bbd1658cab@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Julia Lawall <julia.lawall@lip6.fr>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <3b3c91ad-3225-3483-bb58-fdee33bf2290@broadcom.com> (sfid-20160820_212709_724340_46B0DBF1)
+Date: Sat, 20 Aug 2016 21:26:42 +0200
+MIME-Version: 1.0
+In-Reply-To: <f0cd7a82-e603-6a91-0afd-33bbd1658cab@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-07-13 at 10:11 +0000, Machani, Yaniv wrote:
-> On Wed, Jun 29, 2016 at 10:14:19, Johannes Berg wrote:
-> > Cc: Hahn, Maital
-> > Subject: Re: [PATCH 1/4] mac80211: mesh: flush stations before
-> > beacons 
-> > are stopped
-> > 
-> > On Tue, 2016-06-28 at 14:13 +0300, Yaniv Machani wrote:
-> > > From: Maital Hahn <maitalm@ti.com>
-> > > 
-> > > Some drivers (e.g. wl18xx) expect that the last stage in the 
-> > > de-initialization process will be stopping the beacons, similar
-> > > to ap.
-> > > Update ieee80211_stop_mesh() flow accordingly.
-> > > 
-> > How well have you tested that with other drivers?
-> > 
+On 20-08-16 18:43, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sat, 20 Aug 2016 18:35:43 +0200
 > 
-> Sorry for the delayed response (I've been out) and thanks for your
-> comments,
-> I have tested it with RT3572 as well, and didn't see any issue.
-> I'll update the comment to reflect that.
+> A few update suggestions were taken into account
+> from static source code analysis.
+
+Is it worth touching this old stuff especially when you are not making
+any functional changes.
+
+Regards,
+Arend
+
+> Markus Elfring (3):
+>   Use memdup_user()
+>   Delete an unnecessary jump label
+>   Delete unnecessary variable initialisations
 > 
-
-I'm actually reasonably sure that it *must* work, similiar to the AP
-mode change, since it's always valid to remove stations while the the
-mesh beacon is still active.
-
-I hoped you'd actually figure out that line of reasoning and put it
-into the commit message :)
-
-johannes
+>  .../net/wireless/intersil/hostap/hostap_ioctl.c    | 36 ++++++++--------------
+>  1 file changed, 12 insertions(+), 24 deletions(-)
+> 
