@@ -1,35 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0097.hostedemail.com ([216.40.44.97]:47941 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751583AbcHMEMF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2016 00:12:05 -0400
-Message-ID: <1471061519.3467.7.camel@perches.com> (sfid-20160813_061209_218370_C93EAD93)
-Subject: Re: [PATCH 1/2] etherdevice: add is_zero_ether_addr_unaligned()
-From: Joe Perches <joe@perches.com>
-To: Petri Gynther <pgynther@google.com>, linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, davem@davemloft.net, akarwar@marvell.com
-Date: Fri, 12 Aug 2016 21:11:59 -0700
-In-Reply-To: <1471057200-58166-1-git-send-email-pgynther@google.com>
-References: <1471057200-58166-1-git-send-email-pgynther@google.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mout.web.de ([212.227.15.4]:54917 "EHLO mout.web.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752796AbcHTQng (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 20 Aug 2016 12:43:36 -0400
+Subject: [PATCH 0/3] hostap: Fine-tuning for a few functions
+References: <566ABCD9.1060404@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Julia Lawall <julia.lawall@lip6.fr>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <f0cd7a82-e603-6a91-0afd-33bbd1658cab@users.sourceforge.net> (sfid-20160820_184403_575163_408B5C4C)
+Date: Sat, 20 Aug 2016 18:43:16 +0200
+MIME-Version: 1.0
+In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-08-12 at 19:59 -0700, Petri Gynther wrote:
-> Add a generic routine to test if possibly unaligned to u16
-> Ethernet address is a zero address.
-[]
-> diff --git a/include/linux/etherdevice.h b/include/linux/etherdevice.h
-[]
-> +static inline bool is_zero_ether_addr_unaligned(const u8 *addr)
-> +{
-> +#if defined(CONFIG_HAVE_EFFICIENT_UNALIGNED_ACCESS)
-> +	return is_zero_ether_addr(addr);
-> +#else
-> +	return (addr[0] | addr[1] | addr[2] | addr[3] | addr[4] | addr[5]) == 0;
-> +#endif
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sat, 20 Aug 2016 18:35:43 +0200
 
-Because the return is bool, the == 0 is unnecessary.
+A few update suggestions were taken into account
+from static source code analysis.
 
+Markus Elfring (3):
+  Use memdup_user()
+  Delete an unnecessary jump label
+  Delete unnecessary variable initialisations
+
+ .../net/wireless/intersil/hostap/hostap_ioctl.c    | 36 ++++++++--------------
+ 1 file changed, 12 insertions(+), 24 deletions(-)
+
+-- 
+2.9.3
