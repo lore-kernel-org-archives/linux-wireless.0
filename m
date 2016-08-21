@@ -1,50 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:59876 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752000AbcHBLD0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 07:03:26 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH 4.8] ath9k: fix using sta->drv_priv before initializing it
-Date: Tue,  2 Aug 2016 13:03:22 +0200
-Message-Id: <20160802110322.38359-1-nbd@nbd.name> (sfid-20160802_130329_559529_E5210A8C)
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33773 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753290AbcHUOtc (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 Aug 2016 10:49:32 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org
+Cc: robh+dt@kernel.org, mark.rutland@arm.com, arnd@arndb.de,
+        chunkeey@googlemail.com, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH 5/5] ath9k: Make EEPROM endianness swapping configurable via devicetree
+Date: Sun, 21 Aug 2016 16:49:06 +0200
+Message-Id: <20160821144906.30984-6-martin.blumenstingl@googlemail.com> (sfid-20160821_164939_103365_5D827E86)
+In-Reply-To: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A station pointer can be passed to the driver on tx, before it has been
-marked as associated. Since ath9k_sta_state was initializing the entry
-too late, it resulted in some spurious crashes.
-
-Fixes: df3c6eb34da5 ("ath9k: Use sta_state() callback")
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+The endianness swapping is disabled by default since many devices have
+EEPROMs with incorrect endianness magic bytes (at the beginning).
+Devices where the EEPROM is known to indicate the correct endianness
+can enable the new flag to enable swapping when required.
+This behavior is consistent with ath9k_platform_data where the endian
+check also has to be enabled explicitly.
 ---
- drivers/net/wireless/ath/ath9k/main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ .../devicetree/bindings/net/wireless/qca,ath9k.txt       | 16 ++++++++++++++++
+ drivers/net/wireless/ath/ath9k/init.c                    |  6 +++++-
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 7594650..a659e81 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -1563,13 +1563,13 @@ static int ath9k_sta_state(struct ieee80211_hw *hw,
- 	struct ath_common *common = ath9k_hw_common(sc->sc_ah);
- 	int ret = 0;
+diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+index 98065ad..05c54c4 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+@@ -17,6 +17,22 @@ Optional properties:
+ 			ath9k wireless chip (in this case the calibration /
+ 			EEPROM data will be loaded from userspace using the
+ 			kernel firmware loader).
++- qca,check-eeprom-endianness: When enabled, the driver checks if the
++				endianness of the EEPROM (using two checks,
++				one is based on the two magic bytes at the
++				start of the EEPROM and a second one which
++				relies on a flag within the EEPROM data)
++				matches the host system's native endianness.
++				The data will be swapped accordingly if there
++				is a mismatch.
++				Leaving this disabled means that the EEPROM
++				data will always be interpreted in the
++				system's native endianness.
++				Enable this option only when the EEPROMs
++				endianness identifiers are known to be
++				correct, because otherwise the EEPROM data
++				may be swapped and thus interpreted
++				incorrectly.
+ - qca,disable-2ghz: Overrides the settings from the EEPROM and disables the
+ 			2.4GHz band. Setting this property is only needed
+ 			when the RF circuit does not support the 2.4GHz band
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index c123145..d123977 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -581,6 +581,11 @@ static int ath9k_of_init(struct ath_softc *sc)
+ 	if (of_property_read_bool(np, "qca,disable-5ghz"))
+ 		ah->disable_5ghz = true;
  
--	if (old_state == IEEE80211_STA_AUTH &&
--	    new_state == IEEE80211_STA_ASSOC) {
-+	if (old_state == IEEE80211_STA_NOTEXIST &&
-+	    new_state == IEEE80211_STA_NONE) {
- 		ret = ath9k_sta_add(hw, vif, sta);
- 		ath_dbg(common, CONFIG,
- 			"Add station: %pM\n", sta->addr);
--	} else if (old_state == IEEE80211_STA_ASSOC &&
--		   new_state == IEEE80211_STA_AUTH) {
-+	} else if (old_state == IEEE80211_STA_NONE &&
-+		   new_state == IEEE80211_STA_NOTEXIST) {
- 		ret = ath9k_sta_remove(hw, vif, sta);
- 		ath_dbg(common, CONFIG,
- 			"Remove station: %pM\n", sta->addr);
++	if (of_property_read_bool(np, "qca,check-eeprom-endianness"))
++		ah->ah_flags &= ~AH_NO_EEP_SWAP;
++	else
++		ah->ah_flags |= AH_NO_EEP_SWAP;
++
+ 	if (of_property_read_bool(np, "qca,no-eeprom")) {
+ 		/* ath9k-eeprom-<bus>-<id>.bin */
+ 		scnprintf(eeprom_name, sizeof(eeprom_name),
+@@ -597,7 +602,6 @@ static int ath9k_of_init(struct ath_softc *sc)
+ 		ether_addr_copy(common->macaddr, mac);
+ 
+ 	ah->ah_flags &= ~AH_USE_EEPROM;
+-	ah->ah_flags |= AH_NO_EEP_SWAP;
+ 
+ 	return 0;
+ }
 -- 
-2.8.4
-
+2.9.3
