@@ -1,84 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36310 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932349AbcHVNED (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:32882 "EHLO
+        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751549AbcHUBqE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 09:04:03 -0400
-Subject: Re: [PATCH 1/1] brcmfmac: fix pmksa->bssid usage
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <20160805203418.32162-1-nicolas.iooss_linux@m4x.org>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Message-ID: <96ea6e57-79d7-d4ff-1228-6f22addd4996@m4x.org> (sfid-20160822_150422_162269_8DB7EB5A)
-Date: Mon, 22 Aug 2016 15:03:59 +0200
+        Sat, 20 Aug 2016 21:46:04 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160805203418.32162-1-nicolas.iooss_linux@m4x.org>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <65ed528f-7ec5-a0f2-6219-3e63a78ca0ee@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net> <f0cd7a82-e603-6a91-0afd-33bbd1658cab@users.sourceforge.net>
+ <65ed528f-7ec5-a0f2-6219-3e63a78ca0ee@users.sourceforge.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 21 Aug 2016 11:45:13 +1000
+Message-ID: <CAGRGNgW3tCpLqs56DXW65_Du8HD+oYt-St3Oc6C6WLeungM51g@mail.gmail.com> (sfid-20160821_034630_720906_18364064)
+Subject: Re: [PATCH 2/3] hostap: Delete an unnecessary jump label in prism2_ioctl_priv_hostapd()
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>, Jouni Malinen <j@w1.fi>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors <kernel-janitors@vger.kernel.org>,
+        Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Hi Marcus,
 
-After I sent the following patch a few weeks ago, I have not received
-any feedback. Could you please review it and tell me what I may have
-done wrong?
+On Sun, Aug 21, 2016 at 2:46 AM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sat, 20 Aug 2016 18:21:29 +0200
+>
+> Remove a jump label which is unneeded in this function at the end.
+>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/net/wireless/intersil/hostap/hostap_ioctl.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
+> index 4e271f9..5942917 100644
+> --- a/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
+> +++ b/drivers/net/wireless/intersil/hostap/hostap_ioctl.c
+> @@ -3835,14 +3835,12 @@ static int prism2_ioctl_priv_hostapd(local_info_t *local, struct iw_point *p)
+>         }
+>
+>         if (ret == 1 || !ap_ioctl) {
+> -               if (copy_to_user(p->pointer, param, p->length)) {
+> +               if (copy_to_user(p->pointer, param, p->length))
+>                         ret = -EFAULT;
+> -                       goto out;
+> -               } else if (ap_ioctl)
+> +               else if (ap_ioctl)
+>                         ret = 0;
+>         }
+>
+> - out:
+
+Does this change make any difference to the compiled code?
 
 Thanks,
-Nicolas
 
-On 05/08/16 22:34, Nicolas Iooss wrote:
-> The struct cfg80211_pmksa defines its bssid field as:
-> 
->     const u8 *bssid;
-> 
-> contrary to struct brcmf_pmksa, which uses:
-> 
->     u8 bssid[ETH_ALEN];
-> 
-> Therefore in brcmf_cfg80211_del_pmksa(), &pmksa->bssid takes the address
-> of this field (of type u8**), not the one of its content (which would be
-> u8*).  Remove the & operator to make brcmf_dbg("%pM") and memcmp()
-> behave as expected.
-> 
-> This bug have been found using a custom static checker (which checks the
-> usage of %p... attributes at build time).  It has been introduced in
-> commit 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code"),
-> which replaced pmksa->bssid by &pmksa->bssid while refactoring the code,
-> without modifying struct cfg80211_pmksa definition.
-> 
-> Fixes: 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code")
-> Cc: stable@ger.kernel.org
-> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-> ---
-> 
-> scripts/checkpatch.pl reports a warning: "Prefer ether_addr_equal() or
-> ether_addr_equal_unaligned() over memcmp()".  Because some files in
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/ still use memcmp()
-> to compare addresses and because I do not know whether pmksa->bssid is
-> always aligned, I did not follow this warning.
-> 
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index 2628d5e12c64..aceab77cd95a 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -3884,11 +3884,11 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
->  	if (!check_vif_up(ifp->vif))
->  		return -EIO;
->  
-> -	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", &pmksa->bssid);
-> +	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", pmksa->bssid);
->  
->  	npmk = le32_to_cpu(cfg->pmk_list.npmk);
->  	for (i = 0; i < npmk; i++)
-> -		if (!memcmp(&pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
-> +		if (!memcmp(pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
->  			break;
->  
->  	if ((npmk > 0) && (i < npmk)) {
-> 
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
