@@ -1,59 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atlantic540.startdedicated.de ([188.138.9.77]:35477 "EHLO
-	atlantic540.startdedicated.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753186AbcHRNi1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Aug 2016 09:38:27 -0400
-From: Daniel Wagner <wagi@monom.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-	"Luis R . Rodriguez" <mcgrof@kernel.org>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>
-Subject: [PATCH 0/2] wireless: Use complete() instead complete_all()
-Date: Thu, 18 Aug 2016 15:12:04 +0200
-Message-Id: <1471525926-20384-1-git-send-email-wagi@monom.org> (sfid-20160818_153915_881858_91C07E53)
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34665 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752464AbcHUOb3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 Aug 2016 10:31:29 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
+        kvalo@codeaurora.org, chunkeey@googlemail.com,
+        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
+        bjorn@mork.no, linux@rempel-privat.de,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v5 3/3] ath9k: parse the device configuration from an OF node
+Date: Sun, 21 Aug 2016 16:31:05 +0200
+Message-Id: <20160821143105.27487-4-martin.blumenstingl@googlemail.com> (sfid-20160821_163132_247668_9DA67542)
+In-Reply-To: <20160821143105.27487-1-martin.blumenstingl@googlemail.com>
+References: <20160709232834.31654-1-martin.blumenstingl@googlemail.com>
+ <20160821143105.27487-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Daniel Wagner <daniel.wagner@bmw-carit.de>
+This allows configuring ath9k based PCI devices using devicetree.
+There is some out-of-tree code to "convert devicetree to
+ath9k_platform_data" (for example in OpenWrt and LEDE) which becomes
+obsolete with this patch.
 
-Hi,
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ drivers/net/wireless/ath/ath9k/init.c | 51 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-Using complete_all() is not wrong per se but it suggest that there
-might be more than one reader. For -rt I am reviewing all
-complete_all() users and would like to leave only the real ones in the
-tree. The main problem for -rt about complete_all() is that it can be
-uses inside IRQ context and that can lead to unbounded amount work
-inside the interrupt handler. That is a no no for -rt.
-
-The patches grouped per subsystem and in small batches to allow
-reviewing.
-
-This series ignores all complete_all() usages in the firmware loading
-path. They will be hopefully address by Luis' sysdata patches [0].
-That leaves a couple of complete_all() calls.
-
-The first patch fixes a real glitch for the carl9170 driver. I was
-able to test it because I have the hardware. For the second one I
-haven't found any dongle with that chip in my drawers. 
-
-This series against net-next of today.
-
-cheers,
-daniel
-
-[0] https://lkml.kernel.org/r/1466117661-22075-1-git-send-email-mcgrof@kernel.org
-
-Daniel Wagner (2):
-  carl9170: Fix wrong completion usage
-  ath10k: use complete() instead complete_all()
-
- drivers/net/wireless/ath/ath10k/core.c  | 16 ++++++++--------
- drivers/net/wireless/ath/ath10k/mac.c   |  2 +-
- drivers/net/wireless/ath/carl9170/usb.c |  6 ++----
- 3 files changed, 11 insertions(+), 13 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index cfa3fe8..c123145 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -20,6 +20,8 @@
+ #include <linux/slab.h>
+ #include <linux/ath9k_platform.h>
+ #include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_net.h>
+ #include <linux/relay.h>
+ #include <net/ieee80211_radiotap.h>
+ 
+@@ -555,6 +557,51 @@ static int ath9k_init_platform(struct ath_softc *sc)
+ 	return 0;
+ }
+ 
++static int ath9k_of_init(struct ath_softc *sc)
++{
++	struct device_node *np = sc->dev->of_node;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	enum ath_bus_type bus_type = common->bus_ops->ath_bus_type;
++	const char *mac;
++	char eeprom_name[100];
++	int ret;
++
++	if (!of_device_is_available(np))
++		return 0;
++
++	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
++
++	if (of_property_read_bool(np, "qca,clk-25mhz"))
++		ah->is_clk_25mhz = true;
++
++	if (of_property_read_bool(np, "qca,disable-2ghz"))
++		ah->disable_2ghz = true;
++
++	if (of_property_read_bool(np, "qca,disable-5ghz"))
++		ah->disable_5ghz = true;
++
++	if (of_property_read_bool(np, "qca,no-eeprom")) {
++		/* ath9k-eeprom-<bus>-<id>.bin */
++		scnprintf(eeprom_name, sizeof(eeprom_name),
++			  "ath9k-eeprom-%s-%s.bin",
++			  ath_bus_type_to_string(bus_type), dev_name(ah->dev));
++
++		ret = ath9k_eeprom_request(sc, eeprom_name);
++		if (ret)
++			return ret;
++	}
++
++	mac = of_get_mac_address(np);
++	if (mac)
++		ether_addr_copy(common->macaddr, mac);
++
++	ah->ah_flags &= ~AH_USE_EEPROM;
++	ah->ah_flags |= AH_NO_EEP_SWAP;
++
++	return 0;
++}
++
+ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 			    const struct ath_bus_ops *bus_ops)
+ {
+@@ -611,6 +658,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		return ret;
+ 
++	ret = ath9k_of_init(sc);
++	if (ret)
++		return ret;
++
+ 	if (ath9k_led_active_high != -1)
+ 		ah->config.led_active_high = ath9k_led_active_high == 1;
+ 
 -- 
-2.7.4
+2.9.3
