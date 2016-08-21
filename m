@@ -1,74 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57408 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751385AbcHBJNs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 05:13:48 -0400
-From: Felix Fietkau <nbd@nbd.name>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: fix purging multicast PS buffer queue
-Date: Tue,  2 Aug 2016 11:13:41 +0200
-Message-Id: <20160802091341.64330-1-nbd@nbd.name> (sfid-20160802_111356_489284_9B44A4D7)
+Received: from devils.ext.ti.com ([198.47.26.153]:58826 "EHLO
+        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752572AbcHULRM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 Aug 2016 07:17:12 -0400
+From: Maxim Altshul <maxim.altshul@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
+        Maxim Altshul <maxim.altshul@ti.com>
+Subject: [PATCH 3/3 v2] wlcore: Add RX_BA_WIN_SIZE_CHANGE_EVENT event
+Date: Sun, 21 Aug 2016 14:24:25 +0300
+Message-ID: <20160821112425.11302-3-maxim.altshul@ti.com> (sfid-20160821_131720_165000_947B14B5)
+In-Reply-To: <20160821112425.11302-2-maxim.altshul@ti.com>
+References: <20160821112425.11302-1-maxim.altshul@ti.com>
+ <20160821112425.11302-2-maxim.altshul@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The code currently assumes that buffered multicast PS frames don't have
-a pending ACK frame for tx status reporting.
-However, hostapd sends a broadcast deauth frame on teardown for which tx
-status is requested. This can lead to the "Have pending ack frames"
-warning on module reload.
-Fix this by using ieee80211_free_txskb/ieee80211_purge_tx_queue.
+This event is used by the Firmware to limit the RX BA win size
+for a specific link.
 
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
+The event handler updates the new size in the mac's sta->sta struct.
+
+BA sessions opened for that link will use the new restricted
+win_size. This limitation remains until a new update is received or
+until the link is closed.
+
+Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
 ---
- net/mac80211/cfg.c | 2 +-
- net/mac80211/tx.c  | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Instead of calling ieee80211_change_rx_ba_max_subframes which was removed in v2,
+we will find the station, change the window size and call for a stop on it's active RX BA sessions.
+ 
+ drivers/net/wireless/ti/wl18xx/event.c | 28 ++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/event.h |  1 +
+ drivers/net/wireless/ti/wl18xx/main.c  |  3 ++-
+ 3 files changed, 31 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 47e99ab8..543b1d4 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -869,7 +869,7 @@ static int ieee80211_stop_ap(struct wiphy *wiphy, struct net_device *dev)
+diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
+index 2c5df43..9fd1c69 100644
+--- a/drivers/net/wireless/ti/wl18xx/event.c
++++ b/drivers/net/wireless/ti/wl18xx/event.c
+@@ -217,5 +217,33 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
+ 	if (vector & FW_LOGGER_INDICATION)
+ 		wlcore_event_fw_logger(wl);
  
- 	/* free all potentially still buffered bcast frames */
- 	local->total_ps_buffered -= skb_queue_len(&sdata->u.ap.ps.bc_buf);
--	skb_queue_purge(&sdata->u.ap.ps.bc_buf);
-+	ieee80211_purge_tx_queue(&local->hw, &sdata->u.ap.ps.bc_buf);
++	if (vector & RX_BA_WIN_SIZE_CHANGE_EVENT_ID) {
++		struct wl12xx_vif *wlvif;
++		struct ieee80211_vif *vif;
++		struct ieee80211_sta *sta;
++		u8 link_id = mbox->rx_ba_link_id;
++		u8 win_size = mbox->rx_ba_win_size;
++		const u8 *addr;
++
++		wlvif = wl->links[link_id].wlvif;
++		vif = wl12xx_wlvif_to_vif(wlvif);
++
++		/* Update RX aggregation window size and call
++		 * MAC routine to stop active RX aggregations for this link
++		 */
++		if (wlvif->bss_type != BSS_TYPE_AP_BSS)
++			addr = vif->bss_conf.bssid;
++		else
++			addr = wl->links[link_id].addr;
++
++		sta = ieee80211_find_sta(vif, addr);
++		if (sta) {
++			sta->max_rx_aggregation_subframes = win_size;
++			ieee80211_stop_rx_ba_session(vif,
++						wl->links[link_id].ba_bitmap,
++						addr);
++		}
++	}
++
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ti/wl18xx/event.h b/drivers/net/wireless/ti/wl18xx/event.h
+index ce8ea9c0..4af297f 100644
+--- a/drivers/net/wireless/ti/wl18xx/event.h
++++ b/drivers/net/wireless/ti/wl18xx/event.h
+@@ -38,6 +38,7 @@ enum {
+ 	REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID      = BIT(18),
+ 	DFS_CHANNELS_CONFIG_COMPLETE_EVENT       = BIT(19),
+ 	PERIODIC_SCAN_REPORT_EVENT_ID            = BIT(20),
++	RX_BA_WIN_SIZE_CHANGE_EVENT_ID           = BIT(21),
+ 	SMART_CONFIG_SYNC_EVENT_ID               = BIT(22),
+ 	SMART_CONFIG_DECODE_EVENT_ID             = BIT(23),
+ 	TIME_SYNC_EVENT_ID                       = BIT(24),
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+index 00a04df..dafb2fd 100644
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1041,7 +1041,8 @@ static int wl18xx_boot(struct wl1271 *wl)
+ 		SMART_CONFIG_SYNC_EVENT_ID |
+ 		SMART_CONFIG_DECODE_EVENT_ID |
+ 		TIME_SYNC_EVENT_ID |
+-		FW_LOGGER_INDICATION;
++		FW_LOGGER_INDICATION |
++		RX_BA_WIN_SIZE_CHANGE_EVENT_ID;
  
- 	mutex_lock(&local->mtx);
- 	ieee80211_vif_copy_chanctx_to_vlans(sdata, true);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 91461c4..5023966 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -368,7 +368,7 @@ static void purge_old_ps_buffers(struct ieee80211_local *local)
- 		skb = skb_dequeue(&ps->bc_buf);
- 		if (skb) {
- 			purged++;
--			dev_kfree_skb(skb);
-+			ieee80211_free_txskb(&local->hw, skb);
- 		}
- 		total += skb_queue_len(&ps->bc_buf);
- 	}
-@@ -451,7 +451,7 @@ ieee80211_tx_h_multicast_ps_buf(struct ieee80211_tx_data *tx)
- 	if (skb_queue_len(&ps->bc_buf) >= AP_MAX_BC_BUFFER) {
- 		ps_dbg(tx->sdata,
- 		       "BC TX buffer full - dropping the oldest frame\n");
--		dev_kfree_skb(skb_dequeue(&ps->bc_buf));
-+		ieee80211_free_txskb(&tx->local->hw, skb_dequeue(&ps->bc_buf));
- 	} else
- 		tx->local->total_ps_buffered++;
+ 	wl->ap_event_mask = MAX_TX_FAILURE_EVENT_ID;
  
-@@ -4275,7 +4275,7 @@ ieee80211_get_buffered_bc(struct ieee80211_hw *hw,
- 			sdata = IEEE80211_DEV_TO_SUB_IF(skb->dev);
- 		if (!ieee80211_tx_prepare(sdata, &tx, NULL, skb))
- 			break;
--		dev_kfree_skb_any(skb);
-+		ieee80211_free_txskb(hw, skb);
- 	}
- 
- 	info = IEEE80211_SKB_CB(skb);
 -- 
-2.8.4
-
+2.9.0
