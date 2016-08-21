@@ -1,61 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32646 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752214AbcHPMer (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2016 08:34:47 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Xu, Peng" <pxu@qca.qualcomm.com>
-Subject: Re: [PATCH] cfg80211: Add HT and VHT information in start_ap
-Date: Tue, 16 Aug 2016 12:34:43 +0000
-Message-ID: <20160816123441.GA3678@jouni.qca.qualcomm.com> (sfid-20160816_143450_251454_26813F27)
-References: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
- <1471330367.16783.23.camel@sipsolutions.net>
-In-Reply-To: <1471330367.16783.23.camel@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35689 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753148AbcHUOtb (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 Aug 2016 10:49:31 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org
+Cc: robh+dt@kernel.org, mark.rutland@arm.com, arnd@arndb.de,
+        chunkeey@googlemail.com, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH 4/5] ath9k: Make the EEPROM swapping check use the eepmisc register
+Date: Sun, 21 Aug 2016 16:49:05 +0200
+Message-Id: <20160821144906.30984-5-martin.blumenstingl@googlemail.com> (sfid-20160821_164937_593400_9E3DC529)
+In-Reply-To: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Aug 16, 2016 at 08:52:47AM +0200, Johannes Berg wrote:
-> On Mon, 2016-08-15 at 21:07 +0300, Jouni Malinen wrote:
-> > From: Peng Xu <pxu@qca.qualcomm.com>
-> > Add HT and VHT information in struct cfg80211_ap_settings when
-> > starting ap so that driver does not need to parse IE to obtain
-> > the information.
->=20
-> > +enum ht_vht_support {
-> > +	HT_VHT_DISABLED,
-> > +	HT_VHT_ENABLED,
-> > +	HT_VHT_NOT_INDICATED
-> > +};
->=20
-> So if you get HT_VHT_NOT_INDICATED in the driver, don't you *still*
-> have to parse the IEs?
+There are two ways of swapping the EEPROM data in the ath9k driver:
+1) swab16 based on the first two EEPROM "magic" bytes (same for all
+   EEPROM formats)
+2) field and EEPROM format specific swab16/swab32 (different for
+   eeprom_def, eeprom_4k and eeprom_9287)
 
-Well.. Yes, I guess one would need to do that for some time until
-relevant user space is expected to have been updated to support the new
-attribute.
+The result of the first check was used to also enable the second swap.
+This behavior seems incorrect, since the data may only be byte-swapped
+(afterwards the data could be in the correct endianness).
+Thus we introduce a separate check based on the "eepmisc" register
+(which is part of the EEPROM data). When bit 0 is set, then the EEPROM
+format specific values are in "big endian". This is also done by the
+FreeBSD kernel, see [0] for example.
 
-> Arguably, cfg80211 could know itself by parsing though, so it could
-> already fall back to that, no?
->=20
-> But if you do that, you already need the parsing code, so then perhaps
-> it would make sense to just always use the parsing in cfg80211? Or
-> export a parsing function to use in driver(s)?
+This allows us to parse EEPROMs with the "correct" magic bytes but
+swapped EEPROM format specific values. These EEPROMs (mostly found in
+lantiq and broadcom based big endian MIPS based devices) only worked
+due to platform specific "hacks" which swapped the EEPROM so the
+magic was inverted, which also enabled the format specific swapping.
+With this patch the old behavior is still supported, but neither
+recommended nor needed anymore.
 
-I guess that could be considered reasonable approach for the existing
-HT and VHT cases and new attributes would obviously be significantly
-easier to introduce with new extensions (need to remember to do this for
-HE from the beginning..).
+[0]
+https://github.com/freebsd/freebsd/blob/50719b56d9ce8d7d4beb53b16e9edb2e9a4a7a18/sys/dev/ath/ath_hal/ah_eeprom_9287.c#L351
+---
+ drivers/net/wireless/ath/ath9k/eeprom.c | 57 ++++++++++++++++++++++++---------
+ 1 file changed, 41 insertions(+), 16 deletions(-)
 
-The parsing for these HT/VHT enabled/required is a bit strange
-combination having to go over three IEs. I'm not sure a parsing function
-to do so would be that nice.. The parsing code could indeed be moved to
-cfg80211 so that it would not need to be duplicated into each driver
-needing this, though.
-
---=20
-Jouni Malinen                                            PGP id EFC895FA=
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index a449588..8138a1d 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -155,11 +155,19 @@ bool ath9k_hw_nvram_read(struct ath_hw *ah, u32 off, u16 *data)
+ 	return ret;
+ }
+ 
++#ifdef __BIG_ENDIAN
++#define EXPECTED_EEPMISC_VAL AR5416_EEPMISC_BIG_ENDIAN
++#else
++#define EXPECTED_EEPMISC_VAL 0
++#endif
++
+ int ath9k_hw_nvram_swap_data(struct ath_hw *ah, bool *swap_needed, int size)
+ {
+ 	u16 magic;
+ 	u16 *eepdata;
++	u8 eepmisc;
+ 	int i;
++	bool needs_byteswap = false;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 
+ 	if (!ath9k_hw_nvram_read(ah, AR5416_EEPROM_MAGIC_OFFSET, &magic)) {
+@@ -167,36 +175,53 @@ int ath9k_hw_nvram_swap_data(struct ath_hw *ah, bool *swap_needed, int size)
+ 		return -EIO;
+ 	}
+ 
+-	*swap_needed = false;
+ 	if (swab16(magic) == AR5416_EEPROM_MAGIC) {
++		needs_byteswap = true;
++		ath_dbg(common, EEPROM,
++			"EEPROM needs byte-swapping to correct endianness.\n");
++	} else if (magic != AR5416_EEPROM_MAGIC) {
++		if (ath9k_hw_use_flash(ah)) {
++			ath_dbg(common, EEPROM,
++				"Ignoring invalid EEPROM magic (0x%04x).\n",
++				magic);
++		} else {
++			ath_err(common,
++				"Invalid EEPROM magic (0x%04x).\n", magic);
++			return -EINVAL;
++		}
++	}
++
++	if (needs_byteswap) {
+ 		if (ah->ah_flags & AH_NO_EEP_SWAP) {
+ 			ath_info(common,
+ 				 "Ignoring endianness difference in EEPROM magic bytes.\n");
+ 		} else {
+-			*swap_needed = true;
+-		}
+-	} else if (magic != AR5416_EEPROM_MAGIC) {
+-		if (ath9k_hw_use_flash(ah))
+-			return 0;
++			eepdata = (u16 *)(&ah->eeprom);
+ 
+-		ath_err(common,
+-			"Invalid EEPROM Magic (0x%04x).\n", magic);
+-		return -EINVAL;
++			for (i = 0; i < size; i++)
++				eepdata[i] = swab16(eepdata[i]);
++		}
+ 	}
+ 
+-	eepdata = (u16 *)(&ah->eeprom);
+-
+-	if (*swap_needed) {
+-		ath_dbg(common, EEPROM,
+-			"EEPROM Endianness is not native.. Changing.\n");
++	*swap_needed = false;
+ 
+-		for (i = 0; i < size; i++)
+-			eepdata[i] = swab16(eepdata[i]);
++	eepmisc = ah->eep_ops->get_eepmisc(ah);
++	if ((eepmisc & AR5416_EEPMISC_BIG_ENDIAN) != EXPECTED_EEPMISC_VAL) {
++		if (ah->ah_flags & AH_NO_EEP_SWAP) {
++			ath_info(common,
++				 "Ignoring endianness difference in eepmisc register.\n");
++		} else {
++			*swap_needed = true;
++			ath_dbg(common, EEPROM,
++				"EEPROM needs swapping according to the eepmisc register.\n");
++		}
+ 	}
+ 
+ 	return 0;
+ }
+ 
++#undef EXPECTED_EEPMISC_VAL
++
+ bool ath9k_hw_nvram_validate_checksum(struct ath_hw *ah, int size)
+ {
+ 	u32 i, sum = 0;
+-- 
+2.9.3
