@@ -1,60 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:63093 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932680AbcHKPeo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 11:34:44 -0400
-From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
-	"Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
-Subject: RE: [PATCH v5] cfg80211: Provision to allow the support for different
- beacon intervals
-Date: Thu, 11 Aug 2016 15:34:26 +0000
-Message-ID: <932bf43403904d87997749137113f7ce@aphydexm01f.ap.qualcomm.com> (sfid-20160811_173451_037347_0BCE08CC)
-References: <1470916154-18821-1-git-send-email-pkushwah@qti.qualcomm.com>
- <1470920916.12075.15.camel@sipsolutions.net>
-In-Reply-To: <1470920916.12075.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34634 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751549AbcHUObY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 Aug 2016 10:31:24 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
+        kvalo@codeaurora.org, chunkeey@googlemail.com,
+        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
+        bjorn@mork.no, linux@rempel-privat.de,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v5 0/3] add devicetree support to ath9k
+Date: Sun, 21 Aug 2016 16:31:02 +0200
+Message-Id: <20160821143105.27487-1-martin.blumenstingl@googlemail.com> (sfid-20160821_163128_009172_16316A6F)
+In-Reply-To: <20160709232834.31654-1-martin.blumenstingl@googlemail.com>
+References: <20160709232834.31654-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBUaGlzIHNlZW1zIG9kZC4gU2hvdWxkbid0IGl0IHVzZSBjZmc4MDIxMV9pdGVyX2NvbWJpbmF0
-aW9ucygpPw0KWWVzIC4gV2Ugc2hvdWxkIGhhdmUgcmV1c2VkIGNmZzgwMjExX2l0ZXJfY29tYmlu
-YXRpb25zLiBUaGFua3MgYSBsb3QgZm9yIHlvdXIgc3VnZ2VzdGlvbi4gDQoNCj4gc2VlbXMgd2Ug
-bW9zdGx5IG1vdmVkIHRoYXQgdG8gbWFjODAyMTEsIGJ1dCBmb3IgdGhpcyBjYXNlIGl0IHNob3Vs
-ZCBwcm9iYWJseSBzdGF5IGluIGNmZzgwMjExPyBPciBzaG91bGQgaXQ/DQpUaGUgc2NvcGUgaGVy
-ZSBpcyB0byBrbm93IHRoZSBhZHZlcnRpc2VkICJkaWZmX2JlYWNvbl9pbnRfZ2NkIiBmb3IgdGhl
-IHJlc3BlY3RpdmUgbWF0Y2hpbmcgaW50ZXJmYWNlIGNvbWJpbmF0aW9uIGFuZCBmdXJ0aGVyIHZh
-bGlkYXRlIGl0IHdpdGggdGhlIGNvbmZpZ3VyZWQgb25lLiANClRvIGFkZHJlc3MgdGhpcyAiIGNm
-ZzgwMjExX3ZhbGlkYXRlX2JlYWNvbl9pbnQiIG5lZWRzIHRvIGdldCBlbmhhbmNlZCAsIGlzbid0
-ID8NCg0KUmVnYXJkcywNClN1bmlsDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTog
-Sm9oYW5uZXMgQmVyZyBbbWFpbHRvOmpvaGFubmVzQHNpcHNvbHV0aW9ucy5uZXRdIA0KU2VudDog
-VGh1cnNkYXksIEF1Z3VzdCAxMSwgMjAxNiA2OjM5IFBNDQpUbzogS3VzaHdhaGEsIFB1cnVzaG90
-dGFtIDxwa3VzaHdhaEBxdGkucXVhbGNvbW0uY29tPg0KQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIu
-a2VybmVsLm9yZzsgTWFsaW5lbiwgSm91bmkgPGpvdW5pQHFjYS5xdWFsY29tbS5jb20+OyBVbmRl
-a2FyaSwgU3VuaWwgRHV0dCA8dXNkdXR0QHF0aS5xdWFsY29tbS5jb20+OyBIdWxsdXIgU3VicmFt
-YW55YW0sIEFtYXJuYXRoIDxhbWFybmF0aEBxY2EucXVhbGNvbW0uY29tPjsgS3VtYXIsIERlZXBh
-ayAoUUNBKSA8ZGppbmRhbEBxdGkucXVhbGNvbW0uY29tPg0KU3ViamVjdDogUmU6IFtQQVRDSCB2
-NV0gY2ZnODAyMTE6IFByb3Zpc2lvbiB0byBhbGxvdyB0aGUgc3VwcG9ydCBmb3IgZGlmZmVyZW50
-IGJlYWNvbiBpbnRlcnZhbHMNCg0KDQo+ICtzdGF0aWMgYm9vbCBkaWZmX2JlYWNvbl9pbnRlcnZh
-bF9zdXBwb3J0ZWQoc3RydWN0IHdpcGh5ICp3aXBoeSwgdTE2DQo+IHR5cGVzLA0KPiArCQkJCQnC
-oMKgwqB1MzIgYmVhY29uX2ludCkNCj4gK3sNCj4gKwljb25zdCBzdHJ1Y3QgaWVlZTgwMjExX2lm
-YWNlX2NvbWJpbmF0aW9uICpjOw0KPiArCXUxNiBhbGxfdHlwZXM7DQo+ICsJaW50IGksIGo7DQo+
-ICsNCj4gKwlmb3IgKGkgPSAwOyBpIDwgd2lwaHktPm5faWZhY2VfY29tYmluYXRpb25zOyBpKysp
-IHsNCj4gKwkJYyA9ICZ3aXBoeS0+aWZhY2VfY29tYmluYXRpb25zW2ldOw0KPiArDQo+ICsJCWlm
-ICghYy0+ZGlmZl9iZWFjb25faW50X2djZCB8fA0KPiArCQnCoMKgwqDCoChiZWFjb25faW50ICUg
-Yy0+ZGlmZl9iZWFjb25faW50X2djZCkpDQo+ICsJCQljb250aW51ZTsNCj4gKw0KPiArCQlhbGxf
-dHlwZXMgPSAwOw0KPiArCQlmb3IgKGogPSAwOyBqIDwgYy0+bl9saW1pdHM7IGorKykNCj4gKwkJ
-CWFsbF90eXBlcyB8PSBjLT5saW1pdHNbal0udHlwZXM7DQo+ICsNCj4gKwkJaWYgKGFsbF90eXBl
-cyAmIHR5cGVzKQ0KPiArCQkJcmV0dXJuIHRydWU7DQo+ICsJfQ0KPiArDQo+ICsJcmV0dXJuIGZh
-bHNlOw0KPiArfQ0KDQpUaGlzIHNlZW1zIG9kZC4gU2hvdWxkbid0IGl0IHVzZcKgY2ZnODAyMTFf
-aXRlcl9jb21iaW5hdGlvbnMoKT8gTWlnaHQgbmVlZCBzb21lIGFkZGl0aW9uYWwgaGVscGVyIHRv
-IHVuZGVyc3RhbmQgd2hpY2ggaW50ZXJmYWNlIHR5cGVzIGFyZSB1c2VkIHJpZ2h0IG5vdyAtIHNl
-ZW1zIHdlIG1vc3RseSBtb3ZlZCB0aGF0IHRvIG1hYzgwMjExLCBidXQgZm9yIHRoaXMgY2FzZSBp
-dCBzaG91bGQgcHJvYmFibHkgc3RheSBpbiBjZmc4MDIxMT8gT3Igc2hvdWxkIGl0Pw0KDQpqb2hh
-bm5lcw0K
+This series adds support for configuring ath9k based devices via
+devicetree. This was tested on PCI(e) based devices. This should work
+for AHB based devices as well as soon as the ath79 platform is ready
+to populate the ath9k wmac via devicetree.
+
+Changes since v4:
+- dropped "qca,check-eeprom-endianness" for now - this will be part
+  of a separate patch
+- update documentation to fix the "compatible" string (as there is a
+  PCI device specific format)
+
+
+Martin Blumenstingl (3):
+  Documentation: dt: net: add ath9k wireless device binding
+  ath9k: add a helper to get the string representation of ath_bus_type
+  ath9k: parse the device configuration from an OF node
+
+ .../devicetree/bindings/net/wireless/qca,ath9k.txt | 47 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath.h                     |  6 +++
+ drivers/net/wireless/ath/ath9k/init.c              | 51 ++++++++++++++++++++++
+ drivers/net/wireless/ath/main.c                    |  7 +++
+ 4 files changed, 111 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+
+-- 
+2.9.3
