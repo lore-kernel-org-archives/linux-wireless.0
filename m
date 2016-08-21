@@ -1,49 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0056.hostedemail.com ([216.40.44.56]:40982 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752755AbcHNMXX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Aug 2016 08:23:23 -0400
-Message-ID: <1471177398.5201.9.camel@perches.com> (sfid-20160814_142343_730421_CA61D269)
-Subject: Re: [PATCH] Staging: rtl8723au: os_intfs: fixed case statement is
- variable issue
-From: Joe Perches <joe@perches.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	sunbing <sunbing@redflag-linux.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, sunbing.linux@gmail.com
-Date: Sun, 14 Aug 2016 05:23:18 -0700
-In-Reply-To: <1471176951.5903.6.camel@sipsolutions.net>
-References: <1470924695-14931-1-git-send-email-sunbing@redflag-linux.com>
-	 <wrfja8gje395.fsf@redhat.com>
-	 <7FC388BC-FD87-44C6-87D3-AC041F1393DB@redflag-linux.com>
-	 <wrfj7fbmawl1.fsf@redhat.com>
-	 <E0CA1BD5-A2ED-4FDC-8E58-8024E2F3C24C@redflag-linux.com>
-	 <1471176423.5201.7.camel@perches.com>
-	 <1471176951.5903.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33943 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753148AbcHUOt2 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 21 Aug 2016 10:49:28 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org
+Cc: robh+dt@kernel.org, mark.rutland@arm.com, arnd@arndb.de,
+        chunkeey@googlemail.com, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH 2/5] ath9k: Set the "big endian" bit of the AR9003 EEPROM templates
+Date: Sun, 21 Aug 2016 16:49:03 +0200
+Message-Id: <20160821144906.30984-3-martin.blumenstingl@googlemail.com> (sfid-20160821_164931_990785_497B15E6)
+In-Reply-To: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2016-08-14 at 14:15 +0200, Johannes Berg wrote:
-> > 
-> > It's a sparse defect.
-> > 
-> > Try again after patching sparse with Jes' patch:
-> > http://marc.info/?l=linux-sparse&m=147091200720267&w=3
-> Mine, not Jes's ;-)
+We will default to the system's native endianness for the eepmisc value.
+This may be overwritten by the actual calibration data. If it is not
+overwritten we interpret the template data in it's native endianness,
+meaning that no swapping is required.
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 10 +++++-----
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.h |  6 ++++++
+ 2 files changed, 11 insertions(+), 5 deletions(-)
 
-Right, sorry 'bout that.
-
-> But there's another patch going into the kernel to fix it:
-> 
-> https://www.ozlabs.org/~akpm/mmotm/broken-out/byteswap-dont-use-__builtin_bswap-with-sparse.patch
-
-Thanks.
-
-Maybe this test should be sparse version checked after
-sparse is updated.
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index ea7b819..6669e36 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -53,7 +53,7 @@ static const struct ar9300_eeprom ar9300_default = {
+ 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+@@ -631,7 +631,7 @@ static const struct ar9300_eeprom ar9300_x113 = {
+ 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+@@ -1210,7 +1210,7 @@ static const struct ar9300_eeprom ar9300_h112 = {
+ 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+@@ -1789,7 +1789,7 @@ static const struct ar9300_eeprom ar9300_x112 = {
+ 		.txrxMask =  0x77, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+@@ -2367,7 +2367,7 @@ static const struct ar9300_eeprom ar9300_h116 = {
+ 		.txrxMask =  0x33, /* 4 bits tx and 4 bits rx */
+ 		.opCapFlags = {
+ 			.opFlags = AR5416_OPFLAGS_11G | AR5416_OPFLAGS_11A,
+-			.eepMisc = 0,
++			.eepMisc = AR9300_EEPMISC_DEFAULT_VALUE,
+ 		},
+ 		.rfSilent = 0,
+ 		.blueToothOptions = 0,
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+index 0a4c736..7e06f12 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.h
+@@ -69,6 +69,12 @@
+ #define AR9300_BASE_ADDR 0x3ff
+ #define AR9300_BASE_ADDR_512 0x1ff
+ 
++#ifdef __BIG_ENDIAN
++#define AR9300_EEPMISC_DEFAULT_VALUE AR5416_EEPMISC_BIG_ENDIAN
++#else
++#define AR9300_EEPMISC_DEFAULT_VALUE 0
++#endif
++
+ #define AR9300_OTP_BASE \
+ 		((AR_SREV_9340(ah) || AR_SREV_9550(ah)) ? 0x30000 : 0x14000)
+ #define AR9300_OTP_STATUS \
+-- 
+2.9.3
