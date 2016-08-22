@@ -1,66 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39527 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752673AbcHBH3N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 03:29:13 -0400
-Message-ID: <1470122837.2665.5.camel@sipsolutions.net> (sfid-20160802_092938_151744_AB03B5A3)
-Subject: Re: [PATCH v3 3/3] mac80211: mesh: fixed HT ies in beacon template
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Masashi Honma <masashi.honma@gmail.com>
-Cc: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org,
-	Meirav Kama <meiravk@ti.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Tue, 02 Aug 2016 09:27:17 +0200
-In-Reply-To: <1c2d3cfc-b7fd-c8fd-4f74-14dd3aa3076e@gmail.com> (sfid-20160802_045911_090360_06FDF780)
-References: <20160713200755.26839-1-yanivma@ti.com>
- <40a34537-486e-a466-5a7e-e253f19d81c3@gmail.com>
- <1470045822.3389.24.camel@sipsolutions.net>
- <75fef3ce-41a6-5845-e9be-d7ff052a07da@gmail.com>
-	 <1c2d3cfc-b7fd-c8fd-4f74-14dd3aa3076e@gmail.com>
-	 (sfid-20160802_045911_090360_06FDF780)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:37590 "EHLO
+        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753411AbcHVU7y (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Aug 2016 16:59:54 -0400
+Received: by mail-wm0-f52.google.com with SMTP id i5so164539886wmg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2016 13:59:40 -0700 (PDT)
+Date: Mon, 22 Aug 2016 21:59:34 +0100
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCHv7 4/4] mt7601u: use linux/bitfield.h
+Message-ID: <20160822215934.03d51ba5@jkicinski-Precision-T1700> (sfid-20160822_225959_998807_0D9F4DFC)
+In-Reply-To: <8958bdba-d01d-026c-a018-f2a94bff3e52@broadcom.com>
+References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
+        <1471625049-12643-5-git-send-email-jakub.kicinski@netronome.com>
+        <161e3391-9a95-6388-6b93-99a5b12a2036@broadcom.com>
+        <20160822115254.62ee6589@jkicinski-Precision-T1700>
+        <8958bdba-d01d-026c-a018-f2a94bff3e52@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-08-02 at 11:59 +0900, Masashi Honma wrote:
+On Mon, 22 Aug 2016 21:19:41 +0200, Arend Van Spriel wrote:
+> On 22-8-2016 12:52, Jakub Kicinski wrote:
+> > On Fri, 19 Aug 2016 21:02:02 +0200, Arend Van Spriel wrote:  
+> >> On 19-8-2016 18:44, Jakub Kicinski wrote:  
+> >>> Use the newly added linux/bitfield.h.
+> >>>
+> >>> Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
+> >>> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+> >>> ---  
+> 
+> [snip]
+> 
+> >>> diff --git a/drivers/net/wireless/mediatek/mt7601u/eeprom.c b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
+> >>> index 8d8ee0344f7b..da6faea092d6 100644
+> >>> --- a/drivers/net/wireless/mediatek/mt7601u/eeprom.c
+> >>> +++ b/drivers/net/wireless/mediatek/mt7601u/eeprom.c
+> >>> @@ -45,8 +45,8 @@ mt7601u_efuse_read(struct mt7601u_dev *dev, u16 addr, u8 *data,
+> >>>  	val = mt76_rr(dev, MT_EFUSE_CTRL);
+> >>>  	val &= ~(MT_EFUSE_CTRL_AIN |
+> >>>  		 MT_EFUSE_CTRL_MODE);
+> >>> -	val |= MT76_SET(MT_EFUSE_CTRL_AIN, addr & ~0xf) |
+> >>> -	       MT76_SET(MT_EFUSE_CTRL_MODE, mode) |
+> >>> +	val |= FIELD_PREP(MT_EFUSE_CTRL_AIN, addr & ~0xf) |
+> >>> +	       FIELD_PREP(MT_EFUSE_CTRL_MODE, mode) |
+> >>>  	       MT_EFUSE_CTRL_KICK;    
+> >>
+> >> MT_EFUSE_CTRL_KICK is probably a 1-bit field in MT_EFUSE_CTRL register.
+> >> It looks like you did not want to go all the way although you do give an
+> >> example in bitfield.h, ie. + *  #define REG_FIELD_B  BIT(7).  
 > > 
-> > On 2016年08月01日 19:03, Johannes Berg wrote:
-> > > 
-> > > But why is that behaviour *correct*? We still support 40 MHz
-> > > bandwidth
-> > > things, we just don't use them if we disable HT40.
+> > True, I just wanted to show in the examples that BIT() is OK to use.
+> > My feeling is that ORing in always set flags is acceptable, or at least
+> > it was my feeling when I wrote this code ;)  
 > 
-> Or do you mean difference between "hardware capability" and "software
-> capability" ?
-> Do you think IEEE80211_HT_CAP_SUP_WIDTH_20_40 bit should be 1 if the 
-> hardware capable of HT40 even though HT40 is disabled by 
-> wpa_supplicant/hostapd ?
+> I find it tricky to have the user do the field clearing separately.
+> Especially if you allow the calling function to pass additional opaque
+> "flags". In my experience this is more error prone than anything else
+> when dealing with bit fields and as such it is unfortunate this aspect
+> is not addressed in your patches.
 
-I basically think that the CAP_SUP_WIDTH_20_40 bit shouldn't matter at
-all, so it's not clear to me why there's so much talk about it.
+I don't think anything in this set prevents people from adding a
+FIELD_SET() wrapper.  Quite the opposite and I'd encourage it.
 
-After all, if 40 MHz isn't actually *used* as indicated by the HT
-operation (rather than HT capability) IE, then the fact that the device
-may or may not support 40 MHz is pretty much irrelevant.
-
-> I have tested with hostapd. I compared these 2 configfiles.
+> I would rather see:
 > 
-> hostapd0.conf
-> 	ht_capab=[HT40-]
-> hostapd1.conf
-> 	#ht_capab=[HT40-]
+> 	val = mt76_rr(dev, MT_EFUSE_CTRL);
+> 	FIELD_SET(val, MT_EFUSE_CTRL_AIN, addr & ~0xf);
+> 	FIELD_SET(val, MT_EFUSE_CTRL_MODE, mode);
+> 	FIELD_SET(val, MT_EFUSE_CTRL_KICK, 1);
+>  	mt76_wr(dev, MT_EFUSE_CTRL, val);
 > 
+> in which FIELD_SET takes care of clearing the indicated field.
 
-This explicitly configures *HT capability* though - that's even the
-name of the parameter. If you enable HT40 in the capability, the
-resulting BSS might still not actually *use* 40 MHz bandwidth, as
-required by overlapping BSS detection.
+Yes, I agree this is a good solution as well.  The reason I didn't go
+with this approach (apart from modifying an argument of a macro ;)) is
+the experience with rt2x00 which followed this design and I wasn't
+particularly fond of the resulting code.
 
-In this patch, they're taking one thing (current HT channel width
-configuration) and applying it to another thing (HT capability), and
-then even selling it as a bugfix - which I simply cannot understand.
-The HT capability shouldn't matter at all, if HT operation is correct.
+I find PREP macro easier to read (less parameters).  It's also
+often convenient to not have to zero the variable for pure write
+and be able to combine the values in a parameter list:
 
-johannes
++	mt7601u_wr(dev, MT_TXOP_CTRL_CFG,
++		   FIELD_PREP(MT_TXOP_TRUN_EN, 0x3f) |
++		   FIELD_PREP(MT_TXOP_EXT_CCA_DLY, 0x58));
+or:
++	reg = cpu_to_le32(FIELD_PREP(MT_TXD_INFO_TYPE, DMA_PACKET) |
++			  FIELD_PREP(MT_TXD_INFO_D_PORT, CPU_TX_PORT) |
++			  FIELD_PREP(MT_TXD_INFO_LEN, len));
+
+So each approach has it's advantages and I think they complement each
+other.
+
+Please note that I'm just using mt7601u as an example, I really don't
+need SET in the new code I'm trying to use these macros for now [1].
+
+[1] https://patchwork.ozlabs.org/patch/628779/
