@@ -1,100 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47594 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755321AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 17:47:24 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 11/20] rtl8xxxu: Add interrupt bit definitions for gen2 parts
-Date: Fri, 19 Aug 2016 17:46:33 -0400
-Message-Id: <1471643202-26250-12-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234840_759069_661C2AB7)
-In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from smtprelay0043.hostedemail.com ([216.40.44.43]:50225 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752059AbcHVQWx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Aug 2016 12:22:53 -0400
+Message-ID: <1471882737.3746.55.camel@perches.com> (sfid-20160822_182301_459226_CE36B387)
+Subject: Re: [PATCH 0/3] hostap: Fine-tuning for a few functions
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: SF Markus Elfring <elfring@users.sourceforge.net>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Jouni Malinen <j@w1.fi>, LKML <linux-kernel@vger.kernel.org>,
+        kernel-janitors@vger.kernel.org,
+        Julia Lawall <julia.lawall@lip6.fr>
+Date: Mon, 22 Aug 2016 09:18:57 -0700
+In-Reply-To: <87shtwvm63.fsf@kamboji.qca.qualcomm.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+         <f0cd7a82-e603-6a91-0afd-33bbd1658cab@users.sourceforge.net>
+         <3b3c91ad-3225-3483-bb58-fdee33bf2290@broadcom.com>
+         <87shtwvm63.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Mon, 2016-08-22 at 18:49 +0300, Kalle Valo wrote:
+> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+[]
+> But yeah, not really sure what to do with these obsolete drivers like
+> hostap, ray_cs and wl3501.
 
-These are primarily needed for SDIO/PCI parts, but the vendor driver
-still sets them for some USB devices.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  | 56 ++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index a338890..3555a2f 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -213,10 +213,66 @@
- #define REG_HMBOX_EXT_1			0x008a
- #define REG_HMBOX_EXT_2			0x008c
- #define REG_HMBOX_EXT_3			0x008e
-+
- /* Interrupt registers for 8192e/8723bu/8812 */
- #define REG_HIMR0			0x00b0
-+#define	 IMR0_TXCCK			BIT(30)	/* TXRPT interrupt when CCX bit
-+						   of the packet is set */
-+#define	 IMR0_PSTIMEOUT			BIT(29)	/* Power Save Time Out Int */
-+#define	 IMR0_GTINT4			BIT(28)	/* Set when GTIMER4 expires */
-+#define	 IMR0_GTINT3			BIT(27)	/* Set when GTIMER3 expires */
-+#define	 IMR0_TBDER			BIT(26)	/* Transmit Beacon0 Error */
-+#define	 IMR0_TBDOK			BIT(25)	/* Transmit Beacon0 OK */
-+#define	 IMR0_TSF_BIT32_TOGGLE		BIT(24)	/* TSF Timer BIT32 toggle
-+						   indication interrupt */
-+#define	 IMR0_BCNDMAINT0		BIT(20)	/* Beacon DMA Interrupt 0 */
-+#define	 IMR0_BCNDERR0			BIT(16)	/* Beacon Queue DMA Error 0 */
-+#define	 IMR0_HSISR_IND_ON_INT		BIT(15)	/* HSISR Indicator (HSIMR &
-+						   HSISR is true) */
-+#define	 IMR0_BCNDMAINT_E		BIT(14)	/* Beacon DMA Interrupt
-+						   Extension for Win7 */
-+#define	 IMR0_ATIMEND			BIT(12)	/* CTWidnow End or
-+						   ATIM Window End */
-+#define	 IMR0_HISR1_IND_INT		BIT(11)	/* HISR1 Indicator
-+						   (HISR1 & HIMR1 is true) */
-+#define	 IMR0_C2HCMD			BIT(10)	/* CPU to Host Command INT
-+						   Status, Write 1 to clear */
-+#define	 IMR0_CPWM2			BIT(9)	/* CPU power Mode exchange INT
-+						   Status, Write 1 to clear */
-+#define	 IMR0_CPWM			BIT(8)	/* CPU power Mode exchange INT
-+						   Status, Write 1 to clear */
-+#define	 IMR0_HIGHDOK			BIT(7)	/* High Queue DMA OK */
-+#define	 IMR0_MGNTDOK			BIT(6)	/* Management Queue DMA OK */
-+#define	 IMR0_BKDOK			BIT(5)	/* AC_BK DMA OK */
-+#define	 IMR0_BEDOK			BIT(4)	/* AC_BE DMA OK */
-+#define	 IMR0_VIDOK			BIT(3)	/* AC_VI DMA OK */
-+#define	 IMR0_VODOK			BIT(2)	/* AC_VO DMA OK */
-+#define	 IMR0_RDU			BIT(1)	/* Rx Descriptor Unavailable */
-+#define	 IMR0_ROK			BIT(0)	/* Receive DMA OK */
- #define REG_HISR0			0x00b4
- #define REG_HIMR1			0x00b8
-+#define	 IMR1_BCNDMAINT7		BIT(27)	/* Beacon DMA Interrupt 7 */
-+#define	 IMR1_BCNDMAINT6		BIT(26)	/* Beacon DMA Interrupt 6 */
-+#define	 IMR1_BCNDMAINT5		BIT(25)	/* Beacon DMA Interrupt 5 */
-+#define	 IMR1_BCNDMAINT4		BIT(24)	/* Beacon DMA Interrupt 4 */
-+#define	 IMR1_BCNDMAINT3		BIT(23)	/* Beacon DMA Interrupt 3 */
-+#define	 IMR1_BCNDMAINT2		BIT(22)	/* Beacon DMA Interrupt 2 */
-+#define	 IMR1_BCNDMAINT1		BIT(21)	/* Beacon DMA Interrupt 1 */
-+#define	 IMR1_BCNDERR7			BIT(20)	/* Beacon Queue DMA Err Int 7 */
-+#define	 IMR1_BCNDERR6			BIT(19)	/* Beacon Queue DMA Err Int 6 */
-+#define	 IMR1_BCNDERR5			BIT(18)	/* Beacon Queue DMA Err Int 5 */
-+#define	 IMR1_BCNDERR4			BIT(17)	/* Beacon Queue DMA Err Int 4 */
-+#define	 IMR1_BCNDERR3			BIT(16)	/* Beacon Queue DMA Err Int 3 */
-+#define	 IMR1_BCNDERR2			BIT(15)	/* Beacon Queue DMA Err Int 2 */
-+#define	 IMR1_BCNDERR1			BIT(14)	/* Beacon Queue DMA Err Int 1 */
-+#define	 IMR1_ATIMEND_E			BIT(13)	/* ATIM Window End Extension
-+						   for Win7 */
-+#define	 IMR1_TXERR			BIT(11)	/* Tx Error Flag Int Status,
-+						   write 1 to clear */
-+#define	 IMR1_RXERR			BIT(10)	/* Rx Error Flag Int Status,
-+						   write 1 to clear */
-+#define	 IMR1_TXFOVW			BIT(9)	/* Transmit FIFO Overflow */
-+#define	 IMR1_RXFOVW			BIT(8)	/* Receive FIFO Overflow */
- #define REG_HISR1			0x00bc
- 
- /*  Host suspend counter on FPGA platform */
--- 
-2.7.4
+Maybe marking sections obsolete in MAINTAINERS could
+flag some "shouldn't touch this" warning for old code
+in checkpatch.pl and/or get_maintainer.pl
