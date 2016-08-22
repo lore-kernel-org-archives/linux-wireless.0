@@ -1,196 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33385 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751014AbcHZHRB (ORCPT
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:35643 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754407AbcHVTif (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 26 Aug 2016 03:17:01 -0400
-Received: by mail-wm0-f67.google.com with SMTP id o80so10210797wme.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2016 00:17:00 -0700 (PDT)
-Received: from desktop.wvd.kresin.me (p200300454B6FD200C870EA4A541E6E10.dip0.t-ipconnect.de. [2003:45:4b6f:d200:c870:ea4a:541e:6e10])
-        by smtp.gmail.com with ESMTPSA id f3sm18669804wjh.2.2016.08.26.00.16.58
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Fri, 26 Aug 2016 00:16:58 -0700 (PDT)
-From: Mathias Kresin <dev@kresin.me>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH v2] rt2x00: add support for mac addr from device tree
-Date: Fri, 26 Aug 2016 09:16:53 +0200
-Message-Id: <1472195813-30471-1-git-send-email-dev@kresin.me> (sfid-20160826_091706_001454_6F5D1195)
+        Mon, 22 Aug 2016 15:38:35 -0400
+Received: by mail-qk0-f173.google.com with SMTP id v123so90498725qkh.2
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2016 12:38:34 -0700 (PDT)
+Subject: Re: [PATCH 1/1] brcmfmac: fix pmksa->bssid usage
+To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
+References: <20160805203418.32162-1-nicolas.iooss_linux@m4x.org>
+ <96ea6e57-79d7-d4ff-1228-6f22addd4996@m4x.org>
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <45617c4f-60b9-2587-5e29-6330ba2f40a6@broadcom.com> (sfid-20160822_213921_035871_16E985E6)
+Date: Mon, 22 Aug 2016 21:38:23 +0200
+MIME-Version: 1.0
+In-Reply-To: <96ea6e57-79d7-d4ff-1228-6f22addd4996@m4x.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On some devices the EEPROMs of Ralink Wi-Fi chips have a default Ralink
-MAC address set (RT3062F: 00:0C:43:30:62:00, RT3060F:
-00:0C:43:30:60:00). Using multiple of these devices in the same network
-can cause nasty issues.
+On 22-8-2016 15:03, Nicolas Iooss wrote:
+> Hello,
+> 
+> After I sent the following patch a few weeks ago, I have not received
+> any feedback. Could you please review it and tell me what I may have
+> done wrong?
 
-Allow to override the MAC in the EEPROM with (a known good) one set in
-the device tree to bypass the issue.
+Nothing. People went on vacation :-)
+> Thanks,
+> Nicolas
+> 
+> On 05/08/16 22:34, Nicolas Iooss wrote:
+>> The struct cfg80211_pmksa defines its bssid field as:
+>>
+>>     const u8 *bssid;
+>>
+>> contrary to struct brcmf_pmksa, which uses:
+>>
+>>     u8 bssid[ETH_ALEN];
+>>
+>> Therefore in brcmf_cfg80211_del_pmksa(), &pmksa->bssid takes the address
+>> of this field (of type u8**), not the one of its content (which would be
+>> u8*).  Remove the & operator to make brcmf_dbg("%pM") and memcmp()
+>> behave as expected.
+>>
+>> This bug have been found using a custom static checker (which checks the
+>> usage of %p... attributes at build time).  It has been introduced in
+>> commit 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code"),
+>> which replaced pmksa->bssid by &pmksa->bssid while refactoring the code,
+>> without modifying struct cfg80211_pmksa definition.
+>>
+>> Fixes: 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code")
+>> Cc: stable@ger.kernel.org
 
-Signed-off-by: Mathias Kresin <dev@kresin.me>
----
+Ah, so you did something wrong after all :-p. The email address should
+be 'stable@vger.kernel.org'.
 
-As discussed before, forcing a random MAC for known default MACs would
-be a wonky approach. I wouldn't be surprise to see ODMs setting an ODM
-specific default MAC in the EEPROM. This would require a permanent
-update of the list of known default MACs.
+>> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+>> ---
+>>
+>> scripts/checkpatch.pl reports a warning: "Prefer ether_addr_equal() or
+>> ether_addr_equal_unaligned() over memcmp()".  Because some files in
+>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/ still use memcmp()
+>> to compare addresses and because I do not know whether pmksa->bssid is
+>> always aligned, I did not follow this warning.
 
-Changes in v2:
+As most of this is done in slow path, I prefer memcmp() as I do not want
+to check alignment for minimal performance gain.
 
-- new commit message, the former one was incomprehensible
+>>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> index 2628d5e12c64..aceab77cd95a 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+>> @@ -3884,11 +3884,11 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
+>>  	if (!check_vif_up(ifp->vif))
+>>  		return -EIO;
+>>  
+>> -	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", &pmksa->bssid);
+>> +	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", pmksa->bssid);
+>>  
+>>  	npmk = le32_to_cpu(cfg->pmk_list.npmk);
+>>  	for (i = 0; i < npmk; i++)
+>> -		if (!memcmp(&pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
+>> +		if (!memcmp(pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
 
- drivers/net/wireless/ralink/rt2x00/rt2400pci.c |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt2500pci.c |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt2500usb.c |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  1 +
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 17 +++++++++++++++++
- drivers/net/wireless/ralink/rt2x00/rt61pci.c   |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt73usb.c   |  5 +----
- 8 files changed, 24 insertions(+), 24 deletions(-)
+I find '&pmk[i].bssid' confusing so maybe you could change it to
+'&pmk[i].bssid[0]' or 'pmk[i].bssid' as I think these two are
+essentially the same.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-index 155f343..085c5b4 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-@@ -1459,10 +1459,7 @@ static int rt2400pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-index 2553cdd..9832fd5 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-@@ -1585,10 +1585,7 @@ static int rt2500pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-index 2d64611..cd3ab5a 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-@@ -1349,10 +1349,7 @@ static int rt2500usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index bf3f0a3..59c49af 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -6919,10 +6919,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2800_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index f68d492..aa3d4cee 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -1403,6 +1403,7 @@ static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
-  */
- u32 rt2x00lib_get_bssidx(struct rt2x00_dev *rt2x00dev,
- 			 struct ieee80211_vif *vif);
-+void rt2x00lib_set_mac_address(struct rt2x00_dev *rt2x00dev, u8 *eeprom_mac_addr);
- 
- /*
-  * Interrupt context handlers.
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index 4e0c565..d659250 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-@@ -26,6 +26,8 @@
- #include <linux/module.h>
- #include <linux/slab.h>
- #include <linux/log2.h>
-+#include <linux/of.h>
-+#include <linux/of_net.h>
- 
- #include "rt2x00.h"
- #include "rt2x00lib.h"
-@@ -931,6 +933,21 @@ static void rt2x00lib_rate(struct ieee80211_rate *entry,
- 		entry->flags |= IEEE80211_RATE_SHORT_PREAMBLE;
- }
- 
-+void rt2x00lib_set_mac_address(struct rt2x00_dev *rt2x00dev, u8 *eeprom_mac_addr)
-+{
-+	const char *mac_addr;
-+
-+	mac_addr = of_get_mac_address(rt2x00dev->dev->of_node);
-+	if (mac_addr)
-+		ether_addr_copy(eeprom_mac_addr, mac_addr);
-+
-+	if (!is_valid_ether_addr(eeprom_mac_addr)) {
-+		eth_random_addr(eeprom_mac_addr);
-+		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", eeprom_mac_addr);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(rt2x00lib_set_mac_address);
-+
- static int rt2x00lib_probe_hw_modes(struct rt2x00_dev *rt2x00dev,
- 				    struct hw_mode_spec *spec)
- {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-index 03013eb..5306a3b 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-@@ -2413,10 +2413,7 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-index c1397a6..1a29c4d 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-@@ -1766,10 +1766,7 @@ static int rt73usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
--- 
-2.7.4
+Regards,
+Arend
+
+>>  			break;
+>>  
+>>  	if ((npmk > 0) && (i < npmk)) {
+>>
+> 
