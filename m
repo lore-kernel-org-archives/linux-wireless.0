@@ -1,239 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0130.hostedemail.com ([216.40.44.130]:45505 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754458AbcH2RGS (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:58304 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754533AbcHVQF0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 13:06:18 -0400
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] ath10k: Spelling and miscellaneous neatening
-Date: Mon, 29 Aug 2016 10:05:51 -0700
-Message-Id: <95a6b65277914d88178ed2b15e182455067cca60.1472490319.git.joe@perches.com> (sfid-20160829_190638_313436_6935B697)
+        Mon, 22 Aug 2016 12:05:26 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath9k: fix client mode beacon configuration
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160726062923.98555-1-nbd@nbd.name>
+To: Felix Fietkau <nbd@nbd.name>
+CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>,
+        <benjamin.berg@open-mesh.com>
+Message-ID: <c6de307a53fa4059b76356f63ffeb39b@euamsexm01a.eu.qualcomm.com> (sfid-20160822_180800_993401_EECD6A5D)
+Date: Mon, 22 Aug 2016 18:05:17 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Correct some trivial comment typos.
-Remove unnecessary parentheses in a long line.
-Convert a return; before the end of a void function definition to just ;
+Felix Fietkau <nbd@nbd.name> wrote:
+> For pure station mode, iter_data.primary_beacon_vif was used and passed
+> to ath_beacon_config, but not set to the station vif.
+> This was causing the following warning:
+> 
+> [  100.310919] ------------[ cut here ]------------
+> [  100.315683] WARNING: CPU: 0 PID: 7 at compat-wireless-2016-06-20/drivers/net/wireless/ath/ath9k/beacon.c:642 ath9k_calculate_summary_state+0x250/0x60c [ath9k]()
+> [  100.402028] CPU: 0 PID: 7 Comm: kworker/u2:1 Tainted: G        W       4.4.15 #5
+> [  100.409676] Workqueue: phy0 ieee80211_ibss_leave [mac80211]
+> [  100.415351] Stack : 8736e98c 870b4b20 87a25b54 800a6800 8782a080 80400d63 8039b96c 00000007
+> [  100.415351]    803c5edc 87875914 80400000 800a47cc 87a25b54 800a6800 803a0fd8 80400000
+> [  100.415351]    00000003 87875914 80400000 80094ae0 87a25b54 8787594c 00000000 801ef308
+> [  100.415351]    803ffe70 801ef300 87193d58 87b3a400 87b3ad00 70687930 00000000 00000000
+> [  100.415351]    00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+> [  100.415351]    ...
+> [  100.451703] Call Trace:
+> [  100.454235] [<800a6800>] vprintk_default+0x24/0x30
+> [  100.459110] [<800a47cc>] printk+0x2c/0x38
+> [  100.463190] [<800a6800>] vprintk_default+0x24/0x30
+> [  100.468072] [<80094ae0>] print_worker_info+0x148/0x174
+> [  100.473378] [<801ef308>] serial8250_console_putchar+0x0/0x44
+> [  100.479122] [<801ef300>] wait_for_xmitr+0xc4/0xcc
+> [  100.484014] [<87193d58>] ieee80211_ibss_leave+0xb90/0x1900 [mac80211]
+> [  100.490590] [<80081604>] warn_slowpath_common+0xa0/0xd0
+> [  100.495922] [<801a359c>] dump_stack+0x14/0x28
+> [  100.500350] [<80071a00>] show_stack+0x50/0x84
+> [  100.504784] [<80081604>] warn_slowpath_common+0xa0/0xd0
+> [  100.510106] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
+> [  100.517105] [<800816b8>] warn_slowpath_null+0x18/0x24
+> [  100.522256] [<87024c60>] ath9k_calculate_summary_state+0x250/0x60c [ath9k]
+> [  100.529273] [<87025418>] ath9k_set_txpower+0x148/0x498 [ath9k]
+> [  100.535302] [<871d2c64>] cleanup_module+0xa74/0xd4c [mac80211]
+> [  100.541237] [<801ef308>] serial8250_console_putchar+0x0/0x44
+> [  100.547042] [<800a5d18>] wake_up_klogd+0x54/0x68
+> [  100.551730] [<800a6650>] vprintk_emit+0x404/0x43c
+> [  100.556623] [<871b9db8>] ieee80211_sta_rx_notify+0x258/0x32c [mac80211]
+> [  100.563475] [<871ba6a4>] ieee80211_sta_rx_queued_mgmt+0x63c/0x734 [mac80211]
+> [  100.570693] [<871aa49c>] ieee80211_tx_prepare_skb+0x210/0x230 [mac80211]
+> [  100.577609] [<800af5d4>] mod_timer+0x15c/0x190
+> [  100.582220] [<871ba8b8>] ieee80211_sta_work+0xfc/0xe1c [mac80211]
+> [  100.588539] [<871940b4>] ieee80211_ibss_leave+0xeec/0x1900 [mac80211]
+> [  100.595122] [<8009ec84>] dequeue_task_fair+0x44/0x130
+> [  100.600281] [<80092a34>] process_one_work+0x1f8/0x334
+> [  100.605454] [<80093830>] worker_thread+0x2b4/0x408
+> [  100.610317] [<8009357c>] worker_thread+0x0/0x408
+> [  100.615019] [<8009357c>] worker_thread+0x0/0x408
+> [  100.619705] [<80097b68>] kthread+0xdc/0xe8
+> [  100.623886] [<80097a8c>] kthread+0x0/0xe8
+> [  100.627961] [<80060878>] ret_from_kernel_thread+0x14/0x1c
+> [  100.633448]
+> [  100.634956] ---[ end trace aafbe57e9ae6862f ]---
+> 
+> Fixes: cfda2d8e2314 ("ath9k: Fix beacon configuration for addition/removal of interfaces")
+> Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/net/wireless/ath/ath10k/ce.c        |  2 +-
- drivers/net/wireless/ath/ath10k/core.c      |  2 +-
- drivers/net/wireless/ath/ath10k/htt.h       |  8 ++++----
- drivers/net/wireless/ath/ath10k/hw.c        |  2 +-
- drivers/net/wireless/ath/ath10k/hw.h        |  2 +-
- drivers/net/wireless/ath/ath10k/targaddrs.h |  2 +-
- drivers/net/wireless/ath/ath10k/wmi.h       | 24 ++++++++++++------------
- 7 files changed, 21 insertions(+), 21 deletions(-)
+Thanks, 1 patch applied to ath-current branch of ath.git:
 
-diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
-index 9fb8d74..cea9684 100644
---- a/drivers/net/wireless/ath/ath10k/ce.c
-+++ b/drivers/net/wireless/ath/ath10k/ce.c
-@@ -39,7 +39,7 @@
-  * chooses what to send (buffer address, length). The destination
-  * side keeps a supply of "anonymous receive buffers" available and
-  * it handles incoming data as it arrives (when the destination
-- * recieves an interrupt).
-+ * receives an interrupt).
-  *
-  * The sender may send a simple buffer (address/length) or it may
-  * send a small list of buffers.  When a small list is sent, hardware
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index e889829..1e8147a 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -2118,7 +2118,7 @@ err:
- 	/* TODO: It's probably a good idea to release device from the driver
- 	 * but calling device_release_driver() here will cause a deadlock.
- 	 */
--	return;
-+	;
- }
- 
- int ath10k_core_register(struct ath10k *ar, u32 chip_id)
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 430a83e..cedb4e8 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -595,7 +595,7 @@ enum htt_rx_mpdu_status {
- 	/* only accept EAPOL frames */
- 	HTT_RX_IND_MPDU_STATUS_UNAUTH_PEER,
- 	HTT_RX_IND_MPDU_STATUS_OUT_OF_SYNC,
--	/* Non-data in promiscous mode */
-+	/* Non-data in promiscuous mode */
- 	HTT_RX_IND_MPDU_STATUS_MGMT_CTRL,
- 	HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR,
- 	HTT_RX_IND_MPDU_STATUS_DECRYPT_ERR,
-@@ -900,7 +900,7 @@ struct htt_rx_in_ord_ind {
-  *     Purpose: indicate how many 32-bit integers follow the message header
-  *   - NUM_CHARS
-  *     Bits 31:16
-- *     Purpose: indicate how many 8-bit charaters follow the series of integers
-+ *     Purpose: indicate how many 8-bit characters follow the series of integers
-  */
- struct htt_rx_test {
- 	u8 num_ints;
-@@ -1042,10 +1042,10 @@ struct htt_dbg_stats_wal_tx_stats {
- 	/* illegal rate phy errors  */
- 	__le32 illgl_rate_phy_err;
- 
--	/* wal pdev continous xretry */
-+	/* wal pdev continuous xretry */
- 	__le32 pdev_cont_xretry;
- 
--	/* wal pdev continous xretry */
-+	/* wal pdev continuous xretry */
- 	__le32 pdev_tx_timeout;
- 
- 	/* wal pdev resets  */
-diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
-index f903d46..ed917cb 100644
---- a/drivers/net/wireless/ath/ath10k/hw.c
-+++ b/drivers/net/wireless/ath/ath10k/hw.c
-@@ -85,7 +85,7 @@ const struct ath10k_hw_regs qca99x0_regs = {
- 	.ce7_base_address			= 0x0004bc00,
- 	/* Note: qca99x0 supports upto 12 Copy Engines. Other than address of
- 	 * CE0 and CE1 no other copy engine is directly referred in the code.
--	 * It is not really neccessary to assign address for newly supported
-+	 * It is not really necessary to assign address for newly supported
- 	 * CEs in this address table.
- 	 *	Copy Engine		Address
- 	 *	CE8			0x0004c000
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index e014cd7..93ca128 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -284,7 +284,7 @@ void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
- #define QCA_REV_9377(ar) ((ar)->hw_rev == ATH10K_HW_QCA9377)
- #define QCA_REV_40XX(ar) ((ar)->hw_rev == ATH10K_HW_QCA4019)
- 
--/* Known pecularities:
-+/* Known peculiarities:
-  *  - raw appears in nwifi decap, raw and nwifi appear in ethernet decap
-  *  - raw have FCS, nwifi doesn't
-  *  - ethernet frames have 802.11 header decapped and parts (base hdr, cipher
-diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
-index aaf53a8..a47cab4 100644
---- a/drivers/net/wireless/ath/ath10k/targaddrs.h
-+++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
-@@ -405,7 +405,7 @@ Fw Mode/SubMode Mask
-  * 1. target firmware would check magic number and if it's a match, firmware
-  *    would consider the bits[0:15] are valid and base on that to calculate
-  *    the end of DRAM. Early allocation would be located at that area and
-- *    may be reclaimed when necesary
-+ *    may be reclaimed when necessary
-  * 2. if no magic number is found, early allocation would happen at "_end"
-  *    symbol of ROM which is located before the app-data and might NOT be
-  *    re-claimable. If this is adopted, link script should keep this in
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 3ef4688..452790e 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -55,7 +55,7 @@
-  *    type.
-  *
-  * 6. Comment each parameter part of the WMI command/event structure by
-- *    using the 2 stars at the begining of C comment instead of one star to
-+ *    using the 2 stars at the beginning of C comment instead of one star to
-  *    enable HTML document generation using Doxygen.
-  *
-  */
-@@ -2082,7 +2082,7 @@ struct wmi_resource_config {
- 	 * In offload mode target supports features like WOW, chatter and
- 	 * other protocol offloads. In order to support them some
- 	 * functionalities like reorder buffering, PN checking need to be
--	 * done in target. This determines maximum number of peers suported
-+	 * done in target. This determines maximum number of peers supported
- 	 * by target in offload mode
- 	 */
- 	__le32 num_offload_peers;
-@@ -2263,7 +2263,7 @@ struct wmi_resource_config {
- 	 * Max. number of Tx fragments per MSDU
- 	 *  This parameter controls the max number of Tx fragments per MSDU.
- 	 *  This is sent by the target as part of the WMI_SERVICE_READY event
--	 *  and is overriden by the OS shim as required.
-+	 *  and is overridden by the OS shim as required.
- 	 */
- 	__le32 max_frag_entries;
- } __packed;
-@@ -2445,7 +2445,7 @@ struct wmi_resource_config_10x {
- 	 * Max. number of Tx fragments per MSDU
- 	 *  This parameter controls the max number of Tx fragments per MSDU.
- 	 *  This is sent by the target as part of the WMI_SERVICE_READY event
--	 *  and is overriden by the OS shim as required.
-+	 *  and is overridden by the OS shim as required.
- 	 */
- 	__le32 max_frag_entries;
- } __packed;
-@@ -2739,7 +2739,7 @@ struct wmi_init_cmd {
- 	struct wmi_host_mem_chunks mem_chunks;
- } __packed;
- 
--/* _10x stucture is from 10.X FW API */
-+/* _10x structure is from 10.X FW API */
- struct wmi_init_cmd_10x {
- 	struct wmi_resource_config_10x resource_config;
- 	struct wmi_host_mem_chunks mem_chunks;
-@@ -3962,7 +3962,7 @@ struct wmi_pdev_stats_tx {
- 	/* illegal rate phy errors  */
- 	__le32 illgl_rate_phy_err;
- 
--	/* wal pdev continous xretry */
-+	/* wal pdev continuous xretry */
- 	__le32 pdev_cont_xretry;
- 
- 	/* wal pdev continous xretry */
-@@ -4456,9 +4456,9 @@ struct wmi_vdev_start_request_cmd {
- 	__le32 flags;
- 	/* ssid field. Only valid for AP/GO/IBSS/BTAmp VDEV type. */
- 	struct wmi_ssid ssid;
--	/* beacon/probe reponse xmit rate. Applicable for SoftAP. */
-+	/* beacon/probe response xmit rate. Applicable for SoftAP. */
- 	__le32 bcn_tx_rate;
--	/* beacon/probe reponse xmit power. Applicable for SoftAP. */
-+	/* beacon/probe response xmit power. Applicable for SoftAP. */
- 	__le32 bcn_tx_power;
- 	/* number of p2p NOA descriptor(s) from scan entry */
- 	__le32 num_noa_descriptors;
-@@ -4686,7 +4686,7 @@ enum wmi_vdev_param {
- 	WMI_VDEV_PARAM_BEACON_INTERVAL,
- 	/* Listen interval in TUs */
- 	WMI_VDEV_PARAM_LISTEN_INTERVAL,
--	/* muticast rate in Mbps */
-+	/* multicast rate in Mbps */
- 	WMI_VDEV_PARAM_MULTICAST_RATE,
- 	/* management frame rate in Mbps */
- 	WMI_VDEV_PARAM_MGMT_TX_RATE,
-@@ -4817,7 +4817,7 @@ enum wmi_10x_vdev_param {
- 	WMI_10X_VDEV_PARAM_BEACON_INTERVAL,
- 	/* Listen interval in TUs */
- 	WMI_10X_VDEV_PARAM_LISTEN_INTERVAL,
--	/* muticast rate in Mbps */
-+	/* multicast rate in Mbps */
- 	WMI_10X_VDEV_PARAM_MULTICAST_RATE,
- 	/* management frame rate in Mbps */
- 	WMI_10X_VDEV_PARAM_MGMT_TX_RATE,
-@@ -5062,7 +5062,7 @@ struct wmi_vdev_simple_event {
- } __packed;
- 
- /* VDEV start response status codes */
--/* VDEV succesfully started */
-+/* VDEV successfully started */
- #define WMI_INIFIED_VDEV_START_RESPONSE_STATUS_SUCCESS	0x0
- 
- /* requested VDEV not found */
-@@ -5378,7 +5378,7 @@ enum wmi_sta_ps_param_pspoll_count {
- #define WMI_UAPSD_AC_TYPE_TRIG 1
- 
- #define WMI_UAPSD_AC_BIT_MASK(ac, type) \
--	((type ==  WMI_UAPSD_AC_TYPE_DELI) ? (1 << (ac << 1)) : (1 << ((ac << 1) + 1)))
-+	(type == WMI_UAPSD_AC_TYPE_DELI ? 1 << (ac << 1) : 1 << ((ac << 1) + 1))
- 
- enum wmi_sta_ps_param_uapsd {
- 	WMI_STA_PS_UAPSD_AC0_DELIVERY_EN = (1 << 0),
+05860bed491b ath9k: fix client mode beacon configuration
+
 -- 
-2.8.0.rc4.16.g56331f8
+Sent by pwcli
+https://patchwork.kernel.org/patch/9247699/
