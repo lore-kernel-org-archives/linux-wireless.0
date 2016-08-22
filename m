@@ -1,96 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:35218 "EHLO
-	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751571AbcHCQGI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 12:06:08 -0400
-Received: by mail-oi0-f67.google.com with SMTP id w143so20364167oiw.2
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 09:04:28 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
-Date: Wed,  3 Aug 2016 17:02:15 -0500
-Message-Id: <1470261735-2977-1-git-send-email-denkenz@gmail.com> (sfid-20160803_180614_643489_B91CE333)
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33427 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752016AbcHVUbu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Aug 2016 16:31:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <14216135.Y4g7Oly61q@wuerfel>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+ <3744898.ltfZjZgAjj@wuerfel> <CAFBinCBdv9poKwjsDeGue30x0B9aUjxdkb5BHZcBgouOMAGWMQ@mail.gmail.com>
+ <14216135.Y4g7Oly61q@wuerfel>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Mon, 22 Aug 2016 22:31:28 +0200
+Message-ID: <CAFBinCB0BVCi1cG=w_05MGj3ASyB9wXT37=yANaLdvmzB=AfYw@mail.gmail.com> (sfid-20160822_223154_129301_DF749375)
+Subject: Re: [PATCH 2/5] ath9k: Set the "big endian" bit of the AR9003 EEPROM templates
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org, robh+dt@kernel.org,
+        mark.rutland@arm.com, chunkeey@googlemail.com, nbd@nbd.name
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch allows GET_INTERFACE dumps to be filtered based on
-NL80211_ATTR_WIPHY or NL80211_ATTR_WDEV.  The documentation for
-GET_INTERFACE mentions that this is possible:
-"Request an interface's configuration; either a dump request on
-a %NL80211_ATTR_WIPHY or ..."
+On Mon, Aug 22, 2016 at 5:31 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday, August 22, 2016 1:56:46 PM CEST Martin Blumenstingl wrote:
+>> On Mon, Aug 22, 2016 at 1:47 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> > On Sunday, August 21, 2016 4:49:03 PM CEST Martin Blumenstingl wrote:
+>> >> We will default to the system's native endianness for the eepmisc value.
+>> >> This may be overwritten by the actual calibration data. If it is not
+>> >> overwritten we interpret the template data in it's native endianness,
+>> >> meaning that no swapping is required.
+>> >
+>> > I'm still skeptical about this one. What is the significance of "native
+>> > endianess" here? You are keying the endianess of the eeprom tables off the
+>> > way the CPU operates, but for a PCI device there is no correlation between
+>> > those two.
+>> (the ar9003 eeprom format and handling is different compared to 9287,
+>> def and 4k)
+>> ar9003_eeprom.c contains EEPROM templates -> these are compiled into
+>> the ath9k kernel module. Values from these templates can be
+>> overwritten by the EEPROM found on the actual hardware.
+>> This change tries to handle the case where the values in the hardware
+>> EEPROM do not override any of the template values (means final EEPROM
+>> data = template data). In this case the we can simply rely on the
+>> endianness which was used to compile ath9k.ko.
+>
+> Ok, I see what you mean now. However, looking at the source now, I
+> also see
+>
+> #define LE16(x) cpu_to_le16(x)
+> #define LE32(x) cpu_to_le32(x)
+>         .baseEepHeader = {
+>                 .regDmn = { LE16(0), LE16(0x1f) },
+>
+> suggesting that the fields are meant to be little-endian in object
+> code, and your patch does not change that. In fact, Felix's
+> ffdc4cbe5b17 ("ath9k_hw: clean up EEPROM endian handling on AR9003")
+> seems to have corrected this already.
+oh, I totally missed that - thanks for the hint!
+This means that eepMisc should be 0 (indicates little endian) in all
+cases (it had this value, but the code was not explicit about it).
 
-However, this behavior has not been implemented until now.
-
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
----
- net/wireless/nl80211.c | 36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
-
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 46417f9..ac19eb8 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -2519,15 +2519,47 @@ static int nl80211_send_iface(struct sk_buff *msg, u32 portid, u32 seq, int flag
- 	return -EMSGSIZE;
- }
- 
-+static int nl80211_dump_interface_parse(struct sk_buff *skb,
-+				    struct netlink_callback *cb,
-+				    int *filter_wiphy)
-+{
-+	struct nlattr **tb = nl80211_fam.attrbuf;
-+	int ret = nlmsg_parse(cb->nlh, GENL_HDRLEN + nl80211_fam.hdrsize,
-+			      tb, nl80211_fam.maxattr, nl80211_policy);
-+	/* ignore parse errors for backward compatibility */
-+	if (ret)
-+		return 0;
-+
-+	if (tb[NL80211_ATTR_WIPHY])
-+		*filter_wiphy = nla_get_u32(tb[NL80211_ATTR_WIPHY]);
-+	if (tb[NL80211_ATTR_WDEV])
-+		*filter_wiphy = nla_get_u64(tb[NL80211_ATTR_WDEV]) >> 32;
-+
-+	return 0;
-+}
-+
- static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *cb)
- {
- 	int wp_idx = 0;
- 	int if_idx = 0;
- 	int wp_start = cb->args[0];
- 	int if_start = cb->args[1];
-+	int filter_wiphy = cb->args[2];
- 	struct cfg80211_registered_device *rdev;
- 	struct wireless_dev *wdev;
- 
-+	if (!wp_start && !if_start && !filter_wiphy) {
-+		int ret;
-+
-+		filter_wiphy = -1;
-+
-+		ret = nl80211_dump_interface_parse(skb, cb, &filter_wiphy);
-+		if (ret)
-+			return ret;
-+
-+		cb->args[2] = filter_wiphy;
-+	}
-+
- 	rtnl_lock();
- 	list_for_each_entry(rdev, &cfg80211_rdev_list, list) {
- 		if (!net_eq(wiphy_net(&rdev->wiphy), sock_net(skb->sk)))
-@@ -2536,6 +2568,10 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
- 			wp_idx++;
- 			continue;
- 		}
-+
-+		if (filter_wiphy != -1 && filter_wiphy != rdev->wiphy_idx)
-+			continue;
-+
- 		if_idx = 0;
- 
- 		list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
--- 
-2.7.3
-
+so please ignore this patch for now, it might cause more harm than good.
