@@ -1,58 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30107 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752279AbcHIOv1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 10:51:27 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u79EnPTX019959
-	for <linux-wireless@vger.kernel.org>; Tue, 9 Aug 2016 07:51:26 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0a-0016f401.pphosted.com with ESMTP id 24nd8q5cud-2
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 09 Aug 2016 07:51:25 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/3] mwifiex: correct aid value during tdls setup
-Date: Tue, 9 Aug 2016 20:20:44 +0530
-Message-ID: <1470754246-635-1-git-send-email-akarwar@marvell.com> (sfid-20160809_165131_426715_AA9F3A48)
+Received: from mail2.tohojo.dk ([77.235.48.147]:51957 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755301AbcHVQQj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Aug 2016 12:16:39 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v4] ath9k: Switch to using mac80211 intermediate software
+        queues.
+References: <20160706193417.13080-1-toke@toke.dk>
+        <20160805160346.10545-1-toke@toke.dk>
+        <87mvk44xmt.fsf@purkki.adurom.net>
+Date: Mon, 22 Aug 2016 18:16:34 +0200
+In-Reply-To: <87mvk44xmt.fsf@purkki.adurom.net> (Kalle Valo's message of "Mon,
+        22 Aug 2016 18:43:54 +0300")
+Message-ID: <87bn0k4w4d.fsf@toke.dk> (sfid-20160822_181726_740949_AE8117BC)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-AID gets updated during TDLS setup, but modified value isn't reflected
-in "priv->assoc_rsp_buf". This causes TDLS setup failure. The problem is
-fixed here.
+> Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk> writes:
+>
+>> This switches ath9k over to using the mac80211 intermediate software
+>> queueing mechanism for data packets. It removes the queueing inside the
+>> driver, except for the retry queue, and instead pulls from mac80211 when
+>> a packet is needed. The retry queue is used to store a packet that was
+>> pulled but can't be sent immediately.
+>>
+>> The old code path in ath_tx_start that would queue packets has been
+>> removed completely, as has the qlen limit tunables (since there's no
+>> longer a queue in the driver to limit).
+>>
+>> Based on Tim's original patch set, but reworked quite thoroughly.
+>>
+>> Cc: Tim Shepard <shep@alum.mit.edu>
+>> Cc: Felix Fietkau <nbd@nbd.name>
+>> Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+>> ---
+>> Changes since v3 (most due to Felix; thanks!):
+>>   - Correctly notify mac80211 when there are packets in the retry queue
+>>     on powersave start/stop.
+>>   - Get rid of ath_tx_aggr_resume().
+>>   - Some readability changes and additional WARN_ON/BUG_ON in
+>>     appropriate places.
+>
+> This is great work but due to the regressions I'm not sure if this
+> will be ready for 4.9. To get more testing time I wonder if we should
+> wait for 4.10? IMHO applying this in the end of the cycle is too risky
+> and we should try to maximise the time linux-next by applying this
+> just after -rc1 is released.
+>
+> Thoughts?
 
-Fixes: 4aff53ef18e4a4 ("mwifiex: parsing aid while receiving..")
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/join.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Well, now that we understand what is causing the throughput regressions,
+fixing them should be fairly straight forward (yeah, famous last words,
+but still...). I already have a patch for the fast path and will go poke
+at the slow path next. It'll probably require another workaround or two,
+so I guess it won't be the architecturally clean ideal solution; but it
+would make it possible to have something that works for 4.9 and then
+iterate for a cleaner design for 4.10.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/join.c b/drivers/net/wireless/marvell/mwifiex/join.c
-index 1c7b006..b89596c 100644
---- a/drivers/net/wireless/marvell/mwifiex/join.c
-+++ b/drivers/net/wireless/marvell/mwifiex/join.c
-@@ -669,9 +669,8 @@ int mwifiex_ret_802_11_associate(struct mwifiex_private *priv,
- 	priv->assoc_rsp_size = min(le16_to_cpu(resp->size) - S_DS_GEN,
- 				   sizeof(priv->assoc_rsp_buf));
- 
--	memcpy(priv->assoc_rsp_buf, &resp->params, priv->assoc_rsp_size);
--
- 	assoc_rsp->a_id = cpu_to_le16(aid);
-+	memcpy(priv->assoc_rsp_buf, &resp->params, priv->assoc_rsp_size);
- 
- 	if (status_code) {
- 		priv->adapter->dbg.num_cmd_assoc_failure++;
--- 
-1.9.1
-
+-Toke
