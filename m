@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:35889 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755690AbcHCQSZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 12:18:25 -0400
-Date: Wed, 3 Aug 2016 09:18:21 -0700
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Daniel Wagner <daniel.wagner@bmw-carit.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jeff Mahoney <jeffm@suse.com>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Bjorn Andersson <bjorn.andersson@linaro.org>,
-	Daniel Wagner <wagi@monom.org>,
-	Bastien Nocera <hadess@hadess.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	David Howells <dhowells@redhat.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
- completion
-Message-ID: <20160803161821.GB32965@dtor-ws> (sfid-20160803_181847_275146_2DF1B182)
-References: <20160730165817.GQ3296@wotan.suse.de>
- <C528E404-0CA5-46B4-B551-B1D4B58BC053@gmail.com>
- <37a3cd66-262e-ffbe-ea7a-a6d5b1ca1c8b@bmw-carit.de>
- <20160801194408.GZ3296@wotan.suse.de>
- <0f9350fa-e8b5-9d64-b2d3-afda5e5f6bbf@bmw-carit.de>
- <20160802063419.GG3296@wotan.suse.de>
- <2713d779-ef55-793d-f37e-d1414bb1bfc2@bmw-carit.de>
- <20160802074106.GI3296@wotan.suse.de>
- <ef14dc68-d2f8-0934-7be5-dfb3a4771f27@bmw-carit.de>
- <20160803155540.GL3296@wotan.suse.de>
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:37048 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932220AbcHVQZu (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Aug 2016 12:25:50 -0400
+Received: by mail-wm0-f42.google.com with SMTP id i5so153532849wmg.0
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2016 09:25:49 -0700 (PDT)
+From: Ioan-Adrian Ratiu <adi@adirat.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Benjamin Berg <benjamin.berg@open-mesh.com>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        ath9k-devel@lists.ath9k.org, linux-kernel@vger.kernel.org,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: ath9k: Fix beacon configuration assertion failure
+In-Reply-To: <87r39h3p0f.fsf@purkki.adurom.net>
+References: <fb48526fcf8f4b6db25c20b727c4a3d5@euamsexm01a.eu.qualcomm.com> <87fuq1yt1x.fsf@kamboji.qca.qualcomm.com> <1471855240.16921.6.camel@open-mesh.com> <87r39h3p0f.fsf@purkki.adurom.net>
+Date: Mon, 22 Aug 2016 19:18:42 +0300
+Message-ID: <87mvk4kc9p.fsf@ni.com> (sfid-20160822_182600_209979_06A43DD6)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160803155540.GL3296@wotan.suse.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Aug 03, 2016 at 05:55:40PM +0200, Luis R. Rodriguez wrote:
-> 
-> I accept all help and would be glad to make enhancements instead of
-> the old API through new API. The biggest thing here first I think is
-> adding devm support, that I think should address what seemed to be
-> the need to add more code for a transformation into the API. I'd
+On Mon, 22 Aug 2016, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Benjamin Berg <benjamin.berg@open-mesh.com> writes:
+>
+>> On Fr, 2016-08-19 at 13:03 +0300, Kalle Valo wrote:
+>>> Actually, I see two patches which might be related but not identical:
+>>>=20
+>>> ath9k: fix client mode beacon configuration
+>>> https://patchwork.kernel.org/patch/9247699/
+>>>=20
+>>> ath9k: Fix beacon configuration assertion failure
+>>> https://patchwork.kernel.org/patch/9281191/
+>>>=20
+>>> Felix (CCed) & Benjamin: please take a look and advice which one I
+>>> should take.
+>>
+>> Yes, both patches are designed to fix the same issue in my patch.
+>>
+>> Felix solution looks entirely correct to me, the second solution seems
+>> slightly wrong because it prevents the call to ath9k_beacon_config from
+>> happening instead of ensuring the correct parameter value.
+>> ath9k_beacon_config needs to be called even if iter_data.beacons=C2=A0is
+>> false as it disables the interrupts.
+>
+> Ok, I'll the patch from Felix then. Thanks.
 
-I am confused. Why do we need devm support, given that devm is only
-valid in probe() paths[*] and we do know that we do not want to load
-firmware in probe() paths because it may cause blocking?
+Tested Felix patch. Confirm it works great. Thanks!
 
-[*] Yes, I know there are calls to devm* outside of probe() but I am
-pretty sure they are buggy unless they explicitly freed with devm* as
-well and then there is no point. IN all other cases it is likely wrong
-as it messes up with order of freeing resources.
-
-Thanks.
-
--- 
-Dmitry
+>
+> --=20
+> Kalle Valo
