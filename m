@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:34528 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754850AbcHCONG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 10:13:06 -0400
-Received: by mail-oi0-f65.google.com with SMTP id a135so2329686oii.1
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 07:12:51 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH v3 0/3] Improve wireless netdev detection
-Date: Wed,  3 Aug 2016 16:58:32 -0500
-Message-Id: <1470261515-2830-1-git-send-email-denkenz@gmail.com> (sfid-20160803_161400_172995_F10633C5)
+Received: from mail-it0-f53.google.com ([209.85.214.53]:36056 "EHLO
+        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752172AbcHVOHr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Aug 2016 10:07:47 -0400
+MIME-Version: 1.0
+From: David Binderman <linuxdev.baldrick@gmail.com>
+Date: Mon, 22 Aug 2016 15:07:44 +0100
+Message-ID: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com> (sfid-20160822_160803_241193_51644DE9)
+Subject: linux-4.8-rc3/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c:3533:
+ pointless test ?
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+        gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+        devel@driverdev.osuosl.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        dcb314@hotmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The current mechanism to detect hot-plug / unplug of wireless devices is
-somewhat arcane.  One has to listen to NEW_WIPHY/DEL_WIPHY events over
-nl80211 as well as RTM_NEWLINK / RTM_DELLINK events over rtnl, then
-somehow find a correlation between these events.  This involves userspace
-sending GET_INTERFACE or GET_WIPHY commands to the kernel, which incurs
-additional roundtrips.
+Hello there,
 
-This patch series proposes that NEW_INTERFACE and DEL_INTERFACE events are
-always emitted, regardless of whether a netdev was added/removed by the
-driver or explicitly via NEW_INTERFACE/DEL_INTERFACE commands.
+linux-4.8-rc3/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c:3533]:
+(style) Condition 'pBtMgnt.ExtConfig.HCIExtensionVer>=1' is always
+true
 
-v2: Squished patches 2+3, 4+5.  DEL_INTERFACE event notification is now
-sent inside cfg80211_unregister_wdev instead of nl80211_del_interface.
+Source code is
 
-v3: No changes, non-RFC version.
+        if (pBtMgnt->ExtConfig.HCIExtensionVer < 1) {
+        ....
+        } else if (pBtMgnt->ExtConfig.HCIExtensionVer >= 1) {
 
-Denis Kenzior (3):
-  nl80211: Add nl80211_notify_iface
-  core: Always notify of new wireless netdevs
-  core: Always notify when wireless netdev is removed
+Suggest remove second test.
 
- net/wireless/core.c    |  6 +++++
- net/wireless/nl80211.c | 69 +++++++++++++++++++++++++++-----------------------
- net/wireless/nl80211.h |  3 +++
- 3 files changed, 47 insertions(+), 31 deletions(-)
 
--- 
-2.7.3
+Regards
 
+David Binderman
