@@ -1,55 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:57479 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754729AbcHBLTQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 07:19:16 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"nbd@nbd.name" <nbd@nbd.name>
-Subject: Re: [RFC] ath10k: silence firmware file probing warnings
-Date: Tue, 2 Aug 2016 11:18:15 +0000
-Message-ID: <87ziov772h.fsf@kamboji.qca.qualcomm.com> (sfid-20160802_202639_164427_C1C0D126)
-References: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
-In-Reply-To: <1468933237-5226-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Tue, 19 Jul 2016 15:00:37 +0200")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:11997 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751287AbcHVJn3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 22 Aug 2016 05:43:29 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 1/4] wil6210: fix protection of wil->scan_request
+Date: Mon, 22 Aug 2016 12:42:19 +0300
+Message-Id: <1471858942-23766-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160822_114335_146057_197E468A)
+In-Reply-To: <1471858942-23766-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1471858942-23766-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-> Firmware files are versioned to prevent older
-> driver instances to load unsupported firmware
-> blobs. This is reflected with a fallback logic
-> which attempts to load several firmware files.
->
-> This however produced a lot of unnecessary
-> warnings sometimes confusing users and leading
-> them to rename firmware files making things even
-> more confusing.
->
-> Hence use request_firmware_direct() which does not
-> produce extra warnings. This shouldn't really
-> break anything because most modern systems don't
-> rely on udev/hotplug helpers to load firmware
-> files anymore.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Currently the places that check wil->scan_request and
+call cfg80211_scan_done are not consistently protected,
+so there is a risk that cfg80211_scan_done will be called
+with NULL scan_request, causing a kernel crash.
+Fix this by using p2p_wdev_mutex in few other places
+that access scan_request. This makes sense since
+scan_request may point to p2p_wdev, and it is not worth
+the extra complexity of adding a new mutex.
 
-Nice. These "firmware not found" messages have been confusing ath10k
-users for ages and should be properly fixed. I hope we find a solution.
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 3 +++
+ drivers/net/wireless/ath/wil6210/main.c     | 4 ++++
+ drivers/net/wireless/ath/wil6210/wil6210.h  | 2 +-
+ drivers/net/wireless/ath/wil6210/wmi.c      | 4 ++--
+ 4 files changed, 10 insertions(+), 3 deletions(-)
 
-But I talked with Felix about this and he made a good point about board
-and calibration files. Calibration files might be created runtime, for
-example retrieved from NAND etc, and this might break the use case when
-ath10k is statically linked to kernel. Is the combination used in real
-life and should we care, that I do not know, but I'm worried of possible
-regressions. I guess LEDE/openwrt always loads ath10k as a module and
-after the calibration file is created?
-
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index ffacc76..d117240 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -354,10 +354,13 @@ static int wil_cfg80211_scan(struct wiphy *wiphy,
+ 	wil_dbg_misc(wil, "%s(), wdev=0x%p iftype=%d\n",
+ 		     __func__, wdev, wdev->iftype);
+ 
++	mutex_lock(&wil->p2p_wdev_mutex);
+ 	if (wil->scan_request) {
+ 		wil_err(wil, "Already scanning\n");
++		mutex_unlock(&wil->p2p_wdev_mutex);
+ 		return -EAGAIN;
+ 	}
++	mutex_unlock(&wil->p2p_wdev_mutex);
+ 
+ 	/* check we are client side */
+ 	switch (wdev->iftype) {
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index d0b180c..7b7619c 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -852,6 +852,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	bitmap_zero(wil->status, wil_status_last);
+ 	mutex_unlock(&wil->wmi_mutex);
+ 
++	mutex_lock(&wil->p2p_wdev_mutex);
+ 	if (wil->scan_request) {
+ 		struct cfg80211_scan_info info = {
+ 			.aborted = true,
+@@ -863,6 +864,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 		cfg80211_scan_done(wil->scan_request, &info);
+ 		wil->scan_request = NULL;
+ 	}
++	mutex_unlock(&wil->p2p_wdev_mutex);
+ 
+ 	wil_mask_irq(wil);
+ 
+@@ -1055,6 +1057,7 @@ int __wil_down(struct wil6210_priv *wil)
+ 
+ 	wil_p2p_stop_radio_operations(wil);
+ 
++	mutex_lock(&wil->p2p_wdev_mutex);
+ 	if (wil->scan_request) {
+ 		struct cfg80211_scan_info info = {
+ 			.aborted = true,
+@@ -1066,6 +1069,7 @@ int __wil_down(struct wil6210_priv *wil)
+ 		cfg80211_scan_done(wil->scan_request, &info);
+ 		wil->scan_request = NULL;
+ 	}
++	mutex_unlock(&wil->p2p_wdev_mutex);
+ 
+ 	wil_reset(wil, false);
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 6087691..1eb7fe7 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -657,7 +657,7 @@ struct wil6210_priv {
+ 
+ 	/* P2P_DEVICE vif */
+ 	struct wireless_dev *p2p_wdev;
+-	struct mutex p2p_wdev_mutex; /* protect @p2p_wdev */
++	struct mutex p2p_wdev_mutex; /* protect @p2p_wdev and @scan_request */
+ 	struct wireless_dev *radio_wdev;
+ 
+ 	/* High Access Latency Policy voting */
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 4d92541..0b109b2 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -424,6 +424,7 @@ static void wmi_evt_tx_mgmt(struct wil6210_priv *wil, int id, void *d, int len)
+ static void wmi_evt_scan_complete(struct wil6210_priv *wil, int id,
+ 				  void *d, int len)
+ {
++	mutex_lock(&wil->p2p_wdev_mutex);
+ 	if (wil->scan_request) {
+ 		struct wmi_scan_complete_event *data = d;
+ 		struct cfg80211_scan_info info = {
+@@ -435,14 +436,13 @@ static void wmi_evt_scan_complete(struct wil6210_priv *wil, int id,
+ 			     wil->scan_request, info.aborted);
+ 
+ 		del_timer_sync(&wil->scan_timer);
+-		mutex_lock(&wil->p2p_wdev_mutex);
+ 		cfg80211_scan_done(wil->scan_request, &info);
+ 		wil->radio_wdev = wil->wdev;
+-		mutex_unlock(&wil->p2p_wdev_mutex);
+ 		wil->scan_request = NULL;
+ 	} else {
+ 		wil_err(wil, "SCAN_COMPLETE while not scanning\n");
+ 	}
++	mutex_unlock(&wil->p2p_wdev_mutex);
+ }
+ 
+ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
 -- 
-Kalle Valo
+1.9.1
