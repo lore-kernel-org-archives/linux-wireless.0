@@ -1,106 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:58826 "EHLO
-        devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752572AbcHULRM (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:46420 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756005AbcHVOaM (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Aug 2016 07:17:12 -0400
-From: Maxim Altshul <maxim.altshul@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <kvalo@codeaurora.org>, <johannes@sipsolutions.net>,
-        Maxim Altshul <maxim.altshul@ti.com>
-Subject: [PATCH 3/3 v2] wlcore: Add RX_BA_WIN_SIZE_CHANGE_EVENT event
-Date: Sun, 21 Aug 2016 14:24:25 +0300
-Message-ID: <20160821112425.11302-3-maxim.altshul@ti.com> (sfid-20160821_131720_165000_947B14B5)
-In-Reply-To: <20160821112425.11302-2-maxim.altshul@ti.com>
-References: <20160821112425.11302-1-maxim.altshul@ti.com>
- <20160821112425.11302-2-maxim.altshul@ti.com>
+        Mon, 22 Aug 2016 10:30:12 -0400
+Date: Mon, 22 Aug 2016 10:30:20 -0400
+From: Greg KH <gregkh@linuxfoundation.org>
+To: David Binderman <linuxdev.baldrick@gmail.com>
+Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        dcb314@hotmail.com
+Subject: Re:
+ linux-4.8-rc3/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c:3533:
+ pointless test ?
+Message-ID: <20160822143020.GA7695@kroah.com> (sfid-20160822_163033_159236_F7FB2CF9)
+References: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This event is used by the Firmware to limit the RX BA win size
-for a specific link.
+On Mon, Aug 22, 2016 at 03:07:44PM +0100, David Binderman wrote:
+> Hello there,
+> 
+> linux-4.8-rc3/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c:3533]:
+> (style) Condition 'pBtMgnt.ExtConfig.HCIExtensionVer>=1' is always
+> true
+> 
+> Source code is
+> 
+>         if (pBtMgnt->ExtConfig.HCIExtensionVer < 1) {
+>         ....
+>         } else if (pBtMgnt->ExtConfig.HCIExtensionVer >= 1) {
+> 
+> Suggest remove second test.
 
-The event handler updates the new size in the mac's sta->sta struct.
-
-BA sessions opened for that link will use the new restricted
-win_size. This limitation remains until a new update is received or
-until the link is closed.
-
-Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
----
-Instead of calling ieee80211_change_rx_ba_max_subframes which was removed in v2,
-we will find the station, change the window size and call for a stop on it's active RX BA sessions.
- 
- drivers/net/wireless/ti/wl18xx/event.c | 28 ++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/event.h |  1 +
- drivers/net/wireless/ti/wl18xx/main.c  |  3 ++-
- 3 files changed, 31 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
-index 2c5df43..9fd1c69 100644
---- a/drivers/net/wireless/ti/wl18xx/event.c
-+++ b/drivers/net/wireless/ti/wl18xx/event.c
-@@ -217,5 +217,33 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
- 	if (vector & FW_LOGGER_INDICATION)
- 		wlcore_event_fw_logger(wl);
- 
-+	if (vector & RX_BA_WIN_SIZE_CHANGE_EVENT_ID) {
-+		struct wl12xx_vif *wlvif;
-+		struct ieee80211_vif *vif;
-+		struct ieee80211_sta *sta;
-+		u8 link_id = mbox->rx_ba_link_id;
-+		u8 win_size = mbox->rx_ba_win_size;
-+		const u8 *addr;
-+
-+		wlvif = wl->links[link_id].wlvif;
-+		vif = wl12xx_wlvif_to_vif(wlvif);
-+
-+		/* Update RX aggregation window size and call
-+		 * MAC routine to stop active RX aggregations for this link
-+		 */
-+		if (wlvif->bss_type != BSS_TYPE_AP_BSS)
-+			addr = vif->bss_conf.bssid;
-+		else
-+			addr = wl->links[link_id].addr;
-+
-+		sta = ieee80211_find_sta(vif, addr);
-+		if (sta) {
-+			sta->max_rx_aggregation_subframes = win_size;
-+			ieee80211_stop_rx_ba_session(vif,
-+						wl->links[link_id].ba_bitmap,
-+						addr);
-+		}
-+	}
-+
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ti/wl18xx/event.h b/drivers/net/wireless/ti/wl18xx/event.h
-index ce8ea9c0..4af297f 100644
---- a/drivers/net/wireless/ti/wl18xx/event.h
-+++ b/drivers/net/wireless/ti/wl18xx/event.h
-@@ -38,6 +38,7 @@ enum {
- 	REMAIN_ON_CHANNEL_COMPLETE_EVENT_ID      = BIT(18),
- 	DFS_CHANNELS_CONFIG_COMPLETE_EVENT       = BIT(19),
- 	PERIODIC_SCAN_REPORT_EVENT_ID            = BIT(20),
-+	RX_BA_WIN_SIZE_CHANGE_EVENT_ID           = BIT(21),
- 	SMART_CONFIG_SYNC_EVENT_ID               = BIT(22),
- 	SMART_CONFIG_DECODE_EVENT_ID             = BIT(23),
- 	TIME_SYNC_EVENT_ID                       = BIT(24),
-diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
-index 00a04df..dafb2fd 100644
---- a/drivers/net/wireless/ti/wl18xx/main.c
-+++ b/drivers/net/wireless/ti/wl18xx/main.c
-@@ -1041,7 +1041,8 @@ static int wl18xx_boot(struct wl1271 *wl)
- 		SMART_CONFIG_SYNC_EVENT_ID |
- 		SMART_CONFIG_DECODE_EVENT_ID |
- 		TIME_SYNC_EVENT_ID |
--		FW_LOGGER_INDICATION;
-+		FW_LOGGER_INDICATION |
-+		RX_BA_WIN_SIZE_CHANGE_EVENT_ID;
- 
- 	wl->ap_event_mask = MAX_TX_FAILURE_EVENT_ID;
- 
--- 
-2.9.0
+patches are always welcome :)
