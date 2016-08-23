@@ -1,77 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:35466 "EHLO
-        shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751515AbcHaBkp (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:35511 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757164AbcHWLpA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 21:40:45 -0400
-Message-ID: <1472607632.25374.44.camel@decadent.org.uk> (sfid-20160831_034050_128625_B9012AFF)
-Subject: Re: [PATCH V2] rtl_bt: Add firmware and config file for RTL8822BE
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Larry Finger <Larry.Finger@lwfinger.net>, linux-firmware@kernel.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        =?UTF-8?Q?=E9=99=86=E6=9C=B1=E4=BC=9F?= <alex_lu@realsil.com.cn>,
-        linux-bluetooth@vger.kernel.org
-Date: Wed, 31 Aug 2016 02:40:32 +0100
-In-Reply-To: <1472605864-4197-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1472605864-4197-1-git-send-email-Larry.Finger@lwfinger.net>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-        protocol="application/pgp-signature"; boundary="=-ViVrOBgV0i4J1JeyUTym"
-Mime-Version: 1.0
+        Tue, 23 Aug 2016 07:45:00 -0400
+Received: by mail-oi0-f68.google.com with SMTP id e80so2386014oig.2
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Aug 2016 04:44:59 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <DM5PR06MB2825089C55692920E0432B31D9E80@DM5PR06MB2825.namprd06.prod.outlook.com>
+References: <1470894260-18128-1-git-send-email-wright.feng@cypress.com>
+ <CACna6rxLVkhzf0fea0ESbeBF4G-FK12JRBYNULosgVNRssyTiQ@mail.gmail.com> <DM5PR06MB2825089C55692920E0432B31D9E80@DM5PR06MB2825.namprd06.prod.outlook.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Tue, 23 Aug 2016 13:44:58 +0200
+Message-ID: <CACna6rxVQOt0=0qyWT9_u=888O_FGkwFLkKRx_6wty4cZLH3eA@mail.gmail.com> (sfid-20160823_134524_601617_ADEC74A8)
+Subject: Re: [PATCH v2] brcmfmac: shut down AP and set IBSS mode only on
+ primary interface
+To: Wright Feng <wefe@cypress.com>
+Cc: "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Chi-Hsien Lin <chln@cypress.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 22 August 2016 at 05:40, Wright Feng <wefe@cypress.com> wrote:
+> This message and any attachments may contain Cypress (or its subsidiaries=
+) confidential information. If it has been received in error, please advise=
+ the sender and immediately delete this message.
 
---=-ViVrOBgV0i4J1JeyUTym
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, 2016-08-30 at 20:11 -0500, Larry Finger wrote:
-> This device is a new model from Realtek. Updates to driver btrtl will
-> soon be submitted to the kernel.
->=20
-> These files were provided by the Realtek developer.
->=20
-> Signed-off-by: =E9=99=86=E6=9C=B1=E4=BC=9F <alex_lu@realsil.com.cn>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: linux-bluetooth@vger.kernel.org
-> ---
->=20
-> V2 - fix error in file names in WHENCE
-> ---
-[...]
-> =C2=A0Found in vendor driver, linux_bt_usb_2.11.20140423_8723be.rar
-> =C2=A0From https://github.com/troy-tan/driver_store
-> +Files rtl_bt/rtl8822e_* came directly from Realtek.
-[...]
-
-You missed this wildcard, but I fixed it up. =C2=A0Applied and pushed,
-thanks.
-
-Ben.
+You are aware you're writing to few open mailing lists, aren't you? I
+don't think such footer makes any/much sense, please avoid it.
 
 --=20
-Ben Hutchings
-Anthony's Law of Force: Don't force it, get a larger hammer.
-
---=-ViVrOBgV0i4J1JeyUTym
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-
-iQIcBAABCgAGBQJXxjWQAAoJEOe/yOyVhhEJm38P/jBMd5Y3b1YxkG9Ky6wCkBfA
-Hq0UW6XaZfP/QoRTUXQ+YvWDJY0Dl3q3snQUlENriOM2YmUPxDRpbE/JWd0/BpI6
-KhbsCbRwTIfNJ3vc5Gl/curdOcuEOJPsh143yZkaVOtalwHKpGg1OSSExZxnoKRq
-ZF5ZWeIGtJUCQ0F18fs/Dg74j/dauwAn7VlyDj9HNDQoW/2SDDh3DAwzaHXLaNSi
-gBHyjoaq6zNVilUTS86mSdwSMb4lwPWNVkmCgdZpf4UkEDUfO3k0o/Yky8U+cVQB
-q+n77r4WHAvUNVX8tEWGZmMs3rd/KgP5k/3iCAYQsvNu74EB62VAiZQ7HDUEoveT
-lufLNYVLClt/HZfIYI4BH23UoJGmBxHyUdGWnsGwEB8t6Q830bX+1EjprXJivrV6
-cxNMWaLuus1BKVPuv6vng8sxE/r4XpUB7tsBcBtQr8CF/1eM7k3y21puXYGMjLNq
-z7dNTjsgO6OrdbHh8M7HXokMDAco6lS12/2ye3cP4n5SeTR8hD6VI2lCc7jLl2UY
-RCq0y9OwzHN6kWlKfjL0VTmpMFbRiLqfGxSqm24qavClAEVRneIhM+KdTcCa0G3S
-gZGl5splwm/xbIwKa6Jgyb3W+WdxScdRyKuR5GDYwHr1uLXdOwOEn1P9cEPXR6H4
-NrH4KeeDgpy1nIdAZbQT
-=7GjX
------END PGP SIGNATURE-----
-
---=-ViVrOBgV0i4J1JeyUTym--
+Rafa=C5=82
