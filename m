@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50309 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752112AbcHVQGK (ORCPT
+Received: from libra.uberspace.de ([95.143.172.171]:38964 "EHLO
+        libra.uberspace.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752643AbcHWUMa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 12:06:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Mishol\, Guy" <guym@ti.com>
-Cc: "Pedersen\, Thomas" <twp@qca.qualcomm.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wlcore: mesh: add zone time sync support
-References: <20160808085706.22668-1-guym@ti.com>
-        <1471538527.3432.21.camel@qca.qualcomm.com>
-        <874m6h5bex.fsf@purkki.adurom.net>
-        <97207D90F0289D498537011312FCAD1138F55E66@DFRE01.ent.ti.com>
-Date: Mon, 22 Aug 2016 18:56:01 +0300
-In-Reply-To: <97207D90F0289D498537011312FCAD1138F55E66@DFRE01.ent.ti.com> (Guy
-        Mishol's message of "Sun, 21 Aug 2016 10:13:22 +0000")
-Message-ID: <87k2f8vlv2.fsf@kamboji.qca.qualcomm.com> (sfid-20160822_180811_590448_E0267B43)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Tue, 23 Aug 2016 16:12:30 -0400
+From: Matthias Beyer <mail@beyermatthias.de>
+To: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+        amitoj1606@gmail.com, bhaktipriya96@gmail.com, bhumirks@gmail.com,
+        ksenija.stanojevic@gmail.com, mail@beyermatthias.de,
+        meleodr@gmail.com, shivanib134@gmail.com
+Subject: [PATCH] drivers: staging: rtl823au: hal: Remove pointless test
+Date: Tue, 23 Aug 2016 21:44:16 +0200
+Message-Id: <20160823194417.30531-1-mail@beyermatthias.de> (sfid-20160823_221240_627700_FD35ADB7)
+In-Reply-To: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com>
+References: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com>
+In-Reply-To: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com>
+References: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Mishol, Guy" <guym@ti.com> writes:
+As reported by David Binderman, this test is useless as of
 
-> Kalle/Thomas,
-> Thanks for your feedback.
+    if (a < 3) {
+        /* ... */
+    } else if (a >= 3) {
+        /* ... */
+    }
 
-Please don't top most, it makes using patchwork difficult and is
-annoying to the readers.
+so this patch removes the second check.
 
-> This time sync support is different from the one that mac80211
-> maintains with mesh peers. This time sync is mostly used by upper
-> layers for several applications (like audio). In this case we allow
-> the user to configure for each zone who will be the synchronizer. You
-> can refer to the following Application Report (chapter 6) for more
-> information: http://www.ti.com/lit/an/swaa166/swaa166.pdf
+Matthias Beyer (1):
+  drivers: staging: rtl8723au: hal: Remove pointless test
 
-I didn't fully understand what this does, but debugfs doesn't sound (no
-pun intended) like a suitable interface for something like this. nl80211
-is more likely candidate.
+ drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 -- 
-Kalle Valo
+2.9.2
