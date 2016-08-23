@@ -1,74 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:35442 "EHLO
-        mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750860AbcH3OIU (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59445 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755160AbcHWHAS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 10:08:20 -0400
-Received: by mail-it0-f68.google.com with SMTP id f128so2123817ith.2
-        for <linux-wireless@vger.kernel.org>; Tue, 30 Aug 2016 07:08:20 -0700 (PDT)
-From: engineering@keppy.com
-To: kvalo@qca.qualcomm.com
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: [PATCH] ath6kl: enable firmware crash dumps on the AR6004
-Date: Tue, 30 Aug 2016 10:11:43 -0400
-Message-Id: <1472566303-32613-1-git-send-email-dan.kephart@lairdtech.com> (sfid-20160830_160834_813606_50D84D33)
+        Tue, 23 Aug 2016 03:00:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+Cc: linux-wireless@vger.kernel.org,
+        make-wifi-fast@lists.bufferbloat.net, ath9k-devel@lists.ath9k.org,
+        Tim Shepard <shep@alum.mit.edu>, Felix Fietkau <nbd@nbd.name>
+Subject: Re: [PATCH v4] ath9k: Switch to using mac80211 intermediate software queues.
+References: <20160706193417.13080-1-toke@toke.dk>
+        <20160805160346.10545-1-toke@toke.dk>
+        <87mvk44xmt.fsf@purkki.adurom.net> <87bn0k4w4d.fsf@toke.dk>
+        <87fupwvisn.fsf@kamboji.qca.qualcomm.com> <871t1g4thz.fsf@toke.dk>
+Date: Tue, 23 Aug 2016 09:59:42 +0300
+In-Reply-To: <871t1g4thz.fsf@toke.dk> ("Toke =?utf-8?Q?H=C3=B8iland-J?=
+ =?utf-8?Q?=C3=B8rgensen=22's?= message of
+        "Mon, 22 Aug 2016 19:13:12 +0200")
+Message-ID: <877fb8ug0x.fsf@kamboji.qca.qualcomm.com> (sfid-20160823_090127_337498_5BAD61BB)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Kephart <dan.kephart@lairdtech.com>
+Toke Høiland-Jørgensen <toke@toke.dk> writes:
 
-The firmware crash dumps on the 6004 are the same as the 6003. Remove the
-statement guarding it from dumping on the 6004.  Renamed the
-REG_DUMP_COUNT_AR6003 to reflect support on both chips.
+>>>> This is great work but due to the regressions I'm not sure if this
+>>>> will be ready for 4.9. To get more testing time I wonder if we should
+>>>> wait for 4.10? IMHO applying this in the end of the cycle is too risky
+>>>> and we should try to maximise the time linux-next by applying this
+>>>> just after -rc1 is released.
+>>>>
+>>>> Thoughts?
+>>>
+>>> Well, now that we understand what is causing the throughput regressions,
+>>> fixing them should be fairly straight forward (yeah, famous last words,
+>>> but still...). I already have a patch for the fast path and will go poke
+>>> at the slow path next. It'll probably require another workaround or two,
+>>> so I guess it won't be the architecturally clean ideal solution; but it
+>>> would make it possible to have something that works for 4.9 and then
+>>> iterate for a cleaner design for 4.10.
+>>
+>> But if we try to rush this to 4.9 it won't be in linux-next for long. We
+>> are now in -rc3 and let's say that the patches are ready to apply in two
+>> weeks. That would leave us only two weeks of -next time before the merge
+>> window, which I think is not enough for a controversial patch like this
+>> one. There might be other bugs lurking which haven't been found yet.
+>
+> What, other hidden bugs? Unpossible! :)
 
-Signed-off-by: Dan Kephart <dan.kephart@lairdtech.com>
----
- drivers/net/wireless/ath/ath6kl/hif.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
+Yeah, right ;)
 
-diff --git a/drivers/net/wireless/ath/ath6kl/hif.c b/drivers/net/wireless/ath/ath6kl/hif.c
-index 18c0708..d194253 100644
---- a/drivers/net/wireless/ath/ath6kl/hif.c
-+++ b/drivers/net/wireless/ath/ath6kl/hif.c
-@@ -64,7 +64,7 @@ int ath6kl_hif_rw_comp_handler(void *context, int status)
- }
- EXPORT_SYMBOL(ath6kl_hif_rw_comp_handler);
- 
--#define REG_DUMP_COUNT_AR6003   60
-+#define REGISTER_DUMP_COUNT     60
- #define REGISTER_DUMP_LEN_MAX   60
- 
- static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
-@@ -73,9 +73,6 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
- 	u32 i, address, regdump_addr = 0;
- 	int ret;
- 
--	if (ar->target_type != TARGET_TYPE_AR6003)
--		return;
--
- 	/* the reg dump pointer is copied to the host interest area */
- 	address = ath6kl_get_hi_item_addr(ar, HI_ITEM(hi_failure_state));
- 	address = TARG_VTOP(ar->target_type, address);
-@@ -95,7 +92,7 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
- 
- 	/* fetch register dump data */
- 	ret = ath6kl_diag_read(ar, regdump_addr, (u8 *)&regdump_val[0],
--				  REG_DUMP_COUNT_AR6003 * (sizeof(u32)));
-+				  REGISTER_DUMP_COUNT * (sizeof(u32)));
- 	if (ret) {
- 		ath6kl_warn("failed to get register dump: %d\n", ret);
- 		return;
-@@ -105,9 +102,9 @@ static void ath6kl_hif_dump_fw_crash(struct ath6kl *ar)
- 	ath6kl_info("hw 0x%x fw %s\n", ar->wiphy->hw_version,
- 		    ar->wiphy->fw_version);
- 
--	BUILD_BUG_ON(REG_DUMP_COUNT_AR6003 % 4);
-+	BUILD_BUG_ON(REGISTER_DUMP_COUNT % 4);
- 
--	for (i = 0; i < REG_DUMP_COUNT_AR6003; i += 4) {
-+	for (i = 0; i < REGISTER_DUMP_COUNT; i += 4) {
- 		ath6kl_info("%d: 0x%8.8x 0x%8.8x 0x%8.8x 0x%8.8x\n",
- 			    i,
- 			    le32_to_cpu(regdump_val[i]),
+> Would it be possible to merge the partial solution (which is ready now,
+> basically) and fix the slow path in a separate patch later?
+
+What do you mean with partial solution? You mean ath9k users would
+suffer from regressions until they are fixed? We can't do that.
+
+> (Just spit-balling here; I'm still fairly new to this process. But I am
+> concerned that we'll hit a catch-22 where we can't get wider testing
+> before it's "ready" and we can't prove that it's "ready" until we've had
+> wider testing...)
+
+I understand your point, but I don't want to rush this to 4.9 and then
+start getting lots of bug reports and eventually forced to revert it. If
+we just found a new serious regression the chances are that there are
+more lurking somewhere and this patch is just not ready yet.
+
 -- 
-2.4.10
+Kalle Valo
