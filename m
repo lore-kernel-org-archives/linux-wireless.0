@@ -1,65 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.eperm.de ([89.247.134.16]:34042 "EHLO mail.eperm.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759865AbcHEPIW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 11:08:22 -0400
-From: Stephan Mueller <smueller@chronox.de>
-To: Ted Tso <tytso@mit.edu>, herbert@gondor.apana.org.au
-Cc: linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: [RFC][PATCH] RANDOM: ATH9K RNG delivers zero bits of entropy
-Date: Fri, 05 Aug 2016 17:08:14 +0200
-Message-ID: <34197429.2CvoIfft9B@positron.chronox.de> (sfid-20160805_170839_103481_E2E8F405)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from libra.uberspace.de ([95.143.172.171]:38962 "EHLO
+        libra.uberspace.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754924AbcHWUMa (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Aug 2016 16:12:30 -0400
+From: Matthias Beyer <mail@beyermatthias.de>
+To: devel@driverdev.osuosl.org, gregkh@linuxfoundation.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+Cc: Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
+        amitoj1606@gmail.com, bhaktipriya96@gmail.com, bhumirks@gmail.com,
+        ksenija.stanojevic@gmail.com, mail@beyermatthias.de,
+        meleodr@gmail.com, shivanib134@gmail.com
+Subject: [PATCH] drivers: staging: rtl8723au: hal: Remove pointless test
+Date: Tue, 23 Aug 2016 21:44:17 +0200
+Message-Id: <20160823194417.30531-2-mail@beyermatthias.de> (sfid-20160823_221234_181540_B932103A)
+In-Reply-To: <20160823194417.30531-1-mail@beyermatthias.de>
+References: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com>
+ <20160823194417.30531-1-mail@beyermatthias.de>
+In-Reply-To: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com>
+References: <CAMzoamY0HSt4af8EeJpt73FD++q1MZ7iHJFa4NDBtzzQrNMjbg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ted, Herbert,
+This patch removes the pointless `else if` test.
 
-I sent a question to the ATH9K RNG some time ago to the developers.
-See https://www.mail-archive.com/linux-crypto@vger.kernel.org/msg19115.html
-
-I have not yet received a word and I think this issue should be resolved.
-
-Thanks
-Stephan
-
----8<---
-
-The ATH9K driver implements an RNG which is completely bypassing the
-standard Linux HW generator logic.
-
-The RNG may or may not deliver entropy. Considering the conservative
-approach in treating entropy with respect to non-auditable sources, this
-patch changes the delivered entropy value to zero. The RNG still feeds
-data into the input_pool but it is assumed to have no entropy.
-
-When the ATH9K RNG changes to use the HW RNG framework, it may re-enable
-the entropy estimation considering that a user can change that value at
-boot and runtime.
-
-Signed-off-by: Stephan Mueller <smueller@chronox.de>
+Signed-off-by: Matthias Beyer <mail@beyermatthias.de>
+Reported-by: David Binderman <linuxdev.baldrick@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/rng.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
-index d38e50f..d63dc48 100644
---- a/drivers/net/wireless/ath/ath9k/rng.c
-+++ b/drivers/net/wireless/ath/ath9k/rng.c
-@@ -92,8 +92,7 @@ static int ath9k_rng_kthread(void *data)
- 		fail_stats = 0;
- 
- 		/* sleep until entropy bits under write_wakeup_threshold */
--		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
--					   ATH9K_RNG_ENTROPY(bytes_read));
-+		add_hwgenerator_randomness((void *)rng_buf, bytes_read, 0);
- 	}
- 
- 	kfree(rng_buf);
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+index bfcbd7a..7f11521 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+@@ -3530,7 +3530,7 @@ bthci_CmdLinkStatusNotify(
+ 				pBtMgnt->ExtConfig.linkInfo[i].BTProfile,
+ 				pBtMgnt->ExtConfig.linkInfo[i].BTCoreSpec));
+ 			pTriple += 4;
+-		} else if (pBtMgnt->ExtConfig.HCIExtensionVer >= 1) {
++		} else {
+ 			pBtMgnt->ExtConfig.linkInfo[i].ConnectHandle = *((u16 *)&pTriple[0]);
+ 			pBtMgnt->ExtConfig.linkInfo[i].BTProfile = pTriple[2];
+ 			pBtMgnt->ExtConfig.linkInfo[i].BTCoreSpec = pTriple[3];
 -- 
-2.7.4
-
-
+2.9.2
