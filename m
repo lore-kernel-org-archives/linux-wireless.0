@@ -1,26 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34181 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752342AbcHAMY6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2016 08:24:58 -0400
-Message-ID: <1470054294.17912.8.camel@sipsolutions.net> (sfid-20160801_142501_317511_B4F46C80)
-Subject: Re: [PATCH] iw: display 5/10 MHz channel widths
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 01 Aug 2016 14:24:54 +0200
-In-Reply-To: <20160721153948.32171-1-me@bobcopeland.com> (sfid-20160721_174006_254207_A60A70E7)
-References: <20160721153948.32171-1-me@bobcopeland.com>
-	 (sfid-20160721_174006_254207_A60A70E7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:33678 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751710AbcHWSue (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 23 Aug 2016 14:50:34 -0400
+Subject: [PATCH 0/6] linux-firmware: ath10k: update and add various firmware
+ files
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Date: Tue, 23 Aug 2016 21:47:19 +0300
+Message-ID: <20160823184644.21587.95655.stgit@potku.adurom.net> (sfid-20160823_205123_388029_CF807618)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-07-21 at 11:39 -0400, Bob Copeland wrote:
-> iw was showing 'width: unknown' for channels on OCB interfaces; teach
-> it the values for 5/10 MHz so it will show the configured width.
-> 
-Applied, thanks.
+Hi,
 
-johannes
+here's a bigger ath10k firmware update. Support for four new hardware
+and smaller updates for existing hardware.
+
+Kalle
+
+---
+
+Kalle Valo (6):
+      ath10k: QCA4019 hw1.0: add firmware and board files
+      ath10k: QCA9887 hw1.0: add firmware and board files
+      ath10k: QCA9888 hw2.0: add firmware and board files
+      ath10k: QCA9984 hw1.0: add firmware and board files
+      ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.54
+      ath10k: QCA6174: update board files
+
+
+ WHENCE                                            |   18 +
+ ath10k/QCA4019/hw1.0/board-2.bin                  |  Bin
+ ath10k/QCA4019/hw1.0/firmware-5.bin               |  Bin
+ ath10k/QCA4019/hw1.0/notice_ath10k_firmware-5.txt |  589 +++++++++++++++++++++
+ ath10k/QCA6174/hw2.1/board-2.bin                  |  Bin
+ ath10k/QCA6174/hw3.0/board-2.bin                  |  Bin
+ ath10k/QCA9887/hw1.0/board.bin                    |  Bin
+ ath10k/QCA9887/hw1.0/firmware-5.bin               |  Bin
+ ath10k/QCA9887/hw1.0/notice_ath10k_firmware-5.txt |  328 ++++++++++++
+ ath10k/QCA9888/hw2.0/board-2.bin                  |  Bin
+ ath10k/QCA9888/hw2.0/firmware-5.bin               |  Bin
+ ath10k/QCA9888/hw2.0/notice_ath10k_firmware-5.txt |  589 +++++++++++++++++++++
+ ath10k/QCA988X/hw2.0/firmware-5.bin               |  Bin
+ ath10k/QCA988X/hw2.0/notice_ath10k_firmware-5.txt |   44 +-
+ ath10k/QCA9984/hw1.0/board-2.bin                  |  Bin
+ ath10k/QCA9984/hw1.0/firmware-5.bin               |  Bin
+ ath10k/QCA9984/hw1.0/notice_ath10k_firmware-5.txt |  589 +++++++++++++++++++++
+ 17 files changed, 2134 insertions(+), 23 deletions(-)
+ create mode 100644 ath10k/QCA4019/hw1.0/board-2.bin
+ create mode 100644 ath10k/QCA4019/hw1.0/firmware-5.bin
+ create mode 100644 ath10k/QCA4019/hw1.0/notice_ath10k_firmware-5.txt
+ create mode 100644 ath10k/QCA9887/hw1.0/board.bin
+ create mode 100644 ath10k/QCA9887/hw1.0/firmware-5.bin
+ create mode 100644 ath10k/QCA9887/hw1.0/notice_ath10k_firmware-5.txt
+ create mode 100644 ath10k/QCA9888/hw2.0/board-2.bin
+ create mode 100644 ath10k/QCA9888/hw2.0/firmware-5.bin
+ create mode 100644 ath10k/QCA9888/hw2.0/notice_ath10k_firmware-5.txt
+ create mode 100644 ath10k/QCA9984/hw1.0/board-2.bin
+ create mode 100644 ath10k/QCA9984/hw1.0/firmware-5.bin
+ create mode 100644 ath10k/QCA9984/hw1.0/notice_ath10k_firmware-5.txt
