@@ -1,57 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28440 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751948AbcHKJob (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 05:44:31 -0400
-From: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
-	<usdutt@qti.qualcomm.com>, <mkalikot@qca.qualcomm.com>,
-	<amarnath@qca.qualcomm.com>, <djindal@qti.qualcomm.com>,
-	<pkushwah@qti.qualcomm.com>
-Subject: [PATCH] cfg80211: validate beacon interval for MESH/IBSS
-Date: Thu, 11 Aug 2016 15:14:02 +0530
-Message-ID: <1470908642-13535-1-git-send-email-pkushwah@qti.qualcomm.com> (sfid-20160811_114434_695335_BB56F215)
+Received: from comal.ext.ti.com ([198.47.26.152]:40125 "EHLO comal.ext.ti.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755690AbcHXLaC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Aug 2016 07:30:02 -0400
+Received: from dflxv15.itg.ti.com ([128.247.5.124])
+        by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id u7OBRuIN021175
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2016 06:27:56 -0500
+Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
+        by dflxv15.itg.ti.com (8.14.3/8.13.8) with ESMTP id u7OBRtjt028199
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Aug 2016 06:27:55 -0500
+From: Guy Mishol <guym@ti.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Guy Mishol <guym@ti.com>
+Subject: [PATCH] wl18xx: add time sync configuration api
+Date: Wed, 24 Aug 2016 14:35:27 +0300
+Message-ID: <20160824113527.5040-1-guym@ti.com> (sfid-20160824_133006_291361_4B8BD023)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Beacon interval validation was missing for MESH / IBSS join.
-This commit addresses the same.
+Add time sync configuration api.
+The new api allows to configure the synchronization
+mode (STA/AP/MESH) and (in case of Mesh mode) the
+master address of each zone.
 
-Signed-off-by: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+Signed-off-by: Guy Mishol <guym@ti.com>
 ---
- net/wireless/nl80211.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/net/wireless/ti/wl18xx/acx.c    | 29 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/acx.h    | 13 +++++++++++++
+ drivers/net/wireless/ti/wl18xx/event.c  |  1 +
+ drivers/net/wireless/ti/wlcore/wlcore.h |  3 +++
+ 4 files changed, 46 insertions(+)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index f02653a..ddb1469 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7780,6 +7780,10 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 			return -EINVAL;
- 	}
- 
-+	err = cfg80211_validate_beacon_int(rdev, ibss.beacon_interval);
-+	if (err)
-+		return err;
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
+index 4be0409..b5525a3 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.c
++++ b/drivers/net/wireless/ti/wl18xx/acx.c
+@@ -309,3 +309,32 @@ out:
+ 	kfree(acx);
+ 	return ret;
+ }
 +
- 	if (!rdev->ops->join_ibss)
- 		return -EOPNOTSUPP;
- 
-@@ -9255,6 +9259,10 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 		if (setup.beacon_interval < 10 ||
- 		    setup.beacon_interval > 10000)
- 			return -EINVAL;
++int wl18xx_acx_time_sync_cfg(struct wl1271 *wl)
++{
++	struct acx_time_sync_cfg *acx;
++	int ret;
 +
-+		err = cfg80211_validate_beacon_int(rdev, setup.beacon_interval);
-+		if (err)
-+			return err;
- 	}
++	wl1271_debug(DEBUG_ACX, "acx time sync cfg: mode %d, addr: %pM",
++		     wl->conf.sg.params[WL18XX_CONF_SG_TIME_SYNC],
++		     wl->zone_master_mac_addr);
++
++	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
++	if (!acx) {
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	acx->sync_mode = wl->conf.sg.params[WL18XX_CONF_SG_TIME_SYNC];
++	memcpy(acx->zone_mac_addr, wl->zone_master_mac_addr, ETH_ALEN);
++
++	ret = wl1271_cmd_configure(wl, ACX_TIME_SYNC_CFG,
++				   acx, sizeof(*acx));
++	if (ret < 0) {
++		wl1271_warning("acx time sync cfg failed: %d", ret);
++		goto out;
++	}
++out:
++	kfree(acx);
++	return ret;
++}
+diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
+index 342a299..2edbbbf 100644
+--- a/drivers/net/wireless/ti/wl18xx/acx.h
++++ b/drivers/net/wireless/ti/wl18xx/acx.h
+@@ -37,6 +37,7 @@ enum {
+ 	ACX_RX_BA_FILTER		 = 0x0058,
+ 	ACX_AP_SLEEP_CFG                 = 0x0059,
+ 	ACX_DYNAMIC_TRACES_CFG		 = 0x005A,
++	ACX_TIME_SYNC_CFG		 = 0x005B,
+ };
  
- 	if (info->attrs[NL80211_ATTR_DTIM_PERIOD]) {
+ /* numbers of bits the length field takes (add 1 for the actual number) */
+@@ -388,6 +389,17 @@ struct acx_dynamic_fw_traces_cfg {
+ 	__le32 dynamic_fw_traces;
+ } __packed;
+ 
++/*
++ * ACX_TIME_SYNC_CFG
++ * configure the time sync parameters
++ */
++struct acx_time_sync_cfg {
++	struct acx_header header;
++	u8 sync_mode;
++	u8 zone_mac_addr[ETH_ALEN];
++	u8 padding[1];
++} __packed;
++
+ int wl18xx_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap,
+ 				  u32 sdio_blk_size, u32 extra_mem_blks,
+ 				  u32 len_field_size);
+@@ -402,5 +414,6 @@ int wl18xx_acx_interrupt_notify_config(struct wl1271 *wl, bool action);
+ int wl18xx_acx_rx_ba_filter(struct wl1271 *wl, bool action);
+ int wl18xx_acx_ap_sleep(struct wl1271 *wl);
+ int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl);
++int wl18xx_acx_time_sync_cfg(struct wl1271 *wl);
+ 
+ #endif /* __WL18XX_ACX_H__ */
+diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
+index 2c5df43..b36ce18 100644
+--- a/drivers/net/wireless/ti/wl18xx/event.c
++++ b/drivers/net/wireless/ti/wl18xx/event.c
+@@ -22,6 +22,7 @@
+ #include <net/genetlink.h>
+ #include "event.h"
+ #include "scan.h"
++#include "conf.h"
+ #include "../wlcore/cmd.h"
+ #include "../wlcore/debug.h"
+ #include "../wlcore/vendor_cmd.h"
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index 8f28aa0..1827546 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -501,6 +501,9 @@ struct wl1271 {
+ 
+ 	/* dynamic fw traces */
+ 	u32 dynamic_fw_traces;
++
++	/* time sync zone master */
++	u8 zone_master_mac_addr[ETH_ALEN];
+ };
+ 
+ int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
 -- 
-1.9.1
-
+2.6.4
