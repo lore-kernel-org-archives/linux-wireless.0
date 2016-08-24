@@ -1,42 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:43521 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118AbcHHP0N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2016 11:26:13 -0400
-Date: Mon, 8 Aug 2016 23:26:03 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-	tom@herbertland.com
-Subject: Re: Buggy rhashtable walking
-Message-ID: <20160808152603.GB31570@gondor.apana.org.au> (sfid-20160808_172617_468279_3E12CA4B)
-References: <20160804071846.GA773@gondor.apana.org.au>
- <20160804074546.GA996@gondor.apana.org.au>
- <1470377813.2977.14.camel@sipsolutions.net>
- <20160805104858.GA9297@gondor.apana.org.au>
- <1470394233.2977.37.camel@sipsolutions.net>
- <57A47CA3.4010101@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <57A47CA3.4010101@candelatech.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33354 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750954AbcHXGFT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Aug 2016 02:05:19 -0400
+Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.87)
+        (envelope-from <johannes@sipsolutions.net>)
+        id 1bcRIR-0000eO-0M
+        for linux-wireless@vger.kernel.org; Wed, 24 Aug 2016 08:04:19 +0200
+Message-ID: <1472018657.5143.2.camel@sipsolutions.net> (sfid-20160824_080720_283154_1584C51A)
+Subject: Re: Wireless Workshop accepted into the 2016 Linux Kernel Summit
+ and Linux Plumbers Conference
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 24 Aug 2016 08:04:17 +0200
+In-Reply-To: <1470724553.28531.5.camel@sipsolutions.net> (sfid-20160809_083559_830310_C17F020D)
+References: <20160802084542.75cd47c2@redtail.lan>
+         (sfid-20160802_171326_600881_B04D22BD) <1470331975.29954.9.camel@sipsolutions.net>
+         (sfid-20160804_193325_168400_FAF2E39F) <1470724262.28531.2.camel@sipsolutions.net>
+         (sfid-20160809_083111_463547_42541CEA) <1470724553.28531.5.camel@sipsolutions.net>
+         (sfid-20160809_083559_830310_C17F020D)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 05, 2016 at 04:46:43AM -0700, Ben Greear wrote:
->
-> It would not be fun to have to revert to the old way of hashing
-> stations in mac80211...
-> 
-> I'll be happy to test the patches when you have them ready.
+Last call!
 
-Thanks for the offer.  Unfortunately it'll be a few days before
-I'm ready because I need to work through some crypto patches first.
+No, not really, but I need to get the list of reserved passes to the
+LPC committee very soon. I've also more or less run out of them.
 
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+If anyone else is wishing to attend, please remember to sign up for LPC
+as soon as it opens next Monday, only a limited number of slots will be
+available.
+
+If you need any help don't hesitate to email me.
+
+johannes
