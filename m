@@ -1,202 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:38635 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753626AbcHPPS4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2016 11:18:56 -0400
-Received: by mail-wm0-f54.google.com with SMTP id o80so175142368wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Aug 2016 08:18:55 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: torvalds@linux-foundation.org, akpm@linux-foundation.org,
-	gregkh@linuxfoundation.org, davem@davemloft.net,
-	kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	dinan.gunawardena@netronome.com,
-	Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv6 1/2] add basic register-field manipulation macros
-Date: Tue, 16 Aug 2016 16:18:23 +0100
-Message-Id: <1471360704-10507-2-git-send-email-jakub.kicinski@netronome.com> (sfid-20160816_171936_040526_EA44652A)
-In-Reply-To: <1471360704-10507-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1471360704-10507-1-git-send-email-jakub.kicinski@netronome.com>
+Received: from mail-it0-f53.google.com ([209.85.214.53]:38468 "EHLO
+        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754637AbcHXLOp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Aug 2016 07:14:45 -0400
+MIME-Version: 1.0
+In-Reply-To: <20160822183505.26568-1-colin.king@canonical.com>
+References: <20160822183505.26568-1-colin.king@canonical.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 24 Aug 2016 21:14:23 +1000
+Message-ID: <CAGRGNgXxeQE=EpXXBdv4F5ZZOhnVDSuP-UfsPkQp=1pXFZp0CA@mail.gmail.com> (sfid-20160824_131505_019179_DFB8D11A)
+Subject: Re: [PATCH] zd1211rw: fix spelling mistake "firmeware" -> "firmware"
+To: Colin King <colin.king@canonical.com>
+Cc: Daniel Drake <dsd@gentoo.org>, Ulrich Kunitz <kune@deine-taler.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Common approach to accessing register fields is to define
-structures or sets of macros containing mask and shift pair.
-Operations on the register are then performed as follows:
+Hi All,
 
- field = (reg >> shift) & mask;
+On Tue, Aug 23, 2016 at 4:35 AM, Colin King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Trivial fix to spelling mistake in dev_err message.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
- reg &= ~(mask << shift);
- reg |= (field & mask) << shift;
+Looks right to me.
 
-Defining shift and mask separately is tedious.  Ivo van Doorn
-came up with an idea of computing them at compilation time
-based on a single shifted mask (later refined by Felix) which
-can be used like this:
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
- #define REG_FIELD 0x000ff000
+Thanks,
 
- field = FIELD_GET(REG_FIELD, reg);
-
- reg &= ~REG_FIELD;
- reg |= FIELD_PUT(REG_FIELD, field);
-
-FIELD_{GET,PUT} macros take care of finding out what the
-appropriate shift is based on compilation time ffs operation.
-
-GENMASK can be used to define registers (which is usually
-less error-prone and easier to match with datasheets).
-
-This approach is the most convenient I've seen so to limit code
-multiplication let's move the macros to a global header file.
-Attempts to use static inlines instead of macros failed due
-to false positive triggering of BUILD_BUG_ON()s, especially with
-GCC < 6.0.
-
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
-Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
----
- include/linux/bitfield.h | 109 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/bug.h      |   3 ++
- 2 files changed, 112 insertions(+)
- create mode 100644 include/linux/bitfield.h
-
-diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
-new file mode 100644
-index 000000000000..ff9fd0af2ac7
---- /dev/null
-+++ b/include/linux/bitfield.h
-@@ -0,0 +1,109 @@
-+/*
-+ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ */
-+
-+#ifndef _LINUX_BITFIELD_H
-+#define _LINUX_BITFIELD_H
-+
-+#include <asm/types.h>
-+#include <linux/bug.h>
-+
-+#define _bf_shf(x) (__builtin_ffsll(x) - 1)
-+
-+#define _BF_FIELD_CHECK(_mask, _val)					\
-+	({								\
-+		BUILD_BUG_ON(!(_mask));					\
-+		BUILD_BUG_ON(__builtin_constant_p(_val) ?		\
-+			     ~((_mask) >> _bf_shf(_mask)) & (_val) :	\
-+			     0);					\
-+		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
-+					      (1ULL << _bf_shf(_mask))); \
-+	})
-+
-+/*
-+ * Bitfield access macros
-+ *
-+ * This file contains macros which take as input shifted mask
-+ * from which they extract the base mask and shift amount at
-+ * compilation time.  There are two separate sets of the macros
-+ * one for 32bit registers and one for 64bit ones.
-+ *
-+ * Fields can be defined using GENMASK (which is usually
-+ * less error-prone and easier to match with datasheets).
-+ *
-+ * FIELD_{GET,PUT} macros are designed to be used with masks which
-+ * are compilation time constants.
-+ *
-+ * Example:
-+ *
-+ *  #define REG_FIELD_A  GENMASK(6, 0)
-+ *  #define REG_FIELD_B  BIT(7)
-+ *  #define REG_FIELD_C  GENMASK(15, 8)
-+ *  #define REG_FIELD_D  GENMASK(31, 16)
-+ *
-+ * Get:
-+ *  a = FIELD_GET(REG_FIELD_A, reg);
-+ *  b = FIELD_GET(REG_FIELD_B, reg);
-+ *
-+ * Set:
-+ *  reg = FIELD_PUT(REG_FIELD_A, 1) |
-+ *	  FIELD_PUT(REG_FIELD_B, 0) |
-+ *	  FIELD_PUT(REG_FIELD_C, c) |
-+ *	  FIELD_PUT(REG_FIELD_D, 0x40);
-+ *
-+ * Modify:
-+ *  reg &= ~REG_FIELD_C;
-+ *  reg |= FIELD_PUT(REG_FIELD_C, c);
-+ */
-+
-+/**
-+ * FIELD_PUT() - construct a bitfield element
-+ * @_mask: shifted mask defining the field's length and position
-+ * @_val:  value to put in the field
-+ *
-+ * FIELD_PUT() masks and shifts up the value.  The result should
-+ * be combined with other fields of the bitfield using logical OR.
-+ */
-+#define FIELD_PUT(_mask, _val)					\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, _val);			\
-+		((u32)(_val) << _bf_shf(_mask)) & (_mask);	\
-+	})
-+
-+/**
-+ * FIELD_GET() - extract a bitfield element
-+ * @_mask: shifted mask defining the field's length and position
-+ * @_val:  32bit value of entire bitfield
-+ *
-+ * FIELD_GET() extracts the field specified by @_mask from the
-+ * bitfield passed in as @_val.
-+ */
-+#define FIELD_GET(_mask, _val)					\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, 0);			\
-+		(u32)(((_val) & (_mask)) >> _bf_shf(_mask));	\
-+	})
-+
-+#define FIELD_PUT64(_mask, _val)				\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, _val);			\
-+		((u64)(_val) << _bf_shf(_mask)) & (_mask);	\
-+	})
-+
-+#define FIELD_GET64(_mask, _val)				\
-+	({							\
-+		_BF_FIELD_CHECK(_mask, 0);			\
-+		(u64)(((_val) & (_mask)) >> _bf_shf(_mask));	\
-+	})
-+
-+#endif
-diff --git a/include/linux/bug.h b/include/linux/bug.h
-index e51b0709e78d..bba5bdae1681 100644
---- a/include/linux/bug.h
-+++ b/include/linux/bug.h
-@@ -13,6 +13,7 @@ enum bug_trap_type {
- struct pt_regs;
- 
- #ifdef __CHECKER__
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_ZERO(e) (0)
- #define BUILD_BUG_ON_NULL(e) ((void*)0)
-@@ -24,6 +25,8 @@ struct pt_regs;
- #else /* __CHECKER__ */
- 
- /* Force a compilation error if a constant expression is not a power of 2 */
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) 			\
-+	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
- 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
- 
 -- 
-1.9.1
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
