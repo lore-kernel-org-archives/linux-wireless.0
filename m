@@ -1,85 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound1a.ore.mailhop.org ([54.213.22.21]:49030 "EHLO
-	outbound1a.ore.mailhop.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752070AbcHFUCC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Aug 2016 16:02:02 -0400
-Date: Sat, 6 Aug 2016 19:45:51 +0000
-From: Jason Cooper <jason@lakedaemon.net>
-To: Stephan Mueller <smueller@chronox.de>
-Cc: Ted Tso <tytso@mit.edu>, herbert@gondor.apana.org.au,
-	linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [RFC][PATCH] RANDOM: ATH9K RNG delivers zero bits of entropy
-Message-ID: <20160806194551.GA4511@io.lakedaemon.net> (sfid-20160806_220223_608152_AE55D59A)
-References: <34197429.2CvoIfft9B@positron.chronox.de>
+Received: from mail2.candelatech.com ([208.74.158.173]:59744 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751044AbcHXRUf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Aug 2016 13:20:35 -0400
+Subject: Re: [PATCH 4/4] ath10k: fix spurious tx/rx during boot
+To: Michal Kazior <michal.kazior@tieto.com>, kvalo@qca.qualcomm.com
+References: <1468924452-23877-1-git-send-email-michal.kazior@tieto.com>
+ <1468924452-23877-5-git-send-email-michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        marek.puzyniak@tieto.com
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <a9bf9a29-f020-7118-79ee-b6c1aaa95ffe@candelatech.com> (sfid-20160824_192039_303484_0107447C)
+Date: Wed, 24 Aug 2016 10:20:34 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <34197429.2CvoIfft9B@positron.chronox.de>
+In-Reply-To: <1468924452-23877-5-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephan,
+On 07/19/2016 03:34 AM, Michal Kazior wrote:
+> HW Rx filters and masks are not configured
+> properly by firmware during boot sequences. The
+> MAC_PCU_ADDR1 is set to 0s instead of 1s which
+> allows the HW to ACK any frame that passes through
+> MAC_PCU_RX_FILTER. The MAC_PCU_RX_FILTER itself
+> is misconfigured on boot as well.
+>
+> The combination of these bugs ended up with the
+> following manifestations:
+>  - "no channel configured; ignoring frame(s)!"
+>    warnings in the driver
+>  - spurious ACKs (transmission) on the air during
+>    firmware bootup sequences
+>
+> The former was a long standing and known bug
+> originally though mostly harmless.
+>
+> However Marek recently discovered that this
+> problem also involves ACKing *all* frames the HW
+> receives (including beacons ;). Such frames
+> are delivered to host and generate the former
+> warning as well.
+>
+> This could be a problem with regulatory compliance
+> in some rare cases (e.g. Taiwan which forbids
+> transmissions on channel 36 which is the default
+> bootup channel on 5Ghz band cards). The good news
+> is that it'd require someone else to violate
+> regulatory first to coerce our device to generate
+> and transmit an ACK.
+>
+> The problem could be reproduced in a rather busy
+> environment that has a lot of APs. The likelihood
+> could be increased by injecting an msleep() of
+> 5000 or longer immediately after
+> ath10k_htt_setup() in ath10k_core_start().
+>
+> The reason why the former warnings were only
+> showing up seldom is because the device was either
+> quickly reset again (i.e. during firmware probing)
+> or wmi vdev was created (which fixes hw and fw
+> states).
+>
+> It is technically possible for host driver to
+> override adequate hw registers however this can't
+> work reliably because the bug root cause lies in
+> incorrect firmware state on boot (internal
+> structure used to program MAC_PCU_ADDR1 is not
+> properly initialized) and only vdev create/delete
+> events can fix it. This is why the patch takes
+> dummy vdev approach.
+>
+> This could be fixed in firmware as well but having
+> this fixed in driver is more robust, most notably
+> when thinking of users of older firmware such as
+> 999.999.0.636.
+>
+> Reported-by: Marek Puzyniak <marek.puzyniak@tieto.com>
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 
-On Fri, Aug 05, 2016 at 05:08:14PM +0200, Stephan Mueller wrote:
-> Hi Ted, Herbert,
-> 
-> I sent a question to the ATH9K RNG some time ago to the developers.
-> See https://www.mail-archive.com/linux-crypto@vger.kernel.org/msg19115.html
-> 
-> I have not yet received a word and I think this issue should be resolved.
-> 
-> Thanks
-> Stephan
-> 
-> ---8<---
+I was looking at firmware to make sure that I fixed what I could there....
 
-If the above text is placed below the three dashes, "---", below ...
+ From what I can tell, 10.4 should not have this bug.  Did you see this only
+on 10.1/10.2 firmware?  It is of course possible that I am mis-understanding
+10.4....
 
-> The ATH9K driver implements an RNG which is completely bypassing the
-> standard Linux HW generator logic.
-> 
-> The RNG may or may not deliver entropy. Considering the conservative
-> approach in treating entropy with respect to non-auditable sources, this
-> patch changes the delivered entropy value to zero. The RNG still feeds
-> data into the input_pool but it is assumed to have no entropy.
-> 
-> When the ATH9K RNG changes to use the HW RNG framework, it may re-enable
-> the entropy estimation considering that a user can change that value at
-> boot and runtime.
-> 
-> Signed-off-by: Stephan Mueller <smueller@chronox.de>
-> ---
+Thanks,
+Ben
 
-here, then the mail can be applied directly without editing.
 
->  drivers/net/wireless/ath/ath9k/rng.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/rng.c b/drivers/net/wireless/ath/ath9k/rng.c
-> index d38e50f..d63dc48 100644
-> --- a/drivers/net/wireless/ath/ath9k/rng.c
-> +++ b/drivers/net/wireless/ath/ath9k/rng.c
-> @@ -92,8 +92,7 @@ static int ath9k_rng_kthread(void *data)
->  		fail_stats = 0;
->  
->  		/* sleep until entropy bits under write_wakeup_threshold */
-> -		add_hwgenerator_randomness((void *)rng_buf, bytes_read,
-> -					   ATH9K_RNG_ENTROPY(bytes_read));
 
-This is the only use of this macro.  I'd remove the #define on line 25
-as well.
-
-> +		add_hwgenerator_randomness((void *)rng_buf, bytes_read, 0);
->  	}
->  
->  	kfree(rng_buf);
-
-Other than that,
-
-Reviewed-by: Jason Cooper <jason@lakedaemon.net>
-
-thx,
-
-Jason.
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
