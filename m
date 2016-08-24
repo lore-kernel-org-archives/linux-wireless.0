@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35570 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934300AbcHJS03 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:26:29 -0400
-Received: by mail-oi0-f65.google.com with SMTP id e80so1035176oig.2
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Aug 2016 11:26:29 -0700 (PDT)
-Subject: Re: [PATCH] rtlwifi: rtl8192de: Fix leak in
- _rtl92de_read_adapter_info()
-To: Christian Engelmayer <cengelma@gmx.at>, chaoming_li@realsil.com.cn
-References: <1470770397-24390-1-git-send-email-cengelma@gmx.at>
-Cc: kvalo@codeaurora.org, arnd@arndb.de, linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <a04f9806-e8cc-9858-9189-82206fd82d5d@lwfinger.net> (sfid-20160810_202635_764781_F0939C1A)
-Date: Wed, 10 Aug 2016 09:10:22 -0500
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49688 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932567AbcHXLgT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 24 Aug 2016 07:36:19 -0400
+Subject: [PATCH v2 6/6] ath10k: QCA6174: update board files
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <linux-firmware@kernel.org>
+CC: <linux-wireless@vger.kernel.org>, <ath10k@lists.infradead.org>
+Date: Wed, 24 Aug 2016 14:34:17 +0300
+Message-ID: <20160824113417.5625.90975.stgit@potku.adurom.net> (sfid-20160824_133640_858239_4DECB254)
+In-Reply-To: <20160824113134.5625.35574.stgit@potku.adurom.net>
+References: <20160824113134.5625.35574.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1470770397-24390-1-git-send-email-cengelma@gmx.at>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 08/09/2016 02:19 PM, Christian Engelmayer wrote:
-> In case rtl_get_hwinfo() fails, the function directly returns and leaks the
-> already allocated hwinfo memory. Go through the correct exit path.
->
-> Signed-off-by: Christian Engelmayer <cengelma@gmx.at>
-> ---
->  drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+Adding support for new QCA6174 board types.
 
-This patch looks good. Thanks.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ ath10k/QCA6174/hw2.1/board-2.bin |  Bin
+ ath10k/QCA6174/hw3.0/board-2.bin |  Bin
+ 2 files changed, 0 insertions(+), 0 deletions(-)
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+diff --git a/ath10k/QCA6174/hw2.1/board-2.bin b/ath10k/QCA6174/hw2.1/board-2.bin
+index 3e0da12c277188e31c081773a9b5b18f86f1d91c..eda3f0f3b3ee4adfed5853ba2557420b94556e82 100644
+GIT binary patch
+delta 29
+jcmbQzAuy#wV8g<MiH^F>=Mvh_B`^Xp)An--%x;ST#7GSI
 
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-> index b0f632462335..57205514801c 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-> @@ -1757,7 +1757,7 @@ static void _rtl92de_read_adapter_info(struct ieee80211_hw *hw)
->  		return;
->
->  	if (rtl_get_hwinfo(hw, rtlpriv, HWSET_MAX_SIZE, hwinfo, params))
-> -		return;
-> +		goto exit;
->
->  	_rtl92de_efuse_update_chip_version(hw);
->  	_rtl92de_read_macphymode_and_bandtype(hw, hwinfo);
-> @@ -1790,6 +1790,7 @@ static void _rtl92de_read_adapter_info(struct ieee80211_hw *hw)
->  		break;
->  	}
->  	rtlefuse->txpwr_fromeprom = true;
-> +exit:
->  	kfree(hwinfo);
->  }
->
->
+delta 30
+lcmbQzAuy#wV8g<M$&3eeo6jY*pG#l_Vy5lq5}4f<0|3&Y4SN6p
 
+diff --git a/ath10k/QCA6174/hw3.0/board-2.bin b/ath10k/QCA6174/hw3.0/board-2.bin
+index a71865242e19ed53a9353dbfdc844c311532029c..8e7b8c0b0cae7f7ac15ef5ca42fa5bcca6ad66c2 100644
+GIT binary patch
+delta 2553
+zcmdmTLSV}&kqzq{HlIt-aM(P}K|x{jw*?9c+r^GB1DRq6w=S6ex{;B8^Dc)!^4qs1
+zGMXx|7@8WJZGPXtuF(E%A>;OM3z=9RF?niEzLOx&$gx?bQHW{sM0qvV4IltyiEl1w
+z-p$ImXuD1i^DFc1W>1*^*-sYWWtqNXA!D$hfrXKIE+Yd2!yb7ME?z%*kAplDqcKpU
+z^yVK9uSDx*WhBHPSPDpEVm`kA=RH)`n0!QGWT~t%1B(C|ZbUJ7dH<h}6rN*x5tUI7
+z6RI?w6Mh*aM~K12_5Xj5+xd(wa0U<0|NB`gYuz@18E$LSwh+T$0fWiQ#q}p|5NDr!
+zO<Y%d!j>I-5BkI;fN8(5zG>^W?LQurG-=VM!wd|l;*;|tk_@6`qhh6GrD9>UaD;G-
+zq>QkPpooaHv;YGGL|if!CcY_h8~b!%q>2LL#dtJcu*cK@$BW5mybQ{CF&&MUK^HG#
+z)7LmM@-dCpDu@ba07|dz4YwG#v#T0e=oFVG6;~FQq~_|Tq?TnSr`j4A8yX;0|Ap%|
+z?{RSAU|c@=zlXbSh@w)mG_!J&6r)m-FcXXx3lkHOjFe;sVn)eGVJ0X&S&&g=@&W6Q
+zn=8ER#MBJ1T4sV`na={4W&1gF-9<x1MMDu-7|IqF4GjTGh%y5)qiCow6A~?gMI6Z)
+z5q$N6fr5d7Kn$k^fdIq<0bu=$E)J9esRxr_8mtgP0NY3mAX#K_5C^IrObY__!T?aY
+TAV>p>#P*8@j3P{nOQKl;_CT?r
+
+delta 80
+zcmV-W0I&bF$`rK75U{R5v+jThAhVW0KtQwhpdcW#HsQ6Pw+o^HARw3PfdLP*+F<-2
+mhc@B?w>IJe1mXhuz_Z+7a0s`o%mb=7vlhW1Ah%Wo1pYr1w<R9{
