@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32264 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752708AbcHaHQl (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:39496 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751518AbcHYEtS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Aug 2016 03:16:41 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 25 Aug 2016 00:49:18 -0400
+Date: Wed, 24 Aug 2016 20:31:01 -0400
+From: Kyle McMartin <kyle@infradead.org>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        linux-firmware@kernel.org
+Subject: Re: [PATCH 4/6] ath10k: QCA9984 hw1.0: add firmware and board files
+Message-ID: <20160825003101.GC20731@merlin.infradead.org> (sfid-20160825_064949_399965_0B3D625D)
+References: <20160823184644.21587.95655.stgit@potku.adurom.net>
+ <20160823184847.21587.65336.stgit@potku.adurom.net>
+ <60cf498d-162e-6b5a-25b7-627949033f85@candelatech.com>
+ <87pooypfuq.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Subject: Re: ath10k: Remove driver log suggesting QCA9887 support is
- experimental
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1469631896-9852-1-git-send-email-mohammed@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>,
-        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Message-ID: <7158b1d4f4b843dd8fafde91ddd16b0a@euamsexm01a.eu.qualcomm.com> (sfid-20160831_091644_976285_80756AE2)
-Date: Wed, 31 Aug 2016 09:16:25 +0200
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87pooypfuq.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Wed, Aug 24, 2016 at 11:26:54AM +0000, Valo, Kalle wrote:
+> Ben Greear <greearb@candelatech.com> writes:
 > 
-> Support for QCA9887 is no longer experimental and if there are any issues
-> we need to address them
+> > On 08/23/2016 11:48 AM, Kalle Valo wrote:
+> >> QCA9884 is a new chip supported by ath10k. Firmware version is 10.4-3.2-00072.
+> >
+> > Typo in the '9884' string I think.  Should be 9984?
 > 
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> You are right, I'll send v2. Thanks.
+> 
 
-Thanks, 1 patch applied to ath-current branch of ath.git:
+Heh, you didn't need to send the whole series again. ;-)
 
-4e80ffab0e72 ath10k: Remove driver log suggesting QCA9887 support is experimental
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9249941/
+cheers, --Kyle
