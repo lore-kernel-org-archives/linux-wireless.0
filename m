@@ -1,62 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:58505 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932628AbcH2MMv (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 08:12:51 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: Re: [PATCH v5 1/3] Documentation: dt: net: add ath9k wireless device binding
-Date: Mon, 29 Aug 2016 14:12:23 +0200
-Cc: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-        mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
-        kvalo@codeaurora.org, chunkeey@googlemail.com,
-        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
-        bjorn@mork.no, linux@rempel-privat.de
-References: <20160709232834.31654-1-martin.blumenstingl@googlemail.com> <2913835.hr5kg63Vcv@wuerfel> <CAFBinCAj0gFnKkqBrmUxCwXjsv6NY4KuWGRA4_mnXjq_boYx8w@mail.gmail.com>
-In-Reply-To: <CAFBinCAj0gFnKkqBrmUxCwXjsv6NY4KuWGRA4_mnXjq_boYx8w@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35184 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751000AbcHYJeJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Aug 2016 05:34:09 -0400
+Date: Thu, 25 Aug 2016 11:33:31 +0200
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Mathias Kresin <dev@kresin.me>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: add support for mac addr from device tree
+Message-ID: <20160825093330.GA2827@redhat.com> (sfid-20160825_113414_705950_C4567506)
+References: <1472113162-26915-1-git-send-email-dev@kresin.me>
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201608291412.23530.arnd@arndb.de> (sfid-20160829_141254_192423_F51F0C8E)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1472113162-26915-1-git-send-email-dev@kresin.me>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 28 August 2016, Martin Blumenstingl wrote:
-> On Mon, Aug 22, 2016 at 11:08 AM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Sunday, August 21, 2016 4:31:03 PM CEST Martin Blumenstingl wrote:
-> >> +               ath9k@0,0 {
-> >
-> > According to the PCI binding, the name should be the same as the
-> > compatible string here, or match the class code in the table.
-> The original example was from an actual system (where an ath9k is
-> connected to the PCIe bug). Unfortunately the PCIe driver contains
-> some hacks, so I'm not sure if these values serve as a good example.
-> Thus I took an example from a device where the ath9k chip is connected
-> via PCI (no "express" - found in sysfs at:
-> /sys/bus/pci/devices/0000:00:0e.0):
-> &pci0 {
->     ath9k@168c,002d {
->         compatible = "pci168c,002d";
->         reg = <0x7000 0 0 0 0>;
->         qca,disable-5ghz;
->     };
-> };
+On Thu, Aug 25, 2016 at 10:19:22AM +0200, Mathias Kresin wrote:
+> The EEPROM used on some CPEs has for every device the same generic
+> ralink mac in EEPROM and needs to be overridden.
 
-Ok, that would be a better example.
+I don't know what is CPE, but even if I would know that, I most likely
+sill will not understand that description.
 
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+> @@ -1459,10 +1459,7 @@ static int rt2400pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+>  	 * Start validation of the data that has been read.
+>  	 */
+>  	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
+> -	if (!is_valid_ether_addr(mac)) {
+> -		eth_random_addr(mac);
+> -		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
+> -	}
+> +	rt2x00lib_set_mac_address(rt2x00dev, mac);
+<snip>
+> +#include <linux/of.h>
+> +#include <linux/of_net.h>
+>  
+>  #include "rt2x00.h"
+>  #include "rt2x00lib.h"
+> @@ -931,6 +933,21 @@ static void rt2x00lib_rate(struct ieee80211_rate *entry,
+>  		entry->flags |= IEEE80211_RATE_SHORT_PREAMBLE;
+>  }
+>  
+> +void rt2x00lib_set_mac_address(struct rt2x00_dev *rt2x00dev, u8 *eeprom_mac_addr)
+> +{
+> +	const char *mac_addr;
+> +
+> +	mac_addr = of_get_mac_address(rt2x00dev->dev->of_node);
 
-> >> +                       compatible = "pci168c,0030";
-> >> +                       reg = <0 0 0 0 0>;
-> >
-> > Are the device/fn numbers all zero on your system? This is a bit
-> > confusing, as it's not immediately clear what the reg properties
-> > refers to. Also, I think the length should reflect the actual length
-> > of the config space, either 0x100 or 0x1000.
-> The first issue is solved with the updated example (see above).
-> Where would the size go (is it the second-last or last value)?
+Shouldn't use dev_of_node(&rt2x00dev->dev) and check against NULL ? 
 
-The last one.
+> +	if (mac_addr)
+> +		ether_addr_copy(eeprom_mac_addr, mac_addr);
 
-	Arnd
+Why we do not read MAC from EEPROM if fail to get it from of_node?
+
+Thanks
+Stanislaw
