@@ -1,82 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57825 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751271AbcH2TCP (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40332 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932821AbcHYJyU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 15:02:15 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2016-08-29
-Date: Mon, 29 Aug 2016 22:02:08 +0300
-Message-ID: <87h9a3iekv.fsf@kamboji.qca.qualcomm.com> (sfid-20160829_210236_145836_949F6D68)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 25 Aug 2016 05:54:20 -0400
+Message-ID: <1472118853.5024.129.camel@coelho.fi> (sfid-20160825_115424_303911_36D21074)
+From: Luca Coelho <luca@coelho.fi>
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Thu, 25 Aug 2016 12:54:13 +0300
+In-Reply-To: <CANUX_P27s1jzXfLzBca19db10c9yo1MKQ6T9b=pw-ZQLZ0KKVQ@mail.gmail.com>
+References: <1460448559.2630.8.camel@intel.com>
+         <CANUX_P27s1jzXfLzBca19db10c9yo1MKQ6T9b=pw-ZQLZ0KKVQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: pull request: iwlwifi 2016-04-12
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On Sun, 2016-08-07 at 07:38 +0300, Emmanuel Grumbach wrote:
+> On Sun, Aug 7, 2016 at 7:35 AM, Grumbach, Emmanuel
+> <emmanuel.grumbach@intel.com> wrote:
+> > 
+> > 
+> > Hi Kalle,
+> > 
+> > Here is a pull request for 4.6. I have here a patch that was merged
+> > to
+> > -next already, but clearly, it should have been routed through the
+> > current cycle's trees. Sorry about that.
+> > The patch is:
+> 
+> 
+> Wow.. I knew evolution was sometimes stupid, but this is new to me..
 
-I'm quite backlogged after coming back from my vacation but luckily it
-has been pretty quiet. Here is the first batch of patches for 4.8, quite
-simple actually and not really anything special to mention. More to come
-later, most probably next week. Please let me know if there are any
-problems.
+Which evolution are you blaming here? The email client or the evolution
+of species? :D
 
-Kalle
-
-The following changes since commit 184ca823481c99dadd7d946e5afd4bb921eab30d:
-
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2016-08-17 17:26:58 -0700)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-08-29
-
-for you to fetch changes up to bb87f02b7e4ccdb614a83cbf840524de81e9b321:
-
-  Merge ath-current from ath.git (2016-08-29 21:39:04 +0300)
-
-----------------------------------------------------------------
-
-wireless-drivers fixes for 4.8
-
-ath9k
-
-* fix regression in client mode beacon configuration
-* fix a station pointer which resulted in spurious crashes
-
-mwifiex
-
-* fix large amsdu packets causing firmware hang
-
-brcmfmac
-
-* fix deadlock when removing interface
-* fix use of mutex in atomic context
-
-----------------------------------------------------------------
-Cathy Luo (1):
-      mwifiex: fix large amsdu packets causing firmware hang
-
-Felix Fietkau (2):
-      ath9k: fix client mode beacon configuration
-      ath9k: fix using sta->drv_priv before initializing it
-
-Kalle Valo (1):
-      Merge ath-current from ath.git
-
-mhiramat@kernel.org (2):
-      brcmfmac: Check rtnl_lock is locked when removing interface
-      brcmfmac: Change vif_event_lock to spinlock
-
- drivers/net/wireless/ath/ath9k/main.c              |    9 ++++---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   26 ++++++++++----------
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |    2 +-
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |    2 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |    8 +++---
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.h |    2 +-
- drivers/net/wireless/marvell/mwifiex/11n_aggr.c    |    3 ++-
- 7 files changed, 28 insertions(+), 24 deletions(-)
+--
+Luca.
