@@ -1,66 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43880 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752435AbcHQUaS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2016 16:30:18 -0400
-Message-ID: <1471463348.5173.16.camel@sipsolutions.net> (sfid-20160817_223022_421601_4E7BD708)
-Subject: Re: [PATCH v2] mac80211: Move crypto IV generation to after TXQ
- dequeue.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-	make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless@vger.kernel.org
-Cc: Felix Fietkau <nbd@nbd.name>
-Date: Wed, 17 Aug 2016 21:49:08 +0200
-In-Reply-To: <20160817144531.4285-1-toke@toke.dk> (sfid-20160817_164550_842827_E5D1AFAC)
-References: <20160817125800.19154-1-toke@toke.dk>
-	 <20160817144531.4285-1-toke@toke.dk> (sfid-20160817_164550_842827_E5D1AFAC)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f48.google.com ([209.85.218.48]:32955 "EHLO
+        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758942AbcHYPAR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Aug 2016 11:00:17 -0400
+Received: by mail-oi0-f48.google.com with SMTP id c15so70103379oig.0
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2016 07:59:32 -0700 (PDT)
+Subject: Re: rtl8192ce
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Lobachevskii Vitalii <silverunicorn2011@yandex.ru>
+References: <321381b3-5dea-f16a-56cb-11120d4a38ef@yandex.ru>
+ <72b958e1-0200-cd6f-2012-e04ff6fb74cb@yandex.ru>
+ <wrfjmvk1asxp.fsf@redhat.com>
+Cc: linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <6f06ce56-6289-6931-973f-1c52886e2b45@lwfinger.net> (sfid-20160825_170058_017825_CDE68E3D)
+Date: Thu, 25 Aug 2016 09:59:30 -0500
+MIME-Version: 1.0
+In-Reply-To: <wrfjmvk1asxp.fsf@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 08/25/2016 08:17 AM, Jes Sorensen wrote:
+> Lobachevskii Vitalii <silverunicorn2011@yandex.ru> writes:
+>> Hello,
+>>
+>> The RTL8192CE device seems to work fine without any firmware, so you may
+>> make it fully optional, removing dependency on FW_LOADER. Of course that
+>> require some patching, but if I understood the driver internals
+>> correctly, simple complete(&rtlpriv->firmware_loading_complete); would
+>> be enough when firmware loading machinery is unavailable, that is, when
+>> request_firmware_nowait returns -EINVAL (currently that may only happen
+>> in improperly configured or patched kernels, like Linux-libre; see
+>> attached messages for more information)
+>>
+>> Of course I will try to fix Linux-libre “deblobbing” technique, as it
+>> should never break anything that may work without a firmware. But
+>> anyway, if a device and its driver may work without a certain kernel
+>> feature, that feature should not be selected, I think.
+>
+> The realtek devices all require firmwere to operate correctly,
+> including the 8192c series. There are a bunch of commands flying back
+> and forth between the driver and the firmware.
+>
+> If your device happens to work without loading the firmware then you
+> have an old firmware blob loaded.
+>
+> At least this is the case for the USB version of the device, and I find
+> it highly unlikely the PCIe version is any different.
+>
+> Trying to remove the firmware loading error is just plain silly.
 
-You need to work on coding style, a lot of your indentation is
-completely messed up.
+I have not bothered my Realtek contacts with such a question, but I have a 
+plausible explanation. If an RTL8192CE functions without loading external 
+firmware, it is because the device has minimal function built in the default 
+firmware. Mostly this rudimentary firmware is used to boot the device and to 
+download the firmware for complex wireless communication. Rudimentary wifi 
+functions would be needed for wake-on-lan operations. The fact that Realtek has 
+never implemented WOL for the 8192C chips is highly suggestive that they do not 
+function very well in that capacity.
 
-> +	switch (sdata->vif.type) {
-> +	case NL80211_IFTYPE_STATION:
-> +		if (sdata->u.mgd.use_4addr) {
-> +			pn_offs = 30;
-> +			break;
-> +		}
-> +		pn_offs = 24;
-> +		break;
-> +	case NL80211_IFTYPE_AP_VLAN:
-> +		if (sdata->wdev.use_4addr) {
-> +			pn_offs = 30;
-> +			break;
-> +		}
-> +		/* fall through */
-> +	case NL80211_IFTYPE_ADHOC:
-> +	case NL80211_IFTYPE_AP:
-> +		pn_offs = 24;
-> +		break;
-> +	default:
-> +		return;
-> +	}
-> +
-> +	if (sta->sta.wme) {
-> +		pn_offs += 2;
-> +	}
+If the RTL8192CE actually runs without loading external firmware, then I am 
+quite sure that it will be restricted to 802.11g at the most, and more likely 
+802.11b. If it handles any 802.11n capabilities, then that firmware will 
+certainly not have any of the bug fixes applied to the firmware since the 
+earliest release.
 
-I think you just reinvented ieee80211_hdrlen(). No?
+You are certainly allowed to configure your system any way you want, but please 
+do not send any such "fixes" to the kernel sources. They will NEVER be accepted!
 
-> -	if (fast_tx->pn_offs) {
-> -		u64 pn;
-> -		u8 *crypto_hdr = skb->data + fast_tx->pn_offs;
+Configuring a kernel without firmware loading capacity is indeed silly.
 
-No need to undo the pn_offs optimisation for the !txq case, you can
-pass it in to the new function that will fill it.
-
-However, you're still doing it wrong - now you haven't fixed anything
-for TKIP, which won't hit the fastpath.
-
-johannes
+Larry
