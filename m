@@ -1,64 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:52358 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751699AbcHGQtt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Aug 2016 12:49:49 -0400
-Message-ID: <1470588577.4325.4.camel@decadent.org.uk> (sfid-20160807_184952_437873_8E01E9DD)
-Subject: Re: wext: Fix 32 bit iwpriv compatibility issue with 64 bit Kernel
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Johannes Berg <johannes.berg@intel.com>
-Cc: rasun Maiti <prasunmaiti87@gmail.com>,
-	Ujjal Roy <royujjal@gmail.com>,
-	Dibyajyoti Ghosh <dibyajyotig@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	stable <stable@vger.kernel.org>
-Date: Sun, 07 Aug 2016 17:49:37 +0100
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-TfIF++KxaGp1kbSH8qT1"
-Mime-Version: 1.0
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:20548 "EHLO
+        mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751680AbcHYTWB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Aug 2016 15:22:01 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH] nl80211: initialize state.filter_wiphy in nl80211_dump_interface()
+Date: Thu, 25 Aug 2016 20:20:54 +0100
+Message-Id: <1472152854-3183-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160825_212214_311381_0C1A69A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In nl80211_dump_interface() the filter_wiphy variable was set to -1.
+However, that does not help as message may not contain wiphy or wdev
+attribute. Instead initialize state.filter_wiphy as is done in
+nl80211_dump_wiphy().
 
---=-TfIF++KxaGp1kbSH8qT1
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Fixes: 2d75da13fbb9 ("nl80211: Allow GET_INTERFACE dumps to be filtered")
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ net/wireless/nl80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-I'm looking at commit=C2=A03d5fdff46c4b as part of the stable process.
-
-The path it touches is only used for drivers that don't describe their
-private wext handlers, right? =C2=A0So how can we know that the private
-ioctl is using the iw_point structure and not one of the other types in
-union iwreq_data? =C2=A0Doesn't this result in a regression when another
-type is being used?
-
-Ben.
-
---=20
-Ben Hutchings
-Beware of bugs in the above code;
-I have only proved it correct, not tried it. - Donald Knuth
---=-TfIF++KxaGp1kbSH8qT1
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJXp2ahAAoJEOe/yOyVhhEJ8rcP/j7iCOnWpAe5bVXEDg96A0ed
-SUjhruHIMO1SXgH9FivxogphIUXghdbii0KJWrDXRdyr96wTJfIRCI+Y+0ycEylI
-IQ/ruAXzZ/9u3ibmk2GEjpI+7Pz7M9Wx70BaiOtZUVRYeSIbbBw0g7egS3xiJzxq
-wuKGc+TAA2Hk3wlw3MaOX0KAfvwphJqQRFT93azzEIFLi9pJCHLtR//oFWY9KxdO
-PYn6rvSgJP7Al15U5GTNkwUK1HiryU0Ark/RcrjAJTAHxWYDZNdUMDgQ6g72uEFc
-chdJkQTLTk+JfBGBCflHhc/Retmb7HJ14FZWkXJB+XAqpg7R03BfAZb+sd8KP/Bc
-JaLd2JjT/5gsg5ZWj/CQ9OCe0DKyjCIAof4jlMZWODtPuGKJitgldiEgZ1/IgF8b
-reRVmxYPTzRdYFPDDAQA9PoLuY336EUxUwSAzL2WK34dpcpYhwE9rJHdP+uGJtX+
-nxGeRShHJ3RDOTtidIq/In3RxEQqoVGv1rQNOqEBdQn012+51GBgHH4Lzau+f4Wg
-Qfzzjbq2R2ShFDRXPowNfBEKv2FPAuZx9GJQrU21UksX7XhOl+gjJOJiQsBsg1kf
-ZcX0uIO8vD39AnW4uhBdVt51kBIsMmw6kiPU6iWqtxcVRNPIcRlSVz+iP/mymu5O
-VACvCRrZ0KANg+5zkLDI
-=2IvV
------END PGP SIGNATURE-----
-
---=-TfIF++KxaGp1kbSH8qT1--
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 95d55d2..681c689 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -2525,7 +2525,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
+ 	int if_idx = 0;
+ 	int wp_start = cb->args[0];
+ 	int if_start = cb->args[1];
+-	int filter_wiphy = -1;
++	int filter_wiphy;
+ 	struct cfg80211_registered_device *rdev;
+ 	struct wireless_dev *wdev;
+ 
+@@ -2534,6 +2534,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
+ 		struct nl80211_dump_wiphy_state state = {};
+ 		int ret;
+ 
++		state.filter_wiphy = -1;
+ 		ret = nl80211_dump_wiphy_parse(skb, cb, &state);
+ 		if (ret)
+ 			return ret;
+-- 
+1.9.1
