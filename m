@@ -1,57 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound1.eu.mailhop.org ([52.28.251.132]:60353 "EHLO
-	outbound1.eu.mailhop.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932275AbcHIRxT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 13:53:19 -0400
-Date: Tue, 9 Aug 2016 17:51:08 +0000
-From: Jason Cooper <jason@lakedaemon.net>
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Stephan Mueller <smueller@chronox.de>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Message-ID: <20160809175108.GE2013@io.lakedaemon.net> (sfid-20160809_195322_830747_184073EB)
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
- <12791731.pG3fmEhvyp@tauon.atsec.com>
- <20160809095657.GB6618@gondor.apana.org.au>
- <11316081.S4pPZmZMrt@tauon.atsec.com>
- <20160809102458.GA20214@khazad-dum.debian.net>
+Received: from merlin.infradead.org ([205.233.59.134]:39498 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751530AbcHYEtT (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Aug 2016 00:49:19 -0400
+Date: Wed, 24 Aug 2016 20:38:01 -0400
+From: Kyle McMartin <kyle@infradead.org>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+        linux-firmware@kernel.org
+Subject: Re: [PATCH v2 0/6] linux-firmware: ath10k: update and add various
+ firmware files
+Message-ID: <20160825003801.GD20731@merlin.infradead.org> (sfid-20160825_064931_360746_4E5C63F7)
+References: <20160824113134.5625.35574.stgit@potku.adurom.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160809102458.GA20214@khazad-dum.debian.net>
+In-Reply-To: <20160824113134.5625.35574.stgit@potku.adurom.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Henrique,
-
-On Tue, Aug 09, 2016 at 07:24:58AM -0300, Henrique de Moraes Holschuh wrote:
-> On Tue, 09 Aug 2016, Stephan Mueller wrote:
-> > RHEL 7 and Fedora do not adjust it. So, shall we consider those rng-tools then 
-> > broken (at least in those large distros)?
+On Wed, Aug 24, 2016 at 02:32:10PM +0300, Kalle Valo wrote:
+> Hi,
 > 
-> Might I humbly suggest that the kernel start providing some metatada
-> about the quality of the random source that userspace can consume?
-> Preferably by a new ioctl, so that it will fit naturally if we ever
-> extend /dev/hwrng to support more than one source?
+> here's a bigger ath10k firmware update. Support for four new hardware
+> and smaller updates for existing hardware.
 > 
-> That would allow for auto tunning to be implemented in userspace...
+> Kalle
+> 
+> v2:
+> 
+> * patch 4: Fix a typo in the commit log.
 
-See my reply to Keith Packard's proposed multi-device hw_random patch:
+Applied series, thanks Kalle.
 
-  https://lkml.kernel.org/r/20160809165710.GC2013@io.lakedaemon.net
+regards, --Kyle
 
-and top of thread:
-
-  https://lkml.kernel.org/r/1469477255-26824-1-git-send-email-keithp@keithp.com
-
-thx,
-
-Jason.
+> 
+> ---
+> 
+> Kalle Valo (6):
+>       ath10k: QCA4019 hw1.0: add firmware and board files
+>       ath10k: QCA9887 hw1.0: add firmware and board files
+>       ath10k: QCA9888 hw2.0: add firmware and board files
+>       ath10k: QCA9984 hw1.0: add firmware and board files
+>       ath10k: QCA988X hw2.0: update firmware to 10.2.4.70.54
+>       ath10k: QCA6174: update board files
+> 
+> 
+>  WHENCE                                            |   18 +
+>  ath10k/QCA4019/hw1.0/board-2.bin                  |  Bin
+>  ath10k/QCA4019/hw1.0/firmware-5.bin               |  Bin
+>  ath10k/QCA4019/hw1.0/notice_ath10k_firmware-5.txt |  589 +++++++++++++++++++++
+>  ath10k/QCA6174/hw2.1/board-2.bin                  |  Bin
+>  ath10k/QCA6174/hw3.0/board-2.bin                  |  Bin
+>  ath10k/QCA9887/hw1.0/board.bin                    |  Bin
+>  ath10k/QCA9887/hw1.0/firmware-5.bin               |  Bin
+>  ath10k/QCA9887/hw1.0/notice_ath10k_firmware-5.txt |  328 ++++++++++++
+>  ath10k/QCA9888/hw2.0/board-2.bin                  |  Bin
+>  ath10k/QCA9888/hw2.0/firmware-5.bin               |  Bin
+>  ath10k/QCA9888/hw2.0/notice_ath10k_firmware-5.txt |  589 +++++++++++++++++++++
+>  ath10k/QCA988X/hw2.0/firmware-5.bin               |  Bin
+>  ath10k/QCA988X/hw2.0/notice_ath10k_firmware-5.txt |   44 +-
+>  ath10k/QCA9984/hw1.0/board-2.bin                  |  Bin
+>  ath10k/QCA9984/hw1.0/firmware-5.bin               |  Bin
+>  ath10k/QCA9984/hw1.0/notice_ath10k_firmware-5.txt |  589 +++++++++++++++++++++
+>  17 files changed, 2134 insertions(+), 23 deletions(-)
+>  create mode 100644 ath10k/QCA4019/hw1.0/board-2.bin
+>  create mode 100644 ath10k/QCA4019/hw1.0/firmware-5.bin
+>  create mode 100644 ath10k/QCA4019/hw1.0/notice_ath10k_firmware-5.txt
+>  create mode 100644 ath10k/QCA9887/hw1.0/board.bin
+>  create mode 100644 ath10k/QCA9887/hw1.0/firmware-5.bin
+>  create mode 100644 ath10k/QCA9887/hw1.0/notice_ath10k_firmware-5.txt
+>  create mode 100644 ath10k/QCA9888/hw2.0/board-2.bin
+>  create mode 100644 ath10k/QCA9888/hw2.0/firmware-5.bin
+>  create mode 100644 ath10k/QCA9888/hw2.0/notice_ath10k_firmware-5.txt
+>  create mode 100644 ath10k/QCA9984/hw1.0/board-2.bin
+>  create mode 100644 ath10k/QCA9984/hw1.0/firmware-5.bin
+>  create mode 100644 ath10k/QCA9984/hw1.0/notice_ath10k_firmware-5.txt
+> 
+> 
