@@ -1,82 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4973 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934915AbcHJSxB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:53:01 -0400
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: Stephan Mueller <smueller@chronox.de>
-CC: Herbert Xu <herbert@gondor.apana.org.au>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: RE: [PATCH 2/2] ath9k: disable RNG by default
-Date: Wed, 10 Aug 2016 06:04:32 +0000
-Message-ID: <866e31b50f364a87aabe94d2af03ecb8@aptaiexm02f.ap.qualcomm.com> (sfid-20160810_213856_602830_F245086D)
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
- <1645997.7cVzaEi3NG@tauon.atsec.com> <1470796501856.53342@qti.qualcomm.com>
- <1543667.vXsZDTRgbm@positron.chronox.de>
-In-Reply-To: <1543667.vXsZDTRgbm@positron.chronox.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36110 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752152AbcHYWaA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Aug 2016 18:30:00 -0400
+Received: by mail-wm0-f51.google.com with SMTP id q128so257048015wma.1
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2016 15:29:59 -0700 (PDT)
+Subject: Re: [PATCH] nl80211: Fix unfiltered GET_INTERFACE dumps
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+References: <1472157884-3174-1-git-send-email-denkenz@gmail.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <210adf6d-287c-f836-8e2c-78f42de94dee@broadcom.com> (sfid-20160826_003003_669094_0C351B64)
+Date: Thu, 25 Aug 2016 23:35:11 +0200
 MIME-Version: 1.0
+In-Reply-To: <1472157884-3174-1-git-send-email-denkenz@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephan,
-
-FIPS RNG test is supposed to be run on the output of an RNG, and not on the RNG entropy source. It is not surprising that the RNG input fails the entropy tests from NIST. Check the following example.
-
-Imagine you have a perfectly random sequence, a_1, a_2, .., a_n, where each a_i is a byte. And imagine, this sequence passes all randomness tests.
-
-Now, let's say I create a new sequence a_1, 0, a_2, 0, a_3, 0, ..., 0, a_n, where each zero is a byte
-
-If you give this sequence (as an entropy source) to a randomness test, it will fail most of the tests, if not all. This does not mean this sequence is not appropriate as an entropy source, it just means we need twice more bytes to gain the same amount of entropy.
-
-I can give this 2n byte sequence to an RNG as an entropy source and it provides the same amount of security as if I give the n byte stream.
-
-Thanks,
-Miaoqing
-
------Original Message-----
-From: Stephan Mueller [mailto:smueller@chronox.de] 
-Sent: Wednesday, August 10, 2016 1:29 PM
-To: Pan, Miaoqing <miaoqing@qti.qualcomm.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>; Matt Mackall <mpm@selenic.com>; miaoqing@codeaurora.org; Valo, Kalle <kvalo@qca.qualcomm.com>; linux-wireless@vger.kernel.org; ath9k-devel <ath9k-devel@qca.qualcomm.com>; linux-crypto@vger.kernel.org; jason@lakedaemon.net; Sepehrdad, Pouyan <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-
-Am Mittwoch, 10. August 2016, 02:35:04 CEST schrieb Pan, Miaoqing:
-
-Hi Miaoqing,
-
-> Hi Stephan,
+On 25-08-16 22:44, Denis Kenzior wrote:
+> dump_wiphy_parse only assigns filter_wiphy if one of the supported
+> NL80211 attributes is present.  So for unfiltered dumps, filter_wiphy
+> was always initialized to 0, and only interface 0 was dumped.
 > 
-> For those less perfect noise source, can't pass the FIPS test.
+> This was introduced in commit 2d75da13fbb957e955d212555b91101cef36f0ce.
 > 
-> static int update_kernel_random(int random_step,
->         unsigned char *buf, fips_ctx_t *fipsctx_in) {
->         unsigned char *p;
->         int fips;
+> Reported-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
+
+Actually sent a patch for this issue a little earlier. I should have
+Cc'ed you explicitly, I guess.
+
+Regards,
+Arend
+
+> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+> ---
+>  net/wireless/nl80211.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
->         fips = fips_run_rng_test(fipsctx_in, buf);
->         if (fips)
->                 return 1;
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 95d55d2..ddc994a 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -2534,6 +2534,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
+>  		struct nl80211_dump_wiphy_state state = {};
+>  		int ret;
+>  
+> +		state.filter_wiphy = -1;
+>  		ret = nl80211_dump_wiphy_parse(skb, cb, &state);
+>  		if (ret)
+>  			return ret;
 > 
->         for (p = buf; p + random_step <= &buf[FIPS_RNG_BUFFER_SIZE];
->                  p += random_step) {
->                 random_add_entropy(p, random_step);
->                 random_sleep();
->         }
->         return 0;
-> }
-
-Not even the poor cheap AIS20 statistical tests from rngd pass?
-
-I guess the only sensible solution is what Ted suggested to use add_device_randomness.
-
-Ciao
-Stephan
