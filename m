@@ -1,183 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:37248 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754396AbcHSQom (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 12:44:42 -0400
-Received: by mail-wm0-f46.google.com with SMTP id i5so49579721wmg.0
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2016 09:44:41 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>
-Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv7 1/4] add basic register-field manipulation macros
-Date: Fri, 19 Aug 2016 17:44:06 +0100
-Message-Id: <1471625049-12643-2-git-send-email-jakub.kicinski@netronome.com> (sfid-20160819_184446_516015_206B64D3)
-In-Reply-To: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44044 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759781AbcHYP3o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 25 Aug 2016 11:29:44 -0400
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Stanislaw Gruszka <sgruszka@redhat.com>
+Subject: [PATCH 1/3] mwifiex: make "PCI-E is not the winner" print more informative
+Date: Thu, 25 Aug 2016 17:05:16 +0200
+Message-Id: <1472137518-10431-2-git-send-email-sgruszka@redhat.com> (sfid-20160825_173006_880260_836EBC13)
+In-Reply-To: <1472137518-10431-1-git-send-email-sgruszka@redhat.com>
+References: <1472137518-10431-1-git-send-email-sgruszka@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Common approach to accessing register fields is to define
-structures or sets of macros containing mask and shift pair.
-Operations on the register are then performed as follows:
+Printing ret and adapter->winner do not provide any useful information
+as those are always 0 at point where the massage is printed. Print value
+read from reg->fw_status register instead.
 
- field = (reg >> shift) & mask;
-
- reg &= ~(mask << shift);
- reg |= (field & mask) << shift;
-
-Defining shift and mask separately is tedious.  Ivo van Doorn
-came up with an idea of computing them at compilation time
-based on a single shifted mask (later refined by Felix) which
-can be used like this:
-
- #define REG_FIELD 0x000ff000
-
- field = FIELD_GET(REG_FIELD, reg);
-
- reg &= ~REG_FIELD;
- reg |= FIELD_PREP(REG_FIELD, field);
-
-FIELD_{GET,PREP} macros take care of finding out what the
-appropriate shift is based on compilation time ffs operation.
-
-GENMASK can be used to define registers (which is usually
-less error-prone and easier to match with datasheets).
-
-This approach is the most convenient I've seen so to limit code
-multiplication let's move the macros to a global header file.
-Attempts to use static inlines instead of macros failed due
-to false positive triggering of BUILD_BUG_ON()s, especially with
-GCC < 6.0.
-
-Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+Stanislaw Gruszka <sgruszka@redhat.com>
 ---
- include/linux/bitfield.h | 93 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/bug.h      |  3 ++
- 2 files changed, 96 insertions(+)
- create mode 100644 include/linux/bitfield.h
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
-new file mode 100644
-index 000000000000..32ca8863e66d
---- /dev/null
-+++ b/include/linux/bitfield.h
-@@ -0,0 +1,93 @@
-+/*
-+ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
-+ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2
-+ * as published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ */
-+
-+#ifndef _LINUX_BITFIELD_H
-+#define _LINUX_BITFIELD_H
-+
-+#include <linux/bug.h>
-+
-+/*
-+ * Bitfield access macros
-+ *
-+ * FIELD_{GET,PREP} macros take as first parameter shifted mask
-+ * from which they extract the base mask and shift amount.
-+ * Mask must be a compilation time constant.
-+ *
-+ * Example:
-+ *
-+ *  #define REG_FIELD_A  GENMASK(6, 0)
-+ *  #define REG_FIELD_B  BIT(7)
-+ *  #define REG_FIELD_C  GENMASK(15, 8)
-+ *  #define REG_FIELD_D  GENMASK(31, 16)
-+ *
-+ * Get:
-+ *  a = FIELD_GET(REG_FIELD_A, reg);
-+ *  b = FIELD_GET(REG_FIELD_B, reg);
-+ *
-+ * Set:
-+ *  reg = FIELD_PREP(REG_FIELD_A, 1) |
-+ *	  FIELD_PREP(REG_FIELD_B, 0) |
-+ *	  FIELD_PREP(REG_FIELD_C, c) |
-+ *	  FIELD_PREP(REG_FIELD_D, 0x40);
-+ *
-+ * Modify:
-+ *  reg &= ~REG_FIELD_C;
-+ *  reg |= FIELD_PREP(REG_FIELD_C, c);
-+ */
-+
-+#define _bf_shf(x) (__builtin_ffsll(x) - 1)
-+
-+#define _BF_FIELD_CHECK(_mask, _reg, _val, _pfx)			\
-+	({								\
-+		BUILD_BUG_ON_MSG(!__builtin_constant_p(_mask),		\
-+				 _pfx "mask is not constant");		\
-+		BUILD_BUG_ON_MSG(!(_mask), _pfx "mask is zero");	\
-+		BUILD_BUG_ON_MSG(__builtin_constant_p(_val) ?		\
-+				 ~((_mask) >> _bf_shf(_mask)) & (_val) : 0, \
-+				 _pfx "value too large for the field"); \
-+		BUILD_BUG_ON_MSG((_mask) > (typeof(_reg))~0ull,		\
-+				 _pfx "type of reg too small for mask"); \
-+		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
-+					      (1ULL << _bf_shf(_mask))); \
-+	})
-+
-+/**
-+ * FIELD_PREP() - prepare a bitfield element
-+ * @_mask: shifted mask defining the field's length and position
-+ * @_val:  value to put in the field
-+ *
-+ * FIELD_PREP() masks and shifts up the value.  The result should
-+ * be combined with other fields of the bitfield using logical OR.
-+ */
-+#define FIELD_PREP(_mask, _val)						\
-+	({								\
-+		_BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ");	\
-+		((typeof(_mask))(_val) << _bf_shf(_mask)) & (_mask);	\
-+	})
-+
-+/**
-+ * FIELD_GET() - extract a bitfield element
-+ * @_mask: shifted mask defining the field's length and position
-+ * @_reg:  32bit value of entire bitfield
-+ *
-+ * FIELD_GET() extracts the field specified by @_mask from the
-+ * bitfield passed in as @_reg by masking and shifting it down.
-+ */
-+#define FIELD_GET(_mask, _reg)						\
-+	({								\
-+		_BF_FIELD_CHECK(_mask, _reg, 0U, "FIELD_GET: ");	\
-+		(typeof(_mask))(((_reg) & (_mask)) >> _bf_shf(_mask));	\
-+	})
-+
-+#endif
-diff --git a/include/linux/bug.h b/include/linux/bug.h
-index e51b0709e78d..292d6a10b0c2 100644
---- a/include/linux/bug.h
-+++ b/include/linux/bug.h
-@@ -13,6 +13,7 @@ enum bug_trap_type {
- struct pt_regs;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 453ab6a..8abbbfe 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2074,8 +2074,7 @@ mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+ 		adapter->winner = 1;
+ 	} else {
+ 		mwifiex_dbg(adapter, ERROR,
+-			    "PCI-E is not the winner <%#x,%d>, exit dnld\n",
+-			    ret, adapter->winner);
++			    "PCI-E is not the winner <%#x>", winner);
+ 	}
  
- #ifdef __CHECKER__
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
- #define BUILD_BUG_ON_ZERO(e) (0)
- #define BUILD_BUG_ON_NULL(e) ((void*)0)
-@@ -24,6 +25,8 @@ struct pt_regs;
- #else /* __CHECKER__ */
- 
- /* Force a compilation error if a constant expression is not a power of 2 */
-+#define __BUILD_BUG_ON_NOT_POWER_OF_2(n)	\
-+	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
- #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
- 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
- 
+ 	return ret;
 -- 
-1.9.1
+1.8.3.1
