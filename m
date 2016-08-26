@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:60119 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S932155AbcHKKkf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 06:40:35 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: Problems with mwifiex_pcie firmware activation
-Date: Thu, 11 Aug 2016 10:21:58 +0000
-Message-ID: <f5b2566be31743809217833e76060d42@SC-EXCH04.marvell.com> (sfid-20160811_124039_531177_32041FC2)
-References: <20160614135015.GB4962@redhat.com>
- <b881b09bf5384169ba1038af71fd435a@SC-EXCH04.marvell.com>
- <20160616115315.GB21199@redhat.com> <20160623120952.GA11157@redhat.com>
- <20160811090113.GA27059@redhat.com>
-In-Reply-To: <20160811090113.GA27059@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:47447 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750929AbcHZIOy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Aug 2016 04:14:54 -0400
+Message-ID: <1472199291.390.23.camel@sipsolutions.net> (sfid-20160826_101458_411417_7C2B47A2)
+Subject: Re: [PATCH] cfg80211: Add support for user configurable beacon data
+ rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
+        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+        "Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
+        "Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
+        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
+        "Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
+Date: Fri, 26 Aug 2016 10:14:51 +0200
+In-Reply-To: <17fc8f16b6184c2ba09146faefd2bc8c@aphydexm01f.ap.qualcomm.com>
+References: <1470371701-13074-1-git-send-email-pkushwah@qti.qualcomm.com>
+         <1470387784.2977.30.camel@sipsolutions.net>
+         <92b06d4df5984e6ea91081126e096a96@aphydexm01f.ap.qualcomm.com>
+         <1470513454.3374.1.camel@sipsolutions.net>
+         <17fc8f16b6184c2ba09146faefd2bc8c@aphydexm01f.ap.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stanislaw,
+On Wed, 2016-08-24 at 12:30 +0000, Undekari, Sunil Dutt wrote:
 
-> -----Original Message-----
-> From: Stanislaw Gruszka [mailto:sgruszka@redhat.com]
-> Sent: Thursday, August 11, 2016 2:31 PM
-> To: Amitkumar Karwar
-> Cc: Nishant Sarmukadam; linux-wireless@vger.kernel.org
-> Subject: Re: Problems with mwifiex_pcie firmware activation
+> > It also doesn't check that you specified exactly one rate, but it's
+> > not clear how else this would work?
+> I can think of the following options here . 
+> 1. Consider these rates as only the preference ( in order ) to the
+> host driver , but the User space would have no way of knowing what
+> the driver has selected.
+> 2. Limit this beacon rate to only one . cfg80211 to verify that there
+> is exactly one rate to be specified. 
 > 
-> On Thu, Jun 23, 2016 at 02:09:52PM +0200, Stanislaw Gruszka wrote:
-> > On Thu, Jun 16, 2016 at 01:53:15PM +0200, Stanislaw Gruszka wrote:
-> > > On Wed, Jun 15, 2016 at 01:47:53PM +0000, Amitkumar Karwar wrote:
-> > > > Could you please share complete dmesg log for failure and
-> successful cases?
-> > >
-> > > Dmesg from failure case is in attachment. I loose access to system
-> > > where device initalize, I'll provide missed dmesg when I get back
-> > > the access.
-> >
-> > Have the access now, dmesg is in attachment.
+> Is option 2 a viable option ?
 > 
-> Any news here ?
+Yeah, I think option 1 doesn't make much sense.
 
-Do you have below patch included? It increases poll count which may help in your case.
-https://patchwork.kernel.org/patch/7973951/
-
-Regards,
-Amitkumar
+johannes
