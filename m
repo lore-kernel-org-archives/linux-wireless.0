@@ -1,41 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.lairdtech.com ([63.123.150.69]:7815 "EHLO
-        webmail.lairdtech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750969AbcH3OjP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59609 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753127AbcHZQIL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 10:39:15 -0400
-From: Dan Kephart <Dan.Kephart@lairdtech.com>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-        "engineering@keppy.com" <engineering@keppy.com>
-CC: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: enable firmware crash dumps on the AR6004
-Date: Tue, 30 Aug 2016 14:33:36 +0000
-Message-ID: <F2BDA79A-DC91-43FD-9A35-FC6E36B2D37C@lairdtech.com> (sfid-20160830_163919_570294_81E466FA)
-References: <1472566303-32613-1-git-send-email-dan.kephart@lairdtech.com>
- <871t16e34f.fsf@qca.qualcomm.com>
-In-Reply-To: <871t16e34f.fsf@qca.qualcomm.com>
-Content-Type: text/plain; charset="utf-8"
+        Fri, 26 Aug 2016 12:08:11 -0400
 MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 26 Aug 2016 21:37:32 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        ath10k <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath10k: implement NAPI support
+In-Reply-To: <CAA93jw5mEMbUVs-i-Bpjkv6tX-umsO=9ZKPEnFcEj=22yjWX1g@mail.gmail.com>
+References: <20160826102250.24174-1-rmanohar@qti.qualcomm.com>
+ <CAA93jw7vHWROH9Ymq1UoOKA5kw+fDbCM=vJehs8J=QP2PVs_RA@mail.gmail.com>
+ <1472209920.390.34.camel@sipsolutions.net>
+ <CAA93jw5mEMbUVs-i-Bpjkv6tX-umsO=9ZKPEnFcEj=22yjWX1g@mail.gmail.com>
+Message-ID: <ca7f8cbdeeb259f5550e17a8f2a22e4f@codeaurora.org> (sfid-20160826_180816_060078_A4D15139)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-U29ycnkgS2FsbGUsIEkgZGlkIG5vdCBpbnRlbmQgdG8gcmUtc2VuZCB0aGlzIHBhdGNoIHVwLCBp
-dCBpcyB0aGUgc2FtZSBhcyB0aGUgcHJldmlvdXMgb25lLg0KDQoNCk9uIDgvMzAvMTYsIDEwOjE5
-IEFNLCAibGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3JnIG9uIGJlaGFsZiBvZiBW
-YWxvLCBLYWxsZSIgPGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9yZyBvbiBiZWhh
-bGYgb2Yga3ZhbG9AcWNhLnF1YWxjb21tLmNvbT4gd3JvdGU6DQoNCiAgICBlbmdpbmVlcmluZ0Br
-ZXBweS5jb20gd3JpdGVzOg0KICAgIA0KICAgID4gRnJvbTogRGFuIEtlcGhhcnQgPGRhbi5rZXBo
-YXJ0QGxhaXJkdGVjaC5jb20+DQogICAgPg0KICAgID4gVGhlIGZpcm13YXJlIGNyYXNoIGR1bXBz
-IG9uIHRoZSA2MDA0IGFyZSB0aGUgc2FtZSBhcyB0aGUgNjAwMy4gUmVtb3ZlIHRoZQ0KICAgID4g
-c3RhdGVtZW50IGd1YXJkaW5nIGl0IGZyb20gZHVtcGluZyBvbiB0aGUgNjAwNC4gIFJlbmFtZWQg
-dGhlDQogICAgPiBSRUdfRFVNUF9DT1VOVF9BUjYwMDMgdG8gcmVmbGVjdCBzdXBwb3J0IG9uIGJv
-dGggY2hpcHMuDQogICAgPg0KICAgID4gU2lnbmVkLW9mZi1ieTogRGFuIEtlcGhhcnQgPGRhbi5r
-ZXBoYXJ0QGxhaXJkdGVjaC5jb20+DQogICAgDQogICAgSSBoYXZlIGEgc2ltaWxhciBwYXRjaCBh
-bHJlYWR5IG9uIG15IHF1ZXVlOg0KICAgIA0KICAgIGh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5v
-cmcvcGF0Y2gvOTI2MjI4OS8NCiAgICANCiAgICBIb3cgZG9lcyB0aGlzIGRpZmZlciBmcm9tIHRo
-YXQ/IFBsZWFzZSBfYWx3YXlzXyBhZGQgYSBjaGFuZ2Vsb2cgc28gdGhhdA0KICAgIHBlb3BsZSBr
-bm93IHdoYXQgaGFzIGNoYW5nZWQuIEFsc28gcmVtZW1iZXIgdG8gYWRkICJbUEFUQ0ggdjJdIiB0
-byB0aGUNCiAgICB0aXRsZS4NCiAgICANCiAgICBodHRwczovL3dpcmVsZXNzLndpa2kua2VybmVs
-Lm9yZy9lbi9kZXZlbG9wZXJzL2RvY3VtZW50YXRpb24vc3VibWl0dGluZ3BhdGNoZXMjc3ViamVj
-dF9uYW1lDQogICAgDQogICAgLS0gDQogICAgS2FsbGUgVmFsbw0KDQoNCg==
+On 2016-08-26 17:19, Dave Taht wrote:
+> On Fri, Aug 26, 2016 at 4:12 AM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+>> On Fri, 2016-08-26 at 03:48 -0700, Dave Taht wrote:
+>>> I'm always rather big on people testing latency under load, and napi
+>>> tends to add some.
+>> 
+>> That's a completely useless comment.
+>> 
+>> Obviously, everybody uses NAPI; it's necessary for system load and 
+>> thus
+>> performance, and lets drivers take advantage of TCP merging to reduce
+>> ACKs, which is tremendously helpful (over wifi in particular.)
+>> 
+>> Please stop making such drive-by comments that focus only on the 
+>> single
+>> thing you find important above all; not all people can care only about
+>> that single thing, and unconstructively reiterating it over and over
+>> doesn't help.
+> 
+> Well, I apologize for being testy. It is  I spent a lot of time
+> testing michal's patchset for the ath10k back in may, and I *will* go
+> and retest ath10k, when these patches land. My principal concern with
+> using napi is at lower rates than the maxes typically reported in a
+> patchset.
+> 
+
+You are always welcome to validate this change and share your feedback.
+
+>  But it would be nice if people always did test for latency under load
+> when making improvements, before getting to me, and despite having
+> helped make a very comprehensive test suite available (flent) that
+> tests all sorts of things for wifi, getting people to actually use it
+> to see real problems, (in addition to latency under load!) while their
+> fingers are still hot in the codebase, and track/plot their results,
+> remains an ongoing issue across the entire industry.
+> 
+> http://blog.cerowrt.org/post/fq_codel_on_ath10k/
+> 
+As you know, NAPI is designed to improve performance of high speed n/w 
+devices. From LWN: "NAPI is a proven 
+(www.cyberus.ca/~hadi/usenix-paper.tgz) technique to improve network 
+performance on Linux." Even most of Gig-speed network drivers were 
+already migrated to NAPI. Tasklets are heavy CPU consumers and it will 
+impact performance of other low priority tasks. The article[1] explains 
+the problems of tasklet.
+
+ From my observations, average CPU usage got reduced by 10% under heavy 
+data traffic against same peak throughput. I validated this change on 
+both IPQ4019 platform (Quad-Core ARM Cortex A7 processor) and AP135 
+platform (uni-core MIPS 720 MHz processor). I did not observe any 
+regression.
+
+> There are many other problems in wifi, of course, that could use
+> engineering mental internalization, like airtime fairness, and the
+> mis-behavior of the hardware queues,
+> 
+> http://blog.cerowrt.org/post/cs5_lockout/
+> 
+> wifi channel scans
+> 
+> http://blog.cerowrt.org/post/disabling_channel_scans/
+> 
+> and so on.
+> 
+> I have a ton more datasets and blog entries left to write up from the
+> ath9k work thus far which point to some other issues (minstrel,
+> aggregation, retries)
+> 
+your data are really impressive. Once again, feel free to validate this 
+change and share your inputs.
+
+[1] http://lwn.net/Articles/239633/
+
+-Rajkumar
