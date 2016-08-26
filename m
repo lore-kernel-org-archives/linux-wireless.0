@@ -1,43 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:36028 "EHLO
-        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754172AbcHSQon (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 12:44:43 -0400
-Received: by mail-wm0-f49.google.com with SMTP id q128so41478877wma.1
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Aug 2016 09:44:43 -0700 (PDT)
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Linux Wireless List <linux-wireless@vger.kernel.org>
-Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCHv7 3/4] mt7601u: remove unnecessary include
-Date: Fri, 19 Aug 2016 17:44:08 +0100
-Message-Id: <1471625049-12643-4-git-send-email-jakub.kicinski@netronome.com> (sfid-20160819_184450_586187_C20974C1)
-In-Reply-To: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
-References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:47420 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750929AbcHZINK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Aug 2016 04:13:10 -0400
+Message-ID: <1472199187.390.21.camel@sipsolutions.net> (sfid-20160826_101314_967974_2E783201)
+Subject: Re: [PATCH] nl80211: Fix unfiltered GET_INTERFACE dumps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
+Date: Fri, 26 Aug 2016 10:13:07 +0200
+In-Reply-To: <1472157884-3174-1-git-send-email-denkenz@gmail.com> (sfid-20160825_224636_108212_521AFE0B)
+References: <1472157884-3174-1-git-send-email-denkenz@gmail.com>
+         (sfid-20160825_224636_108212_521AFE0B)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to include linux/version.h in a in-tree
-driver.
+On Thu, 2016-08-25 at 15:44 -0500, Denis Kenzior wrote:
+> dump_wiphy_parse only assigns filter_wiphy if one of the supported
+> NL80211 attributes is present.  So for unfiltered dumps, filter_wiphy
+> was always initialized to 0, and only interface 0 was dumped.
+> 
+> This was introduced in commit
+> 2d75da13fbb957e955d212555b91101cef36f0ce.
+> 
+> Reported-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
+> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+> 
+Thanks guys, I've squashed this (and moved it into the initializer we
+already had.)
 
-Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- drivers/net/wireless/mediatek/mt7601u/main.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/mediatek/mt7601u/main.c b/drivers/net/wireless/mediatek/mt7601u/main.c
-index e70dd9523911..43ebd460ba86 100644
---- a/drivers/net/wireless/mediatek/mt7601u/main.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/main.c
-@@ -15,7 +15,6 @@
- #include "mt7601u.h"
- #include "mac.h"
- #include <linux/etherdevice.h>
--#include <linux/version.h>
- 
- static int mt7601u_start(struct ieee80211_hw *hw)
- {
--- 
-1.9.1
+johannes
