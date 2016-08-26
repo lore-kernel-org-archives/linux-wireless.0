@@ -1,32 +1,25 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mo4-p00-ob.smtp.rzone.de ([81.169.146.220]:36972 "EHLO
-	mo4-p00-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751152AbcHIHJr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 03:09:47 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
-Subject: Re: [BUG] 4.8-rc1: wlcore: NULL pointer dereference in wlcore_op_get_expected_throughput
-From: "H. Nikolaus Schaller" <hns@goldelico.com>
-In-Reply-To: <1470724641.28531.6.camel@sipsolutions.net>
-Date: Tue, 9 Aug 2016 09:09:36 +0200
-Cc: linux-wireless@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Discussions about the Letux Kernel
-	<letux-kernel@openphoenux.org>
-Message-Id: <76AFEF14-9879-4ACF-9EF8-335253A83CA7@goldelico.com> (sfid-20160809_090951_097013_F23C9935)
-References: <4FEB5780-826B-49C3-81E9-D361CD12DD4A@goldelico.com> <1470724641.28531.6.camel@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-it0-f51.google.com ([209.85.214.51]:37111 "EHLO
+        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752758AbcHZKs7 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Aug 2016 06:48:59 -0400
+Received: by mail-it0-f51.google.com with SMTP id d65so18437231ith.0
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2016 03:48:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160826102250.24174-1-rmanohar@qti.qualcomm.com>
+References: <20160826102250.24174-1-rmanohar@qti.qualcomm.com>
+From: Dave Taht <dave.taht@gmail.com>
+Date: Fri, 26 Aug 2016 03:48:42 -0700
+Message-ID: <CAA93jw7vHWROH9Ymq1UoOKA5kw+fDbCM=vJehs8J=QP2PVs_RA@mail.gmail.com> (sfid-20160826_124913_305753_49D4FF3C)
+Subject: Re: [PATCH v3] ath10k: implement NAPI support
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: ath10k <ath10k@lists.infradead.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Rajkumar Manoharan <rmanohar@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> Am 09.08.2016 um 08:37 schrieb Johannes Berg <johannes@sipsolutions.net>:
-> 
-> 2439ca0402091badb24415e1b073ba12b34ba423
-
-Ah, nice!
-
-Thanks,
-Nikolaus
-
+I'm always rather big on people testing latency under load, and napi
+tends to add some.
