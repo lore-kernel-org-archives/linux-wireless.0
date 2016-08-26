@@ -1,233 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout02.posteo.de ([185.67.36.142]:50986 "EHLO mout02.posteo.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751035AbcHLJ0U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2016 05:26:20 -0400
-In-Reply-To: <6cdbbae7-8a56-6778-e886-68eeea7add15@broadcom.com>
-References: <1470429980.29489.10.camel@embedded.rocks> <CAF7Mx6o+WuQqtzuApMWQ8YAkLSX7xQ_H06xmO--RxFdwHwzLdQ@mail.gmail.com> <1BCE83A1-AA47-438D-BC47-05AE53D40121@embedded.rocks> <CA+8PC_f7VQMwBfQmZZ_vUtYtNJKVYzmFmxziAwoG8-iRUeW9Jw@mail.gmail.com> <1470492734.2120.0.camel@embedded.rocks> <6cdbbae7-8a56-6778-e886-68eeea7add15@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:65287 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751110AbcHZIMK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Aug 2016 04:12:10 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>,
+        Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH v5] ath10k: Fix broken NULL func data frame status for 10.4
+Date: Fri, 26 Aug 2016 13:42:20 +0530
+Message-ID: <1472199140-8404-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160826_101217_066429_1E5800C4)
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: TCP data throughput for BCM43362
-From: =?ISO-8859-1?Q?J=F6rg_Krause?= <joerg.krause@embedded.rocks>
-Date: Fri, 12 Aug 2016 11:25:57 +0200
-To: Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>
-CC: Brett Rudley <brudley@broadcom.com>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Arend van Spriel <arend@broadcom.com>,
-	=?ISO-8859-1?Q?J=F6rg_Krause?= <joerg.krause@embedded.rocks>
-Message-ID: <4DC05A04-B8AB-497B-B835-2CBB63082CD5@embedded.rocks> (sfid-20160812_112625_135057_658D5A32)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
+Older firmware with HTT delivers incorrect tx status for null func
+frames to driver, but this fixed in 10.2 and 10.4 firmware versions.
+Also this workaround results in reporting of incorrect null func status
+for 10.4. Fix this is by introducing a firmware feature flag for 10.4
+so that this workaround is skipped and proper tx status for null func
+frames are reported
 
-Am 7. August 2016 13:41:04 MESZ, schrieb Arend van Spriel <arend.vanspriel@broadcom.com>:
->On 06-08-16 16:12, Jörg Krause wrote:
->> Hi all,
->
->A bit weird email format making it a bit hard to determine where your
->last reply starts...
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[v5 based on the review comments from Michal]
 
-Sorry for my bad mobile mail client. I hope this one can handle in line comments. 
+ drivers/net/wireless/ath/ath10k/core.c |    1 +
+ drivers/net/wireless/ath/ath10k/core.h |    7 +++++++
+ drivers/net/wireless/ath/ath10k/mac.c  |    2 ++
+ 3 files changed, 10 insertions(+)
 
->
->> On Fr, 2016-08-05 at 17:56 -0700, Franky Lin wrote:
->> 
->> On Fri, Aug 5, 2016 at 2:29 PM, Jörg Krause <joerg.krause@embedded.ro
->> cks>
->> wrote:
->> 
->> 
->> 
->> 
->> 
->> Am 5. August 2016 23:01:10 MESZ, schrieb Arend Van Spriel <
->> arend.vanspriel@broadcom.com>:
->> 
->> 
->> Op 5 aug. 2016 22:46 schreef "Jörg Krause"
->> <joerg.krause@embedded.rocks>:
->> 
->> 
->> 
->> Hi,
->> 
->> I'm using a custom ARM board with an BCM43362 wifi chip from
->> 
->> Broadcom.
->> 
->> 
->> The wifi chip is attached via SDIO to the controller with a
->> clock of
->> 48MHz. Linux kernel version is 4.7.
->> 
->> When measuring the network bandwidth with iperf3 I get a
->> bandwith of
->> only around 5 Mbps. I found a similar thread at the Broadcom
->> 
->> community
->> 
->> 
->> [1] where the test was done with a M4 CPU + BCM43362 and an
->> average
->> result of 3.3 Mbps.
->> 
->> Interestingly, a BCM43362 Wi-Fi Dev Kit [2] notes a TCP data
->> 
->> throughput
->> 
->> 
->> greater than 20 Mbps.
->> 
->> Why is the throughput I measured much lower? Note that I
->> measured
->> several times with almost no neighbor devices or networks.
->> 
->> This is a test sample measured with iperf3:
->> 
->>     $ iperf3 -c 192.168.2.1 -i 1 -t 10
->>     Connecting to host 192.168.2.1, port 5201
->>     [  4] local 192.168.2.155 port 36442 connected to
->> 192.168.2.1
->> 
->> port
->> 
->> 
->>     5201
->>     [ ID]
->> Interval           Transfer     Bandwidth       Retr  Cwnd
->>     [  4]   0.00-1.00   sec   615 KBytes  5.04
->> Mbits/sec    0   56.6
->>     KBytes
->>     [  4]   1.00-2.00   sec   622 KBytes  5.10
->> Mbits/sec    0   84.8
->>     KBytes
->>     [  4]   2.00-3.00   sec   625 KBytes  5.12
->> Mbits/sec    0    113
->>     KBytes
->>     [  4]   3.00-4.00   sec   571 KBytes  4.68
->> Mbits/sec    0    140
->>     KBytes
->>     [  4]   4.00-5.00   sec   594 KBytes  4.87
->> Mbits/sec    0    167
->>     KBytes
->>     [  4]   5.00-6.00   sec   628 KBytes  5.14
->> Mbits/sec    0    195
->>     KBytes
->>     [  4]   6.00-7.00   sec   619 KBytes  5.07
->> Mbits/sec    0    202
->>     KBytes
->>     [  4]   7.00-8.00   sec   608 KBytes  4.98
->> Mbits/sec    0    202
->>     KBytes
->>     [  4]   8.00-9.00   sec   602 KBytes  4.93
->> Mbits/sec    0    202
->>     KBytes
->>     [  4]   9.00-10.00  sec   537 KBytes  4.40
->> Mbits/sec    0    202
->>     KBytes
->>     - - - - - - - - - - - - - - - - - - - - - - - - -
->>     [ ID] Interval           Transfer     Bandwidth       Retr
->>     [  4]   0.00-10.00  sec  5.88 MBytes  4.93
->>     Mbits/sec    0             sender
->>     [  4]   0.00-10.00  sec  5.68 MBytes  4.76
->>     Mbits/sec                  receiver
->> 
->> 
->> Not overly familiar with iperf3. Do these lines mean you are
->> doing
->> bidirectional test, ie. upstream and downstream at the same time.
->> Another
->> thing affecting tput could be power-save.
->> 
->> 
->> No, iperf3 does not support bidrectional test. Power-save is turned
->> off.
->> 
->> What does iw link say?
->> 
->
->but I guess it starts here!
->
->> I compared the results with a Cubietruck I have:
->> 
->> # iperf3 -s
->> -----------------------------------------------------------
->> Server listening on 5201
->> -----------------------------------------------------------
->> Accepted connection from 192.168.178.46, port 42906
->> [  5] local 192.168.178.38 port 5201 connected to 192.168.178.46 port
->> 42908
->> [ ID] Interval           Transfer     Bandwidth
->> [  5]   0.00-1.00   sec  2.29 MBytes  19.2 Mbits/sec                 
->
->> [  5]   1.00-2.00   sec  2.21 MBytes  18.5 Mbits/sec                 
->
->> [  5]   2.00-3.00   sec  2.17 MBytes  18.2 Mbits/sec                 
->
->> [  5]   3.00-4.00   sec  2.09 MBytes  17.6 Mbits/sec                 
->
->> [  5]   4.00-5.00   sec  2.20 MBytes  18.5 Mbits/sec                 
->
->> [  5]   5.00-6.00   sec  2.64 MBytes  22.1 Mbits/sec                 
->
->> [  5]   6.00-7.00   sec  2.67 MBytes  22.4 Mbits/sec                 
->
->> [  5]   7.00-8.00   sec  2.62 MBytes  22.0 Mbits/sec                 
->
->> [  5]   8.00-9.00   sec  2.35 MBytes  19.8 Mbits/sec                 
->
->> [  5]   9.00-10.00  sec  2.30 MBytes  19.3 Mbits/sec                 
->
->> [  5]  10.00-10.03  sec  83.4 KBytes  23.5 Mbits/sec                 
->
->> - - - - - - - - - - - - - - - - - - - - - - - - -
->> [ ID] Interval           Transfer     Bandwidth       Retr
->> [  5]   0.00-10.03  sec  23.9 MBytes  20.0
->> Mbits/sec    0             sender
->> [  5]   0.00-10.03  sec  23.6 MBytes  19.8
->> Mbits/sec                  receiver
->> 
->> # iw dev wlan0 link
->> Connected to xx:xx:xx:xx:xx (on wlan0)
->> 	SSID: xxx
->> 	freq: 2437
->> 	tx bitrate: 65.0 MBit/s
->> 
->> 	bss flags:	short-preamble short-slot-time
->> 	dtim period:	1
->> 	beacon int:	100
->
->Too bad RSSI is not in the output above. That may be due to a
->regression
->in our driver which has been fixed by commit 94abd778a7bb ("brcmfmac:
->add fallback for devices that do not report per-chain values").
->However,
->the tx bitrate seems within the same range as the other platform.
->
->> The Cubietruck works also with the brcmfmac driver.
->> 
->> May it depend on the NVRAM file?
->
->Not sure. Can you tell me a bit more about the custom ARM board. Does
->it
->use the same wifi module as Cubietruck, ie. the AMPAK AP6210? If you
->can
->make a wireshark sniff we can check the actual bitrate and medium
->density in terms of packets. Another thing to look at is the SDIO host
->controller. In brcmf_sdiod_sgtable_alloc() some key values are used
->from
->the host controller. It only logs the number of entries of the
->scatter-gather table, but could you add the other values in this
->function that are used to determine the number of entries.
-
-Many thanks for your conclusions! I am on vacation right now and I will investigate this issue further when I am back.
-
-Best regards,
-Jörg Krause
-
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e889829..798b3f8 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -304,6 +304,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_MFP_SUPPORT] = "mfp",
+ 	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] = "peer-flow-ctrl",
+ 	[ATH10K_FW_FEATURE_BTCOEX_PARAM] = "btcoex-param",
++	[ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR] = "skip-null-func-war",
+ };
+ 
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 30ae5bf..54e40f3 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -551,6 +551,13 @@ enum ath10k_fw_features {
+ 	 */
+ 	ATH10K_FW_FEATURE_BTCOEX_PARAM = 14,
+ 
++	/* Older firmware with HTT delivers incorrect tx status for null func
++	 * frames to driver, but this fixed in 10.2 and 10.4 firmware versions.
++	 * Also this workaround results in reporting of incorrect null func
++	 * status for 10.4. This flag is used to skip the workaround.
++	 */
++	ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR = 15,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index fb8e38d..7508ef8 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3255,6 +3255,8 @@ ath10k_mac_tx_h_get_txmode(struct ath10k *ar,
+ 	if (ar->htt.target_version_major < 3 &&
+ 	    (ieee80211_is_nullfunc(fc) || ieee80211_is_qos_nullfunc(fc)) &&
+ 	    !test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
++		      ar->running_fw->fw_file.fw_features) &&
++	    !test_bit(ATH10K_FW_FEATURE_SKIP_NULL_FUNC_WAR,
+ 		      ar->running_fw->fw_file.fw_features))
+ 		return ATH10K_HW_TXRX_MGMT;
+ 
+-- 
+1.7.9.5
