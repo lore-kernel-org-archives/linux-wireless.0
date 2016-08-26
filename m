@@ -1,246 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40866 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750786AbcH2UZ1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 16:25:27 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Mon, 29 Aug 2016 23:25:15 +0300
-Message-Id: <1472502319-10847-3-git-send-email-luca@coelho.fi> (sfid-20160829_222537_733893_FED3769D)
-In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
-References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH v2 2/6] mac80211: refactor monitor representation in sdata
+Received: from mail2.tohojo.dk ([77.235.48.147]:47705 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751742AbcHZIyx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 26 Aug 2016 04:54:53 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Dave Taht <dave.taht@gmail.com>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [Make-wifi-fast] [PATCH v2] mac80211: Move crypto IV generation
+        to after TXQ dequeue.
+References: <20160817125800.19154-1-toke@toke.dk>
+        <20160817144531.4285-1-toke@toke.dk>
+        <1471463348.5173.16.camel@sipsolutions.net>
+        <CAA93jw4+WTiFAdUJkPaf5aRDy81vMW34TPQt7xSgv95tsXU=cA@mail.gmail.com>
+        <1471466600.5173.21.camel@sipsolutions.net> <87oa4k508r.fsf@toke.dk>
+        <1472200706.390.29.camel@sipsolutions.net>
+Date: Fri, 26 Aug 2016 10:54:47 +0200
+In-Reply-To: <1472200706.390.29.camel@sipsolutions.net> (Johannes Berg's
+        message of "Fri, 26 Aug 2016 10:38:26 +0200")
+Message-ID: <87d1kvzz8o.fsf@toke.dk> (sfid-20160826_105507_391212_EFC43138)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Aviya Erenfeld <aviya.erenfeld@intel.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Insert the u32 monitor flags variable in a new structure
-that represents a monitor interface.
-This will allow to add more configuration variables to
-that structure which will happen in an upcoming change.
+> On Mon, 2016-08-22 at 16:47 +0200, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>>=C2=A0
+>> I suppose that could be a way to do it (i.e. have
+>> ieee80211_tx_dequeue call all the TX hooks etc), but am not sure
+>> whether there would be problems doing all this work in the loop
+>> that's building aggregates (which is what would happen for ath9k at
+>> least).
+>
+> I don't know, but it seems that it's worth trying.
+>
+>> An alternative could be to split the process up in two: An "early"
+>> and "late" stage, where the early stage does everything that is not
+>> sensitive to reordering and the occasional drop, and the late stage
+>> is everything that is. Then the queueing step could happen in-between=20
+>> the two stages, and the non-queueing path could just call both stages
+>> at once. In effect, this would just make the current work-arounds be
+>> more explicit in the structure, rather than being marked as
+>> exceptions.
+>
+> I'm not sure that works the way you think it does.
+>
+> What you did works for fast-xmit, but *only* because that doesn't do
+> software crypto. If, for some reason, the TXQ stuff combines with
+> software crypto, which doesn't seem impossible (ath9k even has a module
+> parameter, iirc), then you have no way for this to work.
 
-Signed-off-by: Aviya Erenfeld <aviya.erenfeld@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- net/mac80211/cfg.c         |  8 ++++----
- net/mac80211/driver-ops.c  |  2 +-
- net/mac80211/ieee80211_i.h |  6 +++++-
- net/mac80211/iface.c       | 16 ++++++++--------
- net/mac80211/rx.c          |  4 ++--
- net/mac80211/status.c      |  2 +-
- net/mac80211/tx.c          |  2 +-
- net/mac80211/util.c        |  2 +-
- 8 files changed, 23 insertions(+), 19 deletions(-)
+Yeah, I realised that when I started reviewing the slow path (sorry for
+not realising that straight away). The v3 takes the "split handlers"
+approach for this reason. That saved having to deal with fragmentation
+on TXQ dequeue, and it means that some of the processing can be done
+before queueing (such as GSO splitting; having packets be as small as
+possible before applying FQ to them is a good thing if we want to
+realise the full potential).
 
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 543b1d4..f2c8cd2 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -39,7 +39,7 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
- 
- 	if (type == NL80211_IFTYPE_MONITOR && flags) {
- 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
--		sdata->u.mntr_flags = *flags;
-+		sdata->u.mntr.flags = *flags;
- 	}
- 
- 	return wdev;
-@@ -89,11 +89,11 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 			 *	cooked_mntrs, monitor and all fif_* counters
- 			 *	reconfigure hardware
- 			 */
--			if ((*flags & mask) != (sdata->u.mntr_flags & mask))
-+			if ((*flags & mask) != (sdata->u.mntr.flags & mask))
- 				return -EBUSY;
- 
- 			ieee80211_adjust_monitor_flags(sdata, -1);
--			sdata->u.mntr_flags = *flags;
-+			sdata->u.mntr.flags = *flags;
- 			ieee80211_adjust_monitor_flags(sdata, 1);
- 
- 			ieee80211_configure_filter(local);
-@@ -103,7 +103,7 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
- 			 * and ieee80211_do_open take care of "everything"
- 			 * mentioned in the comment above.
- 			 */
--			sdata->u.mntr_flags = *flags;
-+			sdata->u.mntr.flags = *flags;
- 		}
- 	}
- 
-diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
-index c258f10..c701b64 100644
---- a/net/mac80211/driver-ops.c
-+++ b/net/mac80211/driver-ops.c
-@@ -62,7 +62,7 @@ int drv_add_interface(struct ieee80211_local *local,
- 	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
- 		    (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
- 		     !ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) &&
--		     !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))))
-+		     !(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))))
- 		return -EINVAL;
- 
- 	trace_drv_add_interface(local, sdata);
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index f56d342..9211cce 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -824,6 +824,10 @@ struct txq_info {
- 	struct ieee80211_txq txq;
- };
- 
-+struct ieee80211_if_mntr {
-+	u32 flags;
-+};
-+
- struct ieee80211_sub_if_data {
- 	struct list_head list;
- 
-@@ -922,7 +926,7 @@ struct ieee80211_sub_if_data {
- 		struct ieee80211_if_ibss ibss;
- 		struct ieee80211_if_mesh mesh;
- 		struct ieee80211_if_ocb ocb;
--		u32 mntr_flags;
-+		struct ieee80211_if_mntr mntr;
- 	} u;
- 
- #ifdef CONFIG_MAC80211_DEBUGFS
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index b123a9e..c8509d9 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -188,7 +188,7 @@ static int ieee80211_verify_mac(struct ieee80211_sub_if_data *sdata, u8 *addr,
- 			continue;
- 
- 		if (iter->vif.type == NL80211_IFTYPE_MONITOR &&
--		    !(iter->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+		    !(iter->u.mntr.flags & MONITOR_FLAG_ACTIVE))
- 			continue;
- 
- 		m = iter->vif.addr;
-@@ -217,7 +217,7 @@ static int ieee80211_change_mac(struct net_device *dev, void *addr)
- 		return -EBUSY;
- 
- 	if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
--	    !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+	    !(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
- 		check_dup = false;
- 
- 	ret = ieee80211_verify_mac(sdata, sa->sa_data, check_dup);
-@@ -357,7 +357,7 @@ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
- 				    const int offset)
- {
- 	struct ieee80211_local *local = sdata->local;
--	u32 flags = sdata->u.mntr_flags;
-+	u32 flags = sdata->u.mntr.flags;
- 
- #define ADJUST(_f, _s)	do {					\
- 	if (flags & MONITOR_FLAG_##_f)				\
-@@ -589,12 +589,12 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
- 		}
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
--		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) {
-+		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES) {
- 			local->cooked_mntrs++;
- 			break;
- 		}
- 
--		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
-+		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
- 			res = drv_add_interface(local, sdata);
- 			if (res)
- 				goto err_stop;
-@@ -926,7 +926,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		/* no need to tell driver */
- 		break;
- 	case NL80211_IFTYPE_MONITOR:
--		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) {
-+		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES) {
- 			local->cooked_mntrs--;
- 			break;
- 		}
-@@ -1012,7 +1012,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 		ieee80211_recalc_idle(local);
- 		mutex_unlock(&local->mtx);
- 
--		if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+		if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
- 			break;
- 
- 		/* fall through */
-@@ -1444,7 +1444,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
- 	case NL80211_IFTYPE_MONITOR:
- 		sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
- 		sdata->dev->netdev_ops = &ieee80211_monitorif_ops;
--		sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
-+		sdata->u.mntr.flags = MONITOR_FLAG_CONTROL |
- 				      MONITOR_FLAG_OTHER_BSS;
- 		break;
- 	case NL80211_IFTYPE_WDS:
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9dce3b1..708c3b1 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -567,7 +567,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
- 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
- 			continue;
- 
--		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES)
-+		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
- 			continue;
- 
- 		if (!ieee80211_sdata_running(sdata))
-@@ -3147,7 +3147,7 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
- 			continue;
- 
- 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR ||
--		    !(sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES))
-+		    !(sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES))
- 			continue;
- 
- 		if (prev_dev) {
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index a2a6826..fabd9ff 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -709,7 +709,7 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
- 			if (!ieee80211_sdata_running(sdata))
- 				continue;
- 
--			if ((sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) &&
-+			if ((sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES) &&
- 			    !send_to_cooked)
- 				continue;
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 1d0746d..efc38e7 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1643,7 +1643,7 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
- 
- 	switch (sdata->vif.type) {
- 	case NL80211_IFTYPE_MONITOR:
--		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
-+		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
- 			vif = &sdata->vif;
- 			break;
- 		}
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 42bf0b6..e777c2a 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -598,7 +598,7 @@ static void __iterate_interfaces(struct ieee80211_local *local,
- 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
- 		switch (sdata->vif.type) {
- 		case NL80211_IFTYPE_MONITOR:
--			if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
-+			if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
- 				continue;
- 			break;
- 		case NL80211_IFTYPE_AP_VLAN:
--- 
-2.8.1
+It seems there are still some bugs to work out with that patch, but I'd
+be grateful if you could glance at it and comment on whether you think
+this is a viable way forward (provided we can work out all the bugs, of
+course).
+
+>> > Now, it's unlikely to be that simple - fragmentation, for example,
+>> > might mess this up.
+>> >=20
+>> > Overall though, I'm definitely wondering if it should be this way,
+>> > since all the special cases just add complexity.
+>>=20
+>> I agree that the work-arounds are iffy, but I do also think it's
+>> important to keep in mind that we are improving latency by orders of
+>> magnitude here. A few special cases is worth it to achieve that, IMO.
+>> And then iterating towards a design that don't need them, of course
+>> :)
+>
+> I don't really agree, I'm not going to treat this unlike any other
+> feature, which gets merged when it's ready for that.
+>
+> Right now, your code here obviously isn't, since it doesn't even
+> address the cases that ath9k could run into, so either ath9k shouldn't
+> use this mac80211 feature, or the mac80211 feature needs to be fixed
+> before ath9k can use it.
+
+Yeah, I agree now that I've looked at it some more :)
+
+> I have no problems with documenting that the TXQ stuff can only be
+> used with full hardware crypto, but then we should add some checks and
+> warnings in mac80211 to ensure that, i.e. not allow software keys when
+> TXQ stuff is used, nor allow keys with mac80211 PN assignment, etc.
+
+I'd much rather fix things so it works in all cases. My patch to ath9k
+to use this stuff completely removes the old TX path, and things like
+the airtime fairness scheduler needs the intermediate queues to work.
+
+-Toke
