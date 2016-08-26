@@ -1,87 +1,196 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41044 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756118AbcH2V26 (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33385 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751014AbcHZHRB (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 17:28:58 -0400
-From: Luca Coelho <luca@coelho.fi>
+        Fri, 26 Aug 2016 03:17:01 -0400
+Received: by mail-wm0-f67.google.com with SMTP id o80so10210797wme.0
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2016 00:17:00 -0700 (PDT)
+Received: from desktop.wvd.kresin.me (p200300454B6FD200C870EA4A541E6E10.dip0.t-ipconnect.de. [2003:45:4b6f:d200:c870:ea4a:541e:6e10])
+        by smtp.gmail.com with ESMTPSA id f3sm18669804wjh.2.2016.08.26.00.16.58
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Fri, 26 Aug 2016 00:16:58 -0700 (PDT)
+From: Mathias Kresin <dev@kresin.me>
 To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 00:26:16 +0300
-Message-Id: <1472505976-21108-16-git-send-email-luca@coelho.fi> (sfid-20160829_232901_682889_86D66A7C)
-In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
-References: <1472505827.27868.41.camel@coelho.fi>
- <1472505976-21108-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 16/16] iwlwifi: pcie: remove dead code
+Subject: [PATCH v2] rt2x00: add support for mac addr from device tree
+Date: Fri, 26 Aug 2016 09:16:53 +0200
+Message-Id: <1472195813-30471-1-git-send-email-dev@kresin.me> (sfid-20160826_091706_001454_6F5D1195)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On some devices the EEPROMs of Ralink Wi-Fi chips have a default Ralink
+MAC address set (RT3062F: 00:0C:43:30:62:00, RT3060F:
+00:0C:43:30:60:00). Using multiple of these devices in the same network
+can cause nasty issues.
 
-If device family is 8000 then iwl_pcie_load_cpu_sections()
-won't be called at all (iwl_pcie_load_cpu_sections_8000() is
-called in that case) so this piece of code never gets called.
+Allow to override the MAC in the EEPROM with (a known good) one set in
+the device tree to bypass the issue.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Mathias Kresin <dev@kresin.me>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-prph.h   | 13 -------------
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  8 --------
- 2 files changed, 21 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-index 849ee79..406ef30 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
-@@ -302,7 +302,6 @@
- #define OSC_CLK_FORCE_CONTROL		(0x8)
+As discussed before, forcing a random MAC for known default MACs would
+be a wonky approach. I wouldn't be surprise to see ODMs setting an ODM
+specific default MAC in the EEPROM. This would require a permanent
+update of the list of known default MACs.
+
+Changes in v2:
+
+- new commit message, the former one was incomprehensible
+
+ drivers/net/wireless/ralink/rt2x00/rt2400pci.c |  5 +----
+ drivers/net/wireless/ralink/rt2x00/rt2500pci.c |  5 +----
+ drivers/net/wireless/ralink/rt2x00/rt2500usb.c |  5 +----
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c |  5 +----
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  1 +
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 17 +++++++++++++++++
+ drivers/net/wireless/ralink/rt2x00/rt61pci.c   |  5 +----
+ drivers/net/wireless/ralink/rt2x00/rt73usb.c   |  5 +----
+ 8 files changed, 24 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+index 155f343..085c5b4 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+@@ -1459,10 +1459,7 @@ static int rt2400pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Start validation of the data that has been read.
+ 	 */
+ 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
+-	if (!is_valid_ether_addr(mac)) {
+-		eth_random_addr(mac);
+-		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
+-	}
++	rt2x00lib_set_mac_address(rt2x00dev, mac);
  
- #define FH_UCODE_LOAD_STATUS		(0x1AF0)
--#define CSR_UCODE_LOAD_STATUS_ADDR	(0x1E70)
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+ 	if (word == 0xffff) {
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+index 2553cdd..9832fd5 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+@@ -1585,10 +1585,7 @@ static int rt2500pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Start validation of the data that has been read.
+ 	 */
+ 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
+-	if (!is_valid_ether_addr(mac)) {
+-		eth_random_addr(mac);
+-		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
+-	}
++	rt2x00lib_set_mac_address(rt2x00dev, mac);
+ 
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+ 	if (word == 0xffff) {
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+index 2d64611..cd3ab5a 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+@@ -1349,10 +1349,7 @@ static int rt2500usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Start validation of the data that has been read.
+ 	 */
+ 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
+-	if (!is_valid_ether_addr(mac)) {
+-		eth_random_addr(mac);
+-		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
+-	}
++	rt2x00lib_set_mac_address(rt2x00dev, mac);
+ 
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+ 	if (word == 0xffff) {
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index bf3f0a3..59c49af 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -6919,10 +6919,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Start validation of the data that has been read.
+ 	 */
+ 	mac = rt2800_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
+-	if (!is_valid_ether_addr(mac)) {
+-		eth_random_addr(mac);
+-		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
+-	}
++	rt2x00lib_set_mac_address(rt2x00dev, mac);
+ 
+ 	rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &word);
+ 	if (word == 0xffff) {
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index f68d492..aa3d4cee 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -1403,6 +1403,7 @@ static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
+  */
+ u32 rt2x00lib_get_bssidx(struct rt2x00_dev *rt2x00dev,
+ 			 struct ieee80211_vif *vif);
++void rt2x00lib_set_mac_address(struct rt2x00_dev *rt2x00dev, u8 *eeprom_mac_addr);
  
  /*
-  * Replacing FH_UCODE_LOAD_STATUS
-@@ -311,21 +310,9 @@
-  */
- #define UREG_UCODE_LOAD_STATUS		(0xa05c40)
+  * Interrupt context handlers.
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+index 4e0c565..d659250 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+@@ -26,6 +26,8 @@
+ #include <linux/module.h>
+ #include <linux/slab.h>
+ #include <linux/log2.h>
++#include <linux/of.h>
++#include <linux/of_net.h>
  
--enum secure_load_status_reg {
--	LMPM_CPU_UCODE_LOADING_STARTED			= 0x00000001,
--	LMPM_CPU_HDRS_LOADING_COMPLETED			= 0x00000003,
--	LMPM_CPU_UCODE_LOADING_COMPLETED		= 0x00000007,
--	LMPM_CPU_STATUS_NUM_OF_LAST_COMPLETED		= 0x000000F8,
--	LMPM_CPU_STATUS_NUM_OF_LAST_LOADED_BLOCK	= 0x0000FF00,
--};
--
--#define LMPM_SECURE_INSPECTOR_CODE_ADDR	(0x1E38)
--#define LMPM_SECURE_INSPECTOR_DATA_ADDR	(0x1E3C)
- #define LMPM_SECURE_UCODE_LOAD_CPU1_HDR_ADDR	(0x1E78)
- #define LMPM_SECURE_UCODE_LOAD_CPU2_HDR_ADDR	(0x1E7C)
+ #include "rt2x00.h"
+ #include "rt2x00lib.h"
+@@ -931,6 +933,21 @@ static void rt2x00lib_rate(struct ieee80211_rate *entry,
+ 		entry->flags |= IEEE80211_RATE_SHORT_PREAMBLE;
+ }
  
--#define LMPM_SECURE_INSPECTOR_CODE_MEM_SPACE	(0x400000)
--#define LMPM_SECURE_INSPECTOR_DATA_MEM_SPACE	(0x402000)
- #define LMPM_SECURE_CPU1_HDR_MEM_SPACE		(0x420000)
- #define LMPM_SECURE_CPU2_HDR_MEM_SPACE		(0x420400)
++void rt2x00lib_set_mac_address(struct rt2x00_dev *rt2x00dev, u8 *eeprom_mac_addr)
++{
++	const char *mac_addr;
++
++	mac_addr = of_get_mac_address(rt2x00dev->dev->of_node);
++	if (mac_addr)
++		ether_addr_copy(eeprom_mac_addr, mac_addr);
++
++	if (!is_valid_ether_addr(eeprom_mac_addr)) {
++		eth_random_addr(eeprom_mac_addr);
++		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", eeprom_mac_addr);
++	}
++}
++EXPORT_SYMBOL_GPL(rt2x00lib_set_mac_address);
++
+ static int rt2x00lib_probe_hw_modes(struct rt2x00_dev *rt2x00dev,
+ 				    struct hw_mode_spec *spec)
+ {
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+index 03013eb..5306a3b 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+@@ -2413,10 +2413,7 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Start validation of the data that has been read.
+ 	 */
+ 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
+-	if (!is_valid_ether_addr(mac)) {
+-		eth_random_addr(mac);
+-		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
+-	}
++	rt2x00lib_set_mac_address(rt2x00dev, mac);
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 039eeca..2f46eed 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -903,14 +903,6 @@ static int iwl_pcie_load_cpu_sections(struct iwl_trans *trans,
- 			return ret;
- 	}
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+ 	if (word == 0xffff) {
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+index c1397a6..1a29c4d 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+@@ -1766,10 +1766,7 @@ static int rt73usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
+ 	 * Start validation of the data that has been read.
+ 	 */
+ 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
+-	if (!is_valid_ether_addr(mac)) {
+-		eth_random_addr(mac);
+-		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
+-	}
++	rt2x00lib_set_mac_address(rt2x00dev, mac);
  
--	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
--		iwl_set_bits_prph(trans,
--				  CSR_UCODE_LOAD_STATUS_ADDR,
--				  (LMPM_CPU_UCODE_LOADING_COMPLETED |
--				   LMPM_CPU_HDRS_LOADING_COMPLETED |
--				   LMPM_CPU_UCODE_LOADING_STARTED) <<
--					shift_param);
--
- 	*first_ucode_section = last_read_idx;
- 
- 	return 0;
+ 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
+ 	if (word == 0xffff) {
 -- 
-2.8.1
+2.7.4
