@@ -1,89 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:43346 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934613AbcHBM0j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:26:39 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: jussi.kivilinna@iki.fi, kvalo@codeaurora.org, linuxwifi@intel.com,
-	m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, chuansheng.liu@intel.com,
-	baolex.ni@intel.com
-Subject: [PATCH 0802/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:47:58 +0800
-Message-Id: <20160802114758.3433-1-baolex.ni@intel.com> (sfid-20160802_173604_025701_F629E2CE)
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:35637 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754252AbcH0Q1w (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Aug 2016 12:27:52 -0400
+Received: by mail-pf0-f175.google.com with SMTP id x72so38074507pfd.2
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2016 09:27:52 -0700 (PDT)
+From: Baoyou Xie <baoyou.xie@linaro.org>
+To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        arnd@linaro.org, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
+Subject: [PATCH] fix:gpio: mark symbols static where possible
+Date: Sun, 28 Aug 2016 00:27:08 +0800
+Message-Id: <1472315228-14802-1-git-send-email-baoyou.xie@linaro.org> (sfid-20160827_182837_986767_50A72A67)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+We get 1 warning about global functions without a declaration
+in the ath9k gpio driver when building with W=1:
+drivers/net/wireless/ath/ath9k/gpio.c:25:6: warning: no previous prototype for 'ath_fill_led_pin' [-Wmissing-prototypes]
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
+In fact, this function is only used in the file in which it is declared
+and don't need a declaration, but can be made static.
+so this patch marks it 'static'.
+
+Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
 ---
- drivers/net/wireless/rndis_wlan.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ath/ath9k/gpio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/rndis_wlan.c b/drivers/net/wireless/rndis_wlan.c
-index 569918c..f6317d7 100644
---- a/drivers/net/wireless/rndis_wlan.c
-+++ b/drivers/net/wireless/rndis_wlan.c
-@@ -46,43 +46,43 @@
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 490f74d..ddb2886 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -22,7 +22,7 @@
  
- /* NOTE: All these are settings for Broadcom chipset */
- static char modparam_country[4] = "EU";
--module_param_string(country, modparam_country, 4, 0444);
-+module_param_string(country, modparam_country, 4, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(country, "Country code (ISO 3166-1 alpha-2), default: EU");
+ #ifdef CONFIG_MAC80211_LEDS
  
- static int modparam_frameburst = 1;
--module_param_named(frameburst, modparam_frameburst, int, 0444);
-+module_param_named(frameburst, modparam_frameburst, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(frameburst, "enable frame bursting (default: on)");
- 
- static int modparam_afterburner = 0;
--module_param_named(afterburner, modparam_afterburner, int, 0444);
-+module_param_named(afterburner, modparam_afterburner, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(afterburner,
- 	"enable afterburner aka '125 High Speed Mode' (default: off)");
- 
- static int modparam_power_save = 0;
--module_param_named(power_save, modparam_power_save, int, 0444);
-+module_param_named(power_save, modparam_power_save, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(power_save,
- 	"set power save mode: 0=off, 1=on, 2=fast (default: off)");
- 
- static int modparam_power_output = 3;
--module_param_named(power_output, modparam_power_output, int, 0444);
-+module_param_named(power_output, modparam_power_output, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(power_output,
- 	"set power output: 0=25%, 1=50%, 2=75%, 3=100% (default: 100%)");
- 
- static int modparam_roamtrigger = -70;
--module_param_named(roamtrigger, modparam_roamtrigger, int, 0444);
-+module_param_named(roamtrigger, modparam_roamtrigger, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(roamtrigger,
- 	"set roaming dBm trigger: -80=optimize for distance, "
- 				"-60=bandwidth (default: -70)");
- 
- static int modparam_roamdelta = 1;
--module_param_named(roamdelta, modparam_roamdelta, int, 0444);
-+module_param_named(roamdelta, modparam_roamdelta, int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(roamdelta,
- 	"set roaming tendency: 0=aggressive, 1=moderate, "
- 				"2=conservative (default: moderate)");
- 
- static int modparam_workaround_interval;
- module_param_named(workaround_interval, modparam_workaround_interval,
--							int, 0444);
-+							int, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(workaround_interval,
- 	"set stall workaround interval in msecs (0=disabled) (default: 0)");
+-void ath_fill_led_pin(struct ath_softc *sc)
++static void ath_fill_led_pin(struct ath_softc *sc)
+ {
+ 	struct ath_hw *ah = sc->sc_ah;
  
 -- 
-2.9.2
-
+2.7.4
