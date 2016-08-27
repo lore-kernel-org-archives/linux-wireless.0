@@ -1,103 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37536 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754967AbcHAUNx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Aug 2016 16:13:53 -0400
-Date: Mon, 1 Aug 2016 21:56:20 +0200
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Daniel Wagner <daniel.wagner@bmw-carit.de>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Daniel Wagner <wagi@monom.org>,
-	Bastien Nocera <hadess@hadess.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Ohad Ben-Cohen <ohad@wizery.com>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Mimi Zohar <zohar@linux.vnet.ibm.com>,
-	Andy Lutomirski <luto@amacapital.net>,
-	David Woodhouse <dwmw2@infradead.org>,
-	David Howells <dhowells@redhat.com>,
-	linux-input@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [RFC v0 7/8] Input: ims-pcu: use firmware_stat instead of
- completion
-Message-ID: <20160801195620.GA3296@wotan.suse.de> (sfid-20160801_221505_591192_7BD707B6)
-References: <1469692512-16863-1-git-send-email-wagi@monom.org>
- <1469692512-16863-8-git-send-email-wagi@monom.org>
- <20160728183343.GD16852@dtor-ws>
- <20160728190151.GV13516@tuxbot>
- <c05a7b98-5ada-701f-9a77-65d81b841c17@bmw-carit.de>
- <ee9a29aa-0d29-a33f-e43a-057dc359cf89@broadcom.com>
- <20160730165817.GQ3296@wotan.suse.de>
- <20160801171951.GC13516@tuxbot>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160801171951.GC13516@tuxbot>
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:34684 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750798AbcH0GOJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Aug 2016 02:14:09 -0400
+Received: by mail-pf0-f170.google.com with SMTP id p64so35132181pfb.1
+        for <linux-wireless@vger.kernel.org>; Fri, 26 Aug 2016 23:14:08 -0700 (PDT)
+From: Baoyou Xie <baoyou.xie@linaro.org>
+To: franky.lin@broadcom.com, hante.meuleman@broadcom.com,
+        kvalo@codeaurora.org
+Cc: baoyou.xie@linaro.org, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, arnd@linaro.org,
+        xie.baoyou@zte.com.cn
+Subject: [PATCH v2] fix:brcmfmac: add missing header dependencies
+Date: Sat, 27 Aug 2016 14:08:23 +0800
+Message-Id: <1472278103-28320-1-git-send-email-baoyou.xie@linaro.org> (sfid-20160827_081436_583793_923234D5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Aug 01, 2016 at 10:19:51AM -0700, Bjorn Andersson wrote:
-> On Sat 30 Jul 09:58 PDT 2016, Luis R. Rodriguez wrote:
-> 
-> > On Sat, Jul 30, 2016 at 02:42:41PM +0200, Arend van Spriel wrote:
-> > > + Luis (again) ;-)
-> > > 
-> > > On 29-07-16 08:13, Daniel Wagner wrote:
-> > > > On 07/28/2016 09:01 PM, Bjorn Andersson wrote:
-> > > >> On Thu 28 Jul 11:33 PDT 2016, Dmitry Torokhov wrote:
-> > > >>
-> > > >>> On Thu, Jul 28, 2016 at 09:55:11AM +0200, Daniel Wagner wrote:
-> > > >>>> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-> > > >>>>
-> > > >> [..]
-> > > >>>
-> > > >>> Do not quite like it... I'd rather asynchronous request give out a
-> > > >>> firmware status pointer that could be used later on.
-> > > 
-> > > Excellent. Why not get rid of the callback function as well and have
-> > > fw_loading_wait() return result (0 = firmware available, < 0 = fail).
-> > > Just to confirm, you are proposing a new API function next to
-> > > request_firmware_nowait(), right?
-> > 
-> > If proposing new firmware_class patches please bounce / Cc me, I've
-> > recently asked for me to be added to MAINTAINERS so I get these
-> > e-mails as I'm working on a new flexible API which would allow us
-> > to extend the firmware API without having to care about the old
-> > stupid usermode helper at all.
-> > 
-> 
-> In the remoteproc world there are several systems where we see 100+MB of
-> firmware being loaded. It's unfeasible to have these files in an
-> initramfs, so we need a way to indicate to the kernel that the
-> second/primary (or a dedicated firmware partition) is mounted.
-> 
-> We're currently loading these files with request_firmware_nowait(), so
-> either one can either use kernel modules or the user-helper fallback to
-> delay the loading until the files are available. (I don't like to
-> enforce the usage of kernel modules)
+We get 1 warning when biuld kernel with W=1:
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c:23:6: warning: no previous prototype for '__brcmf_err' [-Wmissing-
+prototypes]
 
-Now that the firmware API is sharing the same API call to read files
-the existential issue of the file is not unique issue of firmware,
-but also to any other caller of it.
+In fact, this function is declared in brcmfmac/debug.h, so this patch
+add missing header dependencies
 
-> I'm open to alternative ways of having firmware loading wait on
-> secondary filesystems to be mounted, but have not yet tried to tackle
-> this problem. I do believe something that waits and retries the firmware
-> load as additional file systems gets mounted would be prettier than
-> forcing user space to tell us it's time to move on.
+Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Agreed. We simply have not addressed this problem yet. Let's discuss a
-possible solution on the other reply thread I provided with more details
-to Dmitry.
-
-> Due to the size of these firmware files we release the firmware as soon
-> as we have copied the content into the appropriate memory segments, so
-> we're not utilizing the caching mechanisms of the current fw loader.
-
-BTW my goal with the sysdata API is to automatically free this for you too :)
-
-  Luis
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+index a10f35c..fe67559 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c
+@@ -19,6 +19,7 @@
+ #ifndef __CHECKER__
+ #define CREATE_TRACE_POINTS
+ #include "tracepoint.h"
++#include "debug.h"
+ 
+ void __brcmf_err(const char *func, const char *fmt, ...)
+ {
+-- 
+2.7.4
