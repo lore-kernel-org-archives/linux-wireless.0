@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:36397 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759414AbcHEIsk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 04:48:40 -0400
-Subject: Re: [v5.1] ucc_fast: Fix to avoid IS_ERR_VALUE abuses and dead code
- on 64bit systems.
-To: Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@lists.ozlabs.org
-References: <1470329563-5464-1-git-send-email-arvind.yadav.cs@gmail.com>
- <2376517.GXv6XVOdDd@wuerfel>
-Cc: zajec5@gmail.com, leoli@freescale.com, qiang.zhao@freescale.com,
-	viresh.kumar@linaro.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, scottwood@freescale.com,
-	akpm@linux-foundation.org, linux@roeck-us.net
-From: arvind Yadav <arvind.yadav.cs@gmail.com>
-Message-ID: <57A452E0.10904@gmail.com> (sfid-20160805_104900_154644_37E4A209)
-Date: Fri, 5 Aug 2016 14:18:32 +0530
-MIME-Version: 1.0
-In-Reply-To: <2376517.GXv6XVOdDd@wuerfel>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from srv-hp10-72.netsons.net ([94.141.22.72]:36897 "EHLO
+        srv-hp10.netsons.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751195AbcH0NVN (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Aug 2016 09:21:13 -0400
+From: Luca Ceresoli <luca@lucaceresoli.net>
+To: devel@driverdev.osuosl.org
+Cc: Luca Ceresoli <luca@lucaceresoli.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/6] rtl8723au: remove declaration of unimplemented functions
+Date: Sat, 27 Aug 2016 14:40:44 +0200
+Message-Id: <1472301649-18694-1-git-send-email-luca@lucaceresoli.net> (sfid-20160827_152158_558617_AC8D64FD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+---
+ drivers/staging/rtl8723au/include/recv_osdep.h | 3 ---
+ 1 file changed, 3 deletions(-)
 
-
-On Friday 05 August 2016 02:01 AM, Arnd Bergmann wrote:
-> On Thursday, August 4, 2016 10:22:43 PM CEST Arvind Yadav wrote:
->> index df8ea79..ada9070 100644
->> --- a/include/soc/fsl/qe/ucc_fast.h
->> +++ b/include/soc/fsl/qe/ucc_fast.h
->> @@ -165,10 +165,12 @@ struct ucc_fast_private {
->>          int stopped_tx;         /* Whether channel has been stopped for Tx
->>                                     (STOP_TX, etc.) */
->>          int stopped_rx;         /* Whether channel has been stopped for Rx */
->> -       u32 ucc_fast_tx_virtual_fifo_base_offset;/* pointer to base of Tx
->> -                                                   virtual fifo */
->> -       u32 ucc_fast_rx_virtual_fifo_base_offset;/* pointer to base of Rx
->> -                                                   virtual fifo */
->> +       unsigned long ucc_fast_tx_virtual_fifo_base_offset;/* pointer to base of
->> +                                                           * Tx virtual fifo
->> +                                                           */
->> +       unsigned long ucc_fast_rx_virtual_fifo_base_offset;/* pointer to base of
->> +                                                           * Rx virtual fifo
->> +                                                           */
->>   #ifdef STATISTICS
->>          u32 tx_frames;          /* Transmitted frames counter. */
->>          u32 rx_frames;          /* Received frames counter (only frames
->>
-> This change seems ok, but what about the other u32 variables in ucc_geth.c
-> that get checked for IS_ERR_VALUE?
->
-> 	Arnd
-> I have send separate patch for ucc_geth ans ucc_slow.
-> -Arvind
-
+diff --git a/drivers/staging/rtl8723au/include/recv_osdep.h b/drivers/staging/rtl8723au/include/recv_osdep.h
+index c2d3f1bd5948..c159dbc5c752 100644
+--- a/drivers/staging/rtl8723au/include/recv_osdep.h
++++ b/drivers/staging/rtl8723au/include/recv_osdep.h
+@@ -26,9 +26,6 @@ int rtw_recv_indicatepkt23a(struct rtw_adapter *adapter, struct recv_frame *prec
+ 
+ void rtw_handle_tkip_mic_err23a(struct rtw_adapter *padapter, u8 bgroup);
+ 
+-int	rtw_init_recv_priv(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
+-void rtw_free_recv_priv (struct recv_priv *precvpriv);
+-
+ int rtw_os_recv_resource_init(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
+ 
+ void rtw_init_recv_timer23a(struct recv_reorder_ctrl *preorder_ctrl);
+-- 
+2.7.4
