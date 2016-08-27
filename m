@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:62831 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473AbcHHPOC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2016 11:14:02 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: David Laight <David.Laight@aculab.com>,
-	'Arvind Yadav' <arvind.yadav.cs@gmail.com>,
-	"zajec5@gmail.com" <zajec5@gmail.com>,
-	"leoli@freescale.com" <leoli@freescale.com>,
-	"qiang.zhao@freescale.com" <qiang.zhao@freescale.com>,
-	"viresh.kumar@linaro.org" <viresh.kumar@linaro.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"scottwood@freescale.com" <scottwood@freescale.com>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"linux@roeck-us.net" <linux@roeck-us.net>
-Subject: Re: [5.3] ucc_geth: Fix to avoid IS_ERR_VALUE abuses and dead code on 64bit systems.
-Date: Mon, 08 Aug 2016 17:13:02 +0200
-Message-ID: <2862487.guU7g5Qkfj@wuerfel> (sfid-20160808_171409_781710_91E61528)
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D5F50C493@AcuExch.aculab.com>
-References: <1470386442-7208-1-git-send-email-arvind.yadav.cs@gmail.com> <063D6719AE5E284EB5DD2968C1650D6D5F50C493@AcuExch.aculab.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33651 "EHLO
+        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753872AbcH0QPK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 27 Aug 2016 12:15:10 -0400
+Received: by mail-pf0-f174.google.com with SMTP id y134so37965226pfg.0
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2016 09:15:10 -0700 (PDT)
+From: Baoyou Xie <baoyou.xie@linaro.org>
+To: Jes.Sorensen@redhat.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, arnd@linaro.org,
+        baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
+Subject: [PATCH] fix:rtl8xxxu_core: mark symbols static where possible
+Date: Sun, 28 Aug 2016 00:14:36 +0800
+Message-Id: <1472314476-23351-1-git-send-email-baoyou.xie@linaro.org> (sfid-20160827_181531_811767_85931DEA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, August 8, 2016 2:49:11 PM CEST David Laight wrote:
-> 
-> > If qe_muram_alloc will return any error, Then IS_ERR_VALUE will always
-> > return 0. it'll not call ucc_fast_free for any failure. Inside 'if code'
-> > will be a dead code on 64bit. Even qe_muram_addr will return wrong
-> > virtual address. Which can cause an error.
-> > 
-> >  kfree((void *)ugeth->tx_bd_ring_offset[i]);
-> 
-> Erm, kfree() isn't the right function for things allocated by qe_muram_alloc().
-> 
-> I still thing you need to stop this code using IS_ERR_VALUE() at all.
+We get 1 warning about global functions without a declaration
+in the rtl8xxxu rtl8xxxu_core.c when building with W=1:
+drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:898:1: warning: no previous prototype for 'rtl8xxxu_gen1_h2c_cmd' [-Wmissing-prototypes]
 
-Those are two separate issues:
+In fact, this function is only used in the file in which it is declared
+and don't need a declaration, but can be made static.
+so this patch marks it 'static'.
 
-a) The ucc_geth driver mixing kmalloc() memory with muram, and assigning
-   the result to "u32" and "void __iomem *" variables, both of which
-   are wrong at least half of the time.
+Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-b) calling conventions of qe_muram_alloc() being defined in a way that
-   requires the use of IS_ERR_VALUE(), because '0' is a valid address
-   here.
-
-The first one can be solved by updating the network driver, ideally
-by getting rid of the casts and using proper types and accessors,
-while the second would require updating all users of that interface.
-
-	Arnd
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 77048db..95b54b8 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -894,7 +894,7 @@ int rtl8xxxu_write_rfreg(struct rtl8xxxu_priv *priv,
+ 	return retval;
+ }
+ 
+-int
++static int
+ rtl8xxxu_gen1_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
+ {
+ 	struct device *dev = &priv->udev->dev;
+-- 
+2.7.4
