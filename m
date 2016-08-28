@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:34190 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbcHLQYJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2016 12:24:09 -0400
-Received: by mail-pa0-f46.google.com with SMTP id fi15so9981379pac.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Aug 2016 09:24:09 -0700 (PDT)
-Subject: Re: [RESEND PATCH] nl80211: Allow GET_INTERFACE dumps to be filtered
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1470261735-2977-1-git-send-email-denkenz@gmail.com>
- <1470919643.12075.7.camel@sipsolutions.net> <57ACA9E9.4020507@gmail.com>
- <1470938627.12075.25.camel@sipsolutions.net> <57ACC1F8.6070908@gmail.com>
- <1470981481.26902.4.camel@sipsolutions.net>
-From: Denis Kenzior <denkenz@gmail.com>
-Message-ID: <57ADF825.5080409@gmail.com> (sfid-20160812_182413_059260_CFC4C179)
-Date: Fri, 12 Aug 2016 11:24:05 -0500
-MIME-Version: 1.0
-In-Reply-To: <1470981481.26902.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from nbd.name ([46.4.11.11]:46618 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755273AbcH1LKs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 28 Aug 2016 07:10:48 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: fix tim recalculation after PS response
+Date: Sun, 28 Aug 2016 13:10:37 +0200
+Message-Id: <20160828111037.46801-1-nbd@nbd.name> (sfid-20160828_131052_076308_52755F86)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+Handle the case where the mac80211 intermediate queues are empty and the
+driver has buffered frames
 
- >
-> No, I don't see a fault in the logic. I just think it's misleading. You
-> make the code look like it relies on filter_wiphy != 0, but then you go
-> and treat filter_wiphy==0 as a valid case.
+Fixes: ba8c3d6f16a1 ("mac80211: add an intermediate software queue implementation")
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ net/mac80211/sta_info.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-It relies on a sentry condition with all 3 variables being zero, not 
-just filter_wiphy.  The original patch is about the most non-invasive 
-one I can come up with.  Maybe a comment will alleviate any concerns? 
-Anyway, if you feel this is misleading, fair enough.
-
->
-> In other places, like nl80211_prepare_wdev_dump(), we add 1 to the
-> wiphy and subtract it again later to avoid exactly this. Perhaps you
-> could do the same, and rely only on filter_wiphy instead of really
-> relying only on wp_start/if_start.
-
-Having looked at that particular piece of code, I ran away scared with 
-the conclusion that the cure is probably much worse than the disease :)
-
-I posted a slightly different solution in v2.  It is a bit more 
-invasive, but is more explicit in what is going on.  I ran sanity checks 
-on it and it works as expected.
-
-Regards,
--Denis
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 19f14c9..251e14e 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1616,7 +1616,6 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
+ 
+ 		sta_info_recalc_tim(sta);
+ 	} else {
+-		unsigned long tids = sta->txq_buffered_tids & driver_release_tids;
+ 		int tid;
+ 
+ 		/*
+@@ -1648,7 +1647,8 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
+ 		for (tid = 0; tid < ARRAY_SIZE(sta->sta.txq); tid++) {
+ 			struct txq_info *txqi = to_txq_info(sta->sta.txq[tid]);
+ 
+-			if (!(tids & BIT(tid)) || txqi->tin.backlog_packets)
++			if (!(driver_release_tids & BIT(tid)) ||
++			    txqi->tin.backlog_packets)
+ 				continue;
+ 
+ 			sta_info_recalc_tim(sta);
+-- 
+2.8.4
