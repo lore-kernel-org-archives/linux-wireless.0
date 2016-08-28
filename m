@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:36110 "EHLO
-        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752152AbcHYWaA (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:42079 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755273AbcH1LaA (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Aug 2016 18:30:00 -0400
-Received: by mail-wm0-f51.google.com with SMTP id q128so257048015wma.1
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2016 15:29:59 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: Fix unfiltered GET_INTERFACE dumps
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-References: <1472157884-3174-1-git-send-email-denkenz@gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <210adf6d-287c-f836-8e2c-78f42de94dee@broadcom.com> (sfid-20160826_003003_669094_0C351B64)
-Date: Thu, 25 Aug 2016 23:35:11 +0200
-MIME-Version: 1.0
-In-Reply-To: <1472157884-3174-1-git-send-email-denkenz@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+        Sun, 28 Aug 2016 07:30:00 -0400
+From: Colin King <colin.king@canonical.com>
+To: Aditya Shankar <aditya.shankar@microchip.com>,
+        Ganesh Krishna <ganesh.krishna@microchip.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: wilc1000: fix spelling mistake: "retyring" -> "retrying"
+Date: Sun, 28 Aug 2016 12:28:41 +0100
+Message-Id: <20160828112841.10919-1-colin.king@canonical.com> (sfid-20160828_133021_561795_9329D550)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25-08-16 22:44, Denis Kenzior wrote:
-> dump_wiphy_parse only assigns filter_wiphy if one of the supported
-> NL80211 attributes is present.  So for unfiltered dumps, filter_wiphy
-> was always initialized to 0, and only interface 0 was dumped.
-> 
-> This was introduced in commit 2d75da13fbb957e955d212555b91101cef36f0ce.
-> 
-> Reported-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Actually sent a patch for this issue a little earlier. I should have
-Cc'ed you explicitly, I guess.
+trivial fix to spelling mistake in dev_err message
 
-Regards,
-Arend
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/staging/wilc1000/wilc_spi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Signed-off-by: Denis Kenzior <denkenz@gmail.com>
-> ---
->  net/wireless/nl80211.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-> index 95d55d2..ddc994a 100644
-> --- a/net/wireless/nl80211.c
-> +++ b/net/wireless/nl80211.c
-> @@ -2534,6 +2534,7 @@ static int nl80211_dump_interface(struct sk_buff *skb, struct netlink_callback *
->  		struct nl80211_dump_wiphy_state state = {};
->  		int ret;
->  
-> +		state.filter_wiphy = -1;
->  		ret = nl80211_dump_wiphy_parse(skb, cb, &state);
->  		if (ret)
->  			return ret;
-> 
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 22cf4b7..0f8d625 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -871,7 +871,7 @@ static int wilc_spi_init(struct wilc *wilc, bool resume)
+ 		/* Read failed. Try with CRC off. This might happen when module
+ 		 * is removed but chip isn't reset*/
+ 		g_spi.crc_off = 1;
+-		dev_err(&spi->dev, "Failed internal read protocol with CRC on, retyring with CRC off...\n");
++		dev_err(&spi->dev, "Failed internal read protocol with CRC on, retrying with CRC off...\n");
+ 		if (!spi_internal_read(wilc, WILC_SPI_PROTOCOL_OFFSET, &reg)) {
+ 			/* Reaad failed with both CRC on and off, something went bad */
+ 			dev_err(&spi->dev,
+-- 
+2.9.3
