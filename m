@@ -1,101 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [220.194.60.87] ([220.194.60.87]:56508 "EHLO
-	mail.redflag-linux.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751418AbcHMJ05 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 13 Aug 2016 05:26:57 -0400
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 7.3 \(1878.6\))
-Subject: Re: [PATCH] Staging: rtl8723au: os_intfs: fixed case statement is variable issue
-From: sunbing <sunbing@redflag-linux.com>
-In-Reply-To: <wrfj7fbmawl1.fsf@redhat.com>
-Date: Sat, 13 Aug 2016 17:26:44 +0800
-Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, sunbing.linux@gmail.com
-Message-Id: <E0CA1BD5-A2ED-4FDC-8E58-8024E2F3C24C@redflag-linux.com> (sfid-20160813_222751_973078_7A4CBE65)
-References: <1470924695-14931-1-git-send-email-sunbing@redflag-linux.com> <wrfja8gje395.fsf@redhat.com> <7FC388BC-FD87-44C6-87D3-AC041F1393DB@redflag-linux.com> <wrfj7fbmawl1.fsf@redhat.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36568 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751610AbcH1VKn (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 28 Aug 2016 17:10:43 -0400
+MIME-Version: 1.0
+In-Reply-To: <2303906.Xe1WvCfP0V@wuerfel>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+ <20160821144906.30984-6-martin.blumenstingl@googlemail.com> <2303906.Xe1WvCfP0V@wuerfel>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Sun, 28 Aug 2016 23:10:21 +0200
+Message-ID: <CAFBinCCK4zG7QXENpCgEr9wUgzinfr1ugEm3HepjE6c3RDqtVg@mail.gmail.com> (sfid-20160828_231047_621576_F3331970)
+Subject: Re: [PATCH 5/5] ath9k: Make EEPROM endianness swapping configurable
+ via devicetree
+To: Arnd Bergmann <arnd@arndb.de>, nbd@nbd.name
+Cc: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org, mark.rutland@arm.com,
+        chunkeey@googlemail.com, robh+dt@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, Aug 22, 2016 at 1:52 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Sunday, August 21, 2016 4:49:06 PM CEST Martin Blumenstingl wrote:
+>> +- qca,check-eeprom-endianness: When enabled, the driver checks if the
+>> +                               endianness of the EEPROM (using two checks,
+>> +                               one is based on the two magic bytes at the
+>> +                               start of the EEPROM and a second one which
+>> +                               relies on a flag within the EEPROM data)
+>> +                               matches the host system's native endianness.
+>> +                               The data will be swapped accordingly if there
+>> +                               is a mismatch.
+>> +                               Leaving this disabled means that the EEPROM
+>> +                               data will always be interpreted in the
+>> +                               system's native endianness.
+>> +                               Enable this option only when the EEPROMs
+>> +                               endianness identifiers are known to be
+>> +                               correct, because otherwise the EEPROM data
+>> +                               may be swapped and thus interpreted
+>> +                               incorrectly.
+>
+> The property should not describe the driver behavior, but instead
+> describe what the hardware is like.
+>
+> A default of "system's native endianess" should not be specified
+> in a binding, as the same DTB can be used with both big-endian or
+> little-endian kernels on some architectures (ARM and PowerPC among
+> others), so disabling the property means that it is guaranteed to
+> be broken on one of the two.
+OK, I went back to have a separate look at the whole issue again.
+Let's recap, there are two types of swapping:
+1. swab16 for the whole EEPROM data
+2. EEPROM format specific swapping (for all u16 and u32 values)
 
-On Aug 12, 2016, at 22:30, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+Actually I am not 100% sure what #1 exists. In OpenWrt and LEDE it's
+only used by the brcm63xx and lantiq targets (I personally have only
+lantiq based devices, so that's what I can test with).
+Without patch 4 from this series the EEPROM data is loaded like this:
+1. out of tree code extracts the EEPROM data from NOR/SPI/NAND flash
+2. board specific entry (usually device-tree) tells the code to apply
+swab16 to the data
+3. board specific entry (usually device-tree again) sets the
+"endian_check" property in the ath9k_platform_data to true
+4.a ath9k sees that the magic bytes are not matching and applies swab16
+4.b while doing that it notifies the EEPROM format specific swapping
 
-> sunbing <sunbing@redflag-linux.com> writes:
->> On Aug 11, 2016, at 23:25, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
->> 
->>> Bing Sun <sunbing@redflag-linux.com> writes:
->>>> Fixed sparse parse error:
->>>> Expected constant expression in case statement.
->>>> 
->>>> Signed-off-by: Bing Sun <sunbing@redflag-linux.com>
->>>> ---
->>>> drivers/staging/rtl8723au/os_dep/os_intfs.c | 11 +++++------
->>>> 1 file changed, 5 insertions(+), 6 deletions(-)
->>>> 
->>>> diff --git a/drivers/staging/rtl8723au/os_dep/os_intfs.c b/drivers/staging/rtl8723au/os_dep/os_intfs.c
->>>> index b8848c2..f30d5d2 100644
->>>> --- a/drivers/staging/rtl8723au/os_dep/os_intfs.c
->>>> +++ b/drivers/staging/rtl8723au/os_dep/os_intfs.c
->>>> @@ -283,14 +283,13 @@ static u32 rtw_classify8021d(struct sk_buff *skb)
->>>> 	 */
->>>> 	if (skb->priority >= 256 && skb->priority <= 263)
->>>> 		return skb->priority - 256;
->>>> -	switch (skb->protocol) {
->>>> -	case htons(ETH_P_IP):
->>>> +
->>>> +	if (skb->protocol == htons(ETH_P_IP)) {
->>>> 		dscp = ip_hdr(skb)->tos & 0xfc;
->>>> -		break;
->>>> -	default:
->>>> -		return 0;
->>>> +		return dscp >> 5;
->>>> 	}
->>>> -	return dscp >> 5;
->>>> +
->>>> +	return 0;
->>>> }
->>> 
->>> Pardon me here, but I find it really hard to see how this change is an
->>> improvement over the old code in any shape or form.
->>> 
->>> Jes
->> 
->> There is no functional improvement. 
->> But before this patch, when we do: make C=1 M=drivers/staging/rtl8723au/
->> An error output: 
->> drivers/staging/rtl8723au//os_dep/os_intfs.c:287:14: error: Expected
->> constant expression in case statement
->> To avoid sparse parse error, a case statement converts to an if statement.
->> So we got this patch.
-> 
-> Hello
-> 
-> I understand this part, but it seems to me we are changing the code due
-> to a broken test case in sparse. Does the warning go away if you use
-> __constant_htons() instead of htons()?
-> 
-> Jes
+However, with patch 4 from this series steps 4.a and 4.b are replaced with:
+4. ath9k checks the eepMisc field of the EEPROM and applies the EEPROM
+format specific swapping
 
-Thanks for your guidance.
+Currently this code is still guarded by a check whether swapping is
+enabled or not.
+However, FreeBSD uses the same check but has no guarding if-clause for it.
 
-1. If I use __constant_htons, checkpatch.pl will warning:
-    WARNING: __constant_htons should be htons
+TL;DR: if we remove if (ah->ah_flags & AH_NO_EEP_SWAP) from patch 4 we
+don't need an extra device-tree property.
 
-2. In os_intfs.c: rtw_classify8021d, there are only one case statement and a 
-default statement. So, convert "switch case" to "if else" is more readable in my opinion.
+The question is how we can test this properly:
+I can test this on the boards I own (3 in total) - but I don't think
+that this is enough.
+Maybe we can test this together with some LEDE people - this should
+get us test-coverage for embedded devices.
+I'm open to more/better suggestions
 
-So, I pushed this patch.
 
-There are some patches convert use of __constant_htons to htons in kernel logs. 
-Will there be a new patch convert to htons in the future if I use  __constant_htons now ?
-
-After search through kernel code, there are 158 "case htons(...)" statements and 
-2 "case __constant_htons(...)" statements. Does this mean we can ignore sparse 
-error and use "case htons(...)" ?
-
-It makes me confused. More help, please.
-
-Regards.
-
+Regards,
+Martin
