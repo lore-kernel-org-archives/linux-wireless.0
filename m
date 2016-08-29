@@ -1,50 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.eperm.de ([89.247.134.16]:34274 "EHLO mail.eperm.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751414AbcHIIHc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 04:07:32 -0400
-From: Stephan Mueller <smueller@chronox.de>
-To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	herbert@gondor.apana.org.au, Matt Mackall <mpm@selenic.com>
-Cc: "miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Date: Tue, 09 Aug 2016 10:07:29 +0200
-Message-ID: <4731753.YZZKimtrHM@tauon.atsec.com> (sfid-20160809_100737_687259_378D2DA9)
-In-Reply-To: <69af156ac93a4fe6ab1844dfcc35c266@aptaiexm02f.ap.qualcomm.com>
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <4627645.oz3l49ICL3@tauon.atsec.com> <69af156ac93a4fe6ab1844dfcc35c266@aptaiexm02f.ap.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from paleale.coelho.fi ([176.9.41.70]:40742 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S933162AbcH2NkJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 09:40:09 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 29 Aug 2016 16:39:57 +0300
+Message-Id: <1472477998-25972-4-git-send-email-luca@coelho.fi> (sfid-20160829_154013_364129_64E5BF9B)
+Subject: [PATCH 4/5] mac80211: send delBA on unexpected BlockAck data frames
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Dienstag, 9. August 2016, 07:35:33 CEST schrieb Pan, Miaoqing:
+From: Johannes Berg <johannes.berg@intel.com>
 
-Hi Miaoqing, Herbert, Matt,
+When we receive data frames with ACK policy BlockAck, send
+delBA as requested by the 802.11 spec. Since this would be
+happening for every frame inside an A-MPDU if it's really
+received outside a session, limit it to a single attempt.
 
-> Hi Stephan,
-> 
-> So your suggestion is to use HW Random framework ?   Actually, which was
-> done by the commit 6301566e0b2d ("ath9k: export HW random number
-> generator"), but it was reverted, you can refer to
-> https://www.mail-archive.com/linux-crypto%40vger.kernel.org/msg15483.html
-> for more information.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/agg-rx.c   | 4 +++-
+ net/mac80211/rx.c       | 9 ++++++++-
+ net/mac80211/sta_info.h | 3 +++
+ 3 files changed, 14 insertions(+), 2 deletions(-)
 
-I see, it is the same RNG we talked about earlier. The issue is that the 
-suggested rngd per default assumes one bit of entropy with every data bit. 
-This is not given with this noise source. This is the basis of my reply last 
-time.
-
-Herbert, Matt, should such noise sources be added to the HW random framework? 
-The thing is that the in-kernel HW random to input_pool link per default uses 
-a more conservative entropy estimate than the user space rngd. I would think 
-that the in-kernel link would appropriate for that rng. But the user space 
-rngd tool with its default behavior is not really suited here.
-
-Thanks
-Stephan
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index a9aff60..4d05acc 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -406,8 +406,10 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 	}
+ 
+ end:
+-	if (status == WLAN_STATUS_SUCCESS)
++	if (status == WLAN_STATUS_SUCCESS) {
+ 		__set_bit(tid, sta->ampdu_mlme.agg_session_valid);
++		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
++	}
+ 	mutex_unlock(&sta->ampdu_mlme.mtx);
+ 
+ end_no_lock:
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index c8ec434..7a60b59 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1123,8 +1123,15 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
+ 	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+ 
+ 	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
+-	if (!tid_agg_rx)
++	if (!tid_agg_rx) {
++		if (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK &&
++		    !test_bit(tid, rx->sta->ampdu_mlme.agg_session_valid) &&
++		    !test_and_set_bit(tid, rx->sta->ampdu_mlme.unexpected_agg))
++			ieee80211_send_delba(rx->sdata, rx->sta->sta.addr, tid,
++					     WLAN_BACK_RECIPIENT,
++					     WLAN_REASON_QSTA_REQUIRE_SETUP);
+ 		goto dont_reorder;
++	}
+ 
+ 	/* qos null data frames are excluded */
+ 	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 0556be3..530231b 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -230,6 +230,8 @@ struct tid_ampdu_rx {
+  * @tid_rx_stop_requested:  bitmap indicating which BA sessions per TID the
+  *	driver requested to close until the work for it runs
+  * @agg_session_valid: bitmap indicating which TID has a rx BA session open on
++ * @unexpected_agg: bitmap indicating which TID already sent a delBA due to
++ *	unexpected aggregation related frames outside a session
+  * @work: work struct for starting/stopping aggregation
+  * @tid_tx: aggregation info for Tx per TID
+  * @tid_start_tx: sessions where start was requested
+@@ -244,6 +246,7 @@ struct sta_ampdu_mlme {
+ 	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	unsigned long tid_rx_stop_requested[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	unsigned long agg_session_valid[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
++	unsigned long unexpected_agg[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	/* tx */
+ 	struct work_struct work;
+ 	struct tid_ampdu_tx __rcu *tid_tx[IEEE80211_NUM_TIDS];
+-- 
+2.8.1
