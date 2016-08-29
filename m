@@ -1,69 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43644 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755481AbcHSVrY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 19 Aug 2016 17:47:24 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 16/20] rtl8xxxu: Determine the need for SGI before handling specific TX desc formats
-Date: Fri, 19 Aug 2016 17:46:38 -0400
-Message-Id: <1471643202-26250-17-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160819_234745_805985_AAAD10A3)
-In-Reply-To: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1471643202-26250-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:40860 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751378AbcH2UZ0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 16:25:26 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 29 Aug 2016 23:25:14 +0300
+Message-Id: <1472502319-10847-2-git-send-email-luca@coelho.fi> (sfid-20160829_222530_636330_749E11C2)
+In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 1/6] cfg80211: clarify the requirements of .disconnect()
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-In order to be able to split out the TX descriptor handling code,
-determine in advance the need to mark SGI.
+cfg80211 expects the .disconnect() handler to call
+cfg80211_disconnect() when done. Make this requirement
+more explicit.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 14 ++++++++------
- 1 file changed, 8 insertions(+), 6 deletions(-)
+ include/net/cfg80211.h | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 2f951cf..6dc3f52 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -4770,7 +4770,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 	u16 rate_flag = tx_info->control.rates[0].flags;
- 	int tx_desc_size = priv->fops->tx_desc_size;
- 	int ret;
--	bool usedesc40, ampdu_enable;
-+	bool usedesc40, ampdu_enable, sgi = false;
- 
- 	if (skb_headroom(skb) < tx_desc_size) {
- 		dev_warn(dev,
-@@ -4854,6 +4854,12 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 	else
- 		rate = tx_rate->hw_value;
- 
-+	if (rate_flag & IEEE80211_TX_RC_SHORT_GI ||
-+	    (ieee80211_is_data_qos(hdr->frame_control) &&
-+	     sta && sta->ht_cap.cap &
-+	     (IEEE80211_HT_CAP_SGI_40 | IEEE80211_HT_CAP_SGI_20)))
-+		sgi = true;
-+
- 	seq_number = IEEE80211_SEQ_TO_SN(le16_to_cpu(hdr->seq_ctrl));
- 	if (!usedesc40) {
- 		tx_desc->txdw5 = cpu_to_le32(rate);
-@@ -4886,12 +4892,8 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 		    (sta && vif && vif->bss_conf.use_short_preamble))
- 			tx_desc->txdw4 |= cpu_to_le32(TXDESC32_SHORT_PREAMBLE);
- 
--		if (rate_flag & IEEE80211_TX_RC_SHORT_GI ||
--		    (ieee80211_is_data_qos(hdr->frame_control) &&
--		     sta && sta->ht_cap.cap &
--		     (IEEE80211_HT_CAP_SGI_40 | IEEE80211_HT_CAP_SGI_20))) {
-+		if (sgi)
- 			tx_desc->txdw5 |= cpu_to_le32(TXDESC32_SHORT_GI);
--		}
- 
- 		if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
- 			/*
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9c23f4d3..d5e7f69 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2423,7 +2423,8 @@ struct cfg80211_qos_map {
+  *	cases, the result of roaming is indicated with a call to
+  *	cfg80211_roamed() or cfg80211_roamed_bss().
+  *	(invoked with the wireless_dev mutex held)
+- * @disconnect: Disconnect from the BSS/ESS.
++ * @disconnect: Disconnect from the BSS/ESS. Once done, call
++ *	cfg80211_disconnected().
+  *	(invoked with the wireless_dev mutex held)
+  *
+  * @join_ibss: Join the specified IBSS (or create if necessary). Once done, call
 -- 
-2.7.4
+2.8.1
