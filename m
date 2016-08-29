@@ -1,181 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33491 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755524AbcHYIT3 (ORCPT
+Received: from smtprelay0130.hostedemail.com ([216.40.44.130]:45505 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754458AbcH2RGS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Aug 2016 04:19:29 -0400
-Received: by mail-wm0-f67.google.com with SMTP id o80so6298104wme.0
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2016 01:19:29 -0700 (PDT)
-Received: from desktop.wvd.kresin.me (p200300454B4D5C0058F68CFDF8018812.dip0.t-ipconnect.de. [2003:45:4b4d:5c00:58f6:8cfd:f801:8812])
-        by smtp.gmail.com with ESMTPSA id g184sm37649155wme.15.2016.08.25.01.19.27
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Thu, 25 Aug 2016 01:19:27 -0700 (PDT)
-From: Mathias Kresin <dev@kresin.me>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH] rt2x00: add support for mac addr from device tree
-Date: Thu, 25 Aug 2016 10:19:22 +0200
-Message-Id: <1472113162-26915-1-git-send-email-dev@kresin.me> (sfid-20160825_102220_356390_AF26662D)
+        Mon, 29 Aug 2016 13:06:18 -0400
+From: Joe Perches <joe@perches.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] ath10k: Spelling and miscellaneous neatening
+Date: Mon, 29 Aug 2016 10:05:51 -0700
+Message-Id: <95a6b65277914d88178ed2b15e182455067cca60.1472490319.git.joe@perches.com> (sfid-20160829_190638_313436_6935B697)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The EEPROM used on some CPEs has for every device the same generic
-ralink mac in EEPROM and needs to be overridden.
+Correct some trivial comment typos.
+Remove unnecessary parentheses in a long line.
+Convert a return; before the end of a void function definition to just ;
 
-Signed-off-by: Mathias Kresin <dev@kresin.me>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ralink/rt2x00/rt2400pci.c |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt2500pci.c |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt2500usb.c |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  1 +
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c | 17 +++++++++++++++++
- drivers/net/wireless/ralink/rt2x00/rt61pci.c   |  5 +----
- drivers/net/wireless/ralink/rt2x00/rt73usb.c   |  5 +----
- 8 files changed, 24 insertions(+), 24 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.c        |  2 +-
+ drivers/net/wireless/ath/ath10k/core.c      |  2 +-
+ drivers/net/wireless/ath/ath10k/htt.h       |  8 ++++----
+ drivers/net/wireless/ath/ath10k/hw.c        |  2 +-
+ drivers/net/wireless/ath/ath10k/hw.h        |  2 +-
+ drivers/net/wireless/ath/ath10k/targaddrs.h |  2 +-
+ drivers/net/wireless/ath/ath10k/wmi.h       | 24 ++++++++++++------------
+ 7 files changed, 21 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-index 155f343..085c5b4 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-@@ -1459,10 +1459,7 @@ static int rt2400pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
+diff --git a/drivers/net/wireless/ath/ath10k/ce.c b/drivers/net/wireless/ath/ath10k/ce.c
+index 9fb8d74..cea9684 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.c
++++ b/drivers/net/wireless/ath/ath10k/ce.c
+@@ -39,7 +39,7 @@
+  * chooses what to send (buffer address, length). The destination
+  * side keeps a supply of "anonymous receive buffers" available and
+  * it handles incoming data as it arrives (when the destination
+- * recieves an interrupt).
++ * receives an interrupt).
+  *
+  * The sender may send a simple buffer (address/length) or it may
+  * send a small list of buffers.  When a small list is sent, hardware
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index e889829..1e8147a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2118,7 +2118,7 @@ err:
+ 	/* TODO: It's probably a good idea to release device from the driver
+ 	 * but calling device_release_driver() here will cause a deadlock.
  	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-index 2553cdd..9832fd5 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-@@ -1585,10 +1585,7 @@ static int rt2500pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-index 2d64611..cd3ab5a 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-@@ -1349,10 +1349,7 @@ static int rt2500usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-index bf3f0a3..59c49af 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-@@ -6919,10 +6919,7 @@ static int rt2800_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2800_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
- 
- 	rt2800_eeprom_read(rt2x00dev, EEPROM_NIC_CONF0, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index f68d492..aa3d4cee 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -1403,6 +1403,7 @@ static inline void rt2x00debug_dump_frame(struct rt2x00_dev *rt2x00dev,
-  */
- u32 rt2x00lib_get_bssidx(struct rt2x00_dev *rt2x00dev,
- 			 struct ieee80211_vif *vif);
-+void rt2x00lib_set_mac_address(struct rt2x00_dev *rt2x00dev, u8 *eeprom_mac_addr);
- 
- /*
-  * Interrupt context handlers.
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index 4e0c565..d659250 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-@@ -26,6 +26,8 @@
- #include <linux/module.h>
- #include <linux/slab.h>
- #include <linux/log2.h>
-+#include <linux/of.h>
-+#include <linux/of_net.h>
- 
- #include "rt2x00.h"
- #include "rt2x00lib.h"
-@@ -931,6 +933,21 @@ static void rt2x00lib_rate(struct ieee80211_rate *entry,
- 		entry->flags |= IEEE80211_RATE_SHORT_PREAMBLE;
+-	return;
++	;
  }
  
-+void rt2x00lib_set_mac_address(struct rt2x00_dev *rt2x00dev, u8 *eeprom_mac_addr)
-+{
-+	const char *mac_addr;
-+
-+	mac_addr = of_get_mac_address(rt2x00dev->dev->of_node);
-+	if (mac_addr)
-+		ether_addr_copy(eeprom_mac_addr, mac_addr);
-+
-+	if (!is_valid_ether_addr(eeprom_mac_addr)) {
-+		eth_random_addr(eeprom_mac_addr);
-+		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", eeprom_mac_addr);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(rt2x00lib_set_mac_address);
-+
- static int rt2x00lib_probe_hw_modes(struct rt2x00_dev *rt2x00dev,
- 				    struct hw_mode_spec *spec)
- {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-index 03013eb..5306a3b 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-@@ -2413,10 +2413,7 @@ static int rt61pci_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
+ int ath10k_core_register(struct ath10k *ar, u32 chip_id)
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 430a83e..cedb4e8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -595,7 +595,7 @@ enum htt_rx_mpdu_status {
+ 	/* only accept EAPOL frames */
+ 	HTT_RX_IND_MPDU_STATUS_UNAUTH_PEER,
+ 	HTT_RX_IND_MPDU_STATUS_OUT_OF_SYNC,
+-	/* Non-data in promiscous mode */
++	/* Non-data in promiscuous mode */
+ 	HTT_RX_IND_MPDU_STATUS_MGMT_CTRL,
+ 	HTT_RX_IND_MPDU_STATUS_TKIP_MIC_ERR,
+ 	HTT_RX_IND_MPDU_STATUS_DECRYPT_ERR,
+@@ -900,7 +900,7 @@ struct htt_rx_in_ord_ind {
+  *     Purpose: indicate how many 32-bit integers follow the message header
+  *   - NUM_CHARS
+  *     Bits 31:16
+- *     Purpose: indicate how many 8-bit charaters follow the series of integers
++ *     Purpose: indicate how many 8-bit characters follow the series of integers
+  */
+ struct htt_rx_test {
+ 	u8 num_ints;
+@@ -1042,10 +1042,10 @@ struct htt_dbg_stats_wal_tx_stats {
+ 	/* illegal rate phy errors  */
+ 	__le32 illgl_rate_phy_err;
  
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-index c1397a6..1a29c4d 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-@@ -1766,10 +1766,7 @@ static int rt73usb_validate_eeprom(struct rt2x00_dev *rt2x00dev)
- 	 * Start validation of the data that has been read.
- 	 */
- 	mac = rt2x00_eeprom_addr(rt2x00dev, EEPROM_MAC_ADDR_0);
--	if (!is_valid_ether_addr(mac)) {
--		eth_random_addr(mac);
--		rt2x00_eeprom_dbg(rt2x00dev, "MAC: %pM\n", mac);
--	}
-+	rt2x00lib_set_mac_address(rt2x00dev, mac);
+-	/* wal pdev continous xretry */
++	/* wal pdev continuous xretry */
+ 	__le32 pdev_cont_xretry;
  
- 	rt2x00_eeprom_read(rt2x00dev, EEPROM_ANTENNA, &word);
- 	if (word == 0xffff) {
+-	/* wal pdev continous xretry */
++	/* wal pdev continuous xretry */
+ 	__le32 pdev_tx_timeout;
+ 
+ 	/* wal pdev resets  */
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index f903d46..ed917cb 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -85,7 +85,7 @@ const struct ath10k_hw_regs qca99x0_regs = {
+ 	.ce7_base_address			= 0x0004bc00,
+ 	/* Note: qca99x0 supports upto 12 Copy Engines. Other than address of
+ 	 * CE0 and CE1 no other copy engine is directly referred in the code.
+-	 * It is not really neccessary to assign address for newly supported
++	 * It is not really necessary to assign address for newly supported
+ 	 * CEs in this address table.
+ 	 *	Copy Engine		Address
+ 	 *	CE8			0x0004c000
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index e014cd7..93ca128 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -284,7 +284,7 @@ void ath10k_hw_fill_survey_time(struct ath10k *ar, struct survey_info *survey,
+ #define QCA_REV_9377(ar) ((ar)->hw_rev == ATH10K_HW_QCA9377)
+ #define QCA_REV_40XX(ar) ((ar)->hw_rev == ATH10K_HW_QCA4019)
+ 
+-/* Known pecularities:
++/* Known peculiarities:
+  *  - raw appears in nwifi decap, raw and nwifi appear in ethernet decap
+  *  - raw have FCS, nwifi doesn't
+  *  - ethernet frames have 802.11 header decapped and parts (base hdr, cipher
+diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
+index aaf53a8..a47cab4 100644
+--- a/drivers/net/wireless/ath/ath10k/targaddrs.h
++++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
+@@ -405,7 +405,7 @@ Fw Mode/SubMode Mask
+  * 1. target firmware would check magic number and if it's a match, firmware
+  *    would consider the bits[0:15] are valid and base on that to calculate
+  *    the end of DRAM. Early allocation would be located at that area and
+- *    may be reclaimed when necesary
++ *    may be reclaimed when necessary
+  * 2. if no magic number is found, early allocation would happen at "_end"
+  *    symbol of ROM which is located before the app-data and might NOT be
+  *    re-claimable. If this is adopted, link script should keep this in
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 3ef4688..452790e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -55,7 +55,7 @@
+  *    type.
+  *
+  * 6. Comment each parameter part of the WMI command/event structure by
+- *    using the 2 stars at the begining of C comment instead of one star to
++ *    using the 2 stars at the beginning of C comment instead of one star to
+  *    enable HTML document generation using Doxygen.
+  *
+  */
+@@ -2082,7 +2082,7 @@ struct wmi_resource_config {
+ 	 * In offload mode target supports features like WOW, chatter and
+ 	 * other protocol offloads. In order to support them some
+ 	 * functionalities like reorder buffering, PN checking need to be
+-	 * done in target. This determines maximum number of peers suported
++	 * done in target. This determines maximum number of peers supported
+ 	 * by target in offload mode
+ 	 */
+ 	__le32 num_offload_peers;
+@@ -2263,7 +2263,7 @@ struct wmi_resource_config {
+ 	 * Max. number of Tx fragments per MSDU
+ 	 *  This parameter controls the max number of Tx fragments per MSDU.
+ 	 *  This is sent by the target as part of the WMI_SERVICE_READY event
+-	 *  and is overriden by the OS shim as required.
++	 *  and is overridden by the OS shim as required.
+ 	 */
+ 	__le32 max_frag_entries;
+ } __packed;
+@@ -2445,7 +2445,7 @@ struct wmi_resource_config_10x {
+ 	 * Max. number of Tx fragments per MSDU
+ 	 *  This parameter controls the max number of Tx fragments per MSDU.
+ 	 *  This is sent by the target as part of the WMI_SERVICE_READY event
+-	 *  and is overriden by the OS shim as required.
++	 *  and is overridden by the OS shim as required.
+ 	 */
+ 	__le32 max_frag_entries;
+ } __packed;
+@@ -2739,7 +2739,7 @@ struct wmi_init_cmd {
+ 	struct wmi_host_mem_chunks mem_chunks;
+ } __packed;
+ 
+-/* _10x stucture is from 10.X FW API */
++/* _10x structure is from 10.X FW API */
+ struct wmi_init_cmd_10x {
+ 	struct wmi_resource_config_10x resource_config;
+ 	struct wmi_host_mem_chunks mem_chunks;
+@@ -3962,7 +3962,7 @@ struct wmi_pdev_stats_tx {
+ 	/* illegal rate phy errors  */
+ 	__le32 illgl_rate_phy_err;
+ 
+-	/* wal pdev continous xretry */
++	/* wal pdev continuous xretry */
+ 	__le32 pdev_cont_xretry;
+ 
+ 	/* wal pdev continous xretry */
+@@ -4456,9 +4456,9 @@ struct wmi_vdev_start_request_cmd {
+ 	__le32 flags;
+ 	/* ssid field. Only valid for AP/GO/IBSS/BTAmp VDEV type. */
+ 	struct wmi_ssid ssid;
+-	/* beacon/probe reponse xmit rate. Applicable for SoftAP. */
++	/* beacon/probe response xmit rate. Applicable for SoftAP. */
+ 	__le32 bcn_tx_rate;
+-	/* beacon/probe reponse xmit power. Applicable for SoftAP. */
++	/* beacon/probe response xmit power. Applicable for SoftAP. */
+ 	__le32 bcn_tx_power;
+ 	/* number of p2p NOA descriptor(s) from scan entry */
+ 	__le32 num_noa_descriptors;
+@@ -4686,7 +4686,7 @@ enum wmi_vdev_param {
+ 	WMI_VDEV_PARAM_BEACON_INTERVAL,
+ 	/* Listen interval in TUs */
+ 	WMI_VDEV_PARAM_LISTEN_INTERVAL,
+-	/* muticast rate in Mbps */
++	/* multicast rate in Mbps */
+ 	WMI_VDEV_PARAM_MULTICAST_RATE,
+ 	/* management frame rate in Mbps */
+ 	WMI_VDEV_PARAM_MGMT_TX_RATE,
+@@ -4817,7 +4817,7 @@ enum wmi_10x_vdev_param {
+ 	WMI_10X_VDEV_PARAM_BEACON_INTERVAL,
+ 	/* Listen interval in TUs */
+ 	WMI_10X_VDEV_PARAM_LISTEN_INTERVAL,
+-	/* muticast rate in Mbps */
++	/* multicast rate in Mbps */
+ 	WMI_10X_VDEV_PARAM_MULTICAST_RATE,
+ 	/* management frame rate in Mbps */
+ 	WMI_10X_VDEV_PARAM_MGMT_TX_RATE,
+@@ -5062,7 +5062,7 @@ struct wmi_vdev_simple_event {
+ } __packed;
+ 
+ /* VDEV start response status codes */
+-/* VDEV succesfully started */
++/* VDEV successfully started */
+ #define WMI_INIFIED_VDEV_START_RESPONSE_STATUS_SUCCESS	0x0
+ 
+ /* requested VDEV not found */
+@@ -5378,7 +5378,7 @@ enum wmi_sta_ps_param_pspoll_count {
+ #define WMI_UAPSD_AC_TYPE_TRIG 1
+ 
+ #define WMI_UAPSD_AC_BIT_MASK(ac, type) \
+-	((type ==  WMI_UAPSD_AC_TYPE_DELI) ? (1 << (ac << 1)) : (1 << ((ac << 1) + 1)))
++	(type == WMI_UAPSD_AC_TYPE_DELI ? 1 << (ac << 1) : 1 << ((ac << 1) + 1))
+ 
+ enum wmi_sta_ps_param_uapsd {
+ 	WMI_STA_PS_UAPSD_AC0_DELIVERY_EN = (1 << 0),
 -- 
-2.7.4
+2.8.0.rc4.16.g56331f8
