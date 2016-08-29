@@ -1,242 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41142 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:40804 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756437AbcH3Lj2 (ORCPT
+        with ESMTP id S1755756AbcH2TkH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 07:39:28 -0400
+        Mon, 29 Aug 2016 15:40:07 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: linux-wireless@vger.kernel.org
-Cc: Ayala Beker <ayala.beker@intel.com>,
+Cc: Sharon Dvir <sharon.dvir@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 14:38:48 +0300
-Message-Id: <1472557142-14782-2-git-send-email-luca@coelho.fi> (sfid-20160830_133932_808333_AA13F5B8)
-In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
-References: <1472556999.27868.86.camel@coelho.fi>
- <1472557142-14782-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 02/16] iwlwifi: mvm: support GMAC protocol
+Date: Mon, 29 Aug 2016 22:39:52 +0300
+Message-Id: <1472499594-3369-2-git-send-email-luca@coelho.fi> (sfid-20160829_214011_417833_90AE06E6)
+In-Reply-To: <1472499594-3369-1-git-send-email-luca@coelho.fi>
+References: <1472499451.27868.31.camel@coelho.fi>
+ <1472499594-3369-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 2/4] iwlwifi: mvm: check if vif is NULL before using it
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Sharon Dvir <sharon.dvir@intel.com>
 
-Add support for installing and removing GMAC key
-for newer FW versions that support GCM and MFP.
-GMAC provides authentication and integrity for multicast management
-frames.
+wdev_to_ieee80211_vif() might return NULL.
+Check that vif != NULL before dereferencing it.
 
-Firmware API was changed, update the driver accordingly.
-
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- .../net/wireless/intel/iwlwifi/mvm/fw-api-sta.h    | 31 ++++++++++++----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 18 ++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       | 42 ++++++++++++++++++----
- 4 files changed, 76 insertions(+), 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-index d1c4fb8..6c8e3ca 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-@@ -433,25 +433,42 @@ struct iwl_mvm_rm_sta_cmd {
- } __packed; /* REMOVE_STA_CMD_API_S_VER_2 */
- 
- /**
-+ * struct iwl_mvm_mgmt_mcast_key_cmd_v1
-+ * ( MGMT_MCAST_KEY = 0x1f )
-+ * @ctrl_flags: %iwl_sta_key_flag
-+ * @igtk:
-+ * @k1: unused
-+ * @k2: unused
-+ * @sta_id: station ID that support IGTK
-+ * @key_id:
-+ * @receive_seq_cnt: initial RSC/PN needed for replay check
-+ */
-+struct iwl_mvm_mgmt_mcast_key_cmd_v1 {
-+	__le32 ctrl_flags;
-+	u8 igtk[16];
-+	u8 k1[16];
-+	u8 k2[16];
-+	__le32 key_id;
-+	__le32 sta_id;
-+	__le64 receive_seq_cnt;
-+} __packed; /* SEC_MGMT_MULTICAST_KEY_CMD_API_S_VER_1 */
-+
-+/**
-  * struct iwl_mvm_mgmt_mcast_key_cmd
-  * ( MGMT_MCAST_KEY = 0x1f )
-  * @ctrl_flags: %iwl_sta_key_flag
-- * @IGTK:
-- * @K1: unused
-- * @K2: unused
-+ * @igtk: IGTK master key
-  * @sta_id: station ID that support IGTK
-  * @key_id:
-  * @receive_seq_cnt: initial RSC/PN needed for replay check
-  */
- struct iwl_mvm_mgmt_mcast_key_cmd {
- 	__le32 ctrl_flags;
--	u8 IGTK[16];
--	u8 K1[16];
--	u8 K2[16];
-+	u8 igtk[32];
- 	__le32 key_id;
- 	__le32 sta_id;
- 	__le64 receive_seq_cnt;
--} __packed; /* SEC_MGMT_MULTICAST_KEY_CMD_API_S_VER_1 */
-+} __packed; /* SEC_MGMT_MULTICAST_KEY_CMD_API_S_VER_2 */
- 
- struct iwl_mvm_wep_key {
- 	u8 key_index;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 6d60645..f5290c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -465,7 +465,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	hw->uapsd_queues = IWL_MVM_UAPSD_QUEUES;
- 	hw->uapsd_max_sp_len = IWL_UAPSD_MAX_SP;
- 
--	BUILD_BUG_ON(ARRAY_SIZE(mvm->ciphers) < ARRAY_SIZE(mvm_ciphers) + 4);
-+	BUILD_BUG_ON(ARRAY_SIZE(mvm->ciphers) < ARRAY_SIZE(mvm_ciphers) + 6);
- 	memcpy(mvm->ciphers, mvm_ciphers, sizeof(mvm_ciphers));
- 	hw->wiphy->n_cipher_suites = ARRAY_SIZE(mvm_ciphers);
- 	hw->wiphy->cipher_suites = mvm->ciphers;
-@@ -490,6 +490,14 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 		mvm->ciphers[hw->wiphy->n_cipher_suites] =
- 			WLAN_CIPHER_SUITE_AES_CMAC;
- 		hw->wiphy->n_cipher_suites++;
-+		if (iwl_mvm_has_new_rx_api(mvm)) {
-+			mvm->ciphers[hw->wiphy->n_cipher_suites] =
-+				WLAN_CIPHER_SUITE_BIP_GMAC_128;
-+			hw->wiphy->n_cipher_suites++;
-+			mvm->ciphers[hw->wiphy->n_cipher_suites] =
-+				WLAN_CIPHER_SUITE_BIP_GMAC_256;
-+			hw->wiphy->n_cipher_suites++;
-+		}
- 	}
- 
- 	/* currently FW API supports only one optional cipher scheme */
-@@ -2746,6 +2754,8 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 		key->flags |= IEEE80211_KEY_FLAG_PUT_IV_SPACE;
- 		break;
- 	case WLAN_CIPHER_SUITE_AES_CMAC:
-+	case WLAN_CIPHER_SUITE_BIP_GMAC_128:
-+	case WLAN_CIPHER_SUITE_BIP_GMAC_256:
- 		WARN_ON_ONCE(!ieee80211_hw_check(hw, MFP_CAPABLE));
- 		break;
- 	case WLAN_CIPHER_SUITE_WEP40:
-@@ -2779,9 +2789,11 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 			 * GTK on AP interface is a TX-only key, return 0;
- 			 * on IBSS they're per-station and because we're lazy
- 			 * we don't support them for RX, so do the same.
--			 * CMAC in AP/IBSS modes must be done in software.
-+			 * CMAC/GMAC in AP/IBSS modes must be done in software.
- 			 */
--			if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
-+			if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
-+			    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
-+			    key->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256)
- 				ret = -EOPNOTSUPP;
- 			else
- 				ret = 0;
 diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index b4fc86d..0b0855a 100644
+index b4fc86d..6a615bb 100644
 --- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
 +++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -707,7 +707,7 @@ enum iwl_mvm_queue_status {
- };
- 
- #define IWL_MVM_DQA_QUEUE_TIMEOUT	(5 * HZ)
--#define IWL_MVM_NUM_CIPHERS             8
-+#define IWL_MVM_NUM_CIPHERS             10
- 
- struct iwl_mvm {
- 	/* for logger access */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 3130b9c..5960eb4 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -2412,9 +2412,15 @@ static int iwl_mvm_send_sta_igtk(struct iwl_mvm *mvm,
- 	struct iwl_mvm_mgmt_mcast_key_cmd igtk_cmd = {};
- 
- 	/* verify the key details match the required command's expectations */
--	if (WARN_ON((keyconf->cipher != WLAN_CIPHER_SUITE_AES_CMAC) ||
--		    (keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE) ||
--		    (keyconf->keyidx != 4 && keyconf->keyidx != 5)))
-+	if (WARN_ON((keyconf->flags & IEEE80211_KEY_FLAG_PAIRWISE) ||
-+		    (keyconf->keyidx != 4 && keyconf->keyidx != 5) ||
-+		    (keyconf->cipher != WLAN_CIPHER_SUITE_AES_CMAC &&
-+		     keyconf->cipher != WLAN_CIPHER_SUITE_BIP_GMAC_128 &&
-+		     keyconf->cipher != WLAN_CIPHER_SUITE_BIP_GMAC_256)))
-+		return -EINVAL;
-+
-+	if (WARN_ON(!iwl_mvm_has_new_rx_api(mvm) &&
-+		    keyconf->cipher != WLAN_CIPHER_SUITE_AES_CMAC))
- 		return -EINVAL;
- 
- 	igtk_cmd.key_id = cpu_to_le32(keyconf->keyidx);
-@@ -2430,11 +2436,18 @@ static int iwl_mvm_send_sta_igtk(struct iwl_mvm *mvm,
- 		case WLAN_CIPHER_SUITE_AES_CMAC:
- 			igtk_cmd.ctrl_flags |= cpu_to_le32(STA_KEY_FLG_CCM);
- 			break;
-+		case WLAN_CIPHER_SUITE_BIP_GMAC_128:
-+		case WLAN_CIPHER_SUITE_BIP_GMAC_256:
-+			igtk_cmd.ctrl_flags |= cpu_to_le32(STA_KEY_FLG_GCMP);
-+			break;
- 		default:
- 			return -EINVAL;
- 		}
- 
--		memcpy(igtk_cmd.IGTK, keyconf->key, keyconf->keylen);
-+		memcpy(igtk_cmd.igtk, keyconf->key, keyconf->keylen);
-+		if (keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256)
-+			igtk_cmd.ctrl_flags |=
-+				cpu_to_le32(STA_KEY_FLG_KEY_32BYTES);
- 		ieee80211_get_key_rx_seq(keyconf, 0, &seq);
- 		pn = seq.aes_cmac.pn;
- 		igtk_cmd.receive_seq_cnt = cpu_to_le64(((u64) pn[5] << 0) |
-@@ -2449,6 +2462,19 @@ static int iwl_mvm_send_sta_igtk(struct iwl_mvm *mvm,
- 		       remove_key ? "removing" : "installing",
- 		       igtk_cmd.sta_id);
- 
-+	if (!iwl_mvm_has_new_rx_api(mvm)) {
-+		struct iwl_mvm_mgmt_mcast_key_cmd_v1 igtk_cmd_v1 = {
-+			.ctrl_flags = igtk_cmd.ctrl_flags,
-+			.key_id = igtk_cmd.key_id,
-+			.sta_id = igtk_cmd.sta_id,
-+			.receive_seq_cnt = igtk_cmd.receive_seq_cnt
-+		};
-+
-+		memcpy(igtk_cmd_v1.igtk, igtk_cmd.igtk,
-+		       ARRAY_SIZE(igtk_cmd_v1.igtk));
-+		return iwl_mvm_send_cmd_pdu(mvm, MGMT_MCAST_KEY, 0,
-+					    sizeof(igtk_cmd_v1), &igtk_cmd_v1);
-+	}
- 	return iwl_mvm_send_cmd_pdu(mvm, MGMT_MCAST_KEY, 0,
- 				    sizeof(igtk_cmd), &igtk_cmd);
+@@ -467,6 +467,8 @@ struct iwl_mvm_vif {
+ static inline struct iwl_mvm_vif *
+ iwl_mvm_vif_from_mac80211(struct ieee80211_vif *vif)
+ {
++	if (!vif)
++		return NULL;
+ 	return (void *)vif->drv_priv;
  }
-@@ -2573,7 +2599,9 @@ int iwl_mvm_set_sta_key(struct iwl_mvm *mvm,
- 	}
- 	sta_id = mvm_sta->sta_id;
  
--	if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC) {
-+	if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256) {
- 		ret = iwl_mvm_send_sta_igtk(mvm, keyconf, sta_id, false);
- 		goto end;
- 	}
-@@ -2659,7 +2687,9 @@ int iwl_mvm_remove_sta_key(struct iwl_mvm *mvm,
- 	IWL_DEBUG_WEP(mvm, "mvm remove dynamic key: idx=%d sta=%d\n",
- 		      keyconf->keyidx, sta_id);
- 
--	if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
-+	if (keyconf->cipher == WLAN_CIPHER_SUITE_AES_CMAC ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_128 ||
-+	    keyconf->cipher == WLAN_CIPHER_SUITE_BIP_GMAC_256)
- 		return iwl_mvm_send_sta_igtk(mvm, keyconf, sta_id, true);
- 
- 	if (!__test_and_clear_bit(keyconf->hw_key_idx, mvm->fw_key_table)) {
 -- 
 2.8.1
