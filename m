@@ -1,142 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33756 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753245AbcHUOt3 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41020 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755475AbcH2V2N (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Aug 2016 10:49:29 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org
-Cc: robh+dt@kernel.org, mark.rutland@arm.com, arnd@arndb.de,
-        chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 3/5] ath9k: Add an eeprom_ops callback for retrieving the eepmisc value
-Date: Sun, 21 Aug 2016 16:49:04 +0200
-Message-Id: <20160821144906.30984-4-martin.blumenstingl@googlemail.com> (sfid-20160821_164933_534523_123DC5FD)
-In-Reply-To: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
-References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+        Mon, 29 Aug 2016 17:28:13 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 00:26:13 +0300
+Message-Id: <1472505976-21108-13-git-send-email-luca@coelho.fi> (sfid-20160829_232817_800700_AAAA9BBC)
+In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
+References: <1472505827.27868.41.camel@coelho.fi>
+ <1472505976-21108-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 13/16] iwlwifi: add the new 9170 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This allows deciding if we have to swap the EEPROM data (so it matches
-the system's native endianness) even if no byte-swapping (swab16, based on
-the first two bytes in the EEPROM) is needed.
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 8 +++++++-
- drivers/net/wireless/ath/ath9k/eeprom.h        | 1 +
- drivers/net/wireless/ath/ath9k/eeprom_4k.c     | 8 +++++++-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c   | 8 +++++++-
- drivers/net/wireless/ath/ath9k/eeprom_def.c    | 8 +++++++-
- 5 files changed, 29 insertions(+), 4 deletions(-)
+From: Oren Givon <oren.givon@intel.com>
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 6669e36..7d62d1c 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -5498,6 +5498,11 @@ unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
- 	}
- }
+Add a new config struct for the new 9170 series and add
+the first PCI ID for it.
+
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 10 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  1 +
+ 3 files changed, 12 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index e442650..1fec6af 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -146,6 +146,16 @@ static const struct iwl_tt_params iwl9000_tt_params = {
+ 	.mac_addr_from_csr = true,					\
+ 	.rf_id = true
  
-+static u8 ar9003_get_eepmisc(struct ath_hw *ah)
-+{
-+	return ah->eeprom.map4k.baseEepHeader.eepMisc;
-+}
++const struct iwl_cfg iwl9160_2ac_cfg = {
++	.name = "Intel(R) Dual Band Wireless AC 9160",
++	.fw_name_pre = IWL9260_FW_PRE,
++	IWL_DEVICE_9000,
++	.ht_params = &iwl9000_ht_params,
++	.nvm_ver = IWL9000_NVM_VERSION,
++	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
 +
- const struct eeprom_ops eep_ar9300_ops = {
- 	.check_eeprom = ath9k_hw_ar9300_check_eeprom,
- 	.get_eeprom = ath9k_hw_ar9300_get_eeprom,
-@@ -5508,5 +5513,6 @@ const struct eeprom_ops eep_ar9300_ops = {
- 	.set_board_values = ath9k_hw_ar9300_set_board_values,
- 	.set_addac = ath9k_hw_ar9300_set_addac,
- 	.set_txpower = ath9k_hw_ar9300_set_txpower,
--	.get_spur_channel = ath9k_hw_ar9300_get_spur_channel
-+	.get_spur_channel = ath9k_hw_ar9300_get_spur_channel,
-+	.get_eepmisc = ar9003_get_eepmisc
- };
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.h b/drivers/net/wireless/ath/ath9k/eeprom.h
-index c466ada..408cfa7 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.h
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.h
-@@ -655,6 +655,7 @@ struct eeprom_ops {
- 			   u16 cfgCtl, u8 twiceAntennaReduction,
- 			   u8 powerLimit, bool test);
- 	u16 (*get_spur_channel)(struct ath_hw *ah, u16 i, bool is2GHz);
-+	u8 (*get_eepmisc)(struct ath_hw *ah);
- };
+ const struct iwl_cfg iwl9260_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 9260",
+ 	.fw_name_pre = IWL9260_FW_PRE,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 0ab415c..7008319 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -450,6 +450,7 @@ extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl9000lc_2ac_cfg;
++extern const struct iwl_cfg iwl9160_2ac_cfg;
+ extern const struct iwl_cfg iwl9260_2ac_cfg;
+ extern const struct iwl_cfg iwl9270_2ac_cfg;
+ extern const struct iwl_cfg iwl9460_2ac_cfg;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 1be0ac2..c6e24fb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -502,6 +502,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24FD, 0x0850, iwl8265_2ac_cfg)},
  
- void ath9k_hw_analog_shift_regwrite(struct ath_hw *ah, u32 reg, u32 val);
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_4k.c b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-index 780cb49..7cd9c64 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_4k.c
-@@ -1064,6 +1064,11 @@ static u16 ath9k_hw_4k_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- 	return ah->eeprom.map4k.modalHeader.spurChans[i].spurChan;
- }
- 
-+static u8 ath9k_hw_4k_get_eepmisc(struct ath_hw *ah)
-+{
-+	return ah->eeprom.map4k.baseEepHeader.eepMisc;
-+}
-+
- const struct eeprom_ops eep_4k_ops = {
- 	.check_eeprom		= ath9k_hw_4k_check_eeprom,
- 	.get_eeprom		= ath9k_hw_4k_get_eeprom,
-@@ -1073,5 +1078,6 @@ const struct eeprom_ops eep_4k_ops = {
- 	.get_eeprom_rev		= ath9k_hw_4k_get_eeprom_rev,
- 	.set_board_values	= ath9k_hw_4k_set_board_values,
- 	.set_txpower		= ath9k_hw_4k_set_txpower,
--	.get_spur_channel	= ath9k_hw_4k_get_spur_channel
-+	.get_spur_channel	= ath9k_hw_4k_get_spur_channel,
-+	.get_eepmisc		= ath9k_hw_4k_get_eepmisc
- };
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_9287.c b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-index f483ba2..e1ba9bc 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_9287.c
-@@ -986,6 +986,11 @@ static u16 ath9k_hw_ar9287_get_spur_channel(struct ath_hw *ah,
- 	return ah->eeprom.map9287.modalHeader.spurChans[i].spurChan;
- }
- 
-+static u8 ath9k_hw_ar9287_get_eepmisc(struct ath_hw *ah)
-+{
-+	return ah->eeprom.map9287.baseEepHeader.eepMisc;
-+}
-+
- const struct eeprom_ops eep_ar9287_ops = {
- 	.check_eeprom		= ath9k_hw_ar9287_check_eeprom,
- 	.get_eeprom		= ath9k_hw_ar9287_get_eeprom,
-@@ -995,5 +1000,6 @@ const struct eeprom_ops eep_ar9287_ops = {
- 	.get_eeprom_rev		= ath9k_hw_ar9287_get_eeprom_rev,
- 	.set_board_values	= ath9k_hw_ar9287_set_board_values,
- 	.set_txpower		= ath9k_hw_ar9287_set_txpower,
--	.get_spur_channel	= ath9k_hw_ar9287_get_spur_channel
-+	.get_spur_channel	= ath9k_hw_ar9287_get_spur_channel,
-+	.get_eepmisc		= ath9k_hw_ar9287_get_eepmisc
- };
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom_def.c b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-index 39b1b27..087bdb7 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom_def.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom_def.c
-@@ -1317,6 +1317,11 @@ static u16 ath9k_hw_def_get_spur_channel(struct ath_hw *ah, u16 i, bool is2GHz)
- 	return ah->eeprom.def.modalHeader[is2GHz].spurChans[i].spurChan;
- }
- 
-+static u8 ath9k_hw_def_get_eepmisc(struct ath_hw *ah)
-+{
-+	return ah->eeprom.def.baseEepHeader.eepMisc;
-+}
-+
- const struct eeprom_ops eep_def_ops = {
- 	.check_eeprom		= ath9k_hw_def_check_eeprom,
- 	.get_eeprom		= ath9k_hw_def_get_eeprom,
-@@ -1327,5 +1332,6 @@ const struct eeprom_ops eep_def_ops = {
- 	.set_board_values	= ath9k_hw_def_set_board_values,
- 	.set_addac		= ath9k_hw_def_set_addac,
- 	.set_txpower		= ath9k_hw_def_set_txpower,
--	.get_spur_channel	= ath9k_hw_def_get_spur_channel
-+	.get_spur_channel	= ath9k_hw_def_get_spur_channel,
-+	.get_eepmisc		= ath9k_hw_def_get_eepmisc
- };
+ /* 9000 Series */
++	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
 -- 
-2.9.3
+2.8.1
