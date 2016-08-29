@@ -1,74 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:35923 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753148AbcHUOtZ (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40878 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750786AbcH2UZ2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 21 Aug 2016 10:49:25 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
-        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        devicetree@vger.kernel.org
-Cc: robh+dt@kernel.org, mark.rutland@arm.com, arnd@arndb.de,
-        chunkeey@googlemail.com, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH 0/5] ath9k: EEPROM swapping improvements
-Date: Sun, 21 Aug 2016 16:49:01 +0200
-Message-Id: <20160821144906.30984-1-martin.blumenstingl@googlemail.com> (sfid-20160821_164930_361511_50046255)
+        Mon, 29 Aug 2016 16:25:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 29 Aug 2016 23:25:17 +0300
+Message-Id: <1472502319-10847-5-git-send-email-luca@coelho.fi> (sfid-20160829_222533_929675_5C060C40)
+In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 4/6] mac80211: add support for radiotap timestamp field
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are two types of swapping the EEPROM data in the ath9k driver.
-Before this series one type of swapping could not be used without the
-other.
+From: Johannes Berg <johannes.berg@intel.com>
 
-The first type of swapping looks at the "magic bytes" at the start of
-the EEPROM data and performs swab16 on the EEPROM contents if needed.
-The second type of swapping is EEPROM format specific and swaps
-specific fields within the EEPROM itself (swab16, swab32 - depends on
-the EEPROM format).
+Use the existing device timestamp from the RX status information
+to add support for the new radiotap timestamp field. Currently
+only 32-bit counters are supported, but we also add the radiotap
+mactime where applicable. This new field allows more flexibility
+in where the timestamp is taken etc. The non-timestamp data in
+the field is taken from a new field in the hw struct.
 
-With this series the second part now looks at the EEPMISC register
-inside the EEPROM, which uses a bit to indicate if the EEPROM data
-is Big Endian (this is also done by the FreeBSD kernel).
-This has a nice advantage: currently there are some out-of-tree hacks
-(in OpenWrt and LEDE) where the EEPROM has a Big Endian header on a
-Big Endian system (= no swab16 is performed) but the EEPROM itself
-indicates that it's data is Little Endian. Until now the out-of-tree
-code simply did a swab16 before passing the data to ath9k, so ath9k
-first did the swab16 - this also enabled the format specific swapping.
-These out-of-tree hacks are still working with the new logic, but it
-is recommended to remove them.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ include/net/ieee80211_radiotap.h | 21 +++++++++++++++++++++
+ include/net/mac80211.h           | 12 ++++++++++++
+ net/mac80211/main.c              |  3 +++
+ net/mac80211/rx.c                | 30 ++++++++++++++++++++++++++++++
+ 4 files changed, 66 insertions(+)
 
-The last patch in this series allows enabling the EEPROM endianness
-swapping via devicetree. This should be fine now since it addresses
-the concerns raised by Arnd Bergmann in in the original OF support
-patches: [0].
-
-This series depends on my other series (V5):
-"add devicetree support to ath9k" - see [1]
-
-
-[0] http://www.spinics.net/lists/linux-wireless/msg152634.html
-[1] https://marc.info/?l=linux-wireless&m=147178988827847&w=2
-
-
-Martin Blumenstingl (5):
-  ath9k: Add a #define for the EEPROM "eepmisc" endianness bit
-  ath9k: Set the "big endian" bit of the AR9003 EEPROM templates
-  ath9k: Add an eeprom_ops callback for retrieving the eepmisc value
-  ath9k: Make the EEPROM swapping check use the eepmisc register
-  ath9k: Make EEPROM endianness swapping configurable via devicetree
-
- .../devicetree/bindings/net/wireless/qca,ath9k.txt | 16 ++++++
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c     | 21 +++++---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.h     |  7 ++-
- drivers/net/wireless/ath/ath9k/eeprom.c            | 57 ++++++++++++++++------
- drivers/net/wireless/ath/ath9k/eeprom.h            |  5 +-
- drivers/net/wireless/ath/ath9k/eeprom_4k.c         | 10 +++-
- drivers/net/wireless/ath/ath9k/eeprom_9287.c       | 10 +++-
- drivers/net/wireless/ath/ath9k/eeprom_def.c        | 10 +++-
- drivers/net/wireless/ath/ath9k/init.c              |  6 ++-
- 9 files changed, 110 insertions(+), 32 deletions(-)
-
+diff --git a/include/net/ieee80211_radiotap.h b/include/net/ieee80211_radiotap.h
+index b0fd947..ba07b9d 100644
+--- a/include/net/ieee80211_radiotap.h
++++ b/include/net/ieee80211_radiotap.h
+@@ -190,6 +190,10 @@ struct ieee80211_radiotap_header {
+  * IEEE80211_RADIOTAP_VHT	u16, u8, u8, u8[4], u8, u8, u16
+  *
+  *	Contains VHT information about this frame.
++ *
++ * IEEE80211_RADIOTAP_TIMESTAMP		u64, u16, u8, u8	variable
++ *
++ *	Contains timestamp information for this frame.
+  */
+ enum ieee80211_radiotap_type {
+ 	IEEE80211_RADIOTAP_TSFT = 0,
+@@ -214,6 +218,7 @@ enum ieee80211_radiotap_type {
+ 	IEEE80211_RADIOTAP_MCS = 19,
+ 	IEEE80211_RADIOTAP_AMPDU_STATUS = 20,
+ 	IEEE80211_RADIOTAP_VHT = 21,
++	IEEE80211_RADIOTAP_TIMESTAMP = 22,
+ 
+ 	/* valid in every it_present bitmap, even vendor namespaces */
+ 	IEEE80211_RADIOTAP_RADIOTAP_NAMESPACE = 29,
+@@ -321,6 +326,22 @@ enum ieee80211_radiotap_type {
+ #define IEEE80211_RADIOTAP_CODING_LDPC_USER2			0x04
+ #define IEEE80211_RADIOTAP_CODING_LDPC_USER3			0x08
+ 
++/* For IEEE80211_RADIOTAP_TIMESTAMP */
++#define IEEE80211_RADIOTAP_TIMESTAMP_UNIT_MASK			0x000F
++#define IEEE80211_RADIOTAP_TIMESTAMP_UNIT_MS			0x0000
++#define IEEE80211_RADIOTAP_TIMESTAMP_UNIT_US			0x0001
++#define IEEE80211_RADIOTAP_TIMESTAMP_UNIT_NS			0x0003
++#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_MASK			0x00F0
++#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_BEGIN_MDPU		0x0000
++#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_EO_MPDU		0x0010
++#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_EO_PPDU		0x0020
++#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_PLCP_SIG_ACQ		0x0030
++#define IEEE80211_RADIOTAP_TIMESTAMP_SPOS_UNKNOWN		0x00F0
++
++#define IEEE80211_RADIOTAP_TIMESTAMP_FLAG_64BIT			0x00
++#define IEEE80211_RADIOTAP_TIMESTAMP_FLAG_32BIT			0x01
++#define IEEE80211_RADIOTAP_TIMESTAMP_FLAG_ACCURACY		0x02
++
+ /* helpers */
+ static inline int ieee80211_get_radiotap_len(unsigned char *data)
+ {
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index cca510a..81870dc 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2141,6 +2141,14 @@ enum ieee80211_hw_flags {
+  *	the default is _GI | _BANDWIDTH.
+  *	Use the %IEEE80211_RADIOTAP_VHT_KNOWN_* values.
+  *
++ * @radiotap_timestamp: Information for the radiotap timestamp field; if the
++ *	'units_pos' member is set to a non-negative value it must be set to
++ *	a combination of a IEEE80211_RADIOTAP_TIMESTAMP_UNIT_* and a
++ *	IEEE80211_RADIOTAP_TIMESTAMP_SPOS_* value, and then the timestamp
++ *	field will be added and populated from the &struct ieee80211_rx_status
++ *	device_timestamp. If the 'accuracy' member is non-negative, it's put
++ *	into the accuracy radiotap field and the accuracy known flag is set.
++ *
+  * @netdev_features: netdev features to be set in each netdev created
+  *	from this HW. Note that not all features are usable with mac80211,
+  *	other features will be rejected during HW registration.
+@@ -2184,6 +2192,10 @@ struct ieee80211_hw {
+ 	u8 offchannel_tx_hw_queue;
+ 	u8 radiotap_mcs_details;
+ 	u16 radiotap_vht_details;
++	struct {
++		int units_pos;
++		s16 accuracy;
++	} radiotap_timestamp;
+ 	netdev_features_t netdev_features;
+ 	u8 uapsd_queues;
+ 	u8 uapsd_max_sp_len;
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index d00ea9b..ac053a9 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -660,6 +660,9 @@ struct ieee80211_hw *ieee80211_alloc_hw_nm(size_t priv_data_len,
+ 
+ 	ieee80211_roc_setup(local);
+ 
++	local->hw.radiotap_timestamp.units_pos = -1;
++	local->hw.radiotap_timestamp.accuracy = -1;
++
+ 	return &local->hw;
+  err_free:
+ 	wiphy_free(wiphy);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index b7f051c..268eeb7 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -180,6 +180,11 @@ ieee80211_rx_radiotap_hdrlen(struct ieee80211_local *local,
+ 		len += 12;
+ 	}
+ 
++	if (local->hw.radiotap_timestamp.units_pos >= 0) {
++		len = ALIGN(len, 8);
++		len += 12;
++	}
++
+ 	if (status->chains) {
+ 		/* antenna and antenna signal fields */
+ 		len += 2 * hweight8(status->chains);
+@@ -447,6 +452,31 @@ ieee80211_add_rx_radiotap_header(struct ieee80211_local *local,
+ 		pos += 2;
+ 	}
+ 
++	if (local->hw.radiotap_timestamp.units_pos >= 0) {
++		u16 accuracy = 0;
++		u8 flags = IEEE80211_RADIOTAP_TIMESTAMP_FLAG_32BIT;
++
++		rthdr->it_present |=
++			cpu_to_le32(1 << IEEE80211_RADIOTAP_TIMESTAMP);
++
++		/* ensure 8 byte alignment */
++		while ((pos - (u8 *)rthdr) & 7)
++			pos++;
++
++		put_unaligned_le64(status->device_timestamp, pos);
++		pos += sizeof(u64);
++
++		if (local->hw.radiotap_timestamp.accuracy >= 0) {
++			accuracy = local->hw.radiotap_timestamp.accuracy;
++			flags |= IEEE80211_RADIOTAP_TIMESTAMP_FLAG_ACCURACY;
++		}
++		put_unaligned_le16(accuracy, pos);
++		pos += sizeof(u16);
++
++		*pos++ = local->hw.radiotap_timestamp.units_pos;
++		*pos++ = flags;
++	}
++
+ 	for_each_set_bit(chain, &chains, IEEE80211_MAX_CHAINS) {
+ 		*pos++ = status->chain_signal[chain];
+ 		*pos++ = chain;
 -- 
-2.9.3
+2.8.1
