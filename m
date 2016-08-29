@@ -1,80 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:35246 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752041AbcHKMeu convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 08:34:50 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: Re: [PATCH] mac80211: Keep CoDel stats per txq,
-	export them in debugfs.
-References: <20160720145442.1098-1-toke@toke.dk>
-	<1470918167.12075.2.camel@sipsolutions.net>
-Date: Thu, 11 Aug 2016 14:34:44 +0200
-In-Reply-To: <1470918167.12075.2.camel@sipsolutions.net> (Johannes Berg's
-	message of "Thu, 11 Aug 2016 14:22:47 +0200")
-Message-ID: <87popf8owr.fsf@toke.dk> (sfid-20160811_143453_969636_1705B51E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from paleale.coelho.fi ([176.9.41.70]:40972 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756443AbcH2V0i (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 17:26:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 00:26:07 +0300
+Message-Id: <1472505976-21108-7-git-send-email-luca@coelho.fi> (sfid-20160829_232641_553240_0174A5BB)
+In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
+References: <1472505827.27868.41.camel@coelho.fi>
+ <1472505976-21108-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 07/16] iwlwifi: mvm: use defines for SCD_CONFIG_CMD enablement
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+From: Liad Kaufman <liad.kaufman@intel.com>
 
->> @@ -137,18 +137,20 @@ static int aqm_open(struct inode *inode, struct
->> file *file)
->>  	len += scnprintf(info->buf + len,
->>  			 info->size - len,
->>  			 "* vif\n"
->> -			 "ifname addr ac backlog-bytes backlog-
->> packets flows overlimit collisions tx-bytes tx-packets\n");
->> +			 "ifname addr ac backlog-bytes backlog-
->> packets flows drops marks overlimit collisions tx-bytes tx-
->> packets\n");
->
-> It seems to me that you have to change the buffer length to take this
-> into account?
+Due to the addition of another option in the SCD_CONFIG_CMD's
+%enable field, change the assignment of this field to use
+defines rather than hard-code the value itself.
 
-Haven't run into issues with running out of buffer space in my testing.
-But yeah, guess that could become an issue.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 12 ++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 13 +++++++------
+ 3 files changed, 19 insertions(+), 10 deletions(-)
 
->>  	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
->>  		txqi = to_txq_info(sdata->vif.txq);
->>  		len += scnprintf(info->buf + len, info->size - len,
->> -				 "%s %pM %u %u %u %u %u %u %u %u\n",
->> +				 "%s %pM %u %u %u %u %u %u %u %u %u
->> %u\n",
->>  				 sdata->name,
->
-> Why is it this way anyway? It'd seem nicer to move the content of this
-> into the per-netdev subdirectories, and then it becomes a lot simpler
-> code too (yes, at the expense of some userspace, but still)
-
-Yeah, makes sense. Can do a larger reorg moving things into the
-per-netdev and per-station directories instead.
-
->>  				 txqi->txq.ac,
->>  				 txqi->tin.backlog_bytes,
->>  				 txqi->tin.backlog_packets,
->>  				 txqi->tin.flows,
->> +				 txqi->cstats.drop_count,
->> +				 txqi->cstats.ecn_mark,
->>  				 txqi->tin.overlimit,
->>  				 txqi->tin.collisions,
->>  				 txqi->tin.tx_bytes,
->
-> Do you really want to add these in the middle? Seems that if you add
-> them at the end, you at least have *some* way of keeping this working
-> with older versions?
-
-Well I though they should be logically grouped with overlimits, and was
-counting on no one actually parsing these yet. Guess if the information
-is moved that becomes moot.
-
-
-Will re-send; thanks for the feedback :)
-
--Toke
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index 4144623..6b4c63a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -675,13 +675,21 @@ static inline u32 iwl_mvm_get_scd_ssn(struct iwl_mvm_tx_resp *tx_resp)
+ 			    tx_resp->frame_count) & 0xfff;
+ }
+ 
++/* Available options for the SCD_QUEUE_CFG HCMD */
++enum iwl_scd_cfg_actions {
++	SCD_CFG_DISABLE_QUEUE		= 0x0,
++	SCD_CFG_ENABLE_QUEUE		= 0x1,
++	SCD_CFG_UPDATE_QUEUE_TID	= 0x2,
++};
++
+ /**
+  * struct iwl_scd_txq_cfg_cmd - New txq hw scheduler config command
+  * @token:
+  * @sta_id: station id
+  * @tid:
+  * @scd_queue: scheduler queue to confiug
+- * @enable: 1 queue enable, 0 queue disable
++ * @action: 1 queue enable, 0 queue disable, 2 change txq's tid owner
++ *	Value is one of %iwl_scd_cfg_actions options
+  * @aggregate: 1 aggregated queue, 0 otherwise
+  * @tx_fifo: %enum iwl_mvm_tx_fifo
+  * @window: BA window size
+@@ -692,7 +700,7 @@ struct iwl_scd_txq_cfg_cmd {
+ 	u8 sta_id;
+ 	u8 tid;
+ 	u8 scd_queue;
+-	u8 enable;
++	u8 action;
+ 	u8 aggregate;
+ 	u8 tx_fifo;
+ 	u8 window;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 305219d..190bf1a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -536,7 +536,7 @@ int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
+ {
+ 	struct iwl_scd_txq_cfg_cmd cmd = {
+ 		.scd_queue = queue,
+-		.enable = 0,
++		.action = SCD_CFG_DISABLE_QUEUE,
+ 	};
+ 	bool shared_queue;
+ 	unsigned long mq;
+@@ -745,7 +745,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 	if (using_inactive_queue) {
+ 		struct iwl_scd_txq_cfg_cmd cmd = {
+ 			.scd_queue = queue,
+-			.enable = 0,
++			.action = SCD_CFG_DISABLE_QUEUE,
+ 		};
+ 		u8 ac;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 423efab..7c138fe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -610,7 +610,7 @@ int iwl_mvm_reconfig_scd(struct iwl_mvm *mvm, int queue, int fifo, int sta_id,
+ {
+ 	struct iwl_scd_txq_cfg_cmd cmd = {
+ 		.scd_queue = queue,
+-		.enable = 1,
++		.action = SCD_CFG_ENABLE_QUEUE,
+ 		.window = frame_limit,
+ 		.sta_id = sta_id,
+ 		.ssn = cpu_to_le16(ssn),
+@@ -684,7 +684,7 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 	if (enable_queue) {
+ 		struct iwl_scd_txq_cfg_cmd cmd = {
+ 			.scd_queue = queue,
+-			.enable = 1,
++			.action = SCD_CFG_ENABLE_QUEUE,
+ 			.window = cfg->frame_limit,
+ 			.sta_id = cfg->sta_id,
+ 			.ssn = cpu_to_le16(ssn),
+@@ -711,7 +711,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ {
+ 	struct iwl_scd_txq_cfg_cmd cmd = {
+ 		.scd_queue = queue,
+-		.enable = 0,
++		.action = SCD_CFG_DISABLE_QUEUE,
+ 	};
+ 	bool remove_mac_queue = true;
+ 	int ret;
+@@ -746,8 +746,9 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 			~BIT(mac80211_queue);
+ 	mvm->queue_info[queue].hw_queue_refcount--;
+ 
+-	cmd.enable = mvm->queue_info[queue].hw_queue_refcount ? 1 : 0;
+-	if (!cmd.enable)
++	cmd.action = mvm->queue_info[queue].hw_queue_refcount ?
++		SCD_CFG_ENABLE_QUEUE : SCD_CFG_DISABLE_QUEUE;
++	if (cmd.action == SCD_CFG_DISABLE_QUEUE)
+ 		mvm->queue_info[queue].status = IWL_MVM_QUEUE_FREE;
+ 
+ 	IWL_DEBUG_TX_QUEUES(mvm,
+@@ -757,7 +758,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 			    mvm->queue_info[queue].hw_queue_to_mac80211);
+ 
+ 	/* If the queue is still enabled - nothing left to do in this func */
+-	if (cmd.enable) {
++	if (cmd.action == SCD_CFG_ENABLE_QUEUE) {
+ 		spin_unlock_bh(&mvm->queue_info_lock);
+ 		return;
+ 	}
+-- 
+2.8.1
