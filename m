@@ -1,100 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47671 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932822AbcHJTAT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 15:00:19 -0400
-Message-ID: <1470842288.10717.12.camel@sipsolutions.net> (sfid-20160810_210106_891859_74471A3E)
-Subject: Re: [PATCH v4] cfg80211: Provision to allow the support for
- different beacon intervals
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
-	"Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"Kondabattini, Ganesh" <ganeshk@qti.qualcomm.com>,
-	"Kalikot Veetil, Mahesh Kumar" <mkalikot@qca.qualcomm.com>,
-	"Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>,
-	"Kumar, Deepak (QCA)" <djindal@qti.qualcomm.com>
-Date: Wed, 10 Aug 2016 17:18:08 +0200
-In-Reply-To: <33789175707446c89435264aa54f7474@APSANEXR01F.ap.qualcomm.com>
-References: <1470374768-22297-1-git-send-email-pkushwah@qti.qualcomm.com>
-	 <1470386912.2977.28.camel@sipsolutions.net>
-	 <9513d3caf9354aeda408f65128b4a079@aphydexm01f.ap.qualcomm.com>
- <1470729393.28531.11.camel@sipsolutions.net>
-	 <33789175707446c89435264aa54f7474@APSANEXR01F.ap.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33975 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753566AbcH2TqA (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 15:46:00 -0400
+MIME-Version: 1.0
+In-Reply-To: <201608291410.44338.arnd@arndb.de>
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com>
+ <2303906.Xe1WvCfP0V@wuerfel> <CAFBinCCK4zG7QXENpCgEr9wUgzinfr1ugEm3HepjE6c3RDqtVg@mail.gmail.com>
+ <201608291410.44338.arnd@arndb.de>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Mon, 29 Aug 2016 21:45:38 +0200
+Message-ID: <CAFBinCCSBE8KsLgP3t=FzB-2jgjfQBtuF+EjqQEk-7mmmps_Pg@mail.gmail.com> (sfid-20160829_214603_884440_0B32CE67)
+Subject: Re: [PATCH 5/5] ath9k: Make EEPROM endianness swapping configurable
+ via devicetree
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: nbd@nbd.name, kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org, mark.rutland@arm.com,
+        chunkeey@googlemail.com, robh+dt@kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-08-10 at 14:53 +0000, Undekari, Sunil Dutt wrote:
-> > 
-> > I don't know what your firmware/hardware capabilities are :)
-> I was not referring to any specific architecture here.  With the 2
-> choices you had mentioned (mesh must match either one of them / make
-> this apply on mesh and IBSS as well ) we see that this new flag being
-> defined in the interface combinations could better be applicable for
-> all the beaconing interfaces. 
+On Mon, Aug 29, 2016 at 2:10 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+>> Without patch 4 from this series the EEPROM data is loaded like this:
+>> 1. out of tree code extracts the EEPROM data from NOR/SPI/NAND flash
+>> 2. board specific entry (usually device-tree) tells the code to apply
+>> swab16 to the data
+>> 3. board specific entry (usually device-tree again) sets the
+>> "endian_check" property in the ath9k_platform_data to true
+>> 4.a ath9k sees that the magic bytes are not matching and applies swab16
+>> 4.b while doing that it notifies the EEPROM format specific swapping
+>>
+>> However, with patch 4 from this series steps 4.a and 4.b are replaced with:
+>> 4. ath9k checks the eepMisc field of the EEPROM and applies the EEPROM
+>> format specific swapping
+>
+> I think the intention of the patch is right, but it needs to go further:
+> It seems wrong to have 'u32' members e.g. in
+>
+> struct modal_eep_ar9287_header {
+>         u32 antCtrlChain[AR9287_MAX_CHAINS];
+>         u32 antCtrlCommon;
+>
+> and then do a swab32() on them. I suspect these should just be __le32
+> (and __le16, respectively where needed), using appropriate accessors
+> everywhere that those fields are being read instead of having one function
+> that tries to turn them into cpu-native ordering.
+I'm not sure if we want those fields to be __le32:
+BIT(0) in the eepMisc field indicates whether to interpret the data as
+big or little endian.
+When this bit is set we would want these fields to be __be32 instead -
+so I guess the current implementation is "OK" for this specific
+use-case.
 
-Yes, I agree. If that's what you can implement, that's clearly the
-better choice, and once you have multiple BIs for APs it seems
-relatively straight-forward to also add for other interface types.
-
-> If we had restricted this to AP / P2P GO and have Mesh match either
-> of them , a new request ( in future ? ) to have a different interval
-> for Mesh, IMO  would ask a need for new flag , isn't ?  Our intention
-> here was to avoid this by ensuring that this flag is applicable for
-> all the beaconing interface combinations. 
-
-Makes sense.
-
-Just need to update the documentation then, I guess?
-
-> > I'd argue that instead of having the interface combinations flag,
-> > that nl80211 attribute could carry the GCD?
-> If your say here is to just use the wiphy parameter rather than
-> having the flag in the interface combinations, signifying the support
-> for different beacon intervals , Yes we too agree to your point. 
-
-Well, I think it would still make sense to have this on the interface
-combinations, if only for flexibility. It's practically equally
-complicated (or cheap) to do that way, but gives a bit more
-flexibility.
-
-I was just thinking that instead of adding the *flag* on interface
-combinations, which you did in this patch:
-> +	bool supp_diff_beacon_int;
-...
-> + * @NL80211_IFACE_COMB_DIFF_BEACON_INTERVAL: flag attribute specifying that
-
-it would make sense to make that a
-
-u8 diff_beacon_int_gcd;
-...
-NL80211_IFACE_COMB_DIFF_BEACON_GCD: u32 attribute specifying the GCD
-	of different beacon interfaces (not present if all beacon
-	intervals must match)
+> If we can manage to convert the code into doing this consistently,
+> maybe only the 16-bit swaps of the data stream are left over.
+ we don't need the 16bit swap anymore - at least on the lantiq devices
+that I know (not sure about other platforms / devices though).
 
 
-> This is considering the fact that the current implementation
-> restricts the validation of the beacon interval
-> (cfg80211_validate_beacon_int ) to only AP / P2P GO. 
-> Neither the Mesh / IBSS ( join ) have this restriction . Not sure why
-> this is not imposed for Mesh / IBSS though. 
-
-Interesting, that seems like a bug that we should fix. I suspect the
-reason is that IBSS used to not be supported in combinations, and so
-nobody thought of adding it there, and mesh was more or less copied
-from IBSS. Do you want to submit a (separate) patch to fix this?
-Otherwise I can do that.
-
-> After introducing this flag in the interface combinations, we do feel
-> that currently it is not going to apply for Mesh / IBSS , unless
-> there is a future need to do so , which we are not aware of . 
-
-Well, you're right given the circumstances, but I'd rather fix that
-first, forcing MBSS/IBSS to match, and then let it be relaxed with the
-new capability. I'm pretty sure current drivers wouldn't do something
-useful when mesh/AP combinations have different BIs.
-
-johannes
+Martin
