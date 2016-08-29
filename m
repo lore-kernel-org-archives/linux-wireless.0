@@ -1,96 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59744 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751044AbcHXRUf (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41036 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753322AbcH2V24 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 24 Aug 2016 13:20:35 -0400
-Subject: Re: [PATCH 4/4] ath10k: fix spurious tx/rx during boot
-To: Michal Kazior <michal.kazior@tieto.com>, kvalo@qca.qualcomm.com
-References: <1468924452-23877-1-git-send-email-michal.kazior@tieto.com>
- <1468924452-23877-5-git-send-email-michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-        marek.puzyniak@tieto.com
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <a9bf9a29-f020-7118-79ee-b6c1aaa95ffe@candelatech.com> (sfid-20160824_192039_303484_0107447C)
-Date: Wed, 24 Aug 2016 10:20:34 -0700
-MIME-Version: 1.0
-In-Reply-To: <1468924452-23877-5-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+        Mon, 29 Aug 2016 17:28:56 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 00:26:11 +0300
+Message-Id: <1472505976-21108-11-git-send-email-luca@coelho.fi> (sfid-20160829_232900_094437_5675ABBD)
+In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
+References: <1472505827.27868.41.camel@coelho.fi>
+ <1472505976-21108-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 11/16] iwlwifi: add new 9460 series PCI IDs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 07/19/2016 03:34 AM, Michal Kazior wrote:
-> HW Rx filters and masks are not configured
-> properly by firmware during boot sequences. The
-> MAC_PCU_ADDR1 is set to 0s instead of 1s which
-> allows the HW to ACK any frame that passes through
-> MAC_PCU_RX_FILTER. The MAC_PCU_RX_FILTER itself
-> is misconfigured on boot as well.
->
-> The combination of these bugs ended up with the
-> following manifestations:
->  - "no channel configured; ignoring frame(s)!"
->    warnings in the driver
->  - spurious ACKs (transmission) on the air during
->    firmware bootup sequences
->
-> The former was a long standing and known bug
-> originally though mostly harmless.
->
-> However Marek recently discovered that this
-> problem also involves ACKing *all* frames the HW
-> receives (including beacons ;). Such frames
-> are delivered to host and generate the former
-> warning as well.
->
-> This could be a problem with regulatory compliance
-> in some rare cases (e.g. Taiwan which forbids
-> transmissions on channel 36 which is the default
-> bootup channel on 5Ghz band cards). The good news
-> is that it'd require someone else to violate
-> regulatory first to coerce our device to generate
-> and transmit an ACK.
->
-> The problem could be reproduced in a rather busy
-> environment that has a lot of APs. The likelihood
-> could be increased by injecting an msleep() of
-> 5000 or longer immediately after
-> ath10k_htt_setup() in ath10k_core_start().
->
-> The reason why the former warnings were only
-> showing up seldom is because the device was either
-> quickly reset again (i.e. during firmware probing)
-> or wmi vdev was created (which fixes hw and fw
-> states).
->
-> It is technically possible for host driver to
-> override adequate hw registers however this can't
-> work reliably because the bug root cause lies in
-> incorrect firmware state on boot (internal
-> structure used to program MAC_PCU_ADDR1 is not
-> properly initialized) and only vdev create/delete
-> events can fix it. This is why the patch takes
-> dummy vdev approach.
->
-> This could be fixed in firmware as well but having
-> this fixed in driver is more robust, most notably
-> when thinking of users of older firmware such as
-> 999.999.0.636.
->
-> Reported-by: Marek Puzyniak <marek.puzyniak@tieto.com>
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+From: Oren Givon <oren.givon@intel.com>
 
-I was looking at firmware to make sure that I fixed what I could there....
+Add 4 more new 9460 series PCI IDs.
 
- From what I can tell, 10.4 should not have this bug.  Did you see this only
-on 10.1/10.2 firmware?  It is of course possible that I am mis-understanding
-10.4....
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Thanks,
-Ben
-
-
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index d053183..3e5a11a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -517,6 +517,10 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg)},
+ 
+ /* a000 Series */
+ 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg)},
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.8.1
