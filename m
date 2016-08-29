@@ -1,215 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([198.47.19.11]:51829 "EHLO bear.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751158AbcHHIu5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Aug 2016 04:50:57 -0400
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by bear.ext.ti.com (8.13.7/8.13.7) with ESMTP id u788otIQ017219
-	for <linux-wireless@vger.kernel.org>; Mon, 8 Aug 2016 03:50:55 -0500
-Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id u788otOS004393
-	for <linux-wireless@vger.kernel.org>; Mon, 8 Aug 2016 03:50:55 -0500
-From: Guy Mishol <guym@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Guy Mishol <guym@ti.com>
-Subject: [PATCH] wlcore: mesh: add zone time sync support
-Date: Mon, 8 Aug 2016 11:57:06 +0300
-Message-ID: <20160808085706.22668-1-guym@ti.com> (sfid-20160808_105102_155058_B7AC5AA5)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:40978 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756080AbcH2V0i (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 17:26:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 00:26:08 +0300
+Message-Id: <1472505976-21108-8-git-send-email-luca@coelho.fi> (sfid-20160829_233017_558876_E2CDC00E)
+In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
+References: <1472505827.27868.41.camel@coelho.fi>
+ <1472505976-21108-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 08/16] iwlwifi: mvm: support txq tid owner change
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add zone time sync support for mesh role.
-This allows to configure the mesh peer
-master of each zone for time synchronization.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Signed-off-by: Guy Mishol <guym@ti.com>
+Every active TXQ is assigned to a TID given through the
+SCD_CONFIG_CMD, and acts as an identifier in the FW. However,
+there may be cases this ownership needs to be changed.
+
+For example, in the following scenario:
+ 1. TID x is owner of a queue
+ 2. Due to a shortage of queues, TID y and z share with x
+ 3. TID x becomes inactive and needs to be removed from the
+    shared queue.
+In this scenario, if another queue is freed and traffic on x
+continues, we can't allocate it a new queue as long as it is
+the owner of the first queue.
+
+Support moving ownership of a TXQ to a different TID (same
+STA) without stopping the queue.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ti/wl18xx/acx.c     | 29 ++++++++++++++++
- drivers/net/wireless/ti/wl18xx/acx.h     | 13 +++++++
- drivers/net/wireless/ti/wl18xx/debugfs.c | 59 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/event.c   |  1 +
- drivers/net/wireless/ti/wlcore/wlcore.h  |  3 ++
- 5 files changed, 105 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 51 ++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.c b/drivers/net/wireless/ti/wl18xx/acx.c
-index 4be0409..b5525a3 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.c
-+++ b/drivers/net/wireless/ti/wl18xx/acx.c
-@@ -309,3 +309,32 @@ out:
- 	kfree(acx);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 190bf1a..e52c46b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -850,6 +850,41 @@ out_err:
  	return ret;
  }
-+
-+int wl18xx_acx_time_sync_cfg(struct wl1271 *wl)
+ 
++static void iwl_mvm_change_queue_owner(struct iwl_mvm *mvm, int queue)
 +{
-+	struct acx_time_sync_cfg *acx;
++	struct iwl_scd_txq_cfg_cmd cmd = {
++		.scd_queue = queue,
++		.action = SCD_CFG_UPDATE_QUEUE_TID,
++	};
++	s8 sta_id;
++	int tid;
++	unsigned long tid_bitmap;
 +	int ret;
 +
-+	wl1271_debug(DEBUG_ACX, "acx time sync cfg: mode %d, addr: %pM",
-+		     wl->conf.sg.params[WL18XX_CONF_SG_TIME_SYNC],
-+		     wl->zone_master_mac_addr);
++	lockdep_assert_held(&mvm->mutex);
 +
-+	acx = kzalloc(sizeof(*acx), GFP_KERNEL);
-+	if (!acx) {
-+		ret = -ENOMEM;
-+		goto out;
-+	}
++	spin_lock_bh(&mvm->queue_info_lock);
++	sta_id = mvm->queue_info[queue].ra_sta_id;
++	tid_bitmap = mvm->queue_info[queue].tid_bitmap;
++	spin_unlock_bh(&mvm->queue_info_lock);
 +
-+	acx->sync_mode = wl->conf.sg.params[WL18XX_CONF_SG_TIME_SYNC];
-+	memcpy(acx->zone_mac_addr, wl->zone_master_mac_addr, ETH_ALEN);
++	if (WARN(!tid_bitmap, "TXQ %d has no tids assigned to it\n", queue))
++		return;
 +
-+	ret = wl1271_cmd_configure(wl, ACX_TIME_SYNC_CFG,
-+				   acx, sizeof(*acx));
-+	if (ret < 0) {
-+		wl1271_warning("acx time sync cfg failed: %d", ret);
-+		goto out;
-+	}
-+out:
-+	kfree(acx);
-+	return ret;
-+}
-diff --git a/drivers/net/wireless/ti/wl18xx/acx.h b/drivers/net/wireless/ti/wl18xx/acx.h
-index 342a299..2edbbbf 100644
---- a/drivers/net/wireless/ti/wl18xx/acx.h
-+++ b/drivers/net/wireless/ti/wl18xx/acx.h
-@@ -37,6 +37,7 @@ enum {
- 	ACX_RX_BA_FILTER		 = 0x0058,
- 	ACX_AP_SLEEP_CFG                 = 0x0059,
- 	ACX_DYNAMIC_TRACES_CFG		 = 0x005A,
-+	ACX_TIME_SYNC_CFG		 = 0x005B,
- };
- 
- /* numbers of bits the length field takes (add 1 for the actual number) */
-@@ -388,6 +389,17 @@ struct acx_dynamic_fw_traces_cfg {
- 	__le32 dynamic_fw_traces;
- } __packed;
- 
-+/*
-+ * ACX_TIME_SYNC_CFG
-+ * configure the time sync parameters
-+ */
-+struct acx_time_sync_cfg {
-+	struct acx_header header;
-+	u8 sync_mode;
-+	u8 zone_mac_addr[ETH_ALEN];
-+	u8 padding[1];
-+} __packed;
++	/* Find any TID for queue */
++	tid = find_first_bit(&tid_bitmap, IWL_MAX_TID_COUNT + 1);
++	cmd.tid = tid;
++	cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[tid_to_mac80211_ac[tid]];
 +
- int wl18xx_acx_host_if_cfg_bitmap(struct wl1271 *wl, u32 host_cfg_bitmap,
- 				  u32 sdio_blk_size, u32 extra_mem_blks,
- 				  u32 len_field_size);
-@@ -402,5 +414,6 @@ int wl18xx_acx_interrupt_notify_config(struct wl1271 *wl, bool action);
- int wl18xx_acx_rx_ba_filter(struct wl1271 *wl, bool action);
- int wl18xx_acx_ap_sleep(struct wl1271 *wl);
- int wl18xx_acx_dynamic_fw_traces(struct wl1271 *wl);
-+int wl18xx_acx_time_sync_cfg(struct wl1271 *wl);
- 
- #endif /* __WL18XX_ACX_H__ */
-diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
-index 86ccf84..9e28748 100644
---- a/drivers/net/wireless/ti/wl18xx/debugfs.c
-+++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
-@@ -408,6 +408,64 @@ static const struct file_operations radar_debug_mode_ops = {
- };
- #endif /* CFG80211_CERTIFICATION_ONUS */
- 
-+static ssize_t time_sync_zone_addr_write(struct file *file,
-+					 const char __user *user_buf,
-+					 size_t count, loff_t *ppos) {
-+	struct wl1271 *wl = file->private_data;
-+	char buf[(ETH_ALEN * 2)];
-+	int ret;
-+
-+	if (count < (ETH_ALEN * 2 + 1)) {
-+		wl1271_warning("Illegal MAC address: wrong size");
-+		return -EINVAL;
-+	}
-+
-+	ret = copy_from_user(buf, user_buf, (ETH_ALEN * 2));
-+	if (ret < 0)
-+		return ret;
-+
-+	ret = hex2bin(wl->zone_master_mac_addr, buf, ETH_ALEN);
-+	if (ret < 0) {
-+		wl1271_warning("Illegal MAC address: invalid characters");
-+		return ret;
-+	}
-+
-+	mutex_lock(&wl->mutex);
-+
-+	if (unlikely(wl->state != WLCORE_STATE_ON))
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = wl18xx_acx_time_sync_cfg(wl);
-+	if (ret < 0)
-+		count = ret;
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return count;
++	ret = iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd), &cmd);
++	if (ret)
++		IWL_ERR(mvm, "Failed to update owner of TXQ %d (ret=%d)\n",
++			queue, ret);
++	else
++		IWL_DEBUG_TX_QUEUES(mvm, "Changed TXQ %d ownership to tid %d\n",
++				    queue, tid);
 +}
 +
-+static ssize_t time_sync_zone_addr_read(struct file *file,
-+					char __user *userbuf,
-+					size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+
-+	return wl1271_format_buffer(userbuf, count, ppos,
-+				    "%pM\n", wl->zone_master_mac_addr);
-+}
-+
-+static const struct file_operations time_sync_zone_addr_ops = {
-+	.write  = time_sync_zone_addr_write,
-+	.read = time_sync_zone_addr_read,
-+	.open   = simple_open,
-+	.llseek = default_llseek,
-+};
-+
- int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 			     struct dentry *rootdir)
+ static void iwl_mvm_unshare_queue(struct iwl_mvm *mvm, int queue)
  {
-@@ -576,6 +634,7 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
- #ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
- 	DEBUGFS_ADD(radar_debug_mode, moddir);
- #endif
-+	DEBUGFS_ADD(time_sync_zone_addr, moddir);
- 	DEBUGFS_ADD(dynamic_fw_traces, moddir);
+ 	struct ieee80211_sta *sta;
+@@ -1005,14 +1040,30 @@ void iwl_mvm_add_new_dqa_stream_wk(struct work_struct *wk)
+ 	/* Reconfigure queues requiring reconfiguation */
+ 	for (queue = 0; queue < IWL_MAX_HW_QUEUES; queue++) {
+ 		bool reconfig;
++		bool change_owner;
  
- 	return 0;
-diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
-index 2c5df43..b36ce18 100644
---- a/drivers/net/wireless/ti/wl18xx/event.c
-+++ b/drivers/net/wireless/ti/wl18xx/event.c
-@@ -22,6 +22,7 @@
- #include <net/genetlink.h>
- #include "event.h"
- #include "scan.h"
-+#include "conf.h"
- #include "../wlcore/cmd.h"
- #include "../wlcore/debug.h"
- #include "../wlcore/vendor_cmd.h"
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index 8f28aa0..1827546 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -501,6 +501,9 @@ struct wl1271 {
- 
- 	/* dynamic fw traces */
- 	u32 dynamic_fw_traces;
+ 		spin_lock_bh(&mvm->queue_info_lock);
+ 		reconfig = (mvm->queue_info[queue].status ==
+ 			    IWL_MVM_QUEUE_RECONFIGURING);
 +
-+	/* time sync zone master */
-+	u8 zone_master_mac_addr[ETH_ALEN];
- };
++		/*
++		 * We need to take into account a situation in which a TXQ was
++		 * allocated to TID x, and then turned shared by adding TIDs y
++		 * and z. If TID x becomes inactive and is removed from the TXQ,
++		 * ownership must be given to one of the remaining TIDs.
++		 * This is mainly because if TID x continues - a new queue can't
++		 * be allocated for it as long as it is an owner of another TXQ.
++		 */
++		change_owner = !(mvm->queue_info[queue].tid_bitmap &
++				 BIT(mvm->queue_info[queue].txq_tid)) &&
++			       (mvm->queue_info[queue].status ==
++				IWL_MVM_QUEUE_SHARED);
+ 		spin_unlock_bh(&mvm->queue_info_lock);
  
- int wlcore_probe(struct wl1271 *wl, struct platform_device *pdev);
+ 		if (reconfig)
+ 			iwl_mvm_unshare_queue(mvm, queue);
++		else if (change_owner)
++			iwl_mvm_change_queue_owner(mvm, queue);
+ 	}
+ 
+ 	/* Go over all stations with deferred traffic */
 -- 
-2.6.4
-
+2.8.1
