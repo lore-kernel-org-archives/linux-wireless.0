@@ -1,131 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:10463 "EHLO
-        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754000AbcHSD4m (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57825 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751271AbcH2TCP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Aug 2016 23:56:42 -0400
-From: "Pedersen, Thomas" <twp@qca.qualcomm.com>
-To: Guy Mishol <guym@ti.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] wlcore: mesh: add zone time sync support
-Date: Thu, 18 Aug 2016 16:42:41 +0000
-Message-ID: <1471538527.3432.21.camel@qca.qualcomm.com> (sfid-20160819_055707_187644_58281E2E)
-References: <20160808085706.22668-1-guym@ti.com>
-In-Reply-To: <20160808085706.22668-1-guym@ti.com>
-Content-Type: text/plain; charset="utf-8"
+        Mon, 29 Aug 2016 15:02:15 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2016-08-29
+Date: Mon, 29 Aug 2016 22:02:08 +0300
+Message-ID: <87h9a3iekv.fsf@kamboji.qca.qualcomm.com> (sfid-20160829_210236_145836_949F6D68)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE2LTA4LTA4IGF0IDExOjU3ICswMzAwLCBHdXkgTWlzaG9sIHdyb3RlOg0KPiBB
-ZGQgem9uZSB0aW1lIHN5bmMgc3VwcG9ydCBmb3IgbWVzaCByb2xlLg0KPiBUaGlzIGFsbG93cyB0
-byBjb25maWd1cmUgdGhlIG1lc2ggcGVlcg0KPiBtYXN0ZXIgb2YgZWFjaCB6b25lIGZvciB0aW1l
-IHN5bmNocm9uaXphdGlvbi4NCg0KV2hhdCBpcyB0aGlzPyBtYWM4MDIxMSBhbHJlYWR5IHRyaWVz
-IHRvIG1haW50YWluIFRTRiBzeW5jIHdpdGggbWVzaA0KcGVlcnMgaWYgZ2V0L3NldCBUU0Ygb3Bz
-IGFyZSBzdXBwb3J0ZWQgYnkgdGhlIGRyaXZlci4NCg0KPiBTaWduZWQtb2ZmLWJ5OiBHdXkgTWlz
-aG9sIDxndXltQHRpLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy90aS93bDE4
-eHgvYWN4LmMgICAgIHwgMjkgKysrKysrKysrKysrKysrKw0KPiAgZHJpdmVycy9uZXQvd2lyZWxl
-c3MvdGkvd2wxOHh4L2FjeC5oICAgICB8IDEzICsrKysrKysNCj4gIGRyaXZlcnMvbmV0L3dpcmVs
-ZXNzL3RpL3dsMTh4eC9kZWJ1Z2ZzLmMgfCA1OSArKysrKysrKysrKysrKysrKysrKysrKysrKysr
-KysrKw0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wxOHh4L2V2ZW50LmMgICB8ICAxICsN
-Cj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsY29yZS93bGNvcmUuaCAgfCAgMyArKw0KPiAg
-NSBmaWxlcyBjaGFuZ2VkLCAxMDUgaW5zZXJ0aW9ucygrKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2Ry
-aXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsMTh4eC9hY3guYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L3RpL3dsMTh4eC9hY3guYw0KPiBpbmRleCA0YmUwNDA5Li5iNTUyNWEzIDEwMDY0NA0KPiAtLS0g
-YS9kcml2ZXJzL25ldC93aXJlbGVzcy90aS93bDE4eHgvYWN4LmMNCj4gKysrIGIvZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvdGkvd2wxOHh4L2FjeC5jDQo+IEBAIC0zMDksMyArMzA5LDMyIEBAIG91dDoN
-Cj4gIAlrZnJlZShhY3gpOw0KPiAgCXJldHVybiByZXQ7DQo+ICB9DQo+ICsNCj4gK2ludCB3bDE4
-eHhfYWN4X3RpbWVfc3luY19jZmcoc3RydWN0IHdsMTI3MSAqd2wpDQo+ICt7DQo+ICsJc3RydWN0
-IGFjeF90aW1lX3N5bmNfY2ZnICphY3g7DQo+ICsJaW50IHJldDsNCj4gKw0KPiArCXdsMTI3MV9k
-ZWJ1ZyhERUJVR19BQ1gsICJhY3ggdGltZSBzeW5jIGNmZzogbW9kZSAlZCwgYWRkcjogJXBNIiwN
-Cj4gKwkJICAgICB3bC0+Y29uZi5zZy5wYXJhbXNbV0wxOFhYX0NPTkZfU0dfVElNRV9TWU5DXSwN
-Cj4gKwkJICAgICB3bC0+em9uZV9tYXN0ZXJfbWFjX2FkZHIpOw0KPiArDQo+ICsJYWN4ID0ga3ph
-bGxvYyhzaXplb2YoKmFjeCksIEdGUF9LRVJORUwpOw0KPiArCWlmICghYWN4KSB7DQo+ICsJCXJl
-dCA9IC1FTk9NRU07DQo+ICsJCWdvdG8gb3V0Ow0KPiArCX0NCj4gKw0KPiArCWFjeC0+c3luY19t
-b2RlID0gd2wtPmNvbmYuc2cucGFyYW1zW1dMMThYWF9DT05GX1NHX1RJTUVfU1lOQ107DQo+ICsJ
-bWVtY3B5KGFjeC0+em9uZV9tYWNfYWRkciwgd2wtPnpvbmVfbWFzdGVyX21hY19hZGRyLCBFVEhf
-QUxFTik7DQo+ICsNCj4gKwlyZXQgPSB3bDEyNzFfY21kX2NvbmZpZ3VyZSh3bCwgQUNYX1RJTUVf
-U1lOQ19DRkcsDQo+ICsJCQkJICAgYWN4LCBzaXplb2YoKmFjeCkpOw0KPiArCWlmIChyZXQgPCAw
-KSB7DQo+ICsJCXdsMTI3MV93YXJuaW5nKCJhY3ggdGltZSBzeW5jIGNmZyBmYWlsZWQ6ICVkIiwg
-cmV0KTsNCj4gKwkJZ290byBvdXQ7DQo+ICsJfQ0KPiArb3V0Og0KPiArCWtmcmVlKGFjeCk7DQo+
-ICsJcmV0dXJuIHJldDsNCj4gK30NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L3RpL3dsMTh4eC9hY3guaCBiL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsMTh4eC9hY3guaA0K
-PiBpbmRleCAzNDJhMjk5Li4yZWRiYmJmIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL25ldC93aXJl
-bGVzcy90aS93bDE4eHgvYWN4LmgNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wx
-OHh4L2FjeC5oDQo+IEBAIC0zNyw2ICszNyw3IEBAIGVudW0gew0KPiAgCUFDWF9SWF9CQV9GSUxU
-RVIJCSA9IDB4MDA1OCwNCj4gIAlBQ1hfQVBfU0xFRVBfQ0ZHICAgICAgICAgICAgICAgICA9IDB4
-MDA1OSwNCj4gIAlBQ1hfRFlOQU1JQ19UUkFDRVNfQ0ZHCQkgPSAweDAwNUEsDQo+ICsJQUNYX1RJ
-TUVfU1lOQ19DRkcJCSA9IDB4MDA1QiwNCj4gIH07DQo+ICANCj4gIC8qIG51bWJlcnMgb2YgYml0
-cyB0aGUgbGVuZ3RoIGZpZWxkIHRha2VzIChhZGQgMSBmb3IgdGhlIGFjdHVhbCBudW1iZXIpICov
-DQo+IEBAIC0zODgsNiArMzg5LDE3IEBAIHN0cnVjdCBhY3hfZHluYW1pY19md190cmFjZXNfY2Zn
-IHsNCj4gIAlfX2xlMzIgZHluYW1pY19md190cmFjZXM7DQo+ICB9IF9fcGFja2VkOw0KPiAgDQo+
-ICsvKg0KPiArICogQUNYX1RJTUVfU1lOQ19DRkcNCj4gKyAqIGNvbmZpZ3VyZSB0aGUgdGltZSBz
-eW5jIHBhcmFtZXRlcnMNCj4gKyAqLw0KPiArc3RydWN0IGFjeF90aW1lX3N5bmNfY2ZnIHsNCj4g
-KwlzdHJ1Y3QgYWN4X2hlYWRlciBoZWFkZXI7DQo+ICsJdTggc3luY19tb2RlOw0KPiArCXU4IHpv
-bmVfbWFjX2FkZHJbRVRIX0FMRU5dOw0KPiArCXU4IHBhZGRpbmdbMV07DQo+ICt9IF9fcGFja2Vk
-Ow0KPiArDQo+ICBpbnQgd2wxOHh4X2FjeF9ob3N0X2lmX2NmZ19iaXRtYXAoc3RydWN0IHdsMTI3
-MSAqd2wsIHUzMiBob3N0X2NmZ19iaXRtYXAsDQo+ICAJCQkJICB1MzIgc2Rpb19ibGtfc2l6ZSwg
-dTMyIGV4dHJhX21lbV9ibGtzLA0KPiAgCQkJCSAgdTMyIGxlbl9maWVsZF9zaXplKTsNCj4gQEAg
-LTQwMiw1ICs0MTQsNiBAQCBpbnQgd2wxOHh4X2FjeF9pbnRlcnJ1cHRfbm90aWZ5X2NvbmZpZyhz
-dHJ1Y3Qgd2wxMjcxICp3bCwgYm9vbCBhY3Rpb24pOw0KPiAgaW50IHdsMTh4eF9hY3hfcnhfYmFf
-ZmlsdGVyKHN0cnVjdCB3bDEyNzEgKndsLCBib29sIGFjdGlvbik7DQo+ICBpbnQgd2wxOHh4X2Fj
-eF9hcF9zbGVlcChzdHJ1Y3Qgd2wxMjcxICp3bCk7DQo+ICBpbnQgd2wxOHh4X2FjeF9keW5hbWlj
-X2Z3X3RyYWNlcyhzdHJ1Y3Qgd2wxMjcxICp3bCk7DQo+ICtpbnQgd2wxOHh4X2FjeF90aW1lX3N5
-bmNfY2ZnKHN0cnVjdCB3bDEyNzEgKndsKTsNCj4gIA0KPiAgI2VuZGlmIC8qIF9fV0wxOFhYX0FD
-WF9IX18gKi8NCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsMTh4eC9k
-ZWJ1Z2ZzLmMgYi9kcml2ZXJzL25ldC93aXJlbGVzcy90aS93bDE4eHgvZGVidWdmcy5jDQo+IGlu
-ZGV4IDg2Y2NmODQuLjllMjg3NDggMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L3RpL3dsMTh4eC9kZWJ1Z2ZzLmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wx
-OHh4L2RlYnVnZnMuYw0KPiBAQCAtNDA4LDYgKzQwOCw2NCBAQCBzdGF0aWMgY29uc3Qgc3RydWN0
-IGZpbGVfb3BlcmF0aW9ucyByYWRhcl9kZWJ1Z19tb2RlX29wcyA9IHsNCj4gIH07DQo+ICAjZW5k
-aWYgLyogQ0ZHODAyMTFfQ0VSVElGSUNBVElPTl9PTlVTICovDQo+ICANCj4gK3N0YXRpYyBzc2l6
-ZV90IHRpbWVfc3luY196b25lX2FkZHJfd3JpdGUoc3RydWN0IGZpbGUgKmZpbGUsDQo+ICsJCQkJ
-CSBjb25zdCBjaGFyIF9fdXNlciAqdXNlcl9idWYsDQo+ICsJCQkJCSBzaXplX3QgY291bnQsIGxv
-ZmZfdCAqcHBvcykgew0KPiArCXN0cnVjdCB3bDEyNzEgKndsID0gZmlsZS0+cHJpdmF0ZV9kYXRh
-Ow0KPiArCWNoYXIgYnVmWyhFVEhfQUxFTiAqIDIpXTsNCj4gKwlpbnQgcmV0Ow0KPiArDQo+ICsJ
-aWYgKGNvdW50IDwgKEVUSF9BTEVOICogMiArIDEpKSB7DQo+ICsJCXdsMTI3MV93YXJuaW5nKCJJ
-bGxlZ2FsIE1BQyBhZGRyZXNzOiB3cm9uZyBzaXplIik7DQo+ICsJCXJldHVybiAtRUlOVkFMOw0K
-PiArCX0NCj4gKw0KPiArCXJldCA9IGNvcHlfZnJvbV91c2VyKGJ1ZiwgdXNlcl9idWYsIChFVEhf
-QUxFTiAqIDIpKTsNCj4gKwlpZiAocmV0IDwgMCkNCj4gKwkJcmV0dXJuIHJldDsNCj4gKw0KPiAr
-CXJldCA9IGhleDJiaW4od2wtPnpvbmVfbWFzdGVyX21hY19hZGRyLCBidWYsIEVUSF9BTEVOKTsN
-Cj4gKwlpZiAocmV0IDwgMCkgew0KPiArCQl3bDEyNzFfd2FybmluZygiSWxsZWdhbCBNQUMgYWRk
-cmVzczogaW52YWxpZCBjaGFyYWN0ZXJzIik7DQo+ICsJCXJldHVybiByZXQ7DQo+ICsJfQ0KPiAr
-DQo+ICsJbXV0ZXhfbG9jaygmd2wtPm11dGV4KTsNCj4gKw0KPiArCWlmICh1bmxpa2VseSh3bC0+
-c3RhdGUgIT0gV0xDT1JFX1NUQVRFX09OKSkNCj4gKwkJZ290byBvdXQ7DQo+ICsNCj4gKwlyZXQg
-PSB3bDEyNzFfcHNfZWxwX3dha2V1cCh3bCk7DQo+ICsJaWYgKHJldCA8IDApDQo+ICsJCWdvdG8g
-b3V0Ow0KPiArDQo+ICsJcmV0ID0gd2wxOHh4X2FjeF90aW1lX3N5bmNfY2ZnKHdsKTsNCj4gKwlp
-ZiAocmV0IDwgMCkNCj4gKwkJY291bnQgPSByZXQ7DQo+ICsNCj4gKwl3bDEyNzFfcHNfZWxwX3Ns
-ZWVwKHdsKTsNCj4gK291dDoNCj4gKwltdXRleF91bmxvY2soJndsLT5tdXRleCk7DQo+ICsJcmV0
-dXJuIGNvdW50Ow0KPiArfQ0KPiArDQo+ICtzdGF0aWMgc3NpemVfdCB0aW1lX3N5bmNfem9uZV9h
-ZGRyX3JlYWQoc3RydWN0IGZpbGUgKmZpbGUsDQo+ICsJCQkJCWNoYXIgX191c2VyICp1c2VyYnVm
-LA0KPiArCQkJCQlzaXplX3QgY291bnQsIGxvZmZfdCAqcHBvcykNCj4gK3sNCj4gKwlzdHJ1Y3Qg
-d2wxMjcxICp3bCA9IGZpbGUtPnByaXZhdGVfZGF0YTsNCj4gKw0KPiArCXJldHVybiB3bDEyNzFf
-Zm9ybWF0X2J1ZmZlcih1c2VyYnVmLCBjb3VudCwgcHBvcywNCj4gKwkJCQkgICAgIiVwTVxuIiwg
-d2wtPnpvbmVfbWFzdGVyX21hY19hZGRyKTsNCj4gK30NCj4gKw0KPiArc3RhdGljIGNvbnN0IHN0
-cnVjdCBmaWxlX29wZXJhdGlvbnMgdGltZV9zeW5jX3pvbmVfYWRkcl9vcHMgPSB7DQo+ICsJLndy
-aXRlICA9IHRpbWVfc3luY196b25lX2FkZHJfd3JpdGUsDQo+ICsJLnJlYWQgPSB0aW1lX3N5bmNf
-em9uZV9hZGRyX3JlYWQsDQo+ICsJLm9wZW4gICA9IHNpbXBsZV9vcGVuLA0KPiArCS5sbHNlZWsg
-PSBkZWZhdWx0X2xsc2VlaywNCj4gK307DQo+ICsNCj4gIGludCB3bDE4eHhfZGVidWdmc19hZGRf
-ZmlsZXMoc3RydWN0IHdsMTI3MSAqd2wsDQo+ICAJCQkgICAgIHN0cnVjdCBkZW50cnkgKnJvb3Rk
-aXIpDQo+ICB7DQo+IEBAIC01NzYsNiArNjM0LDcgQEAgaW50IHdsMTh4eF9kZWJ1Z2ZzX2FkZF9m
-aWxlcyhzdHJ1Y3Qgd2wxMjcxICp3bCwNCj4gICNpZmRlZiBDT05GSUdfQ0ZHODAyMTFfQ0VSVElG
-SUNBVElPTl9PTlVTDQo+ICAJREVCVUdGU19BREQocmFkYXJfZGVidWdfbW9kZSwgbW9kZGlyKTsN
-Cj4gICNlbmRpZg0KPiArCURFQlVHRlNfQUREKHRpbWVfc3luY196b25lX2FkZHIsIG1vZGRpcik7
-DQo+ICAJREVCVUdGU19BREQoZHluYW1pY19md190cmFjZXMsIG1vZGRpcik7DQo+ICANCj4gIAly
-ZXR1cm4gMDsNCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsMTh4eC9l
-dmVudC5jIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wxOHh4L2V2ZW50LmMNCj4gaW5kZXgg
-MmM1ZGY0My4uYjM2Y2UxOCAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkv
-d2wxOHh4L2V2ZW50LmMNCj4gKysrIGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2wxOHh4L2V2
-ZW50LmMNCj4gQEAgLTIyLDYgKzIyLDcgQEANCj4gICNpbmNsdWRlIDxuZXQvZ2VuZXRsaW5rLmg+
-DQo+ICAjaW5jbHVkZSAiZXZlbnQuaCINCj4gICNpbmNsdWRlICJzY2FuLmgiDQo+ICsjaW5jbHVk
-ZSAiY29uZi5oIg0KPiAgI2luY2x1ZGUgIi4uL3dsY29yZS9jbWQuaCINCj4gICNpbmNsdWRlICIu
-Li93bGNvcmUvZGVidWcuaCINCj4gICNpbmNsdWRlICIuLi93bGNvcmUvdmVuZG9yX2NtZC5oIg0K
-PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2xjb3JlL3dsY29yZS5oIGIv
-ZHJpdmVycy9uZXQvd2lyZWxlc3MvdGkvd2xjb3JlL3dsY29yZS5oDQo+IGluZGV4IDhmMjhhYTAu
-LjE4Mjc1NDYgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL3RpL3dsY29yZS93
-bGNvcmUuaA0KPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy90aS93bGNvcmUvd2xjb3JlLmgN
-Cj4gQEAgLTUwMSw2ICs1MDEsOSBAQCBzdHJ1Y3Qgd2wxMjcxIHsNCj4gIA0KPiAgCS8qIGR5bmFt
-aWMgZncgdHJhY2VzICovDQo+ICAJdTMyIGR5bmFtaWNfZndfdHJhY2VzOw0KPiArDQo+ICsJLyog
-dGltZSBzeW5jIHpvbmUgbWFzdGVyICovDQo+ICsJdTggem9uZV9tYXN0ZXJfbWFjX2FkZHJbRVRI
-X0FMRU5dOw0KPiAgfTsNCj4gIA0KPiAgaW50IHdsY29yZV9wcm9iZShzdHJ1Y3Qgd2wxMjcxICp3
-bCwgc3RydWN0IHBsYXRmb3JtX2RldmljZSAqcGRldik7DQoNCg0K
+Hi Dave,
+
+I'm quite backlogged after coming back from my vacation but luckily it
+has been pretty quiet. Here is the first batch of patches for 4.8, quite
+simple actually and not really anything special to mention. More to come
+later, most probably next week. Please let me know if there are any
+problems.
+
+Kalle
+
+The following changes since commit 184ca823481c99dadd7d946e5afd4bb921eab30d:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2016-08-17 17:26:58 -0700)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-08-29
+
+for you to fetch changes up to bb87f02b7e4ccdb614a83cbf840524de81e9b321:
+
+  Merge ath-current from ath.git (2016-08-29 21:39:04 +0300)
+
+----------------------------------------------------------------
+
+wireless-drivers fixes for 4.8
+
+ath9k
+
+* fix regression in client mode beacon configuration
+* fix a station pointer which resulted in spurious crashes
+
+mwifiex
+
+* fix large amsdu packets causing firmware hang
+
+brcmfmac
+
+* fix deadlock when removing interface
+* fix use of mutex in atomic context
+
+----------------------------------------------------------------
+Cathy Luo (1):
+      mwifiex: fix large amsdu packets causing firmware hang
+
+Felix Fietkau (2):
+      ath9k: fix client mode beacon configuration
+      ath9k: fix using sta->drv_priv before initializing it
+
+Kalle Valo (1):
+      Merge ath-current from ath.git
+
+mhiramat@kernel.org (2):
+      brcmfmac: Check rtnl_lock is locked when removing interface
+      brcmfmac: Change vif_event_lock to spinlock
+
+ drivers/net/wireless/ath/ath9k/main.c              |    9 ++++---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   26 ++++++++++----------
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |    2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    |    2 +-
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |    8 +++---
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.h |    2 +-
+ drivers/net/wireless/marvell/mwifiex/11n_aggr.c    |    3 ++-
+ 7 files changed, 28 insertions(+), 24 deletions(-)
