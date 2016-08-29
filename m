@@ -1,252 +1,468 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41490 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759680AbcHaN0u (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40952 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756370AbcH2V0f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Aug 2016 09:26:50 -0400
-From: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
-        <usdutt@qti.qualcomm.com>, <amarnath@qca.qualcomm.com>,
-        <pkushwah@qti.qualcomm.com>
-Subject: [PATCH v8] cfg80211: Provision to allow the support for different beacon intervals
-Date: Wed, 31 Aug 2016 18:56:12 +0530
-Message-ID: <1472649972-6649-1-git-send-email-pkushwah@qti.qualcomm.com> (sfid-20160831_152655_164903_38DE1386)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 29 Aug 2016 17:26:35 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 00:26:04 +0300
+Message-Id: <1472505976-21108-4-git-send-email-luca@coelho.fi> (sfid-20160829_233018_039396_723DEB02)
+In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
+References: <1472505827.27868.41.camel@coelho.fi>
+ <1472505976-21108-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 04/16] iwlwifi: mvm: re-aggregate shared queue after unsharing
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This commit provides a mechanism for the host drivers to advertise the
-support for different beacon intervals among the respective interface
-combinations in a group, through diff_beacon_int_gcd_min (u32).
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Following sets the expectation for diff_beacon_int_gcd_min.
+When a shared queue becomes unshared, aggregations should be
+re-enabled if they've existed before. Make sure that they do
+this, if required.
 
-= 0 - all beacon intervals for different interfaces must be same.
-> 0 - any beacon interval for the interface part of this combination
-      must also be bigger than this value
-
-Signed-off-by: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/cfg80211.h       |  9 +++++++-
- include/uapi/linux/nl80211.h |  8 +++++--
- net/wireless/core.h          |  2 +-
- net/wireless/nl80211.c       | 13 ++++++++---
- net/wireless/util.c          | 53 +++++++++++++++++++++++++++++++++++++++++---
- 5 files changed, 75 insertions(+), 10 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   |  17 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c   | 162 +++++++++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h   |   4 +
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c    |  38 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c |   8 +-
+ 5 files changed, 203 insertions(+), 26 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index c58afc8..b149a57 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2943,6 +2943,11 @@ struct ieee80211_iface_limit {
-  *	only in special cases.
-  * @radar_detect_widths: bitmap of channel widths supported for radar detection
-  * @radar_detect_regions: bitmap of regions supported for radar detection
-+ * @beacon_int_min_gcd: This interface combination supports different
-+ *	beacon intervals.
-+ *	= 0 - all beacon intervals for different interface must be same.
-+ *	> 0 - any beacon interval for the interface part of this combination
-+ *	      must also be bigger than this value
-  *
-  * With this structure the driver can describe which interface
-  * combinations it supports concurrently.
-@@ -2963,7 +2968,7 @@ struct ieee80211_iface_limit {
-  *  };
-  *
-  *
-- * 2. Allow #{AP, P2P-GO} <= 8, channels = 1, 8 total:
-+ * 2. Allow #{AP, P2P-GO} <= 8, BI min gcd = 10, channels = 1, 8 total:
-  *
-  *  struct ieee80211_iface_limit limits2[] = {
-  *	{ .max = 8, .types = BIT(NL80211_IFTYPE_AP) |
-@@ -2974,6 +2979,7 @@ struct ieee80211_iface_limit {
-  *	.n_limits = ARRAY_SIZE(limits2),
-  *	.max_interfaces = 8,
-  *	.num_different_channels = 1,
-+ *	.beacon_int_min_gcd = 10,
-  *  };
-  *
-  *
-@@ -3001,6 +3007,7 @@ struct ieee80211_iface_combination {
- 	bool beacon_int_infra_match;
- 	u8 radar_detect_widths;
- 	u8 radar_detect_regions;
-+	u32 beacon_int_min_gcd;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 28ebc12..ee5a9ad 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -697,6 +697,10 @@ struct iwl_mvm_baid_data {
+  *	it. In this state, when a new queue is needed to be allocated but no
+  *	such free queue exists, an inactive queue might be freed and given to
+  *	the new RA/TID.
++ * @IWL_MVM_QUEUE_RECONFIGURING: queue is being reconfigured
++ *	This is the state of a queue that has had traffic pass through it, but
++ *	needs to be reconfigured for some reason, e.g. the queue needs to
++ *	become unshared and aggregations re-enabled on.
+  */
+ enum iwl_mvm_queue_status {
+ 	IWL_MVM_QUEUE_FREE,
+@@ -704,6 +708,7 @@ enum iwl_mvm_queue_status {
+ 	IWL_MVM_QUEUE_READY,
+ 	IWL_MVM_QUEUE_SHARED,
+ 	IWL_MVM_QUEUE_INACTIVE,
++	IWL_MVM_QUEUE_RECONFIGURING,
  };
  
- struct ieee80211_txrx_stypes {
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 2206941..5770d4f 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -4203,6 +4203,9 @@ enum nl80211_iface_limit_attrs {
-  *	of supported channel widths for radar detection.
-  * @NL80211_IFACE_COMB_RADAR_DETECT_REGIONS: u32 attribute containing the bitmap
-  *	of supported regulatory regions for radar detection.
-+ * @NL80211_IFACE_COMB_BI_MIN_GCD: u32 attribute specifying the minimum GCD of
-+ *	different beacon intervals supported by all the interface combinations
-+ *	in this group (if not present, all beacon interval must match).
-  * @NUM_NL80211_IFACE_COMB: number of attributes
-  * @MAX_NL80211_IFACE_COMB: highest attribute number
-  *
-@@ -4210,8 +4213,8 @@ enum nl80211_iface_limit_attrs {
-  *	limits = [ #{STA} <= 1, #{AP} <= 1 ], matching BI, channels = 1, max = 2
-  *	=> allows an AP and a STA that must match BIs
-  *
-- *	numbers = [ #{AP, P2P-GO} <= 8 ], channels = 1, max = 8
-- *	=> allows 8 of AP/GO
-+ *	numbers = [ #{AP, P2P-GO} <= 8 ], BI min gcd, channels = 1, max = 8,
-+ *	=> allows 8 of AP/GO that can have BI gcd >= min gcd
-  *
-  *	numbers = [ #{STA} <= 2 ], channels = 2, max = 2
-  *	=> allows two STAs on different channels
-@@ -4237,6 +4240,7 @@ enum nl80211_if_combination_attrs {
- 	NL80211_IFACE_COMB_NUM_CHANNELS,
- 	NL80211_IFACE_COMB_RADAR_DETECT_WIDTHS,
- 	NL80211_IFACE_COMB_RADAR_DETECT_REGIONS,
-+	NL80211_IFACE_COMB_BI_MIN_GCD,
- 
- 	/* keep last */
- 	NUM_NL80211_IFACE_COMB,
-diff --git a/net/wireless/core.h b/net/wireless/core.h
-index eee9144..5fffe58 100644
---- a/net/wireless/core.h
-+++ b/net/wireless/core.h
-@@ -475,7 +475,7 @@ int ieee80211_get_ratemask(struct ieee80211_supported_band *sband,
- 			   u32 *mask);
- 
- int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
--				 u32 beacon_int);
-+				 enum nl80211_iftype iftype, u32 beacon_int);
- 
- void cfg80211_update_iface_num(struct cfg80211_registered_device *rdev,
- 			       enum nl80211_iftype iftype, int num);
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 047bd26..4ee01ad 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1020,6 +1020,10 @@ static int nl80211_put_iface_combinations(struct wiphy *wiphy,
- 		     nla_put_u32(msg, NL80211_IFACE_COMB_RADAR_DETECT_REGIONS,
- 				c->radar_detect_regions)))
- 			goto nla_put_failure;
-+		if (c->beacon_int_min_gcd &&
-+		    nla_put_u32(msg, NL80211_IFACE_COMB_BI_MIN_GCD,
-+				c->beacon_int_min_gcd))
-+			goto nla_put_failure;
- 
- 		nla_nest_end(msg, nl_combi);
- 	}
-@@ -3692,7 +3696,8 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
- 	params.dtim_period =
- 		nla_get_u32(info->attrs[NL80211_ATTR_DTIM_PERIOD]);
- 
--	err = cfg80211_validate_beacon_int(rdev, params.beacon_interval);
-+	err = cfg80211_validate_beacon_int(rdev, dev->ieee80211_ptr->iftype,
-+					   params.beacon_interval);
- 	if (err)
- 		return err;
- 
-@@ -8063,7 +8068,8 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 		ibss.beacon_interval =
- 			nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
- 
--	err = cfg80211_validate_beacon_int(rdev, ibss.beacon_interval);
-+	err = cfg80211_validate_beacon_int(rdev, NL80211_IFTYPE_ADHOC,
-+					   ibss.beacon_interval);
- 	if (err)
- 		return err;
- 
-@@ -9323,7 +9329,8 @@ static int nl80211_join_mesh(struct sk_buff *skb, struct genl_info *info)
- 		setup.beacon_interval =
- 			nla_get_u32(info->attrs[NL80211_ATTR_BEACON_INTERVAL]);
- 
--		err = cfg80211_validate_beacon_int(rdev, setup.beacon_interval);
-+		err = cfg80211_validate_beacon_int(rdev, NL80211_IFTYPE_MESH_POINT,
-+						   setup.beacon_interval);
- 		if (err)
- 			return err;
- 	}
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 0675f51..ee8e5c5 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1553,25 +1553,72 @@ bool ieee80211_chandef_to_operating_class(struct cfg80211_chan_def *chandef,
+ #define IWL_MVM_DQA_QUEUE_TIMEOUT	(5 * HZ)
+@@ -1122,6 +1127,18 @@ static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
+ 		(mvm->trans->runtime_pm_mode != IWL_PLAT_PM_MODE_D0I3);
  }
- EXPORT_SYMBOL(ieee80211_chandef_to_operating_class);
  
-+static void
-+cfg80211_get_beacon_int_min_gcd(const struct ieee80211_iface_combination *c,
-+				void *data)
++static inline bool iwl_mvm_is_dqa_data_queue(struct iwl_mvm *mvm, u8 queue)
 +{
-+	u32 *gcd = data;
-+
-+	/* Get the least beacon_int_min_gcd among the matched combinations */
-+	if (c->beacon_int_min_gcd) {
-+		if (*gcd) {
-+			if (*gcd > c->beacon_int_min_gcd)
-+				*gcd = c->beacon_int_min_gcd;
-+		} else {
-+			*gcd = c->beacon_int_min_gcd;
-+		}
-+	}
++	return (queue >= IWL_MVM_DQA_MIN_DATA_QUEUE) &&
++	       (queue <= IWL_MVM_DQA_MAX_DATA_QUEUE);
 +}
 +
- int cfg80211_validate_beacon_int(struct cfg80211_registered_device *rdev,
--				 u32 beacon_int)
-+				 enum nl80211_iftype iftype, u32 beacon_int)
++static inline bool iwl_mvm_is_dqa_mgmt_queue(struct iwl_mvm *mvm, u8 queue)
++{
++	return (queue >= IWL_MVM_DQA_MIN_MGMT_QUEUE) &&
++	       (queue <= IWL_MVM_DQA_MAX_MGMT_QUEUE);
++}
++
+ static inline bool iwl_mvm_is_lar_supported(struct iwl_mvm *mvm)
  {
- 	struct wireless_dev *wdev;
- 	int res = 0;
-+	u32 min_gcd = 0;
-+	u32 bi_prev, tmp_bi, gcd;
-+	int iftype_num[NUM_NL80211_IFTYPES];
- 
- 	if (beacon_int < 10 || beacon_int > 10000)
- 		return -EINVAL;
- 
-+	memset(iftype_num, 0, sizeof(iftype_num));
-+	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
-+		if (!wdev->beacon_interval)
-+			continue;
-+		iftype_num[wdev->iftype]++;
-+	}
-+	iftype_num[iftype]++;
-+
-+	res = cfg80211_iter_combinations(&rdev->wiphy, 0, 0, iftype_num,
-+					 cfg80211_get_beacon_int_min_gcd,
-+					 &min_gcd);
-+	if (res)
-+		return res;
-+
-+	/* GCD(n) = n */
-+	gcd = beacon_int;
- 	list_for_each_entry(wdev, &rdev->wiphy.wdev_list, list) {
- 		if (!wdev->beacon_interval)
+ 	bool nvm_lar = mvm->nvm_data->lar_enabled;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 5960eb4..e3257d0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -468,6 +468,11 @@ static int iwl_mvm_get_shared_queue(struct iwl_mvm *mvm,
+ 		    i != IWL_MVM_DQA_BSS_CLIENT_QUEUE)
  			continue;
- 		if (wdev->beacon_interval != beacon_int) {
--			res = -EINVAL;
-+			/* beacon_int_min_gcd=0 or not specified, all
-+			 * beacon interval of this combination must match
-+			 */
-+			if (min_gcd == 0)
-+				return -EINVAL;
-+			/* Get the GCD */
-+			bi_prev = wdev->beacon_interval;
-+			while (bi_prev != 0) {
-+				tmp_bi = bi_prev;
-+				bi_prev = gcd % bi_prev;
-+				gcd = tmp_bi;
-+			}
- 			break;
- 		}
+ 
++		/* Don't try and take queues being reconfigured */
++		if (mvm->queue_info[queue].status ==
++		    IWL_MVM_QUEUE_RECONFIGURING)
++			continue;
++
+ 		ac_to_queue[mvm->queue_info[i].mac80211_ac] = i;
  	}
  
--	return res;
-+	return (gcd < min_gcd) ? -EINVAL : 0;
+@@ -501,27 +506,33 @@ static int iwl_mvm_get_shared_queue(struct iwl_mvm *mvm,
+ 		queue = ac_to_queue[IEEE80211_AC_VO];
+ 
+ 	/* Make sure queue found (or not) is legal */
+-	if (!((queue >= IWL_MVM_DQA_MIN_MGMT_QUEUE &&
+-	       queue <= IWL_MVM_DQA_MAX_MGMT_QUEUE) ||
+-	      (queue >= IWL_MVM_DQA_MIN_DATA_QUEUE &&
+-	       queue <= IWL_MVM_DQA_MAX_DATA_QUEUE) ||
+-	      (queue == IWL_MVM_DQA_BSS_CLIENT_QUEUE))) {
++	if (!iwl_mvm_is_dqa_data_queue(mvm, queue) &&
++	    !iwl_mvm_is_dqa_mgmt_queue(mvm, queue) &&
++	    (queue != IWL_MVM_DQA_BSS_CLIENT_QUEUE)) {
+ 		IWL_ERR(mvm, "No DATA queues available to share\n");
+ 		queue = -ENOSPC;
+ 	}
+ 
++	/* Make sure the queue isn't in the middle of being reconfigured */
++	if (mvm->queue_info[queue].status == IWL_MVM_QUEUE_RECONFIGURING) {
++		IWL_ERR(mvm,
++			"TXQ %d is in the middle of re-config - try again\n",
++			queue);
++		queue = -1;
++	}
++
+ 	return queue;
  }
  
- int cfg80211_iter_combinations(struct wiphy *wiphy,
+ /*
+- * If a given queue has a higher AC than the TID stream that is being added to
+- * it, the queue needs to be redirected to the lower AC. This function does that
++ * If a given queue has a higher AC than the TID stream that is being compared
++ * to, the queue needs to be redirected to the lower AC. This function does that
+  * in such a case, otherwise - if no redirection required - it does nothing,
+  * unless the %force param is true.
+  */
+-static int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
+-				      int ac, int ssn, unsigned int wdg_timeout,
+-				      bool force)
++int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
++			       int ac, int ssn, unsigned int wdg_timeout,
++			       bool force)
+ {
+ 	struct iwl_scd_txq_cfg_cmd cmd = {
+ 		.scd_queue = queue,
+@@ -555,7 +566,7 @@ static int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
+ 	shared_queue = (mvm->queue_info[queue].hw_queue_refcount > 1);
+ 	spin_unlock_bh(&mvm->queue_info_lock);
+ 
+-	IWL_DEBUG_TX_QUEUES(mvm, "Redirecting shared TXQ #%d to FIFO #%d\n",
++	IWL_DEBUG_TX_QUEUES(mvm, "Redirecting TXQ #%d to FIFO #%d\n",
+ 			    queue, iwl_mvm_ac_to_tx_fifo[ac]);
+ 
+ 	/* Stop MAC queues and wait for this queue to empty */
+@@ -827,6 +838,84 @@ out_err:
+ 	return ret;
+ }
+ 
++static void iwl_mvm_unshare_queue(struct iwl_mvm *mvm, int queue)
++{
++	struct ieee80211_sta *sta;
++	struct iwl_mvm_sta *mvmsta;
++	s8 sta_id;
++	int tid = -1;
++	unsigned long tid_bitmap;
++	unsigned int wdg_timeout;
++	int ssn;
++	int ret = true;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	spin_lock_bh(&mvm->queue_info_lock);
++	sta_id = mvm->queue_info[queue].ra_sta_id;
++	tid_bitmap = mvm->queue_info[queue].tid_bitmap;
++	spin_unlock_bh(&mvm->queue_info_lock);
++
++	/* Find TID for queue, and make sure it is the only one on the queue */
++	tid = find_first_bit(&tid_bitmap, IWL_MAX_TID_COUNT + 1);
++	if (tid_bitmap != BIT(tid)) {
++		IWL_ERR(mvm, "Failed to unshare q %d, active tids=0x%lx\n",
++			queue, tid_bitmap);
++		return;
++	}
++
++	IWL_DEBUG_TX_QUEUES(mvm, "Unsharing TXQ %d, keeping tid %d\n", queue,
++			    tid);
++
++	sta = rcu_dereference_protected(mvm->fw_id_to_mac_id[sta_id],
++					lockdep_is_held(&mvm->mutex));
++
++	if (WARN_ON_ONCE(IS_ERR_OR_NULL(sta)))
++		return;
++
++	mvmsta = iwl_mvm_sta_from_mac80211(sta);
++	wdg_timeout = iwl_mvm_get_wd_timeout(mvm, mvmsta->vif, false, false);
++
++	ssn = IEEE80211_SEQ_TO_SN(mvmsta->tid_data[tid].seq_number);
++
++	ret = iwl_mvm_scd_queue_redirect(mvm, queue, tid,
++					 tid_to_mac80211_ac[tid], ssn,
++					 wdg_timeout, true);
++	if (ret) {
++		IWL_ERR(mvm, "Failed to redirect TXQ %d\n", queue);
++		return;
++	}
++
++	/* If aggs should be turned back on - do it */
++	if (mvmsta->tid_data[tid].state == IWL_AGG_ON) {
++		struct iwl_mvm_add_sta_cmd cmd;
++
++		mvmsta->tid_disable_agg &= ~BIT(tid);
++
++		cmd.mac_id_n_color = cpu_to_le32(mvmsta->mac_id_n_color);
++		cmd.sta_id = mvmsta->sta_id;
++		cmd.add_modify = STA_MODE_MODIFY;
++		cmd.modify_mask = STA_MODIFY_TID_DISABLE_TX;
++		cmd.tfd_queue_msk = cpu_to_le32(mvmsta->tfd_queue_msk);
++		cmd.tid_disable_tx = cpu_to_le16(mvmsta->tid_disable_agg);
++
++		ret = iwl_mvm_send_cmd_pdu(mvm, ADD_STA, CMD_ASYNC,
++					   iwl_mvm_add_sta_cmd_size(mvm), &cmd);
++		if (!ret) {
++			IWL_DEBUG_TX_QUEUES(mvm,
++					    "TXQ #%d is now aggregated again\n",
++					    queue);
++
++			/* Mark queue intenally as aggregating again */
++			iwl_trans_txq_set_shared_mode(mvm->trans, queue, false);
++		}
++	}
++
++	spin_lock_bh(&mvm->queue_info_lock);
++	mvm->queue_info[queue].status = IWL_MVM_QUEUE_READY;
++	spin_unlock_bh(&mvm->queue_info_lock);
++}
++
+ static inline u8 iwl_mvm_tid_to_ac_queue(int tid)
+ {
+ 	if (tid == IWL_MAX_TID_COUNT)
+@@ -894,13 +983,26 @@ void iwl_mvm_add_new_dqa_stream_wk(struct work_struct *wk)
+ 	struct ieee80211_sta *sta;
+ 	struct iwl_mvm_sta *mvmsta;
+ 	unsigned long deferred_tid_traffic;
+-	int sta_id, tid;
++	int queue, sta_id, tid;
+ 
+ 	/* Check inactivity of queues */
+ 	iwl_mvm_inactivity_check(mvm);
+ 
+ 	mutex_lock(&mvm->mutex);
+ 
++	/* Reconfigure queues requiring reconfiguation */
++	for (queue = 0; queue < IWL_MAX_HW_QUEUES; queue++) {
++		bool reconfig;
++
++		spin_lock_bh(&mvm->queue_info_lock);
++		reconfig = (mvm->queue_info[queue].status ==
++			    IWL_MVM_QUEUE_RECONFIGURING);
++		spin_unlock_bh(&mvm->queue_info_lock);
++
++		if (reconfig)
++			iwl_mvm_unshare_queue(mvm, queue);
++	}
++
+ 	/* Go over all stations with deferred traffic */
+ 	for_each_set_bit(sta_id, mvm->sta_deferred_frames,
+ 			 IWL_MVM_STATION_COUNT) {
+@@ -1956,7 +2058,7 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		return -EIO;
+ 	}
+ 
+-	spin_lock_bh(&mvm->queue_info_lock);
++	spin_lock(&mvm->queue_info_lock);
+ 
+ 	/*
+ 	 * Note the possible cases:
+@@ -1967,14 +2069,20 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	 *	non-DQA mode, since the TXQ hasn't yet been allocated
+ 	 */
+ 	txq_id = mvmsta->tid_data[tid].txq_id;
+-	if (!iwl_mvm_is_dqa_supported(mvm) ||
++	if (iwl_mvm_is_dqa_supported(mvm) &&
++	    unlikely(mvm->queue_info[txq_id].status == IWL_MVM_QUEUE_SHARED)) {
++		ret = -ENXIO;
++		IWL_DEBUG_TX_QUEUES(mvm,
++				    "Can't start tid %d agg on shared queue!\n",
++				    tid);
++		goto release_locks;
++	} else if (!iwl_mvm_is_dqa_supported(mvm) ||
+ 	    mvm->queue_info[txq_id].status != IWL_MVM_QUEUE_READY) {
+ 		txq_id = iwl_mvm_find_free_queue(mvm, mvmsta->sta_id,
+ 						 mvm->first_agg_queue,
+ 						 mvm->last_agg_queue);
+ 		if (txq_id < 0) {
+ 			ret = txq_id;
+-			spin_unlock_bh(&mvm->queue_info_lock);
+ 			IWL_ERR(mvm, "Failed to allocate agg queue\n");
+ 			goto release_locks;
+ 		}
+@@ -1982,7 +2090,8 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		/* TXQ hasn't yet been enabled, so mark it only as reserved */
+ 		mvm->queue_info[txq_id].status = IWL_MVM_QUEUE_RESERVED;
+ 	}
+-	spin_unlock_bh(&mvm->queue_info_lock);
++
++	spin_unlock(&mvm->queue_info_lock);
+ 
+ 	IWL_DEBUG_TX_QUEUES(mvm,
+ 			    "AGG for tid %d will be on queue #%d\n",
+@@ -2006,8 +2115,11 @@ int iwl_mvm_sta_tx_agg_start(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	}
+ 
+ 	ret = 0;
++	goto out;
+ 
+ release_locks:
++	spin_unlock(&mvm->queue_info_lock);
++out:
+ 	spin_unlock_bh(&mvmsta->lock);
+ 
+ 	return ret;
+@@ -2023,6 +2135,7 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 		iwl_mvm_get_wd_timeout(mvm, vif, sta->tdls, false);
+ 	int queue, ret;
+ 	bool alloc_queue = true;
++	enum iwl_mvm_queue_status queue_status;
+ 	u16 ssn;
+ 
+ 	struct iwl_trans_txq_scd_cfg cfg = {
+@@ -2048,13 +2161,15 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 
+ 	cfg.fifo = iwl_mvm_ac_to_tx_fifo[tid_to_mac80211_ac[tid]];
+ 
++	spin_lock_bh(&mvm->queue_info_lock);
++	queue_status = mvm->queue_info[queue].status;
++	spin_unlock_bh(&mvm->queue_info_lock);
++
+ 	/* In DQA mode, the existing queue might need to be reconfigured */
+ 	if (iwl_mvm_is_dqa_supported(mvm)) {
+-		spin_lock_bh(&mvm->queue_info_lock);
+ 		/* Maybe there is no need to even alloc a queue... */
+ 		if (mvm->queue_info[queue].status == IWL_MVM_QUEUE_READY)
+ 			alloc_queue = false;
+-		spin_unlock_bh(&mvm->queue_info_lock);
+ 
+ 		/*
+ 		 * Only reconfig the SCD for the queue if the window size has
+@@ -2089,9 +2204,12 @@ int iwl_mvm_sta_tx_agg_oper(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 				   vif->hw_queue[tid_to_mac80211_ac[tid]], ssn,
+ 				   &cfg, wdg_timeout);
+ 
+-	ret = iwl_mvm_sta_tx_agg(mvm, sta, tid, queue, true);
+-	if (ret)
+-		return -EIO;
++	/* Send ADD_STA command to enable aggs only if the queue isn't shared */
++	if (queue_status != IWL_MVM_QUEUE_SHARED) {
++		ret = iwl_mvm_sta_tx_agg(mvm, sta, tid, queue, true);
++		if (ret)
++			return -EIO;
++	}
+ 
+ 	/* No need to mark as reserved */
+ 	spin_lock_bh(&mvm->queue_info_lock);
+@@ -2123,7 +2241,6 @@ int iwl_mvm_sta_tx_agg_stop(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	u16 txq_id;
+ 	int err;
+ 
+-
+ 	/*
+ 	 * If mac80211 is cleaning its state, then say that we finished since
+ 	 * our state has been cleared anyway.
+@@ -2152,6 +2269,7 @@ int iwl_mvm_sta_tx_agg_stop(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+ 	 */
+ 	if (mvm->queue_info[txq_id].status == IWL_MVM_QUEUE_RESERVED)
+ 		mvm->queue_info[txq_id].status = IWL_MVM_QUEUE_FREE;
++
+ 	spin_unlock_bh(&mvm->queue_info_lock);
+ 
+ 	switch (tid_data->state) {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index bbc1cab..709542b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -554,4 +554,8 @@ void iwl_mvm_modify_all_sta_disable_tx(struct iwl_mvm *mvm,
+ void iwl_mvm_csa_client_absent(struct iwl_mvm *mvm, struct ieee80211_vif *vif);
+ void iwl_mvm_add_new_dqa_stream_wk(struct work_struct *wk);
+ 
++int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
++			       int ac, int ssn, unsigned int wdg_timeout,
++			       bool force);
++
+ #endif /* __sta_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index c6585ab..8b91544 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -838,6 +838,22 @@ static void iwl_mvm_tx_add_stream(struct iwl_mvm *mvm,
+ 	}
+ }
+ 
++/* Check if there are any timed-out TIDs on a given shared TXQ */
++static bool iwl_mvm_txq_should_update(struct iwl_mvm *mvm, int txq_id)
++{
++	unsigned long queue_tid_bitmap = mvm->queue_info[txq_id].tid_bitmap;
++	unsigned long now = jiffies;
++	int tid;
++
++	for_each_set_bit(tid, &queue_tid_bitmap, IWL_MAX_TID_COUNT + 1) {
++		if (time_before(mvm->queue_info[txq_id].last_frame_time[tid] +
++				IWL_MVM_DQA_QUEUE_TIMEOUT, now))
++			return true;
++	}
++
++	return false;
++}
++
+ /*
+  * Sets the fields in the Tx cmd that are crypto related
+  */
+@@ -940,7 +956,6 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			iwl_trans_free_tx_cmd(mvm->trans, dev_cmd);
+ 			spin_unlock(&mvmsta->lock);
+ 			return 0;
+-
+ 		}
+ 
+ 		/* If we are here - TXQ exists and needs to be re-activated */
+@@ -953,8 +968,25 @@ static int iwl_mvm_tx_mpdu(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 				    txq_id);
+ 	}
+ 
+-	/* Keep track of the time of the last frame for this RA/TID */
+-	mvm->queue_info[txq_id].last_frame_time[tid] = jiffies;
++	if (iwl_mvm_is_dqa_supported(mvm)) {
++		/* Keep track of the time of the last frame for this RA/TID */
++		mvm->queue_info[txq_id].last_frame_time[tid] = jiffies;
++
++		/*
++		 * If we have timed-out TIDs - schedule the worker that will
++		 * reconfig the queues and update them
++		 *
++		 * Note that the mvm->queue_info_lock isn't being taken here in
++		 * order to not serialize the TX flow. This isn't dangerous
++		 * because scheduling mvm->add_stream_wk can't ruin the state,
++		 * and if we DON'T schedule it due to some race condition then
++		 * next TX we get here we will.
++		 */
++		if (unlikely(mvm->queue_info[txq_id].status ==
++			     IWL_MVM_QUEUE_SHARED &&
++			     iwl_mvm_txq_should_update(mvm, txq_id)))
++			schedule_work(&mvm->add_stream_wk);
++	}
+ 
+ 	IWL_DEBUG_TX(mvm, "TX to [%d|%d] Q:%d - seq: 0x%x\n", mvmsta->sta_id,
+ 		     tid, txq_id, IEEE80211_SEQ_TO_SN(seq_number));
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 68f4e7f..dae64a6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -1131,7 +1131,13 @@ static void iwl_mvm_remove_inactive_tids(struct iwl_mvm *mvm,
+ 			BIT(mvmsta->vif->hw_queue[tid_to_mac80211_ac[tid]]);
+ 	}
+ 
+-	/* TODO: if queue was shared - need to re-enable AGGs */
++	/* If the queue is marked as shared - "unshare" it */
++	if (mvm->queue_info[queue].hw_queue_refcount == 1 &&
++	    mvm->queue_info[queue].status == IWL_MVM_QUEUE_SHARED) {
++		mvm->queue_info[queue].status = IWL_MVM_QUEUE_RECONFIGURING;
++		IWL_DEBUG_TX_QUEUES(mvm, "Marking Q:%d for reconfig\n",
++				    queue);
++	}
+ }
+ 
+ void iwl_mvm_inactivity_check(struct iwl_mvm *mvm)
 -- 
-1.9.1
+2.8.1
