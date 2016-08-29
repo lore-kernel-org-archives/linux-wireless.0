@@ -1,79 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58578 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751022AbcHLOam (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2016 10:30:42 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: sunbing <sunbing@redflag-linux.com>
-Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, sunbing.linux@gmail.com
-Subject: Re: [PATCH] Staging: rtl8723au: os_intfs: fixed case statement is variable issue
-References: <1470924695-14931-1-git-send-email-sunbing@redflag-linux.com>
-	<wrfja8gje395.fsf@redhat.com>
-	<7FC388BC-FD87-44C6-87D3-AC041F1393DB@redflag-linux.com>
-Date: Fri, 12 Aug 2016 10:30:34 -0400
-In-Reply-To: <7FC388BC-FD87-44C6-87D3-AC041F1393DB@redflag-linux.com>
-	(sunbing@redflag-linux.com's message of "Fri, 12 Aug 2016 06:50:03
-	+0800")
-Message-ID: <wrfj7fbmawl1.fsf@redhat.com> (sfid-20160812_163100_941697_4910C486)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from paleale.coelho.fi ([176.9.41.70]:41032 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756398AbcH2V2T (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 17:28:19 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 00:26:12 +0300
+Message-Id: <1472505976-21108-12-git-send-email-luca@coelho.fi> (sfid-20160829_232821_942205_13AC3279)
+In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
+References: <1472505827.27868.41.camel@coelho.fi>
+ <1472505976-21108-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 12/16] iwlwifi: add the new 9270 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sunbing <sunbing@redflag-linux.com> writes:
-> On Aug 11, 2016, at 23:25, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
->
->> Bing Sun <sunbing@redflag-linux.com> writes:
->>> Fixed sparse parse error:
->>> Expected constant expression in case statement.
->>> 
->>> Signed-off-by: Bing Sun <sunbing@redflag-linux.com>
->>> ---
->>> drivers/staging/rtl8723au/os_dep/os_intfs.c | 11 +++++------
->>> 1 file changed, 5 insertions(+), 6 deletions(-)
->>> 
->>> diff --git a/drivers/staging/rtl8723au/os_dep/os_intfs.c b/drivers/staging/rtl8723au/os_dep/os_intfs.c
->>> index b8848c2..f30d5d2 100644
->>> --- a/drivers/staging/rtl8723au/os_dep/os_intfs.c
->>> +++ b/drivers/staging/rtl8723au/os_dep/os_intfs.c
->>> @@ -283,14 +283,13 @@ static u32 rtw_classify8021d(struct sk_buff *skb)
->>> 	 */
->>> 	if (skb->priority >= 256 && skb->priority <= 263)
->>> 		return skb->priority - 256;
->>> -	switch (skb->protocol) {
->>> -	case htons(ETH_P_IP):
->>> +
->>> +	if (skb->protocol == htons(ETH_P_IP)) {
->>> 		dscp = ip_hdr(skb)->tos & 0xfc;
->>> -		break;
->>> -	default:
->>> -		return 0;
->>> +		return dscp >> 5;
->>> 	}
->>> -	return dscp >> 5;
->>> +
->>> +	return 0;
->>> }
->> 
->> Pardon me here, but I find it really hard to see how this change is an
->> improvement over the old code in any shape or form.
->> 
->> Jes
->
-> There is no functional improvement. 
-> But before this patch, when we do: make C=1 M=drivers/staging/rtl8723au/
-> An error output: 
-> drivers/staging/rtl8723au//os_dep/os_intfs.c:287:14: error: Expected
-> constant expression in case statement
-> To avoid sparse parse error, a case statement converts to an if statement.
-> So we got this patch.
+From: Oren Givon <oren.givon@intel.com>
 
-Hello
+Add a new config struct for the new 9270 series and add
+the first PCI ID for it.
 
-I understand this part, but it seems to me we are changing the code due
-to a broken test case in sparse. Does the warning go away if you use
-__constant_htons() instead of htons()?
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 10 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  1 +
+ 3 files changed, 12 insertions(+)
 
-Jes
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 5621cf2..e442650 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -156,6 +156,16 @@ const struct iwl_cfg iwl9260_2ac_cfg = {
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+ };
+ 
++const struct iwl_cfg iwl9270_2ac_cfg = {
++	.name = "Intel(R) Dual Band Wireless AC 9270",
++	.fw_name_pre = IWL9260_FW_PRE,
++	IWL_DEVICE_9000,
++	.ht_params = &iwl9000_ht_params,
++	.nvm_ver = IWL9000_NVM_VERSION,
++	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
+ const struct iwl_cfg iwl9460_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 9460",
+ 	.fw_name_pre = IWL9000_FW_PRE,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index a18b57f..0ab415c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -451,6 +451,7 @@ extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl9000lc_2ac_cfg;
+ extern const struct iwl_cfg iwl9260_2ac_cfg;
++extern const struct iwl_cfg iwl9270_2ac_cfg;
+ extern const struct iwl_cfg iwl9460_2ac_cfg;
+ extern const struct iwl_cfg iwla000_2ac_cfg;
+ #endif /* CONFIG_IWLMVM */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 3e5a11a..1be0ac2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -504,6 +504,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ /* 9000 Series */
+ 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
+-- 
+2.8.1
