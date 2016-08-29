@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:35637 "EHLO
-        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754252AbcH0Q1w (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40890 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755599AbcH2UZ3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 27 Aug 2016 12:27:52 -0400
-Received: by mail-pf0-f175.google.com with SMTP id x72so38074507pfd.2
-        for <linux-wireless@vger.kernel.org>; Sat, 27 Aug 2016 09:27:52 -0700 (PDT)
-From: Baoyou Xie <baoyou.xie@linaro.org>
-To: ath9k-devel@qca.qualcomm.com, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        arnd@linaro.org, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
-Subject: [PATCH] fix:gpio: mark symbols static where possible
-Date: Sun, 28 Aug 2016 00:27:08 +0800
-Message-Id: <1472315228-14802-1-git-send-email-baoyou.xie@linaro.org> (sfid-20160827_182837_986767_50A72A67)
+        Mon, 29 Aug 2016 16:25:29 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 29 Aug 2016 23:25:19 +0300
+Message-Id: <1472502319-10847-7-git-send-email-luca@coelho.fi> (sfid-20160829_222535_738972_9C7A140E)
+In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 6/6] mac80211: send delBA on unexpected BlockAck Request
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We get 1 warning about global functions without a declaration
-in the ath9k gpio driver when building with W=1:
-drivers/net/wireless/ath/ath9k/gpio.c:25:6: warning: no previous prototype for 'ath_fill_led_pin' [-Wmissing-prototypes]
+From: Johannes Berg <johannes.berg@intel.com>
 
-In fact, this function is only used in the file in which it is declared
-and don't need a declaration, but can be made static.
-so this patch marks it 'static'.
+If we don't have a BA session, send delBA, as requested by the
+IEEE 802.11 spec. Apply the same limit of sending such a delBA
+only once as in the previous patch.
 
-Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/gpio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ net/mac80211/rx.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 490f74d..ddb2886 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -22,7 +22,7 @@
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 27b58f3..29f9669 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2593,6 +2593,12 @@ ieee80211_rx_h_ctrl(struct ieee80211_rx_data *rx, struct sk_buff_head *frames)
  
- #ifdef CONFIG_MAC80211_LEDS
+ 		tid = le16_to_cpu(bar_data.control) >> 12;
  
--void ath_fill_led_pin(struct ath_softc *sc)
-+static void ath_fill_led_pin(struct ath_softc *sc)
- {
- 	struct ath_hw *ah = sc->sc_ah;
- 
++		if (!test_bit(tid, rx->sta->ampdu_mlme.agg_session_valid) &&
++		    !test_and_set_bit(tid, rx->sta->ampdu_mlme.unexpected_agg))
++			ieee80211_send_delba(rx->sdata, rx->sta->sta.addr, tid,
++					     WLAN_BACK_RECIPIENT,
++					     WLAN_REASON_QSTA_REQUIRE_SETUP);
++
+ 		tid_agg_rx = rcu_dereference(rx->sta->ampdu_mlme.tid_rx[tid]);
+ 		if (!tid_agg_rx)
+ 			return RX_DROP_MONITOR;
 -- 
-2.7.4
+2.8.1
