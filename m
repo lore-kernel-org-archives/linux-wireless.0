@@ -1,77 +1,174 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:33078 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754897AbcHSB3u (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40872 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754081AbcH2UZ2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 18 Aug 2016 21:29:50 -0400
-Received: by mail-qt0-f173.google.com with SMTP id w38so5068625qtb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Aug 2016 18:28:38 -0700 (PDT)
-Subject: Re: [PATCH] mwifiex: propagate error if IRQ request fails in
- mwifiex_sdio_of()
-To: Javier Martinez Canillas <javier@osg.samsung.com>,
-        linux-kernel@vger.kernel.org
-References: <1471529868-13669-1-git-send-email-javier@osg.samsung.com>
- <10fb1110-4c0b-00a2-522c-7011ca397b8c@broadcom.com>
- <70b6a0d1-8cc4-280e-3e53-8c42cb43b721@osg.samsung.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <866da517-4b5c-492e-56d0-260afeb55ded@broadcom.com> (sfid-20160819_033047_150919_AB40E98E)
-Date: Thu, 18 Aug 2016 21:49:09 +0200
-MIME-Version: 1.0
-In-Reply-To: <70b6a0d1-8cc4-280e-3e53-8c42cb43b721@osg.samsung.com>
-Content-Type: text/plain; charset=windows-1252
+        Mon, 29 Aug 2016 16:25:28 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 29 Aug 2016 23:25:16 +0300
+Message-Id: <1472502319-10847-4-git-send-email-luca@coelho.fi> (sfid-20160829_222539_097486_15F021B6)
+In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 3/6] mac80211: add support for MU-MIMO air sniffer
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Aviya Erenfeld <aviya.erenfeld@intel.com>
 
+add support to MU-MIMO air sniffer according groupID:
+in monitor mode, use a given MU-MIMO groupID to monitor stations
+that belongs to that group using MU-MIMO.
 
-On 18-08-16 21:29, Javier Martinez Canillas wrote:
-> Hello Arend,
-> 
-> Thanks a lot for your feedback.
-> 
-> On 08/18/2016 03:14 PM, Arend van Spriel wrote:
->> On 18-08-16 16:17, Javier Martinez Canillas wrote:
->>> If request_irq() fails in mwifiex_sdio_probe_of(), only an error message
->>> is printed but the actual error is not propagated to the caller function.
->>
->> Hmm. The caller function, ie. mwifiex_sdio_probe(), does not seem to care.
->>
-> 
-> Hmm, I'm not so sure about that. It's checking the wifiex_sdio_probe_of()
-> return value.
+add support for following a station according to its MAC address
+using VHT MU-MIMO sniffer:
+the monitors wait until they get an action MU-MIMO notification
+frame, then parses it in order to find the groupID that corresponds
+to the given MAC address and monitors packets destined to that
+groupID using VHT MU-MIMO.
 
-Ok. I looked at 4.7 sources on lxr [1].
+Signed-off-by: Aviya Erenfeld <aviya.erenfeld@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/cfg.c         | 23 ++++++++++++++++++++++-
+ net/mac80211/driver-ops.h  |  3 ++-
+ net/mac80211/ieee80211_i.h |  3 ++-
+ net/mac80211/iface.c       |  5 +++++
+ net/mac80211/rx.c          | 21 +++++++++++++++++++++
+ 5 files changed, 52 insertions(+), 3 deletions(-)
 
-> If the IRQ request failing is not an error, then at the very least the call
-> to disable_irq() should be avoided if request_irq() fails, and the message
-> should be changed from dev_err() to dev_dgb() or dev_info().
-
-agree.
-
->> The device may still function without this wake interrupt.
->>
-> 
-> That's correct, the binding says that the "interrupts" property in the child
-> node is optional since is just a wakeup IRQ. Now the question is if should
-> be an error if the IRQ is defined but fails to be requested.
-
-Clearly it indicates an error in the DT specification so behavior is not
-as expected. Personally I would indeed consider it an error, but I was
-just indicating that it might have done like this intentionally.
-
-Regards,
-Arend
-
-[1]
-http://lxr.free-electrons.com/source/drivers/net/wireless/marvell/mwifiex/sdio.c#L192
-
->> Regards,
->> Arend
->>
-> 
-> Best regards,
-> 
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index f2c8cd2..5d4afea 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -73,8 +73,29 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 		sdata->u.mgd.use_4addr = params->use_4addr;
+ 	}
+ 
+-	if (sdata->vif.type == NL80211_IFTYPE_MONITOR && flags) {
++	if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
+ 		struct ieee80211_local *local = sdata->local;
++		struct ieee80211_sub_if_data *monitor_sdata;
++		u32 mu_mntr_cap_flag = NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER;
++
++		monitor_sdata = rtnl_dereference(local->monitor_sdata);
++		if (monitor_sdata &&
++		    wiphy_ext_feature_isset(wiphy, mu_mntr_cap_flag)) {
++			memcpy(monitor_sdata->vif.bss_conf.mu_group.membership,
++			       params->vht_mumimo_groups, WLAN_MEMBERSHIP_LEN);
++			memcpy(monitor_sdata->vif.bss_conf.mu_group.position,
++			       params->vht_mumimo_groups + WLAN_MEMBERSHIP_LEN,
++			       WLAN_USER_POSITION_LEN);
++			monitor_sdata->vif.mu_mimo_owner = true;
++			ieee80211_bss_info_change_notify(monitor_sdata,
++							 BSS_CHANGED_MU_GROUPS);
++
++			ether_addr_copy(monitor_sdata->u.mntr.mu_follow_addr,
++					params->macaddr);
++		}
++
++		if (!flags)
++			return 0;
+ 
+ 		if (ieee80211_sdata_running(sdata)) {
+ 			u32 mask = MONITOR_FLAG_COOK_FRAMES |
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index 42a41ae..c39f93b 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -162,7 +162,8 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
+ 		return;
+ 
+ 	if (WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
+-			 sdata->vif.type == NL80211_IFTYPE_MONITOR))
++			 (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
++			  !sdata->vif.mu_mimo_owner)))
+ 		return;
+ 
+ 	if (!check_sdata_in_driver(sdata))
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9211cce..7576168 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -3,7 +3,7 @@
+  * Copyright 2005, Devicescape Software, Inc.
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
+- * Copyright 2013-2014  Intel Mobile Communications GmbH
++ * Copyright 2013-2015  Intel Mobile Communications GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -826,6 +826,7 @@ struct txq_info {
+ 
+ struct ieee80211_if_mntr {
+ 	u32 flags;
++	u8 mu_follow_addr[ETH_ALEN] __aligned(2);
+ };
+ 
+ struct ieee80211_sub_if_data {
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index c8509d9..b0abddc7 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -43,6 +43,8 @@
+  * by either the RTNL, the iflist_mtx or RCU.
+  */
+ 
++static void ieee80211_iface_work(struct work_struct *work);
++
+ bool __ieee80211_recalc_txpower(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+@@ -448,6 +450,9 @@ int ieee80211_add_virtual_monitor(struct ieee80211_local *local)
+ 		return ret;
+ 	}
+ 
++	skb_queue_head_init(&sdata->skb_queue);
++	INIT_WORK(&sdata->work, ieee80211_iface_work);
++
+ 	return 0;
+ }
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 708c3b1..b7f051c 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -485,6 +485,9 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 	struct net_device *prev_dev = NULL;
+ 	int present_fcs_len = 0;
+ 	unsigned int rtap_vendor_space = 0;
++	struct ieee80211_mgmt *mgmt;
++	struct ieee80211_sub_if_data *monitor_sdata =
++		rcu_dereference(local->monitor_sdata);
+ 
+ 	if (unlikely(status->flag & RX_FLAG_RADIOTAP_VENDOR_DATA)) {
+ 		struct ieee80211_vendor_radiotap *rtap = (void *)origskb->data;
+@@ -585,6 +588,24 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 		ieee80211_rx_stats(sdata->dev, skb->len);
+ 	}
+ 
++	mgmt = (void *)skb->data;
++	if (monitor_sdata && ieee80211_is_action(mgmt->frame_control) &&
++	    skb->len >= IEEE80211_MIN_ACTION_SIZE + 1 +
++		VHT_MUMIMO_GROUPS_DATA_LEN &&
++	    mgmt->u.action.category == WLAN_CATEGORY_VHT &&
++	    mgmt->u.action.u.vht_group_notif.action_code ==
++		WLAN_VHT_ACTION_GROUPID_MGMT &&
++	    is_valid_ether_addr(monitor_sdata->u.mntr.mu_follow_addr) &&
++	    ether_addr_equal(mgmt->da, monitor_sdata->u.mntr.mu_follow_addr)) {
++		struct sk_buff *mu_skb = skb_copy(skb, GFP_ATOMIC);
++
++		if (mu_skb) {
++			mu_skb->pkt_type = IEEE80211_SDATA_QUEUE_TYPE_FRAME;
++			skb_queue_tail(&monitor_sdata->skb_queue, mu_skb);
++			ieee80211_queue_work(&local->hw, &monitor_sdata->work);
++		}
++	}
++
+ 	if (prev_dev) {
+ 		skb->dev = prev_dev;
+ 		netif_receive_skb(skb);
+-- 
+2.8.1
