@@ -1,93 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59606 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753471AbcHaVGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Aug 2016 17:06:51 -0400
-Message-ID: <1472677599.5470.13.camel@sipsolutions.net> (sfid-20160831_230710_820717_3EF1D476)
-Subject: Re: [PATCH v4] mac80211: Move reorder-sensitive TX handlers to
- after TXQ dequeue.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Wed, 31 Aug 2016 23:06:39 +0200
-In-Reply-To: <20160830131548.6014-1-toke@toke.dk> (sfid-20160830_151618_124950_CD061443)
-References: <20160824162015.29933-1-toke@toke.dk>
-         <20160830131548.6014-1-toke@toke.dk> (sfid-20160830_151618_124950_CD061443)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:41048 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753322AbcH2V3A (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 17:29:00 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 00:26:14 +0300
+Message-Id: <1472505976-21108-14-git-send-email-luca@coelho.fi> (sfid-20160829_232903_610798_84224C7B)
+In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
+References: <1472505827.27868.41.camel@coelho.fi>
+ <1472505976-21108-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 14/16] iwlwifi: pcie: refrain from SCD accesses
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-08-30 at 15:15 +0200, Toke Høiland-Jørgensen wrote:
+From: Sara Sharon <sara.sharon@intel.com>
 
-> @@ -829,10 +844,16 @@ ieee80211_tx_h_sequence(struct
-> ieee80211_tx_data *tx)
->  	 */
->  	if (!ieee80211_is_data_qos(hdr->frame_control) ||
->  	    is_multicast_ether_addr(hdr->addr1)) {
-> -		/* driver should assign sequence number */
-> -		info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
-> -		/* for pure STA mode without beacons, we can do it
-> */
-> -		hdr->seq_ctrl = cpu_to_le16(tx->sdata-
-> >sequence_number);
-> +		fragnum = 0;
-> +		seq = cpu_to_le16(tx->sdata->sequence_number);
-> +		skb_queue_walk(&tx->skbs, skb) {
-> +			info = IEEE80211_SKB_CB(skb);
-> +			hdr = (struct ieee80211_hdr *)skb->data;
-> +			/* driver should assign sequence number */
-> +			info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
-> +			/* for pure STA mode without beacons, we can
-> do it */
-> +			hdr->seq_ctrl = seq | fragnum++;
+Up till now we accessed SCD configuration only for initial
+configuration and for enabling command queue.
+For a000 generation the command queue is open by default
+and firmware configures the rest. No driver SCD accesses
+are expected. Make sure this is the case.
 
-I would very much prefer you kept fragnum assignment in the
-fragmentation handler.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  4 ++++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c    | 13 ++++++++++++-
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
-Also, you just broke this on big endian, please run sparse on your
-patches if you don't see these things directly.
-
-> +		if (!fast_tx ||
-> +		    !ieee80211_xmit_fast_finish(sta->sdata, sta,
-> fast_tx, skb,
-> +						false)) {
-> +			/* fast xmit was started, but fails to
-> finish */
-> +			ieee80211_free_txskb(hw, skb);
-> +			goto begin;
-> +		}
-
-That obviously cannot happen, it can't fail to finish. See the comments
-in xmit_fast() and the return values ...
-
-> +static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
-> +{
-> +	return invoke_tx_handlers_early(tx) ||
-> invoke_tx_handlers_late(tx);
-> +}
-
-Ugh, please, no, don't be tricky where it's not necessary. Now every
-person reading this has to first look up the return type, and then the
-return value, and make sure they understand that success is actually
-the value 0 ... that's way too much to ask.
- 
-> +ieee80211_tx_result
-> +ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
-> +{
-> +	struct sk_buff *skb;
-> +	ieee80211_tx_result r;
-> +
-> +	skb_queue_walk(&tx->skbs, skb) {
-> +		r = ieee80211_tx_h_michael_mic_add_skb(tx, skb);
-> +		if (r != TX_CONTINUE)
-> +			return r;
-> +	}
-> +	return TX_CONTINUE;
-> +}
-
-You just broke TKIP completely again. Adding the MMIC and fragmentation
-are not commutative operations.
-
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 74f2f03..559f118 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1960,6 +1960,10 @@ void iwl_trans_pcie_log_scd_error(struct iwl_trans *trans, struct iwl_txq *txq)
+ 	IWL_ERR(trans, "Current SW read_ptr %d write_ptr %d\n",
+ 		txq->q.read_ptr, txq->q.write_ptr);
+ 
++	if (trans->cfg->use_tfh)
++		/* TODO: access new SCD registers and dump them */
++		return;
++
+ 	scd_sram_addr = trans_pcie->scd_base_addr +
+ 			SCD_TX_STTS_QUEUE_OFFSET(txq->q.id);
+ 	iwl_trans_read_mem_bytes(trans, scd_sram_addr, buf, sizeof(buf));
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 18650dc..9636dc8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -703,6 +703,9 @@ void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr)
+ 	memset(trans_pcie->queue_stopped, 0, sizeof(trans_pcie->queue_stopped));
+ 	memset(trans_pcie->queue_used, 0, sizeof(trans_pcie->queue_used));
+ 
++	if (trans->cfg->use_tfh)
++		return;
++
+ 	trans_pcie->scd_base_addr =
+ 		iwl_read_prph(trans, SCD_SRAM_BASE_ADDR);
+ 
+@@ -970,11 +973,13 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 		}
+ 	}
+ 
+-	if (trans->cfg->use_tfh)
++	if (trans->cfg->use_tfh) {
+ 		iwl_write_direct32(trans, TFH_TRANSFER_MODE,
+ 				   TFH_TRANSFER_MAX_PENDING_REQ |
+ 				   TFH_CHUNK_SIZE_128 |
+ 				   TFH_CHUNK_SPLIT_MODE);
++		return 0;
++	}
+ 
+ 	iwl_set_bits_prph(trans, SCD_GP_CTRL, SCD_GP_CTRL_AUTO_ACTIVE_MODE);
+ 	if (trans->cfg->base_params->num_of_queues > 20)
+@@ -1249,6 +1254,9 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 	if (test_and_set_bit(txq_id, trans_pcie->queue_used))
+ 		WARN_ONCE(1, "queue %d already used - expect issues", txq_id);
+ 
++	if (cfg && trans->cfg->use_tfh)
++		WARN_ONCE(1, "Expected no calls to SCD configuration");
++
+ 	txq->wd_timeout = msecs_to_jiffies(wdg_timeout);
+ 
+ 	if (cfg) {
+@@ -1366,6 +1374,9 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id,
+ 		return;
+ 	}
+ 
++	if (configure_scd && trans->cfg->use_tfh)
++		WARN_ONCE(1, "Expected no calls to SCD configuration");
++
+ 	if (configure_scd) {
+ 		iwl_scd_txq_set_inactive(trans, txq_id);
+ 
+-- 
+2.8.1
