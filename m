@@ -1,79 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:41242 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:40884 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1758217AbcH3LkR (ORCPT
+        with ESMTP id S1751378AbcH2UZ3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 30 Aug 2016 07:40:17 -0400
+        Mon, 29 Aug 2016 16:25:29 -0400
 From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Tue, 30 Aug 2016 14:38:59 +0300
-Message-Id: <1472557142-14782-13-git-send-email-luca@coelho.fi> (sfid-20160830_134021_123461_EA1BC8B8)
-In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
-References: <1472556999.27868.86.camel@coelho.fi>
- <1472557142-14782-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 13/16] iwlwifi: add the new 9170 series
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 29 Aug 2016 23:25:18 +0300
+Message-Id: <1472502319-10847-6-git-send-email-luca@coelho.fi> (sfid-20160829_222532_417867_7C746F43)
+In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 5/6] mac80211: send delBA on unexpected BlockAck data frames
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Add a new config struct for the new 9170 series and add
-the first PCI ID for it.
+When we receive data frames with ACK policy BlockAck, send
+delBA as requested by the 802.11 spec. Since this would be
+happening for every frame inside an A-MPDU if it's really
+received outside a session, limit it to a single attempt.
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 10 ++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  1 +
- 3 files changed, 12 insertions(+)
+ net/mac80211/agg-rx.c   | 4 +++-
+ net/mac80211/rx.c       | 9 ++++++++-
+ net/mac80211/sta_info.h | 3 +++
+ 3 files changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-index e442650..1fec6af 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-@@ -146,6 +146,16 @@ static const struct iwl_tt_params iwl9000_tt_params = {
- 	.mac_addr_from_csr = true,					\
- 	.rf_id = true
+diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+index a9aff60..4d05acc 100644
+--- a/net/mac80211/agg-rx.c
++++ b/net/mac80211/agg-rx.c
+@@ -406,8 +406,10 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+ 	}
  
-+const struct iwl_cfg iwl9160_2ac_cfg = {
-+	.name = "Intel(R) Dual Band Wireless AC 9160",
-+	.fw_name_pre = IWL9260_FW_PRE,
-+	IWL_DEVICE_9000,
-+	.ht_params = &iwl9000_ht_params,
-+	.nvm_ver = IWL9000_NVM_VERSION,
-+	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
-+	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
-+};
-+
- const struct iwl_cfg iwl9260_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 9260",
- 	.fw_name_pre = IWL9260_FW_PRE,
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-index 0ab415c..7008319 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
-@@ -450,6 +450,7 @@ extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
- extern const struct iwl_cfg iwl9000lc_2ac_cfg;
-+extern const struct iwl_cfg iwl9160_2ac_cfg;
- extern const struct iwl_cfg iwl9260_2ac_cfg;
- extern const struct iwl_cfg iwl9270_2ac_cfg;
- extern const struct iwl_cfg iwl9460_2ac_cfg;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 1be0ac2..c6e24fb 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -502,6 +502,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24FD, 0x0850, iwl8265_2ac_cfg)},
+ end:
+-	if (status == WLAN_STATUS_SUCCESS)
++	if (status == WLAN_STATUS_SUCCESS) {
+ 		__set_bit(tid, sta->ampdu_mlme.agg_session_valid);
++		__clear_bit(tid, sta->ampdu_mlme.unexpected_agg);
++	}
+ 	mutex_unlock(&sta->ampdu_mlme.mtx);
  
- /* 9000 Series */
-+	{IWL_PCI_DEVICE(0x271B, 0x0010, iwl9160_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
+ end_no_lock:
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 268eeb7..27b58f3 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1123,8 +1123,15 @@ static void ieee80211_rx_reorder_ampdu(struct ieee80211_rx_data *rx,
+ 	tid = *ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_TID_MASK;
+ 
+ 	tid_agg_rx = rcu_dereference(sta->ampdu_mlme.tid_rx[tid]);
+-	if (!tid_agg_rx)
++	if (!tid_agg_rx) {
++		if (ack_policy == IEEE80211_QOS_CTL_ACK_POLICY_BLOCKACK &&
++		    !test_bit(tid, rx->sta->ampdu_mlme.agg_session_valid) &&
++		    !test_and_set_bit(tid, rx->sta->ampdu_mlme.unexpected_agg))
++			ieee80211_send_delba(rx->sdata, rx->sta->sta.addr, tid,
++					     WLAN_BACK_RECIPIENT,
++					     WLAN_REASON_QSTA_REQUIRE_SETUP);
+ 		goto dont_reorder;
++	}
+ 
+ 	/* qos null data frames are excluded */
+ 	if (unlikely(hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_NULLFUNC)))
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 0556be3..530231b 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -230,6 +230,8 @@ struct tid_ampdu_rx {
+  * @tid_rx_stop_requested:  bitmap indicating which BA sessions per TID the
+  *	driver requested to close until the work for it runs
+  * @agg_session_valid: bitmap indicating which TID has a rx BA session open on
++ * @unexpected_agg: bitmap indicating which TID already sent a delBA due to
++ *	unexpected aggregation related frames outside a session
+  * @work: work struct for starting/stopping aggregation
+  * @tid_tx: aggregation info for Tx per TID
+  * @tid_start_tx: sessions where start was requested
+@@ -244,6 +246,7 @@ struct sta_ampdu_mlme {
+ 	unsigned long tid_rx_timer_expired[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	unsigned long tid_rx_stop_requested[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	unsigned long agg_session_valid[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
++	unsigned long unexpected_agg[BITS_TO_LONGS(IEEE80211_NUM_TIDS)];
+ 	/* tx */
+ 	struct work_struct work;
+ 	struct tid_ampdu_tx __rcu *tid_tx[IEEE80211_NUM_TIDS];
 -- 
 2.8.1
