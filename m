@@ -1,237 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:36614 "EHLO
-        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753517AbcHaTfG (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:40790 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751965AbcH2Thz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 31 Aug 2016 15:35:06 -0400
-Received: by mail-pf0-f169.google.com with SMTP id h186so22465759pfg.3
-        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2016 12:34:47 -0700 (PDT)
-Date: Wed, 31 Aug 2016 12:34:44 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Subject: Re: [v4,1/2] mwifiex: add manufacturing mode support
-Message-ID: <20160831193441.GA30908@localhost> (sfid-20160831_213528_614914_D48B8C89)
-References: <1469525960-6643-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1469525960-6643-1-git-send-email-akarwar@marvell.com>
+        Mon, 29 Aug 2016 15:37:55 -0400
+Message-ID: <1472499451.27868.31.camel@coelho.fi> (sfid-20160829_213758_789432_75F69E66)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Date: Mon, 29 Aug 2016 22:37:31 +0300
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-e1pDD3FSpZyZCp9BJffA"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi 2016-08-29
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
 
-On Tue, Jul 26, 2016 at 03:09:19PM +0530, Amitkumar Karwar wrote:
-> By default normal mode is chosen when driver is loaded. This
-> patch adds a provision to choose manufacturing mode via module
-> parameters.
-> 
-> Below command loads driver in manufacturing mode
-> insmod mwifiex.ko mfg_mode=1.
-> 
-> Tested-by: chunfan chen <jeffc@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
-> v4: Removed mfg_firmware module parameter and hardcoded the firmware name
->     in driver(Kalle Valo).
-> ---
->  drivers/net/wireless/marvell/mwifiex/cmdevt.c |  8 ++++++++
->  drivers/net/wireless/marvell/mwifiex/init.c   | 22 +++++++++++++++-------
->  drivers/net/wireless/marvell/mwifiex/main.c   | 25 +++++++++++++++++++++----
->  drivers/net/wireless/marvell/mwifiex/main.h   |  2 ++
->  drivers/net/wireless/marvell/mwifiex/pcie.c   |  2 +-
->  drivers/net/wireless/marvell/mwifiex/sdio.c   |  2 +-
->  drivers/net/wireless/marvell/mwifiex/usb.c    |  2 +-
->  7 files changed, 49 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> index d433aa0..636cfa0 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> @@ -595,6 +595,14 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
->  			return -1;
->  		}
->  	}
-> +	/* We don't expect commands in manufacturing mode. They are cooked
-> +	 * in application and ready to download buffer is passed to the driver
-> +	*/
+--=-e1pDD3FSpZyZCp9BJffA
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-You have the alignment wrong here. Needs an extra space.
+Hi Kalle,
 
-> +	if (adapter->mfg_mode && cmd_no) {
-> +		dev_dbg(adapter->dev, "Ignoring commands in manufacturing mode\n");
-> +		return -1;
-> +	}
-> +
->  
->  	/* Get a new command node */
->  	cmd_node = mwifiex_get_cmd_node(adapter);
-> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
-> index 1489c90..82839d9 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/init.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
-> @@ -298,6 +298,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
->  	memset(&adapter->arp_filter, 0, sizeof(adapter->arp_filter));
->  	adapter->arp_filter_size = 0;
->  	adapter->max_mgmt_ie_index = MAX_MGMT_IE_INDEX;
-> +	adapter->mfg_mode = mfg_mode;
->  	adapter->key_api_major_ver = 0;
->  	adapter->key_api_minor_ver = 0;
->  	eth_broadcast_addr(adapter->perm_addr);
-> @@ -553,15 +554,22 @@ int mwifiex_init_fw(struct mwifiex_adapter *adapter)
->  				return -1;
->  		}
->  	}
-> +	if (adapter->mfg_mode) {
-> +		adapter->hw_status = MWIFIEX_HW_STATUS_READY;
-> +		ret = -EINPROGRESS;
-> +	} else {
-> +		for (i = 0; i < adapter->priv_num; i++) {
-> +			if (adapter->priv[i]) {
-> +				ret = mwifiex_sta_init_cmd(adapter->priv[i],
-> +							   first_sta, true);
-> +				if (ret == -1)
-> +					return -1;
-> +
-> +				first_sta = false;
-> +			}
-> +
->  
-> -	for (i = 0; i < adapter->priv_num; i++) {
-> -		if (adapter->priv[i]) {
-> -			ret = mwifiex_sta_init_cmd(adapter->priv[i], first_sta,
-> -						   true);
-> -			if (ret == -1)
-> -				return -1;
->  
-> -			first_sta = false;
->  		}
->  	}
->  
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-> index db4925d..7fbf74b 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
-> @@ -23,6 +23,7 @@
->  #include "11n.h"
->  
->  #define VERSION	"1.0"
-> +#define MFG_FIRMWARE	"mwifiex_mfg.bin"
->  
->  static unsigned int debug_mask = MWIFIEX_DEFAULT_DEBUG_MASK;
->  module_param(debug_mask, uint, 0);
-> @@ -36,6 +37,9 @@ static unsigned short driver_mode;
->  module_param(driver_mode, ushort, 0);
->  MODULE_PARM_DESC(driver_mode,
->  		 "station=0x1(default), ap-sta=0x3, station-p2p=0x5, ap-sta-p2p=0x7");
-> +bool mfg_mode;
+Here are 4 patches intended for 4.8. =C2=A0They are all very small and low
+risk, but fix some actual issues. =C2=A0More details in the tag description=
+.
 
-Does this really need to be global? It's only actually used in init.c,
-so could it help to move it to init.c and make it static?
+Let me know if everything's fine (or not). :)
 
-> +module_param(mfg_mode, bool, 0);
-> +MODULE_PARM_DESC(mfg_mode, "0:disable 1:enable (bool)");
+Luca.
 
-That's not a very helpful description. Perhaps you could mention in a
-word or two what this mode means?
 
-Brian
+The following changes since commit bb87f02b7e4ccdb614a83cbf840524de81e9b321=
+:
 
->  
->  /*
->   * This function registers the device and performs all the necessary
-> @@ -559,10 +563,12 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
->  		goto done;
->  	}
->  	/* Wait for mwifiex_init to complete */
-> -	wait_event_interruptible(adapter->init_wait_q,
-> -				 adapter->init_wait_q_woken);
-> -	if (adapter->hw_status != MWIFIEX_HW_STATUS_READY)
-> -		goto err_init_fw;
-> +	if (!adapter->mfg_mode) {
-> +		wait_event_interruptible(adapter->init_wait_q,
-> +					 adapter->init_wait_q_woken);
-> +		if (adapter->hw_status != MWIFIEX_HW_STATUS_READY)
-> +			goto err_init_fw;
-> +	}
->  
->  	priv = adapter->priv[MWIFIEX_BSS_ROLE_STA];
->  	if (mwifiex_register_cfg80211(adapter)) {
-> @@ -666,6 +672,17 @@ static int mwifiex_init_hw_fw(struct mwifiex_adapter *adapter)
->  {
->  	int ret;
->  
-> +	/* Override default firmware with manufacturing one if
-> +	 * manufacturing mode is enabled
-> +	 */
-> +	if (mfg_mode) {
-> +		if (strlcpy(adapter->fw_name, MFG_FIRMWARE,
-> +			    sizeof(adapter->fw_name)) >=
-> +			    sizeof(adapter->fw_name)) {
-> +			pr_err("%s: fw_name too long!\n", __func__);
-> +			return -1;
-> +		}
-> +	}
->  	ret = request_firmware_nowait(THIS_MODULE, 1, adapter->fw_name,
->  				      adapter->dev, GFP_KERNEL, adapter,
->  				      mwifiex_fw_dpc);
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-> index 5902600..fcc2af35 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
-> @@ -58,6 +58,7 @@
->  #include "sdio.h"
->  
->  extern const char driver_version[];
-> +extern bool mfg_mode;
->  
->  struct mwifiex_adapter;
->  struct mwifiex_private;
-> @@ -990,6 +991,7 @@ struct mwifiex_adapter {
->  	u32 drv_info_size;
->  	bool scan_chan_gap_enabled;
->  	struct sk_buff_head rx_data_q;
-> +	bool mfg_mode;
->  	struct mwifiex_chan_stats *chan_stats;
->  	u32 num_in_chan_stats;
->  	int survey_idx;
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 453ab6a..a6af85d 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -225,7 +225,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
->  	if (!adapter || !adapter->priv_num)
->  		return;
->  
-> -	if (user_rmmod) {
-> +	if (user_rmmod && !adapter->mfg_mode) {
->  #ifdef CONFIG_PM_SLEEP
->  		if (adapter->is_suspended)
->  			mwifiex_pcie_resume(&pdev->dev);
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> index d3e1561..6dba409 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -289,7 +289,7 @@ mwifiex_sdio_remove(struct sdio_func *func)
->  
->  	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
->  
-> -	if (user_rmmod) {
-> +	if (user_rmmod && !adapter->mfg_mode) {
->  		if (adapter->is_suspended)
->  			mwifiex_sdio_resume(adapter->dev);
->  
-> diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-> index 0857575..ba616ec 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/usb.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-> @@ -611,7 +611,7 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
->  	if (!adapter->priv_num)
->  		return;
->  
-> -	if (user_rmmod) {
-> +	if (user_rmmod && !adapter->mfg_mode) {
->  #ifdef CONFIG_PM
->  		if (adapter->is_suspended)
->  			mwifiex_usb_resume(intf);
+=C2=A0 Merge ath-current from ath.git (2016-08-29 21:39:04 +0300)
+
+are available in the git repository at:
+
+=C2=A0 git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.=
+git tags/iwlwifi-for-kalle-2016-08-29
+
+for you to fetch changes up to a904a08b5fee5317ff0f7b8212aa5d0776795a52:
+
+=C2=A0 iwlwifi: mvm: Advertise support for AP channel width change (2016-08=
+-29 22:29:06 +0300)
+
+----------------------------------------------------------------
+* Fix P2P dump trigger
+* Prevent a potential null dereference in iwlmvm
+* Prevent an uninitialized value from being returned in iwlmvm
+* Advertise support for channel width change in AP mode
+
+----------------------------------------------------------------
+Emmanuel Grumbach (2):
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: consider P2p device type =
+for firmware dump triggers
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: don't use ret when not in=
+itialised
+
+Peer, Ilan (1):
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: Advertise support for AP =
+channel width change
+
+Sharon Dvir (1):
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: check if vif is NULL befo=
+re using it
+
+=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c=C2=A0=C2=A0=C2=A0| 3 =
+++-
+=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h=C2=A0=C2=A0=C2=A0| 3 =
+++-
+=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 1 +
+=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/mvm.h=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0| 2 ++
+=C2=A04 files changed, 7 insertions(+), 2 deletions(-)
+--=-e1pDD3FSpZyZCp9BJffA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJXxI77AAoJEKFHnKIaPMX6OaoP/0sjh0EoNMm3VLYtkfeXp07a
+orkZt2EX7NmZGBRDe9KG/UrOnnfArjTLcXbptTGA2qh6U7uZYaooD/LC8PyZwzqh
+iVwTYreTRcTCQVP3dfiBPEPLQsdabm3av/1Sbo2C3aW0Xfoj3L3/b8cfJnBqK3Ak
+lVjpwvaXv5cAlZv1E2wBojNxhtGco7aetoUvDszcyhyHOV1LzlckFy1/074Sfghq
+2sOTSj+9+GXEAmO7/b182D6glU3QbOXJvSBGUawnrFQEdQ1vfTdcWMlBkugTkpHa
+lnSNmdy+hpqTZQQctp71Ox+DFeChmH6IhhEyrKGpOw0BFeOZdJFrBa0/+wiFJXic
+stARAhu1oe7PnWb4Sh4rDb3rwKHqZ8GUw9QW5uPy9i3GGGT4RZuma1KItAVF/S6Q
+3/96XqqVCljMQq9SMmjLoBLn7AboxQeCikJI/ij306qnnUmavZZxkrkZ993vUnfU
+z1Ovg02rWj3zs8difoPumOTlfsM1qoKGkSMUaVu9RcyFKDaofWPGcrOET0hcdFoY
+V04iEU+e2h3ZQabOweOBi6lDMklJl+G6rEYOKf9PojqP4QDXNIQwiCG1lHZ6sun4
+nqDXN/Umeg7iv6mXVKyI5evCTQ+s7r/zJXxUotTksBMLHvyTpPPLzf2n/pabnULr
+i0P09GsnMTOvjZUWdL7g
+=8dJe
+-----END PGP SIGNATURE-----
+
+--=-e1pDD3FSpZyZCp9BJffA--
