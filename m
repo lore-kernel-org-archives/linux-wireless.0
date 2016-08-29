@@ -1,79 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59028 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751230AbcHLJW2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Aug 2016 05:22:28 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2016-08-12
-Date: Fri, 12 Aug 2016 11:20:45 +0200
-Message-Id: <1470993646-14778-1-git-send-email-johannes@sipsolutions.net> (sfid-20160812_112233_159035_68BA83B2)
+Received: from paleale.coelho.fi ([176.9.41.70]:41024 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756398AbcH2V2Q (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 17:28:16 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 00:26:15 +0300
+Message-Id: <1472505976-21108-15-git-send-email-luca@coelho.fi> (sfid-20160829_232819_966814_1E536453)
+In-Reply-To: <1472505976-21108-1-git-send-email-luca@coelho.fi>
+References: <1472505827.27868.41.camel@coelho.fi>
+ <1472505976-21108-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 15/16] iwlwifi: pcie: fix ucode load flow for a000 devices
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Sara Sharon <sara.sharon@intel.com>
 
-This first pull request is pretty small, but there's no point
-in hanging on to it for long, so here it goes anyway. Nothing
-all that interesting, I think.
+Turns out we should access TFH relative addresses.
+Also, the FH_UCODE_LOAD_STATUS was replaced by
+UREG_UCODE_LOAD_STATUS.
 
-We might have a bunch of new APIs that were promised to me
-coming up soon, for new features, but I don't know how quickly
-that's actually going to happen.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h     | 15 ++++++-----
+ drivers/net/wireless/intel/iwlwifi/iwl-prph.h   |  8 ++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 33 +++++++++++++++++++------
+ 3 files changed, 40 insertions(+), 16 deletions(-)
 
-Let me know if there's any problem.
-
-Thanks,
-johannes
-
-
-
-The following changes since commit 6cdaf03f8c23fcbfe7d4fa6876e114193bb6b632:
-
-  RDS: add __printf format attribute to error reporting functions (2016-08-08 16:16:21 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-08-12
-
-for you to fetch changes up to ff9a71afc948f609c4eaba47cd6788926e7cc105:
-
-  nl80211: explicitly check enum nl80211_mesh_power_mode (2016-08-11 20:00:37 +0200)
-
-----------------------------------------------------------------
-Not much for -next so far, but here it goes:
- * send more nl80211 events for interfaces
- * remove useless network/transport offset mangling code
- * validate beacon intervals identically for all interface types
- * use driver rate estimates for mesh
- * fix a compiler type/signedness warning
-
-----------------------------------------------------------------
-Denis Kenzior (2):
-      cfg80211: always notify userspace of new wireless netdevs
-      cfg80211: always notify userspace when wireless netdev is removed
-
-Felix Fietkau (1):
-      mac80211: remove skb header offset mangling in ieee80211_build_hdr
-
-Johannes Berg (1):
-      nl80211: explicitly check enum nl80211_mesh_power_mode
-
-Maxim Altshul (2):
-      mac80211: mesh: Add support for HW RC implementation
-      mac80211: call get_expected_throughput only after adding station
-
-Purushottam Kushwaha (1):
-      cfg80211: identically validate beacon interval for AP/MESH/IBSS
-
- net/mac80211/driver-ops.h |  8 ++--
- net/mac80211/mesh_hwmp.c  | 27 ++++++++++----
- net/mac80211/sta_info.c   | 25 ++++++++++---
- net/mac80211/sta_info.h   |  2 +
- net/mac80211/tx.c         | 28 +-------------
- net/wireless/core.c       |  6 +++
- net/wireless/nl80211.c    | 94 +++++++++++++++++++++++++++--------------------
- net/wireless/nl80211.h    |  3 ++
- net/wireless/util.c       |  2 +-
- 9 files changed, 112 insertions(+), 83 deletions(-)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
+index 1d6f5d2..dd75ea7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
+@@ -77,7 +77,6 @@
+  */
+ #define FH_MEM_LOWER_BOUND                   (0x1000)
+ #define FH_MEM_UPPER_BOUND                   (0x2000)
+-#define TFH_MEM_LOWER_BOUND                  (0xA06000)
+ 
+ /**
+  * Keep-Warm (KW) buffer base address.
+@@ -120,7 +119,7 @@
+ #define FH_MEM_CBBC_20_31_LOWER_BOUND		(FH_MEM_LOWER_BOUND + 0xB20)
+ #define FH_MEM_CBBC_20_31_UPPER_BOUND		(FH_MEM_LOWER_BOUND + 0xB80)
+ /* a000 TFD table address, 64 bit */
+-#define TFH_TFDQ_CBB_TABLE			(TFH_MEM_LOWER_BOUND + 0x1C00)
++#define TFH_TFDQ_CBB_TABLE			(0x1C00)
+ 
+ /* Find TFD CB base pointer for given queue */
+ static inline unsigned int FH_MEM_CBBC_QUEUE(struct iwl_trans *trans,
+@@ -156,7 +155,7 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(struct iwl_trans *trans,
+  * In case of DRAM read address which is not aligned to 128B, the TFH will
+  * enable transfer size which doesn't cross 64B DRAM address boundary.
+ */
+-#define TFH_TRANSFER_MODE		(TFH_MEM_LOWER_BOUND + 0x1F40)
++#define TFH_TRANSFER_MODE		(0x1F40)
+ #define TFH_TRANSFER_MAX_PENDING_REQ	0xc
+ #define TFH_CHUNK_SIZE_128			BIT(8)
+ #define TFH_CHUNK_SPLIT_MODE		BIT(10)
+@@ -167,7 +166,7 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(struct iwl_trans *trans,
+  * the start of the TFD first TB.
+  * In case of a DRAM Tx CMD update the TFH will update PN and Key ID
+  */
+-#define TFH_TXCMD_UPDATE_CFG		(TFH_MEM_LOWER_BOUND + 0x1F48)
++#define TFH_TXCMD_UPDATE_CFG		(0x1F48)
+ /*
+  * Controls TX DMA operation
+  *
+@@ -181,22 +180,22 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(struct iwl_trans *trans,
+  * set to 1 - interrupt is sent to the driver
+  * Bit 0: Indicates the snoop configuration
+ */
+-#define TFH_SRV_DMA_CHNL0_CTRL	(TFH_MEM_LOWER_BOUND + 0x1F60)
++#define TFH_SRV_DMA_CHNL0_CTRL	(0x1F60)
+ #define TFH_SRV_DMA_SNOOP	BIT(0)
+ #define TFH_SRV_DMA_TO_DRIVER	BIT(24)
+ #define TFH_SRV_DMA_START	BIT(31)
+ 
+ /* Defines the DMA SRAM write start address to transfer a data block */
+-#define TFH_SRV_DMA_CHNL0_SRAM_ADDR	(TFH_MEM_LOWER_BOUND + 0x1F64)
++#define TFH_SRV_DMA_CHNL0_SRAM_ADDR	(0x1F64)
+ 
+ /* Defines the 64bits DRAM start address to read the DMA data block from */
+-#define TFH_SRV_DMA_CHNL0_DRAM_ADDR	(TFH_MEM_LOWER_BOUND + 0x1F68)
++#define TFH_SRV_DMA_CHNL0_DRAM_ADDR	(0x1F68)
+ 
+ /*
+  * Defines the number of bytes to transfer from DRAM to SRAM.
+  * Note that this register may be configured with non-dword aligned size.
+  */
+-#define TFH_SRV_DMA_CHNL0_BC	(TFH_MEM_LOWER_BOUND + 0x1F70)
++#define TFH_SRV_DMA_CHNL0_BC	(0x1F70)
+ 
+ /**
+  * Rx SRAM Control and Status Registers (RSCSR)
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+index 459bf73..849ee79 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-prph.h
+@@ -303,6 +303,14 @@
+ 
+ #define FH_UCODE_LOAD_STATUS		(0x1AF0)
+ #define CSR_UCODE_LOAD_STATUS_ADDR	(0x1E70)
++
++/*
++ * Replacing FH_UCODE_LOAD_STATUS
++ * This register is writen by driver and is read by uCode during boot flow.
++ * Note this address is cleared after MAC reset.
++ */
++#define UREG_UCODE_LOAD_STATUS		(0xa05c40)
++
+ enum secure_load_status_reg {
+ 	LMPM_CPU_UCODE_LOADING_STARTED			= 0x00000001,
+ 	LMPM_CPU_HDRS_LOADING_COMPLETED			= 0x00000003,
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 559f118..039eeca 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -827,10 +827,16 @@ static int iwl_pcie_load_cpu_sections_8000(struct iwl_trans *trans,
+ 		if (ret)
+ 			return ret;
+ 
+-		/* Notify the ucode of the loaded section number and status */
+-		val = iwl_read_direct32(trans, FH_UCODE_LOAD_STATUS);
+-		val = val | (sec_num << shift_param);
+-		iwl_write_direct32(trans, FH_UCODE_LOAD_STATUS, val);
++		/* Notify ucode of loaded section number and status */
++		if (trans->cfg->use_tfh) {
++			val = iwl_read_prph(trans, UREG_UCODE_LOAD_STATUS);
++			val = val | (sec_num << shift_param);
++			iwl_write_prph(trans, UREG_UCODE_LOAD_STATUS, val);
++		} else {
++			val = iwl_read_direct32(trans, FH_UCODE_LOAD_STATUS);
++			val = val | (sec_num << shift_param);
++			iwl_write_direct32(trans, FH_UCODE_LOAD_STATUS, val);
++		}
+ 		sec_num = (sec_num << 1) | 0x1;
+ 	}
+ 
+@@ -838,10 +844,21 @@ static int iwl_pcie_load_cpu_sections_8000(struct iwl_trans *trans,
+ 
+ 	iwl_enable_interrupts(trans);
+ 
+-	if (cpu == 1)
+-		iwl_write_direct32(trans, FH_UCODE_LOAD_STATUS, 0xFFFF);
+-	else
+-		iwl_write_direct32(trans, FH_UCODE_LOAD_STATUS, 0xFFFFFFFF);
++	if (trans->cfg->use_tfh) {
++		if (cpu == 1)
++			iwl_write_prph(trans, UREG_UCODE_LOAD_STATUS,
++				       0xFFFF);
++		else
++			iwl_write_prph(trans, UREG_UCODE_LOAD_STATUS,
++				       0xFFFFFFFF);
++	} else {
++		if (cpu == 1)
++			iwl_write_direct32(trans, FH_UCODE_LOAD_STATUS,
++					   0xFFFF);
++		else
++			iwl_write_direct32(trans, FH_UCODE_LOAD_STATUS,
++					   0xFFFFFFFF);
++	}
+ 
+ 	return 0;
+ }
+-- 
+2.8.1
