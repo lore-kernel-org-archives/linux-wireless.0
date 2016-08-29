@@ -1,55 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43959 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752545AbcHQUnY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Aug 2016 16:43:24 -0400
-Message-ID: <1471466600.5173.21.camel@sipsolutions.net> (sfid-20160817_224339_019640_5262FDF5)
-Subject: Re: [Make-wifi-fast] [PATCH v2] mac80211: Move crypto IV generation
- to after TXQ dequeue.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-	make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Date: Wed, 17 Aug 2016 22:43:20 +0200
-In-Reply-To: <CAA93jw4+WTiFAdUJkPaf5aRDy81vMW34TPQt7xSgv95tsXU=cA@mail.gmail.com> (sfid-20160817_220750_313180_B51CF7A4)
-References: <20160817125800.19154-1-toke@toke.dk>
-	 <20160817144531.4285-1-toke@toke.dk>
-	 <1471463348.5173.16.camel@sipsolutions.net>
-	 <CAA93jw4+WTiFAdUJkPaf5aRDy81vMW34TPQt7xSgv95tsXU=cA@mail.gmail.com>
-	 (sfid-20160817_220750_313180_B51CF7A4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mout.kundenserver.de ([212.227.126.130]:52946 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753564AbcH2V0I (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 17:26:08 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: Re: [PATCH 5/5] ath9k: Make EEPROM endianness swapping configurable via devicetree
+Date: Mon, 29 Aug 2016 23:25:37 +0200
+Cc: nbd@nbd.name, kvalo@codeaurora.org, ath9k-devel@qca.qualcomm.com,
+        linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+        devicetree@vger.kernel.org, mark.rutland@arm.com,
+        chunkeey@googlemail.com, robh+dt@kernel.org
+References: <20160821144906.30984-1-martin.blumenstingl@googlemail.com> <201608291410.44338.arnd@arndb.de> <CAFBinCCSBE8KsLgP3t=FzB-2jgjfQBtuF+EjqQEk-7mmmps_Pg@mail.gmail.com>
+In-Reply-To: <CAFBinCCSBE8KsLgP3t=FzB-2jgjfQBtuF+EjqQEk-7mmmps_Pg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: Text/Plain;
+  charset="utf-8"
+Message-Id: <201608292325.38091.arnd@arndb.de> (sfid-20160829_232611_441510_D2FE635F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Monday 29 August 2016, Martin Blumenstingl wrote:
+> > and then do a swab32() on them. I suspect these should just be __le32
+> > (and __le16, respectively where needed), using appropriate accessors
+> > everywhere that those fields are being read instead of having one function
+> > that tries to turn them into cpu-native ordering.
+> I'm not sure if we want those fields to be __le32:
+> BIT(0) in the eepMisc field indicates whether to interpret the data as
+> big or little endian.
+> When this bit is set we would want these fields to be __be32 instead -
+> so I guess the current implementation is "OK" for this specific
+> use-case.
 
-> well, we're getting there. the results of both patch attempts were
-> really nice, and brought encrypted performance with fq back into line
-> with unencrypted. Still running crypted tests as I write...
-> 
-> So fixing TKIP would be next, forcing the AP to use that? What other
-> scenarios do we have to worry about? WDS?
-> 
+Ok, I see. It's still confusing because it's different from how other
+drivers handle this (case in point: I was very confused by this). 
 
-I don't think there's anything else, I just don't really feel it's
-getting anywhere. This is a mere symptom of the design.
+Do you see any downsides in changing the code to consistently annotate
+the eeprom as either __le or __be (whichever is more common), using
+the respective endianess accessors, and then doing the swap if the
+data we read is the opposite way?
 
-Felix had worked around the SN assignment in a similar way, but I feel
-that perhaps the whole thing isn't quite the right architecture. Why
-are we applying FQ after the wifi conversion, when clearly that doesn't
-work well? Seems to me that it would make more sense to let the frames
-sit on the queues as they come in, and do most of the wifi handling
-only when needed (obviously, things like control port would still have
-to be done).
-We even count those packets that are dropped for TX statistics, which
-would seem to be a big behavioural difference vs. applying a qdisc.
-
-Now, it's unlikely to be that simple - fragmentation, for example,
-might mess this up.
-
-Overall though, I'm definitely wondering if it should be this way,
-since all the special cases just add complexity.
-
-johannes
+	Arnd
