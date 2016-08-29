@@ -1,47 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.eperm.de ([89.247.134.16]:34716 "EHLO mail.eperm.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932444AbcHJSDR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:03:17 -0400
-From: Stephan Mueller <smueller@chronox.de>
-To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Date: Wed, 10 Aug 2016 09:27:06 +0200
-Message-ID: <4321952.1nMxxDi7Wz@positron.chronox.de> (sfid-20160810_232649_879788_FE53D5F9)
-In-Reply-To: <c0951e085764481d8d85637734e2e14b@aptaiexm02f.ap.qualcomm.com>
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org> <1526134.1iUazSISyZ@positron.chronox.de> <c0951e085764481d8d85637734e2e14b@aptaiexm02f.ap.qualcomm.com>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33608 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751691AbcH2QkK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 12:40:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CACna6rytnp7WsrdscwPOTvi=FajAtoF2V2ZKx34RUdjEOiZO1w@mail.gmail.com>
+References: <1472474375-29910-1-git-send-email-baoyou.xie@linaro.org> <CACna6rytnp7WsrdscwPOTvi=FajAtoF2V2ZKx34RUdjEOiZO1w@mail.gmail.com>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 29 Aug 2016 18:39:25 +0200
+Message-ID: <CACna6rwBrT5Ei8oY1qfcCTa5J+xh9PyZUDwwghcXNX1U0E5vuw@mail.gmail.com> (sfid-20160829_184038_153008_04B92361)
+Subject: Re: [PATCH v4] brcmfmac: add missing header dependencies
+To: Baoyou Xie <baoyou.xie@linaro.org>
+Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, xie.baoyou@zte.com.cn
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Am Mittwoch, 10. August 2016, 07:15:49 CEST schrieb Pan, Miaoqing:
+On 29 August 2016 at 17:42, Baoyou Xie <baoyou.xie@linaro.org> wrote:
+> On 29 August 2016 at 23:31, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> wr=
+ote:
+>>
+>> On 29 August 2016 at 14:39, Baoyou Xie <baoyou.xie@linaro.org> wrote:
+>> > We get 1 warning when build kernel with W=3D1:
+>> > drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c:23:6:
+>> > warning: no previous prototype for '__brcmf_err' [-Wmissing-prototypes=
+]
+>>
+>> building? I'm not native English, but I think so.
+>>
+>>
+>> > In fact, this function is declared in brcmfmac/debug.h, so this patch
+>> > add missing header dependencies.
+>>
+>> adds
+>>
+>>
+>> > Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+>> > Acked-by: Arnd Bergmann <arnd@arndb.de>
+>>
+>> Please don't resend patches just to add tags like that. This only
+>> increases a noise and patchwork handles this just fine, see:
+>> https://patchwork.kernel.org/patch/9303285/
+>> https://patchwork.kernel.org/patch/9303285/mbox/
+>
+>
+> it modifies a typo biuld/build.
 
-Hi Miaoqing,
+Please send your replies to all, not privately.
 
-> Hi Stephan,
-> 
-> NIST SP 800-22-rev1a and NIST SP 800-90B are used together to evaluate the
-> amount of min entropy the source provides, and not to decide if the source
-> has passed the tests or failed. See
-> 
-> https://github.com/usnistgov/SP800-90B_EntropyAssessment
-> 
-> The goal is often to make sure the input entropy is more than the entropy we
-> expect from the output.
-
-You are correct on the SP800-90B tests (hence I did not refer to them for the 
-binary decision). Yet, SP800-22 with the associated tool delivers a binary 
-decision.
-
-Ciao
-Stephan
+OK, so you should also include a changelog in the comments part of diff, e.=
+g.:
+V4: Fix typo in "biuld"
