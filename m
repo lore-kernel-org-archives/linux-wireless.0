@@ -1,86 +1,246 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35735 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752995AbcHCOKM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Aug 2016 10:10:12 -0400
-Received: by mail-oi0-f66.google.com with SMTP id w143so20046306oiw.2
-        for <linux-wireless@vger.kernel.org>; Wed, 03 Aug 2016 07:09:50 -0700 (PDT)
-From: Denis Kenzior <denkenz@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Denis Kenzior <denkenz@gmail.com>
-Subject: [PATCH v3 1/3] nl80211: Add nl80211_notify_iface
-Date: Wed,  3 Aug 2016 16:58:33 -0500
-Message-Id: <1470261515-2830-2-git-send-email-denkenz@gmail.com> (sfid-20160803_161045_764360_5843B915)
-In-Reply-To: <1470261515-2830-1-git-send-email-denkenz@gmail.com>
-References: <1470261515-2830-1-git-send-email-denkenz@gmail.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:40866 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750786AbcH2UZ1 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 29 Aug 2016 16:25:27 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Mon, 29 Aug 2016 23:25:15 +0300
+Message-Id: <1472502319-10847-3-git-send-email-luca@coelho.fi> (sfid-20160829_222537_733893_FED3769D)
+In-Reply-To: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+References: <1472502319-10847-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH v2 2/6] mac80211: refactor monitor representation in sdata
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function emits NL80211_CMD_NEW_INTERFACE or
-NL80211_CMD_DEL_INTERFACE events.  This is meant to be used by the core
-to notify userspace applications such as wpa_supplicant when a netdev
-related to a wireless device has been added or removed.
+From: Aviya Erenfeld <aviya.erenfeld@intel.com>
 
-Signed-off-by: Denis Kenzior <denkenz@gmail.com>
+Insert the u32 monitor flags variable in a new structure
+that represents a monitor interface.
+This will allow to add more configuration variables to
+that structure which will happen in an upcoming change.
+
+Signed-off-by: Aviya Erenfeld <aviya.erenfeld@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/nl80211.c | 28 ++++++++++++++++++++++++++++
- net/wireless/nl80211.h |  3 +++
- 2 files changed, 31 insertions(+)
+ net/mac80211/cfg.c         |  8 ++++----
+ net/mac80211/driver-ops.c  |  2 +-
+ net/mac80211/ieee80211_i.h |  6 +++++-
+ net/mac80211/iface.c       | 16 ++++++++--------
+ net/mac80211/rx.c          |  4 ++--
+ net/mac80211/status.c      |  2 +-
+ net/mac80211/tx.c          |  2 +-
+ net/mac80211/util.c        |  2 +-
+ 8 files changed, 23 insertions(+), 19 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index ac19eb8..c174770 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -11855,6 +11855,34 @@ void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
- 				NL80211_MCGRP_CONFIG, GFP_KERNEL);
- }
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 543b1d4..f2c8cd2 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -39,7 +39,7 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
  
-+void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
-+				struct wireless_dev *wdev,
-+				enum nl80211_commands cmd)
-+{
-+	struct sk_buff *msg;
-+	bool removal;
+ 	if (type == NL80211_IFTYPE_MONITOR && flags) {
+ 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+-		sdata->u.mntr_flags = *flags;
++		sdata->u.mntr.flags = *flags;
+ 	}
+ 
+ 	return wdev;
+@@ -89,11 +89,11 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 			 *	cooked_mntrs, monitor and all fif_* counters
+ 			 *	reconfigure hardware
+ 			 */
+-			if ((*flags & mask) != (sdata->u.mntr_flags & mask))
++			if ((*flags & mask) != (sdata->u.mntr.flags & mask))
+ 				return -EBUSY;
+ 
+ 			ieee80211_adjust_monitor_flags(sdata, -1);
+-			sdata->u.mntr_flags = *flags;
++			sdata->u.mntr.flags = *flags;
+ 			ieee80211_adjust_monitor_flags(sdata, 1);
+ 
+ 			ieee80211_configure_filter(local);
+@@ -103,7 +103,7 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
+ 			 * and ieee80211_do_open take care of "everything"
+ 			 * mentioned in the comment above.
+ 			 */
+-			sdata->u.mntr_flags = *flags;
++			sdata->u.mntr.flags = *flags;
+ 		}
+ 	}
+ 
+diff --git a/net/mac80211/driver-ops.c b/net/mac80211/driver-ops.c
+index c258f10..c701b64 100644
+--- a/net/mac80211/driver-ops.c
++++ b/net/mac80211/driver-ops.c
+@@ -62,7 +62,7 @@ int drv_add_interface(struct ieee80211_local *local,
+ 	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_AP_VLAN ||
+ 		    (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+ 		     !ieee80211_hw_check(&local->hw, WANT_MONITOR_VIF) &&
+-		     !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))))
++		     !(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))))
+ 		return -EINVAL;
+ 
+ 	trace_drv_add_interface(local, sdata);
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index f56d342..9211cce 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -824,6 +824,10 @@ struct txq_info {
+ 	struct ieee80211_txq txq;
+ };
+ 
++struct ieee80211_if_mntr {
++	u32 flags;
++};
 +
-+	WARN_ON(cmd != NL80211_CMD_NEW_INTERFACE &&
-+		cmd != NL80211_CMD_DEL_INTERFACE);
-+
-+	if (cmd == NL80211_CMD_DEL_INTERFACE)
-+		removal = true;
-+	else
-+		removal = false;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
-+	if (!msg)
-+		return;
-+
-+	if (nl80211_send_iface(msg, 0, 0, 0, rdev, wdev, removal) < 0) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+				NL80211_MCGRP_CONFIG, GFP_KERNEL);
-+}
-+
- static int nl80211_add_scan_req(struct sk_buff *msg,
- 				struct cfg80211_registered_device *rdev)
+ struct ieee80211_sub_if_data {
+ 	struct list_head list;
+ 
+@@ -922,7 +926,7 @@ struct ieee80211_sub_if_data {
+ 		struct ieee80211_if_ibss ibss;
+ 		struct ieee80211_if_mesh mesh;
+ 		struct ieee80211_if_ocb ocb;
+-		u32 mntr_flags;
++		struct ieee80211_if_mntr mntr;
+ 	} u;
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index b123a9e..c8509d9 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -188,7 +188,7 @@ static int ieee80211_verify_mac(struct ieee80211_sub_if_data *sdata, u8 *addr,
+ 			continue;
+ 
+ 		if (iter->vif.type == NL80211_IFTYPE_MONITOR &&
+-		    !(iter->u.mntr_flags & MONITOR_FLAG_ACTIVE))
++		    !(iter->u.mntr.flags & MONITOR_FLAG_ACTIVE))
+ 			continue;
+ 
+ 		m = iter->vif.addr;
+@@ -217,7 +217,7 @@ static int ieee80211_change_mac(struct net_device *dev, void *addr)
+ 		return -EBUSY;
+ 
+ 	if (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+-	    !(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
++	    !(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
+ 		check_dup = false;
+ 
+ 	ret = ieee80211_verify_mac(sdata, sa->sa_data, check_dup);
+@@ -357,7 +357,7 @@ void ieee80211_adjust_monitor_flags(struct ieee80211_sub_if_data *sdata,
+ 				    const int offset)
  {
-diff --git a/net/wireless/nl80211.h b/net/wireless/nl80211.h
-index a63f402..6f6b73c 100644
---- a/net/wireless/nl80211.h
-+++ b/net/wireless/nl80211.h
-@@ -7,6 +7,9 @@ int nl80211_init(void);
- void nl80211_exit(void);
- void nl80211_notify_wiphy(struct cfg80211_registered_device *rdev,
- 			  enum nl80211_commands cmd);
-+void nl80211_notify_iface(struct cfg80211_registered_device *rdev,
-+				struct wireless_dev *wdev,
-+				enum nl80211_commands cmd);
- void nl80211_send_scan_start(struct cfg80211_registered_device *rdev,
- 			     struct wireless_dev *wdev);
- struct sk_buff *nl80211_build_scan_msg(struct cfg80211_registered_device *rdev,
+ 	struct ieee80211_local *local = sdata->local;
+-	u32 flags = sdata->u.mntr_flags;
++	u32 flags = sdata->u.mntr.flags;
+ 
+ #define ADJUST(_f, _s)	do {					\
+ 	if (flags & MONITOR_FLAG_##_f)				\
+@@ -589,12 +589,12 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 		}
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) {
++		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES) {
+ 			local->cooked_mntrs++;
+ 			break;
+ 		}
+ 
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
++		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
+ 			res = drv_add_interface(local, sdata);
+ 			if (res)
+ 				goto err_stop;
+@@ -926,7 +926,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		/* no need to tell driver */
+ 		break;
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) {
++		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES) {
+ 			local->cooked_mntrs--;
+ 			break;
+ 		}
+@@ -1012,7 +1012,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		ieee80211_recalc_idle(local);
+ 		mutex_unlock(&local->mtx);
+ 
+-		if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
++		if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
+ 			break;
+ 
+ 		/* fall through */
+@@ -1444,7 +1444,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 	case NL80211_IFTYPE_MONITOR:
+ 		sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
+ 		sdata->dev->netdev_ops = &ieee80211_monitorif_ops;
+-		sdata->u.mntr_flags = MONITOR_FLAG_CONTROL |
++		sdata->u.mntr.flags = MONITOR_FLAG_CONTROL |
+ 				      MONITOR_FLAG_OTHER_BSS;
+ 		break;
+ 	case NL80211_IFTYPE_WDS:
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9dce3b1..708c3b1 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -567,7 +567,7 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
+ 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
+ 			continue;
+ 
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES)
++		if (sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES)
+ 			continue;
+ 
+ 		if (!ieee80211_sdata_running(sdata))
+@@ -3147,7 +3147,7 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
+ 			continue;
+ 
+ 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR ||
+-		    !(sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES))
++		    !(sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES))
+ 			continue;
+ 
+ 		if (prev_dev) {
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index a2a6826..fabd9ff 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -709,7 +709,7 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
+ 			if (!ieee80211_sdata_running(sdata))
+ 				continue;
+ 
+-			if ((sdata->u.mntr_flags & MONITOR_FLAG_COOK_FRAMES) &&
++			if ((sdata->u.mntr.flags & MONITOR_FLAG_COOK_FRAMES) &&
+ 			    !send_to_cooked)
+ 				continue;
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 1d0746d..efc38e7 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1643,7 +1643,7 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
+ 
+ 	switch (sdata->vif.type) {
+ 	case NL80211_IFTYPE_MONITOR:
+-		if (sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE) {
++		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
+ 			vif = &sdata->vif;
+ 			break;
+ 		}
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 42bf0b6..e777c2a 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -598,7 +598,7 @@ static void __iterate_interfaces(struct ieee80211_local *local,
+ 	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_MONITOR:
+-			if (!(sdata->u.mntr_flags & MONITOR_FLAG_ACTIVE))
++			if (!(sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE))
+ 				continue;
+ 			break;
+ 		case NL80211_IFTYPE_AP_VLAN:
 -- 
-2.7.3
-
+2.8.1
