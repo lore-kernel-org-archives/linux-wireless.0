@@ -1,105 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f173.google.com ([209.85.220.173]:35643 "EHLO
-        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754407AbcHVTif (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:41194 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758167AbcH3Ljf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 22 Aug 2016 15:38:35 -0400
-Received: by mail-qk0-f173.google.com with SMTP id v123so90498725qkh.2
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Aug 2016 12:38:34 -0700 (PDT)
-Subject: Re: [PATCH 1/1] brcmfmac: fix pmksa->bssid usage
-To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org, brcm80211-dev-list.pdl@broadcom.com
-References: <20160805203418.32162-1-nicolas.iooss_linux@m4x.org>
- <96ea6e57-79d7-d4ff-1228-6f22addd4996@m4x.org>
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <45617c4f-60b9-2587-5e29-6330ba2f40a6@broadcom.com> (sfid-20160822_213921_035871_16E985E6)
-Date: Mon, 22 Aug 2016 21:38:23 +0200
-MIME-Version: 1.0
-In-Reply-To: <96ea6e57-79d7-d4ff-1228-6f22addd4996@m4x.org>
-Content-Type: text/plain; charset=windows-1252
+        Tue, 30 Aug 2016 07:39:35 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 14:38:56 +0300
+Message-Id: <1472557142-14782-10-git-send-email-luca@coelho.fi> (sfid-20160830_133939_691621_4FFE8509)
+In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
+References: <1472556999.27868.86.camel@coelho.fi>
+ <1472557142-14782-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 10/16] iwlwifi: add a new series 9460 with new PCI ID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22-8-2016 15:03, Nicolas Iooss wrote:
-> Hello,
-> 
-> After I sent the following patch a few weeks ago, I have not received
-> any feedback. Could you please review it and tell me what I may have
-> done wrong?
+From: Oren Givon <oren.givon@intel.com>
 
-Nothing. People went on vacation :-)
-> Thanks,
-> Nicolas
-> 
-> On 05/08/16 22:34, Nicolas Iooss wrote:
->> The struct cfg80211_pmksa defines its bssid field as:
->>
->>     const u8 *bssid;
->>
->> contrary to struct brcmf_pmksa, which uses:
->>
->>     u8 bssid[ETH_ALEN];
->>
->> Therefore in brcmf_cfg80211_del_pmksa(), &pmksa->bssid takes the address
->> of this field (of type u8**), not the one of its content (which would be
->> u8*).  Remove the & operator to make brcmf_dbg("%pM") and memcmp()
->> behave as expected.
->>
->> This bug have been found using a custom static checker (which checks the
->> usage of %p... attributes at build time).  It has been introduced in
->> commit 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code"),
->> which replaced pmksa->bssid by &pmksa->bssid while refactoring the code,
->> without modifying struct cfg80211_pmksa definition.
->>
->> Fixes: 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code")
->> Cc: stable@ger.kernel.org
+Add a new series to the 9000 series called 9460.
+In addition, add a new PCI ID that is the 9460 new series.
 
-Ah, so you did something wrong after all :-p. The email address should
-be 'stable@vger.kernel.org'.
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c   |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 27 +++++++++++++------------
+ 3 files changed, 17 insertions(+), 16 deletions(-)
 
->> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
->> ---
->>
->> scripts/checkpatch.pl reports a warning: "Prefer ether_addr_equal() or
->> ether_addr_equal_unaligned() over memcmp()".  Because some files in
->> drivers/net/wireless/broadcom/brcm80211/brcmfmac/ still use memcmp()
->> to compare addresses and because I do not know whether pmksa->bssid is
->> always aligned, I did not follow this warning.
-
-As most of this is done in slow path, I prefer memcmp() as I do not want
-to check alignment for minimal performance gain.
-
->>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> index 2628d5e12c64..aceab77cd95a 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> @@ -3884,11 +3884,11 @@ brcmf_cfg80211_del_pmksa(struct wiphy *wiphy, struct net_device *ndev,
->>  	if (!check_vif_up(ifp->vif))
->>  		return -EIO;
->>  
->> -	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", &pmksa->bssid);
->> +	brcmf_dbg(CONN, "del_pmksa - PMK bssid = %pM\n", pmksa->bssid);
->>  
->>  	npmk = le32_to_cpu(cfg->pmk_list.npmk);
->>  	for (i = 0; i < npmk; i++)
->> -		if (!memcmp(&pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
->> +		if (!memcmp(pmksa->bssid, &pmk[i].bssid, ETH_ALEN))
-
-I find '&pmk[i].bssid' confusing so maybe you could change it to
-'&pmk[i].bssid[0]' or 'pmk[i].bssid' as I think these two are
-essentially the same.
-
-Regards,
-Arend
-
->>  			break;
->>  
->>  	if ((npmk > 0) && (i < npmk)) {
->>
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index b8356a8..5621cf2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -156,8 +156,8 @@ const struct iwl_cfg iwl9260_2ac_cfg = {
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+ };
+ 
+-const struct iwl_cfg iwl9000_2ac_cfg = {
+-	.name = "Intel(R) Dual Band Wireless AC 9000",
++const struct iwl_cfg iwl9460_2ac_cfg = {
++	.name = "Intel(R) Dual Band Wireless AC 9460",
+ 	.fw_name_pre = IWL9000_FW_PRE,
+ 	IWL_DEVICE_9000,
+ 	.ht_params = &iwl9000_ht_params,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 04260fc..a18b57f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -449,9 +449,9 @@ extern const struct iwl_cfg iwl4165_2ac_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
+-extern const struct iwl_cfg iwl9000_2ac_cfg;
+ extern const struct iwl_cfg iwl9000lc_2ac_cfg;
+ extern const struct iwl_cfg iwl9260_2ac_cfg;
++extern const struct iwl_cfg iwl9460_2ac_cfg;
+ extern const struct iwl_cfg iwla000_2ac_cfg;
+ #endif /* CONFIG_IWLMVM */
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index bf523f5..d053183 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -504,18 +504,19 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ /* 9000 Series */
+ 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9000_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9000_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1420, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
+ 
+ /* a000 Series */
+ 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg)},
+@@ -636,7 +637,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	}
+ 
+ 	if (iwl_trans->cfg->rf_id) {
+-		if (cfg == &iwl9000_2ac_cfg &&
++		if (cfg == &iwl9460_2ac_cfg &&
+ 		    iwl_trans->hw_rf_id == CSR_HW_RF_ID_TYPE_LC) {
+ 			cfg = &iwl9000lc_2ac_cfg;
+ 			iwl_trans->cfg = cfg;
+-- 
+2.8.1
