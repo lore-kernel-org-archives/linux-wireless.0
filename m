@@ -1,97 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from outbound1a.ore.mailhop.org ([54.213.22.21]:62205 "EHLO
-	outbound1a.ore.mailhop.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750992AbcHKNOc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 09:14:32 -0400
-Date: Thu, 11 Aug 2016 13:14:24 +0000
-From: Jason Cooper <jason@lakedaemon.net>
-To: miaoqing@codeaurora.org
-Cc: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>,
-	Stephan Mueller <smueller@chronox.de>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Matt Mackall <mpm@selenic.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	linux-crypto@vger.kernel.org,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-Message-ID: <20160811131424.GI2013@io.lakedaemon.net> (sfid-20160811_151437_809516_B2FC88EA)
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
- <1526134.1iUazSISyZ@positron.chronox.de>
- <c0951e085764481d8d85637734e2e14b@aptaiexm02f.ap.qualcomm.com>
- <4321952.1nMxxDi7Wz@positron.chronox.de>
- <1e8e88ad7de64c528f08c75ff9176ab8@aptaiexm02f.ap.qualcomm.com>
- <389c3c1fdde2447aacf31a8b4aadfc08@aptaiexm02f.ap.qualcomm.com>
- <20160810132449.GH2013@io.lakedaemon.net>
- <14a3879458f3bfc36068c2e8294ca448@codeaurora.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <14a3879458f3bfc36068c2e8294ca448@codeaurora.org>
+Received: from paleale.coelho.fi ([176.9.41.70]:41180 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758003AbcH3Lje (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Aug 2016 07:39:34 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 14:38:54 +0300
+Message-Id: <1472557142-14782-8-git-send-email-luca@coelho.fi> (sfid-20160830_133948_057548_E5953109)
+In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
+References: <1472556999.27868.86.camel@coelho.fi>
+ <1472557142-14782-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 08/16] iwlwifi: mvm: support txq tid owner change
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Aug 11, 2016 at 10:54:11AM +0800, miaoqing@codeaurora.org wrote:
-> On 2016-08-10 21:24, Jason Cooper wrote:
-> >The fact is, barring userspace expectations of /dev/hwrng, hw_random is
-> >the appropriate place for it.  It's not a devicetree blob, mac address,
-> >or pci config space.  Which are things we feed in once for the heck of
-> >it.  This is a *continuous* source or questionable quality.
-> >
-> >I'm seriously considering putting this and timeriomem-rng into a
-> >subdirectory under hw_random/, maybe environ/.  Anything in there gets
-> >quality=0 for default, and *doesn't* contribute to /dev/hwrng.
-> >
-> >Regardless which path we take, I think we should include 'adc' in the
-> >name.  I've heard countless times about "Atheros cards come with an rng
-> >on board". :-/
-> 
-> If I understand correctly, you want to bind the ADC source to
-> /dev/hwrng, and then change rng-tools to set the entropy to zero in
-> the ioctl call ?  There are two major problems with that approach,
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Nope.  I want to leverage the hwrng framework to facilitate feeding the
-*kernel* entropy pools like all the other hwrngs do currently.  The
-difference for *environmental* sources is that when userspace read()s
-from /dev/hwrng, they will *not* contribute.
+Every active TXQ is assigned to a TID given through the
+SCD_CONFIG_CMD, and acts as an identifier in the FW. However,
+there may be cases this ownership needs to be changed.
 
-If the environmental sources are the only sources, then no /dev/hwrng
-should appear.
+For example, in the following scenario:
+ 1. TID x is owner of a queue
+ 2. Due to a shortage of queues, TID y and z share with x
+ 3. TID x becomes inactive and needs to be removed from the
+    shared queue.
+In this scenario, if another queue is freed and traffic on x
+continues, we can't allocate it a new queue as long as it is
+the owner of the first queue.
 
-> 1) We already tried once before to bind our solution to /dev/hwrng,
-> and got so much complaints. The conclusion was that maybe we know that
-> the output of /dev/hwrng does not have perfect entropy, but a normal
-> user does not know and will misuse it. You mentioned in
-> https://www.kernel.org/doc/Documentation/hw_random.txt we have
-> 
-> "This data is NOT CHECKED by any
-> 	fitness tests, and could potentially be bogus (if the
-> 	hardware is faulty or has been tampered with).  Data is only
-> 	output if the hardware "has-data" flag is set, but nevertheless
-> 	a security-conscious person would run fitness tests on the
-> 	data before assuming it is truly random."
-> 
-> But this is not enough to convince upstream to switch to /dev/hwrng.
-> I think the concern of users misusing the solution is a very valid
-> concern.
+Support moving ownership of a TXQ to a different TID (same
+STA) without stopping the queue.
 
-Agreed.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 51 ++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-> 2) If we set the entropy to zero in rng-tools, we cannot tolerate the
-> load.  Rng-tools is not a timer-based solution. Similar to our
-> solution, it is based on
-> /proc/sys/kernel/random/write_wakeup_threshold. If we do not increase
-> the entropy counter, rng-tools keep writing into the pool, and both
-> rng-tools and WiFi chip will be overloaded.
-
-That's why I propose a change to the hwrng framework to permit noise
-sources while not wiring them up to feed /dev/hwrng.  timeriomem-rng
-should have the same problem ath9k-rng does.
-
-Basically, if it wasn't designed to be an rng, it shouldn't be wired up
-to /dev/hwrng.
-
-thx,
-
-Jason.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index e87473a..30fc3af 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -850,6 +850,41 @@ out_err:
+ 	return ret;
+ }
+ 
++static void iwl_mvm_change_queue_owner(struct iwl_mvm *mvm, int queue)
++{
++	struct iwl_scd_txq_cfg_cmd cmd = {
++		.scd_queue = queue,
++		.action = SCD_CFG_UPDATE_QUEUE_TID,
++	};
++	s8 sta_id;
++	int tid;
++	unsigned long tid_bitmap;
++	int ret;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	spin_lock_bh(&mvm->queue_info_lock);
++	sta_id = mvm->queue_info[queue].ra_sta_id;
++	tid_bitmap = mvm->queue_info[queue].tid_bitmap;
++	spin_unlock_bh(&mvm->queue_info_lock);
++
++	if (WARN(!tid_bitmap, "TXQ %d has no tids assigned to it\n", queue))
++		return;
++
++	/* Find any TID for queue */
++	tid = find_first_bit(&tid_bitmap, IWL_MAX_TID_COUNT + 1);
++	cmd.tid = tid;
++	cmd.tx_fifo = iwl_mvm_ac_to_tx_fifo[tid_to_mac80211_ac[tid]];
++
++	ret = iwl_mvm_send_cmd_pdu(mvm, SCD_QUEUE_CFG, 0, sizeof(cmd), &cmd);
++	if (ret)
++		IWL_ERR(mvm, "Failed to update owner of TXQ %d (ret=%d)\n",
++			queue, ret);
++	else
++		IWL_DEBUG_TX_QUEUES(mvm, "Changed TXQ %d ownership to tid %d\n",
++				    queue, tid);
++}
++
+ static void iwl_mvm_unshare_queue(struct iwl_mvm *mvm, int queue)
+ {
+ 	struct ieee80211_sta *sta;
+@@ -1005,14 +1040,30 @@ void iwl_mvm_add_new_dqa_stream_wk(struct work_struct *wk)
+ 	/* Reconfigure queues requiring reconfiguation */
+ 	for (queue = 0; queue < IWL_MAX_HW_QUEUES; queue++) {
+ 		bool reconfig;
++		bool change_owner;
+ 
+ 		spin_lock_bh(&mvm->queue_info_lock);
+ 		reconfig = (mvm->queue_info[queue].status ==
+ 			    IWL_MVM_QUEUE_RECONFIGURING);
++
++		/*
++		 * We need to take into account a situation in which a TXQ was
++		 * allocated to TID x, and then turned shared by adding TIDs y
++		 * and z. If TID x becomes inactive and is removed from the TXQ,
++		 * ownership must be given to one of the remaining TIDs.
++		 * This is mainly because if TID x continues - a new queue can't
++		 * be allocated for it as long as it is an owner of another TXQ.
++		 */
++		change_owner = !(mvm->queue_info[queue].tid_bitmap &
++				 BIT(mvm->queue_info[queue].txq_tid)) &&
++			       (mvm->queue_info[queue].status ==
++				IWL_MVM_QUEUE_SHARED);
+ 		spin_unlock_bh(&mvm->queue_info_lock);
+ 
+ 		if (reconfig)
+ 			iwl_mvm_unshare_queue(mvm, queue);
++		else if (change_owner)
++			iwl_mvm_change_queue_owner(mvm, queue);
+ 	}
+ 
+ 	/* Go over all stations with deferred traffic */
+-- 
+2.8.1
