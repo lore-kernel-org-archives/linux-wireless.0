@@ -1,53 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:16778 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934496AbcHBMWX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:22:23 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: kvalo@qca.qualcomm.com, linux-wimax@intel.com,
-	bkenward@solarflare.com, linux-driver@qlogic.com,
-	computersforpeace@gmail.com, m.chehab@samsung.com,
-	pawel@osciak.com, m.szyprowski@samsung.com,
-	kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com, baolex.ni@intel.com,
-	daniel@iogearbox.net, pabeni@redhat.com
-Subject: [PATCH 0764/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:44:02 +0800
-Message-Id: <20160802114402.595-1-baolex.ni@intel.com> (sfid-20160802_175201_270635_9DC24606)
+Received: from paleale.coelho.fi ([176.9.41.70]:41226 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758217AbcH3LkK (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Aug 2016 07:40:10 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 14:38:57 +0300
+Message-Id: <1472557142-14782-11-git-send-email-luca@coelho.fi> (sfid-20160830_134013_578266_97343364)
+In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
+References: <1472556999.27868.86.camel@coelho.fi>
+ <1472557142-14782-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 11/16] iwlwifi: add new 9460 series PCI IDs
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+From: Oren Givon <oren.givon@intel.com>
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
+Add 4 more new 9460 series PCI IDs.
+
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/pci.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 8133d7b..0961a4e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -41,10 +41,10 @@ enum ath10k_pci_reset_mode {
- static unsigned int ath10k_pci_irq_mode = ATH10K_PCI_IRQ_AUTO;
- static unsigned int ath10k_pci_reset_mode = ATH10K_PCI_RESET_AUTO;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index d053183..3e5a11a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -517,6 +517,10 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x30DC, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg)},
  
--module_param_named(irq_mode, ath10k_pci_irq_mode, uint, 0644);
-+module_param_named(irq_mode, ath10k_pci_irq_mode, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(irq_mode, "0: auto, 1: legacy, 2: msi (default: 0)");
- 
--module_param_named(reset_mode, ath10k_pci_reset_mode, uint, 0644);
-+module_param_named(reset_mode, ath10k_pci_reset_mode, uint, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(reset_mode, "0: auto, 1: warm only (default: 0)");
- 
- /* how long wait to wait for target to initialise, in ms */
+ /* a000 Series */
+ 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg)},
 -- 
-2.9.2
-
+2.8.1
