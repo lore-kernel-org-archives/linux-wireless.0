@@ -1,97 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:4030 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751059AbcHJSMV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:12:21 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 4/4] cfg80211: rdev-ops: remove checks from rdev_{add,del}_tx_ts()
-Date: Wed, 10 Aug 2016 12:33:29 +0200
-Message-Id: <1470825209-10054-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160810_201231_028910_82D6D75E)
-In-Reply-To: <1470825209-10054-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1470825209-10054-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from paleale.coelho.fi ([176.9.41.70]:41230 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758217AbcH3LkM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Aug 2016 07:40:12 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 14:39:00 +0300
+Message-Id: <1472557142-14782-14-git-send-email-luca@coelho.fi> (sfid-20160830_134015_307820_FADF4F80)
+In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
+References: <1472556999.27868.86.camel@coelho.fi>
+ <1472557142-14782-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 14/16] iwlwifi: pcie: refrain from SCD accesses
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The wrappers check if callback is specified. Just have the checks
-in nl80211.c checking the NL80211_FEATURE_SUPPORTS_WMM_ADMISSION
-feature flag. If the driver sets this flag the callbacks are being
-checked in wiphy_register().
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Up till now we accessed SCD configuration only for initial
+configuration and for enabling command queue.
+For a000 generation the command queue is open by default
+and firmware configures the rest. No driver SCD accesses
+are expected. Make sure this is the case.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- net/wireless/core.c     |  4 ++++
- net/wireless/nl80211.c  |  3 +++
- net/wireless/rdev-ops.h | 12 +++++-------
- 3 files changed, 12 insertions(+), 7 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c |  4 ++++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c    | 13 ++++++++++++-
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 7645e97..ef83db8 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -579,6 +579,10 @@ int wiphy_register(struct wiphy *wiphy)
- 		     !rdev->ops->tdls_cancel_channel_switch)))
- 		return -EINVAL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 74f2f03..559f118 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1960,6 +1960,10 @@ void iwl_trans_pcie_log_scd_error(struct iwl_trans *trans, struct iwl_txq *txq)
+ 	IWL_ERR(trans, "Current SW read_ptr %d write_ptr %d\n",
+ 		txq->q.read_ptr, txq->q.write_ptr);
  
-+	if (WARN_ON((wiphy->features & NL80211_FEATURE_SUPPORTS_WMM_ADMISSION)
-+		    && (!rdev->ops->add_tx_ts || !rdev->ops->del_tx_ts)))
-+		return -EINVAL;
++	if (trans->cfg->use_tfh)
++		/* TODO: access new SCD registers and dump them */
++		return;
 +
- 	/*
- 	 * if a wiphy has unsupported modes for regulatory channel enforcement,
- 	 * opt-out of enforcement checking
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 8ab63b5..e818cec 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10890,6 +10890,9 @@ static int nl80211_del_tx_ts(struct sk_buff *skb, struct genl_info *info)
- 	u8 tsid;
- 	int err;
+ 	scd_sram_addr = trans_pcie->scd_base_addr +
+ 			SCD_TX_STTS_QUEUE_OFFSET(txq->q.id);
+ 	iwl_trans_read_mem_bytes(trans, scd_sram_addr, buf, sizeof(buf));
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 18650dc..9636dc8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -703,6 +703,9 @@ void iwl_pcie_tx_start(struct iwl_trans *trans, u32 scd_base_addr)
+ 	memset(trans_pcie->queue_stopped, 0, sizeof(trans_pcie->queue_stopped));
+ 	memset(trans_pcie->queue_used, 0, sizeof(trans_pcie->queue_used));
  
-+	if (!(rdev->wiphy.features & NL80211_FEATURE_SUPPORTS_WMM_ADMISSION))
-+		return -EOPNOTSUPP;
++	if (trans->cfg->use_tfh)
++		return;
 +
- 	if (!info->attrs[NL80211_ATTR_TSID] || !info->attrs[NL80211_ATTR_MAC])
- 		return -EINVAL;
+ 	trans_pcie->scd_base_addr =
+ 		iwl_read_prph(trans, SCD_SRAM_BASE_ADDR);
  
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 2020606..be89461 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -978,13 +978,12 @@ rdev_add_tx_ts(struct cfg80211_registered_device *rdev,
- 	       struct net_device *dev, u8 tsid, const u8 *peer,
- 	       u8 user_prio, u16 admitted_time)
- {
--	int ret = -EOPNOTSUPP;
-+	int ret;
+@@ -970,11 +973,13 @@ int iwl_pcie_tx_init(struct iwl_trans *trans)
+ 		}
+ 	}
  
- 	trace_rdev_add_tx_ts(&rdev->wiphy, dev, tsid, peer,
- 			     user_prio, admitted_time);
--	if (rdev->ops->add_tx_ts)
--		ret = rdev->ops->add_tx_ts(&rdev->wiphy, dev, tsid, peer,
--					   user_prio, admitted_time);
-+	ret = rdev->ops->add_tx_ts(&rdev->wiphy, dev, tsid, peer,
-+				   user_prio, admitted_time);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
+-	if (trans->cfg->use_tfh)
++	if (trans->cfg->use_tfh) {
+ 		iwl_write_direct32(trans, TFH_TRANSFER_MODE,
+ 				   TFH_TRANSFER_MAX_PENDING_REQ |
+ 				   TFH_CHUNK_SIZE_128 |
+ 				   TFH_CHUNK_SPLIT_MODE);
++		return 0;
++	}
  
- 	return ret;
-@@ -994,11 +993,10 @@ static inline int
- rdev_del_tx_ts(struct cfg80211_registered_device *rdev,
- 	       struct net_device *dev, u8 tsid, const u8 *peer)
- {
--	int ret = -EOPNOTSUPP;
-+	int ret;
+ 	iwl_set_bits_prph(trans, SCD_GP_CTRL, SCD_GP_CTRL_AUTO_ACTIVE_MODE);
+ 	if (trans->cfg->base_params->num_of_queues > 20)
+@@ -1249,6 +1254,9 @@ void iwl_trans_pcie_txq_enable(struct iwl_trans *trans, int txq_id, u16 ssn,
+ 	if (test_and_set_bit(txq_id, trans_pcie->queue_used))
+ 		WARN_ONCE(1, "queue %d already used - expect issues", txq_id);
  
- 	trace_rdev_del_tx_ts(&rdev->wiphy, dev, tsid, peer);
--	if (rdev->ops->del_tx_ts)
--		ret = rdev->ops->del_tx_ts(&rdev->wiphy, dev, tsid, peer);
-+	ret = rdev->ops->del_tx_ts(&rdev->wiphy, dev, tsid, peer);
- 	trace_rdev_return_int(&rdev->wiphy, ret);
++	if (cfg && trans->cfg->use_tfh)
++		WARN_ONCE(1, "Expected no calls to SCD configuration");
++
+ 	txq->wd_timeout = msecs_to_jiffies(wdg_timeout);
  
- 	return ret;
+ 	if (cfg) {
+@@ -1366,6 +1374,9 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id,
+ 		return;
+ 	}
+ 
++	if (configure_scd && trans->cfg->use_tfh)
++		WARN_ONCE(1, "Expected no calls to SCD configuration");
++
+ 	if (configure_scd) {
+ 		iwl_scd_txq_set_inactive(trans, txq_id);
+ 
 -- 
-1.9.1
-
+2.8.1
