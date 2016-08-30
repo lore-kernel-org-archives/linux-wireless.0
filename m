@@ -1,44 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52814 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751148AbcHKNE2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Aug 2016 09:04:28 -0400
-Message-ID: <1470920661.12075.12.camel@sipsolutions.net> (sfid-20160811_150432_720297_0F2377CE)
-Subject: Re: [PATCH v3] mac80211: mesh: set tx_info->hw_queue to the correct
- queue upon packet forwarding
+Received: from s3.sipsolutions.net ([5.9.151.49]:48671 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757721AbcH3GHh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Aug 2016 02:07:37 -0400
+Message-ID: <1472537253.4249.6.camel@sipsolutions.net> (sfid-20160830_080800_275669_F21D136F)
+Subject: Re: [PATCH] cfg80211: Add stub for cfg80211_get_station()
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Yaniv Machani <yanivma@ti.com>, linux-kernel@vger.kernel.org
-Cc: Meirav Kama <meiravk@ti.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Thu, 11 Aug 2016 15:04:21 +0200
-In-Reply-To: <20160808070610.20563-1-yanivma@ti.com>
-References: <20160808070610.20563-1-yanivma@ti.com>
+To: Linus =?ISO-8859-1?Q?L=FCssing?= <linus.luessing@c0d3.blue>,
+        linux-wireless@vger.kernel.org
+Cc: "David S . Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Antonio Quartulli <a@unstable.cc>,
+        b.a.t.m.a.n@lists.open-mesh.org
+Date: Tue, 30 Aug 2016 08:07:33 +0200
+In-Reply-To: <20160819200248.8202-1-linus.luessing@c0d3.blue> (sfid-20160819_220304_170640_809CF938)
+References: <20160819200248.8202-1-linus.luessing@c0d3.blue>
+         (sfid-20160819_220304_170640_809CF938)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-08-08 at 10:06 +0300, Yaniv Machani wrote:
-> From: Meirav Kama <meiravk@ti.com>
+On Fri, 2016-08-19 at 22:02 +0200, Linus Lüssing wrote:
+> This allows modules using this function (currently: batman-adv) to
+> compile even if cfg80211 is not built at all, thus relaxing
+> dependencies.
 > 
-> MP received data frames from another MP. Frames are forwarded
-> from Rx to Tx to be transmitted to a third MP.
-> Upon cloning the skb, the tx_info was zeroed, and the
-> hw_queue wasn't set correctly, causing frames to be
-> inserted to queue 0 (VOICE). If re-queue occurred for some
-> reason, frame will be inserted to correct queue 2 (BE).
-> In this case frames are now dequeued from 2 different queues and
-> sent out of order.
+Err, excuse the earlier empty email - editing mixup.
 
-Uh, sorry. I was so focused on the commit message and everything that I
-neglected to look into the code change ... :(
-
->  	info->control.jiffies = jiffies;
-> +	info->hw_queue = q;
-> 
-This is incorrect. 'q' appears to be the AC here, so you need to set
-something like vif->hw_queue[q], afaict? Check out tx.c where this is
-set.
+I've applied this and will send it to 4.8 so you can take advantage of
+it sooner (to adjust the Kconfig dependencies, presumably).
 
 johannes
