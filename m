@@ -1,35 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ua0-f170.google.com ([209.85.217.170]:35508 "EHLO
-        mail-ua0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757520AbcHYMYt (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48195 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755250AbcH3QIk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Aug 2016 08:24:49 -0400
-Received: by mail-ua0-f170.google.com with SMTP id n59so80248715uan.2
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2016 05:24:49 -0700 (PDT)
+        Tue, 30 Aug 2016 12:08:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Baoyou Xie <baoyou.xie@linaro.org>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Franky Lin <franky.lin@broadcom.com>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "open list\:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
+        <brcm80211-dev-list.pdl@broadcom.com>,
+        Network Development <netdev@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>, xie.baoyou@zte.com.cn
+Subject: Re: [PATCH v4] brcmfmac: add missing header dependencies
+References: <1472474375-29910-1-git-send-email-baoyou.xie@linaro.org>
+        <CACna6rytnp7WsrdscwPOTvi=FajAtoF2V2ZKx34RUdjEOiZO1w@mail.gmail.com>
+        <CA+DQWkxpoScXLNhScNpwmLnaMhgVHoGLrH72dAm7OiOX2nW2vA@mail.gmail.com>
+Date: Tue, 30 Aug 2016 19:08:33 +0300
+In-Reply-To: <CA+DQWkxpoScXLNhScNpwmLnaMhgVHoGLrH72dAm7OiOX2nW2vA@mail.gmail.com>
+        (Baoyou Xie's message of "Tue, 30 Aug 2016 19:15:35 +0800")
+Message-ID: <87twe244u6.fsf@kamboji.qca.qualcomm.com> (sfid-20160830_180844_933606_39260052)
 MIME-Version: 1.0
-In-Reply-To: <e9fde75d-a17a-8a3e-feee-6495eec0f67f@broadcom.com>
-References: <CAOMZO5BVB4YTsdzhU2f7jKZop6i1QaGGT2YM3Yw3DbYxeJ-v5w@mail.gmail.com>
- <CAOMZO5C-NTppSiZt_Pc5GLrta06zvZiBwTVmpzhLVOR3f-6VbA@mail.gmail.com> <e9fde75d-a17a-8a3e-feee-6495eec0f67f@broadcom.com>
-From: Fabio Estevam <festevam@gmail.com>
-Date: Thu, 25 Aug 2016 09:24:48 -0300
-Message-ID: <CAOMZO5CXQbHA6JH=TH4Xx_oaVm36h9k8SOxqMXruTtFkZZVJZg@mail.gmail.com> (sfid-20160825_142453_749905_7565DACC)
-Subject: Re: brcmfmac43430-sdio.bin in linux-firmware
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-        Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+Baoyou Xie <baoyou.xie@linaro.org> writes:
 
-On Wed, Aug 24, 2016 at 4:22 PM, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-
->> Is this something you could help?
+> On 29 August 2016 at 23:31, Rafał Miłecki <zajec5@gmail.com> wrote:
 >
-> I could, but this is handled by Cypress now. I have asked for firmware
-> release tag so I can release it.
+>     On 29 August 2016 at 14:39, Baoyou Xie <baoyou.xie@linaro.org> wrote:
+>     > We get 1 warning when build kernel with W=1:
+>     > drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c:23:6:
+>     warning: no previous prototype for '__brcmf_err' [-Wmissing-prototypes]
+>
+>     building? I'm not native English, but I think so.
+>    
+>
+>     > In fact, this function is declared in brcmfmac/debug.h, so this patch
+>     > add missing header dependencies.
+>
+>     adds
+>    
+>
+>     > Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+>     > Acked-by: Arnd Bergmann <arnd@arndb.de>
+>
+>     Please don't resend patches just to add tags like that. This only
+>     increases a noise and patchwork handles this just fine, see:
+>     https://patchwork.kernel.org/patch/9303285/
+>     https://patchwork.kernel.org/patch/9303285/mbox/
+>
+>
+> Do I need to resend a patch that fixes two typos(build/add)? or you modify them
+> on your way?
 
-Excellent, thanks for your help!
+I can fix those when I commit the patch.
+
+-- 
+Kalle Valo
