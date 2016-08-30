@@ -1,75 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from iodev.co.uk ([82.211.30.53]:60240 "EHLO iodev.co.uk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752931AbcHTPWR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 20 Aug 2016 11:22:17 -0400
-Date: Sat, 20 Aug 2016 12:17:04 -0300
-From: Ismael Luceno <ismael@iodev.co.uk>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH] brcmfmac: Add USB ID for Cisco Linksys AE1200
-Message-ID: <20160820151703.b5gxbfruvf3riuwf@pirotess.bf.iodev.co.uk> (sfid-20160820_172221_780224_3E22AF8C)
-References: <20160621001841.5383-1-ismael@iodev.co.uk>
- <57698F43.3050303@broadcom.com>
- <20160622183622.uo5avhsjzmnn6jgf@pirotess>
- <576AE1DC.7050203@broadcom.com>
- <20160622205407.sh6w64thsygavbvt@pirotess>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13900 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753182AbcH3OTx (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Aug 2016 10:19:53 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "engineering@keppy.com" <engineering@keppy.com>
+CC: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: enable firmware crash dumps on the AR6004
+Date: Tue, 30 Aug 2016 14:19:46 +0000
+Message-ID: <871t16e34f.fsf@qca.qualcomm.com> (sfid-20160830_161957_366353_9EF40576)
+References: <1472566303-32613-1-git-send-email-dan.kephart@lairdtech.com>
+In-Reply-To: <1472566303-32613-1-git-send-email-dan.kephart@lairdtech.com>
+        (engineering@keppy.com's message of "Tue, 30 Aug 2016 10:11:43 -0400")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160622205407.sh6w64thsygavbvt@pirotess>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ping.
+engineering@keppy.com writes:
 
-On 22/Jun/2016 17:54, Ismael Luceno wrote:
-> On 22/Jun/2016 21:07, Arend van Spriel wrote:
-> > On 22-06-16 20:36, Ismael Luceno wrote:
-> > > On 21/Jun/2016 21:02, Arend van Spriel wrote:
-> > >> On 21-06-16 02:18, Ismael Luceno wrote:
-> > >>> Signed-off-by: Ismael Luceno <ismael@iodev.co.uk>
-> > >>
-> > >> A bit more description would be nice. I am actually wondering why you
-> > >> would be adding this. If I am not mistaken the AE1200 can not be handled
-> > >> by brcmfmac. Otherwise I am interested in a kernel log showing the
-> > >> device probe sequence with brcmfmac loaded with parameter debug=0x1416.
-> > > 
-> > > Log attached.
-> > > 
-> > > I was surprised it works without any tweaking.
-> > 
-> > Nice. What kernel version are you running on.
-> 
-> Commit c3695331f3a326a468bd6a5b6f05b481b399726b.
-> 
-> > Can you also dump a debugfs file,
-> > ie. /sys/kernel/debug/brcmfmac/*/revinfo.
-> 
-> vendorid: 0x14e4
-> deviceid: 0x4347
-> radiorev: 114.5.112
-> chipnum: 43235 (a8e3)
-> chiprev: 3
-> chippkg: 4
-> corerev: 24
-> boardid: 0x0571
-> boardvendor: 0x14e4
-> boardrev: P523
-> driverrev: 5.90.188.22
-> ucoderev: 0
-> bus: 0
-> phytype: 4
-> phyrev: 9
-> anarev: 0
-> nvramrev: 00000000
-> 
-> 
-> > I want to know what chip id and revision is reported. I have tried an
-> > AE1200 in the past, but it had a chip revision that had insufficient
-> > memory to run fullmac firmware.
-> 
-> That's going to be confusing for anyone having the hardware :(.
-> 
-> > Is there FCC registration number on it?
-> 
-> Yes: Q87-AE1200
+> From: Dan Kephart <dan.kephart@lairdtech.com>
+>
+> The firmware crash dumps on the 6004 are the same as the 6003. Remove the
+> statement guarding it from dumping on the 6004.  Renamed the
+> REG_DUMP_COUNT_AR6003 to reflect support on both chips.
+>
+> Signed-off-by: Dan Kephart <dan.kephart@lairdtech.com>
+
+I have a similar patch already on my queue:
+
+https://patchwork.kernel.org/patch/9262289/
+
+How does this differ from that? Please _always_ add a changelog so that
+people know what has changed. Also remember to add "[PATCH v2]" to the
+title.
+
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatc=
+hes#subject_name
+
+--=20
+Kalle Valo=
