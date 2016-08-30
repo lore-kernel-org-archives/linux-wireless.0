@@ -1,63 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:3171 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934991AbcHJS2k convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:28:40 -0400
-From: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
-To: Stephan Mueller <smueller@chronox.de>
-CC: Herbert Xu <herbert@gondor.apana.org.au>,
-	Matt Mackall <mpm@selenic.com>,
-	"miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-	"jason@lakedaemon.net" <jason@lakedaemon.net>,
-	"Sepehrdad, Pouyan" <pouyans@qti.qualcomm.com>
-Subject: RE: [PATCH 2/2] ath9k: disable RNG by default
-Date: Wed, 10 Aug 2016 07:40:54 +0000
-Message-ID: <1e8e88ad7de64c528f08c75ff9176ab8@aptaiexm02f.ap.qualcomm.com> (sfid-20160810_221400_011401_113337DA)
-References: <1470726147-30095-1-git-send-email-miaoqing@codeaurora.org>
- <1526134.1iUazSISyZ@positron.chronox.de>
- <c0951e085764481d8d85637734e2e14b@aptaiexm02f.ap.qualcomm.com>
- <4321952.1nMxxDi7Wz@positron.chronox.de>
-In-Reply-To: <4321952.1nMxxDi7Wz@positron.chronox.de>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:41238 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1758217AbcH3LkP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Aug 2016 07:40:15 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 14:38:58 +0300
+Message-Id: <1472557142-14782-12-git-send-email-luca@coelho.fi> (sfid-20160830_134017_854427_6FE47D26)
+In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
+References: <1472556999.27868.86.camel@coelho.fi>
+ <1472557142-14782-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 12/16] iwlwifi: add the new 9270 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Stephan,
+From: Oren Givon <oren.givon@intel.com>
 
-That is set as "optional but highly recommended" in the FIPS doc, plus the fact that we do not have a requirement to have a FIP-approved RNG in our case. Although FIPS might impose higher and stronger requirements on the source of entropy, but not passing those tests does not mean the source of entropy is of bad quality. As I mentioned earlier, we just need to evaluate the amount of entropy it provides correctly and use it accordingly. If we are dealing with a chip which has a HW RNG, we expect extremely high entropy close to full from our source, but this patch is for chips which do not have a dedicated HW RNG in place to improve the quality of random number generation on the platform.
+Add a new config struct for the new 9270 series and add
+the first PCI ID for it.
 
-Thanks,
-Miaoqing
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 10 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  1 +
+ 3 files changed, 12 insertions(+)
 
------Original Message-----
-From: Stephan Mueller [mailto:smueller@chronox.de] 
-Sent: Wednesday, August 10, 2016 3:27 PM
-To: Pan, Miaoqing <miaoqing@qti.qualcomm.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>; Matt Mackall <mpm@selenic.com>; miaoqing@codeaurora.org; Valo, Kalle <kvalo@qca.qualcomm.com>; linux-wireless@vger.kernel.org; ath9k-devel <ath9k-devel@qca.qualcomm.com>; linux-crypto@vger.kernel.org; jason@lakedaemon.net; Sepehrdad, Pouyan <pouyans@qti.qualcomm.com>
-Subject: Re: [PATCH 2/2] ath9k: disable RNG by default
-
-Am Mittwoch, 10. August 2016, 07:15:49 CEST schrieb Pan, Miaoqing:
-
-Hi Miaoqing,
-
-> Hi Stephan,
-> 
-> NIST SP 800-22-rev1a and NIST SP 800-90B are used together to evaluate 
-> the amount of min entropy the source provides, and not to decide if 
-> the source has passed the tests or failed. See
-> 
-> https://github.com/usnistgov/SP800-90B_EntropyAssessment
-> 
-> The goal is often to make sure the input entropy is more than the 
-> entropy we expect from the output.
-
-You are correct on the SP800-90B tests (hence I did not refer to them for the binary decision). Yet, SP800-22 with the associated tool delivers a binary decision.
-
-Ciao
-Stephan
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 5621cf2..e442650 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -156,6 +156,16 @@ const struct iwl_cfg iwl9260_2ac_cfg = {
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
+ };
+ 
++const struct iwl_cfg iwl9270_2ac_cfg = {
++	.name = "Intel(R) Dual Band Wireless AC 9270",
++	.fw_name_pre = IWL9260_FW_PRE,
++	IWL_DEVICE_9000,
++	.ht_params = &iwl9000_ht_params,
++	.nvm_ver = IWL9000_NVM_VERSION,
++	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++};
++
+ const struct iwl_cfg iwl9460_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 9460",
+ 	.fw_name_pre = IWL9000_FW_PRE,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index a18b57f..0ab415c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -451,6 +451,7 @@ extern const struct iwl_cfg iwl8265_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl9000lc_2ac_cfg;
+ extern const struct iwl_cfg iwl9260_2ac_cfg;
++extern const struct iwl_cfg iwl9270_2ac_cfg;
+ extern const struct iwl_cfg iwl9460_2ac_cfg;
+ extern const struct iwl_cfg iwla000_2ac_cfg;
+ #endif /* CONFIG_IWLMVM */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 3e5a11a..1be0ac2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -504,6 +504,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ /* 9000 Series */
+ 	{IWL_PCI_DEVICE(0x2526, 0x0000, iwl9260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x1410, iwl9270_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9460_2ac_cfg)},
+-- 
+2.8.1
