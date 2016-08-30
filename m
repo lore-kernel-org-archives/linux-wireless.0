@@ -1,122 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.taht.net ([176.58.107.8]:35857 "EHLO mail.taht.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752329AbcHPXW0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Aug 2016 19:22:26 -0400
-Subject: Re: [Make-wifi-fast] On the ath9k performance regression with FQ and
- crypto
-To: Eric Dumazet <eric.dumazet@gmail.com>,
-	=?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
-References: <87pop85tvr.fsf@toke.dk>
- <1471380444.4943.17.camel@edumazet-glaptop3.roam.corp.google.com>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-From: =?UTF-8?Q?Dave_T=c3=a4ht?= <dave@taht.net>
-Message-ID: <80cb3441-64bc-e1f2-e649-db74c76b5085@taht.net> (sfid-20160817_012229_948797_18D4FCA4)
-Date: Wed, 17 Aug 2016 01:16:33 +0200
-MIME-Version: 1.0
-In-Reply-To: <1471380444.4943.17.camel@edumazet-glaptop3.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8
+Received: from paleale.coelho.fi ([176.9.41.70]:41174 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754327AbcH3Ljd (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 30 Aug 2016 07:39:33 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 30 Aug 2016 14:38:53 +0300
+Message-Id: <1472557142-14782-7-git-send-email-luca@coelho.fi> (sfid-20160830_133948_591958_9B4D63BD)
+In-Reply-To: <1472557142-14782-1-git-send-email-luca@coelho.fi>
+References: <1472556999.27868.86.camel@coelho.fi>
+ <1472557142-14782-1-git-send-email-luca@coelho.fi>
+Subject: [PATCH 07/16] iwlwifi: mvm: use defines for SCD_CONFIG_CMD enablement
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Liad Kaufman <liad.kaufman@intel.com>
 
+Due to the addition of another option in the SCD_CONFIG_CMD's
+%enable field, change the assignment of this field to use
+defines rather than hard-code the value itself.
 
-On 8/16/16 10:47 PM, Eric Dumazet wrote:
-> 
-> Do you have tcpdumps of
-> 
-> 1) sample with crypto
-> 
-> 2) sample without crypto.
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h | 12 ++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 13 +++++++------
+ 3 files changed, 19 insertions(+), 10 deletions(-)
 
-
-decrypted aircaps (ssid: borgen-public key: mysecret) for 1 flow and for
-2 flows are at:
-
-http://www.taht.net/~d/fqcryptbug/
-
-There are also regular captures...
-
-flent results for all test scenarios comparison graphed here:
-
-http://www.taht.net/~d/fqcryptbug/cryptvsfqwndr3800.svg
-
-Total throughput degrades somewhat relative of the total number of flows
-in the crypted scenario - 80 mbits total with one flow. ~35 with 12.
-
-(elsewhere: 120mbit without encryption, with fq, any number of flows,
-and you can see codel working at least somewhat)
-
-> 
-> Looks like some TCP Small queue interaction with skb->truesize, if GSO
-> is involved, or encapsulation adding overhead.
-
-My own suspicion has been around breaking the block ack window, or on
-misunderstanding how complex aggregates are hw/sw retried.
-
-> 
-> 
-> On Tue, 2016-08-16 at 22:41 +0200, Toke Høiland-Jørgensen wrote:
->> So Dave and I have been spending the last couple of days trying to
->> narrow down why there's a performance regression in some cases on ath9k
->> with the softq-FQ patches. Felix first noticed this regression, and LEDE
->> currently carries a patch [1] to disable the FQ portion of the softq
->> patches to avoid it.
->>
->> While we have been able to narrow it down a little bit, no solution has
->> been forthcoming, so this is an attempt to describe the bug in the hope
->> that someone else will have an idea about what could be causing it.
->>
->> What we're seeing is the following (when the access point is running
->> ath9k with the softq patches):
->>
->> When running two or more flows to a station, their combined throughput
->> will be roughly 20-30% lower than the throughput of a single flow to the
->> same station. This happens:
->>
->> - for both TCP and UDP traffic.
->> - independent of the base rate (i.e. signal quality).
->> - but only with crypto enabled (WPA2 CCMP in this case).
->>
->> However, the regression completely disappears if either of the
->> following is true:
->>
->> - no crypto is enabled.
->> - the FQ part of mac80211 is disabled (as in [1]).
->>
->> We have been able to reproduce this behaviour on two different ath9k
->> hardware chips and two different architectures.
->>
->> The cause of the regression seems to be that the aggregates are smaller
->> when there are two flows than when there is only one. Adding debug
->> statements to the aggregate forming code indicates that this is because
->> no more packets are available when the aggregates are built (i.e.
->> ieee80211_tx_dequeue() returns NULL).
->>
->> We have not been able to determine why the queues run empty when this
->> combination of circumstances arise. Since we easily get upwards of 120
->> Mbps of TCP throughput without crypto but with full FQ, it's clearly not
->> the hashing overhead in itself that does it (and the hashing also
->> happens with just one flow, so the overhead is still there). And the
->> crypto itself should be offloaded to hardware (shouldn't it? we do see a
->> marked drop in overall throughput from just enabling crypto), so how
->> would the queueing (say, mixing of packets from different flows)
->> influence that?
->>
->> Does anyone have any ideas? We are stumped...
->>
->> -Toke
->>
->> [1] https://git.lede-project.org/?p=lede/nbd/staging.git;a=blob;f=package/kernel/mac80211/patches/220-fq_disable_hack.patch;h=7f420beea56335d5043de6fd71b5febae3e9bd79;hb=HEAD
->> _______________________________________________
->> Make-wifi-fast mailing list
->> Make-wifi-fast@lists.bufferbloat.net
->> https://lists.bufferbloat.net/listinfo/make-wifi-fast
-> 
-> 
-> _______________________________________________
-> Make-wifi-fast mailing list
-> Make-wifi-fast@lists.bufferbloat.net
-> https://lists.bufferbloat.net/listinfo/make-wifi-fast
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index 4144623..6b4c63a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -675,13 +675,21 @@ static inline u32 iwl_mvm_get_scd_ssn(struct iwl_mvm_tx_resp *tx_resp)
+ 			    tx_resp->frame_count) & 0xfff;
+ }
+ 
++/* Available options for the SCD_QUEUE_CFG HCMD */
++enum iwl_scd_cfg_actions {
++	SCD_CFG_DISABLE_QUEUE		= 0x0,
++	SCD_CFG_ENABLE_QUEUE		= 0x1,
++	SCD_CFG_UPDATE_QUEUE_TID	= 0x2,
++};
++
+ /**
+  * struct iwl_scd_txq_cfg_cmd - New txq hw scheduler config command
+  * @token:
+  * @sta_id: station id
+  * @tid:
+  * @scd_queue: scheduler queue to confiug
+- * @enable: 1 queue enable, 0 queue disable
++ * @action: 1 queue enable, 0 queue disable, 2 change txq's tid owner
++ *	Value is one of %iwl_scd_cfg_actions options
+  * @aggregate: 1 aggregated queue, 0 otherwise
+  * @tx_fifo: %enum iwl_mvm_tx_fifo
+  * @window: BA window size
+@@ -692,7 +700,7 @@ struct iwl_scd_txq_cfg_cmd {
+ 	u8 sta_id;
+ 	u8 tid;
+ 	u8 scd_queue;
+-	u8 enable;
++	u8 action;
+ 	u8 aggregate;
+ 	u8 tx_fifo;
+ 	u8 window;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 1ddcbea..e87473a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -536,7 +536,7 @@ int iwl_mvm_scd_queue_redirect(struct iwl_mvm *mvm, int queue, int tid,
+ {
+ 	struct iwl_scd_txq_cfg_cmd cmd = {
+ 		.scd_queue = queue,
+-		.enable = 0,
++		.action = SCD_CFG_DISABLE_QUEUE,
+ 	};
+ 	bool shared_queue;
+ 	unsigned long mq;
+@@ -745,7 +745,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 	if (using_inactive_queue) {
+ 		struct iwl_scd_txq_cfg_cmd cmd = {
+ 			.scd_queue = queue,
+-			.enable = 0,
++			.action = SCD_CFG_DISABLE_QUEUE,
+ 		};
+ 		u8 ac;
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 423efab..7c138fe 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -610,7 +610,7 @@ int iwl_mvm_reconfig_scd(struct iwl_mvm *mvm, int queue, int fifo, int sta_id,
+ {
+ 	struct iwl_scd_txq_cfg_cmd cmd = {
+ 		.scd_queue = queue,
+-		.enable = 1,
++		.action = SCD_CFG_ENABLE_QUEUE,
+ 		.window = frame_limit,
+ 		.sta_id = sta_id,
+ 		.ssn = cpu_to_le16(ssn),
+@@ -684,7 +684,7 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 	if (enable_queue) {
+ 		struct iwl_scd_txq_cfg_cmd cmd = {
+ 			.scd_queue = queue,
+-			.enable = 1,
++			.action = SCD_CFG_ENABLE_QUEUE,
+ 			.window = cfg->frame_limit,
+ 			.sta_id = cfg->sta_id,
+ 			.ssn = cpu_to_le16(ssn),
+@@ -711,7 +711,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ {
+ 	struct iwl_scd_txq_cfg_cmd cmd = {
+ 		.scd_queue = queue,
+-		.enable = 0,
++		.action = SCD_CFG_DISABLE_QUEUE,
+ 	};
+ 	bool remove_mac_queue = true;
+ 	int ret;
+@@ -746,8 +746,9 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 			~BIT(mac80211_queue);
+ 	mvm->queue_info[queue].hw_queue_refcount--;
+ 
+-	cmd.enable = mvm->queue_info[queue].hw_queue_refcount ? 1 : 0;
+-	if (!cmd.enable)
++	cmd.action = mvm->queue_info[queue].hw_queue_refcount ?
++		SCD_CFG_ENABLE_QUEUE : SCD_CFG_DISABLE_QUEUE;
++	if (cmd.action == SCD_CFG_DISABLE_QUEUE)
+ 		mvm->queue_info[queue].status = IWL_MVM_QUEUE_FREE;
+ 
+ 	IWL_DEBUG_TX_QUEUES(mvm,
+@@ -757,7 +758,7 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 			    mvm->queue_info[queue].hw_queue_to_mac80211);
+ 
+ 	/* If the queue is still enabled - nothing left to do in this func */
+-	if (cmd.enable) {
++	if (cmd.action == SCD_CFG_ENABLE_QUEUE) {
+ 		spin_unlock_bh(&mvm->queue_info_lock);
+ 		return;
+ 	}
+-- 
+2.8.1
