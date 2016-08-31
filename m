@@ -1,103 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40790 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751965AbcH2Thz (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59352 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1758844AbcHaLN7 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 15:37:55 -0400
-Message-ID: <1472499451.27868.31.camel@coelho.fi> (sfid-20160829_213758_789432_75F69E66)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Date: Mon, 29 Aug 2016 22:37:31 +0300
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-e1pDD3FSpZyZCp9BJffA"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi 2016-08-29
+        Wed, 31 Aug 2016 07:13:59 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mwifiex: handle edmac vendor command
+Date: Wed, 31 Aug 2016 11:13:54 +0000
+Message-ID: <f79cfce7f84c4e1884dcc1fb571a31bd@SC-EXCH04.marvell.com> (sfid-20160831_131408_620630_CE7C7C9B)
+References: <1461945483-3239-1-git-send-email-akarwar@marvell.com>
+        <cbd542a552db4d368a5b402307976494@SC-EXCH04.marvell.com>
+ <87zirg8qxo.fsf@kamboji.qca.qualcomm.com>
+ <e2b7d7d9aef1488a97eb7ec44b4c46af@SC-EXCH04.marvell.com>
+In-Reply-To: <e2b7d7d9aef1488a97eb7ec44b4c46af@SC-EXCH04.marvell.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] On Behalf Of Amitkumar Karwar
+> Sent: Wednesday, August 03, 2016 4:51 PM
+> To: Kalle Valo
+> Cc: linux-wireless@vger.kernel.org
+> Subject: RE: [PATCH] mwifiex: handle edmac vendor command
+> 
+> Hi Kalle,
+> 
+> > From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> > Sent: Tuesday, May 24, 2016 1:53 AM
+> > To: Amitkumar Karwar
+> > Cc: linux-wireless@vger.kernel.org
+> > Subject: Re: [PATCH] mwifiex: handle edmac vendor command
+> >
+> > Amitkumar Karwar <akarwar@marvell.com> writes:
+> >
+> > > Hi Kalle,
+> > >
+> > >> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
+> > >> Sent: Friday, April 29, 2016 9:28 PM
+> > >> To: linux-wireless@vger.kernel.org
+> > >> Cc: Jeff CF Chen; Amitkumar Karwar
+> > >> Subject: [PATCH] mwifiex: handle edmac vendor command
+> > >>
+> > >> From: chunfan chen <jeffc@marvell.com>
+> > >>
+> > >> Userspace can configure edmac values through a custom vendor
+> command.
+> > >> They will be used by hardware for adaptivity.
+> > >>
+> > >> Signed-off-by: chunfan chen <jeffc@marvell.com>
+> > >> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> >
+> > [deleted over 200 lines of unnecessary quotes]
+> >
+> > > This patch seems to have deferred. We basically want a way to
+> > > download a vendor specific configuration to our firmware. Do you
+> > > have any suggestions on how can achieve this in better way?
+> > >
+> > > I can see below iw command suits our requirement.
+> > >
+> > > iw dev <devname> vendor send <oui> <subcmd> <filename|-|hex data>
+> > >
+> > > Please guide.
+> >
+> > It was deferred because use of the nl80211 vendor interface (which I
+> > don't think belong to upstream drivers). I'll take a look at this
+> > patch in detail after the merge window.
+> >
+> 
+> Did you get a chance to check this patch?
+> Please let me know if you have any suggestions.
+> 
 
---=-e1pDD3FSpZyZCp9BJffA
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Any suggestions for a mechanism to download vendor specific command to firmware?
 
-Hi Kalle,
-
-Here are 4 patches intended for 4.8. =C2=A0They are all very small and low
-risk, but fix some actual issues. =C2=A0More details in the tag description=
-.
-
-Let me know if everything's fine (or not). :)
-
-Luca.
-
-
-The following changes since commit bb87f02b7e4ccdb614a83cbf840524de81e9b321=
-:
-
-=C2=A0 Merge ath-current from ath.git (2016-08-29 21:39:04 +0300)
-
-are available in the git repository at:
-
-=C2=A0 git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.=
-git tags/iwlwifi-for-kalle-2016-08-29
-
-for you to fetch changes up to a904a08b5fee5317ff0f7b8212aa5d0776795a52:
-
-=C2=A0 iwlwifi: mvm: Advertise support for AP channel width change (2016-08=
--29 22:29:06 +0300)
-
-----------------------------------------------------------------
-* Fix P2P dump trigger
-* Prevent a potential null dereference in iwlmvm
-* Prevent an uninitialized value from being returned in iwlmvm
-* Advertise support for channel width change in AP mode
-
-----------------------------------------------------------------
-Emmanuel Grumbach (2):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: consider P2p device type =
-for firmware dump triggers
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: don't use ret when not in=
-itialised
-
-Peer, Ilan (1):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: Advertise support for AP =
-channel width change
-
-Sharon Dvir (1):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: check if vif is NULL befo=
-re using it
-
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c=C2=A0=C2=A0=C2=A0| 3 =
-++-
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h=C2=A0=C2=A0=C2=A0| 3 =
-++-
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 1 +
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/mvm.h=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0| 2 ++
-=C2=A04 files changed, 7 insertions(+), 2 deletions(-)
---=-e1pDD3FSpZyZCp9BJffA
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJXxI77AAoJEKFHnKIaPMX6OaoP/0sjh0EoNMm3VLYtkfeXp07a
-orkZt2EX7NmZGBRDe9KG/UrOnnfArjTLcXbptTGA2qh6U7uZYaooD/LC8PyZwzqh
-iVwTYreTRcTCQVP3dfiBPEPLQsdabm3av/1Sbo2C3aW0Xfoj3L3/b8cfJnBqK3Ak
-lVjpwvaXv5cAlZv1E2wBojNxhtGco7aetoUvDszcyhyHOV1LzlckFy1/074Sfghq
-2sOTSj+9+GXEAmO7/b182D6glU3QbOXJvSBGUawnrFQEdQ1vfTdcWMlBkugTkpHa
-lnSNmdy+hpqTZQQctp71Ox+DFeChmH6IhhEyrKGpOw0BFeOZdJFrBa0/+wiFJXic
-stARAhu1oe7PnWb4Sh4rDb3rwKHqZ8GUw9QW5uPy9i3GGGT4RZuma1KItAVF/S6Q
-3/96XqqVCljMQq9SMmjLoBLn7AboxQeCikJI/ij306qnnUmavZZxkrkZ993vUnfU
-z1Ovg02rWj3zs8difoPumOTlfsM1qoKGkSMUaVu9RcyFKDaofWPGcrOET0hcdFoY
-V04iEU+e2h3ZQabOweOBi6lDMklJl+G6rEYOKf9PojqP4QDXNIQwiCG1lHZ6sun4
-nqDXN/Umeg7iv6mXVKyI5evCTQ+s7r/zJXxUotTksBMLHvyTpPPLzf2n/pabnULr
-i0P09GsnMTOvjZUWdL7g
-=8dJe
------END PGP SIGNATURE-----
-
---=-e1pDD3FSpZyZCp9BJffA--
+Regards,
+Amitkumar Karwar
