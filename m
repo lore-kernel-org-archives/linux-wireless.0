@@ -1,82 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:3264 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934521AbcHBMYw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:24:52 -0400
-From: Baole Ni <baolex.ni@intel.com>
-To: kvalo@codeaurora.org, luciano.coelho@intel.com,
-	linuxwifi@intel.com, m.chehab@samsung.com, pawel@osciak.com,
-	m.szyprowski@samsung.com, kyungmin.park@samsung.com,
-	k.kozlowski@samsung.com
-Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	chuansheng.liu@intel.com, baolex.ni@intel.com
-Subject: [PATCH 0786/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:46:18 +0800
-Message-Id: <20160802114618.2152-1-baolex.ni@intel.com> (sfid-20160802_174411_939692_6FB5DDC5)
+Received: from s3.sipsolutions.net ([5.9.151.49]:59606 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753471AbcHaVGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Aug 2016 17:06:51 -0400
+Message-ID: <1472677599.5470.13.camel@sipsolutions.net> (sfid-20160831_230710_820717_3EF1D476)
+Subject: Re: [PATCH v4] mac80211: Move reorder-sensitive TX handlers to
+ after TXQ dequeue.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Wed, 31 Aug 2016 23:06:39 +0200
+In-Reply-To: <20160830131548.6014-1-toke@toke.dk> (sfid-20160830_151618_124950_CD061443)
+References: <20160824162015.29933-1-toke@toke.dk>
+         <20160830131548.6014-1-toke@toke.dk> (sfid-20160830_151618_124950_CD061443)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+On Tue, 2016-08-30 at 15:15 +0200, Toke Høiland-Jørgensen wrote:
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
----
- drivers/net/wireless/marvell/libertas/mesh.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+> @@ -829,10 +844,16 @@ ieee80211_tx_h_sequence(struct
+> ieee80211_tx_data *tx)
+>  	 */
+>  	if (!ieee80211_is_data_qos(hdr->frame_control) ||
+>  	    is_multicast_ether_addr(hdr->addr1)) {
+> -		/* driver should assign sequence number */
+> -		info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
+> -		/* for pure STA mode without beacons, we can do it
+> */
+> -		hdr->seq_ctrl = cpu_to_le16(tx->sdata-
+> >sequence_number);
+> +		fragnum = 0;
+> +		seq = cpu_to_le16(tx->sdata->sequence_number);
+> +		skb_queue_walk(&tx->skbs, skb) {
+> +			info = IEEE80211_SKB_CB(skb);
+> +			hdr = (struct ieee80211_hdr *)skb->data;
+> +			/* driver should assign sequence number */
+> +			info->flags |= IEEE80211_TX_CTL_ASSIGN_SEQ;
+> +			/* for pure STA mode without beacons, we can
+> do it */
+> +			hdr->seq_ctrl = seq | fragnum++;
 
-diff --git a/drivers/net/wireless/marvell/libertas/mesh.c b/drivers/net/wireless/marvell/libertas/mesh.c
-index d0c881d..ae4f0a5 100644
---- a/drivers/net/wireless/marvell/libertas/mesh.c
-+++ b/drivers/net/wireless/marvell/libertas/mesh.c
-@@ -297,19 +297,19 @@ static ssize_t lbs_mesh_set(struct device *dev,
-  * lbs_mesh attribute to be exported per ethX interface
-  * through sysfs (/sys/class/net/ethX/lbs_mesh)
-  */
--static DEVICE_ATTR(lbs_mesh, 0644, lbs_mesh_get, lbs_mesh_set);
-+static DEVICE_ATTR(lbs_mesh, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, lbs_mesh_get, lbs_mesh_set);
- 
- /*
-  * anycast_mask attribute to be exported per mshX interface
-  * through sysfs (/sys/class/net/mshX/anycast_mask)
-  */
--static DEVICE_ATTR(anycast_mask, 0644, lbs_anycast_get, lbs_anycast_set);
-+static DEVICE_ATTR(anycast_mask, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, lbs_anycast_get, lbs_anycast_set);
- 
- /*
-  * prb_rsp_limit attribute to be exported per mshX interface
-  * through sysfs (/sys/class/net/mshX/prb_rsp_limit)
-  */
--static DEVICE_ATTR(prb_rsp_limit, 0644, lbs_prb_rsp_limit_get,
-+static DEVICE_ATTR(prb_rsp_limit, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, lbs_prb_rsp_limit_get,
- 		lbs_prb_rsp_limit_set);
- 
- static struct attribute *lbs_mesh_sysfs_entries[] = {
-@@ -764,13 +764,13 @@ static ssize_t capability_set(struct device *dev, struct device_attribute *attr,
- }
- 
- 
--static DEVICE_ATTR(bootflag, 0644, bootflag_get, bootflag_set);
--static DEVICE_ATTR(boottime, 0644, boottime_get, boottime_set);
--static DEVICE_ATTR(channel, 0644, channel_get, channel_set);
--static DEVICE_ATTR(mesh_id, 0644, mesh_id_get, mesh_id_set);
--static DEVICE_ATTR(protocol_id, 0644, protocol_id_get, protocol_id_set);
--static DEVICE_ATTR(metric_id, 0644, metric_id_get, metric_id_set);
--static DEVICE_ATTR(capability, 0644, capability_get, capability_set);
-+static DEVICE_ATTR(bootflag, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, bootflag_get, bootflag_set);
-+static DEVICE_ATTR(boottime, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, boottime_get, boottime_set);
-+static DEVICE_ATTR(channel, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, channel_get, channel_set);
-+static DEVICE_ATTR(mesh_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, mesh_id_get, mesh_id_set);
-+static DEVICE_ATTR(protocol_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, protocol_id_get, protocol_id_set);
-+static DEVICE_ATTR(metric_id, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, metric_id_get, metric_id_set);
-+static DEVICE_ATTR(capability, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH, capability_get, capability_set);
- 
- static struct attribute *boot_opts_attrs[] = {
- 	&dev_attr_bootflag.attr,
--- 
-2.9.2
+I would very much prefer you kept fragnum assignment in the
+fragmentation handler.
 
+Also, you just broke this on big endian, please run sparse on your
+patches if you don't see these things directly.
+
+> +		if (!fast_tx ||
+> +		    !ieee80211_xmit_fast_finish(sta->sdata, sta,
+> fast_tx, skb,
+> +						false)) {
+> +			/* fast xmit was started, but fails to
+> finish */
+> +			ieee80211_free_txskb(hw, skb);
+> +			goto begin;
+> +		}
+
+That obviously cannot happen, it can't fail to finish. See the comments
+in xmit_fast() and the return values ...
+
+> +static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+> +{
+> +	return invoke_tx_handlers_early(tx) ||
+> invoke_tx_handlers_late(tx);
+> +}
+
+Ugh, please, no, don't be tricky where it's not necessary. Now every
+person reading this has to first look up the return type, and then the
+return value, and make sure they understand that success is actually
+the value 0 ... that's way too much to ask.
+ 
+> +ieee80211_tx_result
+> +ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
+> +{
+> +	struct sk_buff *skb;
+> +	ieee80211_tx_result r;
+> +
+> +	skb_queue_walk(&tx->skbs, skb) {
+> +		r = ieee80211_tx_h_michael_mic_add_skb(tx, skb);
+> +		if (r != TX_CONTINUE)
+> +			return r;
+> +	}
+> +	return TX_CONTINUE;
+> +}
+
+You just broke TKIP completely again. Adding the MMIC and fragmentation
+are not commutative operations.
+
+johannes
