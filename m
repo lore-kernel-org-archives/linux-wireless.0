@@ -1,46 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33582 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758891AbcHYPM3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Aug 2016 11:12:29 -0400
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 3/3] mwifiex: do not print dot when downloading FW
-Date: Thu, 25 Aug 2016 17:05:18 +0200
-Message-Id: <1472137518-10431-4-git-send-email-sgruszka@redhat.com> (sfid-20160825_171233_254344_F1ABA9F5)
-In-Reply-To: <1472137518-10431-1-git-send-email-sgruszka@redhat.com>
-References: <1472137518-10431-1-git-send-email-sgruszka@redhat.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64733 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758970AbcHaIYZ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Aug 2016 04:24:25 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: fix throughput regression in multi client mode
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160829081613.1474-1-rmanohar@qti.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
+        <rmanohar@codeaurora.org>
+Message-ID: <425ad8d804bf46feada839a8e0d0c77e@euamsexm01a.eu.qualcomm.com> (sfid-20160831_102429_469775_B8C95611)
+Date: Wed, 31 Aug 2016 10:24:15 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Printing about 3000 lines like this
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> commit 7a0adc83f34d ("ath10k: improve tx scheduling") is causing
+> severe throughput drop in multi client mode. This issue is originally
+> reported in veriwave setup with 50 clients with TCP downlink traffic.
+> While increasing number of clients, the average throughput drops
+> gradually. With 50 clients, the combined peak throughput is decreased
+> to 98 Mbps whereas reverting given commit restored it to 550 Mbps.
+> 
+> Processing txqs for every tx completion is causing overhead. Ideally for
+> management frame tx completion, pending txqs processing can be avoided.
+> The change partly reverts the commit "ath10k: improve tx scheduling".
+> Processing pending txqs after all skbs tx completion will yeild enough
+> room to burst tx frames.
+> 
+> Fixes: 7a0adc83f34d ("ath10k: improve tx scheduling")
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-[   20.691850] mwifiex_pcie 0000:02:00.0: .
-[   20.693466] mwifiex_pcie 0000:02:00.0: .
+I'm planning to queue this to 4.8 if no objections.
 
-is not useful. If FW downloading will be interrupted, we will get
-proper error message about that.
-
-Signed-off-by: Stanislaw Gruszka <sgruszka@redhat.com>
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 2f555b0..50a6a53 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -1956,8 +1956,6 @@ static int mwifiex_prog_fw_w_helper(struct mwifiex_adapter *adapter,
- 			if (firmware_len - offset < txlen)
- 				txlen = firmware_len - offset;
- 
--			mwifiex_dbg(adapter, INFO, ".");
--
- 			tx_blocks = (txlen + card->pcie.blksz_fw_dl - 1) /
- 				    card->pcie.blksz_fw_dl;
- 
 -- 
-1.8.3.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9303279/
