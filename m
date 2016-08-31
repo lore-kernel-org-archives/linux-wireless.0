@@ -1,52 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36694 "EHLO
-	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752759AbcHOLwT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Aug 2016 07:52:19 -0400
-MIME-Version: 1.0
-In-Reply-To: <87wpjib8pb.fsf@kamboji.qca.qualcomm.com>
-References: <147125403645.9434.8008546579326856373.stgit@devbox>
- <147125405701.9434.12911635695339175773.stgit@devbox> <5bb6e373-e110-b1ac-6f65-fdf2f9f059fc@gmail.com>
- <87wpjib8pb.fsf@kamboji.qca.qualcomm.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 15 Aug 2016 13:52:17 +0200
-Message-ID: <CACna6ryuN_qDrVwAbS5P9mfhjMwv2hNeTqEzTQ=WxvP1V=zHXA@mail.gmail.com> (sfid-20160815_135243_678397_66D1C4A2)
-Subject: Re: [BUGFIX PATCH 1/2] brcmfmac: Check rtnl_lock is locked when
- removing interface
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Masami Hiramatsu <mhiramat@kernel.org>,
-	Arend van Spriel <arend.vanspriel@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	Hante Meuleman <hante.meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-	<brcm80211-dev-list.pdl@broadcom.com>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:37906 "EHLO
+        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933226AbcHaLr0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Aug 2016 07:47:26 -0400
+Received: by mail-wm0-f50.google.com with SMTP id 1so35792661wmz.1
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2016 04:47:25 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>
+Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv8 1/4] add basic register-field manipulation macros
+Date: Wed, 31 Aug 2016 12:46:44 +0100
+Message-Id: <1472644007-20959-2-git-send-email-jakub.kicinski@netronome.com> (sfid-20160831_134741_227336_303C3C43)
+In-Reply-To: <1472644007-20959-1-git-send-email-jakub.kicinski@netronome.com>
+References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
+ <1472644007-20959-1-git-send-email-jakub.kicinski@netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 15 August 2016 at 12:57, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Rafał Miłecki <zajec5@gmail.com> writes:
->
->>> Signed-off-by: Masami Hiramatsu <mhiramat@kernel.org>
->>
->> Fixes: a63b09872c1d ("brcmfmac: delete interface directly in code that sent fw request")
->> Acked-by: Rafał Miłecki <rafal@milecki.pl>
->>
->> Kalle: I'm acking this as bugfix for 4.8 release.
->
-> Ok. I'll wait few days for more comments before I apply this.
+Common approach to accessing register fields is to define
+structures or sets of macros containing mask and shift pair.
+Operations on the register are then performed as follows:
 
-Sure.
+ field = (reg >> shift) & mask;
 
+ reg &= ~(mask << shift);
+ reg |= (field & mask) << shift;
 
-> (I assume you are talking only about patch 1)
+Defining shift and mask separately is tedious.  Ivo van Doorn
+came up with an idea of computing them at compilation time
+based on a single shifted mask (later refined by Felix) which
+can be used like this:
 
-Yes, I'll leave mutex vs. spinlock to the experts :)
+ #define REG_FIELD 0x000ff000
 
+ field = FIELD_GET(REG_FIELD, reg);
+
+ reg &= ~REG_FIELD;
+ reg |= FIELD_PREP(REG_FIELD, field);
+
+FIELD_{GET,PREP} macros take care of finding out what the
+appropriate shift is based on compilation time ffs operation.
+
+GENMASK can be used to define registers (which is usually
+less error-prone and easier to match with datasheets).
+
+This approach is the most convenient I've seen so to limit code
+multiplication let's move the macros to a global header file.
+Attempts to use static inlines instead of macros failed due
+to false positive triggering of BUILD_BUG_ON()s, especially with
+GCC < 6.0.
+
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
+---
+ v8:
+  - use two underscores as prefix for __bf_shf() and 
+    __BF_FIELD_CHECK()
+
+ include/linux/bitfield.h | 93 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/bug.h      |  3 ++
+ 2 files changed, 96 insertions(+)
+ create mode 100644 include/linux/bitfield.h
+
+diff --git a/include/linux/bitfield.h b/include/linux/bitfield.h
+new file mode 100644
+index 000000000000..f6505d83069d
+--- /dev/null
++++ b/include/linux/bitfield.h
+@@ -0,0 +1,93 @@
++/*
++ * Copyright (C) 2014 Felix Fietkau <nbd@nbd.name>
++ * Copyright (C) 2004 - 2009 Ivo van Doorn <IvDoorn@gmail.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2
++ * as published by the Free Software Foundation
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#ifndef _LINUX_BITFIELD_H
++#define _LINUX_BITFIELD_H
++
++#include <linux/bug.h>
++
++/*
++ * Bitfield access macros
++ *
++ * FIELD_{GET,PREP} macros take as first parameter shifted mask
++ * from which they extract the base mask and shift amount.
++ * Mask must be a compilation time constant.
++ *
++ * Example:
++ *
++ *  #define REG_FIELD_A  GENMASK(6, 0)
++ *  #define REG_FIELD_B  BIT(7)
++ *  #define REG_FIELD_C  GENMASK(15, 8)
++ *  #define REG_FIELD_D  GENMASK(31, 16)
++ *
++ * Get:
++ *  a = FIELD_GET(REG_FIELD_A, reg);
++ *  b = FIELD_GET(REG_FIELD_B, reg);
++ *
++ * Set:
++ *  reg = FIELD_PREP(REG_FIELD_A, 1) |
++ *	  FIELD_PREP(REG_FIELD_B, 0) |
++ *	  FIELD_PREP(REG_FIELD_C, c) |
++ *	  FIELD_PREP(REG_FIELD_D, 0x40);
++ *
++ * Modify:
++ *  reg &= ~REG_FIELD_C;
++ *  reg |= FIELD_PREP(REG_FIELD_C, c);
++ */
++
++#define __bf_shf(x) (__builtin_ffsll(x) - 1)
++
++#define __BF_FIELD_CHECK(_mask, _reg, _val, _pfx)			\
++	({								\
++		BUILD_BUG_ON_MSG(!__builtin_constant_p(_mask),		\
++				 _pfx "mask is not constant");		\
++		BUILD_BUG_ON_MSG(!(_mask), _pfx "mask is zero");	\
++		BUILD_BUG_ON_MSG(__builtin_constant_p(_val) ?		\
++				 ~((_mask) >> __bf_shf(_mask)) & (_val) : 0, \
++				 _pfx "value too large for the field"); \
++		BUILD_BUG_ON_MSG((_mask) > (typeof(_reg))~0ull,		\
++				 _pfx "type of reg too small for mask"); \
++		__BUILD_BUG_ON_NOT_POWER_OF_2((_mask) +			\
++					      (1ULL << __bf_shf(_mask))); \
++	})
++
++/**
++ * FIELD_PREP() - prepare a bitfield element
++ * @_mask: shifted mask defining the field's length and position
++ * @_val:  value to put in the field
++ *
++ * FIELD_PREP() masks and shifts up the value.  The result should
++ * be combined with other fields of the bitfield using logical OR.
++ */
++#define FIELD_PREP(_mask, _val)						\
++	({								\
++		__BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ");	\
++		((typeof(_mask))(_val) << __bf_shf(_mask)) & (_mask);	\
++	})
++
++/**
++ * FIELD_GET() - extract a bitfield element
++ * @_mask: shifted mask defining the field's length and position
++ * @_reg:  32bit value of entire bitfield
++ *
++ * FIELD_GET() extracts the field specified by @_mask from the
++ * bitfield passed in as @_reg by masking and shifting it down.
++ */
++#define FIELD_GET(_mask, _reg)						\
++	({								\
++		__BF_FIELD_CHECK(_mask, _reg, 0U, "FIELD_GET: ");	\
++		(typeof(_mask))(((_reg) & (_mask)) >> __bf_shf(_mask));	\
++	})
++
++#endif
+diff --git a/include/linux/bug.h b/include/linux/bug.h
+index e51b0709e78d..292d6a10b0c2 100644
+--- a/include/linux/bug.h
++++ b/include/linux/bug.h
+@@ -13,6 +13,7 @@ enum bug_trap_type {
+ struct pt_regs;
+ 
+ #ifdef __CHECKER__
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n) (0)
+ #define BUILD_BUG_ON_ZERO(e) (0)
+ #define BUILD_BUG_ON_NULL(e) ((void*)0)
+@@ -24,6 +25,8 @@ struct pt_regs;
+ #else /* __CHECKER__ */
+ 
+ /* Force a compilation error if a constant expression is not a power of 2 */
++#define __BUILD_BUG_ON_NOT_POWER_OF_2(n)	\
++	BUILD_BUG_ON(((n) & ((n) - 1)) != 0)
+ #define BUILD_BUG_ON_NOT_POWER_OF_2(n)			\
+ 	BUILD_BUG_ON((n) == 0 || (((n) & ((n) - 1)) != 0))
+ 
 -- 
-Rafał
+1.9.1
