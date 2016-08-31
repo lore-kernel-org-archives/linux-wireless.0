@@ -1,37 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:32863 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757357AbcHCCH2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Aug 2016 22:07:28 -0400
-Received: by mail-pf0-f193.google.com with SMTP id i6so13607695pfe.0
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Aug 2016 19:07:23 -0700 (PDT)
-Subject: Re: [PATCH v2] nl80211: Receive correct value for
- NL80211_MESHCONF_HT_OPMODE command
-References: <1468927556-4703-1-git-send-email-masashi.honma@gmail.com>
- <1470138089-6864-1-git-send-email-masashi.honma@gmail.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org, j@w1.fi,
-	me@bobcopeland.com
-To: masashi.honma@gmail.com
-From: Masashi Honma <masashi.honma@gmail.com>
-Message-ID: <9967cc0f-777e-31f6-0c4a-a788e92b9049@gmail.com> (sfid-20160803_040736_815133_FD62F2ED)
-Date: Wed, 3 Aug 2016 10:07:35 +0900
-MIME-Version: 1.0
-In-Reply-To: <1470138089-6864-1-git-send-email-masashi.honma@gmail.com>
-Content-Type: text/plain; charset=iso-2022-jp; format=flowed; delsp=yes
+Received: from smtp07.smtpout.orange.fr ([80.12.242.129]:34432 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933276AbcHaLwV (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Aug 2016 07:52:21 -0400
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] mwifiex: scan: Simplify code
+Date: Wed, 31 Aug 2016 13:50:59 +0200
+Message-Id: <1472644259-15605-1-git-send-email-christophe.jaillet@wanadoo.fr> (sfid-20160831_135244_725276_7AD71DB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016年08月02日 20:41, Masashi Honma wrote:
-> -	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0, 16,
-> +	FILL_IN_MESH_PARAM_IF_SET(tb, cfg, ht_opmode, 0,
-> +				  IEEE80211_HT_OP_MODE_PROTECTION |
-> +				  IEEE80211_HT_OP_MODE_NON_GF_STA_PRSNT |
-> +				  IEEE80211_HT_OP_MODE_NON_HT_STA_PRSNT,
->  				  mask, NL80211_MESHCONF_HT_OPMODE,
->  				  nl80211_check_u16);
+This patch:
+   - improves code layout
+   - removes a useless memset(0) for some memory allocated with kzalloc
+   - removes a useless if. We know that 'if (chan_band_tlv)' will succeed
+     because it has been tested a few lines above
 
-This patch could over write cfg->ht_opmode even though EINVAL.
-I will modify this.
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 12 ++++--------
+ 1 file changed, 4 insertions(+), 8 deletions(-)
 
-Masashi Honma.
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 21ec84794d0c..c29dd958acae 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -2179,18 +2179,14 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 
+ 		if (chan_band_tlv && adapter->nd_info) {
+ 			adapter->nd_info->matches[idx] =
+-				kzalloc(sizeof(*pmatch) +
+-				sizeof(u32), GFP_ATOMIC);
++				kzalloc(sizeof(*pmatch) + sizeof(u32),
++					GFP_ATOMIC);
+ 
+ 			pmatch = adapter->nd_info->matches[idx];
+ 
+ 			if (pmatch) {
+-				memset(pmatch, 0, sizeof(*pmatch));
+-				if (chan_band_tlv) {
+-					pmatch->n_channels = 1;
+-					pmatch->channels[0] =
+-						chan_band->chan_number;
+-				}
++				pmatch->n_channels = 1;
++				pmatch->channels[0] = chan_band->chan_number;
+ 			}
+ 		}
+ 
+-- 
+2.7.4
