@@ -1,41 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37264 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751020AbcHIGhY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Aug 2016 02:37:24 -0400
-Message-ID: <1470724641.28531.6.camel@sipsolutions.net> (sfid-20160809_083727_581274_539DA8D2)
-Subject: Re: [BUG] 4.8-rc1: wlcore: NULL pointer dereference in
- wlcore_op_get_expected_throughput
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "H. Nikolaus Schaller" <hns@goldelico.com>,
-	linux-wireless@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Discussions about the Letux Kernel
-	<letux-kernel@openphoenux.org>
-Date: Tue, 09 Aug 2016 08:37:21 +0200
-In-Reply-To: <4FEB5780-826B-49C3-81E9-D361CD12DD4A@goldelico.com> (sfid-20160808_232959_664351_C51374E0)
-References: <4FEB5780-826B-49C3-81E9-D361CD12DD4A@goldelico.com>
-	 (sfid-20160808_232959_664351_C51374E0)
-Content-Type: text/plain; charset="UTF-8"
+Received: from smtprelay0213.hostedemail.com ([216.40.44.213]:33575 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S935178AbcHaPJU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Aug 2016 11:09:20 -0400
+Message-ID: <1472656150.4176.7.camel@perches.com> (sfid-20160831_170938_911055_600A5F3E)
+Subject: Re: [PATCH] mwifiex: scan: Simplify code
+From: Joe Perches <joe@perches.com>
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Date: Wed, 31 Aug 2016 08:09:10 -0700
+In-Reply-To: <1472644259-15605-1-git-send-email-christophe.jaillet@wanadoo.fr>
+References: <1472644259-15605-1-git-send-email-christophe.jaillet@wanadoo.fr>
+Content-Type: text/plain; charset="ISO-8859-1"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-08-08 at 23:26 +0200, H. Nikolaus Schaller wrote:
-> Here is what I see in 4.8-rc1 on Pyra device after typing "poweroff".
-> I hope someone knows what it means.
-> 
-> BR and thanks,
-> Nikolaus
+On Wed, 2016-08-31 at 13:50 +0200, Christophe JAILLET wrote:
+> This patch:
+>    - improves code layout
+>    - removes a useless memset(0) for some memory allocated with kzalloc
+>    - removes a useless if. We know that 'if (chan_band_tlv)' will succeed
+>      because it has been tested a few lines above
 
-[snip]
+True, the code above it is also confusing as it's
 
-> [Â Â 616.041894] [<bf4de050>] (wlcore_op_get_expected_throughput
-> [wlcore]) from [<bf40cf20>] (sta_set_sinfo+0xc18/0x1110 [mac80211])
-> [Â Â 616.054542] [<bf40cf20>] (sta_set_sinfo [mac80211]) from 
-[snip]
+#ifdef CONFIG_PM
+	if (priv->wdev.wiphy->wowlan_config)
+		nd_config = priv->wdev.wiphy->wowlan_config->nd_config;
+#endif
 
-This is already fixed byÂ 2439ca0402091badb24415e1b073ba12b34ba423
+	if (nd_config) {
+		adapter->nd_info =
+			kzalloc(sizeof(struct cfg80211_wowlan_nd_match) +
+				sizeof(struct cfg80211_wowlan_nd_match *) *
+				scan_rsp->number_of_sets, GFP_ATOMIC);
 
-johannes
-> 
+		if (adapter->nd_info)
+			adapter->nd_info->n_matches = scan_rsp->number_of_sets;
+	}
+where nd_config is a pointer already initialized to NULL
+so the #endif seems misplaced.
+
+> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+[]
+> @@ -2179,18 +2179,14 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+
+>  
+>  		if (chan_band_tlv && adapter->nd_info) {
+>  			adapter->nd_info->matches[idx] =
+> -				kzalloc(sizeof(*pmatch) +
+> -				sizeof(u32), GFP_ATOMIC);
+> +				kzalloc(sizeof(*pmatch) + sizeof(u32),
+> +					GFP_ATOMIC);
+>  
+>  			pmatch = adapter->nd_info->matches[idx];
+>  
+>  			if (pmatch) {
+> -				memset(pmatch, 0, sizeof(*pmatch));
+> -				if (chan_band_tlv) {
+> -					pmatch->n_channels = 1;
+> -					pmatch->channels[0] =
+> -						chan_band->chan_number;
+> -				}
+> +				pmatch->n_channels = 1;
+> +				pmatch->channels[0] = chan_band->chan_number;
+>  			}
+>  		}
+
+Maybe it'd be better to move the pmatch declaration to this block
+and alloc to pmatch then assign adapter->nd_info->matches[idx]
+later.
+
+I think the #ifdef CONFIG_PM use in this routine is incomplete.
