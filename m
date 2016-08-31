@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:37372 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934745AbcHEKum (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Aug 2016 06:50:42 -0400
-Message-ID: <1470394233.2977.37.camel@sipsolutions.net> (sfid-20160805_125052_198435_BEADBCFA)
-Subject: Re: Buggy rhashtable walking
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-	tom@herbertland.com
-Date: Fri, 05 Aug 2016 12:50:33 +0200
-In-Reply-To: <20160805104858.GA9297@gondor.apana.org.au>
-References: <20160804071846.GA773@gondor.apana.org.au>
- <20160804074546.GA996@gondor.apana.org.au>
- <1470377813.2977.14.camel@sipsolutions.net>
-	 <20160805104858.GA9297@gondor.apana.org.au>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57402 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756123AbcHaHcP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 31 Aug 2016 03:32:15 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/4] wil6210: fix protection of wil->scan_request
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1471858942-23766-2-git-send-email-qca_merez@qca.qualcomm.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Lior David <qca_liord@qca.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <wil6210@qca.qualcomm.com>,
+        Maya Erez <qca_merez@qca.qualcomm.com>
+Message-ID: <0f6311c697f74bc2a804f09dff4c7a95@euamsexm01a.eu.qualcomm.com> (sfid-20160831_093221_646446_A2B7E7EE)
+Date: Wed, 31 Aug 2016 09:31:43 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-08-05 at 18:48 +0800, Herbert Xu wrote:
-> On Fri, Aug 05, 2016 at 08:16:53AM +0200, Johannes Berg wrote:
-> > 
-> > Hm. Would you rather allocate a separate head entry for the
-> > hashtable,
-> > or chain the entries?
+Maya Erez <qca_merez@qca.qualcomm.com> wrote:
+> From: Lior David <qca_liord@qca.qualcomm.com>
 > 
-> My plan is to build support for this directly into rhashtable.
-> So I'm adding a struct rhlist_head that would be used in place
-> of rhash_head for these cases and it'll carry an extra pointer
-> for the list of identical entries.
+> Currently the places that check wil->scan_request and
+> call cfg80211_scan_done are not consistently protected,
+> so there is a risk that cfg80211_scan_done will be called
+> with NULL scan_request, causing a kernel crash.
+> Fix this by using p2p_wdev_mutex in few other places
+> that access scan_request. This makes sense since
+> scan_request may point to p2p_wdev, and it is not worth
+> the extra complexity of adding a new mutex.
 > 
-> I will then add an additional layer of insert/lookup interfaces
-> for rhlist_head.
+> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-Oh, ok.
+Thanks, 4 patches applied to ath-next branch of ath.git:
 
-> So bottom-line is that if you have no identical entries that you
-> only incur an extra 8 bytes per-object.
-> 
-Right.
+5ffae43208ec wil6210: fix protection of wil->scan_request
+08989f9640a0 wil6210: align to latest auto generated wmi.h
+12bace75704e wil6210: extract firmware capabilities from FW file
+13cd9f758a55 wil6210: extract firmware version from file header
 
-Thanks!
-
-johannes
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9293303/
