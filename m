@@ -1,70 +1,237 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:37856 "EHLO
-        mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753968AbcHYWHC (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:36614 "EHLO
+        mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753517AbcHaTfG (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 25 Aug 2016 18:07:02 -0400
-Received: by mail-wm0-f53.google.com with SMTP id i5so92535097wmg.0
-        for <linux-wireless@vger.kernel.org>; Thu, 25 Aug 2016 15:07:02 -0700 (PDT)
-Subject: Re: [PATCH] nl80211: Fix unfiltered GET_INTERFACE dumps
-To: Denis Kenzior <denkenz@gmail.com>, linux-wireless@vger.kernel.org
-References: <1472157884-3174-1-git-send-email-denkenz@gmail.com>
- <210adf6d-287c-f836-8e2c-78f42de94dee@broadcom.com>
- <57BF689A.5050406@gmail.com>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <61329b32-bd15-1c0d-867f-f50b29424953@broadcom.com> (sfid-20160826_000706_942550_6B226734)
-Date: Fri, 26 Aug 2016 00:07:01 +0200
+        Wed, 31 Aug 2016 15:35:06 -0400
+Received: by mail-pf0-f169.google.com with SMTP id h186so22465759pfg.3
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2016 12:34:47 -0700 (PDT)
+Date: Wed, 31 Aug 2016 12:34:44 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: [v4,1/2] mwifiex: add manufacturing mode support
+Message-ID: <20160831193441.GA30908@localhost> (sfid-20160831_213528_614914_D48B8C89)
+References: <1469525960-6643-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <57BF689A.5050406@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1469525960-6643-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25-08-16 23:52, Denis Kenzior wrote:
-> Hi Arend,
-> 
-> On 08/25/2016 04:35 PM, Arend van Spriel wrote:
->> On 25-08-16 22:44, Denis Kenzior wrote:
->>> dump_wiphy_parse only assigns filter_wiphy if one of the supported
->>> NL80211 attributes is present.  So for unfiltered dumps, filter_wiphy
->>> was always initialized to 0, and only interface 0 was dumped.
->>>
->>> This was introduced in commit 2d75da13fbb957e955d212555b91101cef36f0ce.
->>>
->>> Reported-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
->>
->> Actually sent a patch for this issue a little earlier. I should have
->> Cc'ed you explicitly, I guess.
->>
-> 
-> Whoops.  I saw your regression report and didn't look to see if you
-> fixed it :)
+Hi,
 
-I wanted to avoid having to revert so I decided to take a closer look.
+On Tue, Jul 26, 2016 at 03:09:19PM +0530, Amitkumar Karwar wrote:
+> By default normal mode is chosen when driver is loaded. This
+> patch adds a provision to choose manufacturing mode via module
+> parameters.
+> 
+> Below command loads driver in manufacturing mode
+> insmod mwifiex.ko mfg_mode=1.
+> 
+> Tested-by: chunfan chen <jeffc@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> v4: Removed mfg_firmware module parameter and hardcoded the firmware name
+>     in driver(Kalle Valo).
+> ---
+>  drivers/net/wireless/marvell/mwifiex/cmdevt.c |  8 ++++++++
+>  drivers/net/wireless/marvell/mwifiex/init.c   | 22 +++++++++++++++-------
+>  drivers/net/wireless/marvell/mwifiex/main.c   | 25 +++++++++++++++++++++----
+>  drivers/net/wireless/marvell/mwifiex/main.h   |  2 ++
+>  drivers/net/wireless/marvell/mwifiex/pcie.c   |  2 +-
+>  drivers/net/wireless/marvell/mwifiex/sdio.c   |  2 +-
+>  drivers/net/wireless/marvell/mwifiex/usb.c    |  2 +-
+>  7 files changed, 49 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> index d433aa0..636cfa0 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+> @@ -595,6 +595,14 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+>  			return -1;
+>  		}
+>  	}
+> +	/* We don't expect commands in manufacturing mode. They are cooked
+> +	 * in application and ready to download buffer is passed to the driver
+> +	*/
 
-> Looking at your patch, I'm worried that
-> 
-> -    int filter_wiphy = -1;
-> +    int filter_wiphy;
-> 
-> might still break things, since Johannes used:
-> 
->     if (!cb->args[2]) {
->         ...
+You have the alignment wrong here. Needs an extra space.
 
-Maybe my look was not close enough. In this branch cb->args[2] is set to
--1. So indeed that would make filter_wiphy uninitialized in subsequent
-call(s). Thanks for catching that.
+> +	if (adapter->mfg_mode && cmd_no) {
+> +		dev_dbg(adapter->dev, "Ignoring commands in manufacturing mode\n");
+> +		return -1;
+> +	}
+> +
+>  
+>  	/* Get a new command node */
+>  	cmd_node = mwifiex_get_cmd_node(adapter);
+> diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+> index 1489c90..82839d9 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/init.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/init.c
+> @@ -298,6 +298,7 @@ static void mwifiex_init_adapter(struct mwifiex_adapter *adapter)
+>  	memset(&adapter->arp_filter, 0, sizeof(adapter->arp_filter));
+>  	adapter->arp_filter_size = 0;
+>  	adapter->max_mgmt_ie_index = MAX_MGMT_IE_INDEX;
+> +	adapter->mfg_mode = mfg_mode;
+>  	adapter->key_api_major_ver = 0;
+>  	adapter->key_api_minor_ver = 0;
+>  	eth_broadcast_addr(adapter->perm_addr);
+> @@ -553,15 +554,22 @@ int mwifiex_init_fw(struct mwifiex_adapter *adapter)
+>  				return -1;
+>  		}
+>  	}
+> +	if (adapter->mfg_mode) {
+> +		adapter->hw_status = MWIFIEX_HW_STATUS_READY;
+> +		ret = -EINPROGRESS;
+> +	} else {
+> +		for (i = 0; i < adapter->priv_num; i++) {
+> +			if (adapter->priv[i]) {
+> +				ret = mwifiex_sta_init_cmd(adapter->priv[i],
+> +							   first_sta, true);
+> +				if (ret == -1)
+> +					return -1;
+> +
+> +				first_sta = false;
+> +			}
+> +
+>  
+> -	for (i = 0; i < adapter->priv_num; i++) {
+> -		if (adapter->priv[i]) {
+> -			ret = mwifiex_sta_init_cmd(adapter->priv[i], first_sta,
+> -						   true);
+> -			if (ret == -1)
+> -				return -1;
+>  
+> -			first_sta = false;
+>  		}
+>  	}
+>  
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+> index db4925d..7fbf74b 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.c
+> @@ -23,6 +23,7 @@
+>  #include "11n.h"
+>  
+>  #define VERSION	"1.0"
+> +#define MFG_FIRMWARE	"mwifiex_mfg.bin"
+>  
+>  static unsigned int debug_mask = MWIFIEX_DEFAULT_DEBUG_MASK;
+>  module_param(debug_mask, uint, 0);
+> @@ -36,6 +37,9 @@ static unsigned short driver_mode;
+>  module_param(driver_mode, ushort, 0);
+>  MODULE_PARM_DESC(driver_mode,
+>  		 "station=0x1(default), ap-sta=0x3, station-p2p=0x5, ap-sta-p2p=0x7");
+> +bool mfg_mode;
 
-Regards,
-Arend
+Does this really need to be global? It's only actually used in init.c,
+so could it help to move it to init.c and make it static?
 
->         } else if (cb->args[2] > 0) {
->                 filter_wiphy = cb->args[2] - 1;
->         }
-> 
-> So for unfiltered dumps, filter_wiphy would not be initialized properly
-> for the second & onward call of nl80211_dump_interface. Right?
-> 
-> Regards,
-> -Denis
+> +module_param(mfg_mode, bool, 0);
+> +MODULE_PARM_DESC(mfg_mode, "0:disable 1:enable (bool)");
+
+That's not a very helpful description. Perhaps you could mention in a
+word or two what this mode means?
+
+Brian
+
+>  
+>  /*
+>   * This function registers the device and performs all the necessary
+> @@ -559,10 +563,12 @@ static void mwifiex_fw_dpc(const struct firmware *firmware, void *context)
+>  		goto done;
+>  	}
+>  	/* Wait for mwifiex_init to complete */
+> -	wait_event_interruptible(adapter->init_wait_q,
+> -				 adapter->init_wait_q_woken);
+> -	if (adapter->hw_status != MWIFIEX_HW_STATUS_READY)
+> -		goto err_init_fw;
+> +	if (!adapter->mfg_mode) {
+> +		wait_event_interruptible(adapter->init_wait_q,
+> +					 adapter->init_wait_q_woken);
+> +		if (adapter->hw_status != MWIFIEX_HW_STATUS_READY)
+> +			goto err_init_fw;
+> +	}
+>  
+>  	priv = adapter->priv[MWIFIEX_BSS_ROLE_STA];
+>  	if (mwifiex_register_cfg80211(adapter)) {
+> @@ -666,6 +672,17 @@ static int mwifiex_init_hw_fw(struct mwifiex_adapter *adapter)
+>  {
+>  	int ret;
+>  
+> +	/* Override default firmware with manufacturing one if
+> +	 * manufacturing mode is enabled
+> +	 */
+> +	if (mfg_mode) {
+> +		if (strlcpy(adapter->fw_name, MFG_FIRMWARE,
+> +			    sizeof(adapter->fw_name)) >=
+> +			    sizeof(adapter->fw_name)) {
+> +			pr_err("%s: fw_name too long!\n", __func__);
+> +			return -1;
+> +		}
+> +	}
+>  	ret = request_firmware_nowait(THIS_MODULE, 1, adapter->fw_name,
+>  				      adapter->dev, GFP_KERNEL, adapter,
+>  				      mwifiex_fw_dpc);
+> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+> index 5902600..fcc2af35 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/main.h
+> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
+> @@ -58,6 +58,7 @@
+>  #include "sdio.h"
+>  
+>  extern const char driver_version[];
+> +extern bool mfg_mode;
+>  
+>  struct mwifiex_adapter;
+>  struct mwifiex_private;
+> @@ -990,6 +991,7 @@ struct mwifiex_adapter {
+>  	u32 drv_info_size;
+>  	bool scan_chan_gap_enabled;
+>  	struct sk_buff_head rx_data_q;
+> +	bool mfg_mode;
+>  	struct mwifiex_chan_stats *chan_stats;
+>  	u32 num_in_chan_stats;
+>  	int survey_idx;
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index 453ab6a..a6af85d 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -225,7 +225,7 @@ static void mwifiex_pcie_remove(struct pci_dev *pdev)
+>  	if (!adapter || !adapter->priv_num)
+>  		return;
+>  
+> -	if (user_rmmod) {
+> +	if (user_rmmod && !adapter->mfg_mode) {
+>  #ifdef CONFIG_PM_SLEEP
+>  		if (adapter->is_suspended)
+>  			mwifiex_pcie_resume(&pdev->dev);
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> index d3e1561..6dba409 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+> @@ -289,7 +289,7 @@ mwifiex_sdio_remove(struct sdio_func *func)
+>  
+>  	mwifiex_dbg(adapter, INFO, "info: SDIO func num=%d\n", func->num);
+>  
+> -	if (user_rmmod) {
+> +	if (user_rmmod && !adapter->mfg_mode) {
+>  		if (adapter->is_suspended)
+>  			mwifiex_sdio_resume(adapter->dev);
+>  
+> diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+> index 0857575..ba616ec 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/usb.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+> @@ -611,7 +611,7 @@ static void mwifiex_usb_disconnect(struct usb_interface *intf)
+>  	if (!adapter->priv_num)
+>  		return;
+>  
+> -	if (user_rmmod) {
+> +	if (user_rmmod && !adapter->mfg_mode) {
+>  #ifdef CONFIG_PM
+>  		if (adapter->is_suspended)
+>  			mwifiex_usb_resume(intf);
