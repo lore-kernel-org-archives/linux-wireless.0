@@ -1,44 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:40816 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755886AbcH2TkI (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:36940 "EHLO
+        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933226AbcHaLra (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 29 Aug 2016 15:40:08 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: "Peer, Ilan" <ilan.peer@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 29 Aug 2016 22:39:54 +0300
-Message-Id: <1472499594-3369-4-git-send-email-luca@coelho.fi> (sfid-20160829_214015_020536_06730768)
-In-Reply-To: <1472499594-3369-1-git-send-email-luca@coelho.fi>
-References: <1472499451.27868.31.camel@coelho.fi>
- <1472499594-3369-1-git-send-email-luca@coelho.fi>
-Subject: [PATCH 4/4] iwlwifi: mvm: Advertise support for AP channel width change
+        Wed, 31 Aug 2016 07:47:30 -0400
+Received: by mail-wm0-f44.google.com with SMTP id i5so84774483wmg.0
+        for <linux-wireless@vger.kernel.org>; Wed, 31 Aug 2016 04:47:29 -0700 (PDT)
+From: Jakub Kicinski <jakub.kicinski@netronome.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+        Linux Wireless List <linux-wireless@vger.kernel.org>
+Cc: Jakub Kicinski <jakub.kicinski@netronome.com>
+Subject: [PATCHv8 3/4] mt7601u: remove unnecessary include
+Date: Wed, 31 Aug 2016 12:46:46 +0100
+Message-Id: <1472644007-20959-4-git-send-email-jakub.kicinski@netronome.com> (sfid-20160831_134742_528857_658717E0)
+In-Reply-To: <1472644007-20959-1-git-send-email-jakub.kicinski@netronome.com>
+References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
+ <1472644007-20959-1-git-send-email-jakub.kicinski@netronome.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Peer, Ilan" <ilan.peer@intel.com>
+There is no need to include linux/version.h in a in-tree
+driver.
 
-The iwlmvm driver supports channel width change in AP mode.  Add the
-proper flag.
-
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/mediatek/mt7601u/main.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 6d60645..5dd77e3 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -624,6 +624,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 	hw->wiphy->features |= NL80211_FEATURE_P2P_GO_CTWIN |
- 			       NL80211_FEATURE_LOW_PRIORITY_SCAN |
- 			       NL80211_FEATURE_P2P_GO_OPPPS |
-+			       NL80211_FEATURE_AP_MODE_CHAN_WIDTH_CHANGE |
- 			       NL80211_FEATURE_DYNAMIC_SMPS |
- 			       NL80211_FEATURE_STATIC_SMPS |
- 			       NL80211_FEATURE_SUPPORTS_WMM_ADMISSION;
+diff --git a/drivers/net/wireless/mediatek/mt7601u/main.c b/drivers/net/wireless/mediatek/mt7601u/main.c
+index e70dd9523911..43ebd460ba86 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/main.c
++++ b/drivers/net/wireless/mediatek/mt7601u/main.c
+@@ -15,7 +15,6 @@
+ #include "mt7601u.h"
+ #include "mac.h"
+ #include <linux/etherdevice.h>
+-#include <linux/version.h>
+ 
+ static int mt7601u_start(struct ieee80211_hw *hw)
+ {
 -- 
-2.8.1
+1.9.1
