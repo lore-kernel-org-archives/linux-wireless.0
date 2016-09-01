@@ -1,106 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:21958 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755781AbcILSub (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 14:50:31 -0400
-Date: Mon, 12 Sep 2016 21:50:23 +0300
-From: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: Felipe Balbi <felipe.balbi@linux.intel.com>,
-        linux-renesas-soc@vger.kernel.org, joe@perches.com,
-        kernel-janitors@vger.kernel.org,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
-        Tatyana Nikolova <tatyana.e.nikolova@intel.com>,
-        Shiraz Saleem <shiraz.saleem@intel.com>,
-        Mustafa Ismail <mustafa.ismail@intel.com>,
-        Chien Tin Tung <chien.tin.tung@intel.com>,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        devel@driverdev.osuosl.org, alsa-devel@alsa-project.org,
-        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        tpmdd-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 00/26] constify local structures
-Message-ID: <20160912185023.GB14727@intel.com> (sfid-20160912_205049_005815_7FCF9FA6)
-References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
- <20160911172105.GB5493@intel.com>
- <alpine.DEB.2.10.1609121051050.3049@hadrien>
- <20160912131625.GD957@intel.com>
- <877fah5j35.fsf@linux.intel.com>
- <alpine.DEB.2.10.1609121548200.29099@hadrien>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52768 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934075AbcIAQPt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Sep 2016 12:15:49 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Mimi Zohar <zohar@linux.vnet.ibm.com>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+        ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@suse.com>
+Subject: Re: linux-4.8-rcX:  ath9k traceback
+References: <1472682267.2607.8.camel@linux.vnet.ibm.com>
+Date: Thu, 01 Sep 2016 19:15:42 +0300
+In-Reply-To: <1472682267.2607.8.camel@linux.vnet.ibm.com> (Mimi Zohar's
+        message of "Wed, 31 Aug 2016 18:24:27 -0400")
+Message-ID: <87eg5338b5.fsf@purkki.adurom.net> (sfid-20160901_181554_219297_9FF35905)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.10.1609121548200.29099@hadrien>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 12, 2016 at 03:52:08PM +0200, Julia Lawall wrote:
-> 
-> 
-> On Mon, 12 Sep 2016, Felipe Balbi wrote:
-> 
-> >
-> > Hi,
-> >
-> > Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com> writes:
-> > > On Mon, Sep 12, 2016 at 10:54:07AM +0200, Julia Lawall wrote:
-> > >>
-> > >>
-> > >> On Sun, 11 Sep 2016, Jarkko Sakkinen wrote:
-> > >>
-> > >> > On Sun, Sep 11, 2016 at 03:05:42PM +0200, Julia Lawall wrote:
-> > >> > > Constify local structures.
-> > >> > >
-> > >> > > The semantic patch that makes this change is as follows:
-> > >> > > (http://coccinelle.lip6.fr/)
-> > >> >
-> > >> > Just my two cents but:
-> > >> >
-> > >> > 1. You *can* use a static analysis too to find bugs or other issues.
-> > >> > 2. However, you should manually do the commits and proper commit
-> > >> >    messages to subsystems based on your findings. And I generally think
-> > >> >    that if one contributes code one should also at least smoke test changes
-> > >> >    somehow.
-> > >> >
-> > >> > I don't know if I'm alone with my opinion. I just think that one should
-> > >> > also do the analysis part and not blindly create and submit patches.
-> > >>
-> > >> All of the patches are compile tested.  And the individual patches are
-> > >
-> > > Compile-testing is not testing. If you are not able to test a commit,
-> > > you should explain why.
-> >
-> > Dude, Julia has been doing semantic patching for years already and
-> > nobody has raised any concerns so far. There's already an expectation
-> > that Coccinelle *works* and Julia's sematic patches are sound.
-> >
-> > Besides, adding 'const' is something that causes virtually no functional
-> > changes to the point that build-testing is really all you need. Any
-> > problems caused by adding 'const' to a definition will be seen by build
-> > errors or warnings.
-> >
-> > Really, just stop with the pointless discussion and go read a bit about
-> > Coccinelle and what semantic patches are giving you. The work done by
-> > Julia and her peers are INRIA have measurable benefits.
-> >
-> > You're really making a thunderstorm in a glass of water.
-> 
-> Thanks for the defense, but since a lot of these patches torned out to be
-> wrong, due to an incorrect parse by Coccinelle, combined with an
-> unpleasantly lax compiler, Jarkko does have a point that I should have
-> looked at the patches more carefully.  In any case, I have written to the
-> maintainers relevant to the patches that turned out to be incorrect.
+Mimi Zohar <zohar@linux.vnet.ibm.com> writes:
 
-Exactly. I'm not excepting that every commit would require extensive
-analysis but it would be good to quickly at least skim through commits
-and see if they make sense (or ask if unsure) :) 
+> There weren't any problems on linux-4.7 kernels.  I'm getting the
+> following traceback on linux-4.8-rc1/-rc4 kernels.  Let me know if you
+> need any additional information.
+>
+> [   64.006529] WARNING: CPU: 3 PID: 94 at drivers/net/wireless/ath/ath9k/beacon.c:642 ath9k_beacon_config+0x12c/0x140 [ath9k]
 
-And I'm fine with compile testing if it is mentioned in the commit msg.
+This should fix it:
 
-> julia
+ath9k: fix client mode beacon configuration
 
-/Jarkko
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=05860bed491b114a9f2d7a4f6e09fb02c0b69056
+
+-- 
+Kalle Valo
