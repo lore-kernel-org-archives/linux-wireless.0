@@ -1,39 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:59456 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932515AbcI3O7B (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35870 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752478AbcIAUz5 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 10:59:01 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
-Date: Fri, 30 Sep 2016 16:58:34 +0200
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org
-References: <20160905095128.80560-1-nbd@nbd.name> <201609301636.43363.arnd@arndb.de> <557be2b8-5ff1-83ea-f6d1-6421c2465969@nbd.name>
-In-Reply-To: <557be2b8-5ff1-83ea-f6d1-6421c2465969@nbd.name>
+        Thu, 1 Sep 2016 16:55:57 -0400
+Subject: Re: Ath10k probe response error related to mac80211 commit.
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <cf9852df-6d14-baf6-af0a-9cc78c448fde@candelatech.com>
+ <1472752911.9608.11.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <c7eb32b4-84c5-41ae-1fe6-89df7cbbe7d4@candelatech.com> (sfid-20160901_225605_420948_427DBF6F)
+Date: Thu, 1 Sep 2016 11:23:50 -0700
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201609301658.35039.arnd@arndb.de> (sfid-20160930_172119_430440_207F6019)
+In-Reply-To: <1472752911.9608.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday 30 September 2016, Felix Fietkau wrote:
-> >> >> >> +                 device_type = "pci";
-> >> >> >> +                 mediatek,mtd-eeprom = <&factory 0x8000>;
-> >> >> >> +                 mediatek,2ghz = <0>;
-> >> > 
-> >> > It's not clear what the possible values for the 2ghz property are,
-> >> > can you be more verbose in the description? How is <0> different
-> >> > from no property?
-> >> 0 means disabled, no property means unchanged (compared to EEPROM).
-> > 
-> > Maybe have a boolean property instead then to say "mediatek,2ghz-disabled" ?
-> > 
-> > If zero is the only possible value, there is no need to put a number in there.
-> 1 is also possible, which will force-enable the capability.
+On 09/01/2016 11:01 AM, Johannes Berg wrote:
+>
+>> If someone has any idea of why this patch might trigger it, please
+>> let me know.
+>> I'll keep digging in the meantime...
+>>
+>>      Revert "mac80211: don't advertise NL80211_FEATURE_FULL_AP_CLIENT_STATE"
+>>
+>
+> With a sufficiently recent hostapd/wpa_supplicant, the patch will cause
+> a station entry to be added to the firmware before sending the
+> authentication frame.
+>
+> Why, of all frames, probe response frames should be corrupted I don't
+> know - I could imagine auth/assoc replies being treated differently
+> since they are now with a station entry rather than without.
 
-Ok, then both those values should be documented in the binding.
+Could easily be that others are corrupted too, but since probe resp is bad,
+the association will not proceed.
 
-	Arnd
+>
+>> This only breaks AP mode (station mode works fine).
+>
+> It also has no impact on anything but AP mode, as even indicated by the
+> name of the flag :)
+
+Heh, I spent 4 days tracking this down, so I wanted to be precise in
+my bug report :)
+
+> Anyway, I was pretty sure this was safe and it does help other drivers
+> to have the full state, but I guess you can make the driver opt out of
+> the flag again (just unset it before register_hw).
+
+The result I see is that there is an extra 10 bytes at the end of the frame on
+air.  But, it looks like the exact same pkt is sent to the firmware both with
+and without this patch.  Maybe the firmware is using the wrong tid or something
+like that due to how the station is created differently with this patch.
+
+Since this only happens (as far as I know) with my modified firmware, then
+I will try to fix it there.  Or, possibly I can change ath10k driver to flip this
+mac80211 flag when loading my firmware variant if firmware cannot be easily fixed.
+
+Thanks for the info,
+--Ben
+
+>
+> johannes
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
