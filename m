@@ -1,112 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55882 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1759339AbcISHar (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35990 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754595AbcIAU6D (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 03:30:47 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Sep 2016 10:30:13 +0300
-Message-Id: <20160919073028.22065-10-luca@coelho.fi> (sfid-20160919_093059_778609_56AF220F)
-In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
-References: <1474270071.5664.89.camel@coelho.fi>
-Subject: [PATCH 10/25] iwlwifi: mvm: support packet injection
+        Thu, 1 Sep 2016 16:58:03 -0400
+Subject: Re: Ath10k probe response error related to mac80211 commit.
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        ath10k <ath10k@lists.infradead.org>
+References: <cf9852df-6d14-baf6-af0a-9cc78c448fde@candelatech.com>
+ <1472752911.9608.11.camel@sipsolutions.net>
+ <c7eb32b4-84c5-41ae-1fe6-89df7cbbe7d4@candelatech.com>
+ <1472756034.9608.15.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <79ab7dfa-f485-ffcd-963c-b91f7d5a8386@candelatech.com> (sfid-20160901_225806_621505_028F3376)
+Date: Thu, 1 Sep 2016 13:52:15 -0700
+MIME-Version: 1.0
+In-Reply-To: <1472756034.9608.15.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On 09/01/2016 11:53 AM, Johannes Berg wrote:
+> On Thu, 2016-09-01 at 11:23 -0700, Ben Greear wrote:
+>>
+>> Could easily be that others are corrupted too, but since probe resp
+>> is bad, the association will not proceed.
+>
+> makes sense.
+>
+>> Heh, I spent 4 days tracking this down, so I wanted to be precise in
+>> my bug report :)
+>
+> Ahrg, ouch. Sorry about that. I really didn't think the flag would
+> cause any issues for anyone.
+>
+>> The result I see is that there is an extra 10 bytes at the end of the
+>> frame on air.  But, it looks like the exact same pkt is sent to the
+>> firmware both with and without this patch.  Maybe the firmware is
+>> using the wrong tid or something like that due to how the station is
+>> created differently with this patch.
+>
+> That makes no sense though, unless this only happens on say the second
+> station that connects? Until the first station sends an authentication
+> frame, that patch really should have no impact whatsoever.
 
-For automatic testing packet injection can be useful.
-Support injection through debugfs.
+Ok, I found the problem.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 55 ++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+In the 10.1 firmware (at least), it will force the TID to be NON-QOS-TID
+if the peer object does not have the qos_enabled flag set.  This is probably
+a work-around for some other thing lost in antiquity.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index b344898..540b7c9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -917,6 +917,59 @@ static ssize_t iwl_dbgfs_indirection_tbl_write(struct iwl_mvm *mvm,
- 	return ret ?: count;
- }
- 
-+static ssize_t iwl_dbgfs_inject_packet_write(struct iwl_mvm *mvm,
-+					     char *buf, size_t count,
-+					     loff_t *ppos)
-+{
-+	struct iwl_rx_cmd_buffer rxb = {
-+		._rx_page_order = 0,
-+		.truesize = 0, /* not used */
-+		._offset = 0,
-+	};
-+	struct iwl_rx_packet *pkt;
-+	struct iwl_rx_mpdu_desc *desc;
-+	int bin_len = count / 2;
-+	int ret = -EINVAL;
-+
-+	/* supporting only 9000 descriptor */
-+	if (!mvm->trans->cfg->mq_rx_supported)
-+		return -ENOTSUPP;
-+
-+	rxb._page = alloc_pages(GFP_ATOMIC, 0);
-+	if (!rxb._page)
-+		return -ENOMEM;
-+	pkt = rxb_addr(&rxb);
-+
-+	ret = hex2bin(page_address(rxb._page), buf, bin_len);
-+	if (ret)
-+		goto out;
-+
-+	/* avoid invalid memory access */
-+	if (bin_len < sizeof(*pkt) + sizeof(*desc))
-+		goto out;
-+
-+	/* check this is RX packet */
-+	if (WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd) !=
-+	    WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD))
-+		goto out;
-+
-+	/* check the length in metadata matches actual received length */
-+	desc = (void *)pkt->data;
-+	if (le16_to_cpu(desc->mpdu_len) !=
-+	    (bin_len - sizeof(*desc) - sizeof(*pkt)))
-+		goto out;
-+
-+	local_bh_disable();
-+	iwl_mvm_rx_mpdu_mq(mvm, NULL, &rxb, 0);
-+	local_bh_enable();
-+	ret = 0;
-+
-+out:
-+	iwl_free_rxb(&rxb);
-+
-+	return ret ?: count;
-+}
-+
- static ssize_t iwl_dbgfs_fw_dbg_conf_read(struct file *file,
- 					  char __user *user_buf,
- 					  size_t count, loff_t *ppos)
-@@ -1454,6 +1507,7 @@ MVM_DEBUGFS_WRITE_FILE_OPS(cont_recording, 8);
- MVM_DEBUGFS_WRITE_FILE_OPS(max_amsdu_len, 8);
- MVM_DEBUGFS_WRITE_FILE_OPS(indirection_tbl,
- 			   (IWL_RSS_INDIRECTION_TABLE_SIZE * 2));
-+MVM_DEBUGFS_WRITE_FILE_OPS(inject_packet, 512);
- 
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
- MVM_DEBUGFS_READ_WRITE_FILE_OPS(bcast_filters, 256);
-@@ -1502,6 +1556,7 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 	MVM_DEBUGFS_ADD_FILE(send_echo_cmd, mvm->debugfs_dir, S_IWUSR);
- 	MVM_DEBUGFS_ADD_FILE(cont_recording, mvm->debugfs_dir, S_IWUSR);
- 	MVM_DEBUGFS_ADD_FILE(indirection_tbl, mvm->debugfs_dir, S_IWUSR);
-+	MVM_DEBUGFS_ADD_FILE(inject_packet, mvm->debugfs_dir, S_IWUSR);
- 	if (!debugfs_create_bool("enable_scan_iteration_notif",
- 				 S_IRUSR | S_IWUSR,
- 				 mvm->debugfs_dir,
+When using my firmware that puts mgt frames over HTT, the TID for mgt
+frames was being over-ridden and set to non-qos TID.  Due to other
+hackery and work-arounds, mgt frames cannot be sent on the non-qos
+TID because they will be put on-air 10 bytes too long.  They must be
+sent on the mgt-tid or non-pause tid.
+
+I am guessing that somehow this mac80211 change creates a peer early
+that does not have the qos logic enabled, and so that is why I suddenly
+started hitting this bug.
+
+Probably stock firmware is OK since it uses a second tx path for management,
+and I guess that by whatever time it starts sending non-mgt frames the
+qos-enabled logic is set properly.
+
+I can fix this in my firmware by making it not over-ride the TID in
+this case.
+
+Thanks,
+Ben
+
 -- 
-2.9.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
