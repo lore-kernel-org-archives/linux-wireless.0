@@ -1,133 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:36800 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751032AbcIOPHI (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34842 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932857AbcIAOxP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 11:07:08 -0400
-Subject: Re: [PATCH v2 03/21] ath10k: Allow changing ath10k debug mask at
- runtime.
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
- <1462986153-16318-4-git-send-email-greearb@candelatech.com>
- <871t0mfuej.fsf@kamboji.qca.qualcomm.com> <57D96DB1.5040003@candelatech.com>
- <874m5hb5zn.fsf@kamboji.qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <ff47bbbb-56da-7eed-91a0-c5acdb03179d@candelatech.com> (sfid-20160915_170712_655894_29EBF21C)
-Date: Thu, 15 Sep 2016 08:07:06 -0700
+        Thu, 1 Sep 2016 10:53:15 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mwifiex: handle edmac vendor command
+References: <1461945483-3239-1-git-send-email-akarwar@marvell.com>
+        <cbd542a552db4d368a5b402307976494@SC-EXCH04.marvell.com>
+        <87zirg8qxo.fsf@kamboji.qca.qualcomm.com>
+        <e2b7d7d9aef1488a97eb7ec44b4c46af@SC-EXCH04.marvell.com>
+Date: Thu, 01 Sep 2016 17:53:09 +0300
+In-Reply-To: <e2b7d7d9aef1488a97eb7ec44b4c46af@SC-EXCH04.marvell.com>
+        (Amitkumar Karwar's message of "Wed, 3 Aug 2016 11:20:57 +0000")
+Message-ID: <87poon1xka.fsf@kamboji.qca.qualcomm.com> (sfid-20160901_165318_676013_CBC18D68)
 MIME-Version: 1.0
-In-Reply-To: <874m5hb5zn.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2016 07:19 AM, Valo, Kalle wrote:
-> Ben Greear <greearb@candelatech.com> writes:
+Amitkumar Karwar <akarwar@marvell.com> writes:
+
+>> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+>> Sent: Tuesday, May 24, 2016 1:53 AM
+>> To: Amitkumar Karwar
+>> Cc: linux-wireless@vger.kernel.org
+>> Subject: Re: [PATCH] mwifiex: handle edmac vendor command
+>> 
+>> Amitkumar Karwar <akarwar@marvell.com> writes:
+>> 
+>> > Hi Kalle,
+>> >
+>> >> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
+>> >> Sent: Friday, April 29, 2016 9:28 PM
+>> >> To: linux-wireless@vger.kernel.org
+>> >> Cc: Jeff CF Chen; Amitkumar Karwar
+>> >> Subject: [PATCH] mwifiex: handle edmac vendor command
+>> >>
+>> >> From: chunfan chen <jeffc@marvell.com>
+>> >>
+>> >> Userspace can configure edmac values through a custom vendor command.
+>> >> They will be used by hardware for adaptivity.
+>> >>
+>> >> Signed-off-by: chunfan chen <jeffc@marvell.com>
+>> >> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>> 
+>> [deleted over 200 lines of unnecessary quotes]
+>> 
+>> > This patch seems to have deferred. We basically want a way to download
+>> > a vendor specific configuration to our firmware. Do you have any
+>> > suggestions on how can achieve this in better way?
+>> >
+>> > I can see below iw command suits our requirement.
+>> >
+>> > iw dev <devname> vendor send <oui> <subcmd> <filename|-|hex data>
+>> >
+>> > Please guide.
+>> 
+>> It was deferred because use of the nl80211 vendor interface (which I
+>> don't think belong to upstream drivers). I'll take a look at this patch
+>> in detail after the merge window.
+>> 
 >
->> On 09/14/2016 07:06 AM, Valo, Kalle wrote:
->>> greearb@candelatech.com writes:
->>>
->>>> From: Ben Greear <greearb@candelatech.com>
->>>>
->>>> Using debugfs.  More convenient than module options
->>>> in some cases.
->>>>
->>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>>> ---
->>>>   drivers/net/wireless/ath/ath10k/debug.c | 62 +++++++++++++++++++++++++++++++++
->>>>   1 file changed, 62 insertions(+)
->>>>
->>>> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
->>>> index e251155..d552a4a 100644
->>>> --- a/drivers/net/wireless/ath/ath10k/debug.c
->>>> +++ b/drivers/net/wireless/ath/ath10k/debug.c
->>>> @@ -870,6 +870,65 @@ static const struct file_operations fops_reg_addr = {
->>>>   	.llseek = default_llseek,
->>>>   };
->>>>
->>>> +static ssize_t ath10k_read_debug_level(struct file *file,
->>>> +				       char __user *user_buf,
->>>> +				       size_t count, loff_t *ppos)
->>>> +{
->>>> +	int sz;
->>>> +	const char buf[] =
->>>> +		"To change debug level, set value adding up desired flags:\n"
->>>> +		"PCI:                0x1\n"
->>>> +		"WMI:                0x2\n"
->>>> +		"HTC:                0x4\n"
->>>> +		"HTT:                0x8\n"
->>>> +		"MAC:               0x10\n"
->>>> +		"BOOT:              0x20\n"
->>>> +		"PCI-DUMP:          0x40\n"
->>>> +		"HTT-DUMP:          0x80\n"
->>>> +		"MGMT:             0x100\n"
->>>> +		"DATA:             0x200\n"
->>>> +		"BMI:              0x400\n"
->>>> +		"REGULATORY:       0x800\n"
->>>> +		"TESTMODE:        0x1000\n"
->>>> +		"INFO-AS-DBG: 0x40000000\n"
->>>> +		"FW:          0x80000000\n"
->>>> +		"ALL:         0xFFFFFFFF\n";
->>>> +	char wbuf[sizeof(buf) + 60];
->>>> +	sz = snprintf(wbuf, sizeof(wbuf), "Current debug level: 0x%x\n\n%s",
->>>> +		      ath10k_debug_mask, buf);
->>>> +	wbuf[sizeof(wbuf) - 1] = 0;
->>>> +
->>>> +	return simple_read_from_buffer(user_buf, count, ppos, wbuf, sz);
->>>> +}
->>>> +
->>>> +/* Set logging level.
->>>> + */
->>>> +static ssize_t ath10k_write_debug_level(struct file *file,
->>>> +					const char __user *user_buf,
->>>> +					size_t count, loff_t *ppos)
->>>> +{
->>>> +	struct ath10k *ar = file->private_data;
->>>> +	int ret;
->>>> +	unsigned long mask;
->>>> +
->>>> +	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
->>>> +	if (ret)
->>>> +		return ret;
->>>> +
->>>> +	ath10k_warn(ar, "Setting debug-mask to: 0x%lx  old: 0x%x\n",
->>>> +		    mask, ath10k_debug_mask);
->>>> +	ath10k_debug_mask = mask;
->>>> +	return count;
->>>> +}
->>>
->>> There are already sysfs files for module parameters which seems to work
->>> just fine for this case:
->>>
->>> # echo 0xffffffff > /sys/module/ath10k_core/parameters/debug_mask
->>
->>
->> Ok, but it is still nice to have the printout info of what log levels
->> means.  Otherwise, you have to go look at firmware source to even know how
->> to enable the proper flags.  And as these flags are internal and might change,
->> we could change the printout text to match the specific kernel that is running.
->
-> The debug log levels are documented in the wiki:
->
-> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/debug#debug_log_messages
->
-> And they are not supposed to change, there should be only additions.
+> Did you get a chance to check this patch?
+> Please let me know if you have any suggestions.
 
+Sorry for the delay. I have been thinking about vendor commands quite a
+lot and I don't think they belong to upstream drivers. For regular use
+cases (used by normal users) we have nl80211, for developer and testing
+purposes we have debugfs and for manufacturing type of tests we have
+nl80211 testmode interface. The focus of development should be adding
+new functionality to nl80211 (and other generic interfaces), not to
+driver specific vendor commands.
 
-Ahh, I remember the best part of this patch.  It pre-positions for another patch
-that makes the debug-mask per NIC instance instead of per driver.
+I know brcm80211 and ti's wlcore have few vendor commands but I'm hoping
+to remove them sometime soon.
 
-This can be quite useful for testing with multiple radios, maybe only one of
-which you want to see logging for.
-
-And regardless of what is in a wiki somewhere, having a debugfs file to cat out is
-more user friendly.
-
-Thanks,
-Ben
-
+Thoughts?
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
