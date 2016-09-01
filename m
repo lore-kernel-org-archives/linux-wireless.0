@@ -1,144 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:15388 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933252AbcIBPza (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:55:30 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail2.tohojo.dk ([77.235.48.147]:52327 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753963AbcIAJmg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Sep 2016 05:42:36 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] mac80211: Move reorder-sensitive TX handlers to after
+        TXQ dequeue.
+References: <20160824162015.29933-1-toke@toke.dk>
+        <20160830131548.6014-1-toke@toke.dk>
+        <1472677599.5470.13.camel@sipsolutions.net> <87inug81vo.fsf@toke.dk>
+        <1472718860.4249.0.camel@sipsolutions.net> <8737lk816p.fsf@toke.dk>
+        <1472720848.9608.1.camel@sipsolutions.net> <8760qgugb0.fsf@toke.dk>
+        <1472722020.9608.3.camel@sipsolutions.net>
+Date: Thu, 01 Sep 2016 11:42:31 +0200
+In-Reply-To: <1472722020.9608.3.camel@sipsolutions.net> (Johannes Berg's
+        message of "Thu, 01 Sep 2016 11:27:00 +0200")
+Message-ID: <871t14ufaw.fsf@toke.dk> (sfid-20160901_114239_344883_7434E40F)
 MIME-Version: 1.0
-Subject: Re: [2/2] ath10k: use complete() instead complete_all()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1471525926-20384-3-git-send-email-wagi@monom.org>
-To: Daniel Wagner <wagi@monom.org>
-CC: Kalle Valo <kvalo@codeaurora.org>, <netdev@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <ath10k@lists.infradead.org>,
-        Daniel Wagner <daniel.wagner@bmw-carit.de>,
-        "Luis R . Rodriguez" <mcgrof@kernel.org>,
-        Christian Lamparter <chunkeey@googlemail.com>
-Message-ID: <cf7ac1577bed46af9e664cb1134c6643@euamsexm01a.eu.qualcomm.com> (sfid-20160902_175606_027666_93008B57)
-Date: Fri, 2 Sep 2016 17:55:20 +0200
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Daniel Wagner <wagi@monom.org> wrote:
-> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
-> 
-> There is only one waiter for the completion, therefore there
-> is no need to use complete_all(). Let's make that clear by
-> using complete() instead of complete_all().
-> 
-> The usage pattern of the completion is:
-> 
-> waiter context                          waker context
-> 
-> scan.started
-> ------------
-> 
-> ath10k_start_scan()
->   lockdep_assert_held(conf_mutex)
->   auth10k_wmi_start_scan()
->   wait_for_completion_timeout(scan.started)
-> 
-> 					ath10k_wmi_event_scan_start_failed()
-> 					  complete(scan.started)
-> 
-> 					ath10k_wmi_event_scan_started()
-> 					  complete(scan.started)
-> 
-> scan.completed
-> --------------
-> 
-> ath10k_scan_stop()
->   lockdep_assert_held(conf_mutex)
->   ath10k_wmi_stop_scan()
->   wait_for_completion_timeout(scan.completed)
-> 
-> 					__ath10k_scan_finish()
-> 					  complete(scan.completed)
-> 
-> scan.on_channel
-> ---------------
-> 
-> ath10k_remain_on_channel()
->   mutex_lock(conf_mutex)
->   ath10k_start_scan()
->   wait_for_completion_timeout(scan.on_channel)
-> 
-> 					ath10k_wmi_event_scan_foreign_chan()
-> 					  complete(scan.on_channel)
-> 
-> offchan_tx_completed
-> --------------------
-> 
-> ath10k_offchan_tx_work()
->   mutex_lock(conf_mutex)
->   reinit_completion(offchan_tx_completed)
->   wait_for_completion_timeout(offchan_tx_completed)
-> 
-> 					ath10k_report_offchain_tx()
-> 					  complete(offchan_tx_completed)
-> 
-> install_key_done
-> ----------------
-> ath10k_install_key()
->   lockep_assert_held(conf_mutex)
->   reinit_completion(install_key_done)
->   wait_for_completion_timeout(install_key_done)
-> 
-> 				        ath10k_htt_t2h_msg_handler()
-> 					  complete(install_key_done)
-> 
-> vdev_setup_done
-> ---------------
-> 
-> ath10k_monitor_vdev_start()
->   lockdep_assert_held(conf_mutex)
->    reinit_completion(vdev_setup_done)
->   ath10k_vdev_setup_sync()
->     wait_for_completion_timeout(vdev_setup_done)
-> 
-> 					ath10k_wmi_event_vdev_start_resp()
-> 					  complete(vdev_setup_done)
-> 
-> ath10k_monitor_vdev_stop()
->   lockdep_assert_held(conf_mutex)
->   reinit_completion(vdev_setup_done()
->   ath10k_vdev_setup_sync()
->     wait_for_completion_timeout(vdev_setup_done)
-> 
-> 					ath10k_wmi_event_vdev_stopped()
-> 					 complete(vdev_setup_done)
-> 
-> thermal.wmi_sync
-> ----------------
-> ath10k_thermal_show_temp()
->   mutex_lock(conf_mutex)
->   reinit_completion(thermal.wmi_sync)
->   wait_for_completion_timeout(thermal.wmi_sync)
-> 
-> 					ath10k_thermal_event_temperature()
-> 					  complete(thermal.wmi_sync)
-> 
-> bss_survey_done
-> ---------------
-> ath10k_mac_update_bss_chan_survey
->   lockdep_assert_held(conf_mutex)
->   reinit_completion(bss_survey_done)
->   wait_for_completion_timeout(bss_survey_done)
-> 
-> 					ath10k_wmi_event_pdev_bss_chan_info()
-> 					  complete(bss_survey_done)
-> 
-> All complete() calls happen while the conf_mutex is taken. That means
-> at max one waiter is possible.
-> 
-> Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+>> Yeah, was going to do that anyway. But since I'm touching the code
+>> anyway, this might be an opportunity to avoid constructs like this:
+>>=20
+>> if (!invoke_tx_handlers(tx))
+>> =C2=A0 /* continue sending the packet */
+>>=20
+>> Most other succeed/fail functions seem to be of type bool, so it
+>> would help consistency as well. Unless there is some particular
+>> reason why this function happens to be using 0 to indicate success?
+>>=20
+>
+> It's just convention in the kernel, really.
+>
+> IMHO if a function has a bool return value it should be have a more
+> expressive name that indicates better what's going on, like e.g.
+>
+> bool ieee80211_is_radar_required(...);
+>
+> but of course that's not always done.
 
-881ed54ecc13 ath10k: use complete() instead complete_all()
+Well, it's applied somewhat inconsistently across mac80211, it seems
+(e.g. ieee80211_tx() and ieee80211_tx_prepare_skb() are bool, while
+invoke_tx_handlers() and ieee80211_skb_resize() are int). But okay,
+don't have that strong an opinion about the colour of this particular
+bikeshed so I'll keep it the way it is ;)
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9287731/
+-Toke
