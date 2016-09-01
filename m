@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49652 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1762000AbcINQl4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 12:41:56 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail2.tohojo.dk ([77.235.48.147]:49861 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752895AbcIAIi1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Sep 2016 04:38:27 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4] mac80211: Move reorder-sensitive TX handlers to after
+        TXQ dequeue.
+References: <20160824162015.29933-1-toke@toke.dk>
+        <20160830131548.6014-1-toke@toke.dk>
+        <1472677599.5470.13.camel@sipsolutions.net> <87inug81vo.fsf@toke.dk>
+        <1472718860.4249.0.camel@sipsolutions.net>
+Date: Thu, 01 Sep 2016 10:38:22 +0200
+In-Reply-To: <1472718860.4249.0.camel@sipsolutions.net> (Johannes Berg's
+        message of "Thu, 01 Sep 2016 10:34:20 +0200")
+Message-ID: <8737lk816p.fsf@toke.dk> (sfid-20160901_103830_879124_AE36B042)
 MIME-Version: 1.0
-Subject: Re: [2/3,v2] wlcore: Pass win_size taken from ieee80211_sta to FW
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160821112425.11302-2-maxim.altshul@ti.com>
-To: Maxim Altshul <maxim.altshul@ti.com>
-Cc: <linux-wireless@vger.kernel.org>, <johannes@sipsolutions.net>,
-        Maxim Altshul <maxim.altshul@ti.com>
-Message-Id: <20160914164153.B69A361B1D@smtp.codeaurora.org> (sfid-20160914_184200_719487_02FD99B8)
-Date: Wed, 14 Sep 2016 16:41:53 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maxim Altshul <maxim.altshul@ti.com> wrote:
-> When starting a new BA session, we must pass the win_size to the FW.
-> 
-> To do this we take max_rx_aggregation_subframes (BA RX win size)
-> which is stored in ieee80211_sta structure (e.g per link and not per HW)
-> 
-> We will use the value stored per link when passing the win_size to
-> firmware through the ACX_BA_SESSION_RX_SETUP command.
-> 
-> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
+Johannes Berg <johannes@sipsolutions.net> writes:
 
-Depends on this commit which is currently in mac80211-next:
+>> > > +static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+>> > > +{
+>> > > +	return invoke_tx_handlers_early(tx) ||
+>> > > invoke_tx_handlers_late(tx);
+>> > > +}
+>> > 
+>> > Ugh, please, no, don't be tricky where it's not necessary. Now
+>> > every
+>> > person reading this has to first look up the return type, and then
+>> > the
+>> > return value, and make sure they understand that success is
+>> > actually
+>> > the value 0 ... that's way too much to ask.
+>> 
+>> Noted. Any objections to turning these into bool return types?
+>
+> They have three possible values ... :)
 
-480dd46b9d68 mac80211: RX BA support for sta max_rx_aggregation_subframes
+Ah, no, not the handlers themselves. Meant the invoke_tx_handlers()
+function (or all three of them after my patch; hence the plural). To
+avoid the "0 means true" confusion you alluded to :)
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9292121/
+-Toke
