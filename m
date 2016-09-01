@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55086 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752028AbcINRIz (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 13:08:55 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Tony Lindgren <tony@atomide.com>
-Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: Re: [PATCH 3/5] wlcore: sdio: Populate config firmware data
-References: <20160913215043.29454-1-tony@atomide.com>
-        <20160913215043.29454-4-tony@atomide.com>
-Date: Wed, 14 Sep 2016 20:08:49 +0300
-In-Reply-To: <20160913215043.29454-4-tony@atomide.com> (Tony Lindgren's
-        message of "Tue, 13 Sep 2016 14:50:41 -0700")
-Message-ID: <87intycsta.fsf@kamboji.qca.qualcomm.com> (sfid-20160914_190859_464230_A2640B03)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:39355 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755817AbcIAVBu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Sep 2016 17:01:50 -0400
+Message-ID: <1472754954.9608.13.camel@sipsolutions.net> (sfid-20160901_230155_997778_288B9778)
+Subject: Re: [PATCH v5] mac80211: Move reorder-sensitive TX handlers to
+ after TXQ dequeue.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Thu, 01 Sep 2016 20:35:54 +0200
+In-Reply-To: <871t1379r0.fsf@toke.dk>
+References: <20160830131548.6014-1-toke@toke.dk>
+         <20160901160312.31540-1-toke@toke.dk>
+         <1472752745.9608.8.camel@sipsolutions.net> <871t1379r0.fsf@toke.dk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tony Lindgren <tony@atomide.com> writes:
+On Thu, 2016-09-01 at 20:30 +0200, Toke Høiland-Jørgensen wrote:
 
-> Configure the config firmware names and make it available
-> in platform data.
->
-> Let's also fix the order of the struct wilink_family_data
-> while at it.
->
-> Signed-off-by: Tony Lindgren <tony@atomide.com>
-> ---
->  drivers/net/wireless/ti/wlcore/spi.c | 42 ++++++++++++++++++++----------------
->  1 file changed, 24 insertions(+), 18 deletions(-)
+> > seq=1,frag=0
+> > seq=2,frag=0
+> > seq=2,frag=1
+> > seq=2,frag=1
+> > 
+> > if reordering happened?
+> 
+> (assuming the last line was supposed to read 'seq=1,frag=1')
 
-I think the title should be:
+I did actually mean seq=2,frag=1, since the seqno assignment happened
+after fragmentation in your patch, and after codel reordering, and
+would not change the seqno until it encountered a frag=0 packet.
 
-wlcore: spi: Populate config firmware data
+Or maybe that was only with the previous version of the patch.
 
-I can fix that during commit.
+> When does fragmentation happen anyway? Is it safe to assume there's
+> no aggregation when it does?
+> 
 
--- 
-Kalle Valo
+Yes, fragmented packets are not allowed to be aggregated.
+
+johannes
