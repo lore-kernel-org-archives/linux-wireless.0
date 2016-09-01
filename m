@@ -1,73 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47861 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751237AbcI0IBN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 04:01:13 -0400
-Message-ID: <1474963267.5141.11.camel@sipsolutions.net> (sfid-20160927_100118_476172_A31D1DFF)
-Subject: Re: [PATCHv2] mac80211: check A-MSDU inner frame source address on
- AP interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Date: Tue, 27 Sep 2016 10:01:07 +0200
-In-Reply-To: <1474802886-27220-1-git-send-email-michael-dev@fami-braun.de> (sfid-20160925_132809_451078_E31A6EC3)
-References: <1474802886-27220-1-git-send-email-michael-dev@fami-braun.de>
-         (sfid-20160925_132809_451078_E31A6EC3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:36132 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750998AbcIAV4L (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 1 Sep 2016 17:56:11 -0400
+From: =?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
+        <giedrius.statkevicius@gmail.com>
+To: kvalo@codeaurora.org
+Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
+        ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Miaoqing Pan <miaoqing@codeaurora.org>,
+        Kalle Valo <kvalo@qca.qualcomm.com>, stable@vger.kernel.org,
+        =?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
+        <giedrius.statkevicius@gmail.com>
+Subject: [PATCH] ath9k: bring back direction setting in ath9k_{start_stop}
+Date: Thu,  1 Sep 2016 20:47:02 +0300
+Message-Id: <20160901174702.8645-1-giedrius.statkevicius@gmail.com> (sfid-20160901_235628_148377_9F8FF7A3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Huh. I know this bug, I thought we fixed it a long time ago. Oops.
+A regression was introduced in commit id 79d4db1214a ("ath9k: cleanup
+led_pin initial") that broken the WLAN status led on my laptop with
+AR9287 after suspending and resuming.
 
+Steps to reproduce:
+* Suspend (laptop)
+* Resume (laptop)
+* Observe that the WLAN led no longer turns ON/OFF depending on the
+  status and is always red
 
-> -	struct ethhdr eth;
-> +	struct ethhdr eth, eth_80211;
->  	bool reuse_frag = skb->head_frag && !skb_has_frag_list(skb);
->  	bool reuse_skb = false;
->  	bool last = false;
->  
->  	if (has_80211_header) {
-> -		err = __ieee80211_data_to_8023(skb, &eth, addr,
-> iftype);
-> +		err = __ieee80211_data_to_8023(skb, &eth_80211,
-> addr, iftype);
->  		if (err)
->  			goto out;
->  	}
+Even though for my case it only needs to be set to OUT in ath9k_start
+but for consistency bring back the IN direction setting as well.
 
-This leaves "eth_80211" uninitialized if has_80211_header is false.
+Cc: Miaoqing Pan <miaoqing@codeaurora.org>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
+---
+This patch should be applied to all 4.7 and later kernels
 
-> @@ -768,6 +768,13 @@ void ieee80211_amsdu_to_8023s(struct sk_buff
-> *skb, struct sk_buff_head *list,
->  		subframe_len = sizeof(struct ethhdr) + len;
->  		padding = (4 - subframe_len) & 0x3;
->  
-> +		if (unlikely(has_80211_header &&
-> +			     (iftype == NL80211_IFTYPE_AP ||
-> +			      iftype == NL80211_IFTYPE_AP_VLAN) &&
-> +			     !ether_addr_equal(eth_80211.h_source,
-> eth.h_source)
-> +		   ))
-> +			goto purge;
+Another user complaining about probably the same problem:
+https://bugzilla.kernel.org/show_bug.cgi?id=151711
 
-And this then compares against uninitialized data, so this won't work.
+ drivers/net/wireless/ath/ath9k/main.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-I'd suggest removing the "has_80211_header" argument entirely, and
-replacing it with a "const u8 *sa" argument, but that complicates
-mac80211 significantly since all the checks
-in __ieee80211_data_to_8023() would have to be replicated.
-
-Maybe we can still do this, and say that it must be NULL when an 802.11
-header is present, and be the SA when not. However, mwifiex doesn't
-seem to be able to easily provide the SA (at least I don't see it,
-perhaps it can), so that we'd have to allow some kind of ERR_PTR() or
-something for that special case ... Actually it'd be better to just fix
-mwifiex though :)
-
-The staging driver using this (rtl8712) can easily provide the SA,
-afaict.
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 8b63988..121dc05 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -718,9 +718,12 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	if (!ath_complete_reset(sc, false))
+ 		ah->reset_power_on = false;
+ 
+-	if (ah->led_pin >= 0)
++	if (ah->led_pin >= 0) {
+ 		ath9k_hw_set_gpio(ah, ah->led_pin,
+ 				  (ah->config.led_active_high) ? 1 : 0);
++		ath9k_hw_gpio_request_out(ah, ah->led_pin, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++	}
+ 
+ 	/*
+ 	 * Reset key cache to sane defaults (all entries cleared) instead of
+@@ -864,9 +867,11 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+-	if (ah->led_pin >= 0)
++	if (ah->led_pin >= 0) {
+ 		ath9k_hw_set_gpio(ah, ah->led_pin,
+ 				  (ah->config.led_active_high) ? 0 : 1);
++		ath9k_hw_gpio_request_in(ah, ah->led_pin, NULL);
++	}
+ 
+ 	ath_prepare_reset(sc);
+ 
+-- 
+2.9.3
