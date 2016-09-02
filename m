@@ -1,36 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56602 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752240AbcICKDT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:20979 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932172AbcIBPaH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 06:03:19 -0400
+        Fri, 2 Sep 2016 11:30:07 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: [1/1] mwifiex: remove superfluous condition
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1469961555-2123-1-git-send-email-xypron.glpk@gmx.de>
-To: Heinrich Schuchardt <xypron.glpk@gmx.de>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Heinrich Schuchardt <xypron.glpk@gmx.de>
-Message-Id: <20160903100016.F332B61AC4@smtp.codeaurora.org> (sfid-20160903_120322_555915_2031D8DA)
-Date: Sat,  3 Sep 2016 10:00:16 +0000 (UTC)
+Subject: Re: ath10k: hide kernel addresses from logs using %pK format specifier
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1470318711-28986-1-git-send-email-c_mkenna@qti.qualcomm.com>
+To: <c_mkenna@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mkenna@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+Message-ID: <539a89901cc14f9a8a938a4d41f185cd@euamsexm01a.eu.qualcomm.com> (sfid-20160902_173023_246527_7FD50261)
+Date: Fri, 2 Sep 2016 17:29:56 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Heinrich Schuchardt <xypron.glpk@gmx.de> wrote:
-> for_each_property_of_node is only executed if the
-> property prop is not NULL.
+c_mkenna@qti.qualcomm.com wrote:
+> From: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
 > 
-> Signed-off-by: Heinrich Schuchardt <xypron.glpk@gmx.de>
-> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+> With the %pK format specifier we hide the kernel addresses
+> with the help of kptr_restrict sysctl.
+> In this patch, %p is changed to %pK in the driver code.
+> 
+> The sysctl is documented in Documentation/sysctl/kernel.txt.
+> 
+> Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-2f69e67058fb mwifiex: remove superfluous condition
+75b34800a228 ath10k: hide kernel addresses from logs using %pK format specifier
 
 -- 
 Sent by pwcli
-https://patchwork.kernel.org/patch/9253329/
+https://patchwork.kernel.org/patch/9263691/
