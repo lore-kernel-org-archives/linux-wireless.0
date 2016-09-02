@@ -1,52 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:60166 "EHLO mail2.tohojo.dk"
+Received: from narfation.org ([79.140.41.39]:33880 "EHLO v3-1039.vlinux.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934155AbcIVREn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2016 13:04:43 -0400
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH v9 0/2] mac80211: TXQ dequeue path rework
-Date: Thu, 22 Sep 2016 19:04:18 +0200
-Message-Id: <20160922170420.5193-1-toke@toke.dk> (sfid-20160922_190446_954643_9940028D)
-In-Reply-To: <20160906114426.25520-1-toke@toke.dk>
-References: <20160906114426.25520-1-toke@toke.dk>
+        id S932173AbcIBL0g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Sep 2016 07:26:36 -0400
+From: Sven Eckelmann <sven@narfation.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Simon Wunderlich <sw@simonwunderlich.de>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        linux-wireless@vger.kernel.org,
+        Pannirselvam Kanagaratnam <pannirk@gmail.com>
+Subject: Re: Debugging RTL8192CU firmware loading on 3.12 powerpc
+Date: Fri, 02 Sep 2016 13:26:26 +0200
+Message-ID: <6578938.N4SWO0a2Ic@bentobox> (sfid-20160902_132657_577642_121D8893)
+In-Reply-To: <8cae6bb9-0465-9210-b543-61136836c263@broadcom.com>
+References: <1586991.4QUcrJhXOm@prime> <8cae6bb9-0465-9210-b543-61136836c263@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; boundary="nextPart7295035.8hyijCJXRR"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is the ninth iteration of my attempts to reorder the TXQ dequeue
-path to avoid issues with reorder-sensitive operations. This version is
-split into two patches; the first one moves ieee80211_tx_dequeue() to
-avoid adding function stubs at the top of tx.c.
+--nextPart7295035.8hyijCJXRR
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Changes since v8:
-- Don't add function stubs to the beginning of tx.c
-- Don't use control.hw_key from the dequeued packet, since that can go
-  away while the packet is queued. Instead, run the select_key handler
-  on dequeue and use the key from that.
-- Change places that check tin.backlog_packets as an indication of
-  whether the TXQ has anything queued to also look at the 'frags' queue.
-- Don't change the order of the select_key handler with respect to the
-  other handlers.
-- Rebase on current mac80211-next tree.
+On Freitag, 2. September 2016 13:13:20 CEST Arend Van Spriel wrote:
+[...]
+> > Do you have any recommendations where the firmware loading problems could
+> > come from, and where we could start to debug? Any pointers would be
+> > appreciated.
+> Hi Simon,
+> 
+> Could it be an endian issue?
 
-Toke H=C3=B8iland-J=C3=B8rgensen (2):
-  mac80211: Move ieee802111_tx_dequeue() to later in tx.c
-  mac80211: Move reorder-sensitive TX handlers to after TXQ dequeue
+Yes, it could be one (at least I've also guessed this - I could still be 
+completely wrong). But the problem is now to find a good starting point for 
+the debugging effort.
 
- include/net/mac80211.h     |   2 +
- net/mac80211/ieee80211_i.h |   8 ++
- net/mac80211/rx.c          |   4 +-
- net/mac80211/sta_info.c    |  10 +-
- net/mac80211/tx.c          | 335 +++++++++++++++++++++++++++++++--------=
-------
- net/mac80211/util.c        |  11 +-
- 6 files changed, 256 insertions(+), 114 deletions(-)
+I've only looked at Simon's screen once while he gather USB dumps but didn't 
+spot any obvious at that time. There was also the problem that the comparison 
+dump looked already a lot different due to some timing differences.
 
---=20
-2.9.3
+I think Simon can give you later more details (when required).
 
-base-commit: c13ed534b8db543e4d8ead3885f4b06585a5771c
+Kind regards,
+	Sven
+--nextPart7295035.8hyijCJXRR
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJXyWHiAAoJEF2HCgfBJntGvMgQAMBky8S+3zzEXGSSuK68st9F
+jyLtE2Qjzyfq8+H8OXmfToUQGcQ69DMqEZbYvPEj6fdi1h6llRR43uoox8YrLOsc
+jIXnnY5Md/866Ry5Q0x5Vim2xYCcx106fqjA6wefwps5YUoVTZUUg+UiM7YPazFJ
+iAe10x27t/2EazRFlFfFxHueydwkO+KyT7H4HnKTymQsl0tQv2FuE+0fKY5pKoFv
+g0Oa9MWpBMVgzSv7/RVshEQ+JtpAXZjQ/w3Ob1dvBOHvlktRyKYT50aa4mjJ4aAd
+WD1sRE0lUPMVTfX0vwdFzn2hZINmsUY/IqW3Amqx9h4lvmWbaW5Wd4V1Jhcsa5by
+1uYghCvufNE+EV7ziiRUgb9xUvXMPeZNVvM+9e5Qyl8F3ByH4q3GIQQrIuEYx8dB
+cr7QJ2NMZoIpEX814GSBwoHPtwJdsiI7qTlUtzuypOdst7/yKEg8v0ZewPbky03E
+25Tllo5Uw3gYHLspVzmlHSzTPY/Hm/qDy6CbtakvGdFFpaLJrtAoSAs4d8HqOX2U
+soja0NRMRBfLpK7lsnBzAhTHMUUxhGQfwt4kvdNvAL3EzXHEGFpomTZ3d9sI9K2G
+NRz6xYvK6Cmr22IO/8EYSHCBMwhzO8ds1YbVdUfnwqhhiHeAQxlcsteGfqri4sC0
+xA3ERn2OjJEfErmUs3lZ
+=r8Y4
+-----END PGP SIGNATURE-----
+
+--nextPart7295035.8hyijCJXRR--
