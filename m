@@ -1,55 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv-hp10-72.netsons.net ([94.141.22.72]:36695 "EHLO
-        srv-hp10.netsons.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753564AbcIBM6O (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61563 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932236AbcIBPpP (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 08:58:14 -0400
-From: Luca Ceresoli <luca@lucaceresoli.net>
-To: devel@driverdev.osuosl.org
-Cc: Luca Ceresoli <luca@lucaceresoli.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/6] rtl8723au: remove declaration of unimplemented functions
-Date: Fri,  2 Sep 2016 14:57:44 +0200
-Message-Id: <1472821069-5437-1-git-send-email-luca@lucaceresoli.net> (sfid-20160902_145943_198376_2B3A10D0)
+        Fri, 2 Sep 2016 11:45:15 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Colin King <colin.king@canonical.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: fix memory leak on caldata on error exit path
+Date: Fri, 2 Sep 2016 15:45:09 +0000
+Message-ID: <87r392z4ox.fsf@kamboji.qca.qualcomm.com> (sfid-20160902_174537_447156_824A0653)
+References: <1471268785-11576-1-git-send-email-colin.king@canonical.com>
+In-Reply-To: <1471268785-11576-1-git-send-email-colin.king@canonical.com>
+        (Colin King's message of "Mon, 15 Aug 2016 14:46:25 +0100")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These functions have been declared without any implementation since
-the first commit (364e30ebd2dbaccba430c603da03e68746eb932a) and there
-has been no mention of them in following commits.
+Colin King <colin.king@canonical.com> writes:
 
-Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@driverdev.osuosl.org
-Cc: linux-kernel@vger.kernel.org
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> caldata is not being free'd on the error exit path, causing
+> a memory leak. kfree it to fix the leak.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/pci.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless=
+/ath/ath10k/pci.c
+> index 9a22c47..886337c 100644
+> --- a/drivers/net/wireless/ath/ath10k/pci.c
+> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+> @@ -2725,6 +2725,7 @@ static int ath10k_pci_hif_fetch_cal_eeprom(struct a=
+th10k *ar, void **data,
+>  	return 0;
+> =20
+>  err_free:
+> +	kfree(caldata);
+>  	kfree(data);
+> =20
+>  	return -EINVAL;
 
----
+I don't think we should free data at all:
 
-Changes v1 -> v2:
-- improve the commit message.
----
- drivers/staging/rtl8723au/include/recv_osdep.h | 3 ---
- 1 file changed, 3 deletions(-)
+static int ath10k_download_cal_eeprom(struct ath10k *ar)
+{
+	size_t data_len;
+	void *data =3D NULL;
+	int ret;
 
-diff --git a/drivers/staging/rtl8723au/include/recv_osdep.h b/drivers/staging/rtl8723au/include/recv_osdep.h
-index c2d3f1b..c159dbc 100644
---- a/drivers/staging/rtl8723au/include/recv_osdep.h
-+++ b/drivers/staging/rtl8723au/include/recv_osdep.h
-@@ -26,9 +26,6 @@ int rtw_recv_indicatepkt23a(struct rtw_adapter *adapter, struct recv_frame *prec
- 
- void rtw_handle_tkip_mic_err23a(struct rtw_adapter *padapter, u8 bgroup);
- 
--int	rtw_init_recv_priv(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
--void rtw_free_recv_priv (struct recv_priv *precvpriv);
--
- int rtw_os_recv_resource_init(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
- 
- void rtw_init_recv_timer23a(struct recv_reorder_ctrl *preorder_ctrl);
--- 
-2.7.4
+	ret =3D ath10k_hif_fetch_cal_eeprom(ar, &data, &data_len);
+
+Instead we should free only caldata, right?
+
+--=20
+Kalle Valo=
