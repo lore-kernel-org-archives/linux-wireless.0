@@ -1,92 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42586 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753761AbcIQQGl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 12:06:41 -0400
-From: Tony Lindgren <tony@atomide.com>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:35872 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932554AbcIBQq0 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 2 Sep 2016 12:46:26 -0400
+Received: by mail-pf0-f172.google.com with SMTP id h186so43929389pfg.3
+        for <linux-wireless@vger.kernel.org>; Fri, 02 Sep 2016 09:46:26 -0700 (PDT)
+Date: Fri, 2 Sep 2016 09:46:23 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: [PATCH 1/5] wlcore: Prepare family to fix nvs file handling
-Date: Sat, 17 Sep 2016 09:06:29 -0700
-Message-Id: <20160917160633.8767-2-tony@atomide.com> (sfid-20160917_180646_600984_B2CF2243)
-In-Reply-To: <20160917160633.8767-1-tony@atomide.com>
-References: <20160917160633.8767-1-tony@atomide.com>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] wcn36xx: Transition driver to SMD client
+Message-ID: <20160902164623.GY15161@tuxbot> (sfid-20160902_184647_480088_EC250119)
+References: <1472741468-24762-1-git-send-email-bjorn.andersson@linaro.org>
+ <87mvjqz2ul.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87mvjqz2ul.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move struct wilink_family_data to be available for all TI WLAN
-variants. And fix familiy typo, it should be just family.
+On Fri 02 Sep 09:24 PDT 2016, Kalle Valo wrote:
 
-Looks like wl12xx use two different nvs.bin files and wl18xx
-uses a different conf.bin file.
+> Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+> 
+> > The wcn36xx wifi driver follows the life cycle of the WLAN_CTRL SMD
+> > channel, as such it should be a SMD client. This patch makes this
+> > transition, now that we have the necessary frameworks available.
+> >
+> > Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> 
+> [...]
+> 
+> > --- a/drivers/net/wireless/ath/wcn36xx/Kconfig
+> > +++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
+> > @@ -1,6 +1,6 @@
+> >  config WCN36XX
+> >  	tristate "Qualcomm Atheros WCN3660/3680 support"
+> > -	depends on MAC80211 && HAS_DMA
+> > +	depends on MAC80211 && HAS_DMA && QCOM_SMD
+> 
+> While I had this patch on my pending branch I noticed that I can't
+> compile wcn36xx on x86 anymore. This is actually quite inconvenient, for
+> example then it's easy to miss mac80211 API changes etc. Is there any
+> way we could continue build testing wcn36xx on x86 (or all) platforms?
+> 
 
-Signed-off-by: Tony Lindgren <tony@atomide.com>
----
- drivers/net/wireless/ti/wlcore/spi.c      | 12 ++++--------
- drivers/net/wireless/ti/wlcore/wlcore_i.h |  7 +++++++
- 2 files changed, 11 insertions(+), 8 deletions(-)
+Sorry about that, we should at least be able to COMPILE_TEST it in
+non-qcom builds. Thanks for letting me know.
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -80,17 +80,13 @@
- 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
- 
- 
--struct wilink_familiy_data {
--	char name[8];
--};
--
--static const struct wilink_familiy_data *wilink_data;
-+static const struct wilink_family_data *wilink_data;
- 
--static const struct wilink_familiy_data wl18xx_data = {
-+static const struct wilink_family_data wl18xx_data = {
- 	.name = "wl18xx",
- };
- 
--static const struct wilink_familiy_data wl12xx_data = {
-+static const struct wilink_family_data wl12xx_data = {
- 	.name = "wl12xx",
- };
- 
-@@ -461,7 +457,7 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
- 		return -ENODEV;
- 
- 	wilink_data = of_id->data;
--	dev_info(&spi->dev, "selected chip familiy is %s\n",
-+	dev_info(&spi->dev, "selected chip family is %s\n",
- 		 wilink_data->name);
- 
- 	if (of_find_property(dt_node, "clock-xtal", NULL))
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore_i.h b/drivers/net/wireless/ti/wlcore/wlcore_i.h
---- a/drivers/net/wireless/ti/wlcore/wlcore_i.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore_i.h
-@@ -42,6 +42,12 @@
-  */
- #define WL12XX_NVS_NAME "ti-connectivity/wl1271-nvs.bin"
- 
-+struct wilink_family_data {
-+	const char *name;
-+	const char *nvs_name;	/* wl12xx nvs file */
-+	const char *cfg_name;	/* wl18xx cfg file */
-+};
-+
- #define WL1271_TX_SECURITY_LO16(s) ((u16)((s) & 0xffff))
- #define WL1271_TX_SECURITY_HI32(s) ((u32)(((s) >> 16) & 0xffffffff))
- #define WL1271_TX_SQN_POST_RECOVERY_PADDING 0xff
-@@ -208,6 +214,7 @@ struct wl1271_if_operations {
- 
- struct wlcore_platdev_data {
- 	struct wl1271_if_operations *if_ops;
-+	const struct wilink_family_data *family;
- 
- 	bool ref_clock_xtal;	/* specify whether the clock is XTAL or not */
- 	u32 ref_clock_freq;	/* in Hertz */
--- 
-2.9.3
+And the driver should also depend on QCOM_WCNSS_CTRL, in the normal
+case.
+
+I'll respin this, unless you prefer an incremental patch for those
+changes(?)
+
+> Also what about older platforms? Earlier I used wcn36xx on my Nexus 4
+> with help of backports project. I can't do that anymore, right?
+> 
+
+This has been tested on 8064, 8974 and 8916. So your Nexus 4 is covered.
+
+Unfortunately I don't have a Nexus 4, but we currently have Nexus 7
+(the 8064 version), Xperia Z, Xperia Z1 and DB410c using this chip and
+all four has been tested with this code.
+
+I've staged the PIL/remoteproc (firmware "loader") driver for v4.9, so
+with this patch the only thing missing to fill in the dts files is one
+clock from the RPM.
+
+
+JFYI, There seems to be some race in the removal path, which I will look
+into. But I would prefer if we could merge this to make the driver
+usable, and more accessible to work on.
+
+Regards,
+Bjorn
