@@ -1,49 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:39573
-        "EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755737AbcIFMMk (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17217 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751256AbcIBFaa (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 08:12:40 -0400
-Subject: Re: mwifiex: propagate error if IRQ request fails in
- mwifiex_sdio_of()
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20160903103520.8C69C6201B@smtp.codeaurora.org>
-Cc: linux-kernel@vger.kernel.org,
-        Amitkumar Karwar <akarwar@marvell.com>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-Message-ID: <66735eb5-c831-8e06-337b-80ccfc392061@osg.samsung.com> (sfid-20160906_141302_371384_9A7E9E05)
-Date: Tue, 6 Sep 2016 14:12:33 +0200
+        Fri, 2 Sep 2016 01:30:30 -0400
+From: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <arnagara@codeaurora.org>,
+        "Ashok Raj Nagarajan" <arnagara@qti.qualcomm.com>
+Subject: [PATCH] ath10k: fix reporting channel survey data
+Date: Fri, 2 Sep 2016 10:59:53 +0530
+Message-ID: <1472794193-20774-1-git-send-email-arnagara@qti.qualcomm.com> (sfid-20160902_073034_443118_A846CCE2)
 MIME-Version: 1.0
-In-Reply-To: <20160903103520.8C69C6201B@smtp.codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Kalle,
+When user requests for survey dump data, driver is providing wrong survey
+information. This information we sent is the survey data that we have
+collected during previous user request.
 
-On 09/03/2016 12:35 PM, Kalle Valo wrote:
-> Javier Martinez Canillas <javier@osg.samsung.com> wrote:
->> If request_irq() fails in mwifiex_sdio_probe_of(), only an error message
->> is printed but the actual error is not propagated to the caller function.
->>
->> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-> 
-> What's the conclusion with this patch? Should I drop it or take it?
-> 
-> (The discussion is available from the patchwork link in the signature.)
-> 
+This issue occurs because we request survey dump for wrong channel. With
+this change, we correctly display the correct and current survey
+information to userspace.
 
-My understanding is that Arend agrees with the patch and that the question
-raised was caused by looking at an older kernel version. IOW, the patch is
-OK and should be picked.
+Fixes: fa7937e3d5c2 ("ath10k: update bss channel survey information")
+Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I'm adding Arend to cc, so can comment in case I misunderstood him though.
-
-Best regards,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0bbd0a0..1fa3c17 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6538,7 +6538,7 @@ static int ath10k_get_survey(struct ieee80211_hw *hw, int idx,
+ 		goto exit;
+ 	}
+ 
+-	ath10k_mac_update_bss_chan_survey(ar, survey->channel);
++	ath10k_mac_update_bss_chan_survey(ar, &sband->channels[idx]);
+ 
+ 	spin_lock_bh(&ar->data_lock);
+ 	memcpy(survey, ar_survey, sizeof(*survey));
 -- 
-Javier Martinez Canillas
-Open Source Group
-Samsung Research America
+1.9.1
