@@ -1,55 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28124 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751648AbcI1JtG (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17820 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932302AbcIBP5j (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 05:49:06 -0400
+        Fri, 2 Sep 2016 11:57:39 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: ath10k: fix copy engine 5 destination ring stuck
+Subject: Re: ath10k: replace config_enabled() with IS_REACHABLE()
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160921105806.23980-1-rmanohar@qti.qualcomm.com>
-References: <20160921105806.23980-1-rmanohar@qti.qualcomm.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <stable@vger.kernel.org>,
-        <linux-wireless@vger.kernel.org>,
-        Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-        <rmanohar@codeaurora.org>
-Message-ID: <69a6e1629c9048da8db94c38bd911466@euamsexm01a.eu.qualcomm.com> (sfid-20160928_114911_193522_7C86DEA7)
-Date: Wed, 28 Sep 2016 11:48:58 +0200
+In-Reply-To: <1471969646-13119-1-git-send-email-yamada.masahiro@socionext.com>
+To: Masahiro Yamada <yamada.masahiro@socionext.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Masahiro Yamada" <yamada.masahiro@socionext.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>
+Message-ID: <388c99a317f2431596e43d0feee204c9@euamsexm01a.eu.qualcomm.com> (sfid-20160902_175745_476490_58F0046D)
+Date: Fri, 2 Sep 2016 17:57:30 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-> Firmware is running watchdog timer for tracking copy engine ring index
-> and write index. Whenever both indices are stuck at same location for
-> given duration, watchdog will be trigger to assert target. While
-> updating copy engine destination ring write index, driver ensures that
-> write index will not be same as read index by finding delta between these
-> two indices (CE_RING_DELTA).
+Masahiro Yamada <yamada.masahiro@socionext.com> wrote:
+> Commit 97f2645f358b ("tree-wide: replace config_enabled() with
+> IS_ENABLED()") mostly did away with config_enabled().
 > 
-> HTT target to host copy engine (CE5) is special case where ring buffers
-> will be reused and delta check is not applied while updating write index.
-> In rare scenario, whenever CE5 ring is full, both indices will be referring
-> same location and this is causing CE ring stuck issue as explained
-> above. This issue is originally reported on IPQ4019 during long hour stress
-> testing and during veriwave max clients testsuites. The same issue is
-> also observed in other chips as well. Fix this by ensuring that write
-> index is one less than read index which means that full ring is
-> available for receiving data.
+> This is one of the postponed TODO items as config_enabled() is used
+> for a tristate option here.  Theoretically, config_enabled() is
+> equivalent to IS_BUILTIN(), but I guess IS_REACHABLE() is the best
+> fit for this case because both CONFIG_HWMON and CONFIG_ATH10K are
+> tristate.
 > 
-> Cc: stable@vger.kernel.org
-> Tested-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
 
-Patch applied to ath-next branch of ath.git, thanks.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-0628467f97b5 ath10k: fix copy engine 5 destination ring stuck
+749bc03ae2cd ath10k: replace config_enabled() with IS_REACHABLE()
 
 -- 
-https://patchwork.kernel.org/patch/9343317/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Sent by pwcli
+https://patchwork.kernel.org/patch/9295945/
