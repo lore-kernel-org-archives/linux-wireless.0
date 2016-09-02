@@ -1,70 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:34641 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755249AbcI0Ldi (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:49274 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932537AbcIBPwQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 07:33:38 -0400
-Received: by mail-qk0-f178.google.com with SMTP id j129so4763282qkd.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 04:33:37 -0700 (PDT)
-Subject: Re: [PATCH 4.9] brcmfmac: use correct skb freeing helper when
- deleting flowring
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20160927091428.19223-1-zajec5@gmail.com>
- <86fd0b60-0f73-484b-1788-3ec740672232@broadcom.com>
- <87inthy441.fsf@kamboji.qca.qualcomm.com>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <c0e00728-e869-d39f-515f-2b540f1e47cc@broadcom.com> (sfid-20160927_133407_592895_8159D7BD)
-Date: Tue, 27 Sep 2016 13:33:17 +0200
+        Fri, 2 Sep 2016 11:52:16 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87inthy441.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+Subject: Re: ath10k: improve wake_tx_queue ops performance
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160817153253.6615-1-rmanohar@qti.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
+        <rmanohar@codeaurora.org>
+Message-ID: <2bbb5b5df5f44598ac35860bcf353d08@euamsexm01a.eu.qualcomm.com> (sfid-20160902_175220_670223_46DC54CA)
+Date: Fri, 2 Sep 2016 17:52:08 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-9-2016 13:27, Kalle Valo wrote:
-> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> txqs_lock is interfering with wake_tx_queue submitting more frames.
+> so queues don't get filled in and don't keep firmware/hardware busy
+> enough. This change helps to reduce the txqs_lock contention and
+> wake_tx_queue() blockage to being possible in txrx_unref().
 > 
->> On 27-9-2016 11:14, Rafał Miłecki wrote:
->>> From: Rafał Miłecki <rafal@milecki.pl>
->>>
->>> Flowrings contain skbs waiting for transmission that were passed to us
->>> by netif. It means we checked every one of them looking for 802.1x
->>> Ethernet type. When deleting flowring we have to use freeing function
->>> that will check for 802.1x type as well.
->>>
->>> Freeing skbs without a proper check was leading to counter not being
->>> properly decreased. This was triggering a WARNING every time
->>> brcmf_netdev_wait_pend8021x was called.
->>
->> Acked-by: Arend van Spriel <arend@broadcom.com>
->>> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
->>> ---
->>> Kalle: this isn't important enough for 4.8 as it's too late for that.
->>>
->>> I'd like to get it for 4.9 however, as this fixes bug that could lead
->>> to WARNING on every add_key/del_key call. We was struggling with these
->>> WARNINGs for some time and this fixes one of two problems causing them.
+> To reduce turn around time of wake_tx_queue ops and to maintain fairness
+> among all txqs, the callback is updated to push first txq alone from
+> pending list for every wake_tx_queue call. Remaining txqs will be
+> processed later upon tx completion.
 > 
-> Ok, I'll queue this for 4.9.
+> Below improvements are observed in push-only mode and validated on
+> IPQ4019 platform. With this change, in AP mode ~10Mbps increase is
+> observed in downlink (AP -> STA) traffic and approx. 5-10% of CPU
+> usage is reduced.
 > 
->> Please mark it for stable as well.
+> Major improvement is observed in 1-hop Mesh mode topology in 11ACVHT80.
+> Compared to Infra mode, CPU overhead is higher in Mesh mode due to path
+> lookup and no fast-xmit support. So reducing spin lock contention is
+> helping in Mesh.
 > 
-> I can add that. Any ideas how old releases stable releases should this
-> go to?
+>              TOT       +change
+>            --------    --------
+> TCP DL     545 Mbps    595 Mbps
+> TCP UL     555 Mbps    585 Mbps
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-Not sure if the vendor directory move causes issues as stable can not
-fallback to three-way merge. I assumed it would so my last stable tag
-was only for 4.7 and I took care of older kernels at later time with
-backported patch. I can do that for this one as well.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-Regards,
-Arend
+83e164b7679d ath10k: improve wake_tx_queue ops performance
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9286083/
