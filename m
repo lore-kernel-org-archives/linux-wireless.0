@@ -1,71 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:39990 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750961AbcI0NBj (ORCPT
+Received: from srv-hp10-72.netsons.net ([94.141.22.72]:36695 "EHLO
+        srv-hp10.netsons.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753564AbcIBM6O (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 09:01:39 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH v4] ath10k: Cleanup calling ath10k_htt_rx_h_unchain
-Date: Tue, 27 Sep 2016 18:31:40 +0530
-Message-ID: <1474981300-15945-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160927_150143_078938_12A94E3E)
-MIME-Version: 1.0
-Content-Type: text/plain
+        Fri, 2 Sep 2016 08:58:14 -0400
+From: Luca Ceresoli <luca@lucaceresoli.net>
+To: devel@driverdev.osuosl.org
+Cc: Luca Ceresoli <luca@lucaceresoli.net>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/6] rtl8723au: remove declaration of unimplemented functions
+Date: Fri,  2 Sep 2016 14:57:44 +0200
+Message-Id: <1472821069-5437-1-git-send-email-luca@lucaceresoli.net> (sfid-20160902_145943_198376_2B3A10D0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+These functions have been declared without any implementation since
+the first commit (364e30ebd2dbaccba430c603da03e68746eb932a) and there
+has been no mention of them in following commits.
 
-'ath10k_htt_rx_h_unchain' is need to be called only if the return
-value from 'ath10k_htt_rx_amsdu_pop' is 1('chained msdu's'), this
-change makes it more explicit and avoids doing a skb_peek, fetching
-rx descriptor pointer, checking rx msdu decap format for the case of
-ret = 0 (unchained msdus). Found this change during code walk through,
-not sure if this addresses any issue.
+Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-wireless@vger.kernel.org
+Cc: devel@driverdev.osuosl.org
+Cc: linux-kernel@vger.kernel.org
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 7ae9349..e51dace 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1459,8 +1459,7 @@ static int ath10k_unchain_msdu(struct sk_buff_head *amsdu)
- }
+Changes v1 -> v2:
+- improve the commit message.
+---
+ drivers/staging/rtl8723au/include/recv_osdep.h | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/include/recv_osdep.h b/drivers/staging/rtl8723au/include/recv_osdep.h
+index c2d3f1b..c159dbc 100644
+--- a/drivers/staging/rtl8723au/include/recv_osdep.h
++++ b/drivers/staging/rtl8723au/include/recv_osdep.h
+@@ -26,9 +26,6 @@ int rtw_recv_indicatepkt23a(struct rtw_adapter *adapter, struct recv_frame *prec
  
- static void ath10k_htt_rx_h_unchain(struct ath10k *ar,
--				    struct sk_buff_head *amsdu,
--				    bool chained)
-+				    struct sk_buff_head *amsdu)
- {
- 	struct sk_buff *first;
- 	struct htt_rx_desc *rxd;
-@@ -1471,9 +1470,6 @@ static void ath10k_htt_rx_h_unchain(struct ath10k *ar,
- 	decap = MS(__le32_to_cpu(rxd->msdu_start.common.info1),
- 		   RX_MSDU_START_INFO1_DECAP_FORMAT);
+ void rtw_handle_tkip_mic_err23a(struct rtw_adapter *padapter, u8 bgroup);
  
--	if (!chained)
--		return;
+-int	rtw_init_recv_priv(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
+-void rtw_free_recv_priv (struct recv_priv *precvpriv);
 -
- 	/* FIXME: Current unchaining logic can only handle simple case of raw
- 	 * msdu chaining. If decapping is other than raw the chaining may be
- 	 * more complex and this isn't handled by the current code. Don't even
-@@ -1550,7 +1546,11 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
- 	}
+ int rtw_os_recv_resource_init(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
  
- 	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
--	ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);
-+
-+	/* only for ret = 1 indicates chained msdus */
-+	if (ret > 0)
-+		ath10k_htt_rx_h_unchain(ar, &amsdu);
-+
- 	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
- 	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
- 	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
+ void rtw_init_recv_timer23a(struct recv_reorder_ctrl *preorder_ctrl);
 -- 
-1.9.1
+2.7.4
