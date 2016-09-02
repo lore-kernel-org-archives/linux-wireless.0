@@ -1,34 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35546 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756009AbcISFqU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:6668 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932701AbcIBPxy (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 01:46:20 -0400
-Received: from potku.adurom.net (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0F04D6165F
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 05:46:18 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-drivers-next soon closing for 4.9
-Date: Mon, 19 Sep 2016 08:46:16 +0300
-Message-ID: <8760ps5tnb.fsf@kamboji.qca.qualcomm.com> (sfid-20160919_074624_991699_9678A091)
+        Fri, 2 Sep 2016 11:53:54 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: ath10k: fix sending frame in management path in push txq logic
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1471514404-24098-1-git-send-email-arnagara@qti.qualcomm.com>
+To: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>,
+        Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>,
+        <arnagara@codeaurora.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <d88420cfb8264f28ac04cce477ed5cf1@euamsexm01a.eu.qualcomm.com> (sfid-20160902_175401_528926_7693D290)
+Date: Fri, 2 Sep 2016 17:53:46 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> wrote:
+> In the wake tx queue path, we are not checking if the frame to be sent
+> takes management path or not. For eg. QOS null func frame coming here will
+> take the management path. Since we are not incrementing the descriptor
+> counter (num_pending_mgmt_tx) w.r.t tx management, on tx completion it is
+> possible to see negative values.
+> 
+> When the above counter reaches a negative value, we will not be sending a
+> probe response out.
+> 
+>     if (is_presp &&
+> 	ar->hw_params.max_probe_resp_desc_thres < htt->num_pending_mgmt_tx)
+> 
+> For IPQ4019, max_probe_resp_desc_thres (u32) is 24 is compared against
+> num_pending_mgmt_tx (int) and the above condtions comes true if the counter
+> is negative and we drop the probe response.
+> 
+> To avoid this, check on the wake tx queue path as well for the tx path of
+> the frame and increment the appropriate counters
+> 
+> Fixes: cac085524cf1 "ath10k: move mgmt descriptor limit handle under mgmt_tx"
+> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
 
-Linus released 4.8-rc7 few hours and said that he "might" release -rc8
-still. So if there's anything which you absolutely want to have in 4.9
-send it now to make sure it makes it in time in the unlikely case that
--rc8 is not released. If -rc8 is released the deadline will be this
-week's Sunday.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-wireless-drivers remains open for important fixes.
+e4fd726f21cd ath10k: fix sending frame in management path in push txq logic
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/9287191/
