@@ -1,62 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57832 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932299AbcIHPzl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36219 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753689AbcIBQSJ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 11:55:41 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Javier Martinez Canillas <javier@osg.samsung.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Nishant Sarmukadam" <nishants@marvell.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: RE: mwifiex: propagate error if IRQ request fails in
- mwifiex_sdio_of()
-Date: Thu, 8 Sep 2016 15:55:34 +0000
-Message-ID: <0f15fe320fa34ae287f8a6b91ec78a34@SC-EXCH04.marvell.com> (sfid-20160908_175601_517573_2F1081ED)
-References: <20160903103520.8C69C6201B@smtp.codeaurora.org>
- <66735eb5-c831-8e06-337b-80ccfc392061@osg.samsung.com>
-In-Reply-To: <66735eb5-c831-8e06-337b-80ccfc392061@osg.samsung.com>
-Content-Type: text/plain; charset="utf-8"
+        Fri, 2 Sep 2016 12:18:09 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Ceresoli <luca@lucaceresoli.net>
+Cc: devel@driverdev.osuosl.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/6] rtl8723au: remove declaration of unimplemented functions
+References: <1472821069-5437-1-git-send-email-luca@lucaceresoli.net>
+Date: Fri, 02 Sep 2016 19:18:01 +0300
+In-Reply-To: <1472821069-5437-1-git-send-email-luca@lucaceresoli.net> (Luca
+        Ceresoli's message of "Fri, 2 Sep 2016 14:57:44 +0200")
+Message-ID: <87a8fq2s3q.fsf@purkki.adurom.net> (sfid-20160902_181814_715291_439238D6)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSmF2aWVyLA0KDQo+IEZyb206IEphdmllciBNYXJ0aW5leiBDYW5pbGxhcyBbbWFpbHRvOmph
-dmllckBvc2cuc2Ftc3VuZy5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIFNlcHRlbWJlciAwNiwgMjAx
-NiA1OjQzIFBNDQo+IFRvOiBLYWxsZSBWYWxvDQo+IENjOiBsaW51eC1rZXJuZWxAdmdlci5rZXJu
-ZWwub3JnOyBBbWl0a3VtYXIgS2Fyd2FyOw0KPiBuZXRkZXZAdmdlci5rZXJuZWwub3JnOyBsaW51
-eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IE5pc2hhbnQNCj4gU2FybXVrYWRhbTsgQXJlbmQg
-dmFuIFNwcmllbA0KPiBTdWJqZWN0OiBSZTogbXdpZmlleDogcHJvcGFnYXRlIGVycm9yIGlmIElS
-USByZXF1ZXN0IGZhaWxzIGluDQo+IG13aWZpZXhfc2Rpb19vZigpDQo+IA0KPiBIZWxsbyBLYWxs
-ZSwNCj4gDQo+IE9uIDA5LzAzLzIwMTYgMTI6MzUgUE0sIEthbGxlIFZhbG8gd3JvdGU6DQo+ID4g
-SmF2aWVyIE1hcnRpbmV6IENhbmlsbGFzIDxqYXZpZXJAb3NnLnNhbXN1bmcuY29tPiB3cm90ZToN
-Cj4gPj4gSWYgcmVxdWVzdF9pcnEoKSBmYWlscyBpbiBtd2lmaWV4X3NkaW9fcHJvYmVfb2YoKSwg
-b25seSBhbiBlcnJvcg0KPiA+PiBtZXNzYWdlIGlzIHByaW50ZWQgYnV0IHRoZSBhY3R1YWwgZXJy
-b3IgaXMgbm90IHByb3BhZ2F0ZWQgdG8gdGhlDQo+IGNhbGxlciBmdW5jdGlvbi4NCj4gPj4NCj4g
-Pj4gU2lnbmVkLW9mZi1ieTogSmF2aWVyIE1hcnRpbmV6IENhbmlsbGFzIDxqYXZpZXJAb3NnLnNh
-bXN1bmcuY29tPg0KPiA+DQo+ID4gV2hhdCdzIHRoZSBjb25jbHVzaW9uIHdpdGggdGhpcyBwYXRj
-aD8gU2hvdWxkIEkgZHJvcCBpdCBvciB0YWtlIGl0Pw0KPiA+DQo+ID4gKFRoZSBkaXNjdXNzaW9u
-IGlzIGF2YWlsYWJsZSBmcm9tIHRoZSBwYXRjaHdvcmsgbGluayBpbiB0aGUNCj4gPiBzaWduYXR1
-cmUuKQ0KPiA+DQo+IA0KPiBNeSB1bmRlcnN0YW5kaW5nIGlzIHRoYXQgQXJlbmQgYWdyZWVzIHdp
-dGggdGhlIHBhdGNoIGFuZCB0aGF0IHRoZQ0KPiBxdWVzdGlvbiByYWlzZWQgd2FzIGNhdXNlZCBi
-eSBsb29raW5nIGF0IGFuIG9sZGVyIGtlcm5lbCB2ZXJzaW9uLiBJT1csDQo+IHRoZSBwYXRjaCBp
-cyBPSyBhbmQgc2hvdWxkIGJlIHBpY2tlZC4NCj4gDQo+IEknbSBhZGRpbmcgQXJlbmQgdG8gY2Ms
-IHNvIGNhbiBjb21tZW50IGluIGNhc2UgSSBtaXN1bmRlcnN0b29kIGhpbQ0KPiB0aG91Z2guDQo+
-IA0KDQpUaGlzIGVycm9yIGRvZXNuJ3QgYWZmZWN0IGFjdHVhbCB3aWZpIGZ1bmN0aW9uYWxpdHku
-IE9ubHkgdGhpbmcgaXMgd2FrZXVwIG9uIGludGVycnVwdCB3aGVuIHN5c3RlbSBpcyBpbiBzdXNw
-ZW5kZWQgc3RhdGUgd29uJ3Qgd29yay4NCkkgdGhpbmssIHdlIGNhbiBtYWtlIGJlbG93IGNoYW5n
-ZS4gDQoNCi0tLS0tLS0tLS0tLS0tLS0tLQ0KQEAgLTEyMiw5ICsxMjIsMTEgQEAgc3RhdGljIGlu
-dCBtd2lmaWV4X3NkaW9fcHJvYmVfb2Yoc3RydWN0IGRldmljZSAqZGV2LCBzdHJ1Y3Qgc2Rpb19t
-bWNfY2FyZCAqY2FyZCkNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgSVJRRl9UUklHR0VSX0xPVywNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIndpZmlfd2FrZSIsIGNmZyk7DQogICAgICAgICAgIGlmIChyZXQpIHsN
-Ci0gICAgICAgICAgICAgICAgICAgIGRldl9lcnIoZGV2LA0KKyAgICAgICAgICAgICAgICAgICAg
-ZGV2X2RiZyhkZXYsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICJGYWlsZWQgdG8gcmVx
-dWVzdCBpcnFfd2lmaSAlZCAoJWQpXG4iLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICBj
-ZmctPmlycV93aWZpLCByZXQpOw0KKyAgICAgICAgICAgICAgICAgICAgY2FyZC0+cGx0X3dha2Vf
-Y2ZnID0gTlVMTDsNCisgICAgICAgICAgICAgICAgICAgIHJldHVybiAwOw0KICAgICAgICAgICAg
-IH0NCiAgICAgICAgICAgICAgICBkaXNhYmxlX2lycShjZmctPmlycV93aWZpKTsNCiAgICAgICAg
-ICAgIH0NCi0tLS0tLS0tLS0tLS0tLS0tDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
+Luca Ceresoli <luca@lucaceresoli.net> writes:
+
+> These functions have been declared without any implementation since
+> the first commit (364e30ebd2dbaccba430c603da03e68746eb932a) and there
+> has been no mention of them in following commits.
+>
+> Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
+> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: devel@driverdev.osuosl.org
+> Cc: linux-kernel@vger.kernel.org
+>
+> ---
+>
+> Changes v1 -> v2:
+> - improve the commit message.
+> ---
+>  drivers/staging/rtl8723au/include/recv_osdep.h | 3 ---
+>  1 file changed, 3 deletions(-)
+
+Please prefix staging drivers with "staging:".
+
+-- 
+Kalle Valo
