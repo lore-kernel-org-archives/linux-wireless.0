@@ -1,83 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45488 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752590AbcI1Kzn (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:38615 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754495AbcICQfL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 06:55:43 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Mathias Kresin <dev@kresin.me>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [v2] rt2x00: add support for mac addr from device tree
-References: <1472195813-30471-1-git-send-email-dev@kresin.me>
-        <20160927155057.A4182616F6@smtp.codeaurora.org>
-        <CABwW5nn9gGpzBQq3ag1MhsA-bxGop93=C7mjZG9nmi26G4ar5A@mail.gmail.com>
-Date: Wed, 28 Sep 2016 13:55:38 +0300
-In-Reply-To: <CABwW5nn9gGpzBQq3ag1MhsA-bxGop93=C7mjZG9nmi26G4ar5A@mail.gmail.com>
-        (Mathias Kresin's message of "Wed, 28 Sep 2016 12:36:46 +0200")
-Message-ID: <87shskwaxh.fsf@kamboji.qca.qualcomm.com> (sfid-20160928_125547_945704_98F9C83A)
+        Sat, 3 Sep 2016 12:35:11 -0400
+Subject: Re: [PATCH] ath10k: fix memory leak on caldata on error exit path
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <1471268785-11576-1-git-send-email-colin.king@canonical.com>
+ <87r392z4ox.fsf@kamboji.qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Colin Ian King <colin.king@canonical.com>
+Message-ID: <4e586d21-51cf-768c-4aee-9b0a147f1183@canonical.com> (sfid-20160903_183537_588429_0699AB71)
+Date: Sat, 3 Sep 2016 17:33:40 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87r392z4ox.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mathias Kresin <dev@kresin.me> writes:
-
-> 2016-09-27 17:50 GMT+02:00 Kalle Valo <kvalo@codeaurora.org>:
->> Mathias Kresin <dev@kresin.me> wrote:
->>> On some devices the EEPROMs of Ralink Wi-Fi chips have a default Ralink
->>> MAC address set (RT3062F: 00:0C:43:30:62:00, RT3060F:
->>> 00:0C:43:30:60:00). Using multiple of these devices in the same network
->>> can cause nasty issues.
->>>
->>> Allow to override the MAC in the EEPROM with (a known good) one set in
->>> the device tree to bypass the issue.
->>>
->>> Signed-off-by: Mathias Kresin <dev@kresin.me>
->>> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On 02/09/16 16:45, Valo, Kalle wrote:
+> Colin King <colin.king@canonical.com> writes:
+> 
+>> From: Colin Ian King <colin.king@canonical.com>
 >>
->> I think this needs to update the devicetree binding document. Also
->> remember to CC the devicetree mailing list.
+>> caldata is not being free'd on the error exit path, causing
+>> a memory leak. kfree it to fix the leak.
 >>
->> Patch set to Changes Requested.
+>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/pci.c | 1 +
+>>  1 file changed, 1 insertion(+)
 >>
->> --
->> https://patchwork.kernel.org/patch/9300893/
->
-> Hey Kalle,
->
-> was it intentional not to CC the linux-wireless list?
+>> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+>> index 9a22c47..886337c 100644
+>> --- a/drivers/net/wireless/ath/ath10k/pci.c
+>> +++ b/drivers/net/wireless/ath/ath10k/pci.c
+>> @@ -2725,6 +2725,7 @@ static int ath10k_pci_hif_fetch_cal_eeprom(struct ath10k *ar, void **data,
+>>  	return 0;
+>>  
+>>  err_free:
+>> +	kfree(caldata);
+>>  	kfree(data);
+>>  
+>>  	return -EINVAL;
+> 
+> I don't think we should free data at all:
+> 
+> static int ath10k_download_cal_eeprom(struct ath10k *ar)
+> {
+> 	size_t data_len;
+> 	void *data = NULL;
+> 	int ret;
+> 
+> 	ret = ath10k_hif_fetch_cal_eeprom(ar, &data, &data_len);
+> 
+> Instead we should free only caldata, right?
+> 
+Yep, good catch, I'll send V2 later.
 
-No, that was a bug in my script. Thanks for noticing it! Please always
-report back if my script does something strange.
-
-I'm adding now linux-wireless back.
-
-> I thought about _adding_ a devicetree binding document before sending
-> the patch. But in the end it would be an empty file, since I neither
-> add any bindings nor introduce a compatible string. I'm just add
-> support for the generic of_get_mac_address() devicetree property,
-> which is meant to be used via a devicetree pci childnode.
->
-> I grepped though the 4.7 code and found a few driver using
-> of_get_mac_address() without having a devicetree binding document:
->
-> - drivers/net/usb/smsc95xx.c
-> - drivers/net/usb/smsc75xx.c
-> - drivers/net/ethernet/marvell/sky2.c
-> - drivers/net/ethernet/cavium/thunder/thunder_bgx.c
-> - drivers/net/ethernet/wiznet/w5100-spi.c
-> - drivers/net/ethernet/arc/emac_main.c
->
-> Just let me know if you are still the opinion that a devicetree
-> binding document is required to get this patch accepted.
-
-I'm not familiar enough device tree to really comment. Can someone from
-the device tree list (CCed) help?
-
-Full patch here:
-
-https://patchwork.kernel.org/patch/9300893/
-
-
--- 
-Kalle Valo
+Colin
