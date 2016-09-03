@@ -1,56 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34274 "EHLO
-        mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756627AbcISLKZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56773 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751987AbcICKDz (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 07:10:25 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 7/9] brcmfmac: fix clearing entry IPv6 address
-Date: Mon, 19 Sep 2016 12:09:57 +0100
-Message-Id: <1474283399-14385-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131042_113373_21566E3F)
-In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sat, 3 Sep 2016 06:03:55 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: wl3501_cs: Add spinlock to wl3501_reset
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1470130913-5218-1-git-send-email-andrianov@ispras.ru>
+To: Pavel Andrianov <andrianov@ispras.ru>
+Cc: Arnaldo Carvalho de Melo <acme@redhat.com>,
+        Pavel Andrianov <andrianov@ispras.ru>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org,
+        vaishali.thakkar@oracle.com
+Message-Id: <20160903100136.BB94A6201C@smtp.codeaurora.org> (sfid-20160903_120401_769224_DAAB7828)
+Date: Sat,  3 Sep 2016 10:01:36 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <hante.meuleman@broadcom.com>
+Pavel Andrianov <andrianov@ispras.ru> wrote:
+> Likely wl3501_reset should acquire spinlock as wl3501_{open, close}.
+> One of calls of wl3501_reset has been already protected.
+> The others were unprotected and might lead to a race condition.
+> The patch adds spinlock into the wl3501_reset and removes it from 
+> wl3501_tx_timeout.
+> 
+> Found by Linux Driver Verification project (linuxtesting.org)
+> 
+> Signed-off-by: Pavel Andrianov <andrianov@ispras.ru>
+> Acked-by: Vaishali Thakkar <vaishali.thakkar@oracle.com>
 
-When IPv6 address is to be cleared there is a possible out of
-bound access. But also the clearing of the last entry and the
-adjustment of total number of stored IPv6 addresses is not
-updated. This patch fixes that bug. Bug was found using coverity.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+bd6b0242652a wl3501_cs: Add spinlock to wl3501_reset
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 3394184..bb71199 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -873,9 +873,12 @@ static int brcmf_inet6addr_changed(struct notifier_block *nb,
- 		}
- 		break;
- 	case NETDEV_DOWN:
--		if (i < NDOL_MAX_ENTRIES)
--			for (; i < ifp->ipv6addr_idx; i++)
-+		if (i < NDOL_MAX_ENTRIES) {
-+			for (; i < ifp->ipv6addr_idx - 1; i++)
- 				table[i] = table[i + 1];
-+			memset(&table[i], 0, sizeof(table[i]));
-+			ifp->ipv6addr_idx--;
-+		}
- 		break;
- 	default:
- 		break;
 -- 
-1.9.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9255415/
