@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57296 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754615AbcILJh3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 05:37:29 -0400
-Message-ID: <1473673046.27358.0.camel@sipsolutions.net> (sfid-20160912_113732_871651_CB48F9D1)
-Subject: Re: [PATCH 1/3 v3] mac80211: RX BA support for sta
- max_rx_aggregation_subframes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Maxim Altshul <maxim.altshul@ti.com>,
-        linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Date: Mon, 12 Sep 2016 11:37:26 +0200
-In-Reply-To: <20160822141404.12814-1-maxim.altshul@ti.com>
-References: <20160822141404.12814-1-maxim.altshul@ti.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:57338 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752516AbcICKIW (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 3 Sep 2016 06:08:22 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: rt2x00usb: Fix error return code
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1470926334-24532-1-git-send-email-christophe.jaillet@wanadoo.fr>
+To: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
+Cc: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Message-Id: <20160903100705.35E6B62023@smtp.codeaurora.org> (sfid-20160903_120854_619320_8C77645C)
+Date: Sat,  3 Sep 2016 10:07:05 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-08-22 at 17:14 +0300, Maxim Altshul wrote:
-> The ability to change the max_rx_aggregation frames is useful
-> in cases of IOP.
+Christophe Jaillet <christophe.jaillet@wanadoo.fr> wrote:
+> We know that 'retval = 0' because it has been tested a few lines above.
+> So, if 'devm_kmalloc' fails, 0 will be returned instead of an error code.
+> Return -ENOMEM instead.
 > 
-> There exist some devices (latest mobile phones and some AP's)
-> that tend to not respect a BA sessions maximum size (in Kbps).
-> These devices won't respect the AMPDU size that was negotiated during
-> associasion (even though they do respect the maximal number of
-> packets).
-> 
-> This violation is characterized by a valid number of packets in
-> a single AMPDU. Even so, the total size will exceed the size
-> negotiated
-> during association.
-> 
-> Eventually, this will cause some undefined behavior, which in turn
-> causes the hw to drop packets, causing the throughput to plummet.
-> 
-> This patch will make the subframe limitation to be held by each
-> station,
-> instead of being held only by hw.
-> 
-> Signed-off-by: Maxim Altshul <maxim.altshul@ti.com>
-> 
-Applied.
+> Fixes: 8b4c0009313f ("rt2x00usb: Use usb anchor to manage URB")
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
-I fixed the indentation of the commit message, please note for the
-future.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-johannes
+410280bac622 rt2x00usb: Fix error return code
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9275379/
