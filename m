@@ -1,182 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from condef009-v.nifty.com ([210.131.4.246]:51510 "EHLO
-        condef009-v.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755817AbcILTBL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57187 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752499AbcICKH3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 15:01:11 -0400
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-To: Greg KH <gregkh@linuxfoundation.org>, devel@driverdev.osuosl.org
-Cc: Masahiro Yamada <yamada.masahiro@socionext.com>,
-        linux-fbdev@vger.kernel.org,
-        Andreas Dilger <andreas.dilger@intel.com>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Teddy Wang <teddy.wang@siliconmotion.com>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        Laura Abbott <labbott@redhat.com>,
-        =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Riley Andrews <riandrews@android.com>,
-        Oleg Drokin <oleg.drokin@intel.com>,
-        lustre-devel@lists.lustre.org
-Subject: [PATCH] staging: squash lines for simple wrapper functions
-Date: Tue, 13 Sep 2016 03:57:48 +0900
-Message-Id: <1473706668-24216-1-git-send-email-yamada.masahiro@socionext.com> (sfid-20160912_210114_747369_F5C260FE)
+        Sat, 3 Sep 2016 06:07:29 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [1/3] mwifiex: correct aid value during tdls setup
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1470754246-635-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Xinming Hu <huxm@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160903100607.688F9612C0@smtp.codeaurora.org> (sfid-20160903_120732_973932_7EF0605E)
+Date: Sat,  3 Sep 2016 10:06:07 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove unneeded variables and assignments.
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> AID gets updated during TDLS setup, but modified value isn't reflected
+> in "priv->assoc_rsp_buf". This causes TDLS setup failure. The problem is
+> fixed here.
+> 
+> Fixes: 4aff53ef18e4a4 ("mwifiex: parsing aid while receiving..")
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-While we are here, clean up the following as well:
-  - refactor rtl8723a_get_bcn_valid() a bit
-  - remove unneeded casts in sii164Get{Vendor,Device}ID()
+Thanks, 3 patches applied to wireless-drivers-next.git:
 
-Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
----
+b64db1b252e9 mwifiex: correct aid value during tdls setup
+41960b4dfdfc mwifiex: add CHAN_REGION_CFG command
+72539799104d mwifiex: add custom regulatory domain support
 
- drivers/staging/android/ion/ion.c                        |  6 +-----
- .../staging/lustre/lustre/obdclass/linux/linux-module.c  |  5 +----
- drivers/staging/lustre/lustre/ptlrpc/client.c            |  5 +----
- drivers/staging/lustre/lustre/ptlrpc/events.c            |  5 +----
- drivers/staging/rtl8723au/core/rtw_wlan_util.c           |  7 +------
- drivers/staging/rtl8723au/hal/hal_com.c                  |  6 +-----
- drivers/staging/sm750fb/ddk750_sii164.c                  | 16 ++++------------
- 7 files changed, 10 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/staging/android/ion/ion.c b/drivers/staging/android/ion/ion.c
-index a2cf93b..a07fc03 100644
---- a/drivers/staging/android/ion/ion.c
-+++ b/drivers/staging/android/ion/ion.c
-@@ -389,11 +389,7 @@ static void ion_handle_get(struct ion_handle *handle)
- 
- static int ion_handle_put_nolock(struct ion_handle *handle)
- {
--	int ret;
--
--	ret = kref_put(&handle->ref, ion_handle_destroy);
--
--	return ret;
-+	return kref_put(&handle->ref, ion_handle_destroy);
- }
- 
- static int ion_handle_put(struct ion_handle *handle)
-diff --git a/drivers/staging/lustre/lustre/obdclass/linux/linux-module.c b/drivers/staging/lustre/lustre/obdclass/linux/linux-module.c
-index 33342bf..3f2dd95 100644
---- a/drivers/staging/lustre/lustre/obdclass/linux/linux-module.c
-+++ b/drivers/staging/lustre/lustre/obdclass/linux/linux-module.c
-@@ -152,10 +152,7 @@ EXPORT_SYMBOL(obd_ioctl_getdata);
- 
- int obd_ioctl_popdata(void __user *arg, void *data, int len)
- {
--	int err;
--
--	err = copy_to_user(arg, data, len) ? -EFAULT : 0;
--	return err;
-+	return copy_to_user(arg, data, len) ? -EFAULT : 0;
- }
- EXPORT_SYMBOL(obd_ioctl_popdata);
- 
-diff --git a/drivers/staging/lustre/lustre/ptlrpc/client.c b/drivers/staging/lustre/lustre/ptlrpc/client.c
-index d4463d7..38cbf4a 100644
---- a/drivers/staging/lustre/lustre/ptlrpc/client.c
-+++ b/drivers/staging/lustre/lustre/ptlrpc/client.c
-@@ -417,10 +417,7 @@ void ptlrpc_request_cache_fini(void)
- 
- struct ptlrpc_request *ptlrpc_request_cache_alloc(gfp_t flags)
- {
--	struct ptlrpc_request *req;
--
--	req = kmem_cache_zalloc(request_cache, flags);
--	return req;
-+	return kmem_cache_zalloc(request_cache, flags);
- }
- 
- void ptlrpc_request_cache_free(struct ptlrpc_request *req)
-diff --git a/drivers/staging/lustre/lustre/ptlrpc/events.c b/drivers/staging/lustre/lustre/ptlrpc/events.c
-index b1ce725..8821f4d 100644
---- a/drivers/staging/lustre/lustre/ptlrpc/events.c
-+++ b/drivers/staging/lustre/lustre/ptlrpc/events.c
-@@ -525,10 +525,7 @@ static void ptlrpc_ni_fini(void)
- 
- static lnet_pid_t ptl_get_pid(void)
- {
--	lnet_pid_t pid;
--
--	pid = LNET_PID_LUSTRE;
--	return pid;
-+	return LNET_PID_LUSTRE;
- }
- 
- static int ptlrpc_ni_init(void)
-diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-index 694cf17..7ab47f0 100644
---- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-+++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-@@ -1202,12 +1202,7 @@ unsigned int update_supported_rate23a(unsigned char *ptn, unsigned int ptn_sz)
- 
- unsigned int update_MSC_rate23a(struct ieee80211_ht_cap *pHT_caps)
- {
--	unsigned int mask;
--
--	mask = pHT_caps->mcs.rx_mask[0] << 12 |
--		pHT_caps->mcs.rx_mask[1] << 20;
--
--	return mask;
-+	return pHT_caps->mcs.rx_mask[0] << 12 | pHT_caps->mcs.rx_mask[1] << 20;
- }
- 
- int support_short_GI23a(struct rtw_adapter *padapter,
-diff --git a/drivers/staging/rtl8723au/hal/hal_com.c b/drivers/staging/rtl8723au/hal/hal_com.c
-index 9d7b11b..dfbeebe 100644
---- a/drivers/staging/rtl8723au/hal/hal_com.c
-+++ b/drivers/staging/rtl8723au/hal/hal_com.c
-@@ -708,11 +708,7 @@ void rtl8723a_bcn_valid(struct rtw_adapter *padapter)
- 
- bool rtl8723a_get_bcn_valid(struct rtw_adapter *padapter)
- {
--	bool retval;
--
--	retval = (rtl8723au_read8(padapter, REG_TDECTRL + 2) & BIT(0)) ? true : false;
--
--	return retval;
-+	return !!(rtl8723au_read8(padapter, REG_TDECTRL + 2) & BIT(0));
- }
- 
- void rtl8723a_set_beacon_interval(struct rtw_adapter *padapter, u16 interval)
-diff --git a/drivers/staging/sm750fb/ddk750_sii164.c b/drivers/staging/sm750fb/ddk750_sii164.c
-index 67f36e7..28818e1 100644
---- a/drivers/staging/sm750fb/ddk750_sii164.c
-+++ b/drivers/staging/sm750fb/ddk750_sii164.c
-@@ -36,12 +36,8 @@ static char *gDviCtrlChipName = "Silicon Image SiI 164";
-  */
- unsigned short sii164GetVendorID(void)
- {
--	unsigned short vendorID;
--
--	vendorID = ((unsigned short) i2cReadReg(SII164_I2C_ADDRESS, SII164_VENDOR_ID_HIGH) << 8) |
--		    (unsigned short) i2cReadReg(SII164_I2C_ADDRESS, SII164_VENDOR_ID_LOW);
--
--	return vendorID;
-+	return (i2cReadReg(SII164_I2C_ADDRESS, SII164_VENDOR_ID_HIGH) << 8) |
-+		i2cReadReg(SII164_I2C_ADDRESS, SII164_VENDOR_ID_LOW);
- }
- 
- /*
-@@ -53,12 +49,8 @@ unsigned short sii164GetVendorID(void)
-  */
- unsigned short sii164GetDeviceID(void)
- {
--	unsigned short deviceID;
--
--	deviceID = ((unsigned short) i2cReadReg(SII164_I2C_ADDRESS, SII164_DEVICE_ID_HIGH) << 8) |
--		    (unsigned short) i2cReadReg(SII164_I2C_ADDRESS, SII164_DEVICE_ID_LOW);
--
--	return deviceID;
-+	return (i2cReadReg(SII164_I2C_ADDRESS, SII164_DEVICE_ID_HIGH) << 8) |
-+		i2cReadReg(SII164_I2C_ADDRESS, SII164_DEVICE_ID_LOW);
- }
- 
- 
 -- 
-1.9.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9271429/
