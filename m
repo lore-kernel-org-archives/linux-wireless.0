@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:43822 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933050AbcI3Of4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 10:35:56 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH 3/3] mac80211: Set lower memory limit for non-VHT devices
-References: <20160923195911.4572-1-toke@toke.dk>
-        <20160923195911.4572-4-toke@toke.dk>
-        <1475235230.17481.43.camel@sipsolutions.net> <87twcx5zll.fsf@toke.dk>
-        <1475239915.17481.63.camel@sipsolutions.net>
-Date: Fri, 30 Sep 2016 16:35:49 +0200
-In-Reply-To: <1475239915.17481.63.camel@sipsolutions.net> (Johannes Berg's
-        message of "Fri, 30 Sep 2016 14:51:55 +0200")
-Message-ID: <87h98x5ube.fsf@toke.dk> (sfid-20160930_163602_164677_27037932)
+Received: from smtp.codeaurora.org ([198.145.29.96]:58828 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752240AbcICK2W (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 3 Sep 2016 06:28:22 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: fix:rtl8xxxu_core: mark symbols static where possible
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1472314476-23351-1-git-send-email-baoyou.xie@linaro.org>
+To: Baoyou Xie <baoyou.xie@linaro.org>
+Cc: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        arnd@linaro.org, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
+Message-Id: <20160903102821.BFC0F62017@smtp.codeaurora.org> (sfid-20160903_122847_702389_E6B730B1)
+Date: Sat,  3 Sep 2016 10:28:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Baoyou Xie <baoyou.xie@linaro.org> wrote:
+> We get 1 warning about global functions without a declaration
+> in the rtl8xxxu rtl8xxxu_core.c when building with W=1:
+> drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c:898:1: warning: no previous prototype for 'rtl8xxxu_gen1_h2c_cmd' [-Wmissing-prototypes]
+> 
+> In fact, this function is only used in the file in which it is declared
+> and don't need a declaration, but can be made static.
+> so this patch marks it 'static'.
+> 
+> Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
 
->> > I kinda see the logic here - we really don't need to queue as much
->> > if we can't possibly transmit it out quickly - but it seems to me
->> > we should also throw in some kind of limit that's relative to the
->> > amount of memory you have on the system?
->> 
->> Yes, ideally. That goes for FQ-CoDel as well, BTW. LEDE currently
->> carries a patch for that which just changes the hard-coded default to
->> another hard-coded default. Not sure how to get a good value to use,
->> though; and deciding on how large a fraction of memory to use for
->> packets starts smelling an awful lot like setting policy in the
->> kernel, doesn't it?
->
-> Yeah, I agree it does seem awkward.
->
-> Perhaps we should instead pick a low limit and let users change it
-> more easily (i.e. not debugfs)? I don't know a good answer to this
-> either.
+The title should be "rtl8xxxu: ". See:
 
-Hmm, I'll talk it over with some of the LEDE people who are more used to
-dealing with these sorts of memory-constrained devices than I am. Will
-send a patch if we come up with a good solution :)
+https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches#subject_name
 
--Toke
+Also I assume Jes will take this.
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9302457/
