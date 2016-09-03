@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f43.google.com ([209.85.213.43]:34503 "EHLO
-        mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752626AbcIMN5T (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56250 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752270AbcICJz6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 09:57:19 -0400
-Received: by mail-vk0-f43.google.com with SMTP id v189so178277902vkv.1
-        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2016 06:57:19 -0700 (PDT)
+        Sat, 3 Sep 2016 05:55:58 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <87bmztm8qm.fsf@kamboji.qca.qualcomm.com>
-References: <1470140454-3899-1-git-send-email-bartosz.markowski@tieto.com>
- <1470140454-3899-3-git-send-email-bartosz.markowski@tieto.com> <87bmztm8qm.fsf@kamboji.qca.qualcomm.com>
-From: Bartosz Markowski <bartosz.markowski@tieto.com>
-Date: Tue, 13 Sep 2016 15:57:17 +0200
-Message-ID: <CACKGw+FAwPb2NLW5G8CnGH4X2eCCjUkuJwLoqW9w9rKpDuQJDw@mail.gmail.com> (sfid-20160913_155722_626272_EBF8255A)
-Subject: Re: [PATCH 2/2] ath10k: add platform regulatory domain support
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [-next] wlcore: spi: fix non static symbol warning
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1469196488-21050-1-git-send-email-weiyj.lk@gmail.com>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: "Andrew F. Davis" <afd@ti.com>, Arnd Bergmann <arnd@arndb.de>,
+        Igor Grinberg <grinberg@compulab.co.il>,
+        Uri Mashiach <uri.mashiach@compulab.co.il>,
+        Rob Herring <robh@kernel.org>, "Reizer, Eyal" <eyalr@ti.com>,
+        Wei Yongjun <weiyj.lk@gmail.com>,
+        linux-wireless@vger.kernel.org
+Message-Id: <20160903095557.F023661ADF@smtp.codeaurora.org> (sfid-20160903_115601_597781_1B52F54F)
+Date: Sat,  3 Sep 2016 09:55:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12 September 2016 at 17:35, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+Wei Yongjun <weiyj.lk@gmail.com> wrote:
+> Fixes the following sparse warning:
+> 
+> drivers/net/wireless/ti/wlcore/spi.c:87:34: warning:
+>  symbol 'wilink_data' was not declared. Should it be static?
+> 
+> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
 
-[...]
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-> > +#ifdef CONFIG_ACPI
-> > +#define WRD_METHOD "WRDD"
-> > +#define WRDD_WIFI  (0x07)
-> > +
-> > +static u32 ath10k_mac_wrdd_get_mcc(struct ath10k *ar, union acpi_object *wrdd)
-> > +{
->
-> I don't think the ifdef is really necessary, acpi.h should handle that
-> (hopefully). Also I changed the error handling to use standard error
-> values and changed the info messages to dbg, they are too spammy in my
-> opinion. Please check carefully my changes in the pending branch:
->
-> https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=fe91745381ec3999d8de6dedb07b396c82539717
+4ad0579a28c0 wlcore: spi: fix non static symbol warning
 
-I'm OK with the changes, I have not tried that though, except of
-reviewing and compiling it (do not have access to the chromebook for
-next few days). If you want to wait with it until I test it, it's fine
-too.
-
-Bartosz
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9243695/
