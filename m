@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:32795 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753524AbcICQI4 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47030 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753168AbcICOK3 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 12:08:56 -0400
-Date: Sat, 3 Sep 2016 19:08:51 +0300
-From: Giedrius =?utf-8?Q?Statkevi=C4=8Dius?=
-        <giedrius.statkevicius@gmail.com>
-To: kvalo@codeaurora.org
-Cc: ath9k-devel@qca.qualcomm.com, linux-wireless@vger.kernel.org,
-        ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Miaoqing Pan <miaoqing@codeaurora.org>,
-        Kalle Valo <kvalo@qca.qualcomm.com>, stable@vger.kernel.org
-Subject: Re: [PATCH] ath9k: bring back direction setting in ath9k_{start_stop}
-Message-ID: <20160903160851.GA27396@tyrael> (sfid-20160903_180915_596509_BCA55532)
-References: <20160901174702.8645-1-giedrius.statkevicius@gmail.com>
+        Sat, 3 Sep 2016 10:10:29 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160901174702.8645-1-giedrius.statkevicius@gmail.com>
+Subject: Re: [v2] bcma: use of_dma_configure() to set initial dma mask
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1458207563-3453369-1-git-send-email-arnd@arndb.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <20160903140819.359A96216A@smtp.codeaurora.org> (sfid-20160903_161037_454187_64E079B5)
+Date: Sat,  3 Sep 2016 14:08:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some more users complaining about this:
-https://bbs.archlinux.org/viewtopic.php?id=215978
+Arnd Bergmann <arnd@arndb.de> wrote:
+> While fixing another bug, I noticed that bcma manually sets up
+> a dma_mask pointer for its child devices. We have a generic
+> helper for that now, which should be able to cope better with
+> any variations that might be needed to deal with cache coherency,
+> unusual DMA address offsets, iommus, or limited DMA masks, none
+> of which are currently handled here.
+> 
+> This changes the core to use the of_dma_configure(), like
+> we do for platform devices that are probed directly from
+> DT.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-On Thu, Sep 01, 2016 at 08:47:02PM +0300, Giedrius Statkevičius wrote:
-> A regression was introduced in commit id 79d4db1214a ("ath9k: cleanup
-> led_pin initial") that broken the WLAN status led on my laptop with
-> AR9287 after suspending and resuming.
-> 
-> Steps to reproduce:
-> * Suspend (laptop)
-> * Resume (laptop)
-> * Observe that the WLAN led no longer turns ON/OFF depending on the
->   status and is always red
-> 
-> Even though for my case it only needs to be set to OUT in ath9k_start
-> but for consistency bring back the IN direction setting as well.
-> 
-> Cc: Miaoqing Pan <miaoqing@codeaurora.org>
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
-> ---
-[...]
+Nobody tested this, so I'll drop the patch.
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/8608751/
