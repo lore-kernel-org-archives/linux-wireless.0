@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:58902 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932094AbcILIOJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48036 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752654AbcICOa4 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 04:14:09 -0400
-Date: Mon, 12 Sep 2016 10:14:14 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Luca Ceresoli <luca@lucaceresoli.net>
-Cc: devel@driverdev.osuosl.org, Jes Sorensen <Jes.Sorensen@redhat.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH v3 1/6] staging: rtl8723au: remove unimplemented
- functions declaration
-Message-ID: <20160912081414.GA26862@kroah.com> (sfid-20160912_101429_349175_E910076D)
-References: <1473179817-7277-1-git-send-email-luca@lucaceresoli.net>
+        Sat, 3 Sep 2016 10:30:56 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1473179817-7277-1-git-send-email-luca@lucaceresoli.net>
+Subject: Re: [v2] ErrHandling:Make IS_ERR_VALUE_U32 as generic API to avoid
+ IS_ERR_VALUE abuses.
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1468083696-15283-1-git-send-email-arvind.yadav.cs@gmail.com>
+To: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Cc: zajec5@gmail.com, viresh.kumar@linaro.org,
+        akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linville@tuxdriver.com,
+        Arvind Yadav <arvind.yadav.cs@gmail.com>
+Message-Id: <20160903142913.16FBA6216D@smtp.codeaurora.org> (sfid-20160903_163100_804575_3A3C9862)
+Date: Sat,  3 Sep 2016 14:29:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 06, 2016 at 06:36:52PM +0200, Luca Ceresoli wrote:
-> These functions have been declared without any implementation since
-> the first commit (364e30ebd2dbaccba430c603da03e68746eb932a) and there
-> has been no mention of them in following commits.
+Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
+> IS_ERR_VALUE() assumes that its parameter is an unsigned long.
+> It can not be used to check if an 'unsigned int' reflects an error.
+> As they pass an 'unsigned int' into a function that takes an
+> 'unsigned long' argument. This happens to work because the type
+> is sign-extended on 64-bit architectures before it gets converted
+> into an unsigned type.
 > 
-> Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: devel@driverdev.osuosl.org
-> Cc: linux-kernel@vger.kernel.org
+> However, anything that passes an 'unsigned short' or 'unsigned int'
+> argument into IS_ERR_VALUE() is guaranteed to be broken, as are
+> 8-bit integers and types that are wider than 'unsigned long'.
 > 
-> ---
+> It would be nice to any users that are not passing 'unsigned int'
+> arguments.
 > 
-> Changes v2 -> v3:
-> - add "staging: " prefix to commit message title.
-> 
-> Changes v1 -> v2:
-> - improve the commit message.
-> ---
->  drivers/staging/rtl8723au/include/recv_osdep.h | 3 ---
+> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
 
-File is no longer in my tree :(
+This touches include/linux/err.h and I'm not very enthusiastic to change
+anything in include directory without wider support. I recommend first to just
+fix bcma.  And separately you can try to improve linux/err.h via some more
+approariate tree, not via wireless trees.
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9222139/
