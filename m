@@ -1,47 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:36429 "EHLO
-        mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932952AbcISLKL (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57589 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751127AbcICKLE (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 07:10:11 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 0/9] brcmfmac: coverity fixes
-Date: Mon, 19 Sep 2016 12:09:50 +0100
-Message-Id: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131032_223211_337CE8FF)
+        Sat, 3 Sep 2016 06:11:04 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v4] brcmfmac: add missing header dependencies
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1472474375-29910-1-git-send-email-baoyou.xie@linaro.org>
+To: Baoyou Xie <baoyou.xie@linaro.org>
+Cc: arend.vanspriel@broadcom.com, franky.lin@broadcom.com,
+        hante.meuleman@broadcom.com, linux-wireless@vger.kernel.org,
+        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, arnd@arndb.de, baoyou.xie@linaro.org,
+        xie.baoyou@zte.com.cn
+Message-Id: <20160903101035.74BDC6201D@smtp.codeaurora.org> (sfid-20160903_121206_632289_AC7D4F1B)
+Date: Sat,  3 Sep 2016 10:10:35 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series consist of:
-* fixes for several issues found by Coverity.
-* ignore 802.11d configuration if not supported in firmware.
-* remove worker from netdev callback.
+Baoyou Xie <baoyou.xie@linaro.org> wrote:
+> We get 1 warning when building kernel with W=1:
+> 
+> drivers/net/wireless/broadcom/brcm80211/brcmfmac/tracepoint.c:23:6: warning: no previous prototype for '__brcmf_err' [-Wmissing-prototypes]
+> 
+> In fact, this function is declared in brcmfmac/debug.h, so this patch
+> adds missing header dependencies.
+> 
+> Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+> Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-This is intended for 4.9 and applies to the master branch of
-the wireless-drivers-next repository.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Arend van Spriel (4):
-  brcmfmac: rework pointer trickery in brcmf_proto_bcdc_query_dcmd()
-  brcmfmac: fix memory leak in brcmf_flowring_add_tdls_peer()
-  brcmfmac: initialize variable in brcmf_sdiod_regrl()
-  brcmfmac: remove worker from .ndo_set_mac_address() callback
-
-Hante Meuleman (5):
-  brcmfmac: ignore 11d configuration errors
-  brcmfmac: remove unnecessary null pointer check
-  brcmfmac: fix clearing entry IPv6 address
-  brcmfmac: fix out of bound access on clearing wowl wake indicator
-  brcmfmac: simplify mapping of auth type
-
- .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    |  2 +-
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |  2 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 41 +++++++++---------
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 49 +++++++++-------------
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 -
- .../broadcom/brcm80211/brcmfmac/flowring.c         |  8 +++-
- 6 files changed, 47 insertions(+), 57 deletions(-)
+8af92af3f2d5 brcmfmac: add missing header dependencies
 
 -- 
-1.9.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9303939/
