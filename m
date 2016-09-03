@@ -1,64 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:35356 "EHLO
-        mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757504AbcILJn6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57451 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752804AbcICKJF (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 05:43:58 -0400
-Received: by mail-pa0-f65.google.com with SMTP id pp5so7549083pac.2
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 02:43:58 -0700 (PDT)
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        johannes.berg@intel.com, hofrat@osadl.org
-Cc: prameela.j04cs@gmail.com, prameela.garnepudi@redpinesignals.com
-Subject: [PATCH 9/9] rsi: code cleanup in file rsi_91x_usb_ops.c
-Date: Mon, 12 Sep 2016 15:08:24 +0530
-Message-Id: <f6204fbacd7300f323ea35cd2c7a2a6fd5d9b5c0.1473669618.git.prameela.j04cs@gmail.com> (sfid-20160912_114401_856815_3BCB581E)
-In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
-References: <cover.1473669618.git.prameela.j04cs@gmail.com>
-In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
-References: <cover.1473669618.git.prameela.j04cs@gmail.com>
+        Sat, 3 Sep 2016 06:09:05 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: fix missing break on IEEE80211_STYPE_ACTION case
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1471349413-21893-1-git-send-email-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Message-Id: <20160903100844.CDF306201B@smtp.codeaurora.org> (sfid-20160903_120924_918603_D264F383)
+Date: Sat,  3 Sep 2016 10:08:44 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+Colin Ian King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> The IEEE80211_STYPE_ACTION case is missing a break in the switch
+> statement, causing it to fall through to the default case that
+> reports a debug message about an unknown frame subtype. Fix this
+> by adding in the missing break statement.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-index de49008..5ab2ce3 100644
---- a/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_usb_ops.c
-@@ -96,26 +96,25 @@ void rsi_usb_rx_thread(struct rsi_common *common)
- 		rsi_wait_event(&dev->rx_thread.event, EVENT_WAIT_FOREVER);
- 
- 		if (atomic_read(&dev->rx_thread.thread_done))
--			goto out;
-+			break;
- 
- 		mutex_lock(&common->tx_rxlock);
- 		status = rsi_read_pkt(common, 0);
- 		if (status) {
- 			rsi_dbg(ERR_ZONE, "%s: Failed To read data", __func__);
- 			mutex_unlock(&common->tx_rxlock);
--			return;
-+			break;
- 		}
- 		mutex_unlock(&common->tx_rxlock);
- 		rsi_reset_event(&dev->rx_thread.event);
- 		if (adapter->rx_urb_submit(adapter)) {
- 			rsi_dbg(ERR_ZONE,
- 				"%s: Failed in urb submission", __func__);
--			return;
-+			break;
- 		}
- 	} while (1);
- 
--out:
--	rsi_dbg(INFO_ZONE, "%s: Terminated thread\n", __func__);
-+	rsi_dbg(INFO_ZONE, "%s: Terminated USB RX thread\n", __func__);
- 	complete_and_exit(&dev->rx_thread.completion, 0);
- }
- 
+Thanks, 1 patch applied to wireless-drivers-next.git:
+
+d393be3ed0be mwifiex: fix missing break on IEEE80211_STYPE_ACTION case
+
 -- 
-2.4.11
+Sent by pwcli
+https://patchwork.kernel.org/patch/9283755/
