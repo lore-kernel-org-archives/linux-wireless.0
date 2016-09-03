@@ -1,47 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:7542 "EHLO
-        mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934245AbcISLKY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57949 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753296AbcICRBL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 07:10:24 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 2/9] brcmfmac: rework pointer trickery in brcmf_proto_bcdc_query_dcmd()
-Date: Mon, 19 Sep 2016 12:09:52 +0100
-Message-Id: <1474283399-14385-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131034_269630_F78E2BF1)
-In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+        Sat, 3 Sep 2016 13:01:11 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: rtlwifi: rtl8723ae: Fix leak in _rtl8723e_read_adapter_info()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1470772452-24642-1-git-send-email-cengelma@gmx.at>
+To: Christian Engelmayer <cengelma@gmx.at>
+Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+        arnd@arndb.de, joe@perches.com, linux-wireless@vger.kernel.org,
+        Christian Engelmayer <cengelma@gmx.at>
+Message-Id: <20160903165401.C32C762177@smtp.codeaurora.org> (sfid-20160903_190114_739904_5C862062)
+Date: Sat,  3 Sep 2016 16:54:01 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The variable info is assigned to point to bcdc->msg[1], which is the
-same as pointing to bcdc->buf. As that is what we want to access
-make it clear by fixing the assignment. This also avoid out-of-bounds
-errors from static analyzers are bcdc->msg[1] is not in the structure
-definition.
+Christian Engelmayer <cengelma@gmx.at> wrote:
+> In case of (rtlhal->oem_id != RT_CID_DEFAULT), the function directly
+> returns and leaks the already allocated hwinfo memory. Go through the
+> correct exit path.
+> 
+> Signed-off-by: Christian Engelmayer <cengelma@gmx.at>
+> Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-index d1bc51f..038a960 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-@@ -194,7 +194,7 @@ retry:
- 	}
- 
- 	/* Check info buffer */
--	info = (void *)&msg[1];
-+	info = (void *)&bcdc->buf[0];
- 
- 	/* Copy info buffer */
- 	if (buf) {
+3eeacaa902a3 rtlwifi: rtl8723ae: Fix leak in _rtl8723e_read_adapter_info()
+
 -- 
-1.9.1
+Sent by pwcli
+https://patchwork.kernel.org/patch/9272147/
