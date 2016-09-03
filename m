@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:33993 "EHLO
-        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754719AbcIQXGc (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:24963 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753471AbcICRfj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 19:06:32 -0400
-Received: by mail-oi0-f42.google.com with SMTP id a62so17382804oib.1
-        for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2016 16:06:32 -0700 (PDT)
-Subject: Re: [PATCH] rtl8xxxu: Stop log spam from each successful interrupt
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-References: <1474132155-9330-1-git-send-email-Larry.Finger@lwfinger.net>
- <wrfjbmzmmed0.fsf@redhat.com>
-Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
-        linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <a9bcf666-719e-bda8-17bb-212e269ca497@lwfinger.net> (sfid-20160918_010636_437790_7E2A2EF6)
-Date: Sat, 17 Sep 2016 18:06:29 -0500
+        Sat, 3 Sep 2016 13:35:39 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <wrfjbmzmmed0.fsf@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Subject: Re: ath9k: bring back direction setting in ath9k_{start_stop}
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160901174702.8645-1-giedrius.statkevicius@gmail.com>
+To: Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com>
+CC: <kvalo@codeaurora.org>, <ath9k-devel@qca.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Miaoqing Pan <miaoqing@codeaurora.org>,
+        <stable@vger.kernel.org>,
+        =?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
+        <giedrius.statkevicius@gmail.com>
+Message-ID: <f70422725ef541e6af08136a61aacba5@euamsexm01a.eu.qualcomm.com> (sfid-20160903_193600_481089_9DB13D77)
+Date: Sat, 3 Sep 2016 19:35:29 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/17/2016 03:59 PM, Jes Sorensen wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->> As soon as debugging is turned on, the logs are filled with messages
->> reporting the interrupt status. As this quantity is usually zero, this
->> output is not needed. In fact, there will be a report if the status is
->> not zero, thus the debug line in question could probably be deleted.
->> Rather than taking that action, I have changed it to only be printed
->> when the RTL8XXXU_DEBUG_USB bit is set in the debug mask.
->
-> Wrong flag, please add a RTL8XXXU_DEBUG_INTERRUPT flag instead and use
-> that.
->
-> Which device do you see this with?
+Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com> wrote:
+> A regression was introduced in commit id 79d4db1214a ("ath9k: cleanup
+> led_pin initial") that broken the WLAN status led on my laptop with
+> AR9287 after suspending and resuming.
+> 
+> Steps to reproduce:
+> * Suspend (laptop)
+> * Resume (laptop)
+> * Observe that the WLAN led no longer turns ON/OFF depending on the
+>   status and is always red
+> 
+> Even though for my case it only needs to be set to OUT in ath9k_start
+> but for consistency bring back the IN direction setting as well.
+> 
+> Cc: Miaoqing Pan <miaoqing@codeaurora.org>
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
 
-OK. I will change the flag.
+I'm planning to queue this to 4.8 if no objections.
 
-I found this with a TP-Link TL-MN8200ND, which has some variant of the RTL8188CU 
-chip. It transmits, but I see no evidence that the receiver is functioning at 
-all. The same is true for driver rtl8192cu. Only the driver from Realtek's web 
-site actually works.
-
-One other problem that I have found is that the debug option on module load 
-seems to be ignored. So far, I've had to hard wire the flags. Once I find the 
-reason, I'll send a patch for that as well.
-
-Larry
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9309829/
