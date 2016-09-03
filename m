@@ -1,81 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50162 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751952AbcISOsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 10:48:43 -0400
-Message-ID: <1474296520.3075.7.camel@redhat.com> (sfid-20160919_164850_032938_F6D06A0A)
-Subject: Re: brcmfmac MAC address change delay and 500ms down delay
-From: Dan Williams <dcbw@redhat.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Sep 2016 09:48:40 -0500
-In-Reply-To: <f1912b3a-80ce-097f-8c58-cfe246804055@broadcom.com>
-References: <1473950537.25907.8.camel@redhat.com>
-         <f1912b3a-80ce-097f-8c58-cfe246804055@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:32865 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753268AbcICLFh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 3 Sep 2016 07:05:37 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCHv8 0/4] register-field manipulation macros
+References: <1471625049-12643-1-git-send-email-jakub.kicinski@netronome.com>
+        <1472644007-20959-1-git-send-email-jakub.kicinski@netronome.com>
+Date: Sat, 03 Sep 2016 14:05:17 +0300
+In-Reply-To: <1472644007-20959-1-git-send-email-jakub.kicinski@netronome.com>
+        (Jakub Kicinski's message of "Wed, 31 Aug 2016 12:46:43 +0100")
+Message-ID: <87y439xmz6.fsf@kamboji.qca.qualcomm.com> (sfid-20160903_130545_295901_094D5FA5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-09-16 at 11:58 +0200, Arend Van Spriel wrote:
-> On 15-9-2016 16:42, Dan Williams wrote:
-> > 
-> > Hi,
-> > 
-> > While refining NetworkManager's MAC address randomization behavior
-> > we
-> > came across two issues with brcmfmac:
-> > 
-> > 1) when changing the MAC address, the driver schedules work for the
-> > new
-> > change and returns success, but doesn't actually change the MAC
-> > until
-> > the work is scheduled.  Because it returns 0 from the
-> > ndo_set_mac_address hook the net core will generate a
-> > NETDEV_CHANGEADDR
-> > event and rtnetlink will send out an RTM_NEWLINK with the old MAC
-> > address.  No event for the new address will be sent.  So it's
-> > pretty
-> > hard to figure out when the address actually changed, and when its
-> > safe
-> > to associate, without polling the device's MAC address.  Ugly.
-> And apparently unnecessary. I recalled we had this as the
-> ndo_set_mac_address callback could be called in atomic context. So we
-> are using a worker because we are grabbing a mutex upon sending the
-> control info to the device. Looking into the core network code it
-> seems
-> the callback is not called in atomic context so it seems we can get
-> rid
-> of the worker here. I made a patch
-> 
-> > 
-> > 2) when closing the device (eg, set !IFF_UP) the driver
-> > unconditionally
-> > blocks for 500ms in __brcmf_cfg80211_down():
-> > 
-> > 	if (check_vif_up(ifp->vif)) {
-> > 		brcmf_link_down(ifp->vif, WLAN_REASON_UNSPECIFIED);
-> > 
-> > 		/* Make sure WPA_Supplicant receives all the event
-> > 		   generated due to DISASSOC call to the fw to keep
-> > 		   the state fw and WPA_Supplicant state consistent
-> > 		 */
-> > 		brcmf_delay(500);
-> > 	}
-> This is actually a bogus delay as we are under an RTNL lock here so I
-> think the events will not go out until after the delay has finished.
-> I
-> did submit a patch long ago removing this delay, but the change was
-> not
-> accepted. Let me revisit that.
-> 
-> > 
-> > Should I dump these into kernel bugzilla, or is there some internal
-> > bug
-> > tracker they could get stuffed into?
-> Kernel bugzilla is fine although I check it rather infrequently.
+Jakub Kicinski <jakub.kicinski@netronome.com> writes:
 
-Thanks for taking another look at these.  Should I still file in
-bugzilla, or are the patches going through the process already?
+> Small improvement suggested by Daniel Borkmann - use
+> two underscore prefix.
+>
+> https://www.mail-archive.com/netdev@vger.kernel.org/msg125423.html
+>
+> -- v6 blurb:
+>
+> This set moves to a global header file macros which I find
+> very useful and worth popularising.  The basic problem is
+> that since C bitfields are not very dependable accessing
+> subfields of registers becomes slightly inconvenient.
+> It is nice to have the necessary mask and shift operations
+> wrapped in a macro and have that macro compute shift
+> at compilation time using FFS.
+>
+> My implementation follows what Felix Fietkau has done in
+> mt76.  Hannes Frederic Sowa suggested more use of standard
+> Linux/GCC functions.  Since the RFC I've also added a 
+> compile-time check to validate that the value passed to
+> setters fits in the mask.
+>
+> I attempted the use of static inlines instead of macros
+> but it makes GCC < 6.0 barf at the BUILD_BUG_ON()s.
+> I also noticed that forcing arguments to be u32 for inlines
+> makes the compiler use 32bit arithmetic where it could
+> get away with 64bit before (on 64bit machines, obviously).
+> That's a potential performance concern but probably not
+> a very practical one today.  Apart from looking "cleaner"
+> static inlines would have the advantage that we could #undef
+> the auxiliary macros at the end of the header.
+>
+> Build bot caught a build failure with -Os set.  AFAICT gcc
+> did not handle temporary variable I put in the macro
+> expression too well.  I work around that by defining
+> __BUILD_BUG_ON_NOT_POWER_OF_2 and using it instead of
+> BUILD_BUG_ON(!tmp || is_power_of_2(tmp)).
+>
+> I'm planning to use those macros in another driver soon,
+> Felix may also use them when upstreaming mt76 if he chooses
+> to do so.
+>
+> IMHO if accepted it would be best to push these through
+> Kalle's wireless drivers' tree, since the only existing
+> user is in drivers/net/wireless/.
+>
+> v8:
+>  - use two underscores for auxiliary macros (Daniel B).
+> v7:
+>  - drop the explicit type marking (u32/u64) - depend on the type
+>    of the mask instead;
+>  - only allow compilation time constant masks;
+>  - barf at "type of register too small to ever match mask" on get;
+>  - rename PUT -> PREP.
+> v6:
+>  - do a full rename in patch 2;
+>  - CC many people.
+> v5:
+>  - repost.
+> v4:
+>  - add documentation in the header.
+> v3:
+>  - don't use variables in statement expressions;
+>  - use __BUILD_BUG_ON_NOT_POWER_OF_2.
+> v2:
+>  - change Felix's email address.
+>
+> Jakub Kicinski (4):
+>   add basic register-field manipulation macros
+>   mt7601u: remove redefinition of GENMASK
+>   mt7601u: remove unnecessary include
+>   mt7601u: use linux/bitfield.h
 
-Dan
+I applied these now to the pending branch of my wireless-drivers-next
+tree. Let's see if the kbuild bot finds any problems.
+
+Please also CC lkml, did that now.
+
+-- 
+Kalle Valo
