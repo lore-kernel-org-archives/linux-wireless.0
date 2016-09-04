@@ -1,139 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from condef007-v.nifty.com ([210.131.4.244]:35790 "EHLO
-        condef007-v.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933133AbcIFMou (ORCPT
+Received: from libra.uberspace.de ([95.143.172.171]:50874 "EHLO
+        libra.uberspace.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754389AbcIDT3Z (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 08:44:50 -0400
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org
-Subject: [PATCH 2/3] ath10k: use devm_reset_control_get() instead of reset_control_get()
-Date: Tue,  6 Sep 2016 21:39:57 +0900
-Message-Id: <1473165598-28683-3-git-send-email-yamada.masahiro@socionext.com> (sfid-20160906_144456_215855_B9F38BB7)
-In-Reply-To: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
-References: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
+        Sun, 4 Sep 2016 15:29:25 -0400
+From: Matthias Beyer <mail@beyermatthias.de>
+To: gregkh@linuxfoundation.org
+Cc: Matthias Beyer <mail@beyermatthias.de>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Manuel Messner <manuel.johannes.messner@hs-furtwangen.de>,
+        Geliang Tang <geliangtang@163.com>,
+        Cihangir Akturk <cakturk@gmail.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 4/5] drivers: staging: rtl8723au: core: Fix "space prohibited" warning
+Date: Sun,  4 Sep 2016 21:26:25 +0200
+Message-Id: <20160904192626.17197-5-mail@beyermatthias.de> (sfid-20160904_212943_101638_DA806DBF)
+In-Reply-To: <20160904192626.17197-1-mail@beyermatthias.de>
+References: <20160904192626.17197-1-mail@beyermatthias.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the managed variant of reset_control_get() to simplify the
-failure path and the .remove callback.
+This patch fixes the "space prohibited between function name and open
+parenthesis '('" warning from checkpatch.pl
 
-Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+Signed-off-by: Matthias Beyer <mail@beyermatthias.de>
+Signed-off-by: Manuel Messner <manuel.johannes.messner@hs-furtwangen.de>
 ---
+ drivers/staging/rtl8723au/core/rtw_mlme.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/ath/ath10k/ahb.c | 56 +++++++----------------------------
- 1 file changed, 10 insertions(+), 46 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index 8a55c0c..6b355ee 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -191,92 +191,56 @@ static int ath10k_ahb_rst_ctrl_init(struct ath10k *ar)
- {
- 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
- 	struct device *dev;
--	int ret;
+diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
+index 196447b..1e01d62 100644
+--- a/drivers/staging/rtl8723au/core/rtw_mlme.c
++++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
+@@ -900,15 +900,15 @@ rtw_joinbss_update_stainfo(struct rtw_adapter *padapter,
+ 				padapter->securitypriv.dot11PrivacyAlgrthm;
  
- 	dev = &ar_ahb->pdev->dev;
+ 			memset(&psta->dot118021x_UncstKey, 0,
+-			       sizeof (union Keytype));
++			       sizeof(union Keytype));
  
--	ar_ahb->core_cold_rst = reset_control_get(dev, "wifi_core_cold");
-+	ar_ahb->core_cold_rst = devm_reset_control_get(dev, "wifi_core_cold");
- 	if (IS_ERR_OR_NULL(ar_ahb->core_cold_rst)) {
- 		ath10k_err(ar, "failed to get core cold rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->core_cold_rst));
--		ret = ar_ahb->core_cold_rst ?
-+		return ar_ahb->core_cold_rst ?
- 			PTR_ERR(ar_ahb->core_cold_rst) : -ENODEV;
--		goto out;
- 	}
+ 			memset(&psta->dot11tkiprxmickey, 0,
+-			       sizeof (union Keytype));
++			       sizeof(union Keytype));
+ 			memset(&psta->dot11tkiptxmickey, 0,
+-			       sizeof (union Keytype));
++			       sizeof(union Keytype));
  
--	ar_ahb->radio_cold_rst = reset_control_get(dev, "wifi_radio_cold");
-+	ar_ahb->radio_cold_rst = devm_reset_control_get(dev, "wifi_radio_cold");
- 	if (IS_ERR_OR_NULL(ar_ahb->radio_cold_rst)) {
- 		ath10k_err(ar, "failed to get radio cold rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->radio_cold_rst));
--		ret = ar_ahb->radio_cold_rst ?
-+		return ar_ahb->radio_cold_rst ?
- 			PTR_ERR(ar_ahb->radio_cold_rst) : -ENODEV;
--		goto err_core_cold_rst_put;
- 	}
+-			memset(&psta->dot11txpn, 0, sizeof (union pn48));
+-			memset(&psta->dot11rxpn, 0, sizeof (union pn48));
++			memset(&psta->dot11txpn, 0, sizeof(union pn48));
++			memset(&psta->dot11rxpn, 0, sizeof(union pn48));
+ 		}
  
--	ar_ahb->radio_warm_rst = reset_control_get(dev, "wifi_radio_warm");
-+	ar_ahb->radio_warm_rst = devm_reset_control_get(dev, "wifi_radio_warm");
- 	if (IS_ERR_OR_NULL(ar_ahb->radio_warm_rst)) {
- 		ath10k_err(ar, "failed to get radio warm rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->radio_warm_rst));
--		ret = ar_ahb->radio_warm_rst ?
-+		return ar_ahb->radio_warm_rst ?
- 			PTR_ERR(ar_ahb->radio_warm_rst) : -ENODEV;
--		goto err_radio_cold_rst_put;
- 	}
- 
--	ar_ahb->radio_srif_rst = reset_control_get(dev, "wifi_radio_srif");
-+	ar_ahb->radio_srif_rst = devm_reset_control_get(dev, "wifi_radio_srif");
- 	if (IS_ERR_OR_NULL(ar_ahb->radio_srif_rst)) {
- 		ath10k_err(ar, "failed to get radio srif rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->radio_srif_rst));
--		ret = ar_ahb->radio_srif_rst ?
-+		return ar_ahb->radio_srif_rst ?
- 			PTR_ERR(ar_ahb->radio_srif_rst) : -ENODEV;
--		goto err_radio_warm_rst_put;
- 	}
- 
--	ar_ahb->cpu_init_rst = reset_control_get(dev, "wifi_cpu_init");
-+	ar_ahb->cpu_init_rst = devm_reset_control_get(dev, "wifi_cpu_init");
- 	if (IS_ERR_OR_NULL(ar_ahb->cpu_init_rst)) {
- 		ath10k_err(ar, "failed to get cpu init rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->cpu_init_rst));
--		ret = ar_ahb->cpu_init_rst ?
-+		return ar_ahb->cpu_init_rst ?
- 			PTR_ERR(ar_ahb->cpu_init_rst) : -ENODEV;
--		goto err_radio_srif_rst_put;
- 	}
- 
- 	return 0;
--
--err_radio_srif_rst_put:
--	reset_control_put(ar_ahb->radio_srif_rst);
--
--err_radio_warm_rst_put:
--	reset_control_put(ar_ahb->radio_warm_rst);
--
--err_radio_cold_rst_put:
--	reset_control_put(ar_ahb->radio_cold_rst);
--
--err_core_cold_rst_put:
--	reset_control_put(ar_ahb->core_cold_rst);
--
--out:
--	return ret;
- }
- 
- static void ath10k_ahb_rst_ctrl_deinit(struct ath10k *ar)
- {
- 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
- 
--	if (!IS_ERR_OR_NULL(ar_ahb->core_cold_rst))
--		reset_control_put(ar_ahb->core_cold_rst);
--
--	if (!IS_ERR_OR_NULL(ar_ahb->radio_cold_rst))
--		reset_control_put(ar_ahb->radio_cold_rst);
--
--	if (!IS_ERR_OR_NULL(ar_ahb->radio_warm_rst))
--		reset_control_put(ar_ahb->radio_warm_rst);
--
--	if (!IS_ERR_OR_NULL(ar_ahb->radio_srif_rst))
--		reset_control_put(ar_ahb->radio_srif_rst);
--
--	if (!IS_ERR_OR_NULL(ar_ahb->cpu_init_rst))
--		reset_control_put(ar_ahb->cpu_init_rst);
--
- 	ar_ahb->core_cold_rst = NULL;
- 	ar_ahb->radio_cold_rst = NULL;
- 	ar_ahb->radio_warm_rst = NULL;
+ 		/*	Commented by Albert 2012/07/21 */
 -- 
-1.9.1
+2.9.3
