@@ -1,61 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50250 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754917AbcISKCW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 06:02:22 -0400
-Message-ID: <1474279330.4469.28.camel@sipsolutions.net> (sfid-20160919_120228_517669_28A2A922)
-Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
-Date: Mon, 19 Sep 2016 12:02:10 +0200
-In-Reply-To: <1474278896.4469.26.camel@sipsolutions.net> (sfid-20160919_115508_261438_39410159)
-References: <20160804071846.GA773@gondor.apana.org.au>
-         <20160804074546.GA996@gondor.apana.org.au>
-         <1470377813.2977.14.camel@sipsolutions.net>
-         <20160805104858.GA9297@gondor.apana.org.au>
-         <1470394233.2977.37.camel@sipsolutions.net>
-         <20160918135030.GA7062@gondor.apana.org.au>
-         <20160919084056.GA11875@gondor.apana.org.au>
-         <1474276530.4469.16.camel@sipsolutions.net>
-         <20160919091721.GA12235@gondor.apana.org.au>
-         <1474277244.4469.21.camel@sipsolutions.net>
-         <20160919093434.GA12378@gondor.apana.org.au>
-         (sfid-20160919_113440_719977_971CE718) <1474278634.4469.25.camel@sipsolutions.net>
-         (sfid-20160919_115045_089605_A254E125) <1474278896.4469.26.camel@sipsolutions.net>
-         (sfid-20160919_115508_261438_39410159)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from libra.uberspace.de ([95.143.172.171]:50446 "EHLO
+        libra.uberspace.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751539AbcIDT1r (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 4 Sep 2016 15:27:47 -0400
+From: Matthias Beyer <mail@beyermatthias.de>
+To: gregkh@linuxfoundation.org
+Cc: Matthias Beyer <mail@beyermatthias.de>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Manuel Messner <manuel.johannes.messner@hs-furtwangen.de>,
+        Geliang Tang <geliangtang@163.com>,
+        Cihangir Akturk <cakturk@gmail.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 1/5] drivers: staging: rtl8723au: core: Fix checkpatch.pl errors
+Date: Sun,  4 Sep 2016 21:26:22 +0200
+Message-Id: <20160904192626.17197-2-mail@beyermatthias.de> (sfid-20160904_212807_162380_CA407D40)
+In-Reply-To: <20160904192626.17197-1-mail@beyermatthias.de>
+References: <20160904192626.17197-1-mail@beyermatthias.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-09-19 at 11:54 +0200, Johannes Berg wrote:
-> > 
-> > The stack trace is useless, but my other annotation showed that the
-> > table's nelems *underflowed* to -1, so now the worker will continue
-> > to try to grow it forever.
-> > 
-> 
-> And this *was* actually a case of duplication, afaict, since it was
-> multiple virtual interfaces on the same device all connecting to the
-> same AP.
+This patch fixes the ERRORs which are reported from the checkpatch.pl
+script for this file.
 
-It seems that __rhashtable_remove_fast_one() should return 0 even in
-the case of err==1 for the "skip all the maintenance due to list
-deletion"?
+Signed-off-by: Matthias Beyer <mail@beyermatthias.de>
+---
+ drivers/staging/rtl8723au/core/rtw_mlme.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
---- a/include/linux/rhashtable.h
-+++ b/include/linux/rhashtable.h
-@@ -1009,7 +1009,7 @@ static inline int __rhashtable_remove_fast_one(
-                err = 0;
-        }
- 
--       return err;
-+       return err < 0 ? err : 0;
- }
-
-But that in itself doesn't help.
-
-johannes
+diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
+index a786fc4..8b8b6a9 100644
+--- a/drivers/staging/rtl8723au/core/rtw_mlme.c
++++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
+@@ -1397,7 +1397,7 @@ void rtw23a_join_to_handler (unsigned long data)
+ 				do_join_r = rtw_do_join(adapter);
+ 				if (do_join_r != _SUCCESS) {
+ 					DBG_8723A("%s roaming do_join return "
+-						  "%d\n", __func__ , do_join_r);
++						  "%d\n", __func__, do_join_r);
+ 					continue;
+ 				}
+ 				break;
+@@ -1546,7 +1546,7 @@ static int rtw_check_join_candidate(struct mlme_priv *pmlmepriv,
+ 	}
+ 
+ 	if (!*candidate ||
+-	    (*candidate)->network.Rssi<competitor->network.Rssi) {
++	    (*candidate)->network.Rssi < competitor->network.Rssi) {
+ 		*candidate = competitor;
+ 		updated = true;
+ 	}
+@@ -1894,7 +1894,7 @@ static int SecIsInPMKIDList(struct rtw_adapter *Adapter, u8 *bssid)
+ 
+ 	do {
+ 		if (psecuritypriv->PMKIDList[i].bUsed &&
+-                    ether_addr_equal(psecuritypriv->PMKIDList[i].Bssid, bssid)) {
++		    ether_addr_equal(psecuritypriv->PMKIDList[i].Bssid, bssid)) {
+ 			break;
+ 		} else {
+ 			i++;
+@@ -2139,7 +2139,7 @@ bool rtw_restructure_ht_ie23a(struct rtw_adapter *padapter, u8 *in_ie,
+ 			out_len = *pout_len;
+ 			pframe = rtw_set_ie23a(out_ie + out_len,
+ 					       WLAN_EID_HT_OPERATION,
+-					       p[1], p + 2 , pout_len);
++					       p[1], p + 2, pout_len);
+ 		}
+ 	}
+ 
+-- 
+2.9.3
