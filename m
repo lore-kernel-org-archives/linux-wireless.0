@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:53207 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753008AbcIAPmZ (ORCPT
+Received: from mail-it0-f44.google.com ([209.85.214.44]:37556 "EHLO
+        mail-it0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750832AbcIDDKO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 11:42:25 -0400
-Date: Thu, 1 Sep 2016 17:42:32 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Luca Ceresoli <luca@lucaceresoli.net>
-Cc: devel@driverdev.osuosl.org, Jes Sorensen <Jes.Sorensen@redhat.com>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 1/6] rtl8723au: remove declaration of unimplemented
- functions
-Message-ID: <20160901154232.GA19440@kroah.com> (sfid-20160901_174229_252386_75E5414D)
-References: <1472301649-18694-1-git-send-email-luca@lucaceresoli.net>
+        Sat, 3 Sep 2016 23:10:14 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1472301649-18694-1-git-send-email-luca@lucaceresoli.net>
+In-Reply-To: <20160903164354.13331-1-colin.king@canonical.com>
+References: <20160903164354.13331-1-colin.king@canonical.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 4 Sep 2016 13:09:47 +1000
+Message-ID: <CAGRGNgXgzGye=jYzKUJyKS7Y0gzRsAVPSgu1=JUEU1had=0fqg@mail.gmail.com> (sfid-20160904_051044_782505_A46923CA)
+Subject: Re: [PATCH] rtl8xxxu: fix spelling mistake "firmare" -> "firmware"
+To: Colin King <colin.king@canonical.com>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        netdev <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Aug 27, 2016 at 02:40:44PM +0200, Luca Ceresoli wrote:
-> Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
-> Cc: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: linux-wireless@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  drivers/staging/rtl8723au/include/recv_osdep.h | 3 ---
->  1 file changed, 3 deletions(-)
+Hi All,
 
-I can't take patches without any changelog text, sorry.  Please fix that
-up for all 6 of these patches and resend.
+On Sun, Sep 4, 2016 at 2:43 AM, Colin King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> Trivial fix to spelling mistakes in dev_dbg message.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-thanks,
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-greg k-h
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
