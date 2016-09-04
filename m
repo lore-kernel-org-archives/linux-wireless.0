@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51744 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755115AbcIFHsW (ORCPT
+Received: from srv-hp10-72.netsons.net ([94.141.22.72]:46498 "EHLO
+        srv-hp10.netsons.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753718AbcIDUwo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 03:48:22 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
+        Sun, 4 Sep 2016 16:52:44 -0400
+Subject: Re: [PATCH v2 1/6] rtl8723au: remove declaration of unimplemented
+ functions
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1472821069-5437-1-git-send-email-luca@lucaceresoli.net>
+ <87a8fq2s3q.fsf@purkki.adurom.net>
+Cc: devel@driverdev.osuosl.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [v2] bcma: use of_dma_configure() to set initial dma mask
-References: <20160903140819.245F06216C@smtp.codeaurora.org>
-        <6123998.NAlOfyAp5F@wuerfel>
-Date: Tue, 06 Sep 2016 10:48:16 +0300
-In-Reply-To: <6123998.NAlOfyAp5F@wuerfel> (Arnd Bergmann's message of "Mon, 05
-        Sep 2016 17:26:27 +0200")
-Message-ID: <87twdtxydb.fsf@kamboji.qca.qualcomm.com> (sfid-20160906_094847_824659_2326F277)
+From: Luca Ceresoli <luca@lucaceresoli.net>
+Message-ID: <9b2365f1-3d11-05f6-7a28-f6bf458cec42@lucaceresoli.net> (sfid-20160904_225259_962790_D67154EF)
+Date: Sun, 4 Sep 2016 22:52:38 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87a8fq2s3q.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+Dear Kalle,
 
-> On Saturday, September 3, 2016 2:08:19 PM CEST Kalle Valo wrote:
->> Arnd Bergmann <arnd@arndb.de> wrote:
->> > While fixing another bug, I noticed that bcma manually sets up
->> > a dma_mask pointer for its child devices. We have a generic
->> > helper for that now, which should be able to cope better with
->> > any variations that might be needed to deal with cache coherency,
->> > unusual DMA address offsets, iommus, or limited DMA masks, none
->> > of which are currently handled here.
->> > 
->> > This changes the core to use the of_dma_configure(), like
->> > we do for platform devices that are probed directly from
->> > DT.
->> > 
->> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> 
->> Nobody tested this, so I'll drop the patch.
->
-> Should I resend it? I think it's still required.
+thanks for your feedback.
 
-Sorry, I misunderstood your comments then. No need to resend, I readded
-this to my queue:
+On 02/09/2016 18:18, Kalle Valo wrote:
+> Luca Ceresoli <luca@lucaceresoli.net> writes:
+> 
+>> These functions have been declared without any implementation since
+>> the first commit (364e30ebd2dbaccba430c603da03e68746eb932a) and there
+>> has been no mention of them in following commits.
+>>
+>> Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
+>> Cc: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> Cc: linux-wireless@vger.kernel.org
+>> Cc: devel@driverdev.osuosl.org
+>> Cc: linux-kernel@vger.kernel.org
+>>
+>> ---
+>>
+>> Changes v1 -> v2:
+>> - improve the commit message.
+>> ---
+>>  drivers/staging/rtl8723au/include/recv_osdep.h | 3 ---
+>>  1 file changed, 3 deletions(-)
+> 
+> Please prefix staging drivers with "staging:".
 
-https://patchwork.kernel.org/patch/8608751/
+Ok, will fix and resubmit.
 
 -- 
-Kalle Valo
+Luca
