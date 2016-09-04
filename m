@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54087 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752795AbcIIJLs (ORCPT
+Received: from libra.uberspace.de ([95.143.172.171]:43889 "EHLO
+        libra.uberspace.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752563AbcIDLC2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 05:11:48 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [PATCHv8,1/4] add basic register-field manipulation macros
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1472644007-20959-2-git-send-email-jakub.kicinski@netronome.com>
-To: Jakub Kicinski <jakub.kicinski@netronome.com>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-        Jakub Kicinski <jakub.kicinski@netronome.com>
-Message-Id: <20160909091148.14A2361EA3@smtp.codeaurora.org> (sfid-20160909_111206_194244_8C2AD435)
-Date: Fri,  9 Sep 2016 09:11:48 +0000 (UTC)
+        Sun, 4 Sep 2016 07:02:28 -0400
+From: Matthias Beyer <mail@beyermatthias.de>
+To: gregkh@linuxfoundation.org
+Cc: Matthias Beyer <mail@beyermatthias.de>, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        shivanib134@gmail.com, ksenija.stanojevic@gmail.com,
+        Jes.Sorensen@redhat.com, meleodr@gmail.com,
+        bhaktipriya96@gmail.com, bhumirks@gmail.com,
+        Larry.Finger@lwfinger.net
+Subject: [PATCH v2 0/1] Remove pointless test
+Date: Sun,  4 Sep 2016 13:01:19 +0200
+Message-Id: <20160904110120.27028-1-mail@beyermatthias.de> (sfid-20160904_130246_410433_1599B40A)
+In-Reply-To: <20160901155447.GB7979@kroah.com>
+References: <20160901155447.GB7979@kroah.com>
+In-Reply-To: <20160901155447.GB7979@kroah.com>
+References: <20160901155447.GB7979@kroah.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jakub Kicinski <jakub.kicinski@netronome.com> wrote:
-> Common approach to accessing register fields is to define
-> structures or sets of macros containing mask and shift pair.
-> Operations on the register are then performed as follows:
-> 
->  field = (reg >> shift) & mask;
-> 
->  reg &= ~(mask << shift);
->  reg |= (field & mask) << shift;
-> 
-> Defining shift and mask separately is tedious.  Ivo van Doorn
-> came up with an idea of computing them at compilation time
-> based on a single shifted mask (later refined by Felix) which
-> can be used like this:
-> 
->  #define REG_FIELD 0x000ff000
-> 
->  field = FIELD_GET(REG_FIELD, reg);
-> 
->  reg &= ~REG_FIELD;
->  reg |= FIELD_PREP(REG_FIELD, field);
-> 
-> FIELD_{GET,PREP} macros take care of finding out what the
-> appropriate shift is based on compilation time ffs operation.
-> 
-> GENMASK can be used to define registers (which is usually
-> less error-prone and easier to match with datasheets).
-> 
-> This approach is the most convenient I've seen so to limit code
-> multiplication let's move the macros to a global header file.
-> Attempts to use static inlines instead of macros failed due
-> to false positive triggering of BUILD_BUG_ON()s, especially with
-> GCC < 6.0.
-> 
-> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
-> Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
+Re-sending as
 
-Thanks, 4 patches applied to wireless-drivers-next.git:
+On 01-09-2016 17:54:47, Greg KH wrote:
+> There is no patch here :(
 
-3e9b3112ec74 add basic register-field manipulation macros
-faad5433b722 mt7601u: remove redefinition of GENMASK
-adcc710d0a9e mt7601u: remove unnecessary include
-d43af50566b4 mt7601u: use linux/bitfield.h
+----8<----
+
+As reported by David Binderman, this test is useless as of
+
+    if (a < 3) {
+        /* ... */
+    } else if (a >= 3) {
+        /* ... */
+    }
+
+so this patch removes the second check.
+
+Matthias Beyer (1):
+  drivers: staging: rtl8723au: hal: Remove pointless test
+
+ drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9306999/
+2.9.3
