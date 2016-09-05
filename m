@@ -1,92 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7404 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755647AbcIPWhm (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:50227 "EHLO
+        mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932337AbcIEKmT (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2016 18:37:42 -0400
-From: "Hsu, Ryan" <ryanhsu@qca.qualcomm.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-        "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: "marek.puzyniak@tieto.com" <marek.puzyniak@tieto.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH 4/4] ath10k: fix spurious tx/rx during boot
-Date: Fri, 16 Sep 2016 22:37:38 +0000
-Message-ID: <57DC735D.8020307@qca.qualcomm.com> (sfid-20160917_003746_876359_94082877)
-References: <1468924452-23877-1-git-send-email-michal.kazior@tieto.com>
- <1468924452-23877-5-git-send-email-michal.kazior@tieto.com>
-In-Reply-To: <1468924452-23877-5-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+        Mon, 5 Sep 2016 06:42:19 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 2/2] brcmfmac: sdio: shorten retry loop in brcmf_sdio_kso_control()
+Date: Mon,  5 Sep 2016 11:42:13 +0100
+Message-Id: <1473072133-4266-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160905_124226_842337_93F4ABAC)
+In-Reply-To: <1473072133-4266-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1473072133-4266-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+In brcmf_sdio_kso_control() there is a retry loop as hardware may take
+time to settle. However, when the call to brcmf_sdiod_regrb() returns
+an error it is due to SDIO access failure and it makes no sense to wait
+for hardware to settle. This patch aborts the loop after a number of
+subsequent access errors.
 
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-On 07/19/2016 03:34 AM, Michal Kazior wrote:
->  =20
-> +static int ath10k_core_reset_rx_filter(struct ath10k *ar)
-> +{
-> +	int ret;
-> +	int vdev_id;
-> +	int vdev_type;
-> +	int vdev_subtype;
-> +	const u8 *vdev_addr;
-> +
-> +	vdev_id =3D 0;
-> +	vdev_type =3D WMI_VDEV_TYPE_STA;
-> +	vdev_subtype =3D ath10k_wmi_get_vdev_subtype(ar, WMI_VDEV_SUBTYPE_NONE)=
-;
-> +	vdev_addr =3D ar->mac_addr;
-> +
-> +	ret =3D ath10k_wmi_vdev_create(ar, vdev_id, vdev_type, vdev_subtype,
-> +				     vdev_addr);
-> +	if (ret) {
-> +		ath10k_err(ar, "failed to create dummy vdev: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	ret =3D ath10k_wmi_vdev_delete(ar, vdev_id);
-> +	if (ret) {
-> +		ath10k_err(ar, "failed to delete dummy vdev: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	/* WMI and HTT may use separate HIF pipes and are not guaranteed to be
-> +	 * serialized properly implicitly.
-> +	 *
-> +	 * Moreover (most) WMI commands have no explicit acknowledges. It is
-> +	 * possible to infer it implicitly by poking firmware with echo
-> +	 * command - getting a reply means all preceding comments have been
-> +	 * (mostly) processed.
-> +	 *
-> +	 * In case of vdev create/delete this is sufficient.
-> +	 *
-> +	 * Without this it's possible to end up with a race when HTT Rx ring is
-> +	 * started before vdev create/delete hack is complete allowing a short
-> +	 * window of opportunity to receive (and Tx ACK) a bunch of frames.
-> +	 */
-> +	ret =3D ath10k_wmi_barrier(ar);
-QCA6174 UTF firmware seems doesn't support the WMI_ECHO command.
-
-[16460.274822] ath10k_pci 0000:04:00.0: wmi tlv echo value 0x0ba991e9
-...
-[16463.461970] ath10k_pci 0000:04:00.0: failed to ping firmware: -110
-[16463.461975] ath10k_pci 0000:04:00.0: failed to reset rx filter: -110
-
-Has anyone verified any AP solution to see if UTF mode is still working=20
-with after this patch?
-
-Anyway, I would like to exclude the workaround from all solution's UTF mode=
-.
-
-Michal any concerns? (or maybe just for QCA61x4 if any...)
-
-> +	if (ret) {
-> +		ath10k_err(ar, "failed to ping firmware: %d\n", ret);
-> +		return ret;
-> +	}
-> +
-> +	return 0;
-> +}
->
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index 589a49c..b892dac 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -313,6 +313,7 @@ struct rte_console {
+ 
+ #define KSO_WAIT_US 50
+ #define MAX_KSO_ATTEMPTS (PMU_MAX_TRANSITION_DLY/KSO_WAIT_US)
++#define BRCMF_SDIO_MAX_ACCESS_ERRORS	5
+ 
+ /*
+  * Conversion of 802.1D priority to precedence level
+@@ -677,6 +678,7 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+ {
+ 	u8 wr_val = 0, rd_val, cmp_val, bmask;
+ 	int err = 0;
++	int err_cnt = 0;
+ 	int try_cnt = 0;
+ 
+ 	brcmf_dbg(TRACE, "Enter: on=%d\n", on);
+@@ -712,9 +714,14 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
+ 		 */
+ 		rd_val = brcmf_sdiod_regrb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
+ 					   &err);
+-		if (((rd_val & bmask) == cmp_val) && !err)
++		if (!err) {
++			if ((rd_val & bmask) == cmp_val)
++				break;
++			err_cnt = 0;
++		}
++		/* bail out upon subsequent access errors */
++		if (err && (err_cnt++ > BRCMF_SDIO_MAX_ACCESS_ERRORS))
+ 			break;
+-
+ 		udelay(KSO_WAIT_US);
+ 		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
+ 				  wr_val, &err);
+-- 
+1.9.1
