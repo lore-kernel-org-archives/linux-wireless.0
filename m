@@ -1,57 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:59873
-        "EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933485AbcILOFI (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 10:05:08 -0400
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: Javier Martinez Canillas <javier@osg.samsung.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Subject: [PATCH 15/15] iwlegacy: use IS_ENABLED() instead of checking for built-in or module
-Date: Mon, 12 Sep 2016 10:03:46 -0400
-Message-Id: <1473689026-6983-16-git-send-email-javier@osg.samsung.com> (sfid-20160912_160603_529840_C8EA8860)
-In-Reply-To: <1473689026-6983-1-git-send-email-javier@osg.samsung.com>
-References: <1473689026-6983-1-git-send-email-javier@osg.samsung.com>
+Received: from mail2.tohojo.dk ([77.235.48.147]:57529 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932234AbcIER7M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Sep 2016 13:59:12 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Felix Fietkau <nbd@nbd.name>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v7] mac80211: Move reorder-sensitive TX handlers to after
+        TXQ dequeue.
+References: <20160902134104.29309-1-toke@toke.dk>
+        <20160905113042.22271-1-toke@toke.dk>
+        <8ffb5fee-78c1-79aa-2297-e125c59b092c@nbd.name>
+Date: Mon, 05 Sep 2016 19:59:06 +0200
+In-Reply-To: <8ffb5fee-78c1-79aa-2297-e125c59b092c@nbd.name> (Felix Fietkau's
+        message of "Mon, 5 Sep 2016 19:49:42 +0200")
+Message-ID: <87wpiq9qj9.fsf@toke.dk> (sfid-20160905_195916_075689_4A70D6C0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The IS_ENABLED() macro checks if a Kconfig symbol has been enabled either
-built-in or as a module, use that macro instead of open coding the same.
+Felix Fietkau <nbd@nbd.name> writes:
 
-Using the macro makes the code more readable by helping abstract away some
-of the Kconfig built-in and module enable details.
+> On 2016-09-05 13:30, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> The TXQ intermediate queues can cause packet reordering when more than
+>> one flow is active to a single station. Since some of the wifi-specific
+>> packet handling (notably sequence number and encryption handling) is
+>> sensitive to re-ordering, things break if they are applied before the
+>> TXQ.
+>>=20
+>> This splits up the TX handlers and fast_xmit logic into two parts: An
+>> early part and a late part. The former is applied before TXQ enqueue,
+>> and the latter after dequeue. The non-TXQ path just applies both parts
+>> at once.
+>>=20
+>> Because fragments shouldn't be split up or reordered, the fragmentation
+>> handler is run after dequeue. Any fragments are then kept in the TXQ and
+>> on subsequent dequeues they take precedence over dequeueing from the FQ
+>> structure.
+>>=20
+>> This approach avoids having to scatter special cases for when TXQ is
+>> enabled, at the cost of making the fast_xmit and TX handler code
+>> slightly more complex.
+> In my test, this one completely breaks ath9k with the txq patch.
+> One or two packets go through, then tx stalls completely.
 
-Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+I assume you are testing on LEDE? It requires a change to work with the
+patch in the LEDE tree that puts hdrlen into ieee80211_tx_data. Did you
+fix that? Otherwise multicast (and possibly other things) will break
+badly.
 
----
+I have a version that should work with LEDE here:
 
- drivers/net/wireless/intel/iwlegacy/common.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+https://kau.toke.dk/git/lede/tree/package/kernel/mac80211/patches/346-mac80=
+211-move-reorder-sensitive-tx-handlers-to-after-TXQ-dequeue.patch
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.h b/drivers/net/wireless/intel/iwlegacy/common.h
-index 726ede391cb9..3bba521d2cd9 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.h
-+++ b/drivers/net/wireless/intel/iwlegacy/common.h
-@@ -1320,7 +1320,7 @@ struct il_priv {
- 	u64 timestamp;
- 
- 	union {
--#if defined(CONFIG_IWL3945) || defined(CONFIG_IWL3945_MODULE)
-+#if IS_ENABLED(CONFIG_IWL3945)
- 		struct {
- 			void *shared_virt;
- 			dma_addr_t shared_phys;
-@@ -1351,7 +1351,7 @@ struct il_priv {
- 
- 		} _3945;
- #endif
--#if defined(CONFIG_IWL4965) || defined(CONFIG_IWL4965_MODULE)
-+#if IS_ENABLED(CONFIG_IWL4965)
- 		struct {
- 			struct il_rx_phy_res last_phy_res;
- 			bool last_phy_res_valid;
--- 
-2.7.4
+-Toke
