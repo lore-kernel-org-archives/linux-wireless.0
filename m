@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:32961 "EHLO
-        mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756178AbcIFN3f (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:35905 "EHLO
+        mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932286AbcIEJqD (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 09:29:35 -0400
-Received: by mail-oi0-f41.google.com with SMTP id y2so71308689oie.0
-        for <linux-wireless@vger.kernel.org>; Tue, 06 Sep 2016 06:29:35 -0700 (PDT)
-Subject: Re: Debugging RTL8192CU firmware loading on 3.12 powerpc
-To: Sven Eckelmann <sven@narfation.org>
-References: <1586991.4QUcrJhXOm@prime>
- <d6f2b558-167b-cb48-e924-7bac815817b1@lwfinger.net>
- <2747159.ja51ucCDFk@bentobox> <2186338.AojtHidiB8@bentobox>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>,
-        linux-wireless@vger.kernel.org,
-        Pannirselvam Kanagaratnam <pannirk@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <1d72a2ac-03e7-37d8-c367-68413595443e@lwfinger.net> (sfid-20160906_152944_201614_A82509E5)
-Date: Tue, 6 Sep 2016 08:29:32 -0500
-MIME-Version: 1.0
-In-Reply-To: <2186338.AojtHidiB8@bentobox>
-Content-Type: text/plain; charset=utf-8; format=flowed
+        Mon, 5 Sep 2016 05:46:03 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH] brcmfmac: avoid potential stack overflow in brcmf_cfg80211_start_ap()
+Date: Mon,  5 Sep 2016 10:45:47 +0100
+Message-Id: <1473068749-22487-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160905_114618_437823_91752636)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/06/2016 08:09 AM, Sven Eckelmann wrote:
-> On Dienstag, 6. September 2016 09:40:41 CEST Sven Eckelmann wrote:
->> On Freitag, 2. September 2016 12:53:28 CEST Larry Finger wrote:
->> [...]
->>
->>> The patch I included in my previous E-mail, and attached here,  does get
->>> the firmware loaded correctly. There is still a problem that prevents
->>> authentication. I'm still looking for that issue.
->>
->> Thanks for the fast update. I am currently testing your patch. It looks like
->> the initial error is now gone. The hostapd also starts but beaconing
->> doesn't seem to work at all (no error from the kernel/hostapd but the
->> device is not sending anything). I am currently checking how beaconing is
->> supposed to work in your driver. Maybe I will spot something useful.
->
-> Yes, found something similar in the checksumming algorithm. See the attached
-> patch for details.
+User-space can choose to omit NL80211_ATTR_SSID and only provide raw
+IE TLV data. When doing so it can provide SSID IE with length exceeding
+the allowed size. The driver further processes this IE copying it
+into a local variable without checking the length. Hence stack can be
+corrupted and used as exploit.
 
-Just for the record, this is not "my" driver. It was provided by Realtek. My 
-contribution has only been to clean it up.
+Cc: stable@vger.kernel.org # v4.7
+Reported-by: Daxing Guo <freener.gdx@gmail.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks for the patch. I too had found that checksum code, but I had not sent it 
-as there are still problems on BE machines. These difficulties are running the 
-NIC in STA mode. I have not tried AP mode. Scan data seem to be read OK, but it 
-never authenticates. I do not know if there are further errors in setting up the 
-transmit buffer, or if the problem is in the encryption/decryption code. I'm 
-still looking.
-
-Larry
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 5db56a7..b8aec5e5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -4527,7 +4527,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 				(u8 *)&settings->beacon.head[ie_offset],
+ 				settings->beacon.head_len - ie_offset,
+ 				WLAN_EID_SSID);
+-		if (!ssid_ie)
++		if (!ssid_ie || ssid_ie->len > IEEE80211_MAX_SSID_LEN)
+ 			return -EINVAL;
+ 
+ 		memcpy(ssid_le.SSID, ssid_ie->data, ssid_ie->len);
+-- 
+1.9.1
