@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50220 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932311AbcI3MLl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 08:11:41 -0400
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Solomon Peachy <pizza@shaftnet.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 1/3] cw1200: Don't leak memory if krealloc failes
-Date: Fri, 30 Sep 2016 14:11:35 +0200
-Message-Id: <1475237495-15030-1-git-send-email-jthumshirn@suse.de> (sfid-20160930_141208_240938_8F56ACB3)
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33137 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754240AbcIEVeP (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Sep 2016 17:34:15 -0400
+MIME-Version: 1.0
+In-Reply-To: <1458207563-3453369-1-git-send-email-arnd@arndb.de>
+References: <1458207563-3453369-1-git-send-email-arnd@arndb.de>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Date: Mon, 5 Sep 2016 23:34:14 +0200
+Message-ID: <CACna6rza3U+X=cNXqvjB8fe1s+hP234cu405m3ObJBB=wQUcOQ@mail.gmail.com> (sfid-20160905_233422_014031_F10C6ECA)
+Subject: Re: [PATCH v2] bcma: use of_dma_configure() to set initial dma mask
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The call to krealloc() in wsm_buf_reserve() directly assigns the newly
-returned memory to buf->begin. This is all fine except when krealloc()
-failes we loose the ability to free the old memory pointed to by
-buf->begin. If we just create a temporary variable to assign memory to
-and assign the memory to it we can mitigate the memory leak.
+On 17 March 2016 at 10:39, Arnd Bergmann <arnd@arndb.de> wrote:
+> While fixing another bug, I noticed that bcma manually sets up
+> a dma_mask pointer for its child devices. We have a generic
+> helper for that now, which should be able to cope better with
+> any variations that might be needed to deal with cache coherency,
+> unusual DMA address offsets, iommus, or limited DMA masks, none
+> of which are currently handled here.
+>
+> This changes the core to use the of_dma_configure(), like
+> we do for platform devices that are probed directly from
+> DT.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/net/wireless/st/cw1200/wsm.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+I applied this patch and tested on BCM47081 based device. I still got
+bgmac working which surely uses DMA. There is only 1 ARM wireless SoC
+using bcma (BCM47198) but its WiFi core isn't supported by b43.
 
-diff --git a/drivers/net/wireless/st/cw1200/wsm.c b/drivers/net/wireless/st/cw1200/wsm.c
-index 680d60e..12fad99 100644
---- a/drivers/net/wireless/st/cw1200/wsm.c
-+++ b/drivers/net/wireless/st/cw1200/wsm.c
-@@ -1807,16 +1807,18 @@ static int wsm_buf_reserve(struct wsm_buf *buf, size_t extra_size)
- {
- 	size_t pos = buf->data - buf->begin;
- 	size_t size = pos + extra_size;
-+	u8 *tmp;
- 
- 	size = round_up(size, FWLOAD_BLOCK_SIZE);
- 
--	buf->begin = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
--	if (buf->begin) {
--		buf->data = &buf->begin[pos];
--		buf->end = &buf->begin[size];
--		return 0;
--	} else {
--		buf->end = buf->data = buf->begin;
-+	tmp = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
-+	if (tmp) {
-+		wsm_buf_deinit(buf);
- 		return -ENOMEM;
- 	}
-+
-+	buf->begin = tmp;
-+	buf->data = &buf->begin[pos];
-+	buf->end = &buf->begin[size];
-+	return 0;
- }
--- 
-1.8.5.6
+Any tips what else to test? SPI core/driver doesn't use DMA. Maybe
+NAND core does, but we don't use it.
+
+--=20
+Rafa=C5=82
