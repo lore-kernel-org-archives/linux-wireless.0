@@ -1,53 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:60627 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754086AbcIFJeO (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 05:34:14 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Hauke Mehrtens <hauke@hauke-m.de>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2] bcma: use of_dma_configure() to set initial dma mask
-Date: Tue, 06 Sep 2016 11:34:26 +0200
-Message-ID: <5961451.eLRiX5Tibt@wuerfel> (sfid-20160906_113418_933568_E969B906)
-In-Reply-To: <CACna6rza3U+X=cNXqvjB8fe1s+hP234cu405m3ObJBB=wQUcOQ@mail.gmail.com>
-References: <1458207563-3453369-1-git-send-email-arnd@arndb.de> <CACna6rza3U+X=cNXqvjB8fe1s+hP234cu405m3ObJBB=wQUcOQ@mail.gmail.com>
+Received: from nbd.name ([46.4.11.11]:40477 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933773AbcIESpE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Sep 2016 14:45:04 -0400
+Subject: Re: [PATCH v7] mac80211: Move reorder-sensitive TX handlers to after
+ TXQ dequeue.
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>
+References: <20160902134104.29309-1-toke@toke.dk>
+ <20160905113042.22271-1-toke@toke.dk>
+ <8ffb5fee-78c1-79aa-2297-e125c59b092c@nbd.name> <87wpiq9qj9.fsf@toke.dk>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <41f0fbc5-c837-65b4-47c0-c875b774f8d5@nbd.name> (sfid-20160905_204726_829893_44B43659)
+Date: Mon, 5 Sep 2016 20:44:59 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <87wpiq9qj9.fsf@toke.dk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, September 5, 2016 11:34:14 PM CEST Rafał Miłecki wrote:
-> On 17 March 2016 at 10:39, Arnd Bergmann <arnd@arndb.de> wrote:
-> > While fixing another bug, I noticed that bcma manually sets up
-> > a dma_mask pointer for its child devices. We have a generic
-> > helper for that now, which should be able to cope better with
-> > any variations that might be needed to deal with cache coherency,
-> > unusual DMA address offsets, iommus, or limited DMA masks, none
-> > of which are currently handled here.
-> >
-> > This changes the core to use the of_dma_configure(), like
-> > we do for platform devices that are probed directly from
-> > DT.
-> >
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On 2016-09-05 19:59, Toke Høiland-Jørgensen wrote:
+> Felix Fietkau <nbd@nbd.name> writes:
 > 
-> I applied this patch and tested on BCM47081 based device. I still got
-> bgmac working which surely uses DMA.
-
-Thanks!
-
-> There is only 1 ARM wireless SoC
-> using bcma (BCM47198) but its WiFi core isn't supported by b43.
+>> On 2016-09-05 13:30, Toke Høiland-Jørgensen wrote:
+>>> The TXQ intermediate queues can cause packet reordering when more than
+>>> one flow is active to a single station. Since some of the wifi-specific
+>>> packet handling (notably sequence number and encryption handling) is
+>>> sensitive to re-ordering, things break if they are applied before the
+>>> TXQ.
+>>> 
+>>> This splits up the TX handlers and fast_xmit logic into two parts: An
+>>> early part and a late part. The former is applied before TXQ enqueue,
+>>> and the latter after dequeue. The non-TXQ path just applies both parts
+>>> at once.
+>>> 
+>>> Because fragments shouldn't be split up or reordered, the fragmentation
+>>> handler is run after dequeue. Any fragments are then kept in the TXQ and
+>>> on subsequent dequeues they take precedence over dequeueing from the FQ
+>>> structure.
+>>> 
+>>> This approach avoids having to scatter special cases for when TXQ is
+>>> enabled, at the cost of making the fast_xmit and TX handler code
+>>> slightly more complex.
+>> In my test, this one completely breaks ath9k with the txq patch.
+>> One or two packets go through, then tx stalls completely.
 > 
-> Any tips what else to test? SPI core/driver doesn't use DMA. Maybe
-> NAND core does, but we don't use it.
+> I assume you are testing on LEDE? It requires a change to work with the
+> patch in the LEDE tree that puts hdrlen into ieee80211_tx_data. Did you
+> fix that? Otherwise multicast (and possibly other things) will break
+> badly.
+You're right, I missed that.
+
+> I have a version that should work with LEDE here:
 > 
+> https://kau.toke.dk/git/lede/tree/package/kernel/mac80211/patches/346-mac80211-move-reorder-sensitive-tx-handlers-to-after-TXQ-dequeue.patch
+That one works fine in my test.
 
-If there is nothing else using this, then the patch won't cause
-a regression ;-)
+Thanks,
 
-	Arnd
+- Felix
