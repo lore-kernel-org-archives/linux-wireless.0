@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36856 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934834AbcIUQtk (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33572 "EHLO
+        mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754731AbcIESe2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Sep 2016 12:49:40 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: gregkh@linuxfoundation.org, Kalle Valo <kvalo@codeaurora.org>
-Cc: Christian Lamparter <chunkeey@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        Nicolai Stange <nicstange@gmail.com>,
-        Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2] carl9170: fix debugfs crashes
-Date: Wed, 21 Sep 2016 18:49:36 +0200
-Message-Id: <238afe4926e979a46013129f8b8db48154e46963.1474476231.git.chunkeey@gmail.com> (sfid-20160921_184945_619573_1626D9DC)
-In-Reply-To: <1927662.l0xhZ6GL0u@debian64>
-References: <1927662.l0xhZ6GL0u@debian64>
+        Mon, 5 Sep 2016 14:34:28 -0400
+Received: by mail-pa0-f50.google.com with SMTP id cm16so15992460pac.0
+        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2016 11:34:28 -0700 (PDT)
+Subject: Re: [v2] bcma: use of_dma_configure() to set initial dma mask
+To: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>
+References: <20160903140819.245F06216C@smtp.codeaurora.org>
+ <6123998.NAlOfyAp5F@wuerfel>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <ba2307b6-e139-0dfb-94c1-ea69548868b4@broadcom.com> (sfid-20160905_203432_877441_178BC5DB)
+Date: Mon, 5 Sep 2016 20:34:08 +0200
+MIME-Version: 1.0
+In-Reply-To: <6123998.NAlOfyAp5F@wuerfel>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear reported:
-> I see lots of instability as soon as I load up the carl9710 NIC.
-> My application is going to be poking at it's debugfs files...
->
-> BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
-> [carl9170] at addr 0xffff8801bc1208b0
-> Read of size 8 by task btserver/5888
-> =======================================================================
-> BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
-> -----------------------------------------------------------------------
->
-> INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
->...
 
-This breakage was caused by the introduction of intermediate
-fops in debugfs by commit 9fd4dcece43a
-("debugfs: prevent access to possibly dead file_operations at file open")
 
-Thankfully, the original/real fops are still available in d_fsdata.
+On 5-9-2016 17:26, Arnd Bergmann wrote:
+> On Saturday, September 3, 2016 2:08:19 PM CEST Kalle Valo wrote:
+>> Arnd Bergmann <arnd@arndb.de> wrote:
+>>> While fixing another bug, I noticed that bcma manually sets up
+>>> a dma_mask pointer for its child devices. We have a generic
+>>> helper for that now, which should be able to cope better with
+>>> any variations that might be needed to deal with cache coherency,
+>>> unusual DMA address offsets, iommus, or limited DMA masks, none
+>>> of which are currently handled here.
+>>>
+>>> This changes the core to use the of_dma_configure(), like
+>>> we do for platform devices that are probed directly from
+>>> DT.
+>>>
+>>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>>
+>> Nobody tested this, so I'll drop the patch.
+>>
+> 
+> Should I resend it? I think it's still required.
 
-Reported-by: Ben Greear <greearb@candelatech.com>
-Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
-Cc: stable <stable@vger.kernel.org> # 4.7+
----
- drivers/net/wireless/ath/carl9170/debug.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Maybe you should request some bcma users (Rafał?) explicitly to test
+this. I have no equipment with CONFIG_OF enabled over here.
 
-diff --git a/drivers/net/wireless/ath/carl9170/debug.c b/drivers/net/wireless/ath/carl9170/debug.c
-index 6808db4..ec3a64e 100644
---- a/drivers/net/wireless/ath/carl9170/debug.c
-+++ b/drivers/net/wireless/ath/carl9170/debug.c
-@@ -75,7 +75,8 @@ static ssize_t carl9170_debugfs_read(struct file *file, char __user *userbuf,
- 
- 	if (!ar)
- 		return -ENODEV;
--	dfops = container_of(file->f_op, struct carl9170_debugfs_fops, fops);
-+	dfops = container_of(debugfs_real_fops(file),
-+			     struct carl9170_debugfs_fops, fops);
- 
- 	if (!dfops->read)
- 		return -ENOSYS;
-@@ -127,7 +128,8 @@ static ssize_t carl9170_debugfs_write(struct file *file,
- 
- 	if (!ar)
- 		return -ENODEV;
--	dfops = container_of(file->f_op, struct carl9170_debugfs_fops, fops);
-+	dfops = container_of(debugfs_real_fops(file),
-+			     struct carl9170_debugfs_fops, fops);
- 
- 	if (!dfops->write)
- 		return -ENOSYS;
--- 
-2.9.3
+Regards,
+Arend
