@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24963 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753471AbcICRfj (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 13:35:39 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath9k: bring back direction setting in ath9k_{start_stop}
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160901174702.8645-1-giedrius.statkevicius@gmail.com>
-To: Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com>
-CC: <kvalo@codeaurora.org>, <ath9k-devel@qca.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Miaoqing Pan <miaoqing@codeaurora.org>,
-        <stable@vger.kernel.org>,
-        =?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
-        <giedrius.statkevicius@gmail.com>
-Message-ID: <f70422725ef541e6af08136a61aacba5@euamsexm01a.eu.qualcomm.com> (sfid-20160903_193600_481089_9DB13D77)
-Date: Sat, 3 Sep 2016 19:35:29 +0200
+Received: from nbd.name ([46.4.11.11]:57526 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932301AbcIEJvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 5 Sep 2016 05:51:33 -0400
+From: Felix Fietkau <nbd@nbd.name>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org
+Subject: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
+Date: Mon,  5 Sep 2016 11:51:26 +0200
+Message-Id: <20160905095128.80560-2-nbd@nbd.name> (sfid-20160905_115141_952345_2697D471)
+In-Reply-To: <20160905095128.80560-1-nbd@nbd.name>
+References: <20160905095128.80560-1-nbd@nbd.name>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com> wrote:
-> A regression was introduced in commit id 79d4db1214a ("ath9k: cleanup
-> led_pin initial") that broken the WLAN status led on my laptop with
-> AR9287 after suspending and resuming.
-> 
-> Steps to reproduce:
-> * Suspend (laptop)
-> * Resume (laptop)
-> * Observe that the WLAN led no longer turns ON/OFF depending on the
->   status and is always red
-> 
-> Even though for my case it only needs to be set to OUT in ath9k_start
-> but for consistency bring back the IN direction setting as well.
-> 
-> Cc: Miaoqing Pan <miaoqing@codeaurora.org>
-> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@nbd.name>
+---
+ .../bindings/net/wireless/mediatek,mt76.txt        | 26 ++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
 
-I'm planning to queue this to 4.8 if no objections.
-
+diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+new file mode 100644
+index 0000000..d51c35f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
+@@ -0,0 +1,26 @@
++* MediaTek mt76xx devices
++
++This node provides properties for configuring the MediaTek mt76xx wireless
++device. The node is expected to be specified as a child node of the PCI
++controller to which the wireless chip is connected.
++
++Optional properties:
++
++- mac-address: See ethernet.txt in the parent directory
++- local-mac-address: See ethernet.txt in the parent directory
++- mediatek,2ghz: Override the 2.4 GHz band capability from EEPROM
++- mediatek,5ghz: Override the 5 GHz band capability from EEPROM
++- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
++
++&pcie {
++	status = "okay";
++
++	pcie0 {
++		mt76@0,0 {
++			reg = <0x0000 0 0 0 0>;
++			device_type = "pci";
++			mediatek,mtd-eeprom = <&factory 0x8000>;
++			mediatek,2ghz = <0>;
++		};
++	};
++};
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9309829/
+2.8.4
