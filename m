@@ -1,62 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53592 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755381AbcIUBTb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 21:19:31 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 4/4] rtl8xxxu: Stop log spam from each successful interrupt
-Date: Tue, 20 Sep 2016 21:19:29 -0400
-Message-Id: <1474420769-20086-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160921_031934_924550_0444A2F3)
-In-Reply-To: <1474420769-20086-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1474420769-20086-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:33080 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933754AbcIFWSg (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Sep 2016 18:18:36 -0400
+Received: by mail-pf0-f175.google.com with SMTP id g202so55557969pfb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 06 Sep 2016 15:18:35 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Andy Gross <andy.gross@linaro.org>,
+        Eugene Krasnikov <k.eugene.e@gmail.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org,
+        Marcel Holtmann <marcel@holtmann.org>
+Subject: [PATCH v4 1/4] soc: qcom: wcnss_ctrl: Stub wcnss_ctrl API
+Date: Tue,  6 Sep 2016 15:18:29 -0700
+Message-Id: <1473200312-22438-1-git-send-email-bjorn.andersson@linaro.org> (sfid-20160907_002001_701461_FDE1AA47)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Larry Finger <Larry.Finger@lwfinger.net>
+Stub the wcnss_ctrl API to allow compile testing wcnss function drivers.
 
-As soon as debugging is turned on, the logs are filled with messages
-reporting the interrupt status. As this quantity is usually zero, this
-output is not needed. In fact, there will be a report if the status is
-not zero, thus the debug line in question could probably be deleted.
-Rather than taking that action, I have changed it to only be printed
-when the newly added RTL8XXXU_DEBUG_INTERRUPT bit is set in the debug
-mask.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      | 1 +
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index a10a57c..10166289 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -29,6 +29,7 @@
- #define RTL8XXXU_DEBUG_H2C		0x800
- #define RTL8XXXU_DEBUG_ACTION		0x1000
- #define RTL8XXXU_DEBUG_EFUSE		0x2000
-+#define RTL8XXXU_DEBUG_INTERRUPT	0x4000
+There are no other pending changes colliding with this, so if Andy is okay with
+this it could be merged through Kalle's tree - together with the other patches.
+
+Marcel, with this applied we can drop the depends on QCOM_SMD from the
+btqcomsmd driver as well.
+
+Changes since v3:
+- Added this patch to allow compile testing without SMD support after patch 2
+
+ include/linux/soc/qcom/wcnss_ctrl.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
+
+diff --git a/include/linux/soc/qcom/wcnss_ctrl.h b/include/linux/soc/qcom/wcnss_ctrl.h
+index a37bc5538f19..eab64976a73b 100644
+--- a/include/linux/soc/qcom/wcnss_ctrl.h
++++ b/include/linux/soc/qcom/wcnss_ctrl.h
+@@ -3,6 +3,19 @@
  
- #define RTW_USB_CONTROL_MSG_TIMEOUT	500
- #define RTL8XXXU_MAX_REG_POLL		500
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 71145eb..b2d7f6e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5375,7 +5375,8 @@ static void rtl8xxxu_int_complete(struct urb *urb)
- 	struct device *dev = &priv->udev->dev;
- 	int ret;
+ #include <linux/soc/qcom/smd.h>
  
--	dev_dbg(dev, "%s: status %i\n", __func__, urb->status);
-+	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_INTERRUPT)
-+		dev_dbg(dev, "%s: status %i\n", __func__, urb->status);
- 	if (urb->status == 0) {
- 		usb_anchor_urb(urb, &priv->int_anchor);
- 		ret = usb_submit_urb(urb, GFP_ATOMIC);
++#if IS_ENABLED(CONFIG_QCOM_WCNSS_CTRL)
++
+ struct qcom_smd_channel *qcom_wcnss_open_channel(void *wcnss, const char *name, qcom_smd_cb_t cb);
+ 
++#else
++
++static inline struct qcom_smd_channel*
++qcom_wcnss_open_channel(void *wcnss, const char *name, qcom_smd_cb_t cb)
++{
++	WARN_ON(1);
++	return ERR_PTR(-ENXIO);
++}
++
++#endif
++
+ #endif
 -- 
-2.7.4
+2.5.0
