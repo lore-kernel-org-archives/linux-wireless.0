@@ -1,104 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:34599 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750790AbcIBCsw (ORCPT
+Received: from condef010-v.nifty.com ([210.131.4.247]:36393 "EHLO
+        condef010-v.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753617AbcIFMnU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 22:48:52 -0400
-Received: by mail-it0-f66.google.com with SMTP id e124so745667ith.1
-        for <linux-wireless@vger.kernel.org>; Thu, 01 Sep 2016 19:48:52 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20160901160312.31540-1-toke@toke.dk>
-References: <20160830131548.6014-1-toke@toke.dk> <20160901160312.31540-1-toke@toke.dk>
-From: Jason Andryuk <jandryuk@gmail.com>
-Date: Thu, 1 Sep 2016 22:48:50 -0400
-Message-ID: <CAKf6xptJrniYA3Q2pYN4DkpKf_30dNJTdHqm+jCM=enDRSQhJQ@mail.gmail.com> (sfid-20160902_044856_869409_0FE30C48)
-Subject: Re: [PATCH v5] mac80211: Move reorder-sensitive TX handlers to after
- TXQ dequeue.
-To: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+        Tue, 6 Sep 2016 08:43:20 -0400
+From: Masahiro Yamada <yamada.masahiro@socionext.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org
+Subject: [PATCH 3/3] ath10k: do not check if reset is NULL
+Date: Tue,  6 Sep 2016 21:39:58 +0900
+Message-Id: <1473165598-28683-4-git-send-email-yamada.masahiro@socionext.com> (sfid-20160906_144326_670774_737345F4)
+In-Reply-To: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
+References: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 1, 2016 at 12:03 PM, Toke H=C3=B8iland-J=C3=B8rgensen <toke@tok=
-e.dk> wrote:
-> @@ -1481,33 +1506,57 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee8=
-0211_hw *hw,
->  {
->         struct ieee80211_local *local =3D hw_to_local(hw);
->         struct txq_info *txqi =3D container_of(txq, struct txq_info, txq)=
-;
-> -       struct ieee80211_hdr *hdr;
->         struct sk_buff *skb =3D NULL;
->         struct fq *fq =3D &local->fq;
->         struct fq_tin *tin =3D &txqi->tin;
-> +       struct ieee80211_tx_info *info;
->
->         spin_lock_bh(&fq->lock);
->
->         if (test_bit(IEEE80211_TXQ_STOP, &txqi->flags))
->                 goto out;
->
-> +begin:
->         skb =3D fq_tin_dequeue(fq, tin, fq_tin_dequeue_func);
->         if (!skb)
->                 goto out;
->
->         ieee80211_set_skb_vif(skb, txqi);
->
-> -       hdr =3D (struct ieee80211_hdr *)skb->data;
-> -       if (txq->sta && ieee80211_is_data_qos(hdr->frame_control)) {
-> +       info =3D IEEE80211_SKB_CB(skb);
-> +       if (txq->sta && info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT=
-) {
->                 struct sta_info *sta =3D container_of(txq->sta, struct st=
-a_info,
->                                                     sta);
-> -               struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
-> +               struct ieee80211_fast_tx *fast_tx;
->
-> -               hdr->seq_ctrl =3D ieee80211_tx_next_seq(sta, txq->tid);
-> -               if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags))
-> -                       info->flags |=3D IEEE80211_TX_CTL_AMPDU;
-> -               else
-> -                       info->flags &=3D ~IEEE80211_TX_CTL_AMPDU;
-> +               fast_tx =3D rcu_dereference(sta->fast_tx);
-> +               if (WARN_ON(!fast_tx)) {
-> +                       /* lost the fast_tx pointer while the packet was =
-queued */
-> +                       ieee80211_free_txskb(hw, skb);
-> +                       goto begin;
-> +               }
-> +               ieee80211_xmit_fast_finish(sta->sdata, sta, fast_tx, skb,=
- false);
-> +       } else {
-> +               struct ieee80211_tx_data tx =3D { };
-> +
-> +               __skb_queue_head_init(&tx.skbs);
-> +               tx.local =3D local;
-> +               if (txq->sta) {
-> +                       struct sta_info *sta =3D container_of(txq->sta,
-> +                                                           struct sta_in=
-fo,
-> +                                                           sta);
+Since reset_control_get() never returns NULL, we can use IS_ERR()
+instead of IS_ERR_OR_NULL().  The return statements can be simpler
+as well.
 
-sta is unneeded give the assignment below?
+Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+---
 
-Regards,
-Jason
+ drivers/net/wireless/ath/ath10k/ahb.c | 25 ++++++++++---------------
+ 1 file changed, 10 insertions(+), 15 deletions(-)
 
-> +                       tx.sta =3D container_of(txq->sta, struct sta_info=
-, sta);
-> +                       tx.sdata =3D sta->sdata;
-> +               } else {
-> +                       tx.sdata =3D vif_to_sdata(info->control.vif);
-> +               }
-> +
-> +               __skb_queue_tail(&tx.skbs, skb);
-> +
-> +               if (invoke_tx_handlers_late(&tx))
-> +                       goto begin;
-> +
-> +               __skb_unlink(skb, &tx.skbs);
->         }
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index 6b355ee..b29dc4d 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -195,43 +195,38 @@ static int ath10k_ahb_rst_ctrl_init(struct ath10k *ar)
+ 	dev = &ar_ahb->pdev->dev;
+ 
+ 	ar_ahb->core_cold_rst = devm_reset_control_get(dev, "wifi_core_cold");
+-	if (IS_ERR_OR_NULL(ar_ahb->core_cold_rst)) {
++	if (IS_ERR(ar_ahb->core_cold_rst)) {
+ 		ath10k_err(ar, "failed to get core cold rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->core_cold_rst));
+-		return ar_ahb->core_cold_rst ?
+-			PTR_ERR(ar_ahb->core_cold_rst) : -ENODEV;
++		return PTR_ERR(ar_ahb->core_cold_rst);
+ 	}
+ 
+ 	ar_ahb->radio_cold_rst = devm_reset_control_get(dev, "wifi_radio_cold");
+-	if (IS_ERR_OR_NULL(ar_ahb->radio_cold_rst)) {
++	if (IS_ERR(ar_ahb->radio_cold_rst)) {
+ 		ath10k_err(ar, "failed to get radio cold rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->radio_cold_rst));
+-		return ar_ahb->radio_cold_rst ?
+-			PTR_ERR(ar_ahb->radio_cold_rst) : -ENODEV;
++		return PTR_ERR(ar_ahb->radio_cold_rst);
+ 	}
+ 
+ 	ar_ahb->radio_warm_rst = devm_reset_control_get(dev, "wifi_radio_warm");
+-	if (IS_ERR_OR_NULL(ar_ahb->radio_warm_rst)) {
++	if (IS_ERR(ar_ahb->radio_warm_rst)) {
+ 		ath10k_err(ar, "failed to get radio warm rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->radio_warm_rst));
+-		return ar_ahb->radio_warm_rst ?
+-			PTR_ERR(ar_ahb->radio_warm_rst) : -ENODEV;
++		return PTR_ERR(ar_ahb->radio_warm_rst);
+ 	}
+ 
+ 	ar_ahb->radio_srif_rst = devm_reset_control_get(dev, "wifi_radio_srif");
+-	if (IS_ERR_OR_NULL(ar_ahb->radio_srif_rst)) {
++	if (IS_ERR(ar_ahb->radio_srif_rst)) {
+ 		ath10k_err(ar, "failed to get radio srif rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->radio_srif_rst));
+-		return ar_ahb->radio_srif_rst ?
+-			PTR_ERR(ar_ahb->radio_srif_rst) : -ENODEV;
++		return PTR_ERR(ar_ahb->radio_srif_rst);
+ 	}
+ 
+ 	ar_ahb->cpu_init_rst = devm_reset_control_get(dev, "wifi_cpu_init");
+-	if (IS_ERR_OR_NULL(ar_ahb->cpu_init_rst)) {
++	if (IS_ERR(ar_ahb->cpu_init_rst)) {
+ 		ath10k_err(ar, "failed to get cpu init rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->cpu_init_rst));
+-		return ar_ahb->cpu_init_rst ?
+-			PTR_ERR(ar_ahb->cpu_init_rst) : -ENODEV;
++		return PTR_ERR(ar_ahb->cpu_init_rst);
+ 	}
+ 
+ 	return 0;
+-- 
+1.9.1
