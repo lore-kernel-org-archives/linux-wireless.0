@@ -1,103 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41456 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752439AbcIMRyn (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:32946 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933490AbcIFVqd (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 13:54:43 -0400
-From: "Pedersen, Thomas" <twp@qca.qualcomm.com>
-To: Simon Wunderlich <sw@simonwunderlich.de>,
-        "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "openwrt-devel@lists.openwrt.org" <openwrt-devel@lists.openwrt.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Martin Blumenstingl" <martin.blumenstingl@googlemail.com>
-Subject: Re: ath10k mesh + ap + encryption?
-Date: Tue, 13 Sep 2016 17:54:38 +0000
-Message-ID: <1473789271.27738.4.camel@qca.qualcomm.com> (sfid-20160913_195448_539001_342D7A60)
-References: <2661831.slnB0LOeVt@prime> <15353347.MUgkgiNHdu@prime>
-         <87d1k8jb34.fsf@kamboji.qca.qualcomm.com> <3247815.ey5ZWkP5uX@prime>
-In-Reply-To: <3247815.ey5ZWkP5uX@prime>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Tue, 6 Sep 2016 17:46:33 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
+        kvalo@codeaurora.org, chunkeey@googlemail.com,
+        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
+        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v6 1/3] Documentation: dt: net: add ath9k wireless device binding
+Date: Tue,  6 Sep 2016 23:46:21 +0200
+Message-Id: <20160906214623.20424-2-martin.blumenstingl@googlemail.com> (sfid-20160906_234638_458093_2FC770C3)
+In-Reply-To: <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
+References: <20160821143105.27487-1-martin.blumenstingl@googlemail.com>
+ <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE2LTA5LTEzIGF0IDE0OjMwICswMjAwLCBTaW1vbiBXdW5kZXJsaWNoIHdyb3Rl
-Og0KPiBPbiBUdWVzZGF5LCBTZXB0ZW1iZXIgMTMsIDIwMTYgMTE6MjU6MjEgQU0gQ0VTVCBWYWxv
-LCBLYWxsZSB3cm90ZToNCj4gPiANCj4gPiBTaW1vbiBXdW5kZXJsaWNoIDxzd0BzaW1vbnd1bmRl
-cmxpY2guZGU+IHdyaXRlczoNCj4gPiA+IA0KPiA+ID4gT24gVHVlc2RheSwgU2VwdGVtYmVyIDEz
-LCAyMDE2IDEwOjU5OjMxIEFNIENFU1QgVmFsbywgS2FsbGUNCj4gPiA+IHdyb3RlOg0KPiA+ID4g
-PiANCj4gPiA+ID4gU2ltb24gV3VuZGVybGljaCA8c3dAc2ltb253dW5kZXJsaWNoLmRlPiB3cml0
-ZXM6DQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4gd2UgaGF2ZSBkb25lIHNvbWUgZXhwZXJpbWVudHMg
-bGFzdCB3ZWVrIG9uIGF0aDEwaywgdHJ5aW5nIHRvDQo+ID4gPiA+ID4gcnVuIG1lc2gNCj4gPiA+
-ID4gPiAoODAyLjExcykgYW5kIGFjY2VzcyBwb2ludCBhdCB0aGUgc2FtZSB0aW1lLCBib3RoIGVu
-Y3J5cHRlZC4NCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBXZSBoYXZlIHRlc3RlZCBhIHJlY2VudCBM
-RURFIChyZWJvb3QtMTUxOS1nNDJmNTU5ZSkgYnV0IHdpdGgNCj4gPiA+ID4gPiBmaXJtd2FyZS01
-LmJpbl8xMC4yLjQuNzAuNDItMiBhbmQgdGhlIGluY2x1ZGVkDQo+ID4gPiA+ID4gd3BhX3N1cHBs
-aWNhbnQsIHdoaWNoDQo+ID4gPiA+ID4gZ2F2ZQ0KPiA+ID4gPiA+IHVzIGEgd29ya2luZyBlbmNy
-eXB0ZWQgODAyLjExcyBuZXR3b3JrLiBIb3dldmVyLCBzdGFydGluZyBhbg0KPiA+ID4gPiA+IEFQ
-IGF0IHRoZQ0KPiA+ID4gPiA+IHNhbWUgdGltZSBkaWRuJ3Qgd29yayAoQVAgZG9lc24ndCBiZWFj
-b24pLiBUaGlzIHdhc24ndCBhDQo+ID4gPiA+ID4gcHJvYmxlbSB3aGVuDQo+ID4gPiA+ID4gODAy
-LjExcyB3YXMgcnVubmluZyB1bmVuY3J5cHRlZC4NCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBXZSBh
-bHNvIHRlc3RlZCB2ZXJzaW9uIDEwLjIuNC45NyAoZnJvbSBjb2RlYXVyb3JhKSwgd2hpY2ggaXMN
-Cj4gPiA+ID4gPiBub3cNCj4gPiA+ID4gPiBkZWZhdWx0DQo+ID4gPiA+ID4gaW4NCj4gPiA+ID4g
-PiBMRURFLiBIb3dldmVyLCB0aGlzIHZlcnNpb24gYXBwYXJlbnRseSBkb2Vzbid0IHN1cHBvcnQg
-MTFzDQo+ID4gPiA+ID4gbWVzaCBhdCBhbGwNCj4gPiA+ID4gPiAoV01JX1NFUlZJQ0VfTUVTSF8x
-MVMgaXMgZGlzYWJsZWQgaW4gdGhlIHNlcnZpY2UgbWFwLCBidXQNCj4gPiA+ID4gPiBjZmcvbWFj
-ODAyMTENCj4gPiA+ID4gPiBhZHZlcnRpc2VzIHN1cHBvcnQpLg0KPiA+ID4gPiA+IA0KPiA+ID4g
-PiA+IFNvIGhlcmUgYXJlIG15IHF1ZXN0aW9uczoNCj4gPiA+ID4gPiDCoCogRGlkIGFueW9uZSBz
-dWNjZXNmdWxseSBydW4gQVAgYW5kIG1lc2gsIGJvdGggZW5jcnlwdGVkIGF0DQo+ID4gPiA+ID4g
-dGhlIHNhbWUNCj4gPiA+ID4gPiDCoHRpbWU/DQo+ID4gPiA+ID4gwqAqIERvIHlvdSBoYXZlIGFu
-eSBwb2ludGVycyBob3cgd2UgY291bGQgZml4IHRoaXM/IENvdWxkIGl0DQo+ID4gPiA+ID4gYmUg
-Zml4YWJsZQ0KPiA+ID4gPiA+IMKgaW4NCj4gPiA+ID4gPiDCoHRoZT4NCj4gPiA+ID4gPiANCj4g
-PiA+ID4gPiBkcml2ZXIgKGkuZS4gbm90IGluIGZpcm13YXJlKT8NCj4gPiA+ID4gPiANCj4gPiA+
-ID4gPiDCoCogRG9lcyBhbnlvbmUgaGF2ZSBhbiBpZGVhIGlmIDExcyB3aWxsIGJlIHN1cHBvcnRl
-ZCBpbg0KPiA+ID4gPiA+IGZ1dHVyZQ0KPiA+ID4gPiA+IMKgdmVyc2lvbnM/IEkNCj4gPiA+ID4g
-PiANCj4gPiA+ID4gPiBkaWRuJ3QgZmluZCBhbnkgY2hhbmdlbG9ncywgYnV0IGhhdmluZyAxMXMg
-bW9kZSBubyBsb25nZXIgaW4NCj4gPiA+ID4gPiB0aGUNCj4gPiA+ID4gPiBzZXJ2aWNlDQo+ID4g
-PiA+ID4gbWFwIGRvZXMgbm90IG1ha2UgbWUgb3B0aW1pc3RpYy4NCj4gPiA+ID4gDQo+ID4gPiA+
-IFdoeSBpcyBMRURFIHVzaW5nIDEwLjIuNC45Nz8gSXQgc2VlbXMgdG8gYmUgYSBxdWl0ZSBvbGQg
-cmVsZWFzZQ0KPiA+ID4gPiBhbmQgSQ0KPiA+ID4gPiBoYXZlIG5vIGtub3dsZWRnZSBpZiBhbnlv
-bmUgZXZlbiB0ZXN0cyB0aGF0IGZpcm13YXJlIGJyYW5jaA0KPiA+ID4gPiB3aXRoIGF0aDEway4N
-Cj4gPiA+ID4gSSByZWNvbW1lbmQgdG8gb25seSB1c2UgZmlybXdhcmUgcmVsZWFzZXMgZnJvbSBh
-dGgxMGstDQo+ID4gPiA+IGZpcm13YXJlLmdpdCBhcyB3ZQ0KPiA+ID4gPiB1c2UgdGhvc2UgaW50
-ZXJuYWxseSB3aXRoIGF0aDEway4gSW4gYW55IGNhc2UsIGRvbid0IG1ha2UgYW55DQo+ID4gPiA+
-IGFzc3VtcHRpb25zIGFib3V0IGZ1dHVyZSBmcm9tIHRoYXQgZmlybXdhcmUgYnJhbmNoIGFzIGl0
-J3Mgc28NCj4gPiA+ID4gb2xkLg0KPiA+ID4gDQo+ID4gPiBUaGlzIHdhcyBpbnRyb2R1Y2VkIGlu
-IERlY2VtYmVyIDI1dGgsIDIwMTUgYWZ0ZXIgc29tZSBmaXJtd2FyZS0NCj4gPiA+IHJlbGF0ZWQN
-Cj4gPiA+IHByb2JsZW1zLiBJJ20gQ0MnaW5nIE1hcnRpbiBCbHVtZW5zdGluZ2wgd2hvIHN1Z2dl
-c3RlZCB0aGlzDQo+ID4gPiBjaGFuZ2UuDQo+ID4gPiANCj4gPiA+IFNpbmNlIHRoZW4sIGF0aDEw
-ayBpcyBwdWxsaW5nIGZpcm13YXJlIGZyb20gaGVyZSAodW5sZXNzIGN0DQo+ID4gPiBmaXJtd2Fy
-ZSBpcw0KPiA+ID4gdXNlZCk6DQo+ID4gPiANCj4gPiA+IGh0dHBzOi8vc291cmNlLmNvZGVhdXJv
-cmEub3JnL3F1aWMvcXNkay9vc3MvZmlybXdhcmUvYXRoMTBrLWZpcm13DQo+ID4gPiBhcmUvcGxh
-aW4NCj4gPiA+IC8NCj4gPiA+IDEwLjIuNC9maXJtd2FyZS01LmJpbl8xMC4yLjQuOTctMQ0KPiA+
-ID4gDQo+ID4gPiBIb3dldmVyLCBJIGRvbid0IHVuZGVyc3RhbmQgdGhlIG51bWJlcmluZz8gMTAu
-Mi40Ljk3ID4gMTAuMi40LjcwLA0KPiA+ID4gYnV0IHlvdQ0KPiA+ID4gc2F5IDEwLjIuNC43MC40
-Mi0yIGlzIG1vcmUgcmVjZW50PyBJIHdvdWxkIGhhdmUgYXNzdW1lZCBvdGhlcndpc2UNCj4gPiA+
-IGZyb20NCj4gPiA+IHRoZSBudW1iZXJzLiBIb3dldmVyLCAxMC4yLjQuNzAgaGFzIG11Y2ggbW9y
-ZSBzdWItcmV2aXNpb25zLg0KPiA+IA0KPiA+IEFzIEkgc2FpZCBiZWZvcmUsIEkganVzdCBkZWxp
-dmVyIHRoZSBmaXJtd2FyZSBmaWxlcyB0byB0aGUNCj4gPiBjb21tdW5pdHkgYW5kDQo+ID4gdGhl
-IGZpcm13YXJlIHRlYW0gY3JlYXRlcyB0aGUgYWN0dWFsIHJlbGVhc2VzLiBCdXQgbXkgdW5kZXJz
-dGFuZGluZw0KPiA+IGlzDQo+ID4gdGhhdCB0aGVzZSBhcmUgZnJvbSBkaWZmZXJlbnQgYnJhbmNo
-ZXMgd2hpY2ggYXJlIGJ1aWx0DQo+ID4gaW5kZXBlbmRlbnRseQ0KPiA+IChhbmQgbWlnaHQgaGF2
-ZSBkaWZmZXJlbnQgZmVhdHVyZXMsIGxpa2UgaW4gdGhpcyBjYXNlIHRoZSBtZXNoDQo+ID4gc3Vw
-cG9ydCkNCj4gPiBzbyBJIHdvdWxkIG5vdCBtYWtlIGFueSBjb25jbHVzaW9ucyBpZiBhbnkgZmly
-bXdhcmUgaXMgImJldHRlciINCj4gPiBqdXN0DQo+ID4gZnJvbSB0aGUgbnVtYmVycyBhbG9uZS4N
-Cj4gDQo+IHlvdSBhcmUgcmlnaHQgLi4uIHRob3NlIG51bWJlcnMgYXJlIG5vdCBhIGdvb2QgcG9p
-bnRlci4gSSBmb3VuZCB0aGlzDQo+IHJlcG8sIGFuZMKgDQo+IGZyb20gdGhlIGNoZWNraW4gZGF0
-ZXMgaXQgbG9va3MgbGlrZSAxMC4yLjQuOTcgaXMgaW5kZWVkIHdheSBvbGRlcg0KPiAoZnJvbcKg
-DQo+IFNlcHRlbWJlciAyMDE1KSB0aGFuIDEwLjIuNC43MC40MiAoQXByaWwgMjAxNik6DQo+IA0K
-PiBodHRwczovL3NvdXJjZS5jb2RlYXVyb3JhLm9yZy9xdWljL3FzZGsvb3NzL2Zpcm13YXJlL2F0
-aDEway1maXJtd2FyZS8NCj4gbG9nLzEwLjIuNA0KPiANCj4gSSB3b3VsZCBhZ3JlZSB0aGF0IENo
-YW5nZWxvZ3Mgd291bGQgYmUgaGVscGZ1bC4NCj4gDQo+IFRoYW5rcyBmb3IgdGhlIGNsYXJpZmlj
-YXRpb24uIFdlIHdpbGwgdGhlbiBzdGljayB0byB0aGUgNzAncyBicmFuY2gNCj4gdGhlbi4NCj4g
-DQo+IERvZXMgYW55b25lIGhhdmUgcG9pbnRlcnMgZm9yIHRoZSBvdGhlciBxdWVzdGlvbnM/IDop
-IEkgd291bGQgYmVsaWV2ZQ0KPiBoYXQgbWFuecKgDQo+IHBlb3BsZSB3b3VsZCBiZSBpbnRlcmVz
-dGVkIGluIHJ1bm5pbmcgQVAgKyBNZXNoIGVuY3J5cHRlZCBhdCB0aGUgc2FtZQ0KPiB0aW1lIChh
-dMKgDQo+IGxlYXN0IGluIHRoZSBvcGVuIHNvdXJjZSBjb21tdW5pdHkgLi4uKS4NCg0KV2UncmUg
-dGVzdGluZyBlbmNyeXB0ZWQgQVAgKyBNZXNoIHF1aXRlIHN1Y2Nlc3NmdWxseSByaWdodCBub3cg
-d2l0aA0KdGhpcyBmaXJtd2FyZTrCoGh0dHBzOi8vZ2l0aHViLmNvbS9rdmFsby9hdGgxMGstZmly
-bXdhcmUvY29tbWl0LzMwN2NiNDZiDQowNjY2MWViZDMxODY3MjNiNTAwMmRlNzY5YzdhZGQ4Mywg
-b2YgY291cnNlIHRoYXQgaXMgZm9yIGEgUUNBNDAxOSBjaGlwLg0KV2hpY2ggY2hpcCBhcmUgeW91
-IHVzaW5nPyBJIGNhbiBwb2tlIHRoZSBmaXJtd2FyZSBndXlzIGZvciBwb3NzaWJpbGl0eQ0Kb2Yg
-Z2V0dGluZyBhIDEwLjQuMy4yIGZpcm13YXJlIGJ1aWxkIGZvciBpdC4NCg0KdGhvbWFz
+Add documentation how devicetree can be used to configure ath9k based
+devices.
+
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+---
+ .../devicetree/bindings/net/wireless/qca,ath9k.txt | 39 ++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+new file mode 100644
+index 0000000..77b9202
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+@@ -0,0 +1,39 @@
++* Qualcomm Atheros ath9k wireless devices
++
++This node provides properties for configuring the ath9k wireless device. The
++node is expected to be specified as a child node of the PCI controller to
++which the wireless chip is connected.
++
++Required properties:
++- compatible: For PCI and PCIe devices this should be an identifier following
++		the format as defined in "PCI Bus Binding to Open Firmware"
++		Revision 2.1. One of the possible formats is "pciVVVV,DDDD"
++		where VVVV is the PCI vendor ID and DDDD is PCI device ID.
++
++Optional properties:
++- reg: Address and length of the register set for the device.
++- qca,clk-25mhz: Defines that a 25MHz clock is used
++- qca,no-eeprom: Indicates that there is no physical EEPROM connected to the
++			ath9k wireless chip (in this case the calibration /
++			EEPROM data will be loaded from userspace using the
++			kernel firmware loader).
++- qca,disable-2ghz: Overrides the settings from the EEPROM and disables the
++			2.4GHz band. Setting this property is only needed
++			when the RF circuit does not support the 2.4GHz band
++			while it is enabled nevertheless in the EEPROM.
++- qca,disable-5ghz: Overrides the settings from the EEPROM and disables the
++			5GHz band. Setting this property is only needed when
++			the RF circuit does not support the 5GHz band while
++			it is enabled nevertheless in the EEPROM.
++- mac-address: See ethernet.txt in the parent directory
++- local-mac-address: See ethernet.txt in the parent directory
++
++
++In this example, the node is defined as child node of the PCI controller:
++&pci0 {
++	ath9k@168c,002d {
++		compatible = "pci168c,002d";
++		reg = <0x7000 0 0 0 0x1000>;
++		qca,disable-5ghz;
++	};
++};
+-- 
+2.9.3
