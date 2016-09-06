@@ -1,70 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:36968 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752769AbcI1MuC (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35043 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933490AbcIFVqh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 08:50:02 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8SCjjS2000483
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:50:01 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0b-0016f401.pphosted.com with ESMTP id 25r7ghjfce-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:50:01 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Xinming Hu <huxm@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 6/8] mwifiex: update tx_pkts_queued for requeued packets
-Date: Wed, 28 Sep 2016 18:18:26 +0530
-Message-ID: <1475066908-11771-6-git-send-email-akarwar@marvell.com> (sfid-20160928_145005_746554_A74AFF8D)
-In-Reply-To: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
-References: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Tue, 6 Sep 2016 17:46:37 -0400
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
+Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
+        kvalo@codeaurora.org, chunkeey@googlemail.com,
+        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
+        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Subject: [PATCH v6 3/3] ath9k: parse the device configuration from an OF node
+Date: Tue,  6 Sep 2016 23:46:23 +0200
+Message-Id: <20160906214623.20424-4-martin.blumenstingl@googlemail.com> (sfid-20160906_234643_970260_2775AD3C)
+In-Reply-To: <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
+References: <20160821143105.27487-1-martin.blumenstingl@googlemail.com>
+ <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+This allows configuring ath9k based PCI devices using devicetree.
+There is some out-of-tree code to "convert devicetree to
+ath9k_platform_data" (for example in OpenWrt and LEDE) which becomes
+obsolete with this patch.
 
-wmm.tx_pkts_queued and ralist's total_pkt_count should be updated in
-synchronization. They were not correctly updated in
-mwifiex_send_processed_packet().
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/wmm.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/ath/ath9k/init.c | 51 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
-index dea2fe6..1ff3a87 100644
---- a/drivers/net/wireless/marvell/mwifiex/wmm.c
-+++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
-@@ -1334,9 +1334,11 @@ mwifiex_send_processed_packet(struct mwifiex_private *priv,
- 	skb = skb_dequeue(&ptr->skb_head);
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index cfa3fe8..c123145 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -20,6 +20,8 @@
+ #include <linux/slab.h>
+ #include <linux/ath9k_platform.h>
+ #include <linux/module.h>
++#include <linux/of.h>
++#include <linux/of_net.h>
+ #include <linux/relay.h>
+ #include <net/ieee80211_radiotap.h>
  
- 	if (adapter->data_sent || adapter->tx_lock_flag) {
-+		ptr->total_pkt_count--;
- 		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
- 				       ra_list_flags);
- 		skb_queue_tail(&adapter->tx_data_q, skb);
-+		atomic_dec(&priv->wmm.tx_pkts_queued);
- 		atomic_inc(&adapter->tx_queued);
- 		return;
- 	}
-@@ -1394,6 +1396,10 @@ mwifiex_send_processed_packet(struct mwifiex_private *priv,
- 	if (ret != -EBUSY) {
- 		mwifiex_rotate_priolists(priv, ptr, ptr_index);
- 		atomic_dec(&priv->wmm.tx_pkts_queued);
-+		spin_lock_irqsave(&priv->wmm.ra_list_spinlock, ra_list_flags);
-+		ptr->total_pkt_count--;
-+		spin_unlock_irqrestore(&priv->wmm.ra_list_spinlock,
-+				       ra_list_flags);
- 	}
+@@ -555,6 +557,51 @@ static int ath9k_init_platform(struct ath_softc *sc)
+ 	return 0;
  }
  
++static int ath9k_of_init(struct ath_softc *sc)
++{
++	struct device_node *np = sc->dev->of_node;
++	struct ath_hw *ah = sc->sc_ah;
++	struct ath_common *common = ath9k_hw_common(ah);
++	enum ath_bus_type bus_type = common->bus_ops->ath_bus_type;
++	const char *mac;
++	char eeprom_name[100];
++	int ret;
++
++	if (!of_device_is_available(np))
++		return 0;
++
++	ath_dbg(common, CONFIG, "parsing configuration from OF node\n");
++
++	if (of_property_read_bool(np, "qca,clk-25mhz"))
++		ah->is_clk_25mhz = true;
++
++	if (of_property_read_bool(np, "qca,disable-2ghz"))
++		ah->disable_2ghz = true;
++
++	if (of_property_read_bool(np, "qca,disable-5ghz"))
++		ah->disable_5ghz = true;
++
++	if (of_property_read_bool(np, "qca,no-eeprom")) {
++		/* ath9k-eeprom-<bus>-<id>.bin */
++		scnprintf(eeprom_name, sizeof(eeprom_name),
++			  "ath9k-eeprom-%s-%s.bin",
++			  ath_bus_type_to_string(bus_type), dev_name(ah->dev));
++
++		ret = ath9k_eeprom_request(sc, eeprom_name);
++		if (ret)
++			return ret;
++	}
++
++	mac = of_get_mac_address(np);
++	if (mac)
++		ether_addr_copy(common->macaddr, mac);
++
++	ah->ah_flags &= ~AH_USE_EEPROM;
++	ah->ah_flags |= AH_NO_EEP_SWAP;
++
++	return 0;
++}
++
+ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 			    const struct ath_bus_ops *bus_ops)
+ {
+@@ -611,6 +658,10 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 	if (ret)
+ 		return ret;
+ 
++	ret = ath9k_of_init(sc);
++	if (ret)
++		return ret;
++
+ 	if (ath9k_led_active_high != -1)
+ 		ah->config.led_active_high = ath9k_led_active_high == 1;
+ 
 -- 
-1.9.1
+2.9.3
