@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58115 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51744 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754030AbcICRCW (ORCPT
+        with ESMTP id S1755115AbcIFHsW (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 13:02:22 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,1/1] brcmfmac: fix pmksa->bssid usage
+        Tue, 6 Sep 2016 03:48:22 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160823093717.1065-1-nicolas.iooss_linux@m4x.org>
-To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Message-Id: <20160903170222.1399E62180@smtp.codeaurora.org> (sfid-20160903_190242_818068_629D2BEF)
-Date: Sat,  3 Sep 2016 17:02:22 +0000 (UTC)
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [v2] bcma: use of_dma_configure() to set initial dma mask
+References: <20160903140819.245F06216C@smtp.codeaurora.org>
+        <6123998.NAlOfyAp5F@wuerfel>
+Date: Tue, 06 Sep 2016 10:48:16 +0300
+In-Reply-To: <6123998.NAlOfyAp5F@wuerfel> (Arnd Bergmann's message of "Mon, 05
+        Sep 2016 17:26:27 +0200")
+Message-ID: <87twdtxydb.fsf@kamboji.qca.qualcomm.com> (sfid-20160906_094847_824659_2326F277)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nicolas Iooss <nicolas.iooss_linux@m4x.org> wrote:
-> The struct cfg80211_pmksa defines its bssid field as:
-> 
->     const u8 *bssid;
-> 
-> contrary to struct brcmf_pmksa, which uses:
-> 
->     u8 bssid[ETH_ALEN];
-> 
-> Therefore in brcmf_cfg80211_del_pmksa(), &pmksa->bssid takes the address
-> of this field (of type u8**), not the one of its content (which would be
-> u8*).  Remove the & operator to make brcmf_dbg("%pM") and memcmp()
-> behave as expected.
-> 
-> This bug have been found using a custom static checker (which checks the
-> usage of %p... attributes at build time).  It has been introduced in
-> commit 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code"),
-> which replaced pmksa->bssid by &pmksa->bssid while refactoring the code,
-> without modifying struct cfg80211_pmksa definition.
-> 
-> Replace &pmk[i].bssid with pmk[i].bssid too to make the code clearer,
-> this change does not affect the semantic.
-> 
-> Fixes: 6c404f34f2bd ("brcmfmac: Cleanup pmksa cache handling code")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Arnd Bergmann <arnd@arndb.de> writes:
 
-Thanks, 1 patch applied to wireless-drivers-next.git:
+> On Saturday, September 3, 2016 2:08:19 PM CEST Kalle Valo wrote:
+>> Arnd Bergmann <arnd@arndb.de> wrote:
+>> > While fixing another bug, I noticed that bcma manually sets up
+>> > a dma_mask pointer for its child devices. We have a generic
+>> > helper for that now, which should be able to cope better with
+>> > any variations that might be needed to deal with cache coherency,
+>> > unusual DMA address offsets, iommus, or limited DMA masks, none
+>> > of which are currently handled here.
+>> > 
+>> > This changes the core to use the of_dma_configure(), like
+>> > we do for platform devices that are probed directly from
+>> > DT.
+>> > 
+>> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>> 
+>> Nobody tested this, so I'll drop the patch.
+>
+> Should I resend it? I think it's still required.
 
-7703773ef1d8 brcmfmac: fix pmksa->bssid usage
+Sorry, I misunderstood your comments then. No need to resend, I readded
+this to my queue:
+
+https://patchwork.kernel.org/patch/8608751/
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9295351/
+Kalle Valo
