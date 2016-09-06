@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:28829 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933169AbcIAQMn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 12:12:43 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Remove unnecessary error code assignment
-Date: Thu, 1 Sep 2016 21:43:36 +0530
-Message-ID: <1472746416-23869-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160901_181252_778544_8D287080)
+Received: from nbd.name ([46.4.11.11]:50643 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753495AbcIFWEG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Sep 2016 18:04:06 -0400
+Subject: Re: [PATCH v8] mac80211: Move reorder-sensitive TX handlers to after
+ TXQ dequeue.
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+References: <20160905113042.22271-1-toke@toke.dk>
+ <20160906114426.25520-1-toke@toke.dk>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <9063eae7-53c7-a1c0-c973-9dc519cf66cd@nbd.name> (sfid-20160907_000410_924381_638ED8F8)
+Date: Wed, 7 Sep 2016 00:04:02 +0200
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20160906114426.25520-1-toke@toke.dk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-
-The error assigned does not seems to be used anywhere,
-fixes nothing just a small cleanup
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.c | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index eb2831c..3117a71 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3544,7 +3544,6 @@ void ath10k_wmi_event_host_swba(struct ath10k *ar, struct sk_buff *skb)
- 				ath10k_warn(ar, "failed to map beacon: %d\n",
- 					    ret);
- 				dev_kfree_skb_any(bcn);
--				ret = -EIO;
- 				goto skip;
- 			}
- 
--- 
-1.9.1
+On 2016-09-06 13:44, Toke Høiland-Jørgensen wrote:
+> The TXQ intermediate queues can cause packet reordering when more than
+> one flow is active to a single station. Since some of the wifi-specific
+> packet handling (notably sequence number and encryption handling) is
+> sensitive to re-ordering, things break if they are applied before the
+> TXQ.
+> 
+> This splits up the TX handlers and fast_xmit logic into two parts: An
+> early part and a late part. The former is applied before TXQ enqueue,
+> and the latter after dequeue. The non-TXQ path just applies both parts
+> at once.
+> 
+> Because fragments shouldn't be split up or reordered, the fragmentation
+> handler is run after dequeue. Any fragments are then kept in the TXQ and
+> on subsequent dequeues they take precedence over dequeueing from the FQ
+> structure.
+> 
+> This approach avoids having to scatter special cases for when TXQ is
+> enabled, at the cost of making the fast_xmit and TX handler code
+> slightly more complex.
+> 
+> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
+Acked-by: Felix Fietkau <nbd@nbd.name>
