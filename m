@@ -1,70 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0189.hostedemail.com ([216.40.44.189]:39889 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754522AbcIXRcm (ORCPT
+Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:39573
+        "EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755737AbcIFMMk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Sep 2016 13:32:42 -0400
-Message-ID: <1474738358.23838.11.camel@perches.com> (sfid-20160924_193248_478574_7F631F0A)
-Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
- processed' messages
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Jean Delvare <jdelvare@suse.de>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Sat, 24 Sep 2016 10:32:38 -0700
-In-Reply-To: <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net>
-References: <1474654333.1849.5.camel@perches.com>
-         <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
-         <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
-         <1474657363.1849.9.camel@perches.com> <20160924175555.01cae6dd@endymion>
-         <1474733754.23838.3.camel@perches.com>
-         <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Tue, 6 Sep 2016 08:12:40 -0400
+Subject: Re: mwifiex: propagate error if IRQ request fails in
+ mwifiex_sdio_of()
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20160903103520.8C69C6201B@smtp.codeaurora.org>
+Cc: linux-kernel@vger.kernel.org,
+        Amitkumar Karwar <akarwar@marvell.com>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+Message-ID: <66735eb5-c831-8e06-337b-80ccfc392061@osg.samsung.com> (sfid-20160906_141302_371384_9A7E9E05)
+Date: Tue, 6 Sep 2016 14:12:33 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160903103520.8C69C6201B@smtp.codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(adding Jes Sorensen to recipients)
+Hello Kalle,
 
-On Sat, 2016-09-24 at 11:35 -0500, Larry Finger wrote:
-> I have patches that makes HAL_DEF_WOWLAN be a no-op for the rest of the drivers, 
-> and one that sets the enum values for that particular statement to hex values. I 
-> also looked at the other large enums and decided that they never need the human 
-> lookup.
+On 09/03/2016 12:35 PM, Kalle Valo wrote:
+> Javier Martinez Canillas <javier@osg.samsung.com> wrote:
+>> If request_irq() fails in mwifiex_sdio_probe_of(), only an error message
+>> is printed but the actual error is not propagated to the caller function.
+>>
+>> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+> 
+> What's the conclusion with this patch? Should I drop it or take it?
+> 
+> (The discussion is available from the patchwork link in the signature.)
+> 
 
-Hey Larry.
+My understanding is that Arend agrees with the patch and that the question
+raised was caused by looking at an older kernel version. IOW, the patch is
+OK and should be picked.
 
-There are many somewhat common realtek wireless drivers.
+I'm adding Arend to cc, so can comment in case I misunderstood him though.
 
-Not to step on your toes, but what do you think of
-rationalizing the switch/case statements of all the
-realtek drivers in a few steps:
-
-o Reindent all the switch/case blocks to a more normal
-  kernel style (git diff -w would show no changes here)
-
-o cast, spacing and parenthesis reductions
-  Lots of odd and somewhat unique styles in various
-  drivers, looks like too many individual authors without
-  a style guide / code enforcer using slightly different
-  personalized code.  Glancing at the code, it looks to be
-  similar logic, just written in different styles.
-
-o Logic changes like
-  from:
-    if (foo) func(..., bar, ...); else func(..., baz, ...);
-  to:
-    func(..., foo ? bar : baz, ...);
-  to make the case statement code blocks more consistent
-  and emit somewhat smaller object code.
-
-o Consolidation of equivalent function spanning drivers
-  With the style only changes minimized, where possible
-  make the drivers use common ops/callback functions.
-
-Is there any value in that or is Jes' work going to make
-doing any or all of this unnecessary and futile?
+Best regards,
+-- 
+Javier Martinez Canillas
+Open Source Group
+Samsung Research America
