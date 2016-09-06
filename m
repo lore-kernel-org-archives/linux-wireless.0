@@ -1,35 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41863 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932088AbcI3JsC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 05:48:02 -0400
-Message-ID: <1475228878.17481.10.camel@sipsolutions.net> (sfid-20160930_114805_713727_041C49F9)
-Subject: Re: [PATCH 3/3] mac80211: cache the only AP_VLAN station
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 30 Sep 2016 11:47:58 +0200
-In-Reply-To: <1474821596-12155-4-git-send-email-michael-dev@fami-braun.de> (sfid-20160925_184003_115938_F92E1D65)
-References: <1474821596-12155-1-git-send-email-michael-dev@fami-braun.de>
-         <1474821596-12155-4-git-send-email-michael-dev@fami-braun.de>
-         (sfid-20160925_184003_115938_F92E1D65)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from condef007-v.nifty.com ([210.131.4.244]:35790 "EHLO
+        condef007-v.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933133AbcIFMou (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Sep 2016 08:44:50 -0400
+From: Masahiro Yamada <yamada.masahiro@socionext.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org
+Subject: [PATCH 2/3] ath10k: use devm_reset_control_get() instead of reset_control_get()
+Date: Tue,  6 Sep 2016 21:39:57 +0900
+Message-Id: <1473165598-28683-3-git-send-email-yamada.masahiro@socionext.com> (sfid-20160906_144456_215855_B9F38BB7)
+In-Reply-To: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
+References: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2016-09-25 at 18:39 +0200, Michael Braun wrote:
-> If an AP_VLAN is only used with one station, cache a pointer to this
-> station to avoid lookup. This should speed up station lookup when 
+Use the managed variant of reset_control_get() to simplify the
+failure path and the .remove callback.
 
-"should speed up"? Do you have numbers to back that up?
+Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+---
 
-Read this as - you need to do more to convince me that the double
-accounting and software complexity is worth it.
+ drivers/net/wireless/ath/ath10k/ahb.c | 56 +++++++----------------------------
+ 1 file changed, 10 insertions(+), 46 deletions(-)
 
-And then, if we really want/need to have the double accounting and all
-the associated complexity and potential problems, perhaps making per-
-interface lists, perhaps even replacing the global list (since we still
-have a global hash table), or something similar would make more sense?
-
-johannes
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index 8a55c0c..6b355ee 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -191,92 +191,56 @@ static int ath10k_ahb_rst_ctrl_init(struct ath10k *ar)
+ {
+ 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
+ 	struct device *dev;
+-	int ret;
+ 
+ 	dev = &ar_ahb->pdev->dev;
+ 
+-	ar_ahb->core_cold_rst = reset_control_get(dev, "wifi_core_cold");
++	ar_ahb->core_cold_rst = devm_reset_control_get(dev, "wifi_core_cold");
+ 	if (IS_ERR_OR_NULL(ar_ahb->core_cold_rst)) {
+ 		ath10k_err(ar, "failed to get core cold rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->core_cold_rst));
+-		ret = ar_ahb->core_cold_rst ?
++		return ar_ahb->core_cold_rst ?
+ 			PTR_ERR(ar_ahb->core_cold_rst) : -ENODEV;
+-		goto out;
+ 	}
+ 
+-	ar_ahb->radio_cold_rst = reset_control_get(dev, "wifi_radio_cold");
++	ar_ahb->radio_cold_rst = devm_reset_control_get(dev, "wifi_radio_cold");
+ 	if (IS_ERR_OR_NULL(ar_ahb->radio_cold_rst)) {
+ 		ath10k_err(ar, "failed to get radio cold rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->radio_cold_rst));
+-		ret = ar_ahb->radio_cold_rst ?
++		return ar_ahb->radio_cold_rst ?
+ 			PTR_ERR(ar_ahb->radio_cold_rst) : -ENODEV;
+-		goto err_core_cold_rst_put;
+ 	}
+ 
+-	ar_ahb->radio_warm_rst = reset_control_get(dev, "wifi_radio_warm");
++	ar_ahb->radio_warm_rst = devm_reset_control_get(dev, "wifi_radio_warm");
+ 	if (IS_ERR_OR_NULL(ar_ahb->radio_warm_rst)) {
+ 		ath10k_err(ar, "failed to get radio warm rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->radio_warm_rst));
+-		ret = ar_ahb->radio_warm_rst ?
++		return ar_ahb->radio_warm_rst ?
+ 			PTR_ERR(ar_ahb->radio_warm_rst) : -ENODEV;
+-		goto err_radio_cold_rst_put;
+ 	}
+ 
+-	ar_ahb->radio_srif_rst = reset_control_get(dev, "wifi_radio_srif");
++	ar_ahb->radio_srif_rst = devm_reset_control_get(dev, "wifi_radio_srif");
+ 	if (IS_ERR_OR_NULL(ar_ahb->radio_srif_rst)) {
+ 		ath10k_err(ar, "failed to get radio srif rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->radio_srif_rst));
+-		ret = ar_ahb->radio_srif_rst ?
++		return ar_ahb->radio_srif_rst ?
+ 			PTR_ERR(ar_ahb->radio_srif_rst) : -ENODEV;
+-		goto err_radio_warm_rst_put;
+ 	}
+ 
+-	ar_ahb->cpu_init_rst = reset_control_get(dev, "wifi_cpu_init");
++	ar_ahb->cpu_init_rst = devm_reset_control_get(dev, "wifi_cpu_init");
+ 	if (IS_ERR_OR_NULL(ar_ahb->cpu_init_rst)) {
+ 		ath10k_err(ar, "failed to get cpu init rst ctrl: %ld\n",
+ 			   PTR_ERR(ar_ahb->cpu_init_rst));
+-		ret = ar_ahb->cpu_init_rst ?
++		return ar_ahb->cpu_init_rst ?
+ 			PTR_ERR(ar_ahb->cpu_init_rst) : -ENODEV;
+-		goto err_radio_srif_rst_put;
+ 	}
+ 
+ 	return 0;
+-
+-err_radio_srif_rst_put:
+-	reset_control_put(ar_ahb->radio_srif_rst);
+-
+-err_radio_warm_rst_put:
+-	reset_control_put(ar_ahb->radio_warm_rst);
+-
+-err_radio_cold_rst_put:
+-	reset_control_put(ar_ahb->radio_cold_rst);
+-
+-err_core_cold_rst_put:
+-	reset_control_put(ar_ahb->core_cold_rst);
+-
+-out:
+-	return ret;
+ }
+ 
+ static void ath10k_ahb_rst_ctrl_deinit(struct ath10k *ar)
+ {
+ 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
+ 
+-	if (!IS_ERR_OR_NULL(ar_ahb->core_cold_rst))
+-		reset_control_put(ar_ahb->core_cold_rst);
+-
+-	if (!IS_ERR_OR_NULL(ar_ahb->radio_cold_rst))
+-		reset_control_put(ar_ahb->radio_cold_rst);
+-
+-	if (!IS_ERR_OR_NULL(ar_ahb->radio_warm_rst))
+-		reset_control_put(ar_ahb->radio_warm_rst);
+-
+-	if (!IS_ERR_OR_NULL(ar_ahb->radio_srif_rst))
+-		reset_control_put(ar_ahb->radio_srif_rst);
+-
+-	if (!IS_ERR_OR_NULL(ar_ahb->cpu_init_rst))
+-		reset_control_put(ar_ahb->cpu_init_rst);
+-
+ 	ar_ahb->core_cold_rst = NULL;
+ 	ar_ahb->radio_cold_rst = NULL;
+ 	ar_ahb->radio_warm_rst = NULL;
+-- 
+1.9.1
