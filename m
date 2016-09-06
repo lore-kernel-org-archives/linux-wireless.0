@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36854 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751473AbcIMOpW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 10:45:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 4/6] cfg80211: wext: only allow WEP keys to be configured before connected
-Date: Tue, 13 Sep 2016 16:44:26 +0200
-Message-Id: <1473777868-32429-4-git-send-email-johannes@sipsolutions.net> (sfid-20160913_164726_425162_AF328ACC)
-In-Reply-To: <1473777868-32429-1-git-send-email-johannes@sipsolutions.net>
-References: <1473777868-32429-1-git-send-email-johannes@sipsolutions.net>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8606 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754586AbcIFHJQ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 6 Sep 2016 03:09:16 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+        "Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH] ath10k: advertize hardware packet loss mechanism
+Date: Tue, 6 Sep 2016 12:38:41 +0530
+Message-ID: <20160906070841.4266-1-rmanohar@qti.qualcomm.com> (sfid-20160906_090920_002490_85FF7F99)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Indicate hardware (or firmware) supports that CQM packet-loss report
+will be generated based on station kickout algorithm. As of now mac80211
+tracks connection loss by missing msdu counts (50) whereas ath10k
+firmware tracks them by missing ppdus (+ BAR tries). While firmware is
+trying to adapt its rate table, mac80211 might send out low_ack event to
+hostapd. This is causing frequent connect and disconnect iteration under
+noisy environment or when station is roaming around.
 
-When not connected, anything but WEP keys shouldn't be allowed to be
-configured for later - only static WEP keys make sense at this point.
-Change wext to reject anything else just like nl80211 does.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- net/wireless/wext-compat.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/net/wireless/wext-compat.c b/net/wireless/wext-compat.c
-index 9f27221c8913..e45a76449b43 100644
---- a/net/wireless/wext-compat.c
-+++ b/net/wireless/wext-compat.c
-@@ -487,6 +487,9 @@ static int __cfg80211_set_encryption(struct cfg80211_registered_device *rdev,
- 	err = 0;
- 	if (wdev->current_bss)
- 		err = rdev_add_key(rdev, dev, idx, pairwise, addr, params);
-+	else if (params->cipher != WLAN_CIPHER_SUITE_WEP40 &&
-+		 params->cipher != WLAN_CIPHER_SUITE_WEP104)
-+		return -EINVAL;
- 	if (err)
- 		return err;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 79525f769db6..bae7662e7207 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -7865,6 +7865,7 @@ int ath10k_mac_register(struct ath10k *ar)
+ 	ieee80211_hw_set(ar->hw, WANT_MONITOR_VIF);
+ 	ieee80211_hw_set(ar->hw, CHANCTX_STA_CSA);
+ 	ieee80211_hw_set(ar->hw, QUEUE_CONTROL);
++	ieee80211_hw_set(ar->hw, REPORTS_LOW_ACK);
  
+ 	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
+ 		ieee80211_hw_set(ar->hw, SW_CRYPTO_CONTROL);
 -- 
-2.8.1
+2.9.3
