@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55870 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751214AbcIAONg (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:8534 "EHLO
+        sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935521AbcIFTGj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 10:13:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi 2016-08-29
-References: <1472499451.27868.31.camel@coelho.fi>
-Date: Thu, 01 Sep 2016 17:13:28 +0300
-In-Reply-To: <1472499451.27868.31.camel@coelho.fi> (Luca Coelho's message of
-        "Mon, 29 Aug 2016 22:37:31 +0300")
-Message-ID: <87y43b1zef.fsf@kamboji.qca.qualcomm.com> (sfid-20160901_161340_936855_8DEEDFFD)
+        Tue, 6 Sep 2016 15:06:39 -0400
+From: Thomas Pedersen <twp@qca.qualcomm.com>
+To: ath10k <ath10k@lists.infradead.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+        Thomas Pedersen <twp@qca.qualcomm.com>
+Subject: [PATCH] ath10k: enable peer stats by default
+Date: Tue, 6 Sep 2016 12:05:28 -0700
+Message-ID: <1473188728-14995-1-git-send-email-twp@qca.qualcomm.com> (sfid-20160906_210650_900403_4F287E18)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+IFTYPE_MESH_POINT need to rely on these for accurate path
+selection metrics. Other modes will probably also find
+them useful. Enabling peer stats has the side effect of
+reducing max number of STAs from 128 to 118. There should
+be negligible performance impact.
 
-> Here are 4 patches intended for 4.8.  They are all very small and low
-> risk, but fix some actual issues.  More details in the tag description.
->
-> Let me know if everything's fine (or not). :)
->
-> Luca.
->
->
-> The following changes since commit bb87f02b7e4ccdb614a83cbf840524de81e9b321:
->
->   Merge ath-current from ath.git (2016-08-29 21:39:04 +0300)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2016-08-29
+If users really need 128 STAs and don't mind losing out on
+peer stats, they can still disable them:
 
-Pulled, thanks.
+echo 0 > debugfs/ieee80211/phyn/ath10k/peer_stats
 
+Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c9d163e..c0ab4f4 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -2145,6 +2145,9 @@ static void ath10k_core_register_work(struct work_struct *work)
+ 	struct ath10k *ar = container_of(work, struct ath10k, register_work);
+ 	int status;
+ 
++	/* peer stats are enabled by default */
++	set_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags);
++
+ 	status = ath10k_core_probe_fw(ar);
+ 	if (status) {
+ 		ath10k_err(ar, "could not probe fw (%d)\n", status);
 -- 
-Kalle Valo
+2.1.4
