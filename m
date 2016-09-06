@@ -1,87 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f66.google.com ([209.85.214.66]:34071 "EHLO
-        mail-it0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755879AbcINMpK (ORCPT
+Received: from condef007-v.nifty.com ([210.131.4.244]:34764 "EHLO
+        condef007-v.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932806AbcIFMmk (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 08:45:10 -0400
-Received: by mail-it0-f66.google.com with SMTP id 186so1438871itf.1
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2016 05:45:09 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
+        Tue, 6 Sep 2016 08:42:40 -0400
+From: Masahiro Yamada <yamada.masahiro@socionext.com>
 To: linux-wireless@vger.kernel.org
-Cc: Bob Copeland <me@bobcopeland.com>,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>
-Subject: [PATCH] mwifiex: fix error handling in mwifiex_create_custom_regdomain
-Date: Wed, 14 Sep 2016 08:42:36 -0400
-Message-Id: <20160914124236.1951-1-me@bobcopeland.com> (sfid-20160914_144515_376968_21E13FBC)
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
+        Masahiro Yamada <yamada.masahiro@socionext.com>,
+        Kalle Valo <kvalo@qca.qualcomm.com>, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org
+Subject: [PATCH 1/3] ath10k: use devm_clk_get() instead of clk_get()
+Date: Tue,  6 Sep 2016 21:39:56 +0900
+Message-Id: <1473165598-28683-2-git-send-email-yamada.masahiro@socionext.com> (sfid-20160906_144245_695108_7D0DC759)
+In-Reply-To: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
+References: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-smatch reports:
+Use the managed variant of clk_get() to simplify the failure path
+and the .remove callback.
 
-sta_cmdresp.c:1053 mwifiex_create_custom_regdomain() warn: possible memory leak of 'regd'
-
-Indeed, mwifiex_create_custom_regdomain() returns NULL in the
-case that channel is missing in the TLV without freeing regd.
-
-Moreover, some other error paths in this function return ERR_PTR
-values which are assigned without checking to the regd field in
-the mwifiex_adapter struct.  The latter is only null-checked where
-used.
-
-Fix by freeing regd in the error path, and only update
-priv->adapter->regd if the returned pointer is valid.
-
-Cc: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-
+Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
 ---
-Note, compile-tested only.  It might make sense to instead remove
-the ERR_PTR stuff if there is no plan to report them further up the
-call stack but I just went for the minimal patch here.
----
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index 3344a26..8548027 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -1049,8 +1049,10 @@ mwifiex_create_custom_regdomain(struct mwifiex_private *priv,
- 		enum nl80211_band band;
+ drivers/net/wireless/ath/ath10k/ahb.c | 34 ++++++----------------------------
+ 1 file changed, 6 insertions(+), 28 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index acec16b..8a55c0c 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -91,59 +91,37 @@ static int ath10k_ahb_clock_init(struct ath10k *ar)
+ {
+ 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
+ 	struct device *dev;
+-	int ret;
  
- 		chan = *buf++;
--		if (!chan)
-+		if (!chan) {
-+			kfree(regd);
- 			return NULL;
-+		}
- 		chflags = *buf++;
- 		band = (chan <= 14) ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
- 		freq = ieee80211_channel_to_frequency(chan, band);
-@@ -1116,6 +1118,7 @@ static int mwifiex_ret_chan_region_cfg(struct mwifiex_private *priv,
- 	u16 action = le16_to_cpu(reg->action);
- 	u16 tlv, tlv_buf_len, tlv_buf_left;
- 	struct mwifiex_ie_types_header *head;
-+	struct ieee80211_regdomain *regd;
- 	u8 *tlv_buf;
+ 	dev = &ar_ahb->pdev->dev;
  
- 	if (action != HostCmd_ACT_GEN_GET)
-@@ -1137,10 +1140,10 @@ static int mwifiex_ret_chan_region_cfg(struct mwifiex_private *priv,
- 			mwifiex_dbg_dump(priv->adapter, CMD_D, "CHAN:",
- 					 (u8 *)head + sizeof(*head),
- 					 tlv_buf_len);
--			priv->adapter->regd =
--				mwifiex_create_custom_regdomain(priv,
--								(u8 *)head +
--						sizeof(*head), tlv_buf_len);
-+			regd = mwifiex_create_custom_regdomain(priv,
-+				(u8 *)head + sizeof(*head), tlv_buf_len);
-+			if (!IS_ERR(regd))
-+				priv->adapter->regd = regd;
- 			break;
- 		}
+-	ar_ahb->cmd_clk = clk_get(dev, "wifi_wcss_cmd");
++	ar_ahb->cmd_clk = devm_clk_get(dev, "wifi_wcss_cmd");
+ 	if (IS_ERR_OR_NULL(ar_ahb->cmd_clk)) {
+ 		ath10k_err(ar, "failed to get cmd clk: %ld\n",
+ 			   PTR_ERR(ar_ahb->cmd_clk));
+-		ret = ar_ahb->cmd_clk ? PTR_ERR(ar_ahb->cmd_clk) : -ENODEV;
+-		goto out;
++		return ar_ahb->cmd_clk ? PTR_ERR(ar_ahb->cmd_clk) : -ENODEV;
+ 	}
  
+-	ar_ahb->ref_clk = clk_get(dev, "wifi_wcss_ref");
++	ar_ahb->ref_clk = devm_clk_get(dev, "wifi_wcss_ref");
+ 	if (IS_ERR_OR_NULL(ar_ahb->ref_clk)) {
+ 		ath10k_err(ar, "failed to get ref clk: %ld\n",
+ 			   PTR_ERR(ar_ahb->ref_clk));
+-		ret = ar_ahb->ref_clk ? PTR_ERR(ar_ahb->ref_clk) : -ENODEV;
+-		goto err_cmd_clk_put;
++		return ar_ahb->ref_clk ? PTR_ERR(ar_ahb->ref_clk) : -ENODEV;
+ 	}
+ 
+-	ar_ahb->rtc_clk = clk_get(dev, "wifi_wcss_rtc");
++	ar_ahb->rtc_clk = devm_clk_get(dev, "wifi_wcss_rtc");
+ 	if (IS_ERR_OR_NULL(ar_ahb->rtc_clk)) {
+ 		ath10k_err(ar, "failed to get rtc clk: %ld\n",
+ 			   PTR_ERR(ar_ahb->rtc_clk));
+-		ret = ar_ahb->rtc_clk ? PTR_ERR(ar_ahb->rtc_clk) : -ENODEV;
+-		goto err_ref_clk_put;
++		return ar_ahb->rtc_clk ? PTR_ERR(ar_ahb->rtc_clk) : -ENODEV;
+ 	}
+ 
+ 	return 0;
+-
+-err_ref_clk_put:
+-	clk_put(ar_ahb->ref_clk);
+-
+-err_cmd_clk_put:
+-	clk_put(ar_ahb->cmd_clk);
+-
+-out:
+-	return ret;
+ }
+ 
+ static void ath10k_ahb_clock_deinit(struct ath10k *ar)
+ {
+ 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
+ 
+-	if (!IS_ERR_OR_NULL(ar_ahb->cmd_clk))
+-		clk_put(ar_ahb->cmd_clk);
+-
+-	if (!IS_ERR_OR_NULL(ar_ahb->ref_clk))
+-		clk_put(ar_ahb->ref_clk);
+-
+-	if (!IS_ERR_OR_NULL(ar_ahb->rtc_clk))
+-		clk_put(ar_ahb->rtc_clk);
+-
+ 	ar_ahb->cmd_clk = NULL;
+ 	ar_ahb->ref_clk = NULL;
+ 	ar_ahb->rtc_clk = NULL;
 -- 
-2.9.0
+1.9.1
