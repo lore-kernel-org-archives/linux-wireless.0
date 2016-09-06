@@ -1,69 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:33854 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751550AbcIUGYJ (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.74]:60627 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754086AbcIFJeO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Sep 2016 02:24:09 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH] brcmfmac: fix memory leak in brcmf_fill_bss_param
-Date: Wed, 21 Sep 2016 08:23:24 +0200
-Message-Id: <20160921062327.28729-1-zajec5@gmail.com> (sfid-20160921_082428_550400_B4E8BF80)
+        Tue, 6 Sep 2016 05:34:14 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Hauke Mehrtens <hauke@hauke-m.de>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] bcma: use of_dma_configure() to set initial dma mask
+Date: Tue, 06 Sep 2016 11:34:26 +0200
+Message-ID: <5961451.eLRiX5Tibt@wuerfel> (sfid-20160906_113418_933568_E969B906)
+In-Reply-To: <CACna6rza3U+X=cNXqvjB8fe1s+hP234cu405m3ObJBB=wQUcOQ@mail.gmail.com>
+References: <1458207563-3453369-1-git-send-email-arnd@arndb.de> <CACna6rza3U+X=cNXqvjB8fe1s+hP234cu405m3ObJBB=wQUcOQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On Monday, September 5, 2016 11:34:14 PM CEST Rafał Miłecki wrote:
+> On 17 March 2016 at 10:39, Arnd Bergmann <arnd@arndb.de> wrote:
+> > While fixing another bug, I noticed that bcma manually sets up
+> > a dma_mask pointer for its child devices. We have a generic
+> > helper for that now, which should be able to cope better with
+> > any variations that might be needed to deal with cache coherency,
+> > unusual DMA address offsets, iommus, or limited DMA masks, none
+> > of which are currently handled here.
+> >
+> > This changes the core to use the of_dma_configure(), like
+> > we do for platform devices that are probed directly from
+> > DT.
+> >
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> 
+> I applied this patch and tested on BCM47081 based device. I still got
+> bgmac working which surely uses DMA.
 
-This function is called from get_station callback which means that every
-time user space was getting/dumping station(s) we were leaking 2 KiB.
+Thanks!
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-Fixes: 1f0dc59a6de ("brcmfmac: rework .get_station() callback")
-Cc: stable@vger.kernel.org # 4.2+
----
-Kalle, ideally this should go as 4.8 fix, but I'm aware it's quite late.
-If you are not planning to send another pull request, just get it for
-the next release and let's let stable guys backport it.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> There is only 1 ARM wireless SoC
+> using bcma (BCM47198) but its WiFi core isn't supported by b43.
+> 
+> Any tips what else to test? SPI core/driver doesn't use DMA. Maybe
+> NAND core does, but we don't use it.
+> 
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index b8aec5e5..62a7675 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -2533,7 +2533,7 @@ static void brcmf_fill_bss_param(struct brcmf_if *ifp, struct station_info *si)
- 				     WL_BSS_INFO_MAX);
- 	if (err) {
- 		brcmf_err("Failed to get bss info (%d)\n", err);
--		return;
-+		goto out_kfree;
- 	}
- 	si->filled |= BIT(NL80211_STA_INFO_BSS_PARAM);
- 	si->bss_param.beacon_interval = le16_to_cpu(buf->bss_le.beacon_period);
-@@ -2545,6 +2545,9 @@ static void brcmf_fill_bss_param(struct brcmf_if *ifp, struct station_info *si)
- 		si->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_PREAMBLE;
- 	if (capability & WLAN_CAPABILITY_SHORT_SLOT_TIME)
- 		si->bss_param.flags |= BSS_PARAM_FLAGS_SHORT_SLOT_TIME;
-+
-+out_kfree:
-+	kfree(buf);
- }
- 
- static s32
--- 
-2.9.3
+If there is nothing else using this, then the patch won't cause
+a regression ;-)
+
+	Arnd
