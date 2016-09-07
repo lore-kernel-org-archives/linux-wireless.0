@@ -1,90 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56109 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751699AbcIBSXK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:52607 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757498AbcIGNL6 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 14:23:10 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] wcn36xx: Transition driver to SMD client
-References: <1472741468-24762-1-git-send-email-bjorn.andersson@linaro.org>
-        <87mvjqz2ul.fsf@kamboji.qca.qualcomm.com>
-        <20160902164623.GY15161@tuxbot>
-Date: Fri, 02 Sep 2016 21:23:01 +0300
-In-Reply-To: <20160902164623.GY15161@tuxbot> (Bjorn Andersson's message of
-        "Fri, 2 Sep 2016 09:46:23 -0700")
-Message-ID: <87a8fqyxdm.fsf@kamboji.qca.qualcomm.com> (sfid-20160902_202332_051192_1B548FD4)
+        Wed, 7 Sep 2016 09:11:58 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: ath9k: bring back direction setting in ath9k_{start_stop}
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160901174702.8645-1-giedrius.statkevicius@gmail.com>
+To: Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com>
+CC: <kvalo@codeaurora.org>, <ath9k-devel@qca.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Miaoqing Pan <miaoqing@codeaurora.org>,
+        <stable@vger.kernel.org>,
+        =?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
+        <giedrius.statkevicius@gmail.com>
+Message-ID: <e61bb634860745818f8c8c99f79f71a0@euamsexm01a.eu.qualcomm.com> (sfid-20160907_151220_867633_ED6E5A6D)
+Date: Wed, 7 Sep 2016 15:11:44 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com> wrote:
+> A regression was introduced in commit id 79d4db1214a ("ath9k: cleanup
+> led_pin initial") that broken the WLAN status led on my laptop with
+> AR9287 after suspending and resuming.
+> 
+> Steps to reproduce:
+> * Suspend (laptop)
+> * Resume (laptop)
+> * Observe that the WLAN led no longer turns ON/OFF depending on the
+>   status and is always red
+> 
+> Even though for my case it only needs to be set to OUT in ath9k_start
+> but for consistency bring back the IN direction setting as well.
+> 
+> Cc: Miaoqing Pan <miaoqing@codeaurora.org>
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
 
-> On Fri 02 Sep 09:24 PDT 2016, Kalle Valo wrote:
->
->> Bjorn Andersson <bjorn.andersson@linaro.org> writes:
->> 
->> > --- a/drivers/net/wireless/ath/wcn36xx/Kconfig
->> > +++ b/drivers/net/wireless/ath/wcn36xx/Kconfig
->> > @@ -1,6 +1,6 @@
->> >  config WCN36XX
->> >  	tristate "Qualcomm Atheros WCN3660/3680 support"
->> > -	depends on MAC80211 && HAS_DMA
->> > +	depends on MAC80211 && HAS_DMA && QCOM_SMD
->> 
->> While I had this patch on my pending branch I noticed that I can't
->> compile wcn36xx on x86 anymore. This is actually quite inconvenient, for
->> example then it's easy to miss mac80211 API changes etc. Is there any
->> way we could continue build testing wcn36xx on x86 (or all) platforms?
->> 
->
-> Sorry about that, we should at least be able to COMPILE_TEST it in
-> non-qcom builds. Thanks for letting me know.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-Yeah, that would be better. Even though it's a bit shame that
-COMPILE_TEST disables DEBUG_INFO (I use the same build also for
-development) so I need to toggle it on and off whenever I need debug
-symbols. Oh well...
-
-> And the driver should also depend on QCOM_WCNSS_CTRL, in the normal
-> case.
->
-> I'll respin this, unless you prefer an incremental patch for those
-> changes(?)
-
-Yes, please respin.
-
->> Also what about older platforms? Earlier I used wcn36xx on my Nexus 4
->> with help of backports project. I can't do that anymore, right?
->> 
->
-> This has been tested on 8064, 8974 and 8916. So your Nexus 4 is covered.
->
-> Unfortunately I don't have a Nexus 4, but we currently have Nexus 7
-> (the 8064 version), Xperia Z, Xperia Z1 and DB410c using this chip and
-> all four has been tested with this code.
-
-Actually I meant running wcn36xx on older kernels, where your QCOM_SMD
-is not yet supported.
-
-> I've staged the PIL/remoteproc (firmware "loader") driver for v4.9, so
-> with this patch the only thing missing to fill in the dts files is one
-> clock from the RPM.
-
-Nice.
-
-> JFYI, There seems to be some race in the removal path, which I will look
-> into. But I would prefer if we could merge this to make the driver
-> usable, and more accessible to work on.
-
-Sure, a race like that isn't that big of a deal compared to the benefits
-your work brings. But it's good to document knows regressions to the
-commit log anyway so that others can be prepared if they test it.
+088a60926b66 ath9k: bring back direction setting in ath9k_{start_stop}
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/9309829/
