@@ -1,78 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55788 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761890AbcINP2C (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42389 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1161169AbcIGL1X (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 11:28:02 -0400
-Message-ID: <57D96C81.4010503@candelatech.com> (sfid-20160914_172805_979172_1B93205B)
-Date: Wed, 14 Sep 2016 08:28:01 -0700
-From: Ben Greear <greearb@candelatech.com>
+        Wed, 7 Sep 2016 07:27:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mwifiex: handle edmac vendor command
+References: <1461945483-3239-1-git-send-email-akarwar@marvell.com>
+        <cbd542a552db4d368a5b402307976494@SC-EXCH04.marvell.com>
+        <87zirg8qxo.fsf@kamboji.qca.qualcomm.com>
+        <e2b7d7d9aef1488a97eb7ec44b4c46af@SC-EXCH04.marvell.com>
+        <87poon1xka.fsf@kamboji.qca.qualcomm.com>
+        <2320ad20-164e-12c5-0b01-9612a1d24300@broadcom.com>
+Date: Wed, 07 Sep 2016 14:27:17 +0300
+In-Reply-To: <2320ad20-164e-12c5-0b01-9612a1d24300@broadcom.com> (Arend Van
+        Spriel's message of "Mon, 5 Sep 2016 10:33:02 +0200")
+Message-ID: <87bn00x84q.fsf@kamboji.qca.qualcomm.com> (sfid-20160907_132743_316995_2AB6DBB7)
 MIME-Version: 1.0
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 19/21] ath10k: Enable adhoc mode for CT firmware.
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com> <1462986153-16318-20-git-send-email-greearb@candelatech.com> <877faeeedm.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <877faeeedm.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
 
-
-On 09/14/2016 07:37 AM, Valo, Kalle wrote:
-> greearb@candelatech.com writes:
+> On 1-9-2016 16:53, Kalle Valo wrote:
 >
->> From: Ben Greear <greearb@candelatech.com>
->>
->> CT firmware can support IBSS mode, so allow users to configure this.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>   drivers/net/wireless/ath/ath10k/mac.c | 5 +++++
->>   1 file changed, 5 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
->> index f1bfb3a..3fc9006 100644
->> --- a/drivers/net/wireless/ath/ath10k/mac.c
->> +++ b/drivers/net/wireless/ath/ath10k/mac.c
->> @@ -7482,6 +7482,10 @@ static const struct ieee80211_iface_limit ath10k_10x_ct_if_limits[] = {
->>   	.max	= 7,
->>   	.types	= BIT(NL80211_IFTYPE_AP)
->>   	},
->> +	{
->> +	.max	= 1,
->> +	.types	= BIT(NL80211_IFTYPE_ADHOC)
->> +	},
->>   };
->>
->>   static const struct ieee80211_iface_combination ath10k_if_comb[] = {
->> @@ -7862,6 +7866,7 @@ int ath10k_mac_register(struct ath10k *ar)
->>   			ar->hw->wiphy->iface_combinations = ath10k_10x_ct_if_comb;
->>   			ar->hw->wiphy->n_iface_combinations =
->>   				ARRAY_SIZE(ath10k_10x_ct_if_comb);
->> +			ar->hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_ADHOC);
->>   		} else {
->>   			ar->hw->wiphy->iface_combinations = ath10k_10x_if_comb;
->>   			ar->hw->wiphy->n_iface_combinations =
+>> Sorry for the delay. I have been thinking about vendor commands quite a
+>> lot and I don't think they belong to upstream drivers. For regular use
+>> cases (used by normal users) we have nl80211, for developer and testing
+>> purposes we have debugfs and for manufacturing type of tests we have
+>> nl80211 testmode interface. The focus of development should be adding
+>> new functionality to nl80211 (and other generic interfaces), not to
+>> driver specific vendor commands.
+>> 
+>> I know brcm80211 and ti's wlcore have few vendor commands but I'm hoping
+>> to remove them sometime soon.
+>> 
+>> Thoughts?
 >
-> There should a feature flag ATH10K_FW_FEATURE_SUPPORTS_ADHOC and we use
-> that flag as an indication to enable the mode. I wish we had done that
-> from the beginning, using wmi_op_version to guess that just creates
-> problems :(
+> Grabbing the original commit message for vendor commands:
+>
+> commit ad7e718c9b4f717823fd920a0103f7b0fb06183f
+> Author: Johannes Berg <johannes.berg@intel.com>
+> Date:   Wed Nov 13 13:37:47 2013 +0100
+>
+>     nl80211: vendor command support
+>
+>     Add support for vendor-specific commands to nl80211. This is
+>     intended to be used for really vendor-specific functionality
+>     that can't be implemented in a generic fashion for any reason.
+>     It's *NOT* intended to be used for any normal/generic feature
+>     or any optimisations that could be implemented across drivers.
+>
+> I agree that the effort needs to be made to come up with a solution that
+> is usable by (most of) all drivers in the upstream wireless subsystem.
+>
+> The thing with the test mode is that you need to enable it in Kconfig.
 
-No argument there.  If you want to add a feature flag I can start setting it in
-my firmware.
+And that's on purpose. We did not want testmode to be enabled on distro
+kernels, for example.
 
-But, the if-combinations crap is a bigger problem than that anyway.  I have
-some later patches to re-work it to make it dynamically created instead of static,
-but that is a fairly big change and I figured I had a better chance of getting
-smaller changes upstream first.
+> We have 1 vendor command in brcmfmac and it used to be under testmode
+> api. However, because of the Kconfig thing it would mean we need a
+> different kernel to do manufacturing testing. Especially when the
+> modules are built-in. The OEMs typically don't like that as they want to
+> do the testing using the same kernel as what ends up in the product.
+> This was our motivation to use the vendor command when that was added.
 
-Thanks,
-Ben
+Is there a specific reason why you can't keep the testmode always
+enabled? Then you would have the same kernel both in manufacturing and
+in "normal mode".
 
+> It does have a nasty side-effect that some will see it as a drop-in
+> replacement of the driver private ioctl-s. To some extent (as mentioned
+> in the commit message above) that should be fine, but we need to make a
+> good effort to move things to nl80211.
+
+Sorry, but I'm way too cynical to buy that :) A "good effort" means that
+in most of cases it will never happen. Once the vendor command is
+accepted into upsteam trees the developer will lose any interest on
+trying to make it a generic interface. That's just how humans work,
+including me.
+
+I do see your and Amitkumar's point how much easier the vendor commands
+make it to implement new driver features and part of me also wants that.
+I just think that in the long run that's detrimental for Linux wireless
+and we end up into having multiple drivers having same features enabled
+via different vendor commands.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Kalle Valo
