@@ -1,43 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45432 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S938998AbcIVUwV (ORCPT
+Received: from libra.uberspace.de ([95.143.172.171]:33908 "EHLO
+        libra.uberspace.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756512AbcIGHog (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2016 16:52:21 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Oren Givon <oren.givon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 22 Sep 2016 23:52:03 +0300
-Message-Id: <20160922205210.1778-4-luca@coelho.fi> (sfid-20160922_225239_673227_970FE6DE)
-In-Reply-To: <20160922205210.1778-1-luca@coelho.fi>
-References: <20160922205210.1778-1-luca@coelho.fi>
-Subject: [PATCH 03/10] iwlwifi: add two new 9560 series PCI IDs
+        Wed, 7 Sep 2016 03:44:36 -0400
+Date: Wed, 7 Sep 2016 09:43:46 +0200
+From: Matthias Beyer <mail@beyermatthias.de>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: gregkh@linuxfoundation.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Manuel Messner <manuel.johannes.messner@hs-furtwangen.de>,
+        Geliang Tang <geliangtang@163.com>,
+        Cihangir Akturk <cakturk@gmail.com>,
+        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/5] Some cleanup patches for
+ drivers/staging/rtl8723au/core/rtw_mlme.c
+Message-ID: <20160907074346.GG19230@yuu> (sfid-20160907_094511_616454_633E6687)
+Reply-To: Matthias Beyer <mail@beyermatthias.de>
+References: <20160904192626.17197-1-mail@beyermatthias.de>
+ <wrfjshtdyq56.fsf@redhat.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="aPdhxNJGSeOG9wFI"
+In-Reply-To: <wrfjshtdyq56.fsf@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
 
-Add two new PCI IDs for the 9560 series.
+--aPdhxNJGSeOG9wFI
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 2 ++
- 1 file changed, 2 insertions(+)
+On 06-09-2016 12:00:37, Jes Sorensen wrote:
+> Matthias Beyer <mail@beyermatthias.de> writes:
+> > This patchset fixes some errors and warnings reported by checkpatch.pl.
+> >
+> > Matthias Beyer (5):
+> >   drivers: staging: rtl8723au: core: Fix checkpatch.pl errors
+> >   drivers: staging: rtl8723au: core: simplify if-break-else
+> >   drivers: staging: rtl8723au: core: Refactor pointless branching
+> >   drivers: staging: rtl8723au: core: Fix "space prohibited" warning
+> >   drivers: staging: rtl8723au: core: Fix indentation
+> >
+> >  drivers/staging/rtl8723au/core/rtw_mlme.c | 72 ++++++++++++++---------=
+--------
+> >  1 file changed, 33 insertions(+), 39 deletions(-)
+>=20
+> Nothing wrong with these patches, however I intend to post a patch to
+> remove this driver soon, so it's kind of a waste of your time to spend
+> too many cycles on it.
+>=20
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 3d766f2..001be40 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -529,6 +529,8 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x2526, 0x1030, iwl9560_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0xA370, 0x1030, iwl9560_2ac_cfg)},
- 
- /* a000 Series */
- 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg)},
--- 
-2.9.3
+Alright, thanks for telling me, I won't waste any more time on it.
+
+Besides that - thanks for telling me that the patchset is okay as-is.
+That keeps me motivated!
+
+--=20
+Mit freundlichen Gr=FC=DFen,
+Kind regards,
+Matthias Beyer
+
+Proudly sent with mutt.
+Happily signed with gnupg.
+
+--aPdhxNJGSeOG9wFI
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJXz8UwAAoJEM6vG2R+1WslSWAP/2siCdjldrS/6xUize9UKtm3
+oy8smfAliUwzdppsPuKw7QW3Q9wUDXGIMlrbmvYqSDNZNY6Fw5v0UsCGQm/vupOZ
+WVcYG2ljVKrCV2bjHoDcOTEqYv1iZf/GaI+Shax+CGVN4lUV20lfVx5Y22D0iY4u
+1OnvArbsfNhQMJQVYtLcuBRb0nW3HZZsj2t8XtLn/6mUCv8GUK3zfBVTkc/c4H69
+k0woR0RJ1gXDAH1jjU9A/Cd7zRQ4EUZvU6HLEjo6AjWhruyRwbdN1RW9Yd17NgXi
+TPT+jzfK9XIk0MJiLzoPrSmKUUxoXbyaTlPQhRh7bCa/1tdu2JrTe3V3eflMlgEr
+aQKpYIX5HjtnqvVS4ZmWaqRzO3Nn1d8jZwqT/JNTDZ+7GA3fW/red4266SILUOKS
+aJZ/It4eH/OIlgmUlQE0qDHOo+CXOZZydiFsPfdke28jxHGg/fYaCMkI7OJNsiRi
+6uvUca9G8ILmKARjkfwMjV/MYjeXxzWsLcNsJH6164ZwVUSy/ddnGa5DTlazML2P
+KGVnw9UAkNkhJJehKE+kDH5eAhxVZ3N3UanSXdM2tEb0hzPFZ1zWyOTL4cMYlhFO
+h83nY8HqWr/yL7ckG4chXJPJ0RKmGzgniBSoHiU1mrgB8wueRzuECd1XphEXSsen
+gf0ZEGkoYTSU8poOCByV
+=ui2m
+-----END PGP SIGNATURE-----
+
+--aPdhxNJGSeOG9wFI--
