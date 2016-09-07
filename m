@@ -1,46 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:41180 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933265AbcI3HUo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 03:20:44 -0400
-Message-ID: <1475220037.17481.3.camel@sipsolutions.net> (sfid-20160930_092056_454534_C8F7DF11)
-Subject: Re: [PATCH 1/3] mac80211: filter multicast data packets on AP /
- AP_VLAN
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michael Braun <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 30 Sep 2016 09:20:37 +0200
-In-Reply-To: <1474821596-12155-2-git-send-email-michael-dev@fami-braun.de> (sfid-20160925_184004_593715_152E8F66)
-References: <1474821596-12155-1-git-send-email-michael-dev@fami-braun.de>
-         <1474821596-12155-2-git-send-email-michael-dev@fami-braun.de>
-         (sfid-20160925_184004_593715_152E8F66)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:58600 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932994AbcIGNQR (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 7 Sep 2016 09:16:17 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com>
+Cc: <ath9k-devel@qca.qualcomm.com>, <linux-wireless@vger.kernel.org>,
+        <ath9k-devel@lists.ath9k.org>, <netdev@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        Miaoqing Pan <miaoqing@codeaurora.org>,
+        <stable@vger.kernel.org>
+Subject: Re: ath9k: bring back direction setting in ath9k_{start_stop}
+References: <e61bb634860745818f8c8c99f79f71a0@euamsexm01a.eu.qualcomm.com>
+Date: Wed, 07 Sep 2016 16:16:09 +0300
+In-Reply-To: <e61bb634860745818f8c8c99f79f71a0@euamsexm01a.eu.qualcomm.com>
+        (Kalle Valo's message of "Wed, 7 Sep 2016 15:11:44 +0200")
+Message-ID: <8737lbx33a.fsf@kamboji.qca.qualcomm.com> (sfid-20160907_151637_325307_862B6BBF)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-[snip]
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-I think this makes sense, but it's not clear to me why you add two
-counters and keep the old one? It seems to me that it would be
-sufficient to have a single counter per AP/VLAN interface?
+> Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com> wrote:
+>> A regression was introduced in commit id 79d4db1214a ("ath9k: cleanup
+>> led_pin initial") that broken the WLAN status led on my laptop with
+>> AR9287 after suspending and resuming.
+>> 
+>> Steps to reproduce:
+>> * Suspend (laptop)
+>> * Resume (laptop)
+>> * Observe that the WLAN led no longer turns ON/OFF depending on the
+>>   status and is always red
+>> 
+>> Even though for my case it only needs to be set to OUT in ath9k_start
+>> but for consistency bring back the IN direction setting as well.
+>> 
+>> Cc: Miaoqing Pan <miaoqing@codeaurora.org>
+>> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+>> Cc: <stable@vger.kernel.org>
+>> Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
+>
+> Thanks, 1 patch applied to ath-next branch of ath.git:
+>
+> 088a60926b66 ath9k: bring back direction setting in ath9k_{start_stop}
 
-The usage in __ieee80211_request_smps_ap() can just be removed since it
-goes to iterate the stations next. That should be a separate, first,
-patch in the series, but after that I don't see a need to keep
-num_mcast_sta, or rather, I see no reason not to remove the VLAN
-stations from the AP's num_mcast_sta, and add a new per-VLAN
-num_mcast_sta.
+Oops, I was supposed to apply this to ath-current branch. Please ignore
+this. Luckily I didn't push yet so I can easily fix this.
 
-> +/**
-> + * @returns number of multicast stations connected
-> + *  -1 if unsupported (no-AP, 4addr mode)
-> + */
-> +static inline int
-> +ieee80211_vif_get_num_mcast_if(struct ieee80211_sub_if_data *sdata)
-
-That's not a valid kernel-doc comment, but you've tagged it as one with
-the /** - please fix by removing the /** and the @, and writing a real
-sentence out of that, or by making it a real kernel-doc comment.
-
-johannes
+-- 
+Kalle Valo
