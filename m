@@ -1,79 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:32946 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933490AbcIFVqd (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:54906 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752387AbcIGKMj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 17:46:33 -0400
-From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-To: ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
-        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com
-Cc: mcgrof@do-not-panic.com, mark.rutland@arm.com, robh+dt@kernel.org,
-        kvalo@codeaurora.org, chunkeey@googlemail.com,
-        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
-        bjorn@mork.no, linux@rempel-privat.de, nbd@nbd.name,
-        Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Subject: [PATCH v6 1/3] Documentation: dt: net: add ath9k wireless device binding
-Date: Tue,  6 Sep 2016 23:46:21 +0200
-Message-Id: <20160906214623.20424-2-martin.blumenstingl@googlemail.com> (sfid-20160906_234638_458093_2FC770C3)
-In-Reply-To: <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
-References: <20160821143105.27487-1-martin.blumenstingl@googlemail.com>
- <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
+        Wed, 7 Sep 2016 06:12:39 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mwifiex: handle edmac vendor command
+Date: Wed, 7 Sep 2016 10:12:35 +0000
+Message-ID: <f827ba80b79646fd8711e1a00c2b8394@SC-EXCH04.marvell.com> (sfid-20160907_121243_014228_55755044)
+References: <1461945483-3239-1-git-send-email-akarwar@marvell.com>
+        <cbd542a552db4d368a5b402307976494@SC-EXCH04.marvell.com>
+        <87zirg8qxo.fsf@kamboji.qca.qualcomm.com>
+        <e2b7d7d9aef1488a97eb7ec44b4c46af@SC-EXCH04.marvell.com>
+        <87poon1xka.fsf@kamboji.qca.qualcomm.com>
+        <0fa2b5d5e09f4396a9c273c3c8dfc3db@SC-EXCH04.marvell.com>
+ <87d1km1hb6.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87d1km1hb6.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation how devicetree can be used to configure ath9k based
-devices.
+Hi Kalle,
 
-Signed-off-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
----
- .../devicetree/bindings/net/wireless/qca,ath9k.txt | 39 ++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
+> From: Kalle Valo [mailto:kvalo@codeaurora.org]
+> Sent: Friday, September 02, 2016 8:26 PM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org
+> Subject: Re: [PATCH] mwifiex: handle edmac vendor command
+> 
+> Amitkumar Karwar <akarwar@marvell.com> writes:
+> 
+> >> Sorry for the delay. I have been thinking about vendor commands quite
+> >> a lot and I don't think they belong to upstream drivers. For regular
+> >> use cases (used by normal users) we have nl80211, for developer and
+> >> testing purposes we have debugfs and for manufacturing type of tests
+> >> we have
+> >> nl80211 testmode interface. The focus of development should be adding
+> >> new functionality to nl80211 (and other generic interfaces), not to
+> >> driver specific vendor commands.
+> >>
+> >> I know brcm80211 and ti's wlcore have few vendor commands but I'm
+> >> hoping to remove them sometime soon.
+> >>
+> >> Thoughts?
+> >>
+> >
+> > Thanks for your reply.
+> >
+> > There is something called energy detect mode. Chip can detect non-WiFi
+> > radio signal also and monitor it for specified time before
+> > transmitting frames. As per ETSI specification, enabling this mode is
+> > mandatory for some countries for certain frequencies.
+> 
+> To me this looks this is something which can be generic, not a driver
+> specific interface. And why can't regulatory code enable this
+> automatically, without any user involvement? It already knows what
+> country we are in.
+> 
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-new file mode 100644
-index 0000000..77b9202
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/qca,ath9k.txt
-@@ -0,0 +1,39 @@
-+* Qualcomm Atheros ath9k wireless devices
-+
-+This node provides properties for configuring the ath9k wireless device. The
-+node is expected to be specified as a child node of the PCI controller to
-+which the wireless chip is connected.
-+
-+Required properties:
-+- compatible: For PCI and PCIe devices this should be an identifier following
-+		the format as defined in "PCI Bus Binding to Open Firmware"
-+		Revision 2.1. One of the possible formats is "pciVVVV,DDDD"
-+		where VVVV is the PCI vendor ID and DDDD is PCI device ID.
-+
-+Optional properties:
-+- reg: Address and length of the register set for the device.
-+- qca,clk-25mhz: Defines that a 25MHz clock is used
-+- qca,no-eeprom: Indicates that there is no physical EEPROM connected to the
-+			ath9k wireless chip (in this case the calibration /
-+			EEPROM data will be loaded from userspace using the
-+			kernel firmware loader).
-+- qca,disable-2ghz: Overrides the settings from the EEPROM and disables the
-+			2.4GHz band. Setting this property is only needed
-+			when the RF circuit does not support the 2.4GHz band
-+			while it is enabled nevertheless in the EEPROM.
-+- qca,disable-5ghz: Overrides the settings from the EEPROM and disables the
-+			5GHz band. Setting this property is only needed when
-+			the RF circuit does not support the 5GHz band while
-+			it is enabled nevertheless in the EEPROM.
-+- mac-address: See ethernet.txt in the parent directory
-+- local-mac-address: See ethernet.txt in the parent directory
-+
-+
-+In this example, the node is defined as child node of the PCI controller:
-+&pci0 {
-+	ath9k@168c,002d {
-+		compatible = "pci168c,002d";
-+		reg = <0x7000 0 0 0 0x1000>;
-+		qca,disable-5ghz;
-+	};
-+};
--- 
-2.9.3
+Got it. I will check if we can make this as generic as you mentioned and explore the option.
+
+Regards,
+Amitkumar
