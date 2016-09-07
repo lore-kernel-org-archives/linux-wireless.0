@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59611 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751214AbcIAO26 (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34089 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933438AbcIGHtr (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 10:28:58 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi-next 2016-08-30-2
-References: <1472556999.27868.86.camel@coelho.fi>
-Date: Thu, 01 Sep 2016 17:28:53 +0300
-In-Reply-To: <1472556999.27868.86.camel@coelho.fi> (Luca Coelho's message of
-        "Tue, 30 Aug 2016 14:36:39 +0300")
-Message-ID: <87twdz1yoq.fsf@kamboji.qca.qualcomm.com> (sfid-20160901_162901_669756_458DB8F2)
+        Wed, 7 Sep 2016 03:49:47 -0400
+Received: by mail-wm0-f67.google.com with SMTP id w12so1573548wmf.1
+        for <linux-wireless@vger.kernel.org>; Wed, 07 Sep 2016 00:49:45 -0700 (PDT)
+Received: from automatix.localnet (net-93-147-4-153.cust.dsl.teletu.it. [93.147.4.153])
+        by smtp.gmail.com with ESMTPSA id q65sm2770791wmd.24.2016.09.07.00.49.43
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Wed, 07 Sep 2016 00:49:44 -0700 (PDT)
+From: Valerio Passini <valerio.passini@unicam.it>
+To: linux-wireless@vger.kernel.org
+Subject: Stability connection problems in ath9k kernel 4.7
+Date: Wed, 07 Sep 2016 09:49:42 +0200
+Message-ID: <1798564.U2X6r5Zons@automatix> (sfid-20160907_095006_868179_B7BDE5A2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+Hello,
 
-> This is a v2 of my pull request with the potential below array bounds
-> access, reported by kbuild bot, fixed.
->
->> Another pull request, this time intended for 4.9.  I have a lot of
->> patches to send, but I'll send smaller batches this time. :)
->> 
->> These patches contain mostly preparation for new HW, but also some
->> improvements in the dynamic queue allocation code and the
->> implementation to support GMAC.
->
-> Let me know if everything's fine (or not). :)
->
-> Luca.
->
->
-> The following changes since commit 60747ef4d173c2747bf7f0377fb22846cb422195:
->
->   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2016-08-18 01:17:32 -0400)
->
-> are available in the git repository at:
->
->   git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-08-30-2
+I have found some connection problems since 4.7 release using ath9k that turn 
+the wifi pretty useless, I think it might be something in the power management 
+because the signal seems really low. Previously, up to kernel 4.6.7 everything 
+worked very well.
+This is a sample of dmesg in kernel 4.7.2:
+ 239.898935] wlp4s0: authenticate with XX:XX:XX:XX:XX:XX 
+[  239.919995] wlp4s0: send auth to XX:XX:XX:XX:XX:XX  (try 1/3) 
+[  239.931877] wlp4s0: authenticated 
+[  239.932357] wlp4s0: associate with XX:XX:XX:XX:XX:XX  (try 1/3) 
+[  239.942171] wlp4s0: RX AssocResp from XX:XX:XX:XX:XX:XX  (capab=0x431 
+status=0 aid=2) 
+[  239.942301] wlp4s0: associated 
+[  244.802853] ath: phy0: DMA failed to stop in 10 ms AR_CR=0x00000024 
+AR_DIAG_SW=0x02000020 DMADBG_7=0x0000
+6100                                                                                                         
+[  245.931832] wlp4s0: authenticate with XX:XX:XX:XX:XX:XX  
+[  245.953028] wlp4s0: send auth to XX:XX:XX:XX:XX:XX  (try 1/3) 
+[  245.958702] wlp4s0: authenticated 
+[  245.960386] wlp4s0: associate withXX:XX:XX:XX:XX:XX  (try 1/3) 
+[  245.980543] wlp4s0: RX AssocResp from XX:XX:XX:XX:XX:XX  (capab=0x431 
+status=0 aid=2)
 
-Pulled, thanks.
+lspci on 4.6.7 kernel:
+04:00.0 Network controller: Qualcomm Atheros AR9485 Wireless Network Adapter 
+(rev 01)
+        Subsystem: AzureWave AR9485 Wireless Network Adapter
+        Flags: bus master, fast devsel, latency 0, IRQ 18
+        Memory at f7900000 (64-bit, non-prefetchable) [size=512K]
+        Expansion ROM at f7980000 [disabled] [size=64K]
+        Capabilities: [40] Power Management version 2
+        Capabilities: [50] MSI: Enable- Count=1/4 Maskable+ 64bit+
+        Capabilities: [70] Express Endpoint, MSI 00
+        Capabilities: [100] Advanced Error Reporting
+        Capabilities: [140] Virtual Channel
+        Capabilities: [160] Device Serial Number 00-00-00-00-00-00-00-00
+        Kernel driver in use: ath9k
+        Kernel modules: ath9k
 
--- 
-Kalle Valo
+Probably you need some debugging output, but before recompiling the kernel I 
+would like to know if you are interested in any kind of help from me and what 
+steps I should take (I'm able to help in testing patches but I'm not familiar 
+with git). Thank you
+
+Valerio
