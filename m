@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55156 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752954AbcIPK0r (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19949 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754667AbcIGNYC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2016 06:26:47 -0400
-Message-ID: <1474021599.5664.73.camel@coelho.fi> (sfid-20160916_122651_037265_7CAA4580)
-From: Luca Coelho <luca@coelho.fi>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Date: Fri, 16 Sep 2016 13:26:39 +0300
-In-Reply-To: <1055fff0-4eb0-08c5-2e16-a0b6f2887bda@broadcom.com>
-References: <20160916083321.5840-1-luca@coelho.fi>
-         <1055fff0-4eb0-08c5-2e16-a0b6f2887bda@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v2 0/9] Add support for Neighbor Awareness Networking
+        Wed, 7 Sep 2016 09:24:02 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath9k: bring back direction setting in ath9k_{start_stop}
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160901174702.8645-1-giedrius.statkevicius@gmail.com>
+To: Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com>
+CC: <kvalo@codeaurora.org>, <ath9k-devel@qca.qualcomm.com>,
+        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Miaoqing Pan <miaoqing@codeaurora.org>,
+        <stable@vger.kernel.org>,
+        =?UTF-8?q?Giedrius=20Statkevi=C4=8Dius?=
+        <giedrius.statkevicius@gmail.com>
+Message-ID: <a331907578a94d2c8adc0de4362039e4@euamsexm01a.eu.qualcomm.com> (sfid-20160907_152445_911328_8E8B6828)
+Date: Wed, 7 Sep 2016 15:23:06 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-09-16 at 11:00 +0200, Arend Van Spriel wrote:
-> On 16-9-2016 10:33, Luca Coelho wrote:
-> > 
-> > From: Luca Coelho <luciano.coelho@intel.com>
-> > 
-> > Hi,
-> > 
-> > This is v2 of the NAN patches that Emmanuel sent a while
-> > back[1].  In
-> > this version, we squashed some patches and took care of some
-> > comments
-> > after reviews (both internal and public).
+Giedrius Statkevi?ius <giedrius.statkevicius@gmail.com> wrote:
+> A regression was introduced in commit id 79d4db1214a ("ath9k: cleanup
+> led_pin initial") that broken the WLAN status led on my laptop with
+> AR9287 after suspending and resuming.
 > 
-> Hi Luca,
+> Steps to reproduce:
+> * Suspend (laptop)
+> * Resume (laptop)
+> * Observe that the WLAN led no longer turns ON/OFF depending on the
+>   status and is always red
 > 
-> You may have missed some as I think this should be v4.
+> Even though for my case it only needs to be set to OUT in ath9k_start
+> but for consistency bring back the IN direction setting as well.
+> 
+> Cc: Miaoqing Pan <miaoqing@codeaurora.org>
+> Cc: Kalle Valo <kvalo@qca.qualcomm.com>
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Giedrius Statkevičius <giedrius.statkevicius@gmail.com>
 
-Right... I saw those other ones, but they didn't have a cover-letter,
-this series is sort of the v2 of "Add support for Neighbor Awareness
-Networking".  Or something... :)
+Thanks, 1 patch applied to ath-current branch of ath.git:
 
-In any case, this new series should include all the changes done on the
-way.
+e34f2ff40e03 ath9k: bring back direction setting in ath9k_{start_stop}
 
---
-Luca.
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9309829/
