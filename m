@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55501 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933723AbcILPbo (ORCPT
+Received: from mail-it0-f49.google.com ([209.85.214.49]:37982 "EHLO
+        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933022AbcIHPbh (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 11:31:44 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix rfc1042 header retrieval in QCA4019 with eth
- decap mode
-Date: Mon, 12 Sep 2016 15:31:35 +0000
-Message-ID: <87fup5m8x5.fsf@kamboji.qca.qualcomm.com> (sfid-20160912_174235_251096_229D98E5)
-References: <1469623085-13942-1-git-send-email-vthiagar@qti.qualcomm.com>
-In-Reply-To: <1469623085-13942-1-git-send-email-vthiagar@qti.qualcomm.com>
-        (Vasanthakumar Thiagarajan's message of "Wed, 27 Jul 2016 18:08:05      +0530")
-Content-Type: text/plain; charset="us-ascii"
+        Thu, 8 Sep 2016 11:31:37 -0400
+Received: by mail-it0-f49.google.com with SMTP id c198so87614845ith.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2016 08:31:37 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <87k2emsi22.fsf@kamboji.qca.qualcomm.com>
+References: <1473200312-22438-1-git-send-email-bjorn.andersson@linaro.org>
+ <1473200312-22438-2-git-send-email-bjorn.andersson@linaro.org> <87k2emsi22.fsf@kamboji.qca.qualcomm.com>
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Date: Thu, 8 Sep 2016 08:31:36 -0700
+Message-ID: <CAOCOHw5Wvy5g0HuDaYUZ2WTCws5uXtw6DO7S3Dvp+0mgW-Mg=Q@mail.gmail.com> (sfid-20160908_173204_607461_7A62E276)
+Subject: Re: [PATCH v4 2/4] wcn36xx: Transition driver to SMD client
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev <netdev@vger.kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        Andy Gross <andy.gross@linaro.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
-
-> Chipset from QCA99X0 onwards (QCA99X0, QCA9984, QCA4019 & future)
-> rx_hdr_status is not padded to align in 4-byte boundary. Define a
-> new hw_params field to handle different alignment behaviour between
-> different hw. This patch fixes improper retrieval of rfc1042 header
-> with QCA4019. This patch along with "ath10k: Properly remove padding
-> from the start of rx payload" will fix traffic failure in ethernet
-> decap mode for QCA4019.
+On Thu, Sep 8, 2016 at 5:16 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Bjorn Andersson <bjorn.andersson@linaro.org> writes:
 >
-> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+>> The wcn36xx wifi driver follows the life cycle of the WLAN_CTRL SMD
+>> channel, as such it should be a SMD client. This patch makes this
+>> transition, now that we have the necessary frameworks available.
+>>
+>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>> ---
+>>
+>> Changes since v3:
+>> - Made msg_header const in wcn36xx_smd_rsp_process()
+>>
+>> Changes since v2:
+>> - Correct the call to the new ieee80211_scan_completed()
+>>
+>>  drivers/net/wireless/ath/wcn36xx/dxe.c     | 16 +++---
+>>  drivers/net/wireless/ath/wcn36xx/main.c    | 79 ++++++++++++++++++++----------
+>>  drivers/net/wireless/ath/wcn36xx/smd.c     | 31 +++++-------
+>>  drivers/net/wireless/ath/wcn36xx/smd.h     |  5 ++
+>>  drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 21 +++-----
+>>  5 files changed, 86 insertions(+), 66 deletions(-)
+>
+> This doesn't compile for me:
+>
 
-There were some conflicts, I fixed them in the pending branch. Please
-check my changes:
+I thought I mentioned this in the mail, sorry for missing that.
 
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=3Dpend=
-ing&id=3Dd0d9e40216e1a8edd2f3b387b96aad62c3a49add
+There is a patch for this issue in linux-next already [1] which is
+part of [2], which was part of the pull request to arm-soc for
+inclusion in v4.9.
 
---=20
-Kalle Valo=
+[1] https://patchwork.kernel.org/patch/9272457/
+[2] https://git.kernel.org/cgit/linux/kernel/git/agross/linux.git/tag/?h=qcom-drivers-for-4.9
+
+Regards,
+Bjorn
