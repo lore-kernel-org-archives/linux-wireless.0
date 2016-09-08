@@ -1,34 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50123 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965268AbcIVVBg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2016 17:01:36 -0400
-Date: Thu, 22 Sep 2016 23:01:32 +0200
-From: Jean Delvare <jdelvare@suse.de>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        linux-wireless@vger.kernel.org
-Subject: Re: rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case not processed
-Message-ID: <20160922230132.5aa36918@endymion> (sfid-20160922_230147_361375_B54AD236)
-In-Reply-To: <83974845-037d-0cde-00b1-ec7b28eeb15f@lwfinger.net>
-References: <20160922115116.149c599c@endymion>
-        <83974845-037d-0cde-00b1-ec7b28eeb15f@lwfinger.net>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60639 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753874AbcIHMQ3 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Sep 2016 08:16:29 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, Andy Gross <andy.gross@linaro.org>
+Subject: Re: [PATCH v4 2/4] wcn36xx: Transition driver to SMD client
+References: <1473200312-22438-1-git-send-email-bjorn.andersson@linaro.org>
+        <1473200312-22438-2-git-send-email-bjorn.andersson@linaro.org>
+Date: Thu, 08 Sep 2016 15:16:21 +0300
+In-Reply-To: <1473200312-22438-2-git-send-email-bjorn.andersson@linaro.org>
+        (Bjorn Andersson's message of "Tue, 6 Sep 2016 15:18:30 -0700")
+Message-ID: <87k2emsi22.fsf@kamboji.qca.qualcomm.com> (sfid-20160908_141647_605764_84E14D7B)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Larry,
+Bjorn Andersson <bjorn.andersson@linaro.org> writes:
 
-On Thu, 22 Sep 2016 10:09:58 -0500, Larry Finger wrote:
-> Do you build your own kernel, or are you using openSUSE's supplied version? If 
-> the latter, I will need to think how we might debug the issue. If the former, 
-> please add the attached patch.
+> The wcn36xx wifi driver follows the life cycle of the WLAN_CTRL SMD
+> channel, as such it should be a SMD client. This patch makes this
+> transition, now that we have the necessary frameworks available.
+>
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> ---
+>
+> Changes since v3:
+> - Made msg_header const in wcn36xx_smd_rsp_process()
+>
+> Changes since v2:
+> - Correct the call to the new ieee80211_scan_completed()
+>
+>  drivers/net/wireless/ath/wcn36xx/dxe.c     | 16 +++---
+>  drivers/net/wireless/ath/wcn36xx/main.c    | 79 ++++++++++++++++++++----------
+>  drivers/net/wireless/ath/wcn36xx/smd.c     | 31 +++++-------
+>  drivers/net/wireless/ath/wcn36xx/smd.h     |  5 ++
+>  drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 21 +++-----
+>  5 files changed, 86 insertions(+), 66 deletions(-)
 
-The debug module is in place. The error message was logged 3 times
-today, so I should have some data for you tomorrow.
+This doesn't compile for me:
 
-Thanks,
+  CC [M]  drivers/net/wireless/ath/wcn36xx/main.o
+  CC [M]  drivers/net/wireless/ath/wcn36xx/dxe.o
+  CC [M]  drivers/net/wireless/ath/wcn36xx/txrx.o
+  CC [M]  drivers/net/wireless/ath/wcn36xx/smd.o
+  CC [M]  drivers/net/wireless/ath/wcn36xx/pmc.o
+  CC [M]  drivers/net/wireless/ath/wcn36xx/debug.o
+  LD [M]  drivers/net/wireless/ath/wcn36xx/wcn36xx.o
+drivers/net/wireless/ath/wcn36xx/smd.o: In function `qcom_smd_get_drvdata':
+/home/kvalo/ath10k/src/ath/./include/linux/soc/qcom/smd.h:87: multiple definition of `qcom_smd_get_drvdata'
+drivers/net/wireless/ath/wcn36xx/main.o:/home/kvalo/ath10k/src/ath/./include/linux/soc/qcom/smd.h:87: first defined here
+drivers/net/wireless/ath/wcn36xx/smd.o: In function `qcom_smd_set_drvdata':
+/home/kvalo/ath10k/src/ath/./include/linux/soc/qcom/smd.h:94: multiple definition of `qcom_smd_set_drvdata'
+drivers/net/wireless/ath/wcn36xx/main.o:/home/kvalo/ath10k/src/ath/./include/linux/soc/qcom/smd.h:94: first defined here
+make[5]: *** [drivers/net/wireless/ath/wcn36xx/wcn36xx.o] Error 1
+
+I fixed it with the diff below. Please let me know if it looks ok to
+you, the patch is not applied yet so it's easy to make changes. The full
+commit in my pending branch:
+
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=pending&id=dba68ea7a404a9959d0ab44bc13c844187db6d6a
+
+--- a/include/linux/soc/qcom/smd.h
++++ b/include/linux/soc/qcom/smd.h
+@@ -83,14 +83,14 @@ qcom_smd_open_channel(struct qcom_smd_channel *channel,
+        return NULL;
+ }
+ 
+-void *qcom_smd_get_drvdata(struct qcom_smd_channel *channel)
++static inline void *qcom_smd_get_drvdata(struct qcom_smd_channel *channel)
+ {
+        /* This shouldn't be possible */
+        WARN_ON(1);
+        return NULL;
+ }
+ 
+-void qcom_smd_set_drvdata(struct qcom_smd_channel *channel, void *data)
++static inline void qcom_smd_set_drvdata(struct qcom_smd_channel *channel, void *data)
+ {
+        /* This shouldn't be possible */
+        WARN_ON(1);
+
+
 -- 
-Jean Delvare
-SUSE L3 Support
+Kalle Valo
