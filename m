@@ -1,103 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58953 "EHLO
-        mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933190AbcISLKO (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51419 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752248AbcIHLlp (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 07:10:14 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 1/9] brcmfmac: ignore 11d configuration errors
-Date: Mon, 19 Sep 2016 12:09:51 +0100
-Message-Id: <1474283399-14385-2-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131031_633757_D52A5553)
-In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+        Thu, 8 Sep 2016 07:41:45 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Cc: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/2] ath9k: use ieee80211_tx_status_noskb where possible
+References: <20160804214940.78476-1-nbd@nbd.name>
+        <8aeb7913-d955-d894-d82c-4614e17d3ee4@neratec.com>
+        <9e324227-f105-bc16-f0c0-c2a3a79032e8@nbd.name>
+        <236fc08a-9474-0917-47f0-756e9136e3b5@neratec.com>
+Date: Thu, 08 Sep 2016 14:41:16 +0300
+In-Reply-To: <236fc08a-9474-0917-47f0-756e9136e3b5@neratec.com> (Zefir
+        Kurtisi's message of "Fri, 12 Aug 2016 10:31:32 +0200")
+Message-ID: <87y432sjoj.fsf@kamboji.qca.qualcomm.com> (sfid-20160908_134149_040344_52FEFD95)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <hante.meuleman@broadcom.com>
+Zefir Kurtisi <zefir.kurtisi@neratec.com> writes:
 
-802.11d is not always supported by firmware anymore. Currently the
-AP configuration of 11d will cause an abort if the ioctl set is
-failing. This behavior is not correct and the error should be
-ignored.
+> On 08/11/2016 09:27 PM, Felix Fietkau wrote:
+>> On 2016-08-11 18:05, Zefir Kurtisi wrote:
+>>> On 08/04/2016 11:49 PM, Felix Fietkau wrote:
+>>>> It removes the need for undoing the padding changes to skb->data and it
+>>>> improves performance by eliminating one tx status lookup per MPDU in the
+>>>> status path. It is also useful for preparing a follow-up fix to better
+>>>> handle powersave filtering.
+>>>>
+>>>
+>>> For me, this one introduces a regression to the statistics, e.g.
+>>> 'dot11TransmittedFragmentCount' is now accounted differently since it is not
+>>> updated from within ieee80211_tx_status_noskb().
+>> Is this important? I guess it would be possible to make this more
+>> accurate by extending the API, but I wonder if that's worth doing just
+>> for these debugfs counters.
+>> 
+> If you want to support the IEEE802dot11.MIB (dot11mac.dot11CountersTable), they
+> are important. Not sure though if it is used by others besides us.
+>
+> I think the real issue here is that those counters are regarded as internal debug
+> values (as the comments or e.g. commit c206ca6709 state) instead of general
+> purpose statistics that is exposed to SNMP. As such, they should be configurable
+> as a feature independent of debug settings in mac80211.
+>
+>
+> Aside from that consideration, this patch (with the follow up ones) increased peak
+> performance noticeably (we measure some 5%+ higher peak throughput), which for
+> sure is worth dropping the counters for most.
+>
+> I am fine handling this internally. A note in the commit message would be helpful
+> that states that counters dot11TransmittedFragmentCount, dot11FrameDuplicateCount,
+> dot11ReceivedFragmentCount, and dot11MulticastReceivedFrameCount become invalid.
 
-Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 27 ++++++++++++----------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+A good idea, I updated the commit log to mention that. Does that look
+ok?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 201a980..c3b8f59 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -4502,6 +4502,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 	u16 chanspec = chandef_to_chanspec(&cfg->d11inf, &settings->chandef);
- 	bool mbss;
- 	int is_11d;
-+	bool supports_11d;
- 
- 	brcmf_dbg(TRACE, "ctrlchn=%d, center=%d, bw=%d, beacon_interval=%d, dtim_period=%d,\n",
- 		  settings->chandef.chan->hw_value,
-@@ -4514,11 +4515,16 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 	mbss = ifp->vif->mbss;
- 
- 	/* store current 11d setting */
--	brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_REGULATORY, &ifp->vif->is_11d);
--	country_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
--				      settings->beacon.tail_len,
--				      WLAN_EID_COUNTRY);
--	is_11d = country_ie ? 1 : 0;
-+	if (brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_REGULATORY,
-+				  &ifp->vif->is_11d)) {
-+		supports_11d = false;
-+	} else {
-+		country_ie = brcmf_parse_tlvs((u8 *)settings->beacon.tail,
-+					      settings->beacon.tail_len,
-+					      WLAN_EID_COUNTRY);
-+		is_11d = country_ie ? 1 : 0;
-+		supports_11d = true;
-+	}
- 
- 	memset(&ssid_le, 0, sizeof(ssid_le));
- 	if (settings->ssid == NULL || settings->ssid_len == 0) {
-@@ -4577,7 +4583,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 
- 	/* Parameters shared by all radio interfaces */
- 	if (!mbss) {
--		if (is_11d != ifp->vif->is_11d) {
-+		if ((supports_11d) && (is_11d != ifp->vif->is_11d)) {
- 			err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_REGULATORY,
- 						    is_11d);
- 			if (err < 0) {
-@@ -4619,7 +4625,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
- 			brcmf_err("SET INFRA error %d\n", err);
- 			goto exit;
- 		}
--	} else if (WARN_ON(is_11d != ifp->vif->is_11d)) {
-+	} else if (WARN_ON(supports_11d && (is_11d != ifp->vif->is_11d))) {
- 		/* Multiple-BSS should use same 11d configuration */
- 		err = -EINVAL;
- 		goto exit;
-@@ -4753,11 +4759,8 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
- 			brcmf_err("setting INFRA mode failed %d\n", err);
- 		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MBSS))
- 			brcmf_fil_iovar_int_set(ifp, "mbss", 0);
--		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_REGULATORY,
--					    ifp->vif->is_11d);
--		if (err < 0)
--			brcmf_err("restoring REGULATORY setting failed %d\n",
--				  err);
-+		brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_REGULATORY,
-+				      ifp->vif->is_11d);
- 		/* Bring device back up so it can be used again */
- 		err = brcmf_fil_cmd_int_set(ifp, BRCMF_C_UP, 1);
- 		if (err < 0)
+Author: Felix Fietkau <nbd@nbd.name>
+Date:   Fri Sep 2 19:46:12 2016 +0300
+
+    ath9k: use ieee80211_tx_status_noskb where possible
+    
+    It removes the need for undoing the padding changes to skb->data and it
+    improves performance by eliminating one tx status lookup per MPDU in the
+    status path. It is also useful for preparing a follow-up fix to better
+    handle powersave filtering.
+    
+    A side effect is that these counters, available via debugfs, become now invalid:
+    
+    * dot11TransmittedFragmentCount
+    * dot11FrameDuplicateCount,
+    * dot11ReceivedFragmentCount
+    * dot11MulticastReceivedFrameCount
+    
+    Signed-off-by: Felix Fietkau <nbd@nbd.name>
+    Patchwork-Id: 9264385
+    [kvalo@qca.qualcomm.com: add a note about counters, thanks to Zefir Kurtisi]
+    Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
 -- 
-1.9.1
+Kalle Valo
