@@ -1,70 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:35048 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755134AbcITWAu (ORCPT
+Received: from mail-yw0-f176.google.com ([209.85.161.176]:34603 "EHLO
+        mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965060AbcIHIaI (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 18:00:50 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Hante Meuleman <meuleman@broadcom.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        brcm80211-dev-list@broadcom.com
-Cc: linux-wireless@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-        brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH RFC] brcmfmac: stop netif queue when waiting for packets transmission
-Date: Wed, 21 Sep 2016 00:00:22 +0200
-Message-Id: <20160920220030.10257-1-zajec5@gmail.com> (sfid-20160921_000113_640823_C1BA4217)
+        Thu, 8 Sep 2016 04:30:08 -0400
+Received: by mail-yw0-f176.google.com with SMTP id g192so24305258ywh.1
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2016 01:30:08 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <d65738be-cb30-cedd-562c-814d02a91794@nbd.name>
+References: <20160905095128.80560-1-nbd@nbd.name> <20160905095128.80560-4-nbd@nbd.name>
+ <CAHNKnsTwBVmWSis_5EV1mrJM53E6XDhJ=CHWCjihZ839bDXGuA@mail.gmail.com> <d65738be-cb30-cedd-562c-814d02a91794@nbd.name>
+From: Sergey Ryazanov <ryazanov.s.a@gmail.com>
+Date: Thu, 8 Sep 2016 11:29:42 +0300
+Message-ID: <CAHNKnsQTEuSp6dFTecqP65NU0msEx2pPa56p=0RJjtKB4zp5Fw@mail.gmail.com> (sfid-20160908_103029_143906_E3101F53)
+Subject: Re: [PATCH v3 3/3] mt76: add driver code for MT76x2e
+To: Felix Fietkau <nbd@nbd.name>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Kalle Valo <kvalo@codeaurora.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+2016-09-08 11:25 GMT+03:00 Felix Fietkau <nbd@nbd.name>:
+> On 2016-09-08 09:52, Sergey Ryazanov wrote:
+>>> +
+>>> +int mt76x2_register_device(struct mt76x2_dev *dev)
+>>> +{
+>>> +       struct ieee80211_hw *hw = mt76_hw(dev);
+>>> +       struct wiphy *wiphy = hw->wiphy;
+>>> +       void *status_fifo;
+>>> +       int fifo_size;
+>>> +       int i, ret;
+>>> +
+>>> +       fifo_size = roundup_pow_of_two(32 * sizeof(struct mt76x2_tx_status));
+>>> +       status_fifo = devm_kzalloc(dev->mt76.dev, fifo_size, GFP_KERNEL);
+>>> +       if (!status_fifo)
+>>> +               return -ENOMEM;
+>>> +
+>>> +       kfifo_init(&dev->txstatus_fifo, status_fifo, fifo_size);
+>>> +
+>>> +       ret = mt76x2_init_hardware(dev);
+>>> +       if (ret)
+>>> +               return ret;
+>>> +
+>>> +       hw->queues = 4;
+>>> +       hw->max_rates = 1;
+>>> +       hw->max_report_rates = 7;
+>>> +       hw->max_rate_tries = 1;
+>>> +       hw->extra_tx_headroom = 2;
+>>> +
+>>> +       hw->sta_data_size = sizeof(struct mt76x2_sta);
+>>> +       hw->vif_data_size = sizeof(struct mt76x2_vif);
+>>> +
+>>> +       for (i = 0; i < ARRAY_SIZE(dev->macaddr_list); i++) {
+>>> +               u8 *addr = dev->macaddr_list[i].addr;
+>>> +
+>>> +               memcpy(addr, dev->mt76.macaddr, ETH_ALEN);
+>>> +
+>>> +               if (!i)
+>>> +                       continue;
+>>> +
+>>> +               addr[0] |= BIT(1);
+>>> +               addr[0] ^= ((i - 1) << 2);
+>>> +       }
+>>> +       wiphy->addresses = dev->macaddr_list;
+>>> +       wiphy->n_addresses = ARRAY_SIZE(dev->macaddr_list);
+>>> +
+>>> +       wiphy->iface_combinations = if_comb;
+>>> +       wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
+>>> +
+>>> +       wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
+>>> +
+>>> +       ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
+>>> +       INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
+>>> +       INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
+>>> +
+>>> +       dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+>>> +       dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
+>>> +
+>>> +       ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
+>>> +                                  ARRAY_SIZE(mt76x2_rates));
+>>> +       if (ret)
+>>> +               goto fail;
+>>> +
+>>> +       mt76x2_init_debugfs(dev);
+>>> +
+>>> +       return 0;
+>>> +
+>>> +fail:
+>>> +       mt76x2_stop_hardware(dev);
+>>> +       return ret;
+>>> +}
+>>
+>> Just curious, almost full chip initialization performed in probe
+>> procedure, why not do that in start() callback? In such case we could
+>> fully restart chip without module reloading, just with ifdown/ifup
+>> circle.
+> Last time I tried that I ran into some weird chip quirks. I do think
+> it's a good idea but I'd rather see this merged first and try again to
+> rework it when I have some more time to figure out what's going on.
+>
+Got it. Thank you for explanation.
 
-Sending a new key to the firmware should be done without any 802.1x
-packets pending. Currently brcmfmac has very trivial code waiting for
-that condition and it doesn't seem to be enough.
-
-We should stop netif from sending any extra packets in order to:
-1) Make sure new 802.1x packets won't be coming over and over
-2) Avoid a race with netif providing a new packet right after our
-   waiting code
-
-Another solution would be to accept only non-802.1x packets. This would
-require enqueuing all packets and hacking brcmf_fws_dequeue_worker to
-dequeue only non-802.1x ones but that would most likely result in too
-hacky code.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 201a980..1791060 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -471,11 +471,14 @@ send_key_to_dongle(struct brcmf_if *ifp, struct brcmf_wsec_key *key)
- 
- 	convert_key_from_CPU(key, &key_le);
- 
-+	netif_stop_queue(ifp->ndev);
- 	brcmf_netdev_wait_pend8021x(ifp);
- 
- 	err = brcmf_fil_bsscfg_data_set(ifp, "wsec_key", &key_le,
- 					sizeof(key_le));
- 
-+	netif_start_queue(ifp->ndev);
-+
- 	if (err)
- 		brcmf_err("wsec_key error (%d)\n", err);
- 	return err;
 -- 
-2.9.3
+Sergey
