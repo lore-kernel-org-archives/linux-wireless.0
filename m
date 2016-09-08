@@ -1,48 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:35712 "EHLO
-        helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751129AbcISJRb (ORCPT
+Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:49035
+        "EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932299AbcIHP5v (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 05:17:31 -0400
-Date: Mon, 19 Sep 2016 17:17:21 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
-Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
-Message-ID: <20160919091721.GA12235@gondor.apana.org.au> (sfid-20160919_111735_499908_F6D9ED9A)
-References: <20160804071846.GA773@gondor.apana.org.au>
- <20160804074546.GA996@gondor.apana.org.au>
- <1470377813.2977.14.camel@sipsolutions.net>
- <20160805104858.GA9297@gondor.apana.org.au>
- <1470394233.2977.37.camel@sipsolutions.net>
- <20160918135030.GA7062@gondor.apana.org.au>
- <20160919084056.GA11875@gondor.apana.org.au>
- <1474276530.4469.16.camel@sipsolutions.net>
+        Thu, 8 Sep 2016 11:57:51 -0400
+Subject: Re: mwifiex: propagate error if IRQ request fails in
+ mwifiex_sdio_of()
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+References: <20160903103520.8C69C6201B@smtp.codeaurora.org>
+ <66735eb5-c831-8e06-337b-80ccfc392061@osg.samsung.com>
+ <0f15fe320fa34ae287f8a6b91ec78a34@SC-EXCH04.marvell.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+Message-ID: <c7e8b951-97dd-d2a5-4740-b6895d577f91@osg.samsung.com> (sfid-20160908_175813_070384_625E1CA8)
+Date: Thu, 8 Sep 2016 11:57:43 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1474276530.4469.16.camel@sipsolutions.net>
+In-Reply-To: <0f15fe320fa34ae287f8a6b91ec78a34@SC-EXCH04.marvell.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Sep 19, 2016 at 11:15:30AM +0200, Johannes Berg wrote:
-> On Mon, 2016-09-19 at 16:40 +0800, Herbert Xu wrote:
-> 
-> > I've tested the rhlist code with test_rhashtable but I haven't
-> > tested the mac80211 conversion.  So please give it a go and see
-> > if it still works.
-> 
-> This is still running out of memory on my test suite.
-> 
-> Somehow I don't see kmemleak kicking in, so I'll have to find the bug
-> manually :)
+Hello Amitkumar,
 
-What does your test suite actually do? Is it something that I
-can run without special hardware?
+On 09/08/2016 11:55 AM, Amitkumar Karwar wrote:
+> Hi Javier,
+> 
+>> From: Javier Martinez Canillas [mailto:javier@osg.samsung.com]
+>> Sent: Tuesday, September 06, 2016 5:43 PM
+>> To: Kalle Valo
+>> Cc: linux-kernel@vger.kernel.org; Amitkumar Karwar;
+>> netdev@vger.kernel.org; linux-wireless@vger.kernel.org; Nishant
+>> Sarmukadam; Arend van Spriel
+>> Subject: Re: mwifiex: propagate error if IRQ request fails in
+>> mwifiex_sdio_of()
+>>
+>> Hello Kalle,
+>>
+>> On 09/03/2016 12:35 PM, Kalle Valo wrote:
+>>> Javier Martinez Canillas <javier@osg.samsung.com> wrote:
+>>>> If request_irq() fails in mwifiex_sdio_probe_of(), only an error
+>>>> message is printed but the actual error is not propagated to the
+>> caller function.
+>>>>
+>>>> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
+>>>
+>>> What's the conclusion with this patch? Should I drop it or take it?
+>>>
+>>> (The discussion is available from the patchwork link in the
+>>> signature.)
+>>>
+>>
+>> My understanding is that Arend agrees with the patch and that the
+>> question raised was caused by looking at an older kernel version. IOW,
+>> the patch is OK and should be picked.
+>>
+>> I'm adding Arend to cc, so can comment in case I misunderstood him
+>> though.
+>>
+> 
+> This error doesn't affect actual wifi functionality. Only thing is wakeup on interrupt when system is in suspended state won't work.
+> I think, we can make below change. 
+> 
+> ------------------
+> @@ -122,9 +122,11 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
+>                                                IRQF_TRIGGER_LOW,
+>                                                "wifi_wake", cfg);
+>            if (ret) {
+> -                    dev_err(dev,
+> +                    dev_dbg(dev,
+>                              "Failed to request irq_wifi %d (%d)\n",
+>                              cfg->irq_wifi, ret);
+> +                    card->plt_wake_cfg = NULL;
+> +                    return 0;
+>              }
 
-Thanks,
+I'm OK with that change. Feel free too add my Reviewed-by if you post it.
+
+>                 disable_irq(cfg->irq_wifi);
+>             }
+> -----------------
+> 
+> Regards,
+> Amitkumar
+> 
+
+Best regards,
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Javier Martinez Canillas
+Open Source Group
+Samsung Research America
