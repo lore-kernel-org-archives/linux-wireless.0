@@ -1,48 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:5809 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754605AbcIIMOP (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 08:14:15 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from nbd.name ([46.4.11.11]:53866 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754584AbcIHUSl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Sep 2016 16:18:41 -0400
+Subject: Re: [RFC] mac80211: Dynamically set CoDel parameters per station.
+To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+References: <20160908195915.31478-1-toke@toke.dk>
+Cc: Michal Kazior <michal.kazior@tieto.com>, Dave Taht <dave@taht.net>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <2663e4fb-bcdf-a872-f5ab-fac3bb5344c1@nbd.name> (sfid-20160908_221844_510410_D2E3E542)
+Date: Thu, 8 Sep 2016 22:18:37 +0200
 MIME-Version: 1.0
-Subject: Re: ath6kl: Allow the radio to report 0 dbm txpower without timing out
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1472537779-3723-1-git-send-email-eric.bentley@lairdtech.com>
-To: Eric Bentley <eric.bentley@lairdtech.com>
-CC: <ath6kl@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Message-ID: <8b623c07c491428485cfbf0cf3458df5@euamsexm01a.eu.qualcomm.com> (sfid-20160909_141418_535790_0CD74AAF)
-Date: Fri, 9 Sep 2016 14:14:08 +0200
+In-Reply-To: <20160908195915.31478-1-toke@toke.dk>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eric Bentley <eric.bentley@lairdtech.com> wrote:
-> The ath6kl driver attempts to get the txpower value from the radio by first
-> clearing the existing stored value and then watching the value to become
-> non-zero.
+On 2016-09-08 21:59, Toke Høiland-Jørgensen wrote:
+> CoDel can be too aggressive if a station sends at a very low rate. This
+> gets worse the more stations are present, as each station gets more
+> bursty the longer the round-robin scheduling between stations takes.
 > 
-> APs allow setting client power to values from -127..127, but this radio
-> is not capable of setting values less then 0 and so will report txpower
-> as 0dbm for both negative and 0 client power values.
+> This is an attempt to dynamically adjust CoDel parameters per station.
+> It takes a rather simple approach and uses a simple binary designation
+> of a station as 'slow' if it has expected throughput less than eight
+> Mbps (i.e. the lowest couple of rates). In this case, CoDel is set to be
+> more lenient by adjusting its target to 50 ms and interval to 300 ms.
+> There's a built-in hysteresis so a station cannot flip between slow and
+> fast more than once every two seconds.
 > 
-> When the radio has txpower set to 0dbm txpower (equivalent to 1mw) the
-> ath6kl_cfg80211_get_txpower() function will remain in the
-> wait_event_interruptible_timeout() loop waiting for the value to be
-> non-zero, and will eventually timeout. This results in a 5 second delay in
-> response. However, the correct value of zero is eventually returned.
-> 
-> The 6004 defaults to 63dbm which is then limited by regulatory and
-> hardware limits with max of 18dbm (6003 max is 16dbm), therefore we can
-> use values larger then these to be able to determine when the value has
-> been updated.
-> 
-> To correct the issue, set the value to a nonsensical value (255) and wait
-> for it to change to the valid value.
+> In this version the check is performed every time a packet is enqueued
+> to the intermediate queues; and the overhead of doing this is alleviated
+> a bit by caching the result and by the above-mentioned hysteresis. It
+> can probably be smarter about both when and how to do the scaling, but
+> this seems to alleviate some of the starvation I've seen with very slow
+> stations.
+Since this is not dealing properly with firmware rate control anyway,
+I'd suggest calling the update from rate_control_set_rates in order to
+avoid putting more stuff into the tx hot path.
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+You could add a separate code path to allow firmware rate control
+devices to provide a hint at a convenient point in time.
 
-cabd34d0e9c4 ath6kl: Allow the radio to report 0 dbm txpower without timing out
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9304907/
+- Felix
