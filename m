@@ -1,216 +1,195 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:34104 "EHLO
-        mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933166AbcIZVv5 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 17:51:57 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH] brcmfmac: proto: add callback for queuing TX data
-Date: Mon, 26 Sep 2016 23:51:44 +0200
-Message-Id: <20160926215144.9923-1-zajec5@gmail.com> (sfid-20160926_235229_301187_9723C2F0)
+Received: from mail2.tohojo.dk ([77.235.48.147]:44795 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751420AbcIHUAK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Sep 2016 16:00:10 -0400
+From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Felix Fietkau <nbd@nbd.name>, Dave Taht <dave@taht.net>
+Subject: [RFC] mac80211: Dynamically set CoDel parameters per station.
+Date: Thu,  8 Sep 2016 21:59:15 +0200
+Message-Id: <20160908195915.31478-1-toke@toke.dk> (sfid-20160908_220015_839744_5EE2B956)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+CoDel can be too aggressive if a station sends at a very low rate. This
+gets worse the more stations are present, as each station gets more
+bursty the longer the round-robin scheduling between stations takes.
 
-So far our core code was calling brcmf_fws_process_skb which wasn't
-a proper thing to do. If case of devices using msgbuf protocol fwsignal
-shouldn't be used. It was an unnecessary extra layer simply calling
-a protocol specifix txdata function.
+This is an attempt to dynamically adjust CoDel parameters per station.
+It takes a rather simple approach and uses a simple binary designation
+of a station as 'slow' if it has expected throughput less than eight
+Mbps (i.e. the lowest couple of rates). In this case, CoDel is set to be
+more lenient by adjusting its target to 50 ms and interval to 300 ms.
+There's a built-in hysteresis so a station cannot flip between slow and
+fast more than once every two seconds.
 
-Please note we already have txdata callback, but it's used for calls
-between bcdc and fwsignal so it couldn't be simply used there.
+In this version the check is performed every time a packet is enqueued
+to the intermediate queues; and the overhead of doing this is alleviated
+a bit by caching the result and by the above-mentioned hysteresis. It
+can probably be smarter about both when and how to do the scaling, but
+this seems to alleviate some of the starvation I've seen with very slow
+stations.
 
-This makes core code more generic (instead of bcdc/fwsignal specific).
+I'm not sure how this interacts with drivers that do rate-control in
+firmware (such as ath10k). I assume they will just not be able to return
+an expected rate (and so will be considered 'fast').
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Cc: Michal Kazior <michal.kazior@tieto.com>
+Cc: Felix Fietkau <nbd@nbd.name>
+Cc: Dave Taht <dave@taht.net>
+Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
 ---
-There is one 1 CHECK report from checkpatch.pl in this patch:
-CHECK: Comparison to NULL could be written "!proto->hdrpull"
-#157: FILE: drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c:54:
-+       if (!proto->tx_queue_data || (proto->hdrpull == NULL) ||
+ net/mac80211/sta_info.c | 37 +++++++++++++++++++++++++++++++++++++
+ net/mac80211/sta_info.h | 13 +++++++++++++
+ net/mac80211/tx.c       | 14 +++++++++++++-
+ 3 files changed, 63 insertions(+), 1 deletion(-)
 
-It's caused by a code that was already there and that should be fixed
-in a separated patch. This shouldn't stop this patch from being applied.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c   | 12 ++++++++++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c   |  8 +++++++-
- .../net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c   | 15 +++++----------
- .../net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h   |  1 +
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c |  6 +++---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c  |  2 +-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h  |  9 +++++++++
- 7 files changed, 38 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-index 038a960..384b187 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
-@@ -326,6 +326,17 @@ brcmf_proto_bcdc_hdrpull(struct brcmf_pub *drvr, bool do_fws,
- 	return 0;
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 19f14c9..8bc9eba 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -20,6 +20,8 @@
+ #include <linux/timer.h>
+ #include <linux/rtnetlink.h>
+=20
++#include <net/codel.h>
++#include <net/codel_impl.h>
+ #include <net/mac80211.h>
+ #include "ieee80211_i.h"
+ #include "driver-ops.h"
+@@ -325,6 +327,10 @@ struct sta_info *sta_info_alloc(struct ieee80211_sub=
+_if_data *sdata,
+ 	INIT_WORK(&sta->drv_deliver_wk, sta_deliver_ps_frames);
+ 	INIT_WORK(&sta->ampdu_mlme.work, ieee80211_ba_session_work);
+ 	mutex_init(&sta->ampdu_mlme.mtx);
++
++	codel_params_init(&sta->cparams.cparams);
++	sta->cparams.cparams.ecn =3D true;
++
+ #ifdef CONFIG_MAC80211_MESH
+ 	if (ieee80211_vif_is_mesh(&sdata->vif)) {
+ 		sta->mesh =3D kzalloc(sizeof(*sta->mesh), gfp);
+@@ -2314,3 +2320,34 @@ unsigned long ieee80211_sta_last_active(struct sta=
+_info *sta)
+ 		return stats->last_rx;
+ 	return sta->status_stats.last_ack;
  }
- 
-+static int brcmf_proto_bcdc_tx_queue_data(struct brcmf_pub *drvr, int ifidx,
-+					  struct sk_buff *skb)
++
++void sta_update_codel_params(struct sta_info *sta)
 +{
-+	struct brcmf_if *ifp = brcmf_get_ifp(drvr, ifidx);
++	u64 now =3D ktime_get_ns();
++	u32 thr;
++	bool slow;
 +
-+	if (!brcmf_fws_queue_skbs(drvr->fws))
-+		return brcmf_proto_txdata(drvr, ifidx, 0, skb);
++	if (likely(now - sta->cparams.update_time < STA_CPARAMS_HYSTERESIS))
++		return;
 +
-+	return brcmf_fws_process_skb(ifp, skb);
++	thr =3D sta_get_expected_throughput(sta);
++	slow =3D !!(thr && thr < STA_SLOW_THRESHOLD);
++
++	if (likely(slow =3D=3D sta->cparams.slow))
++		return;
++
++	net_info_ratelimited("%pM: updating CoDel params - throughput %d slow %=
+s\n",
++			sta->addr, thr, slow ? "true" : "false");
++
++	if (slow) {
++		sta->cparams.cparams.target =3D MS2TIME(50);
++		sta->cparams.cparams.interval =3D MS2TIME(300);
++		sta->cparams.cparams.ecn =3D false;
++	} else {
++		sta->cparams.cparams.target =3D MS2TIME(5);
++		sta->cparams.cparams.interval =3D MS2TIME(100);
++		sta->cparams.cparams.ecn =3D true;
++	}
++	sta->cparams.update_time =3D now;
++	sta->cparams.slow =3D slow;
 +}
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 0556be3..928c52d 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -384,6 +384,16 @@ struct ieee80211_sta_rx_stats {
+ 	u64 msdu[IEEE80211_NUM_TIDS + 1];
+ };
+=20
++#define STA_CPARAMS_HYSTERESIS 5 * NSEC_PER_SEC
++#define STA_SLOW_THRESHOLD 8000 /* 8 mbps */
 +
- static int
- brcmf_proto_bcdc_txdata(struct brcmf_pub *drvr, int ifidx, u8 offset,
- 			struct sk_buff *pktbuf)
-@@ -375,6 +386,7 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
- 	drvr->proto->hdrpull = brcmf_proto_bcdc_hdrpull;
- 	drvr->proto->query_dcmd = brcmf_proto_bcdc_query_dcmd;
- 	drvr->proto->set_dcmd = brcmf_proto_bcdc_set_dcmd;
-+	drvr->proto->tx_queue_data = brcmf_proto_bcdc_tx_queue_data;
- 	drvr->proto->txdata = brcmf_proto_bcdc_txdata;
- 	drvr->proto->configure_addr_mode = brcmf_proto_bcdc_configure_addr_mode;
- 	drvr->proto->delete_peer = brcmf_proto_bcdc_delete_peer;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 1715280..6d046ba 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -239,7 +239,13 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 	if (eh->h_proto == htons(ETH_P_PAE))
- 		atomic_inc(&ifp->pend_8021x_cnt);
- 
--	ret = brcmf_fws_process_skb(ifp, skb);
-+	/* determine the priority */
-+	if ((skb->priority == 0) || (skb->priority > 7))
-+		skb->priority = cfg80211_classify8021d(skb, NULL);
++struct sta_codel_params {
++	struct codel_params cparams;
++	u64 update_time;
++	bool slow;
++};
++void sta_update_codel_params(struct sta_info *sta);
 +
-+	ret = brcmf_proto_tx_queue_data(drvr, ifp->ifidx, skb);
-+	if (ret < 0)
-+		brcmf_txfinalize(ifp, skb, false);
- 
- done:
- 	if (ret) {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-index a190f53..5f1a592 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
-@@ -2100,16 +2100,6 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
- 	int rc = 0;
- 
- 	brcmf_dbg(DATA, "tx proto=0x%X\n", ntohs(eh->h_proto));
--	/* determine the priority */
--	if ((skb->priority == 0) || (skb->priority > 7))
--		skb->priority = cfg80211_classify8021d(skb, NULL);
--
--	if (fws->avoid_queueing) {
--		rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
--		if (rc < 0)
--			brcmf_txfinalize(ifp, skb, false);
--		return rc;
--	}
- 
- 	/* set control buffer information */
- 	skcb->if_flags = 0;
-@@ -2442,6 +2432,11 @@ void brcmf_fws_deinit(struct brcmf_pub *drvr)
- 	kfree(fws);
- }
- 
-+bool brcmf_fws_queue_skbs(struct brcmf_fws_info *fws)
-+{
-+	return !fws->avoid_queueing;
-+}
+ /**
+  * struct sta_info - STA information
+  *
+@@ -437,6 +447,7 @@ struct ieee80211_sta_rx_stats {
+  * @known_smps_mode: the smps_mode the client thinks we are in. Relevant=
+ for
+  *	AP only.
+  * @cipher_scheme: optional cipher scheme for this station
++ * @cparams: CoDel parameters for this station.
+  * @reserved_tid: reserved TID (if any, otherwise IEEE80211_TID_UNRESERV=
+ED)
+  * @fast_tx: TX fastpath information
+  * @fast_rx: RX fastpath information
+@@ -540,6 +551,8 @@ struct sta_info {
+ 	enum ieee80211_smps_mode known_smps_mode;
+ 	const struct ieee80211_cipher_scheme *cipher_scheme;
+=20
++	struct sta_codel_params cparams;
 +
- bool brcmf_fws_fc_active(struct brcmf_fws_info *fws)
- {
- 	if (!fws->creditmap_received)
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-index ef0ad85..96df660 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-@@ -20,6 +20,7 @@
- 
- int brcmf_fws_init(struct brcmf_pub *drvr);
- void brcmf_fws_deinit(struct brcmf_pub *drvr);
-+bool brcmf_fws_queue_skbs(struct brcmf_fws_info *fws);
- bool brcmf_fws_fc_active(struct brcmf_fws_info *fws);
- void brcmf_fws_hdrpull(struct brcmf_if *ifp, s16 siglen, struct sk_buff *skb);
- int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-index 2b9a2bc..7cc8851 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
-@@ -782,8 +782,8 @@ static int brcmf_msgbuf_schedule_txdata(struct brcmf_msgbuf *msgbuf, u32 flowid,
- }
- 
- 
--static int brcmf_msgbuf_txdata(struct brcmf_pub *drvr, int ifidx,
--			       u8 offset, struct sk_buff *skb)
-+static int brcmf_msgbuf_tx_queue_data(struct brcmf_pub *drvr, int ifidx,
-+				      struct sk_buff *skb)
- {
- 	struct brcmf_msgbuf *msgbuf = (struct brcmf_msgbuf *)drvr->proto->pd;
- 	struct brcmf_flowring *flow = msgbuf->flow;
-@@ -1467,7 +1467,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
- 	drvr->proto->hdrpull = brcmf_msgbuf_hdrpull;
- 	drvr->proto->query_dcmd = brcmf_msgbuf_query_dcmd;
- 	drvr->proto->set_dcmd = brcmf_msgbuf_set_dcmd;
--	drvr->proto->txdata = brcmf_msgbuf_txdata;
-+	drvr->proto->tx_queue_data = brcmf_msgbuf_tx_queue_data;
- 	drvr->proto->configure_addr_mode = brcmf_msgbuf_configure_addr_mode;
- 	drvr->proto->delete_peer = brcmf_msgbuf_delete_peer;
- 	drvr->proto->add_tdls_peer = brcmf_msgbuf_add_tdls_peer;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
-index 26b68c3..d26ff21 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.c
-@@ -51,7 +51,7 @@ int brcmf_proto_attach(struct brcmf_pub *drvr)
- 			  drvr->bus_if->proto_type);
- 		goto fail;
- 	}
--	if ((proto->txdata == NULL) || (proto->hdrpull == NULL) ||
-+	if (!proto->tx_queue_data || (proto->hdrpull == NULL) ||
- 	    (proto->query_dcmd == NULL) || (proto->set_dcmd == NULL) ||
- 	    (proto->configure_addr_mode == NULL) ||
- 	    (proto->delete_peer == NULL) || (proto->add_tdls_peer == NULL)) {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-index 57531f4..34b59fe 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
-@@ -33,6 +33,8 @@ struct brcmf_proto {
- 			  void *buf, uint len);
- 	int (*set_dcmd)(struct brcmf_pub *drvr, int ifidx, uint cmd, void *buf,
- 			uint len);
-+	int (*tx_queue_data)(struct brcmf_pub *drvr, int ifidx,
-+			     struct sk_buff *skb);
- 	int (*txdata)(struct brcmf_pub *drvr, int ifidx, u8 offset,
- 		      struct sk_buff *skb);
- 	void (*configure_addr_mode)(struct brcmf_pub *drvr, int ifidx,
-@@ -74,6 +76,13 @@ static inline int brcmf_proto_set_dcmd(struct brcmf_pub *drvr, int ifidx,
- {
- 	return drvr->proto->set_dcmd(drvr, ifidx, cmd, buf, len);
- }
+ 	u8 reserved_tid;
+=20
+ 	struct cfg80211_chan_def tdls_chandef;
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index efc38e7..3973ab0 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1339,12 +1339,19 @@ static struct sk_buff *fq_tin_dequeue_func(struct=
+ fq *fq,
+ 	struct codel_vars *cvars;
+ 	struct codel_params *cparams;
+ 	struct codel_stats *cstats;
++	struct sta_info *sta;
+=20
+ 	local =3D container_of(fq, struct ieee80211_local, fq);
+ 	txqi =3D container_of(tin, struct txq_info, tin);
+-	cparams =3D &local->cparams;
+ 	cstats =3D &local->cstats;
+=20
++	if (txqi->txq.sta) {
++		sta =3D container_of(txqi->txq.sta, struct sta_info, sta);
++		cparams =3D &sta->cparams.cparams;
++	} else
++		cparams =3D &local->cparams;
 +
-+static inline int brcmf_proto_tx_queue_data(struct brcmf_pub *drvr, int ifidx,
-+					    struct sk_buff *skb)
-+{
-+	return drvr->proto->tx_queue_data(drvr, ifidx, skb);
-+}
 +
- static inline int brcmf_proto_txdata(struct brcmf_pub *drvr, int ifidx,
- 				     u8 offset, struct sk_buff *skb)
- {
--- 
+ 	if (flow =3D=3D &txqi->def_flow)
+ 		cvars =3D &txqi->def_cvars;
+ 	else
+@@ -1547,6 +1554,11 @@ static bool ieee80211_tx_frags(struct ieee80211_lo=
+cal *local,
+=20
+ 		txqi =3D ieee80211_get_txq(local, vif, sta, skb);
+ 		if (txqi) {
++			if (sta) {
++				struct sta_info *sti =3D container_of(sta, struct sta_info, sta);
++				sta_update_codel_params(sti);
++			}
++
+ 			info->control.vif =3D vif;
+=20
+ 			__skb_unlink(skb, skbs);
+--=20
 2.9.3
