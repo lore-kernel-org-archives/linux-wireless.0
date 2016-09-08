@@ -1,121 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54840 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752020AbcIOSM1 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52608 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752301AbcIHPFu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 14:12:27 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 15 Sep 2016 21:11:21 +0300
-Message-Id: <20160915181131.32213-15-luca@coelho.fi> (sfid-20160915_203149_373644_3F2A4DF7)
-In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
-References: <1473962425.5664.41.camel@coelho.fi>
-Subject: [PATCH 15/25] iwlwifi: pcie: Set affinity mask for rx interrupt vectors per cpu
+        Thu, 8 Sep 2016 11:05:50 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: mwifiex: add PCIe function level reset support
+Date: Thu, 8 Sep 2016 15:05:46 +0000
+Message-ID: <86c718ca301b4da2ba814c049b78e6b3@SC-EXCH04.marvell.com> (sfid-20160908_170555_659964_9408665D)
+References: <1469541704-2880-1-git-send-email-akarwar@marvell.com>
+ <20160903154016.4BCE56217C@smtp.codeaurora.org>
+In-Reply-To: <20160903154016.4BCE56217C@smtp.codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
-
-In order to utilize the host's CPUs in the most efficient way
-we bind each rx interrupt vector to each CPU on the host.
-Each rx interrupt is prioritized to execute only on the designated CPU
-rather than any CPU.
-Processor affinity takes advantage of the fact that some remnants of
-a process that was run on a given processor may remain in that
-processor's memory state for example, data in the CPU cache after
-another process is run on that CPU. Scheduling that process to execute
-on the same processor could result in an efficient use of process by
-reducing performance-degrading situations such as cache misses
-and parallel processing.
-
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  2 ++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 32 +++++++++++++++++++++-
- 2 files changed, 33 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 8ad92fa..987a077 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -37,6 +37,7 @@
- #include <linux/wait.h>
- #include <linux/pci.h>
- #include <linux/timer.h>
-+#include <linux/cpu.h>
- 
- #include "iwl-fh.h"
- #include "iwl-csr.h"
-@@ -426,6 +427,7 @@ struct iwl_trans_pcie {
- 	u32 hw_init_mask;
- 	u32 fh_mask;
- 	u32 hw_mask;
-+	cpumask_t affinity_mask[IWL_MAX_RX_HW_QUEUES];
- };
- 
- static inline struct iwl_trans_pcie *
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index be32fe1..d7521c1 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1573,6 +1573,30 @@ msi:
- 	}
- }
- 
-+static void iwl_pcie_irq_set_affinity(struct iwl_trans *trans)
-+{
-+	int iter_rx_q, i, ret, cpu, offset;
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+
-+	i = trans_pcie->shared_vec_mask & IWL_SHARED_IRQ_FIRST_RSS ? 0 : 1;
-+	iter_rx_q = trans_pcie->trans->num_rx_queues - 1 + i;
-+	offset = 1 + i;
-+	for (; i < iter_rx_q ; i++) {
-+		/*
-+		 * Get the cpu prior to the place to search
-+		 * (i.e. return will be > i - 1).
-+		 */
-+		cpu = cpumask_next(i - offset, cpu_online_mask);
-+		cpumask_set_cpu(cpu, &trans_pcie->affinity_mask[i]);
-+		ret = irq_set_affinity_hint(trans_pcie->msix_entries[i].vector,
-+					    &trans_pcie->affinity_mask[i]);
-+		if (ret)
-+			IWL_ERR(trans_pcie->trans,
-+				"Failed to set affinity mask for IRQ %d\n",
-+				i);
-+	}
-+}
-+
- static int iwl_pcie_init_msix_handler(struct pci_dev *pdev,
- 				      struct iwl_trans_pcie *trans_pcie)
- {
-@@ -1601,6 +1625,7 @@ static int iwl_pcie_init_msix_handler(struct pci_dev *pdev,
- 			return ret;
- 		}
- 	}
-+	iwl_pcie_irq_set_affinity(trans_pcie->trans);
- 
- 	return 0;
- }
-@@ -1760,9 +1785,14 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 	iwl_pcie_rx_free(trans);
- 
- 	if (trans_pcie->msix_enabled) {
--		for (i = 0; i < trans_pcie->alloc_vecs; i++)
-+		for (i = 0; i < trans_pcie->alloc_vecs; i++) {
-+			irq_set_affinity_hint(
-+				trans_pcie->msix_entries[i].vector,
-+				NULL);
-+
- 			free_irq(trans_pcie->msix_entries[i].vector,
- 				 &trans_pcie->msix_entries[i]);
-+		}
- 
- 		pci_disable_msix(trans_pcie->pci_dev);
- 		trans_pcie->msix_enabled = false;
--- 
-2.9.3
+SGkgS2FsbGUsDQoNCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
+IFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
+YWxmIE9mIEthbGxlIFZhbG8NCj4gU2VudDogU2F0dXJkYXksIFNlcHRlbWJlciAwMywgMjAxNiA5
+OjEwIFBNDQo+IFRvOiBBbWl0a3VtYXIgS2Fyd2FyDQo+IENjOiBsaW51eC13aXJlbGVzc0B2Z2Vy
+Lmtlcm5lbC5vcmc7IEFtaXRrdW1hciBLYXJ3YXINCj4gU3ViamVjdDogUmU6IG13aWZpZXg6IGFk
+ZCBQQ0llIGZ1bmN0aW9uIGxldmVsIHJlc2V0IHN1cHBvcnQNCj4gDQo+IEFtaXRrdW1hciBLYXJ3
+YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+IHdyb3RlOg0KPiA+IFRoaXMgcGF0Y2ggaW1wbGVtZW50
+cyBwcmUgYW5kIHBvc3QgRkxSIGhhbmRsZXJzIHRvIHN1cHBvcnQgUENJZSBGTFINCj4gPiBmdW5j
+dGlvbmFsaXR5LiBTb2Z0d2FyZSBjbGVhbnVwIGlzIHBlcmZvcm1lZCBpbiBwcmUtRkxSIHdoZXJl
+YXMNCj4gPiBmaXJtd2FyZSBpcyBkb3dubG9hZGVkIGFuZCBzb2Z0d2FyZSBpcyByZS1pbml0aWFs
+aXNlZCBpbiBwb3N0LUZMUg0KPiA+IGhhbmRsZXIuDQo+ID4NCj4gPiBGb2xsb3dpbmcgY29tbWFu
+ZCB0cmlnZ2VycyBGTFIuDQo+ID4gZWNobyAiMSIgPiAvc3lzL2J1cy9wY2kvZGV2aWNlcy8kTlVN
+QkVSL3Jlc2V0DQo+ID4NCj4gPiBUaGlzIGZlYXR1cmUgY2FuIGJlIHVzZWQgYXMgYSByZWNvdmVy
+eSBtZWNoYW5pc20gd2hlbiBmaXJtd2FyZSBnZXRzDQo+ID4gaGFuZy4NCj4gPg0KPiA+IFNpZ25l
+ZC1vZmYtYnk6IEFtaXRrdW1hciBLYXJ3YXIgPGFrYXJ3YXJAbWFydmVsbC5jb20+DQo+IA0KPiBE
+b2Vzbid0IGFwcGx5IGFueW1vcmUsIHBsZWFzZSByZWJhc2UuDQo+IA0KPiBBcHBseWluZzogbXdp
+ZmlleDogYWRkIFBDSWUgZnVuY3Rpb24gbGV2ZWwgcmVzZXQgc3VwcG9ydA0KPiBmYXRhbDogc2hh
+MSBpbmZvcm1hdGlvbiBpcyBsYWNraW5nIG9yIHVzZWxlc3MNCj4gKGRyaXZlcnMvbmV0L3dpcmVs
+ZXNzL21hcnZlbGwvbXdpZmlleC9tYWluLmMpLg0KPiBSZXBvc2l0b3J5IGxhY2tzIG5lY2Vzc2Fy
+eSBibG9icyB0byBmYWxsIGJhY2sgb24gMy13YXkgbWVyZ2UuDQo+IENhbm5vdCBmYWxsIGJhY2sg
+dG8gdGhyZWUtd2F5IG1lcmdlLg0KPiBQYXRjaCBmYWlsZWQgYXQgMDAwMSBtd2lmaWV4OiBhZGQg
+UENJZSBmdW5jdGlvbiBsZXZlbCByZXNldCBzdXBwb3J0DQo+IA0KDQpJdCBnZXRzIGFwcGxpZWQg
+c21vb3RobHkgaWYgYmVsb3cgcGF0Y2hlcyBhcmUgYXBwbGllZCBmaXJzdC4NCmh0dHBzOi8vcGF0
+Y2h3b3JrLmtlcm5lbC5vcmcvcGF0Y2gvOTMxMDQ5OS8gKFt2NSwxLzJdIG13aWZpZXg6IGFkZCBt
+YW51ZmFjdHVyaW5nIG1vZGUgc3VwcG9ydCkNCmh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5vcmcv
+cGF0Y2gvOTMxMDUwMS8gKFt2NSwyLzJdIG13aWZpZXg6IGFkZCBjZmc4MDIxMSB0ZXN0bW9kZSBz
+dXBwb3J0KQ0KDQpQbGVhc2UgbGV0IG1lIGtub3cgaWYgeW91IHdhbnQgbWUgdG8gcmViYXNlICJQ
+Q0llIGZ1bmN0aW9uIGxldmVsIHJlc2V0IHN1cHBvcnQiLiBJbiB0aGF0IGNhc2UgSSBuZWVkIHRv
+IHJlYmFzZSBhbmQgc2VuZCBhYm92ZSAyIHBhdGNoZXMgYXMgd2VsbC4NCg0KUmVnYXJkcywNCkFt
+aXRrdW1hcg0K
