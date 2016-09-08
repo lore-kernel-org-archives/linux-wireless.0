@@ -1,43 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:49268 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751032AbcIAIX3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 04:23:29 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] mac80211: Move reorder-sensitive TX handlers to after
-        TXQ dequeue.
-References: <20160824162015.29933-1-toke@toke.dk>
-        <20160830131548.6014-1-toke@toke.dk>
-        <1472677599.5470.13.camel@sipsolutions.net>
-Date: Thu, 01 Sep 2016 10:23:23 +0200
-In-Reply-To: <1472677599.5470.13.camel@sipsolutions.net> (Johannes Berg's
-        message of "Wed, 31 Aug 2016 23:06:39 +0200")
-Message-ID: <87inug81vo.fsf@toke.dk> (sfid-20160901_102335_325718_CC93D4C7)
+Received: from smtp.codeaurora.org ([198.145.29.96]:56863 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753784AbcIHRfS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 8 Sep 2016 13:35:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev <netdev@vger.kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        Andy Gross <andy.gross@linaro.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>
+Subject: Re: [PATCH v4 2/4] wcn36xx: Transition driver to SMD client
+References: <1473200312-22438-1-git-send-email-bjorn.andersson@linaro.org>
+        <1473200312-22438-2-git-send-email-bjorn.andersson@linaro.org>
+        <87k2emsi22.fsf@kamboji.qca.qualcomm.com>
+        <CAOCOHw5Wvy5g0HuDaYUZ2WTCws5uXtw6DO7S3Dvp+0mgW-Mg=Q@mail.gmail.com>
+Date: Thu, 08 Sep 2016 20:35:11 +0300
+In-Reply-To: <CAOCOHw5Wvy5g0HuDaYUZ2WTCws5uXtw6DO7S3Dvp+0mgW-Mg=Q@mail.gmail.com>
+        (Bjorn Andersson's message of "Thu, 8 Sep 2016 08:31:36 -0700")
+Message-ID: <878tv2s3ao.fsf@kamboji.qca.qualcomm.com> (sfid-20160908_193538_973172_F0BDB1D5)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Bjorn Andersson <bjorn.andersson@linaro.org> writes:
 
->> +static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
->> +{
->> +	return invoke_tx_handlers_early(tx) ||
->> invoke_tx_handlers_late(tx);
->> +}
+> On Thu, Sep 8, 2016 at 5:16 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+>>
+>>> The wcn36xx wifi driver follows the life cycle of the WLAN_CTRL SMD
+>>> channel, as such it should be a SMD client. This patch makes this
+>>> transition, now that we have the necessary frameworks available.
+>>>
+>>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+>>> ---
+>>>
+>>> Changes since v3:
+>>> - Made msg_header const in wcn36xx_smd_rsp_process()
+>>>
+>>> Changes since v2:
+>>> - Correct the call to the new ieee80211_scan_completed()
+>>>
+>>>  drivers/net/wireless/ath/wcn36xx/dxe.c     | 16 +++---
+>>>  drivers/net/wireless/ath/wcn36xx/main.c    | 79 ++++++++++++++++++++----------
+>>>  drivers/net/wireless/ath/wcn36xx/smd.c     | 31 +++++-------
+>>>  drivers/net/wireless/ath/wcn36xx/smd.h     |  5 ++
+>>>  drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 21 +++-----
+>>>  5 files changed, 86 insertions(+), 66 deletions(-)
+>>
+>> This doesn't compile for me:
+>>
 >
-> Ugh, please, no, don't be tricky where it's not necessary. Now every
-> person reading this has to first look up the return type, and then the
-> return value, and make sure they understand that success is actually
-> the value 0 ... that's way too much to ask.
+> I thought I mentioned this in the mail, sorry for missing that.
 
-Noted. Any objections to turning these into bool return types?
+Maybe you did and I just forgot, I have a tendency to do that :)
 
+> There is a patch for this issue in linux-next already [1] which is
+> part of [2], which was part of the pull request to arm-soc for
+> inclusion in v4.9.
+>
+> [1] https://patchwork.kernel.org/patch/9272457/
+> [2] https://git.kernel.org/cgit/linux/kernel/git/agross/linux.git/tag/?h=qcom-drivers-for-4.9
 
-I'll go through and fix your other comments and send a new version.
-Thanks for the feedback :)
+So the commit in question is:
 
--Toke
+soc: qcom: smd: Correct compile stub prototypes
+https://git.kernel.org/cgit/linux/kernel/git/agross/linux.git/commit/?h=qcom-drivers-for-4.9&id=3a1281848830fcb3202cfd7ffe62d19641471d05
+
+But that's not obviously in my tree yet, but I should have it after
+4.9-rc1 is released. I think it's easiest that I wait for that before
+applying these. Do you agree?
+
+-- 
+Kalle Valo
