@@ -1,112 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54876 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753418AbcIOSMr (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48983 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750710AbcIIFRS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 14:12:47 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sharon Dvir <sharon.dvir@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 15 Sep 2016 21:11:28 +0300
-Message-Id: <20160915181131.32213-22-luca@coelho.fi> (sfid-20160915_201250_071358_70A4D073)
-In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
-References: <1473962425.5664.41.camel@coelho.fi>
-Subject: [PATCH 22/25] iwlwifi: unify iwl_get_ucode_image() implementations
+        Fri, 9 Sep 2016 01:17:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Andy Gross <andy.gross@linaro.org>
+Cc: Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Eugene Krasnikov <k.eugene.e@gmail.com>,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev <netdev@vger.kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>
+Subject: Re: [PATCH v4 2/4] wcn36xx: Transition driver to SMD client
+References: <1473200312-22438-1-git-send-email-bjorn.andersson@linaro.org>
+        <1473200312-22438-2-git-send-email-bjorn.andersson@linaro.org>
+        <87k2emsi22.fsf@kamboji.qca.qualcomm.com>
+        <CAOCOHw5Wvy5g0HuDaYUZ2WTCws5uXtw6DO7S3Dvp+0mgW-Mg=Q@mail.gmail.com>
+        <878tv2s3ao.fsf@kamboji.qca.qualcomm.com>
+        <20160909042159.GD405@tuxbot>
+        <20160909042754.GA32071@hector.attlocal.net>
+Date: Fri, 09 Sep 2016 08:17:09 +0300
+In-Reply-To: <20160909042754.GA32071@hector.attlocal.net> (Andy Gross's
+        message of "Thu, 8 Sep 2016 23:27:54 -0500")
+Message-ID: <87inu5r6sq.fsf@kamboji.qca.qualcomm.com> (sfid-20160909_071735_980388_5C9003D7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sharon Dvir <sharon.dvir@intel.com>
+Andy Gross <andy.gross@linaro.org> writes:
 
-Avoid multiple implementations.
+>> > >> This doesn't compile for me:
+>> > >>
+>> > >
+>> > > I thought I mentioned this in the mail, sorry for missing that.
+>> > 
+>> > Maybe you did and I just forgot, I have a tendency to do that :)
+>> > 
+>> > > There is a patch for this issue in linux-next already [1] which is
+>> > > part of [2], which was part of the pull request to arm-soc for
+>> > > inclusion in v4.9.
+>> > >
+>> > > [1] https://patchwork.kernel.org/patch/9272457/
+>> > > [2] https://git.kernel.org/cgit/linux/kernel/git/agross/linux.git/tag/?h=qcom-drivers-for-4.9
+>> > 
+>> > So the commit in question is:
+>> > 
+>> > soc: qcom: smd: Correct compile stub prototypes
+>> > https://git.kernel.org/cgit/linux/kernel/git/agross/linux.git/commit/?h=qcom-drivers-for-4.9&id=3a1281848830fcb3202cfd7ffe62d19641471d05
+>> > 
+>> 
+>> Correct
+>> 
+>> > But that's not obviously in my tree yet, but I should have it after
+>> > 4.9-rc1 is released. I think it's easiest that I wait for that before
+>> > applying these. Do you agree?
+>> > 
+>> 
+>> Would be nice to have it land sooner rather than later, but I'm okay
+>> with this.
+>
+> We could just treat the tag as immutable.  You can merge the tag in and arm-soc
+> can as well.  it'll just get nop'd the second time it is taken.  The only
+> downside is if arm-soc doesn't take my merge request.
 
-Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/dvm/ucode.c | 11 +----------
- drivers/net/wireless/intel/iwlwifi/iwl-fw.h    |  9 +++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c    | 13 ++-----------
- 3 files changed, 12 insertions(+), 21 deletions(-)
+I take it that you are talking about this tag:
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/ucode.c b/drivers/net/wireless/intel/iwlwifi/dvm/ucode.c
-index b662cf3..c7509c5 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/ucode.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/ucode.c
-@@ -46,15 +46,6 @@
-  *
-  ******************************************************************************/
- 
--static inline const struct fw_img *
--iwl_get_ucode_image(struct iwl_priv *priv, enum iwl_ucode_type ucode_type)
--{
--	if (ucode_type >= IWL_UCODE_TYPE_MAX)
--		return NULL;
--
--	return &priv->fw->img[ucode_type];
--}
--
- /*
-  *  Calibration
-  */
-@@ -330,7 +321,7 @@ int iwl_load_ucode_wait_alive(struct iwl_priv *priv,
- 	enum iwl_ucode_type old_type;
- 	static const u16 alive_cmd[] = { REPLY_ALIVE };
- 
--	fw = iwl_get_ucode_image(priv, ucode_type);
-+	fw = iwl_get_ucode_image(priv->fw, ucode_type);
- 	if (WARN_ON(!fw))
- 		return -EINVAL;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
-index 74ea68d..5f22955 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
-@@ -329,4 +329,13 @@ iwl_fw_dbg_conf_usniffer(const struct iwl_fw *fw, u8 id)
- 	return conf_tlv->usniffer;
- }
- 
-+static inline const struct fw_img *
-+iwl_get_ucode_image(const struct iwl_fw *fw, enum iwl_ucode_type ucode_type)
-+{
-+	if (ucode_type >= IWL_UCODE_TYPE_MAX)
-+		return NULL;
-+
-+	return &fw->img[ucode_type];
-+}
-+
- #endif  /* __iwl_fw_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index b951a7f..7322c43 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -90,15 +90,6 @@ struct iwl_mvm_alive_data {
- 	u32 scd_base_addr;
- };
- 
--static inline const struct fw_img *
--iwl_get_ucode_image(struct iwl_mvm *mvm, enum iwl_ucode_type ucode_type)
--{
--	if (ucode_type >= IWL_UCODE_TYPE_MAX)
--		return NULL;
--
--	return &mvm->fw->img[ucode_type];
--}
--
- static int iwl_send_tx_ant_cfg(struct iwl_mvm *mvm, u8 valid_tx_ant)
- {
- 	struct iwl_tx_ant_cfg_cmd tx_ant_cmd = {
-@@ -592,9 +583,9 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 	    iwl_fw_dbg_conf_usniffer(mvm->fw, FW_DBG_START_FROM_ALIVE) &&
- 	    !(fw_has_capa(&mvm->fw->ucode_capa,
- 			  IWL_UCODE_TLV_CAPA_USNIFFER_UNIFIED)))
--		fw = iwl_get_ucode_image(mvm, IWL_UCODE_REGULAR_USNIFFER);
-+		fw = iwl_get_ucode_image(mvm->fw, IWL_UCODE_REGULAR_USNIFFER);
- 	else
--		fw = iwl_get_ucode_image(mvm, ucode_type);
-+		fw = iwl_get_ucode_image(mvm->fw, ucode_type);
- 	if (WARN_ON(!fw))
- 		return -EINVAL;
- 	mvm->cur_ucode = ucode_type;
+git://git.kernel.org/pub/scm/linux/kernel/git/agross/linux.git qcom-drivers-for-4.9
+
+I did a test pull and there are only 8 commits so in theory that could
+work. But my trees go via Dave Miller's net-next so I can't control when
+they hit Linus' tree. It might be that Linus pulls the net-next tree
+before arm-soc and arm-soc commits coming from net-next might confuse
+people. I'm just afraid that the hassle would outweight the benefit.
+
+> Or we can wait till -rc1
+
+To keep things simple I prefer this option. Of course it means waiting
+few more extra weeks, but when working with new subsystems that can
+happen. The crystall ball[1] says that 4.9-rc1 would be released on
+2016-10-16 so it's not that far away.
+
+[1] http://phb-crystal-ball.org/
+
 -- 
-2.9.3
+Kalle Valo
