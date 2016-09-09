@@ -1,93 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:40904 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755172AbcIBTHE (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:25284 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752441AbcIIO3a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 15:07:04 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-        Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  ensure pdev sta kickout threshold is set.
-Date: Fri,  2 Sep 2016 12:06:42 -0700
-Message-Id: <1472843202-12428-1-git-send-email-greearb@candelatech.com> (sfid-20160902_210928_714032_53CE601E)
+        Fri, 9 Sep 2016 10:29:30 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/4] ath10k: Padding related clean ups in rx
+Date: Fri, 9 Sep 2016 14:29:23 +0000
+Message-ID: <87a8fhp2nx.fsf@kamboji.qca.qualcomm.com> (sfid-20160909_162941_270077_7F5451BE)
+References: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
+In-Reply-To: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
+        (Vasanthakumar Thiagarajan's message of "Wed, 27 Jul 2016 18:06:42      +0530")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
 
-The station kickout threshold is a pdev value, not per vdev,
-so it should be set all the time, not just when vdev is an
-AP.  This should fix setting the station kickout threshold
-when using ibss interfaces.
+> This patch set adds abstraction for rx_hw_desc processing so that
+> we can make use of newer desc fields notifying padding information
+> which is done on rx payload. "ath10k: Properly remove padding from
+> the start of rx payload" fixes padding related bug in ethernet decap
+> mode for QCA99X0, QCA9984 qnd QCA4019 but even fixing this bug will
+> not make ethernet decap mode work, there needs to be some more fix
+> wich would follow this patch series.
+>
+> Vasanthakumar Thiagarajan (4):
+>   ath10k: Move ath10k_hw_params definition to hw.h
+>   ath10k: Add provision for Rx descriptor abstraction
+>   ath10k: Properly remove padding from the start of rx payload
+>   ath10k: Remove 4-addr padding related hw_param configuration
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 27 ++++++++++++++++++---------
- drivers/net/wireless/ath/ath10k/mac.h |  2 ++
- 2 files changed, 20 insertions(+), 9 deletions(-)
+As Benjamin has these patches on his own set I'm dropping this one.
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 39fcdad..4aa0736 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -744,21 +744,26 @@ static int ath10k_peer_create(struct ath10k *ar,
- 	return 0;
- }
- 
-+int ath10k_mac_set_pdev_kickout(struct ath10k *ar)
-+{
-+	u32 param = ar->wmi.pdev_param->sta_kickout_th;
-+	int rv;
-+
-+	rv = ath10k_wmi_pdev_set_param(ar, param,
-+				       ar->sta_xretry_kickout_thresh);
-+	if (rv) {
-+		ath10k_warn(ar, "failed to set sta kickout threshold to %d: %d\n",
-+			    ar->sta_xretry_kickout_thresh, rv);
-+	}
-+	return rv;
-+}
-+
- static int ath10k_mac_set_kickout(struct ath10k_vif *arvif)
- {
- 	struct ath10k *ar = arvif->ar;
- 	u32 param;
- 	int ret;
- 
--	param = ar->wmi.pdev_param->sta_kickout_th;
--	ret = ath10k_wmi_pdev_set_param(ar, param,
--					ar->sta_xretry_kickout_thresh);
--	if (ret) {
--		ath10k_warn(ar, "failed to set kickout threshold on vdev %i: %d\n",
--			    arvif->vdev_id, ret);
--		return ret;
--	}
--
- 	param = ar->wmi.vdev_param->ap_keepalive_min_idle_inactive_time_secs;
- 	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id, param,
- 					ATH10K_KEEPALIVE_MIN_IDLE);
-@@ -5427,6 +5432,10 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		arvif->peer_id = HTT_INVALID_PEERID;
- 	}
- 
-+	ret = ath10k_mac_set_pdev_kickout(ar);
-+	if (ret)
-+		return ret;
-+
- 	if (arvif->vdev_type == WMI_VDEV_TYPE_AP) {
- 		ret = ath10k_mac_set_kickout(arvif);
- 		if (ret) {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
-index 5f027ec..1a34cab 100644
---- a/drivers/net/wireless/ath/ath10k/mac.h
-+++ b/drivers/net/wireless/ath/ath10k/mac.h
-@@ -113,4 +113,6 @@ static inline void ath10k_tx_h_seq_no(struct ieee80211_vif *vif,
- 	}
- }
- 
-+int ath10k_mac_set_pdev_kickout(struct ath10k *ar);
-+
- #endif /* _MAC_H_ */
--- 
-2.4.11
+--=20
+Kalle Valo=
