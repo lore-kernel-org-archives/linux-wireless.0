@@ -1,39 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49744 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759746AbcISIZY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 04:25:24 -0400
-Message-ID: <1474273518.4469.8.camel@sipsolutions.net> (sfid-20160919_102531_542945_20EB5F40)
-Subject: Re: [PATCH 0/2] rhashtable: rhashtable with duplicate objects
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-        tom@herbertland.com
-Date: Mon, 19 Sep 2016 10:25:18 +0200
-In-Reply-To: <1474273219.4469.7.camel@sipsolutions.net> (sfid-20160919_102334_213492_CF017D1F)
-References: <20160804071846.GA773@gondor.apana.org.au>
-         <20160804074546.GA996@gondor.apana.org.au>
-         <1470377813.2977.14.camel@sipsolutions.net>
-         <20160805104858.GA9297@gondor.apana.org.au>
-         <1470394233.2977.37.camel@sipsolutions.net>
-         <20160918135030.GA7062@gondor.apana.org.au>
-         <1474273219.4469.7.camel@sipsolutions.net>
-         (sfid-20160919_102334_213492_CF017D1F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:54087 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752795AbcIIJLs (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 05:11:48 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [PATCHv8,1/4] add basic register-field manipulation macros
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1472644007-20959-2-git-send-email-jakub.kicinski@netronome.com>
+To: Jakub Kicinski <jakub.kicinski@netronome.com>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
+        Jakub Kicinski <jakub.kicinski@netronome.com>
+Message-Id: <20160909091148.14A2361EA3@smtp.codeaurora.org> (sfid-20160909_111206_194244_8C2AD435)
+Date: Fri,  9 Sep 2016 09:11:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> Yes, it's passing all the wpa_supplicant tests, so
+Jakub Kicinski <jakub.kicinski@netronome.com> wrote:
+> Common approach to accessing register fields is to define
+> structures or sets of macros containing mask and shift pair.
+> Operations on the register are then performed as follows:
 > 
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+>  field = (reg >> shift) & mask;
 > 
+>  reg &= ~(mask << shift);
+>  reg |= (field & mask) << shift;
+> 
+> Defining shift and mask separately is tedious.  Ivo van Doorn
+> came up with an idea of computing them at compilation time
+> based on a single shifted mask (later refined by Felix) which
+> can be used like this:
+> 
+>  #define REG_FIELD 0x000ff000
+> 
+>  field = FIELD_GET(REG_FIELD, reg);
+> 
+>  reg &= ~REG_FIELD;
+>  reg |= FIELD_PREP(REG_FIELD, field);
+> 
+> FIELD_{GET,PREP} macros take care of finding out what the
+> appropriate shift is based on compilation time ffs operation.
+> 
+> GENMASK can be used to define registers (which is usually
+> less error-prone and easier to match with datasheets).
+> 
+> This approach is the most convenient I've seen so to limit code
+> multiplication let's move the macros to a global header file.
+> Attempts to use static inlines instead of macros failed due
+> to false positive triggering of BUILD_BUG_ON()s, especially with
+> GCC < 6.0.
+> 
+> Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
+> Reviewed-by: Dinan Gunawardena <dinan.gunawardena@netronome.com>
 
-I take that back. I think it's leaking memory - my tests never used to
-run out of memory, but now they eventually do.
+Thanks, 4 patches applied to wireless-drivers-next.git:
 
-I'll try to figure out more.
+3e9b3112ec74 add basic register-field manipulation macros
+faad5433b722 mt7601u: remove redefinition of GENMASK
+adcc710d0a9e mt7601u: remove unnecessary include
+d43af50566b4 mt7601u: use linux/bitfield.h
 
-johannes
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9306999/
