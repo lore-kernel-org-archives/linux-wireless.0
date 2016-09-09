@@ -1,71 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:50227 "EHLO
-        mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932337AbcIEKmT (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:36132 "EHLO
+        mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750831AbcIIE14 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Sep 2016 06:42:19 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 2/2] brcmfmac: sdio: shorten retry loop in brcmf_sdio_kso_control()
-Date: Mon,  5 Sep 2016 11:42:13 +0100
-Message-Id: <1473072133-4266-3-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160905_124226_842337_93F4ABAC)
-In-Reply-To: <1473072133-4266-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1473072133-4266-1-git-send-email-arend.vanspriel@broadcom.com>
+        Fri, 9 Sep 2016 00:27:56 -0400
+Received: by mail-oi0-f47.google.com with SMTP id q188so14036oia.3
+        for <linux-wireless@vger.kernel.org>; Thu, 08 Sep 2016 21:27:56 -0700 (PDT)
+Date: Thu, 8 Sep 2016 23:27:54 -0500
+From: Andy Gross <andy.gross@linaro.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Eugene Krasnikov <k.eugene.e@gmail.com>,
+        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev <netdev@vger.kernel.org>,
+        lkml <linux-kernel@vger.kernel.org>,
+        linux-arm-msm <linux-arm-msm@vger.kernel.org>
+Subject: Re: [PATCH v4 2/4] wcn36xx: Transition driver to SMD client
+Message-ID: <20160909042754.GA32071@hector.attlocal.net> (sfid-20160909_062832_110529_F5B8795D)
+References: <1473200312-22438-1-git-send-email-bjorn.andersson@linaro.org>
+ <1473200312-22438-2-git-send-email-bjorn.andersson@linaro.org>
+ <87k2emsi22.fsf@kamboji.qca.qualcomm.com>
+ <CAOCOHw5Wvy5g0HuDaYUZ2WTCws5uXtw6DO7S3Dvp+0mgW-Mg=Q@mail.gmail.com>
+ <878tv2s3ao.fsf@kamboji.qca.qualcomm.com>
+ <20160909042159.GD405@tuxbot>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160909042159.GD405@tuxbot>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In brcmf_sdio_kso_control() there is a retry loop as hardware may take
-time to settle. However, when the call to brcmf_sdiod_regrb() returns
-an error it is due to SDIO access failure and it makes no sense to wait
-for hardware to settle. This patch aborts the loop after a number of
-subsequent access errors.
+On Thu, Sep 08, 2016 at 09:21:59PM -0700, Bjorn Andersson wrote:
+> On Thu 08 Sep 10:35 PDT 2016, Kalle Valo wrote:
+> 
+> > Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+> > 
+> > > On Thu, Sep 8, 2016 at 5:16 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> > >> Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+> > >>
+> > >>> The wcn36xx wifi driver follows the life cycle of the WLAN_CTRL SMD
+> > >>> channel, as such it should be a SMD client. This patch makes this
+> > >>> transition, now that we have the necessary frameworks available.
+> > >>>
+> > >>> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> > >>> ---
+> > >>>
+> > >>> Changes since v3:
+> > >>> - Made msg_header const in wcn36xx_smd_rsp_process()
+> > >>>
+> > >>> Changes since v2:
+> > >>> - Correct the call to the new ieee80211_scan_completed()
+> > >>>
+> > >>>  drivers/net/wireless/ath/wcn36xx/dxe.c     | 16 +++---
+> > >>>  drivers/net/wireless/ath/wcn36xx/main.c    | 79 ++++++++++++++++++++----------
+> > >>>  drivers/net/wireless/ath/wcn36xx/smd.c     | 31 +++++-------
+> > >>>  drivers/net/wireless/ath/wcn36xx/smd.h     |  5 ++
+> > >>>  drivers/net/wireless/ath/wcn36xx/wcn36xx.h | 21 +++-----
+> > >>>  5 files changed, 86 insertions(+), 66 deletions(-)
+> > >>
+> > >> This doesn't compile for me:
+> > >>
+> > >
+> > > I thought I mentioned this in the mail, sorry for missing that.
+> > 
+> > Maybe you did and I just forgot, I have a tendency to do that :)
+> > 
+> > > There is a patch for this issue in linux-next already [1] which is
+> > > part of [2], which was part of the pull request to arm-soc for
+> > > inclusion in v4.9.
+> > >
+> > > [1] https://patchwork.kernel.org/patch/9272457/
+> > > [2] https://git.kernel.org/cgit/linux/kernel/git/agross/linux.git/tag/?h=qcom-drivers-for-4.9
+> > 
+> > So the commit in question is:
+> > 
+> > soc: qcom: smd: Correct compile stub prototypes
+> > https://git.kernel.org/cgit/linux/kernel/git/agross/linux.git/commit/?h=qcom-drivers-for-4.9&id=3a1281848830fcb3202cfd7ffe62d19641471d05
+> > 
+> 
+> Correct
+> 
+> > But that's not obviously in my tree yet, but I should have it after
+> > 4.9-rc1 is released. I think it's easiest that I wait for that before
+> > applying these. Do you agree?
+> > 
+> 
+> Would be nice to have it land sooner rather than later, but I'm okay
+> with this.
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+We could just treat the tag as immutable.  You can merge the tag in and arm-soc
+can as well.  it'll just get nop'd the second time it is taken.  The only
+downside is if arm-soc doesn't take my merge request.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 589a49c..b892dac 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -313,6 +313,7 @@ struct rte_console {
- 
- #define KSO_WAIT_US 50
- #define MAX_KSO_ATTEMPTS (PMU_MAX_TRANSITION_DLY/KSO_WAIT_US)
-+#define BRCMF_SDIO_MAX_ACCESS_ERRORS	5
- 
- /*
-  * Conversion of 802.1D priority to precedence level
-@@ -677,6 +678,7 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
- {
- 	u8 wr_val = 0, rd_val, cmp_val, bmask;
- 	int err = 0;
-+	int err_cnt = 0;
- 	int try_cnt = 0;
- 
- 	brcmf_dbg(TRACE, "Enter: on=%d\n", on);
-@@ -712,9 +714,14 @@ brcmf_sdio_kso_control(struct brcmf_sdio *bus, bool on)
- 		 */
- 		rd_val = brcmf_sdiod_regrb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
- 					   &err);
--		if (((rd_val & bmask) == cmp_val) && !err)
-+		if (!err) {
-+			if ((rd_val & bmask) == cmp_val)
-+				break;
-+			err_cnt = 0;
-+		}
-+		/* bail out upon subsequent access errors */
-+		if (err && (err_cnt++ > BRCMF_SDIO_MAX_ACCESS_ERRORS))
- 			break;
--
- 		udelay(KSO_WAIT_US);
- 		brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_SLEEPCSR,
- 				  wr_val, &err);
--- 
-1.9.1
+Or we can wait till -rc1
+
+Regards,
+
+Andy
