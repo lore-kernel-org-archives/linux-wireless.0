@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:52327 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753963AbcIAJmg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 05:42:36 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v4] mac80211: Move reorder-sensitive TX handlers to after
-        TXQ dequeue.
-References: <20160824162015.29933-1-toke@toke.dk>
-        <20160830131548.6014-1-toke@toke.dk>
-        <1472677599.5470.13.camel@sipsolutions.net> <87inug81vo.fsf@toke.dk>
-        <1472718860.4249.0.camel@sipsolutions.net> <8737lk816p.fsf@toke.dk>
-        <1472720848.9608.1.camel@sipsolutions.net> <8760qgugb0.fsf@toke.dk>
-        <1472722020.9608.3.camel@sipsolutions.net>
-Date: Thu, 01 Sep 2016 11:42:31 +0200
-In-Reply-To: <1472722020.9608.3.camel@sipsolutions.net> (Johannes Berg's
-        message of "Thu, 01 Sep 2016 11:27:00 +0200")
-Message-ID: <871t14ufaw.fsf@toke.dk> (sfid-20160901_114239_344883_7434E40F)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48160 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752827AbcIIMF4 (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 08:05:56 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Subject: Re: [v3] ath10k: implement NAPI support
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160826102250.24174-1-rmanohar@qti.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
+        <rmanohar@codeaurora.org>
+Message-ID: <5b16e9c1bb354beb9650733e0f7a84b0@euamsexm01a.eu.qualcomm.com> (sfid-20160909_140559_719711_2819CC2D)
+Date: Fri, 9 Sep 2016 14:05:48 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> Add NAPI support for rx and tx completion. NAPI poll is scheduled
+> from interrupt handler. The design is as below
+> 
+>  - on interrupt
+>      - schedule napi and mask interrupts
+>  - on poll
+>    - process all pipes (no actual Tx/Rx)
+>    - process Rx within budget
+>    - if quota exceeds budget reschedule napi poll by returning budget
+>    - process Tx completions and update budget if necessary
+>    - process Tx fetch indications (pull-push)
+>    - push any other pending Tx (if possible)
+>    - before resched or napi completion replenish htt rx ring buffer
+>    - if work done < budget, complete napi poll and unmask interrupts
+> 
+> This change also get rid of two tasklets (intr_tq and txrx_compl_task).
+> 
+> Measured peak throughput with NAPI on IPQ4019 platform in controlled
+> environment. No noticeable reduction in throughput is seen and also
+> observed improvements in CPU usage. Approx. 15% CPU usage got reduced
+> in UDP uplink case.
+> 
+> DL: AP DUT Tx
+> UL: AP DUT Rx
+> 
+> IPQ4019 (avg. cpu usage %)
+> 
+> ========
+>                 TOT              +NAPI
+>               ===========      =============
+> TCP DL       644 Mbps (42%)    645 Mbps (36%)
+> TCP UL       673 Mbps (30%)    675 Mbps (26%)
+> UDP DL       682 Mbps (49%)    680 Mbps (49%)
+> UDP UL       720 Mbps (28%)    717 Mbps (11%)
+> 
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
->> Yeah, was going to do that anyway. But since I'm touching the code
->> anyway, this might be an opportunity to avoid constructs like this:
->>=20
->> if (!invoke_tx_handlers(tx))
->> =C2=A0 /* continue sending the packet */
->>=20
->> Most other succeed/fail functions seem to be of type bool, so it
->> would help consistency as well. Unless there is some particular
->> reason why this function happens to be using 0 to indicate success?
->>=20
->
-> It's just convention in the kernel, really.
->
-> IMHO if a function has a bool return value it should be have a more
-> expressive name that indicates better what's going on, like e.g.
->
-> bool ieee80211_is_radar_required(...);
->
-> but of course that's not always done.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-Well, it's applied somewhat inconsistently across mac80211, it seems
-(e.g. ieee80211_tx() and ieee80211_tx_prepare_skb() are bool, while
-invoke_tx_handlers() and ieee80211_skb_resize() are int). But okay,
-don't have that strong an opinion about the colour of this particular
-bikeshed so I'll keep it the way it is ;)
+3c97f5de1f28 ath10k: implement NAPI support
 
--Toke
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9301091/
