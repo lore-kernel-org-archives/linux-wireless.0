@@ -1,71 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41086 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756904AbcIHKy3 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 06:54:29 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
+Received: from mail2.tohojo.dk ([77.235.48.147]:33463 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750892AbcIIJvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 05:51:46 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
 To: Felix Fietkau <nbd@nbd.name>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
-References: <20160905095128.80560-1-nbd@nbd.name>
-        <20160905095128.80560-2-nbd@nbd.name>
-Date: Thu, 08 Sep 2016 13:54:24 +0300
-In-Reply-To: <20160905095128.80560-2-nbd@nbd.name> (Felix Fietkau's message of
-        "Mon, 5 Sep 2016 11:51:26 +0200")
-Message-ID: <87eg4uu0f3.fsf@kamboji.qca.qualcomm.com> (sfid-20160908_125432_971784_BC740B66)
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org,
+        Michal Kazior <michal.kazior@tieto.com>,
+        Dave Taht <dave@taht.net>
+Subject: Re: [RFC] mac80211: Dynamically set CoDel parameters per station.
+References: <20160908195915.31478-1-toke@toke.dk>
+        <2663e4fb-bcdf-a872-f5ab-fac3bb5344c1@nbd.name>
+Date: Fri, 09 Sep 2016 11:51:40 +0200
+In-Reply-To: <2663e4fb-bcdf-a872-f5ab-fac3bb5344c1@nbd.name> (Felix Fietkau's
+        message of "Thu, 8 Sep 2016 22:18:37 +0200")
+Message-ID: <87h99ph043.fsf@toke.dk> (sfid-20160909_115150_555949_FD13C1A8)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Felix Fietkau <nbd@nbd.name> writes:
 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> ---
->  .../bindings/net/wireless/mediatek,mt76.txt        | 26 ++++++++++++++++++++++
->  1 file changed, 26 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
->
-> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> new file mode 100644
-> index 0000000..d51c35f
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> @@ -0,0 +1,26 @@
-> +* MediaTek mt76xx devices
-> +
-> +This node provides properties for configuring the MediaTek mt76xx wireless
-> +device. The node is expected to be specified as a child node of the PCI
-> +controller to which the wireless chip is connected.
-> +
-> +Optional properties:
-> +
-> +- mac-address: See ethernet.txt in the parent directory
-> +- local-mac-address: See ethernet.txt in the parent directory
-> +- mediatek,2ghz: Override the 2.4 GHz band capability from EEPROM
-> +- mediatek,5ghz: Override the 5 GHz band capability from EEPROM
-> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
-> +
-> +&pcie {
-> +	status = "okay";
-> +
-> +	pcie0 {
-> +		mt76@0,0 {
-> +			reg = <0x0000 0 0 0 0>;
-> +			device_type = "pci";
-> +			mediatek,mtd-eeprom = <&factory 0x8000>;
-> +			mediatek,2ghz = <0>;
-> +		};
-> +	};
-> +};
+> On 2016-09-08 21:59, Toke H=C3=B8iland-J=C3=B8rgensen wrote:
+>> CoDel can be too aggressive if a station sends at a very low rate. This
+>> gets worse the more stations are present, as each station gets more
+>> bursty the longer the round-robin scheduling between stations takes.
+>>=20
+>> This is an attempt to dynamically adjust CoDel parameters per station.
+>> It takes a rather simple approach and uses a simple binary designation
+>> of a station as 'slow' if it has expected throughput less than eight
+>> Mbps (i.e. the lowest couple of rates). In this case, CoDel is set to be
+>> more lenient by adjusting its target to 50 ms and interval to 300 ms.
+>> There's a built-in hysteresis so a station cannot flip between slow and
+>> fast more than once every two seconds.
+>>=20
+>> In this version the check is performed every time a packet is enqueued
+>> to the intermediate queues; and the overhead of doing this is alleviated
+>> a bit by caching the result and by the above-mentioned hysteresis. It
+>> can probably be smarter about both when and how to do the scaling, but
+>> this seems to alleviate some of the starvation I've seen with very slow
+>> stations.
+> Since this is not dealing properly with firmware rate control anyway,
+> I'd suggest calling the update from rate_control_set_rates in order to
+> avoid putting more stuff into the tx hot path.
 
-I need an ack from device tree maintainers, CCing the devicetree list.
-Do we need to resend or this ok?
+Yeah, I wasn't expecting that to stay in the TX path, but was not
+familiar enough with minstrel to know where a good place would be.
+Thanks for the pointer.
 
-Patchwork link:
+> You could add a separate code path to allow firmware rate control
+> devices to provide a hint at a convenient point in time.
 
-https://patchwork.kernel.org/patch/9313309/
+There's already a get_expected_throughput() driver hook; but no drivers
+seem to be using it? But I assume you mean a hook the other way, i.e.
+export a function where the driver can tell mac80211 "my expected
+throughput changed, please update"?
 
--- 
-Kalle Valo
+-Toke
