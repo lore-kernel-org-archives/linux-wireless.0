@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55040 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1752629AbcIPIdc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2016 04:33:32 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 16 Sep 2016 11:33:12 +0300
-Message-Id: <20160916083321.5840-1-luca@coelho.fi> (sfid-20160916_103347_863143_DC16B5F9)
-Subject: [PATCH v2 0/9] Add support for Neighbor Awareness Networking
+Received: from mx1.redhat.com ([209.132.183.28]:45026 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751463AbcIISB1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 14:01:27 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Colin Ian King <colin.king@canonical.com>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 2/2] rtl8xxxu: fix spelling mistake "firmare" -> "firmware"
+Date: Fri,  9 Sep 2016 14:01:25 -0400
+Message-Id: <1473444085-6363-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160909_200130_459641_FFF40622)
+In-Reply-To: <1473444085-6363-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1473444085-6363-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-Hi,
+Trivial fix to spelling mistakes in dev_dbg message.
 
-This is v2 of the NAN patches that Emmanuel sent a while back[1].  In
-this version, we squashed some patches and took care of some comments
-after reviews (both internal and public).
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-NAN was described in the original post[2].
-
-I hope they're good for merging now, because I'm tired of carrying
-this changes forward in our internal trees. :P
-
-Nevertheless, comments are welcome, as always.
-
-[1] http://mid.gmane.org/1456752313-5792-1-git-send-email-emmanuel.grumbach@intel.com
-[2] http://mid.gmane.org/1442500351-8780-1-git-send-email-andrei.otcheretianski@intel.com
-
-Cheers,
-Luca.
-
-
-Ayala Beker (9):
-  cfg80211: add start / stop NAN commands
-  mac80211: add boilerplate code for start / stop NAN
-  cfg80211: add add_nan_func / rm_nan_func
-  cfg80211: allow the user space to change current NAN configuration
-  cfg80211: provide a function to report a match for NAN
-  cfg80211: Provide an API to report NAN function termination
-  mac80211: implement nan_change_conf
-  mac80211: Implement add_nan_func and rm_nan_func
-  mac80211: Add API to report NAN function match
-
- include/net/cfg80211.h       | 184 ++++++++++++-
- include/net/mac80211.h       |  65 +++++
- include/uapi/linux/nl80211.h | 258 +++++++++++++++++
- net/mac80211/cfg.c           | 208 ++++++++++++++
- net/mac80211/chan.c          |   6 +
- net/mac80211/driver-ops.h    |  82 +++++-
- net/mac80211/ieee80211_i.h   |  17 ++
- net/mac80211/iface.c         |  28 +-
- net/mac80211/main.c          |   8 +
- net/mac80211/offchannel.c    |   4 +-
- net/mac80211/rx.c            |   3 +
- net/mac80211/trace.h         | 133 +++++++++
- net/mac80211/util.c          |  50 +++-
- net/wireless/chan.c          |   2 +
- net/wireless/core.c          |  35 +++
- net/wireless/core.h          |   3 +
- net/wireless/mlme.c          |   1 +
- net/wireless/nl80211.c       | 642 ++++++++++++++++++++++++++++++++++++++++++-
- net/wireless/rdev-ops.h      |  58 ++++
- net/wireless/trace.h         |  90 ++++++
- net/wireless/util.c          |  28 +-
- 21 files changed, 1894 insertions(+), 11 deletions(-)
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index d2611a4..ca92022 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -3921,11 +3921,11 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	rtl8xxxu_write16(priv, REG_TRXFF_BNDY + 2, priv->fops->trxff_boundary);
+ 
+ 	ret = rtl8xxxu_download_firmware(priv);
+-	dev_dbg(dev, "%s: download_fiwmare %i\n", __func__, ret);
++	dev_dbg(dev, "%s: download_firmware %i\n", __func__, ret);
+ 	if (ret)
+ 		goto exit;
+ 	ret = rtl8xxxu_start_firmware(priv);
+-	dev_dbg(dev, "%s: start_fiwmare %i\n", __func__, ret);
++	dev_dbg(dev, "%s: start_firmware %i\n", __func__, ret);
+ 	if (ret)
+ 		goto exit;
+ 
 -- 
-2.9.3
+2.7.4
