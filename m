@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:36616 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932836AbcI3Fcu (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 01:32:50 -0400
-Date: Fri, 30 Sep 2016 01:32:45 -0400 (EDT)
-Message-Id: <20160930.013245.1474369794552343595.davem@davemloft.net> (sfid-20160930_073255_200808_548427FA)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2016-09-29
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87ponmve2v.fsf@kamboji.qca.qualcomm.com>
-References: <87ponmve2v.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:45028 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752039AbcIISB1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 14:01:27 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 1/2] rtl8xxxu: Reset device on module unload if still attached
+Date: Fri,  9 Sep 2016 14:01:24 -0400
+Message-Id: <1473444085-6363-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160909_200131_482663_E803DA5F)
+In-Reply-To: <1473444085-6363-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1473444085-6363-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Thu, 29 Sep 2016 19:57:28 +0300
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> this should be the last wireless-drivers-next pull request for 4.9, from
-> now on only important bugfixes. Nothing really special stands out,
-> iwlwifi being most active but other drivers also getting attention. More
-> details in the signed tag. Please let me know if there are any problems.
+If the USB dongle is still attached, reset it on module unload to
+avoid scans failing when reloading the driver.
 
-Pulled, thanks Kalle.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-> Or actually I had one problem. While doing a test merge I noticed that
-> net-next fails to compile for me, but I don't think this is anything
-> wireless related:
-> 
->   CC      net/netfilter/core.o
-> net/netfilter/core.c: In function 'nf_set_hooks_head':
-> net/netfilter/core.c:96:149: error: 'struct net_device' has no member named 'nf_hooks_ingress'
-
-Yes, I am aware of this build issue and will tackle it myself if someone
-doesn't beat me to it.
-
-Thanks again.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index c362083..d2611a4 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -6129,6 +6129,11 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
+ 	mutex_destroy(&priv->usb_buf_mutex);
+ 	mutex_destroy(&priv->h2c_mutex);
+ 
++	if (priv->udev->state != USB_STATE_NOTATTACHED) {
++		dev_info(&priv->udev->dev,
++			 "Device still attached, trying to reset\n");
++		usb_reset_device(priv->udev);
++	}
+ 	usb_put_dev(priv->udev);
+ 	ieee80211_free_hw(hw);
+ }
+-- 
+2.7.4
