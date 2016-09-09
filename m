@@ -1,40 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17820 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45843 "EHLO
         wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932302AbcIBP5j (ORCPT
+        with ESMTP id S1750980AbcIIMQ0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:57:39 -0400
+        Fri, 9 Sep 2016 08:16:26 -0400
 Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Subject: Re: ath10k: replace config_enabled() with IS_REACHABLE()
+Subject: Re: [1/2] carl9170: Fix wrong completion usage
 From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1471969646-13119-1-git-send-email-yamada.masahiro@socionext.com>
-To: Masahiro Yamada <yamada.masahiro@socionext.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        "Masahiro Yamada" <yamada.masahiro@socionext.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        <linux-kernel@vger.kernel.org>, <netdev@vger.kernel.org>
-Message-ID: <388c99a317f2431596e43d0feee204c9@euamsexm01a.eu.qualcomm.com> (sfid-20160902_175745_476490_58F0046D)
-Date: Fri, 2 Sep 2016 17:57:30 +0200
+In-Reply-To: <1471525926-20384-2-git-send-email-wagi@monom.org>
+To: Daniel Wagner <wagi@monom.org>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        "Luis R . Rodriguez" <mcgrof@kernel.org>,
+        <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Daniel Wagner <daniel.wagner@bmw-carit.de>
+Message-ID: <a4ae46314f69459ba45600306e933108@euamsexm01a.eu.qualcomm.com> (sfid-20160909_141649_116252_6603D96C)
+Date: Fri, 9 Sep 2016 14:16:17 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Masahiro Yamada <yamada.masahiro@socionext.com> wrote:
-> Commit 97f2645f358b ("tree-wide: replace config_enabled() with
-> IS_ENABLED()") mostly did away with config_enabled().
+Daniel Wagner <wagi@monom.org> wrote:
+> From: Daniel Wagner <daniel.wagner@bmw-carit.de>
 > 
-> This is one of the postponed TODO items as config_enabled() is used
-> for a tristate option here.  Theoretically, config_enabled() is
-> equivalent to IS_BUILTIN(), but I guess IS_REACHABLE() is the best
-> fit for this case because both CONFIG_HWMON and CONFIG_ATH10K are
-> tristate.
+> carl9170_usb_stop() is used from several places to flush and cleanup any
+> pending work. The normal pattern is to send a request and wait for the
+> irq handler to call complete(). The completion is not reinitialized
+> during normal operation and as the old comment indicates it is important
+> to keep calls to wait_for_completion_timeout() and complete() balanced.
 > 
-> Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+> Calling complete_all() brings this equilibirum out of balance and needs
+> to be fixed by a reinit_completion(). But that opens a small race
+> window. It is possible that the sequence of complete_all(),
+> reinit_completion() is faster than the wait_for_completion_timeout() can
+> do its work. The wake up is not lost but the done counter test is after
+> reinit_completion() has been executed. The only reason we don't see
+> carl9170_exec_cmd() hang forever is we use the timeout version of
+> wait_for_copletion().
+> 
+> Let's fix this by reinitializing the completion (that is just setting
+> done counter to 0) just before we send out an request. Now,
+> carl9170_usb_stop() can be sure a complete() call is enough to make
+> progess since there is only one waiter at max. This is a common pattern
+> also seen in various drivers which use completion.
+> 
+> Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
 
 Thanks, 1 patch applied to ath-next branch of ath.git:
 
-749bc03ae2cd ath10k: replace config_enabled() with IS_REACHABLE()
+78a9e170388b carl9170: Fix wrong completion usage
 
 -- 
 Sent by pwcli
-https://patchwork.kernel.org/patch/9295945/
+https://patchwork.kernel.org/patch/9287819/
