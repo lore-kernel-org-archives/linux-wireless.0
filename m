@@ -1,69 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.fem.tu-ilmenau.de ([141.24.220.54]:42199 "EHLO
-        mail.fem.tu-ilmenau.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938708AbcIYL0J (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:50256 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754094AbcIIL1q (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 25 Sep 2016 07:26:09 -0400
-From: Michael Braun <michael-dev@fami-braun.de>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        Michael Braun <michael-dev@fami-braun.de>
-Subject: [PATCH] mac80211: check A-MSDU inner frame source address on AP interfaces
-Date: Sun, 25 Sep 2016 13:25:58 +0200
-Message-Id: <1474802758-14502-1-git-send-email-michael-dev@fami-braun.de> (sfid-20160925_132613_830419_C7174B1B)
+        Fri, 9 Sep 2016 07:27:46 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Subject: Re: mwifiex: PCIe8997 chip specific handling
+References: <1469788731-5361-1-git-send-email-akarwar@marvell.com>
+        <20160909091449.A66606183E@smtp.codeaurora.org>
+        <5c381ec576c54a7fad54e7a23a060e29@SC-EXCH04.marvell.com>
+Date: Fri, 09 Sep 2016 14:27:39 +0300
+In-Reply-To: <5c381ec576c54a7fad54e7a23a060e29@SC-EXCH04.marvell.com>
+        (Amitkumar Karwar's message of "Fri, 9 Sep 2016 10:28:18 +0000")
+Message-ID: <87a8fhqpn8.fsf@kamboji.qca.qualcomm.com> (sfid-20160909_132750_506996_E363935C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When using WPA security, the station and thus the required key is
-identified by its mac address when packets are received. So a
-station usually cannot spoof its source mac address.
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-But when a station sends an A-MSDU frame, port control and crypto
-is done using the outer mac address, while the packets delivered
-and forwarded use the inner mac address.
+> Hi Kalle,
+>
+>> -----Original Message-----
+>> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+>> owner@vger.kernel.org] On Behalf Of Kalle Valo
+>> Sent: Friday, September 09, 2016 2:45 PM
+>> To: Amitkumar Karwar
+>> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
+>> Amitkumar Karwar
+>> Subject: Re: mwifiex: PCIe8997 chip specific handling
+>> 
+>> Amitkumar Karwar <akarwar@marvell.com> wrote:
+>> > The patch corrects the revision id register and uses it along with
+>> > magic value and chip version registers to download appropriate
+>> > firmware image.
+>> >
+>> > PCIe8997 Z chipset variant code has been removed, as it won't be used
+>> > in production.
+>> >
+>> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>> 
+>> Does apply, please rebase:
+>> 
+>> Applying: mwifiex: PCIe8997 chip specific handling
+>> fatal: sha1 information is lacking or useless
+>> (drivers/net/wireless/marvell/mwifiex/pcie.c).
+>> Repository lacks necessary blobs to fall back on 3-way merge.
+>> Cannot fall back to three-way merge.
+>> Patch failed at 0001 mwifiex: PCIe8997 chip specific handling
+>> 
+>
+> The patch now smoothly applies to top of the tree. It had a dependency
+> with "mwifiex: add PCIe function level reset support" which is merged.
+> Let me know if there is still a problem.
 
-IEEE 802.11-2012 mandates that the outer source mac address should
-match the inner source address (section 8.3.2.2). For the
-destination mac address, matching is not required (section 10.23.15).
+Ok, I applied it now. But if there's a dependency to another patch
+please document it after the "---" line, a lot easier that way.
 
-Signed-off-by: Michael Braun <michael-dev@fami-braun.de>
----
- net/wireless/util.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b7d1592..7ea56fe 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -747,13 +747,13 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
- 	u16 ethertype;
- 	u8 *payload;
- 	int offset = 0, remaining, err;
--	struct ethhdr eth;
-+	struct ethhdr eth, eth_80211;
- 	bool reuse_frag = skb->head_frag && !skb_has_frag_list(skb);
- 	bool reuse_skb = false;
- 	bool last = false;
- 
- 	if (has_80211_header) {
--		err = __ieee80211_data_to_8023(skb, &eth, addr, iftype);
-+		err = __ieee80211_data_to_8023(skb, &eth_80211, addr, iftype);
- 		if (err)
- 			goto out;
- 	}
-@@ -768,6 +768,13 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
- 		subframe_len = sizeof(struct ethhdr) + len;
- 		padding = (4 - subframe_len) & 0x3;
- 
-+		if (unlikely(has_80211_header &&
-+			     (iftype == NL80211_IFTYPE_AP ||
-+			      iftype == NL80211_IFTYPE_AP_VLAN) &&
-+			     ether_addr_equal(eth_80211.h_source, eth.h_source))
-+		   )
-+			goto purge;
-+
- 		/* the last MSDU has no padding */
- 		remaining = skb->len - offset;
- 		if (subframe_len > remaining)
 -- 
-2.1.4
+Kalle Valo
