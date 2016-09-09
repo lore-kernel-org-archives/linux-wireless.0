@@ -1,35 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49932 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754238AbcISJAn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 05:00:43 -0400
-Message-ID: <1474275637.4469.15.camel@sipsolutions.net> (sfid-20160919_110047_833948_6AC615FC)
-Subject: Re: [PATCH] cfg80211: cap 20MHz VHT bitrate at MCS 8
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Pedersen, Thomas" <twp@qca.qualcomm.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-        linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 19 Sep 2016 11:00:37 +0200
-In-Reply-To: <1474050629.31554.19.camel@qca.qualcomm.com> (sfid-20160916_203211_452910_08E25A89)
-References: <1473188417-13987-1-git-send-email-twp@qca.qualcomm.com>
-         <2769a14e-964d-4ec2-9f04-ddd332434b78@candelatech.com>
-         <38049c4f-da5b-a6ec-bcc4-c803197abcd7@qca.qualcomm.com>
-         <1473662637.4201.2.camel@sipsolutions.net>
-         <1473789454.27738.7.camel@qca.qualcomm.com>
-         <1473789740.5622.3.camel@sipsolutions.net>
-         <1474050629.31554.19.camel@qca.qualcomm.com>
-         (sfid-20160916_203211_452910_08E25A89)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5376 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754143AbcIIMHo (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 08:07:44 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: fix throughput regression in multi client mode
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160829081613.1474-1-rmanohar@qti.qualcomm.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        "Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
+        <rmanohar@codeaurora.org>
+Message-ID: <00fa6b69d3a645b19d85f2f3c83748b5@euamsexm01a.eu.qualcomm.com> (sfid-20160909_140748_203658_2FCD0A9D)
+Date: Fri, 9 Sep 2016 14:07:34 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> commit 7a0adc83f34d ("ath10k: improve tx scheduling") is causing
+> severe throughput drop in multi client mode. This issue is originally
+> reported in veriwave setup with 50 clients with TCP downlink traffic.
+> While increasing number of clients, the average throughput drops
+> gradually. With 50 clients, the combined peak throughput is decreased
+> to 98 Mbps whereas reverting given commit restored it to 550 Mbps.
+> 
+> Processing txqs for every tx completion is causing overhead. Ideally for
+> management frame tx completion, pending txqs processing can be avoided.
+> The change partly reverts the commit "ath10k: improve tx scheduling".
+> Processing pending txqs after all skbs tx completion will yeild enough
+> room to burst tx frames.
+> 
+> Fixes: 7a0adc83f34d ("ath10k: improve tx scheduling")
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-> Actually, can you apply the v2 (cfg80211: add bitrate for 20MHz MCS
-> 9) of this? Systems guys confirmed they use MCS 9 @ 20MHz when LDPC
-> is enabled. Also confirmed bitrate should be ok.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-I don't really understand that. How can the bitrate be "OK" when the
-spec explicitly says it cannot be used?
+18f53fe0f303 ath10k: fix throughput regression in multi client mode
 
-johannes
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9303279/
