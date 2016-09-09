@@ -1,63 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:33699 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759546AbcIWT72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Sep 2016 15:59:28 -0400
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH 2/3] mac80211: Export fq memory limit information in debugfs
-Date: Fri, 23 Sep 2016 21:59:10 +0200
-Message-Id: <20160923195911.4572-3-toke@toke.dk> (sfid-20160923_215935_201252_A98D32C2)
-In-Reply-To: <20160923195911.4572-1-toke@toke.dk>
-References: <20160923195911.4572-1-toke@toke.dk>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31077 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752567AbcIIMgB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 08:36:01 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: support for QCA9377 SDIO (ath10k or ath6kl)
+Date: Fri, 9 Sep 2016 12:35:55 +0000
+Message-ID: <87wpilp7x0.fsf@kamboji.qca.qualcomm.com> (sfid-20160909_143604_970652_DE75A8E9)
+References: <CAFBinCDnmEuSEKofHQy3SkKuewL+cjuxhibj7O71ASL0yfH_Ew@mail.gmail.com>
+In-Reply-To: <CAFBinCDnmEuSEKofHQy3SkKuewL+cjuxhibj7O71ASL0yfH_Ew@mail.gmail.com>       (Martin
+ Blumenstingl's message of "Thu, 8 Sep 2016 21:31:12 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add memory limit, usage and overlimit counter to per-PHY 'aqm' debugfs
-file.
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
 
-Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
----
- net/mac80211/debugfs.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+> is there any support for the SDIO chips QCA9377 (and QCA9378) planned?
+> Would these be supported by ath10k or ath6kl or is a completely new
+> driver needed?
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 8ca62b6..f56e2f4 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -89,13 +89,19 @@ static ssize_t aqm_read(struct file *file,
- 			"R fq_flows_cnt %u\n"
- 			"R fq_backlog %u\n"
- 			"R fq_overlimit %u\n"
-+			"R fq_overmemory %u\n"
- 			"R fq_collisions %u\n"
-+			"R fq_memory_usage %u\n"
-+			"RW fq_memory_limit %u\n"
- 			"RW fq_limit %u\n"
- 			"RW fq_quantum %u\n",
- 			fq->flows_cnt,
- 			fq->backlog,
-+			fq->overmemory,
- 			fq->overlimit,
- 			fq->collisions,
-+			fq->memory_usage,
-+			fq->memory_limit,
- 			fq->limit,
- 			fq->quantum);
-=20
-@@ -128,6 +134,8 @@ static ssize_t aqm_write(struct file *file,
-=20
- 	if (sscanf(buf, "fq_limit %u", &local->fq.limit) =3D=3D 1)
- 		return count;
-+	else if (sscanf(buf, "fq_memory_limit %u", &local->fq.memory_limit) =3D=
-=3D 1)
-+		return count;
- 	else if (sscanf(buf, "fq_quantum %u", &local->fq.quantum) =3D=3D 1)
- 		return count;
-=20
+I'm not familiar with the details of QCA9377 SDIO firmware but I assume
+ath10k would be the best option for supporting it. We split from the
+beginning the core code (ath10k_core.ko) and the PCI code
+(ath10k_pci.ko) to make it easier to add new bus support.
+
 --=20
-2.9.3
+Kalle Valo=
