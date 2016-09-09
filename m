@@ -1,58 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45679 "EHLO
-        mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933792AbcISLKY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 07:10:24 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 9/9] brcmfmac: simplify mapping of auth type
-Date: Mon, 19 Sep 2016 12:09:59 +0100
-Message-Id: <1474283399-14385-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131036_312416_1F56D173)
-In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from 8bytes.org ([81.169.241.247]:43546 "EHLO theia.8bytes.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750839AbcIIIie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 04:38:34 -0400
+Date: Fri, 9 Sep 2016 10:38:32 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Valerio Passini <valerio.passini@unicam.it>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Adam Morrison <mad@cs.technion.ac.il>,
+        linux-wireless@vger.kernel.org,
+        Omer Peleg <omer@cs.technion.ac.il>,
+        linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+        David Woodhouse <David.Woodhouse@intel.com>
+Subject: Re: Stability connection problems in ath9k kernel 4.7
+Message-ID: <20160909083832.GX1437@8bytes.org> (sfid-20160909_103857_717175_C668EF82)
+References: <1798564.U2X6r5Zons@automatix>
+ <87wpio155z.fsf@purkki.adurom.net>
+ <2596121.7secQ7hYiJ@automatix>
+ <87d1kes3qe.fsf@kamboji.qca.qualcomm.com>
+ <CAC6K2=_Hdkgc_6igoC59J_Cn9=bdye827zbEK7PWtZY6ebh-6Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAC6K2=_Hdkgc_6igoC59J_Cn9=bdye827zbEK7PWtZY6ebh-6Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <hante.meuleman@broadcom.com>
+Hi Valerio,
 
-The 802.11 standard only has four valid auth type configurations of which
-our firmware only supports two, ie. Open System and Shared Key. Simplify
-the mapping falling back to automatic for other types specified by
-user-space.
+On Thu, Sep 08, 2016 at 09:07:56PM +0200, Valerio Passini wrote:
+> I'm hoping having done it right and I can try your first suggestion, but I
+> really cannot solve this problem by myself: sorry, I have no capabilities in
+> programming in any known and unknown computer language. Surely, I can test all
+> the patches you want and report the results but this is the best I can do. Best
+> regards
 
-Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+Can you please send me the full dmesg after boot? The Intel-IOMMU is not
+enabled by default, so I want to check if it is either enabled by
+kernel-config or kernel command-line.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 386ad7e..3b7c0f6 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -1595,15 +1595,9 @@ static s32 brcmf_set_auth_type(struct net_device *ndev,
- 		val = 1;
- 		brcmf_dbg(CONN, "shared key\n");
- 		break;
--	case NL80211_AUTHTYPE_AUTOMATIC:
--		val = 2;
--		brcmf_dbg(CONN, "automatic\n");
--		break;
--	case NL80211_AUTHTYPE_NETWORK_EAP:
--		brcmf_dbg(CONN, "network eap\n");
- 	default:
- 		val = 2;
--		brcmf_err("invalid auth type (%d)\n", sme->auth_type);
-+		brcmf_dbg(CONN, "automatic, auth type (%d)\n", sme->auth_type);
- 		break;
- 	}
- 
--- 
-1.9.1
+Thanks,
+
+	Joerg
