@@ -1,38 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38981 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751543AbcIQPMF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 11:12:05 -0400
-Message-ID: <1474125118.7623.3.camel@sipsolutions.net> (sfid-20160917_171208_392983_1FACFFCB)
-Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver
- for Quantenna chipsets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>
-Date: Sat, 17 Sep 2016 17:11:58 +0200
-In-Reply-To: <87wpia7eou.fsf@kamboji.qca.qualcomm.com>
-References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-         <87eg4i8wqi.fsf@kamboji.qca.qualcomm.com>
-         <1474123851.7623.2.camel@sipsolutions.net>
-         <87wpia7eou.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:55815 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750892AbcIIJVp (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 05:21:45 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: scan: Simplify code
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1472644259-15605-1-git-send-email-christophe.jaillet@wanadoo.fr>
+To: Christophe Jaillet <christophe.jaillet@wanadoo.fr>
+Cc: akarwar@marvell.com, nishants@marvell.com,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Message-Id: <20160909092145.2A21861EAC@smtp.codeaurora.org> (sfid-20160909_112211_148584_EF23EA69)
+Date: Fri,  9 Sep 2016 09:21:45 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-09-17 at 18:01 +0300, Kalle Valo wrote:
-> 
-> Sorry, I was unclear. I meant the whole file
-[...]
+Christophe Jaillet <christophe.jaillet@wanadoo.fr> wrote:
+> This patch:
+>    - improves code layout
+>    - removes a useless memset(0) for some memory allocated with kzalloc
+>    - removes a useless if. We know that 'if (chan_band_tlv)' will succeed
+>      because it has been tested a few lines above
+> 
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
-Ah, ok - yeah, I think you're right - I think the supported_band ones
-can be, for example, and probably others as well.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-johannes
+b71165761694 mwifiex: scan: Simplify code
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9307009/
