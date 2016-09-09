@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59375 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755491AbcIPMr3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2016 08:47:29 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-09-16
-Date: Fri, 16 Sep 2016 14:47:22 +0200
-Message-Id: <1474030043-16094-1-git-send-email-johannes@sipsolutions.net> (sfid-20160916_144734_392704_E0B5BCB6)
+Received: from smtp.codeaurora.org ([198.145.29.96]:50048 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753830AbcIIL1A (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 9 Sep 2016 07:27:00 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: PCIe8997 chip specific handling
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1469788731-5361-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160909112659.F015A61821@smtp.codeaurora.org> (sfid-20160909_132709_648524_6BE1245F)
+Date: Fri,  9 Sep 2016 11:26:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> The patch corrects the revision id register and uses it along with
+> magic value and chip version registers to download appropriate firmware
+> image.
+> 
+> PCIe8997 Z chipset variant code has been removed, as it won't be used in
+> production.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Sorry - I know you only just pulled my tree for the previous fixes,
-but we found two more problems in the last few days; it'd be great
-to get those fixes in as well.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Let me know if there's any problem.
+75696fe70477 mwifiex: PCIe8997 chip specific handling
 
-Thanks,
-johannes
-
-
-
-The following changes since commit ad5987b47e96a0fb6d13fea250e936aed000093c:
-
-  nl80211: validate number of probe response CSA counters (2016-09-13 20:19:27 +0200)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-09-16
-
-for you to fetch changes up to 85d5313ed717ad60769491c7c072d23bc0a68e7a:
-
-  mac80211: reject TSPEC TIDs (TSIDs) for aggregation (2016-09-15 10:08:52 +0200)
-
-----------------------------------------------------------------
-Two more fixes:
- * reject aggregation sessions for TSID/TID 8-16 that we
-   can never use anyway and which could confuse drivers
- * check return value of skb_linearize()
-
-----------------------------------------------------------------
-Johannes Berg (2):
-      mac80211: check skb_linearize() return value
-      mac80211: reject TSPEC TIDs (TSIDs) for aggregation
-
- net/mac80211/agg-rx.c | 8 +++++++-
- net/mac80211/agg-tx.c | 3 +++
- net/mac80211/tx.c     | 8 ++++++--
- 3 files changed, 16 insertions(+), 3 deletions(-)
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9252431/
