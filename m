@@ -1,55 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:36198 "EHLO
-        mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933347AbcIZMNp (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:29449 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751260AbcIIMN1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 08:13:45 -0400
+        Fri, 9 Sep 2016 08:13:27 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
-References: <20160926102348.8695-1-zajec5@gmail.com> <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Mon, 26 Sep 2016 14:13:35 +0200
-Message-ID: <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com> (sfid-20160926_141350_369717_07F24823)
-Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: ath6kl: enable firmware crash dumps on the AR6004
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1470257023-6747-1-git-send-email-dan.kephart@lairdtech.com>
+To: <engineering@keppy.com>
+CC: <ath6kl@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Message-ID: <463d416b29d941dfbad0edaa6ec850a1@euamsexm01a.eu.qualcomm.com> (sfid-20160909_141339_405964_DCC25F83)
+Date: Fri, 9 Sep 2016 14:13:20 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 September 2016 at 13:46, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 26-9-2016 12:23, Rafa=C5=82 Mi=C5=82ecki wrote:
->> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>
->> We need to track 802.1x packets to know if there are any pending ones
->> for transmission. This is required for performing key update in the
->> firmware.
->
-> The problem we are trying to solve is a pretty old one. The problem is
-> that wpa_supplicant uses two separate code paths: EAPOL messaging
-> through data path and key configuration though nl80211.
+engineering@keppy.com wrote:
+> From: Dan Kephart <dan.kephart@lairdtech.com>
+> 
+> The firmware crash dumps on the 6004 are the same as the 6003. Remove the
+> statement guarding it from dumping on the 6004.  Renamed the
+> REG_DUMP_COUNT_AR6003 to reflect support on both chips.
+> 
+> Signed-off-by: Dan Kephart <dan.kephart@lairdtech.com>
+> Reviewed-by: Steve deRosier <steve.derosier@lairdtech.com>
 
-Can I find it described/reported somewhere?
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
+f3fa63144482 ath6kl: enable firmware crash dumps on the AR6004
 
->> Unfortunately our old tracking code wasn't very accurate. It was
->> treating skb as pending as soon as it was passed by the netif. Actual
->> handling packet to the firmware was happening later as brcmfmac
->> internally queues them and uses its own worker(s).
->
-> That does not seem right. As soon as we get a 1x packet we need to wait
-> with key configuration regardless whether it is still in the driver or
-> handed over to firmware already.
-
-OK, thanks.
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9262289/
