@@ -1,83 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:33513 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752831AbcI0JOm (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38350 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754006AbcIIRqj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 05:14:42 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 4.9] brcmfmac: use correct skb freeing helper when deleting flowring
-Date: Tue, 27 Sep 2016 11:14:28 +0200
-Message-Id: <20160927091428.19223-1-zajec5@gmail.com> (sfid-20160927_111458_177981_A8852189)
+        Fri, 9 Sep 2016 13:46:39 -0400
+Subject: Re: [PATCH 1/3] ath10k: Ensure there are no stale ar->txqs entries.
+To: Felix Fietkau <nbd@nbd.name>, ath10k@lists.infradead.org
+References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
+ <a9add01b-4d5a-0e1c-d856-64dcf71bdb1c@nbd.name>
+Cc: linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <86ebec61-7fd7-dac2-d3da-c008899c138e@candelatech.com> (sfid-20160909_194656_397257_35180584)
+Date: Fri, 9 Sep 2016 10:46:36 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <a9add01b-4d5a-0e1c-d856-64dcf71bdb1c@nbd.name>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
+On 09/09/2016 10:25 AM, Felix Fietkau wrote:
+> On 2016-08-19 03:26, greearb@candelatech.com wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> I was seeing kernel crashes due to accessing freed memory
+>> while debugging a 9984 firmware that was crashing often.
+>>
+>> This patch fixes the crashes.  I am not certain if there
+>> is a better way or not.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++++
+>>  1 file changed, 10 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index 5659ef1..916119c 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -4172,8 +4172,10 @@ static void ath10k_mac_txq_init(struct ieee80211_txq *txq)
+>>  static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
+>>  {
+>>  	struct ath10k_txq *artxq = (void *)txq->drv_priv;
+>> +	struct ath10k_txq *tmp, *walker;
+>>  	struct ath10k_skb_cb *cb;
+>>  	struct sk_buff *msdu;
+>> +	struct ieee80211_txq *txq_tmp;
+>>  	int msdu_id;
+>>
+>>  	if (!txq)
+>> @@ -4182,6 +4184,14 @@ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
+>>  	spin_lock_bh(&ar->txqs_lock);
+>>  	if (!list_empty(&artxq->list))
+>>  		list_del_init(&artxq->list);
+>> +
+>> +	/* Remove from ar->txqs in case it still exists there. */
+>> +	list_for_each_entry_safe(walker, tmp, &ar->txqs, list) {
+>> +		txq_tmp = container_of((void *)walker, struct ieee80211_txq,
+>> +				       drv_priv);
+>> +		if (txq_tmp == txq)
+>> +			list_del(&walker->list);
+>> +	}
+> This makes no sense at all. From txq_tmp == txq we can deduce that
+> walker == artxq. In the context above, it already does a
+> list_del_init(&artxq->list).
 
-Flowrings contain skbs waiting for transmission that were passed to us
-by netif. It means we checked every one of them looking for 802.1x
-Ethernet type. When deleting flowring we have to use freeing function
-that will check for 802.1x type as well.
+This fixed my problem, so something about this matters.
 
-Freeing skbs without a proper check was leading to counter not being
-properly decreased. This was triggering a WARNING every time
-brcmf_netdev_wait_pend8021x was called.
+Possibly it works around some other race, just possibly it
+is because of some other regression/bug in my driver/kernel.
 
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
----
-Kalle: this isn't important enough for 4.8 as it's too late for that.
+I thought maybe the issue was that flushing doesn't really work
+for ath10k, so when the upper stack tried to flush and delete
+a station there were still skbs in the driver that were referencing
+the txqs up in mac80211.
 
-I'd like to get it for 4.9 however, as this fixes bug that could lead
-to WARNING on every add_key/del_key call. We was struggling with these
-WARNINGs for some time and this fixes one of two problems causing them.
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+Also, this bug was triggered by firmware that crashed very often on
+transmit of an skb, so in general there were skbs that were not properly
+transmitted and maybe that also triggers some other bug/race in the
+driver.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-index b16b367..d0b738d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-@@ -234,13 +234,20 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
- 
- void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
- {
-+	struct brcmf_bus *bus_if = dev_get_drvdata(flow->dev);
- 	struct brcmf_flowring_ring *ring;
-+	struct brcmf_if *ifp;
- 	u16 hash_idx;
-+	u8 ifidx;
- 	struct sk_buff *skb;
- 
- 	ring = flow->rings[flowid];
- 	if (!ring)
- 		return;
-+
-+	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
-+	ifp = brcmf_get_ifp(bus_if->drvr, ifidx);
-+
- 	brcmf_flowring_block(flow, flowid, false);
- 	hash_idx = ring->hash_id;
- 	flow->hash[hash_idx].ifidx = BRCMF_FLOWRING_INVALID_IFIDX;
-@@ -249,7 +256,7 @@ void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
- 
- 	skb = skb_dequeue(&ring->skblist);
- 	while (skb) {
--		brcmu_pkt_buf_free_skb(skb);
-+		brcmf_txfinalize(ifp, skb, false);
- 		skb = skb_dequeue(&ring->skblist);
- 	}
- 
+Thanks,
+Ben
+
 -- 
-2.9.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
