@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:34087 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:47788 "EHLO
         wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932878AbcI3M6w (ORCPT
+        with ESMTP id S1750882AbcIINgl (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 08:58:52 -0400
+        Fri, 9 Sep 2016 09:36:41 -0400
 From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Benjamin Berg <benjamin@sipsolutions.net>
-CC: Simon Wunderlich <sw@simonwunderlich.de>,
-        "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-        "ath10k @ lists . infradead . org" <ath10k@lists.infradead.org>,
-        "michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
-Subject: Re: [PATCH] ath10k: Fix spinlock use in coverage class hack
-Date: Fri, 30 Sep 2016 12:58:42 +0000
-Message-ID: <87ponltugu.fsf@kamboji.qca.qualcomm.com> (sfid-20160930_145855_714221_F56B589B)
-References: <8760q0j8st.fsf@kamboji.qca.qualcomm.com>
-        <20160914163231.20863-1-benjamin@sipsolutions.net>
-In-Reply-To: <20160914163231.20863-1-benjamin@sipsolutions.net> (Benjamin
-        Berg's message of "Wed, 14 Sep 2016 18:32:31 +0200")
+To: "greearb@candelatech.com" <greearb@candelatech.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/3] ath10k:  Grab rcu_read_lock before the txqs spinlock.
+Date: Fri, 9 Sep 2016 13:36:33 +0000
+Message-ID: <87k2elp53z.fsf@kamboji.qca.qualcomm.com> (sfid-20160909_153644_886385_CAB6F06E)
+References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
+        <1471569995-10028-2-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1471569995-10028-2-git-send-email-greearb@candelatech.com>
+        (greearb@candelatech.com's message of "Thu, 18 Aug 2016 18:26:34        -0700")
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Benjamin Berg <benjamin@sipsolutions.net> writes:
+greearb@candelatech.com writes:
 
-> ath10k_hw_qca988x_set_coverage_class needs to hold both conf_mutex and
-> the data_lock spin lock for parts of the function. However, data_lock
-> is only needed while storing the coverage_class to store the value that
-> the card is configured to.
+> From: Ben Greear <greearb@candelatech.com>
 >
-> Fix the locking issue by only holding data_lock for the required duration=
-.
+> I was seeing some spin-lock hangs in this area of the code,
+> and it seems more proper to do the rcu-read-lock outside of
+> the spin lock.  I am not sure how much this matters, however.
 >
-> Signed-off-by: Benjamin Berg <benjamin@sipsolutions.net>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless=
+/ath/ath10k/mac.c
+> index 916119c..d96c06e 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -4307,8 +4307,8 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
+>  	int max;
+>  	int loop_max =3D 2000;
+> =20
+> -	spin_lock_bh(&ar->txqs_lock);
+>  	rcu_read_lock();
+> +	spin_lock_bh(&ar->txqs_lock);
+> =20
+>  	last =3D list_last_entry(&ar->txqs, struct ath10k_txq, list);
+>  	while (!list_empty(&ar->txqs)) {
+> @@ -4342,8 +4342,8 @@ void ath10k_mac_tx_push_pending(struct ath10k *ar)
+>  			break;
+>  	}
+> =20
+> -	rcu_read_unlock();
+>  	spin_unlock_bh(&ar->txqs_lock);
+> +	rcu_read_unlock();
 
-Thanks, I also folded this with the patch in the pending branch.
-
-> And yes, I fully agree with your points of it being rather fragile. But a=
-s
-> you said, it should be entirely safe if not used.
-
-That's good.
-
-> Obviously a firmware implementation would be preferential.
-
-That's a shame as this feature is quite often requested. But if the
-firmware ever starts supporting the featrue we can then remove this hack
-from ath10k.
-
-> This locking issue was pretty unnecessary. Lets see if any more issues sh=
-ow
-> up in a closer review.
-
-I can't see the locking problem anymore so it seems to be fixed. I'll
-fix some minor things and send v2. I'll also CC linux-wireless.
+I'm no RCU expert but this isn't making any sense. Maybe it changes
+timings on your kernel so that it hides the real problem?
 
 --=20
 Kalle Valo=
