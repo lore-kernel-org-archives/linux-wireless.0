@@ -1,29 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:51942 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751488AbcISC13 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59098 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753017AbcIIMKN (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Sep 2016 22:27:29 -0400
-Date: Sun, 18 Sep 2016 22:27:24 -0400 (EDT)
-Message-Id: <20160918.222724.1155106758154554200.davem@davemloft.net> (sfid-20160919_042733_216141_286971CF)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2016-09-16
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1474030043-16094-1-git-send-email-johannes@sipsolutions.net>
-References: <1474030043-16094-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        Fri, 9 Sep 2016 08:10:13 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: ath10k: Remove unnecessary error code assignment
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <1472746416-23869-1-git-send-email-mohammed@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
+        <linux-wireless@vger.kernel.org>,
+        Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Message-ID: <29d813fd318d4481b55d361557da6d92@euamsexm01a.eu.qualcomm.com> (sfid-20160909_141016_228523_39048E09)
+Date: Fri, 9 Sep 2016 14:10:06 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Fri, 16 Sep 2016 14:47:22 +0200
-
-> Sorry - I know you only just pulled my tree for the previous fixes,
-> but we found two more problems in the last few days; it'd be great
-> to get those fixes in as well.
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 > 
-> Let me know if there's any problem.
+> The error assigned does not seems to be used anywhere,
+> fixes nothing just a small cleanup
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Pulled, thanks Johannes.
+Thanks, 1 patch applied to ath-next branch of ath.git:
+
+fe79f6314a71 ath10k: remove unnecessary error code assignment
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9309397/
