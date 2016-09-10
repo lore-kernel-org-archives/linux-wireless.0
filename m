@@ -1,45 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55158 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753600AbcIIJUA (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 05:20:00 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: mwifiex: add PCIe function level reset support
-References: <1469541704-2880-1-git-send-email-akarwar@marvell.com>
-        <20160903154016.4BCE56217C@smtp.codeaurora.org>
-        <86c718ca301b4da2ba814c049b78e6b3@SC-EXCH04.marvell.com>
-Date: Fri, 09 Sep 2016 12:19:54 +0300
-In-Reply-To: <86c718ca301b4da2ba814c049b78e6b3@SC-EXCH04.marvell.com>
-        (Amitkumar Karwar's message of "Thu, 8 Sep 2016 15:05:46 +0000")
-Message-ID: <87eg4tqvk5.fsf@kamboji.qca.qualcomm.com> (sfid-20160909_112019_020531_DA7819CB)
+Received: from mail2.tohojo.dk ([77.235.48.147]:33903 "EHLO mail2.tohojo.dk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751756AbcIJUJQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 10 Sep 2016 16:09:16 -0400
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Jim Gettys <jg@freedesktop.org>
+Cc: make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless <linux-wireless@vger.kernel.org>,
+        Felix Fietkau <nbd@nbd.name>
+Subject: Re: [Make-wifi-fast] [PATCH] mac80211: Dynamically set CoDel
+        parameters per station.
+References: <20160910193315.30738-1-toke@toke.dk>
+        <CAGhGL2D8Hfed0VTsinnCbkK31dGTc=bYjzpPfrcLRnp+x6O3sA@mail.gmail.com>
+Date: Sat, 10 Sep 2016 22:09:10 +0200
+In-Reply-To: <CAGhGL2D8Hfed0VTsinnCbkK31dGTc=bYjzpPfrcLRnp+x6O3sA@mail.gmail.com>
+        (Jim Gettys's message of "Sat, 10 Sep 2016 15:54:44 -0400")
+Message-ID: <87bmzv7c0p.fsf@toke.dk> (sfid-20160910_222042_947622_646B86A4)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> writes:
+Jim Gettys <jg@freedesktop.org> writes:
 
->> Doesn't apply anymore, please rebase.
->> 
->> Applying: mwifiex: add PCIe function level reset support
->> fatal: sha1 information is lacking or useless
->> (drivers/net/wireless/marvell/mwifiex/main.c).
->> Repository lacks necessary blobs to fall back on 3-way merge.
->> Cannot fall back to three-way merge.
->> Patch failed at 0001 mwifiex: add PCIe function level reset support
+>> On Sat, Sep 10, 2016 at 3:33 PM, Toke H=C3=B8iland-J=C3=B8rgensen <toke@=
+toke.dk> wrote:
+>>
+>>  CoDel can be too aggressive if a station sends at a very low rate,
+>>  leading to starvation. This gets worse the more stations are present, as
+>>  each station gets more bursty the longer the round-robin scheduling
+>>  between stations takes.
+>>
+>>  This adds dynamic adjustment of CoDel parameters per station. It uses
+>>  the rate selection information to estimate throughput and sets more
+>>  lenient CoDel parameters if the estimated throughput is below a
+>>  threshold. To not change parameters too often, a hysteresis of two
+>>  seconds is added.
 >
-> It gets applied smoothly if below patches are applied first.
-> https://patchwork.kernel.org/patch/9310499/ ([v5,1/2] mwifiex: add manufacturing mode support)
-> https://patchwork.kernel.org/patch/9310501/ ([v5,2/2] mwifiex: add cfg80211 testmode support)
->
-> Please let me know if you want me to rebase "PCIe function level reset
-> support". In that case I need to rebase and send above 2 patches as
-> well.
+> =E2=80=8BWhere is this 2 second constant coming from? I'd expect it shoul=
+d be
+> of order the maximum RTT (or a small constant factor of that, which
+> for intercontinental connections should be 200-300ms.
 
-Yes, I was able to apply this after those patches. No need to resend.
+Well, in most cases a station is either going to be squarely below or
+squarely above the threshold. The hysteresis is there to deal with the
+exception to this, where a station's rate oscillates around the
+threshold. I picked two seconds as something that is far enough above
+the CoDel interval to hopefully let it do its thing.
 
--- 
-Kalle Valo
+> More interestingly, maybe the adjustment should be related to the # of
+> active stations.
+
+There is no doubt the algorithm can be improved. This is just a stopgap
+measure to avoid starving slow stations. The CoDel parameters for slow
+stations could be set smarter as well, or they could be scaled with the
+rate instead of being threshold based. But since we have FQ, being
+lenient can work without affecting latency too much.
+
+> Basically, I'm pushing back about an arbitrary number apparently
+> picked out of thin air... ;-).
+
+You're very welcome to contribute to coming up with a better solution ;)
+
+-Toke
