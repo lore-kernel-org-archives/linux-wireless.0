@@ -1,64 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37066 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752819AbcIOPLe (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26917 "EHLO
+        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751623AbcIKGhH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 11:11:34 -0400
-Subject: Re: [PATCH v2 10/21] ath10k: support logging ath10k_info as
- KERN_DEBUG
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
- <1462986153-16318-11-git-send-email-greearb@candelatech.com>
- <87k2eeef79.fsf@kamboji.qca.qualcomm.com> <57D9696B.10103@candelatech.com>
- <87fup1b6ao.fsf@kamboji.qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <da354a6f-83f5-9529-7405-e992ec8b62e4@candelatech.com> (sfid-20160915_171136_865823_0C0FB921)
-Date: Thu, 15 Sep 2016 08:11:33 -0700
+        Sun, 11 Sep 2016 02:37:07 -0400
+From: Thomas Pedersen <twp@qca.qualcomm.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+CC: Johannes Berg <johannes.berg@intel.com>, <greearb@candelatech.com>,
+        Thomas Pedersen <twp@qca.qualcomm.com>
+Subject: [PATCH v2] cfg80211: add bitrate for 20MHz MCS 9
+Date: Sat, 10 Sep 2016 23:35:48 -0700
+Message-ID: <1473575748-26372-1-git-send-email-twp@qca.qualcomm.com> (sfid-20160911_083724_273897_FA70C5E9)
 MIME-Version: 1.0
-In-Reply-To: <87fup1b6ao.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2016 07:12 AM, Valo, Kalle wrote:
-> Ben Greear <greearb@candelatech.com> writes:
->
->> On 09/14/2016 07:19 AM, Valo, Kalle wrote:
->>> greearb@candelatech.com writes:
->>>
->>>> From: Ben Greear <greearb@candelatech.com>
->>>>
->>>> Helps keep messages off of (serial) console when
->>>> that is desired.
->>>>
->>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>>
->>> Isn't /proc/sys/kernel/print exactly for this purpose? At least I recall
->>> using it.
->>
->> I just wanted to hide some ath10k logs from the console, not all
->> system logs. I don't think that /proc/sys/kernel/print has any
->> granularity?
->
-> It should be based on KERN_ log levels. I don't know what your kernel
-> does, but ath10k should be printing only very few messages with level
-> KERN_INFO or above, all of of the debug messages. So you should be
-> easily able to filter out all ath10k debug messages as they are sent
-> with KERN_DEBUG.
+Some drivers (ath10k) report MCS 9 @ 20MHz, which
+technically isn't defined. To get more meaningful value
+than 0 out of this however, just extrapolate a bitrate
+from ratio of MCS 7 and 9 in channels where it is allowed.
 
-I originally added this when I was testing .11r associating timing.  Just
-having a few lines of ath10k printk on the serial console added several 10s
-of milliseconds to the time it took to associate, and that was throwing off my
-results.  I still wanted to see the messges in 'dmesg', just not on the console.
+Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
+---
+v2: add MCS 9 bitrate instead of capping at MCS 8
+---
+ net/wireless/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I did not want to hide other WARN level logs from the console, just the ath10k
-ones.
-
-Thanks,
-Ben
-
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index b7d1592..3e83170 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1157,7 +1157,7 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
+ 		   58500000,
+ 		   65000000,
+ 		   78000000,
+-		   0,
++		   86500000,
+ 		},
+ 		{  13500000,
+ 		   27000000,
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.4
