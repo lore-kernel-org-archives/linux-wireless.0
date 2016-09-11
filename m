@@ -1,96 +1,180 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:49035
-        "EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932299AbcIHP5v (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:25115 "EHLO
+        mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755542AbcIKN0W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 11:57:51 -0400
-Subject: Re: mwifiex: propagate error if IRQ request fails in
- mwifiex_sdio_of()
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20160903103520.8C69C6201B@smtp.codeaurora.org>
- <66735eb5-c831-8e06-337b-80ccfc392061@osg.samsung.com>
- <0f15fe320fa34ae287f8a6b91ec78a34@SC-EXCH04.marvell.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-From: Javier Martinez Canillas <javier@osg.samsung.com>
-Message-ID: <c7e8b951-97dd-d2a5-4740-b6895d577f91@osg.samsung.com> (sfid-20160908_175813_070384_625E1CA8)
-Date: Thu, 8 Sep 2016 11:57:43 -0400
-MIME-Version: 1.0
-In-Reply-To: <0f15fe320fa34ae287f8a6b91ec78a34@SC-EXCH04.marvell.com>
-Content-Type: text/plain; charset=utf-8
+        Sun, 11 Sep 2016 09:26:22 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: linux-renesas-soc@vger.kernel.org
+Cc: joe@perches.com, kernel-janitors@vger.kernel.org,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
+        Tatyana Nikolova <tatyana.e.nikolova@intel.com>,
+        Shiraz Saleem <shiraz.saleem@intel.com>,
+        Mustafa Ismail <mustafa.ismail@intel.com>,
+        Chien Tin Tung <chien.tin.tung@intel.com>,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, alsa-devel@alsa-project.org,
+        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        tpmdd-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: [PATCH 00/26] constify local structures
+Date: Sun, 11 Sep 2016 15:05:42 +0200
+Message-Id: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr> (sfid-20160911_153023_376564_C863488F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Amitkumar,
+Constify local structures.
 
-On 09/08/2016 11:55 AM, Amitkumar Karwar wrote:
-> Hi Javier,
-> 
->> From: Javier Martinez Canillas [mailto:javier@osg.samsung.com]
->> Sent: Tuesday, September 06, 2016 5:43 PM
->> To: Kalle Valo
->> Cc: linux-kernel@vger.kernel.org; Amitkumar Karwar;
->> netdev@vger.kernel.org; linux-wireless@vger.kernel.org; Nishant
->> Sarmukadam; Arend van Spriel
->> Subject: Re: mwifiex: propagate error if IRQ request fails in
->> mwifiex_sdio_of()
->>
->> Hello Kalle,
->>
->> On 09/03/2016 12:35 PM, Kalle Valo wrote:
->>> Javier Martinez Canillas <javier@osg.samsung.com> wrote:
->>>> If request_irq() fails in mwifiex_sdio_probe_of(), only an error
->>>> message is printed but the actual error is not propagated to the
->> caller function.
->>>>
->>>> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
->>>
->>> What's the conclusion with this patch? Should I drop it or take it?
->>>
->>> (The discussion is available from the patchwork link in the
->>> signature.)
->>>
->>
->> My understanding is that Arend agrees with the patch and that the
->> question raised was caused by looking at an older kernel version. IOW,
->> the patch is OK and should be picked.
->>
->> I'm adding Arend to cc, so can comment in case I misunderstood him
->> though.
->>
-> 
-> This error doesn't affect actual wifi functionality. Only thing is wakeup on interrupt when system is in suspended state won't work.
-> I think, we can make below change. 
-> 
-> ------------------
-> @@ -122,9 +122,11 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
->                                                IRQF_TRIGGER_LOW,
->                                                "wifi_wake", cfg);
->            if (ret) {
-> -                    dev_err(dev,
-> +                    dev_dbg(dev,
->                              "Failed to request irq_wifi %d (%d)\n",
->                              cfg->irq_wifi, ret);
-> +                    card->plt_wake_cfg = NULL;
-> +                    return 0;
->              }
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
 
-I'm OK with that change. Feel free too add my Reviewed-by if you post it.
+// <smpl>
+// The first rule ignores some cases that posed problems
+@r disable optional_qualifier@
+identifier s != {peri_clk_data,threshold_attr,tracer_flags,tracer};
+identifier i != {s5k5baf_cis_rect,smtcfb_fix};
+position p;
+@@
+static struct s i@p = { ... };
 
->                 disable_irq(cfg->irq_wifi);
->             }
-> -----------------
-> 
-> Regards,
-> Amitkumar
-> 
+@lstruct@
+identifier r.s;
+@@
+struct s { ... };
 
-Best regards,
--- 
-Javier Martinez Canillas
-Open Source Group
-Samsung Research America
+@used depends on lstruct@
+identifier r.i;
+@@
+i
+
+@bad1@
+expression e;
+identifier r.i;
+assignment operator a;
+@@
+ (<+...i...+>) a e
+
+@bad2@
+identifier r.i;
+@@
+ &(<+...i...+>)
+
+@bad3@
+identifier r.i;
+declarer d;
+@@
+ d(...,<+...i...+>,...);
+
+@bad4@
+identifier r.i;
+type T;
+T[] e;
+identifier f;
+position p;
+@@
+
+f@p(...,
+(
+  (<+...i...+>)
+&
+  e
+)
+,...)
+
+@bad4a@
+identifier r.i;
+type T;
+T *e;
+identifier f;
+position p;
+@@
+
+f@p(...,
+(
+  (<+...i...+>)
+&
+  e
+)
+,...)
+
+@ok5@
+expression *e;
+identifier r.i;
+position p;
+@@
+e =@p i
+
+@bad5@
+expression *e;
+identifier r.i;
+position p != ok5.p;
+@@
+e =@p (<+...i...+>)
+
+@rr depends on used && !bad1 && !bad2 && !bad3 && !bad4 && !bad4a && !bad5@
+identifier s,r.i;
+position r.p;
+@@
+
+static
++const
+ struct s i@p = { ... };
+
+@depends on used && !bad1 && !bad2 && !bad3 && !bad4 && !bad4a && !bad5
+ disable optional_qualifier@
+identifier rr.s,r.i;
+@@
+
+static
++const
+ struct s i;
+// </smpl>
+
+---
+
+ drivers/acpi/acpi_apd.c                              |    8 +++---
+ drivers/char/tpm/tpm-interface.c                     |   10 ++++----
+ drivers/char/tpm/tpm-sysfs.c                         |    2 -
+ drivers/cpufreq/intel_pstate.c                       |    8 +++---
+ drivers/infiniband/hw/i40iw/i40iw_uk.c               |    6 ++---
+ drivers/media/i2c/tvp514x.c                          |    2 -
+ drivers/media/pci/ddbridge/ddbridge-core.c           |   18 +++++++--------
+ drivers/media/pci/ngene/ngene-cards.c                |   14 ++++++------
+ drivers/media/pci/smipcie/smipcie-main.c             |    8 +++---
+ drivers/misc/sgi-xp/xpc_uv.c                         |    2 -
+ drivers/net/arcnet/com20020-pci.c                    |   10 ++++----
+ drivers/net/can/c_can/c_can_pci.c                    |    4 +--
+ drivers/net/can/sja1000/plx_pci.c                    |   20 ++++++++---------
+ drivers/net/ethernet/mellanox/mlx4/main.c            |    4 +--
+ drivers/net/ethernet/oki-semi/pch_gbe/pch_gbe_main.c |    2 -
+ drivers/net/ethernet/renesas/sh_eth.c                |   14 ++++++------
+ drivers/net/ethernet/stmicro/stmmac/stmmac_pci.c     |    2 -
+ drivers/net/wireless/ath/dfs_pattern_detector.c      |    2 -
+ drivers/net/wireless/intel/iwlegacy/3945.c           |    4 +--
+ drivers/net/wireless/realtek/rtlwifi/rtl8188ee/sw.c  |    2 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ce/sw.c  |    2 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8192de/sw.c  |    2 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/sw.c  |    2 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c  |    2 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8723ae/sw.c  |    2 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c  |    2 -
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/sw.c  |    2 -
+ drivers/platform/chrome/chromeos_laptop.c            |   22 +++++++++----------
+ drivers/platform/x86/intel_scu_ipc.c                 |    6 ++---
+ drivers/platform/x86/intel_telemetry_debugfs.c       |    2 -
+ drivers/scsi/esas2r/esas2r_flash.c                   |    2 -
+ drivers/scsi/hptiop.c                                |    6 ++---
+ drivers/spi/spi-dw-pci.c                             |    4 +--
+ drivers/staging/rtl8192e/rtl8192e/rtl_core.c         |    2 -
+ drivers/usb/misc/ezusb.c                             |    2 -
+ drivers/video/fbdev/matrox/matroxfb_g450.c           |    2 -
+ lib/crc64_ecma.c                                     |    2 -
+ sound/pci/ctxfi/ctatc.c                              |    2 -
+ sound/pci/hda/patch_ca0132.c                         |   10 ++++----
+ sound/pci/riptide/riptide.c                          |    2 -
+ 40 files changed, 110 insertions(+), 110 deletions(-)
