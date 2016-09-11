@@ -1,103 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:62866 "EHLO
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:11441 "EHLO
         mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932160AbcIKTLl (ORCPT
+        by vger.kernel.org with ESMTP id S1755470AbcIKN0W (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Sep 2016 15:11:41 -0400
-Date: Sun, 11 Sep 2016 21:11:35 +0200 (CEST)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: Joe Perches <joe@perches.com>
-cc: Julia Lawall <Julia.Lawall@lip6.fr>,
-        linux-renesas-soc@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
-        Tatyana Nikolova <tatyana.e.nikolova@intel.com>,
-        Shiraz Saleem <shiraz.saleem@intel.com>,
-        Mustafa Ismail <mustafa.ismail@intel.com>,
-        Chien Tin Tung <chien.tin.tung@intel.com>,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        devel@driverdev.osuosl.org, alsa-devel@alsa-project.org,
-        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        tpmdd-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Subject: Re: [PATCH 00/26] constify local structures
-In-Reply-To: <1473616576.19464.10.camel@perches.com>
-Message-ID: <alpine.DEB.2.10.1609112105250.3818@hadrien> (sfid-20160911_211201_335175_B6AEB062)
-References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr> <1473616576.19464.10.camel@perches.com>
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+        Sun, 11 Sep 2016 09:26:22 -0400
+From: Julia Lawall <Julia.Lawall@lip6.fr>
+To: "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
+Cc: joe@perches.com, kernel-janitors@vger.kernel.org,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 06/26] ath: constify local structures
+Date: Sun, 11 Sep 2016 15:05:48 +0200
+Message-Id: <1473599168-30561-7-git-send-email-Julia.Lawall@lip6.fr> (sfid-20160911_153518_342101_F73B21E7)
+In-Reply-To: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
+References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+For structure types defined in the same file or local header files, find
+top-level static structure declarations that have the following
+properties:
+1. Never reassigned.
+2. Address never taken
+3. Not passed to a top-level macro call
+4. No pointer or array-typed field passed to a function or stored in a
+variable.
+Declare structures having all of these properties as const.
 
-On Sun, 11 Sep 2016, Joe Perches wrote:
+Done using Coccinelle.
+Based on a suggestion by Joe Perches <joe@perches.com>.
 
-> On Sun, 2016-09-11 at 15:05 +0200, Julia Lawall wrote:
-> > Constify local structures.
->
-> Thanks Julia.
->
-> A few suggestions & questions:
->
-> Perhaps the script should go into scripts/coccinelle/
-> so that future cases could be caught by the robot
-> and commit message referenced by the patch instances.
+Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
 
-OK.
+---
+The semantic patch seems too long for a commit log, but is in the cover
+letter.
 
-> Can you please compile the files modified using the
-> appropriate defconfig/allyesconfig and show the
+ drivers/net/wireless/ath/dfs_pattern_detector.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I currently send patches for this issue only for files that compile using
-the x86 allyesconfig.
-
-> movement from data to const by using
-> 	$ size <object>.new/old
-> and include that in the changelogs (maybe next time)?
-
-OK, thanks for the suggestion.
-
-> Is it possible for a rule to trace the instances where
-> an address of a struct or struct member is taken by
-> locally defined and declared function call where the
-> callee does not modify any dereferenced object?
->
-> ie:
->
-> struct foo {
-> 	int bar;
-> 	char *baz;
-> };
->
-> struct foo qux[] = {
-> 	{ 1, "description 1" },
-> 	{ 2, "dewcription 2" },
-> 	[ n, "etc" ]...,
-> };
->
-> void message(struct foo *msg)
-> {
-> 	printk("%d %s\n", msg->bar, msg->baz);
-> }
->
-> where some code uses
->
-> 	message(qux[index]);
->
-> So could a coccinelle script change:
->
-> struct foo qux[] = { to const struct foo quz[] = {
->
-> and
->
-> void message(struct foo *msg) to void message(const struct foo *msg)
-
-Yes, this could be possible too.
-
-Thanks for the feedback.
-
-julia
+diff --git a/drivers/net/wireless/ath/dfs_pattern_detector.c b/drivers/net/wireless/ath/dfs_pattern_detector.c
+index 2f8136d..4100ffd 100644
+--- a/drivers/net/wireless/ath/dfs_pattern_detector.c
++++ b/drivers/net/wireless/ath/dfs_pattern_detector.c
+@@ -338,7 +338,7 @@ static bool dpd_set_domain(struct dfs_pattern_detector *dpd,
+ 	return true;
+ }
+ 
+-static struct dfs_pattern_detector default_dpd = {
++static const struct dfs_pattern_detector default_dpd = {
+ 	.exit		= dpd_exit,
+ 	.set_dfs_domain	= dpd_set_domain,
+ 	.add_pulse	= dpd_add_pulse,
