@@ -1,84 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55658 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756348AbcINPY4 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 11:24:56 -0400
-Message-ID: <57D96BC7.1080609@candelatech.com> (sfid-20160914_172506_006844_FB3FCDD9)
-Date: Wed, 14 Sep 2016 08:24:55 -0700
-From: Ben Greear <greearb@candelatech.com>
+Received: from nbd.name ([46.4.11.11]:51386 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932633AbcILKIh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 06:08:37 -0400
+Subject: Re: [PATCH] mac80211: fix sequence number assignment for PS response
+ frames
+To: Johannes Berg <johannes@sipsolutions.net>,
+        linux-wireless@vger.kernel.org
+References: <20160904160059.66297-1-nbd@nbd.name>
+ <1473674327.29016.3.camel@sipsolutions.net>
+ <afb51baf-ec2d-3600-9e5b-f406b9e836b7@nbd.name>
+ <1473674624.29016.4.camel@sipsolutions.net>
+ <521f75cd-2203-efc0-77c9-d9f7b6c4079f@nbd.name>
+ <1473674822.29016.6.camel@sipsolutions.net>
+From: Felix Fietkau <nbd@nbd.name>
+Message-ID: <96ab269f-a40c-8824-1e61-fd17666ded46@nbd.name> (sfid-20160912_120849_086285_DAD82DF4)
+Date: Mon, 12 Sep 2016 12:08:35 +0200
 MIME-Version: 1.0
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 15/21] ath10k: support CT firmware flag.
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com> <1462986153-16318-16-git-send-email-greearb@candelatech.com> <87bmzqeeox.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87bmzqeeox.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <1473674822.29016.6.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On 2016-09-12 12:07, Johannes Berg wrote:
+> On Mon, 2016-09-12 at 12:05 +0200, Felix Fietkau wrote:
+>> On 2016-09-12 12:03, Johannes Berg wrote:
+>> > 
+>> > 
+>> > > 
+>> > > Hm, I guess I didn't think of that. I guess this potential issue
+>> > > will
+>> > > go away once we get Toke's tx handler reorder patch fixed,
+>> > > rebased
+>> > > and integrated.
+>> > > 
+>> > 
+>> > I don't really see how that helps?
+>> It replaces the changes that I made.
+>> 
+> 
+> But this is a more general problem, no?
+Will look into it some more soon.
 
-
-On 09/14/2016 07:30 AM, Valo, Kalle wrote:
-> greearb@candelatech.com writes:
->
->> From: Ben Greear <greearb@candelatech.com>
->>
->> Add placeholder so CT firmware can more easily co-exist with upstream
->> kernel.  CT firmware should be backwards compatible with existing kernels,
->> but it also has many new features.  Subsequent patches, if acceptable for
->> upstream, can enable and further describe those features.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>   drivers/net/wireless/ath/ath10k/core.c | 1 +
->>   drivers/net/wireless/ath/ath10k/core.h | 3 +++
->>   2 files changed, 4 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
->> index fa71d57..49c85c3 100644
->> --- a/drivers/net/wireless/ath/ath10k/core.c
->> +++ b/drivers/net/wireless/ath/ath10k/core.c
->> @@ -235,6 +235,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
->>   	[ATH10K_FW_FEATURE_SUPPORTS_ADAPTIVE_CCA] = "adaptive-cca",
->>   	[ATH10K_FW_FEATURE_MFP_SUPPORT] = "mfp",
->>   	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] = "peer-flow-ctrl",
->> +	[ATH10K_FW_FEATURE_WMI_10X_CT] = "wmi-10.x-CT",
->>   };
->>
->>   static unsigned int ath10k_core_get_fw_feature_str(char *buf,
->> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
->> index cb6aa8c..f9e3b20 100644
->> --- a/drivers/net/wireless/ath/ath10k/core.h
->> +++ b/drivers/net/wireless/ath/ath10k/core.h
->> @@ -566,6 +566,9 @@ enum ath10k_fw_features {
->>   	 */
->>   	ATH10K_FW_FEATURE_PEER_FLOW_CONTROL = 13,
->>
->> +	/* Firmware from Candela Technologies, enables more VIFs, etc */
->> +	ATH10K_FW_FEATURE_WMI_10X_CT = 31,
->
-> The idea of firmware feature flags to enable (or disable) one particular
-> feature, not a group of features. This way it's easy to enable certain
-> features on different firmware branches. It also makes the maintenance
-> easier as you don't need to remember all the different features one flag
-> enables.
-
-One potential use for this flag:  Bug reports could be automatically directed to me instead
-of QCA.
-
-I have actually re-written much of my earlier logic so that it uses specific
-feature flags now.  I still like the idea of having the driver (and user)
-know it is using CT firmware, but I can live without this flag if needed.
-
-Even if I change generation of my new firmware, all of my older firmware
-will have this flag set though, so I would still prefer the flag exist
-in the driver, even if it is not used for any serious decisions.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+- Felix
