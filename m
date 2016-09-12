@@ -1,65 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53441 "EHLO mx2.suse.de"
+Received: from mga02.intel.com ([134.134.136.20]:57487 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933018AbcI3MjX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 08:39:23 -0400
-From: Johannes Thumshirn <jthumshirn@suse.de>
-To: Solomon Peachy <pizza@shaftnet.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2] cw1200: Don't leak memory if krealloc failes
-Date: Fri, 30 Sep 2016 14:39:17 +0200
-Message-Id: <1475239157-16448-1-git-send-email-jthumshirn@suse.de> (sfid-20160930_143953_120202_E1A15A41)
+        id S1751092AbcILUO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 16:14:56 -0400
+Date: Mon, 12 Sep 2016 23:14:50 +0300
+From: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+To: Felipe Balbi <felipe.balbi@linux.intel.com>
+Cc: Julia Lawall <julia.lawall@lip6.fr>,
+        linux-renesas-soc@vger.kernel.org, joe@perches.com,
+        kernel-janitors@vger.kernel.org,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
+        Tatyana Nikolova <tatyana.e.nikolova@intel.com>,
+        Shiraz Saleem <shiraz.saleem@intel.com>,
+        Mustafa Ismail <mustafa.ismail@intel.com>,
+        Chien Tin Tung <chien.tin.tung@intel.com>,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, alsa-devel@alsa-project.org,
+        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        tpmdd-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 00/26] constify local structures
+Message-ID: <20160912201450.GA8889@intel.com> (sfid-20160912_221506_694912_B74CE94F)
+References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
+ <20160911172105.GB5493@intel.com>
+ <alpine.DEB.2.10.1609121051050.3049@hadrien>
+ <20160912131625.GD957@intel.com>
+ <877fah5j35.fsf@linux.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <877fah5j35.fsf@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The call to krealloc() in wsm_buf_reserve() directly assigns the newly
-returned memory to buf->begin. This is all fine except when krealloc()
-failes we loose the ability to free the old memory pointed to by
-buf->begin. If we just create a temporary variable to assign memory to
-and assign the memory to it we can mitigate the memory leak.
+On Mon, Sep 12, 2016 at 04:43:58PM +0300, Felipe Balbi wrote:
+> 
+> Hi,
+> 
+> Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com> writes:
+> > On Mon, Sep 12, 2016 at 10:54:07AM +0200, Julia Lawall wrote:
+> >> 
+> >> 
+> >> On Sun, 11 Sep 2016, Jarkko Sakkinen wrote:
+> >> 
+> >> > On Sun, Sep 11, 2016 at 03:05:42PM +0200, Julia Lawall wrote:
+> >> > > Constify local structures.
+> >> > >
+> >> > > The semantic patch that makes this change is as follows:
+> >> > > (http://coccinelle.lip6.fr/)
+> >> >
+> >> > Just my two cents but:
+> >> >
+> >> > 1. You *can* use a static analysis too to find bugs or other issues.
+> >> > 2. However, you should manually do the commits and proper commit
+> >> >    messages to subsystems based on your findings. And I generally think
+> >> >    that if one contributes code one should also at least smoke test changes
+> >> >    somehow.
+> >> >
+> >> > I don't know if I'm alone with my opinion. I just think that one should
+> >> > also do the analysis part and not blindly create and submit patches.
+> >> 
+> >> All of the patches are compile tested.  And the individual patches are
+> >
+> > Compile-testing is not testing. If you are not able to test a commit,
+> > you should explain why.
+> 
+> Dude, Julia has been doing semantic patching for years already and
+> nobody has raised any concerns so far. There's already an expectation
+> that Coccinelle *works* and Julia's sematic patches are sound.
+> 
+> Besides, adding 'const' is something that causes virtually no functional
+> changes to the point that build-testing is really all you need. Any
+> problems caused by adding 'const' to a definition will be seen by build
+> errors or warnings.
+> 
+> Really, just stop with the pointless discussion and go read a bit about
+> Coccinelle and what semantic patches are giving you. The work done by
+> Julia and her peers are INRIA have measurable benefits.
+> 
+> You're really making a thunderstorm in a glass of water.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>
----
- drivers/net/wireless/st/cw1200/wsm.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+Hmm... I've been using coccinelle in cyclic basis for some time now.
+My comment was oversized but I didn't mean it to be impolite or attack
+of any kind for that matter.
 
-Changes from v1:
-* Do the correct check for a failed re-allocation (Johannes Berg)
+> -- 
+> balbi
 
-diff --git a/drivers/net/wireless/st/cw1200/wsm.c b/drivers/net/wireless/st/cw1200/wsm.c
-index 680d60e..ffb245e 100644
---- a/drivers/net/wireless/st/cw1200/wsm.c
-+++ b/drivers/net/wireless/st/cw1200/wsm.c
-@@ -1807,16 +1807,18 @@ static int wsm_buf_reserve(struct wsm_buf *buf, size_t extra_size)
- {
- 	size_t pos = buf->data - buf->begin;
- 	size_t size = pos + extra_size;
-+	u8 *tmp;
- 
- 	size = round_up(size, FWLOAD_BLOCK_SIZE);
- 
--	buf->begin = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
--	if (buf->begin) {
--		buf->data = &buf->begin[pos];
--		buf->end = &buf->begin[size];
--		return 0;
--	} else {
--		buf->end = buf->data = buf->begin;
-+	tmp = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
-+	if (!tmp) {
-+		wsm_buf_deinit(buf);
- 		return -ENOMEM;
- 	}
-+
-+	buf->begin = tmp;
-+	buf->data = &buf->begin[pos];
-+	buf->end = &buf->begin[size];
-+	return 0;
- }
--- 
-1.8.5.6
+/Jarkko
