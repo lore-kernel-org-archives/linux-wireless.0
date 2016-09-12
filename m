@@ -1,125 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45679 "EHLO
-        mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934266AbcISLKZ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 07:10:25 -0400
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Subject: [PATCH 5/9] brcmfmac: remove worker from .ndo_set_mac_address() callback
-Date: Mon, 19 Sep 2016 12:09:55 +0100
-Message-Id: <1474283399-14385-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131045_251351_DE365163)
-In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
-References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44372 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932451AbcILT3l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 15:29:41 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>, devel@driverdev.osuosl.org,
+        linux-fbdev@vger.kernel.org,
+        Andreas Dilger <andreas.dilger@intel.com>,
+        Sumit Semwal <sumit.semwal@linaro.org>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Teddy Wang <teddy.wang@siliconmotion.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        Laura Abbott <labbott@redhat.com>,
+        Arve =?utf-8?B?SGrDuG5uZXbDpWc=?= <arve@android.com>,
+        Riley Andrews <riandrews@android.com>,
+        Oleg Drokin <oleg.drokin@intel.com>,
+        lustre-devel@lists.lustre.org
+Subject: Re: [PATCH] staging: squash lines for simple wrapper functions
+References: <1473706668-24216-1-git-send-email-yamada.masahiro@socionext.com>
+Date: Mon, 12 Sep 2016 15:29:38 -0400
+In-Reply-To: <1473706668-24216-1-git-send-email-yamada.masahiro@socionext.com>
+        (Masahiro Yamada's message of "Tue, 13 Sep 2016 03:57:48 +0900")
+Message-ID: <wrfjwpigex25.fsf@redhat.com> (sfid-20160912_213215_807893_C1480B68)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As it turns out there is no need to use a worker for the callback
-because it is not called from atomic context.
+Masahiro Yamada <yamada.masahiro@socionext.com> writes:
+> Remove unneeded variables and assignments.
+>
+> While we are here, clean up the following as well:
+>   - refactor rtl8723a_get_bcn_valid() a bit
+>   - remove unneeded casts in sii164Get{Vendor,Device}ID()
+>
+> Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
+> ---
+>
+>  drivers/staging/android/ion/ion.c                        |  6 +-----
+>  .../staging/lustre/lustre/obdclass/linux/linux-module.c  |  5 +----
+>  drivers/staging/lustre/lustre/ptlrpc/client.c            |  5 +----
+>  drivers/staging/lustre/lustre/ptlrpc/events.c            |  5 +----
+>  drivers/staging/rtl8723au/core/rtw_wlan_util.c           |  7 +------
+>  drivers/staging/rtl8723au/hal/hal_com.c                  |  6 +-----
+>  drivers/staging/sm750fb/ddk750_sii164.c                  | 16 ++++------------
+>  7 files changed, 10 insertions(+), 40 deletions(-)
 
-Reported-by: Dan Williams <dcbw@redhat.com>
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 39 ++++++++--------------
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 --
- 2 files changed, 13 insertions(+), 28 deletions(-)
+1) Do not submit one giant patch modifying multiple drivers in one go
+2) drivers/staging/rtl8723au is gone - had you followed 1), you wouldn't
+   necessarily have had to respin this patch.
+3) Consider if your changes, even if technically correct, actually
+   improve the code (see below)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 8d16f02..77c4180 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -136,27 +136,6 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
- 			  err);
- }
- 
--static void
--_brcmf_set_mac_address(struct work_struct *work)
--{
--	struct brcmf_if *ifp;
--	s32 err;
--
--	ifp = container_of(work, struct brcmf_if, setmacaddr_work);
--
--	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
--
--	err = brcmf_fil_iovar_data_set(ifp, "cur_etheraddr", ifp->mac_addr,
--				       ETH_ALEN);
--	if (err < 0) {
--		brcmf_err("Setting cur_etheraddr failed, %d\n", err);
--	} else {
--		brcmf_dbg(TRACE, "MAC address updated to %pM\n",
--			  ifp->mac_addr);
--		memcpy(ifp->ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
--	}
--}
--
- #if IS_ENABLED(CONFIG_IPV6)
- static void _brcmf_update_ndtable(struct work_struct *work)
- {
-@@ -190,10 +169,20 @@ static int brcmf_netdev_set_mac_address(struct net_device *ndev, void *addr)
- {
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct sockaddr *sa = (struct sockaddr *)addr;
-+	int err;
- 
--	memcpy(&ifp->mac_addr, sa->sa_data, ETH_ALEN);
--	schedule_work(&ifp->setmacaddr_work);
--	return 0;
-+	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
-+
-+	err = brcmf_fil_iovar_data_set(ifp, "cur_etheraddr", sa->sa_data,
-+				       ETH_ALEN);
-+	if (err < 0) {
-+		brcmf_err("Setting cur_etheraddr failed, %d\n", err);
-+	} else {
-+		brcmf_dbg(TRACE, "updated to %pM\n", sa->sa_data);
-+		memcpy(ifp->mac_addr, sa->sa_data, ETH_ALEN);
-+		memcpy(ifp->ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
-+	}
-+	return err;
- }
- 
- static void brcmf_netdev_set_multicast_list(struct net_device *ndev)
-@@ -525,7 +514,6 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
- 	/* set the mac address */
- 	memcpy(ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
- 
--	INIT_WORK(&ifp->setmacaddr_work, _brcmf_set_mac_address);
- 	INIT_WORK(&ifp->multicast_work, _brcmf_set_multicast_list);
- 	INIT_WORK(&ifp->ndoffload_work, _brcmf_update_ndtable);
- 
-@@ -730,7 +718,6 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bsscfgidx,
- 		}
- 
- 		if (ifp->ndev->netdev_ops == &brcmf_netdev_ops_pri) {
--			cancel_work_sync(&ifp->setmacaddr_work);
- 			cancel_work_sync(&ifp->multicast_work);
- 			cancel_work_sync(&ifp->ndoffload_work);
- 		}
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index 8fa34ca..8a810bb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -176,7 +176,6 @@ enum brcmf_netif_stop_reason {
-  * @vif: points to cfg80211 specific interface information.
-  * @ndev: associated network device.
-  * @stats: interface specific network statistics.
-- * @setmacaddr_work: worker object for setting mac address.
-  * @multicast_work: worker object for multicast provisioning.
-  * @ndoffload_work: worker object for neighbor discovery offload configuration.
-  * @fws_desc: interface specific firmware-signalling descriptor.
-@@ -193,7 +192,6 @@ struct brcmf_if {
- 	struct brcmf_cfg80211_vif *vif;
- 	struct net_device *ndev;
- 	struct net_device_stats stats;
--	struct work_struct setmacaddr_work;
- 	struct work_struct multicast_work;
- 	struct work_struct ndoffload_work;
- 	struct brcmf_fws_mac_descriptor *fws_desc;
--- 
-1.9.1
+Jes
+
+> diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+> index 694cf17..7ab47f0 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+> @@ -1202,12 +1202,7 @@ unsigned int update_supported_rate23a(unsigned char *ptn, unsigned int ptn_sz)
+>  
+>  unsigned int update_MSC_rate23a(struct ieee80211_ht_cap *pHT_caps)
+>  {
+> -	unsigned int mask;
+> -
+> -	mask = pHT_caps->mcs.rx_mask[0] << 12 |
+> -		pHT_caps->mcs.rx_mask[1] << 20;
+> -
+> -	return mask;
+> +	return pHT_caps->mcs.rx_mask[0] << 12 | pHT_caps->mcs.rx_mask[1] << 20;
+>  }
+
+The use of the mask variable didn't cause any harm, and it was certainly
+a lot nicer to read the way it was.
+
+>  int support_short_GI23a(struct rtw_adapter *padapter,
+> diff --git a/drivers/staging/rtl8723au/hal/hal_com.c b/drivers/staging/rtl8723au/hal/hal_com.c
+> index 9d7b11b..dfbeebe 100644
+> --- a/drivers/staging/rtl8723au/hal/hal_com.c
+> +++ b/drivers/staging/rtl8723au/hal/hal_com.c
+> @@ -708,11 +708,7 @@ void rtl8723a_bcn_valid(struct rtw_adapter *padapter)
+>  
+>  bool rtl8723a_get_bcn_valid(struct rtw_adapter *padapter)
+>  {
+> -	bool retval;
+> -
+> -	retval = (rtl8723au_read8(padapter, REG_TDECTRL + 2) & BIT(0)) ? true : false;
+> -
+> -	return retval;
+> +	return !!(rtl8723au_read8(padapter, REG_TDECTRL + 2) & BIT(0));
+>  }
+
+One word: Yuck!
+
+Talk about obfuscating the code for the sake of obfuscation!
+
+>  void rtl8723a_set_beacon_interval(struct rtw_adapter *padapter, u16 interval)
+> diff --git a/drivers/staging/sm750fb/ddk750_sii164.c b/drivers/staging/sm750fb/ddk750_sii164.c
+> index 67f36e7..28818e1 100644
+> --- a/drivers/staging/sm750fb/ddk750_sii164.c
+> +++ b/drivers/staging/sm750fb/ddk750_sii164.c
+> @@ -36,12 +36,8 @@ static char *gDviCtrlChipName = "Silicon Image SiI 164";
+>   */
+>  unsigned short sii164GetVendorID(void)
+>  {
+> -	unsigned short vendorID;
+> -
+> -	vendorID = ((unsigned short) i2cReadReg(SII164_I2C_ADDRESS, SII164_VENDOR_ID_HIGH) << 8) |
+> -		    (unsigned short) i2cReadReg(SII164_I2C_ADDRESS, SII164_VENDOR_ID_LOW);
+> -
+> -	return vendorID;
+> +	return (i2cReadReg(SII164_I2C_ADDRESS, SII164_VENDOR_ID_HIGH) << 8) |
+> +		i2cReadReg(SII164_I2C_ADDRESS, SII164_VENDOR_ID_LOW);
+>  }
+>  
+>  /*
+> @@ -53,12 +49,8 @@ unsigned short sii164GetVendorID(void)
+>   */
+>  unsigned short sii164GetDeviceID(void)
+>  {
+> -	unsigned short deviceID;
+> -
+> -	deviceID = ((unsigned short) i2cReadReg(SII164_I2C_ADDRESS, SII164_DEVICE_ID_HIGH) << 8) |
+> -		    (unsigned short) i2cReadReg(SII164_I2C_ADDRESS, SII164_DEVICE_ID_LOW);
+> -
+> -	return deviceID;
+> +	return (i2cReadReg(SII164_I2C_ADDRESS, SII164_DEVICE_ID_HIGH) << 8) |
+> +		i2cReadReg(SII164_I2C_ADDRESS, SII164_DEVICE_ID_LOW);
+>  }
+
+Getting rid of the casts would be nice, merging them into a giant
+multi-line return line certainly isn't an improvement in my book. That
+said, I will leave that to the maintainer of that driver to decide what
+is preferred.
+
+Jes
