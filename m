@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39355 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755817AbcIAVBu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 1 Sep 2016 17:01:50 -0400
-Message-ID: <1472754954.9608.13.camel@sipsolutions.net> (sfid-20160901_230155_997778_288B9778)
-Subject: Re: [PATCH v5] mac80211: Move reorder-sensitive TX handlers to
- after TXQ dequeue.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Thu, 01 Sep 2016 20:35:54 +0200
-In-Reply-To: <871t1379r0.fsf@toke.dk>
-References: <20160830131548.6014-1-toke@toke.dk>
-         <20160901160312.31540-1-toke@toke.dk>
-         <1472752745.9608.8.camel@sipsolutions.net> <871t1379r0.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:54861 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755887AbcILN0B (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 09:26:01 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8CDQ0d9008444
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 06:26:00 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0a-0016f401.pphosted.com with ESMTP id 25cfhnxwky-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 06:25:59 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 0/2] mwifiex: usb8997 chipset support
+Date: Mon, 12 Sep 2016 18:55:26 +0530
+Message-ID: <1473686728-8101-1-git-send-email-akarwar@marvell.com> (sfid-20160912_152604_997323_D78F5F01)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-09-01 at 20:30 +0200, Toke Høiland-Jørgensen wrote:
+This patch series includes changes needed to support Marvell usb8997
+chipset.
 
-> > seq=1,frag=0
-> > seq=2,frag=0
-> > seq=2,frag=1
-> > seq=2,frag=1
-> > 
-> > if reordering happened?
-> 
-> (assuming the last line was supposed to read 'seq=1,frag=1')
+Ganapathi Bhat (2):
+  mwifiex: Command 7 handling for USB chipsets
+  mwifiex: firmware name correction for usb8997 chipset
 
-I did actually mean seq=2,frag=1, since the seqno assignment happened
-after fragmentation in your patch, and after codel reordering, and
-would not change the seqno until it encountered a frag=0 packet.
+ drivers/net/wireless/marvell/mwifiex/usb.c | 4 ++++
+ drivers/net/wireless/marvell/mwifiex/usb.h | 3 ++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-Or maybe that was only with the previous version of the patch.
-
-> When does fragmentation happen anyway? Is it safe to assume there's
-> no aggregation when it does?
-> 
-
-Yes, fragmented packets are not allowed to be aggregated.
-
-johannes
+-- 
+1.9.1
