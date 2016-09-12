@@ -1,86 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:34038 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934855AbcI1BpP (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:60900 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753151AbcILQgb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 21:45:15 -0400
-Received: by mail-pf0-f174.google.com with SMTP id l25so11566591pfb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 18:45:15 -0700 (PDT)
-From: Rajat Jain <rajatja@google.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Rajat Jain <rajatja@google.com>,
-        Wei-Ning Huang <wnhuang@google.com>,
-        Brian Norris <briannorris@google.com>,
-        Eric Caruso <ejcaruso@chromium.org>, rajatxjain@gmail.com
-Subject: [PATCH v2] mwifiex: report wakeup for wowlan
-Date: Tue, 27 Sep 2016 18:45:04 -0700
-Message-Id: <1475027104-17423-1-git-send-email-rajatja@google.com> (sfid-20160928_034522_857947_89713CAD)
-In-Reply-To: <1474995364-123069-1-git-send-email-rajatja@google.com>
-References: <1474995364-123069-1-git-send-email-rajatja@google.com>
+        Mon, 12 Sep 2016 12:36:31 -0400
+Subject: Re: [PATCH] cfg80211: cap 20MHz VHT bitrate at MCS 8
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "Pedersen, Thomas" <twp@qca.qualcomm.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+References: <1473188417-13987-1-git-send-email-twp@qca.qualcomm.com>
+ <2769a14e-964d-4ec2-9f04-ddd332434b78@candelatech.com>
+ <38049c4f-da5b-a6ec-bcc4-c803197abcd7@qca.qualcomm.com>
+ <1473662637.4201.2.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <6c78bfe8-c760-6331-b188-9cf79334f08d@candelatech.com> (sfid-20160912_183634_664420_5DED29CB)
+Date: Mon, 12 Sep 2016 09:36:29 -0700
+MIME-Version: 1.0
+In-Reply-To: <1473662637.4201.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Enable notifying wakeup source to the PM core in case of
-a wake on wireless LAN event.
+On 09/11/2016 11:43 PM, Johannes Berg wrote:
+> On Wed, 2016-09-07 at 18:20 +0000, Pedersen, Thomas wrote:
+>> On 09/06/2016 12:07 PM, Ben Greear wrote:
+>>>
+>>> On 09/06/2016 12:00 PM, Thomas Pedersen wrote:
+>>>>
+>>>> Some drivers (ath10k) report MCS 9 @ 20MHz, which
+>>>> technically isn't allowed. To get more meaningful value
+>>>> than 0 out of this however, just cap the bitrate for 20MHz
+>>>> to MCS 8.
+>>>
+>>> If it is actually reporting MCS9, why lie about it?  Report it up
+>>> the stack as a proper value instead of hiding the issue?
+>>
+>> Good point, will send a v2 extrapolating the value to 86.5Mb/s.
+>
+> That makes no sense either, IMHO.
+>
+> Are you saying that ath10k actually somehow manages to use an invalid
+> bitrate over the air?!
+>
+> It seems more likely that it's actually just misreporting what it's
+> doing, and thus the issue should be fixed in ath10k.
 
-Signed-off-by: Wei-Ning Huang <wnhuang@google.com>
-Signed-off-by: Rajat Jain <rajatja@google.com>
-Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
-Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
----
-v2: Fix the commit log
+I saw ath10k report the same value in my testing.
 
- drivers/net/wireless/marvell/mwifiex/sdio.c | 8 ++++++++
- drivers/net/wireless/marvell/mwifiex/sdio.h | 1 +
- 2 files changed, 9 insertions(+)
+Hard to know what the actual on-air encoding rate is.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index d3e1561..a5f63e4 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -89,6 +89,9 @@ static irqreturn_t mwifiex_wake_irq_wifi(int irq, void *priv)
- 		disable_irq_nosync(irq);
- 	}
- 
-+	/* Notify PM core we are wakeup source */
-+	pm_wakeup_event(cfg->dev, 0);
-+
- 	return IRQ_HANDLED;
- }
- 
-@@ -112,6 +115,7 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 					  GFP_KERNEL);
- 	cfg = card->plt_wake_cfg;
- 	if (cfg && card->plt_of_node) {
-+		cfg->dev = dev;
- 		cfg->irq_wifi = irq_of_parse_and_map(card->plt_of_node, 0);
- 		if (!cfg->irq_wifi) {
- 			dev_dbg(dev,
-@@ -130,6 +134,10 @@ static int mwifiex_sdio_probe_of(struct device *dev, struct sdio_mmc_card *card)
- 		}
- 	}
- 
-+	ret = device_init_wakeup(dev, true);
-+	if (ret)
-+		dev_err(dev, "fail to init wakeup for mwifiex");
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h b/drivers/net/wireless/marvell/mwifiex/sdio.h
-index db837f1..07cdd23 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.h
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
-@@ -155,6 +155,7 @@
- } while (0)
- 
- struct mwifiex_plt_wake_cfg {
-+	struct device *dev;
- 	int irq_wifi;
- 	bool wake_by_wifi;
- };
+I do know that some ath10k firmware would run 1Mbps encoding
+management frames on 5Mhz, which is also not per spec, for what that is worth.
+
+Thanks,
+Ben
+
 -- 
-2.8.0.rc3.226.g39d4020
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
