@@ -1,80 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:36222 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933973AbcIVDet (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 21 Sep 2016 23:34:49 -0400
-Received: by mail-oi0-f53.google.com with SMTP id t83so83762985oie.3
-        for <linux-wireless@vger.kernel.org>; Wed, 21 Sep 2016 20:34:48 -0700 (PDT)
+Received: from mga06.intel.com ([134.134.136.31]:21958 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755781AbcILSub (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 14:50:31 -0400
+Date: Mon, 12 Sep 2016 21:50:23 +0300
+From: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: Felipe Balbi <felipe.balbi@linux.intel.com>,
+        linux-renesas-soc@vger.kernel.org, joe@perches.com,
+        kernel-janitors@vger.kernel.org,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
+        Tatyana Nikolova <tatyana.e.nikolova@intel.com>,
+        Shiraz Saleem <shiraz.saleem@intel.com>,
+        Mustafa Ismail <mustafa.ismail@intel.com>,
+        Chien Tin Tung <chien.tin.tung@intel.com>,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, alsa-devel@alsa-project.org,
+        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        tpmdd-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 00/26] constify local structures
+Message-ID: <20160912185023.GB14727@intel.com> (sfid-20160912_205049_005815_7FCF9FA6)
+References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
+ <20160911172105.GB5493@intel.com>
+ <alpine.DEB.2.10.1609121051050.3049@hadrien>
+ <20160912131625.GD957@intel.com>
+ <877fah5j35.fsf@linux.intel.com>
+ <alpine.DEB.2.10.1609121548200.29099@hadrien>
 MIME-Version: 1.0
-In-Reply-To: <96b0636d-1171-5830-6481-edb991ca8e1a@rempel-privat.de>
-References: <CAArymCks5NN=09EdJ4uaoRrHZciYAkYTES+i62BkfZ4R-W30HQ@mail.gmail.com>
- <96b0636d-1171-5830-6481-edb991ca8e1a@rempel-privat.de>
-From: bruce m beach <brucembeach@gmail.com>
-Date: Wed, 21 Sep 2016 20:34:47 -0700
-Message-ID: <CAArymCnJZgUbgCiLqA6-94RAtXYkYeeS9uF71MX9+ou-AbYszg@mail.gmail.com> (sfid-20160922_053505_063154_38466DA8)
-Subject: Re: ath9k_htc kernel driver regression affecting throughput
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.10.1609121548200.29099@hadrien>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> We recently updated FW to GCC 6.2 which can detect more problems. So it
-> will be probably interesting for you to pick this patch out.
+On Mon, Sep 12, 2016 at 03:52:08PM +0200, Julia Lawall wrote:
+> 
+> 
+> On Mon, 12 Sep 2016, Felipe Balbi wrote:
+> 
+> >
+> > Hi,
+> >
+> > Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com> writes:
+> > > On Mon, Sep 12, 2016 at 10:54:07AM +0200, Julia Lawall wrote:
+> > >>
+> > >>
+> > >> On Sun, 11 Sep 2016, Jarkko Sakkinen wrote:
+> > >>
+> > >> > On Sun, Sep 11, 2016 at 03:05:42PM +0200, Julia Lawall wrote:
+> > >> > > Constify local structures.
+> > >> > >
+> > >> > > The semantic patch that makes this change is as follows:
+> > >> > > (http://coccinelle.lip6.fr/)
+> > >> >
+> > >> > Just my two cents but:
+> > >> >
+> > >> > 1. You *can* use a static analysis too to find bugs or other issues.
+> > >> > 2. However, you should manually do the commits and proper commit
+> > >> >    messages to subsystems based on your findings. And I generally think
+> > >> >    that if one contributes code one should also at least smoke test changes
+> > >> >    somehow.
+> > >> >
+> > >> > I don't know if I'm alone with my opinion. I just think that one should
+> > >> > also do the analysis part and not blindly create and submit patches.
+> > >>
+> > >> All of the patches are compile tested.  And the individual patches are
+> > >
+> > > Compile-testing is not testing. If you are not able to test a commit,
+> > > you should explain why.
+> >
+> > Dude, Julia has been doing semantic patching for years already and
+> > nobody has raised any concerns so far. There's already an expectation
+> > that Coccinelle *works* and Julia's sematic patches are sound.
+> >
+> > Besides, adding 'const' is something that causes virtually no functional
+> > changes to the point that build-testing is really all you need. Any
+> > problems caused by adding 'const' to a definition will be seen by build
+> > errors or warnings.
+> >
+> > Really, just stop with the pointless discussion and go read a bit about
+> > Coccinelle and what semantic patches are giving you. The work done by
+> > Julia and her peers are INRIA have measurable benefits.
+> >
+> > You're really making a thunderstorm in a glass of water.
+> 
+> Thanks for the defense, but since a lot of these patches torned out to be
+> wrong, due to an incorrect parse by Coccinelle, combined with an
+> unpleasantly lax compiler, Jarkko does have a point that I should have
+> looked at the patches more carefully.  In any case, I have written to the
+> maintainers relevant to the patches that turned out to be incorrect.
 
-Yes I saw the message by Adrian Chadd and tried tried to git clone the link
-he gave but that clearly wasn't what was to be done. Is there a patch that I
-need to apply to the firmware? I do have a local copy.
+Exactly. I'm not excepting that every commit would require extensive
+analysis but it would be good to quickly at least skim through commits
+and see if they make sense (or ask if unsure) :) 
 
-On 9/20/16, Oleksij Rempel <linux@rempel-privat.de> wrote:
-> Am 21.09.2016 um 05:43 schrieb bruce m beach:
->> Oleksij
->>
->> I looked at
->> https://unix.stackexchange.com/questions/122050/
->>       send-traffic-to-self-over-physical-network-on-ubuntu
->>
->> It appearred to too complicated but
->>
->> https://unix.stackexchange.com/questions/122050/
->>         send-traffic-to-self-over-physical-network-on-ubuntu
->> with:
->>     # Create a network namespace and move one of interfaces into it:
->>       ip netns add test2
->>       ip link set wlan0 netns test2
->>     # Start a shell in the new namespace:
->>        ip netns exec test2 bash
->>     # Then proceed as if you had two machines. When finished exit the
->> shell and
->>     # delete the namespace:
->>        ip netns del test2
->> Certainly looks interesting but after I got a
->>  RTNETLINK answers: Invalid argument
->> I lost interest. My heart isn't in it. I'm still working on the firmware.
->> I
->> have started a new tree (tree #3) that consists of a userland firmware
->> uploader
->> and until recently the following firmware:
->>
->> app_start( void ) {}
->>
->> i.e a lable that the code jumps to and nothing else. At this point I have
->> added VendorCommand(), and a debugger via ep0. ( ep0 is a good choice
->> since it is available a boot, no matter what) and over the next few
->> months I am going to move ->all<- the rom code into ram starting with
->> the USB subsystem.
->>
->> Bruce
->>
->
->
-> Wow, this sounds interesting :)
-> We recently updated FW to GCC 6.2 which can detect more problems. So it
-> will be probably interesting for you to pick this patch out.
->
-> --
-> Regards,
-> Oleksij
->
->
+And I'm fine with compile testing if it is mentioned in the commit msg.
+
+> julia
+
+/Jarkko
