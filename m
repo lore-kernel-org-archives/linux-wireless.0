@@ -1,59 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44074 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750794AbcIOSIc (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 14:08:32 -0400
-Subject: Re: [PATCH v2 09/21] ath10k: print fw debug messages in hex.
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "kvalo@qca.qualcomm.com" <kvalo@qca.qualcomm.com>
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
- <1462986153-16318-10-git-send-email-greearb@candelatech.com>
- <87oa3qefac.fsf@kamboji.qca.qualcomm.com> <57D96910.2010608@candelatech.com>
- <87k2edb6kp.fsf@kamboji.qca.qualcomm.com>
- <a26dfea0-9a18-69fc-e23c-cb223490822d@candelatech.com>
- <1473960869.31073.15.camel@intel.com>
- <50a08de4-1959-3dc9-cfc7-89d5b2914cc5@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <6dab62e6-4d5d-207c-b012-960f16e39b95@candelatech.com> (sfid-20160915_200840_000357_435A0F56)
-Date: Thu, 15 Sep 2016 11:08:31 -0700
+Received: from mga14.intel.com ([192.55.52.115]:33113 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758381AbcILNQi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 09:16:38 -0400
+Date: Mon, 12 Sep 2016 16:16:25 +0300
+From: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: linux-renesas-soc@vger.kernel.org, joe@perches.com,
+        kernel-janitors@vger.kernel.org,
+        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+        linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
+        Tatyana Nikolova <tatyana.e.nikolova@intel.com>,
+        Shiraz Saleem <shiraz.saleem@intel.com>,
+        Mustafa Ismail <mustafa.ismail@intel.com>,
+        Chien Tin Tung <chien.tin.tung@intel.com>,
+        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
+        devel@driverdev.osuosl.org, alsa-devel@alsa-project.org,
+        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        tpmdd-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-acpi@vger.kernel.org
+Subject: Re: [PATCH 00/26] constify local structures
+Message-ID: <20160912131625.GD957@intel.com> (sfid-20160912_151655_629991_67637E92)
+References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
+ <20160911172105.GB5493@intel.com>
+ <alpine.DEB.2.10.1609121051050.3049@hadrien>
 MIME-Version: 1.0
-In-Reply-To: <50a08de4-1959-3dc9-cfc7-89d5b2914cc5@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.10.1609121051050.3049@hadrien>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2016 10:59 AM, Ben Greear wrote:
-> On 09/15/2016 10:34 AM, Grumbach, Emmanuel wrote:
+On Mon, Sep 12, 2016 at 10:54:07AM +0200, Julia Lawall wrote:
+> 
+> 
+> On Sun, 11 Sep 2016, Jarkko Sakkinen wrote:
+> 
+> > On Sun, Sep 11, 2016 at 03:05:42PM +0200, Julia Lawall wrote:
+> > > Constify local structures.
+> > >
+> > > The semantic patch that makes this change is as follows:
+> > > (http://coccinelle.lip6.fr/)
+> >
+> > Just my two cents but:
+> >
+> > 1. You *can* use a static analysis too to find bugs or other issues.
+> > 2. However, you should manually do the commits and proper commit
+> >    messages to subsystems based on your findings. And I generally think
+> >    that if one contributes code one should also at least smoke test changes
+> >    somehow.
+> >
+> > I don't know if I'm alone with my opinion. I just think that one should
+> > also do the analysis part and not blindly create and submit patches.
+> 
+> All of the patches are compile tested.  And the individual patches are
 
-> I have other patches that remember the last 100 or so firmware log messages from
-> the kernel and provide that in a binary dump image when firmware crashes.
->
-> This is indeed very useful.
->
-> But, when debugging non-crash occasions, it is still useful to see what
-> the firmware is doing.
->
-> For instance, maybe it is reporting lots of tx-hangs and/or low-level
-> resets.  This gives you a clue as to why a user might report 'my wifi sucks'.
->
-> Since I am both FW and driver team for my firmware variant,
-> and my approach has been working for me, then I feel it is certainly better than
-> the current state.  And just maybe the official upstream FW team could start
-> using something similar as well.  Currently, I don't see how they can ever make
-> much progress on firmware crashes reported in stock kernels.
+Compile-testing is not testing. If you are not able to test a commit,
+you should explain why.
 
-I forgot the other good reason about console logging this:
+> submitted to the relevant maintainers.  The individual commit messages
+> give a more detailed explanation of the strategy used to decide that the
+> structure was constifiable.  It seemed redundant to put that in the cover
+> letter, which will not be committed anyway.
 
-Sometimes ath10k firmware crash causes the entire kernel to crash, so there is no time to
-grab the binary dump from a file system...but a serial console can help you
-make progress...
+I don't mean to be harsh but I do not care about your thought process
+*that much* when I review a commit (sometimes it might make sense to
+explain that but it depends on the context).
 
-Thanks,
-Ben
+I mostly only care why a particular change makes sense for this
+particular subsystem. The report given by a static analysis tool can
+be a starting point for making a commit but it's not sufficient.
+Based on the report you should look subsystems as individuals.
 
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> julia
+
+/Jarkko
