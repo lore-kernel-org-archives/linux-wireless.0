@@ -1,87 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f43.google.com ([209.85.218.43]:36213 "EHLO
-        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933580AbcIVPKC (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55501 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933723AbcILPbo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2016 11:10:02 -0400
-Received: by mail-oi0-f43.google.com with SMTP id t83so100861376oie.3
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2016 08:10:02 -0700 (PDT)
-Subject: Re: rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case not processed
-To: Jean Delvare <jdelvare@suse.de>,
-        Chaoming Li <chaoming_li@realsil.com.cn>
-References: <20160922115116.149c599c@endymion>
-Cc: linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <83974845-037d-0cde-00b1-ec7b28eeb15f@lwfinger.net> (sfid-20160922_171006_309408_5586DDDA)
-Date: Thu, 22 Sep 2016 10:09:58 -0500
+        Mon, 12 Sep 2016 11:31:44 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Fix rfc1042 header retrieval in QCA4019 with eth
+ decap mode
+Date: Mon, 12 Sep 2016 15:31:35 +0000
+Message-ID: <87fup5m8x5.fsf@kamboji.qca.qualcomm.com> (sfid-20160912_174235_251096_229D98E5)
+References: <1469623085-13942-1-git-send-email-vthiagar@qti.qualcomm.com>
+In-Reply-To: <1469623085-13942-1-git-send-email-vthiagar@qti.qualcomm.com>
+        (Vasanthakumar Thiagarajan's message of "Wed, 27 Jul 2016 18:08:05      +0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20160922115116.149c599c@endymion>
-Content-Type: multipart/mixed;
- boundary="------------6E0A5384EF9FD72921A2A4AD"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------6E0A5384EF9FD72921A2A4AD
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
 
-On 09/22/2016 04:51 AM, Jean Delvare wrote:
-> Hello,
+> Chipset from QCA99X0 onwards (QCA99X0, QCA9984, QCA4019 & future)
+> rx_hdr_status is not padded to align in 4-byte boundary. Define a
+> new hw_params field to handle different alignment behaviour between
+> different hw. This patch fixes improper retrieval of rfc1042 header
+> with QCA4019. This patch along with "ath10k: Properly remove padding
+> from the start of rx payload" will fix traffic failure in ethernet
+> decap mode for QCA4019.
 >
-> I bought an Asus PCE-N10 PCIe Wi-Fi N card to install in my wife's
-> computer. This morning it stopped working suddenly. Investigating the
-> kernel logs, the following error message caught my eye:
->
-> rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case not processed
->
-> It was printed twice, 3.5 hours apart, the second time at the moment
-> the network stopped working. I guess this is not supposed to happen.
-> What additional information can I provide to help you debug the issue?
-> That's the device:
->
-> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
-> 	Subsystem: ASUSTeK Computer Inc. Device [1043:84b5]
-> 	Flags: bus master, fast devsel, latency 0, IRQ 17
-> 	I/O ports at e800 [size=256]
-> 	Memory at febfc000 (64-bit, non-prefetchable) [size=16K]
-> 	Capabilities: <access denied>
-> 	Kernel driver in use: rtl8192ce
-> 	Kernel modules: rtl8192ce
->
-> Kernel version is 4.5.4-1-default x86_64 (openSUSE Tumbleweed.)
->
-> Reloading the rtl8192ce module and restarting the network service got
-> everything back up.
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 
-Unfortunately, that message is not as helpful as it might be.
+There were some conflicts, I fixed them in the pending branch. Please
+check my changes:
 
-Do you build your own kernel, or are you using openSUSE's supplied version? If 
-the latter, I will need to think how we might debug the issue. If the former, 
-please add the attached patch.
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=3Dpend=
+ing&id=3Dd0d9e40216e1a8edd2f3b387b96aad62c3a49add
 
-Larry
-
-
---------------6E0A5384EF9FD72921A2A4AD
-Content-Type: text/x-diff;
- name="rtl8192ce_debug.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="rtl8192ce_debug.diff"
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-index 04eb5c3..e0c7d36 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-@@ -143,7 +143,7 @@ void rtl92ce_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %d not processed\n", variable);
- 		break;
- 	}
- }
-
---------------6E0A5384EF9FD72921A2A4AD--
+--=20
+Kalle Valo=
