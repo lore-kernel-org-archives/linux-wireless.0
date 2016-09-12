@@ -1,52 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41310 "EHLO mx1.redhat.com"
+Received: from zoot.epublica.de ([78.46.103.157]:58487 "EHLO zoot.epublica.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755404AbcI2Tk5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Sep 2016 15:40:57 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        stable@vger.kernel.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 1/2] rtl8xxxu: Fix memory leak in handling rxdesc16 packets
-Date: Thu, 29 Sep 2016 15:40:54 -0400
-Message-Id: <1475178055-16924-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160929_214104_395461_6E114DEB)
-In-Reply-To: <1475178055-16924-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1475178055-16924-1-git-send-email-Jes.Sorensen@redhat.com>
+        id S1755210AbcILJaK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 05:30:10 -0400
+To: linux-wireless@vger.kernel.org, Jes.Sorensen@redhat.com
+Cc: Larry.Finger@lwfinger.net, Bastien Nocera <hadess@hadess.net>,
+        anthony.wong@canonical.com
+From: Hanno Zulla <abos@hanno.de>
+Subject: Support of rtl8723bs
+Message-ID: <688574b6-1141-f408-d397-535f1f69999e@hanno.de> (sfid-20160912_113014_315632_FA5EDCD5)
+Date: Mon, 12 Sep 2016 11:20:54 +0200
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hi Jes,
+hello linux-wireless,
 
-A device running without RX package aggregation could return more data
-in the USB packet than the actual network packet. In this case the
-could would clone the skb but then determine that that there was no
-packet to handle and exit without freeing the cloned skb first.
+I'd like to know more about the current progress of rtl8723bs support
+for Linux.
 
-This has so far only been observed with 8188eu devices, but could
-affect others.
+Googling and reading the mailing list archives found an older vendor driver
+https://github.com/hadess/rtl8723bs
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+plus patches at
+https://github.com/lwfinger/rtl8723bs
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index b2d7f6e..a96ff17 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -5197,7 +5197,12 @@ int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv, struct sk_buff *skb)
- 		pkt_offset = roundup(pkt_len + drvinfo_sz + desc_shift +
- 				     sizeof(struct rtl8xxxu_rxdesc16), 128);
- 
--		if (pkt_cnt > 1)
-+		/*
-+		 * Only clone the skb if there's enough data at the end to
-+		 * at least cover the rx descriptor
-+		 */
-+		if (pkt_cnt > 1 &&
-+		    urb_len > (pkt_offset + sizeof(struct rtl8xxxu_rxdesc16)))
- 			next_skb = skb_clone(skb, GFP_ATOMIC);
- 
- 		rx_status = IEEE80211_SKB_RXCB(skb);
--- 
-2.7.4
+which both aren't ready for Linux according to
+https://github.com/hadess/rtl8723bs/issues/96
+
+According to
+https://github.com/hadess/rtl8723bs/issues/98
+
+there is a newer vendor driver from Realtek at
+https://github.com/anthonywong/rtl8723bs
+which Anthony wants to get ready for inclusion to the Ubuntu kernel.
+
+But after reading
+https://marc.info/?l=linux-wireless&m=146902477024130&w=2
+it appears that even that newer vendor driver isn't ready for Jes's work.
+
+Anyway, as an owner of such a device, I'd like to help somehow, and be
+it as a guinea pig to test on my hardware. The newer vendor driver
+crashed on Ubuntu' 4.4 sources and doesn't compile yet on Ubuntu 4.8-rc
+sources.
+https://github.com/anthonywong/rtl8723bs/issues/1
+
+Kind regards,
+
+Hanno
