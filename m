@@ -1,138 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:35426 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756783AbcIXUoj (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:36033 "EHLO
+        mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752742AbcILJn1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Sep 2016 16:44:39 -0400
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: [PATCH 2/2] brcmfmac: compile fws(ignal) code only with BCDC support enabled
-Date: Sat, 24 Sep 2016 22:44:19 +0200
-Message-Id: <20160924204419.10213-2-zajec5@gmail.com> (sfid-20160924_224528_083754_1595071A)
-In-Reply-To: <20160924204419.10213-1-zajec5@gmail.com>
-References: <20160924204419.10213-1-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+        Mon, 12 Sep 2016 05:43:27 -0400
+Received: by mail-pa0-f67.google.com with SMTP id p2so1326131pap.3
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 02:43:27 -0700 (PDT)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        johannes.berg@intel.com, hofrat@osadl.org
+Cc: prameela.j04cs@gmail.com, prameela.garnepudi@redpinesignals.com
+Subject: [PATCH 3/9] rsi: Added freeing of allocated buffers (sbands and dfsentry)      Cleanup (spelling mistakes, code format corrections,          empty lines after declaration)
+Date: Mon, 12 Sep 2016 15:08:18 +0530
+Message-Id: <9e848b4549d9e919eb3a772e0d292db5eee39b43.1473669618.git.prameela.j04cs@gmail.com> (sfid-20160912_114332_590493_6437BBB6)
+In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
+References: <cover.1473669618.git.prameela.j04cs@gmail.com>
+In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
+References: <cover.1473669618.git.prameela.j04cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Rafał Miłecki <rafal@milecki.pl>
-
-It's not needed by the other (msgbuf) protocol, so let's save some size
-and compile it conditionally.
-
-Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/Makefile  |  4 +-
- .../broadcom/brcm80211/brcmfmac/fwsignal.h         | 59 ++++++++++++++++++++++
- 2 files changed, 61 insertions(+), 2 deletions(-)
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 24 +++++++++++++++++-------
+ 1 file changed, 17 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-index 9e4b505..ad3b06e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/Makefile
-@@ -27,7 +27,6 @@ brcmfmac-objs += \
- 		chip.o \
- 		fwil.o \
- 		fweh.o \
--		fwsignal.o \
- 		p2p.o \
- 		proto.o \
- 		common.o \
-@@ -37,7 +36,8 @@ brcmfmac-objs += \
- 		btcoex.o \
- 		vendor.o
- brcmfmac-$(CONFIG_BRCMFMAC_PROTO_BCDC) += \
--		bcdc.o
-+		bcdc.o \
-+		fwsignal.o
- brcmfmac-$(CONFIG_BRCMFMAC_PROTO_MSGBUF) += \
- 		commonring.o \
- 		flowring.o \
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-index 8f7c1d7..ba0c1bc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
-@@ -18,6 +18,7 @@
- #ifndef FWSIGNAL_H_
- #define FWSIGNAL_H_
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index dbb2389..29abedc 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -194,6 +194,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+ void rsi_mac80211_detach(struct rsi_hw *adapter)
+ {
+ 	struct ieee80211_hw *hw = adapter->hw;
++	int i;
  
-+#ifdef CONFIG_BRCMFMAC_PROTO_BCDC
- int brcmf_fws_init(struct brcmf_pub *drvr);
- void brcmf_fws_deinit(struct brcmf_pub *drvr);
- bool brcmf_fws_skbs_queueing(struct brcmf_fws_info *fws);
-@@ -31,5 +32,63 @@ void brcmf_fws_del_interface(struct brcmf_if *ifp);
- void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb);
- void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked);
- void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb);
-+#else
-+static inline int brcmf_fws_init(struct brcmf_pub *drvr)
-+{
-+	return -ENOTSUPP;
-+}
+ 	if (hw) {
+ 		ieee80211_stop_queues(hw);
+@@ -201,7 +202,17 @@ void rsi_mac80211_detach(struct rsi_hw *adapter)
+ 		ieee80211_free_hw(hw);
+ 	}
+ 
++	for(i = 0; i < 2; i++) {
++		struct ieee80211_supported_band *sbands = &adapter->sbands[i];
 +
-+static inline void brcmf_fws_deinit(struct brcmf_pub *drvr)
-+{
-+}
++		if (sbands->channels)
++			kfree(sbands->channels);
++	}
 +
-+static inline bool brcmf_fws_skbs_queueing(struct brcmf_fws_info *fws)
-+{
-+	return false;
-+}
-+
-+static inline bool brcmf_fws_fc_active(struct brcmf_fws_info *fws)
-+{
-+	return false;
-+}
-+
-+static inline void brcmf_fws_hdrpull(struct brcmf_if *ifp, s16 siglen,
-+				     struct sk_buff *skb)
-+{
-+}
-+
-+static inline int brcmf_fws_process_skb(struct brcmf_if *ifp,
-+					struct sk_buff *skb)
-+{
-+	return -ENOTSUPP;
-+}
-+
-+static inline void brcmf_fws_reset_interface(struct brcmf_if *ifp)
-+{
-+}
-+
-+static inline void brcmf_fws_add_interface(struct brcmf_if *ifp)
-+{
-+}
-+
-+static inline void brcmf_fws_del_interface(struct brcmf_if *ifp)
-+{
-+}
-+
-+static inline void brcmf_fws_bustxfail(struct brcmf_fws_info *fws,
-+				       struct sk_buff *skb)
-+{
-+}
-+
-+static inline void brcmf_fws_bus_blocked(struct brcmf_pub *drvr,
-+					 bool flow_blocked)
-+{
-+}
-+
-+static inline void brcmf_fws_rxreorder(struct brcmf_if *ifp,
-+				       struct sk_buff *skb)
-+{
-+}
++#ifdef CONFIG_RSI_DEBUGFS
+ 	rsi_remove_dbgfs(adapter);
++	kfree(adapter->dfsentry);
 +#endif
+ }
+ EXPORT_SYMBOL_GPL(rsi_mac80211_detach);
  
- #endif /* FWSIGNAL_H_ */
+@@ -304,7 +315,8 @@ static int rsi_mac80211_add_interface(struct ieee80211_hw *hw,
+ 		if (!adapter->sc_nvifs) {
+ 			++adapter->sc_nvifs;
+ 			adapter->vifs[0] = vif;
+-			ret = rsi_set_vap_capabilities(common, STA_OPMODE);
++			ret = rsi_set_vap_capabilities(common,
++						       STA_OPMODE);
+ 		}
+ 		break;
+ 	default:
+@@ -429,9 +441,11 @@ static int rsi_mac80211_config(struct ieee80211_hw *hw,
+ u16 rsi_get_connected_channel(struct rsi_hw *adapter)
+ {
+ 	struct ieee80211_vif *vif = adapter->vifs[0];
++
+ 	if (vif) {
+ 		struct ieee80211_bss_conf *bss = &vif->bss_conf;
+ 		struct ieee80211_channel *channel = bss->chandef.chan;
++
+ 		return channel->hw_value;
+ 	}
+ 
+@@ -819,8 +833,6 @@ static void rsi_perform_cqm(struct rsi_common *common,
+ 	common->cqm_info.last_cqm_event_rssi = rssi;
+ 	rsi_dbg(INFO_ZONE, "CQM: Notifying event: %d\n", event);
+ 	ieee80211_cqm_rssi_notify(adapter->vifs[0], event, GFP_KERNEL);
+-
+-	return;
+ }
+ 
+ /**
+@@ -875,16 +887,14 @@ static void rsi_fill_rx_status(struct ieee80211_hw *hw,
+ 	}
+ 
+ 	/* CQM only for connected AP beacons, the RSSI is a weighted avg */
+-	if (bss->assoc && !(memcmp(bss->bssid, hdr->addr2, ETH_ALEN))) {
++	if (bss->assoc && ether_addr_equal(bss->bssid, hdr->addr2)) {
+ 		if (ieee80211_is_beacon(hdr->frame_control))
+ 			rsi_perform_cqm(common, hdr->addr2, rxs->signal);
+ 	}
+-
+-	return;
+ }
+ 
+ /**
+- * rsi_indicate_pkt_to_os() - This function sends recieved packet to mac80211.
++ * rsi_indicate_pkt_to_os() - This function sends received packet to mac80211.
+  * @common: Pointer to the driver private structure.
+  * @skb: Pointer to the socket buffer structure.
+  *
 -- 
-2.9.3
+2.4.11
