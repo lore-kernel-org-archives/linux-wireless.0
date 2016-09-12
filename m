@@ -1,51 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55984 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S936248AbcISHby (ORCPT
+Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:59767
+        "EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932845AbcILOES (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 03:31:54 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Sep 2016 10:30:18 +0300
-Message-Id: <20160919073028.22065-15-luca@coelho.fi> (sfid-20160919_093156_991367_C50BBF61)
-In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
-References: <1474270071.5664.89.camel@coelho.fi>
-Subject: [PATCH 15/25] iwlwifi: mvm: document passing unexpected Block Ack Request frames
+        Mon, 12 Sep 2016 10:04:18 -0400
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: Javier Martinez Canillas <javier@osg.samsung.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Sony Chacko <sony.chacko@qlogic.com>,
+        Giuseppe Cavallaro <peppe.cavallaro@st.com>,
+        Solarflare linux maintainers <linux-net-drivers@solarflare.com>,
+        Florian Westphal <fw@strlen.de>,
+        Bert Kenward <bkenward@solarflare.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Edward Cree <ecree@solarflare.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Marcin Wojtas <mw@semihalf.com>,
+        Antonio Quartulli <a@unstable.cc>,
+        intel-wired-lan@lists.osuosl.org,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Felipe Balbi <felipe.balbi@linux.intel.com>,
+        Gregory CLEMENT <gregory.clement@free-electrons.com>,
+        Dept-HSGLinuxNICDev@qlogic.com,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Mugunthan V N <mugunthanvnm@ti.com>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Steffen Klassert <klassert@mathematik.tu-chemnitz.de>,
+        Stanislaw Gruszka <sgruszka@redhat.com>,
+        Denis Kirjanov <kda@linux-powerpc.org>,
+        Zhao Qiang <qiang.zhao@freescale.com>, netdev@vger.kernel.org,
+        Gerlando Falauto <gerlando.falauto@keymile.com>,
+        linux-wireless@vger.kernel.org, Ion Badulescu <ionut@badula.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Daniele Venzano <venza@brownhat.org>,
+        Alexandre Torgue <alexandre.torgue@st.com>
+Subject: [PATCH 00/15] drivers: net: use IS_ENABLED() instead of checking for built-in or module
+Date: Mon, 12 Sep 2016 10:03:31 -0400
+Message-Id: <1473689026-6983-1-git-send-email-javier@osg.samsung.com> (sfid-20160912_161027_792742_17237D8B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hello David,
 
-When we get an unexpected Block Ack Request frame, the BAID from
-the hardware will be invalid, and we'll pass it to mac80211 for
-further handling (sending a delBA action frame.)
+This trivial series is similar to [0] for net/ that you already merged, but
+for drivers/net. The patches replaces the open coding to check for a Kconfig
+symbol being built-in or module, with IS_ENABLED() macro that does the same.
 
-Add a comment explaining that, in case anyone looks in the future.
+Using the macro makes the code more readable by helping abstract away some
+of the Kconfig built-in and module enable details.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 5 +++++
- 1 file changed, 5 insertions(+)
+[0]: https://lkml.org/lkml/2016/9/9/323
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 0274f14..a57c6ef 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -591,6 +591,11 @@ static bool iwl_mvm_reorder(struct iwl_mvm *mvm,
- 	baid = (reorder & IWL_RX_MPDU_REORDER_BAID_MASK) >>
- 		IWL_RX_MPDU_REORDER_BAID_SHIFT;
- 
-+	/*
-+	 * This also covers the case of receiving a Block Ack Request
-+	 * outside a BA session; we'll pass it to mac80211 and that
-+	 * then sends a delBA action frame.
-+	 */
- 	if (baid == IWL_RX_REORDER_DATA_INVALID_BAID)
- 		return false;
- 
+Best regards,
+Javier
+
+
+Javier Martinez Canillas (15):
+  3c59x: use IS_ENABLED() instead of checking for built-in or module
+  starfire: use IS_ENABLED() instead of checking for built-in or module
+  ethernet: amd: use IS_ENABLED() instead of checking for built-in or
+    module
+  bnx2: use IS_ENABLED() instead of checking for built-in or module
+  sundance: use IS_ENABLED() instead of checking for built-in or module
+  net/fsl_pq_mdio: use IS_ENABLED() instead of checking for built-in or
+    module
+  i825xx: use IS_ENABLED() instead of checking for built-in or module
+  ixgbe: use IS_ENABLED() instead of checking for built-in or module
+  net: mvneta: use IS_ENABLED() instead of checking for built-in or
+    module
+  natsemi: use IS_ENABLED() instead of checking for built-in or module
+  sfc: use IS_ENABLED() instead of checking for built-in or module
+  sis900: use IS_ENABLED() instead of checking for built-in or module
+  stmmac: use IS_ENABLED() instead of checking for built-in or module
+  hamradio: use IS_ENABLED() instead of checking for built-in or module
+  iwlegacy: use IS_ENABLED() instead of checking for built-in or module
+
+ drivers/net/ethernet/3com/3c59x.c            | 2 +-
+ drivers/net/ethernet/adaptec/starfire.c      | 2 +-
+ drivers/net/ethernet/amd/7990.c              | 6 +++---
+ drivers/net/ethernet/amd/amd8111e.c          | 2 +-
+ drivers/net/ethernet/broadcom/bnx2.c         | 2 +-
+ drivers/net/ethernet/dlink/sundance.c        | 2 +-
+ drivers/net/ethernet/freescale/fsl_pq_mdio.c | 8 ++++----
+ drivers/net/ethernet/i825xx/82596.c          | 4 ++--
+ drivers/net/ethernet/intel/ixgbe/ixgbe.h     | 4 ++--
+ drivers/net/ethernet/marvell/mvneta_bm.h     | 2 +-
+ drivers/net/ethernet/natsemi/ns83820.c       | 2 +-
+ drivers/net/ethernet/sfc/falcon_boards.c     | 4 ++--
+ drivers/net/ethernet/sis/sis900.c            | 4 ++--
+ drivers/net/ethernet/sis/sis900.h            | 2 +-
+ drivers/net/ethernet/stmicro/stmmac/common.h | 2 +-
+ drivers/net/hamradio/bpqether.c              | 2 +-
+ drivers/net/wireless/intel/iwlegacy/common.h | 4 ++--
+ 17 files changed, 27 insertions(+), 27 deletions(-)
+
 -- 
-2.9.3
+2.7.4
