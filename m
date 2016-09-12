@@ -1,42 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47446 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755407AbcIUBTb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 21:19:31 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 1/4] rtl8xxxu: Fix off by one error calculating pubq
-Date: Tue, 20 Sep 2016 21:19:26 -0400
-Message-Id: <1474420769-20086-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160921_031936_037042_C683C7DE)
-In-Reply-To: <1474420769-20086-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1474420769-20086-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:60984 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751955AbcILQhr (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 12:37:47 -0400
+Subject: Re: [PATCH 2/3] ath10k: Grab rcu_read_lock before the txqs spinlock.
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
+ <1471569995-10028-2-git-send-email-greearb@candelatech.com>
+ <87k2elp53z.fsf@kamboji.qca.qualcomm.com> <57D2CB92.3020407@candelatech.com>
+ <1473662509.4201.0.camel@sipsolutions.net>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <d182bdea-089a-7b44-302c-cedcda1aa1ec@candelatech.com> (sfid-20160912_183751_021530_3358042B)
+Date: Mon, 12 Sep 2016 09:37:46 -0700
+MIME-Version: 1.0
+In-Reply-To: <1473662509.4201.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 09/11/2016 11:41 PM, Johannes Berg wrote:
+>
+>>>> -	rcu_read_unlock();
+>>>>   	spin_unlock_bh(&ar->txqs_lock);
+>>>> +	rcu_read_unlock();
+>>>
+>>> I'm no RCU expert but this isn't making any sense. Maybe it changes
+>>> timings on your kernel so that it hides the real problem?
+>>
+>> I'm not sure this fixed anything or not, it just seemed weird so I
+>> changed it.
+>>
+>> I was hoping someone that understood rcu locking would comment...
+>>
+>
+> RCU is no "locking". The sooner you get over that notion, the better.
+>
+> This therefore make no sense whatsoever.
+>
+> In fact, you want to keep the RCU protected section *small*, so having
+> the spinlock inside hurts overall system performance.
 
-This was detected tracing the 8188eu driver, but doesn't seem to make
-any difference when using it.
+Ok, thanks for the review.  I'll drop this patch from my tree.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks,
+Ben
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index ca92022..98fcd7b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -3869,7 +3869,7 @@ static void rtl8xxxu_init_queue_reserved_page(struct rtl8xxxu_priv *priv)
- 	val32 = (nq << RQPN_NPQ_SHIFT) | (eq << RQPN_EPQ_SHIFT);
- 	rtl8xxxu_write32(priv, REG_RQPN_NPQ, val32);
- 
--	pubq = fops->total_page_num - hq - lq - nq;
-+	pubq = fops->total_page_num - hq - lq - nq - 1;
- 
- 	val32 = RQPN_LOAD;
- 	val32 |= (hq << RQPN_HI_PQ_SHIFT);
 -- 
-2.7.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
