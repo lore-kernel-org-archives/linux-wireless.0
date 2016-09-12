@@ -1,54 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56360 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751797AbcITGkK (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 02:40:10 -0400
-Message-ID: <1474353599.5664.125.camel@coelho.fi> (sfid-20160920_084013_550569_899E669F)
-From: Luca Coelho <luca@coelho.fi>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Lior David <liord@codeaurora.org>,
-        Johannes Berg <johannes@sipsolutions.net>
-Cc: Maya Erez <merez@codeaurora.org>,
-        Jouni Malinen <jouni@qca.qualcomm.com>,
-        linux-wireless@vger.kernel.org
-Date: Tue, 20 Sep 2016 09:39:59 +0300
-In-Reply-To: <45d2980c-aeb4-4faa-e73f-75747124e9eb@broadcom.com>
-References: <e7096bbb-ba66-e639-b86e-a483dc198b85@codeaurora.org>
-         <45d2980c-aeb4-4faa-e73f-75747124e9eb@broadcom.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:56366 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752742AbcILGl5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 02:41:57 -0400
+Message-ID: <1473662509.4201.0.camel@sipsolutions.net> (sfid-20160912_084202_742284_FBA547D6)
+Subject: Re: [PATCH 2/3] ath10k:  Grab rcu_read_lock before the txqs
+ spinlock.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+        "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Mon, 12 Sep 2016 08:41:49 +0200
+In-Reply-To: <57D2CB92.3020407@candelatech.com> (sfid-20160909_164754_211937_A51918C3)
+References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
+         <1471569995-10028-2-git-send-email-greearb@candelatech.com>
+         <87k2elp53z.fsf@kamboji.qca.qualcomm.com>
+         <57D2CB92.3020407@candelatech.com> (sfid-20160909_164754_211937_A51918C3)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Subject: Re: nl80211 fine timing measurement support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-09-19 at 20:42 +0200, Arend Van Spriel wrote:
-> 
-> On 19-9-2016 19:31, Lior David wrote:
-> > 
-> > Hi Johannes,
-> > 
-> > We are working on adding indoor location support to the wil6210
-> > 11ad driver. This includes fine timing measurement (FTM) as well as
-> > something we call angle of arrival (AOA) which measures azimuth and
-> > elevation.
-> > Initially we implemented it internally using vendor commands but we
-> > would like to upstream it using standard nl80211 API.
-> > I noticed a patch you sent some time ago (https://patchwork.kernel.
-> > org/patch/7790701/) for adding fine timing measurement support to
-> > nl80211, it looks like a good baseline though we do have few issues
-> > with it... However I did not see any comments or response on this
-> > patch. Can you please update if you plan on eventually submitting
-> > this patch?
-> 
-> You can find several FTM related patches in backport-iwlwifi repo on
-> kernel.org. See link to git log of nl80211.h there [1].
 
-We have a full FTM implementation in our internal tree (which is
-published in the URL Arend provided) and we are currently working on
-cleaning it up for upstream submission.  You should see patches from us
-this week.
+> > > -	rcu_read_unlock();
+> > >   	spin_unlock_bh(&ar->txqs_lock);
+> > > +	rcu_read_unlock();
+> > 
+> > I'm no RCU expert but this isn't making any sense. Maybe it changes
+> > timings on your kernel so that it hides the real problem?
+> 
+> I'm not sure this fixed anything or not, it just seemed weird so I
+> changed it.
+> 
+> I was hoping someone that understood rcu locking would comment...
+> 
 
---
-Cheers,
-Luca.
+RCU is no "locking". The sooner you get over that notion, the better.
+
+This therefore make no sense whatsoever.
+
+In fact, you want to keep the RCU protected section *small*, so having
+the spinlock inside hurts overall system performance.
+
+johannes
