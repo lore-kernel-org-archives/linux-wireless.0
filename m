@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:38028 "EHLO mail.us.es"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57542 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934756AbcI2SVZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Sep 2016 14:21:25 -0400
-Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
-        by mail.us.es (Postfix) with ESMTP id AE92D2E7846
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2016 20:21:20 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 9E020BAC23
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2016 20:21:20 +0200 (CEST)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-        by antivirus1-rhel7.int (Postfix) with ESMTP id 7FD7ABAC28
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2016 20:21:18 +0200 (CEST)
-Date: Thu, 29 Sep 2016 20:21:17 +0200
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: David Miller <davem@davemloft.net>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2016-09-29
-Message-ID: <20160929182117.GA18734@salvia> (sfid-20160929_202211_557294_1CD4F0BC)
-References: <87ponmve2v.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87ponmve2v.fsf@kamboji.qca.qualcomm.com>
+        id S932199AbcILKJp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 06:09:45 -0400
+Message-ID: <1473674982.29016.10.camel@sipsolutions.net> (sfid-20160912_121108_487936_30752DDA)
+Subject: Re: [PATCH] cfg80211: Add HT and VHT information in start_ap
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Xu, Peng" <pxu@qca.qualcomm.com>
+Date: Mon, 12 Sep 2016 12:09:42 +0200
+In-Reply-To: <1472198948.390.20.camel@sipsolutions.net> (sfid-20160826_100916_928008_E35799B6)
+References: <1471284424-12142-1-git-send-email-jouni@qca.qualcomm.com>
+         <1471330367.16783.23.camel@sipsolutions.net>
+         <20160816123441.GA3678@jouni.qca.qualcomm.com>
+         <1472198948.390.20.camel@sipsolutions.net>
+         (sfid-20160826_100916_928008_E35799B6)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Sep 29, 2016 at 07:57:28PM +0300, Kalle Valo wrote:
-> Hi Dave,
-> 
-> this should be the last wireless-drivers-next pull request for 4.9, from
-> now on only important bugfixes. Nothing really special stands out,
-> iwlwifi being most active but other drivers also getting attention. More
-> details in the signed tag. Please let me know if there are any problems.
-> 
-> Or actually I had one problem. While doing a test merge I noticed that
-> net-next fails to compile for me, but I don't think this is anything
-> wireless related:
-> 
->   CC      net/netfilter/core.o
-> net/netfilter/core.c: In function 'nf_set_hooks_head':
-> net/netfilter/core.c:96:149: error: 'struct net_device' has no member named 'nf_hooks_ingress'
+So I haven't seen a response from you guys:
 
-That's my problem, will be sending a pull request to fix this asap,
-thanks.
+I have no major objections to this. However, a few things:
+
+1) are you planning to add support for this into a kernel driver at
+   all, anyway?
+2) are you planning to have a driver upstream that contains the now
+   necessary parsing?
+
+Depending on the answers, I suppose we could/should merge this:
+
+no  *  : don't merge
+yes no : merge
+yes yes: don't merge, put parsing into cfg80211
+
+I guess?
+
+We don't have to always draw a too rigid line for non-upstream things, but it's still disappointing that you keep proposing things that are only used for non-upstream drivers.
+
+johannes
