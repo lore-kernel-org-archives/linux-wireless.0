@@ -1,44 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51983 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932446AbcICPkW (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52734 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1758566AbcILMk2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 11:40:22 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 12 Sep 2016 08:40:28 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Cathy Luo" <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Subject: pull-request mwifiex-firmware 2015-09-12
+Date: Mon, 12 Sep 2016 12:40:23 +0000
+Message-ID: <bf3662bacb394fc2aac0ff891a5100ea@SC-EXCH04.marvell.com> (sfid-20160912_144045_585272_6172045C)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: mwifiex: add PCIe function level reset support
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1469541704-2880-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160903154016.4BCE56217C@smtp.codeaurora.org> (sfid-20160903_174903_267710_5299D04A)
-Date: Sat,  3 Sep 2016 15:40:16 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> This patch implements pre and post FLR handlers to support PCIe FLR
-> functionality. Software cleanup is performed in pre-FLR whereas
-> firmware is downloaded and software is re-initialised in
-> post-FLR handler.
-> 
-> Following command triggers FLR.
-> echo "1" > /sys/bus/pci/devices/$NUMBER/reset
-> 
-> This feature can be used as a recovery mechanism when firmware gets
-> hang.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+The following changes since commit e92f8b3f65443764297b947b1843955d9a65dde7:
 
-Doesn't apply anymore, please rebase.
+  linux-firmware: update Marvell USB8797-B0 firmware image (2015-11-02 06:25:05 -0500)
 
-Applying: mwifiex: add PCIe function level reset support
-fatal: sha1 information is lacking or useless (drivers/net/wireless/marvell/mwifiex/main.c).
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0001 mwifiex: add PCIe function level reset support
+are available in the git repository at:
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9248233/
+  git://git.marvell.com/mwifiex-firmware.git master
+
+for you to fetch changes up to 1e0f28ad5a26b2c86e55dbad3141b2ec2de804f7:
+
+  linux-firmware: update WHENCE file for Marvell firmware versions (2016-09-12 17:12:42 +0530)
+
+----------------------------------------------------------------
+Amitkumar Karwar (4):
+      linux-firmware: update Marvell 8897-B0 firmware images to 7.p66
+      linux-firmware: update Marvell 8897-B0 firmware images to 7.p77
+      linux-firmware: add Marvell PCIe8997 firmware images
+      linux-firmware: update WHENCE file for Marvell firmware versions
+
+ WHENCE                         |  10 ++++++++--
+ mrvl/pcie8897_uapsta.bin       | Bin 803884 -> 820212 bytes
+ mrvl/pcieuart8997_combo_v4.bin | Bin 0 -> 583628 bytes
+ mrvl/pcieusb8997_combo_v4.bin  | Bin 0 -> 589048 bytes
+ mrvl/sd8897_uapsta.bin         | Bin 780760 -> 802164 bytes
+ 5 files changed, 8 insertions(+), 2 deletions(-)
+ create mode 100644 mrvl/pcieuart8997_combo_v4.bin
+ create mode 100644 mrvl/pcieusb8997_combo_v4.bin
