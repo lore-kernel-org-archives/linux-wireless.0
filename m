@@ -1,72 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41430 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932987AbcI2Sbd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Sep 2016 14:31:33 -0400
-Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device
- binding
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <20160905095128.80560-1-nbd@nbd.name>
- <20160905095128.80560-2-nbd@nbd.name>
- <87eg4uu0f3.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, devicetree@vger.kernel.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <e7d435b2-6b59-45af-07eb-b10789d61a9c@nbd.name> (sfid-20160929_203139_612997_DC5CAE5B)
-Date: Thu, 29 Sep 2016 20:31:30 +0200
-MIME-Version: 1.0
-In-Reply-To: <87eg4uu0f3.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:35978 "EHLO
+        mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756419AbcILJnB (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 05:43:01 -0400
+Received: by mail-pa0-f66.google.com with SMTP id p2so1325688pap.3
+        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 02:43:00 -0700 (PDT)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
+        johannes.berg@intel.com, hofrat@osadl.org
+Cc: prameela.j04cs@gmail.com, prameela.garnepudi@redpinesignals.com
+Subject: [PATCH 1/9] rsi: cleanup and added debug prints in file rsi_91x_core.c
+Date: Mon, 12 Sep 2016 15:08:16 +0530
+Message-Id: <846d9f40c344b684a8ca6dd904495690aaaae724.1473669618.git.prameela.j04cs@gmail.com> (sfid-20160912_114304_788054_3878C51C)
+In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
+References: <cover.1473669618.git.prameela.j04cs@gmail.com>
+In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
+References: <cover.1473669618.git.prameela.j04cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-09-08 12:54, Kalle Valo wrote:
-> Felix Fietkau <nbd@nbd.name> writes:
-> 
->> Signed-off-by: Felix Fietkau <nbd@nbd.name>
->> ---
->>  .../bindings/net/wireless/mediatek,mt76.txt        | 26 ++++++++++++++++++++++
->>  1 file changed, 26 insertions(+)
->>  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
->>
->> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
->> new file mode 100644
->> index 0000000..d51c35f
->> --- /dev/null
->> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
->> @@ -0,0 +1,26 @@
->> +* MediaTek mt76xx devices
->> +
->> +This node provides properties for configuring the MediaTek mt76xx wireless
->> +device. The node is expected to be specified as a child node of the PCI
->> +controller to which the wireless chip is connected.
->> +
->> +Optional properties:
->> +
->> +- mac-address: See ethernet.txt in the parent directory
->> +- local-mac-address: See ethernet.txt in the parent directory
->> +- mediatek,2ghz: Override the 2.4 GHz band capability from EEPROM
->> +- mediatek,5ghz: Override the 5 GHz band capability from EEPROM
->> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
->> +
->> +&pcie {
->> +	status = "okay";
->> +
->> +	pcie0 {
->> +		mt76@0,0 {
->> +			reg = <0x0000 0 0 0 0>;
->> +			device_type = "pci";
->> +			mediatek,mtd-eeprom = <&factory 0x8000>;
->> +			mediatek,2ghz = <0>;
->> +		};
->> +	};
->> +};
-> 
-> I need an ack from device tree maintainers, CCing the devicetree list.
-> Do we need to resend or this ok?
-> 
-> Patchwork link:
-> 
-> https://patchwork.kernel.org/patch/9313309/
-Ping?
+Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_core.c | 24 +++++++++++++++++++-----
+ 1 file changed, 19 insertions(+), 5 deletions(-)
 
-- Felix
+diff --git a/drivers/net/wireless/rsi/rsi_91x_core.c b/drivers/net/wireless/rsi/rsi_91x_core.c
+index f3d3995..b989ec5 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_core.c
++++ b/drivers/net/wireless/rsi/rsi_91x_core.c
+@@ -142,8 +142,10 @@ static u8 rsi_core_determine_hal_queue(struct rsi_common *common)
+ 		return q_num;
+ 	}
+ 
+-	if (common->hw_data_qs_blocked)
++	if (common->hw_data_qs_blocked) {
++		rsi_dbg(INFO_ZONE, "%s: data queue blocked\n", __func__);
+ 		return q_num;
++	}
+ 
+ 	if (common->pkt_cnt != 0) {
+ 		--common->pkt_cnt;
+@@ -210,6 +212,7 @@ static void rsi_core_queue_pkt(struct rsi_common *common,
+ 			       struct sk_buff *skb)
+ {
+ 	u8 q_num = skb->priority;
++
+ 	if (q_num >= NUM_SOFT_QUEUES) {
+ 		rsi_dbg(ERR_ZONE, "%s: Invalid Queue Number: q_num = %d\n",
+ 			__func__, q_num);
+@@ -285,7 +288,7 @@ void rsi_core_qos_processor(struct rsi_common *common)
+ 		}
+ 
+ 		skb = rsi_core_dequeue_pkt(common, q_num);
+-		if (skb == NULL) {
++		if (!skb) {
+ 			rsi_dbg(ERR_ZONE, "skb null\n");
+ 			mutex_unlock(&common->tx_rxlock);
+ 			break;
+@@ -331,21 +334,32 @@ void rsi_core_xmit(struct rsi_common *common, struct sk_buff *skb)
+ 			__func__);
+ 		goto xmit_fail;
+ 	}
+-	info = IEEE80211_SKB_CB(skb);
+-	tx_params = (struct skb_info *)info->driver_data;
+-	tmp_hdr = (struct ieee80211_hdr *)&skb->data[0];
+ 
+ 	if (common->fsm_state != FSM_MAC_INIT_DONE) {
+ 		rsi_dbg(ERR_ZONE, "%s: FSM state not open\n", __func__);
+ 		goto xmit_fail;
+ 	}
+ 
++	info = IEEE80211_SKB_CB(skb);
++	tx_params = (struct skb_info *)info->driver_data;
++	tmp_hdr = (struct ieee80211_hdr *)&skb->data[0];
++
+ 	if ((ieee80211_is_mgmt(tmp_hdr->frame_control)) ||
+ 	    (ieee80211_is_ctl(tmp_hdr->frame_control)) ||
+ 	    (ieee80211_is_qos_nullfunc(tmp_hdr->frame_control))) {
+ 		q_num = MGMT_SOFT_Q;
+ 		skb->priority = q_num;
++		if (ieee80211_is_probe_req(tmp_hdr->frame_control))
++			rsi_dbg(MGMT_TX_ZONE, "%s: Probe Request\n", __func__);
++		else if (ieee80211_is_auth(tmp_hdr->frame_control))
++			rsi_dbg(MGMT_TX_ZONE, "%s: Auth Request\n", __func__);
++		else if (ieee80211_is_assoc_req(tmp_hdr->frame_control))
++			rsi_dbg(MGMT_TX_ZONE, "%s: Assoc Request\n", __func__);
++		else
++			rsi_dbg(MGMT_TX_ZONE, "%s: pkt_type=%04x\n",
++				__func__, tmp_hdr->frame_control);
+ 	} else {
++		rsi_dbg(DATA_TX_ZONE, "%s: Data Packet\n", __func__);
+ 		if (ieee80211_is_data_qos(tmp_hdr->frame_control)) {
+ 			tid = (skb->data[24] & IEEE80211_QOS_TID);
+ 			skb->priority = TID_TO_WME_AC(tid);
+-- 
+2.4.11
