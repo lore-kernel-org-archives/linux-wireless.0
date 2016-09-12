@@ -1,57 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42009 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751304AbcIQPCA (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42960 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932960AbcILPjH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 11:02:00 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: igor.mitsyanko.os@quantenna.com, linux-wireless@vger.kernel.org,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>
-Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
-References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-        <87eg4i8wqi.fsf@kamboji.qca.qualcomm.com>
-        <1474123851.7623.2.camel@sipsolutions.net>
-Date: Sat, 17 Sep 2016 18:01:53 +0300
-In-Reply-To: <1474123851.7623.2.camel@sipsolutions.net> (Johannes Berg's
-        message of "Sat, 17 Sep 2016 16:50:51 +0200")
-Message-ID: <87wpia7eou.fsf@kamboji.qca.qualcomm.com> (sfid-20160917_170209_995051_CE2C9CD5)
+        Mon, 12 Sep 2016 11:39:07 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "bartosz.markowski@tieto.com" <bartosz.markowski@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 2/2] ath10k: add platform regulatory domain support
+Date: Mon, 12 Sep 2016 15:35:30 +0000
+Message-ID: <87bmztm8qm.fsf@kamboji.qca.qualcomm.com> (sfid-20160912_173918_362878_5989B932)
+References: <1470140454-3899-1-git-send-email-bartosz.markowski@tieto.com>
+        <1470140454-3899-3-git-send-email-bartosz.markowski@tieto.com>
+In-Reply-To: <1470140454-3899-3-git-send-email-bartosz.markowski@tieto.com>
+        (Bartosz Markowski's message of "Tue, 2 Aug 2016 14:20:54 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Bartosz Markowski <bartosz.markowski@tieto.com> writes:
 
->> I guess some of these static variables could be also const, but
->> didn't check.
+> This overrides whatever regulatory the device
+> EEPROM contains and uses what the platform says
+> instead - in this implementation the ACPI driver.
 >
-> I think both bitrates and channels can't be, due to cfg80211 writing
-> some (global) flags there on init.
+> In case the hint is not programmed or corrupted (0xffff)
+> the device falls back to the eeprom programmed settings.
+>
+> Signed-off-by: Bartosz Markowski <bartosz.markowski@tieto.com>
 
-Sorry, I was unclear. I meant the whole file, not just what was in my
-mail:
+[...]
 
-qtnfmac/cfg80211.c:static struct ieee80211_rate qtnf_rates[] = {
-qtnfmac/cfg80211.c:static struct ieee80211_channel qtnf_channels_2ghz[] = {
-qtnfmac/cfg80211.c:static struct ieee80211_supported_band qtnf_band_2ghz = {
-qtnfmac/cfg80211.c:static struct ieee80211_channel qtnf_channels_5ghz[] = {
-qtnfmac/cfg80211.c:static struct ieee80211_supported_band qtnf_band_5ghz = {
-qtnfmac/cfg80211.c:static struct cfg80211_ops qtn_cfg80211_ops = {
-qtnfmac/pcie.c:static struct qtnf_bus_ops qtnf_pcie_bus_ops = {
-qtnfmac/pcie.c:static struct attribute *qtnf_sysfs_entries[] = {
-qtnfmac/pcie.c:static struct attribute_group qtnf_attrs_group = {
-qtnfmac/pcie.c:static struct pci_device_id qtnf_pcie_devid_table[] = {
-qtnfmac/pcie.c:static struct pci_driver qtnf_pcie_drv_data = {
+> +#ifdef CONFIG_ACPI
+> +#define WRD_METHOD "WRDD"
+> +#define WRDD_WIFI  (0x07)
+> +
+> +static u32 ath10k_mac_wrdd_get_mcc(struct ath10k *ar, union acpi_object =
+*wrdd)
+> +{
 
-Anyway, nothing important. Just something which I started to wonder
-while reading the code.
- 
--- 
-Kalle Valo
+I don't think the ifdef is really necessary, acpi.h should handle that
+(hopefully). Also I changed the error handling to use standard error
+values and changed the info messages to dbg, they are too spammy in my
+opinion. Please check carefully my changes in the pending branch:
+
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=3Dpend=
+ing&id=3Dfe91745381ec3999d8de6dedb07b396c82539717
+
+--=20
+Kalle Valo=
