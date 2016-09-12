@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45480 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S940174AbcIVUw1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2016 16:52:27 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Sara Sharon <sara.sharon@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 22 Sep 2016 23:52:09 +0300
-Message-Id: <20160922205210.1778-10-luca@coelho.fi> (sfid-20160922_225243_143290_38E1CE83)
-In-Reply-To: <20160922205210.1778-1-luca@coelho.fi>
-References: <20160922205210.1778-1-luca@coelho.fi>
-Subject: [PATCH 09/10] iwlwifi: allow error table address new range
+Received: from mga07.intel.com ([134.134.136.100]:51997 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755984AbcILMFu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 08:05:50 -0400
+Date: Mon, 12 Sep 2016 20:05:02 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
+        kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
+        prameela.j04cs@gmail.com, prameela.garnepudi@redpinesignals.com
+Subject: Re: [PATCH 3/9] rsi: Added freeing of allocated buffers (sbands and
+ dfsentry) Cleanup (spelling mistakes, code format corrections, empty lines
+ after declaration)
+Message-ID: <201609122009.NSihCWVh%fengguang.wu@intel.com> (sfid-20160912_140556_507745_CB852597)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9e848b4549d9e919eb3a772e0d292db5eee39b43.1473669618.git.prameela.j04cs@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi Prameela,
 
-The firmware has a new smart linker, and this table can now be
-in ICCM or in SMEM. It is not hardcoded, but depends on code
-size. Allow the full range.
+[auto build test WARNING on wireless-drivers-next/master]
+[also build test WARNING on v4.8-rc6 next-20160912]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+[Suggest to use git(>=2.9.0) format-patch --base=<commit> (or --base=auto for convenience) to record what (public, well-known) commit your patch series was built on]
+[Check https://git-scm.com/docs/git-format-patch for more information]
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+url:    https://github.com/0day-ci/linux/commits/Prameela-Rani-Garnepudi/rsi-cleanup-and-added-debug-prints-in-file-rsi_91x_core-c/20160912-184326
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+
+
+coccinelle warnings: (new ones prefixed by >>)
+
+>> drivers/net/wireless/rsi/rsi_91x_mac80211.c:209:3-8: WARNING: NULL check before freeing functions like kfree, debugfs_remove, debugfs_remove_recursive or usb_free_urb is not needed. Maybe consider reorganizing relevant code to avoid passing NULL values.
+
+Please review and possibly fold the followup patch.
+
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 9e366e2..d04babd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -512,7 +512,7 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- 			base = mvm->fw->inst_errlog_ptr;
- 	}
- 
--	if (base < 0x800000) {
-+	if (base < 0x400000) {
- 		IWL_ERR(mvm,
- 			"Not valid error log pointer 0x%08X for %s uCode\n",
- 			base,
--- 
-2.9.3
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
