@@ -1,69 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.73]:58518 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934725AbcI2WmD (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10926 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751623AbcILHS0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Sep 2016 18:42:03 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Felix Fietkau <nbd@nbd.name>
-Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device binding
-Date: Fri, 30 Sep 2016 00:41:41 +0200
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org
-References: <20160905095128.80560-1-nbd@nbd.name> <87eg4uu0f3.fsf@kamboji.qca.qualcomm.com> <e7d435b2-6b59-45af-07eb-b10789d61a9c@nbd.name>
-In-Reply-To: <e7d435b2-6b59-45af-07eb-b10789d61a9c@nbd.name>
+        Mon, 12 Sep 2016 03:18:26 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: support for QCA9377 SDIO (ath10k or ath6kl)
+Date: Mon, 12 Sep 2016 07:18:21 +0000
+Message-ID: <87d1k9oabo.fsf@kamboji.qca.qualcomm.com> (sfid-20160912_091830_882098_3F1A026A)
+References: <CAFBinCDnmEuSEKofHQy3SkKuewL+cjuxhibj7O71ASL0yfH_Ew@mail.gmail.com>
+        <87wpilp7x0.fsf@kamboji.qca.qualcomm.com>
+        <CAFBinCCObRokj=1rja7nZ6DKMgFWDZAtoWMBJrxmsuq0mLUxkg@mail.gmail.com>
+In-Reply-To: <CAFBinCCObRokj=1rja7nZ6DKMgFWDZAtoWMBJrxmsuq0mLUxkg@mail.gmail.com>       (Martin
+ Blumenstingl's message of "Fri, 9 Sep 2016 22:01:30 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Message-Id: <201609300041.41876.arnd@arndb.de> (sfid-20160930_004207_801132_10A17A21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 29 September 2016, Felix Fietkau wrote:
-> On 2016-09-08 12:54, Kalle Valo wrote:
-> > Felix Fietkau <nbd@nbd.name> writes:
-> > 
-> >> Signed-off-by: Felix Fietkau <nbd@nbd.name>
-> >> ---
-> >>  .../bindings/net/wireless/mediatek,mt76.txt        | 26 ++++++++++++++++++++++
-> >>  1 file changed, 26 insertions(+)
-> >>  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> >>
-> >> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> >> new file mode 100644
-> >> index 0000000..d51c35f
-> >> --- /dev/null
-> >> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
-> >> @@ -0,0 +1,26 @@
-> >> +* MediaTek mt76xx devices
-> >> +
-> >> +This node provides properties for configuring the MediaTek mt76xx wireless
-> >> +device. The node is expected to be specified as a child node of the PCI
-> >> +controller to which the wireless chip is connected.
-> >> +
-> >> +Optional properties:
-> >> +
-> >> +- mac-address: See ethernet.txt in the parent directory
-> >> +- local-mac-address: See ethernet.txt in the parent directory
-> >> +- mediatek,2ghz: Override the 2.4 GHz band capability from EEPROM
-> >> +- mediatek,5ghz: Override the 5 GHz band capability from EEPROM
-> >> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
-> >> +
-> >> +&pcie {
-> >> +	status = "okay";
-> >> +
-> >> +	pcie0 {
-> >> +		mt76@0,0 {
-> >> +			reg = <0x0000 0 0 0 0>;
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
 
-Maybe have an examplep of a real register address other than zero?
+> is QCA planning to add SDIO support to ath10k or would this have to be
+> done by a community developer?
 
-> >> +			device_type = "pci";
-> >> +			mediatek,mtd-eeprom = <&factory 0x8000>;
-> >> +			mediatek,2ghz = <0>;
+I cannot really comment about company plans.
 
-It's not clear what the possible values for the 2ghz property are,
-can you be more verbose in the description? How is <0> different
-from no property?
-
-	Arnd
+--=20
+Kalle Valo=
