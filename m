@@ -1,44 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50286 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:58141 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754794AbcISKKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 06:10:32 -0400
-Message-ID: <1474279827.4469.30.camel@sipsolutions.net> (sfid-20160919_121036_407416_16C2CEC0)
-Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
+        id S1758598AbcILMfV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 12 Sep 2016 08:35:21 -0400
+Message-ID: <1473683716.29016.37.camel@sipsolutions.net> (sfid-20160912_143539_757269_9D6BAC2F)
+Subject: Re: [PATCH v8] mac80211: Move reorder-sensitive TX handlers to
+ after TXQ dequeue.
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
-Date: Mon, 19 Sep 2016 12:10:27 +0200
-In-Reply-To: <1474279492.4469.29.camel@sipsolutions.net> (sfid-20160919_120500_879459_486B5001)
-References: <20160804071846.GA773@gondor.apana.org.au>
-         <20160804074546.GA996@gondor.apana.org.au>
-         <1470377813.2977.14.camel@sipsolutions.net>
-         <20160805104858.GA9297@gondor.apana.org.au>
-         <1470394233.2977.37.camel@sipsolutions.net>
-         <20160918135030.GA7062@gondor.apana.org.au>
-         <20160919084056.GA11875@gondor.apana.org.au>
-         <1474276530.4469.16.camel@sipsolutions.net>
-         <20160919091721.GA12235@gondor.apana.org.au>
-         <1474277244.4469.21.camel@sipsolutions.net>
-         <20160919093434.GA12378@gondor.apana.org.au>
-         (sfid-20160919_113440_719977_971CE718) <1474278634.4469.25.camel@sipsolutions.net>
-         (sfid-20160919_115045_089605_A254E125) <1474278896.4469.26.camel@sipsolutions.net>
-         (sfid-20160919_115508_261438_39410159) <1474279330.4469.28.camel@sipsolutions.net>
-         (sfid-20160919_120228_517669_28A2A922) <1474279492.4469.29.camel@sipsolutions.net>
-         (sfid-20160919_120500_879459_486B5001)
+To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
+        make-wifi-fast@lists.bufferbloat.net,
+        linux-wireless@vger.kernel.org
+Date: Mon, 12 Sep 2016 14:35:16 +0200
+In-Reply-To: <20160906114426.25520-1-toke@toke.dk> (sfid-20160906_134448_323258_743B2762)
+References: <20160905113042.22271-1-toke@toke.dk>
+         <20160906114426.25520-1-toke@toke.dk>
+         (sfid-20160906_134448_323258_743B2762)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Btw, for debug I put
 
-BUG_ON(atomic_read(&ht->nelems) < 0);
+> +static int invoke_tx_handlers_late(struct ieee80211_tx_data *tx);
+> +static bool ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sdata,
+> +				       struct sta_info *sta, u8 pn_offs,
+> +				       struct ieee80211_key_conf *key_conf,
+> +				       struct sk_buff *skb);
+> +
 
-after the atomic_dec() in __rhashtable_remove_fast_one(). That makes
-the kernel crash instantly on the buggy code, and I just have to run a
-single test ("wpas_ctrl_interface_add_many") to get there.
+I'm not very happy with this - I think you should do some
+refactoring/code move in a separate prior patch to avoid this.
+
+> +	if (txq->sta && info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT) {
+>  		struct sta_info *sta = container_of(txq->sta, struct sta_info,
+>  						    sta);
+> -		struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+> +		u8 pn_offs = 0;
+>  
+> -		hdr->seq_ctrl = ieee80211_tx_next_seq(sta, txq->tid);
+> -		if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags))
+> -			info->flags |= IEEE80211_TX_CTL_AMPDU;
+> -		else
+> -			info->flags &= ~IEEE80211_TX_CTL_AMPDU;
+> +		if (info->control.hw_key)
+> +			pn_offs = ieee80211_hdrlen(hdr->frame_control);
+
+Not very happy with this either - the fast-xmit path explicitly tries
+to avoid all these calculations.
+
+I suppose I don't have to care all that much about the TXQs, but ...
+
+Then again, adding a field in the skb->cb for the sake of this? No, not really either.
+
+
+> +		ieee80211_xmit_fast_finish(sta->sdata, sta, pn_offs,
+> +					   info->control.hw_key, skb);
+
+I don't see how keeping the info->control.hw_key pointer across the
+TXQ/FQ/Codel queueing isn't a potential bug? Probably one that already
+exists in your code today, before this patch, of course.
+
+
+> +	} else {
+> +		struct ieee80211_tx_data tx = { };
+> +
+> +		__skb_queue_head_init(&tx.skbs);
+> +		tx.local = local;
+> +		tx.skb = skb;
+
+an empty initializer is weird - why not at least move local/skb
+initializations into it? Even txq->sta, I guess, since you can assign
+txq->sta either way.
+
+> -	CALL_TXH(ieee80211_tx_h_select_key);
+> +
+>  	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL))
+>  		CALL_TXH(ieee80211_tx_h_rate_ctrl);
+[...]
+> 	if (unlikely(info->flags & IEEE80211_TX_INTFL_RETRANSMISSION)) {
+>  		__skb_queue_tail(&tx->skbs, tx->skb);
+>  		tx->skb = NULL;
+>  		goto txh_done;
+>  	}
+> 
+> +	CALL_TXH(ieee80211_tx_h_select_key);
+
+What happens for the IEEE80211_TX_INTFL_RETRANSMISSION packets wrt. key
+selection? Why is it OK to change this?
 
 johannes
