@@ -1,75 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59640 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:35980 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933233AbcI0MI1 (ORCPT
+        with ESMTP id S1754664AbcILR5K (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 08:08:27 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list\:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <rafal@milecki.pl>
-Subject: Re: [PATCH 4.9] brcmfmac: use correct skb freeing helper when deleting flowring
-References: <20160927091428.19223-1-zajec5@gmail.com>
-        <86fd0b60-0f73-484b-1788-3ec740672232@broadcom.com>
-        <87inthy441.fsf@kamboji.qca.qualcomm.com>
-        <CACna6rwUR_GidhEFNTN+8mGQRpBdUzeM1-0NY65k6-McX7xGVg@mail.gmail.com>
-        <CACna6rxDb_KMwGTFKu1Mf9azmk_PLO0aLR3foRtkqyywa1DNVQ@mail.gmail.com>
-Date: Tue, 27 Sep 2016 15:08:20 +0300
-In-Reply-To: <CACna6rxDb_KMwGTFKu1Mf9azmk_PLO0aLR3foRtkqyywa1DNVQ@mail.gmail.com>
-        (=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Tue, 27 Sep 2016
- 13:58:56 +0200")
-Message-ID: <8760phy28b.fsf@kamboji.qca.qualcomm.com> (sfid-20160927_140853_053964_DDA16E70)
+        Mon, 12 Sep 2016 13:57:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Mon, 12 Sep 2016 23:27:08 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+        linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211: allow driver to handle packet-loss mechanism
+In-Reply-To: <1473684288.29016.38.camel@sipsolutions.net>
+References: <20160906065624.4062-1-rmanohar@qti.qualcomm.com>
+ <1473684288.29016.38.camel@sipsolutions.net>
+Message-ID: <e968a9083a9f5fd7e9c04d563288b229@codeaurora.org> (sfid-20160912_195714_835229_9C986B34)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> writes:
+On 2016-09-12 18:14, Johannes Berg wrote:
+> On Tue, 2016-09-06 at 12:26 +0530, Rajkumar Manoharan wrote:
+>> mac80211 keeps track of missing acks and triggers CQM packet-loss
+>> mechanism whenever consecutive msdu failure reaches threshold limit
+>> (STA_LOST_PKT_THRESHOLD). Drivers like ath10k offlaoded rate countrol
+>> and aggregation to firmware. Such drivers have its own connection
+>> monitoring algorithm that is offloaded to firmware for triggering
+>> station kickout due to excessive tries. In VHT mode, single PPDU can
+>> have
+>> more than 50 msdus at higher rates. Under noisy environment, single
+>> ppdu
+>> failure can cause station kickout by current mac80211 lost_packet
+>> mechanism
+>> while firmware is trying to adapt its rate table. This is causing
+>> frequent
+>> connect and disconnect iteration when station is roaming around.
+>> 
+>> In such scenario, driver (or firmware) is not given enough chance to
+>> tune its rate control. So for devices that report low ack events, add
+>> a
+>> hardware flag to rely on their mechnism.
+>> 
+> 
+> The way you describe this it sounds like somehow you'll be reporting
+> the indication to userspace from the driver; but you do not, and cannot
+> do that. The description seems thus misleading?
+> 
+Sorry for confusion.. The idea is that driver will report low ack status 
+by ieee80211_report_low_ack and if driver wants to completely rely on 
+firmware algorithm, then this flag will be used to bypass mac80211 
+packet loss mechanism. does it make sense?
 
->>>>> Kalle: this isn't important enough for 4.8 as it's too late for that.
->>>>>
->>>>> I'd like to get it for 4.9 however, as this fixes bug that could lead
->>>>> to WARNING on every add_key/del_key call. We was struggling with these
->>>>> WARNINGs for some time and this fixes one of two problems causing the=
-m.
->>>
->>> Ok, I'll queue this for 4.9.
->>>
->>>> Please mark it for stable as well.
->>>
->>> I can add that. Any ideas how old releases stable releases should this
->>> go to?
->>
->> I was analyzing this.
->> 1) This patch uses brcmf_get_ifp which is available in 4.4+ only.
->> 2) It applies cleanly to 4.5+ only due to 32f90caa7debd ("brcmfmac:
->> Increase nr of supported flowrings.")
->> 3) 4.4 would also require applying to the patch without broadcom/ subdir
->>
->> That said I suggest 4.5+. Any objections?
->
-> Let me see if patchwork with pick Cc tag as it does for others.
->
-> Cc: stable@vger.kernel.org # 4.5+
-
-An excellent idea but no luck:
-
-Signed-off-by: Rafa? Mi?ecki <rafal@milecki.pl>
-Acked-by: Arend van Spriel <arend@broadcom.com>
-
-I'll add this to my patchwork wishlist though, I think it would be a
-really useful feature to have.
-
-(The question marks are because of my buggy copy paste, ignore those)
-
---=20
-Kalle Valo
+-Rajkumar
