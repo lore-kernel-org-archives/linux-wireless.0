@@ -1,115 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56034 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S933275AbcISHcj (ORCPT
+Received: from coyote.holtmann.net ([212.227.132.17]:44764 "EHLO
+        mail.holtmann.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754119AbcILH1f (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 03:32:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Johannes Berg <johannes.berg@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Sep 2016 10:30:24 +0300
-Message-Id: <20160919073028.22065-21-luca@coelho.fi> (sfid-20160919_093242_231803_B43AA362)
-In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
-References: <1474270071.5664.89.camel@coelho.fi>
-Subject: [PATCH 21/25] iwlwifi: mvm: move AP-specific code to right function
+        Mon, 12 Sep 2016 03:27:35 -0400
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
+Subject: Re: [PATCH] rtlbt: Add RTL8822BE Bluetooth device
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1473433325-25311-1-git-send-email-Larry.Finger@lwfinger.net>
+Date: Mon, 12 Sep 2016 09:27:38 +0200
+Cc: Kalle Valo <kvalo@codeaurora.org>, devel@driverdev.osuosl.org,
+        linux-wireless@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        =?utf-8?B?6ZmG5pyx5Lyf?= <alex_lu@realsil.com.cn>
+Message-Id: <0B750089-0CEE-4D43-A889-F65F0FF62115@holtmann.org> (sfid-20160912_092739_654182_EFC2566F)
+References: <1473433325-25311-1-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi Larry,
 
-There's no need for the common MAC context function to have an
-if on AP mode, the values can be overridden in the AP-specific
-function later. Clean that up by adding the full command as a
-new parameter to the AP-specific function, and doing it there.
+> The RTL8822BE is a new Realtek wifi and BT device. Support for the BT
+> part is hereby added.
+> 
+> As this device is similar to most of the other Realtek BT devices, the
+> changes are minimal. The main difference is that the 8822BE needs a
+> configuration file for enabling and disabling features. Thus code is
+> added to select and load this configuration file. Although not needed
+> at the moment, hooks are added for the other devices that might need
+> such configuration files.
+> 
+> One additional change is to the routine that tests that the project
+> ID contained in the firmware matches the hardware. As the project IDs
+> are not sequential, continuing to use the position in the array as the
+> expected value of the ID would require adding extra unused entries in
+> the table, and any subsequant rearrangment of the array would break the
+> code. To fix these problems, the array elements now contain both the
+> hardware ID and the expected value for the project ID.
+> 
+> Signed-off-by: 陆朱伟 <alex_lu@realsil.com.cn>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+> drivers/bluetooth/btrtl.c | 104 ++++++++++++++++++++++++++++++++++++++++------
+> drivers/bluetooth/btrtl.h |   5 +++
+> 2 files changed, 97 insertions(+), 12 deletions(-)
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 42 +++++++++++------------
- 1 file changed, 20 insertions(+), 22 deletions(-)
+patch has been applied to bluetooth-next tree.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index d742d27..6b962d6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -774,26 +774,6 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
- 		cmd->ac[txf].fifos_mask = BIT(txf);
- 	}
- 
--	if (vif->type == NL80211_IFTYPE_AP) {
--		/* in AP mode, the MCAST FIFO takes the EDCA params from VO */
--		cmd->ac[IWL_MVM_TX_FIFO_VO].fifos_mask |=
--			BIT(IWL_MVM_TX_FIFO_MCAST);
--
--		/*
--		 * in AP mode, pass probe requests and beacons from other APs
--		 * (needed for ht protection); when there're no any associated
--		 * station don't ask FW to pass beacons to prevent unnecessary
--		 * wake-ups.
--		 */
--		cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
--		if (mvmvif->ap_assoc_sta_count || !mvm->drop_bcn_ap_mode) {
--			cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
--			IWL_DEBUG_HC(mvm, "Asking FW to pass beacons\n");
--		} else {
--			IWL_DEBUG_HC(mvm, "No need to receive beacons\n");
--		}
--	}
--
- 	if (vif->bss_conf.qos)
- 		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
- 
-@@ -1191,6 +1171,7 @@ static void iwl_mvm_mac_ap_iterator(void *_data, u8 *mac,
-  */
- static void iwl_mvm_mac_ctxt_cmd_fill_ap(struct iwl_mvm *mvm,
- 					 struct ieee80211_vif *vif,
-+					 struct iwl_mac_ctx_cmd *cmd,
- 					 struct iwl_mac_data_ap *ctxt_ap,
- 					 bool add)
- {
-@@ -1201,6 +1182,23 @@ static void iwl_mvm_mac_ctxt_cmd_fill_ap(struct iwl_mvm *mvm,
- 		.beacon_device_ts = 0
- 	};
- 
-+	/* in AP mode, the MCAST FIFO takes the EDCA params from VO */
-+	cmd->ac[IWL_MVM_TX_FIFO_VO].fifos_mask |= BIT(IWL_MVM_TX_FIFO_MCAST);
-+
-+	/*
-+	 * in AP mode, pass probe requests and beacons from other APs
-+	 * (needed for ht protection); when there're no any associated
-+	 * station don't ask FW to pass beacons to prevent unnecessary
-+	 * wake-ups.
-+	 */
-+	cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
-+	if (mvmvif->ap_assoc_sta_count || !mvm->drop_bcn_ap_mode) {
-+		cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
-+		IWL_DEBUG_HC(mvm, "Asking FW to pass beacons\n");
-+	} else {
-+		IWL_DEBUG_HC(mvm, "No need to receive beacons\n");
-+	}
-+
- 	ctxt_ap->bi = cpu_to_le32(vif->bss_conf.beacon_int);
- 	ctxt_ap->bi_reciprocal =
- 		cpu_to_le32(iwl_mvm_reciprocal(vif->bss_conf.beacon_int));
-@@ -1258,7 +1256,7 @@ static int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
- 	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, NULL, action);
- 
- 	/* Fill the data specific for ap mode */
--	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd.ap,
-+	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd, &cmd.ap,
- 				     action == FW_CTXT_ACTION_ADD);
- 
- 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
-@@ -1277,7 +1275,7 @@ static int iwl_mvm_mac_ctxt_cmd_go(struct iwl_mvm *mvm,
- 	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, NULL, action);
- 
- 	/* Fill the data specific for GO mode */
--	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd.go.ap,
-+	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd, &cmd.go.ap,
- 				     action == FW_CTXT_ACTION_ADD);
- 
- 	cmd.go.ctwin = cpu_to_le32(noa->oppps_ctwindow &
--- 
-2.9.3
+Regards
+
+Marcel
