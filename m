@@ -1,45 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54024 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751948AbcIPD4r (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:45908 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754811AbcIMQQq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 23:56:47 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: Colin King <colin.king@canonical.com>, kbuild-all@01.org,
-        Amitkumar Karwar <akarwar@marvell.com>,
+        Tue, 13 Sep 2016 12:16:46 -0400
+Date: Tue, 13 Sep 2016 12:16:45 -0400
+From: Kyle McMartin <kyle@infradead.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Cathy Luo <cluo@marvell.com>,
         Nishant Sarmukadam <nishants@marvell.com>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] mwifiex: fix null pointer deference when adapter is null
-References: <201609160029.fRGnTGuA%fengguang.wu@intel.com>
-Date: Fri, 16 Sep 2016 06:56:39 +0300
-In-Reply-To: <201609160029.fRGnTGuA%fengguang.wu@intel.com> (kbuild test
-        robot's message of "Fri, 16 Sep 2016 00:29:25 +0800")
-Message-ID: <87r38ka45k.fsf@kamboji.qca.qualcomm.com> (sfid-20160916_055705_123329_A6B96DB7)
+        linux-firmware@kernel.org
+Subject: Re: pull-request mwifiex-firmware 2015-09-12
+Message-ID: <20160913161645.GD7853@merlin.infradead.org> (sfid-20160913_181649_552950_CB7159AC)
+References: <bf3662bacb394fc2aac0ff891a5100ea@SC-EXCH04.marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <bf3662bacb394fc2aac0ff891a5100ea@SC-EXCH04.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kbuild test robot <lkp@intel.com> writes:
+On Mon, Sep 12, 2016 at 12:40:23PM +0000, Amitkumar Karwar wrote:
+> The following changes since commit e92f8b3f65443764297b947b1843955d9a65dde7:
+> 
+>   linux-firmware: update Marvell USB8797-B0 firmware image (2015-11-02 06:25:05 -0500)
+> 
+> are available in the git repository at:
+> 
+>   git://git.marvell.com/mwifiex-firmware.git master
+> 
+> for you to fetch changes up to 1e0f28ad5a26b2c86e55dbad3141b2ec2de804f7:
+> 
+>   linux-firmware: update WHENCE file for Marvell firmware versions (2016-09-12 17:12:42 +0530)
+> 
 
-> url:    https://github.com/0day-ci/linux/commits/Colin-King/mwifiex-fix-null-pointer-deference-when-adapter-is-null/20160915-231625
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-> config: x86_64-randconfig-x013-201637 (attached as .config)
-> compiler: gcc-6 (Debian 6.1.1-9) 6.1.1 20160705
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=x86_64 
->
-> All warnings (new ones prefixed by >>):
->
->    drivers/net/wireless/marvell/mwifiex/main.c: In function 'mwifiex_shutdown_sw':
->>> drivers/net/wireless/marvell/mwifiex/main.c:1433:1: warning: label 'exit_remove' defined but not used [-Wunused-label]
->     exit_remove:
->     ^~~~~~~~~~~
+Pulled, thanks.
 
-Looks like a valid warning to me, so please resend.
-
--- 
-Kalle Valo
+--Kyle
