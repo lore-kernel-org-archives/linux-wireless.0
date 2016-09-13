@@ -1,47 +1,211 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34467 "EHLO
-        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758057AbcIXQfC (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Sep 2016 12:35:02 -0400
-Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
- processed' messages
-To: Joe Perches <joe@perches.com>, Jean Delvare <jdelvare@suse.de>
-References: <1474654333.1849.5.camel@perches.com>
- <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
- <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
- <1474657363.1849.9.camel@perches.com> <20160924175555.01cae6dd@endymion>
- <1474733754.23838.3.camel@perches.com>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net> (sfid-20160924_183508_443633_9FD14177)
-Date: Sat, 24 Sep 2016 11:35:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <1474733754.23838.3.camel@perches.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:44102 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932427AbcIMTDR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 15:03:17 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+        Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 1/1] rtl8xxxu: Implement 8192e specific power down sequence
+Date: Tue, 13 Sep 2016 15:03:15 -0400
+Message-Id: <1473793395-28927-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160913_210321_824277_8E5383D8)
+In-Reply-To: <1473793395-28927-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1473793395-28927-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/24/2016 11:15 AM, Joe Perches wrote:
-> On Sat, 2016-09-24 at 17:55 +0200, Jean Delvare wrote:
->> Would it make sense to explicitly set the enum values, or add them as
->> comments, to make such look-ups easier?
->
-> If you want to create enum->#ENUM structs and
-> "const char *" lookup functions, please be my guest.
->
-> otherwise, hex is at least a consistent way to display
-> what should be infrequent output.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Displaying those values as hex is OK. As Joe says, they will not be shown very 
-often.
+This powers down the 8192e correctly, or at least to the point where
+the firmware will load again, when reloading the driver module.
 
-I have patches that makes HAL_DEF_WOWLAN be a no-op for the rest of the drivers, 
-and one that sets the enum values for that particular statement to hex values. I 
-also looked at the other large enums and decided that they never need the human 
-lookup.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 144 ++++++++++++++++++++-
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |   1 +
+ 2 files changed, 144 insertions(+), 1 deletion(-)
 
-Larry
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+index 841522e..df54d27 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
+@@ -1396,6 +1396,114 @@ exit:
+ 	return ret;
+ }
+ 
++static int rtl8192eu_active_to_lps(struct rtl8xxxu_priv *priv)
++{
++	struct device *dev = &priv->udev->dev;
++	u8 val8;
++	u16 val16;
++	u32 val32;
++	int retry, retval;
++
++	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
++
++	retry = 100;
++	retval = -EBUSY;
++	/*
++	 * Poll 32 bit wide 0x05f8 for 0x00000000 to ensure no TX is pending.
++	 */
++	do {
++		val32 = rtl8xxxu_read32(priv, REG_SCH_TX_CMD);
++		if (!val32) {
++			retval = 0;
++			break;
++		}
++	} while (retry--);
++
++	if (!retry) {
++		dev_warn(dev, "Failed to flush TX queue\n");
++		retval = -EBUSY;
++		goto out;
++	}
++
++	/* Disable CCK and OFDM, clock gated */
++	val8 = rtl8xxxu_read8(priv, REG_SYS_FUNC);
++	val8 &= ~SYS_FUNC_BBRSTB;
++	rtl8xxxu_write8(priv, REG_SYS_FUNC, val8);
++
++	udelay(2);
++
++	/* Reset whole BB */
++	val8 = rtl8xxxu_read8(priv, REG_SYS_FUNC);
++	val8 &= ~SYS_FUNC_BB_GLB_RSTN;
++	rtl8xxxu_write8(priv, REG_SYS_FUNC, val8);
++
++	/* Reset MAC TRX */
++	val16 = rtl8xxxu_read16(priv, REG_CR);
++	val16 &= 0xff00;
++	val16 |= (CR_HCI_TXDMA_ENABLE | CR_HCI_RXDMA_ENABLE);
++	rtl8xxxu_write16(priv, REG_CR, val16);
++
++	val16 = rtl8xxxu_read16(priv, REG_CR);
++	val16 &= ~CR_SECURITY_ENABLE;
++	rtl8xxxu_write16(priv, REG_CR, val16);
++
++	val8 = rtl8xxxu_read8(priv, REG_DUAL_TSF_RST);
++	val8 |= DUAL_TSF_TX_OK;
++	rtl8xxxu_write8(priv, REG_DUAL_TSF_RST, val8);
++
++out:
++	return retval;
++}
++
++static int rtl8192eu_active_to_emu(struct rtl8xxxu_priv *priv)
++{
++	u8 val8;
++	int count, ret = 0;
++
++	/* Turn off RF */
++	rtl8xxxu_write8(priv, REG_RF_CTRL, 0);
++
++	/* Switch DPDT_SEL_P output from register 0x65[2] */
++	val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
++	val8 &= ~LEDCFG2_DPDT_SELECT;
++	rtl8xxxu_write8(priv, REG_LEDCFG2, val8);
++
++	/* 0x0005[1] = 1 turn off MAC by HW state machine*/
++	val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
++	val8 |= BIT(1);
++	rtl8xxxu_write8(priv, REG_APS_FSMCO + 1, val8);
++
++	for (count = RTL8XXXU_MAX_REG_POLL; count; count--) {
++		val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
++		if ((val8 & BIT(1)) == 0)
++			break;
++		udelay(10);
++	}
++
++	if (!count) {
++		dev_warn(&priv->udev->dev, "%s: Disabling MAC timed out\n",
++			 __func__);
++		ret = -EBUSY;
++		goto exit;
++	}
++
++exit:
++	return ret;
++}
++
++static int rtl8192eu_emu_to_disabled(struct rtl8xxxu_priv *priv)
++{
++	u8 val8;
++
++	/* 0x04[12:11] = 01 enable WL suspend */
++	val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
++	val8 &= ~(BIT(3) | BIT(4));
++	val8 |= BIT(3);
++	rtl8xxxu_write8(priv, REG_APS_FSMCO + 1, val8);
++
++	return 0;
++}
++
+ static int rtl8192eu_power_on(struct rtl8xxxu_priv *priv)
+ {
+ 	u16 val16;
+@@ -1446,6 +1554,40 @@ exit:
+ 	return ret;
+ }
+ 
++void rtl8192eu_power_off(struct rtl8xxxu_priv *priv)
++{
++	u8 val8;
++	u16 val16;
++
++	rtl8xxxu_flush_fifo(priv);
++
++	val8 = rtl8xxxu_read8(priv, REG_TX_REPORT_CTRL);
++	val8 &= ~TX_REPORT_CTRL_TIMER_ENABLE;
++	rtl8xxxu_write8(priv, REG_TX_REPORT_CTRL, val8);
++
++	/* Turn off RF */
++	rtl8xxxu_write8(priv, REG_RF_CTRL, 0x00);
++
++	rtl8192eu_active_to_lps(priv);
++
++	/* Reset Firmware if running in RAM */
++	if (rtl8xxxu_read8(priv, REG_MCU_FW_DL) & MCU_FW_RAM_SEL)
++		rtl8xxxu_firmware_self_reset(priv);
++
++	/* Reset MCU */
++	val16 = rtl8xxxu_read16(priv, REG_SYS_FUNC);
++	val16 &= ~SYS_FUNC_CPU_ENABLE;
++	rtl8xxxu_write16(priv, REG_SYS_FUNC, val16);
++
++	/* Reset MCU ready status */
++	rtl8xxxu_write8(priv, REG_MCU_FW_DL, 0x00);
++
++	rtl8xxxu_reset_8051(priv);
++
++	rtl8192eu_active_to_emu(priv);
++	rtl8192eu_emu_to_disabled(priv);
++}
++
+ static void rtl8192e_enable_rf(struct rtl8xxxu_priv *priv)
+ {
+ 	u32 val32;
+@@ -1487,7 +1629,7 @@ struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.parse_efuse = rtl8192eu_parse_efuse,
+ 	.load_firmware = rtl8192eu_load_firmware,
+ 	.power_on = rtl8192eu_power_on,
+-	.power_off = rtl8xxxu_power_off,
++	.power_off = rtl8192eu_power_off,
+ 	.reset_8051 = rtl8xxxu_reset_8051,
+ 	.llt_init = rtl8xxxu_auto_llt_table,
+ 	.init_phy_bb = rtl8192eu_init_phy_bb,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index 3555a2f..315ccfb 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -676,6 +676,7 @@
+ #define REG_SCH_TXCMD			0x05d0
+ 
+ /* define REG_FW_TSF_SYNC_CNT		0x04a0 */
++#define REG_SCH_TX_CMD			0x05f8
+ #define REG_FW_RESET_TSF_CNT_1		0x05fc
+ #define REG_FW_RESET_TSF_CNT_0		0x05fd
+ #define REG_FW_BCN_DIS_CNT		0x05fe
+-- 
+2.7.4
