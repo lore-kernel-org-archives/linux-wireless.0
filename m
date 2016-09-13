@@ -1,73 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38131 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754281AbcINOIG (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 10:08:06 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "greearb@candelatech.com" <greearb@candelatech.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 04/21] ath10k: rate-limit packet tx errors
-Date: Wed, 14 Sep 2016 14:07:55 +0000
-Message-ID: <87wpieefr9.fsf@kamboji.qca.qualcomm.com> (sfid-20160914_160810_648044_661622AD)
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-        <1462986153-16318-5-git-send-email-greearb@candelatech.com>
-In-Reply-To: <1462986153-16318-5-git-send-email-greearb@candelatech.com>
-        (greearb@candelatech.com's message of "Wed, 11 May 2016 10:02:16        -0700")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:36863 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751473AbcIMOqD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 10:46:03 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/6] cfg80211: disallow shared key authentication with key index 4
+Date: Tue, 13 Sep 2016 16:44:23 +0200
+Message-Id: <1473777868-32429-1-git-send-email-johannes@sipsolutions.net> (sfid-20160913_164744_285716_4C49F90D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> When firmware crashes, stack can continue to send packets
-> for a bit, and existing code was spamming logs.
->
-> So, rate-limit the error message for tx failures.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless=
-/ath/ath10k/mac.c
-> index cd3016d..42cac32 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -3432,8 +3432,9 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
->  	}
-> =20
->  	if (ret) {
-> -		ath10k_warn(ar, "failed to transmit packet, dropping: %d\n",
-> -			    ret);
-> +		if (net_ratelimit())
-> +			ath10k_warn(ar, "failed to transmit packet, dropping: %d\n",
-> +				    ret);
->  		ieee80211_free_txskb(ar->hw, skb);
->  	}
+Key index 4 can only be used for an IGTK, so the range checks
+for shared key authentication should treat 4 as an error, fix
+that in the code.
 
-ath10k_warn() is already rate limited. If there's something wrong then
-that function should be fixed, not the callers.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/mlme.c    | 2 +-
+ net/wireless/nl80211.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-void ath10k_warn(struct ath10k *ar, const char *fmt, ...)
-{
-	struct va_format vaf =3D {
-		.fmt =3D fmt,
-	};
-	va_list args;
-
-	va_start(args, fmt);
-	vaf.va =3D &args;
-	dev_warn_ratelimited(ar->dev, "%pV", &vaf);
-	trace_ath10k_log_warn(ar, &vaf);
-
-	va_end(args);
-}
-
---=20
-Kalle Valo=
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index c284d883c349..d6abb0704db5 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -222,7 +222,7 @@ int cfg80211_mlme_auth(struct cfg80211_registered_device *rdev,
+ 	ASSERT_WDEV_LOCK(wdev);
+ 
+ 	if (auth_type == NL80211_AUTHTYPE_SHARED_KEY)
+-		if (!key || !key_len || key_idx < 0 || key_idx > 4)
++		if (!key || !key_len || key_idx < 0 || key_idx > 3)
+ 			return -EINVAL;
+ 
+ 	if (wdev->current_bss &&
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 83c6445ebf33..c96e22b906af 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -7388,7 +7388,7 @@ static int nl80211_authenticate(struct sk_buff *skb, struct genl_info *info)
+ 		    (key.p.cipher != WLAN_CIPHER_SUITE_WEP104 ||
+ 		     key.p.key_len != WLAN_KEY_LEN_WEP104))
+ 			return -EINVAL;
+-		if (key.idx > 4)
++		if (key.idx > 3)
+ 			return -EINVAL;
+ 	} else {
+ 		key.p.key_len = 0;
+-- 
+2.8.1
