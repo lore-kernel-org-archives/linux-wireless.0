@@ -1,106 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:40384 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932155AbcI1N7n (ORCPT
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:34783 "EHLO
+        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750940AbcIMVMU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 09:59:43 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Rajat Jain <rajatja@google.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>
-CC: Wei-Ning Huang <wnhuang@google.com>,
-        Brian Norris <briannorris@google.com>,
-        Eric Caruso <ejcaruso@chromium.org>,
-        "rajatxjain@gmail.com" <rajatxjain@gmail.com>
-Subject: RE: [PATCH v2] mwifiex: report wakeup for wowlan
-Date: Wed, 28 Sep 2016 13:59:35 +0000
-Message-ID: <014d46607eb34a3cbf61faafd7586905@SC-EXCH04.marvell.com> (sfid-20160928_155951_789115_2C3D8C5E)
-References: <1474995364-123069-1-git-send-email-rajatja@google.com>
- <1475027104-17423-1-git-send-email-rajatja@google.com>
-In-Reply-To: <1475027104-17423-1-git-send-email-rajatja@google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Tue, 13 Sep 2016 17:12:20 -0400
+Received: by mail-qk0-f169.google.com with SMTP id h8so101535846qka.1
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2016 14:12:19 -0700 (PDT)
+From: Marty Faltesek <mfaltesek@google.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] ath10k: cache calibration data when the core is stopped.
+Date: Tue, 13 Sep 2016 17:11:58 -0400
+Message-Id: <1473801118-103112-1-git-send-email-mfaltesek@google.com> (sfid-20160913_231224_043606_CE865EF5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: Rajat Jain [mailto:rajatja@google.com]
-> Sent: Wednesday, September 28, 2016 7:15 AM
-> To: Amitkumar Karwar; Nishant Sarmukadam; Kalle Valo; linux-
-> wireless@vger.kernel.org; netdev@vger.kernel.org
-> Cc: Rajat Jain; Wei-Ning Huang; Brian Norris; Eric Caruso;
-> rajatxjain@gmail.com
-> Subject: [PATCH v2] mwifiex: report wakeup for wowlan
-> 
-> Enable notifying wakeup source to the PM core in case of a wake on
-> wireless LAN event.
-> 
-> Signed-off-by: Wei-Ning Huang <wnhuang@google.com>
-> Signed-off-by: Rajat Jain <rajatja@google.com>
-> Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
-> Reviewed-by: Eric Caruso <ejcaruso@chromium.org>
-> ---
-> v2: Fix the commit log
-> 
->  drivers/net/wireless/marvell/mwifiex/sdio.c | 8 ++++++++
-> drivers/net/wireless/marvell/mwifiex/sdio.h | 1 +
->  2 files changed, 9 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> index d3e1561..a5f63e4 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-> @@ -89,6 +89,9 @@ static irqreturn_t mwifiex_wake_irq_wifi(int irq, void
-> *priv)
->  		disable_irq_nosync(irq);
->  	}
-> 
-> +	/* Notify PM core we are wakeup source */
-> +	pm_wakeup_event(cfg->dev, 0);
-> +
->  	return IRQ_HANDLED;
->  }
-> 
-> @@ -112,6 +115,7 @@ static int mwifiex_sdio_probe_of(struct device *dev,
-> struct sdio_mmc_card *card)
->  					  GFP_KERNEL);
->  	cfg = card->plt_wake_cfg;
->  	if (cfg && card->plt_of_node) {
-> +		cfg->dev = dev;
->  		cfg->irq_wifi = irq_of_parse_and_map(card->plt_of_node, 0);
->  		if (!cfg->irq_wifi) {
->  			dev_dbg(dev,
-> @@ -130,6 +134,10 @@ static int mwifiex_sdio_probe_of(struct device
-> *dev, struct sdio_mmc_card *card)
->  		}
->  	}
-> 
-> +	ret = device_init_wakeup(dev, true);
-> +	if (ret)
-> +		dev_err(dev, "fail to init wakeup for mwifiex");
-> +
->  	return 0;
->  }
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.h
-> b/drivers/net/wireless/marvell/mwifiex/sdio.h
-> index db837f1..07cdd23 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/sdio.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/sdio.h
-> @@ -155,6 +155,7 @@
->  } while (0)
-> 
->  struct mwifiex_plt_wake_cfg {
-> +	struct device *dev;
->  	int irq_wifi;
->  	bool wake_by_wifi;
->  };
-> --
-> 2.8.0.rc3.226.g39d4020
+Caching calibration data allows it to be accessed when the
+device is not active.
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Marty Faltesek <mfaltesek@google.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c  | 47 ++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/core.h  |  2 ++
+ drivers/net/wireless/ath/ath10k/debug.c | 51 +++++++++------------------------
+ drivers/net/wireless/ath/ath10k/debug.h |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c   |  1 +
+ 5 files changed, 65 insertions(+), 37 deletions(-)
 
-Regards,
-Amitkumar
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index c0b9797..c99ad9e 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1227,6 +1227,42 @@ success:
+ 	return 0;
+ }
+ 
++int
++ath10k_cal_data_alloc(struct ath10k *ar, void **buf)
++{
++	u32 hi_addr;
++	__le32 addr;
++	int ret;
++
++	vfree(*buf);
++	*buf = vmalloc(QCA988X_CAL_DATA_LEN);
++	if (!*buf) {
++		return -EAGAIN;
++	}
++
++	hi_addr = host_interest_item_address(HI_ITEM(hi_board_data));
++
++	ret = ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
++
++	if (ret) {
++		ath10k_warn(ar, "failed to read hi_board_data address: %d\n", ret);
++	} else {
++		ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), *buf,
++					   QCA988X_CAL_DATA_LEN);
++		if (ret) {
++			ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
++		}
++	}
++
++	if (ret) {
++		vfree(*buf);
++		*buf = NULL;
++	}
++
++	return ret;
++}
++
++
+ static int ath10k_download_cal_data(struct ath10k *ar)
+ {
+ 	int ret;
+@@ -1714,6 +1750,12 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
+ 
+ 	INIT_LIST_HEAD(&ar->arvifs);
+ 
++	/*
++	 * We are up now, so no need to cache calibration data.
++	 */
++	vfree(ar->cal_data);
++        ar->cal_data = NULL;
++
+ 	return 0;
+ 
+ err_hif_stop:
+@@ -1757,6 +1799,11 @@ void ath10k_core_stop(struct ath10k *ar)
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 	ath10k_debug_stop(ar);
+ 
++	/*
++	 * Cache caclibration data while stopped.
++	 */
++	ath10k_cal_data_alloc(ar, &ar->cal_data);
++
+ 	/* try to suspend target */
+ 	if (ar->state != ATH10K_STATE_RESTARTING &&
+ 	    ar->state != ATH10K_STATE_UTF)
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 4d3f002..cce61c1 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -635,6 +635,8 @@ struct ath10k {
+ 	struct ath10k_htc htc;
+ 	struct ath10k_htt htt;
+ 
++	void *cal_data;
++
+ 	struct ath10k_hw_params {
+ 		u32 id;
+ 		u16 dev_id;
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 8b01e3e..7de0eb4 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -1427,53 +1427,26 @@ static const struct file_operations fops_fw_dbglog = {
+ static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
+ {
+ 	struct ath10k *ar = inode->i_private;
+-	void *buf;
+-	u32 hi_addr;
+-	__le32 addr;
+ 	int ret;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+ 
+ 	if (ar->state != ATH10K_STATE_ON &&
+-	    ar->state != ATH10K_STATE_UTF) {
+-		ret = -ENETDOWN;
+-		goto err;
+-	}
+-
+-	buf = vmalloc(QCA988X_CAL_DATA_LEN);
+-	if (!buf) {
+-		ret = -ENOMEM;
+-		goto err;
++	    ar->state != ATH10K_STATE_UTF && ! ar->cal_data) {
++		mutex_unlock(&ar->conf_mutex);
++		return (-ENETDOWN);
+ 	}
+ 
+-	hi_addr = host_interest_item_address(HI_ITEM(hi_board_data));
+-
+-	ret = ath10k_hif_diag_read(ar, hi_addr, &addr, sizeof(addr));
+-	if (ret) {
+-		ath10k_warn(ar, "failed to read hi_board_data address: %d\n", ret);
+-		goto err_vfree;
+-	}
+-
+-	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), buf,
+-				   QCA988X_CAL_DATA_LEN);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
+-		goto err_vfree;
++	if (ar->cal_data) {
++		file->private_data = ar->cal_data;
++		mutex_unlock(&ar->conf_mutex);
++		return 0;
+ 	}
+ 
+-	file->private_data = buf;
+-
+-	mutex_unlock(&ar->conf_mutex);
+-
+-	return 0;
+-
+-err_vfree:
+-	vfree(buf);
+-
+-err:
++	ret = ath10k_cal_data_alloc(ar, &file->private_data);
+ 	mutex_unlock(&ar->conf_mutex);
+ 
+-	return ret;
++	return (ret);
+ }
+ 
+ static ssize_t ath10k_debug_cal_data_read(struct file *file,
+@@ -1489,7 +1462,11 @@ static ssize_t ath10k_debug_cal_data_read(struct file *file,
+ static int ath10k_debug_cal_data_release(struct inode *inode,
+ 					 struct file *file)
+ {
+-	vfree(file->private_data);
++	struct ath10k *ar = inode->i_private;
++
++	/* Free if it's not the cached version */
++	if (ar->cal_data != file->private_data)
++		vfree(file->private_data);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 3900934..1ae757c 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -59,6 +59,7 @@ enum ath10k_dbg_aggr_mode {
+ #define ATH10K_FW_STATS_BUF_SIZE (1024*1024)
+ 
+ extern unsigned int ath10k_debug_mask;
++extern int ath10k_cal_data_alloc(struct ath10k *ar, void **buf);
+ 
+ __printf(2, 3) void ath10k_info(struct ath10k *ar, const char *fmt, ...);
+ __printf(2, 3) void ath10k_err(struct ath10k *ar, const char *fmt, ...);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index eb36859..88fb27f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6924,6 +6924,7 @@ struct ath10k *ath10k_mac_create(size_t priv_size)
+ 
+ void ath10k_mac_destroy(struct ath10k *ar)
+ {
++	vfree(ar->cal_data);
+ 	ieee80211_free_hw(ar->hw);
+ }
+ 
+-- 
+2.8.0.rc3.226.g39d4020
