@@ -1,86 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0219.hostedemail.com ([216.40.44.219]:49545 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756190AbcIKR4d (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Sep 2016 13:56:33 -0400
-Message-ID: <1473616576.19464.10.camel@perches.com> (sfid-20160911_195644_722509_9A21E180)
-Subject: Re: [PATCH 00/26] constify local structures
-From: Joe Perches <joe@perches.com>
-To: Julia Lawall <Julia.Lawall@lip6.fr>,
-        linux-renesas-soc@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org,
-        Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-        linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-media@vger.kernel.org, linux-can@vger.kernel.org,
-        Tatyana Nikolova <tatyana.e.nikolova@intel.com>,
-        Shiraz Saleem <shiraz.saleem@intel.com>,
-        Mustafa Ismail <mustafa.ismail@intel.com>,
-        Chien Tin Tung <chien.tin.tung@intel.com>,
-        linux-rdma@vger.kernel.org, netdev@vger.kernel.org,
-        devel@driverdev.osuosl.org, alsa-devel@alsa-project.org,
-        linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        tpmdd-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-acpi@vger.kernel.org
-Date: Sun, 11 Sep 2016 10:56:16 -0700
-In-Reply-To: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
-References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:36871 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758610AbcIMOq5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 10:46:57 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 5/6] cfg80211: validate key index better
+Date: Tue, 13 Sep 2016 16:44:27 +0200
+Message-Id: <1473777868-32429-5-git-send-email-johannes@sipsolutions.net> (sfid-20160913_164753_542057_C35FE506)
+In-Reply-To: <1473777868-32429-1-git-send-email-johannes@sipsolutions.net>
+References: <1473777868-32429-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2016-09-11 at 15:05 +0200, Julia Lawall wrote:
-> Constify local structures.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks Julia.
+Don't accept it if a key_idx < 0 snuck through, reject WEP keys with
+key index 4 and 5 (which are used for IGTKs) and don't allow IGTKs
+with key indices other than 4 and 5. This makes the key data match
+expectations better.
 
-A few suggestions & questions:
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/util.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Perhaps the script should go into scripts/coccinelle/
-so that future cases could be caught by the robot
-and commit message referenced by the patch instances.
-
-Can you please compile the files modified using the
-appropriate defconfig/allyesconfig and show the
-movement from data to const by using
-	$ size <object>.new/old
-and include that in the changelogs (maybe next time)?
-
-Is it possible for a rule to trace the instances where
-an address of a struct or struct member is taken by
-locally defined and declared function call where the
-callee does not modify any dereferenced object?
-
-ie:
-
-struct foo {
-	int bar;
-	char *baz;
-};
-
-struct foo qux[] = {
-	{ 1, "description 1" },
-	{ 2, "dewcription 2" },
-	[ n, "etc" ]...,
-};
-
-void message(struct foo *msg)
-{
-	printk("%d %s\n", msg->bar, msg->baz);
-}
-
-where some code uses
-
-	message(qux[index]);
-
-So could a coccinelle script change:
-
-struct foo qux[] = { to const struct foo quz[] = {
-
-and
-
-void message(struct foo *msg) to void message(const struct foo *msg)
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 0675f513e7b9..81fa16b36d30 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -218,7 +218,7 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ 				   struct key_params *params, int key_idx,
+ 				   bool pairwise, const u8 *mac_addr)
+ {
+-	if (key_idx > 5)
++	if (key_idx < 0 || key_idx > 5)
+ 		return -EINVAL;
+ 
+ 	if (!pairwise && mac_addr && !(rdev->wiphy.flags & WIPHY_FLAG_IBSS_RSN))
+@@ -249,7 +249,13 @@ int cfg80211_validate_key_settings(struct cfg80211_registered_device *rdev,
+ 		/* Disallow BIP (group-only) cipher as pairwise cipher */
+ 		if (pairwise)
+ 			return -EINVAL;
++		if (key_idx < 4)
++			return -EINVAL;
+ 		break;
++	case WLAN_CIPHER_SUITE_WEP40:
++	case WLAN_CIPHER_SUITE_WEP104:
++		if (key_idx < 0 || key_idx > 3)
++			return -EINVAL;
+ 	default:
+ 		break;
+ 	}
+-- 
+2.8.1
