@@ -1,45 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58185 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36525 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756551AbcILMpD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 08:45:03 -0400
-Message-ID: <1473684288.29016.38.camel@sipsolutions.net> (sfid-20160912_144507_093996_D4E5F1F7)
-Subject: Re: [PATCH] mac80211: allow driver to handle packet-loss mechanism
+        id S1756361AbcIMNkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 09:40:12 -0400
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
-Date: Mon, 12 Sep 2016 14:44:48 +0200
-In-Reply-To: <20160906065624.4062-1-rmanohar@qti.qualcomm.com>
-References: <20160906065624.4062-1-rmanohar@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: remove useless open_count check
+Date: Tue, 13 Sep 2016 15:40:07 +0200
+Message-Id: <1473774007-29247-1-git-send-email-johannes@sipsolutions.net> (sfid-20160913_154022_015961_8254034B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-09-06 at 12:26 +0530, Rajkumar Manoharan wrote:
-> mac80211 keeps track of missing acks and triggers CQM packet-loss
-> mechanism whenever consecutive msdu failure reaches threshold limit
-> (STA_LOST_PKT_THRESHOLD). Drivers like ath10k offlaoded rate countrol
-> and aggregation to firmware. Such drivers have its own connection
-> monitoring algorithm that is offloaded to firmware for triggering
-> station kickout due to excessive tries. In VHT mode, single PPDU can
-> have
-> more than 50 msdus at higher rates. Under noisy environment, single
-> ppdu
-> failure can cause station kickout by current mac80211 lost_packet
-> mechanism
-> while firmware is trying to adapt its rate table. This is causing
-> frequent
-> connect and disconnect iteration when station is roaming around.
-> 
-> In such scenario, driver (or firmware) is not given enough chance to
-> tune its rate control. So for devices that report low ack events, add
-> a
-> hardware flag to rely on their mechnism.
-> 
+From: Johannes Berg <johannes.berg@intel.com>
 
-The way you describe this it sounds like somehow you'll be reporting
-the indication to userspace from the driver; but you do not, and cannot
-do that. The description seems thus misleading?
+__ieee80211_suspend() checks early on if there's anything
+to do by checking open_count, so there's no need to check
+again later in the function. Remove the useless check.
 
-johannes
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/pm.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
+index 00a43a70e1fc..28a3a0957c9e 100644
+--- a/net/mac80211/pm.c
++++ b/net/mac80211/pm.c
+@@ -178,8 +178,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
+ 	WARN_ON(!list_empty(&local->chanctx_list));
+ 
+ 	/* stop hardware - this must stop RX */
+-	if (local->open_count)
+-		ieee80211_stop_device(local);
++	ieee80211_stop_device(local);
+ 
+  suspend:
+ 	local->suspended = true;
+-- 
+2.8.1
