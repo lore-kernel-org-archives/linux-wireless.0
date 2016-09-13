@@ -1,50 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53830 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161757AbcIZRv0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 13:51:26 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: brcmfmac: drop unused fields from struct brcmf_pub
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160923132759.21875-1-zajec5@gmail.com>
-References: <20160923132759.21875-1-zajec5@gmail.com>
-To: =?utf-8?b?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <rafal@milecki.pl>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        "Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-        Colin Ian King <colin.king@canonical.com>,
-        linux-wireless@vger.kernel.org (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        brcm80211-dev-list.pdl@broadcom.com (open list:BROADCOM BRCM80211
-        IEEE802.11n WIRELESS DRIVER),
-        netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-        linux-kernel@vger.kernel.org (open list)
-Message-Id: <20160926175125.C01A76159A@smtp.codeaurora.org> (sfid-20160926_195150_452096_F00CE720)
-Date: Mon, 26 Sep 2016 17:51:25 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:37953 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754638AbcIMSC1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 14:02:27 -0400
+Message-ID: <1473789740.5622.3.camel@sipsolutions.net> (sfid-20160913_200230_112754_D6C0AE8F)
+Subject: Re: [PATCH] cfg80211: cap 20MHz VHT bitrate at MCS 8
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Pedersen, Thomas" <twp@qca.qualcomm.com>,
+        Ben Greear <greearb@candelatech.com>,
+        linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 13 Sep 2016 20:02:20 +0200
+In-Reply-To: <1473789454.27738.7.camel@qca.qualcomm.com>
+References: <1473188417-13987-1-git-send-email-twp@qca.qualcomm.com>
+         <2769a14e-964d-4ec2-9f04-ddd332434b78@candelatech.com>
+         <38049c4f-da5b-a6ec-bcc4-c803197abcd7@qca.qualcomm.com>
+         <1473662637.4201.2.camel@sipsolutions.net>
+         <1473789454.27738.7.camel@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
+
+> Yeah so apparently the overhead involved in 256-QAM 5/6 (MCS 9)
+> results in lower effective bitrate than just using MCS 8 (unless
+> you're using 3 spatial streams).
+
+Ah. I took a - very brief - look at why this one is invalid and
+couldn't figure it out.
+
+>  Sounds like a rate control or reporting bug then.
+> Please drop this.
 > 
-> They seem to be there from the first day. We calculate these values but
-> never use them.
-> 
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
+Ok, thanks.
 
-Patch applied to wireless-drivers-next.git, thanks.
-
-2df86ad959c9 brcmfmac: drop unused fields from struct brcmf_pub
-
--- 
-https://patchwork.kernel.org/patch/9348103/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+johannes
