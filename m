@@ -1,50 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37920 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751137AbcIQN7N (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:26615 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750951AbcIMMYs (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 09:59:13 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        <linux-wireless@vger.kernel.org>,
-        Avinash Patil <avinashp@quantenna.com>,
-        Dmitrii Lebed <dlebed@quantenna.com>,
-        Sergei Maksimenko <smaksimenko@quantenna.com>,
-        Sergey Matyukevich <smatyukevich@quantenna.com>,
-        Bindu Therthala <btherthala@quantenna.com>,
-        Huizhao Wang <hwang@quantenna.com>,
-        Kamlesh Rath <krath@quantenna.com>
-Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
-References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
-        <1466511726.3170.33.camel@sipsolutions.net>
-        <fd6ee9cd-71fd-352a-e1cd-61d36b296057@quantenna.com>
-Date: Sat, 17 Sep 2016 16:59:06 +0300
-In-Reply-To: <fd6ee9cd-71fd-352a-e1cd-61d36b296057@quantenna.com> (Igor
-        Mitsyanko's message of "Mon, 11 Jul 2016 21:57:15 +0300")
-Message-ID: <8760pu8w5x.fsf@kamboji.qca.qualcomm.com> (sfid-20160917_155916_960126_554D4E1F)
+        Tue, 13 Sep 2016 08:24:48 -0400
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [V2] ath10k: fix memory leak on caldata on error exit path
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+In-Reply-To: <20160903163819.13115-1-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Message-ID: <c603113a967a45c18ddce5deff55b753@euamsexm01a.eu.qualcomm.com> (sfid-20160913_142508_209655_7240F392)
+Date: Tue, 13 Sep 2016 14:24:40 +0200
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> writes:
+Colin Ian King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> caldata is not being free'd on the error exit path, causing
+> a memory leak and data definitely should not be freed. Free
+> caldata instead of data.
+> 
+> Thanks to Kalle Valo for spotting that data should not be
+> free'd.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-> thank for review and sorry for long delays in replies. A parallel
-> thread with Dave a discussion was initiated regarding HW platform
-> samples availability. Current driver implementation supports a newer
-> QSR10G platform, which availability is limited due to the platform
-> still being in development stage. We're working on supporting
-> Quantenna's current QSR1000 platform too, what would be the best
-> approach to this:
-> - have QSR1000 platform support ready, amend it to current patch and
-> post it as a new patch revision (there should be a certain amount of
-> new code);
-> - have current patch accepted by community first, and then post a new
-> patch (adding new platform support) one on top of it.
+Thanks, 1 patch applied to ath-next branch of ath.git:
 
-I prefer the latter option. Let's first try to get the driver applied
-and then you can submit more features as followup patches.
+5f4761dda2ba ath10k: fix memory leak on caldata on error exit path
 
 -- 
-Kalle Valo
+Sent by pwcli
+https://patchwork.kernel.org/patch/9312163/
