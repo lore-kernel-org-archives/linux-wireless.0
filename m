@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43173 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932348AbcI1Ns7 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55057 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754745AbcIMMnO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 09:48:59 -0400
-Received: from potku.adurom.net (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
-        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: kvalo@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id CDB4F61818
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 13:48:57 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-drivers-next closed for 4.9
-Date: Wed, 28 Sep 2016 16:48:54 +0300
-Message-ID: <87bmz8w2wp.fsf@kamboji.qca.qualcomm.com> (sfid-20160928_154913_854718_08724B9B)
+        Tue, 13 Sep 2016 08:43:14 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Joe Perches <joe@perches.com>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: Spelling and miscellaneous neatening
+Date: Tue, 13 Sep 2016 12:43:09 +0000
+Message-ID: <871t0oj7hf.fsf@kamboji.qca.qualcomm.com> (sfid-20160913_144336_723125_8E9199D4)
+References: <95a6b65277914d88178ed2b15e182455067cca60.1472490319.git.joe@perches.com>
+In-Reply-To: <95a6b65277914d88178ed2b15e182455067cca60.1472490319.git.joe@perches.com>
+        (Joe Perches's message of "Mon, 29 Aug 2016 10:05:51 -0700")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Joe Perches <joe@perches.com> writes:
 
-I just pushed the last patches to wireless-drivers-next and I'm planning
-to send the final pull request to Dave tomorrow. This means that
-wireless-drivers-next is closed and will open again for patches going to
-4.10 sometime after 4.9-rc1 is released. Feel free to submit patches at
-this time, they will be just queued in patchwork until the tree is open
-again.
+> Correct some trivial comment typos.
+> Remove unnecessary parentheses in a long line.
+> Convert a return; before the end of a void function definition to just ;
+>
+> Signed-off-by: Joe Perches <joe@perches.com>
 
-For Linux release schedules estimations PHB crystal ball is a nice
-service. The deadline for wireless-drivers patches is usually a week
-before the merge window opens.
+[...]
 
-http://phb-crystal-ball.org/
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -2118,7 +2118,7 @@ err:
+>  	/* TODO: It's probably a good idea to release device from the driver
+>  	 * but calling device_release_driver() here will cause a deadlock.
+>  	 */
+> -	return;
+> +	;
+>  }
 
-wireless-drivers remains open for important bug and regressions fixes to
-4.9.
+I don't think this improves anything, I dropped this part from the patch
+in my pending branch.
 
--- 
-Kalle Valo
+--=20
+Kalle Valo=
