@@ -1,128 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34789 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751959AbcIQTnJ (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 15:43:09 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: gregkh@linuxfoundation.org, Kalle Valo <kvalo@codeaurora.org>
-Cc: Christian Lamparter <chunkeey@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
-        Ben Greear <greearb@candelatech.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 1/4] debugfs: introduce a public file_operations accessor
-Date: Sat, 17 Sep 2016 21:43:01 +0200
-Message-Id: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com> (sfid-20160917_214315_952994_A43B1158)
+Received: from muru.com ([72.249.23.125]:42133 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758329AbcIMVvB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 17:51:01 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCH 2/5] wlcore: sdio: Populate config firmware data
+Date: Tue, 13 Sep 2016 14:50:40 -0700
+Message-Id: <20160913215043.29454-3-tony@atomide.com> (sfid-20160913_235105_611930_FA9FFFD6)
+In-Reply-To: <20160913215043.29454-1-tony@atomide.com>
+References: <20160913215043.29454-1-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces an accessor which can be used
-by the users of debugfs (drivers, fs, ...) to get the
-original file_operations struct. It also removes the
-REAL_FOPS_DEREF macro in file.c and converts the code
-to use the public version.
+Configure the config firmware names and make it available
+in platform data.
 
-Previously, REAL_FOPS_DEREF was only available within
-the file.c of debugfs. But having a public getter
-available for debugfs users is important as some
-drivers (carl9170 and b43) use the pointer of the
-original file_operations in conjunction with container_of()
-within their debugfs implementations.
-
-Reviewed-by: Nicolai Stange <nicstange@gmail.com>
-Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+Signed-off-by: Tony Lindgren <tony@atomide.com>
 ---
- fs/debugfs/file.c       | 13 +++++--------
- include/linux/debugfs.h | 17 +++++++++++++++++
- 2 files changed, 22 insertions(+), 8 deletions(-)
+ drivers/net/wireless/ti/wlcore/sdio.c | 76 ++++++++++++++++++++++-------------
+ 1 file changed, 47 insertions(+), 29 deletions(-)
 
-diff --git a/fs/debugfs/file.c b/fs/debugfs/file.c
-index 592059f..309f4e9 100644
---- a/fs/debugfs/file.c
-+++ b/fs/debugfs/file.c
-@@ -97,9 +97,6 @@ EXPORT_SYMBOL_GPL(debugfs_use_file_finish);
+diff --git a/drivers/net/wireless/ti/wlcore/sdio.c b/drivers/net/wireless/ti/wlcore/sdio.c
+index 5839acb..a6e94b1 100644
+--- a/drivers/net/wireless/ti/wlcore/sdio.c
++++ b/drivers/net/wireless/ti/wlcore/sdio.c
+@@ -216,17 +216,33 @@ static struct wl1271_if_operations sdio_ops = {
+ };
  
- #define F_DENTRY(filp) ((filp)->f_path.dentry)
- 
--#define REAL_FOPS_DEREF(dentry)					\
--	((const struct file_operations *)(dentry)->d_fsdata)
--
- static int open_proxy_open(struct inode *inode, struct file *filp)
- {
- 	const struct dentry *dentry = F_DENTRY(filp);
-@@ -112,7 +109,7 @@ static int open_proxy_open(struct inode *inode, struct file *filp)
- 		goto out;
- 	}
- 
--	real_fops = REAL_FOPS_DEREF(dentry);
-+	real_fops = debugfs_real_fops(filp);
- 	real_fops = fops_get(real_fops);
- 	if (!real_fops) {
- 		/* Huh? Module did not clean up after itself at exit? */
-@@ -143,7 +140,7 @@ static ret_type full_proxy_ ## name(proto)				\
- {									\
- 	const struct dentry *dentry = F_DENTRY(filp);			\
- 	const struct file_operations *real_fops =			\
--		REAL_FOPS_DEREF(dentry);				\
-+		debugfs_real_fops(filp);				\
- 	int srcu_idx;							\
- 	ret_type r;							\
- 									\
-@@ -176,7 +173,7 @@ static unsigned int full_proxy_poll(struct file *filp,
- 				struct poll_table_struct *wait)
- {
- 	const struct dentry *dentry = F_DENTRY(filp);
--	const struct file_operations *real_fops = REAL_FOPS_DEREF(dentry);
-+	const struct file_operations *real_fops = debugfs_real_fops(filp);
- 	int srcu_idx;
- 	unsigned int r = 0;
- 
-@@ -193,7 +190,7 @@ static unsigned int full_proxy_poll(struct file *filp,
- static int full_proxy_release(struct inode *inode, struct file *filp)
- {
- 	const struct dentry *dentry = F_DENTRY(filp);
--	const struct file_operations *real_fops = REAL_FOPS_DEREF(dentry);
-+	const struct file_operations *real_fops = debugfs_real_fops(filp);
- 	const struct file_operations *proxy_fops = filp->f_op;
- 	int r = 0;
- 
-@@ -241,7 +238,7 @@ static int full_proxy_open(struct inode *inode, struct file *filp)
- 		goto out;
- 	}
- 
--	real_fops = REAL_FOPS_DEREF(dentry);
-+	real_fops = debugfs_real_fops(filp);
- 	real_fops = fops_get(real_fops);
- 	if (!real_fops) {
- 		/* Huh? Module did not cleanup after itself at exit? */
-diff --git a/include/linux/debugfs.h b/include/linux/debugfs.h
-index 1438e23..4d3f0d1 100644
---- a/include/linux/debugfs.h
-+++ b/include/linux/debugfs.h
-@@ -45,6 +45,23 @@ extern struct dentry *arch_debugfs_dir;
- 
- extern struct srcu_struct debugfs_srcu;
- 
-+/**
-+ * debugfs_real_fops - getter for the real file operation
-+ * @filp: a pointer to a struct file
-+ *
-+ * Must only be called under the protection established by
-+ * debugfs_use_file_start().
-+ */
-+static inline const struct file_operations *debugfs_real_fops(struct file *filp)
-+	__must_hold(&debugfs_srcu)
-+{
-+	/*
-+	 * Neither the pointer to the struct file_operations, nor its
-+	 * contents ever change -- srcu_dereference() is not needed here.
-+	 */
-+	return filp->f_path.dentry->d_fsdata;
-+}
+ #ifdef CONFIG_OF
 +
- #if defined(CONFIG_DEBUG_FS)
++static const struct wilink_family_data wl127x_data = {
++	.name = "wl127x",
++	.nvs_name = "ti-connectivity/wl127x-nvs.bin",
++};
++
++static const struct wilink_family_data wl128x_data = {
++	.name = "wl128x",
++	.nvs_name = "ti-connectivity/wl128x-nvs.bin",
++};
++
++static const struct wilink_family_data wl18xx_data = {
++	.name = "wl18xx",
++	.cfg_name = "ti-connectivity/wl18xx-conf.bin",
++};
++
+ static const struct of_device_id wlcore_sdio_of_match_table[] = {
+-	{ .compatible = "ti,wl1271" },
+-	{ .compatible = "ti,wl1273" },
+-	{ .compatible = "ti,wl1281" },
+-	{ .compatible = "ti,wl1283" },
+-	{ .compatible = "ti,wl1801" },
+-	{ .compatible = "ti,wl1805" },
+-	{ .compatible = "ti,wl1807" },
+-	{ .compatible = "ti,wl1831" },
+-	{ .compatible = "ti,wl1835" },
+-	{ .compatible = "ti,wl1837" },
++	{ .compatible = "ti,wl1271", .data = &wl127x_data },
++	{ .compatible = "ti,wl1273", .data = &wl127x_data },
++	{ .compatible = "ti,wl1281", .data = &wl128x_data },
++	{ .compatible = "ti,wl1283", .data = &wl128x_data },
++	{ .compatible = "ti,wl1801", .data = &wl18xx_data },
++	{ .compatible = "ti,wl1805", .data = &wl18xx_data },
++	{ .compatible = "ti,wl1807", .data = &wl18xx_data },
++	{ .compatible = "ti,wl1831", .data = &wl18xx_data },
++	{ .compatible = "ti,wl1835", .data = &wl18xx_data },
++	{ .compatible = "ti,wl1837", .data = &wl18xx_data },
+ 	{ }
+ };
  
- struct dentry *debugfs_create_file(const char *name, umode_t mode,
+@@ -234,9 +250,13 @@ static int wlcore_probe_of(struct device *dev, int *irq,
+ 			   struct wlcore_platdev_data *pdev_data)
+ {
+ 	struct device_node *np = dev->of_node;
++	const struct of_device_id *of_id;
++
++	of_id = of_match_node(wlcore_sdio_of_match_table, np);
++	if (!of_id)
++		return -ENODEV;
+ 
+-	if (!np || !of_match_node(wlcore_sdio_of_match_table, np))
+-		return -ENODATA;
++	pdev_data->family = of_id->data;
+ 
+ 	*irq = irq_of_parse_and_map(np, 0);
+ 	if (!*irq) {
+@@ -263,7 +283,7 @@ static int wlcore_probe_of(struct device *dev, int *irq,
+ static int wl1271_probe(struct sdio_func *func,
+ 				  const struct sdio_device_id *id)
+ {
+-	struct wlcore_platdev_data pdev_data;
++	struct wlcore_platdev_data *pdev_data;
+ 	struct wl12xx_sdio_glue *glue;
+ 	struct resource res[1];
+ 	mmc_pm_flag_t mmcflags;
+@@ -275,14 +295,15 @@ static int wl1271_probe(struct sdio_func *func,
+ 	if (func->num != 0x02)
+ 		return -ENODEV;
+ 
+-	memset(&pdev_data, 0x00, sizeof(pdev_data));
+-	pdev_data.if_ops = &sdio_ops;
++	pdev_data = devm_kzalloc(&func->dev, sizeof(*pdev_data), GFP_KERNEL);
++	if (!pdev_data)
++		return -ENOMEM;
+ 
+-	glue = kzalloc(sizeof(*glue), GFP_KERNEL);
+-	if (!glue) {
+-		dev_err(&func->dev, "can't allocate glue\n");
+-		goto out;
+-	}
++	pdev_data->if_ops = &sdio_ops;
++
++	glue = devm_kzalloc(&func->dev, sizeof(*glue), GFP_KERNEL);
++	if (!glue)
++		return -ENOMEM;
+ 
+ 	glue->dev = &func->dev;
+ 
+@@ -292,16 +313,16 @@ static int wl1271_probe(struct sdio_func *func,
+ 	/* Use block mode for transferring over one block size of data */
+ 	func->card->quirks |= MMC_QUIRK_BLKSZ_FOR_BYTE_MODE;
+ 
+-	ret = wlcore_probe_of(&func->dev, &irq, &pdev_data);
++	ret = wlcore_probe_of(&func->dev, &irq, pdev_data);
+ 	if (ret)
+-		goto out_free_glue;
++		goto out;
+ 
+ 	/* if sdio can keep power while host is suspended, enable wow */
+ 	mmcflags = sdio_get_host_pm_caps(func);
+ 	dev_dbg(glue->dev, "sdio PM caps = 0x%x\n", mmcflags);
+ 
+ 	if (mmcflags & MMC_PM_KEEP_POWER)
+-		pdev_data.pwr_in_suspend = true;
++		pdev_data->pwr_in_suspend = true;
+ 
+ 	sdio_set_drvdata(func, glue);
+ 
+@@ -323,7 +344,7 @@ static int wl1271_probe(struct sdio_func *func,
+ 	if (!glue->core) {
+ 		dev_err(glue->dev, "can't allocate platform_device");
+ 		ret = -ENOMEM;
+-		goto out_free_glue;
++		goto out;
+ 	}
+ 
+ 	glue->core->dev.parent = &func->dev;
+@@ -341,8 +362,8 @@ static int wl1271_probe(struct sdio_func *func,
+ 		goto out_dev_put;
+ 	}
+ 
+-	ret = platform_device_add_data(glue->core, &pdev_data,
+-				       sizeof(pdev_data));
++	ret = platform_device_add_data(glue->core, pdev_data,
++				       sizeof(*pdev_data));
+ 	if (ret) {
+ 		dev_err(glue->dev, "can't add platform data\n");
+ 		goto out_dev_put;
+@@ -358,9 +379,6 @@ static int wl1271_probe(struct sdio_func *func,
+ out_dev_put:
+ 	platform_device_put(glue->core);
+ 
+-out_free_glue:
+-	kfree(glue);
+-
+ out:
+ 	return ret;
+ }
 -- 
 2.9.3
