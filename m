@@ -1,102 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from condef007-v.nifty.com ([210.131.4.244]:34764 "EHLO
-        condef007-v.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932806AbcIFMmk (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:32885 "EHLO
+        mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759017AbcIMPFu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 08:42:40 -0400
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org
-Subject: [PATCH 1/3] ath10k: use devm_clk_get() instead of clk_get()
-Date: Tue,  6 Sep 2016 21:39:56 +0900
-Message-Id: <1473165598-28683-2-git-send-email-yamada.masahiro@socionext.com> (sfid-20160906_144245_695108_7D0DC759)
-In-Reply-To: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
-References: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
+        Tue, 13 Sep 2016 11:05:50 -0400
+Received: by mail-oi0-f49.google.com with SMTP id y2so386755338oie.0
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2016 08:05:50 -0700 (PDT)
+Subject: Re: Support of rtl8723bs
+To: Hanno Zulla <abos@hanno.de>,
+        Jes Sorensen <Jes.Sorensen@redhat.com>,
+        Bastien Nocera <hadess@hadess.net>
+References: <688574b6-1141-f408-d397-535f1f69999e@hanno.de>
+ <1473683031.2930.3.camel@hadess.net> <wrfjtwdli39u.fsf@redhat.com>
+ <5b920339-abcd-0fc4-f054-039155c531a0@lwfinger.net>
+ <cd991918-0bfa-a9a3-15e5-aa8561db2c65@hanno.de>
+ <1473695458.6389.3.camel@hadess.net> <wrfj4m5lhzja.fsf@redhat.com>
+ <4efa3f1a-a91c-7b19-43e3-508cbbd4676e@hanno.de>
+Cc: anthony.wong@canonical.com, linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <a9235772-ab37-255c-2fb3-ce2ed1104ad5@lwfinger.net> (sfid-20160913_170607_770187_E6AB3A6E)
+Date: Tue, 13 Sep 2016 10:05:47 -0500
+MIME-Version: 1.0
+In-Reply-To: <4efa3f1a-a91c-7b19-43e3-508cbbd4676e@hanno.de>
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use the managed variant of clk_get() to simplify the failure path
-and the .remove callback.
+On 09/13/2016 02:47 AM, Hanno Zulla wrote:
+> Hi,
+>
+>> The issues I am aware of is to start out changing the register access
+>> macros into function pointers and stick them all into the fileops
+>> structure. Provide a set of SDIO ones to match the USB ones. Then you
+>> will need some code to detect the device, as that part will obviously be
+>> different from the USB device detection.
+>>
+>> I know there are a few issues to look out for in the hw register init
+>> files to look out for too, that does some special casing for SDIO, but
+>> that should be limited. I am happy to point someone in the right
+>> direction on that when they get to that.
+>
+> I had a brief look into the sources of other drivers implementing SDIO,
+> but not being a kernel-dev, this is out of my league.
+>
+> If you decide to reprioritize your TODO-List in favour of adding SDIO
+> sooner, I'll be gladly testing this for you on my hardware (and buy you
+> a beer).
 
-Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
----
+I received a CherryTrail z8300 device yesterday with RTL8723BS wifi and BT. I 
+have started making the changes that Jes suggested. Once I get something 
+running, I will post patches here for review, and I will also make them 
+available in Bastien's repo.
 
- drivers/net/wireless/ath/ath10k/ahb.c | 34 ++++++----------------------------
- 1 file changed, 6 insertions(+), 28 deletions(-)
+I make no promises on when anything will be available.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index acec16b..8a55c0c 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -91,59 +91,37 @@ static int ath10k_ahb_clock_init(struct ath10k *ar)
- {
- 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
- 	struct device *dev;
--	int ret;
- 
- 	dev = &ar_ahb->pdev->dev;
- 
--	ar_ahb->cmd_clk = clk_get(dev, "wifi_wcss_cmd");
-+	ar_ahb->cmd_clk = devm_clk_get(dev, "wifi_wcss_cmd");
- 	if (IS_ERR_OR_NULL(ar_ahb->cmd_clk)) {
- 		ath10k_err(ar, "failed to get cmd clk: %ld\n",
- 			   PTR_ERR(ar_ahb->cmd_clk));
--		ret = ar_ahb->cmd_clk ? PTR_ERR(ar_ahb->cmd_clk) : -ENODEV;
--		goto out;
-+		return ar_ahb->cmd_clk ? PTR_ERR(ar_ahb->cmd_clk) : -ENODEV;
- 	}
- 
--	ar_ahb->ref_clk = clk_get(dev, "wifi_wcss_ref");
-+	ar_ahb->ref_clk = devm_clk_get(dev, "wifi_wcss_ref");
- 	if (IS_ERR_OR_NULL(ar_ahb->ref_clk)) {
- 		ath10k_err(ar, "failed to get ref clk: %ld\n",
- 			   PTR_ERR(ar_ahb->ref_clk));
--		ret = ar_ahb->ref_clk ? PTR_ERR(ar_ahb->ref_clk) : -ENODEV;
--		goto err_cmd_clk_put;
-+		return ar_ahb->ref_clk ? PTR_ERR(ar_ahb->ref_clk) : -ENODEV;
- 	}
- 
--	ar_ahb->rtc_clk = clk_get(dev, "wifi_wcss_rtc");
-+	ar_ahb->rtc_clk = devm_clk_get(dev, "wifi_wcss_rtc");
- 	if (IS_ERR_OR_NULL(ar_ahb->rtc_clk)) {
- 		ath10k_err(ar, "failed to get rtc clk: %ld\n",
- 			   PTR_ERR(ar_ahb->rtc_clk));
--		ret = ar_ahb->rtc_clk ? PTR_ERR(ar_ahb->rtc_clk) : -ENODEV;
--		goto err_ref_clk_put;
-+		return ar_ahb->rtc_clk ? PTR_ERR(ar_ahb->rtc_clk) : -ENODEV;
- 	}
- 
- 	return 0;
--
--err_ref_clk_put:
--	clk_put(ar_ahb->ref_clk);
--
--err_cmd_clk_put:
--	clk_put(ar_ahb->cmd_clk);
--
--out:
--	return ret;
- }
- 
- static void ath10k_ahb_clock_deinit(struct ath10k *ar)
- {
- 	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
- 
--	if (!IS_ERR_OR_NULL(ar_ahb->cmd_clk))
--		clk_put(ar_ahb->cmd_clk);
--
--	if (!IS_ERR_OR_NULL(ar_ahb->ref_clk))
--		clk_put(ar_ahb->ref_clk);
--
--	if (!IS_ERR_OR_NULL(ar_ahb->rtc_clk))
--		clk_put(ar_ahb->rtc_clk);
--
- 	ar_ahb->cmd_clk = NULL;
- 	ar_ahb->ref_clk = NULL;
- 	ar_ahb->rtc_clk = NULL;
--- 
-1.9.1
+Larry
