@@ -1,38 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58220 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753422AbcICRDs (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49418 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750734AbcIMEuw (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 13:03:48 -0400
-Content-Type: text/plain; charset="utf-8"
+        Tue, 13 Sep 2016 00:50:52 -0400
+From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Fix rfc1042 header retrieval in QCA4019 with eth
+ decap mode
+Date: Tue, 13 Sep 2016 04:50:43 +0000
+Message-ID: <57D78591.9050107@qti.qualcomm.com> (sfid-20160913_065057_209051_E5976CFF)
+References: <1469623085-13942-1-git-send-email-vthiagar@qti.qualcomm.com>
+ <87fup5m8x5.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87fup5m8x5.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Subject: Re: [1/3] mwifiex: make "PCI-E is not the winner" print more
- informative
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1472137518-10431-2-git-send-email-sgruszka@redhat.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: linux-wireless@vger.kernel.org,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Stanislaw Gruszka <sgruszka@redhat.com>
-Message-Id: <20160903170348.5223C62182@smtp.codeaurora.org> (sfid-20160903_190351_535856_A969E5F7)
-Date: Sat,  3 Sep 2016 17:03:48 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> wrote:
-> Printing ret and adapter->winner do not provide any useful information
-> as those are always 0 at point where the massage is printed. Print value
-> read from reg->fw_status register instead.
-> 
-> Stanislaw Gruszka <sgruszka@redhat.com>
+On Monday 12 September 2016 09:01 PM, Valo, Kalle wrote:
+> Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
+>
+>> Chipset from QCA99X0 onwards (QCA99X0, QCA9984, QCA4019 & future)
+>> rx_hdr_status is not padded to align in 4-byte boundary. Define a
+>> new hw_params field to handle different alignment behaviour between
+>> different hw. This patch fixes improper retrieval of rfc1042 header
+>> with QCA4019. This patch along with "ath10k: Properly remove padding
+>> from the start of rx payload" will fix traffic failure in ethernet
+>> decap mode for QCA4019.
+>>
+>> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+>
+> There were some conflicts, I fixed them in the pending branch. Please
+> check my changes:
+>
+> https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=3Dpe=
+nding&id=3Dd0d9e40216e1a8edd2f3b387b96aad62c3a49add
+>
 
-Thanks, 3 patches applied to wireless-drivers-next.git:
+Looks fine, thanks.
 
-fd3fbb65cab8 mwifiex: make "PCI-E is not the winner" print more informative
-09dd9ec598c3 mwifiex: print status of FW ready event
-b9aebb69ecd3 mwifiex: do not print dot when downloading FW
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9299495/
+Vasanth=
