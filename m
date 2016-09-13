@@ -1,91 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from condef010-v.nifty.com ([210.131.4.247]:36393 "EHLO
-        condef010-v.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753617AbcIFMnU (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27994 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751541AbcIMLZ1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 08:43:20 -0400
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-        Masahiro Yamada <yamada.masahiro@socionext.com>,
-        Kalle Valo <kvalo@qca.qualcomm.com>, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ath10k@lists.infradead.org
-Subject: [PATCH 3/3] ath10k: do not check if reset is NULL
-Date: Tue,  6 Sep 2016 21:39:58 +0900
-Message-Id: <1473165598-28683-4-git-send-email-yamada.masahiro@socionext.com> (sfid-20160906_144326_670774_737345F4)
-In-Reply-To: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
-References: <1473165598-28683-1-git-send-email-yamada.masahiro@socionext.com>
+        Tue, 13 Sep 2016 07:25:27 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Simon Wunderlich <sw@simonwunderlich.de>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "openwrt-devel@lists.openwrt.org" <openwrt-devel@lists.openwrt.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Martin Blumenstingl" <martin.blumenstingl@googlemail.com>
+Subject: Re: ath10k mesh + ap + encryption?
+Date: Tue, 13 Sep 2016 11:25:21 +0000
+Message-ID: <87d1k8jb34.fsf@kamboji.qca.qualcomm.com> (sfid-20160913_132530_732857_F150DAE2)
+References: <2661831.slnB0LOeVt@prime>
+        <87h99kjca5.fsf@kamboji.qca.qualcomm.com> <15353347.MUgkgiNHdu@prime>
+In-Reply-To: <15353347.MUgkgiNHdu@prime> (Simon Wunderlich's message of "Tue,
+        13 Sep 2016 13:13:49 +0200")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since reset_control_get() never returns NULL, we can use IS_ERR()
-instead of IS_ERR_OR_NULL().  The return statements can be simpler
-as well.
+Simon Wunderlich <sw@simonwunderlich.de> writes:
 
-Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
----
+> On Tuesday, September 13, 2016 10:59:31 AM CEST Valo, Kalle wrote:
+>> Simon Wunderlich <sw@simonwunderlich.de> writes:
+>> > we have done some experiments last week on ath10k, trying to run mesh
+>> > (802.11s) and access point at the same time, both encrypted.
+>> >=20
+>> > We have tested a recent LEDE (reboot-1519-g42f559e) but with
+>> > firmware-5.bin_10.2.4.70.42-2 and the included wpa_supplicant, which g=
+ave
+>> > us a working encrypted 802.11s network. However, starting an AP at the
+>> > same time didn't work (AP doesn't beacon). This wasn't a problem when
+>> > 802.11s was running unencrypted.
+>> >=20
+>> > We also tested version 10.2.4.97 (from codeaurora), which is now defau=
+lt
+>> > in
+>> > LEDE. However, this version apparently doesn't support 11s mesh at all
+>> > (WMI_SERVICE_MESH_11S is disabled in the service map, but cfg/mac80211
+>> > advertises support).
+>> >=20
+>> > So here are my questions:
+>> >  * Did anyone succesfully run AP and mesh, both encrypted at the same
+>> >  time?
+>> >  * Do you have any pointers how we could fix this? Could it be fixable=
+ in
+>> >  the>=20
+>> > driver (i.e. not in firmware)?
+>> >=20
+>> >  * Does anyone have an idea if 11s will be supported in future version=
+s? I
+>> >=20
+>> > didn't find any changelogs, but having 11s mode no longer in the servi=
+ce
+>> > map does not make me optimistic.
+>>=20
+>> Why is LEDE using 10.2.4.97? It seems to be a quite old release and I
+>> have no knowledge if anyone even tests that firmware branch with ath10k.
+>> I recommend to only use firmware releases from ath10k-firmware.git as we
+>> use those internally with ath10k. In any case, don't make any
+>> assumptions about future from that firmware branch as it's so old.
+>
+> This was introduced in December 25th, 2015 after some firmware-related=20
+> problems. I'm CC'ing Martin Blumenstingl who suggested this change.
+>
+> Since then, ath10k is pulling firmware from here (unless ct firmware is u=
+sed):
+>
+> https://source.codeaurora.org/quic/qsdk/oss/firmware/ath10k-firmware/plai=
+n/
+> 10.2.4/firmware-5.bin_10.2.4.97-1
+>
+> However, I don't understand the numbering? 10.2.4.97 > 10.2.4.70, but you=
+ say=20
+> 10.2.4.70.42-2 is more recent? I would have assumed otherwise from the=20
+> numbers. However, 10.2.4.70 has much more sub-revisions.
 
- drivers/net/wireless/ath/ath10k/ahb.c | 25 ++++++++++---------------
- 1 file changed, 10 insertions(+), 15 deletions(-)
+As I said before, I just deliver the firmware files to the community and
+the firmware team creates the actual releases. But my understanding is
+that these are from different branches which are built independently
+(and might have different features, like in this case the mesh support)
+so I would not make any conclusions if any firmware is "better" just
+from the numbers alone.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index 6b355ee..b29dc4d 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -195,43 +195,38 @@ static int ath10k_ahb_rst_ctrl_init(struct ath10k *ar)
- 	dev = &ar_ahb->pdev->dev;
- 
- 	ar_ahb->core_cold_rst = devm_reset_control_get(dev, "wifi_core_cold");
--	if (IS_ERR_OR_NULL(ar_ahb->core_cold_rst)) {
-+	if (IS_ERR(ar_ahb->core_cold_rst)) {
- 		ath10k_err(ar, "failed to get core cold rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->core_cold_rst));
--		return ar_ahb->core_cold_rst ?
--			PTR_ERR(ar_ahb->core_cold_rst) : -ENODEV;
-+		return PTR_ERR(ar_ahb->core_cold_rst);
- 	}
- 
- 	ar_ahb->radio_cold_rst = devm_reset_control_get(dev, "wifi_radio_cold");
--	if (IS_ERR_OR_NULL(ar_ahb->radio_cold_rst)) {
-+	if (IS_ERR(ar_ahb->radio_cold_rst)) {
- 		ath10k_err(ar, "failed to get radio cold rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->radio_cold_rst));
--		return ar_ahb->radio_cold_rst ?
--			PTR_ERR(ar_ahb->radio_cold_rst) : -ENODEV;
-+		return PTR_ERR(ar_ahb->radio_cold_rst);
- 	}
- 
- 	ar_ahb->radio_warm_rst = devm_reset_control_get(dev, "wifi_radio_warm");
--	if (IS_ERR_OR_NULL(ar_ahb->radio_warm_rst)) {
-+	if (IS_ERR(ar_ahb->radio_warm_rst)) {
- 		ath10k_err(ar, "failed to get radio warm rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->radio_warm_rst));
--		return ar_ahb->radio_warm_rst ?
--			PTR_ERR(ar_ahb->radio_warm_rst) : -ENODEV;
-+		return PTR_ERR(ar_ahb->radio_warm_rst);
- 	}
- 
- 	ar_ahb->radio_srif_rst = devm_reset_control_get(dev, "wifi_radio_srif");
--	if (IS_ERR_OR_NULL(ar_ahb->radio_srif_rst)) {
-+	if (IS_ERR(ar_ahb->radio_srif_rst)) {
- 		ath10k_err(ar, "failed to get radio srif rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->radio_srif_rst));
--		return ar_ahb->radio_srif_rst ?
--			PTR_ERR(ar_ahb->radio_srif_rst) : -ENODEV;
-+		return PTR_ERR(ar_ahb->radio_srif_rst);
- 	}
- 
- 	ar_ahb->cpu_init_rst = devm_reset_control_get(dev, "wifi_cpu_init");
--	if (IS_ERR_OR_NULL(ar_ahb->cpu_init_rst)) {
-+	if (IS_ERR(ar_ahb->cpu_init_rst)) {
- 		ath10k_err(ar, "failed to get cpu init rst ctrl: %ld\n",
- 			   PTR_ERR(ar_ahb->cpu_init_rst));
--		return ar_ahb->cpu_init_rst ?
--			PTR_ERR(ar_ahb->cpu_init_rst) : -ENODEV;
-+		return PTR_ERR(ar_ahb->cpu_init_rst);
- 	}
- 
- 	return 0;
--- 
-1.9.1
+--=20
+Kalle Valo=
