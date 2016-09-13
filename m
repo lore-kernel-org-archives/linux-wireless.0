@@ -1,71 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:35649 "EHLO
-        mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758507AbcIWGsV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Sep 2016 02:48:21 -0400
-Received: by mail-oi0-f50.google.com with SMTP id w11so124522535oia.2
-        for <linux-wireless@vger.kernel.org>; Thu, 22 Sep 2016 23:48:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CACna6rzhdzUDhG=jqG6Fksqh7qPP-7jKSTN0AoA-8u84HdrYdQ@mail.gmail.com>
-References: <20160920111604.32716-1-zajec5@gmail.com> <20160922115935.11287-1-zajec5@gmail.com>
- <bdc7e4d1-0d96-c8ed-e07a-fdb19c1265d8@gmail.com> <CACna6rzhdzUDhG=jqG6Fksqh7qPP-7jKSTN0AoA-8u84HdrYdQ@mail.gmail.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Fri, 23 Sep 2016 08:48:19 +0200
-Message-ID: <CACna6rwKfunLZhs3B=qJnWtGZ+qrZzY0kZ=st3KU1LqO5REoLw@mail.gmail.com> (sfid-20160923_084832_989157_A76890A3)
-Subject: Re: brcmf_txfinalize misses 802.1x packet leading to infinite WARNINGs
-To: Hante Meuleman <meuleman@broadcom.com>,
-        Arend van Spriel <arend@broadcom.com>,
-        brcm80211 development <brcm80211-dev-list@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from muru.com ([72.249.23.125]:42135 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758329AbcIMVvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 17:51:04 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCH 3/5] wlcore: sdio: Populate config firmware data
+Date: Tue, 13 Sep 2016 14:50:41 -0700
+Message-Id: <20160913215043.29454-4-tony@atomide.com> (sfid-20160913_235108_825063_138C04E9)
+In-Reply-To: <20160913215043.29454-1-tony@atomide.com>
+References: <20160913215043.29454-1-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 September 2016 at 16:09, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com> w=
-rote:
-> On 22 September 2016 at 14:24, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com>=
- wrote:
->> I got the same problem again, but this time there was only 1 skb in my
->> flowring.
->> That resulted in less serial console messages and no reboot.
->>
->> It doesn't look good. brcmf_txfinalize was called 11 times after deletin=
-g
->> flowring. Everytime it was working with the same skb that was already fr=
-eed.
->
-> I'm wondering if there is some bug in flowring code. Please take a
-> look if my following understanding it correct.
->
-> 1) Every skb that is supposed to reach the device gets queued on a flowri=
-ng.
-> 2) Dequeuing means skb is not available in a flowring anymore
-> 3a) brcmf_msgbuf_txflow dequeues skbs to pass them to the firmware
-> 3b) brcmf_flowring_delete dequeues skbs to delete (free) them
->
-> If that simple description is correct, it shouldn't be possible to skb to=
-:
-> 1) Reach the firmware
-> *and*
-> 2) Get freed as part of flowring deletion
->
-> But this is what seems to be happening in my case. We get one skb
-> freed on flowring deletion and then reported as transmitted (sometimes
-> multiple times) by the firmware.
->
-> Maybe there is simply a race between brcmf_flowring_delete and
-> brcmf_msgbuf_txflow?
+Configure the config firmware names and make it available
+in platform data.
 
-I can see a problem with my debugging code. It may happen brcmfmac
-gets skb allocated at the same address. Due to brcmf_flowring_delete
-bypassing brcmf_txfinalize we don't drop tracing of the old one and
-that results in the same packet listed twice in my debugging code.
+Let's also fix the order of the struct wilink_family_data
+while at it.
 
-I got caught into the same trap that breaks pend_8021x_cnt counting.
+Signed-off-by: Tony Lindgren <tony@atomide.com>
+---
+ drivers/net/wireless/ti/wlcore/spi.c | 42 ++++++++++++++++++++----------------
+ 1 file changed, 24 insertions(+), 18 deletions(-)
 
-I believe pend_8021x_cnt related code should be moved to the place
-that really queues skb for the firmware to access.
-
---=20
-Rafa=C5=82
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index a336493..f949ad2b 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -79,15 +79,19 @@
+ #define WSPI_MAX_NUM_OF_CHUNKS \
+ 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
+ 
++static const struct wilink_family_data wl127x_data = {
++	.name = "wl127x",
++	.nvs_name = "ti-connectivity/wl127x-nvs.bin",
++};
+ 
+-static const struct wilink_family_data *wilink_data;
++static const struct wilink_family_data wl128x_data = {
++	.name = "wl128x",
++	.nvs_name = "ti-connectivity/wl128x-nvs.bin",
++};
+ 
+ static const struct wilink_family_data wl18xx_data = {
+ 	.name = "wl18xx",
+-};
+-
+-static const struct wilink_family_data wl12xx_data = {
+-	.name = "wl12xx",
++	.cfg_name = "ti-connectivity/wl18xx-conf.bin",
+ };
+ 
+ struct wl12xx_spi_glue {
+@@ -425,10 +429,10 @@ static struct wl1271_if_operations spi_ops = {
+ };
+ 
+ static const struct of_device_id wlcore_spi_of_match_table[] = {
+-	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
+-	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
+-	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
+-	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1271", .data = &wl127x_data},
++	{ .compatible = "ti,wl1273", .data = &wl127x_data},
++	{ .compatible = "ti,wl1281", .data = &wl128x_data},
++	{ .compatible = "ti,wl1283", .data = &wl128x_data},
+ 	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
+ 	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
+ 	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
+@@ -456,9 +460,9 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
+ 	if (!of_id)
+ 		return -ENODEV;
+ 
+-	wilink_data = of_id->data;
++	pdev_data->family = of_id->data;
+ 	dev_info(&spi->dev, "selected chip family is %s\n",
+-		 wilink_data->name);
++		 pdev_data->family->name);
+ 
+ 	if (of_find_property(dt_node, "clock-xtal", NULL))
+ 		pdev_data->ref_clock_xtal = true;
+@@ -475,13 +479,15 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
+ static int wl1271_probe(struct spi_device *spi)
+ {
+ 	struct wl12xx_spi_glue *glue;
+-	struct wlcore_platdev_data pdev_data;
++	struct wlcore_platdev_data *pdev_data;
+ 	struct resource res[1];
+ 	int ret;
+ 
+-	memset(&pdev_data, 0x00, sizeof(pdev_data));
++	pdev_data = devm_kzalloc(&spi->dev, sizeof(*pdev_data), GFP_KERNEL);
++	if (!pdev_data)
++		return -ENOMEM;
+ 
+-	pdev_data.if_ops = &spi_ops;
++	pdev_data->if_ops = &spi_ops;
+ 
+ 	glue = devm_kzalloc(&spi->dev, sizeof(*glue), GFP_KERNEL);
+ 	if (!glue) {
+@@ -505,7 +511,7 @@ static int wl1271_probe(struct spi_device *spi)
+ 		return PTR_ERR(glue->reg);
+ 	}
+ 
+-	ret = wlcore_probe_of(spi, glue, &pdev_data);
++	ret = wlcore_probe_of(spi, glue, pdev_data);
+ 	if (ret) {
+ 		dev_err(glue->dev,
+ 			"can't get device tree parameters (%d)\n", ret);
+@@ -518,7 +524,7 @@ static int wl1271_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
+ 
+-	glue->core = platform_device_alloc(wilink_data->name,
++	glue->core = platform_device_alloc(pdev_data->family->name,
+ 					   PLATFORM_DEVID_AUTO);
+ 	if (!glue->core) {
+ 		dev_err(glue->dev, "can't allocate platform_device\n");
+@@ -539,8 +545,8 @@ static int wl1271_probe(struct spi_device *spi)
+ 		goto out_dev_put;
+ 	}
+ 
+-	ret = platform_device_add_data(glue->core, &pdev_data,
+-				       sizeof(pdev_data));
++	ret = platform_device_add_data(glue->core, pdev_data,
++				       sizeof(*pdev_data));
+ 	if (ret) {
+ 		dev_err(glue->dev, "can't add platform data\n");
+ 		goto out_dev_put;
+-- 
+2.9.3
