@@ -1,89 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:42918 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754001AbcITPTd (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 11:19:33 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8KFArPo028808
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 08:19:32 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 25h5bpb4u0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 08:19:31 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Shengzhen Li <szli@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/3] mwifiex: fix kernel crash for USB chipsets
-Date: Tue, 20 Sep 2016 20:49:02 +0530
-Message-ID: <1474384744-14096-1-git-send-email-akarwar@marvell.com> (sfid-20160920_171938_101610_BBB910BA)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:34376 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751120AbcIMGaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 02:30:00 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: simplify TDLS RA lookup
+Date: Tue, 13 Sep 2016 08:29:55 +0200
+Message-Id: <1473748195-17453-1-git-send-email-johannes@sipsolutions.net> (sfid-20160913_083004_106195_6FCBA445)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Cathy Luo <cluo@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Following crash issue is observed during TCP traffic stress
-test
+smatch pointed out that the second check of "tdls_auth" was
+pointless since if it was true, we returned from the function
+already. We can further simplify the code by moving the first
+check (if it's a TDLS peer at all) into the outer if, to only
+handle that inside. This simplifies the control flow here.
 
-[ 2253.625439] NMI watchdog: BUG: soft lockup - CPU#3 stuck for 22s!
-[kworker/u17:1:5191]
-[ 2253.625520] Call Trace:
-[ 2253.625527]  [<ffffffffc0b47030>] ? moal_spin_lock+0x30/0x30
-[usb8xxx]
-[ 2253.625533]  [<ffffffffc0ac3ceb>] ? wlan_wmm_lists_empty+0xb/0xf0
-[mlan]
-[ 2253.625537]  [<ffffffffc0ab0ea3>] mlan_main_process+0x1b3/0x720
-[mlan]
-[ 2253.625540]  [<ffffffffc0b337f5>] woal_main_work_queue+0x45/0x80
-[usb8xxx]
-[ 2253.625543]  [<ffffffff8108aaf0>] process_one_work+0x150/0x3f0
-[ 2253.625545]  [<ffffffff8108b1e1>] worker_thread+0x121/0x520
-[ 2253.625547]  [<ffffffff8108b0c0>] ? rescuer_thread+0x330/0x330
-[ 2253.625549]  [<ffffffff81090222>] kthread+0xd2/0xf0
-[ 2253.625551]  [<ffffffff81090150>] ?
-kthread_create_on_node+0x1c0/0x1c0
-[ 2253.625553]  [<ffffffff8179423c>] ret_from_fork+0x7c/0xb0
-[ 2253.625555]  [<ffffffff81090150>] ?
-kthread_create_on_node+0x1c0/0x1c0
-
-In mwifiex_usb_tx_complete(), we are updating port->block_status first
-and then freeing the skb attached to that URB. We may end up attaching
-new skb to URB in a corner case and same will be freed. This results in
-the kernel crash. The problem is solved by changing the sequence.
-
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/usb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/mac80211/tx.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index 8a20620..e8283dc 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -273,6 +273,8 @@ static void mwifiex_usb_tx_complete(struct urb *urb)
- 	} else {
- 		mwifiex_dbg(adapter, DATA,
- 			    "%s: DATA\n", __func__);
-+		mwifiex_write_data_complete(adapter, context->skb, 0,
-+					    urb->status ? -1 : 0);
- 		for (i = 0; i < MWIFIEX_TX_DATA_PORT; i++) {
- 			port = &card->port[i];
- 			if (context->ep == port->tx_data_ep) {
-@@ -282,8 +284,6 @@ static void mwifiex_usb_tx_complete(struct urb *urb)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index ee9e7d60cb78..61d302d97145 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2263,15 +2263,9 @@ static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+ 	case NL80211_IFTYPE_STATION:
+ 		if (sdata->wdev.wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) {
+ 			sta = sta_info_get(sdata, skb->data);
+-			if (sta) {
+-				bool tdls_peer, tdls_auth;
+-
+-				tdls_peer = test_sta_flag(sta,
+-							  WLAN_STA_TDLS_PEER);
+-				tdls_auth = test_sta_flag(sta,
+-						WLAN_STA_TDLS_PEER_AUTH);
+-
+-				if (tdls_peer && tdls_auth) {
++			if (sta && test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
++				if (test_sta_flag(sta,
++						  WLAN_STA_TDLS_PEER_AUTH)) {
+ 					*sta_out = sta;
+ 					return 0;
+ 				}
+@@ -2283,8 +2277,7 @@ static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
+ 				 * after a TDLS sta is removed due to being
+ 				 * unreachable.
+ 				 */
+-				if (tdls_peer && !tdls_auth &&
+-				    !ieee80211_is_tdls_setup(skb))
++				if (!ieee80211_is_tdls_setup(skb))
+ 					return -EINVAL;
  			}
- 		}
- 		adapter->data_sent = false;
--		mwifiex_write_data_complete(adapter, context->skb, 0,
--					    urb->status ? -1 : 0);
- 	}
  
- 	if (card->mc_resync_flag)
 -- 
-1.9.1
+2.8.1
