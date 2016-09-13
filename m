@@ -1,70 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:50263 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753179AbcISKE5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 06:04:57 -0400
-Message-ID: <1474279492.4469.29.camel@sipsolutions.net> (sfid-20160919_120500_879459_486B5001)
-Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
-        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
-Date: Mon, 19 Sep 2016 12:04:52 +0200
-In-Reply-To: <1474279330.4469.28.camel@sipsolutions.net> (sfid-20160919_120228_517669_28A2A922)
-References: <20160804071846.GA773@gondor.apana.org.au>
-         <20160804074546.GA996@gondor.apana.org.au>
-         <1470377813.2977.14.camel@sipsolutions.net>
-         <20160805104858.GA9297@gondor.apana.org.au>
-         <1470394233.2977.37.camel@sipsolutions.net>
-         <20160918135030.GA7062@gondor.apana.org.au>
-         <20160919084056.GA11875@gondor.apana.org.au>
-         <1474276530.4469.16.camel@sipsolutions.net>
-         <20160919091721.GA12235@gondor.apana.org.au>
-         <1474277244.4469.21.camel@sipsolutions.net>
-         <20160919093434.GA12378@gondor.apana.org.au>
-         (sfid-20160919_113440_719977_971CE718) <1474278634.4469.25.camel@sipsolutions.net>
-         (sfid-20160919_115045_089605_A254E125) <1474278896.4469.26.camel@sipsolutions.net>
-         (sfid-20160919_115508_261438_39410159) <1474279330.4469.28.camel@sipsolutions.net>
-         (sfid-20160919_120228_517669_28A2A922)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-vk0-f53.google.com ([209.85.213.53]:35078 "EHLO
+        mail-vk0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757953AbcIMSMJ (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 14:12:09 -0400
+Received: by mail-vk0-f53.google.com with SMTP id 16so171549385vko.2
+        for <linux-wireless@vger.kernel.org>; Tue, 13 Sep 2016 11:12:08 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <e9fde75d-a17a-8a3e-feee-6495eec0f67f@broadcom.com>
+References: <CAOMZO5BVB4YTsdzhU2f7jKZop6i1QaGGT2YM3Yw3DbYxeJ-v5w@mail.gmail.com>
+ <CAOMZO5C-NTppSiZt_Pc5GLrta06zvZiBwTVmpzhLVOR3f-6VbA@mail.gmail.com> <e9fde75d-a17a-8a3e-feee-6495eec0f67f@broadcom.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Tue, 13 Sep 2016 15:12:07 -0300
+Message-ID: <CAOMZO5D9dsYFgkoN_LtMf1sOYcbOg51AkafF7zrQ0NtPjvq7fg@mail.gmail.com> (sfid-20160913_201211_998647_9ACDAD5D)
+Subject: Re: brcmfmac43430-sdio.bin in linux-firmware
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
+        Hante Meuleman <meuleman@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-09-19 at 12:02 +0200, Johannes Berg wrote:
-> On Mon, 2016-09-19 at 11:54 +0200, Johannes Berg wrote:
-> > 
-> > > 
-> > > 
-> > > The stack trace is useless, but my other annotation showed that
-> > > the
-> > > table's nelems *underflowed* to -1, so now the worker will
-> > > continue
-> > > to try to grow it forever.
-> > > 
-> > 
-> > And this *was* actually a case of duplication, afaict, since it was
-> > multiple virtual interfaces on the same device all connecting to
-> > the
-> > same AP.
-> 
-> It seems that __rhashtable_remove_fast_one() should return 0 even in
-> the case of err==1 for the "skip all the maintenance due to list
-> deletion"?
-> 
-> --- a/include/linux/rhashtable.h
-> +++ b/include/linux/rhashtable.h
-> @@ -1009,7 +1009,7 @@ static inline int __rhashtable_remove_fast_one(
->                 err = 0;
->         }
->  
-> -       return err;
-> +       return err < 0 ? err : 0;
->  }
-> 
+Hi Arend,
 
-No, that's obviously bogus and already handled - wrong case anyway.
-Sorry.
+On Wed, Aug 24, 2016 at 4:22 PM, Arend Van Spriel
+<arend.vanspriel@broadcom.com> wrote:
 
-johannes
+> I could, but this is handled by Cypress now. I have asked for firmware
+> release tag so I can release it.
+
+Have you had a chance to release brcmfmac43430-sdio.bin?
+
+Thanks!
