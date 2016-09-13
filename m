@@ -1,45 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45506 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1751580AbcIVUwq (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:34865 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756273AbcIMJEH (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2016 16:52:46 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 22 Sep 2016 23:52:10 +0300
-Message-Id: <20160922205210.1778-11-luca@coelho.fi> (sfid-20160922_225301_721356_D1340DB3)
-In-Reply-To: <20160922205210.1778-1-luca@coelho.fi>
-References: <20160922205210.1778-1-luca@coelho.fi>
-Subject: [PATCH 10/10] iwlwifi: mvm: initialise ADD_STA before sending it to the firmware
+        Tue, 13 Sep 2016 05:04:07 -0400
+From: "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+        "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>,
+        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
+Subject: RE: [PATCH v3] cfg80211: Add support to configure a beacon data rate
+Date: Tue, 13 Sep 2016 09:04:00 +0000
+Message-ID: <3219e116b6e54ff5b1f3423acfb4a76e@aphydexm01b.ap.qualcomm.com> (sfid-20160913_110411_812629_905D567F)
+References: <1472814834-2728-1-git-send-email-pkushwah@qti.qualcomm.com>
+ <1473675973.29016.19.camel@sipsolutions.net>
+In-Reply-To: <1473675973.29016.19.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-
-When we unshare a queue, the ADD_STA was not properly
-initialised.
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index 258a234..fc77188 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -933,7 +933,7 @@ static void iwl_mvm_unshare_queue(struct iwl_mvm *mvm, int queue)
- 
- 	/* If aggs should be turned back on - do it */
- 	if (mvmsta->tid_data[tid].state == IWL_AGG_ON) {
--		struct iwl_mvm_add_sta_cmd cmd;
-+		struct iwl_mvm_add_sta_cmd cmd = {0};
- 
- 		mvmsta->tid_disable_agg &= ~BIT(tid);
- 
--- 
-2.9.3
+SGkgSm9oYW5uZXMsDQoNCj4gQWxsIG9mIHRoZXNlIGp1c3QgbW92ZSBhcm91bmQsIHJpZ2h0Pw0K
+WWVzLCBqdXN0IG1vdmVkIGFyb3VuZC4gDQoNCj4gSSB0aGluayBpdCB3b3VsZCBiZSBnb29kIHRv
+IHNwbGl0IG91dCB0aGlzICJzaW5nbGUgcmF0ZSIgdGhpbmcgaW50byBhIGhlbHBlciBmdW5jdGlv
+bi4NCnN1cmUsIHdpbGwgcmFpc2UgYSBuZXcgcGF0Y2hzZXQgd2l0aCB0aGlzIGNoYW5nZS4NCg0K
+VGhhbmtzLA0KUHVydXNob3R0YW0NCg==
