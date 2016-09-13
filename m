@@ -1,102 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:57528 "EHLO nbd.name"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37294 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932707AbcIEJvd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Sep 2016 05:51:33 -0400
-From: Felix Fietkau <nbd@nbd.name>
+        id S1754885AbcIMPbu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 11:31:50 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH v3 0/3] mt76: add new wireless driver for MediaTek MT76x2 PCIe chips
-Date: Mon,  5 Sep 2016 11:51:25 +0200
-Message-Id: <20160905095128.80560-1-nbd@nbd.name> (sfid-20160905_115142_532891_0795D748)
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/6] nl80211: only allow WEP keys during connect command
+Date: Tue, 13 Sep 2016 16:44:25 +0200
+Message-Id: <1473777868-32429-3-git-send-email-johannes@sipsolutions.net> (sfid-20160913_173154_401002_53285AFB)
+In-Reply-To: <1473777868-32429-1-git-send-email-johannes@sipsolutions.net>
+References: <1473777868-32429-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series depends on the patch
-"add basic register-field manipulation macros"
+From: Johannes Berg <johannes.berg@intel.com>
 
-Changes since v2:
-- lots of checkpatch cleanups
-- various tx path (and other) fixes
-- use the new bitfield API
-- documented device tree bindings
+This was already documented that way in nl80211.h, but the
+parsing code still accepted other key types. Change it to
+really only accept WEP keys as documented.
 
-Felix Fietkau (3):
-  Documentation: dt: net: add mt76 wireless device binding
-  mt76: add common code shared between multiple chipsets
-  mt76: add driver code for MT76x2e
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
- .../bindings/net/wireless/mediatek,mt76.txt        |  26 +
- drivers/net/wireless/mediatek/Kconfig              |   1 +
- drivers/net/wireless/mediatek/Makefile             |   1 +
- drivers/net/wireless/mediatek/mt76/Kconfig         |  10 +
- drivers/net/wireless/mediatek/mt76/Makefile        |  15 +
- drivers/net/wireless/mediatek/mt76/debugfs.c       |  76 ++
- drivers/net/wireless/mediatek/mt76/dma.c           | 451 ++++++++++++
- drivers/net/wireless/mediatek/mt76/dma.h           |  38 +
- drivers/net/wireless/mediatek/mt76/eeprom.c        | 122 ++++
- drivers/net/wireless/mediatek/mt76/mac80211.c      | 314 +++++++++
- drivers/net/wireless/mediatek/mt76/mmio.c          |  61 ++
- drivers/net/wireless/mediatek/mt76/mt76.h          | 355 ++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2.h        | 220 ++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_core.c   |  83 +++
- .../net/wireless/mediatek/mt76/mt76x2_debugfs.c    | 101 +++
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.c    | 184 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2_dma.h    |  68 ++
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c | 644 +++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h | 181 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2_init.c   | 765 +++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.c    | 738 ++++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mac.h    | 189 +++++
- drivers/net/wireless/mediatek/mt76/mt76x2_main.c   | 532 ++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c    | 452 ++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h    | 136 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2_pci.c    | 109 +++
- drivers/net/wireless/mediatek/mt76/mt76x2_phy.c    | 688 ++++++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_regs.h   | 564 +++++++++++++++
- drivers/net/wireless/mediatek/mt76/mt76x2_trace.c  |  23 +
- drivers/net/wireless/mediatek/mt76/mt76x2_trace.h  | 144 ++++
- drivers/net/wireless/mediatek/mt76/mt76x2_tx.c     | 262 +++++++
- drivers/net/wireless/mediatek/mt76/trace.c         |  23 +
- drivers/net/wireless/mediatek/mt76/trace.h         |  71 ++
- drivers/net/wireless/mediatek/mt76/tx.c            | 511 ++++++++++++++
- drivers/net/wireless/mediatek/mt76/util.c          |  78 +++
- drivers/net/wireless/mediatek/mt76/util.h          |  44 ++
- 36 files changed, 8280 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
- create mode 100644 drivers/net/wireless/mediatek/mt76/Kconfig
- create mode 100644 drivers/net/wireless/mediatek/mt76/Makefile
- create mode 100644 drivers/net/wireless/mediatek/mt76/debugfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/dma.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/dma.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/eeprom.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mac80211.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mmio.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_core.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_debugfs.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_dma.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_eeprom.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_init.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mac.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_main.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_mcu.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_pci.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_phy.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_regs.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_trace.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/mt76x2_tx.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/trace.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/trace.h
- create mode 100644 drivers/net/wireless/mediatek/mt76/tx.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/util.c
- create mode 100644 drivers/net/wireless/mediatek/mt76/util.h
-
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 6fe14b5d1af3..739d0a780d83 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -881,16 +881,19 @@ nl80211_parse_connkeys(struct cfg80211_registered_device *rdev,
+ 						     parse.idx, false, NULL);
+ 		if (err)
+ 			goto error;
++		if (parse.p.cipher != WLAN_CIPHER_SUITE_WEP40 &&
++		    parse.p.cipher != WLAN_CIPHER_SUITE_WEP104) {
++			err = -EINVAL;
++			goto error;
++		}
+ 		result->params[parse.idx].cipher = parse.p.cipher;
+ 		result->params[parse.idx].key_len = parse.p.key_len;
+ 		result->params[parse.idx].key = result->data[parse.idx];
+ 		memcpy(result->data[parse.idx], parse.p.key, parse.p.key_len);
+ 
+-		if (parse.p.cipher == WLAN_CIPHER_SUITE_WEP40 ||
+-		    parse.p.cipher == WLAN_CIPHER_SUITE_WEP104) {
+-			if (no_ht)
+-				*no_ht = true;
+-		}
++		/* must be WEP key if we got here */
++		if (no_ht)
++			*no_ht = true;
+ 	}
+ 
+ 	return result;
 -- 
-2.8.4
+2.8.1
