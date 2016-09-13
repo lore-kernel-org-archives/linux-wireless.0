@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54283 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750816AbcIIJMn (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 05:12:43 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [1/2] brcmfmac: add support for bcm4339 chip with modalias
- sdio:c00v02D0d4339
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1473072133-4266-2-git-send-email-arend.vanspriel@broadcom.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-Id: <20160909091242.D584461E9C@smtp.codeaurora.org> (sfid-20160909_111246_874584_90FF1E86)
-Date: Fri,  9 Sep 2016 09:12:42 +0000 (UTC)
+Received: from s3.sipsolutions.net ([5.9.151.49]:36609 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751433AbcIMN4t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 09:56:49 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] nl80211: validate number of probe response CSA counters
+Date: Tue, 13 Sep 2016 15:56:45 +0200
+Message-Id: <1473775005-16286-1-git-send-email-johannes@sipsolutions.net> (sfid-20160913_155653_590126_6A729122)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.vanspriel@broadcom.com> wrote:
-> The driver already supports the bcm4339 chipset but only for the variant
-> that shares the same modalias as the bcm4335, ie. sdio:c00v02D0d4335.
-> It turns out that there are also bcm4339 devices out there that have a
-> more distiguishable modalias sdio:c00v02D0d4339.
-> 
-> Reported-by: Steve deRosier <derosier@gmail.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+Due to an apparent copy/paste bug, the number of counters for the
+beacon configuration were checked twice, instead of checking the
+number of probe response counters. Fix this to check the number of
+probe response counters before parsing those.
 
-634faf368690 brcmfmac: add support for bcm4339 chip with modalias sdio:c00v02D0d4339
-5251b6be8bb5 brcmfmac: sdio: shorten retry loop in brcmf_sdio_kso_control()
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/nl80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index ef234d2fd854..a65c94f202f8 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -6998,7 +6998,7 @@ static int nl80211_channel_switch(struct sk_buff *skb, struct genl_info *info)
+ 
+ 		params.n_counter_offsets_presp = len / sizeof(u16);
+ 		if (rdev->wiphy.max_num_csa_counters &&
+-		    (params.n_counter_offsets_beacon >
++		    (params.n_counter_offsets_presp >
+ 		     rdev->wiphy.max_num_csa_counters))
+ 			return -EINVAL;
+ 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9313473/
+2.8.1
