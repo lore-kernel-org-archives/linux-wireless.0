@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0195.hostedemail.com ([216.40.44.195]:60264 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1034492AbcIWSMa (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Sep 2016 14:12:30 -0400
-Message-ID: <1474654333.1849.5.camel@perches.com> (sfid-20160923_201234_131283_B362EE10)
-Subject: Re: rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case not processed
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Jean Delvare <jdelvare@suse.de>,
-        Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: linux-wireless@vger.kernel.org
-In-Reply-To: <83974845-037d-0cde-00b1-ec7b28eeb15f@lwfinger.net>
-References: <20160922115116.149c599c@endymion>
-         <83974845-037d-0cde-00b1-ec7b28eeb15f@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Date: Fri, 23 Sep 2016 11:12:13 -0700
+Received: from s3.sipsolutions.net ([5.9.151.49]:38166 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756845AbcIMSnL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Tue, 13 Sep 2016 14:43:11 -0400
+Message-ID: <1473792187.5622.7.camel@sipsolutions.net> (sfid-20160913_204314_700998_61829C43)
+Subject: Re: [PATCH v4] cfg80211: Add support to configure a beacon data rate
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+        usdutt@qti.qualcomm.com, amarnath@qca.qualcomm.com
+Date: Tue, 13 Sep 2016 20:43:07 +0200
+In-Reply-To: <1473759726-14425-1-git-send-email-pkushwah@qti.qualcomm.com>
+References: <1473759726-14425-1-git-send-email-pkushwah@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-09-22 at 10:09 -0500, Larry Finger wrote:
-> On 09/22/2016 04:51 AM, Jean Delvare wrote:
-> Hello,
-> 
-> 
-> I bought an Asus PCE-N10 PCIe Wi-Fi N card to install in my wife's
-> computer. This morning it stopped working suddenly. Investigating the
-> kernel logs, the following error message caught my eye:
-> 
-> 
-> rtl8192ce:rtl92ce_get_hw_reg():<0-0> switch case not processed
-> 
-> 
-> It was printed twice, 3.5 hours apart, the second time at the moment
-> the network stopped working. I guess this is not supposed to happen.
-> What additional information can I provide to help you debug the issue?
-> That's the device:
-> 
-> 
-> 03:00.0 Network controller [0280]: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter [10ec:8176] (rev 01)
-> 	Subsystem: ASUSTeK Computer Inc. Device [1043:84b5]
-> 	Flags: bus master, fast devsel, latency 0, IRQ 17
-> 	I/O ports at e800 [size=256]
-> 	Memory at febfc000 (64-bit, non-prefetchable) [size=16K]
-> 	Capabilities: <access denied>
-> 	Kernel driver in use: rtl8192ce
-> 	Kernel modules: rtl8192ce
-> 
-> 
-> Kernel version is 4.5.4-1-default x86_64 (openSUSE Tumbleweed.)
-> 
-> 
-> Reloading the rtl8192ce module and restarting the network service got
-> everything back up.
-> 
-> 
-> 
-> 
-> Unfortunately, that message is not as helpful as it might be.
-> 
-> 
-> Do you build your own kernel, or are you using openSUSE's supplied version? If 
-> the latter, I will need to think how we might debug the issue. If the former, 
-> please add the attached patch.
+Hi,
 
-It might be better to add the switch value to all the
-RT_TRACE(,,,"switch case not processed\n"); uses in
-drivers/net/wireless/realtek/rtlwifi/
+Thanks for the new version. I was going to apply it but while changing
+something small - see below - found what I think is another issue?
 
-I'll send a patch.
+> +static int validate_beacon_tx_rate(struct cfg80211_ap_settings
+> *params)
+> +{
+> +	u32 rate, count_ht, count_vht, i;
+> +	enum nl80211_band band;
+> +
+> +	band = params->chandef.chan->band;
+> +	rate = params->beacon_rate.control[band].legacy;
+> +
+> +	/* Allow only one rate */
+> +	if (rate && (rate & (rate - 1)))
+> +		return -EINVAL;
+
+I was going to change that to just
+	if (hweight32(rate) > 1)
+		return -EINVAL;
+
+I realize that your code is equivalent, but I doubt that we need to be
+really efficient here, and IMHO hweight32() is easier to understand.
+
+> +	count_ht = 0;
+> +	for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++) {
+> +		if (params->beacon_rate.control[band].ht_mcs[i]) {
+> +			count_ht++;
+> +			if (count_ht > 1)
+> +				return -EINVAL;
+> +		}
+> +	}
+
+But this is where I got confused - this seems wrong, you should be
+checking the hweight8() of each of the ht_mcs[i] values?
+
+Similarly, the VHT one, but with hweight16() of course, no?
+
+I was going to move a "if (rate) return -EINVAL;" check into this and
+the VHT loop, so that we only need the count_ht && count_vht and the
+"all empty" portion of this:
+
+> +	if ((rate && count_ht) ||
+> +	    (rate && count_vht) ||
+> +	    (count_ht && count_vht) ||
+> +	    (!rate && !count_ht && !count_vht))
+> +		return -EINVAL;
+> +
+> +	return 0;
+> +}
+
+
+johannes
