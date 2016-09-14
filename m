@@ -1,64 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:44310 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752115AbcIIRZv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 13:25:51 -0400
-Subject: Re: [PATCH 1/3] ath10k: Ensure there are no stale ar->txqs entries.
-To: greearb@candelatech.com, ath10k@lists.infradead.org
-References: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <a9add01b-4d5a-0e1c-d856-64dcf71bdb1c@nbd.name> (sfid-20160909_192555_094173_6B95B0EF)
-Date: Fri, 9 Sep 2016 19:25:44 +0200
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17160 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754281AbcINM3L (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Sep 2016 08:29:11 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Benjamin Berg <benjamin@sipsolutions.net>
+CC: Simon Wunderlich <sw@simonwunderlich.de>,
+        "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        "ath10k @ lists . infradead . org" <ath10k@lists.infradead.org>,
+        "michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>
+Subject: Re: [PATCH] ath10k: Add missing CONFIG_ATH10K_DEBUGFS check
+Date: Wed, 14 Sep 2016 12:29:03 +0000
+Message-ID: <87a8fafywg.fsf@kamboji.qca.qualcomm.com> (sfid-20160914_142915_223954_F367BEC5)
+References: <871t0tp1ad.fsf@kamboji.qca.qualcomm.com>
+        <20160912141105.24085-1-benjamin@sipsolutions.net>
+In-Reply-To: <20160912141105.24085-1-benjamin@sipsolutions.net> (Benjamin
+        Berg's message of "Mon, 12 Sep 2016 16:11:05 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1471569995-10028-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-08-19 03:26, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> I was seeing kernel crashes due to accessing freed memory
-> while debugging a 9984 firmware that was crashing often.
-> 
-> This patch fixes the crashes.  I am not certain if there
-> is a better way or not.
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 5659ef1..916119c 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -4172,8 +4172,10 @@ static void ath10k_mac_txq_init(struct ieee80211_txq *txq)
->  static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
->  {
->  	struct ath10k_txq *artxq = (void *)txq->drv_priv;
-> +	struct ath10k_txq *tmp, *walker;
->  	struct ath10k_skb_cb *cb;
->  	struct sk_buff *msdu;
-> +	struct ieee80211_txq *txq_tmp;
->  	int msdu_id;
->  
->  	if (!txq)
-> @@ -4182,6 +4184,14 @@ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
->  	spin_lock_bh(&ar->txqs_lock);
->  	if (!list_empty(&artxq->list))
->  		list_del_init(&artxq->list);
-> +
-> +	/* Remove from ar->txqs in case it still exists there. */
-> +	list_for_each_entry_safe(walker, tmp, &ar->txqs, list) {
-> +		txq_tmp = container_of((void *)walker, struct ieee80211_txq,
-> +				       drv_priv);
-> +		if (txq_tmp == txq)
-> +			list_del(&walker->list);
-> +	}
-This makes no sense at all. From txq_tmp == txq we can deduce that
-walker == artxq. In the context above, it already does a
-list_del_init(&artxq->list).
+Benjamin Berg <benjamin@sipsolutions.net> writes:
 
-- Felix
+> The patch "ath10k: allow setting coverage class" was missing a check for
+> CONFIG_ATH10K_DEBUGFS so it would try to use non-existing struct elements
+> in some configurations. Fix this by adding the appropriate ifdef.
+>
+> Signed-off-by: Benjamin Berg <benjamin@sipsolutions.net>
+> ---
+>
+> Sorry, so turns out the kbuild test robot is correct and I forgot the ifd=
+ef
+> to check for CONFIG_ATH10K_DEBUGFS, so here a fixup commit for it.
+>
+> Other than that everything looks good to me in the pending branch.
+
+Thanks, I folded this to the original patch in the pending branch.
+
+--=20
+Kalle Valo=
