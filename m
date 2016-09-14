@@ -1,113 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:46713 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932858AbcILNJH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 09:09:07 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v8] mac80211: Move reorder-sensitive TX handlers to after
-        TXQ dequeue.
-References: <20160905113042.22271-1-toke@toke.dk>
-        <20160906114426.25520-1-toke@toke.dk>
-        <1473683716.29016.37.camel@sipsolutions.net>
-Date: Mon, 12 Sep 2016 15:08:58 +0200
-In-Reply-To: <1473683716.29016.37.camel@sipsolutions.net> (Johannes Berg's
-        message of "Mon, 12 Sep 2016 14:35:16 +0200")
-Message-ID: <87wpihe045.fsf@toke.dk> (sfid-20160912_150911_157829_1560DFD5)
+Received: from smtp.codeaurora.org ([198.145.29.96]:51381 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760515AbcINQsX (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Sep 2016 12:48:23 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Ganapathi Bhat <gbhat@marvell.com>
+Subject: Re: [PATCH v2] mwifiex: cfg80211 set_default_mgmt_key handler
+References: <1473428038-15308-1-git-send-email-akarwar@marvell.com>
+Date: Wed, 14 Sep 2016 19:48:18 +0300
+In-Reply-To: <1473428038-15308-1-git-send-email-akarwar@marvell.com>
+        (Amitkumar Karwar's message of "Fri, 9 Sep 2016 19:03:58 +0530")
+Message-ID: <87twdictrh.fsf@kamboji.qca.qualcomm.com> (sfid-20160914_184827_271204_8B32C400)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
->> +static int invoke_tx_handlers_late(struct ieee80211_tx_data *tx);
->> +static bool ieee80211_xmit_fast_finish(struct ieee80211_sub_if_data *sd=
-ata,
->> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0struct sta_info *sta, u8 =
-pn_offs,
->> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0struct ieee80211_key_conf=
- *key_conf,
->> +				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0struct sk_buff *skb);
->> +
+> From: Ganapathi Bhat <gbhat@marvell.com>
 >
-> I'm not very happy with this - I think you should do some
-> refactoring/code move in a separate prior patch to avoid this.
-
-Noted, will do.
-
->> +	if (txq->sta && info->control.flags & IEEE80211_TX_CTRL_FAST_XMIT) {
->> =C2=A0		struct sta_info *sta =3D container_of(txq->sta, struct sta_info,
->> =C2=A0						=C2=A0=C2=A0=C2=A0=C2=A0sta);
->> -		struct ieee80211_tx_info *info =3D IEEE80211_SKB_CB(skb);
->> +		u8 pn_offs =3D 0;
->> =C2=A0
->> -		hdr->seq_ctrl =3D ieee80211_tx_next_seq(sta, txq->tid);
->> -		if (test_bit(IEEE80211_TXQ_AMPDU, &txqi->flags))
->> -			info->flags |=3D IEEE80211_TX_CTL_AMPDU;
->> -		else
->> -			info->flags &=3D ~IEEE80211_TX_CTL_AMPDU;
->> +		if (info->control.hw_key)
->> +			pn_offs =3D ieee80211_hdrlen(hdr->frame_control);
+> Previously device used to start using IGTK key as Tx key as soon as it
+> gets downloaded in add_key(). This patch implements set_default_mgmt_key
+> handler. We will update Tx key ID in set_default_mgmt_key().
 >
-> Not very happy with this either - the fast-xmit path explicitly tries
-> to avoid all these calculations.
-
-Well, the TXQ already adds a lot of other overhead (hashing on the
-packet header, for one), so my guess would be that this would be
-negligible compared to all that?=20
-
-> I suppose I don't have to care all that much about the TXQs, but ...
+> Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> Changes in v2: v1 had a dummy handler. v2 addresses a corner case problem
+> pointed by Jouni in which AP may send frames encrypted with new key when some
+> of the stations are still using old key.
+> ---
+>  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 25 +++++++++++++++++++++++++
+>  drivers/net/wireless/marvell/mwifiex/fw.h       |  1 +
+>  drivers/net/wireless/marvell/mwifiex/ioctl.h    |  1 +
+>  drivers/net/wireless/marvell/mwifiex/sta_cmd.c  |  5 +++++
+>  4 files changed, 32 insertions(+)
 >
-> Then again, adding a field in the skb->cb for the sake of this? No,
-> not really either.
+> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> index 0a03d3f..33e7a74 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+> @@ -484,6 +484,30 @@ mwifiex_cfg80211_add_key(struct wiphy *wiphy, struct net_device *netdev,
+>  }
+>  
+>  /*
+> + * CFG802.11 operation handler to set default mgmt key.
+> + */
+> +static int
+> +mwifiex_cfg80211_set_default_mgmt_key(struct wiphy *wiphy,
+> +				      struct net_device *netdev,
+> +				      u8 key_index)
+> +{
+> +	struct mwifiex_private *priv = mwifiex_netdev_get_priv(netdev);
+> +	struct mwifiex_ds_encrypt_key encrypt_key;
+> +	const u8 bc_mac[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
-So that's a "keep it", then? :)
+This should be static const, but...
 
->> +		ieee80211_xmit_fast_finish(sta->sdata, sta, pn_offs,
->> +					=C2=A0=C2=A0=C2=A0info->control.hw_key, skb);
->
-> I don't see how keeping the info->control.hw_key pointer across the
-> TXQ/FQ/Codel queueing isn't a potential bug? Probably one that already
-> exists in your code today, before this patch, of course.
+> +	wiphy_dbg(wiphy, "set default mgmt key, key index=%d\n", key_index);
+> +
+> +	memset(&encrypt_key, 0, sizeof(struct mwifiex_ds_encrypt_key));
+> +	encrypt_key.key_len = WLAN_KEY_LEN_CCMP;
+> +	encrypt_key.key_index = key_index;
+> +	encrypt_key.is_igtk_def_key = true;
+> +	ether_addr_copy(encrypt_key.mac_addr, bc_mac);
 
-You mean the key could get removed from the hardware while the packet
-was queued? Can certainly add a check for that. Under what conditions
-does that happen? Does it make sense to try to recover from it (I guess
-by calling tx_h_select_key), or is it rare enough that giving up and
-dropping the packet makes more sense?
+...can't you use eth_broadcast_addr() here?
 
->> +	} else {
->> +		struct ieee80211_tx_data tx =3D { };
->> +
->> +		__skb_queue_head_init(&tx.skbs);
->> +		tx.local =3D local;
->> +		tx.skb =3D skb;
->
-> an empty initializer is weird - why not at least move local/skb
-> initializations into it? Even txq->sta, I guess, since you can assign
-> txq->sta either way.
-
-Yup, makes sense. Noted.
-
->> -	CALL_TXH(ieee80211_tx_h_select_key);
->> +
->> =C2=A0	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL))
->> =C2=A0		CALL_TXH(ieee80211_tx_h_rate_ctrl);
-> [...]
->> 	if (unlikely(info->flags & IEEE80211_TX_INTFL_RETRANSMISSION)) {
->> =C2=A0		__skb_queue_tail(&tx->skbs, tx->skb);
->> =C2=A0		tx->skb =3D NULL;
->> =C2=A0		goto txh_done;
->> =C2=A0	}
->>=20
->> +	CALL_TXH(ieee80211_tx_h_select_key);
->
-> What happens for the=C2=A0IEEE80211_TX_INTFL_RETRANSMISSION packets wrt.
-> key selection? Why is it OK to change this?
-
-You're right, that's an oversight on my part. Will fix.
-
--Toke
+-- 
+Kalle Valo
