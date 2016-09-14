@@ -1,59 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:39462 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751085AbcIOQDY (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 12:03:24 -0400
-Subject: Re: Using ath5k/ath9k radio for constant-tx noise source.
-To: Bob Copeland <me@bobcopeland.com>
-References: <55D4D406.5000603@candelatech.com> <55D5EE0E.3020408@neratec.com>
- <6d50965d-af35-dad9-23fe-162678a0f02f@candelatech.com>
- <20160915132601.GC4475@localhost>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Christian Lamparter <chunkeey@googlemail.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <1241465a-bea6-2452-3943-c95c8110ae69@candelatech.com> (sfid-20160915_180328_292446_27EF8C4B)
-Date: Thu, 15 Sep 2016 09:03:23 -0700
-MIME-Version: 1.0
-In-Reply-To: <20160915132601.GC4475@localhost>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:45648 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758873AbcINQcq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Sep 2016 12:32:46 -0400
+From: Benjamin Berg <benjamin@sipsolutions.net>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "ath10k @ lists . infradead . org" <ath10k@lists.infradead.org>,
+        Simon Wunderlich <sw@simonwunderlich.de>,
+        "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>,
+        Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+        michal.kazior@tieto.com,
+        Mathias Kretschmer <mathias.kretschmer@fit.fraunhofer.de>,
+        linux-wireless@vger.kernel.org,
+        Benjamin Berg <benjamin@sipsolutions.net>
+Subject: [PATCH] ath10k: Fix spinlock use in coverage class hack
+Date: Wed, 14 Sep 2016 18:32:31 +0200
+Message-Id: <20160914163231.20863-1-benjamin@sipsolutions.net> (sfid-20160914_183249_785182_181A4C1D)
+In-Reply-To: <8760q0j8st.fsf@kamboji.qca.qualcomm.com>
+References: <8760q0j8st.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/15/2016 06:26 AM, Bob Copeland wrote:
-> On Wed, Sep 14, 2016 at 05:22:46PM -0700, Ben Greear wrote:
->> On 08/20/2015 08:11 AM, Zefir Kurtisi wrote:
->>> On 08/19/2015 09:07 PM, Ben Greear wrote:
->>>> I have a commercial AP that is using a CM9 ath5k radio (evidently, I could be wrong)
->>>> and it has the ability to do a constant transmit of raw noise (RF probe shows
->>>> noise, but a monitor-port sniffer does not see any frames from the CM9).
->>>>
->>>> I don't know the low-level details of how it is doing this, but I suspect
->>>> it is using something like madwifi for a driver.
->>>>
->>>> Does anyone know how this can be done with modern software and
->>>> ath5k or ath9k NICs?
->
-> Hi Ben,
->
-> I wrote some code to do this on ath5k -- I can post a patch if you're
-> interested in using ath5k for this.
->
-> Here's a snapshot of what it looks like when running on ch.1:
->
-> https://bobcopeland.com/images/speccy-testmode.png
->
+ath10k_hw_qca988x_set_coverage_class needs to hold both conf_mutex and
+the data_lock spin lock for parts of the function. However, data_lock
+is only needed while storing the coverage_class to store the value that
+the card is configured to.
 
-I would be interested in seeing those patches.
+Fix the locking issue by only holding data_lock for the required duration.
 
-ath5k is probably cheaper and easier to find than carl9170 nics.
+Signed-off-by: Benjamin Berg <benjamin@sipsolutions.net>
+---
 
-Personally, such patches for ath9k would be best, but ath5k is still interesting.
+And yes, I fully agree with your points of it being rather fragile. But as
+you said, it should be entirely safe if not used. Obviously a firmware
+implementation would be preferential.
 
-Thanks,
-Ben
+This locking issue was pretty unnecessary. Lets see if any more issues show
+up in a closer review.
 
+ drivers/net/wireless/ath/ath10k/core.h | 2 +-
+ drivers/net/wireless/ath/ath10k/hw.c   | 5 +++--
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 89b07be..5f8c31f 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -915,7 +915,7 @@ struct ath10k {
+ 	struct work_struct set_coverage_class_work;
+ 	/* protected by conf_mutex */
+ 	struct {
+-		/* protected by data_lock */
++		/* writing also protected by data_lock */
+ 		s16 coverage_class;
+ 
+ 		u32 reg_phyclk;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.c b/drivers/net/wireless/ath/ath10k/hw.c
+index e182f09..bd5ca6a 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.c
++++ b/drivers/net/wireless/ath/ath10k/hw.c
+@@ -243,7 +243,6 @@ static void ath10k_hw_qca988x_set_coverage_class(struct ath10k *ar,
+ 	u32 fw_dbglog_level;
+ 
+ 	mutex_lock(&ar->conf_mutex);
+-	spin_lock_bh(&ar->data_lock);
+ 
+ 	/* Only modify registers if the core is started. */
+ 	if ((ar->state != ATH10K_STATE_ON) &&
+@@ -356,12 +355,14 @@ static void ath10k_hw_qca988x_set_coverage_class(struct ath10k *ar,
+ 
+ store_regs:
+ 	/* After an error we will not retry setting the coverage class. */
++	spin_lock_bh(&ar->data_lock);
+ 	ar->fw_coverage.coverage_class = value;
++	spin_unlock_bh(&ar->data_lock);
++
+ 	ar->fw_coverage.reg_slottime_conf = slottime_reg;
+ 	ar->fw_coverage.reg_ack_cts_timeout_conf = timeout_reg;
+ 
+ unlock:
+-	spin_unlock_bh(&ar->data_lock);
+ 	mutex_unlock(&ar->conf_mutex);
+ }
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.9.3
