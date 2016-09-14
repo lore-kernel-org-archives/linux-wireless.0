@@ -1,62 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34376 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751120AbcIMGaA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 02:30:00 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: simplify TDLS RA lookup
-Date: Tue, 13 Sep 2016 08:29:55 +0200
-Message-Id: <1473748195-17453-1-git-send-email-johannes@sipsolutions.net> (sfid-20160913_083004_106195_6FCBA445)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:31979 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1762170AbcINPBM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Sep 2016 11:01:12 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "greearb@candelatech.com" <greearb@candelatech.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 12/21] ath10k: Support up to 64 vdevs.
+Date: Wed, 14 Sep 2016 15:01:07 +0000
+Message-ID: <87y42ucyq6.fsf@kamboji.qca.qualcomm.com> (sfid-20160914_170116_540931_F27D051E)
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+        <1462986153-16318-13-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1462986153-16318-13-git-send-email-greearb@candelatech.com>
+        (greearb@candelatech.com's message of "Wed, 11 May 2016 10:02:24        -0700")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+greearb@candelatech.com writes:
 
-smatch pointed out that the second check of "tdls_auth" was
-pointless since if it was true, we returned from the function
-already. We can further simplify the code by moving the first
-check (if it's a TDLS peer at all) into the outer if, to only
-handle that inside. This simplifies the control flow here.
+> From: Ben Greear <greearb@candelatech.com>
+>
+> The (1 << x) - 1 trick won't work when you
+> are trying to fill up all 64 bits, so add special
+> case for that.
+>
+> And, move the limits to the per-nic structure instead
+> of per-driver to allow better dynamic use of the limits.
+>
+> Signed-off-by: Ben Greear <greearb@candelatech.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/core.c | 5 ++++-
+>  1 file changed, 4 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireles=
+s/ath/ath10k/core.c
+> index 3f1786c..fa71d57 100644
+> --- a/drivers/net/wireless/ath/ath10k/core.c
+> +++ b/drivers/net/wireless/ath/ath10k/core.c
+> @@ -1819,7 +1819,10 @@ int ath10k_core_start(struct ath10k *ar, enum ath1=
+0k_firmware_mode mode,
+>  	if (status)
+>  		goto err_hif_stop;
+> =20
+> -	ar->free_vdev_map =3D (1LL << ar->max_num_vdevs) - 1;
+> +	if (ar->max_num_vdevs >=3D 64)
+> +		ar->free_vdev_map =3D 0xFFFFFFFFFFFFFFFFLL;
+> +	else
+> +		ar->free_vdev_map =3D (1LL << ar->max_num_vdevs) - 1;
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/tx.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+The last sentence in the commit log doesn't match the code, I removed
+that in the pending branch.
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index ee9e7d60cb78..61d302d97145 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -2263,15 +2263,9 @@ static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
- 	case NL80211_IFTYPE_STATION:
- 		if (sdata->wdev.wiphy->flags & WIPHY_FLAG_SUPPORTS_TDLS) {
- 			sta = sta_info_get(sdata, skb->data);
--			if (sta) {
--				bool tdls_peer, tdls_auth;
--
--				tdls_peer = test_sta_flag(sta,
--							  WLAN_STA_TDLS_PEER);
--				tdls_auth = test_sta_flag(sta,
--						WLAN_STA_TDLS_PEER_AUTH);
--
--				if (tdls_peer && tdls_auth) {
-+			if (sta && test_sta_flag(sta, WLAN_STA_TDLS_PEER)) {
-+				if (test_sta_flag(sta,
-+						  WLAN_STA_TDLS_PEER_AUTH)) {
- 					*sta_out = sta;
- 					return 0;
- 				}
-@@ -2283,8 +2277,7 @@ static int ieee80211_lookup_ra_sta(struct ieee80211_sub_if_data *sdata,
- 				 * after a TDLS sta is removed due to being
- 				 * unreachable.
- 				 */
--				if (tdls_peer && !tdls_auth &&
--				    !ieee80211_is_tdls_setup(skb))
-+				if (!ieee80211_is_tdls_setup(skb))
- 					return -EINVAL;
- 			}
- 
--- 
-2.8.1
+--=20
+Kalle Valo=
