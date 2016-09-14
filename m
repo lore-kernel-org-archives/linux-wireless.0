@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:35172 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755089AbcITR1p (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 13:27:45 -0400
-Received: by mail-wm0-f46.google.com with SMTP id l132so221615825wmf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 10:27:44 -0700 (PDT)
-MIME-Version: 1.0
-From: Gucea Doru <gucea.doru@gmail.com>
-Date: Tue, 20 Sep 2016 20:27:42 +0300
-Message-ID: <CANfLQrbz1x6q+S2OmWah583=pTJ_6vK1BgnwLPSTk_VnFQ6TsA@mail.gmail.com> (sfid-20160920_192748_852894_9ED81AA6)
-Subject: Qualcomm: Power Save Algorithm in STA+STA mode
+Received: from s3.sipsolutions.net ([5.9.151.49]:42594 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753254AbcINHan (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Sep 2016 03:30:43 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
 To: linux-wireless@vger.kernel.org
-Cc: Andra Paraschiv <andra.paraschiv7@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] mac80211: fix possible out-of-bounds access
+Date: Wed, 14 Sep 2016 09:30:39 +0200
+Message-Id: <1473838239-23847-1-git-send-email-johannes@sipsolutions.net> (sfid-20160914_093057_083719_0D75FCCB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, everyone
+From: Johannes Berg <johannes.berg@intel.com>
 
-I'm a master student and I currently work on designing an algorithm
-for reducing the power consumption when a mobile device is associated
-to multiple Access Points that operate on the same channel.
+In the unlikely situation that the supplicant has negotiated
+admission for the background AC (which it has no reason to as
+it's not supposed to be requiring admission control to start
+with, and we'd ignore such a requirement anyway), the loop
+here may terminate with non_acm_ac == 4, which leads to an
+array overrun.
 
-I tried to design my algorithm around the prima driver [1] but I
-noticed that the power save feature is fully implemented in the
-firmware (Beacon Mode Power Save). Unfortunately, the firmware is
-closed-source and I can't do any modifications.
+Check this explicitly just for completeness.
 
-Is there any Qualcomm representative reading this mailing list that
-could help me get a possible solution for the above problem?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/mlme.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-
-[1] https://source.codeaurora.org/quic/la
-
-Thank you,
-Doru
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 8d426f637f58..7486f2dab4ba 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -1672,11 +1672,15 @@ __ieee80211_sta_handle_tspec_ac_params(struct ieee80211_sub_if_data *sdata)
+ 			     non_acm_ac++)
+ 				if (!(sdata->wmm_acm & BIT(7 - 2 * non_acm_ac)))
+ 					break;
+-			/* The loop will result in using BK even if it requires
+-			 * admission control, such configuration makes no sense
+-			 * and we have to transmit somehow - the AC selection
+-			 * does the same thing.
++			/* Usually the loop will result in using BK even if it
++			 * requires admission control, but such a configuration
++			 * makes no sense and we have to transmit somehow - the
++			 * AC selection does the same thing.
++			 * If we started out trying to downgrade from BK, then
++			 * the extra condition here might be needed.
+ 			 */
++			if (non_acm_ac >= IEEE80211_NUM_ACS)
++				non_acm_ac = IEEE80211_AC_BK;
+ 			if (drv_conf_tx(local, sdata, ac,
+ 					&sdata->tx_conf[non_acm_ac]))
+ 				sdata_err(sdata,
+-- 
+2.8.1
