@@ -1,101 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from exsmtp01.microchip.com ([198.175.253.37]:58217 "EHLO
-        email.microchip.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756934AbcIOHAO (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:54754 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763000AbcINPCC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 03:00:14 -0400
-From: <Aditya.Shankar@microchip.com>
-To: <josh@awful.name>, <linux-wireless@vger.kernel.org>
-CC: <Ganesh.Krishna@microchip.com>, <devel@driverdev.osuosl.org>,
-        <linux-kernel@vger.kernel.org>, <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] drivers: wilc1000: remove references to semaphores
-Date: Thu, 15 Sep 2016 06:55:00 +0000
-Message-ID: <1FA4CE79C3B5BA4CB1930722261ABC02CAF81E56@CHN-SV-EXMX03.mchp-main.com> (sfid-20160915_090255_724343_179AA1F7)
-References: <4195523.kKD5sp4Uk6@arch>
-Content-Type: text/plain; charset="us-ascii"
+        Wed, 14 Sep 2016 11:02:02 -0400
+Message-ID: <57D96669.20209@candelatech.com> (sfid-20160914_170205_891093_7AC918B4)
+Date: Wed, 14 Sep 2016 08:02:01 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 04/21] ath10k: rate-limit packet tx errors
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com> <1462986153-16318-5-git-send-email-greearb@candelatech.com> <87wpieefr9.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <87wpieefr9.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tuesday 02 August 2016 12:04 AM, Joshua Houghton wrote:
-> * Update the comments that refer to semaphores
-> * Remove redundant includes to semphore.h
-> 
-> Signed-off-by: Joshua Houghton <josh@awful.name>
-> ---
->  drivers/staging/wilc1000/TODO                 | 1 -
->  drivers/staging/wilc1000/linux_wlan.c         | 1 -
->  drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 +-
->  drivers/staging/wilc1000/wilc_wlan.h          | 2 +-
->  drivers/staging/wilc1000/wilc_wlan_if.h       | 1 -
->  5 files changed, 2 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/TODO b/drivers/staging/wilc1000/TODO
-> index ec93b2e..ae61b55 100644
-> --- a/drivers/staging/wilc1000/TODO
-> +++ b/drivers/staging/wilc1000/TODO
-> @@ -3,7 +3,6 @@ TODO:
->  - remove OS wrapper functions
->  - remove custom debug and tracing functions
->  - rework comments and function headers(also coding style)
-> -- replace all semaphores with mutexes or completions
->  - Move handling for each individual members of 'union message_body' out
->    into a separate 'struct work_struct' and completely remove the multiplexer
->    that is currently part of host_if_work(), allowing movement of the
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index 3a66255..315ed2e 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -21,7 +21,6 @@
->  #include <linux/kernel.h>
->  #include <linux/skbuff.h>
->  #include <linux/mutex.h>
-> -#include <linux/semaphore.h>
->  #include <linux/completion.h>
->  
->  static int dev_state_ev_handler(struct notifier_block *this,
-> diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-> index 5cc6a82..ec6b167 100644
-> --- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-> +++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-> @@ -131,7 +131,7 @@ struct wilc_priv {
->  	struct wilc_wfi_key *wilc_gtk[MAX_NUM_STA];
->  	struct wilc_wfi_key *wilc_ptk[MAX_NUM_STA];
->  	u8 wilc_groupkey;
-> -	/* semaphores */
-> +	/* mutexes */
->  	struct mutex scan_req_lock;
->  	/*  */
->  	bool gbAutoRateAdjusted;
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-> index 30e5312..739900e 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.h
-> +++ b/drivers/staging/wilc1000/wilc_wlan.h
-> @@ -192,7 +192,7 @@
->  
->  #define ENABLE_RX_VMM		(SEL_VMM_TBL1 | EN_VMM)
->  #define ENABLE_TX_VMM		(SEL_VMM_TBL0 | EN_VMM)
-> -/*time for expiring the semaphores of cfg packets*/
-> +/*time for expiring the completion of cfg packets*/
->  #define CFG_PKTS_TIMEOUT	2000
->  /********************************************
->   *
-> diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-> index 410bfc0..439ac6f 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan_if.h
-> +++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-> @@ -10,7 +10,6 @@
->  #ifndef WILC_WLAN_IF_H
->  #define WILC_WLAN_IF_H
->  
-> -#include <linux/semaphore.h>
->  #include <linux/netdevice.h>
->  
->  /********************************************
-> 
 
-Removed the non existing email addresses from this list and copy current maintainer
 
-Acked-by: Aditya Shankar <aditya.shankar@microchip.com>
+On 09/14/2016 07:07 AM, Valo, Kalle wrote:
+> greearb@candelatech.com writes:
+>
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> When firmware crashes, stack can continue to send packets
+>> for a bit, and existing code was spamming logs.
+>>
+>> So, rate-limit the error message for tx failures.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>>   drivers/net/wireless/ath/ath10k/mac.c | 5 +++--
+>>   1 file changed, 3 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>> index cd3016d..42cac32 100644
+>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>> @@ -3432,8 +3432,9 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
+>>   	}
+>>
+>>   	if (ret) {
+>> -		ath10k_warn(ar, "failed to transmit packet, dropping: %d\n",
+>> -			    ret);
+>> +		if (net_ratelimit())
+>> +			ath10k_warn(ar, "failed to transmit packet, dropping: %d\n",
+>> +				    ret);
+>>   		ieee80211_free_txskb(ar->hw, skb);
+>>   	}
+>
+> ath10k_warn() is already rate limited. If there's something wrong then
+> that function should be fixed, not the callers.
+>
+> void ath10k_warn(struct ath10k *ar, const char *fmt, ...)
+> {
+> 	struct va_format vaf = {
+> 		.fmt = fmt,
+> 	};
+> 	va_list args;
+>
+> 	va_start(args, fmt);
+> 	vaf.va = &args;
+> 	dev_warn_ratelimited(ar->dev, "%pV", &vaf);
+> 	trace_ath10k_log_warn(ar, &vaf);
+>
+> 	va_end(args);
+> }
 
-Thanks!
+The problem with having the ratelimit here is that you may miss
+rare warnings due to a flood of common warnings.
+
+That is why it is still useful to ratelimit potential floods
+of warnings.
+
+I would like to remove the ratelimit from ath10k_warn eventually.
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
