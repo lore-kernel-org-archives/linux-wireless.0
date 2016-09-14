@@ -1,50 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38552 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752466AbcIQOI0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 10:08:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Subject: Re: pull-request: iwlwifi 2016-09-15
-References: <1473955833.5664.38.camel@coelho.fi>
-Date: Sat, 17 Sep 2016 17:08:21 +0300
-In-Reply-To: <1473955833.5664.38.camel@coelho.fi> (Luca Coelho's message of
-        "Thu, 15 Sep 2016 19:10:33 +0300")
-Message-ID: <871t0i8vqi.fsf@kamboji.qca.qualcomm.com> (sfid-20160917_160849_753434_3D17CC03)
+Received: from muru.com ([72.249.23.125]:42254 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1760100AbcINRNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Sep 2016 13:13:10 -0400
+Date: Wed, 14 Sep 2016 10:13:06 -0700
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: Re: [PATCH 3/5] wlcore: sdio: Populate config firmware data
+Message-ID: <20160914171303.5h4ktdwfrsfnduf6@atomide.com> (sfid-20160914_191314_459782_61BC6228)
+References: <20160913215043.29454-1-tony@atomide.com>
+ <20160913215043.29454-4-tony@atomide.com>
+ <87intycsta.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87intycsta.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
+* Kalle Valo <kvalo@codeaurora.org> [160914 10:09]:
+> Tony Lindgren <tony@atomide.com> writes:
+> 
+> > Configure the config firmware names and make it available
+> > in platform data.
+> >
+> > Let's also fix the order of the struct wilink_family_data
+> > while at it.
+> >
+> > Signed-off-by: Tony Lindgren <tony@atomide.com>
+> > ---
+> >  drivers/net/wireless/ti/wlcore/spi.c | 42 ++++++++++++++++++++----------------
+> >  1 file changed, 24 insertions(+), 18 deletions(-)
+> 
+> I think the title should be:
+> 
+> wlcore: spi: Populate config firmware data
+> 
+> I can fix that during commit.
 
-> Hi Kalle,
->
-> Here is one more patch intended for 4.8. =C2=A0It's small and low risk, j=
-ust
-> moving some lines of code around, to prevent a firmware crash in
-> certain situations.
->
-> Let me know if everything's fine (or not). :)
->
-> Luca.
->
->
-> The following changes since commit a904a08b5fee5317ff0f7b8212aa5d0776795a=
-52:
->
-> =C2=A0 iwlwifi: mvm: Advertise support for AP channel width change (2016-=
-08-29 22:29:06 +0300)
->
-> are available in the git repository at:
->
-> =C2=A0 git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixe=
-s.git tags/iwlwifi-for-kalle-2016-09-15
+Oops sorry shift+Insert caused typo :)
 
-Pulled, thanks.
-
---=20
-Kalle Valo
+Tony
