@@ -1,40 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42753 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932707AbcI3Mv7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 08:51:59 -0400
-Message-ID: <1475239915.17481.63.camel@sipsolutions.net> (sfid-20160930_145203_899398_A1AD3807)
-Subject: Re: [PATCH 3/3] mac80211: Set lower memory limit for non-VHT devices
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>
-Cc: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Fri, 30 Sep 2016 14:51:55 +0200
-In-Reply-To: <87twcx5zll.fsf@toke.dk>
-References: <20160923195911.4572-1-toke@toke.dk>
-         <20160923195911.4572-4-toke@toke.dk>
-         <1475235230.17481.43.camel@sipsolutions.net> <87twcx5zll.fsf@toke.dk>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:53821 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753297AbcINRAw (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Sep 2016 13:00:52 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: [v2] mwifiex: handle error if IRQ request fails in
+ mwifiex_sdio_of()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1473418678-14794-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+        Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160914170024.B4D4361AD3@smtp.codeaurora.org> (sfid-20160914_190120_284502_987A0D01)
+Date: Wed, 14 Sep 2016 17:00:24 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> > I kinda see the logic here - we really don't need to queue as much
-> > if we can't possibly transmit it out quickly - but it seems to me
-> > we should also throw in some kind of limit that's relative to the
-> > amount of memory you have on the system?
+Amitkumar Karwar <akarwar@marvell.com> wrote:
+> When this failure occurs, we will clear card->plt_wake_cfg so that
+> device would initialize without wake up on external interrupt feature.
+> This feature specific code in suspend and resume handlers will be
+> skipped.
 > 
-> Yes, ideally. That goes for FQ-CoDel as well, BTW. LEDE currently
-> carries a patch for that which just changes the hard-coded default to
-> another hard-coded default. Not sure how to get a good value to use,
-> though; and deciding on how large a fraction of memory to use for
-> packets starts smelling an awful lot like setting policy in the
-> kernel, doesn't it?
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Reviewed-by: Javier Martinez Canillas <javier@osg.samsung.com>
 
-Yeah, I agree it does seem awkward.
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-Perhaps we should instead pick a low limit and let users change it more
-easily (i.e. not debugfs)? I don't know a good answer to this either.
+6b03144d93fc mwifiex: handle error if IRQ request fails in mwifiex_sdio_of()
 
-johannes
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9322927/
