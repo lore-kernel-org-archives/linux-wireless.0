@@ -1,101 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:64018 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932947AbcI0PgV (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 11:36:21 -0400
-From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
-        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
-Subject: RE: [PATCH v8] cfg80211: Provision to allow the support for different
- beacon intervals
-Date: Tue, 27 Sep 2016 15:36:11 +0000
-Message-ID: <0b626d7836be4cce8ea4868538fe66d3@aphydexm01f.ap.qualcomm.com> (sfid-20160927_173625_207558_154FF835)
-References: <1472649972-6649-1-git-send-email-pkushwah@qti.qualcomm.com>
-         <1473675843.29016.18.camel@sipsolutions.net>
-         <c6f1a958d7f941b5a7dc8564d3f1c371@aphydexm01f.ap.qualcomm.com>
-         (sfid-20160916_083438_618523_AC15A50F)
- <1474981379.5141.37.camel@sipsolutions.net>
-In-Reply-To: <1474981379.5141.37.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:43465 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753197AbcINJyg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Wed, 14 Sep 2016 05:54:36 -0400
+Message-ID: <1473846871.4423.14.camel@sipsolutions.net> (sfid-20160914_115440_254574_79A823CB)
+Subject: Re: [PATCH 2/2] mwifiex: parse WMM IEs from hostapd for mwifiex AP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bing Zhao <bzhao@marvell.com>, linux-wireless@vger.kernel.org
+Cc: "John W. Linville" <linville@tuxdriver.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Avinash Patil <patila@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Frank Huang <frankh@marvell.com>
+Date: Wed, 14 Sep 2016 11:54:31 +0200
+In-Reply-To: <1357174561-28898-2-git-send-email-bzhao@marvell.com> (sfid-20130103_015637_973661_B4551387)
+References: <1357174561-28898-1-git-send-email-bzhao@marvell.com>
+         <1357174561-28898-2-git-send-email-bzhao@marvell.com>
+         (sfid-20130103_015637_973661_B4551387)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSm9oYW5uZXMsDQoNCj4+IDIuIFNpbmNlICJkaWZmX2JlYWNvbl9pbnRfZ2NkX21pbiLCoMKg
-aXMgb25seSBzcGVjaWZpZWQgLyBhZHZlcnRpc2VkIGluIA0KPj4gdGhlIGludGVyZmFjZSBjb21i
-aW5hdGlvbnMgLCBvdXIgbG9naWMgd2FzIHRvIGdldCB0aGUgbWluaW1hbCANCj4+ICJkaWZmX2Jl
-YWNvbl9pbnRfZ2NkX21pbiIgb2YgYWxsIHRoZSBtYXRjaGluZyBjb21iaW5hdGlvbnMgYW5kIGxh
-dGVyDQo+PiDCoMKgwqDCoGNvbXBhcmUgd2l0aCB0aGUgbmV3IGJlYWNvbiBpbnRlcnZhbC4gKEFQ
-SSANCj4+ICJjZmc4MDIxMV9pdGVyX2NvbWJpbmF0aW9ucyIgaGFzIHRvIGJlIGludm9rZWQgdG8g
-Z2V0IHRoZSANCj4+IGNvcnJlc3BvbmRpbmcgImRpZmZfYmVhY29uX2ludF9nY2RfbWluIikNCg0K
-PlllYWgsIGJ1dCB5b3UgZ2V0IHRoZSBkaWZmX2JlYWNvbl9pbnRfZ2NkX21pbiBmb3IgYWxsIGNv
-bWJpbmF0aW9ucyB0aGF0IGFsbG93IHRoZSAqY3VycmVudCogY29tYmluYXRpb24gb2YgaW50ZXJm
-YWNlcywgbm90IHRoZSBjb21iaW5hdGlvbnMgdGhhdCBhbGxvdyB0aGUgbmV3ICpuZXcqIGNvbWJp
-bmF0aW9uIG9mIGludGVyZmFjZXMsIG5vPw0KDQo+SSBtZWFuLCBjb25zaWRlciB0aGUgY2FzZSB0
-aGF0IHlvdSBoYXZlIGEgc2luZ2xlIEFQIGludGVyZmFjZSwgd2l0aCBiZWFjb24gaW50ZXJ2YWwg
-MzAwLCBhbmQgeW91J3JlIGFkZGluZyBhbm90aGVyIEFQLCB3aXRoIGJlYWNvbiBpbnRlcnZhbCAx
-NTAsIGFuZCB0aGUgZm9sbG93aW5nIGFsbG93ZWQgY29tYmluYXRpb25zOg0KDQrCoD4qIGFwID0g
-MQ0KwqA+wqBtZXNoID0gMQ0KwqA+IMKgZGlmZl9iZWFjb25faW50X2djZF9taW4gPSAxMDANCsKg
-PiAqIGFwID0gMg0KPiDCoGRpZmZfYmVhY29uX2ludF9nY2RfbWluID0gNTANCg0KPiBXb3VsZG4n
-dCB5b3UgcHJldmVudCB0aGF0LCBvciBzb21ldGhpbmc/DQoNCj4gT3Igc2F5IHlvdSBoYXZlDQoN
-Cj7CoCogYXAgPSAxDQo+wqAgwqBtZXNoID0gMQ0KPsKgIMKgZGlmZl9iZWFjb25faW50X2djZF9t
-aW4gPSAxMDANCj4gwqAqIGFwID3CoDINCj7CoCDCoGRpZmZfYmVhY29uX2ludF9nY2RfbWluID0g
-MjAwDQoNCj4gUHJvYmFibHkgZG9lc24ndCByZWFsbHkgbWFrZSBzZW5zZSwgYnV0IG5vdyBpZiB5
-b3UgaGF2ZSBhbiBleGlzdGluZyBBUCBpbnRlcmZhY2UsIHlvdSB3b3VsZCB0aGluayB0aGUgbWlu
-IGlzIDEwMCwgd2hlbiByZWFsbHkgd2hpbGUgYWRkaW5nIGFub3RoZXIgQVAgaXQgc2hvdWxkIGJl
-IDIwMC4NCg0KSW4gUEFUQ0ggdjggLCBjZmc4MDIxMV92YWxpZGF0ZV9iZWFjb25faW50IC0+IGNm
-ZzgwMjExX2l0ZXJfY29tYmluYXRpb25zIGNhcnJpZXMgdGhlIGFyZ3VtZW50IGlmdHlwZV9udW0g
-LCB3aGljaCBhbHNvIGNvbnNpZGVycyB0aGUgIm5ldyBpbnRlcmZhY2UiIHRoYXQgaXMgZ2V0dGlu
-ZyBhZGRlZC4gDQpUaHVzICwgaW4gdGhlIGV4YW1wbGUgeW91IGhhdmUgcXVvdGVkIGFib3ZlICwg
-dGhlIGlmdHlwZV9udW0gc2hhbGwgcmVwcmVzZW50IDIgKCBBUCArIEFQICkgLCBhbmQgdGh1cyB0
-aGUgbWluX2djZCBvYnRhaW5lZCBvdXQgb2YgY2ZnODAyMTFfaXRlcl9jb21iaW5hdGlvbnMgKGNm
-ZzgwMjExX2dldF9iZWFjb25faW50X21pbl9nY2QpIHNoYWxsIGJlIDUwIGZvciB0aGUgZXhhbXBs
-ZSAxIGFuZCAyMDAgZm9yIHRoZSBleGFtcGxlIDIgLiANClRodXMgLCBjb25zaWRlcmluZyB0aGUg
-dHdvIGV4YW1wbGVzIG1lbnRpb25lZCBhYm92ZSAsIHRoZSBzZWNvbmQgQVAgc2hvdWxkIHN1Y2Nl
-ZWQgZm9yICJleGFtcGxlIDEiIHZzIGZhaWx1cmUgZm9yICJleGFtcGxlIDIiIHdpdGggcGF0Y2gg
-VjggLCBpc24ndCA/ICANCg0KPj4gSWYgSSB1bmRlcnN0YW5kIHRoaXMgY29ycmVjdGx5ICwgYXJl
-IHlvdSBzYXlpbmcgdGhhdCB0aGlzIG5ldyBhcmd1bWVudCANCj4+IHRvIGNmZzgwMjExX2l0ZXJf
-Y29tYmluYXRpb25zIHNoYWxsIGJlIHRoZSBHQ0Qgb2YgYWxsIHRoZSBleGlzdGluZyANCj4+IGJl
-YWNvbiBpbnRlcnZhbHMgYW5kIHdvdWxkIGJlIHVzZWQgdG8gbWF0Y2ggd2l0aCB0aGUgY29ycmVz
-cG9uZGluZyANCj4+ICJkaWZmX2JlYWNvbl9pbnRfZ2NkX21pbiIgb2YgdGhlIGludGVyZmFjZSBj
-b21iaW5hdGlvbnMgaW4gDQo+PiAiY2ZnODAyMTFfaXRlcl9jb21iaW5hdGlvbnMiLg0KDQo+WWVz
-LCB0aGF0J3Mgd2hhdCBJIHdhcyB0aGlua2luZy4NCg0KPj4gSWYgeWVzICwgdGhpcyBHQ0QgYXJn
-dW1lbnQgZG9lcyBub3QgcmVwcmVzZW50ICwgaWYgdGhlIGJlYWNvbiANCj4+IGludGVydmFscyBv
-ZiBhbGwgdGhlIGV4aXN0aW5nIGludGVyZmFjZXMgZGlmZmVyIG9yIG5vdCAsIGlzbuKAmXQgPyBJ
-ZiANCj4+IHRoZSAiZGlmZl9iZWFjb25faW50X2djZF9taW4iwqDCoG9mIHRoZSBhbGwgdGhlIG1h
-dGNoaW5nIGludGVyZmFjZSANCj4+IGNvbWJpbmF0aW9ucyBpcyAwICwgc3VjaCBkaWZmZXJlZCBi
-ZWFjb24gaW50ZXJ2YWxzIHdvdWxkIHBhc3MgdGhlIA0KPj4gY2hlY2sgLCBjb250cmFkaWN0aW5n
-IHRoZSBleGlzdGluZyBsb2dpYyAoIG5vdCBhbGxvd2luZyB0aGUgZGlmZmVyZWQgDQo+PiBiZWFj
-b24gaW50ZXJ2YWxzKSwgaXNuJ3QgPw0KDQo+T2gsIHdlbGwsIG9rIC0gaWYgYWxsIGV4aXN0aW5n
-IGFuZCBuZXcgYmVhY29uIGludGVydmFscyBhcmUgdGhlIHNhbWUgd2UnZCBoYXZlIHRvIGRvIHRo
-ZSBsb29rdXAgd2l0aG91dCB0aGUgZXhpc3RpbmcgYmVhY29uIGludGVydmFsIEdDRCBhbmQgc3Rp
-bGwgY29tcGFyZSB0byB0aGUgbWluIHNlcGFyYXRlbHkuDQoNCkxldCBtZSByZWl0ZXJhdGUgb3Vy
-IHByb2JsZW0gaGVyZSB3aXRoIHRoaXMgYXBwcm9hY2guDQoNClRoZSBjdXJyZW50IGJlaGF2aW9y
-IG9mIHRoZSBrZXJuZWwgaXMgdG8gbm90IGFsbG93IHRoZSBjb25maWd1cmF0aW9uIG9mIGRpZmZl
-cmVudCBiZWFjb24gaW50ZXJ2YWxzIGFuZCBvdXIgZXhwZWN0YXRpb24gaXMgdGhhdCB0aGlzIG5l
-dyBwYXRjaCBzaG91bGQgYmUgYmFja3dhcmQgY29tcGF0aWJsZSB3aXRoIHRoZSBleGlzdGluZyBi
-ZWhhdmlvci4NCk5vdyAsIGlmIHdlIGdvIHdpdGggdGhpcyBhcHByb2FjaCBvZiAiaW50cm9kdWNp
-bmcgYSBuZXcgYXJndW1lbnQgdG8gY2ZnODAyMTFfaXRlcl9jb21iaW5hdGlvbnMgd2hpY2ggc2hh
-bGwgYmUgdGhlIEdDRCBvZiBhbGwgdGhlIGV4aXN0aW5nIGNvbWJpbmF0aW9ucyB0byBjaGVjayBh
-Z2FpbnN0IHRoZSByZXNwZWN0aXZlICJkaWZmX2JlYWNvbl9pbnRfZ2NkX21pbiIiICwgIGNvbnNp
-ZGVyIHRoZSBjYXNlICggc2FtZSBvbmUgd2hpY2ggaXMgbWVudGlvbmVkIGFib3ZlICkgdGhhdCB3
-ZSBoYXZlIGEgc2luZ2xlIEFQIGludGVyZmFjZSAoIGJlYWNvbiBpbnRlcnZhbCA9IDMwMCApICwg
-YW5kIGEgbmV3IEFQIGlzIGdldHRpbmcgYWRkZWQgKCBiZWFjb24gaW50ZXJ2YWwgPSAxNTAgKSwg
-IHdpdGggdGhlIGZvbGxvd2luZyBhbGxvd2VkIGNvbWJpbmF0aW9uczoNCg0KMSkgKiBhcCA9IDIN
-CiAgICAgICAgZGlmZl9iZWFjb25faW50X2djZF9taW4gPSAwICggcmF0aGVyIG5vdCBzcGVjaWZp
-ZWQgKSANCjIpICAqIGFwID0gMg0KICAgICAgZGlmZl9iZWFjb25faW50X2djZF9taW4gPSAxMDAN
-Cg0KVGhlIEdDRCBjYWxjdWxhdGVkIGlzIDE1MCAuIGNmZzgwMjExX2l0ZXJfY29tYmluYXRpb25z
-IHNoYWxsIHJldHVybiBzdWNjZXNzIGZvciBib3RoIHRoZSBzY2VuYXJpb3MgKCAxIGFuZCAyICkg
-KFRoZSBpbnRlbnRpb24gaGVyZSBpcyB0byBjb21wYXJlIHdpdGggb25seSB0aGUgbm9uemVybyAi
-IGRpZmZfYmVhY29uX2ludF9nY2RfbWluIiApDQoNClRoaXMgc3VjY2VzcyBmcm9tICJjZmc4MDIx
-MV9pdGVyX2NvbWJpbmF0aW9ucyIgZG9lcyBub3QgcmVwcmVzZW50IGlmIHRoZSBHQ0QgcGFzc2Vk
-IGlzIGNvbXBhcmVkIGFnYWluc3QgYSAwIC8gbm9uIHplcm8gImRpZmZfYmVhY29uX2ludF9nY2Rf
-bWluIiAsIGlzbid0ID8NCg0KVGh1cyAsIHdlIGFyZSB0cnlpbmcgdG8gc29sdmUgdGhpcyBwcm9i
-bGVtICwgYnkgZ2V0dGluZyB0aGUgImRpZmZfYmVhY29uX2ludF9nY2RfbWluIiBmb3IgdGhlIHJl
-c3BlY3RpdmUgaW50ZXJmYWNlIGNvbWJpbmF0aW9uICwgYmVmb3JlIGNvbXBhcmluZyBpdCB3aXRo
-IHRoZSBjYWxjdWxhdGVkIEdDRC4gDQoNClBsZWFzZSBjb3JyZWN0IHVzLg0KDQpSZWdhcmRzLA0K
-U3VuaWwNCg0KIA0KDQo=
+Obviously this is a very old patch, but I was just looking at users of
+cfg80211_find_vendor_ie() and realized you have a bug here:
+
+> +	vendor_ie = cfg80211_find_vendor_ie(WLAN_OUI_MICROSOFT,
+> +					    WLAN_OUI_TYPE_MICROSOFT_
+> WMM,
+> +					    params->beacon.tail,
+> +					    params-
+> >beacon.tail_len);
+> +	if (vendor_ie) {
+> +		wmm_ie = (struct ieee_types_header *)vendor_ie;
+> +		memcpy(&bss_cfg->wmm_info, wmm_ie + 1,
+> +		       sizeof(bss_cfg->wmm_info));
+> +		priv->wmm_enabled = 1;
+
+You need to check that the vendor_ie is actually long enough.
+
+johannes
