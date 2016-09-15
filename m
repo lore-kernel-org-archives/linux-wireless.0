@@ -1,48 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55057 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754745AbcIMMnO (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54944 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752666AbcIOSNX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 08:43:14 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Joe Perches <joe@perches.com>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: Spelling and miscellaneous neatening
-Date: Tue, 13 Sep 2016 12:43:09 +0000
-Message-ID: <871t0oj7hf.fsf@kamboji.qca.qualcomm.com> (sfid-20160913_144336_723125_8E9199D4)
-References: <95a6b65277914d88178ed2b15e182455067cca60.1472490319.git.joe@perches.com>
-In-Reply-To: <95a6b65277914d88178ed2b15e182455067cca60.1472490319.git.joe@perches.com>
-        (Joe Perches's message of "Mon, 29 Aug 2016 10:05:51 -0700")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Thu, 15 Sep 2016 14:13:23 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 15 Sep 2016 21:11:26 +0300
+Message-Id: <20160915181131.32213-20-luca@coelho.fi> (sfid-20160915_201346_798320_5D207841)
+In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
+References: <1473962425.5664.41.camel@coelho.fi>
+Subject: [PATCH 20/25] iwlwifi: mvm: bump max API to 26
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-> Correct some trivial comment typos.
-> Remove unnecessary parentheses in a long line.
-> Convert a return; before the end of a void function definition to just ;
->
-> Signed-off-by: Joe Perches <joe@perches.com>
+The driver now support version 26 of the firmware APIs.
 
-[...]
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-a000.c | 2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-> --- a/drivers/net/wireless/ath/ath10k/core.c
-> +++ b/drivers/net/wireless/ath/ath10k/core.c
-> @@ -2118,7 +2118,7 @@ err:
->  	/* TODO: It's probably a good idea to release device from the driver
->  	 * but calling device_release_driver() here will cause a deadlock.
->  	 */
-> -	return;
-> +	;
->  }
-
-I don't think this improves anything, I dropped this part from the patch
-in my pending branch.
-
---=20
-Kalle Valo=
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
+index 64690c14..aa575fb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
+@@ -73,8 +73,8 @@
+ /* Highest firmware API version supported */
+ #define IWL7260_UCODE_API_MAX	17
+ #define IWL7265_UCODE_API_MAX	17
+-#define IWL7265D_UCODE_API_MAX	24
+-#define IWL3168_UCODE_API_MAX	24
++#define IWL7265D_UCODE_API_MAX	26
++#define IWL3168_UCODE_API_MAX	26
+ 
+ /* Lowest firmware API version supported */
+ #define IWL7260_UCODE_API_MIN	16
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+index cde4f26..990cf2b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+@@ -70,8 +70,8 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL8000_UCODE_API_MAX	24
+-#define IWL8265_UCODE_API_MAX	24
++#define IWL8000_UCODE_API_MAX	26
++#define IWL8265_UCODE_API_MAX	26
+ 
+ /* Lowest firmware API version supported */
+ #define IWL8000_UCODE_API_MIN	16
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 4d68985..a2c7946 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL9000_UCODE_API_MAX	24
++#define IWL9000_UCODE_API_MAX	26
+ 
+ /* Lowest firmware API version supported */
+ #define IWL9000_UCODE_API_MIN	16
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+index 4d78232..ea16185 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-a000.c
+@@ -55,7 +55,7 @@
+ #include "iwl-agn-hw.h"
+ 
+ /* Highest firmware API version supported */
+-#define IWL_A000_UCODE_API_MAX	24
++#define IWL_A000_UCODE_API_MAX	26
+ 
+ /* Lowest firmware API version supported */
+ #define IWL_A000_UCODE_API_MIN	24
+-- 
+2.9.3
