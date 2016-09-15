@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55960 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S935782AbcISHbf (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:47433 "EHLO
+        mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933541AbcIOLn2 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 03:31:35 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Sep 2016 10:30:19 +0300
-Message-Id: <20160919073028.22065-16-luca@coelho.fi> (sfid-20160919_093139_089074_7931B9D9)
-In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
-References: <1474270071.5664.89.camel@coelho.fi>
-Subject: [PATCH 16/25] iwlwifi: don't export trace points that are used in iwlwifi only
+        Thu, 15 Sep 2016 07:43:28 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: stable@vger.kernel.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>,
+        Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH] brcmfmac: avoid potential stack overflow in brcmf_cfg80211_start_ap()
+Date: Thu, 15 Sep 2016 12:43:21 +0100
+Message-Id: <1473939804-11143-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160915_134348_491500_32593008)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+commit ded89912156b1a47d940a0c954c43afbabd0c42c upstream
 
-This can save a few bytes
+User-space can choose to omit NL80211_ATTR_SSID and only provide raw
+IE TLV data. When doing so it can provide SSID IE with length exceeding
+the allowed size. The driver further processes this IE copying it
+into a local variable without checking the length. Hence stack can be
+corrupted and used as exploit.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Cc: stable@vger.kernel.org # v3.18, v3.16, v3.14, v3.12, v3.10
+Reported-by: Daxing Guo <freener.gdx@gmail.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
-index 1d9dd153..50510fb 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
-@@ -33,9 +33,6 @@
- #define CREATE_TRACE_POINTS
- #include "iwl-devtrace.h"
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+index 5db56a7..b8aec5e5 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/wl_cfg80211.c
+@@ -4527,7 +4527,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ 				(u8 *)&settings->beacon.head[ie_offset],
+ 				settings->beacon.head_len - ie_offset,
+ 				WLAN_EID_SSID);
+-		if (!ssid_ie)
++		if (!ssid_ie || ssid_ie->len > IEEE80211_MAX_SSID_LEN)
+ 			return -EINVAL;
  
--EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_iowrite8);
--EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ioread32);
--EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_iowrite32);
- EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_event);
- EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_error);
- EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_cont_event);
+ 		memcpy(ssid_le.SSID, ssid_ie->data, ssid_ie->len);
 -- 
-2.9.3
+1.9.1
