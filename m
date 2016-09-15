@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55692 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932874AbcIFQLz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 12:11:55 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Joe Perches <joe@perches.com>
-Cc: Matthias Beyer <mail@beyermatthias.de>, gregkh@linuxfoundation.org,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Manuel Messner <manuel.johannes.messner@hs-furtwangen.de>,
-        Geliang Tang <geliangtang@163.com>,
-        Cihangir Akturk <cakturk@gmail.com>,
-        linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 0/5] Some cleanup patches for drivers/staging/rtl8723au/core/rtw_mlme.c
-References: <20160904192626.17197-1-mail@beyermatthias.de>
-        <wrfjshtdyq56.fsf@redhat.com> <1473178128.8300.8.camel@perches.com>
-Date: Tue, 06 Sep 2016 12:11:52 -0400
-In-Reply-To: <1473178128.8300.8.camel@perches.com> (Joe Perches's message of
-        "Tue, 06 Sep 2016 09:08:48 -0700")
-Message-ID: <wrfjk2epypmf.fsf@redhat.com> (sfid-20160906_181222_102279_9094195D)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:7431 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751590AbcIOOaM (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Sep 2016 10:30:12 -0400
+From: <c_mkenna@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+CC: <mkenna@codeaurora.org>,
+        Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Provide provision to get Transmit Power Control stats for 10.4
+Date: Thu, 15 Sep 2016 20:00:19 +0530
+Message-ID: <1473949819-29154-1-git-send-email-c_mkenna@qti.qualcomm.com> (sfid-20160915_163024_933248_F9DA02CB)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
-> On Tue, 2016-09-06 at 12:00 -0400, Jes Sorensen wrote:
->
->> Nothing wrong with these patches, however I intend to post a patch to
->> remove this driver soon, so it's kind of a waste of your time to spend
->> too many cycles on it.
->
-> It might be useful to mark any drivers you're
-> planning on removing as "Obsolete" in MAINTAINERS.
->
-> checkpatch will then emit a "don't waste your time"
-> message if anyone scans an obsolete driver/file.
+From: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
 
-I see, wasn't aware of that. I did add a printk to it for 4.6 notifying
-users that the driver was going to go away.
+This patch helps to get the TPC stats for 10.4 fw variants.
 
-Jes
+Signed-off-by: Maharaja Kennadyrajan <c_mkenna@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 38993d7..44a1a8d 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5391,6 +5391,9 @@ static void ath10k_wmi_10_4_op_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	case WMI_10_4_PDEV_BSS_CHAN_INFO_EVENTID:
+ 		ath10k_wmi_event_pdev_bss_chan_info(ar, skb);
+ 		break;
++	case WMI_10_4_PDEV_TPC_CONFIG_EVENTID:
++		ath10k_wmi_event_pdev_tpc_config(ar, skb);
++		break;
+ 	default:
+ 		ath10k_warn(ar, "Unknown eventid: %d\n", id);
+ 		break;
+@@ -8147,6 +8150,7 @@ static const struct wmi_ops wmi_10_4_ops = {
+ 	.get_vdev_subtype = ath10k_wmi_10_4_op_get_vdev_subtype,
+ 	.gen_pdev_bss_chan_info_req = ath10k_wmi_10_2_op_gen_pdev_bss_chan_info,
+ 	.gen_echo = ath10k_wmi_op_gen_echo,
++	.gen_pdev_get_tpc_config = ath10k_wmi_10_2_4_op_gen_pdev_get_tpc_config,
+ };
+ 
+ int ath10k_wmi_attach(struct ath10k *ar)
+-- 
+1.7.9.5
