@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f45.google.com ([209.85.213.45]:36694 "EHLO
-        mail-vk0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161735AbcIZSFe (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:47516 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754253AbcIOQXL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 14:05:34 -0400
-Received: by mail-vk0-f45.google.com with SMTP id d8so69497848vka.3
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2016 11:05:34 -0700 (PDT)
+        Thu, 15 Sep 2016 12:23:11 -0400
+From: Colin King <colin.king@canonical.com>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] mwifiex: fix memory leak on regd when chan is zero
+Date: Thu, 15 Sep 2016 17:21:17 +0100
+Message-Id: <20160915162117.1209-1-colin.king@canonical.com> (sfid-20160915_182507_529856_99CA4E99)
 MIME-Version: 1.0
-In-Reply-To: <a3435bed-4892-4606-44ac-523e47f57b1b@codeaurora.org>
-References: <CALZLQ=biEM2efkYhkr6PYu7wn_CJTJ9LQg+0VJvf2rMgmKPS9w@mail.gmail.com>
- <a3435bed-4892-4606-44ac-523e47f57b1b@codeaurora.org>
-From: Vikram <vikrampal@gmail.com>
-Date: Mon, 26 Sep 2016 23:35:33 +0530
-Message-ID: <CALZLQ=anWS6ThxEOnifRcxgYyk3BvWwMUFqTtZdOMcqZYA+igA@mail.gmail.com> (sfid-20160926_200538_613440_88708177)
-Subject: Re: wil6200
-To: Lior David <liord@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Lior,
+From: Colin Ian King <colin.king@canonical.com>
 
-On 26 September 2016 at 18:19, Lior David <liord@codeaurora.org> wrote:
-> On 9/25/2016 6:15 PM, Vikram wrote:
->> Hi,
->>
->> Could you please let me know as to how to change the mode of wil6200
->> chip from WBE to WiFi?
->>
->> Regards,
->> Vikram
->>
-> What is the exact device you are using? Older devices have firmware that only
-> supports WBE mode.
->
-> Thanks,
-> Lior
+When chan is zero mwifiex_create_custom_regdomain does not kfree
+regd and we have a memory leak. Fix this by freeing regd before
+the return.
 
-I'm using Dell Wireless DW1601 7Gbps WiGig 802.11ad 802.11n 2*2 WiFi
-Half Mini Card abgn+ad 2*2:2
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Regards,
-Vikram
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+index 3344a26..15a91f3 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -1049,8 +1049,10 @@ mwifiex_create_custom_regdomain(struct mwifiex_private *priv,
+ 		enum nl80211_band band;
+ 
+ 		chan = *buf++;
+-		if (!chan)
++		if (!chan) {
++			kfree(regd);
+ 			return NULL;
++		}
+ 		chflags = *buf++;
+ 		band = (chan <= 14) ? NL80211_BAND_2GHZ : NL80211_BAND_5GHZ;
+ 		freq = ieee80211_channel_to_frequency(chan, band);
+-- 
+2.9.3
