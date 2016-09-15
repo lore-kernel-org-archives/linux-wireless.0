@@ -1,265 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55072 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1756167AbcIPIdj (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:43658 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750890AbcIOR7a (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2016 04:33:39 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-        Ayala Beker <ayala.beker@intel.com>,
-        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Fri, 16 Sep 2016 11:33:17 +0300
-Message-Id: <20160916083321.5840-6-luca@coelho.fi> (sfid-20160916_103645_675301_C1F36959)
-In-Reply-To: <20160916083321.5840-1-luca@coelho.fi>
-References: <20160916083321.5840-1-luca@coelho.fi>
-Subject: [PATCH v2 5/9] cfg80211: provide a function to report a match for NAN
+        Thu, 15 Sep 2016 13:59:30 -0400
+Subject: Re: [PATCH v2 09/21] ath10k: print fw debug messages in hex.
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "kvalo@qca.qualcomm.com" <kvalo@qca.qualcomm.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+ <1462986153-16318-10-git-send-email-greearb@candelatech.com>
+ <87oa3qefac.fsf@kamboji.qca.qualcomm.com> <57D96910.2010608@candelatech.com>
+ <87k2edb6kp.fsf@kamboji.qca.qualcomm.com>
+ <a26dfea0-9a18-69fc-e23c-cb223490822d@candelatech.com>
+ <1473960869.31073.15.camel@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <50a08de4-1959-3dc9-cfc7-89d5b2914cc5@candelatech.com> (sfid-20160915_195934_323349_EE9532C8)
+Date: Thu, 15 Sep 2016 10:59:28 -0700
+MIME-Version: 1.0
+In-Reply-To: <1473960869.31073.15.camel@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+On 09/15/2016 10:34 AM, Grumbach, Emmanuel wrote:
+> On Thu, 2016-09-15 at 08:14 -0700, Ben Greear wrote:
+>> On 09/15/2016 07:06 AM, Valo, Kalle wrote:
+>>> Ben Greear <greearb@candelatech.com> writes:
+>>>
+>>>> On 09/14/2016 07:18 AM, Valo, Kalle wrote:
+>>>>> greearb@candelatech.com writes:
+>>>>>
+>>>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>>>
+>>>>>> This allows user-space tools to decode debug-log
+>>>>>> messages by parsing dmesg or /var/log/messages.
+>>>>>>
+>>>>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>>>>
+>>>>> Don't tracing points already provide the same information?
+>>>>
+>>>> Tracing tools are difficult to set up and may not be available on
+>>>> random embedded devices.  And if we are dealing with bug reports
+>>>> from
+>>>> the field, most users will not be able to set it up regardless.
+>>>>
+>>>> There are similar ways to print out hex, but the logic below
+>>>> creates
+>>>> specific and parseable logs in the 'dmesg' output and similar.
+>>>>
+>>>> I have written a tool that can decode these messages into useful
+>>>> human-readable
+>>>> text so that I can debug firmware issues both locally and from
+>>>> field reports.
+>>>>
+>>>> Stock firmware generates similar logs and QCA could write their
+>>>> own decode logic
+>>>> for their firmware versions.
+>>>
+>>> Reinventing the wheel by using printk as the delivery mechanism
+>>> doesn't
+>>> sound like a good idea. IIRC Emmanuel talked about some kind of
+>>> firmware
+>>> debugging framework, he might have some ideas.
+>>
+>> Waiting for magical frameworks to fix problems is even worse.
+>>
+> It has been years since ath10k has been in the kernel.  There is
+>> basically
+>> still no way to debug what the firmware is doing.
+>>
+>
+> I know the feeling :) I was in the same situation before I added stuff
+> for iwlwifi.
+>
+>> My patch gives you something that can work right now, with the
+>> standard 'dmesg'
+>> framework found in virtually all kernels new and old, and it has been
+>> proven
+>> to be useful in the field.  The messages are also nicely interleaved
+>> with the
+>> rest of the mac80211 stack messages and any other driver messages, so
+>> you have
+>> context.
+>>
+>> If someone wants to add support for a framework later, then by all
+>> means, post
+>> the patches when it is ready.
+>
+> From my experience, a strong and easy-to-use firmware debug
+> infrastructure is important because typically, the firmware is written
+> by other people who have different priorities (and are not always Linux
+> wizards) etc... Being able to give them good data is the only way to
+> have them fix their bugs :) For us, it was really a game changer. When
+> you work for a big corporate, having 2 groups work better together
+> always has a big impact. That's for the philosophical part :)
+>
+> FWIW: what I did has nothing to do with FW 'live tracing', but with
+> firmware dumps. One part of our firmware dumps include tracing. We also
+> have "firmware prints", but we don't print them in the kernel log and
+> they are not part of the firmware dump thing. We rather record them in
+> tracepoints just like really *anything* that comes from the firmware.
+> Basically, we have 2 layers, the transport layer (PCIe) and the
+> operation_mode layer. The first just brings the data from the firmware
+> and in that layer we *blindly* record everything in tracepoints. In the
+> operation_mode layer, we look at the data itself. In case of debug
+> prints from the firmware, we simply discard them, because we don't
+> really care of the meaning. All we want is to have them go through the
+> PCIe layer so that they are recorded in the tracepoints.
+> When we finish recording the sequence we wanted with tracing (trace
+> -cmd), we parse the output and then, we parse the firmware prints.
+> IMHO, this is more reliable than kernel logs and you don't lose the
+> alignment with the driver traces as long as you have driver data in
+> tracepoints as well.
 
-Provide a function the driver can call to report a match.
-This will send the event to the user space.
-If the NAN instance is tied to the owner, the notifications will be
-sent to the socket that started the NAN interface only.
+I have other patches that remember the last 100 or so firmware log messages from
+the kernel and provide that in a binary dump image when firmware crashes.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- include/net/cfg80211.h       | 37 +++++++++++++++++++++
- include/uapi/linux/nl80211.h | 31 ++++++++++++++++++
- net/wireless/nl80211.c       | 78 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 146 insertions(+)
+This is indeed very useful.
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b819e32..a08d7da 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -5639,6 +5639,43 @@ wiphy_ext_feature_isset(struct wiphy *wiphy,
-  */
- void cfg80211_free_nan_func(struct cfg80211_nan_func *f);
- 
-+/**
-+ * struct cfg80211_nan_match_params - NAN match parameters
-+ * @type: the type of the function that triggered a match. If it is
-+ *	 %NL80211_NAN_FUNC_SUBSCRIBE it means that we replied to a subscriber.
-+ *	 If it is %NL80211_NAN_FUNC_PUBLISH, it means that we got a discovery
-+ *	 result.
-+ *	 If it is %NL80211_NAN_FUNC_FOLLOW_UP, we received a follow up.
-+ * @inst_id: the local instance id
-+ * @peer_inst_id: the instance id of the peer's function
-+ * @addr: the MAC address of the peer
-+ * @info_len: the length of the &info
-+ * @info: the Service Specific Info from the peer (if any)
-+ * @cookie: unique identifier of the corresponding function
-+ */
-+struct cfg80211_nan_match_params {
-+	enum nl80211_nan_function_type type;
-+	u8 inst_id;
-+	u8 peer_inst_id;
-+	const u8 *addr;
-+	u8 info_len;
-+	const u8 *info;
-+	u64 cookie;
-+};
-+
-+/**
-+ * cfg80211_nan_match - report a match for a NAN function.
-+ * @wdev: the wireless device reporting the match
-+ * @match: match notification parameters
-+ * @gfp: allocation flags
-+ *
-+ * This function reports that the a NAN function had a match. This
-+ * can be a subscribe that had a match or a solicited publish that
-+ * was sent. It can also be a follow up that was received.
-+ */
-+void cfg80211_nan_match(struct wireless_dev *wdev,
-+			struct cfg80211_nan_match_params *match, gfp_t gfp);
-+
- /* ethtool helper */
- void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info);
- 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 9cf1744..badb4a6 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -48,6 +48,7 @@
- #define NL80211_MULTICAST_GROUP_REG		"regulatory"
- #define NL80211_MULTICAST_GROUP_MLME		"mlme"
- #define NL80211_MULTICAST_GROUP_VENDOR		"vendor"
-+#define NL80211_MULTICAST_GROUP_NAN		"nan"
- #define NL80211_MULTICAST_GROUP_TESTMODE	"testmode"
- 
- /**
-@@ -869,6 +870,9 @@
-  *	must be operational (%NL80211_CMD_START_NAN was executed).
-  *	It must contain at least one of the following attributes:
-  *	%NL80211_ATTR_NAN_MASTER_PREF, %NL80211_ATTR_NAN_DUAL.
-+ * @NL80211_CMD_NAN_FUNC_MATCH: Notification sent when a match is reported.
-+ *	This will contain a %NL80211_ATTR_NAN_MATCH nested attribute and
-+ *	%NL80211_ATTR_COOKIE.
-  *
-  * @NL80211_CMD_MAX: highest used command number
-  * @__NL80211_CMD_AFTER_LAST: internal use
-@@ -1063,6 +1067,7 @@ enum nl80211_commands {
- 	NL80211_CMD_ADD_NAN_FUNCTION,
- 	NL80211_CMD_RM_NAN_FUNCTION,
- 	NL80211_CMD_CHANGE_NAN_CONFIG,
-+	NL80211_CMD_NAN_MATCH,
- 
- 	/* add new commands above here */
- 
-@@ -1923,6 +1928,8 @@ enum nl80211_commands {
-  * @NL80211_ATTR_NAN_FUNC: a function that can be added to NAN. See
-  *	&enum nl80211_nan_func_attributes for description of this nested
-  *	attribute.
-+ * @NL80211_ATTR_NAN_MATCH: used to report a match. This is a nested attribute.
-+ *	See &enum nl80211_nan_match_attributes.
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-@@ -2321,6 +2328,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_NAN_MASTER_PREF,
- 	NL80211_ATTR_NAN_DUAL,
- 	NL80211_ATTR_NAN_FUNC,
-+	NL80211_ATTR_NAN_MATCH,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-@@ -5067,4 +5075,27 @@ enum nl80211_nan_srf_attributes {
- 	NL80211_NAN_SRF_ATTR_MAX = NUM_NL80211_NAN_SRF_ATTR - 1,
- };
- 
-+/**
-+ * enum nl80211_nan_match_attributes - NAN match attributes
-+ * @__NL80211_NAN_MATCH_INVALID: invalid
-+ * @NL80211_NAN_MATCH_FUNC_LOCAL: the local function that had the
-+ *	match. This is a nested attribute.
-+ *	See &enum nl80211_nan_func_attributes.
-+ * @NL80211_NAN_MATCH_FUNC_PEER: the peer function
-+ *	that caused the match. This is a nested attribute.
-+ *	See &enum nl80211_nan_func_attributes.
-+ *
-+ * @NUM_NL80211_NAN_MATCH_ATTR: internal
-+ * @NL80211_NAN_MATCH_ATTR_MAX: highest NAN match attribute
-+ */
-+enum nl80211_nan_match_attributes {
-+	__NL80211_NAN_MATCH_INVALID,
-+	NL80211_NAN_MATCH_FUNC_LOCAL,
-+	NL80211_NAN_MATCH_FUNC_PEER,
-+
-+	/* keep last */
-+	NUM_NL80211_NAN_MATCH_ATTR,
-+	NL80211_NAN_MATCH_ATTR_MAX = NUM_NL80211_NAN_MATCH_ATTR - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d627527..4d37717 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -56,6 +56,7 @@ enum nl80211_multicast_groups {
- 	NL80211_MCGRP_REGULATORY,
- 	NL80211_MCGRP_MLME,
- 	NL80211_MCGRP_VENDOR,
-+	NL80211_MCGRP_NAN,
- 	NL80211_MCGRP_TESTMODE /* keep last - ifdef! */
- };
- 
-@@ -65,6 +66,7 @@ static const struct genl_multicast_group nl80211_mcgrps[] = {
- 	[NL80211_MCGRP_REGULATORY] = { .name = NL80211_MULTICAST_GROUP_REG },
- 	[NL80211_MCGRP_MLME] = { .name = NL80211_MULTICAST_GROUP_MLME },
- 	[NL80211_MCGRP_VENDOR] = { .name = NL80211_MULTICAST_GROUP_VENDOR },
-+	[NL80211_MCGRP_NAN] = { .name = NL80211_MULTICAST_GROUP_NAN },
- #ifdef CONFIG_NL80211_TESTMODE
- 	[NL80211_MCGRP_TESTMODE] = { .name = NL80211_MULTICAST_GROUP_TESTMODE }
- #endif
-@@ -10867,6 +10869,82 @@ static int nl80211_nan_change_config(struct sk_buff *skb,
- 	return rdev_nan_change_conf(rdev, wdev, &conf, changed);
- }
- 
-+void cfg80211_nan_match(struct wireless_dev *wdev,
-+			struct cfg80211_nan_match_params *match, gfp_t gfp)
-+{
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-+	struct nlattr *match_attr, *local_func_attr, *peer_func_attr;
-+	struct sk_buff *msg;
-+	void *hdr;
-+
-+	if (WARN_ON(!match->inst_id || !match->peer_inst_id || !match->addr))
-+		return;
-+
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
-+
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_NAN_MATCH);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
-+	}
-+
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    (wdev->netdev && nla_put_u32(msg, NL80211_ATTR_IFINDEX,
-+					 wdev->netdev->ifindex)) ||
-+	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)))
-+		goto nla_put_failure;
-+
-+	if (nla_put_u64(msg, NL80211_ATTR_COOKIE, match->cookie) ||
-+	    nla_put(msg, NL80211_ATTR_MAC, ETH_ALEN, match->addr))
-+		goto nla_put_failure;
-+
-+	match_attr = nla_nest_start(msg, NL80211_ATTR_NAN_MATCH);
-+	if (!match_attr)
-+		goto nla_put_failure;
-+
-+	local_func_attr = nla_nest_start(msg, NL80211_NAN_MATCH_FUNC_LOCAL);
-+	if (!local_func_attr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u8(msg, NL80211_NAN_FUNC_INSTANCE_ID, match->inst_id))
-+		goto nla_put_failure;
-+
-+	nla_nest_end(msg, local_func_attr);
-+
-+	peer_func_attr = nla_nest_start(msg, NL80211_NAN_MATCH_FUNC_PEER);
-+	if (!peer_func_attr)
-+		goto nla_put_failure;
-+
-+	if (nla_put_u8(msg, NL80211_NAN_FUNC_TYPE, match->type) ||
-+	    nla_put_u8(msg, NL80211_NAN_FUNC_INSTANCE_ID, match->peer_inst_id))
-+		goto nla_put_failure;
-+
-+	if (match->info && match->info_len &&
-+	    nla_put(msg, NL80211_NAN_FUNC_SERVICE_INFO, match->info_len,
-+		    match->info))
-+		goto nla_put_failure;
-+
-+	nla_nest_end(msg, peer_func_attr);
-+	nla_nest_end(msg, match_attr);
-+	genlmsg_end(msg, hdr);
-+
-+	if (!wdev->owner_nlportid)
-+		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
-+					msg, 0, NL80211_MCGRP_NAN, gfp);
-+	else
-+		genlmsg_unicast(wiphy_net(&rdev->wiphy), msg,
-+				wdev->owner_nlportid);
-+
-+	return;
-+
-+nla_put_failure:
-+	nlmsg_free(msg);
-+}
-+EXPORT_SYMBOL(cfg80211_nan_match);
-+
- static int nl80211_get_protocol_features(struct sk_buff *skb,
- 					 struct genl_info *info)
- {
+But, when debugging non-crash occasions, it is still useful to see what
+the firmware is doing.
+
+For instance, maybe it is reporting lots of tx-hangs and/or low-level
+resets.  This gives you a clue as to why a user might report 'my wifi sucks'.
+
+Since I am both FW and driver team for my firmware variant,
+and my approach has been working for me, then I feel it is certainly better than
+the current state.  And just maybe the official upstream FW team could start
+using something similar as well.  Currently, I don't see how they can ever make
+much progress on firmware crashes reported in stock kernels.
+
+Thanks,
+Ben
+
 -- 
-2.9.3
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
