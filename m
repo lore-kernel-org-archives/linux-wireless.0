@@ -1,29 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42655 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932418AbcI3M3s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 08:29:48 -0400
-Message-ID: <1475238579.17481.56.camel@sipsolutions.net> (sfid-20160930_142951_993597_F34BFB74)
-Subject: Re: [PATCH 1/3] cw1200: Don't leak memory if krealloc failes
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Johannes Thumshirn <jthumshirn@suse.de>,
-        Solomon Peachy <pizza@shaftnet.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+Received: from youngberry.canonical.com ([91.189.89.112]:48168 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751754AbcIOR2H (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Sep 2016 13:28:07 -0400
+Subject: Re: [PATCH] mwifiex: fix memory leak on regd when chan is zero
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <20160915162117.1209-1-colin.king@canonical.com>
+ <87vaxx9jhk.fsf@kamboji.qca.qualcomm.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Date: Fri, 30 Sep 2016 14:29:39 +0200
-In-Reply-To: <1475237495-15030-1-git-send-email-jthumshirn@suse.de> (sfid-20160930_141208_240938_8F56ACB3)
-References: <1475237495-15030-1-git-send-email-jthumshirn@suse.de>
-         (sfid-20160930_141208_240938_8F56ACB3)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+From: Colin Ian King <colin.king@canonical.com>
+Message-ID: <6afd51c2-c603-c887-3d75-3a1775bfe11c@canonical.com> (sfid-20160915_192834_323657_3CE8B21C)
+Date: Thu, 15 Sep 2016 18:26:26 +0100
+MIME-Version: 1.0
+In-Reply-To: <87vaxx9jhk.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> +	tmp = krealloc(buf->begin, size, GFP_KERNEL | GFP_DMA);
-> +	if (tmp) {
+On 15/09/16 18:10, Kalle Valo wrote:
+> Colin King <colin.king@canonical.com> writes:
 > 
-I think that check is inverted?
+>> From: Colin Ian King <colin.king@canonical.com>
+>>
+>> When chan is zero mwifiex_create_custom_regdomain does not kfree
+>> regd and we have a memory leak. Fix this by freeing regd before
+>> the return.
+>>
+>> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+>> ---
+>>  drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 4 +++-
+>>  1 file changed, 3 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+>> index 3344a26..15a91f3 100644
+>> --- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+>> +++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+>> @@ -1049,8 +1049,10 @@ mwifiex_create_custom_regdomain(struct mwifiex_private *priv,
+>>  		enum nl80211_band band;
+>>  
+>>  		chan = *buf++;
+>> -		if (!chan)
+>> +		if (!chan) {
+>> +			kfree(regd);
+>>  			return NULL;
+>> +		}
+> 
+> Bob sent a similar fix and he also did more:
+> 
+> mwifiex: fix error handling in mwifiex_create_custom_regdomain
+> 
+> https://patchwork.kernel.org/patch/9331337/
+> 
+Ah, sorry for the duplication noise.
 
-johannes
+Colin
