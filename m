@@ -1,52 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55942 "EHLO
+Received: from paleale.coelho.fi ([176.9.41.70]:54832 "EHLO
         farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1760357AbcISHbV (ORCPT
+        with ESMTP id S1753047AbcIOSMX (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 03:31:21 -0400
+        Thu, 15 Sep 2016 14:12:23 -0400
 From: Luca Coelho <luca@coelho.fi>
 To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
+Cc: linux-wireless@vger.kernel.org, Oren Givon <oren.givon@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Sep 2016 10:30:15 +0300
-Message-Id: <20160919073028.22065-12-luca@coelho.fi> (sfid-20160919_093136_561513_7B27E0E3)
-In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
-References: <1474270071.5664.89.camel@coelho.fi>
-Subject: [PATCH 12/25] iwlwifi: pcie: log full command sequence
+Date: Thu, 15 Sep 2016 21:11:22 +0300
+Message-Id: <20160915181131.32213-16-luca@coelho.fi> (sfid-20160915_203149_533245_4C58D726)
+In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
+References: <1473962425.5664.41.camel@coelho.fi>
+Subject: [PATCH 16/25] iwlwifi: add the new 9560 series
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Oren Givon <oren.givon@intel.com>
 
-Log group as well. Remove 0x prefix to match TX logging.
+Add a new config struct for the new 9560 series and add
+the 4 new PCI IDs for it.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Oren Givon <oren.givon@intel.com>
 Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c   | 11 +++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   |  4 ++++
+ 3 files changed, 16 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 0b5b331..78cb6d2 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1108,13 +1108,14 @@ static void iwl_pcie_rx_handle_rb(struct iwl_trans *trans,
- 			FH_RSCSR_RXQ_POS != rxq->id);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 1fec6af..4d68985 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -187,6 +187,17 @@ const struct iwl_cfg iwl9460_2ac_cfg = {
+ 	.integrated = true,
+ };
  
- 		IWL_DEBUG_RX(trans,
--			     "cmd at offset %d: %s (0x%.2x, seq 0x%x)\n",
-+			     "cmd at offset %d: %s (%.2x.%2x, seq 0x%x)\n",
- 			     rxcb._offset,
- 			     iwl_get_cmd_string(trans,
- 						iwl_cmd_id(pkt->hdr.cmd,
- 							   pkt->hdr.group_id,
- 							   0)),
--			     pkt->hdr.cmd, le16_to_cpu(pkt->hdr.sequence));
-+			     pkt->hdr.group_id, pkt->hdr.cmd,
-+			     le16_to_cpu(pkt->hdr.sequence));
++const struct iwl_cfg iwl9560_2ac_cfg = {
++	.name = "Intel(R) Dual Band Wireless AC 9560",
++	.fw_name_pre = IWL9000_FW_PRE,
++	IWL_DEVICE_9000,
++	.ht_params = &iwl9000_ht_params,
++	.nvm_ver = IWL9000_NVM_VERSION,
++	.nvm_calib_ver = IWL9000_TX_POWER_VERSION,
++	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++	.integrated = true,
++};
++
+ /*
+  * TODO the struct below is for internal testing only this should be
+  * removed by EO 2016~
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 7008319..63d3f9b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -454,6 +454,7 @@ extern const struct iwl_cfg iwl9160_2ac_cfg;
+ extern const struct iwl_cfg iwl9260_2ac_cfg;
+ extern const struct iwl_cfg iwl9270_2ac_cfg;
+ extern const struct iwl_cfg iwl9460_2ac_cfg;
++extern const struct iwl_cfg iwl9560_2ac_cfg;
+ extern const struct iwl_cfg iwla000_2ac_cfg;
+ #endif /* CONFIG_IWLMVM */
  
- 		len = iwl_rx_packet_len(pkt);
- 		len += sizeof(u32); /* account for status word */
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index c6e24fb..74aa416 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -523,6 +523,10 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0060, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0xA370, 0x0060, iwl9460_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x31DC, 0x0060, iwl9460_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x9DF0, 0x0030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0xA370, 0x0030, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x31DC, 0x0030, iwl9560_2ac_cfg)},
+ 
+ /* a000 Series */
+ 	{IWL_PCI_DEVICE(0x2720, 0x0A10, iwla000_2ac_cfg)},
 -- 
 2.9.3
