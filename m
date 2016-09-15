@@ -1,105 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:33434 "EHLO
-        mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757479AbcILJnj (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:37770 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751241AbcIOPWj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 05:43:39 -0400
-Received: by mail-pa0-f67.google.com with SMTP id h5so7563187pao.0
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 02:43:39 -0700 (PDT)
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        johannes.berg@intel.com, hofrat@osadl.org
-Cc: prameela.j04cs@gmail.com, prameela.garnepudi@redpinesignals.com
-Subject: [PATCH 6/9] rsi: code cleanup (spelling mistakes and new line after declaration) in file rsi_91x_sdio.c      Added developer name
-Date: Mon, 12 Sep 2016 15:08:21 +0530
-Message-Id: <b624fae62a96a117c4aed52a0626d575628d736c.1473669618.git.prameela.j04cs@gmail.com> (sfid-20160912_114342_848181_9C18D611)
-In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
-References: <cover.1473669618.git.prameela.j04cs@gmail.com>
-In-Reply-To: <cover.1473669618.git.prameela.j04cs@gmail.com>
-References: <cover.1473669618.git.prameela.j04cs@gmail.com>
+        Thu, 15 Sep 2016 11:22:39 -0400
+Subject: Re: [PATCH v2 04/21] ath10k: rate-limit packet tx errors
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+ <1462986153-16318-5-git-send-email-greearb@candelatech.com>
+ <87wpieefr9.fsf@kamboji.qca.qualcomm.com> <57D96669.20209@candelatech.com>
+ <87sht1b6wc.fsf@kamboji.qca.qualcomm.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <afc73fcc-d6cc-e2b4-33dc-87394b640675@candelatech.com> (sfid-20160915_172259_466792_C4A2BC0C)
+Date: Thu, 15 Sep 2016 08:22:37 -0700
+MIME-Version: 1.0
+In-Reply-To: <87sht1b6wc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
----
- drivers/net/wireless/rsi/rsi_91x_sdio.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+On 09/15/2016 06:59 AM, Valo, Kalle wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+>
+>> On 09/14/2016 07:07 AM, Valo, Kalle wrote:
+>>> greearb@candelatech.com writes:
+>>>
+>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>
+>>>> When firmware crashes, stack can continue to send packets
+>>>> for a bit, and existing code was spamming logs.
+>>>>
+>>>> So, rate-limit the error message for tx failures.
+>>>>
+>>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>>> ---
+>>>>   drivers/net/wireless/ath/ath10k/mac.c | 5 +++--
+>>>>   1 file changed, 3 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+>>>> index cd3016d..42cac32 100644
+>>>> --- a/drivers/net/wireless/ath/ath10k/mac.c
+>>>> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+>>>> @@ -3432,8 +3432,9 @@ static int ath10k_mac_tx_submit(struct ath10k *ar,
+>>>>   	}
+>>>>
+>>>>   	if (ret) {
+>>>> -		ath10k_warn(ar, "failed to transmit packet, dropping: %d\n",
+>>>> -			    ret);
+>>>> +		if (net_ratelimit())
+>>>> +			ath10k_warn(ar, "failed to transmit packet, dropping: %d\n",
+>>>> +				    ret);
+>>>>   		ieee80211_free_txskb(ar->hw, skb);
+>>>>   	}
+>>>
+>>> ath10k_warn() is already rate limited. If there's something wrong then
+>>> that function should be fixed, not the callers.
+>>>
+>>> void ath10k_warn(struct ath10k *ar, const char *fmt, ...)
+>>> {
+>>> 	struct va_format vaf = {
+>>> 		.fmt = fmt,
+>>> 	};
+>>> 	va_list args;
+>>>
+>>> 	va_start(args, fmt);
+>>> 	vaf.va = &args;
+>>> 	dev_warn_ratelimited(ar->dev, "%pV", &vaf);
+>>> 	trace_ath10k_log_warn(ar, &vaf);
+>>>
+>>> 	va_end(args);
+>>> }
+>>
+>> The problem with having the ratelimit here is that you may miss
+>> rare warnings due to a flood of common warnings.
+>>
+>> That is why it is still useful to ratelimit potential floods
+>> of warnings.
+>
+> I think this is a common problem in kernel, not specific to ath10k. For
+> starters you could configure the limits dev_warn_ratelimited() has, not
+> trying to workaround it in the driver.
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_sdio.c b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-index 8428858..d958f90 100644
---- a/drivers/net/wireless/rsi/rsi_91x_sdio.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_sdio.c
-@@ -1,6 +1,8 @@
- /**
-  * Copyright (c) 2014 Redpine Signals Inc.
-  *
-+ * Developers:
-+ *		Fariya Fathima	2014 <fariya.f@redpinesignals.com>
-  * Permission to use, copy, modify, and/or distribute this software for any
-  * purpose with or without fee is hereby granted, provided that the above
-  * copyright notice and this permission notice appear in all copies.
-@@ -128,7 +130,7 @@ static int rsi_issue_sdiocommand(struct sdio_func *func,
- }
- 
- /**
-- * rsi_handle_interrupt() - This function is called upon the occurence
-+ * rsi_handle_interrupt() - This function is called upon the occurrence
-  *			    of an interrupt.
-  * @function: Pointer to the sdio_func structure.
-  *
-@@ -183,8 +185,7 @@ static void rsi_reset_card(struct sdio_func *pfunction)
- 	host->ios.timing = MMC_TIMING_LEGACY;
- 	host->ops->set_ios(host, &host->ios);
- 
--	/*
--	 * This delay should be sufficient to allow the power supply
-+	/* This delay should be sufficient to allow the power supply
- 	 * to reach the minimum voltage.
- 	 */
- 	msleep(20);
-@@ -193,8 +194,7 @@ static void rsi_reset_card(struct sdio_func *pfunction)
- 	host->ios.power_mode = MMC_POWER_ON;
- 	host->ops->set_ios(host, &host->ios);
- 
--	/*
--	 * This delay must be at least 74 clock sizes, or 1 ms, or the
-+	/* This delay must be at least 74 clock sizes, or 1 ms, or the
- 	 * time required to reach a stable voltage.
- 	 */
- 	msleep(20);
-@@ -361,6 +361,7 @@ static int rsi_setblocklength(struct rsi_hw *adapter, u32 length)
- 	struct rsi_91x_sdiodev *dev =
- 		(struct rsi_91x_sdiodev *)adapter->rsi_dev;
- 	int status;
-+
- 	rsi_dbg(INIT_ZONE, "%s: Setting the block length\n", __func__);
- 
- 	status = sdio_set_block_size(dev->pfunction, length);
-@@ -464,6 +465,7 @@ int rsi_sdio_write_register(struct rsi_hw *adapter,
- void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit)
- {
- 	int status;
-+
- 	status = rsi_sdio_write_register(adapter,
- 					 1,
- 					 (SDIO_FUN1_INTR_CLR_REG |
-@@ -473,8 +475,6 @@ void rsi_sdio_ack_intr(struct rsi_hw *adapter, u8 int_bit)
- 		rsi_dbg(ERR_ZONE, "%s: unable to send ack\n", __func__);
- }
- 
--
--
- /**
-  * rsi_sdio_read_register_multiple() - This function read multiple bytes of
-  *				       information from the SD card.
-@@ -667,7 +667,7 @@ static int rsi_init_sdio_interface(struct rsi_hw *adapter,
- 		goto fail;
- 	}
- 
--	rsi_dbg(INIT_ZONE, "%s: Setup card succesfully\n", __func__);
-+	rsi_dbg(INIT_ZONE, "%s: Setup card successfully\n", __func__);
- 
- 	status = rsi_init_sdio_slave_regs(adapter);
- 	if (status) {
+I will try to explain this once more.
+
+If you have the ratelimit in a centralized place, then all code that calls it
+is rate-limitted with same counter and each call site gets the same priority.
+
+One verbose caller can thus disable logs for the much more rare callers.
+
+My patch pre-filters one of the verbose callers, which lets other more
+rare and interesting callers be more likely to print logging messages
+that are useful for debugging.
+
+>> I would like to remove the ratelimit from ath10k_warn eventually.
+>
+> I think that's not a good idea, it might cause unnecessary host reboots
+> in problem cases. Rate limitting the messages is much better option.
+
+Ok, but even so, that would be a later patch and that is not a reason
+to reject the one I posted.
+
+For what it is worth, I and my users have been running such a patch for years
+in various embedded and other systems and it works fine.
+
+Thanks,
+Ben
+
+
+
 -- 
-2.4.11
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
