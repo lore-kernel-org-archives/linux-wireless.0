@@ -1,57 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48954 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932418AbcITKUx (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:54848 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752020AbcIOSMb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 06:20:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2016-09-20
-Date: Tue, 20 Sep 2016 13:20:46 +0300
-Message-ID: <87vaxq3m9t.fsf@kamboji.qca.qualcomm.com> (sfid-20160920_122113_420771_3748BB7E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+        Thu, 15 Sep 2016 14:12:31 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Liad Kaufman <liad.kaufman@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 15 Sep 2016 21:11:20 +0300
+Message-Id: <20160915181131.32213-14-luca@coelho.fi> (sfid-20160915_203149_033030_A3DC11D4)
+In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
+References: <1473962425.5664.41.camel@coelho.fi>
+Subject: [PATCH 14/25] iwlwifi: mvm: free reserved queue on STA removal
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-last pull request for 4.8, unless something really drastic comes up. And
-a small one even, just a small fix to iwlwifi to avoid a firmware crash.
+When a STA is removed in DQA mode, if no traffic went through
+its reserved queue, the txq continues to be marked as
+reserved and no STA can use it.
 
-Please let me know if there are any problems.
+Make sure that in such a case the reserved queue is marked
+as free when the STA is removed.
 
-Kalle
+Fixes: commit 24afba7690e4 ("iwlwifi: mvm: support bss dynamic alloc/dealloc of queues")
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
 
-The following changes since commit a0714125d11bcf21599b08b25fdaf384c0db6712:
-
-  Merge ath-current from ath.git (2016-09-07 20:16:37 +0300)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-09-20
-
-for you to fetch changes up to db64c5fa590b5d82ac0d5ec39bc498f95094e66b:
-
-  Merge tag 'iwlwifi-for-kalle-2016-09-15' of git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2016-09-17 17:06:22 +0300)
-
-----------------------------------------------------------------
-
-wireless-drivers fixes for 4.8
-
-iwlwifi
-
-* fix to prevent firmware crash when sending off-channel frames
-
-----------------------------------------------------------------
-Beni Lev (1):
-      iwlwifi: mvm: update TX queue before making a copy of the skb
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2016-09-15' of git://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c |   19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index a92e12e..11c7e15 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1496,9 +1496,31 @@ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
+ 		ret = iwl_mvm_drain_sta(mvm, mvm_sta, false);
+ 
+ 		/* If DQA is supported - the queues can be disabled now */
+-		if (iwl_mvm_is_dqa_supported(mvm))
++		if (iwl_mvm_is_dqa_supported(mvm)) {
++			u8 reserved_txq = mvm_sta->reserved_queue;
++			enum iwl_mvm_queue_status *status;
++
+ 			iwl_mvm_disable_sta_queues(mvm, vif, mvm_sta);
+ 
++			/*
++			 * If no traffic has gone through the reserved TXQ - it
++			 * is still marked as IWL_MVM_QUEUE_RESERVED, and
++			 * should be manually marked as free again
++			 */
++			spin_lock_bh(&mvm->queue_info_lock);
++			status = &mvm->queue_info[reserved_txq].status;
++			if (WARN((*status != IWL_MVM_QUEUE_RESERVED) &&
++				 (*status != IWL_MVM_QUEUE_FREE),
++				 "sta_id %d reserved txq %d status %d",
++				 mvm_sta->sta_id, reserved_txq, *status)) {
++				spin_unlock_bh(&mvm->queue_info_lock);
++				return -EINVAL;
++			}
++
++			*status = IWL_MVM_QUEUE_FREE;
++			spin_unlock_bh(&mvm->queue_info_lock);
++		}
++
+ 		if (vif->type == NL80211_IFTYPE_STATION &&
+ 		    mvmvif->ap_sta_id == mvm_sta->sta_id) {
+ 			/* if associated - we can't remove the AP STA now */
+-- 
+2.9.3
