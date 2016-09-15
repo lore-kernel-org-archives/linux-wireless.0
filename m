@@ -1,434 +1,349 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:48998 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932270AbcILN4F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 09:56:05 -0400
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH v3] mac80211: Re-structure aqm debugfs output and keep CoDel
-        stats per txq
-Date: Mon, 12 Sep 2016 15:55:43 +0200
-Message-Id: <20160912135543.26347-1-toke@toke.dk> (sfid-20160912_155610_196048_AB181E36)
-In-Reply-To: <20160811151156.6485-1-toke@toke.dk>
-References: <20160811151156.6485-1-toke@toke.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from paleale.coelho.fi ([176.9.41.70]:54864 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753409AbcIOSMj (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Sep 2016 14:12:39 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 15 Sep 2016 21:11:17 +0300
+Message-Id: <20160915181131.32213-11-luca@coelho.fi> (sfid-20160915_201246_701548_CDA34BE3)
+In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
+References: <1473962425.5664.41.camel@coelho.fi>
+Subject: [PATCH 11/25] iwlwifi: mvm: support new BA notification response
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently the 'aqm' stats in mac80211 only keeps overlimit drop stats,
-not CoDel stats. This moves the CoDel stats into the txqi structure to
-keep them per txq in order to show them in debugfs.
+From: Sara Sharon <sara.sharon@intel.com>
 
-In addition, the aqm debugfs output is restructured by splitting it up
-into three files: One global per phy, one per netdev and one per
-station, in the appropriate directories. The files are all called aqm,
-and are only created if the driver supports the wake_tx_queue op (rather
-than emitting an error on open as previously).
+Support new format. TX response will not be sent anymore,
+so all needed data is in the BA response.
 
-Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
-Changes since v2:
-  - Dynamically allocate buffer in per-station function.
-  - Rebase on current mac80211-next.
- =20
- net/mac80211/debugfs.c        | 151 ++++++++----------------------------=
-------
- net/mac80211/debugfs_netdev.c |  37 ++++++++++-
- net/mac80211/debugfs_sta.c    |  52 +++++++++++++++
- net/mac80211/ieee80211_i.h    |   2 +-
- net/mac80211/tx.c             |   4 +-
- 5 files changed, 117 insertions(+), 129 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  79 ++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 159 ++++++++++++++-------
+ 2 files changed, 184 insertions(+), 54 deletions(-)
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 2906c10..5bbb470 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -71,138 +71,39 @@ DEBUGFS_READONLY_FILE(wep_iv, "%#08x",
- DEBUGFS_READONLY_FILE(rate_ctrl_alg, "%s",
- 	local->rate_ctrl ? local->rate_ctrl->ops->name : "hw/driver");
-=20
--struct aqm_info {
--	struct ieee80211_local *local;
--	size_t size;
--	size_t len;
--	unsigned char buf[0];
--};
--
--#define AQM_HDR_LEN 200
--#define AQM_HW_ENTRY_LEN 40
--#define AQM_TXQ_ENTRY_LEN 110
--
--static int aqm_open(struct inode *inode, struct file *file)
-+static ssize_t aqm_read(struct file *file,
-+			char __user *user_buf,
-+			size_t count,
-+			loff_t *ppos)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+index 6b4c63a..0055a96 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
+@@ -578,6 +578,85 @@ struct iwl_mvm_ba_notif {
+ } __packed;
+ 
+ /**
++ * struct iwl_mvm_compressed_ba_tfd - progress of a TFD queue
++ * @q_num: TFD queue number
++ * @tfd_index: Index of first un-acked frame in the  TFD queue
++ */
++struct iwl_mvm_compressed_ba_tfd {
++	u8 q_num;
++	u8 reserved;
++	__le16 tfd_index;
++} __packed; /* COMPRESSED_BA_TFD_API_S_VER_1 */
++
++/**
++ * struct iwl_mvm_compressed_ba_ratid - progress of a RA TID queue
++ * @q_num: RA TID queue number
++ * @tid: TID of the queue
++ * @ssn: BA window current SSN
++ */
++struct iwl_mvm_compressed_ba_ratid {
++	u8 q_num;
++	u8 tid;
++	__le16 ssn;
++} __packed; /* COMPRESSED_BA_RATID_API_S_VER_1 */
++
++/*
++ * enum iwl_mvm_ba_resp_flags - TX aggregation status
++ * @IWL_MVM_BA_RESP_TX_AGG: generated due to BA
++ * @IWL_MVM_BA_RESP_TX_BAR: generated due to BA after BAR
++ * @IWL_MVM_BA_RESP_TX_AGG_FAIL: aggregation didn't receive BA
++ * @IWL_MVM_BA_RESP_TX_UNDERRUN: aggregation got underrun
++ * @IWL_MVM_BA_RESP_TX_BT_KILL: aggregation got BT-kill
++ * @IWL_MVM_BA_RESP_TX_DSP_TIMEOUT: aggregation didn't finish within the
++ *	expected time
++ */
++enum iwl_mvm_ba_resp_flags {
++	IWL_MVM_BA_RESP_TX_AGG,
++	IWL_MVM_BA_RESP_TX_BAR,
++	IWL_MVM_BA_RESP_TX_AGG_FAIL,
++	IWL_MVM_BA_RESP_TX_UNDERRUN,
++	IWL_MVM_BA_RESP_TX_BT_KILL,
++	IWL_MVM_BA_RESP_TX_DSP_TIMEOUT
++};
++
++/**
++ * struct iwl_mvm_compressed_ba_notif - notifies about reception of BA
++ * ( BA_NOTIF = 0xc5 )
++ * @flags: status flag, see the &iwl_mvm_ba_resp_flags
++ * @sta_id: Index of recipient (BA-sending) station in fw's station table
++ * @reduced_txp: power reduced according to TPC. This is the actual value and
++ *	not a copy from the LQ command. Thus, if not the first rate was used
++ *	for Tx-ing then this value will be set to 0 by FW.
++ * @initial_rate: TLC rate info, initial rate index, TLC table color
++ * @retry_cnt: retry count
++ * @query_byte_cnt: SCD query byte count
++ * @query_frame_cnt: SCD query frame count
++ * @txed: number of frames sent in the aggregation (all-TIDs)
++ * @done: number of frames that were Acked by the BA (all-TIDs)
++ * @wireless_time: Wireless-media time
++ * @tx_rate: the rate the aggregation was sent at
++ * @tfd_cnt: number of TFD-Q elements
++ * @ra_tid_cnt: number of RATID-Q elements
++ */
++struct iwl_mvm_compressed_ba_notif {
++	__le32 flags;
++	u8 sta_id;
++	u8 reduced_txp;
++	u8 initial_rate;
++	u8 retry_cnt;
++	__le32 query_byte_cnt;
++	__le16 query_frame_cnt;
++	__le16 txed;
++	__le16 done;
++	__le32 wireless_time;
++	__le32 tx_rate;
++	__le16 tfd_cnt;
++	__le16 ra_tid_cnt;
++	struct iwl_mvm_compressed_ba_tfd tfd[1];
++	struct iwl_mvm_compressed_ba_ratid ra_tid[0];
++} __packed; /* COMPRESSED_BA_RES_API_S_VER_4 */
++
++/**
+  * struct iwl_mac_beacon_cmd_v6 - beacon template command
+  * @tx: the tx commands associated with the beacon frame
+  * @template_id: currently equal to the mac context id of the coresponding
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 6271470..96482a5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -1584,41 +1584,16 @@ void iwl_mvm_rx_tx_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 		iwl_mvm_rx_tx_cmd_agg(mvm, pkt);
+ }
+ 
+-static void iwl_mvm_tx_info_from_ba_notif(struct ieee80211_tx_info *info,
+-					  struct iwl_mvm_ba_notif *ba_notif,
+-					  struct iwl_mvm_tid_data *tid_data)
++static void iwl_mvm_tx_reclaim(struct iwl_mvm *mvm, int sta_id, int tid,
++			       int txq, int index,
++			       struct ieee80211_tx_info *ba_info, u32 rate)
  {
--	struct ieee80211_local *local =3D inode->i_private;
--	struct ieee80211_sub_if_data *sdata;
--	struct sta_info *sta;
--	struct txq_info *txqi;
-+	struct ieee80211_local *local =3D file->private_data;
- 	struct fq *fq =3D &local->fq;
--	struct aqm_info *info =3D NULL;
-+	char buf[200];
- 	int len =3D 0;
--	int i;
--
--	if (!local->ops->wake_tx_queue)
--		return -EOPNOTSUPP;
--
--	len +=3D AQM_HDR_LEN;
--	len +=3D 6 * AQM_HW_ENTRY_LEN;
--
--	rcu_read_lock();
--	list_for_each_entry_rcu(sdata, &local->interfaces, list)
--		len +=3D AQM_TXQ_ENTRY_LEN;
--	list_for_each_entry_rcu(sta, &local->sta_list, list)
--		len +=3D AQM_TXQ_ENTRY_LEN * ARRAY_SIZE(sta->sta.txq);
--	rcu_read_unlock();
--
--	info =3D vmalloc(len);
--	if (!info)
--		return -ENOMEM;
-=20
- 	spin_lock_bh(&local->fq.lock);
- 	rcu_read_lock();
-=20
--	file->private_data =3D info;
--	info->local =3D local;
--	info->size =3D len;
--	len =3D 0;
--
--	len +=3D scnprintf(info->buf + len, info->size - len,
--			 "* hw\n"
--			 "access name value\n"
--			 "R fq_flows_cnt %u\n"
--			 "R fq_backlog %u\n"
--			 "R fq_overlimit %u\n"
--			 "R fq_collisions %u\n"
--			 "RW fq_limit %u\n"
--			 "RW fq_quantum %u\n",
--			 fq->flows_cnt,
--			 fq->backlog,
--			 fq->overlimit,
--			 fq->collisions,
--			 fq->limit,
--			 fq->quantum);
--
--	len +=3D scnprintf(info->buf + len,
--			 info->size - len,
--			 "* vif\n"
--			 "ifname addr ac backlog-bytes backlog-packets flows overlimit collis=
-ions tx-bytes tx-packets\n");
--
--	list_for_each_entry_rcu(sdata, &local->interfaces, list) {
--		txqi =3D to_txq_info(sdata->vif.txq);
--		len +=3D scnprintf(info->buf + len, info->size - len,
--				 "%s %pM %u %u %u %u %u %u %u %u\n",
--				 sdata->name,
--				 sdata->vif.addr,
--				 txqi->txq.ac,
--				 txqi->tin.backlog_bytes,
--				 txqi->tin.backlog_packets,
--				 txqi->tin.flows,
--				 txqi->tin.overlimit,
--				 txqi->tin.collisions,
--				 txqi->tin.tx_bytes,
--				 txqi->tin.tx_packets);
--	}
--
--	len +=3D scnprintf(info->buf + len,
--			 info->size - len,
--			 "* sta\n"
--			 "ifname addr tid ac backlog-bytes backlog-packets flows overlimit co=
-llisions tx-bytes tx-packets\n");
--
--	list_for_each_entry_rcu(sta, &local->sta_list, list) {
--		sdata =3D sta->sdata;
--		for (i =3D 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
--			txqi =3D to_txq_info(sta->sta.txq[i]);
--			len +=3D scnprintf(info->buf + len, info->size - len,
--					 "%s %pM %d %d %u %u %u %u %u %u %u\n",
--					 sdata->name,
--					 sta->sta.addr,
--					 txqi->txq.tid,
--					 txqi->txq.ac,
--					 txqi->tin.backlog_bytes,
--					 txqi->tin.backlog_packets,
--					 txqi->tin.flows,
--					 txqi->tin.overlimit,
--					 txqi->tin.collisions,
--					 txqi->tin.tx_bytes,
--					 txqi->tin.tx_packets);
--		}
--	}
--
--	info->len =3D len;
-+	len =3D scnprintf(buf, sizeof(buf),
-+			"access name value\n"
-+			"R fq_flows_cnt %u\n"
-+			"R fq_backlog %u\n"
-+			"R fq_overlimit %u\n"
-+			"R fq_collisions %u\n"
-+			"RW fq_limit %u\n"
-+			"RW fq_quantum %u\n",
-+			fq->flows_cnt,
-+			fq->backlog,
-+			fq->overlimit,
-+			fq->collisions,
-+			fq->limit,
-+			fq->quantum);
-=20
- 	rcu_read_unlock();
- 	spin_unlock_bh(&local->fq.lock);
-=20
--	return 0;
+-	info->flags |= IEEE80211_TX_STAT_AMPDU;
+-	info->status.ampdu_ack_len = ba_notif->txed_2_done;
+-	info->status.ampdu_len = ba_notif->txed;
+-	iwl_mvm_hwrate_to_tx_status(tid_data->rate_n_flags,
+-				    info);
+-	/* TODO: not accounted if the whole A-MPDU failed */
+-	info->status.tx_time = tid_data->tx_time;
+-	info->status.status_driver_data[0] =
+-		(void *)(uintptr_t)ba_notif->reduced_txp;
+-	info->status.status_driver_data[1] =
+-		(void *)(uintptr_t)tid_data->rate_n_flags;
 -}
 -
--static int aqm_release(struct inode *inode, struct file *file)
+-void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 -{
--	vfree(file->private_data);
--	return 0;
--}
+-	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+-	struct iwl_mvm_ba_notif *ba_notif = (void *)pkt->data;
+ 	struct sk_buff_head reclaimed_skbs;
+ 	struct iwl_mvm_tid_data *tid_data;
+ 	struct ieee80211_sta *sta;
+ 	struct iwl_mvm_sta *mvmsta;
+ 	struct sk_buff *skb;
+-	int sta_id, tid, freed;
+-	/* "flow" corresponds to Tx queue */
+-	u16 scd_flow = le16_to_cpu(ba_notif->scd_flow);
+-	/* "ssn" is start of block-ack Tx window, corresponds to index
+-	 * (in Tx queue's circular buffer) of first TFD/frame in window */
+-	u16 ba_resp_scd_ssn = le16_to_cpu(ba_notif->scd_ssn);
 -
--static ssize_t aqm_read(struct file *file,
--			char __user *user_buf,
--			size_t count,
--			loff_t *ppos)
--{
--	struct aqm_info *info =3D file->private_data;
+-	sta_id = ba_notif->sta_id;
+-	tid = ba_notif->tid;
++	int freed;
+ 
+ 	if (WARN_ONCE(sta_id >= IWL_MVM_STATION_COUNT ||
+ 		      tid >= IWL_MAX_TID_COUNT,
+@@ -1638,10 +1613,10 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 	mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	tid_data = &mvmsta->tid_data[tid];
+ 
+-	if (tid_data->txq_id != scd_flow) {
++	if (tid_data->txq_id != txq) {
+ 		IWL_ERR(mvm,
+-			"invalid BA notification: Q %d, tid %d, flow %d\n",
+-			tid_data->txq_id, tid, scd_flow);
++			"invalid BA notification: Q %d, tid %d\n",
++			tid_data->txq_id, tid);
+ 		rcu_read_unlock();
+ 		return;
+ 	}
+@@ -1655,27 +1630,14 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 	 * block-ack window (we assume that they've been successfully
+ 	 * transmitted ... if not, it's too late anyway).
+ 	 */
+-	iwl_trans_reclaim(mvm->trans, scd_flow, ba_resp_scd_ssn,
+-			  &reclaimed_skbs);
++	iwl_trans_reclaim(mvm->trans, txq, index, &reclaimed_skbs);
+ 
+-	IWL_DEBUG_TX_REPLY(mvm,
+-			   "BA_NOTIFICATION Received from %pM, sta_id = %d\n",
+-			   (u8 *)&ba_notif->sta_addr_lo32,
+-			   ba_notif->sta_id);
+-	IWL_DEBUG_TX_REPLY(mvm,
+-			   "TID = %d, SeqCtl = %d, bitmap = 0x%llx, scd_flow = %d, scd_ssn = %d sent:%d, acked:%d\n",
+-			   ba_notif->tid, le16_to_cpu(ba_notif->seq_ctl),
+-			   (unsigned long long)le64_to_cpu(ba_notif->bitmap),
+-			   scd_flow, ba_resp_scd_ssn, ba_notif->txed,
+-			   ba_notif->txed_2_done);
 -
- 	return simple_read_from_buffer(user_buf, count, ppos,
--				       info->buf, info->len);
-+				       buf, len);
+-	IWL_DEBUG_TX_REPLY(mvm, "reduced txp from ba notif %d\n",
+-			   ba_notif->reduced_txp);
+-	tid_data->next_reclaimed = ba_resp_scd_ssn;
++	tid_data->next_reclaimed = index;
+ 
+ 	iwl_mvm_check_ratid_empty(mvm, sta, tid);
+ 
+ 	freed = 0;
++	ba_info->status.status_driver_data[1] = (void *)(uintptr_t)rate;
+ 
+ 	skb_queue_walk(&reclaimed_skbs, skb) {
+ 		struct ieee80211_hdr *hdr = (void *)skb->data;
+@@ -1697,8 +1659,12 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 
+ 		/* this is the first skb we deliver in this batch */
+ 		/* put the rate scaling data there */
+-		if (freed == 1)
+-			iwl_mvm_tx_info_from_ba_notif(info, ba_notif, tid_data);
++		if (freed == 1) {
++			info->flags |= IEEE80211_TX_STAT_AMPDU;
++			memcpy(&info->status, &ba_info->status,
++			       sizeof(ba_info->status));
++			iwl_mvm_hwrate_to_tx_status(rate, info);
++		}
+ 	}
+ 
+ 	spin_unlock_bh(&mvmsta->lock);
+@@ -1708,7 +1674,6 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 	 * Still it's important to update RS about sent vs. acked.
+ 	 */
+ 	if (skb_queue_empty(&reclaimed_skbs)) {
+-		struct ieee80211_tx_info ba_info = {};
+ 		struct ieee80211_chanctx_conf *chanctx_conf = NULL;
+ 
+ 		if (mvmsta->vif)
+@@ -1718,11 +1683,11 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 		if (WARN_ON_ONCE(!chanctx_conf))
+ 			goto out;
+ 
+-		ba_info.band = chanctx_conf->def.chan->band;
+-		iwl_mvm_tx_info_from_ba_notif(&ba_info, ba_notif, tid_data);
++		ba_info->band = chanctx_conf->def.chan->band;
++		iwl_mvm_hwrate_to_tx_status(rate, ba_info);
+ 
+ 		IWL_DEBUG_TX_REPLY(mvm, "No reclaim. Update rs directly\n");
+-		iwl_mvm_rs_tx_status(mvm, sta, tid, &ba_info, false);
++		iwl_mvm_rs_tx_status(mvm, sta, tid, ba_info, false);
+ 	}
+ 
+ out:
+@@ -1734,6 +1699,92 @@ out:
+ 	}
  }
-=20
- static ssize_t aqm_write(struct file *file,
-@@ -210,8 +111,7 @@ static ssize_t aqm_write(struct file *file,
- 			 size_t count,
- 			 loff_t *ppos)
- {
--	struct aqm_info *info =3D file->private_data;
--	struct ieee80211_local *local =3D info->local;
-+	struct ieee80211_local *local =3D file->private_data;
- 	char buf[100];
- 	size_t len;
-=20
-@@ -237,8 +137,7 @@ static ssize_t aqm_write(struct file *file,
- static const struct file_operations aqm_ops =3D {
- 	.write =3D aqm_write,
- 	.read =3D aqm_read,
--	.open =3D aqm_open,
--	.release =3D aqm_release,
-+	.open =3D simple_open,
- 	.llseek =3D default_llseek,
- };
-=20
-@@ -428,7 +327,9 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	DEBUGFS_ADD(hwflags);
- 	DEBUGFS_ADD(user_power);
- 	DEBUGFS_ADD(power);
--	DEBUGFS_ADD_MODE(aqm, 0600);
-+
-+	if (local->ops->wake_tx_queue)
-+		DEBUGFS_ADD_MODE(aqm, 0600);
-=20
- 	statsd =3D debugfs_create_dir("statistics", phyd);
-=20
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.=
-c
-index a5ba739..5d35c0f 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -30,7 +30,7 @@ static ssize_t ieee80211_if_read(
- 	size_t count, loff_t *ppos,
- 	ssize_t (*format)(const struct ieee80211_sub_if_data *, char *, int))
- {
--	char buf[70];
-+	char buf[200];
- 	ssize_t ret =3D -EINVAL;
-=20
- 	read_lock(&dev_base_lock);
-@@ -486,6 +486,38 @@ static ssize_t ieee80211_if_fmt_num_buffered_multica=
-st(
- }
- IEEE80211_IF_FILE_R(num_buffered_multicast);
-=20
-+static ssize_t ieee80211_if_fmt_aqm(
-+	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
+ 
++void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 +{
-+	struct ieee80211_local *local =3D sdata->local;
-+	struct txq_info *txqi =3D to_txq_info(sdata->vif.txq);
-+	int len;
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	int sta_id, tid, txq, index;
++	struct ieee80211_tx_info ba_info = {};
++	struct iwl_mvm_ba_notif *ba_notif;
++	struct iwl_mvm_tid_data *tid_data;
++	struct iwl_mvm_sta *mvmsta;
 +
-+	spin_lock_bh(&local->fq.lock);
-+	rcu_read_lock();
++	if (iwl_mvm_has_new_tx_api(mvm)) {
++		struct iwl_mvm_compressed_ba_notif *ba_res =
++			(void *)pkt->data;
 +
-+	len =3D scnprintf(buf,
-+			buflen,
-+			"ac backlog-bytes backlog-packets new-flows drops marks overlimit col=
-lisions tx-bytes tx-packets\n"
-+			"%u %u %u %u %u %u %u %u %u %u\n",
-+			txqi->txq.ac,
-+			txqi->tin.backlog_bytes,
-+			txqi->tin.backlog_packets,
-+			txqi->tin.flows,
-+			txqi->cstats.drop_count,
-+			txqi->cstats.ecn_mark,
-+			txqi->tin.overlimit,
-+			txqi->tin.collisions,
-+			txqi->tin.tx_bytes,
-+			txqi->tin.tx_packets);
++		sta_id = ba_res->sta_id;
++		ba_info.status.ampdu_ack_len = (u8)le16_to_cpu(ba_res->done);
++		ba_info.status.ampdu_len = (u8)le16_to_cpu(ba_res->txed);
++		ba_info.status.tx_time =
++			(u16)le32_to_cpu(ba_res->wireless_time);
++		ba_info.status.status_driver_data[0] =
++			(void *)(uintptr_t)ba_res->reduced_txp;
 +
-+	rcu_read_unlock();
-+	spin_unlock_bh(&local->fq.lock);
++		/*
++		 * TODO:
++		 * When supporting multi TID aggregations - we need to move
++		 * next_reclaimed to be per TXQ and not per TID or handle it
++		 * in a different way.
++		 * This will go together with SN and AddBA offload and cannot
++		 * be handled properly for now.
++		 */
++		WARN_ON(le16_to_cpu(ba_res->tfd_cnt) != 1);
++		iwl_mvm_tx_reclaim(mvm, sta_id, ba_res->ra_tid[0].tid,
++				   (int)ba_res->tfd[0].q_num,
++				   le16_to_cpu(ba_res->tfd[0].tfd_index),
++				   &ba_info, le32_to_cpu(ba_res->tx_rate));
 +
-+	return len;
-+}
-+IEEE80211_IF_FILE_R(aqm);
-+
- /* IBSS attributes */
- static ssize_t ieee80211_if_fmt_tsf(
- 	const struct ieee80211_sub_if_data *sdata, char *buf, int buflen)
-@@ -618,6 +650,9 @@ static void add_common_files(struct ieee80211_sub_if_=
-data *sdata)
- 	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_2ghz);
- 	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_5ghz);
- 	DEBUGFS_ADD(hw_queues);
-+
-+	if (sdata->local->ops->wake_tx_queue)
-+		DEBUGFS_ADD(aqm);
- }
-=20
- static void add_sta_files(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index fd33413..fb26935 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -133,6 +133,55 @@ static ssize_t sta_last_seq_ctrl_read(struct file *f=
-ile, char __user *userbuf,
- }
- STA_OPS(last_seq_ctrl);
-=20
-+#define AQM_TXQ_ENTRY_LEN 130
-+
-+static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
-+			size_t count, loff_t *ppos)
-+{
-+	struct sta_info *sta =3D file->private_data;
-+	struct ieee80211_local *local =3D sta->local;
-+	size_t bufsz =3D AQM_TXQ_ENTRY_LEN*(IEEE80211_NUM_TIDS+1);
-+	char *buf =3D kzalloc(bufsz, GFP_KERNEL), *p =3D buf;
-+	struct txq_info *txqi;
-+	ssize_t rv;
-+	int i;
-+
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	spin_lock_bh(&local->fq.lock);
-+	rcu_read_lock();
-+
-+	p +=3D scnprintf(p,
-+		       bufsz+buf-p,
-+		       "tid ac backlog-bytes backlog-packets new-flows drops marks ove=
-rlimit collisions tx-bytes tx-packets\n");
-+
-+	for (i =3D 0; i < IEEE80211_NUM_TIDS; i++) {
-+		txqi =3D to_txq_info(sta->sta.txq[i]);
-+		p +=3D scnprintf(p, bufsz+buf-p,
-+			       "%d %d %u %u %u %u %u %u %u %u %u\n",
-+			       txqi->txq.tid,
-+			       txqi->txq.ac,
-+			       txqi->tin.backlog_bytes,
-+			       txqi->tin.backlog_packets,
-+			       txqi->tin.flows,
-+			       txqi->cstats.drop_count,
-+			       txqi->cstats.ecn_mark,
-+			       txqi->tin.overlimit,
-+			       txqi->tin.collisions,
-+			       txqi->tin.tx_bytes,
-+			       txqi->tin.tx_packets);
++		IWL_DEBUG_TX_REPLY(mvm,
++				   "BA_NOTIFICATION Received from sta_id = %d, flags %x, sent:%d, acked:%d\n",
++				   sta_id, le32_to_cpu(ba_res->flags),
++				   le16_to_cpu(ba_res->txed),
++				   le16_to_cpu(ba_res->done));
++		return;
 +	}
 +
++	ba_notif = (void *)pkt->data;
++	sta_id = ba_notif->sta_id;
++	tid = ba_notif->tid;
++	/* "flow" corresponds to Tx queue */
++	txq = le16_to_cpu(ba_notif->scd_flow);
++	/* "ssn" is start of block-ack Tx window, corresponds to index
++	 * (in Tx queue's circular buffer) of first TFD/frame in window */
++	index = le16_to_cpu(ba_notif->scd_ssn);
++
++	rcu_read_lock();
++	mvmsta = iwl_mvm_sta_from_staid_rcu(mvm, sta_id);
++	if (WARN_ON_ONCE(!mvmsta)) {
++		rcu_read_unlock();
++		return;
++	}
++
++	tid_data = &mvmsta->tid_data[tid];
++
++	ba_info.status.ampdu_ack_len = ba_notif->txed_2_done;
++	ba_info.status.ampdu_len = ba_notif->txed;
++	ba_info.status.tx_time = tid_data->tx_time;
++	ba_info.status.status_driver_data[0] =
++		(void *)(uintptr_t)ba_notif->reduced_txp;
++
 +	rcu_read_unlock();
-+	spin_unlock_bh(&local->fq.lock);
 +
-+	rv =3D simple_read_from_buffer(userbuf, count, ppos, buf, p - buf);
-+	kfree(buf);
-+	return rv;
++	iwl_mvm_tx_reclaim(mvm, sta_id, tid, txq, index, &ba_info,
++			   tid_data->rate_n_flags);
++
++	IWL_DEBUG_TX_REPLY(mvm,
++			   "BA_NOTIFICATION Received from %pM, sta_id = %d\n",
++			   (u8 *)&ba_notif->sta_addr_lo32, ba_notif->sta_id);
++
++	IWL_DEBUG_TX_REPLY(mvm,
++			   "TID = %d, SeqCtl = %d, bitmap = 0x%llx, scd_flow = %d, scd_ssn = %d sent:%d, acked:%d\n",
++			   ba_notif->tid, le16_to_cpu(ba_notif->seq_ctl),
++			   le64_to_cpu(ba_notif->bitmap), txq, index,
++			   ba_notif->txed, ba_notif->txed_2_done);
++
++	IWL_DEBUG_TX_REPLY(mvm, "reduced txp from ba notif %d\n",
++			   ba_notif->reduced_txp);
 +}
-+STA_OPS(aqm);
 +
- static ssize_t sta_agg_status_read(struct file *file, char __user *userb=
-uf,
- 					size_t count, loff_t *ppos)
- {
-@@ -478,6 +527,9 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD_COUNTER(rx_fragments, rx_stats.fragments);
- 	DEBUGFS_ADD_COUNTER(tx_filtered, status_stats.filtered);
-=20
-+	if (local->ops->wake_tx_queue)
-+		DEBUGFS_ADD(aqm);
-+
- 	if (sizeof(sta->driver_buffered_tids) =3D=3D sizeof(u32))
- 		debugfs_create_x32("driver_buffered_tids", 0400,
- 				   sta->debugfs_dir,
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 7576168..c71c735 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -818,6 +818,7 @@ struct txq_info {
- 	struct fq_tin tin;
- 	struct fq_flow def_flow;
- 	struct codel_vars def_cvars;
-+	struct codel_stats cstats;
- 	unsigned long flags;
-=20
- 	/* keep last! */
-@@ -1117,7 +1118,6 @@ struct ieee80211_local {
- 	struct fq fq;
- 	struct codel_vars *cvars;
- 	struct codel_params cparams;
--	struct codel_stats cstats;
-=20
- 	const struct ieee80211_ops *ops;
-=20
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index efc38e7..ee9e7d6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1343,7 +1343,7 @@ static struct sk_buff *fq_tin_dequeue_func(struct f=
-q *fq,
- 	local =3D container_of(fq, struct ieee80211_local, fq);
- 	txqi =3D container_of(tin, struct txq_info, tin);
- 	cparams =3D &local->cparams;
--	cstats =3D &local->cstats;
-+	cstats =3D &txqi->cstats;
-=20
- 	if (flow =3D=3D &txqi->def_flow)
- 		cvars =3D &txqi->def_cvars;
-@@ -1403,6 +1403,7 @@ void ieee80211_txq_init(struct ieee80211_sub_if_dat=
-a *sdata,
- 	fq_tin_init(&txqi->tin);
- 	fq_flow_init(&txqi->def_flow);
- 	codel_vars_init(&txqi->def_cvars);
-+	codel_stats_init(&txqi->cstats);
-=20
- 	txqi->txq.vif =3D &sdata->vif;
-=20
-@@ -1441,7 +1442,6 @@ int ieee80211_txq_setup_flows(struct ieee80211_loca=
-l *local)
- 		return ret;
-=20
- 	codel_params_init(&local->cparams);
--	codel_stats_init(&local->cstats);
- 	local->cparams.interval =3D MS2TIME(100);
- 	local->cparams.target =3D MS2TIME(20);
- 	local->cparams.ecn =3D true;
---=20
+ /*
+  * Note that there are transports that buffer frames before they reach
+  * the firmware. This means that after flush_tx_path is called, the
+-- 
 2.9.3
