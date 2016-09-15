@@ -1,45 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26917 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751623AbcIKGhH (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55361 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752008AbcIOJSR (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 11 Sep 2016 02:37:07 -0400
-From: Thomas Pedersen <twp@qca.qualcomm.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-CC: Johannes Berg <johannes.berg@intel.com>, <greearb@candelatech.com>,
-        Thomas Pedersen <twp@qca.qualcomm.com>
-Subject: [PATCH v2] cfg80211: add bitrate for 20MHz MCS 9
-Date: Sat, 10 Sep 2016 23:35:48 -0700
-Message-ID: <1473575748-26372-1-git-send-email-twp@qca.qualcomm.com> (sfid-20160911_083724_273897_FA70C5E9)
+        Thu, 15 Sep 2016 05:18:17 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
+Subject: RE: [PATCH v5] cfg80211: Add support to configure a beacon data rate
+Date: Thu, 15 Sep 2016 09:18:09 +0000
+Message-ID: <5986e153aa334a95ac18f2682211dfa1@aphydexm01f.ap.qualcomm.com> (sfid-20160915_111821_572250_9A6B1E2C)
+References: <1473854924-10352-1-git-send-email-pkushwah@qti.qualcomm.com>
+         <1473927421.4423.38.camel@sipsolutions.net>
+         (sfid-20160915_101917_590850_04C3DE8A)
+ <1473929362.25838.0.camel@sipsolutions.net>
+         <0b1aa5b1fc484bb481ff5be8e187acc2@aphydexm01f.ap.qualcomm.com>
+ <1473930264.25838.2.camel@sipsolutions.net>
+In-Reply-To: <1473930264.25838.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some drivers (ath10k) report MCS 9 @ 20MHz, which
-technically isn't defined. To get more meaningful value
-than 0 out of this however, just extrapolate a bitrate
-from ratio of MCS 7 and 9 in channels where it is allowed.
-
-Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
----
-v2: add MCS 9 bitrate instead of capping at MCS 8
----
- net/wireless/util.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index b7d1592..3e83170 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -1157,7 +1157,7 @@ static u32 cfg80211_calculate_bitrate_vht(struct rate_info *rate)
- 		   58500000,
- 		   65000000,
- 		   78000000,
--		   0,
-+		   86500000,
- 		},
- 		{  13500000,
- 		   27000000,
--- 
-2.1.4
+PiBJJ20gZXZlbiB3aWxsaW5nIHRvIGFkZCBpdCBteXNlbGYgLSBzaG91bGQgd2UganVzdCBoYXZl
+IHRocmVlIGZlYXR1cmUgZmxhZ3M/DQpJIGd1ZXNzICwgWWVzLg0KDQpSZWdhcmRzLA0KU3VuaWwN
+Cg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvaGFubmVzIEJlcmcgW21haWx0
+bzpqb2hhbm5lc0BzaXBzb2x1dGlvbnMubmV0XSANClNlbnQ6IFRodXJzZGF5LCBTZXB0ZW1iZXIg
+MTUsIDIwMTYgMjozNCBQTQ0KVG86IFVuZGVrYXJpLCBTdW5pbCBEdXR0IDx1c2R1dHRAcXRpLnF1
+YWxjb21tLmNvbT47IEt1c2h3YWhhLCBQdXJ1c2hvdHRhbSA8cGt1c2h3YWhAcXRpLnF1YWxjb21t
+LmNvbT4NCkNjOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IE1hbGluZW4sIEpvdW5p
+IDxqb3VuaUBxY2EucXVhbGNvbW0uY29tPjsgSHVsbHVyIFN1YnJhbWFueWFtLCBBbWFybmF0aCA8
+YW1hcm5hdGhAcWNhLnF1YWxjb21tLmNvbT4NClN1YmplY3Q6IFJlOiBbUEFUQ0ggdjVdIGNmZzgw
+MjExOiBBZGQgc3VwcG9ydCB0byBjb25maWd1cmUgYSBiZWFjb24gZGF0YSByYXRlDQoNCk9uIFRo
+dSwgMjAxNi0wOS0xNSBhdCAwOTowMCArMDAwMCwgVW5kZWthcmksIFN1bmlsIER1dHQgd3JvdGU6
+DQo+ID4gDQo+ID4gc2hvdWxkbid0IHdlIGhhdmUgc29tZSBmZWF0dXJlIGZsYWdzIGhlcmUgdG8g
+aW5kaWNhdGUgdGhhdCB0aGUgDQo+ID4gZHJpdmVyIGFjdHVhbGx5IHN1cHBvcnRzIHRoaXM/DQo+
+IFllcy4gQ2FuIHlvdSBwbGVhc2UgYWNjZXB0IHRoaXMgd2l0aCBhIG5ldyBjb21taXQuDQo+IA0K
+SSdtIGV2ZW4gd2lsbGluZyB0byBhZGQgaXQgbXlzZWxmIC0gc2hvdWxkIHdlIGp1c3QgaGF2ZSB0
+aHJlZSBmZWF0dXJlIGZsYWdzPw0KDQpBUF9CRUFDT05fUkFURV9MRUdBQ1kNCkFQX0JFQUNPTl9S
+QVRFX0hUDQpBUF9CRUFDT05fUkFURV9WSFQNCg0KPw0KDQpqb2hhbm5lcw0K
