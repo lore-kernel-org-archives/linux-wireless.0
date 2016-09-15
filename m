@@ -1,66 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39795 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760024AbcIMUDb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 16:03:31 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-09-13
-Date: Tue, 13 Sep 2016 22:03:23 +0200
-Message-Id: <1473797004-24158-1-git-send-email-johannes@sipsolutions.net> (sfid-20160913_220334_631286_FE5E80A7)
+Received: from mail2.candelatech.com ([208.74.158.173]:36800 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751032AbcIOPHI (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Sep 2016 11:07:08 -0400
+Subject: Re: [PATCH v2 03/21] ath10k: Allow changing ath10k debug mask at
+ runtime.
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+ <1462986153-16318-4-git-send-email-greearb@candelatech.com>
+ <871t0mfuej.fsf@kamboji.qca.qualcomm.com> <57D96DB1.5040003@candelatech.com>
+ <874m5hb5zn.fsf@kamboji.qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <ff47bbbb-56da-7eed-91a0-c5acdb03179d@candelatech.com> (sfid-20160915_170712_655894_29EBF21C)
+Date: Thu, 15 Sep 2016 08:07:06 -0700
+MIME-Version: 1.0
+In-Reply-To: <874m5hb5zn.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+On 09/15/2016 07:19 AM, Valo, Kalle wrote:
+> Ben Greear <greearb@candelatech.com> writes:
+>
+>> On 09/14/2016 07:06 AM, Valo, Kalle wrote:
+>>> greearb@candelatech.com writes:
+>>>
+>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>
+>>>> Using debugfs.  More convenient than module options
+>>>> in some cases.
+>>>>
+>>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>>> ---
+>>>>   drivers/net/wireless/ath/ath10k/debug.c | 62 +++++++++++++++++++++++++++++++++
+>>>>   1 file changed, 62 insertions(+)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+>>>> index e251155..d552a4a 100644
+>>>> --- a/drivers/net/wireless/ath/ath10k/debug.c
+>>>> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+>>>> @@ -870,6 +870,65 @@ static const struct file_operations fops_reg_addr = {
+>>>>   	.llseek = default_llseek,
+>>>>   };
+>>>>
+>>>> +static ssize_t ath10k_read_debug_level(struct file *file,
+>>>> +				       char __user *user_buf,
+>>>> +				       size_t count, loff_t *ppos)
+>>>> +{
+>>>> +	int sz;
+>>>> +	const char buf[] =
+>>>> +		"To change debug level, set value adding up desired flags:\n"
+>>>> +		"PCI:                0x1\n"
+>>>> +		"WMI:                0x2\n"
+>>>> +		"HTC:                0x4\n"
+>>>> +		"HTT:                0x8\n"
+>>>> +		"MAC:               0x10\n"
+>>>> +		"BOOT:              0x20\n"
+>>>> +		"PCI-DUMP:          0x40\n"
+>>>> +		"HTT-DUMP:          0x80\n"
+>>>> +		"MGMT:             0x100\n"
+>>>> +		"DATA:             0x200\n"
+>>>> +		"BMI:              0x400\n"
+>>>> +		"REGULATORY:       0x800\n"
+>>>> +		"TESTMODE:        0x1000\n"
+>>>> +		"INFO-AS-DBG: 0x40000000\n"
+>>>> +		"FW:          0x80000000\n"
+>>>> +		"ALL:         0xFFFFFFFF\n";
+>>>> +	char wbuf[sizeof(buf) + 60];
+>>>> +	sz = snprintf(wbuf, sizeof(wbuf), "Current debug level: 0x%x\n\n%s",
+>>>> +		      ath10k_debug_mask, buf);
+>>>> +	wbuf[sizeof(wbuf) - 1] = 0;
+>>>> +
+>>>> +	return simple_read_from_buffer(user_buf, count, ppos, wbuf, sz);
+>>>> +}
+>>>> +
+>>>> +/* Set logging level.
+>>>> + */
+>>>> +static ssize_t ath10k_write_debug_level(struct file *file,
+>>>> +					const char __user *user_buf,
+>>>> +					size_t count, loff_t *ppos)
+>>>> +{
+>>>> +	struct ath10k *ar = file->private_data;
+>>>> +	int ret;
+>>>> +	unsigned long mask;
+>>>> +
+>>>> +	ret = kstrtoul_from_user(user_buf, count, 0, &mask);
+>>>> +	if (ret)
+>>>> +		return ret;
+>>>> +
+>>>> +	ath10k_warn(ar, "Setting debug-mask to: 0x%lx  old: 0x%x\n",
+>>>> +		    mask, ath10k_debug_mask);
+>>>> +	ath10k_debug_mask = mask;
+>>>> +	return count;
+>>>> +}
+>>>
+>>> There are already sysfs files for module parameters which seems to work
+>>> just fine for this case:
+>>>
+>>> # echo 0xffffffff > /sys/module/ath10k_core/parameters/debug_mask
+>>
+>>
+>> Ok, but it is still nice to have the printout info of what log levels
+>> means.  Otherwise, you have to go look at firmware source to even know how
+>> to enable the proper flags.  And as these flags are internal and might change,
+>> we could change the printout text to match the specific kernel that is running.
+>
+> The debug log levels are documented in the wiki:
+>
+> https://wireless.wiki.kernel.org/en/users/drivers/ath10k/debug#debug_log_messages
+>
+> And they are not supposed to change, there should be only additions.
 
-We found a few more issues, I'm sending you small fixes here. The diffstat
-would be even shorter, but one of Felix's patches has to move about 30 lines
-of code, which makes it seem much bigger than it really is.
 
-Let me know if there's any problem.
+Ahh, I remember the best part of this patch.  It pre-positions for another patch
+that makes the debug-mask per NIC instance instead of per driver.
+
+This can be quite useful for testing with multiple radios, maybe only one of
+which you want to see logging for.
+
+And regardless of what is in a wiki somewhere, having a debugfs file to cat out is
+more user friendly.
 
 Thanks,
-johannes
+Ben
 
 
-
-The following changes since commit 15543692a010192b4264ade0d45390e8bb3dc639:
-
-  Merge tag 'mac80211-for-davem-2016-08-30' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2016-08-30 21:34:48 -0700)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-09-13
-
-for you to fetch changes up to ad5987b47e96a0fb6d13fea250e936aed000093c:
-
-  nl80211: validate number of probe response CSA counters (2016-09-13 20:19:27 +0200)
-
-----------------------------------------------------------------
-A few more fixes:
- * better mesh path fixing, from Thomas
- * fix TIM IE recalculation after sending frames
-   to a sleeping station, from Felix
- * fix sequence number assignment while sending
-   frames to a sleeping station, also from Felix
- * validate number of probe response CSA counter
-   offsets, fixing a copy/paste bug (from myself)
-
-----------------------------------------------------------------
-Felix Fietkau (2):
-      mac80211: fix tim recalculation after PS response
-      mac80211: fix sequence number assignment for PS response frames
-
-Johannes Berg (1):
-      nl80211: validate number of probe response CSA counters
-
-Pedersen, Thomas (1):
-      mac80211: make mpath path fixing more robust
-
- net/mac80211/mesh_hwmp.c    |  3 ++-
- net/mac80211/mesh_pathtbl.c |  2 +-
- net/mac80211/sta_info.c     |  4 +--
- net/mac80211/tx.c           | 65 +++++++++++++++++++++++----------------------
- net/wireless/nl80211.c      |  2 +-
- 5 files changed, 39 insertions(+), 37 deletions(-)
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
