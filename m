@@ -1,61 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43778 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932464AbcIBP4p (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:56:45 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u82FrIkk072096
-        for <linux-wireless@vger.kernel.org>; Fri, 2 Sep 2016 11:56:44 -0400
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 25787vnd0j-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Fri, 02 Sep 2016 11:56:44 -0400
-Received: from localhost
-        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-wireless@vger.kernel.org> from <zohar@linux.vnet.ibm.com>;
-        Sat, 3 Sep 2016 01:56:40 +1000
-Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
-        by d23dlp02.au.ibm.com (Postfix) with ESMTP id E4C4E2BB0057
-        for <linux-wireless@vger.kernel.org>; Sat,  3 Sep 2016 01:56:37 +1000 (EST)
-Received: from d23av03.au.ibm.com (d23av03.au.ibm.com [9.190.234.97])
-        by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u82FubQi4325730
-        for <linux-wireless@vger.kernel.org>; Sat, 3 Sep 2016 01:56:37 +1000
-Received: from d23av03.au.ibm.com (localhost [127.0.0.1])
-        by d23av03.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u82Fubi5023742
-        for <linux-wireless@vger.kernel.org>; Sat, 3 Sep 2016 01:56:37 +1000
-Subject: Re: linux-4.8-rcX:  ath9k traceback
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-        ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@suse.com>
-Date: Fri, 02 Sep 2016 11:56:34 -0400
-In-Reply-To: <87eg5338b5.fsf@purkki.adurom.net>
-References: <1472682267.2607.8.camel@linux.vnet.ibm.com>
-         <87eg5338b5.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1472831794.2773.1.camel@linux.vnet.ibm.com> (sfid-20160902_175654_756843_ECD38ADE)
+Received: from mga02.intel.com ([134.134.136.20]:48094 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754941AbcIOUWm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Sep 2016 16:22:42 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "greearb@candelatech.com" <greearb@candelatech.com>,
+        "kvalo@qca.qualcomm.com" <kvalo@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v2 09/21] ath10k: print fw debug messages in hex.
+Date: Thu, 15 Sep 2016 20:22:31 +0000
+Message-ID: <1473970950.31073.23.camel@intel.com> (sfid-20160915_222247_521526_C3F67FD2)
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+         <1462986153-16318-10-git-send-email-greearb@candelatech.com>
+         <87oa3qefac.fsf@kamboji.qca.qualcomm.com>
+         <57D96910.2010608@candelatech.com>
+         <87k2edb6kp.fsf@kamboji.qca.qualcomm.com>
+         <a26dfea0-9a18-69fc-e23c-cb223490822d@candelatech.com>
+         <1473960869.31073.15.camel@intel.com>
+         <50a08de4-1959-3dc9-cfc7-89d5b2914cc5@candelatech.com>
+In-Reply-To: <50a08de4-1959-3dc9-cfc7-89d5b2914cc5@candelatech.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-09-01 at 19:15 +0300, Kalle Valo wrote:
-> Mimi Zohar <zohar@linux.vnet.ibm.com> writes:
-> 
-> > There weren't any problems on linux-4.7 kernels.  I'm getting the
-> > following traceback on linux-4.8-rc1/-rc4 kernels.  Let me know if you
-> > need any additional information.
-> >
-> > [   64.006529] WARNING: CPU: 3 PID: 94 at drivers/net/wireless/ath/ath9k/beacon.c:642 ath9k_beacon_config+0x12c/0x140 [ath9k]
-> 
-> This should fix it:
-> 
-> ath9k: fix client mode beacon configuration
-> 
-> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=05860bed491b114a9f2d7a4f6e09fb02c0b69056
-
-
-Yep, that resolved the problem.  Thanks!
-
-Mimi
+T24gVGh1LCAyMDE2LTA5LTE1IGF0IDEwOjU5IC0wNzAwLCBCZW4gR3JlZWFyIHdyb3RlOg0KPiBP
+biAwOS8xNS8yMDE2IDEwOjM0IEFNLCBHcnVtYmFjaCwgRW1tYW51ZWwgd3JvdGU6DQo+ID4gT24g
+VGh1LCAyMDE2LTA5LTE1IGF0IDA4OjE0IC0wNzAwLCBCZW4gR3JlZWFyIHdyb3RlOg0KPiA+ID4g
+T24gMDkvMTUvMjAxNiAwNzowNiBBTSwgVmFsbywgS2FsbGUgd3JvdGU6DQo+ID4gPiA+IEJlbiBH
+cmVlYXIgPGdyZWVhcmJAY2FuZGVsYXRlY2guY29tPiB3cml0ZXM6DQo+ID4gPiA+IA0KPiA+ID4g
+PiA+IE9uIDA5LzE0LzIwMTYgMDc6MTggQU0sIFZhbG8sIEthbGxlIHdyb3RlOg0KPiA+ID4gPiA+
+ID4gZ3JlZWFyYkBjYW5kZWxhdGVjaC5jb20gd3JpdGVzOg0KPiA+ID4gPiA+ID4gDQo+ID4gPiA+
+ID4gPiA+IEZyb206IEJlbiBHcmVlYXIgPGdyZWVhcmJAY2FuZGVsYXRlY2guY29tPg0KPiA+ID4g
+PiA+ID4gPiANCj4gPiA+ID4gPiA+ID4gVGhpcyBhbGxvd3MgdXNlci1zcGFjZSB0b29scyB0byBk
+ZWNvZGUgZGVidWctbG9nDQo+ID4gPiA+ID4gPiA+IG1lc3NhZ2VzIGJ5IHBhcnNpbmcgZG1lc2cg
+b3IgL3Zhci9sb2cvbWVzc2FnZXMuDQo+ID4gPiA+ID4gPiA+IA0KPiA+ID4gPiA+ID4gPiBTaWdu
+ZWQtb2ZmLWJ5OiBCZW4gR3JlZWFyIDxncmVlYXJiQGNhbmRlbGF0ZWNoLmNvbT4NCj4gPiA+ID4g
+PiA+IA0KPiA+ID4gPiA+ID4gRG9uJ3QgdHJhY2luZyBwb2ludHMgYWxyZWFkeSBwcm92aWRlIHRo
+ZSBzYW1lIGluZm9ybWF0aW9uPw0KPiA+ID4gPiA+IA0KPiA+ID4gPiA+IFRyYWNpbmcgdG9vbHMg
+YXJlIGRpZmZpY3VsdCB0byBzZXQgdXAgYW5kIG1heSBub3QgYmUNCj4gPiA+ID4gPiBhdmFpbGFi
+bGUgb24NCj4gPiA+ID4gPiByYW5kb20gZW1iZWRkZWQgZGV2aWNlcy4gIEFuZCBpZiB3ZSBhcmUg
+ZGVhbGluZyB3aXRoIGJ1Zw0KPiA+ID4gPiA+IHJlcG9ydHMNCj4gPiA+ID4gPiBmcm9tDQo+ID4g
+PiA+ID4gdGhlIGZpZWxkLCBtb3N0IHVzZXJzIHdpbGwgbm90IGJlIGFibGUgdG8gc2V0IGl0IHVw
+DQo+ID4gPiA+ID4gcmVnYXJkbGVzcy4NCj4gPiA+ID4gPiANCj4gPiA+ID4gPiBUaGVyZSBhcmUg
+c2ltaWxhciB3YXlzIHRvIHByaW50IG91dCBoZXgsIGJ1dCB0aGUgbG9naWMgYmVsb3cNCj4gPiA+
+ID4gPiBjcmVhdGVzDQo+ID4gPiA+ID4gc3BlY2lmaWMgYW5kIHBhcnNlYWJsZSBsb2dzIGluIHRo
+ZSAnZG1lc2cnIG91dHB1dCBhbmQNCj4gPiA+ID4gPiBzaW1pbGFyLg0KPiA+ID4gPiA+IA0KPiA+
+ID4gPiA+IEkgaGF2ZSB3cml0dGVuIGEgdG9vbCB0aGF0IGNhbiBkZWNvZGUgdGhlc2UgbWVzc2Fn
+ZXMgaW50bw0KPiA+ID4gPiA+IHVzZWZ1bA0KPiA+ID4gPiA+IGh1bWFuLXJlYWRhYmxlDQo+ID4g
+PiA+ID4gdGV4dCBzbyB0aGF0IEkgY2FuIGRlYnVnIGZpcm13YXJlIGlzc3VlcyBib3RoIGxvY2Fs
+bHkgYW5kDQo+ID4gPiA+ID4gZnJvbQ0KPiA+ID4gPiA+IGZpZWxkIHJlcG9ydHMuDQo+ID4gPiA+
+ID4gDQo+ID4gPiA+ID4gU3RvY2sgZmlybXdhcmUgZ2VuZXJhdGVzIHNpbWlsYXIgbG9ncyBhbmQg
+UUNBIGNvdWxkIHdyaXRlDQo+ID4gPiA+ID4gdGhlaXINCj4gPiA+ID4gPiBvd24gZGVjb2RlIGxv
+Z2ljDQo+ID4gPiA+ID4gZm9yIHRoZWlyIGZpcm13YXJlIHZlcnNpb25zLg0KPiA+ID4gPiANCj4g
+PiA+ID4gUmVpbnZlbnRpbmcgdGhlIHdoZWVsIGJ5IHVzaW5nIHByaW50ayBhcyB0aGUgZGVsaXZl
+cnkgbWVjaGFuaXNtDQo+ID4gPiA+IGRvZXNuJ3QNCj4gPiA+ID4gc291bmQgbGlrZSBhIGdvb2Qg
+aWRlYS4gSUlSQyBFbW1hbnVlbCB0YWxrZWQgYWJvdXQgc29tZSBraW5kIG9mDQo+ID4gPiA+IGZp
+cm13YXJlDQo+ID4gPiA+IGRlYnVnZ2luZyBmcmFtZXdvcmssIGhlIG1pZ2h0IGhhdmUgc29tZSBp
+ZGVhcy4NCj4gPiA+IA0KPiA+ID4gV2FpdGluZyBmb3IgbWFnaWNhbCBmcmFtZXdvcmtzIHRvIGZp
+eCBwcm9ibGVtcyBpcyBldmVuIHdvcnNlLg0KPiA+ID4gDQo+ID4gSXQgaGFzIGJlZW4geWVhcnMg
+c2luY2UgYXRoMTBrIGhhcyBiZWVuIGluIHRoZSBrZXJuZWwuICBUaGVyZSBpcw0KPiA+ID4gYmFz
+aWNhbGx5DQo+ID4gPiBzdGlsbCBubyB3YXkgdG8gZGVidWcgd2hhdCB0aGUgZmlybXdhcmUgaXMg
+ZG9pbmcuDQo+ID4gPiANCj4gPiANCj4gPiBJIGtub3cgdGhlIGZlZWxpbmcgOikgSSB3YXMgaW4g
+dGhlIHNhbWUgc2l0dWF0aW9uIGJlZm9yZSBJIGFkZGVkDQo+ID4gc3R1ZmYNCj4gPiBmb3IgaXds
+d2lmaS4NCj4gPiANCj4gPiA+IE15IHBhdGNoIGdpdmVzIHlvdSBzb21ldGhpbmcgdGhhdCBjYW4g
+d29yayByaWdodCBub3csIHdpdGggdGhlDQo+ID4gPiBzdGFuZGFyZCAnZG1lc2cnDQo+ID4gPiBm
+cmFtZXdvcmsgZm91bmQgaW4gdmlydHVhbGx5IGFsbCBrZXJuZWxzIG5ldyBhbmQgb2xkLCBhbmQg
+aXQgaGFzDQo+ID4gPiBiZWVuDQo+ID4gPiBwcm92ZW4NCj4gPiA+IHRvIGJlIHVzZWZ1bCBpbiB0
+aGUgZmllbGQuICBUaGUgbWVzc2FnZXMgYXJlIGFsc28gbmljZWx5DQo+ID4gPiBpbnRlcmxlYXZl
+ZA0KPiA+ID4gd2l0aCB0aGUNCj4gPiA+IHJlc3Qgb2YgdGhlIG1hYzgwMjExIHN0YWNrIG1lc3Nh
+Z2VzIGFuZCBhbnkgb3RoZXIgZHJpdmVyDQo+ID4gPiBtZXNzYWdlcywgc28NCj4gPiA+IHlvdSBo
+YXZlDQo+ID4gPiBjb250ZXh0Lg0KPiA+ID4gDQo+ID4gPiBJZiBzb21lb25lIHdhbnRzIHRvIGFk
+ZCBzdXBwb3J0IGZvciBhIGZyYW1ld29yayBsYXRlciwgdGhlbiBieQ0KPiA+ID4gYWxsDQo+ID4g
+PiBtZWFucywgcG9zdA0KPiA+ID4gdGhlIHBhdGNoZXMgd2hlbiBpdCBpcyByZWFkeS4NCj4gPiAN
+Cj4gPiBGcm9tIG15IGV4cGVyaWVuY2UsIGEgc3Ryb25nIGFuZCBlYXN5LXRvLXVzZSBmaXJtd2Fy
+ZSBkZWJ1Zw0KPiA+IGluZnJhc3RydWN0dXJlIGlzIGltcG9ydGFudCBiZWNhdXNlIHR5cGljYWxs
+eSwgdGhlIGZpcm13YXJlIGlzDQo+ID4gd3JpdHRlbg0KPiA+IGJ5IG90aGVyIHBlb3BsZSB3aG8g
+aGF2ZSBkaWZmZXJlbnQgcHJpb3JpdGllcyAoYW5kIGFyZSBub3QgYWx3YXlzDQo+ID4gTGludXgN
+Cj4gPiB3aXphcmRzKSBldGMuLi4gQmVpbmcgYWJsZSB0byBnaXZlIHRoZW0gZ29vZCBkYXRhIGlz
+IHRoZSBvbmx5IHdheQ0KPiA+IHRvDQo+ID4gaGF2ZSB0aGVtIGZpeCB0aGVpciBidWdzIDopIEZv
+ciB1cywgaXQgd2FzIHJlYWxseSBhIGdhbWUgY2hhbmdlci4NCj4gPiBXaGVuDQo+ID4geW91IHdv
+cmsgZm9yIGEgYmlnIGNvcnBvcmF0ZSwgaGF2aW5nIDIgZ3JvdXBzIHdvcmsgYmV0dGVyIHRvZ2V0
+aGVyDQo+ID4gYWx3YXlzIGhhcyBhIGJpZyBpbXBhY3QuIFRoYXQncyBmb3IgdGhlIHBoaWxvc29w
+aGljYWwgcGFydCA6KQ0KPiA+IA0KPiA+IEZXSVc6IHdoYXQgSSBkaWQgaGFzIG5vdGhpbmcgdG8g
+ZG8gd2l0aCBGVyAnbGl2ZSB0cmFjaW5nJywgYnV0IHdpdGgNCj4gPiBmaXJtd2FyZSBkdW1wcy4g
+T25lIHBhcnQgb2Ygb3VyIGZpcm13YXJlIGR1bXBzIGluY2x1ZGUgdHJhY2luZy4gV2UNCj4gPiBh
+bHNvDQo+ID4gaGF2ZSAiZmlybXdhcmUgcHJpbnRzIiwgYnV0IHdlIGRvbid0IHByaW50IHRoZW0g
+aW4gdGhlIGtlcm5lbCBsb2cNCj4gPiBhbmQNCj4gPiB0aGV5IGFyZSBub3QgcGFydCBvZiB0aGUg
+ZmlybXdhcmUgZHVtcCB0aGluZy4gV2UgcmF0aGVyIHJlY29yZCB0aGVtDQo+ID4gaW4NCj4gPiB0
+cmFjZXBvaW50cyBqdXN0IGxpa2UgcmVhbGx5ICphbnl0aGluZyogdGhhdCBjb21lcyBmcm9tIHRo
+ZQ0KPiA+IGZpcm13YXJlLg0KPiA+IEJhc2ljYWxseSwgd2UgaGF2ZSAyIGxheWVycywgdGhlIHRy
+YW5zcG9ydCBsYXllciAoUENJZSkgYW5kIHRoZQ0KPiA+IG9wZXJhdGlvbl9tb2RlIGxheWVyLiBU
+aGUgZmlyc3QganVzdCBicmluZ3MgdGhlIGRhdGEgZnJvbSB0aGUNCj4gPiBmaXJtd2FyZQ0KPiA+
+IGFuZCBpbiB0aGF0IGxheWVyIHdlICpibGluZGx5KiByZWNvcmQgZXZlcnl0aGluZyBpbiB0cmFj
+ZXBvaW50cy4gSW4NCj4gPiB0aGUNCj4gPiBvcGVyYXRpb25fbW9kZSBsYXllciwgd2UgbG9vayBh
+dCB0aGUgZGF0YSBpdHNlbGYuIEluIGNhc2Ugb2YgZGVidWcNCj4gPiBwcmludHMgZnJvbSB0aGUg
+ZmlybXdhcmUsIHdlIHNpbXBseSBkaXNjYXJkIHRoZW0sIGJlY2F1c2Ugd2UgZG9uJ3QNCj4gPiBy
+ZWFsbHkgY2FyZSBvZiB0aGUgbWVhbmluZy4gQWxsIHdlIHdhbnQgaXMgdG8gaGF2ZSB0aGVtIGdv
+IHRocm91Z2gNCj4gPiB0aGUNCj4gPiBQQ0llIGxheWVyIHNvIHRoYXQgdGhleSBhcmUgcmVjb3Jk
+ZWQgaW4gdGhlIHRyYWNlcG9pbnRzLg0KPiA+IFdoZW4gd2UgZmluaXNoIHJlY29yZGluZyB0aGUg
+c2VxdWVuY2Ugd2Ugd2FudGVkIHdpdGggdHJhY2luZyAodHJhY2UNCj4gPiAtY21kKSwgd2UgcGFy
+c2UgdGhlIG91dHB1dCBhbmQgdGhlbiwgd2UgcGFyc2UgdGhlIGZpcm13YXJlIHByaW50cy4NCj4g
+PiBJTUhPLCB0aGlzIGlzIG1vcmUgcmVsaWFibGUgdGhhbiBrZXJuZWwgbG9ncyBhbmQgeW91IGRv
+bid0IGxvc2UgdGhlDQo+ID4gYWxpZ25tZW50IHdpdGggdGhlIGRyaXZlciB0cmFjZXMgYXMgbG9u
+ZyBhcyB5b3UgaGF2ZSBkcml2ZXIgZGF0YSBpbg0KPiA+IHRyYWNlcG9pbnRzIGFzIHdlbGwuDQo+
+IA0KPiBJIGhhdmUgb3RoZXIgcGF0Y2hlcyB0aGF0IHJlbWVtYmVyIHRoZSBsYXN0IDEwMCBvciBz
+byBmaXJtd2FyZSBsb2cNCj4gbWVzc2FnZXMgZnJvbQ0KPiB0aGUga2VybmVsIGFuZCBwcm92aWRl
+IHRoYXQgaW4gYSBiaW5hcnkgZHVtcCBpbWFnZSB3aGVuIGZpcm13YXJlDQo+IGNyYXNoZXMuDQo+
+IA0KPiBUaGlzIGlzIGluZGVlZCB2ZXJ5IHVzZWZ1bC4NCj4gDQo+IEJ1dCwgd2hlbiBkZWJ1Z2dp
+bmcgbm9uLWNyYXNoIG9jY2FzaW9ucywgaXQgaXMgc3RpbGwgdXNlZnVsIHRvIHNlZQ0KPiB3aGF0
+DQo+IHRoZSBmaXJtd2FyZSBpcyBkb2luZy4NCj4gDQoNCkZvciB0aGF0LCBJIGhhdmUgY29tZSB1
+cCB3aXRoIHRoZSAidHJpZ2dlcnMiLiBUcmlnZ2VycyBhcmUgY29uZGl0aW9ucw0KdGhhdCBjYW4g
+YmUgZGV0ZWN0ZWQgYnkgdGhlIGRyaXZlciBhbmQgZW5hYmxlZCBieSB0aGUgdXNlci4gU28NCmJh
+c2ljYWxseSwgd2UgY2FuIHNheTogIlBsZWFzZSBkdW1wIHRoZSBsb2dzIHdoZW4geW91IGFyZSBk
+ZWF1dGgnZWQgYnkNCnRoZSBBUCIuIE9yIHdoZW4geW91IGdldCBkZWxCQSwgb3Igd2hlbiB0aGUg
+c3RhdHMgdGhhdCBjb21lIHVwIGZyb20gdGhlDQpmaXJtd2FyZSBzYXkgc3VjaCBhbmQgc3VjaCBl
+dGMuLi4gVGhlcmUgYXJlIGhvb2tzIHRoYXQgSSBhZGRlZCBpbg0KbWFjODAyMTEgdG8gbGV0IHRo
+ZSBkcml2ZXIga25vdyBhYm91dCBldmVudHMgdGhhdCBhcmUgaGFuZGxlZCB0aGVyZQ0KKE1MTUUg
+YW5kIGZyaWVuZHMpLiBUaGVuLCBldmVuIGlmIHlvdXIgbG9ncyBhcmUgc3RvcmVkIGluIGEgY3lj
+bGljDQpidWZmZXIsIHlvdSBkb24ndCBtaXNzIHRoZW0gYW5kIHlvdSBjYXRjaCB0aGVtIGF0IHRo
+ZSByaWdodCBzcG90Lg0KT25lIG9mIHRoZSBtb3N0IHVzZWZ1bCB0cmlnZ2VyIHdlIGhhdmUgaXMg
+d2hlbiBhIFR4IHBhY2tldCBpcyBkcm9wcGVkLg0KWW91IGNhbiB0YWtlIGEgbG9vayBhdCBzdHJ1
+Y3QgaXdsX2Z3X2RiZ190cmlnZ2VyX3RsdiBpbiBpd2x3aWZpIGlmIHlvdQ0Kd2FudC4NCg0KPiBG
+b3IgaW5zdGFuY2UsIG1heWJlIGl0IGlzIHJlcG9ydGluZyBsb3RzIG9mIHR4LWhhbmdzIGFuZC9v
+ciBsb3ctbGV2ZWwNCj4gcmVzZXRzLiAgVGhpcyBnaXZlcyB5b3UgYSBjbHVlIGFzIHRvIHdoeSBh
+IHVzZXIgbWlnaHQgcmVwb3J0ICdteSB3aWZpDQo+IHN1Y2tzJy4NCj4gPiBTaW5jZSBJIGFtIGJv
+dGggRlcgYW5kIGRyaXZlciB0ZWFtIGZvciBteSBmaXJtd2FyZSB2YXJpYW50LA0KPiBhbmQgbXkg
+YXBwcm9hY2ggaGFzIGJlZW4gd29ya2luZyBmb3IgbWUsIHRoZW4gSSBmZWVsIGl0IGlzIGNlcnRh
+aW5seQ0KPiBiZXR0ZXIgdGhhbg0KPiB0aGUgY3VycmVudCBzdGF0ZS4gIEFuZCBqdXN0IG1heWJl
+IHRoZSBvZmZpY2lhbCB1cHN0cmVhbSBGVyB0ZWFtDQo+IGNvdWxkIHN0YXJ0DQo+IHVzaW5nIHNv
+bWV0aGluZyBzaW1pbGFyIGFzIHdlbGwuICBDdXJyZW50bHksIEkgZG9uJ3Qgc2VlIGhvdyB0aGV5
+IGNhbg0KPiBldmVyIG1ha2UNCj4gbXVjaCBwcm9ncmVzcyBvbiBmaXJtd2FyZSBjcmFzaGVzIHJl
+cG9ydGVkIGluIHN0b2NrIGtlcm5lbHMuDQo+ID4gVGhhbmtzLA0KPiBCZW4NCg==
