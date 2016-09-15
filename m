@@ -1,42 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36064 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750980AbcIQN3S (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 09:29:18 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Vidar Haarr <vidar@heidrunbryggeri.no>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [athk9] beacon.c:642 ath9k_calculate_summary_state dump
-References: <CAJiC63F-O5KeCP+JZjW38uNDc=umXcOZVGma_SyiaTm70fGQ3A@mail.gmail.com>
-Date: Sat, 17 Sep 2016 16:29:13 +0300
-In-Reply-To: <CAJiC63F-O5KeCP+JZjW38uNDc=umXcOZVGma_SyiaTm70fGQ3A@mail.gmail.com>
-        (Vidar Haarr's message of "Sat, 17 Sep 2016 11:49:05 +0200")
-Message-ID: <87mvj63b9y.fsf@purkki.adurom.net> (sfid-20160917_152923_219391_BAA3F2E2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:54640 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752553AbcIOOmV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Sep 2016 10:42:21 -0400
+Message-ID: <1473950537.25907.8.camel@redhat.com> (sfid-20160915_164237_741872_09B81D42)
+Subject: brcmfmac MAC address change delay and 500ms down delay
+From: Dan Williams <dcbw@redhat.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Arend van Spriel <arend.vanspriel@broadcom.com>
+Date: Thu, 15 Sep 2016 09:42:17 -0500
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vidar Haarr <vidar@heidrunbryggeri.no> writes:
+Hi,
 
-> I'm seeing the message below spammed continously in journald, even
-> with 4.8-rc6. It's so bad that it throttles the CPU performance every
-> few seconds.
->
-> I found https://patchwork.kernel.org/patch/9247699/ which seems related.
+While refining NetworkManager's MAC address randomization behavior we
+came across two issues with brcmfmac:
 
-[...]
+1) when changing the MAC address, the driver schedules work for the new
+change and returns success, but doesn't actually change the MAC until
+the work is scheduled.  Because it returns 0 from the
+ndo_set_mac_address hook the net core will generate a NETDEV_CHANGEADDR
+event and rtnetlink will send out an RTM_NEWLINK with the old MAC
+address.  No event for the new address will be sent.  So it's pretty
+hard to figure out when the address actually changed, and when its safe
+to associate, without polling the device's MAC address.  Ugly.
 
-> sep. 17 11:38:36 edbpc kernel: WARNING: CPU: 0 PID: 1684 at
-> /home/kernel/COD/linux/drivers/net/wireless/ath/ath9k/beacon.c:642
-> ath9k_calculate_summary_state+0x135/0x390 [ath9k]
+2) when closing the device (eg, set !IFF_UP) the driver unconditionally
+blocks for 500ms in __brcmf_cfg80211_down():
 
-Looks like exactly the same problem, but the fix (below) is not in
-v4.8-rc6. Should be in -rc7 which Linus hopefully releases on Sunday.
-Please test that and report if the problem continues.
+	if (check_vif_up(ifp->vif)) {
+		brcmf_link_down(ifp->vif, WLAN_REASON_UNSPECIFIED);
 
-05860bed491b ath9k: fix client mode beacon configuration
+		/* Make sure WPA_Supplicant receives all the event
+		   generated due to DISASSOC call to the fw to keep
+		   the state fw and WPA_Supplicant state consistent
+		 */
+		brcmf_delay(500);
+	}
 
--- 
-Kalle Valo
+Should I dump these into kernel bugzilla, or is there some internal bug
+tracker they could get stuffed into?
+
+Thanks!
+Dan
