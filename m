@@ -1,47 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:53866 "EHLO nbd.name"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754584AbcIHUSl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 16:18:41 -0400
-Subject: Re: [RFC] mac80211: Dynamically set CoDel parameters per station.
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-References: <20160908195915.31478-1-toke@toke.dk>
-Cc: Michal Kazior <michal.kazior@tieto.com>, Dave Taht <dave@taht.net>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <2663e4fb-bcdf-a872-f5ab-fac3bb5344c1@nbd.name> (sfid-20160908_221844_510410_D2E3E542)
-Date: Thu, 8 Sep 2016 22:18:37 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160908195915.31478-1-toke@toke.dk>
-Content-Type: text/plain; charset=utf-8
+Received: from paleale.coelho.fi ([176.9.41.70]:54512 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751111AbcIONaS (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Sep 2016 09:30:18 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Thu, 15 Sep 2016 16:30:02 +0300
+Message-Id: <20160915133003.24214-1-luca@coelho.fi> (sfid-20160915_153038_625391_BE75357D)
+Subject: [PATCH 1/2] mac80211: allow to support AP_LINK_PS when the set_tim is still needed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-09-08 21:59, Toke Høiland-Jørgensen wrote:
-> CoDel can be too aggressive if a station sends at a very low rate. This
-> gets worse the more stations are present, as each station gets more
-> bursty the longer the round-robin scheduling between stations takes.
-> 
-> This is an attempt to dynamically adjust CoDel parameters per station.
-> It takes a rather simple approach and uses a simple binary designation
-> of a station as 'slow' if it has expected throughput less than eight
-> Mbps (i.e. the lowest couple of rates). In this case, CoDel is set to be
-> more lenient by adjusting its target to 50 ms and interval to 300 ms.
-> There's a built-in hysteresis so a station cannot flip between slow and
-> fast more than once every two seconds.
-> 
-> In this version the check is performed every time a packet is enqueued
-> to the intermediate queues; and the overhead of doing this is alleviated
-> a bit by caching the result and by the above-mentioned hysteresis. It
-> can probably be smarter about both when and how to do the scaling, but
-> this seems to alleviate some of the starvation I've seen with very slow
-> stations.
-Since this is not dealing properly with firmware rate control anyway,
-I'd suggest calling the update from rate_control_set_rates in order to
-avoid putting more stuff into the tx hot path.
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-You could add a separate code path to allow firmware rate control
-devices to provide a hint at a convenient point in time.
+In 46fa38e84b656f80edf83d21144221b0cad18d61, Johannes
+allowed to use mac80211's code for handling stations
+that go to PS or send PS-Poll / uAPSD trigger frames
+for devices that enable RSS.
+This means that mac80211 doesn't look at frames anymore
+but rather relies on a notification that will come from
+the device when a PS transition occurs or when a
+PS-Poll / trigger frame is detected by the firmware.
 
-- Felix
+iwlwifi will need this capability but still needs mac80211
+to take care of the TIM IE. Today, if a driver sets
+AP_LINK_PS, mac80211 will not update the TIM IE.
+Change mac80211 to look at the set_tim driver callback
+rather than AP_LINK_PS to decide if the driver handles
+the TIM IE internally or not.
+
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ net/mac80211/sta_info.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 5e70fa5..1b1b28f 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -690,7 +690,7 @@ static void __sta_info_recalc_tim(struct sta_info *sta, bool ignore_pending)
+ 	}
+ 
+ 	/* No need to do anything if the driver does all */
+-	if (ieee80211_hw_check(&local->hw, AP_LINK_PS))
++	if (!local->ops->set_tim)
+ 		return;
+ 
+ 	if (sta->dead)
+-- 
+2.9.3
