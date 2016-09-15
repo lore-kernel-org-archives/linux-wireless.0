@@ -1,96 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:35437 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933531AbcI0KF0 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 06:05:26 -0400
-Received: by mail-wm0-f43.google.com with SMTP id l132so166684869wmf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 03:05:25 -0700 (PDT)
-Subject: Re: [PATCH 4.9] brcmfmac: use correct skb freeing helper when
- deleting flowring
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Kalle Valo <kvalo@codeaurora.org>
-References: <20160927091428.19223-1-zajec5@gmail.com>
-Cc: Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        brcm80211-dev-list.pdl@broadcom.com, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <86fd0b60-0f73-484b-1788-3ec740672232@broadcom.com> (sfid-20160927_120601_515188_9BF7DDE2)
-Date: Tue, 27 Sep 2016 12:05:09 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160927091428.19223-1-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:51023 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933845AbcIOINs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Thu, 15 Sep 2016 04:13:48 -0400
+Message-ID: <1473927224.4423.37.camel@sipsolutions.net> (sfid-20160915_101410_440646_D19B7FC3)
+Subject: Re: [PATCH v2] mac80211: allow driver to handle packet-loss
+ mechanism
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
+Date: Thu, 15 Sep 2016 10:13:44 +0200
+In-Reply-To: <20160914071832.11465-1-rmanohar@qti.qualcomm.com>
+References: <20160914071832.11465-1-rmanohar@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27-9-2016 11:14, Rafał Miłecki wrote:
-> From: Rafał Miłecki <rafal@milecki.pl>
+On Wed, 2016-09-14 at 12:48 +0530, Rajkumar Manoharan wrote:
+> Based on consecutive msdu failures, mac80211 triggers CQM packet-loss
+> mechanism. Drivers like ath10k that have its own connection
+> monitoring
+> algorithm, offloaded to firmware for triggering station kickout. In
+> case
+> of station kickout, driver will report low ack status by mac80211 API
+> (ieee80211_report_low_ack).
 > 
-> Flowrings contain skbs waiting for transmission that were passed to us
-> by netif. It means we checked every one of them looking for 802.1x
-> Ethernet type. When deleting flowring we have to use freeing function
-> that will check for 802.1x type as well.
+> This flag will enable the driver to completely rely on firmware
+> events
+> for station kickout and bypass mac80211 packet loss mechanism.
 > 
-> Freeing skbs without a proper check was leading to counter not being
-> properly decreased. This was triggering a WARNING every time
-> brcmf_netdev_wait_pend8021x was called.
+applied.
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Rafał Miłecki <rafal@milecki.pl>
-> ---
-> Kalle: this isn't important enough for 4.8 as it's too late for that.
-> 
-> I'd like to get it for 4.9 however, as this fixes bug that could lead
-> to WARNING on every add_key/del_key call. We was struggling with these
-> WARNINGs for some time and this fixes one of two problems causing them.
-
-Please mark it for stable as well.
-
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-> index b16b367..d0b738d 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
-> @@ -234,13 +234,20 @@ static void brcmf_flowring_block(struct brcmf_flowring *flow, u16 flowid,
->  
->  void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
->  {
-> +	struct brcmf_bus *bus_if = dev_get_drvdata(flow->dev);
->  	struct brcmf_flowring_ring *ring;
-> +	struct brcmf_if *ifp;
->  	u16 hash_idx;
-> +	u8 ifidx;
->  	struct sk_buff *skb;
->  
->  	ring = flow->rings[flowid];
->  	if (!ring)
->  		return;
-> +
-> +	ifidx = brcmf_flowring_ifidx_get(flow, flowid);
-> +	ifp = brcmf_get_ifp(bus_if->drvr, ifidx);
-> +
->  	brcmf_flowring_block(flow, flowid, false);
->  	hash_idx = ring->hash_id;
->  	flow->hash[hash_idx].ifidx = BRCMF_FLOWRING_INVALID_IFIDX;
-
-I am not very familiar with flowring code, but I suppose this is just
-initializing the entry for later use, right?
-
-> @@ -249,7 +256,7 @@ void brcmf_flowring_delete(struct brcmf_flowring *flow, u16 flowid)
->  
->  	skb = skb_dequeue(&ring->skblist);
->  	while (skb) {
-> -		brcmu_pkt_buf_free_skb(skb);
-> +		brcmf_txfinalize(ifp, skb, false);
->  		skb = skb_dequeue(&ring->skblist);
->  	}
->  
-> 
+johannes
