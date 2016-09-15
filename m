@@ -1,50 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:43808 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932119AbcIQVpf (ORCPT
+Received: from mail-it0-f50.google.com ([209.85.214.50]:35774 "EHLO
+        mail-it0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751111AbcION20 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 17 Sep 2016 17:45:35 -0400
-Date: Sat, 17 Sep 2016 23:45:39 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Christian Lamparter <chunkeey@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
-        Ben Greear <greearb@candelatech.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 2/4] carl9170: fix debugfs crashes
-Message-ID: <20160917214539.GA28379@kroah.com> (sfid-20160917_234550_929183_DB3A9A5A)
-References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
- <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com>
+        Thu, 15 Sep 2016 09:28:26 -0400
+Received: by mail-it0-f50.google.com with SMTP id r192so94748256ita.0
+        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2016 06:28:25 -0700 (PDT)
+Date: Thu, 15 Sep 2016 09:26:01 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        Christian Lamparter <chunkeey@googlemail.com>
+Subject: Re: Using ath5k/ath9k radio for constant-tx noise source.
+Message-ID: <20160915132601.GC4475@localhost> (sfid-20160915_152829_452233_02BCAEC1)
+References: <55D4D406.5000603@candelatech.com>
+ <55D5EE0E.3020408@neratec.com>
+ <6d50965d-af35-dad9-23fe-162678a0f02f@candelatech.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com>
+In-Reply-To: <6d50965d-af35-dad9-23fe-162678a0f02f@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 17, 2016 at 09:43:02PM +0200, Christian Lamparter wrote:
-> Ben Greear reported:
-> > I see lots of instability as soon as I load up the carl9710 NIC.
-> > My application is going to be poking at it's debugfs files...
-> >
-> > BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
-> > [carl9170] at addr ffff8801bc1208b0
-> > Read of size 8 by task btserver/5888
-> > =======================================================================
-> > BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
-> > -----------------------------------------------------------------------
-> >
-> > INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
-> >...
-> 
-> This breakage was caused by the introduction of intermediate
-> fops in debugfs by commit 9fd4dcece43a
-> ("debugfs: prevent access to possibly dead file_operations at file open")
+On Wed, Sep 14, 2016 at 05:22:46PM -0700, Ben Greear wrote:
+> On 08/20/2015 08:11 AM, Zefir Kurtisi wrote:
+> >On 08/19/2015 09:07 PM, Ben Greear wrote:
+> >>I have a commercial AP that is using a CM9 ath5k radio (evidently, I could be wrong)
+> >>and it has the ability to do a constant transmit of raw noise (RF probe shows
+> >>noise, but a monitor-port sniffer does not see any frames from the CM9).
+> >>
+> >>I don't know the low-level details of how it is doing this, but I suspect
+> >>it is using something like madwifi for a driver.
+> >>
+> >>Does anyone know how this can be done with modern software and
+> >>ath5k or ath9k NICs?
 
-Because of this, these should all be backported to 4.7-stable, and
-4.8-stable, right?
+Hi Ben,
 
-thanks,
+I wrote some code to do this on ath5k -- I can post a patch if you're
+interested in using ath5k for this.
 
-greg k-h
+Here's a snapshot of what it looks like when running on ch.1:
+
+https://bobcopeland.com/images/speccy-testmode.png
+
+-- 
+Bob Copeland %% http://bobcopeland.com/
