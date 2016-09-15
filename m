@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48036 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752654AbcICOa4 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42781 "EHLO
+        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1765783AbcIOOGx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 10:30:56 -0400
-Content-Type: text/plain; charset="utf-8"
+        Thu, 15 Sep 2016 10:06:53 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Ben Greear <greearb@candelatech.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+        "emmanuel.grumbach@intel.com" <emmanuel.grumbach@intel.com>
+Subject: Re: [PATCH v2 09/21] ath10k: print fw debug messages in hex.
+Date: Thu, 15 Sep 2016 14:06:48 +0000
+Message-ID: <87k2edb6kp.fsf@kamboji.qca.qualcomm.com> (sfid-20160915_160700_078054_FF02FC00)
+References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
+        <1462986153-16318-10-git-send-email-greearb@candelatech.com>
+        <87oa3qefac.fsf@kamboji.qca.qualcomm.com>       <57D96910.2010608@candelatech.com>
+In-Reply-To: <57D96910.2010608@candelatech.com> (Ben Greear's message of "Wed,
+        14 Sep 2016 08:13:20 -0700")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: [v2] ErrHandling:Make IS_ERR_VALUE_U32 as generic API to avoid
- IS_ERR_VALUE abuses.
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1468083696-15283-1-git-send-email-arvind.yadav.cs@gmail.com>
-To: Arvind Yadav <arvind.yadav.cs@gmail.com>
-Cc: zajec5@gmail.com, viresh.kumar@linaro.org,
-        akpm@linux-foundation.org, linux-wireless@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linville@tuxdriver.com,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>
-Message-Id: <20160903142913.16FBA6216D@smtp.codeaurora.org> (sfid-20160903_163100_804575_3A3C9862)
-Date: Sat,  3 Sep 2016 14:29:13 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arvind Yadav <arvind.yadav.cs@gmail.com> wrote:
-> IS_ERR_VALUE() assumes that its parameter is an unsigned long.
-> It can not be used to check if an 'unsigned int' reflects an error.
-> As they pass an 'unsigned int' into a function that takes an
-> 'unsigned long' argument. This happens to work because the type
-> is sign-extended on 64-bit architectures before it gets converted
-> into an unsigned type.
-> 
-> However, anything that passes an 'unsigned short' or 'unsigned int'
-> argument into IS_ERR_VALUE() is guaranteed to be broken, as are
-> 8-bit integers and types that are wider than 'unsigned long'.
-> 
-> It would be nice to any users that are not passing 'unsigned int'
-> arguments.
-> 
-> Signed-off-by: Arvind Yadav <arvind.yadav.cs@gmail.com>
+Ben Greear <greearb@candelatech.com> writes:
 
-This touches include/linux/err.h and I'm not very enthusiastic to change
-anything in include directory without wider support. I recommend first to just
-fix bcma.  And separately you can try to improve linux/err.h via some more
-approariate tree, not via wireless trees.
+> On 09/14/2016 07:18 AM, Valo, Kalle wrote:
+>> greearb@candelatech.com writes:
+>>
+>>> From: Ben Greear <greearb@candelatech.com>
+>>>
+>>> This allows user-space tools to decode debug-log
+>>> messages by parsing dmesg or /var/log/messages.
+>>>
+>>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>>
+>> Don't tracing points already provide the same information?
+>
+> Tracing tools are difficult to set up and may not be available on
+> random embedded devices.  And if we are dealing with bug reports from
+> the field, most users will not be able to set it up regardless.
+>
+> There are similar ways to print out hex, but the logic below creates
+> specific and parseable logs in the 'dmesg' output and similar.
+>
+> I have written a tool that can decode these messages into useful human-re=
+adable
+> text so that I can debug firmware issues both locally and from field repo=
+rts.
+>
+> Stock firmware generates similar logs and QCA could write their own decod=
+e logic
+> for their firmware versions.
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9222139/
+Reinventing the wheel by using printk as the delivery mechanism doesn't
+sound like a good idea. IIRC Emmanuel talked about some kind of firmware
+debugging framework, he might have some ideas.
+
+--=20
+Kalle Valo=
