@@ -1,67 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:54906 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752387AbcIGKMj (ORCPT
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:33977 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751083AbcIPJAx (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2016 06:12:39 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] mwifiex: handle edmac vendor command
-Date: Wed, 7 Sep 2016 10:12:35 +0000
-Message-ID: <f827ba80b79646fd8711e1a00c2b8394@SC-EXCH04.marvell.com> (sfid-20160907_121243_014228_55755044)
-References: <1461945483-3239-1-git-send-email-akarwar@marvell.com>
-        <cbd542a552db4d368a5b402307976494@SC-EXCH04.marvell.com>
-        <87zirg8qxo.fsf@kamboji.qca.qualcomm.com>
-        <e2b7d7d9aef1488a97eb7ec44b4c46af@SC-EXCH04.marvell.com>
-        <87poon1xka.fsf@kamboji.qca.qualcomm.com>
-        <0fa2b5d5e09f4396a9c273c3c8dfc3db@SC-EXCH04.marvell.com>
- <87d1km1hb6.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87d1km1hb6.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
+        Fri, 16 Sep 2016 05:00:53 -0400
+Received: by mail-qk0-f182.google.com with SMTP id h8so76838224qka.1
+        for <linux-wireless@vger.kernel.org>; Fri, 16 Sep 2016 02:00:52 -0700 (PDT)
+Subject: Re: [PATCH v2 0/9] Add support for Neighbor Awareness Networking
+To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
+References: <20160916083321.5840-1-luca@coelho.fi>
+Cc: linux-wireless@vger.kernel.org,
+        Luca Coelho <luciano.coelho@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <1055fff0-4eb0-08c5-2e16-a0b6f2887bda@broadcom.com> (sfid-20160916_110057_232990_3359C696)
+Date: Fri, 16 Sep 2016 11:00:38 +0200
 MIME-Version: 1.0
+In-Reply-To: <20160916083321.5840-1-luca@coelho.fi>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On 16-9-2016 10:33, Luca Coelho wrote:
+> From: Luca Coelho <luciano.coelho@intel.com>
+> 
+> Hi,
+> 
+> This is v2 of the NAN patches that Emmanuel sent a while back[1].  In
+> this version, we squashed some patches and took care of some comments
+> after reviews (both internal and public).
 
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Friday, September 02, 2016 8:26 PM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org
-> Subject: Re: [PATCH] mwifiex: handle edmac vendor command
-> 
-> Amitkumar Karwar <akarwar@marvell.com> writes:
-> 
-> >> Sorry for the delay. I have been thinking about vendor commands quite
-> >> a lot and I don't think they belong to upstream drivers. For regular
-> >> use cases (used by normal users) we have nl80211, for developer and
-> >> testing purposes we have debugfs and for manufacturing type of tests
-> >> we have
-> >> nl80211 testmode interface. The focus of development should be adding
-> >> new functionality to nl80211 (and other generic interfaces), not to
-> >> driver specific vendor commands.
-> >>
-> >> I know brcm80211 and ti's wlcore have few vendor commands but I'm
-> >> hoping to remove them sometime soon.
-> >>
-> >> Thoughts?
-> >>
-> >
-> > Thanks for your reply.
-> >
-> > There is something called energy detect mode. Chip can detect non-WiFi
-> > radio signal also and monitor it for specified time before
-> > transmitting frames. As per ETSI specification, enabling this mode is
-> > mandatory for some countries for certain frequencies.
-> 
-> To me this looks this is something which can be generic, not a driver
-> specific interface. And why can't regulatory code enable this
-> automatically, without any user involvement? It already knows what
-> country we are in.
-> 
+Hi Luca,
 
-Got it. I will check if we can make this as generic as you mentioned and explore the option.
+You may have missed some as I think this should be v4.
 
 Regards,
-Amitkumar
+Arend
+
+[1]
+http://mid.gmane.org/1458845547-28762-1-git-send-email-emmanuel.grumbach@intel.com
+
+> NAN was described in the original post[2].
+> 
+> I hope they're good for merging now, because I'm tired of carrying
+> this changes forward in our internal trees. :P
+> 
+> Nevertheless, comments are welcome, as always.
+> 
+> [1] http://mid.gmane.org/1456752313-5792-1-git-send-email-emmanuel.grumbach@intel.com
+> [2] http://mid.gmane.org/1442500351-8780-1-git-send-email-andrei.otcheretianski@intel.com
+> 
+> Cheers,
+> Luca.
+> 
+> 
+> Ayala Beker (9):
+>   cfg80211: add start / stop NAN commands
+>   mac80211: add boilerplate code for start / stop NAN
+>   cfg80211: add add_nan_func / rm_nan_func
+>   cfg80211: allow the user space to change current NAN configuration
+>   cfg80211: provide a function to report a match for NAN
+>   cfg80211: Provide an API to report NAN function termination
+>   mac80211: implement nan_change_conf
+>   mac80211: Implement add_nan_func and rm_nan_func
+>   mac80211: Add API to report NAN function match
+> 
+>  include/net/cfg80211.h       | 184 ++++++++++++-
+>  include/net/mac80211.h       |  65 +++++
+>  include/uapi/linux/nl80211.h | 258 +++++++++++++++++
+>  net/mac80211/cfg.c           | 208 ++++++++++++++
+>  net/mac80211/chan.c          |   6 +
+>  net/mac80211/driver-ops.h    |  82 +++++-
+>  net/mac80211/ieee80211_i.h   |  17 ++
+>  net/mac80211/iface.c         |  28 +-
+>  net/mac80211/main.c          |   8 +
+>  net/mac80211/offchannel.c    |   4 +-
+>  net/mac80211/rx.c            |   3 +
+>  net/mac80211/trace.h         | 133 +++++++++
+>  net/mac80211/util.c          |  50 +++-
+>  net/wireless/chan.c          |   2 +
+>  net/wireless/core.c          |  35 +++
+>  net/wireless/core.h          |   3 +
+>  net/wireless/mlme.c          |   1 +
+>  net/wireless/nl80211.c       | 642 ++++++++++++++++++++++++++++++++++++++++++-
+>  net/wireless/rdev-ops.h      |  58 ++++
+>  net/wireless/trace.h         |  90 ++++++
+>  net/wireless/util.c          |  28 +-
+>  21 files changed, 1894 insertions(+), 11 deletions(-)
+> 
