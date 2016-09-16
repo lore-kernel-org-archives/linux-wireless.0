@@ -1,49 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:36432 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752885AbcI0JDi (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55102 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756528AbcIPIdo (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 05:03:38 -0400
-Received: by mail-wm0-f43.google.com with SMTP id w84so163455310wmg.1
-        for <linux-wireless@vger.kernel.org>; Tue, 27 Sep 2016 02:03:37 -0700 (PDT)
-MIME-Version: 1.0
-From: Gucea Doru <gucea.doru@gmail.com>
-Date: Tue, 27 Sep 2016 12:03:35 +0300
-Message-ID: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com> (sfid-20160927_110342_566189_5C6A5F0D)
-Subject: bcmdhd: Strange Power Save messages
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+        Fri, 16 Sep 2016 04:33:44 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Ayala Beker <ayala.beker@intel.com>,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 16 Sep 2016 11:33:21 +0300
+Message-Id: <20160916083321.5840-10-luca@coelho.fi> (sfid-20160916_103430_676661_D9211344)
+In-Reply-To: <20160916083321.5840-1-luca@coelho.fi>
+References: <20160916083321.5840-1-luca@coelho.fi>
+Subject: [PATCH v2 9/9] mac80211: Add API to report NAN function match
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+From: Ayala Beker <ayala.beker@intel.com>
 
-I am analyzing the Power Save algorithm used on a pair of Nexus 5
-devices. The devices use the bcmdhd Broadcom driver and are Wi-Fi
-Direct connected.
+Provide an API to report NAN function match. Mac80211 will lookup the
+corresponding cookie and report the match to cfg80211.
 
-My test is very simple: I send ping packets from the P2P client
-towards the P2P GO. Before sending a ping packet the P2P client enters
-PS mode (it sends a Null frame with the PWR MGT bit set). A few
-miliseconds later, the P2P client sends the ping request message. Once
-the ping request is ACKed the P2P client exits the PS mode (it sends a
-Null frame with the PWR MGT bit unset) and the P2P GO decides to send
-him the ping reply.
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/mac80211.h | 16 ++++++++++++++++
+ net/mac80211/cfg.c     | 25 +++++++++++++++++++++++++
+ 2 files changed, 41 insertions(+)
 
-What is the decision triggering the exit from the PS mode immediately
-after the ping request? I am asking this because 802.11 PS legacy
-specifies that the client should wait for a beacon with TIM set in
-order to wake up: in my case, there is no beacon between the ping
-request message and the Null frame that announces the exit from the PS
-mode.
-
-For reference, the Wireshark trace can be found at [1].
-SSID: DIRECT-35-Android_Intel
-WPA pass: JYdrhZp3
-
-[1] https://drive.google.com/file/d/0B5SBH08PU_ChQk95LWpzekh3VU0/view?usp=sharing
-
-Thank you,
-Doru
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5b74229..1b6271e 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5777,4 +5777,20 @@ void ieee80211_nan_func_terminated(struct ieee80211_vif *vif,
+ 				   u8 inst_id,
+ 				   enum nl80211_nan_func_term_reason reason,
+ 				   gfp_t gfp);
++
++/**
++ * ieee80211_nan_func_match - notify about NAN function match event.
++ *
++ * This function is used to notify mac80211 about NAN function match. The
++ * cookie inside the match struct will be assigned by mac80211.
++ * Note that this function can't be called from hard irq.
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @match: match event information
++ * @gfp: allocation flags
++ */
++void ieee80211_nan_func_match(struct ieee80211_vif *vif,
++			      struct cfg80211_nan_match_params *match,
++			      gfp_t gfp);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index aee0e25c..20ac00f 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3555,6 +3555,31 @@ void ieee80211_nan_func_terminated(struct ieee80211_vif *vif,
+ }
+ EXPORT_SYMBOL(ieee80211_nan_func_terminated);
+ 
++void ieee80211_nan_func_match(struct ieee80211_vif *vif,
++			      struct cfg80211_nan_match_params *match,
++			      gfp_t gfp)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct cfg80211_nan_func *func;
++
++	if (WARN_ON(vif->type != NL80211_IFTYPE_NAN))
++		return;
++
++	spin_lock_bh(&sdata->u.nan.func_lock);
++
++	func = idr_find(&sdata->u.nan.function_inst_ids,  match->inst_id);
++	if (WARN_ON(!func)) {
++		spin_unlock_bh(&sdata->u.nan.func_lock);
++		return;
++	}
++	match->cookie = func->cookie;
++
++	spin_unlock_bh(&sdata->u.nan.func_lock);
++
++	cfg80211_nan_match(ieee80211_vif_to_wdev(vif), match, gfp);
++}
++EXPORT_SYMBOL(ieee80211_nan_func_match);
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+-- 
+2.9.3
