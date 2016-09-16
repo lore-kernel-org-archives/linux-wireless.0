@@ -1,1209 +1,327 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0117.hostedemail.com ([216.40.44.117]:39632 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S933869AbcIWS1f (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55052 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754368AbcIPIdg (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Sep 2016 14:27:35 -0400
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Jean Delvare <jdelvare@suse.de>,
-        Chaoming Li <chaoming_li@realsil.com.cn>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] realtek: Add switch variable to 'switch case not processed' messages
-Date: Fri, 23 Sep 2016 11:27:19 -0700
-Message-Id: <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com> (sfid-20160923_202804_059352_838C1A49)
-In-Reply-To: <1474654333.1849.5.camel@perches.com>
-References: <1474654333.1849.5.camel@perches.com>
+        Fri, 16 Sep 2016 04:33:36 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+        Ayala Beker <ayala.beker@intel.com>,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Fri, 16 Sep 2016 11:33:14 +0300
+Message-Id: <20160916083321.5840-3-luca@coelho.fi> (sfid-20160916_103404_840383_E691707D)
+In-Reply-To: <20160916083321.5840-1-luca@coelho.fi>
+References: <20160916083321.5840-1-luca@coelho.fi>
+Subject: [PATCH v2 2/9] mac80211: add boilerplate code for start / stop NAN
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Help along debugging by showing what switch/case variable is not
-being processed in these messages.
+From: Ayala Beker <ayala.beker@intel.com>
 
-Signed-off-by: Joe Perches <joe@perches.com>
+This code doesn't do much besides allowing to start and
+stop the vif.
+
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/core.c          |  3 ++-
- drivers/net/wireless/realtek/rtlwifi/pci.c           |  3 ++-
- drivers/net/wireless/realtek/rtlwifi/ps.c            |  2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c  |  9 +++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c | 10 ++++++----
- .../wireless/realtek/rtlwifi/rtl8192c/fw_common.c    |  4 ++--
- .../wireless/realtek/rtlwifi/rtl8192c/phy_common.c   |  8 +++++---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c  |  7 ++++---
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c |  7 ++-----
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c |  7 ++-----
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c  |  9 +++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c | 15 +++++++--------
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c  |  9 +++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/led.c |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c | 10 ++++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c  |  9 +++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c |  5 +++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c  |  9 +++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c | 10 ++++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c  | 10 +++++-----
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c | 12 +++++++-----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c  |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c  |  9 +++++----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/led.c |  4 ++--
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 20 ++++++--------------
- 38 files changed, 128 insertions(+), 123 deletions(-)
+ include/net/mac80211.h    |  9 +++++++++
+ net/mac80211/cfg.c        | 36 ++++++++++++++++++++++++++++++++++
+ net/mac80211/chan.c       |  3 +++
+ net/mac80211/driver-ops.h | 29 ++++++++++++++++++++++++++-
+ net/mac80211/iface.c      |  8 ++++++--
+ net/mac80211/main.c       |  5 +++++
+ net/mac80211/offchannel.c |  3 ++-
+ net/mac80211/trace.h      | 50 +++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/util.c       |  3 ++-
+ 9 files changed, 141 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 7aee5ebb1..f95760c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -765,7 +765,8 @@ static int rtl_op_config(struct ieee80211_hw *hw, u32 changed)
- 					mac->bw_40 = false;
- 					mac->bw_80 = false;
- 					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--						 "switch case not processed\n");
-+						 "switch case %#x not processed\n",
-+						 channel_type);
- 					break;
- 			}
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index d12586d..0dfa9ea 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -179,7 +179,8 @@ static void _rtl_pci_update_default_setting(struct ieee80211_hw *hw)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n",
-+			 rtlpci->const_support_pciaspm);
- 		break;
- 	}
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5296100..df9b5cf 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3420,6 +3420,9 @@ enum ieee80211_reconfig_type {
+  *	synchronization which is needed in case driver has in its RSS queues
+  *	pending frames that were received prior to the control path action
+  *	currently taken (e.g. disassociation) but are not processed yet.
++ *
++ * @start_nan: join an existing NAN cluster, or create a new one.
++ * @stop_nan: leave the NAN cluster.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3655,6 +3658,12 @@ struct ieee80211_ops {
+ 	void (*wake_tx_queue)(struct ieee80211_hw *hw,
+ 			      struct ieee80211_txq *txq);
+ 	void (*sync_rx_queues)(struct ieee80211_hw *hw);
++
++	int (*start_nan)(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 struct cfg80211_nan_conf *conf);
++	int (*stop_nan)(struct ieee80211_hw *hw,
++			struct ieee80211_vif *vif);
+ };
  
-diff --git a/drivers/net/wireless/realtek/rtlwifi/ps.c b/drivers/net/wireless/realtek/rtlwifi/ps.c
-index 9a64f9b..18d979a 100644
---- a/drivers/net/wireless/realtek/rtlwifi/ps.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/ps.c
-@@ -151,7 +151,7 @@ static bool rtl_ps_set_rf_state(struct ieee80211_hw *hw,
- 
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", state_toset);
- 		break;
- 	}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-index 6291256..5360d53 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/fw.c
-@@ -334,7 +334,7 @@ static void _rtl88e_fill_h2c_command(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", boxnum);
- 			break;
- 		}
- 		isfw_read = _rtl88e_check_fw_read_last_h2c(hw, boxnum);
-@@ -405,7 +405,7 @@ static void _rtl88e_fill_h2c_command(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", cmd_len);
- 			break;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-index 4ab6201..3285117 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/hw.c
-@@ -357,7 +357,7 @@ void rtl88ee_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break; }
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process %x\n", variable);
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a74027f..9aabb09 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3,6 +3,7 @@
+  *
+  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2015  Intel Mobile Communications GmbH
++ * Copyright (C) 2015-2016 Intel Deutschland GmbH
+  *
+  * This file is GPLv2 as found in COPYING.
+  */
+@@ -152,6 +153,39 @@ static void ieee80211_stop_p2p_device(struct wiphy *wiphy,
+ 	ieee80211_sdata_stop(IEEE80211_WDEV_TO_SUB_IF(wdev));
  }
-@@ -571,7 +571,8 @@ void rtl88ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				break;
- 			default:
- 				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--					 "switch case not process\n");
-+					 "switch case %#x not processed\n",
-+					 e_aci);
- 				break;
- 			}
- 		}
-@@ -735,7 +736,7 @@ void rtl88ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break; }
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process %x\n", variable);
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
+ 
++static int ieee80211_start_nan(struct wiphy *wiphy,
++			       struct wireless_dev *wdev,
++			       struct cfg80211_nan_conf *conf)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	int ret;
++
++	mutex_lock(&sdata->local->chanctx_mtx);
++	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
++	mutex_unlock(&sdata->local->chanctx_mtx);
++	if (ret < 0)
++		return ret;
++
++	ret = ieee80211_do_open(wdev, true);
++	if (ret)
++		return ret;
++
++	ret = drv_start_nan(sdata->local, sdata, conf);
++	if (ret)
++		ieee80211_sdata_stop(sdata);
++
++	return ret;
++}
++
++static void ieee80211_stop_nan(struct wiphy *wiphy,
++			       struct wireless_dev *wdev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++
++	drv_stop_nan(sdata->local, sdata);
++	ieee80211_sdata_stop(sdata);
++}
++
+ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 				  struct net_device *dev,
+ 				  u16 noack_map)
+@@ -3464,4 +3498,6 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
++	.start_nan = ieee80211_start_nan,
++	.stop_nan = ieee80211_stop_nan,
+ };
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index acb50f8..e4d147e 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -647,6 +647,9 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_chanctx *curr_ctx = NULL;
+ 	int ret = 0;
+ 
++	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_NAN))
++		return -ENOTSUPP;
++
+ 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+ 					 lockdep_is_held(&local->chanctx_mtx));
+ 
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index fe35a1c..67b42c8 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -163,7 +163,8 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
+ 
+ 	if (WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
+ 			 (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+-			  !sdata->vif.mu_mimo_owner)))
++			  !sdata->vif.mu_mimo_owner) ||
++			 sdata->vif.type == NL80211_IFTYPE_NAN))
+ 		return;
+ 
+ 	if (!check_sdata_in_driver(sdata))
+@@ -1165,4 +1166,30 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
+ 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
  }
-@@ -2352,7 +2353,7 @@ void rtl88ee_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c
-index b504bd0..f05c2c6 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/led.c
-@@ -62,7 +62,7 @@ void rtl88ee_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -100,7 +100,7 @@ void rtl88ee_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-index 7498a12..fffaa92 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-@@ -1346,7 +1346,8 @@ static bool _rtl88e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n",
-+				 currentcmd->cmdid);
- 			break;
+ 
++static inline int drv_start_nan(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata,
++				struct cfg80211_nan_conf *conf)
++{
++	int ret;
++
++	might_sleep();
++	check_sdata_in_driver(sdata);
++
++	trace_drv_start_nan(local, sdata, conf);
++	ret = local->ops->start_nan(&local->hw, &sdata->vif, conf);
++	trace_drv_return_int(local, ret);
++	return ret;
++}
++
++static inline void drv_stop_nan(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata)
++{
++	might_sleep();
++	check_sdata_in_driver(sdata);
++
++	trace_drv_stop_nan(local, sdata);
++	local->ops->stop_nan(&local->hw, &sdata->vif);
++	trace_drv_return_void(local);
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index e694ca2..507f46a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -327,6 +327,9 @@ static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata,
+ 	int n_queues = sdata->local->hw.queues;
+ 	int i;
+ 
++	if (iftype == NL80211_IFTYPE_NAN)
++		return 0;
++
+ 	if (iftype != NL80211_IFTYPE_P2P_DEVICE) {
+ 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 			if (WARN_ON_ONCE(sdata->vif.hw_queue[i] ==
+@@ -647,7 +650,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			local->fif_probe_req++;
  		}
  
-@@ -2128,7 +2129,7 @@ bool rtl88e_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", iotype);
- 			break;
- 		}
- 	} while (false);
-@@ -2166,7 +2167,8 @@ static void rtl88e_phy_set_io(struct ieee80211_hw *hw)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n",
-+			 rtlphy->current_io_type);
- 		break;
- 	}
- 	rtlphy->set_io_inprogress = false;
-@@ -2319,7 +2321,7 @@ static bool _rtl88ee_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		}
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-index 43fcb25..7d15246 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/fw_common.c
-@@ -352,7 +352,7 @@ static void _rtl92c_fill_h2c_command(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", boxnum);
- 			break;
- 		}
+-		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
++		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
++		    sdata->vif.type != NL80211_IFTYPE_NAN)
+ 			changed |= ieee80211_reset_erp_info(sdata);
+ 		ieee80211_bss_info_change_notify(sdata, changed);
  
-@@ -456,7 +456,7 @@ static void _rtl92c_fill_h2c_command(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", cmd_len);
- 			break;
- 		}
+@@ -1726,7 +1730,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
  
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-index 60ab2ec..27e3d5f 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192c/phy_common.c
-@@ -910,7 +910,8 @@ bool _rtl92c_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n",
-+				 currentcmd->cmdid);
- 			break;
- 		}
+ 	ASSERT_RTNL();
  
-@@ -1567,7 +1568,7 @@ bool rtl92c_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", iotype);
- 			break;
- 		}
- 	} while (false);
-@@ -1605,7 +1606,8 @@ void rtl92c_phy_set_io(struct ieee80211_hw *hw)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n",
-+			 rtlphy->current_io_type);
- 		break;
- 	}
- 	rtlphy->set_io_inprogress = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-index 2446079..6d308f9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/hw.c
-@@ -143,7 +143,7 @@ void rtl92ce_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -367,7 +367,8 @@ void rtl92ce_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 					break;
- 				default:
- 					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--						 "switch case not processed\n");
-+						 "switch case %#x not processed\n",
-+						 e_aci);
- 					break;
- 				}
- 			}
-@@ -2154,7 +2155,7 @@ void rtl92ce_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not processed\n");
-+				 "switch case %#x not processed\n", enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c
-index 8283e9b..24e483b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/led.c
-@@ -62,7 +62,7 @@ void rtl92ce_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -97,7 +97,7 @@ void rtl92ce_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-index 1ee5a6a..46d0d94 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ce/phy.c
-@@ -300,12 +300,9 @@ bool rtl92c_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		}
- 		break;
- 	case RF90_PATH_C:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
--		break;
- 	case RF90_PATH_D:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", rfpath);
- 		break;
- 	default:
- 		break;
-@@ -554,7 +551,7 @@ static bool _rtl92ce_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		}
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-index 8789752..ae8f055 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/hw.c
-@@ -1560,7 +1560,7 @@ void rtl92cu_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -1931,7 +1931,7 @@ void rtl92cu_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
-index 75a2deb..8514ab65 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/led.c
-@@ -62,7 +62,7 @@ void rtl92cu_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -95,7 +95,7 @@ void rtl92cu_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-index c972fa5..4b29764 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/phy.c
-@@ -277,12 +277,9 @@ bool rtl92cu_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		}
- 		break;
- 	case RF90_PATH_C:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
--		break;
- 	case RF90_PATH_D:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", rfpath);
- 		break;
- 	default:
- 		break;
-@@ -517,7 +514,7 @@ static bool _rtl92cu_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-index 62ef820..8de29cc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/fw.c
-@@ -435,7 +435,7 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not processed\n");
-+				 "switch case %#x not processed\n", boxnum);
- 			break;
- 		}
- 		isfw_read = _rtl92d_check_fw_read_last_h2c(hw, boxnum);
-@@ -512,7 +512,7 @@ static void _rtl92d_fill_h2c_command(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not processed\n");
-+				 "switch case %#x not processed\n", cmd_len);
- 			break;
- 		}
- 		bwrite_success = true;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-index 5720551..5369011 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/hw.c
-@@ -166,7 +166,7 @@ void rtl92de_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -361,7 +361,8 @@ void rtl92de_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				break;
- 			default:
- 				RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--					 "switch case not processed\n");
-+					 "switch case %#x not processed\n",
-+					 e_aci);
- 				break;
- 			}
- 		}
-@@ -502,7 +503,7 @@ void rtl92de_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 	}
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -2171,7 +2172,7 @@ void rtl92de_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not processed\n");
-+				 "switch case %#x not processed\n", enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
-index 76a57ae..811ba57 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/led.c
-@@ -71,7 +71,7 @@ void rtl92de_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -106,7 +106,7 @@ void rtl92de_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index 2a4810d..2a1edfd 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -836,12 +836,9 @@ bool rtl92d_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		}
- 		break;
- 	case RF90_PATH_C:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
--		break;
- 	case RF90_PATH_D:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", rfpath);
- 		break;
- 	}
- 	return true;
-@@ -2850,7 +2847,8 @@ static bool _rtl92d_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not processed\n");
-+				 "switch case %#x not processed\n",
-+				 currentcmd->cmdid);
- 			break;
- 		}
- 		break;
-@@ -2963,7 +2961,8 @@ static void rtl92d_phy_set_io(struct ieee80211_hw *hw)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n",
-+			 rtlphy->current_io_type);
- 		break;
- 	}
- 	rtlphy->set_io_inprogress = false;
-@@ -2994,7 +2993,7 @@ bool rtl92d_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not processed\n");
-+				 "switch case %#x not processed\n", iotype);
- 			break;
- 		}
- 	} while (false);
-@@ -3182,7 +3181,7 @@ bool rtl92d_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-index 0708eed..b3f6a9e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/fw.c
-@@ -344,7 +344,7 @@ static void _rtl92ee_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", boxnum);
- 			break;
- 		}
+-	if (type == NL80211_IFTYPE_P2P_DEVICE) {
++	if (type == NL80211_IFTYPE_P2P_DEVICE || type == NL80211_IFTYPE_NAN) {
+ 		struct wireless_dev *wdev;
  
-@@ -433,7 +433,7 @@ static void _rtl92ee_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", cmd_len);
- 			break;
- 		}
+ 		sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index ac053a9..b5cf2c5 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -821,6 +821,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	     !local->ops->tdls_recv_channel_switch))
+ 		return -EOPNOTSUPP;
  
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index b07af8d..47bb6d8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -340,7 +340,7 @@ void rtl92ee_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
--			 "switch case not process %x\n", variable);
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -566,7 +566,8 @@ void rtl92ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				break;
- 			default:
- 				RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
--					 "switch case not process\n");
-+					 "switch case %#x not processed\n",
-+					 e_aci);
- 				break;
- 			}
- 		}
-@@ -685,7 +686,7 @@ void rtl92ee_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
--			 "switch case not process %x\n", variable);
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -2463,7 +2464,7 @@ void rtl92ee_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/led.c
-index 8388e37..47da05d 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/led.c
-@@ -61,7 +61,7 @@ void rtl92ee_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -91,7 +91,7 @@ void rtl92ee_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-index beafc9a..5ad7e75 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/phy.c
-@@ -1927,7 +1927,8 @@ static bool _rtl92ee_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n",
-+				 currentcmd->cmdid);
- 			break;
- 		}
++	if (WARN_ON(local->hw.wiphy->interface_modes &
++			BIT(NL80211_IFTYPE_NAN) &&
++		    (!local->ops->start_nan || !local->ops->stop_nan)))
++		return -EINVAL;
++
+ #ifdef CONFIG_PM
+ 	if (hw->wiphy->wowlan && (!local->ops->suspend || !local->ops->resume))
+ 		return -EINVAL;
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 75d5c96..c3f610b 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -128,7 +128,8 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
  
-@@ -3001,7 +3002,7 @@ bool rtl92ee_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", iotype);
- 			break;
- 		}
- 	} while (false);
-@@ -3041,7 +3042,8 @@ static void rtl92ee_phy_set_io(struct ieee80211_hw *hw)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n",
-+			 rtlphy->current_io_type);
- 		break;
- 	}
- 	rtlphy->set_io_inprogress = false;
-@@ -3187,7 +3189,7 @@ static bool _rtl92ee_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-index ddfa0ae..5bad9c9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/hw.c
-@@ -79,7 +79,7 @@ void rtl92se_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 	default: {
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", variable);
- 			break;
- 		}
- 	}
-@@ -297,7 +297,8 @@ void rtl92se_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 					break;
- 				default:
- 					RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--						 "switch case not processed\n");
-+						 "switch case %#x not processed\n",
-+						 e_aci);
- 					break;
- 				}
- 			}
-@@ -433,7 +434,7 @@ void rtl92se_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break; }
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", variable);
- 		break;
+-		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE)
++		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
++		    sdata->vif.type == NL80211_IFTYPE_NAN)
+ 			continue;
+ 
+ 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 77e4c53..deefbfb 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1700,6 +1700,56 @@ TRACE_EVENT(drv_get_expected_throughput,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_start_nan,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct cfg80211_nan_conf *conf),
++
++	TP_ARGS(local, sdata, conf),
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(u8, master_pref)
++		__field(u8, dual)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->master_pref = conf->master_pref;
++		__entry->dual = conf->dual;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT
++		", master preference: %u, dual: %d",
++		LOCAL_PR_ARG, VIF_PR_ARG, __entry->master_pref,
++		__entry->dual
++	)
++);
++
++TRACE_EVENT(drv_stop_nan,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++
++	TP_ARGS(local, sdata),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT,
++		LOCAL_PR_ARG, VIF_PR_ARG
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 2c78541..5b57fca 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1209,7 +1209,8 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
  	}
  
-@@ -2465,7 +2466,7 @@ void rtl92se_set_key(struct ieee80211_hw *hw, u32 key_index, u8 *p_macaddr,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not processed\n");
-+				 "switch case %#x not processed\n", enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c
-index 44949b5..9849cb9 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/led.c
-@@ -68,7 +68,7 @@ void rtl92se_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -104,7 +104,7 @@ void rtl92se_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-index 881821f..4bb7558 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
-@@ -442,7 +442,8 @@ static bool _rtl92s_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not processed\n");
-+				 "switch case %#x not processed\n",
-+				 currentcmd->cmdid);
- 			break;
- 		}
- 
-@@ -648,7 +649,7 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 			break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not processed\n");
-+			 "switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
-index b7c0d38..1186755 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/fw.c
-@@ -124,7 +124,7 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", boxnum);
- 			break;
- 		}
- 
-@@ -230,7 +230,7 @@ static void _rtl8723e_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", cmd_len);
- 			break;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-index ba30efc..2bf603b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hw.c
-@@ -143,7 +143,7 @@ void rtl8723e_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -366,7 +366,8 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 					break;
- 				default:
- 					RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--						 "switch case not process\n");
-+						 "switch case %#x not processed\n",
-+						 e_aci);
- 					break;
- 				}
- 			}
-@@ -546,7 +547,7 @@ void rtl8723e_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		}
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -2225,7 +2226,7 @@ void rtl8723e_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
-index 1317335..c7be934 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/led.c
-@@ -63,7 +63,7 @@ void rtl8723e_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -105,7 +105,7 @@ void rtl8723e_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-index 601b78e..17b58cb 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/phy.c
-@@ -1023,7 +1023,8 @@ static bool _rtl8723e_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n",
-+				 currentcmd->cmdid);
- 			break;
- 		}
- 
-@@ -1499,7 +1500,7 @@ bool rtl8723e_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", iotype);
- 			break;
- 		}
- 	} while (false);
-@@ -1536,7 +1537,8 @@ static void rtl8723e_phy_set_io(struct ieee80211_hw *hw)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n",
-+			 rtlphy->current_io_type);
- 		break;
- 	}
- 	rtlphy->set_io_inprogress = false;
-@@ -1682,7 +1684,7 @@ static bool _rtl8723e_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-index d5da0f3..8c5c27c 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/fw.c
-@@ -122,7 +122,7 @@ static void _rtl8723be_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", boxnum);
- 			break;
- 		}
- 
-@@ -195,7 +195,7 @@ static void _rtl8723be_fill_h2c_command(struct ieee80211_hw *hw, u8 element_id,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", cmd_len);
- 			break;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index 82e4476..999c1ac 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -350,7 +350,7 @@ void rtl8723be_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process %x\n", variable);
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -607,7 +607,8 @@ void rtl8723be_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				break;
- 			default:
- 				RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--					 "switch case not process\n");
-+					 "switch case %#x not processed\n",
-+					 e_aci);
- 				break;
- 			}
- 		}
-@@ -723,8 +724,7 @@ void rtl8723be_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process %x\n",
--			 variable);
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -2565,7 +2565,7 @@ void rtl8723be_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c
-index 4196efb..497913e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/led.c
-@@ -58,7 +58,7 @@ void rtl8723be_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -100,7 +100,7 @@ void rtl8723be_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-index 285818d..3cc2232 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
-@@ -837,7 +837,7 @@ bool rtl8723be_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		break;
- 	case RF90_PATH_D:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", rfpath);
- 		break;
- 	}
- 	return true;
-@@ -1507,7 +1507,8 @@ static bool _rtl8723be_phy_sw_chnl_step_by_step(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n",
-+				 currentcmd->cmdid);
- 			break;
- 		}
- 
-@@ -2515,7 +2516,7 @@ bool rtl8723be_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", iotype);
- 			break;
- 		}
- 	} while (false);
-@@ -2553,7 +2554,8 @@ static void rtl8723be_phy_set_io(struct ieee80211_hw *hw)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n",
-+			 rtlphy->current_io_type);
- 		break;
- 	}
- 	rtlphy->set_io_inprogress = false;
-@@ -2705,7 +2707,7 @@ static bool _rtl8723be_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index a4fc70e..b665446 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -392,7 +392,7 @@ static void _rtl8821ae_fill_h2c_command(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", boxnum);
- 			break;
- 		}
- 
-@@ -481,7 +481,7 @@ static void _rtl8821ae_fill_h2c_command(struct ieee80211_hw *hw,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", cmd_len);
- 			break;
- 		}
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-index 0cddf1a..1281ebe 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/hw.c
-@@ -480,7 +480,7 @@ void rtl8821ae_get_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process %x\n", variable);
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -671,7 +671,8 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 				break;
- 			default:
- 				RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--					 "switch case not process\n");
-+					 "switch case %#x not processed\n",
-+					 e_aci);
- 				break;
- 			}
- 		}
-@@ -800,7 +801,7 @@ void rtl8821ae_set_hw_reg(struct ieee80211_hw *hw, u8 variable, u8 *val)
- 		break; }
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process %x\n", variable);
-+			 "switch case %#x not processed\n", variable);
- 		break;
- 	}
- }
-@@ -3934,7 +3935,7 @@ void rtl8821ae_set_key(struct ieee80211_hw *hw, u32 key_index,
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", enc_algo);
- 			enc_algo = CAM_TKIP;
- 			break;
- 		}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/led.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/led.c
-index ba1946a..fcb3b28 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/led.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/led.c
-@@ -60,7 +60,7 @@ void rtl8821ae_sw_led_on(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = true;
-@@ -133,7 +133,7 @@ void rtl8821ae_sw_led_off(struct ieee80211_hw *hw, struct rtl_led *pled)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_LOUD,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", pled->ledpin);
- 		break;
- 	}
- 	pled->ledon = false;
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-index a71bfe3..5dad402 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-@@ -2063,12 +2063,9 @@ bool rtl8812ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		}
- 		break;
- 	case RF90_PATH_C:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
--		break;
- 	case RF90_PATH_D:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", rfpath);
- 		break;
- 	}
- 	return true;
-@@ -2133,16 +2130,10 @@ bool rtl8821ae_phy_config_rf_with_headerfile(struct ieee80211_hw *hw,
- 		break;
- 
- 	case RF90_PATH_B:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
--		break;
- 	case RF90_PATH_C:
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
--		break;
- 	case RF90_PATH_D:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", rfpath);
- 		break;
- 	}
- 	return true;
-@@ -4670,7 +4661,7 @@ bool rtl8821ae_phy_set_io_cmd(struct ieee80211_hw *hw, enum io_type iotype)
- 			break;
- 		default:
- 			RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--				 "switch case not process\n");
-+				 "switch case %#x not processed\n", iotype);
- 			break;
- 		}
- 	} while (false);
-@@ -4714,7 +4705,8 @@ static void rtl8821ae_phy_set_io(struct ieee80211_hw *hw)
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n",
-+			 rtlphy->current_io_type);
- 		break;
- 	}
- 	rtlphy->set_io_inprogress = false;
-@@ -4820,7 +4812,7 @@ static bool _rtl8821ae_phy_set_rf_power_state(struct ieee80211_hw *hw,
- 		break;
- 	default:
- 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
--			 "switch case not process\n");
-+			 "switch case %#x not processed\n", rfpwr_state);
- 		bresult = false;
- 		break;
- 	}
+ 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+-	    sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE) {
++	    sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
++	    sdata->vif.type != NL80211_IFTYPE_NAN) {
+ 		sdata->vif.bss_conf.qos = enable_qos;
+ 		if (bss_notify)
+ 			ieee80211_bss_info_change_notify(sdata,
 -- 
-2.10.0.rc2.1.g053435c
+2.9.3
