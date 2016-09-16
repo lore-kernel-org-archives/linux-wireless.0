@@ -1,63 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:35057 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752040AbcISVQY (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:57033 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753446AbcIPJjQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 17:16:24 -0400
-Received: by mail-wm0-f47.google.com with SMTP id l132so173897999wmf.0
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 14:16:23 -0700 (PDT)
-Date: Mon, 19 Sep 2016 23:16:21 +0200
-From: Thomas Graf <tgraf@suug.ch>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-        linux-wireless@vger.kernel.org, tom@herbertland.com,
-        Ben Greear <greearb@candelatech.com>
-Subject: Re: [v3 PATCH 1/2] rhashtable: Add rhlist interface
-Message-ID: <20160919211621.GA20951@pox.localdomain> (sfid-20160919_231632_639442_ED7C0839)
-References: <20160919105854.GA12892@gondor.apana.org.au>
- <E1blwIz-0003Mz-HD@gondolin.me.apana.org.au>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1blwIz-0003Mz-HD@gondolin.me.apana.org.au>
+        Fri, 16 Sep 2016 05:39:16 -0400
+From: Colin King <colin.king@canonical.com>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH][V2] mwifiex: fix null pointer deference when adapter is null
+Date: Fri, 16 Sep 2016 10:37:31 +0100
+Message-Id: <20160916093731.23346-1-colin.king@canonical.com> (sfid-20160916_113922_199506_0D68EB3D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/19/16 at 07:00pm, Herbert Xu wrote:
-> The insecure_elasticity setting is an ugly wart brought out by
-> users who need to insert duplicate objects (that is, distinct
-> objects with identical keys) into the same table.
-> 
-> In fact, those users have a much bigger problem.  Once those
-> duplicate objects are inserted, they don't have an interface to
-> find them (unless you count the walker interface which walks
-> over the entire table).
-> 
-> Some users have resorted to doing a manual walk over the hash
-> table which is of course broken because they don't handle the
-> potential existence of multiple hash tables.  The result is that
-> they will break sporadically when they encounter a hash table
-> resize/rehash.
-> 
-> This patch provides a way out for those users, at the expense
-> of an extra pointer per object.  Essentially each object is now
-> a list of objects carrying the same key.  The hash table will
-> only see the lists so nothing changes as far as rhashtable is
-> concerned.
-> 
-> To use this new interface, you need to insert a struct rhlist_head
-> into your objects instead of struct rhash_head.  While the hash
-> table is unchanged, for type-safety you'll need to use struct
-> rhltable instead of struct rhashtable.  All the existing interfaces
-> have been duplicated for rhlist, including the hash table walker.
-> 
-> One missing feature is nulls marking because AFAIK the only potential
-> user of it does not need duplicate objects.  Should anyone need
-> this it shouldn't be too hard to add.
-> 
-> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+From: Colin Ian King <colin.king@canonical.com>
 
-Nice, I like how this simplifies users! Is this suitable for
-ILA as well?
+If adapter is null the error exit path in mwifiex_shutdown_sw is
+to down the semaphore sem and print some debug via mwifiex_dbg.
+However, passing a NULL adapter to mwifiex_dbg causes a null
+pointer deference when accessing adapter->dev.  This fix checks
+for a null adapter at the start of the function and to exit
+without the need to up the semaphore and we also skip the debug
+to avoid the null pointer dereference.
 
-Acked-by: Thomas Graf <tgraf@suug.ch>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 9b2e98c..2478ccd 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1369,12 +1369,12 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 	struct mwifiex_private *priv;
+ 	int i;
+ 
++	if (!adapter)
++		goto exit_return;
++
+ 	if (down_interruptible(sem))
+ 		goto exit_sem_err;
+ 
+-	if (!adapter)
+-		goto exit_remove;
+-
+ 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_ANY);
+ 	mwifiex_deauthenticate(priv, NULL);
+ 
+@@ -1430,10 +1430,10 @@ mwifiex_shutdown_sw(struct mwifiex_adapter *adapter, struct semaphore *sem)
+ 		rtnl_unlock();
+ 	}
+ 
+-exit_remove:
+ 	up(sem);
+ exit_sem_err:
+ 	mwifiex_dbg(adapter, INFO, "%s, successful\n", __func__);
++exit_return:
+ 	return 0;
+ }
+ 
+-- 
+2.7.4
