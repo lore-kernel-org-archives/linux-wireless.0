@@ -1,101 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:58983 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752029AbcIHQK0 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55156 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752954AbcIPK0r (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 12:10:26 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Petri Gynther <pgynther@google.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-        David Miller <davem@davemloft.net>,
-        Joe Perches <joe@perches.com>
-Subject: RE: [PATCH 2/2] mwifiex: fix unaligned read in mwifiex_config_scan()
-Date: Thu, 8 Sep 2016 16:10:14 +0000
-Message-ID: <63fa0bf1951945bebc1d620c39a7c6e8@SC-EXCH04.marvell.com> (sfid-20160908_181030_740772_5A516F8C)
-References: <1471057200-58166-1-git-send-email-pgynther@google.com>
- <1471057200-58166-2-git-send-email-pgynther@google.com>
- <CAGXr9JFSUFr+mhyRnPk0pCeVsde4PUudZW+AZ44mKdT1iEpV6A@mail.gmail.com>
-In-Reply-To: <CAGXr9JFSUFr+mhyRnPk0pCeVsde4PUudZW+AZ44mKdT1iEpV6A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+        Fri, 16 Sep 2016 06:26:47 -0400
+Message-ID: <1474021599.5664.73.camel@coelho.fi> (sfid-20160916_122651_037265_7CAA4580)
+From: Luca Coelho <luca@coelho.fi>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 16 Sep 2016 13:26:39 +0300
+In-Reply-To: <1055fff0-4eb0-08c5-2e16-a0b6f2887bda@broadcom.com>
+References: <20160916083321.5840-1-luca@coelho.fi>
+         <1055fff0-4eb0-08c5-2e16-a0b6f2887bda@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2 0/9] Add support for Neighbor Awareness Networking
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgUGV0cmksDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogUGV0cmkg
-R3ludGhlciBbbWFpbHRvOnBneW50aGVyQGdvb2dsZS5jb21dDQo+IFNlbnQ6IFR1ZXNkYXksIEF1
-Z3VzdCAxNiwgMjAxNiAxMToxNyBQTQ0KPiBUbzogbGludXgtd2lyZWxlc3NAdmdlci5rZXJuZWwu
-b3JnDQo+IENjOiBrdmFsb0Bjb2RlYXVyb3JhLm9yZzsgRGF2aWQgTWlsbGVyOyBKb2UgUGVyY2hl
-czsgQW1pdGt1bWFyIEthcndhcjsNCj4gUGV0cmkgR3ludGhlcg0KPiBTdWJqZWN0OiBSZTogW1BB
-VENIIDIvMl0gbXdpZmlleDogZml4IHVuYWxpZ25lZCByZWFkIGluDQo+IG13aWZpZXhfY29uZmln
-X3NjYW4oKQ0KPiANCj4gT24gRnJpLCBBdWcgMTIsIDIwMTYgYXQgODowMCBQTSwgUGV0cmkgR3lu
-dGhlciA8cGd5bnRoZXJAZ29vZ2xlLmNvbT4NCj4gd3JvdGU6DQo+ID4gJCBpd2NvbmZpZyBtbGFu
-MCBlc3NpZCBNeVNTSUQNCj4gPiBbICAgMzYuOTMwMDAwXSBQYXRoOiAvc2Jpbi9pd2NvbmZpZw0K
-PiA+IFsgICAzNi45MzAwMDBdIENQVTogMCBQSUQ6IDIwMyBDb21tOiBpd2NvbmZpZyBOb3QgdGFp
-bnRlZCA0LjcuMCAjMg0KPiA+IFsgICAzNi45NDAwMDBdIHRhc2s6IDg2NmY4M2EwIHRpOiA4NjZh
-NjAwMCB0YXNrLnRpOiA4NjZhNjAwMA0KPiA+IFsgICAzNi45NDAwMDBdDQo+ID4gW0VDUiAgIF06
-IDB4MDAyMzA0MDAgPT4gTWlzYWxpZ25lZCByL3cgZnJvbSAweDg2NzdmNDAzDQo+ID4gWyAgIDM2
-Ljk2MDAwMF0gW0VGQSAgIF06IDB4ODY3N2Y0MDMNCj4gPiBbICAgMzYuOTYwMDAwXSBbQkxJTksg
-XTogbXdpZmlleF9zY2FuX25ldHdvcmtzKzB4MTdhLzB4MTk4YyBbbXdpZmlleF0NCj4gPiBbICAg
-MzYuOTYwMDAwXSBbRVJFVCAgXTogbXdpZmlleF9zY2FuX25ldHdvcmtzKzB4MThhLzB4MTk4YyBb
-bXdpZmlleF0NCj4gPiBbICAgMzYuOTgwMDAwXSBbU1RBVDMyXTogMHgwMDAwMDIwNiA6IEsgICAg
-ICAgICBFMiBFMQ0KPiA+IFsgICAzNi45ODAwMDBdIEJUQTogMHg3MDA3MzZlMiAgIFNQOiAweDg2
-NmE3ZDBjICBGUDogMHg1ZmFkZGM4NA0KPiA+IFsgICAzNy4wMDAwMDBdIExQUzogMHg4MDZhMzdl
-YyAgTFBFOiAweDgwNmEzN2ZhIExQQzogMHgwMDAwMDAwMA0KPiA+IFsgICAzNy4wMDAwMDBdIHIw
-MDogMHg4Njc3ZjQwMSAgcjAxOiAweDg2NjhhYTA4IHIwMjogMHgwMDAwMDAwMQ0KPiA+IHIwMzog
-MHgwMDAwMDAwMCByMDQ6IDB4ODY2OGI2MDAgcjA1OiAweDg2NzdmNDA2DQo+ID4gcjA2OiAweDg3
-MDJiNjAwIHIwNzogMHgwMDAwMDAwMCByMDg6IDB4ODcwMmI2MDANCj4gPiByMDk6IDB4MDAwMDAw
-MDAgcjEwOiAweDg3MGIzYjAwIHIxMTogMHgwMDAwMDAwMA0KPiA+IHIxMjogMHgwMDAwMDAwMA0K
-PiA+IFsgICAzNy4wNDAwMDBdDQo+ID4gWyAgIDM3LjA0MDAwMF0gU3RhY2sgVHJhY2U6DQo+ID4g
-WyAgIDM3LjA0MDAwMF0gICBtd2lmaWV4X3NjYW5fbmV0d29ya3MrMHgxOGEvMHgxOThjIFttd2lm
-aWV4XQ0KPiA+DQo+ID4gUm9vdCBjYXVzZToNCj4gPiBtd2lmaWV4IGRyaXZlciBjYWxscyBpc196
-ZXJvX2V0aGVyX2FkZHIoKSBhZ2FpbnN0IGJ5dGUtYWxpZ25lZA0KPiBhZGRyZXNzOg0KPiA+DQo+
-ID4gZHJpdmVycy9uZXQvd2lyZWxlc3MvbWFydmVsbC9td2lmaWV4L2Z3Lmg6DQo+ID4gc3RydWN0
-IG13aWZpZXhfc2Nhbl9jbWRfY29uZmlnIHsNCj4gPiAgICAgICAgIC8qDQo+ID4gICAgICAgICAg
-KiAgQlNTIG1vZGUgdG8gYmUgc2VudCBpbiB0aGUgZmlybXdhcmUgY29tbWFuZA0KPiA+ICAgICAg
-ICAgICovDQo+ID4gICAgICAgICB1OCBic3NfbW9kZTsNCj4gPg0KPiA+ICAgICAgICAgLyogU3Bl
-Y2lmaWMgQlNTSUQgdXNlZCB0byBmaWx0ZXIgc2NhbiByZXN1bHRzIGluIHRoZSBmaXJtd2FyZQ0K
-PiAqLw0KPiA+ICAgICAgICAgdTggc3BlY2lmaWNfYnNzaWRbRVRIX0FMRU5dOw0KPiA+DQo+ID4g
-ICAgICAgICAuLi4NCj4gPiB9IF9fcGFja2VkOw0KPiA+DQo+ID4gZHJpdmVycy9uZXQvd2lyZWxl
-c3MvbWFydmVsbC9td2lmaWV4L3NjYW4uYzoNCj4gPiBtd2lmaWV4X2NvbmZpZ19zY2FuKC4uLiwg
-c3RydWN0IG13aWZpZXhfc2Nhbl9jbWRfY29uZmlnICpzY2FuX2NmZ19vdXQsDQo+IC4uLikNCj4g
-PiAgICAgICAgIC4uLg0KPiA+ICAgICAgICAgaWYgKGFkYXB0ZXItPmV4dF9zY2FuICYmDQo+ID4g
-ICAgICAgICAgICAgIWlzX3plcm9fZXRoZXJfYWRkcihzY2FuX2NmZ19vdXQtPnNwZWNpZmljX2Jz
-c2lkKSkgew0KPiA+ICAgICAgICAgICAgIC4uLg0KPiA+ICAgICAgICAgfQ0KPiA+DQo+ID4gU2lu
-Y2UgZmlybXdhcmUtcmVsYXRlZCBzdHJ1Y3QgbXdpZmlleF9zY2FuX2NtZF9jb25maWcgY2Fubm90
-IGJlDQo+ID4gY2hhbmdlZCwgd2UgbmVlZCB0byB1c2UgdGhlIG5ldyBmdW5jdGlvbg0KPiBpc196
-ZXJvX2V0aGVyX2FkZHJfdW5hbGlnbmVkKCkgaGVyZS4NCj4gPg0KPiA+IFRoaXMgaXMgdjIgb2Yg
-dGhlIG9yaWdpbmFsIHBhdGNoOg0KPiA+IFtQQVRDSF0gTW9kaWZ5IGlzX3plcm9fZXRoZXJfYWRk
-cigpIHRvIGhhbmRsZSBieXRlLWFsaWduZWQgYWRkcmVzc2VzDQo+ID4NCj4gPiBQZXIgSm9lJ3Mg
-c3VnZ2VzdGlvbiAtLSBpbnN0ZWFkIG9mIG1vZGlmeWluZyBpc196ZXJvX2V0aGVyX2FkZHIoKSAt
-LQ0KPiA+IGFkZCBpc196ZXJvX2V0aGVyX2FkZHJfdW5hbGlnbmVkKCkgYW5kIHVzZSBpdCB3aGVy
-ZSBuZWVkZWQuDQo+ID4NCj4gPiBDYzogS2FsbGUgVmFsbyA8a3ZhbG9AY29kZWF1cm9yYS5vcmc+
-DQo+ID4gQ2M6IERhdmlkIFMuIE1pbGxlciA8ZGF2ZW1AZGF2ZW1sb2Z0Lm5ldD4NCj4gPiBDYzog
-Sm9lIFBlcmNoZXMgPGpvZUBwZXJjaGVzLmNvbT4NCj4gPiBDYzogQW1pdGt1bWFyIEthcndhciA8
-YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBQZXRyaSBHeW50aGVyIDxw
-Z3ludGhlckBnb29nbGUuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9t
-YXJ2ZWxsL213aWZpZXgvc2Nhbi5jIHwgMyArKy0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5z
-ZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPiA+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMv
-bmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9zY2FuLmMNCj4gPiBiL2RyaXZlcnMvbmV0L3dp
-cmVsZXNzL21hcnZlbGwvbXdpZmlleC9zY2FuLmMNCj4gPiBpbmRleCBiYzVlNTJjLi5kNjQ4Yzg4
-IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL21hcnZlbGwvbXdpZmlleC9z
-Y2FuLmMNCj4gPiArKysgYi9kcml2ZXJzL25ldC93aXJlbGVzcy9tYXJ2ZWxsL213aWZpZXgvc2Nh
-bi5jDQo+ID4gQEAgLTg4Myw3ICs4ODMsOCBAQCBtd2lmaWV4X2NvbmZpZ19zY2FuKHN0cnVjdCBt
-d2lmaWV4X3ByaXZhdGUgKnByaXYsDQo+ID4gICAgICAgICAgICAgICAgICAgICAgICBzaXplb2Yo
-c2Nhbl9jZmdfb3V0LT5zcGVjaWZpY19ic3NpZCkpOw0KPiA+DQo+ID4gICAgICAgICAgICAgICAg
-IGlmIChhZGFwdGVyLT5leHRfc2NhbiAmJg0KPiA+IC0gICAgICAgICAgICAgICAgICAgIWlzX3pl
-cm9fZXRoZXJfYWRkcihzY2FuX2NmZ19vdXQtPnNwZWNpZmljX2Jzc2lkKSkNCj4gew0KPiA+ICsg
-ICAgICAgICAgICAgICAgICAgIWlzX3plcm9fZXRoZXJfYWRkcl91bmFsaWduZWQoDQo+ID4gKyAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzY2FuX2NmZ19vdXQtPnNwZWNpZmljX2Jzc2lk
-KSkgew0KPiANCj4gQW55IGNvbW1lbnRzPyBJcyB0aGlzIGFwcHJvYWNoIG9mIGFkZGluZw0KPiBp
-c196ZXJvX2V0aGVyX2FkZHJfdW5hbGlnbmVkKCkgZmluZT8gV2UgYWxyZWFkeSBoYXZlIHNpbWls
-YXIgcm91dGluZQ0KPiBldGhlcl9hZGRyX2VxdWFsX3VuYWxpZ25lZCgpLg0KPiANCj4gSSBkb24n
-dCBzZWUgbXVjaCBiZW5lZml0IG1ha2luZyBhIGxvY2FsLCBhbGlnbmVkIGNvcHkgaGVyZS4gSXQg
-d291bGQNCj4gaGF2ZSB0byB1c2UgbWVtY3B5IHcvIGJ5dGUgb3BlcmF0aW9ucyBhbnl3YXlzIGFu
-ZCB0aGVuIHN0aWxsIHJ1bg0KPiBpc196ZXJvX2V0aGVyX2FkZHIoKS4NCj4gDQo+IEFtaXRrdW1h
-ciAtLSBJcyBpdCBwb3NzaWJsZSB0byBtb2RpZnkgc3RydWN0IG13aWZpZXhfc2Nhbl9jbWRfY29u
-ZmlnIHt9DQo+IGFuZCBhbGlnbiBzcGVjaWZpY19ic3NpZCBmaWVsZCB0byB1MTYgYm91bmRhcnk/
-DQo+IA0KDQpXZSBjYW7igJl0IGNoYW5nZSB0aGUgc3RydWN0dXJlLiBUaGUgcmVhc29uIGlzIGZp
-cm13YXJlIGF0IHJlY2VpdmluZyBlbmQgZXhwZWN0cyB0aGUgdmFyaWFibGVzIGluIHRoZSBzYW1l
-IG9yZGVyLg0KaXNfemVyb19ldGhlcl9hZGRyX3VuYWxpZ25lZCgpIHNob3VsZCBiZSBmaW5lLg0K
-DQpSZWdhcmRzLA0KQW1pdGt1bWFyDQo=
+On Fri, 2016-09-16 at 11:00 +0200, Arend Van Spriel wrote:
+> On 16-9-2016 10:33, Luca Coelho wrote:
+> > 
+> > From: Luca Coelho <luciano.coelho@intel.com>
+> > 
+> > Hi,
+> > 
+> > This is v2 of the NAN patches that Emmanuel sent a while
+> > back[1].  In
+> > this version, we squashed some patches and took care of some
+> > comments
+> > after reviews (both internal and public).
+> 
+> Hi Luca,
+> 
+> You may have missed some as I think this should be v4.
+
+Right... I saw those other ones, but they didn't have a cover-letter,
+this series is sort of the v2 of "Add support for Neighbor Awareness
+Networking".  Or something... :)
+
+In any case, this new series should include all the changes done on the
+way.
+
+--
+Luca.
