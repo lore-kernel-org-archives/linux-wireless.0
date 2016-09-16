@@ -1,59 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48245 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752956AbcI0Izm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 04:55:42 -0400
-Message-ID: <1474966538.5141.12.camel@sipsolutions.net> (sfid-20160927_105546_729466_94EEB1FA)
-Subject: Re: [PATCHv2] mac80211: check A-MSDU inner frame source address on
- AP interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: michael-dev <michael-dev@fami-braun.de>
-Cc: linux-wireless@vger.kernel.org, projekt-wlan@fem.tu-ilmenau.de,
-        Amitkumar Karwar <akarwar@marvell.com>,
-        Avinash Patil <patila@marvell.com>
-Date: Tue, 27 Sep 2016 10:55:38 +0200
-In-Reply-To: <dbc9f09e4d932d808fed99ebd02301c0@fami-braun.de>
-References: <1474802886-27220-1-git-send-email-michael-dev@fami-braun.de>
-         (sfid-20160925_132809_451078_E31A6EC3) <1474963267.5141.11.camel@sipsolutions.net>
-         <dbc9f09e4d932d808fed99ebd02301c0@fami-braun.de>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:34215 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751414AbcIPGeh (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Sep 2016 02:34:37 -0400
+From: "Undekari, Sunil Dutt" <usdutt@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "Kushwaha, Purushottam" <pkushwah@qti.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+        "Hullur Subramanyam, Amarnath" <amarnath@qca.qualcomm.com>
+Subject: RE: [PATCH v8] cfg80211: Provision to allow the support for different
+ beacon intervals
+Date: Fri, 16 Sep 2016 06:34:26 +0000
+Message-ID: <c6f1a958d7f941b5a7dc8564d3f1c371@aphydexm01f.ap.qualcomm.com> (sfid-20160916_083447_289723_9C88E35F)
+References: <1472649972-6649-1-git-send-email-pkushwah@qti.qualcomm.com>
+ <1473675843.29016.18.camel@sipsolutions.net>
+In-Reply-To: <1473675843.29016.18.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-09-27 at 10:53 +0200, michael-dev wrote:
-> Am 27.09.2016 10:01, schrieb Johannes Berg:
-> > 
-> > ...
-> > 
-> > This leaves "eth_80211" uninitialized if has_80211_header is false.
-> > 
-> > > 
-> > > @@ -768,6 +768,13 @@ void ieee80211_amsdu_to_8023s(struct sk_buff
-> > > *skb, struct sk_buff_head *list,
-> > >  		subframe_len = sizeof(struct ethhdr) + len;
-> > >  		padding = (4 - subframe_len) & 0x3;
-> > >  
-> > > +		if (unlikely(has_80211_header &&
-> > > +			     (iftype == NL80211_IFTYPE_AP ||
-> > > +			      iftype == NL80211_IFTYPE_AP_VLAN)
-> > > &&
-> > > > > > +			     !ether_addr_equal(eth_80211.h_source,
-> > > eth.h_source)
-> > > +		   ))
-> > > +			goto purge;
-> > 
-> > And this then compares against uninitialized data, so this won't
-> > work.
-> 
-> but it only compares against eth_80211 if has_80211_header is true
-> due to order of evaluation, which in turn implies eth_80211 is
-> initialized, right?
-> 
-
-Oh, right, I missed that, sorry.
-
-Nevertheless, it seems it would be better to allow the other users (not
-mac80211) that have has_80211_header=false to still have the check?
-
-johannes
+PkluIG9yZGVyIHRvIHZhbGlkYXRlIGEgbmV3IGJlYWNvbiBpbnRlcnZhbCwgeW91J3JlIGZpcnN0
+IGxvb2tpbmcgdXAgdGhlIG1pbiBHQ0QgdmFsdWUgb2YgYWxsIHRoZSBjb21iaW5hdGlvbnMgdGhh
+dCBhbGxvdyB0aGUgKmN1cnJlbnQqIHNjZW5hcmlvLCBidXQgZG9pbmcgdGhhdCBtYXRjaGluZyB3
+aXRob3V0IHRoZSByaWdodCAjIG9mIGNoYW5uZWxzIG9yID5yYWRhciBkZXRlY3QgcGFyYW1ldGVy
+cz8gQW5kIHRoZW4geW91J3JlIHRyeWluZyB0byBtYXRjaCB0aGF0IHRvIHRoZSBuZXcgYmVhY29u
+IGludGVydmFsPw0KWWVzIC4gUGxlYXNlIGFsbG93IHVzIHRvIGV4cGxhaW4gdGhlIHJhdGlvbmFs
+ZSBmb3IgZG9pbmcgc28uIA0KMS4gVGhlIGludGVudGlvbiBoZXJlIGlzIHRvIGVuc3VyZSB0aGF0
+IHRoZSBiZWFjb24gaW50ZXJ2YWwgY29uZmlndXJlZCBmb3IgYW55IHNpbmdsZSBpbnRlcmZhY2Ug
+aXMgZ3JlYXRlciB0aGFuIHRoZSAiZGlmZl9iZWFjb25faW50X2djZF9taW4iICBzcGVjaWZpZWQg
+aW4gdGhlIHJlc3BlY3RpdmUgY29tYmluYXRpb25zLiAgDQoyLiBTaW5jZSAiZGlmZl9iZWFjb25f
+aW50X2djZF9taW4iICBpcyBvbmx5IHNwZWNpZmllZCAvIGFkdmVydGlzZWQgaW4gdGhlIGludGVy
+ZmFjZSBjb21iaW5hdGlvbnMgLCBvdXIgbG9naWMgd2FzIHRvIGdldCB0aGUgbWluaW1hbCAiZGlm
+Zl9iZWFjb25faW50X2djZF9taW4iIG9mIGFsbCB0aGUgbWF0Y2hpbmcgY29tYmluYXRpb25zIGFu
+ZCBsYXRlciANCiAgICBjb21wYXJlIHdpdGggdGhlIG5ldyBiZWFjb24gaW50ZXJ2YWwuIChBUEkg
+ImNmZzgwMjExX2l0ZXJfY29tYmluYXRpb25zIiBoYXMgdG8gYmUgaW52b2tlZCB0byBnZXQgdGhl
+IGNvcnJlc3BvbmRpbmcgImRpZmZfYmVhY29uX2ludF9nY2RfbWluIikNCjMuIElmIHRoZSBiZWFj
+b24gaW50ZXJ2YWwgY29uZmlndXJlZCBuZWVkcyB0byBiZSBlbnN1cmVkIHRvIGJlIGdyZWF0ZXIg
+dGhhbiB0aGUgImRpZmZfYmVhY29uX2ludF9nY2RfbWluIiBjb25maWd1cmVkIGZvciBib3RoIHRo
+ZSAic2luZ2xlIGludGVyZmFjZSIgYW5kICJpbnRlcmZhY2UgY29tYmluYXRpb24iICwgd2UgaGF2
+ZSByZXNvcnRlZCB0byANCiAgICAgIjIiICAoZ2V0IHRoZSBtaW5pbWFsIG9mICJkaWZmX2JlYWNv
+bl9pbnRfZ2NkX21pbiIgYW1vbmcgYWxsIHRoZSBtYXRjaGVkIGludGVyZmFjZSBjb21iaW5hdGlv
+bnMgYW5kIHRoZW4gY29tcGFyZSBpdCB3aXRoIHRoZSBjb25maWd1cmVkIGJlYWNvbiBpbnRlcnZh
+bCkuIA0KDQo+SWYgdGhlIGRyaXZlciBzcGVjaWZpZWQgZGlmZl9iZWFjb25faW50X2djZF9taW4s
+IHRoZW4gZG9uJ3QgZG8gYW55dGhpbmcgaW4gY2ZnODAyMTFfdmFsaWRhdGVfYmVhY29uX2ludCgp
+LCBvdGhlciB0aGFuIHBlcmhhcHMgYSBtaW5pbWFsIHJhbmdlIGNoZWNrIGFnYWluc3QgdGhlIG1p
+bmltdW0gb2YgYWxsID5kaWZmX2JlYWNvbl9pbnRfZ2NkX21pbiB2YWx1ZXMgZm9yIGFsbCBjb21i
+aW5hdGlvbnMuDQo+IFRoYXQgbmV3IGFyZ3VtZW50IGNvdWxkIGJlIG1hZGUgdGhlIEdDRCBvZiBh
+bGwgZXhpc3RpbmcgYmVhY29uaW5nIGludGVyZmFjZXMgKG9yIDAgaWYgbm8gc3VjaCBleGlzdHMp
+LCBzaW5jZSB0aGF0J3Mgc3VmZmljaWVudCBmb3IgY2hlY2tpbmcgYWdhaW5zdCBhIG5ldyBtaW5f
+Z2NkLg0KSWYgSSB1bmRlcnN0YW5kIHRoaXMgY29ycmVjdGx5ICwgYXJlIHlvdSBzYXlpbmcgdGhh
+dCB0aGlzIG5ldyBhcmd1bWVudCB0byBjZmc4MDIxMV9pdGVyX2NvbWJpbmF0aW9ucyBzaGFsbCBi
+ZSB0aGUgR0NEIG9mIGFsbCB0aGUgZXhpc3RpbmcgYmVhY29uIGludGVydmFscyBhbmQgd291bGQg
+YmUgdXNlZCB0byBtYXRjaCB3aXRoIHRoZSBjb3JyZXNwb25kaW5nICJkaWZmX2JlYWNvbl9pbnRf
+Z2NkX21pbiIgb2YgdGhlIGludGVyZmFjZSBjb21iaW5hdGlvbnMgaW4gImNmZzgwMjExX2l0ZXJf
+Y29tYmluYXRpb25zIi4gDQpJZiB5ZXMgLCB0aGlzIEdDRCBhcmd1bWVudCBkb2VzIG5vdCByZXBy
+ZXNlbnQgLCBpZiB0aGUgYmVhY29uIGludGVydmFscyBvZiBhbGwgdGhlIGV4aXN0aW5nIGludGVy
+ZmFjZXMgZGlmZmVyIG9yIG5vdCAsIGlzbuKAmXQgPyBJZiB0aGUgImRpZmZfYmVhY29uX2ludF9n
+Y2RfbWluIiAgb2YgdGhlIGFsbCB0aGUgbWF0Y2hpbmcgaW50ZXJmYWNlIGNvbWJpbmF0aW9ucyBp
+cyAwICwgc3VjaCBkaWZmZXJlZCBiZWFjb24gaW50ZXJ2YWxzIHdvdWxkIHBhc3MgdGhlIGNoZWNr
+ICwgY29udHJhZGljdGluZyB0aGUgZXhpc3RpbmcgbG9naWMgKCBub3QgYWxsb3dpbmcgdGhlIGRp
+ZmZlcmVkIGJlYWNvbiBpbnRlcnZhbHMpLCBpc24ndCA/IA0KDQpUaHVzLCB3b3VsZG4ndCBpdCBi
+ZSBhIGJldHRlciBvcHRpb24gdG8gZmlyc3QgZ2V0IHRoZSAiZGlmZl9iZWFjb25faW50X2djZF9t
+aW4iIGFkdmVydGlzZWQgYnkgdGhlIHJlc3BlY3RpdmUgaW50ZXJmYWNlIGNvbWJpbmF0aW9ucyBh
+bmQgdGhlbiBsYXRlciBjb21wYXJlIGl0IHdpdGggdGhlIGNvbmZpZ3VyZWQgLyBjYWxjdWxhdGVk
+IGJlYWNvbiANCmludGVydmFsJ3MgR0NEIC4gDQpBbHNvICwgbm90IHF1aXRlIHN1cmUgaG93IHdv
+dWxkIHlvdXIgY29tbWVudCAiIG1hdGNoaW5nIHdpdGhvdXQgdGhlIHJpZ2h0ICMgb2YgY2hhbm5l
+bHMgb3IgcmFkYXIgZGV0ZWN0IHBhcmFtZXRlcnMiIGdldCBhZGRyZXNzZWQgd2l0aCB5b3VyIG5l
+dyBwcm9wb3NhbCAoIGFkZGluZyBhIG5ldyBhcmd1bWVudCB0byAiY2ZnODAyMTFfaXRlcl9jb21i
+aW5hdGlvbnMiICkgDQoNClJlZ2FyZHMsDQpTdW5pbA0KDQoNCg0KDQoNCi0tLS0tT3JpZ2luYWwg
+TWVzc2FnZS0tLS0tDQpGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29s
+dXRpb25zLm5ldF0gDQpTZW50OiBNb25kYXksIFNlcHRlbWJlciAxMiwgMjAxNiAzOjU0IFBNDQpU
+bzogS3VzaHdhaGEsIFB1cnVzaG90dGFtIDxwa3VzaHdhaEBxdGkucXVhbGNvbW0uY29tPg0KQ2M6
+IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgTWFsaW5lbiwgSm91bmkgPGpvdW5pQHFj
+YS5xdWFsY29tbS5jb20+OyBVbmRla2FyaSwgU3VuaWwgRHV0dCA8dXNkdXR0QHF0aS5xdWFsY29t
+bS5jb20+OyBIdWxsdXIgU3VicmFtYW55YW0sIEFtYXJuYXRoIDxhbWFybmF0aEBxY2EucXVhbGNv
+bW0uY29tPg0KU3ViamVjdDogUmU6IFtQQVRDSCB2OF0gY2ZnODAyMTE6IFByb3Zpc2lvbiB0byBh
+bGxvdyB0aGUgc3VwcG9ydCBmb3IgZGlmZmVyZW50IGJlYWNvbiBpbnRlcnZhbHMNCg0KSG1tLiBB
+cGFydCBmcm9tIHNvbWUgbWlzbGVhZGluZyBkb2N1bWVudGF0aW9uLCB0aGF0IGRvZXNuJ3QgbWVu
+dGlvbiAiR0NEIiBhdCBhbGwsIHRoZSBsb2dpYyBzZWVtcyBvZGQuDQoNCkluIG9yZGVyIHRvIHZh
+bGlkYXRlIGEgbmV3IGJlYWNvbiBpbnRlcnZhbCwgeW91J3JlIGZpcnN0IGxvb2tpbmcgdXAgdGhl
+IG1pbiBHQ0QgdmFsdWUgb2YgYWxsIHRoZSBjb21iaW5hdGlvbnMgdGhhdCBhbGxvdyB0aGUgKmN1
+cnJlbnQqIHNjZW5hcmlvLCBidXQgZG9pbmcgdGhhdCBtYXRjaGluZyB3aXRob3V0IHRoZSByaWdo
+dCAjIG9mIGNoYW5uZWxzIG9yIHJhZGFyIGRldGVjdCBwYXJhbWV0ZXJzPyBBbmQgdGhlbiB5b3Un
+cmUgdHJ5aW5nIHRvIG1hdGNoIHRoYXQgdG8gdGhlIG5ldyBiZWFjb24gaW50ZXJ2YWw/DQoNCkl0
+IHNlZW1zIHRvIG1lIHRoYXQgdGhlIGxvZ2ljIHNob3VsZCBiZSBzb21ldGhpbmcgbGlrZToNCg0K
+SWYgdGhlIGRyaXZlciBzcGVjaWZpZWTCoGRpZmZfYmVhY29uX2ludF9nY2RfbWluLCB0aGVuIGRv
+bid0IGRvIGFueXRoaW5nIGluwqBjZmc4MDIxMV92YWxpZGF0ZV9iZWFjb25faW50KCksIG90aGVy
+IHRoYW4gcGVyaGFwcyBhIG1pbmltYWwgcmFuZ2UgY2hlY2sgYWdhaW5zdCB0aGUgbWluaW11bSBv
+ZiBhbGwgZGlmZl9iZWFjb25faW50X2djZF9taW4gdmFsdWVzIGZvciBhbGwgY29tYmluYXRpb25z
+Lg0KDQpUaGVuLCBhZGQgYSBuZXcgYXJndW1lbnQgdG/CoGNmZzgwMjExX2NoZWNrX2NvbWJpbmF0
+aW9ucygpIChhbmQNCmNmZzgwMjExX2l0ZXJfY29tYmluYXRpb25zKCkpIHRvIGhhdmUgdGhlIGJl
+YWNvbiBpbnRlcnZhbHMgZm9yIGVhY2ggYmVhY29uaW5nIGludGVyZmFjZSwgYW5kIHVzZSB0aGF0
+IGluIG9yZGVyIHRvIG1hdGNoIGlmIGEgY29tYmluYXRpb24gZml0cywgaW5zaWRlwqBjZmc4MDIx
+MV9pdGVyX2NvbWJpbmF0aW9ucygpLg0KDQpUaGF0IG5ldyBhcmd1bWVudCBjb3VsZCBiZSBtYWRl
+IHRoZSBHQ0Qgb2YgYWxsIGV4aXN0aW5nIGJlYWNvbmluZyBpbnRlcmZhY2VzIChvciAwIGlmIG5v
+IHN1Y2ggZXhpc3RzKSwgc2luY2UgdGhhdCdzIHN1ZmZpY2llbnQgZm9yIGNoZWNraW5nIGFnYWlu
+c3QgYSBuZXcgbWluX2djZC4NCg0Kam9oYW5uZXMNCg==
