@@ -1,70 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:33880 "EHLO v3-1039.vlinux.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932173AbcIBL0g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 07:26:36 -0400
-From: Sven Eckelmann <sven@narfation.org>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        linux-wireless@vger.kernel.org,
-        Pannirselvam Kanagaratnam <pannirk@gmail.com>
-Subject: Re: Debugging RTL8192CU firmware loading on 3.12 powerpc
-Date: Fri, 02 Sep 2016 13:26:26 +0200
-Message-ID: <6578938.N4SWO0a2Ic@bentobox> (sfid-20160902_132657_577642_121D8893)
-In-Reply-To: <8cae6bb9-0465-9210-b543-61136836c263@broadcom.com>
-References: <1586991.4QUcrJhXOm@prime> <8cae6bb9-0465-9210-b543-61136836c263@broadcom.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:7404 "EHLO
+        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755647AbcIPWhm (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Fri, 16 Sep 2016 18:37:42 -0400
+From: "Hsu, Ryan" <ryanhsu@qca.qualcomm.com>
+To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>,
+        "Valo, Kalle" <kvalo@qca.qualcomm.com>
+CC: "marek.puzyniak@tieto.com" <marek.puzyniak@tieto.com>,
+        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH 4/4] ath10k: fix spurious tx/rx during boot
+Date: Fri, 16 Sep 2016 22:37:38 +0000
+Message-ID: <57DC735D.8020307@qca.qualcomm.com> (sfid-20160917_003746_876359_94082877)
+References: <1468924452-23877-1-git-send-email-michal.kazior@tieto.com>
+ <1468924452-23877-5-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1468924452-23877-5-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart7295035.8hyijCJXRR"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart7295035.8hyijCJXRR
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
 
-On Freitag, 2. September 2016 13:13:20 CEST Arend Van Spriel wrote:
-[...]
-> > Do you have any recommendations where the firmware loading problems could
-> > come from, and where we could start to debug? Any pointers would be
-> > appreciated.
-> Hi Simon,
-> 
-> Could it be an endian issue?
 
-Yes, it could be one (at least I've also guessed this - I could still be 
-completely wrong). But the problem is now to find a good starting point for 
-the debugging effort.
+On 07/19/2016 03:34 AM, Michal Kazior wrote:
+>  =20
+> +static int ath10k_core_reset_rx_filter(struct ath10k *ar)
+> +{
+> +	int ret;
+> +	int vdev_id;
+> +	int vdev_type;
+> +	int vdev_subtype;
+> +	const u8 *vdev_addr;
+> +
+> +	vdev_id =3D 0;
+> +	vdev_type =3D WMI_VDEV_TYPE_STA;
+> +	vdev_subtype =3D ath10k_wmi_get_vdev_subtype(ar, WMI_VDEV_SUBTYPE_NONE)=
+;
+> +	vdev_addr =3D ar->mac_addr;
+> +
+> +	ret =3D ath10k_wmi_vdev_create(ar, vdev_id, vdev_type, vdev_subtype,
+> +				     vdev_addr);
+> +	if (ret) {
+> +		ath10k_err(ar, "failed to create dummy vdev: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	ret =3D ath10k_wmi_vdev_delete(ar, vdev_id);
+> +	if (ret) {
+> +		ath10k_err(ar, "failed to delete dummy vdev: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	/* WMI and HTT may use separate HIF pipes and are not guaranteed to be
+> +	 * serialized properly implicitly.
+> +	 *
+> +	 * Moreover (most) WMI commands have no explicit acknowledges. It is
+> +	 * possible to infer it implicitly by poking firmware with echo
+> +	 * command - getting a reply means all preceding comments have been
+> +	 * (mostly) processed.
+> +	 *
+> +	 * In case of vdev create/delete this is sufficient.
+> +	 *
+> +	 * Without this it's possible to end up with a race when HTT Rx ring is
+> +	 * started before vdev create/delete hack is complete allowing a short
+> +	 * window of opportunity to receive (and Tx ACK) a bunch of frames.
+> +	 */
+> +	ret =3D ath10k_wmi_barrier(ar);
+QCA6174 UTF firmware seems doesn't support the WMI_ECHO command.
 
-I've only looked at Simon's screen once while he gather USB dumps but didn't 
-spot any obvious at that time. There was also the problem that the comparison 
-dump looked already a lot different due to some timing differences.
+[16460.274822] ath10k_pci 0000:04:00.0: wmi tlv echo value 0x0ba991e9
+...
+[16463.461970] ath10k_pci 0000:04:00.0: failed to ping firmware: -110
+[16463.461975] ath10k_pci 0000:04:00.0: failed to reset rx filter: -110
 
-I think Simon can give you later more details (when required).
+Has anyone verified any AP solution to see if UTF mode is still working=20
+with after this patch?
 
-Kind regards,
-	Sven
---nextPart7295035.8hyijCJXRR
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
+Anyway, I would like to exclude the workaround from all solution's UTF mode=
+.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
+Michal any concerns? (or maybe just for QCA61x4 if any...)
 
-iQIcBAABCgAGBQJXyWHiAAoJEF2HCgfBJntGvMgQAMBky8S+3zzEXGSSuK68st9F
-jyLtE2Qjzyfq8+H8OXmfToUQGcQ69DMqEZbYvPEj6fdi1h6llRR43uoox8YrLOsc
-jIXnnY5Md/866Ry5Q0x5Vim2xYCcx106fqjA6wefwps5YUoVTZUUg+UiM7YPazFJ
-iAe10x27t/2EazRFlFfFxHueydwkO+KyT7H4HnKTymQsl0tQv2FuE+0fKY5pKoFv
-g0Oa9MWpBMVgzSv7/RVshEQ+JtpAXZjQ/w3Ob1dvBOHvlktRyKYT50aa4mjJ4aAd
-WD1sRE0lUPMVTfX0vwdFzn2hZINmsUY/IqW3Amqx9h4lvmWbaW5Wd4V1Jhcsa5by
-1uYghCvufNE+EV7ziiRUgb9xUvXMPeZNVvM+9e5Qyl8F3ByH4q3GIQQrIuEYx8dB
-cr7QJ2NMZoIpEX814GSBwoHPtwJdsiI7qTlUtzuypOdst7/yKEg8v0ZewPbky03E
-25Tllo5Uw3gYHLspVzmlHSzTPY/Hm/qDy6CbtakvGdFFpaLJrtAoSAs4d8HqOX2U
-soja0NRMRBfLpK7lsnBzAhTHMUUxhGQfwt4kvdNvAL3EzXHEGFpomTZ3d9sI9K2G
-NRz6xYvK6Cmr22IO/8EYSHCBMwhzO8ds1YbVdUfnwqhhiHeAQxlcsteGfqri4sC0
-xA3ERn2OjJEfErmUs3lZ
-=r8Y4
------END PGP SIGNATURE-----
-
---nextPart7295035.8hyijCJXRR--
+> +	if (ret) {
+> +		ath10k_err(ar, "failed to ping firmware: %d\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+>
