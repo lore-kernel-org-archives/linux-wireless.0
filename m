@@ -1,78 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:45412 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S934350AbcIVUwT (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 22 Sep 2016 16:52:19 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 22 Sep 2016 23:52:00 +0300
-Message-Id: <20160922205210.1778-1-luca@coelho.fi> (sfid-20160922_225244_334573_55AC9A3F)
-Subject: [PATCH 00/10] iwlwifi: updates for 2016-09-22 
+Received: from muru.com ([72.249.23.125]:42603 "EHLO muru.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752512AbcIQQGp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Sep 2016 12:06:45 -0400
+From: Tony Lindgren <tony@atomide.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
+        Luca Coelho <luciano.coelho@intel.com>,
+        Maital Hahn <maitalm@ti.com>,
+        Maxim Altshul <maxim.altshul@ti.com>,
+        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
+        linux-omap@vger.kernel.org
+Subject: [PATCH 5/5] wlcore: wl18xx: Use chip specific configuration firmware
+Date: Sat, 17 Sep 2016 09:06:33 -0700
+Message-Id: <20160917160633.8767-6-tony@atomide.com> (sfid-20160917_180657_088554_9C71BAB1)
+In-Reply-To: <20160917160633.8767-1-tony@atomide.com>
+References: <20160917160633.8767-1-tony@atomide.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+Use the wl18xx specific config firmware we now have available.
 
-Hi,
+Signed-off-by: Tony Lindgren <tony@atomide.com>
+---
+ drivers/net/wireless/ti/wl18xx/main.c | 19 ++++++++++---------
+ 1 file changed, 10 insertions(+), 9 deletions(-)
 
-Here's a series of patches that were pending in our internal tree.
-
-I'm changing the process a bit.  From now on I'll send the patches out
-first for review and only later apply them on iwlwifi-next/master and
-send a pull request.  This will make reviews easier and will also
-allow kbuild bot to run tests before I actually apply the patches and
-send a pull request.
-
-Please review and let me know if there are any problems.
-
-Cheers,
-Luca.
-
-
-Emmanuel Grumbach (2):
-  iwlwifi: mvm: fix typo in TC_CMD_SEC_KEY_FROM_TABLE
-  iwlwifi: mvm: initialise ADD_STA before sending it to the firmware
-
-Johannes Berg (2):
-  iwlwifi: pcie: avoid variable shadowing in TFD helpers
-  iwlwifi: mvm: correct rate_idx bounds-check
-
-Luca Coelho (2):
-  iwlwifi: mvm: bail out if CTDP start operation fails
-  iwlwifi: remove support for fw older than -17 and -22
-
-Oren Givon (1):
-  iwlwifi: add two new 9560 series PCI IDs
-
-Sara Sharon (3):
-  iwlwifi: mvm: cleanup redundant no_power_up_nic_in_init config
-  iwlwifi: mvm: cleanup usage of init_dbg parameter
-  iwlwifi: allow error table address new range
-
- drivers/net/wireless/intel/iwlwifi/iwl-7000.c      |  6 +--
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c      |  2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c      |  2 +-
- drivers/net/wireless/intel/iwlwifi/iwl-config.h    |  1 -
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   | 24 +---------
- .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |  3 +-
- .../net/wireless/intel/iwlwifi/mvm/fw-api-power.h  | 21 +++------
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  6 +--
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c        | 43 ++++++++----------
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 24 ++++------
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 -
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 52 +++++++---------------
- drivers/net/wireless/intel/iwlwifi/mvm/power.c     | 15 +++----
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c      | 27 ++---------
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c       |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c        | 10 +----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     |  2 +-
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  2 +
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 19 ++++----
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 47 ++++++++++---------
- 21 files changed, 110 insertions(+), 204 deletions(-)
-
+diff --git a/drivers/net/wireless/ti/wl18xx/main.c b/drivers/net/wireless/ti/wl18xx/main.c
+--- a/drivers/net/wireless/ti/wl18xx/main.c
++++ b/drivers/net/wireless/ti/wl18xx/main.c
+@@ -1397,25 +1397,24 @@ static int wl18xx_get_pg_ver(struct wl1271 *wl, s8 *ver)
+ 	return ret;
+ }
+ 
+-#define WL18XX_CONF_FILE_NAME "ti-connectivity/wl18xx-conf.bin"
+-
+ static int wl18xx_load_conf_file(struct device *dev, struct wlcore_conf *conf,
+-				 struct wl18xx_priv_conf *priv_conf)
++				 struct wl18xx_priv_conf *priv_conf,
++				 const char *file)
+ {
+ 	struct wlcore_conf_file *conf_file;
+ 	const struct firmware *fw;
+ 	int ret;
+ 
+-	ret = request_firmware(&fw, WL18XX_CONF_FILE_NAME, dev);
++	ret = request_firmware(&fw, file, dev);
+ 	if (ret < 0) {
+ 		wl1271_error("could not get configuration binary %s: %d",
+-			     WL18XX_CONF_FILE_NAME, ret);
++			     file, ret);
+ 		return ret;
+ 	}
+ 
+ 	if (fw->size != WL18XX_CONF_SIZE) {
+-		wl1271_error("configuration binary file size is wrong, expected %zu got %zu",
+-			     WL18XX_CONF_SIZE, fw->size);
++		wl1271_error("%s configuration binary size is wrong, expected %zu got %zu",
++			     file, WL18XX_CONF_SIZE, fw->size);
+ 		ret = -EINVAL;
+ 		goto out_release;
+ 	}
+@@ -1448,9 +1447,12 @@ static int wl18xx_load_conf_file(struct device *dev, struct wlcore_conf *conf,
+ 
+ static int wl18xx_conf_init(struct wl1271 *wl, struct device *dev)
+ {
++	struct platform_device *pdev = wl->pdev;
++	struct wlcore_platdev_data *pdata = dev_get_platdata(&pdev->dev);
+ 	struct wl18xx_priv *priv = wl->priv;
+ 
+-	if (wl18xx_load_conf_file(dev, &wl->conf, &priv->conf) < 0) {
++	if (wl18xx_load_conf_file(dev, &wl->conf, &priv->conf,
++				  pdata->family->cfg_name) < 0) {
+ 		wl1271_warning("falling back to default config");
+ 
+ 		/* apply driver default configuration */
+@@ -2141,4 +2143,3 @@ MODULE_PARM_DESC(num_rx_desc_param,
+ MODULE_LICENSE("GPL v2");
+ MODULE_AUTHOR("Luciano Coelho <coelho@ti.com>");
+ MODULE_FIRMWARE(WL18XX_FW_NAME);
+-MODULE_FIRMWARE(WL18XX_CONF_FILE_NAME);
 -- 
 2.9.3
