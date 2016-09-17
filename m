@@ -1,58 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from srv-hp10-72.netsons.net ([94.141.22.72]:57192 "EHLO
-        srv-hp10.netsons.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1755557AbcIFQiX (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 6 Sep 2016 12:38:23 -0400
-From: Luca Ceresoli <luca@lucaceresoli.net>
-To: devel@driverdev.osuosl.org
-Cc: Luca Ceresoli <luca@lucaceresoli.net>,
-        Larry Finger <Larry.Finger@lwfinger.net>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 1/6] staging: rtl8723au: remove unimplemented functions declaration
-Date: Tue,  6 Sep 2016 18:36:52 +0200
-Message-Id: <1473179817-7277-1-git-send-email-luca@lucaceresoli.net> (sfid-20160906_184326_489279_7EB38969)
+Received: from mout.gmx.net ([212.227.15.15]:53897 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752597AbcIQQYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Sep 2016 12:24:08 -0400
+Subject: Re: ath9k_htc kernel driver regression affecting throughput
+To: bruce m beach <brucembeach@gmail.com>,
+        linux-wireless@vger.kernel.org
+References: <CAArymCkTyLUsxMsDJXVM=XvmFZAK-uWLLuP3gXSY9_hqcjWHjg@mail.gmail.com>
+ <78432948-7580-2f07-872d-df261255255e@rempel-privat.de>
+From: Oleksij Rempel <linux@rempel-privat.de>
+Message-ID: <b017ac03-87a3-1188-93a9-162462dbdbe0@rempel-privat.de> (sfid-20160917_182424_833436_6647F383)
+Date: Sat, 17 Sep 2016 18:23:54 +0200
+MIME-Version: 1.0
+In-Reply-To: <78432948-7580-2f07-872d-df261255255e@rempel-privat.de>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="3VlNwd6oH9qKFNilCrPoX74oiVHMG10qB"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These functions have been declared without any implementation since
-the first commit (364e30ebd2dbaccba430c603da03e68746eb932a) and there
-has been no mention of them in following commits.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--3VlNwd6oH9qKFNilCrPoX74oiVHMG10qB
+Content-Type: multipart/mixed; boundary="RCHG3g9e4rt9KTt2454oxIhix5BtXs3ow";
+ protected-headers="v1"
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: bruce m beach <brucembeach@gmail.com>, linux-wireless@vger.kernel.org
+Message-ID: <b017ac03-87a3-1188-93a9-162462dbdbe0@rempel-privat.de>
+Subject: Re: ath9k_htc kernel driver regression affecting throughput
+References: <CAArymCkTyLUsxMsDJXVM=XvmFZAK-uWLLuP3gXSY9_hqcjWHjg@mail.gmail.com>
+ <78432948-7580-2f07-872d-df261255255e@rempel-privat.de>
+In-Reply-To: <78432948-7580-2f07-872d-df261255255e@rempel-privat.de>
 
-Signed-off-by: Luca Ceresoli <luca@lucaceresoli.net>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org
-Cc: devel@driverdev.osuosl.org
-Cc: linux-kernel@vger.kernel.org
+--RCHG3g9e4rt9KTt2454oxIhix5BtXs3ow
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
----
+Am 17.09.2016 um 18:14 schrieb Oleksij Rempel:
+> Am 17.09.2016 um 17:52 schrieb bruce m beach:
+>>>> Hm.. found here one report about bad perfomance on this driver
+>>>> https://ubuntuforums.org/showthread.php?t=3D2312343
+>>>>
+>>>> affected persons seems to use WEP encryption.
+>>>>
+>>>> What encryption do are you using?
+>>
+>> I just wish I could do some testing on a single machine. Every test
+>> suite I've seen always involves 2 machines. Why can't I use the wifi
+>> chip on the mother board and the ar9271(a usb stick) to test basic
+>> communications on the ar9271. The problem is I don't know where to beg=
+in.
+>>
+>> Bruce
+>>
+>=20
+> i didn't tried it myself:
+> https://unix.stackexchange.com/questions/122050/send-traffic-to-self-ov=
+er-physical-network-on-ubuntu
+>=20
+> but last suggestion looks interesting.
+>=20
 
-Changes v2 -> v3:
-- add "staging: " prefix to commit message title.
+or this:
+https://www.spinics.net/lists/netdev/msg152621.html
 
-Changes v1 -> v2:
-- improve the commit message.
----
- drivers/staging/rtl8723au/include/recv_osdep.h | 3 ---
- 1 file changed, 3 deletions(-)
+please share if you get it work :D
 
-diff --git a/drivers/staging/rtl8723au/include/recv_osdep.h b/drivers/staging/rtl8723au/include/recv_osdep.h
-index c2d3f1b..c159dbc 100644
---- a/drivers/staging/rtl8723au/include/recv_osdep.h
-+++ b/drivers/staging/rtl8723au/include/recv_osdep.h
-@@ -26,9 +26,6 @@ int rtw_recv_indicatepkt23a(struct rtw_adapter *adapter, struct recv_frame *prec
- 
- void rtw_handle_tkip_mic_err23a(struct rtw_adapter *padapter, u8 bgroup);
- 
--int	rtw_init_recv_priv(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
--void rtw_free_recv_priv (struct recv_priv *precvpriv);
--
- int rtw_os_recv_resource_init(struct recv_priv *precvpriv, struct rtw_adapter *padapter);
- 
- void rtw_init_recv_timer23a(struct recv_reorder_ctrl *preorder_ctrl);
--- 
-2.7.4
+--=20
+Regards,
+Oleksij
+
+
+--RCHG3g9e4rt9KTt2454oxIhix5BtXs3ow--
+
+--3VlNwd6oH9qKFNilCrPoX74oiVHMG10qB
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAlfdbhoACgkQHwImuRkmbWls7gEAiEdFg630tg/Ru0yrqkbnf/7Q
+RX3vRG71fplv0fygaqAA/Rfvb1JFurMP2K/EDcY3eWlmhq7vc5ePuNoO2oDc7yDb
+=msn5
+-----END PGP SIGNATURE-----
+
+--3VlNwd6oH9qKFNilCrPoX74oiVHMG10qB--
