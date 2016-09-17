@@ -1,58 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:36330 "EHLO
-        mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932249AbcIEKh7 (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35346 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752131AbcIQTnK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 5 Sep 2016 06:37:59 -0400
-Received: by mail-pa0-f52.google.com with SMTP id id6so2692625pad.3
-        for <linux-wireless@vger.kernel.org>; Mon, 05 Sep 2016 03:37:59 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: avoid potential stack overflow in
- brcmf_cfg80211_start_ap()
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1473068749-22487-1-git-send-email-arend.vanspriel@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <36836ecb-e44c-086c-bc84-6dcf16a9981a@broadcom.com> (sfid-20160905_123803_227543_730ACC81)
-Date: Mon, 5 Sep 2016 12:37:44 +0200
-MIME-Version: 1.0
-In-Reply-To: <1473068749-22487-1-git-send-email-arend.vanspriel@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+        Sat, 17 Sep 2016 15:43:10 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: gregkh@linuxfoundation.org, Kalle Valo <kvalo@codeaurora.org>
+Cc: Christian Lamparter <chunkeey@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
+        Ben Greear <greearb@candelatech.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 4/4] b43legacy: fix debugfs crash
+Date: Sat, 17 Sep 2016 21:43:04 +0200
+Message-Id: <720ed4bfe5eef248727fa4af63975a0612b7e0e4.1474140477.git.chunkeey@gmail.com> (sfid-20160917_214339_409737_232F018D)
+In-Reply-To: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
+References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
+In-Reply-To: <60f368dd08cafebc3d39de18996d1df85f525887.1474140477.git.chunkeey@gmail.com>
+References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com> <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com> <60f368dd08cafebc3d39de18996d1df85f525887.1474140477.git.chunkeey@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5-9-2016 11:45, Arend van Spriel wrote:
-> User-space can choose to omit NL80211_ATTR_SSID and only provide raw
-> IE TLV data. When doing so it can provide SSID IE with length exceeding
-> the allowed size. The driver further processes this IE copying it
-> into a local variable without checking the length. Hence stack can be
-> corrupted and used as exploit.
+This patch fixes a crash that happens because b43legacy's
+debugfs code expects file->f_op to be a pointer to its own
+b43legacy_debugfs_fops struct. This is no longer the case
+since commit 9fd4dcece43a
+("debugfs: prevent access to possibly dead file_operations at file open")
 
-This patch is intended for wireless-drivers repository, ie. for v4.8.
+Reviewed-by: Nicolai Stange <nicstange@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+---
+ drivers/net/wireless/broadcom/b43legacy/debugfs.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Regards,
-Arend
-
-> Cc: stable@vger.kernel.org # v4.7
-> Reported-by: Daxing Guo <freener.gdx@gmail.com>
-> Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-> Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
-> ---
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> index 5db56a7..b8aec5e5 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-> @@ -4527,7 +4527,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
->  				(u8 *)&settings->beacon.head[ie_offset],
->  				settings->beacon.head_len - ie_offset,
->  				WLAN_EID_SSID);
-> -		if (!ssid_ie)
-> +		if (!ssid_ie || ssid_ie->len > IEEE80211_MAX_SSID_LEN)
->  			return -EINVAL;
->  
->  		memcpy(ssid_le.SSID, ssid_ie->data, ssid_ie->len);
-> 
+diff --git a/drivers/net/wireless/broadcom/b43legacy/debugfs.c b/drivers/net/wireless/broadcom/b43legacy/debugfs.c
+index 090910e..82ef56e 100644
+--- a/drivers/net/wireless/broadcom/b43legacy/debugfs.c
++++ b/drivers/net/wireless/broadcom/b43legacy/debugfs.c
+@@ -221,7 +221,8 @@ static ssize_t b43legacy_debugfs_read(struct file *file, char __user *userbuf,
+ 		goto out_unlock;
+ 	}
+ 
+-	dfops = container_of(file->f_op, struct b43legacy_debugfs_fops, fops);
++	dfops = container_of(debugfs_real_fops(file),
++			     struct b43legacy_debugfs_fops, fops);
+ 	if (!dfops->read) {
+ 		err = -ENOSYS;
+ 		goto out_unlock;
+@@ -287,7 +288,8 @@ static ssize_t b43legacy_debugfs_write(struct file *file,
+ 		goto out_unlock;
+ 	}
+ 
+-	dfops = container_of(file->f_op, struct b43legacy_debugfs_fops, fops);
++	dfops = container_of(debugfs_real_fops(file),
++			     struct b43legacy_debugfs_fops, fops);
+ 	if (!dfops->write) {
+ 		err = -ENOSYS;
+ 		goto out_unlock;
+-- 
+2.9.3
