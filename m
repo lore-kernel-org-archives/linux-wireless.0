@@ -1,41 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57518 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932199AbcILKHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 06:07:04 -0400
-Message-ID: <1473674822.29016.6.camel@sipsolutions.net> (sfid-20160912_120849_903127_17D3D421)
-Subject: Re: [PATCH] mac80211: fix sequence number assignment for PS
- response frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@nbd.name>, linux-wireless@vger.kernel.org
-Date: Mon, 12 Sep 2016 12:07:02 +0200
-In-Reply-To: <521f75cd-2203-efc0-77c9-d9f7b6c4079f@nbd.name>
-References: <20160904160059.66297-1-nbd@nbd.name>
-         <1473674327.29016.3.camel@sipsolutions.net>
-         <afb51baf-ec2d-3600-9e5b-f406b9e836b7@nbd.name>
-         <1473674624.29016.4.camel@sipsolutions.net>
-         <521f75cd-2203-efc0-77c9-d9f7b6c4079f@nbd.name>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:49656 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752185AbcIQP0U (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Sep 2016 11:26:20 -0400
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Subject: Re: mwifiex: fix error handling in mwifiex_create_custom_regdomain
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160914124236.1951-1-me@bobcopeland.com>
+References: <20160914124236.1951-1-me@bobcopeland.com>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>,
+        Amitkumar Karwar <akarwar@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>
+Message-Id: <20160917152620.41D326175D@smtp.codeaurora.org> (sfid-20160917_172623_932373_B00D000E)
+Date: Sat, 17 Sep 2016 15:26:20 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-09-12 at 12:05 +0200, Felix Fietkau wrote:
-> On 2016-09-12 12:03, Johannes Berg wrote:
-> > 
-> > 
-> > > 
-> > > Hm, I guess I didn't think of that. I guess this potential issue
-> > > will
-> > > go away once we get Toke's tx handler reorder patch fixed,
-> > > rebased
-> > > and integrated.
-> > > 
-> > 
-> > I don't really see how that helps?
-> It replaces the changes that I made.
+Bob Copeland <me@bobcopeland.com> wrote:
+> smatch reports:
 > 
+> sta_cmdresp.c:1053 mwifiex_create_custom_regdomain() warn: possible memory leak of 'regd'
+> 
+> Indeed, mwifiex_create_custom_regdomain() returns NULL in the
+> case that channel is missing in the TLV without freeing regd.
+> 
+> Moreover, some other error paths in this function return ERR_PTR
+> values which are assigned without checking to the regd field in
+> the mwifiex_adapter struct.  The latter is only null-checked where
+> used.
+> 
+> Fix by freeing regd in the error path, and only update
+> priv->adapter->regd if the returned pointer is valid.
+> 
+> Cc: Amitkumar Karwar <akarwar@marvell.com>
+> Cc: Nishant Sarmukadam <nishants@marvell.com>
+> Signed-off-by: Bob Copeland <me@bobcopeland.com>
 
-But this is a more general problem, no?
+Thanks, 1 patch applied to wireless-drivers-next.git:
 
-johannes
+92ca4f92eca7 mwifiex: fix error handling in mwifiex_create_custom_regdomain
+
+-- 
+Sent by pwcli
+https://patchwork.kernel.org/patch/9331337/
