@@ -1,74 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from rhlx01.hs-esslingen.de ([129.143.116.10]:42470 "EHLO
-        rhlx01.hs-esslingen.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751085AbcIOPXq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44197 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752115AbcIQPMq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 11:23:46 -0400
-Date: Thu, 15 Sep 2016 17:14:37 +0200
-From: Andreas Mohr <andi@lisas.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: wireless.wiki.kernel.org: lingering status of
- http://linuxwireless.org/en/users/Drivers/wl12xx/calibrator/
-Message-ID: <20160915151437.GA24991@rhlx01.hs-esslingen.de> (sfid-20160915_172349_320237_EEFFDE3A)
+        Sat, 17 Sep 2016 11:12:46 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Luca Coelho <luca@coelho.fi>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Subject: Re: pull-request: iwlwifi-next 2016-09-15-2
+References: <1473962425.5664.41.camel@coelho.fi>
+        <1474000615.5664.57.camel@coelho.fi>
+        <1474012383.5664.62.camel@coelho.fi>
+Date: Sat, 17 Sep 2016 18:12:42 +0300
+In-Reply-To: <1474012383.5664.62.camel@coelho.fi> (Luca Coelho's message of
+        "Fri, 16 Sep 2016 10:53:03 +0300")
+Message-ID: <87shsy7e6t.fsf@kamboji.qca.qualcomm.com> (sfid-20160917_171250_259419_6F233213)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Mr. Berg,
+Luca Coelho <luca@coelho.fi> writes:
 
-since we are working with TI WL12xx hardware,
-I keep a reference on
-http://linuxwireless.org/en/users/Drivers/wl12xx/calibrator/ ,
-where it now says:
-"NOTE: this page is for archival only, see the note at the end of the page."
-"This is a static dump of the old wiki, taken after locking it in January 2015. The new wiki is at https://wireless.wiki.kernel.org/."
-Trying to find related information
-by searching for "calibrator" on https://wireless.wiki.kernel.org
-will yield
-https://wireless.wiki.kernel.org/en/developers/documentation/nl80211?s[]=calibrator
-where "wl12xx calibrator" is a *dead link*.
-The apparent underlying reason for this surfaces when
-going through the en ... users ... Drivers hierarchy to
-https://wireless.wiki.kernel.org/en/users/drivers/wl12xx
-where it says
-"
-For relicensing, the content of this page was removed.
+> This is v2 of my pull-request. =C2=A0I have fixed the compilation error w=
+ith
+> alpha (and possibly other) platforms.
+>
+> I'll send v2 of the changed patch as a reply to this email.
+>
+> Let me know if everything's fine (or not). :)
+>
+> Luca.
+>
+>
+> The following changes since commit 76f8c0e17edc6eba43f84952e5a87c7f50f693=
+70:
+>
+> =C2=A0 iwlwifi: pcie: remove dead code (2016-08-30 14:16:43 +0300)
+>
+> are available in the git repository at:
+>
+> =C2=A0 git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next=
+.git tags/iwlwifi-next-for-kalle-2016-09-15-2
 
-The old website for now has a copy of the old content:
+Pulled, thanks.
 
-http://linuxwireless.sipsolutions.net/en/users/Drivers/wl12xx/·
-"
-
-Somehow I am not quite feeling entirely well with this status quo
-(I would expect that that content *will* get lost, and possibly rather sooner than later,
-since someone is bound to eventually say "the old site copy is not needed any more").
-
-So,
-are there some ways to improve the content situation,
-or will this job then eventually need to be done by
-last-ditch efforts (web.archive.org etc.)?
-
-
-
-BTW, I realized that
-https://wireless.wiki.kernel.org does not seem to provide
-contact information specific to Wiki maintenance aspects.
-Perhaps this is because
-the usual communication channels as listed e.g. on
-https://wireless.wiki.kernel.org/en/users/support
-are expected to be used,
-but then there still is no explicit statement about Wiki-specific things
-(the Best Practice solution would likely be to
-add a one-liner saying e.g.
-"When intending to provide input about Wiki-specific maintenance aspects,
-please refer to the same general communication channels listed above.")
-
-Ah, of course I should be checking out https://wiki.kernel.org/ -
-but hmm that one does not list anything either...
-
-
-Thank you,
-
-Andreas Mohr
+--=20
+Kalle Valo
