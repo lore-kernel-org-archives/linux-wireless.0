@@ -1,48 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:36027 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750816AbcIIO4n (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:43808 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932119AbcIQVpf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 10:56:43 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u89EtA03027843
-        for <linux-wireless@vger.kernel.org>; Fri, 9 Sep 2016 07:56:41 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 25bd9g5ust-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Fri, 09 Sep 2016 07:56:41 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: correction in Rx STBC field of htcapinfo
-Date: Fri, 9 Sep 2016 20:26:19 +0530
-Message-ID: <1473432979-16554-1-git-send-email-akarwar@marvell.com> (sfid-20160909_165704_685169_6FECEB6B)
+        Sat, 17 Sep 2016 17:45:35 -0400
+Date: Sat, 17 Sep 2016 23:45:39 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Christian Lamparter <chunkeey@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
+        Ben Greear <greearb@candelatech.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 2/4] carl9170: fix debugfs crashes
+Message-ID: <20160917214539.GA28379@kroah.com> (sfid-20160917_234550_929183_DB3A9A5A)
+References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
+ <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently Rx STBC in assoc request frame is advertised as 3. It should
-be 2, as our chipsets support two spatial streams.
+On Sat, Sep 17, 2016 at 09:43:02PM +0200, Christian Lamparter wrote:
+> Ben Greear reported:
+> > I see lots of instability as soon as I load up the carl9710 NIC.
+> > My application is going to be poking at it's debugfs files...
+> >
+> > BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
+> > [carl9170] at addr ffff8801bc1208b0
+> > Read of size 8 by task btserver/5888
+> > =======================================================================
+> > BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
+> > -----------------------------------------------------------------------
+> >
+> > INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
+> >...
+> 
+> This breakage was caused by the introduction of intermediate
+> fops in debugfs by commit 9fd4dcece43a
+> ("debugfs: prevent access to possibly dead file_operations at file open")
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Because of this, these should all be backported to 4.7-stable, and
+4.8-stable, right?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 33e7a74..7a9b431 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -2756,7 +2756,7 @@ mwifiex_setup_ht_caps(struct ieee80211_sta_ht_cap *ht_info,
- 		ht_info->cap &= ~IEEE80211_HT_CAP_SGI_40;
- 
- 	if (adapter->user_dev_mcs_support == HT_STREAM_2X2)
--		ht_info->cap |= 3 << IEEE80211_HT_CAP_RX_STBC_SHIFT;
-+		ht_info->cap |= 2 << IEEE80211_HT_CAP_RX_STBC_SHIFT;
- 	else
- 		ht_info->cap |= 1 << IEEE80211_HT_CAP_RX_STBC_SHIFT;
- 
--- 
-1.9.1
+thanks,
+
+greg k-h
