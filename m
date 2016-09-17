@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36525 "EHLO sipsolutions.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756361AbcIMNkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 09:40:12 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: remove useless open_count check
-Date: Tue, 13 Sep 2016 15:40:07 +0200
-Message-Id: <1473774007-29247-1-git-send-email-johannes@sipsolutions.net> (sfid-20160913_154022_015961_8254034B)
+Received: from smtp.codeaurora.org ([198.145.29.96]:37920 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751137AbcIQN7N (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sat, 17 Sep 2016 09:59:13 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Igor Mitsyanko <igor.mitsyanko.os@quantenna.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        <linux-wireless@vger.kernel.org>,
+        Avinash Patil <avinashp@quantenna.com>,
+        Dmitrii Lebed <dlebed@quantenna.com>,
+        Sergei Maksimenko <smaksimenko@quantenna.com>,
+        Sergey Matyukevich <smatyukevich@quantenna.com>,
+        Bindu Therthala <btherthala@quantenna.com>,
+        Huizhao Wang <hwang@quantenna.com>,
+        Kamlesh Rath <krath@quantenna.com>
+Subject: Re: [PATCH v2 RESEND] qtnfmac: announcement of new FullMAC driver for Quantenna chipsets
+References: <1466460688-28160-1-git-send-email-igor.mitsyanko.os@quantenna.com>
+        <1466511726.3170.33.camel@sipsolutions.net>
+        <fd6ee9cd-71fd-352a-e1cd-61d36b296057@quantenna.com>
+Date: Sat, 17 Sep 2016 16:59:06 +0300
+In-Reply-To: <fd6ee9cd-71fd-352a-e1cd-61d36b296057@quantenna.com> (Igor
+        Mitsyanko's message of "Mon, 11 Jul 2016 21:57:15 +0300")
+Message-ID: <8760pu8w5x.fsf@kamboji.qca.qualcomm.com> (sfid-20160917_155916_960126_554D4E1F)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Igor Mitsyanko <igor.mitsyanko.os@quantenna.com> writes:
 
-__ieee80211_suspend() checks early on if there's anything
-to do by checking open_count, so there's no need to check
-again later in the function. Remove the useless check.
+> thank for review and sorry for long delays in replies. A parallel
+> thread with Dave a discussion was initiated regarding HW platform
+> samples availability. Current driver implementation supports a newer
+> QSR10G platform, which availability is limited due to the platform
+> still being in development stage. We're working on supporting
+> Quantenna's current QSR1000 platform too, what would be the best
+> approach to this:
+> - have QSR1000 platform support ready, amend it to current patch and
+> post it as a new patch revision (there should be a certain amount of
+> new code);
+> - have current patch accepted by community first, and then post a new
+> patch (adding new platform support) one on top of it.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/pm.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+I prefer the latter option. Let's first try to get the driver applied
+and then you can submit more features as followup patches.
 
-diff --git a/net/mac80211/pm.c b/net/mac80211/pm.c
-index 00a43a70e1fc..28a3a0957c9e 100644
---- a/net/mac80211/pm.c
-+++ b/net/mac80211/pm.c
-@@ -178,8 +178,7 @@ int __ieee80211_suspend(struct ieee80211_hw *hw, struct cfg80211_wowlan *wowlan)
- 	WARN_ON(!list_empty(&local->chanctx_list));
- 
- 	/* stop hardware - this must stop RX */
--	if (local->open_count)
--		ieee80211_stop_device(local);
-+	ieee80211_stop_device(local);
- 
-  suspend:
- 	local->suspended = true;
 -- 
-2.8.1
+Kalle Valo
