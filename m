@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25284 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752441AbcIIO3a (ORCPT
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:33993 "EHLO
+        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754719AbcIQXGc (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 10:29:30 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/4] ath10k: Padding related clean ups in rx
-Date: Fri, 9 Sep 2016 14:29:23 +0000
-Message-ID: <87a8fhp2nx.fsf@kamboji.qca.qualcomm.com> (sfid-20160909_162941_270077_7F5451BE)
-References: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
-In-Reply-To: <1469623006-13178-1-git-send-email-vthiagar@qti.qualcomm.com>
-        (Vasanthakumar Thiagarajan's message of "Wed, 27 Jul 2016 18:06:42      +0530")
-Content-Type: text/plain; charset="us-ascii"
+        Sat, 17 Sep 2016 19:06:32 -0400
+Received: by mail-oi0-f42.google.com with SMTP id a62so17382804oib.1
+        for <linux-wireless@vger.kernel.org>; Sat, 17 Sep 2016 16:06:32 -0700 (PDT)
+Subject: Re: [PATCH] rtl8xxxu: Stop log spam from each successful interrupt
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+References: <1474132155-9330-1-git-send-email-Larry.Finger@lwfinger.net>
+ <wrfjbmzmmed0.fsf@redhat.com>
+Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
+        linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <a9bcf666-719e-bda8-17bb-212e269ca497@lwfinger.net> (sfid-20160918_010636_437790_7E2A2EF6)
+Date: Sat, 17 Sep 2016 18:06:29 -0500
 MIME-Version: 1.0
+In-Reply-To: <wrfjbmzmmed0.fsf@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
-
-> This patch set adds abstraction for rx_hw_desc processing so that
-> we can make use of newer desc fields notifying padding information
-> which is done on rx payload. "ath10k: Properly remove padding from
-> the start of rx payload" fixes padding related bug in ethernet decap
-> mode for QCA99X0, QCA9984 qnd QCA4019 but even fixing this bug will
-> not make ethernet decap mode work, there needs to be some more fix
-> wich would follow this patch series.
+On 09/17/2016 03:59 PM, Jes Sorensen wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>> As soon as debugging is turned on, the logs are filled with messages
+>> reporting the interrupt status. As this quantity is usually zero, this
+>> output is not needed. In fact, there will be a report if the status is
+>> not zero, thus the debug line in question could probably be deleted.
+>> Rather than taking that action, I have changed it to only be printed
+>> when the RTL8XXXU_DEBUG_USB bit is set in the debug mask.
 >
-> Vasanthakumar Thiagarajan (4):
->   ath10k: Move ath10k_hw_params definition to hw.h
->   ath10k: Add provision for Rx descriptor abstraction
->   ath10k: Properly remove padding from the start of rx payload
->   ath10k: Remove 4-addr padding related hw_param configuration
+> Wrong flag, please add a RTL8XXXU_DEBUG_INTERRUPT flag instead and use
+> that.
+>
+> Which device do you see this with?
 
-As Benjamin has these patches on his own set I'm dropping this one.
+OK. I will change the flag.
 
---=20
-Kalle Valo=
+I found this with a TP-Link TL-MN8200ND, which has some variant of the RTL8188CU 
+chip. It transmits, but I see no evidence that the receiver is functioning at 
+all. The same is true for driver rtl8192cu. Only the driver from Realtek's web 
+site actually works.
+
+One other problem that I have found is that the debug option on module load 
+seems to be ignored. So far, I've had to hard wire the flags. Once I find the 
+reason, I'll send a patch for that as well.
+
+Larry
