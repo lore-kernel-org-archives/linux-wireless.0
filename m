@@ -1,58 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34821 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934199AbcI0PEw (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36115 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751970AbcIQTnK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 11:04:52 -0400
-Subject: Re: wil6200
-To: Vikram <vikrampal@gmail.com>
-References: <CALZLQ=biEM2efkYhkr6PYu7wn_CJTJ9LQg+0VJvf2rMgmKPS9w@mail.gmail.com>
- <a3435bed-4892-4606-44ac-523e47f57b1b@codeaurora.org>
- <CALZLQ=anWS6ThxEOnifRcxgYyk3BvWwMUFqTtZdOMcqZYA+igA@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: Lior David <liord@codeaurora.org>
-Message-ID: <f95a0e74-6771-05ad-6019-73a0bb20916a@codeaurora.org> (sfid-20160927_170456_779302_E99D4137)
-Date: Tue, 27 Sep 2016 18:04:44 +0300
-MIME-Version: 1.0
-In-Reply-To: <CALZLQ=anWS6ThxEOnifRcxgYyk3BvWwMUFqTtZdOMcqZYA+igA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Sat, 17 Sep 2016 15:43:10 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: gregkh@linuxfoundation.org, Kalle Valo <kvalo@codeaurora.org>
+Cc: Christian Lamparter <chunkeey@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
+        Ben Greear <greearb@candelatech.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 2/4] carl9170: fix debugfs crashes
+Date: Sat, 17 Sep 2016 21:43:02 +0200
+Message-Id: <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com> (sfid-20160917_214338_765581_0F26AE8C)
+In-Reply-To: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
+References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
+In-Reply-To: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
+References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9/26/2016 9:05 PM, Vikram wrote:
-> Hi Lior,
-> 
-> On 26 September 2016 at 18:19, Lior David <liord@codeaurora.org> wrote:
->> On 9/25/2016 6:15 PM, Vikram wrote:
->>> Hi,
->>>
->>> Could you please let me know as to how to change the mode of wil6200
->>> chip from WBE to WiFi?
->>>
->>> Regards,
->>> Vikram
->>>
->> What is the exact device you are using? Older devices have firmware that only
->> supports WBE mode.
->>
->> Thanks,
->> Lior
-> 
-> I'm using Dell Wireless DW1601 7Gbps WiGig 802.11ad 802.11n 2*2 WiFi
-> Half Mini Card abgn+ad 2*2:2
-Unfortunately it looks like this is an old chip which does not support WIFI
-mode. There are 2 main problems:
-1. The chip has its firmware burned into flash and cannot be upgraded, unlike
-newer chips where firmware can be loaded into memory (so wil6210 driver can use
-the firmware file from /lib/firmware).
-2. Based on the product description this card was specifically used to connect
-to the Dell wireless dock which used WBE, so it has a firmware with only WBE
-support.
+Ben Greear reported:
+> I see lots of instability as soon as I load up the carl9710 NIC.
+> My application is going to be poking at it's debugfs files...
+>
+> BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
+> [carl9170] at addr ffff8801bc1208b0
+> Read of size 8 by task btserver/5888
+> =======================================================================
+> BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
+> -----------------------------------------------------------------------
+>
+> INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
+>...
 
-Thanks,
-Lior
+This breakage was caused by the introduction of intermediate
+fops in debugfs by commit 9fd4dcece43a
+("debugfs: prevent access to possibly dead file_operations at file open")
 
-> 
-> Regards,
-> Vikram
-> 
+Thankfully, the original/real fops are still available in d_fsdata.
+
+Reported-by: Ben Greear <greearb@candelatech.com>
+Reviewed-by: Nicolai Stange <nicstange@gmail.com>
+Signed-off-by: Christian Lamparter <chunkeey@gmail.com>
+---
+ drivers/net/wireless/ath/carl9170/debug.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/debug.c b/drivers/net/wireless/ath/carl9170/debug.c
+index 01a0919..ad7ffd5 100644
+--- a/drivers/net/wireless/ath/carl9170/debug.c
++++ b/drivers/net/wireless/ath/carl9170/debug.c
+@@ -75,7 +75,7 @@ static ssize_t carl9170_debugfs_read(struct file *file, char __user *userbuf,
+ 
+ 	if (!ar)
+ 		return -ENODEV;
+-	dfops = container_of(file->f_path.dentry->d_fsdata,
++	dfops = container_of(debugfs_real_fops(file),
+ 			     struct carl9170_debugfs_fops, fops);
+ 
+ 	if (!dfops->read)
+@@ -128,7 +128,7 @@ static ssize_t carl9170_debugfs_write(struct file *file,
+ 
+ 	if (!ar)
+ 		return -ENODEV;
+-	dfops = container_of(file->f_path.dentry->d_fsdata,
++	dfops = container_of(debugfs_real_fops(file),
+ 			     struct carl9170_debugfs_fops, fops);
+ 	if (!dfops->write)
+ 		return -ENOSYS;
+-- 
+2.9.3
