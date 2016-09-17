@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24905 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932371AbcIBQAq (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36064 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750980AbcIQN3S (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 12:00:46 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sat, 17 Sep 2016 09:29:18 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Vidar Haarr <vidar@heidrunbryggeri.no>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [athk9] beacon.c:642 ath9k_calculate_summary_state dump
+References: <CAJiC63F-O5KeCP+JZjW38uNDc=umXcOZVGma_SyiaTm70fGQ3A@mail.gmail.com>
+Date: Sat, 17 Sep 2016 16:29:13 +0300
+In-Reply-To: <CAJiC63F-O5KeCP+JZjW38uNDc=umXcOZVGma_SyiaTm70fGQ3A@mail.gmail.com>
+        (Vidar Haarr's message of "Sat, 17 Sep 2016 11:49:05 +0200")
+Message-ID: <87mvj63b9y.fsf@purkki.adurom.net> (sfid-20160917_152923_219391_BAA3F2E2)
 MIME-Version: 1.0
-Subject: Re: [v5] ath10k: Fix broken NULL func data frame status for 10.4
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1472199140-8404-1-git-send-email-mohammed@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <mohammed@codeaurora.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>,
-        "Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Message-ID: <48c9092d7f6c468092ef093779624a36@euamsexm01a.eu.qualcomm.com> (sfid-20160902_180049_744344_DB85250E)
-Date: Fri, 2 Sep 2016 18:00:33 +0200
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> wrote:
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> Older firmware with HTT delivers incorrect tx status for null func
-> frames to driver, but this fixed in 10.2 and 10.4 firmware versions.
-> Also this workaround results in reporting of incorrect null func status
-> for 10.4. Fix this is by introducing a firmware feature flag for 10.4
-> so that this workaround is skipped and proper tx status for null func
-> frames are reported
-> 
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Vidar Haarr <vidar@heidrunbryggeri.no> writes:
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+> I'm seeing the message below spammed continously in journald, even
+> with 4.8-rc6. It's so bad that it throttles the CPU performance every
+> few seconds.
+>
+> I found https://patchwork.kernel.org/patch/9247699/ which seems related.
 
-2cdce425aa33 ath10k: Fix broken NULL func data frame status for 10.4
+[...]
+
+> sep. 17 11:38:36 edbpc kernel: WARNING: CPU: 0 PID: 1684 at
+> /home/kernel/COD/linux/drivers/net/wireless/ath/ath9k/beacon.c:642
+> ath9k_calculate_summary_state+0x135/0x390 [ath9k]
+
+Looks like exactly the same problem, but the fix (below) is not in
+v4.8-rc6. Should be in -rc7 which Linus hopefully releases on Sunday.
+Please test that and report if the problem continues.
+
+05860bed491b ath9k: fix client mode beacon configuration
 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9300961/
+Kalle Valo
