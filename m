@@ -1,234 +1,172 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:56028 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S934201AbcISHcf (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:35431 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754989AbcIRT41 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 03:32:35 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Sun, 18 Sep 2016 15:56:27 -0400
+Received: by mail-wm0-f43.google.com with SMTP id l132so119275281wmf.0
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2016 12:56:26 -0700 (PDT)
+Subject: Re: [PATCH v2 6/9] cfg80211: Provide an API to report NAN function
+ termination
+To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
+References: <20160916083321.5840-1-luca@coelho.fi>
+ <20160916083321.5840-7-luca@coelho.fi>
 Cc: linux-wireless@vger.kernel.org,
-        Sharon Dvir <sharon.dvir@intel.com>,
+        Ayala Beker <ayala.beker@intel.com>,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Mon, 19 Sep 2016 10:30:21 +0300
-Message-Id: <20160919073028.22065-18-luca@coelho.fi> (sfid-20160919_093238_594580_66194710)
-In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
-References: <1474270071.5664.89.camel@coelho.fi>
-Subject: [PATCH 18/25] iwlwifi: migrate to devm_* API
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <c72fdae0-fa63-be83-62dc-9c7f409fcc61@broadcom.com> (sfid-20160918_215636_950198_078E01E4)
+Date: Sun, 18 Sep 2016 21:56:16 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160916083321.5840-7-luca@coelho.fi>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sharon Dvir <sharon.dvir@intel.com>
+On 16-9-2016 10:33, Luca Coelho wrote:
+> From: Ayala Beker <ayala.beker@intel.com>
+> 
+> Provide a function that reports NAN DE function termination. The function
+> may be terminated due to one of the following reasons: user request,
+> ttl expiration or failure.
+> If the NAN instance is tied to the owner, the notification will be
+> sent to the socket that started the NAN interface only
 
-Change PCIE and trans resource allocations to managed resources.
+So the driver is supposed to use this function from the .rm_nan_func
+callback (or .del_nan_func). How should the driver use this together
+with cfg80211_free_nan_func() function.
 
-Signed-off-by: Sharon Dvir <sharon.dvir@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c  |  8 +--
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 81 ++++++++++---------------
- 2 files changed, 34 insertions(+), 55 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index b42152c..d42cab2 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -78,7 +78,7 @@ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
- 	static struct lock_class_key __key;
- #endif
- 
--	trans = kzalloc(sizeof(*trans) + priv_size, GFP_KERNEL);
-+	trans = devm_kzalloc(dev, sizeof(*trans) + priv_size, GFP_KERNEL);
- 	if (!trans)
- 		return NULL;
- 
-@@ -103,18 +103,14 @@ struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
- 				  SLAB_HWCACHE_ALIGN,
- 				  NULL);
- 	if (!trans->dev_cmd_pool)
--		goto free;
-+		return NULL;
- 
- 	return trans;
-- free:
--	kfree(trans);
--	return NULL;
- }
- 
- void iwl_trans_free(struct iwl_trans *trans)
- {
- 	kmem_cache_destroy(trans->dev_cmd_pool);
--	kfree(trans);
- }
- 
- int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 68fa843..ae95533 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1605,24 +1605,22 @@ static int iwl_pcie_init_msix_handler(struct pci_dev *pdev,
- 
- 	for (i = 0; i < trans_pcie->alloc_vecs; i++) {
- 		int ret;
--
--		ret = request_threaded_irq(trans_pcie->msix_entries[i].vector,
--					   iwl_pcie_msix_isr,
--					   (i == trans_pcie->def_irq) ?
--					   iwl_pcie_irq_msix_handler :
--					   iwl_pcie_irq_rx_msix_handler,
--					   IRQF_SHARED,
--					   DRV_NAME,
--					   &trans_pcie->msix_entries[i]);
-+		struct msix_entry *msix_entry;
-+
-+		msix_entry = &trans_pcie->msix_entries[i];
-+		ret = devm_request_threaded_irq(&pdev->dev,
-+						msix_entry->vector,
-+						iwl_pcie_msix_isr,
-+						(i == trans_pcie->def_irq) ?
-+						iwl_pcie_irq_msix_handler :
-+						iwl_pcie_irq_rx_msix_handler,
-+						IRQF_SHARED,
-+						DRV_NAME,
-+						msix_entry);
- 		if (ret) {
--			int j;
--
- 			IWL_ERR(trans_pcie->trans,
- 				"Error allocating IRQ %d\n", i);
--			for (j = 0; j < i; j++)
--				free_irq(trans_pcie->msix_entries[j].vector,
--					 &trans_pcie->msix_entries[j]);
--			pci_disable_msix(pdev);
-+
- 			return ret;
- 		}
- 	}
-@@ -1789,23 +1787,12 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 			irq_set_affinity_hint(
- 				trans_pcie->msix_entries[i].vector,
- 				NULL);
--
--			free_irq(trans_pcie->msix_entries[i].vector,
--				 &trans_pcie->msix_entries[i]);
- 		}
- 
--		pci_disable_msix(trans_pcie->pci_dev);
- 		trans_pcie->msix_enabled = false;
- 	} else {
--		free_irq(trans_pcie->pci_dev->irq, trans);
--
- 		iwl_pcie_free_ict(trans);
--
--		pci_disable_msi(trans_pcie->pci_dev);
- 	}
--	iounmap(trans_pcie->hw_base);
--	pci_release_regions(trans_pcie->pci_dev);
--	pci_disable_device(trans_pcie->pci_dev);
- 
- 	iwl_pcie_free_fw_monitor(trans);
- 
-@@ -2912,6 +2899,10 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 	struct iwl_trans *trans;
- 	int ret, addr_size;
- 
-+	ret = pcim_enable_device(pdev);
-+	if (ret)
-+		return ERR_PTR(ret);
-+
- 	trans = iwl_trans_alloc(sizeof(struct iwl_trans_pcie),
- 				&pdev->dev, cfg, &trans_ops_pcie, 0);
- 	if (!trans)
-@@ -2930,9 +2921,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		goto out_no_pci;
- 	}
- 
--	ret = pci_enable_device(pdev);
--	if (ret)
--		goto out_no_pci;
- 
- 	if (!cfg->base_params->pcie_l1_allowed) {
- 		/*
-@@ -2974,21 +2962,21 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		/* both attempts failed: */
- 		if (ret) {
- 			dev_err(&pdev->dev, "No suitable DMA available\n");
--			goto out_pci_disable_device;
-+			goto out_no_pci;
- 		}
- 	}
- 
--	ret = pci_request_regions(pdev, DRV_NAME);
-+	ret = pcim_iomap_regions_request_all(pdev, BIT(0), DRV_NAME);
- 	if (ret) {
--		dev_err(&pdev->dev, "pci_request_regions failed\n");
--		goto out_pci_disable_device;
-+		dev_err(&pdev->dev, "pcim_iomap_regions_request_all failed\n");
-+		goto out_no_pci;
- 	}
- 
--	trans_pcie->hw_base = pci_ioremap_bar(pdev, 0);
-+	trans_pcie->hw_base = pcim_iomap_table(pdev)[0];
- 	if (!trans_pcie->hw_base) {
--		dev_err(&pdev->dev, "pci_ioremap_bar failed\n");
-+		dev_err(&pdev->dev, "pcim_iomap_table failed\n");
- 		ret = -ENODEV;
--		goto out_pci_release_regions;
-+		goto out_no_pci;
- 	}
- 
- 	/* We disable the RETRY_TIMEOUT register (0x41) to keep
-@@ -3015,7 +3003,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 		ret = iwl_pcie_prepare_card_hw(trans);
- 		if (ret) {
- 			IWL_WARN(trans, "Exit HW not ready\n");
--			goto out_pci_disable_msi;
-+			goto out_no_pci;
- 		}
- 
- 		/*
-@@ -3032,7 +3020,7 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 				   25000);
- 		if (ret < 0) {
- 			IWL_DEBUG_INFO(trans, "Failed to wake up the nic\n");
--			goto out_pci_disable_msi;
-+			goto out_no_pci;
- 		}
- 
- 		if (iwl_trans_grab_nic_access(trans, &flags)) {
-@@ -3064,15 +3052,16 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 
- 	if (trans_pcie->msix_enabled) {
- 		if (iwl_pcie_init_msix_handler(pdev, trans_pcie))
--			goto out_pci_release_regions;
-+			goto out_no_pci;
- 	 } else {
- 		ret = iwl_pcie_alloc_ict(trans);
- 		if (ret)
--			goto out_pci_disable_msi;
-+			goto out_no_pci;
- 
--		ret = request_threaded_irq(pdev->irq, iwl_pcie_isr,
--					   iwl_pcie_irq_handler,
--					   IRQF_SHARED, DRV_NAME, trans);
-+		ret = devm_request_threaded_irq(&pdev->dev, pdev->irq,
-+						iwl_pcie_isr,
-+						iwl_pcie_irq_handler,
-+						IRQF_SHARED, DRV_NAME, trans);
- 		if (ret) {
- 			IWL_ERR(trans, "Error allocating IRQ %d\n", pdev->irq);
- 			goto out_free_ict;
-@@ -3090,12 +3079,6 @@ struct iwl_trans *iwl_trans_pcie_alloc(struct pci_dev *pdev,
- 
- out_free_ict:
- 	iwl_pcie_free_ict(trans);
--out_pci_disable_msi:
--	pci_disable_msi(pdev);
--out_pci_release_regions:
--	pci_release_regions(pdev);
--out_pci_disable_device:
--	pci_disable_device(pdev);
- out_no_pci:
- 	free_percpu(trans_pcie->tso_hdr_page);
- 	iwl_trans_free(trans);
--- 
-2.9.3
+> Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
+>  include/net/cfg80211.h       | 16 ++++++++++++
+>  include/uapi/linux/nl80211.h | 15 ++++++++++++
+>  net/wireless/nl80211.c       | 58 ++++++++++++++++++++++++++++++++++++++++++++
+>  3 files changed, 89 insertions(+)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index a08d7da..81770d6 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -5676,6 +5676,22 @@ struct cfg80211_nan_match_params {
+>  void cfg80211_nan_match(struct wireless_dev *wdev,
+>  			struct cfg80211_nan_match_params *match, gfp_t gfp);
+>  
+> +/**
+> + * cfg80211_nan_func_terminated - notify about NAN function termination.
+> + *
+> + * @wdev: the wireless device reporting the match
+> + * @inst_id: the local instance id
+> + * @reason: termination reason (one of the NL80211_NAN_FUNC_TERM_REASON_*)
+> + * @cookie: unique NAN function identifier
+> + * @gfp: allocation flags
+> + *
+> + * This function reports that the a NAN function is terminated.
+> + */
+> +void cfg80211_nan_func_terminated(struct wireless_dev *wdev,
+> +				  u8 inst_id,
+> +				  enum nl80211_nan_func_term_reason reason,
+> +				  u64 cookie, gfp_t gfp);
+> +
+>  /* ethtool helper */
+>  void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info);
+>  
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index badb4a6..fd86be6 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -4978,6 +4978,21 @@ enum nl80211_nan_publish_type {
+>  	NL80211_NAN_UNSOLICITED_PUBLISH = 1 << 1,
+>  };
+>  
+> +/**
+> + * enum nl80211_nan_func_term_reason - NAN functions termination reason
+> + *
+> + * Defines termination reasons of a NAN function
+> + *
+> + * @NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST: requested by user
+> + * @NL80211_NAN_FUNC_TERM_REASON_TTL_EXPIRED: timeout
+> + * @NL80211_NAN_FUNC_TERM_REASON_ERROR: errored
+> + */
+> +enum nl80211_nan_func_term_reason {
+> +	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST,
+> +	NL80211_NAN_FUNC_TERM_REASON_TTL_EXPIRED,
+> +	NL80211_NAN_FUNC_TERM_REASON_ERROR,
+> +};
+> +
+>  #define NL80211_NAN_FUNC_SERVICE_ID_LEN 6
+>  #define NL80211_NAN_FUNC_SERVICE_SPEC_INFO_MAX_LEN 0xff
+>  #define NL80211_NAN_FUNC_SRF_MAX_LEN 0xff
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 4d37717..f817105 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -10945,6 +10945,64 @@ nla_put_failure:
+>  }
+>  EXPORT_SYMBOL(cfg80211_nan_match);
+>  
+> +void cfg80211_nan_func_terminated(struct wireless_dev *wdev,
+> +				  u8 inst_id,
+> +				  enum nl80211_nan_func_term_reason reason,
+> +				  u64 cookie, gfp_t gfp)
+> +{
+> +	struct wiphy *wiphy = wdev->wiphy;
+> +	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+> +	struct sk_buff *msg;
+> +	struct nlattr *func_attr;
+> +	void *hdr;
+> +
+> +	if (WARN_ON(!inst_id))
+> +		return;
+> +
+> +	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
+> +	if (!msg)
+> +		return;
+> +
+> +	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_RM_NAN_FUNCTION);
+> +	if (!hdr) {
+> +		nlmsg_free(msg);
+> +		return;
+> +	}
+> +
+> +	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
+> +	    (wdev->netdev && nla_put_u32(msg, NL80211_ATTR_IFINDEX,
+> +					 wdev->netdev->ifindex)) ||
+> +	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)))
+> +		goto nla_put_failure;
+> +
+> +	if (nla_put_u64(msg, NL80211_ATTR_COOKIE, cookie))
+> +		goto nla_put_failure;
+> +
+> +	func_attr = nla_nest_start(msg, NL80211_ATTR_NAN_FUNC);
+> +	if (!func_attr)
+> +		goto nla_put_failure;
+> +
+> +	if (nla_put_u8(msg, NL80211_NAN_FUNC_INSTANCE_ID, inst_id) ||
+> +	    nla_put_u8(msg, NL80211_NAN_FUNC_TERM_REASON, reason))
+> +		goto nla_put_failure;
+> +
+> +	nla_nest_end(msg, func_attr);
+> +	genlmsg_end(msg, hdr);
+> +
+> +	if (!wdev->owner_nlportid)
+> +		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
+> +					msg, 0, NL80211_MCGRP_NAN, gfp);
+> +	else
+> +		genlmsg_unicast(wiphy_net(&rdev->wiphy), msg,
+> +				wdev->owner_nlportid);
+> +
+> +	return;
+> +
+> +nla_put_failure:
+> +	nlmsg_free(msg);
+> +}
+> +EXPORT_SYMBOL(cfg80211_nan_func_terminated);
+> +
+>  static int nl80211_get_protocol_features(struct sk_buff *skb,
+>  					 struct genl_info *info)
+>  {
+> 
