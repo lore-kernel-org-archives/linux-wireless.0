@@ -1,49 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36806 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756086AbcILOrL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 10:47:11 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Bastien Nocera <hadess@hadess.net>
-Cc: Hanno Zulla <abos@hanno.de>, linux-wireless@vger.kernel.org,
-        Larry.Finger@lwfinger.net, anthony.wong@canonical.com
-Subject: Re: Support of rtl8723bs
-References: <688574b6-1141-f408-d397-535f1f69999e@hanno.de>
-        <1473683031.2930.3.camel@hadess.net>
-Date: Mon, 12 Sep 2016 10:47:09 -0400
-In-Reply-To: <1473683031.2930.3.camel@hadess.net> (Bastien Nocera's message of
-        "Mon, 12 Sep 2016 14:23:51 +0200")
-Message-ID: <wrfjtwdli39u.fsf@redhat.com> (sfid-20160912_164715_585761_5D288764)
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37442 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755474AbcIRMth (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Sep 2016 08:49:37 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+        Christian Lamparter <chunkeey@googlemail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
+        Ben Greear <greearb@candelatech.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 2/4] carl9170: fix debugfs crashes
+Date: Sun, 18 Sep 2016 14:49:33 +0200
+Message-ID: <2731122.i7AxIUFRZe@debian64> (sfid-20160918_144949_967479_F03F0105)
+In-Reply-To: <20160918101455.GA8410@kroah.com>
+References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com> <87d1k17idx.fsf@kamboji.qca.qualcomm.com> <20160918101455.GA8410@kroah.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bastien Nocera <hadess@hadess.net> writes:
-> On Mon, 2016-09-12 at 11:20 +0200, Hanno Zulla wrote:
->> Hi Jes,
->> hello linux-wireless,
->> it as a guinea pig to test on my hardware. The newer vendor driver
->> crashed on Ubuntu' 4.4 sources and doesn't compile yet on Ubuntu 4.8-
->> rc
->> sources.
->> https://github.com/anthonywong/rtl8723bs/issues/1
->
-> I really don't care about the vendor driver. There's no way to track
-> changes other than through code dumps.
->
-> Longer term, it seems likely that improving Jes' driver is the way to
-> go. At least there's 170k less lines of code to read in the rtl8723bs
-> driver to get things going.
+On Sunday, September 18, 2016 12:14:55 PM CEST Greg KH wrote:
+> On Sun, Sep 18, 2016 at 10:54:18AM +0300, Kalle Valo wrote:
+> > Greg KH <gregkh@linuxfoundation.org> writes:
+> > 
+> > > On Sat, Sep 17, 2016 at 09:43:02PM +0200, Christian Lamparter wrote:
+> > >> Ben Greear reported:
+> > >> > I see lots of instability as soon as I load up the carl9710 NIC.
+> > >> > My application is going to be poking at it's debugfs files...
+> > >> >
+> > >> > BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
+> > >> > [carl9170] at addr ffff8801bc1208b0
+> > >> > Read of size 8 by task btserver/5888
+> > >> > =======================================================================
+> > >> > BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
+> > >> > -----------------------------------------------------------------------
+> > >> >
+> > >> > INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
+> > >> >...
+> > >> 
+> > >> This breakage was caused by the introduction of intermediate
+> > >> fops in debugfs by commit 9fd4dcece43a
+> > >> ("debugfs: prevent access to possibly dead file_operations at file open")
+> > >
+> > > Because of this, these should all be backported to 4.7-stable, and
+> > > 4.8-stable, right?
+Ok, only b43legacy has debugfs enabled by default. For b43 and carl9170 
+debugfs support is usually disabled.
 
-Longer term I think it makes sense to add SDIO support to rtl8xxxu. The
-differences between the USB version and the SDIO version are rather
-small.
+Greg, would you take these four patches "as is" for -stable
+or do you want a "minimal version" which just replaces the
 
-That said, I have quite a lot of things on my TODO list so it is going
-to take some time until I can look at this. It may make sense to pull
-a cleaned up version of the vendor driver into staging until then if
-there is a desperate need for it, but otherwise any help would be
-appreciated :)
+dfops = container_of(file->f_op, ...
 
-Jes
+with
+
+dfops = container_of(file->f_path.dentry->d_fsdata, ...
+
+in the three drivers for -stable?
+
+> > Via which tree should these go, Greg's or mine?
+> 
+> I'll take it if you ack it, as it's a debugfs issue.
+For carl9170: Ben Greear has reported:
+"I have verified this fixes my problem in the 4.7 kernel."
+
+But this was with a preliminary/minimal version so I didn't
+add the tested-by tag.
+
+As for b43, I'll see if I have a working b43 in my collection
+somewhere to confirm the issue and the fix. Question is, do
+you want to wait or not?
+
+Regards,
+Christian
