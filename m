@@ -1,138 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54894 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753700AbcIOSMz (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:38840 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754989AbcIRTy0 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 14:12:55 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
+        Sun, 18 Sep 2016 15:54:26 -0400
+Received: by mail-wm0-f41.google.com with SMTP id 1so125078540wmz.1
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2016 12:54:26 -0700 (PDT)
+Subject: Re: [PATCH v2 3/9] cfg80211: add add_nan_func / rm_nan_func
+To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
+References: <20160916083321.5840-1-luca@coelho.fi>
+ <20160916083321.5840-4-luca@coelho.fi>
 Cc: linux-wireless@vger.kernel.org,
-        Sara Sharon <sara.sharon@intel.com>,
+        Ayala Beker <ayala.beker@intel.com>,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
         Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 15 Sep 2016 21:11:25 +0300
-Message-Id: <20160915181131.32213-19-luca@coelho.fi> (sfid-20160915_201319_514902_2E4207EE)
-In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
-References: <1473962425.5664.41.camel@coelho.fi>
-Subject: [PATCH 19/25] iwlwifi: pcie: change indentation of iwl_pcie_set_interrupt_capa()
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <d9c124a1-4d25-0f38-c9dc-a6b20cfa7956@broadcom.com> (sfid-20160918_215438_412049_7DC16B11)
+Date: Sun, 18 Sep 2016 21:54:15 +0200
+MIME-Version: 1.0
+In-Reply-To: <20160916083321.5840-4-luca@coelho.fi>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On 16-9-2016 10:33, Luca Coelho wrote:
+> From: Ayala Beker <ayala.beker@intel.com>
+> 
+> A NAN function can be either publish, subscribe or follow
+> up. Make all the necessary verifications and just pass the
+> request to the driver.
+> Allow the user space application that starts NAN to
+> forbid any other socket to add or remove functions.
+> 
+> Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> ---
 
-Function is very indented. Go to msi section if needed to avoid
-it and by that make the code more readable.
+[...]
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 88 ++++++++++++-------------
- 1 file changed, 44 insertions(+), 44 deletions(-)
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 7ab18c8..ab16c8e 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -847,6 +847,24 @@
+>   *	After this command NAN functions can be added.
+>   * @NL80211_CMD_STOP_NAN: Stop the NAN operation, identified by
+>   *	its %NL80211_ATTR_WDEV interface.
+> + * @NL80211_CMD_ADD_NAN_FUNCTION: Add a NAN function. The function is defined
+> + *	with %NL80211_ATTR_NAN_FUNC nested attribute. When called, this
+> + *	operation returns the strictly positive and unique instance id
+> + *	(%NL80211_ATTR_NAN_FUNC_INST_ID) and a cookie (%NL80211_ATTR_COOKIE)
+> + *	of the function upon success.
+> + *	Since instance ID's can be re-used, this cookie is the right
+> + *	way to identify the function. This will avoid races when a termination
+> + *	event is handled by the user space after it has already added a new
+> + *	function that got the same instance id from the kernel as the one
+> + *	which just terminated.
+> + *	This cookie may be used in NAN events even before the command
+> + *	returns, so userspace shouldn't process NAN events until it processes
+> + *	the response to this command.
+> + *	Look at %NL80211_ATTR_SOCKET_OWNER as well.
+> + * @NL80211_CMD_RM_NAN_FUNCTION: Remove a NAN function by cookie.
+> + *	This command is also used as a notification sent when a NAN function is
+> + *	terminated. This will contain a %NL80211_ATTR_NAN_FUNC_INST_ID
+> + *	and %NL80211_ATTR_COOKIE attributes.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index d7521c1..43c3915 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1513,57 +1513,57 @@ static void iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
- 					struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	int max_vector, nvec, i;
-+	int max_irqs, num_irqs, i, ret;
- 	u16 pci_cmd;
- 
--	if (trans->cfg->mq_rx_supported) {
--		max_vector = min_t(u32, (num_possible_cpus() + 2),
--				   IWL_MAX_RX_HW_QUEUES);
--		for (i = 0; i < max_vector; i++)
--			trans_pcie->msix_entries[i].entry = i;
--
--		nvec = pci_enable_msix_range(pdev, trans_pcie->msix_entries,
--					     MSIX_MIN_INTERRUPT_VECTORS,
--					     max_vector);
--		if (nvec < 0) {
--			IWL_DEBUG_INFO(trans,
--				       "ret = %d failed to enable msi-x mode move to msi mode\n",
--				       nvec);
--			goto msi;
--		}
-+	if (!trans->cfg->mq_rx_supported)
-+		goto enable_msi;
-+
-+	max_irqs = min_t(u32, num_possible_cpus() + 2, IWL_MAX_RX_HW_QUEUES);
-+	for (i = 0; i < max_irqs; i++)
-+		trans_pcie->msix_entries[i].entry = i;
- 
-+	num_irqs = pci_enable_msix_range(pdev, trans_pcie->msix_entries,
-+					 MSIX_MIN_INTERRUPT_VECTORS,
-+					 max_irqs);
-+	if (num_irqs < 0) {
- 		IWL_DEBUG_INFO(trans,
--			       "Enable MSI-X allocate %d interrupt vector\n",
--			       nvec);
--		trans_pcie->def_irq = (nvec == max_vector) ? nvec - 1 : 0;
--		/*
--		 * In case the OS provides fewer interrupts than requested,
--		 * different causes will share the same interrupt vector
--		 * as follow:
--		 * One interrupt less: non rx causes shared with FBQ.
--		 * Two interrupts less: non rx causes shared with FBQ and RSS.
--		 * More than two interrupts: we will use fewer RSS queues.
--		 */
--		if (nvec <= num_online_cpus()) {
--			trans_pcie->trans->num_rx_queues = nvec + 1;
--			trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX |
--				IWL_SHARED_IRQ_FIRST_RSS;
--		} else if (nvec == num_online_cpus() + 1) {
--			trans_pcie->trans->num_rx_queues = nvec;
--			trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX;
--		} else {
--			trans_pcie->trans->num_rx_queues = nvec - 1;
--		}
-+			       "Failed to enable msi-x mode (ret %d). Moving to msi mode.\n",
-+			       num_irqs);
-+		goto enable_msi;
-+	}
-+	trans_pcie->def_irq = (num_irqs == max_irqs) ? num_irqs - 1 : 0;
- 
--		trans_pcie->alloc_vecs = nvec;
--		trans_pcie->msix_enabled = true;
--		return;
-+	IWL_DEBUG_INFO(trans,
-+		       "MSI-X enabled. %d interrupt vectors were allocated\n",
-+		       num_irqs);
-+
-+	/*
-+	 * In case the OS provides fewer interrupts than requested, different
-+	 * causes will share the same interrupt vector as follows:
-+	 * One interrupt less: non rx causes shared with FBQ.
-+	 * Two interrupts less: non rx causes shared with FBQ and RSS.
-+	 * More than two interrupts: we will use fewer RSS queues.
-+	 */
-+	if (num_irqs <= num_online_cpus()) {
-+		trans_pcie->trans->num_rx_queues = num_irqs + 1;
-+		trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX |
-+			IWL_SHARED_IRQ_FIRST_RSS;
-+	} else if (num_irqs == num_online_cpus() + 1) {
-+		trans_pcie->trans->num_rx_queues = num_irqs;
-+		trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX;
-+	} else {
-+		trans_pcie->trans->num_rx_queues = num_irqs - 1;
- 	}
--msi:
- 
--	nvec = pci_enable_msi(pdev);
--	if (nvec) {
--		dev_err(&pdev->dev, "pci_enable_msi failed - %d\n", nvec);
-+	trans_pcie->alloc_vecs = num_irqs;
-+	trans_pcie->msix_enabled = true;
-+	return;
-+
-+enable_msi:
-+	ret = pci_enable_msi(pdev);
-+	if (ret) {
-+		dev_err(&pdev->dev, "pci_enable_msi failed - %d\n", ret);
- 		/* enable rfkill interrupt: hw bug w/a */
- 		pci_read_config_word(pdev, PCI_COMMAND, &pci_cmd);
- 		if (pci_cmd & PCI_COMMAND_INTX_DISABLE) {
--- 
-2.9.3
+This patch does not show the notification scenario as it is added in
+patch 6. So those three lines could be added by that patch instead to
+keep things logically together.
+
+Regards,
+Arend
