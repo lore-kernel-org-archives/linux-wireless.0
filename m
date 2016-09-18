@@ -1,112 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:55450 "EHLO
-        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759655AbcINPTT (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:37940 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753274AbcIRVwC (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 11:19:19 -0400
-Message-ID: <57D96A6C.1060101@candelatech.com> (sfid-20160914_171924_397261_991A5794)
-Date: Wed, 14 Sep 2016 08:19:08 -0700
-From: Ben Greear <greearb@candelatech.com>
+        Sun, 18 Sep 2016 17:52:02 -0400
 MIME-Version: 1.0
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 11/21] ath10k: add fw-powerup-fail to ethtool stats.
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com> <1462986153-16318-12-git-send-email-greearb@candelatech.com> <87fup2eey2.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87fup2eey2.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+In-Reply-To: <20160916124541.GB9689@rob-hp-laptop>
+References: <20160821143105.27487-1-martin.blumenstingl@googlemail.com>
+ <20160906214623.20424-1-martin.blumenstingl@googlemail.com>
+ <20160906214623.20424-2-martin.blumenstingl@googlemail.com>
+ <3b93ec95-ec7c-863a-06b7-fab4f2688855@rempel-privat.de> <CAFBinCAOQmk3KY1b+D1iKAOEBfasYyei681cae4PbD+201mzbQ@mail.gmail.com>
+ <20160916124541.GB9689@rob-hp-laptop>
+From: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Date: Sun, 18 Sep 2016 23:51:39 +0200
+Message-ID: <CAFBinCCU5zu3u4r8_PR2nnueXBoSpK5yZZkxmuXnugiP95fr=g@mail.gmail.com> (sfid-20160918_235210_668406_7441CF69)
+Subject: Re: [PATCH v6 1/3] Documentation: dt: net: add ath9k wireless device binding
+To: Rob Herring <robh@kernel.org>
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+        ath9k-devel@lists.ath9k.org, devicetree@vger.kernel.org,
+        linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+        mcgrof@do-not-panic.com, mark.rutland@arm.com,
+        kvalo@codeaurora.org, chunkeey@googlemail.com,
+        arend.vanspriel@broadcom.com, julian.calaby@gmail.com,
+        bjorn@mork.no, nbd@nbd.name, arnd@arndb.de
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 09/14/2016 07:25 AM, Valo, Kalle wrote:
-> greearb@candelatech.com writes:
+On Fri, Sep 16, 2016 at 2:45 PM, Rob Herring <robh@kernel.org> wrote:
+> On Fri, Sep 09, 2016 at 10:57:06PM +0200, Martin Blumenstingl wrote:
+>> On Fri, Sep 9, 2016 at 9:48 AM, Oleksij Rempel <linux@rempel-privat.de> wrote:
+>> >> +Optional properties:
+>> >> +- reg: Address and length of the register set for the device.
+>> >> +- qca,clk-25mhz: Defines that a 25MHz clock is used
+>> >
+>> > Some SoCs even Atheros WiSoCs use WiFi clock for System Clock. In this
+>> > case we need to use clock framework any way, so why not in this case too?
+>> > Provide dummy static clock in DT and connect it with this node?
+>> >
+>> >         osc25m: oscillator {
+>> >                 compatible = "fixed-clock";
+>> >                 #clock-cells = <0>;
+>> >                 clock-frequency = <25000000>;
+>> >                 clock-accuracy = <30000>;
+>> >         };
+>> >
+>> >         acc: clock-controller@80040000 {
+>> >                 compatible = "some-clock-controller";
+>> >                 #clock-cells = <1>;
+>> >                 clocks = <&osc25m>;
+>> >                 reg = <0x80040000 0x204>;
+>> >         };
+>> >
+>> >
+>> > &pci0 {
+>> >         ath9k@168c,002d {
+>> >                 compatible = "pci168c,002d";
+>> >                 reg = <0x7000 0 0 0 0x1000>;
+>> >                 clocks = <&osc25m>;
+>> >                 qca,disable-5ghz;
+>> >         };
+>> > };
+>> >
+>> >
+>> > driver will need to use clk_get and compare frequency instead of
+>> > of_property_read_bool(np, "qca,clk-25mhz"). In this case you will need
+>> > to define source clock only one time and reuse it by all affected DT
+>> > nodes. If we have 40MHz clock you will only need to change it in
+>> > fixed-clock.
+>> that does sound like a good idea, thanks for that input!
+>> However, I will remove the property for the first version because I am
+>> trying to get PCI(e) devices supported. OF support for AHB (WiSoC)
+>> needs more work (in other places, like ahb.c) anyways.
+>> But this suggestion should be remembered!
+>>
+>> >> +- qca,no-eeprom: Indicates that there is no physical EEPROM connected to the
+>> >> +                     ath9k wireless chip (in this case the calibration /
+>> >> +                     EEPROM data will be loaded from userspace using the
+>> >> +                     kernel firmware loader).
+>> >> +- qca,disable-2ghz: Overrides the settings from the EEPROM and disables the
+>> >> +                     2.4GHz band. Setting this property is only needed
+>> >> +                     when the RF circuit does not support the 2.4GHz band
+>> >> +                     while it is enabled nevertheless in the EEPROM.
+>> >> +- qca,disable-5ghz: Overrides the settings from the EEPROM and disables the
+>> >> +                     5GHz band. Setting this property is only needed when
+>> >> +                     the RF circuit does not support the 5GHz band while
+>> >> +                     it is enabled nevertheless in the EEPROM.
+>> >
+>> > This option can be reused for every WiFi controller. Not only for qca.
+>> > So may be instead of adding vendor specific name, make it reusable for
+>> > all vendors. Instead of qca,disable-5ghz and qca,disable-2ghz make
+>> > disable-5ghz and disable-2ghz?
 >
->> From: Ben Greear <greearb@candelatech.com>
+> Fine, but if you do this then document in a common location.
+what about Documentation/devicetree/bindings/net/wireless/ieee80211-common.txt?
+
+>> I am personally fine with anything that fits best into the grand
+>> scheme of things.
+>> There are three scenarios I can think of which may be influenced by
+>> devicetree configuration:
+>> a) let the driver decide automatically whether the 2.4GHz and/or 5GHz
+>> band is/are enabled
+>> b) explicitly disable either bands (because the driver thinks due to
+>> whatever reason that a band is supported while in reality it isn't)
+>> c) explicitly enable a band (for example because the driver cannot
+>> automagically detect which band should be enabled)
 >>
->> This gives user-space a normal-ish way to detect that
->> firmware has failed to start and that a reboot is
->> probably required.
->>
->> Signed-off-by: Ben Greear <greearb@candelatech.com>
->> ---
->>   drivers/net/wireless/ath/ath10k/core.h  | 1 +
->>   drivers/net/wireless/ath/ath10k/debug.c | 2 ++
->>   drivers/net/wireless/ath/ath10k/pci.c   | 2 ++
->>   3 files changed, 5 insertions(+)
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
->> index 6aa7a14..e7c228a 100644
->> --- a/drivers/net/wireless/ath/ath10k/core.h
->> +++ b/drivers/net/wireless/ath/ath10k/core.h
->> @@ -698,6 +698,7 @@ struct ath10k {
->>
->>   	enum ath10k_hw_rev hw_rev;
->>   	u16 dev_id;
->> +	bool fw_powerup_failed; /* If true, might take reboot to recover. */
->>   	u32 chip_id;
->>   	u32 target_version;
->>   	u8 fw_version_major;
->> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
->> index 76b5163..05b5ea4 100644
->> --- a/drivers/net/wireless/ath/ath10k/debug.c
->> +++ b/drivers/net/wireless/ath/ath10k/debug.c
->> @@ -1541,6 +1541,7 @@ static const char ath10k_gstrings_stats[][ETH_GSTRING_LEN] = {
->>   	"d_fw_crash_count",
->>   	"d_fw_warm_reset_count",
->>   	"d_fw_cold_reset_count",
->> +	"d_fw_powerup_failed", /* boolean */
->>   };
->>
->>   #define ATH10K_SSTATS_LEN ARRAY_SIZE(ath10k_gstrings_stats)
->> @@ -1640,6 +1641,7 @@ void ath10k_debug_get_et_stats(struct ieee80211_hw *hw,
->>   	data[i++] = ar->stats.fw_crash_counter;
->>   	data[i++] = ar->stats.fw_warm_reset_counter;
->>   	data[i++] = ar->stats.fw_cold_reset_counter;
->> +	data[i++] = ar->fw_powerup_failed;
->>
->>   	spin_unlock_bh(&ar->data_lock);
->>
->> diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
->> index dbf0db8..2adc459 100644
->> --- a/drivers/net/wireless/ath/ath10k/pci.c
->> +++ b/drivers/net/wireless/ath/ath10k/pci.c
->> @@ -2709,10 +2709,12 @@ static int ath10k_pci_hif_power_up(struct ath10k *ar)
->>   		goto err_ce;
->>   	}
->>
->> +	ar->fw_powerup_failed = false;
->>   	return 0;
->>
->>   err_ce:
->>   	ath10k_pci_ce_deinit(ar);
->> +	ar->fw_powerup_failed = true;
->>
->>   err_sleep:
->>   	return ret;
+>> for ath9k we default to a) but also allow b): the EEPROM (device
+>> specific calibration data) contains information about which bands are
+>> enabled (or not). But some manufacturers are shipping devices for
+>> example with the 5G band enabled, while the actual hardware doesn't
+>> support it.
 >
-> I didn't test myself, but if the firmware boot fails during module load
-> we should return an error and the module would fail to load (and hence
-> no network interface available). And if the firmware boot fails during
-> the interface up call (mac80211 calling ath10k_start()) we should return
-> an error and the interface would stay down. IMHO that's enough of
-> indications to the user space, I don't see how providing this boolean
-> via ethtool stats is really needed.
+> And you can't determine that based on different device IDs? If you can
+> use vendor/device ID, then you should. If not, then this is fine.
+one example is the TP-Link TW-8970 which uses a AR9381. ath9k
+identifies this chip as AR9380 (probably because both are *very*
+similar). The former does not support the 5G band, the latter does
+(but unfortunately - even though it's not supported - the EEPROM data
+on the TW-8970 indicates that 5G is supported)
 
-
-There are lots of reasons that interfaces can fail to come up or exist.
-
-The work-around for the power-up fail is a system reboot, so I wanted to
-know for certain when this case existed so that I could warn users
-that they needed a reboot.
-
-That said, I haven't seen this problem in a while, so maybe this patch is
-no longer to useful.
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+> Is it possible to have no EEPROM at all? If so, you might want to just
+> put the raw EEPROM data into DT rather than a property for every field
+> (I'm assuming there's more than just what you have properties for now).
+In theory: yes
+However, most devices we are talking about are legacy ones without
+devicetree support in the bootloader (in other words: hand-written
+.dts files).
