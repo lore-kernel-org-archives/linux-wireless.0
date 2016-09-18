@@ -1,39 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:34511 "EHLO
-        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753265AbcI2LcF (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56439 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752323AbcIRHy1 (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Sep 2016 07:32:05 -0400
-Received: by mail-wm0-f48.google.com with SMTP id 197so5740345wmk.1
-        for <linux-wireless@vger.kernel.org>; Thu, 29 Sep 2016 04:32:04 -0700 (PDT)
+        Sun, 18 Sep 2016 03:54:27 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Christian Lamparter <chunkeey@googlemail.com>,
+        Christian Lamparter <chunkeey@gmail.com>,
+        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
+        Ben Greear <greearb@candelatech.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 2/4] carl9170: fix debugfs crashes
+References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
+        <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com>
+        <20160917214539.GA28379@kroah.com>
+Date: Sun, 18 Sep 2016 10:54:18 +0300
+In-Reply-To: <20160917214539.GA28379@kroah.com> (Greg KH's message of "Sat, 17
+        Sep 2016 23:45:39 +0200")
+Message-ID: <87d1k17idx.fsf@kamboji.qca.qualcomm.com> (sfid-20160918_095435_253686_CC2ECFD8)
 MIME-Version: 1.0
-In-Reply-To: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
-References: <CANfLQrY6AVJoh8PW+5Ev0seKqnNRxRhK-N735q6Aa4KvdUVEcg@mail.gmail.com>
-From: Gucea Doru <gucea.doru@gmail.com>
-Date: Thu, 29 Sep 2016 14:32:03 +0300
-Message-ID: <CANfLQrZxEUX0UMwrVNZHps9ztqxmOaeovy34fey2NkErCDDarQ@mail.gmail.com> (sfid-20160929_133210_131945_50BCBEE2)
-Subject: Re: bcmdhd: Strange Power Save messages
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Andra Paraschiv <andra.paraschiv7@gmail.com>,
-        linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Sep 27, 2016 at 12:03 PM, Gucea Doru <gucea.doru@gmail.com> wrote:
-> What is the decision triggering the exit from the PS mode immediately
-> after the ping request? I am asking this because 802.11 PS legacy
-> specifies that the client should wait for a beacon with TIM set in
-> order to wake up: in my case, there is no beacon between the ping
-> request message and the Null frame that announces the exit from the PS
-> mode.
+Greg KH <gregkh@linuxfoundation.org> writes:
 
+> On Sat, Sep 17, 2016 at 09:43:02PM +0200, Christian Lamparter wrote:
+>> Ben Greear reported:
+>> > I see lots of instability as soon as I load up the carl9710 NIC.
+>> > My application is going to be poking at it's debugfs files...
+>> >
+>> > BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
+>> > [carl9170] at addr ffff8801bc1208b0
+>> > Read of size 8 by task btserver/5888
+>> > =======================================================================
+>> > BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
+>> > -----------------------------------------------------------------------
+>> >
+>> > INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
+>> >...
+>> 
+>> This breakage was caused by the introduction of intermediate
+>> fops in debugfs by commit 9fd4dcece43a
+>> ("debugfs: prevent access to possibly dead file_operations at file open")
+>
+> Because of this, these should all be backported to 4.7-stable, and
+> 4.8-stable, right?
 
-Any help would be highly appreciated :)
+Via which tree should these go, Greg's or mine?
 
-IEEE Std 802.11-2012, section 10.2.1.8 specifies that "when the STA
-detects that the bit corresponding to its AID is 1 i the TIM, the STA
-shall issue a PS Poll". In my capture there are cases when the STA
-exits the PS mode without waiting for a beacon.
-
-Thanks!
+-- 
+Kalle Valo
