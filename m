@@ -1,118 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:34294 "EHLO
-        mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932591AbcI2V5Z (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 29 Sep 2016 17:57:25 -0400
+Received: from mga11.intel.com ([192.55.52.93]:8119 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752803AbcIRH74 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Sep 2016 03:59:56 -0400
+From: "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Luca Coelho <luca@coelho.fi>,
+        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+        "Beker, Ayala" <ayala.beker@intel.com>,
+        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+        "Coelho, Luciano" <luciano.coelho@intel.com>
+Subject: RE: [PATCH v2 2/9] mac80211: add boilerplate code for start / stop
+ NAN
+Date: Sun, 18 Sep 2016 07:59:51 +0000
+Message-ID: <B2CD83211F5FDD478D7EFFF030D107ED57286E64@hasmsx108.ger.corp.intel.com> (sfid-20160918_100000_715060_03296C5D)
+References: <20160916083321.5840-1-luca@coelho.fi>
+ <20160916083321.5840-3-luca@coelho.fi>
+ <fae482d0-4bcd-6b06-9846-298a3218ab26@broadcom.com>
+In-Reply-To: <fae482d0-4bcd-6b06-9846-298a3218ab26@broadcom.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <0a070079-e3af-ab5c-0485-744bec8b3d86@broadcom.com>
-References: <20160926102348.8695-1-zajec5@gmail.com> <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
- <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
- <CACna6ryNLOqrwsa9KFueUdqStxjP7KoRyvsn6eynLc6Y7Ug_sw@mail.gmail.com> <0a070079-e3af-ab5c-0485-744bec8b3d86@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Thu, 29 Sep 2016 23:57:23 +0200
-Message-ID: <CACna6rxg5r=YWh7m1TYAhD5OrG3+KXAWMihs9mgh-EBVfKvt+g@mail.gmail.com> (sfid-20160929_235730_034788_E07090AA)
-Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 September 2016 at 11:24, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 26-9-2016 14:38, Rafa=C5=82 Mi=C5=82ecki wrote:
->> On 26 September 2016 at 14:13, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
-> wrote:
->>> On 26 September 2016 at 13:46, Arend Van Spriel
->>> <arend.vanspriel@broadcom.com> wrote:
->>>> On 26-9-2016 12:23, Rafa=C5=82 Mi=C5=82ecki wrote:
->>>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>>>>
->>>>> We need to track 802.1x packets to know if there are any pending ones
->>>>> for transmission. This is required for performing key update in the
->>>>> firmware.
->>>>
->>>> The problem we are trying to solve is a pretty old one. The problem is
->>>> that wpa_supplicant uses two separate code paths: EAPOL messaging
->>>> through data path and key configuration though nl80211.
->>>
->>> Can I find it described/reported somewhere?
->>>
->>>
->>>>> Unfortunately our old tracking code wasn't very accurate. It was
->>>>> treating skb as pending as soon as it was passed by the netif. Actual
->>>>> handling packet to the firmware was happening later as brcmfmac
->>>>> internally queues them and uses its own worker(s).
->>>>
->>>> That does not seem right. As soon as we get a 1x packet we need to wai=
-t
->>>> with key configuration regardless whether it is still in the driver or
->>>> handed over to firmware already.
->>>
->>> OK, thanks.
->>
->> Actually, it's not OK. I was trying to report/describe/discuss this
->> problem for over a week. I couldn't get much of answer from you.
->>
->> I had to come with a patch I worked on for quite some time. Only then
->> you decided to react and reply with a reason for a nack. I see this
->> patch may be wrong (but it's still hard to know what's going wrong
->> without a proper hostapd bug report). I'd expect you to somehow work &
->> communicate with open source community.
->
-> We do or at least make an honest attempt, but there is more on our plate
-> so responses may be delayed. It also does not help when you get anal and
-> preachy when we do respond. Also not OK. In this case the delay is
-> caused because I had to pick up the thread(s) as Hante is on vacation
-> (he needed a break :-p ). However, you started sending patches so I
-> decided to look at and respond to those. Sorry if you felt like we left
-> you hanging to dry.
+> -----Original Message-----
+> From: Arend Van Spriel [mailto:arend.vanspriel@broadcom.com]
+> Sent: Friday, September 16, 2016 14:09
+> To: Luca Coelho <luca@coelho.fi>; johannes@sipsolutions.net
+> Cc: linux-wireless@vger.kernel.org; Beker, Ayala <ayala.beker@intel.com>;
+> Otcheretianski, Andrei <andrei.otcheretianski@intel.com>; Grumbach,
+> Emmanuel <emmanuel.grumbach@intel.com>; Coelho, Luciano
+> <luciano.coelho@intel.com>
+> Subject: Re: [PATCH v2 2/9] mac80211: add boilerplate code for start / stop
+> NAN
+> 
+> On 16-9-2016 10:33, Luca Coelho wrote:
+> > From: Ayala Beker <ayala.beker@intel.com>
+> >
+> > This code doesn't do much besides allowing to start and stop the vif.
+> >
+> > Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> > Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+> > Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> > ---
+> >  include/net/mac80211.h    |  9 +++++++++
+> >  net/mac80211/cfg.c        | 36 ++++++++++++++++++++++++++++++++++
+> >  net/mac80211/chan.c       |  3 +++
+> >  net/mac80211/driver-ops.h | 29 ++++++++++++++++++++++++++-
+> >  net/mac80211/iface.c      |  8 ++++++--
+> >  net/mac80211/main.c       |  5 +++++
+> >  net/mac80211/offchannel.c |  3 ++-
+> >  net/mac80211/trace.h      | 50
+> +++++++++++++++++++++++++++++++++++++++++++++++
+> >  net/mac80211/util.c       |  3 ++-
+> >  9 files changed, 141 insertions(+), 5 deletions(-)
+> 
+> [...]
+> 
+> > diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+> > index fe35a1c..67b42c8 100644
+> > --- a/net/mac80211/driver-ops.h
+> > +++ b/net/mac80211/driver-ops.h
+> > @@ -163,7 +163,8 @@ static inline void drv_bss_info_changed(struct
+> > ieee80211_local *local,
+> >
+> >  	if (WARN_ON_ONCE(sdata->vif.type ==
+> NL80211_IFTYPE_P2P_DEVICE ||
+> >  			 (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+> > -			  !sdata->vif.mu_mimo_owner)))
+> > +			  !sdata->vif.mu_mimo_owner) ||
+> > +			 sdata->vif.type == NL80211_IFTYPE_NAN))
+> 
+> Might be more clear to move this up right after P2P_DEVICE check.
 
-I believe I get easily irritated due to my communication experience I
-got so far :(
+Why? It's a completely separate new condition - so it goes to the end.
 
+> 
+> >  		return;
+> >
+> >  	if (!check_sdata_in_driver(sdata))
+> > @@ -1165,4 +1166,30 @@ static inline void drv_wake_tx_queue(struct
+> ieee80211_local *local,
+> >  	local->ops->wake_tx_queue(&local->hw, &txq->txq);  }
+> >
+> > +static inline int drv_start_nan(struct ieee80211_local *local,
+> > +				struct ieee80211_sub_if_data *sdata,
+> > +				struct cfg80211_nan_conf *conf)
+> > +{
+> > +	int ret;
+> > +
+> > +	might_sleep();
+> > +	check_sdata_in_driver(sdata);
+> > +
+> > +	trace_drv_start_nan(local, sdata, conf);
+> > +	ret = local->ops->start_nan(&local->hw, &sdata->vif, conf);
+> > +	trace_drv_return_int(local, ret);
+> > +	return ret;
+> > +}
+> > +
+> > +static inline void drv_stop_nan(struct ieee80211_local *local,
+> > +				struct ieee80211_sub_if_data *sdata) {
+> > +	might_sleep();
+> > +	check_sdata_in_driver(sdata);
+> > +
+> > +	trace_drv_stop_nan(local, sdata);
+> > +	local->ops->stop_nan(&local->hw, &sdata->vif);
+> > +	trace_drv_return_void(local);
+> > +}
+> > +
+> >  #endif /* __MAC80211_DRIVER_OPS */
+> > diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c index
+> > e694ca2..507f46a 100644
+> > --- a/net/mac80211/iface.c
+> > +++ b/net/mac80211/iface.c
+> > @@ -327,6 +327,9 @@ static int ieee80211_check_queues(struct
+> ieee80211_sub_if_data *sdata,
+> >  	int n_queues = sdata->local->hw.queues;
+> >  	int i;
+> >
+> > +	if (iftype == NL80211_IFTYPE_NAN)
+> > +		return 0;
+> > +
+> >  	if (iftype != NL80211_IFTYPE_P2P_DEVICE) {
+> >  		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+> >  			if (WARN_ON_ONCE(sdata->vif.hw_queue[i] == @@
+> -647,7 +650,8 @@ int
+> > ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+> >  			local->fif_probe_req++;
+> >  		}
+> >
+> > -		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
+> > +		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
+> > +		    sdata->vif.type != NL80211_IFTYPE_NAN)
+> 
+> similar check keeps reoccuring in various places so maybe we can create a
+> helper function for it.
 
-Over a year ago I reported brcmfmac can't recover from failed
-register_netdev(ice). This bug remains unfixed.
+Right, but not sure that it deserves a function.
 
-In 2014 I reported problem with 80 MHz support. I didn't have hardware
-to fix & test it on my own (you weren't able/allowed to send me one of
-your PCIe cards). In remained broken until I fixed it year later.
-
-You missed my crash bug report about caused by missing eth_type_trans
-and came with patch on your own a month later.
-
-Earlier this year I reported you problem with BCM4366 and multiple
-interfaces. I didn't get much help. 3 months later I came with patch
-to workaround the problem but you said there's a better way to do
-this. It took me 2 weeks to figure out a new wlioctl API for that
-while all I needed was a simple hint on "interface_remove".
-
-Right now I'm waiting to get any answer from you about 4366c0
-firmware. It's still less than 2 weeks since I asked for it, but a
-simple ETA would be nice. I'm actually not sure if I should report
-more problems to you to don't distract you from pending things.
-
-Problems with brcmf_netdev_wait_pend8021x were reported multiples
-times for last few months. When I finally got time for that it took me
-a week to debug them.
-
-
-As you can see, it takes me months to get help on some things. And in
-few cases I never got much help at all. Yes, I was hoping to have you
-more involved into brcmfmac development and problems solving. I guess
-things didn't meet my expectations and I got grumpy & preachy.
-
---=20
-Rafa=C5=82
+> 
+> >  			changed |= ieee80211_reset_erp_info(sdata);
+> >  		ieee80211_bss_info_change_notify(sdata, changed);
+> >
+> 
+> Regards,
+> Arend
