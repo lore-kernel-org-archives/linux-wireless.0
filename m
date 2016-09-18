@@ -1,94 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34244 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751252AbcIZLTN (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:37783 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753428AbcIRUAY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 07:19:13 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sun, 18 Sep 2016 16:00:24 -0400
+Received: by mail-wm0-f41.google.com with SMTP id b130so30317014wmc.0
+        for <linux-wireless@vger.kernel.org>; Sun, 18 Sep 2016 13:00:24 -0700 (PDT)
+Subject: Re: [PATCH v2 6/9] cfg80211: Provide an API to report NAN function
+ termination
+To: Luca Coelho <luca@coelho.fi>, johannes@sipsolutions.net
+References: <20160916083321.5840-1-luca@coelho.fi>
+ <20160916083321.5840-7-luca@coelho.fi>
+ <c72fdae0-fa63-be83-62dc-9c7f409fcc61@broadcom.com>
+Cc: linux-wireless@vger.kernel.org,
+        Ayala Beker <ayala.beker@intel.com>,
+        Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <66d12a94-4d7b-eadc-8ee2-b55ab8239296@broadcom.com> (sfid-20160918_220028_858565_6565A48C)
+Date: Sun, 18 Sep 2016 22:00:14 +0200
 MIME-Version: 1.0
-Subject: Re: [2/2] mwifiex: fix unaligned read in mwifiex_config_scan()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1471057200-58166-2-git-send-email-pgynther@google.com>
-References: <1471057200-58166-2-git-send-email-pgynther@google.com>
-To: Petri Gynther <pgynther@google.com>
-Cc: linux-wireless@vger.kernel.org, davem@davemloft.net,
-        joe@perches.com, akarwar@marvell.com,
-        Petri Gynther <pgynther@google.com>
-Message-Id: <20160926111912.AE5BD6155C@smtp.codeaurora.org> (sfid-20160926_131918_092962_06214609)
-Date: Mon, 26 Sep 2016 11:19:12 +0000 (UTC)
+In-Reply-To: <c72fdae0-fa63-be83-62dc-9c7f409fcc61@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Petri Gynther <pgynther@google.com> wrote:
-> $ iwconfig mlan0 essid MySSID
-> [   36.930000] Path: /sbin/iwconfig
-> [   36.930000] CPU: 0 PID: 203 Comm: iwconfig Not tainted 4.7.0 #2
-> [   36.940000] task: 866f83a0 ti: 866a6000 task.ti: 866a6000
-> [   36.940000]
-> [ECR   ]: 0x00230400 => Misaligned r/w from 0x8677f403
-> [   36.960000] [EFA   ]: 0x8677f403
-> [   36.960000] [BLINK ]: mwifiex_scan_networks+0x17a/0x198c [mwifiex]
-> [   36.960000] [ERET  ]: mwifiex_scan_networks+0x18a/0x198c [mwifiex]
-> [   36.980000] [STAT32]: 0x00000206 : K         E2 E1
-> [   36.980000] BTA: 0x700736e2   SP: 0x866a7d0c  FP: 0x5faddc84
-> [   37.000000] LPS: 0x806a37ec  LPE: 0x806a37fa LPC: 0x00000000
-> [   37.000000] r00: 0x8677f401  r01: 0x8668aa08 r02: 0x00000001
-> r03: 0x00000000 r04: 0x8668b600 r05: 0x8677f406
-> r06: 0x8702b600 r07: 0x00000000 r08: 0x8702b600
-> r09: 0x00000000 r10: 0x870b3b00 r11: 0x00000000
-> r12: 0x00000000
-> [   37.040000]
-> [   37.040000] Stack Trace:
-> [   37.040000]   mwifiex_scan_networks+0x18a/0x198c [mwifiex]
+On 18-9-2016 21:56, Arend Van Spriel wrote:
+> On 16-9-2016 10:33, Luca Coelho wrote:
+>> From: Ayala Beker <ayala.beker@intel.com>
+>>
+>> Provide a function that reports NAN DE function termination. The function
+>> may be terminated due to one of the following reasons: user request,
+>> ttl expiration or failure.
+>> If the NAN instance is tied to the owner, the notification will be
+>> sent to the socket that started the NAN interface only
 > 
-> Root cause:
-> mwifiex driver calls is_zero_ether_addr() against byte-aligned address:
-> 
-> drivers/net/wireless/marvell/mwifiex/fw.h:
-> struct mwifiex_scan_cmd_config {
->         /*
->          *  BSS mode to be sent in the firmware command
->          */
->         u8 bss_mode;
-> 
->         /* Specific BSSID used to filter scan results in the firmware */
->         u8 specific_bssid[ETH_ALEN];
-> 
->         ...
-> } __packed;
-> 
-> drivers/net/wireless/marvell/mwifiex/scan.c:
-> mwifiex_config_scan(..., struct mwifiex_scan_cmd_config *scan_cfg_out, ...)
->         ...
->         if (adapter->ext_scan &&
->             !is_zero_ether_addr(scan_cfg_out->specific_bssid)) {
->             ...
->         }
-> 
-> Since firmware-related struct mwifiex_scan_cmd_config cannot be changed,
-> we need to use the new function is_zero_ether_addr_unaligned() here.
-> 
-> This is v2 of the original patch:
-> [PATCH] Modify is_zero_ether_addr() to handle byte-aligned addresses
-> 
-> Per Joe's suggestion -- instead of modifying is_zero_ether_addr() --
-> add is_zero_ether_addr_unaligned() and use it where needed.
-> 
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: Joe Perches <joe@perches.com>
-> Cc: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Petri Gynther <pgynther@google.com>
+> So the driver is supposed to use this function from the .rm_nan_func
+> callback (or .del_nan_func). How should the driver use this together
+> with cfg80211_free_nan_func() function.
 
-Patch set to Rejected.
+Hit Send button too fast. Would it make sense to free the nan func
+implicitly in cfg80211_nan_func_terminated() function or would there be
+reasons to keep it.
 
-Reason: As is_zero_ether_addr_unaligned() patch is not applied I can't take
-this. Please resend if that patch is accepted.
-
--- 
-https://patchwork.kernel.org/patch/9306999/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+Regards,
+Arend
