@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19350 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753949AbcIIMJh (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36179 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754009AbcIRGah (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 9 Sep 2016 08:09:37 -0400
-Content-Type: text/plain; charset="utf-8"
+        Sun, 18 Sep 2016 02:30:37 -0400
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: kvalo@qca.qualcomm.com
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH] ath6kl: fix return value in ath6kl_wmi_set_pvb_cmd
+Date: Sun, 18 Sep 2016 15:30:24 +0900
+Message-Id: <20160918063024.2535-1-chaehyun.lim@gmail.com> (sfid-20160918_083049_979329_212A7111)
 MIME-Version: 1.0
-Subject: Re: [1/2] ath9k: use ieee80211_tx_status_noskb where possible
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160804214940.78476-1-nbd@nbd.name>
-To: Felix Fietkau <nbd@nbd.name>
-CC: <linux-wireless@vger.kernel.org>, <kvalo@codeaurora.org>
-Message-ID: <7af2860bf42c4600aa0669cd2d7e0c53@euamsexm01a.eu.qualcomm.com> (sfid-20160909_140940_332400_8EDEE214)
-Date: Fri, 9 Sep 2016 14:09:27 +0200
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Felix Fietkau <nbd@nbd.name> wrote:
-> It removes the need for undoing the padding changes to skb->data and it
-> improves performance by eliminating one tx status lookup per MPDU in the
-> status path. It is also useful for preparing a follow-up fix to better
-> handle powersave filtering.
-> 
-> Signed-off-by: Felix Fietkau <nbd@nbd.name>
+When building with W=1, we got one warning as belows:
+drivers/net/wireless/ath/ath6kl/wmi.c:3509:6: warning: variable ‘ret’
+set but not used [-Wunused-but-set-variable]
 
-Thanks, 2 patches applied to ath-next branch of ath.git:
+At the end of ath6kl_wmi_set_pvb_cmd, it is returned by 0 regardless of
+return value of ath6kl_wmi_cmd_send.
+This patch fixes return value from 0 to ret that has result of
+ath6kl_wmi_cmd_send execution.
 
-d94a461d7a7d ath9k: use ieee80211_tx_status_noskb where possible
-315c457ff123 ath9k: improve powersave filter handling
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/net/wireless/ath/ath6kl/wmi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
+index b8cf04d..3fd1cc9 100644
+--- a/drivers/net/wireless/ath/ath6kl/wmi.c
++++ b/drivers/net/wireless/ath/ath6kl/wmi.c
+@@ -3520,7 +3520,7 @@ int ath6kl_wmi_set_pvb_cmd(struct wmi *wmi, u8 if_idx, u16 aid,
+ 	ret = ath6kl_wmi_cmd_send(wmi, if_idx, skb, WMI_AP_SET_PVB_CMDID,
+ 				  NO_SYNC_WMIFLAG);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ int ath6kl_wmi_set_rx_frame_format_cmd(struct wmi *wmi, u8 if_idx,
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9264385/
+2.9.3
