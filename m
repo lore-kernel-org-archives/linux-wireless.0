@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:26615 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750951AbcIMMYs (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 08:24:48 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mx1.redhat.com ([209.132.183.28]:59572 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752682AbcIRQ0s (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Sun, 18 Sep 2016 12:26:48 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Joe Perches <joe@perches.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: Stop log spam from each successful interrupt
+References: <1474132155-9330-1-git-send-email-Larry.Finger@lwfinger.net>
+        <1474133525.32273.97.camel@perches.com> <wrfjfuoymeez.fsf@redhat.com>
+        <8760pt7hzv.fsf@kamboji.qca.qualcomm.com>
+Date: Sun, 18 Sep 2016 12:26:46 -0400
+In-Reply-To: <8760pt7hzv.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+        of "Sun, 18 Sep 2016 11:02:44 +0300")
+Message-ID: <wrfjh99dkwc9.fsf@redhat.com> (sfid-20160918_182652_202813_A145E126)
 MIME-Version: 1.0
-Subject: Re: [V2] ath10k: fix memory leak on caldata on error exit path
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160903163819.13115-1-colin.king@canonical.com>
-To: Colin Ian King <colin.king@canonical.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Message-ID: <c603113a967a45c18ddce5deff55b753@euamsexm01a.eu.qualcomm.com> (sfid-20160913_142508_209655_7240F392)
-Date: Tue, 13 Sep 2016 14:24:40 +0200
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Colin Ian King <colin.king@canonical.com> wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> caldata is not being free'd on the error exit path, causing
-> a memory leak and data definitely should not be freed. Free
-> caldata instead of data.
-> 
-> Thanks to Kalle Valo for spotting that data should not be
-> free'd.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>
+>> Joe Perches <joe@perches.com> writes:
+>>> I think it'd be nicer to use dev_dbg for all these cases
+>>> and as well use some new macro that includes the test
+>>>
+>>> Something like:
+>>>
+>>> #define rtl8xxxu_dbg(type, fmt, ...)			\
+>>> do {							\
+>>> 	if (rtl8xxxu_debug & (type))			\
+>>> 		dev_dbg(dev, fmt, ##__VA_ARGS__);	\
+>>> } while (0)
+>>
+>> Yuck yuck yuck, no thanks!
+>>
+>> Any attempt of adding that kinda grossness to the driver will get a
+>> NACK.
+>
+> Huh, how is that ugly? To me it's the opposite, original code is ugly
+> and Joes' proposal makes sense. Lots of wireless drivers have something
+> similar.
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+Sorry it's a classic case of obfuscating the code for zero gain. If
+someone else likes this kinda wrapper in their code, by all means go
+ahead. In my book it's just bad coding taste.
 
-5f4761dda2ba ath10k: fix memory leak on caldata on error exit path
-
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9312163/
+Jes
