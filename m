@@ -1,68 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:35282 "EHLO
-        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034113AbcIZMVR (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56034 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S933275AbcISHcj (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 08:21:17 -0400
-Received: by mail-pf0-f175.google.com with SMTP id s13so31052846pfd.2
-        for <linux-wireless@vger.kernel.org>; Mon, 26 Sep 2016 05:21:17 -0700 (PDT)
-Subject: Re: [PATCH] brcmfmac: implement more accurate skb tracking
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <20160926102348.8695-1-zajec5@gmail.com>
- <09084e8b-829d-9a13-ae16-a493438216ac@broadcom.com>
- <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <dd7ae3d7-fa6d-c27c-a19f-712d01c423d7@broadcom.com> (sfid-20160926_142138_565173_4D1907FA)
-Date: Mon, 26 Sep 2016 14:20:59 +0200
-MIME-Version: 1.0
-In-Reply-To: <CACna6rwnLb3sEPmdx6uhYMstVn04WbP2xzznsjnwgguEXn04=w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        Mon, 19 Sep 2016 03:32:39 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 10:30:24 +0300
+Message-Id: <20160919073028.22065-21-luca@coelho.fi> (sfid-20160919_093242_231803_B43AA362)
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Subject: [PATCH 21/25] iwlwifi: mvm: move AP-specific code to right function
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes.berg@intel.com>
 
+There's no need for the common MAC context function to have an
+if on AP mode, the values can be overridden in the AP-specific
+function later. Clean that up by adding the full command as a
+new parameter to the AP-specific function, and doing it there.
 
-On 26-9-2016 14:13, Rafał Miłecki wrote:
-> On 26 September 2016 at 13:46, Arend Van Spriel
-> <arend.vanspriel@broadcom.com> wrote:
->> On 26-9-2016 12:23, Rafał Miłecki wrote:
->>> From: Rafał Miłecki <rafal@milecki.pl>
->>>
->>> We need to track 802.1x packets to know if there are any pending ones
->>> for transmission. This is required for performing key update in the
->>> firmware.
->>
->> The problem we are trying to solve is a pretty old one. The problem is
->> that wpa_supplicant uses two separate code paths: EAPOL messaging
->> through data path and key configuration though nl80211.
-> 
-> Can I find it described/reported somewhere?
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 42 +++++++++++------------
+ 1 file changed, 20 insertions(+), 22 deletions(-)
 
-Not sure. It is something that I recall from working at Intersil so back
-in the prism days.
-
-Regards,
-Arend
-
->>> Unfortunately our old tracking code wasn't very accurate. It was
->>> treating skb as pending as soon as it was passed by the netif. Actual
->>> handling packet to the firmware was happening later as brcmfmac
->>> internally queues them and uses its own worker(s).
->>
->> That does not seem right. As soon as we get a 1x packet we need to wait
->> with key configuration regardless whether it is still in the driver or
->> handed over to firmware already.
-> 
-> OK, thanks.
-> 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index d742d27..6b962d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -774,26 +774,6 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
+ 		cmd->ac[txf].fifos_mask = BIT(txf);
+ 	}
+ 
+-	if (vif->type == NL80211_IFTYPE_AP) {
+-		/* in AP mode, the MCAST FIFO takes the EDCA params from VO */
+-		cmd->ac[IWL_MVM_TX_FIFO_VO].fifos_mask |=
+-			BIT(IWL_MVM_TX_FIFO_MCAST);
+-
+-		/*
+-		 * in AP mode, pass probe requests and beacons from other APs
+-		 * (needed for ht protection); when there're no any associated
+-		 * station don't ask FW to pass beacons to prevent unnecessary
+-		 * wake-ups.
+-		 */
+-		cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
+-		if (mvmvif->ap_assoc_sta_count || !mvm->drop_bcn_ap_mode) {
+-			cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
+-			IWL_DEBUG_HC(mvm, "Asking FW to pass beacons\n");
+-		} else {
+-			IWL_DEBUG_HC(mvm, "No need to receive beacons\n");
+-		}
+-	}
+-
+ 	if (vif->bss_conf.qos)
+ 		cmd->qos_flags |= cpu_to_le32(MAC_QOS_FLG_UPDATE_EDCA);
+ 
+@@ -1191,6 +1171,7 @@ static void iwl_mvm_mac_ap_iterator(void *_data, u8 *mac,
+  */
+ static void iwl_mvm_mac_ctxt_cmd_fill_ap(struct iwl_mvm *mvm,
+ 					 struct ieee80211_vif *vif,
++					 struct iwl_mac_ctx_cmd *cmd,
+ 					 struct iwl_mac_data_ap *ctxt_ap,
+ 					 bool add)
+ {
+@@ -1201,6 +1182,23 @@ static void iwl_mvm_mac_ctxt_cmd_fill_ap(struct iwl_mvm *mvm,
+ 		.beacon_device_ts = 0
+ 	};
+ 
++	/* in AP mode, the MCAST FIFO takes the EDCA params from VO */
++	cmd->ac[IWL_MVM_TX_FIFO_VO].fifos_mask |= BIT(IWL_MVM_TX_FIFO_MCAST);
++
++	/*
++	 * in AP mode, pass probe requests and beacons from other APs
++	 * (needed for ht protection); when there're no any associated
++	 * station don't ask FW to pass beacons to prevent unnecessary
++	 * wake-ups.
++	 */
++	cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
++	if (mvmvif->ap_assoc_sta_count || !mvm->drop_bcn_ap_mode) {
++		cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
++		IWL_DEBUG_HC(mvm, "Asking FW to pass beacons\n");
++	} else {
++		IWL_DEBUG_HC(mvm, "No need to receive beacons\n");
++	}
++
+ 	ctxt_ap->bi = cpu_to_le32(vif->bss_conf.beacon_int);
+ 	ctxt_ap->bi_reciprocal =
+ 		cpu_to_le32(iwl_mvm_reciprocal(vif->bss_conf.beacon_int));
+@@ -1258,7 +1256,7 @@ static int iwl_mvm_mac_ctxt_cmd_ap(struct iwl_mvm *mvm,
+ 	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, NULL, action);
+ 
+ 	/* Fill the data specific for ap mode */
+-	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd.ap,
++	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd, &cmd.ap,
+ 				     action == FW_CTXT_ACTION_ADD);
+ 
+ 	return iwl_mvm_mac_ctxt_send_cmd(mvm, &cmd);
+@@ -1277,7 +1275,7 @@ static int iwl_mvm_mac_ctxt_cmd_go(struct iwl_mvm *mvm,
+ 	iwl_mvm_mac_ctxt_cmd_common(mvm, vif, &cmd, NULL, action);
+ 
+ 	/* Fill the data specific for GO mode */
+-	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd.go.ap,
++	iwl_mvm_mac_ctxt_cmd_fill_ap(mvm, vif, &cmd, &cmd.go.ap,
+ 				     action == FW_CTXT_ACTION_ADD);
+ 
+ 	cmd.go.ctwin = cpu_to_le32(noa->oppps_ctwindow &
+-- 
+2.9.3
