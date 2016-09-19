@@ -1,38 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35658 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932460AbcIMTDR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 15:03:17 -0400
-From: Jes.Sorensen@redhat.com
+Received: from smtp.codeaurora.org ([198.145.29.96]:35546 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756009AbcISFqU (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 01:46:20 -0400
+Received: from potku.adurom.net (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
+        (using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: kvalo@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0F04D6165F
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 05:46:18 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 0/1] Fix problem with rtl8192eu firmware reload
-Date: Tue, 13 Sep 2016 15:03:14 -0400
-Message-Id: <1473793395-28927-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160913_210321_294092_07C57B7C)
+Subject: wireless-drivers-next soon closing for 4.9
+Date: Mon, 19 Sep 2016 08:46:16 +0300
+Message-ID: <8760ps5tnb.fsf@kamboji.qca.qualcomm.com> (sfid-20160919_074624_991699_9678A091)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-
 Hi,
 
-This one goes on top of my previous patches, albeit it probably
-applies out of order.
+Linus released 4.8-rc7 few hours and said that he "might" release -rc8
+still. So if there's anything which you absolutely want to have in 4.9
+send it now to make sure it makes it in time in the unlikely case that
+-rc8 is not released. If -rc8 is released the deadline will be this
+week's Sunday.
 
-It resolves the issue where firmware wouldn't load correctly if
-reloading the driver module.
-
-Cheers,
-Jes
-
-
-Jes Sorensen (1):
-  rtl8xxxu: Implment 8192e specific power down sequence
-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 144 ++++++++++++++++++++-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |   1 +
- 2 files changed, 144 insertions(+), 1 deletion(-)
+wireless-drivers remains open for important fixes.
 
 -- 
-2.7.4
+Kalle Valo
