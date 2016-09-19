@@ -1,94 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:34766 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933233AbcI0MIH (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56108 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932705AbcISIuQ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 08:08:07 -0400
-MIME-Version: 1.0
-In-Reply-To: <41e5f45f-1956-8c9d-49d4-cd73e2c5c7c0@broadcom.com>
-References: <20160927091428.19223-1-zajec5@gmail.com> <86fd0b60-0f73-484b-1788-3ec740672232@broadcom.com>
- <87inthy441.fsf@kamboji.qca.qualcomm.com> <CACna6rwUR_GidhEFNTN+8mGQRpBdUzeM1-0NY65k6-McX7xGVg@mail.gmail.com>
- <CACna6rxDb_KMwGTFKu1Mf9azmk_PLO0aLR3foRtkqyywa1DNVQ@mail.gmail.com> <41e5f45f-1956-8c9d-49d4-cd73e2c5c7c0@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Date: Tue, 27 Sep 2016 14:07:46 +0200
-Message-ID: <CACna6rzjT+cFriHfSG9g6CvBmrV__ph7WysZ8hCYAw+Nkmmiaw@mail.gmail.com> (sfid-20160927_140851_928468_1A481D0D)
-Subject: Re: [PATCH 4.9] brcmfmac: use correct skb freeing helper when
- deleting flowring
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-        Franky Lin <franky.lin@broadcom.com>,
-        Hante Meuleman <hante.meuleman@broadcom.com>,
-        Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "open list:BROADCOM BRCM80211 IEEE802.11n WIRELESS DRIVER"
-        <brcm80211-dev-list.pdl@broadcom.com>,
-        Network Development <netdev@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <rafal@milecki.pl>
-Content-Type: text/plain; charset=UTF-8
+        Mon, 19 Sep 2016 04:50:16 -0400
+Message-ID: <1474275007.5664.96.camel@coelho.fi> (sfid-20160919_105213_141675_581C4C70)
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        linuxwifi <linuxwifi@intel.com>
+Date: Mon, 19 Sep 2016 11:50:07 +0300
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Content-Type: multipart/signed; micalg="pgp-sha256";
+        protocol="application/pgp-signature"; boundary="=-95UmMXKWEJ7BNT6hk6Kk"
+Mime-Version: 1.0
+Subject: pull-request: iwlwifi-next 2016-09-19-2
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 September 2016 at 14:04, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 27-9-2016 13:58, Rafa=C5=82 Mi=C5=82ecki wrote:
->> On 27 September 2016 at 13:44, Rafa=C5=82 Mi=C5=82ecki <zajec5@gmail.com=
-> wrote:
->>> On 27 September 2016 at 13:27, Kalle Valo <kvalo@codeaurora.org> wrote:
->>>> Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
->>>>
->>>>> On 27-9-2016 11:14, Rafa=C5=82 Mi=C5=82ecki wrote:
->>>>>> From: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>>>>>
->>>>>> Flowrings contain skbs waiting for transmission that were passed to =
-us
->>>>>> by netif. It means we checked every one of them looking for 802.1x
->>>>>> Ethernet type. When deleting flowring we have to use freeing functio=
-n
->>>>>> that will check for 802.1x type as well.
->>>>>>
->>>>>> Freeing skbs without a proper check was leading to counter not being
->>>>>> properly decreased. This was triggering a WARNING every time
->>>>>> brcmf_netdev_wait_pend8021x was called.
->>>>>
->>>>> Acked-by: Arend van Spriel <arend@broadcom.com>
->>>>>> Signed-off-by: Rafa=C5=82 Mi=C5=82ecki <rafal@milecki.pl>
->>>>>> ---
->>>>>> Kalle: this isn't important enough for 4.8 as it's too late for that=
-.
->>>>>>
->>>>>> I'd like to get it for 4.9 however, as this fixes bug that could lea=
-d
->>>>>> to WARNING on every add_key/del_key call. We was struggling with the=
-se
->>>>>> WARNINGs for some time and this fixes one of two problems causing th=
-em.
->>>>
->>>> Ok, I'll queue this for 4.9.
->>>>
->>>>> Please mark it for stable as well.
->>>>
->>>> I can add that. Any ideas how old releases stable releases should this
->>>> go to?
->>>
->>> I was analyzing this.
->>> 1) This patch uses brcmf_get_ifp which is available in 4.4+ only.
->>> 2) It applies cleanly to 4.5+ only due to 32f90caa7debd ("brcmfmac:
->>> Increase nr of supported flowrings.")
->>> 3) 4.4 would also require applying to the patch without broadcom/ subdi=
-r
->>>
->>> That said I suggest 4.5+. Any objections?
->
-> No objections. Just a tip. I tend to look at kernel.org main page to see
-> the stable and long-term kernel listed. So 4.7+ and 4.5+ have same
-> meaning as 4.5 and 4.6 are not stable/long-term kernels.
 
-Some projects may work on their own stable kernels, e.g. Ubuntu, see:
-https://wiki.ubuntu.com/Kernel/Dev/ExtendedStable
+--=-95UmMXKWEJ7BNT6hk6Kk
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-That's why I don't always look strictly at upstream stable releases only.
+Hi Kalle,
 
---=20
-Rafa=C5=82
+Please drop my previous pull-request. =C2=A0There was a compilation error
+that I missed to due a missing flag in my .config. =C2=A0I fixed it now and
+this is the new pull request that includes the fix.
+
+Here we go again, now I'm almost catching up with the pending stuff in
+our internal tree, just in time for 4.9.=C2=A0=C2=A0This pull contains a bu=
+nch of
+fixes to DQA and new HW support code, a few new features and some
+cleanups.=C2=A0=C2=A0More details in the tag description.
+
+Let me know if everything's fine (or not). :)
+
+Luca.
+
+
+The following changes since commit 80ba4f1d365af206b9e818d17d22fed02fe5def0=
+:
+
+  mwifiex: fix null pointer deference when adapter is null (2016-09-17 18:2=
+6:32 +0300)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git ta=
+gs/iwlwifi-next-for-kalle-2016-09-19-2
+
+for you to fetch changes up to 0979a913f879ea39504200d83fb9f275a555a58d:
+
+  iwlwifi: pcie: use LIST_HEAD() macro (2016-09-19 11:29:35 +0300)
+
+----------------------------------------------------------------
+* added support for MU-MIMO sniffer
+* added support for RRM by scan
+* added support for packet injection
+* migrate to devm memory allocation handling
+* some fixes, mostly in DQA and new HW support
+* other generic cleanups
+
+----------------------------------------------------------------
+Arik Nemtsov (1):
+      iwlwifi: move BIOS MCC retrieval to common code
+
+Aviya Erenfeld (1):
+      iwlwifi: mvm: add support for MU-MIMO air sniffer
+
+Avrahams Stern (1):
+      iwlwifi: mvm: Add support for RRM by scan
+
+Emmanuel Grumbach (1):
+      iwlwifi: don't export trace points that are used in iwlwifi only
+
+Haim Dreyfuss (1):
+      iwlwifi: check for valid ethernet address provided by OEM
+
+Ido Yariv (1):
+      iwlwifi: mvm: Add mem debugfs entry
+
+Johannes Berg (6):
+      iwlwifi: mvm: compare full command ID
+      iwlwifi: mvm: make iwl_mvm_update_sta() an inline
+      iwlwifi: mvm: document passing unexpected Block Ack Request frames
+      iwlwifi: mvm: move AP-specific code to right function
+      iwlwifi: mvm: use LIST_HEAD() macro
+      iwlwifi: pcie: use LIST_HEAD() macro
+
+Liad Kaufman (1):
+      iwlwifi: mvm: remove variable shadowing
+
+Oren Givon (1):
+      iwlwifi: add new 8265 series PCI ID
+
+Roee Zamir (1):
+      iwlwifi: mvm: Add debugfs function for clocks diff
+
+Sara Sharon (9):
+      iwlwifi: pcie: fix typo in struct name for a000 devices
+      iwlwifi: mvm: cleanup skb queue functions use
+      iwlwifi: mvm: fix DQA AP mode station assumption
+      iwlwifi: mvm: support BAR in reorder buffer
+      iwlwifi: mvm: support packet injection
+      iwlwifi: pcie: log full command sequence
+      iwlwifi: move to wide ID for all commands
+      iwlwifi: mvm: disable P2P queue on mac context release
+      iwlwifi: mvm: set HCMD_NAME for PHY_DB as well
+
+Sharon Dvir (1):
+      iwlwifi: migrate to devm_* API
+
+ drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c    |   3 --
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h     |   5 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-notif-wait.c  |   8 +++-
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c   | 104 +++++++++++++++=
++++++++++++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h   |  20 +++++++-
+ drivers/net/wireless/intel/iwlwifi/iwl-phy-db.c      |   2 +-
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.c       |  11 ++---
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h       |   5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c |  26 +++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c     | 184 +++++++++++++++=
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-scan.h |  20 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h      |  52 +++++++++++++++=
++++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c    |  47 ++++++++++-----=
+----
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c    |  18 ++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         |   7 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c         |  93 +--------------=
+----------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c         |  32 +++++++------
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c        |  30 ++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c        |  61 +++++++++++++++=
++++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c         |  13 ++----
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h         |  11 +++--
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c          |  35 +++++++++++---
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c       |  22 +++++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c        |   1 +
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h   |   2 -
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c         |   9 ++--
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c      |  84 ++++++++++++++-=
+-------------------
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c         |   2 +-
+ 28 files changed, 655 insertions(+), 252 deletions(-)
+--=-95UmMXKWEJ7BNT6hk6Kk
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCAAGBQJX36a/AAoJEKFHnKIaPMX636YP/iqhkm0hseSsMQ6HXATf9y5m
+DagY71uPYzjQI77VHTLWXAxWK1Zp1kt0b0CosK641ZJ5tPYbHWe6Sjt51BT7NxXt
+7iapnv48V+c712ys+cKqitNk8x6FR8YDXj2NHO5r64110LUDUrXUTtWghz8W+fZf
+XNc2JlMMY/e9tkXOeu8iP9sUisAEoMGh3M0bsSYu7qW/S8y2RbJIZn1X4OFepRt+
+BMsHlnBLb+PHWn1+FjU6r0MWBmbfUg1iYX1SXqF1ojT+oRaQ5kJCTYJOUNomheRB
+/sD40s6yy1A7ggTgr17A78as+t3F1fj8ruVE+unde9dsLt4sPzxyeP4puHTkziEi
+tLtWW6rXclvTuRf61xD+hLJcsasg99DlHWT5t2bd/3ntfLcI8+1C40CsmU2zX2TE
+zHnloazqrxG8eABLeyjbn2x9LX9BIpN2L4afei89grFygVZCaNVlpt+TydQSlCxn
+ayPiS1vOWZq/kEfOOMejmcdP36Fqg2cLfGMt3mY28LRR3q9HuchBK71d+D13s0Lr
+5pDW7Z8GRbGprnp5Fe5aSoY9oW2vyg5iXhQ1e8vBo+h4bCgf6sOs2eoa3QT3P6xt
+QGxznPA6MmMT71x5D3srpWR3qADYpnpJs8yhw+0pTQ2usDPLR0xUAozmKhwB/no5
+ig5oQGXBfJKfYRUFUU4x
+=UqwQ
+-----END PGP SIGNATURE-----
+
+--=-95UmMXKWEJ7BNT6hk6Kk--
