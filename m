@@ -1,57 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43908 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757157AbcIGLdf (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:51183 "EHLO
+        helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754766AbcISK7E (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 7 Sep 2016 07:33:35 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Andy Gross <andy.gross@linaro.org>
-Cc: Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Eugene Krasnikov <k.eugene.e@gmail.com>,
-        wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org,
-        Marcel Holtmann <marcel@holtmann.org>
-Subject: Re: [PATCH v4 1/4] soc: qcom: wcnss_ctrl: Stub wcnss_ctrl API
-References: <1473200312-22438-1-git-send-email-bjorn.andersson@linaro.org>
-        <20160907013958.GA6975@hector.attlocal.net>
-Date: Wed, 07 Sep 2016 14:33:28 +0300
-In-Reply-To: <20160907013958.GA6975@hector.attlocal.net> (Andy Gross's message
-        of "Tue, 6 Sep 2016 20:39:58 -0500")
-Message-ID: <874m5sx7uf.fsf@kamboji.qca.qualcomm.com> (sfid-20160907_133359_675743_C17448A1)
+        Mon, 19 Sep 2016 06:59:04 -0400
+Date: Mon, 19 Sep 2016 18:58:54 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
+Subject: [v3 PATCH 0/2] rhashtable: rhashtable with duplicate objects
+Message-ID: <20160919105854.GA12892@gondor.apana.org.au> (sfid-20160919_125912_363310_DC265615)
+References: <20160804071846.GA773@gondor.apana.org.au>
+ <20160804074546.GA996@gondor.apana.org.au>
+ <1470377813.2977.14.camel@sipsolutions.net>
+ <20160805104858.GA9297@gondor.apana.org.au>
+ <1470394233.2977.37.camel@sipsolutions.net>
+ <20160918135030.GA7062@gondor.apana.org.au>
+ <20160919084056.GA11875@gondor.apana.org.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160919084056.GA11875@gondor.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Andy Gross <andy.gross@linaro.org> writes:
+v3 fixes a bug in the remove path that causes the element count
+to decrease when it shouldn't, leading to a gigantic hash table
+when it underflows.
 
-> On Tue, Sep 06, 2016 at 03:18:29PM -0700, Bjorn Andersson wrote:
->> Stub the wcnss_ctrl API to allow compile testing wcnss function drivers.
->> 
->> Cc: Marcel Holtmann <marcel@holtmann.org>
->> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->> ---
->> 
->> There are no other pending changes colliding with this, so if Andy is okay with
->> this it could be merged through Kalle's tree - together with the other patches.
->> 
->> Marcel, with this applied we can drop the depends on QCOM_SMD from the
->> btqcomsmd driver as well.
->> 
->> Changes since v3:
->> - Added this patch to allow compile testing without SMD support after patch 2
->> 
->>  include/linux/soc/qcom/wcnss_ctrl.h | 13 +++++++++++++
->>  1 file changed, 13 insertions(+)
->> 
->
-> This is fine.
->
-> Acked-by: Andy Gross <andy.gross@linaro.org>
+v2 contains a reworked insertion slowpath to ensure that the
+spinlock for the table we're inserting into is taken.
 
-Thanks. I'll then apply this to my ath.git tree and it will go to Linus
-via net-next.
+This series contains two patches.  The first adds the rhlist
+interface and the second converts mac80211 to use it.  If this
+works out I'll then proceed to convert the other insecure_elasticity
+users over to this.
 
+I've tested the rhlist code with test_rhashtable but I haven't
+tested the mac80211 conversion.  So please give it a go and see
+if it still works.
+
+Thanks!
 -- 
-Kalle Valo
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
