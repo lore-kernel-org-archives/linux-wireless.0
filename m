@@ -1,39 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:47356 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932324AbcIBQJW (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55974 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S936248AbcISHbq (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 12:09:22 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2] ath9k: mark ath_fill_led_pin() static
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1472473273-2972-1-git-send-email-baoyou.xie@linaro.org>
-To: Baoyou Xie <baoyou.xie@linaro.org>
-CC: <ath9k-devel@qca.qualcomm.com>, <kvalo@codeaurora.org>,
-        <linux-wireless@vger.kernel.org>, <ath9k-devel@lists.ath9k.org>,
-        <netdev@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <arnd@arndb.de>, <baoyou.xie@linaro.org>, <xie.baoyou@zte.com.cn>
-Message-ID: <7db487f5a15c4563a92de6da26a633fd@euamsexm01a.eu.qualcomm.com> (sfid-20160902_180943_132905_29D5AD65)
-Date: Fri, 2 Sep 2016 18:09:12 +0200
+        Mon, 19 Sep 2016 03:31:46 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 10:30:16 +0300
+Message-Id: <20160919073028.22065-13-luca@coelho.fi> (sfid-20160919_093149_184925_0E52A209)
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Subject: [PATCH 13/25] iwlwifi: mvm: make iwl_mvm_update_sta() an inline
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Baoyou Xie <baoyou.xie@linaro.org> wrote:
-> We get 1 warning about global functions without a declaration
-> in the ath9k gpio driver when building with W=1:
-> drivers/net/wireless/ath/ath9k/gpio.c:25:6: warning: no previous prototype for 'ath_fill_led_pin' [-Wmissing-prototypes]
-> 
-> In fact, this function is only used in the file in which it is declared
-> and don't need a declaration, but can be made static.
-> so this patch marks it 'static'.
-> 
-> Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+There's no point in making this an out-of-line function
+since it just calls a single other function with a few
+changed parameters.
 
-c39265f72ae6 ath9k: mark ath_fill_led_pin() static
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c |  7 -------
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h | 11 ++++++++---
+ 2 files changed, 8 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index d3a0378..258a234 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -1297,13 +1297,6 @@ err:
+ 	return ret;
+ }
+ 
+-int iwl_mvm_update_sta(struct iwl_mvm *mvm,
+-		       struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta)
+-{
+-	return iwl_mvm_sta_send_to_fw(mvm, sta, true, 0);
+-}
+-
+ int iwl_mvm_drain_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
+ 		      bool drain)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index 709542b..e068d53 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -473,9 +473,14 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 		    struct ieee80211_vif *vif,
+ 		    struct ieee80211_sta *sta);
+-int iwl_mvm_update_sta(struct iwl_mvm *mvm,
+-		       struct ieee80211_vif *vif,
+-		       struct ieee80211_sta *sta);
++
++static inline int iwl_mvm_update_sta(struct iwl_mvm *mvm,
++				     struct ieee80211_vif *vif,
++				     struct ieee80211_sta *sta)
++{
++	return iwl_mvm_sta_send_to_fw(mvm, sta, true, 0);
++}
++
+ int iwl_mvm_rm_sta(struct iwl_mvm *mvm,
+ 		   struct ieee80211_vif *vif,
+ 		   struct ieee80211_sta *sta);
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9303795/
+2.9.3
