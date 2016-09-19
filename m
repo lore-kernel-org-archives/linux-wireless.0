@@ -1,96 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:33691 "EHLO mail2.tohojo.dk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759533AbcIWT72 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 23 Sep 2016 15:59:28 -0400
-From: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: =?UTF-8?q?Toke=20H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-Subject: [PATCH 1/3] fq.h: Port memory limit mechanism from fq_codel
-Date: Fri, 23 Sep 2016 21:59:09 +0200
-Message-Id: <20160923195911.4572-2-toke@toke.dk> (sfid-20160923_215936_299521_B1010671)
-In-Reply-To: <20160923195911.4572-1-toke@toke.dk>
-References: <20160923195911.4572-1-toke@toke.dk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from paleale.coelho.fi ([176.9.41.70]:55844 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932427AbcISHan (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 03:30:43 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Haim Dreyfuss <haim.dreyfuss@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 10:30:09 +0300
+Message-Id: <20160919073028.22065-6-luca@coelho.fi> (sfid-20160919_093101_267219_A58D2A10)
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Subject: [PATCH 06/25] iwlwifi: check for valid ethernet address provided by OEM
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The reusable fairness queueing implementation (fq.h) lacks the memory
-usage limit that the fq_codel qdisc has. This means that small
-devices (e.g. WiFi routers) can run out of memory when flooded with a
-large number of packets. This ports the memory limit feature from
-fq_codel to fq.h.
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-Signed-off-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+In 9000 family products we added an option to let the OEM fuse the
+mac address via registers. If these registers are zeroed we use the OTP
+address instead. Make sure that the address provided by the OEM is valid
+and, if not, fall back to the OTP address as well.
+
+Fixes: commit 17c867bfe89b ("iwlwifi: add support for getting HW address from CSR")
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- include/net/fq.h      | 3 +++
- include/net/fq_impl.h | 7 ++++++-
- 2 files changed, 9 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/fq.h b/include/net/fq.h
-index 268b490..6d8521a 100644
---- a/include/net/fq.h
-+++ b/include/net/fq.h
-@@ -72,9 +72,12 @@ struct fq {
- 	u32 flows_cnt;
- 	u32 perturbation;
- 	u32 limit;
-+	u32 memory_limit;
-+	u32 memory_usage;
- 	u32 quantum;
- 	u32 backlog;
- 	u32 overlimit;
-+	u32 overmemory;
- 	u32 collisions;
- };
-=20
-diff --git a/include/net/fq_impl.h b/include/net/fq_impl.h
-index 163f3ed..4e6131c 100644
---- a/include/net/fq_impl.h
-+++ b/include/net/fq_impl.h
-@@ -29,6 +29,7 @@ static struct sk_buff *fq_flow_dequeue(struct fq *fq,
- 	tin->backlog_packets--;
- 	flow->backlog -=3D skb->len;
- 	fq->backlog--;
-+	fq->memory_usage -=3D skb->truesize;
-=20
- 	if (flow->backlog =3D=3D 0) {
- 		list_del_init(&flow->backlogchain);
-@@ -154,6 +155,7 @@ static void fq_tin_enqueue(struct fq *fq,
- 	flow->backlog +=3D skb->len;
- 	tin->backlog_bytes +=3D skb->len;
- 	tin->backlog_packets++;
-+	fq->memory_usage +=3D skb->truesize;
- 	fq->backlog++;
-=20
- 	fq_recalc_backlog(fq, tin, flow);
-@@ -166,7 +168,7 @@ static void fq_tin_enqueue(struct fq *fq,
-=20
- 	__skb_queue_tail(&flow->queue, skb);
-=20
--	if (fq->backlog > fq->limit) {
-+	if (fq->backlog > fq->limit || fq->memory_usage > fq->memory_limit) {
- 		flow =3D list_first_entry_or_null(&fq->backlogs,
- 						struct fq_flow,
- 						backlogchain);
-@@ -181,6 +183,8 @@ static void fq_tin_enqueue(struct fq *fq,
-=20
- 		flow->tin->overlimit++;
- 		fq->overlimit++;
-+		if (fq->memory_usage > fq->memory_limit)
-+			fq->overmemory++;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 43f8f7d..adba3b0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -564,11 +564,16 @@ static void iwl_set_hw_address_from_csr(struct iwl_trans *trans,
+ 	__le32 mac_addr0 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR0_STRAP));
+ 	__le32 mac_addr1 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR1_STRAP));
+ 
+-	/* If OEM did not fuse address - get it from OTP */
+-	if (!mac_addr0 && !mac_addr1) {
+-		mac_addr0 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR0_OTP));
+-		mac_addr1 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR1_OTP));
+-	}
++	iwl_flip_hw_address(mac_addr0, mac_addr1, data->hw_addr);
++	/*
++	 * If the OEM fused a valid address, use it instead of the one in the
++	 * OTP
++	 */
++	if (is_valid_ether_addr(data->hw_addr))
++		return;
++
++	mac_addr0 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR0_OTP));
++	mac_addr1 = cpu_to_le32(iwl_read32(trans, CSR_MAC_ADDR1_OTP));
+ 
+ 	iwl_flip_hw_address(mac_addr0, mac_addr1, data->hw_addr);
  }
-=20
-@@ -251,6 +255,7 @@ static int fq_init(struct fq *fq, int flows_cnt)
- 	fq->perturbation =3D prandom_u32();
- 	fq->quantum =3D 300;
- 	fq->limit =3D 8192;
-+	fq->memory_limit =3D 16 << 20; /* 16 MBytes */
-=20
- 	fq->flows =3D kcalloc(fq->flows_cnt, sizeof(fq->flows[0]), GFP_KERNEL);
- 	if (!fq->flows)
---=20
+-- 
 2.9.3
