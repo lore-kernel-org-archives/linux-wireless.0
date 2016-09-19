@@ -1,42 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57267 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:9251 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756507AbcILJ1x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 05:27:53 -0400
-Message-ID: <1473672467.4201.16.camel@sipsolutions.net> (sfid-20160912_112756_472339_00A99246)
-Subject: Re: [PATCH v2] mac80211: Re-structure aqm debugfs output and
- include CoDel drops
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toke =?ISO-8859-1?Q?H=F8iland-J=F8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-Date: Mon, 12 Sep 2016 11:27:47 +0200
-In-Reply-To: <20160811151156.6485-1-toke@toke.dk> (sfid-20160811_171216_207117_5110F87B)
-References: <20160720145442.1098-1-toke@toke.dk>
-         <20160811151156.6485-1-toke@toke.dk> (sfid-20160811_171216_207117_5110F87B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S934401AbcISIgw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 04:36:52 -0400
+Date: Mon, 19 Sep 2016 10:36:42 +0200
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Julia Lawall <Julia.Lawall@lip6.fr>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+        kernel-janitors@vger.kernel.org,
+        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] NFC: nfcmrvl: constify nfcmrvl_if_ops structures
+Message-ID: <20160919083642.GB13777@zurbaran.home> (sfid-20160919_103716_892258_F2BC43C7)
+References: <1470762230-2520-1-git-send-email-Julia.Lawall@lip6.fr>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1470762230-2520-1-git-send-email-Julia.Lawall@lip6.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Julia,
 
-> --- a/net/mac80211/debugfs_sta.c
-> +++ b/net/mac80211/debugfs_sta.c
-> @@ -109,6 +109,48 @@ static ssize_t sta_last_seq_ctrl_read(struct
-> file *file, char __user *userbuf,
->  }
->  STA_OPS(last_seq_ctrl);
->  
-> +#define AQM_TXQ_ENTRY_LEN 130
-> +
-> +static ssize_t sta_aqm_read(struct file *file, char __user *userbuf,
-> +			size_t count, loff_t *ppos)
-> +{
-> +	struct sta_info *sta = file->private_data;
-> +	struct ieee80211_local *local = sta->local;
-> +	char buf[AQM_TXQ_ENTRY_LEN*(IEEE80211_NUM_TIDS+1)], *p =
-> buf;
+On Tue, Aug 09, 2016 at 07:03:50PM +0200, Julia Lawall wrote:
+> The nfcmrvl_if_ops structures are never modified, so declare them as const.
 > 
-This is very large, I think you should dynamically allocate it.
+> Done with the help of Coccinelle.
+> 
+> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
+> 
+> ---
+>  drivers/nfc/nfcmrvl/i2c.c     |    2 +-
+>  drivers/nfc/nfcmrvl/main.c    |    2 +-
+>  drivers/nfc/nfcmrvl/nfcmrvl.h |    4 ++--
+>  drivers/nfc/nfcmrvl/spi.c     |    2 +-
+>  drivers/nfc/nfcmrvl/uart.c    |    2 +-
+>  drivers/nfc/nfcmrvl/usb.c     |    2 +-
+>  6 files changed, 7 insertions(+), 7 deletions(-)
+Applied as well, thanks.
 
-johannes
+Cheers,
+Samuel.
