@@ -1,46 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56365 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751987AbcICJ6P (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55828 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932338AbcISHal (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 05:58:15 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,
- 1/8] mwifiex: Fixed endianness problem for big endian platform
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1469461871-3135-2-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Karthik D A <karthida@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160903095814.E77D162017@smtp.codeaurora.org> (sfid-20160903_115818_972495_1EAFDE08)
-Date: Sat,  3 Sep 2016 09:58:14 +0000 (UTC)
+        Mon, 19 Sep 2016 03:30:41 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 10:30:07 +0300
+Message-Id: <20160919073028.22065-4-luca@coelho.fi> (sfid-20160919_093049_788882_4C44318A)
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Subject: [PATCH 04/25] iwlwifi: mvm: compare full command ID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> wrote:
-> From: Karthik D A <karthida@marvell.com>
-> 
-> The driver sends and recives information to and from the firmware.
-> Correct endianness should be ensured as firmware follows little
-> endian format and host can be little/big endian.
-> 
-> Signed-off-by: Karthik D A <karthida@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Thanks, 8 patches applied to wireless-drivers-next.git:
+When comparing command IDs, the group should be taken
+into account so the same command/notification from a
+different group doesn't trigger anything unexpected.
+Fix this by comparing to the wide ID.
 
-902831a7629b mwifiex: Fixed endianness problem for big endian platform
-e5988c62b9e6 mwifiex: add region code information in debugfs
-c8ccf3ade785 mwifiex: fix failed to reconnect after interface disabled/enabled
-c2a8f0ff9c6c mwifiex: support random MAC address for scanning
-99ffe72cdae4 mwifiex: process rxba_sync event
-5536c4aafcac mwifiex: remove misleading disconnect message
-432da7d243da mwifiex: add HT aggregation support for adhoc mode
-441756b6a6e3 mwifiex: fix radar detection issue
+Fixes: commit 1738d60b31d7 ("iwlwifi: mvm: handle RX MPDUs separately")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 43ea1e5..de34c9f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -966,10 +966,11 @@ static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
++	u16 cmd = WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd);
+ 
+-	if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD))
++	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD)))
+ 		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb);
+-	else if (pkt->hdr.cmd == REPLY_RX_PHY_CMD)
++	else if (cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_PHY_CMD))
+ 		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);
+ 	else
+ 		iwl_mvm_rx_common(mvm, rxb, pkt);
+@@ -981,13 +982,14 @@ static void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
++	u16 cmd = WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd);
+ 
+-	if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD))
++	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD)))
+ 		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, 0);
+-	else if (unlikely(pkt->hdr.group_id == DATA_PATH_GROUP &&
+-			  pkt->hdr.cmd == RX_QUEUES_NOTIFICATION))
++	else if (unlikely(cmd == WIDE_ID(DATA_PATH_GROUP,
++					 RX_QUEUES_NOTIFICATION)))
+ 		iwl_mvm_rx_queue_notif(mvm, rxb, 0);
+-	else if (pkt->hdr.cmd == FRAME_RELEASE)
++	else if (cmd == WIDE_ID(LEGACY_GROUP, FRAME_RELEASE))
+ 		iwl_mvm_rx_frame_release(mvm, napi, rxb, 0);
+ 	else
+ 		iwl_mvm_rx_common(mvm, rxb, pkt);
+@@ -1666,13 +1668,14 @@ static void iwl_mvm_rx_mq_rss(struct iwl_op_mode *op_mode,
+ {
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	u16 cmd = WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd);
+ 
+-	if (unlikely(pkt->hdr.cmd == FRAME_RELEASE))
++	if (unlikely(cmd == WIDE_ID(LEGACY_GROUP, FRAME_RELEASE)))
+ 		iwl_mvm_rx_frame_release(mvm, napi, rxb, queue);
+-	else if (unlikely(pkt->hdr.cmd == RX_QUEUES_NOTIFICATION &&
+-			  pkt->hdr.group_id == DATA_PATH_GROUP))
++	else if (unlikely(cmd == WIDE_ID(DATA_PATH_GROUP,
++					 RX_QUEUES_NOTIFICATION)))
+ 		iwl_mvm_rx_queue_notif(mvm, rxb, queue);
+-	else if (likely(pkt->hdr.cmd == REPLY_RX_MPDU_CMD))
++	else if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD)))
+ 		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, queue);
+ }
+ 
 -- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9245981/
+2.9.3
