@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:36733 "EHLO
-        mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751449AbcILJmU (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:7542 "EHLO
+        mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933195AbcISLKO (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 05:42:20 -0400
-Received: by mail-pa0-f50.google.com with SMTP id id6so49341245pad.3
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 02:42:20 -0700 (PDT)
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-To: linux-wireless@vger.kernel.org, kvalo@codeaurora.org,
-        johannes.berg@intel.com, hofrat@osadl.org
-Cc: prameela.j04cs@gmail.com, prameela.garnepudi@redpinesignals.com
-Subject: [PATCH 0/9] rsi: code clean-up
-Date: Mon, 12 Sep 2016 15:08:15 +0530
-Message-Id: <cover.1473669618.git.prameela.j04cs@gmail.com> (sfid-20160912_114223_915038_C6681315)
+        Mon, 19 Sep 2016 07:10:14 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 3/9] brcmfmac: fix memory leak in brcmf_flowring_add_tdls_peer()
+Date: Mon, 19 Sep 2016 12:09:53 +0100
+Message-Id: <1474283399-14385-4-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131031_071040_21D54CE2)
+In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-*** BLURB HERE ***
+In the error paths in brcmf_flowring_add_tdls_peer() the allocated
+resource should be freed.
 
-Prameela Rani Garnepudi (9):
-  rsi: cleanup and added debug prints in file rsi_91x_core.c
-  rsi: Spelling and code format corrections in rsi_91x_debugfs.c
-  rsi: Added freeing of allocated buffers (sbands and dfsentry)         
-    Cleanup (spelling mistakes, code format corrections,     	     
-    empty lines after declaration)
-  rsi: code clean up in file rsi_91x_main.c
-  rsi: code cleanup in file rsi_91x_mgmt.c
-  rsi: code cleanup (spelling mistakes and new line after declaration)
-    in file rsi_91x_sdio.c          Added developer name
-  rsi: zone changed for debug message and cleanup in file
-    rsi_91x_sdio_ops.c
-  rsi: code clean up and replaced ctrl message timeouts with macros in
-    file rsi_91x_usb.c
-  rsi: code cleanup in file rsi_91x_usb_ops.c
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
- drivers/net/wireless/rsi/rsi_91x_core.c     | 24 +++++++++++++----
- drivers/net/wireless/rsi/rsi_91x_debugfs.c  | 13 ++++-----
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 24 ++++++++++++-----
- drivers/net/wireless/rsi/rsi_91x_main.c     | 16 +++++------
- drivers/net/wireless/rsi/rsi_91x_mgmt.c     | 30 +++++++++++----------
- drivers/net/wireless/rsi/rsi_91x_sdio.c     | 16 +++++------
- drivers/net/wireless/rsi/rsi_91x_sdio_ops.c |  6 ++---
- drivers/net/wireless/rsi/rsi_91x_usb.c      | 42 ++++++++++++++++-------------
- drivers/net/wireless/rsi/rsi_91x_usb_ops.c  |  9 +++----
- 9 files changed, 104 insertions(+), 76 deletions(-)
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+index 7e269f9..b16b367 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/flowring.c
+@@ -495,14 +495,18 @@ void brcmf_flowring_add_tdls_peer(struct brcmf_flowring *flow, int ifidx,
+ 	} else {
+ 		search = flow->tdls_entry;
+ 		if (memcmp(search->mac, peer, ETH_ALEN) == 0)
+-			return;
++			goto free_entry;
+ 		while (search->next) {
+ 			search = search->next;
+ 			if (memcmp(search->mac, peer, ETH_ALEN) == 0)
+-				return;
++				goto free_entry;
+ 		}
+ 		search->next = tdls_entry;
+ 	}
+ 
+ 	flow->tdls_active = true;
++	return;
++
++free_entry:
++	kfree(tdls_entry);
+ }
 -- 
-2.4.11
+1.9.1
