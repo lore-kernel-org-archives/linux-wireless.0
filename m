@@ -1,59 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36489 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751040AbcITGq0 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55818 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932567AbcISHak (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 02:46:26 -0400
-Received: by mail-pf0-f194.google.com with SMTP id n24so493718pfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 23:46:26 -0700 (PDT)
-From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
-        xypron.glpk@gmx.de,
-        Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Subject: [PATCH 1/1] rsi: fix memory leak in debugfs entry and supported bands
-Date: Tue, 20 Sep 2016 12:13:04 +0530
-Message-Id: <1474353784-9552-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20160920_084630_708463_3BBB9B2E)
+        Mon, 19 Sep 2016 03:30:40 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 10:30:06 +0300
+Message-Id: <20160919073028.22065-3-luca@coelho.fi> (sfid-20160919_093046_220371_7F405444)
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Subject: [PATCH 03/25] iwlwifi: mvm: cleanup skb queue functions use
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-Signed-off-by: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
-Signed-off-by: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+Use skb_queue_empty() and not skb_peek_tail() to check for
+empty list.
+Avoid a redundant check as well - loop will take care of it.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_mac80211.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-index dbb2389..dc64532 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
-@@ -194,6 +194,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
- void rsi_mac80211_detach(struct rsi_hw *adapter)
- {
- 	struct ieee80211_hw *hw = adapter->hw;
-+	int i;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+index d6d9ec4..b386628 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
+@@ -418,10 +418,11 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
  
- 	if (hw) {
- 		ieee80211_stop_queues(hw);
-@@ -201,7 +202,16 @@ void rsi_mac80211_detach(struct rsi_hw *adapter)
- 		ieee80211_free_hw(hw);
- 	}
+ 		ssn = ieee80211_sn_inc(ssn);
  
-+	for (i = 0; i < 2; i++) {
-+		struct ieee80211_supported_band *sbands = &adapter->sbands[i];
-+
-+		kfree(sbands->channels);
-+	}
-+
-+#ifdef CONFIG_RSI_DEBUGFS
- 	rsi_remove_dbgfs(adapter);
-+	kfree(adapter->dfsentry);
-+#endif
- }
- EXPORT_SYMBOL_GPL(rsi_mac80211_detach);
+-		/* holes are valid since nssn indicates frames were received. */
+-		if (skb_queue_empty(skb_list) || !skb_peek_tail(skb_list))
+-			continue;
+-		/* Empty the list. Will have more than one frame for A-MSDU */
++		/*
++		 * Empty the list. Will have more than one frame for A-MSDU.
++		 * Empty list is valid as well since nssn indicates frames were
++		 * received.
++		 */
+ 		while ((skb = __skb_dequeue(skb_list))) {
+ 			iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb,
+ 							reorder_buf->queue,
+@@ -434,7 +435,7 @@ static void iwl_mvm_release_frames(struct iwl_mvm *mvm,
+ 	if (reorder_buf->num_stored && !reorder_buf->removed) {
+ 		u16 index = reorder_buf->head_sn % reorder_buf->buf_size;
  
+-		while (!skb_peek_tail(&reorder_buf->entries[index]))
++		while (skb_queue_empty(&reorder_buf->entries[index]))
+ 			index = (index + 1) % reorder_buf->buf_size;
+ 		/* modify timer to match next frame's expiration time */
+ 		mod_timer(&reorder_buf->reorder_timer,
+@@ -462,7 +463,7 @@ void iwl_mvm_reorder_timer_expired(unsigned long data)
+ 	for (i = 0; i < buf->buf_size ; i++) {
+ 		index = (buf->head_sn + i) % buf->buf_size;
+ 
+-		if (!skb_peek_tail(&buf->entries[index]))
++		if (skb_queue_empty(&buf->entries[index]))
+ 			continue;
+ 		if (!time_after(jiffies, buf->reorder_time[index] +
+ 				RX_REORDER_BUF_TIMEOUT_MQ))
 -- 
-2.4.11
+2.9.3
