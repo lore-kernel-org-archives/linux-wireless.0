@@ -1,203 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:55022 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1757711AbcIPHxT (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45679 "EHLO
+        mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934266AbcISLKZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 16 Sep 2016 03:53:19 -0400
-Message-ID: <1474012383.5664.62.camel@coelho.fi> (sfid-20160916_095323_895656_B1671E3C)
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo <kvalo@codeaurora.org>
+        Mon, 19 Sep 2016 07:10:25 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-        linuxwifi <linuxwifi@intel.com>
-Date: Fri, 16 Sep 2016 10:53:03 +0300
-In-Reply-To: <1474000615.5664.57.camel@coelho.fi>
-References: <1473962425.5664.41.camel@coelho.fi>
-         <1474000615.5664.57.camel@coelho.fi>
-Content-Type: multipart/signed; micalg="pgp-sha256";
-        protocol="application/pgp-signature"; boundary="=-uospM0XVHOoI6/stJnlc"
-Mime-Version: 1.0
-Subject: pull-request: iwlwifi-next 2016-09-15-2
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 5/9] brcmfmac: remove worker from .ndo_set_mac_address() callback
+Date: Mon, 19 Sep 2016 12:09:55 +0100
+Message-Id: <1474283399-14385-6-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131045_251351_DE365163)
+In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+As it turns out there is no need to use a worker for the callback
+because it is not called from atomic context.
 
---=-uospM0XVHOoI6/stJnlc
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Reported-by: Dan Williams <dcbw@redhat.com>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 39 ++++++++--------------
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 --
+ 2 files changed, 13 insertions(+), 28 deletions(-)
 
-Hi Kalle,
-
-This is v2 of my pull-request. =C2=A0I have fixed the compilation error wit=
-h
-alpha (and possibly other) platforms.
-
-I'll send v2 of the changed patch as a reply to this email.
-
-Let me know if everything's fine (or not). :)
-
-Luca.
-
-
-The following changes since commit 76f8c0e17edc6eba43f84952e5a87c7f50f69370=
-:
-
-=C2=A0 iwlwifi: pcie: remove dead code (2016-08-30 14:16:43 +0300)
-
-are available in the git repository at:
-
-=C2=A0 git://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.g=
-it tags/iwlwifi-next-for-kalle-2016-09-15-2
-
-for you to fetch changes up to fd659f8e75b7f8214b4f323d46248205b4566e10:
-
-=C2=A0 iwlwifi: mvm: tighten BAID range check (2016-09-16 09:10:35 +0300)
-
-----------------------------------------------------------------
-* work for new hardware support continues
-* dynamic queue allocation stabilization
-* improvements in the MSIx code
-* multiqueue support work continues
-* new firmware version support
-* general cleanups and improvements
-
-----------------------------------------------------------------
-Emmanuel Grumbach (1):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: bump max API to 26
-
-Haim Dreyfuss (3):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: pcie: Configure shared interru=
-pt vector in MSIX mode
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: pcie: Set affinity mask for rx=
- interrupt vectors per cpu
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: pcie: replace possible_cpus() =
-with online_cpus() in MSIX mode
-
-Johannes Berg (3):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: make RSS RX more robust
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: remove pointless _bh from=
- spinlock in timer
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: tighten BAID range check
-
-Liad Kaufman (3):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: don't free queue after de=
-lba in dqa
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: fix pending frames tracki=
-ng on tx resp
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: free reserved queue on ST=
-A removal
-
-Oren Givon (2):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: add the new 9560 series
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: add the new 8275 series
-
-Sara Sharon (10):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: call a different txq_enab=
-le function
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: pcie: introduce new tfd and tb=
- formats
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: remove dump of locked reg=
-isters
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: support new shared memory=
- config API
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: introduce trans API to get byt=
-e count table
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: pcie: assign and access a000 T=
-FD & TBs
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: change byte count table for a0=
-00 devices
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: pcie: merge iwl_queue and iwl_=
-txq
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: support new BA notificati=
-on response
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: pcie: change indentation of iw=
-l_pcie_set_interrupt_capa()
-
-Sharon Dvir (1):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: unify iwl_get_ucode_image() im=
-plementations
-
-Wei Yongjun (1):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: mvm: use setup_timer instead o=
-f init_timer and data fields
-
-kbuild test robot (1):
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0iwlwifi: fix semicolon.cocci warnings
-
-=C2=A0drivers/net/wireless/intel/iwlwifi/dvm/ucode.c=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0|=C2=A0=C2=A011 +--
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-7000.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0|=C2=A0=C2=A0=C2=A04 +-
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-8000.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0|=C2=A0=C2=A015 ++-
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-9000.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0|=C2=A0=C2=A013 ++-
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-a000.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0|=C2=A0=C2=A0=C2=A02 +-
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-config.h=C2=A0=C2=A0=C2=A0=C2=
-=A0|=C2=A0=C2=A0=C2=A02 +
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-csr.h=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A0=C2=A02 +
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-fh.h=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A057 +++++++++---
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-fw.h=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A0=C2=A09 ++
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-io.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A0=C2=A02 +-
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-trans.c=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0|=C2=A0=C2=A0=C2=A01 +
-=C2=A0drivers/net/wireless/intel/iwlwifi/iwl-trans.h=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0|=C2=A0=C2=A015 ++-
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |=C2=A0=C2=A079 ++=
-++++++++++++++
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h=C2=A0=C2=A0=C2=A0=C2=
-=A0|=C2=A0=C2=A022 ++++-
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c=C2=A0=C2=A0=C2=A0=C2=
-=A0|=C2=A0=C2=A0=C2=A04 +-
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/fw.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0| 109 ++++++++++++----------
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/mvm.h=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A0=C2=A09 +-
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/ops.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A0=C2=A02 +-
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0|=C2=A0=C2=A0=C2=A08 +-
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/sta.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A036 ++++++--
-=C2=A0drivers/net/wireless/intel/iwlwifi/mvm/tx.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0| 175 +++++++++++++++++++++++------------
-=C2=A0drivers/net/wireless/intel/iwlwifi/pcie/drv.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0|=C2=A0=C2=A0=C2=A05 +
-=C2=A0drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 127 ++++++++++++=
-+++----------
-=C2=A0drivers/net/wireless/intel/iwlwifi/pcie/rx.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A016 +++-
-=C2=A0drivers/net/wireless/intel/iwlwifi/pcie/trans.c=C2=A0=C2=A0=C2=A0=C2=
-=A0| 247 +++++++++++++++++++++++++++++++++----------------
-=C2=A0drivers/net/wireless/intel/iwlwifi/pcie/tx.c=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0| 384 +++++++++++++++++++++++++++++++++++++++++++++------=
--------------------------
-=C2=A026 files changed, 897 insertions(+), 459 deletions(-)
---=-uospM0XVHOoI6/stJnlc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCAAGBQJX26TfAAoJEKFHnKIaPMX6EikP/2YMiztr5jLItUmlLsmcqnah
-Ayd5VXTuTIcLLnITibIYIrxZCJdcSrfZOaYjSlmgGm26UA3XmA67jmvBgwZ+GDaH
-JTTl4Ky/OdU4QUHTIEY9dLtBc6QOOkaTMZH5BNXs0q7hhFEZrnZrU2xPhJWaubim
-3yMQ7W42z35cJ2PswK+RgCal32EkfJ0rdWKlaRQQV+vjhAEOTvqegeBsbR0EwHku
-XsbbJDVo3W7l67cYdNcsDTUXdyfvwUmRMqIKFfTIl/Fgw87d6u0sOCzrqYufZmkV
-RsXBmi4GDdcP1fP5nBXlGpkbxj2tct7xEJN1M0sCuZVZOg2Mu//jZxP0DtnWJ3zv
-VsTUUVInaW5ZKP6NUlmYZEUv3/L0pE5dZ+qBTq8Y1UMEKt58xy35VWjVelGpBhjo
-EmdhdeFOcl1lmG4hogDU+8rgBRCas5jt8CmHYH08+TPUHDE2aqqEZRoV2NEKhitn
-CBuvjEpgzt4JuE/qtUUHDZvihmlDv7My+ba4db0gRRMqki0M8gs+WLkPzGkLigtC
-hZWTr/1GK5Oc/kjOhipcBOqTVbpFD3dxnReQfh6L+lLaELJNOCj/ixEtaOf9dHJU
-T/Z391j3OsKIdHmtfDJCHbhW5KhRUUhD6qBkWuvvkNR5mFHho+8a8G2JrTPE0sK/
-WlAn2FmGjqZnULYVG1dN
-=sNEK
------END PGP SIGNATURE-----
-
---=-uospM0XVHOoI6/stJnlc--
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 8d16f02..77c4180 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -136,27 +136,6 @@ static void _brcmf_set_multicast_list(struct work_struct *work)
+ 			  err);
+ }
+ 
+-static void
+-_brcmf_set_mac_address(struct work_struct *work)
+-{
+-	struct brcmf_if *ifp;
+-	s32 err;
+-
+-	ifp = container_of(work, struct brcmf_if, setmacaddr_work);
+-
+-	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
+-
+-	err = brcmf_fil_iovar_data_set(ifp, "cur_etheraddr", ifp->mac_addr,
+-				       ETH_ALEN);
+-	if (err < 0) {
+-		brcmf_err("Setting cur_etheraddr failed, %d\n", err);
+-	} else {
+-		brcmf_dbg(TRACE, "MAC address updated to %pM\n",
+-			  ifp->mac_addr);
+-		memcpy(ifp->ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
+-	}
+-}
+-
+ #if IS_ENABLED(CONFIG_IPV6)
+ static void _brcmf_update_ndtable(struct work_struct *work)
+ {
+@@ -190,10 +169,20 @@ static int brcmf_netdev_set_mac_address(struct net_device *ndev, void *addr)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct sockaddr *sa = (struct sockaddr *)addr;
++	int err;
+ 
+-	memcpy(&ifp->mac_addr, sa->sa_data, ETH_ALEN);
+-	schedule_work(&ifp->setmacaddr_work);
+-	return 0;
++	brcmf_dbg(TRACE, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
++
++	err = brcmf_fil_iovar_data_set(ifp, "cur_etheraddr", sa->sa_data,
++				       ETH_ALEN);
++	if (err < 0) {
++		brcmf_err("Setting cur_etheraddr failed, %d\n", err);
++	} else {
++		brcmf_dbg(TRACE, "updated to %pM\n", sa->sa_data);
++		memcpy(ifp->mac_addr, sa->sa_data, ETH_ALEN);
++		memcpy(ifp->ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
++	}
++	return err;
+ }
+ 
+ static void brcmf_netdev_set_multicast_list(struct net_device *ndev)
+@@ -525,7 +514,6 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
+ 	/* set the mac address */
+ 	memcpy(ndev->dev_addr, ifp->mac_addr, ETH_ALEN);
+ 
+-	INIT_WORK(&ifp->setmacaddr_work, _brcmf_set_mac_address);
+ 	INIT_WORK(&ifp->multicast_work, _brcmf_set_multicast_list);
+ 	INIT_WORK(&ifp->ndoffload_work, _brcmf_update_ndtable);
+ 
+@@ -730,7 +718,6 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bsscfgidx,
+ 		}
+ 
+ 		if (ifp->ndev->netdev_ops == &brcmf_netdev_ops_pri) {
+-			cancel_work_sync(&ifp->setmacaddr_work);
+ 			cancel_work_sync(&ifp->multicast_work);
+ 			cancel_work_sync(&ifp->ndoffload_work);
+ 		}
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 8fa34ca..8a810bb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -176,7 +176,6 @@ enum brcmf_netif_stop_reason {
+  * @vif: points to cfg80211 specific interface information.
+  * @ndev: associated network device.
+  * @stats: interface specific network statistics.
+- * @setmacaddr_work: worker object for setting mac address.
+  * @multicast_work: worker object for multicast provisioning.
+  * @ndoffload_work: worker object for neighbor discovery offload configuration.
+  * @fws_desc: interface specific firmware-signalling descriptor.
+@@ -193,7 +192,6 @@ struct brcmf_if {
+ 	struct brcmf_cfg80211_vif *vif;
+ 	struct net_device *ndev;
+ 	struct net_device_stats stats;
+-	struct work_struct setmacaddr_work;
+ 	struct work_struct multicast_work;
+ 	struct work_struct ndoffload_work;
+ 	struct brcmf_fws_mac_descriptor *fws_desc;
+-- 
+1.9.1
