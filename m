@@ -1,56 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52923 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1758200AbcILN0J (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55836 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S935780AbcISHal (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 09:26:09 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8CDPgf3028631
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 06:26:08 -0700
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-        by mx0b-0016f401.pphosted.com with ESMTP id 25chpmpamn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Mon, 12 Sep 2016 06:26:08 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-        Nishant Sarmukadam <nishants@marvell.com>,
-        Ganapathi Bhat <gbhat@marvell.com>,
-        Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/2] mwifiex: firmware name correction for usb8997 chipset
-Date: Mon, 12 Sep 2016 18:55:28 +0530
-Message-ID: <1473686728-8101-3-git-send-email-akarwar@marvell.com> (sfid-20160912_152613_466695_558E6794)
-In-Reply-To: <1473686728-8101-1-git-send-email-akarwar@marvell.com>
-References: <1473686728-8101-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+        Mon, 19 Sep 2016 03:30:41 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Aviya Erenfeld <aviya.erenfeld@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 10:30:08 +0300
+Message-Id: <20160919073028.22065-5-luca@coelho.fi> (sfid-20160919_093048_312728_4F5C29C9)
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Subject: [PATCH 05/25] iwlwifi: mvm: add support for MU-MIMO air sniffer
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ganapathi Bhat <gbhat@marvell.com>
+From: Aviya Erenfeld <aviya.erenfeld@intel.com>
 
-Similar to pcie8997 chipset, first firmware submitted for usb8997
-chipset will be usbusb8997_combo_v4.bin. This patch corrects the
-name used in driver.
+enable MU-MIMO air sniffer if it's supported by the NIC
 
-Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Aviya Erenfeld <aviya.erenfeld@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/usb.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.h b/drivers/net/wireless/marvell/mwifiex/usb.h
-index 1b49c52..30e8eb8 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.h
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.h
-@@ -46,7 +46,7 @@
- #define USB8766_DEFAULT_FW_NAME	"mrvl/usb8766_uapsta.bin"
- #define USB8797_DEFAULT_FW_NAME	"mrvl/usb8797_uapsta.bin"
- #define USB8801_DEFAULT_FW_NAME	"mrvl/usb8801_uapsta.bin"
--#define USB8997_DEFAULT_FW_NAME	"mrvl/usb8997_uapsta.bin"
-+#define USB8997_DEFAULT_FW_NAME	"mrvl/usbusb8997_combo_v4.bin"
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 9506e65..b7d80b5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -720,6 +720,10 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	if (ret)
+ 		iwl_mvm_leds_exit(mvm);
  
- #define FW_DNLD_TX_BUF_SIZE	620
- #define FW_DNLD_RX_BUF_SIZE	2048
++	if (mvm->cfg->vht_mu_mimo_supported)
++		wiphy_ext_feature_set(hw->wiphy,
++				      NL80211_EXT_FEATURE_MU_MIMO_AIR_SNIFFER);
++
+ 	return ret;
+ }
+ 
+@@ -2229,6 +2233,10 @@ static void iwl_mvm_bss_info_changed(struct ieee80211_hw *hw,
+ 	case NL80211_IFTYPE_ADHOC:
+ 		iwl_mvm_bss_info_changed_ap_ibss(mvm, vif, bss_conf, changes);
+ 		break;
++	case NL80211_IFTYPE_MONITOR:
++		if (changes & BSS_CHANGED_MU_GROUPS)
++			iwl_mvm_update_mu_groups(mvm, vif);
++		break;
+ 	default:
+ 		/* shouldn't happen */
+ 		WARN_ON_ONCE(1);
 -- 
-1.9.1
+2.9.3
