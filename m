@@ -1,47 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from muru.com ([72.249.23.125]:42254 "EHLO muru.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760100AbcINRNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 13:13:10 -0400
-Date: Wed, 14 Sep 2016 10:13:06 -0700
-From: Tony Lindgren <tony@atomide.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Eyal Reizer <eyalr@ti.com>, Guy Mishol <guym@ti.com>,
-        Maital Hahn <maitalm@ti.com>,
-        Maxim Altshul <maxim.altshul@ti.com>,
-        Shahar Patury <shaharp@ti.com>, linux-wireless@vger.kernel.org,
-        linux-omap@vger.kernel.org
-Subject: Re: [PATCH 3/5] wlcore: sdio: Populate config firmware data
-Message-ID: <20160914171303.5h4ktdwfrsfnduf6@atomide.com> (sfid-20160914_191314_459782_61BC6228)
-References: <20160913215043.29454-1-tony@atomide.com>
- <20160913215043.29454-4-tony@atomide.com>
- <87intycsta.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87intycsta.fsf@kamboji.qca.qualcomm.com>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36383 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754543AbcISKyt (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 06:54:49 -0400
+Received: by mail-pf0-f196.google.com with SMTP id n24so7122487pfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 03:54:48 -0700 (PDT)
+From: Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, johannes.berg@intel.com, hofrat@osadl.org,
+        xypron.glpk@gmx.de,
+        Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
+Subject: [PATCH] rsi: fix memory leak in debugfs entry and supported bands
+Date: Mon, 19 Sep 2016 16:21:51 +0530
+Message-Id: <1474282311-21541-1-git-send-email-prameela.j04cs@gmail.com> (sfid-20160919_125502_462528_85E989EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-* Kalle Valo <kvalo@codeaurora.org> [160914 10:09]:
-> Tony Lindgren <tony@atomide.com> writes:
-> 
-> > Configure the config firmware names and make it available
-> > in platform data.
-> >
-> > Let's also fix the order of the struct wilink_family_data
-> > while at it.
-> >
-> > Signed-off-by: Tony Lindgren <tony@atomide.com>
-> > ---
-> >  drivers/net/wireless/ti/wlcore/spi.c | 42 ++++++++++++++++++++----------------
-> >  1 file changed, 24 insertions(+), 18 deletions(-)
-> 
-> I think the title should be:
-> 
-> wlcore: spi: Populate config firmware data
-> 
-> I can fix that during commit.
+From: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
 
-Oops sorry shift+Insert caused typo :)
+Signed-off-by: Prameela Rani Garnepudi <prameela.garnepudi@redpinesignals.com>
+---
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-Tony
+diff --git a/drivers/net/wireless/rsi/rsi_91x_mac80211.c b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+index dbb2389..dc64532 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_mac80211.c
++++ b/drivers/net/wireless/rsi/rsi_91x_mac80211.c
+@@ -194,6 +194,7 @@ static void rsi_register_rates_channels(struct rsi_hw *adapter, int band)
+ void rsi_mac80211_detach(struct rsi_hw *adapter)
+ {
+ 	struct ieee80211_hw *hw = adapter->hw;
++	int i;
+ 
+ 	if (hw) {
+ 		ieee80211_stop_queues(hw);
+@@ -201,7 +202,16 @@ void rsi_mac80211_detach(struct rsi_hw *adapter)
+ 		ieee80211_free_hw(hw);
+ 	}
+ 
++	for (i = 0; i < 2; i++) {
++		struct ieee80211_supported_band *sbands = &adapter->sbands[i];
++
++		kfree(sbands->channels);
++	}
++
++#ifdef CONFIG_RSI_DEBUGFS
+ 	rsi_remove_dbgfs(adapter);
++	kfree(adapter->dfsentry);
++#endif
+ }
+ EXPORT_SYMBOL_GPL(rsi_mac80211_detach);
+ 
+-- 
+2.4.11
