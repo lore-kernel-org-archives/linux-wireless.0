@@ -1,101 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42784 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50501 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759949AbcINIMD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 04:12:03 -0400
+        id S1752255AbcISK6o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 06:58:44 -0400
+Message-ID: <1474282717.4469.33.camel@sipsolutions.net> (sfid-20160919_125847_784045_8E46D67F)
+Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
 From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 5/5] mac80211: remove sta_remove_debugfs driver callback
-Date: Wed, 14 Sep 2016 10:11:58 +0200
-Message-Id: <1473840718-5605-5-git-send-email-johannes@sipsolutions.net> (sfid-20160914_101216_814312_41073FAA)
-In-Reply-To: <1473840718-5605-1-git-send-email-johannes@sipsolutions.net>
-References: <1473840718-5605-1-git-send-email-johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
+Date: Mon, 19 Sep 2016 12:58:37 +0200
+In-Reply-To: <20160919104801.GA12774@gondor.apana.org.au>
+References: <20160919084056.GA11875@gondor.apana.org.au>
+         <1474276530.4469.16.camel@sipsolutions.net>
+         <20160919091721.GA12235@gondor.apana.org.au>
+         <1474277244.4469.21.camel@sipsolutions.net>
+         <20160919093434.GA12378@gondor.apana.org.au>
+         <1474278634.4469.25.camel@sipsolutions.net>
+         <1474278896.4469.26.camel@sipsolutions.net>
+         <1474279330.4469.28.camel@sipsolutions.net>
+         <1474279492.4469.29.camel@sipsolutions.net>
+         <1474279827.4469.30.camel@sipsolutions.net>
+         <20160919104801.GA12774@gondor.apana.org.au>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Mon, 2016-09-19 at 18:48 +0800, Herbert Xu wrote:
+> On Mon, Sep 19, 2016 at 12:10:27PM +0200, Johannes Berg wrote:
+> > 
+> > Btw, for debug I put
+> > 
+> > BUG_ON(atomic_read(&ht->nelems) < 0);
+> > 
+> > after the atomic_dec() in __rhashtable_remove_fast_one(). That
+> > makes
+> > the kernel crash instantly on the buggy code, and I just have to
+> > run a
+> > single test ("wpas_ctrl_interface_add_many") to get there.
+> 
+> Aha I see the problem now.  The nelems logic on remove is broken.
 
-No drivers implement this, relying either on the recursive
-directory removal to remove their debugfs, or not having any
-to start with. Remove the dead driver callback.
+I looked at it for a long time, but didn't see it :) But yeah, I've
+come to the same conclusion by adding debugging of the chains etc.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/net/mac80211.h     | 11 ++---------
- net/mac80211/debugfs_sta.c |  4 ----
- net/mac80211/driver-ops.h  | 15 ---------------
- 3 files changed, 2 insertions(+), 28 deletions(-)
+> I'll send out a v3.
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 08bac23c8de1..d9c8ccd6b4e6 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3101,11 +3101,8 @@ enum ieee80211_reconfig_type {
-  *
-  * @sta_add_debugfs: Drivers can use this callback to add debugfs files
-  *	when a station is added to mac80211's station list. This callback
-- *	and @sta_remove_debugfs should be within a CONFIG_MAC80211_DEBUGFS
-- *	conditional. This callback can sleep.
-- *
-- * @sta_remove_debugfs: Remove the debugfs files which were added using
-- *	@sta_add_debugfs. This callback can sleep.
-+ *	should be within a CONFIG_MAC80211_DEBUGFS conditional. This
-+ *	callback can sleep.
-  *
-  * @sta_notify: Notifies low level driver about power state transition of an
-  *	associated station, AP,  IBSS/WDS/mesh peer etc. For a VIF operating
-@@ -3501,10 +3498,6 @@ struct ieee80211_ops {
- 				struct ieee80211_vif *vif,
- 				struct ieee80211_sta *sta,
- 				struct dentry *dir);
--	void (*sta_remove_debugfs)(struct ieee80211_hw *hw,
--				   struct ieee80211_vif *vif,
--				   struct ieee80211_sta *sta,
--				   struct dentry *dir);
- #endif
- 	void (*sta_notify)(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			enum sta_notify_cmd, struct ieee80211_sta *sta);
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index fb2693582e40..a2fcdb47a0e6 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -544,10 +544,6 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 
- void ieee80211_sta_debugfs_remove(struct sta_info *sta)
- {
--	struct ieee80211_local *local = sta->local;
--	struct ieee80211_sub_if_data *sdata = sta->sdata;
--
--	drv_sta_remove_debugfs(local, sdata, &sta->sta, sta->debugfs_dir);
- 	debugfs_remove_recursive(sta->debugfs_dir);
- 	sta->debugfs_dir = NULL;
- }
-diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
-index c39f93b48791..fe35a1c0dc86 100644
---- a/net/mac80211/driver-ops.h
-+++ b/net/mac80211/driver-ops.h
-@@ -499,21 +499,6 @@ static inline void drv_sta_add_debugfs(struct ieee80211_local *local,
- 		local->ops->sta_add_debugfs(&local->hw, &sdata->vif,
- 					    sta, dir);
- }
--
--static inline void drv_sta_remove_debugfs(struct ieee80211_local *local,
--					  struct ieee80211_sub_if_data *sdata,
--					  struct ieee80211_sta *sta,
--					  struct dentry *dir)
--{
--	might_sleep();
--
--	sdata = get_bss_sdata(sdata);
--	check_sdata_in_driver(sdata);
--
--	if (local->ops->sta_remove_debugfs)
--		local->ops->sta_remove_debugfs(&local->hw, &sdata->vif,
--					       sta, dir);
--}
- #endif
- 
- static inline void drv_sta_pre_rcu_remove(struct ieee80211_local *local,
--- 
-2.8.1
+I'll test it when I have it :)
+
+johannes
