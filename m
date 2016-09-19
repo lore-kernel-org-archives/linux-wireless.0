@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:38277 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751518AbcIMMZh (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 08:25:37 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: ath10k: remove unused variable ar_pci
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <20160905133802.18755-1-chaehyun.lim@gmail.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-CC: <netdev@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-        Chaehyun Lim <chaehyun.lim@gmail.com>,
-        <ath10k@lists.infradead.org>
-Message-ID: <ab838c70bd944270ac482115c9194223@euamsexm01a.eu.qualcomm.com> (sfid-20160913_142541_222342_F338A599)
-Date: Tue, 13 Sep 2016 14:25:28 +0200
+Received: from s3.sipsolutions.net ([5.9.151.49]:49744 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759746AbcISIZY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 04:25:24 -0400
+Message-ID: <1474273518.4469.8.camel@sipsolutions.net> (sfid-20160919_102531_542945_20EB5F40)
+Subject: Re: [PATCH 0/2] rhashtable: rhashtable with duplicate objects
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+        tom@herbertland.com
+Date: Mon, 19 Sep 2016 10:25:18 +0200
+In-Reply-To: <1474273219.4469.7.camel@sipsolutions.net> (sfid-20160919_102334_213492_CF017D1F)
+References: <20160804071846.GA773@gondor.apana.org.au>
+         <20160804074546.GA996@gondor.apana.org.au>
+         <1470377813.2977.14.camel@sipsolutions.net>
+         <20160805104858.GA9297@gondor.apana.org.au>
+         <1470394233.2977.37.camel@sipsolutions.net>
+         <20160918135030.GA7062@gondor.apana.org.au>
+         <1474273219.4469.7.camel@sipsolutions.net>
+         (sfid-20160919_102334_213492_CF017D1F)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Chaehyun Lim <chaehyun.lim@gmail.com> wrote:
-> Trival fix to remove unused variable ar_pci in ath10k_pci_tx_pipe_cleanup
-> when building with W=1:
-> drivers/net/wireless/ath/ath10k/pci.c:1696:21: warning: variable
-> 'ar_pci' set but not used [-Wunused-but-set-variable]
+
+> Yes, it's passing all the wpa_supplicant tests, so
 > 
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> 
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+I take that back. I think it's leaking memory - my tests never used to
+run out of memory, but now they eventually do.
 
-214d55394481 ath10k: remove unused variable ar_pci
+I'll try to figure out more.
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9313963/
+johannes
