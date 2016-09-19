@@ -1,49 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-it0-f50.google.com ([209.85.214.50]:35774 "EHLO
-        mail-it0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751111AbcION20 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:45679 "EHLO
+        mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933792AbcISLKY (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 09:28:26 -0400
-Received: by mail-it0-f50.google.com with SMTP id r192so94748256ita.0
-        for <linux-wireless@vger.kernel.org>; Thu, 15 Sep 2016 06:28:25 -0700 (PDT)
-Date: Thu, 15 Sep 2016 09:26:01 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Zefir Kurtisi <zefir.kurtisi@neratec.com>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Christian Lamparter <chunkeey@googlemail.com>
-Subject: Re: Using ath5k/ath9k radio for constant-tx noise source.
-Message-ID: <20160915132601.GC4475@localhost> (sfid-20160915_152829_452233_02BCAEC1)
-References: <55D4D406.5000603@candelatech.com>
- <55D5EE0E.3020408@neratec.com>
- <6d50965d-af35-dad9-23fe-162678a0f02f@candelatech.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6d50965d-af35-dad9-23fe-162678a0f02f@candelatech.com>
+        Mon, 19 Sep 2016 07:10:24 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 9/9] brcmfmac: simplify mapping of auth type
+Date: Mon, 19 Sep 2016 12:09:59 +0100
+Message-Id: <1474283399-14385-10-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131036_312416_1F56D173)
+In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Sep 14, 2016 at 05:22:46PM -0700, Ben Greear wrote:
-> On 08/20/2015 08:11 AM, Zefir Kurtisi wrote:
-> >On 08/19/2015 09:07 PM, Ben Greear wrote:
-> >>I have a commercial AP that is using a CM9 ath5k radio (evidently, I could be wrong)
-> >>and it has the ability to do a constant transmit of raw noise (RF probe shows
-> >>noise, but a monitor-port sniffer does not see any frames from the CM9).
-> >>
-> >>I don't know the low-level details of how it is doing this, but I suspect
-> >>it is using something like madwifi for a driver.
-> >>
-> >>Does anyone know how this can be done with modern software and
-> >>ath5k or ath9k NICs?
+From: Hante Meuleman <hante.meuleman@broadcom.com>
 
-Hi Ben,
+The 802.11 standard only has four valid auth type configurations of which
+our firmware only supports two, ie. Open System and Shared Key. Simplify
+the mapping falling back to automatic for other types specified by
+user-space.
 
-I wrote some code to do this on ath5k -- I can post a patch if you're
-interested in using ath5k for this.
+Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-Here's a snapshot of what it looks like when running on ch.1:
-
-https://bobcopeland.com/images/speccy-testmode.png
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 386ad7e..3b7c0f6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1595,15 +1595,9 @@ static s32 brcmf_set_auth_type(struct net_device *ndev,
+ 		val = 1;
+ 		brcmf_dbg(CONN, "shared key\n");
+ 		break;
+-	case NL80211_AUTHTYPE_AUTOMATIC:
+-		val = 2;
+-		brcmf_dbg(CONN, "automatic\n");
+-		break;
+-	case NL80211_AUTHTYPE_NETWORK_EAP:
+-		brcmf_dbg(CONN, "network eap\n");
+ 	default:
+ 		val = 2;
+-		brcmf_err("invalid auth type (%d)\n", sme->auth_type);
++		brcmf_dbg(CONN, "automatic, auth type (%d)\n", sme->auth_type);
+ 		break;
+ 	}
+ 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.9.1
