@@ -1,34 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0202.hostedemail.com ([216.40.44.202]:51554 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1757518AbcILSug (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55936 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1760256AbcISHbS (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 14:50:36 -0400
-Message-ID: <1473706232.11006.29.camel@perches.com> (sfid-20160912_205058_019881_7260CCC2)
-Subject: Re: [PATCH 0/9] rsi: code clean-up
-From: Joe Perches <joe@perches.com>
-To: Kalle Valo <kvalo@codeaurora.org>,
-        Prameela Rani Garnepudi <prameela.j04cs@gmail.com>
-Cc: linux-wireless@vger.kernel.org, johannes.berg@intel.com,
-        hofrat@osadl.org, prameela.garnepudi@redpinesignals.com
-Date: Mon, 12 Sep 2016 11:50:32 -0700
-In-Reply-To: <87sht5mg86.fsf@kamboji.qca.qualcomm.com>
-References: <cover.1473669618.git.prameela.j04cs@gmail.com>
-         <87sht5mg86.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Mon, 19 Sep 2016 03:31:18 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Johannes Berg <johannes.berg@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 10:30:27 +0300
+Message-Id: <20160919073028.22065-24-luca@coelho.fi> (sfid-20160919_093135_926616_B8E995A6)
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Subject: [PATCH 24/25] iwlwifi: mvm: use LIST_HEAD() macro
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-09-12 at 15:53 +0300, Kalle Valo wrote:
-> Also try to get more familiar how development is done, here are few
-> links:
-> 
-> https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
-> https://www.kernel.org/doc/Documentation/SubmittingPatches
-> https://kernelnewbies.org/FirstKernelPatch
-> 
-> Also mailing list archives and git logs are a great way to learn from
-> how others do it.
+From: Johannes Berg <johannes.berg@intel.com>
 
-And only working on drivers/staging files is a good way to start.
+There's no need to declare a list and then init it manually,
+just use the LIST_HEAD() macro.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 3eccd89..75f3ca0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -858,9 +858,7 @@ static void iwl_mvm_async_handlers_wk(struct work_struct *wk)
+ 	struct iwl_mvm *mvm =
+ 		container_of(wk, struct iwl_mvm, async_handlers_wk);
+ 	struct iwl_async_handler_entry *entry, *tmp;
+-	struct list_head local_list;
+-
+-	INIT_LIST_HEAD(&local_list);
++	LIST_HEAD(local_list);
+ 
+ 	/* Ensure that we are not in stop flow (check iwl_mvm_mac_stop) */
+ 
+-- 
+2.9.3
