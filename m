@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:16419 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754044AbcISIen (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 19 Sep 2016 04:34:43 -0400
-Date: Mon, 19 Sep 2016 10:34:39 +0200
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Julia Lawall <Julia.Lawall@lip6.fr>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-        kernel-janitors@vger.kernel.org,
-        Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] NFC: pn533: constify pn533_phy_ops structures
-Message-ID: <20160919083439.GA13777@zurbaran.home> (sfid-20160919_103652_711625_BE4FD74A)
-References: <1470759062-21276-1-git-send-email-Julia.Lawall@lip6.fr>
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:35057 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752040AbcISVQY (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 17:16:24 -0400
+Received: by mail-wm0-f47.google.com with SMTP id l132so173897999wmf.0
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 14:16:23 -0700 (PDT)
+Date: Mon, 19 Sep 2016 23:16:21 +0200
+From: Thomas Graf <tgraf@suug.ch>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+        "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, tom@herbertland.com,
+        Ben Greear <greearb@candelatech.com>
+Subject: Re: [v3 PATCH 1/2] rhashtable: Add rhlist interface
+Message-ID: <20160919211621.GA20951@pox.localdomain> (sfid-20160919_231632_639442_ED7C0839)
+References: <20160919105854.GA12892@gondor.apana.org.au>
+ <E1blwIz-0003Mz-HD@gondolin.me.apana.org.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1470759062-21276-1-git-send-email-Julia.Lawall@lip6.fr>
+In-Reply-To: <E1blwIz-0003Mz-HD@gondolin.me.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julia,
+On 09/19/16 at 07:00pm, Herbert Xu wrote:
+> The insecure_elasticity setting is an ugly wart brought out by
+> users who need to insert duplicate objects (that is, distinct
+> objects with identical keys) into the same table.
+> 
+> In fact, those users have a much bigger problem.  Once those
+> duplicate objects are inserted, they don't have an interface to
+> find them (unless you count the walker interface which walks
+> over the entire table).
+> 
+> Some users have resorted to doing a manual walk over the hash
+> table which is of course broken because they don't handle the
+> potential existence of multiple hash tables.  The result is that
+> they will break sporadically when they encounter a hash table
+> resize/rehash.
+> 
+> This patch provides a way out for those users, at the expense
+> of an extra pointer per object.  Essentially each object is now
+> a list of objects carrying the same key.  The hash table will
+> only see the lists so nothing changes as far as rhashtable is
+> concerned.
+> 
+> To use this new interface, you need to insert a struct rhlist_head
+> into your objects instead of struct rhash_head.  While the hash
+> table is unchanged, for type-safety you'll need to use struct
+> rhltable instead of struct rhashtable.  All the existing interfaces
+> have been duplicated for rhlist, including the hash table walker.
+> 
+> One missing feature is nulls marking because AFAIK the only potential
+> user of it does not need duplicate objects.  Should anyone need
+> this it shouldn't be too hard to add.
+> 
+> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
 
-On Tue, Aug 09, 2016 at 06:11:02PM +0200, Julia Lawall wrote:
-> The pn533_phy_ops are never modified, so declare them as const.
-> 
-> Done with the help of Coccinelle.
-> 
-> Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-> 
-> ---
->  drivers/nfc/pn533/i2c.c   |    2 +-
->  drivers/nfc/pn533/pn533.c |    2 +-
->  drivers/nfc/pn533/pn533.h |    4 ++--
->  drivers/nfc/pn533/usb.c   |    2 +-
->  4 files changed, 5 insertions(+), 5 deletions(-)
-Applied to nfc-next, thanks.
+Nice, I like how this simplifies users! Is this suitable for
+ILA as well?
 
-Cheers,
-Samuel.
+Acked-by: Thomas Graf <tgraf@suug.ch>
