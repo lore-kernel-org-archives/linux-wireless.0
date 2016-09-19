@@ -1,43 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.suteba.org.ar ([200.16.134.105]:50186 "EHLO
-        mail.suteba.org.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933889AbcIZPWH (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:36429 "EHLO
+        mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932952AbcISLKL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 26 Sep 2016 11:22:07 -0400
-From: Matias Mucciolo <mmucciolo@suteba.org.ar>
-To: Aditya Shankar <aditya.shankar@microchip.com>,
-        Ganesh Krishna <ganesh.krishna@microchip.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: fix symbol 'WILC_DEBUG_LEVEL' was not declared.
-Date: Mon, 26 Sep 2016 12:15:18 -0300
-Message-ID: <34310025.aMSyYASYEz@varitech> (sfid-20160926_172210_637536_7323E821)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+        Mon, 19 Sep 2016 07:10:11 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 0/9] brcmfmac: coverity fixes
+Date: Mon, 19 Sep 2016 12:09:50 +0100
+Message-Id: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131032_223211_337CE8FF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This series consist of:
+* fixes for several issues found by Coverity.
+* ignore 802.11d configuration if not supported in firmware.
+* remove worker from netdev callback.
 
-- Fixed a sparse warning: symbol 'WILC_DEBUG_LEVEL' was not declared.
+This is intended for 4.9 and applies to the master branch of
+the wireless-drivers-next repository.
 
-Signed-off-by: Matias Mucciolo <mmucciolo@suteba.org.ar>
----
- drivers/staging/wilc1000/wilc_debugfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Arend van Spriel (4):
+  brcmfmac: rework pointer trickery in brcmf_proto_bcdc_query_dcmd()
+  brcmfmac: fix memory leak in brcmf_flowring_add_tdls_peer()
+  brcmfmac: initialize variable in brcmf_sdiod_regrl()
+  brcmfmac: remove worker from .ndo_set_mac_address() callback
 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index b052628..802bb1d 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -29,7 +29,7 @@ static struct dentry *wilc_dir;
- #define ERR             BIT(3)
- 
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
-+static atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
- 
- /*
+Hante Meuleman (5):
+  brcmfmac: ignore 11d configuration errors
+  brcmfmac: remove unnecessary null pointer check
+  brcmfmac: fix clearing entry IPv6 address
+  brcmfmac: fix out of bound access on clearing wowl wake indicator
+  brcmfmac: simplify mapping of auth type
+
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    |  2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |  2 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 41 +++++++++---------
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 49 +++++++++-------------
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  2 -
+ .../broadcom/brcm80211/brcmfmac/flowring.c         |  8 +++-
+ 6 files changed, 47 insertions(+), 57 deletions(-)
+
 -- 
-2.1.4
+1.9.1
