@@ -1,95 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:37365 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752768AbcIORef (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 13:34:35 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "greearb@candelatech.com" <greearb@candelatech.com>,
-        "kvalo@qca.qualcomm.com" <kvalo@qca.qualcomm.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 09/21] ath10k: print fw debug messages in hex.
-Date: Thu, 15 Sep 2016 17:34:29 +0000
-Message-ID: <1473960869.31073.15.camel@intel.com> (sfid-20160915_193446_472375_E3B738A8)
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-         <1462986153-16318-10-git-send-email-greearb@candelatech.com>
-         <87oa3qefac.fsf@kamboji.qca.qualcomm.com>
-         <57D96910.2010608@candelatech.com>
-         <87k2edb6kp.fsf@kamboji.qca.qualcomm.com>
-         <a26dfea0-9a18-69fc-e23c-cb223490822d@candelatech.com>
-In-Reply-To: <a26dfea0-9a18-69fc-e23c-cb223490822d@candelatech.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail2.candelatech.com ([208.74.158.173]:53834 "EHLO
+        mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751327AbcISQTH (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 12:19:07 -0400
+Message-ID: <57E01026.9030604@candelatech.com> (sfid-20160919_181910_706641_36504C5E)
+Date: Mon, 19 Sep 2016 09:19:50 -0700
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+        "Pedersen, Thomas" <twp@qca.qualcomm.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] cfg80211: cap 20MHz VHT bitrate at MCS 8
+References: <1473188417-13987-1-git-send-email-twp@qca.qualcomm.com>         <2769a14e-964d-4ec2-9f04-ddd332434b78@candelatech.com>         <38049c4f-da5b-a6ec-bcc4-c803197abcd7@qca.qualcomm.com>         <1473662637.4201.2.camel@sipsolutions.net>         <1473789454.27738.7.camel@qca.qualcomm.com>         <1473789740.5622.3.camel@sipsolutions.net>         <1474050629.31554.19.camel@qca.qualcomm.com>         (sfid-20160916_203211_452910_08E25A89) <1474275637.4469.15.camel@sipsolutions.net>
+In-Reply-To: <1474275637.4469.15.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVGh1LCAyMDE2LTA5LTE1IGF0IDA4OjE0IC0wNzAwLCBCZW4gR3JlZWFyIHdyb3RlOg0KPiBP
-biAwOS8xNS8yMDE2IDA3OjA2IEFNLCBWYWxvLCBLYWxsZSB3cm90ZToNCj4gPiBCZW4gR3JlZWFy
-IDxncmVlYXJiQGNhbmRlbGF0ZWNoLmNvbT4gd3JpdGVzOg0KPiA+IA0KPiA+ID4gT24gMDkvMTQv
-MjAxNiAwNzoxOCBBTSwgVmFsbywgS2FsbGUgd3JvdGU6DQo+ID4gPiA+IGdyZWVhcmJAY2FuZGVs
-YXRlY2guY29tIHdyaXRlczoNCj4gPiA+ID4gDQo+ID4gPiA+ID4gRnJvbTogQmVuIEdyZWVhciA8
-Z3JlZWFyYkBjYW5kZWxhdGVjaC5jb20+DQo+ID4gPiA+ID4gDQo+ID4gPiA+ID4gVGhpcyBhbGxv
-d3MgdXNlci1zcGFjZSB0b29scyB0byBkZWNvZGUgZGVidWctbG9nDQo+ID4gPiA+ID4gbWVzc2Fn
-ZXMgYnkgcGFyc2luZyBkbWVzZyBvciAvdmFyL2xvZy9tZXNzYWdlcy4NCj4gPiA+ID4gPiANCj4g
-PiA+ID4gPiBTaWduZWQtb2ZmLWJ5OiBCZW4gR3JlZWFyIDxncmVlYXJiQGNhbmRlbGF0ZWNoLmNv
-bT4NCj4gPiA+ID4gDQo+ID4gPiA+IERvbid0IHRyYWNpbmcgcG9pbnRzIGFscmVhZHkgcHJvdmlk
-ZSB0aGUgc2FtZSBpbmZvcm1hdGlvbj8NCj4gPiA+IA0KPiA+ID4gVHJhY2luZyB0b29scyBhcmUg
-ZGlmZmljdWx0IHRvIHNldCB1cCBhbmQgbWF5IG5vdCBiZSBhdmFpbGFibGUgb24NCj4gPiA+IHJh
-bmRvbSBlbWJlZGRlZCBkZXZpY2VzLiAgQW5kIGlmIHdlIGFyZSBkZWFsaW5nIHdpdGggYnVnIHJl
-cG9ydHMNCj4gPiA+IGZyb20NCj4gPiA+IHRoZSBmaWVsZCwgbW9zdCB1c2VycyB3aWxsIG5vdCBi
-ZSBhYmxlIHRvIHNldCBpdCB1cCByZWdhcmRsZXNzLg0KPiA+ID4gDQo+ID4gPiBUaGVyZSBhcmUg
-c2ltaWxhciB3YXlzIHRvIHByaW50IG91dCBoZXgsIGJ1dCB0aGUgbG9naWMgYmVsb3cNCj4gPiA+
-IGNyZWF0ZXMNCj4gPiA+IHNwZWNpZmljIGFuZCBwYXJzZWFibGUgbG9ncyBpbiB0aGUgJ2RtZXNn
-JyBvdXRwdXQgYW5kIHNpbWlsYXIuDQo+ID4gPiANCj4gPiA+IEkgaGF2ZSB3cml0dGVuIGEgdG9v
-bCB0aGF0IGNhbiBkZWNvZGUgdGhlc2UgbWVzc2FnZXMgaW50byB1c2VmdWwNCj4gPiA+IGh1bWFu
-LXJlYWRhYmxlDQo+ID4gPiB0ZXh0IHNvIHRoYXQgSSBjYW4gZGVidWcgZmlybXdhcmUgaXNzdWVz
-IGJvdGggbG9jYWxseSBhbmQgZnJvbQ0KPiA+ID4gZmllbGQgcmVwb3J0cy4NCj4gPiA+IA0KPiA+
-ID4gU3RvY2sgZmlybXdhcmUgZ2VuZXJhdGVzIHNpbWlsYXIgbG9ncyBhbmQgUUNBIGNvdWxkIHdy
-aXRlIHRoZWlyDQo+ID4gPiBvd24gZGVjb2RlIGxvZ2ljDQo+ID4gPiBmb3IgdGhlaXIgZmlybXdh
-cmUgdmVyc2lvbnMuDQo+ID4gDQo+ID4gUmVpbnZlbnRpbmcgdGhlIHdoZWVsIGJ5IHVzaW5nIHBy
-aW50ayBhcyB0aGUgZGVsaXZlcnkgbWVjaGFuaXNtDQo+ID4gZG9lc24ndA0KPiA+IHNvdW5kIGxp
-a2UgYSBnb29kIGlkZWEuIElJUkMgRW1tYW51ZWwgdGFsa2VkIGFib3V0IHNvbWUga2luZCBvZg0K
-PiA+IGZpcm13YXJlDQo+ID4gZGVidWdnaW5nIGZyYW1ld29yaywgaGUgbWlnaHQgaGF2ZSBzb21l
-IGlkZWFzLg0KPiANCj4gV2FpdGluZyBmb3IgbWFnaWNhbCBmcmFtZXdvcmtzIHRvIGZpeCBwcm9i
-bGVtcyBpcyBldmVuIHdvcnNlLg0KPiANCkl0IGhhcyBiZWVuIHllYXJzIHNpbmNlIGF0aDEwayBo
-YXMgYmVlbiBpbiB0aGUga2VybmVsLiAgVGhlcmUgaXMNCj4gYmFzaWNhbGx5DQo+IHN0aWxsIG5v
-IHdheSB0byBkZWJ1ZyB3aGF0IHRoZSBmaXJtd2FyZSBpcyBkb2luZy4NCj4gDQoNCkkga25vdyB0
-aGUgZmVlbGluZyA6KSBJIHdhcyBpbiB0aGUgc2FtZSBzaXR1YXRpb24gYmVmb3JlIEkgYWRkZWQg
-c3R1ZmYNCmZvciBpd2x3aWZpLg0KDQo+IE15IHBhdGNoIGdpdmVzIHlvdSBzb21ldGhpbmcgdGhh
-dCBjYW4gd29yayByaWdodCBub3csIHdpdGggdGhlDQo+IHN0YW5kYXJkICdkbWVzZycNCj4gZnJh
-bWV3b3JrIGZvdW5kIGluIHZpcnR1YWxseSBhbGwga2VybmVscyBuZXcgYW5kIG9sZCwgYW5kIGl0
-IGhhcyBiZWVuDQo+IHByb3Zlbg0KPiB0byBiZSB1c2VmdWwgaW4gdGhlIGZpZWxkLiAgVGhlIG1l
-c3NhZ2VzIGFyZSBhbHNvIG5pY2VseSBpbnRlcmxlYXZlZA0KPiB3aXRoIHRoZQ0KPiByZXN0IG9m
-IHRoZSBtYWM4MDIxMSBzdGFjayBtZXNzYWdlcyBhbmQgYW55IG90aGVyIGRyaXZlciBtZXNzYWdl
-cywgc28NCj4geW91IGhhdmUNCj4gY29udGV4dC4NCj4gDQo+IElmIHNvbWVvbmUgd2FudHMgdG8g
-YWRkIHN1cHBvcnQgZm9yIGEgZnJhbWV3b3JrIGxhdGVyLCB0aGVuIGJ5IGFsbA0KPiBtZWFucywg
-cG9zdA0KPiB0aGUgcGF0Y2hlcyB3aGVuIGl0IGlzIHJlYWR5Lg0KDQpGcm9tIG15IGV4cGVyaWVu
-Y2UsIGEgc3Ryb25nIGFuZCBlYXN5LXRvLXVzZSBmaXJtd2FyZSBkZWJ1Zw0KaW5mcmFzdHJ1Y3R1
-cmUgaXMgaW1wb3J0YW50IGJlY2F1c2UgdHlwaWNhbGx5LCB0aGUgZmlybXdhcmUgaXMgd3JpdHRl
-bg0KYnkgb3RoZXIgcGVvcGxlIHdobyBoYXZlIGRpZmZlcmVudCBwcmlvcml0aWVzIChhbmQgYXJl
-IG5vdCBhbHdheXMgTGludXgNCndpemFyZHMpIGV0Yy4uLiBCZWluZyBhYmxlIHRvIGdpdmUgdGhl
-bSBnb29kIGRhdGEgaXMgdGhlIG9ubHkgd2F5IHRvDQpoYXZlIHRoZW0gZml4IHRoZWlyIGJ1Z3Mg
-OikgRm9yIHVzLCBpdCB3YXMgcmVhbGx5IGEgZ2FtZSBjaGFuZ2VyLiBXaGVuDQp5b3Ugd29yayBm
-b3IgYSBiaWcgY29ycG9yYXRlLCBoYXZpbmcgMiBncm91cHMgd29yayBiZXR0ZXIgdG9nZXRoZXIN
-CmFsd2F5cyBoYXMgYSBiaWcgaW1wYWN0LiBUaGF0J3MgZm9yIHRoZSBwaGlsb3NvcGhpY2FsIHBh
-cnQgOikNCg0KRldJVzogd2hhdCBJIGRpZCBoYXMgbm90aGluZyB0byBkbyB3aXRoIEZXICdsaXZl
-IHRyYWNpbmcnLCBidXQgd2l0aA0KZmlybXdhcmUgZHVtcHMuIE9uZSBwYXJ0IG9mIG91ciBmaXJt
-d2FyZSBkdW1wcyBpbmNsdWRlIHRyYWNpbmcuIFdlIGFsc28NCmhhdmUgImZpcm13YXJlIHByaW50
-cyIsIGJ1dCB3ZSBkb24ndCBwcmludCB0aGVtIGluIHRoZSBrZXJuZWwgbG9nIGFuZA0KdGhleSBh
-cmUgbm90IHBhcnQgb2YgdGhlIGZpcm13YXJlIGR1bXAgdGhpbmcuIFdlIHJhdGhlciByZWNvcmQg
-dGhlbSBpbg0KdHJhY2Vwb2ludHMganVzdCBsaWtlIHJlYWxseSAqYW55dGhpbmcqIHRoYXQgY29t
-ZXMgZnJvbSB0aGUgZmlybXdhcmUuDQpCYXNpY2FsbHksIHdlIGhhdmUgMiBsYXllcnMsIHRoZSB0
-cmFuc3BvcnQgbGF5ZXIgKFBDSWUpIGFuZCB0aGUNCm9wZXJhdGlvbl9tb2RlIGxheWVyLiBUaGUg
-Zmlyc3QganVzdCBicmluZ3MgdGhlIGRhdGEgZnJvbSB0aGUgZmlybXdhcmUNCmFuZCBpbiB0aGF0
-IGxheWVyIHdlICpibGluZGx5KiByZWNvcmQgZXZlcnl0aGluZyBpbiB0cmFjZXBvaW50cy4gSW4g
-dGhlDQpvcGVyYXRpb25fbW9kZSBsYXllciwgd2UgbG9vayBhdCB0aGUgZGF0YSBpdHNlbGYuIElu
-IGNhc2Ugb2YgZGVidWcNCnByaW50cyBmcm9tIHRoZSBmaXJtd2FyZSwgd2Ugc2ltcGx5IGRpc2Nh
-cmQgdGhlbSwgYmVjYXVzZSB3ZSBkb24ndA0KcmVhbGx5IGNhcmUgb2YgdGhlIG1lYW5pbmcuIEFs
-bCB3ZSB3YW50IGlzIHRvIGhhdmUgdGhlbSBnbyB0aHJvdWdoIHRoZQ0KUENJZSBsYXllciBzbyB0
-aGF0IHRoZXkgYXJlIHJlY29yZGVkIGluIHRoZSB0cmFjZXBvaW50cy4NCldoZW4gd2UgZmluaXNo
-IHJlY29yZGluZyB0aGUgc2VxdWVuY2Ugd2Ugd2FudGVkIHdpdGggdHJhY2luZyAodHJhY2UNCi1j
-bWQpLCB3ZSBwYXJzZSB0aGUgb3V0cHV0IGFuZCB0aGVuLCB3ZSBwYXJzZSB0aGUgZmlybXdhcmUg
-cHJpbnRzLg0KSU1ITywgdGhpcyBpcyBtb3JlIHJlbGlhYmxlIHRoYW4ga2VybmVsIGxvZ3MgYW5k
-IHlvdSBkb24ndCBsb3NlIHRoZQ0KYWxpZ25tZW50IHdpdGggdGhlIGRyaXZlciB0cmFjZXMgYXMg
-bG9uZyBhcyB5b3UgaGF2ZSBkcml2ZXIgZGF0YSBpbg0KdHJhY2Vwb2ludHMgYXMgd2VsbC4NCg0K
-PiANCj4gVGhhbmtzLA0KPiBCZW4NCj4gDQo+IA==
+On 09/19/2016 02:00 AM, Johannes Berg wrote:
+>
+>> Actually, can you apply the v2 (cfg80211: add bitrate for 20MHz MCS
+>> 9) of this? Systems guys confirmed they use MCS 9 @ 20MHz when LDPC
+>> is enabled. Also confirmed bitrate should be ok.
+>
+> I don't really understand that. How can the bitrate be "OK" when the
+> spec explicitly says it cannot be used?
+>
+> johannes
+>
+
+I think it is a moot point as far as this change goes:  Regardless of whether
+the NIC should or not, it _does_.  So, mis-reporting it up the stack only hides
+the issue and does not even give the user a clue that on-the-air encoding may be
+slightly off-spec.
+
+If the on-air encoding is an issue, then we need to hack the firmware to
+disable this 'feature', but that is a completely separate issue.
+
+Once this patch goes in, someone might consider properly reporting CCK
+rx rates for 5Ghz band too:  ath10k can do this 'feature' as well, at least
+in some firmware.  Probably can reproduce by sending off-channel mgt frames on
+5Ghz when associated on 2.4, or something similar to this.  I was using ath9k as
+sniffer when I found this long ago, so at least ath9k needs the change....
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
