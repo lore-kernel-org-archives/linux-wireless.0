@@ -1,71 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57612 "EHLO sipsolutions.net"
+Received: from cock.li ([185.100.85.212]:56767 "EHLO cock.li"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757742AbcILK0P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Mon, 12 Sep 2016 06:26:15 -0400
-Message-ID: <1473675973.29016.19.camel@sipsolutions.net> (sfid-20160912_122632_576118_D3327DB2)
-Subject: Re: [PATCH v3] cfg80211: Add support to configure a beacon data rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Purushottam Kushwaha <pkushwah@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-        usdutt@qti.qualcomm.com, amarnath@qca.qualcomm.com
-Date: Mon, 12 Sep 2016 12:26:13 +0200
-In-Reply-To: <1472814834-2728-1-git-send-email-pkushwah@qti.qualcomm.com>
-References: <1472814834-2728-1-git-send-email-pkushwah@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S1752603AbcISTuV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 15:50:21 -0400
+To: linux-wireless@vger.kernel.org
+From: "Franc[e]sco" <lolisamurai@waifu.club>
+Subject: RTL8192EU on rtl8xxxu driver breaks every few minutes
+Message-ID: <c6784dde-65df-87cd-f97e-33fbd8dd55ff@waifu.club> (sfid-20160919_215024_550254_61D4526E)
+Date: Mon, 19 Sep 2016 21:42:55 +0200
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------09BA1DB601F2F41CB47992A5"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is a multi-part message in MIME format.
+--------------09BA1DB601F2F41CB47992A5
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 
-> +static u32 rateset_to_mask(struct ieee80211_supported_band *sband,
-> +			   u8 *rates, u8 rates_len)
+Hi, I happen to own a RTL8192EU WiFi dongle which is marked as untested
+by the rtl8xxxu driver.
+
+I'm on a linux from scratch system using kernel 4.7.3 and wpa_supplicant
+2.5.
+
+The dongle appears to connect and work fine, but after around 10 minutes
+it deauthenticates and enters and endless loop of authentication
+timeout. This continues even if I bring the interface down and back up
+again. The only way to restore the connection is to physically remove
+and re-plug the usb dongle.
+
+I have attached a dmesg log of connecting and entering the auth loop.
 
 
-All of these just move around, right?
+--------------09BA1DB601F2F41CB47992A5
+Content-Type: text/plain; charset=UTF-8;
+ name="rtl8192eu-dmesg"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="rtl8192eu-dmesg"
 
-> +	if (info->attrs[NL80211_ATTR_TX_RATES]) {
-> +		u32 rate, count_ht, count_vht, i;
-> +		enum nl80211_band band;
-> +
-> +		err = nl80211_parse_tx_bitrate_mask(info,
-> &params.beacon_rate);
-> +		if (err)
-> +			return err;
-> +
-> +		band = params.chandef.chan->band;
-> +		rate = params.beacon_rate.control[band].legacy;
-> +		/* Allow only one rate */
-> +		if (rate) {
-> +			if (rate & (rate - 1))
-> +				return -EINVAL;
-> +		} else {
-> +			count_ht = 0;
-> +			for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN;
-> i++) {
-> +				if
-> (params.beacon_rate.control[band].ht_mcs[i]) {
-> +					count_ht++;
-> +					if (count_ht > 1)
-> +						return -EINVAL;
-> +				}
-> +			}
-> +			count_vht = 0;
-> +			for (i = 0; i < NL80211_VHT_NSS_MAX; i++) {
-> +				if
-> (params.beacon_rate.control[band].vht_mcs[i]) {
-> +					count_vht++;
-> +					if (count_vht > 1)
-> +						return -EINVAL;
-> +				}
-> +			}
-> +			if (!count_ht && !count_vht)
-> +				return -EINVAL;
-> +		}
-> +	}
-> 
-I think it would be good to split out this "single rate" thing into a
-helper function.
-
-Thanks,
-johannes
+WyA2NjIyLjcxNzU0M10gdXNiIDItMS43OiBuZXcgaGlnaC1zcGVlZCBVU0IgZGV2aWNlIG51
+bWJlciAxMiB1c2luZyBlaGNpLXBjaQpbIDY2MjIuODAzNjQwXSB1c2IgMi0xLjc6IE5ldyBV
+U0IgZGV2aWNlIGZvdW5kLCBpZFZlbmRvcj0wYmRhLCBpZFByb2R1Y3Q9ODE4YgpbIDY2MjIu
+ODA0MDI2XSB1c2IgMi0xLjc6IE5ldyBVU0IgZGV2aWNlIHN0cmluZ3M6IE1mcj0xLCBQcm9k
+dWN0PTIsIFNlcmlhbE51bWJlcgo9MwpbIDY2MjIuODA0NDE3XSB1c2IgMi0xLjc6IFByb2R1
+Y3Q6IDgwMi4xMW4gTklDClsgNjYyMi44MDQ4MTZdIHVzYiAyLTEuNzogTWFudWZhY3R1cmVy
+OiBSZWFsdGVrClsgNjYyMi44MDUyMTVdIHVzYiAyLTEuNzogU2VyaWFsTnVtYmVyOiAwMGUw
+NGMwMDAwMDEKWyA2NjIyLjgwNTkwNV0gdXNiIDItMS43OiBUaGlzIFJlYWx0ZWsgVVNCIFdp
+RmkgZG9uZ2xlICgweDBiZGE6MHg4MThiKSBpcyB1bnRlc3QKZWQhClsgNjYyMi44MDYzMzJd
+IHVzYiAyLTEuNzogUGxlYXNlIHJlcG9ydCByZXN1bHRzIHRvIEplcy5Tb3JlbnNlbkBnbWFp
+bC5jb20KWyA2NjIyLjk3MDAxNl0gdXNiIDItMS43OiBWZW5kb3I6IFJlYWx0ZWsKWyA2NjIy
+Ljk3MDQ1NF0gdXNiIDItMS43OiBQcm9kdWN0OiA4MDIuMTFuIE5JQwpbIDY2MjIuOTcwODk3
+XSB1c2IgMi0xLjc6IFNlcmlhbDog77+977+977+977+977+977+977+977+977+977+977+9
+ClsgNjYyMi45NzEzMzldIHVzYiAyLTEuNzogcnRsODE5MmV1X3BhcnNlX2VmdXNlOiBkdW1w
+aW5nIGVmdXNlICgweDIwMCBieXRlcyk6ClsgNjYyMi45NzE4MDJdIHVzYiAyLTEuNzogMDA6
+IDI5IDgxIDAwIDdjIDAxIDQwIDAzIDAwClsgNjYyMi45NzIyNjldIHVzYiAyLTEuNzogMDg6
+IDQwIDc0IDA0IDUwIDE0IDAwIDAwIDAwClsgNjYyMi45NzI3MzVdIHVzYiAyLTEuNzogMTA6
+IDIxIDIwIDFmIDIzIDIzIDIzIDJkIDJjClsgNjYyMi45NzMyMDJdIHVzYiAyLTEuNzogMTg6
+IDJiIDJkIDJkIGZmIGVmIGVmIGZmIGZmClsgNjYyMi45NzM2NzFdIHVzYiAyLTEuNzogMjA6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45NzQxMzVdIHVzYiAyLTEuNzogMjg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45NzQ1OThdIHVzYiAyLTEuNzogMzA6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45NzUwNTJdIHVzYiAyLTEuNzogMzg6
+IGZmIGZmIDFmIDFkIDFjIDFlIDFlIDFlClsgNjYyMi45NzU1MDRdIHVzYiAyLTEuNzogNDA6
+IDJhIDI5IDI4IDI5IDI5IGZmIGVmIGVmClsgNjYyMi45NzU5NTddIHVzYiAyLTEuNzogNDg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45NzY0MTJdIHVzYiAyLTEuNzogNTA6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45NzY4NjFdIHVzYiAyLTEuNzogNTg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45NzczMDhdIHVzYiAyLTEuNzogNjA6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45Nzc3NTldIHVzYiAyLTEuNzogNjg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45NzgyMDJdIHVzYiAyLTEuNzogNzA6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45Nzg2NDFdIHVzYiAyLTEuNzogNzg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45NzkwNzNdIHVzYiAyLTEuNzogODA6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45Nzk1MDFdIHVzYiAyLTEuNzogODg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45Nzk5MjZdIHVzYiAyLTEuNzogOTA6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45ODAzNDNdIHVzYiAyLTEuNzogOTg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45ODA3NjBdIHVzYiAyLTEuNzogYTA6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45ODExNzRdIHVzYiAyLTEuNzogYTg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45ODE1ODhdIHVzYiAyLTEuNzogYjA6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45ODIwMDJdIHVzYiAyLTEuNzogYjg6
+IDIwIDBkIGZmIDAwIDMzIDg4IGZmIGZmClsgNjYyMi45ODI0MjFdIHVzYiAyLTEuNzogYzA6
+IGZmIDAxIDIwIDEzIDAwIDAwIDAwIGZmClsgNjYyMi45ODI4NDhdIHVzYiAyLTEuNzogYzg6
+IDAwIDAwIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45ODMyNzVdIHVzYiAyLTEuNzogZDA6
+IGRhIDBiIDhiIDgxIGU3IDQ3IDAyIDAwClsgNjYyMi45ODM3MTFdIHVzYiAyLTEuNzogZDg6
+IDE5IDg4IDAwIDFlIDMzIDA5IDAzIDUyClsgNjYyMi45ODQxNTBdIHVzYiAyLTEuNzogZTA6
+IDY1IDYxIDZjIDc0IDY1IDZiIDBkIDAzClsgNjYyMi45ODQ1OTRdIHVzYiAyLTEuNzogZTg6
+IDM4IDMwIDMyIDJlIDMxIDMxIDZlIDIwClsgNjYyMi45ODUwNDVdIHVzYiAyLTEuNzogZjA6
+IDRlIDQ5IDQzIDAwIGZmIGZmIGZmIGZmClsgNjYyMi45ODU1MDBdIHVzYiAyLTEuNzogZjg6
+IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45ODU5NjBdIHVzYiAyLTEuNzogMTAw
+OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbIDY2MjIuOTg2NDIzXSB1c2IgMi0xLjc6IDEw
+ODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWyA2NjIyLjk4Njg4OV0gdXNiIDItMS43OiAx
+MTA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIDBkClsgNjYyMi45ODczNTRdIHVzYiAyLTEuNzog
+MTE4OiAwMyAwMCAwNSAwMCAzMCAwMCAwMCAwMApbIDY2MjIuOTg3ODI3XSB1c2IgMi0xLjc6
+IDEyMDogMDAgOTMgZmYgZmYgZmYgZmYgZmYgZmYKWyA2NjIyLjk4ODMwMl0gdXNiIDItMS43
+OiAxMjg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45ODg3NzldIHVzYiAyLTEu
+NzogMTMwOiBmNiBhOCA5OCAyZCAwMyA5MiA5OCAwMApbIDY2MjIuOTg5MjYyXSB1c2IgMi0x
+Ljc6IDEzODogZmMgOGMgMDAgMTEgOWIgNDQgMDIgMGEKWyA2NjIyLjk4OTc1MF0gdXNiIDIt
+MS43OiAxNDA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45OTAyNDNdIHVzYiAy
+LTEuNzogMTQ4OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbIDY2MjIuOTkwNzM2XSB1c2Ig
+Mi0xLjc6IDE1MDogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWyA2NjIyLjk5MTIxNF0gdXNi
+IDItMS43OiAxNTg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45OTE2NzldIHVz
+YiAyLTEuNzogMTYwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbIDY2MjIuOTkyMTMzXSB1
+c2IgMi0xLjc6IDE2ODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWyA2NjIyLjk5MjU4MF0g
+dXNiIDItMS43OiAxNzA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45OTMwMTNd
+IHVzYiAyLTEuNzogMTc4OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbIDY2MjIuOTkzNDM3
+XSB1c2IgMi0xLjc6IDE4MDogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWyA2NjIyLjk5Mzg0
+N10gdXNiIDItMS43OiAxODg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45OTQy
+NTRdIHVzYiAyLTEuNzogMTkwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbIDY2MjIuOTk0
+NjUzXSB1c2IgMi0xLjc6IDE5ODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWyA2NjIyLjk5
+NTAzNV0gdXNiIDItMS43OiAxYTA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYyMi45
+OTU0MDldIHVzYiAyLTEuNzogMWE4OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbIDY2MjIu
+OTk1Nzc0XSB1c2IgMi0xLjc6IDFiMDogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWyA2NjIy
+Ljk5NjEyOV0gdXNiIDItMS43OiAxYjg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsgNjYy
+Mi45OTY0NzldIHVzYiAyLTEuNzogMWMwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpbIDY2
+MjIuOTk2ODI3XSB1c2IgMi0xLjc6IDFjODogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYKWyA2
+NjIyLjk5NzE2MV0gdXNiIDItMS43OiAxZDA6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZmClsg
+NjYyMi45OTc0ODNdIHVzYiAyLTEuNzogMWQ4OiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBmZgpb
+IDY2MjIuOTk3Nzk4XSB1c2IgMi0xLjc6IDFlMDogZmYgZmYgZmYgZmYgZmYgZmYgZmYgZmYK
+WyA2NjIyLjk5ODEwOV0gdXNiIDItMS43OiAxZTg6IGZmIGZmIGZmIGZmIGZmIGZmIGZmIGZm
+ClsgNjYyMi45OTg0MTNdIHVzYiAyLTEuNzogMWYwOiBmZiBmZiBmZiBmZiBmZiBmZiBmZiBm
+ZgpbIDY2MjIuOTk4NzExXSB1c2IgMi0xLjc6IDFmODogZmYgZmYgZmYgZmYgZmYgZmYgZmYg
+ZmYKWyA2NjIyLjk5ODk5Nl0gdXNiIDItMS43OiBSVEw4MTkyRVUgcmV2IEIgKFNNSUMpIDJU
+MlIsIFRYIHF1ZXVlcyAzLCBXaUZpPTEsIEJUPTAKLCBHUFM9MCwgSEkgUEE9MApbIDY2MjIu
+OTk5MzAyXSB1c2IgMi0xLjc6IFJUTDgxOTJFVSBNQUM6IDAwOjE5Ojg4OjAwOjFlOjMzClsg
+NjYyMi45OTk2MDZdIHVzYiAyLTEuNzogcnRsOHh4eHU6IExvYWRpbmcgZmlybXdhcmUgcnRs
+d2lmaS9ydGw4MTkyZXVfbmljLmJpbgpbIDY2MjIuOTk5OTQxXSB1c2IgMi0xLjc6IEZpcm13
+YXJlIHJldmlzaW9uIDE5LjAgKHNpZ25hdHVyZSAweDkyZTEpClsgNjYyNC4wMDM3ODZdIHJ0
+bDh4eHh1IDItMS43OjEuMCBlbngwMDE5ODgwMDFlMzM6IHJlbmFtZWQgZnJvbSB3bGFuMApb
+IDY2MzMuOTQ5NDE0XSBJUHY2OiBBRERSQ09ORihORVRERVZfVVApOiBlbngwMDE5ODgwMDFl
+MzM6IGxpbmsgaXMgbm90IHJlYWR5ClsgNjYzNS4xMzc4ODJdIGVueDAwMTk4ODAwMWUzMzog
+YXV0aGVudGljYXRlIHdpdGggZTA6M2Y6NDk6OTc6MGM6NjgKWyA2NjM1LjE2MDY2M10gZW54
+MDAxOTg4MDAxZTMzOiBzZW5kIGF1dGggdG8gZTA6M2Y6NDk6OTc6MGM6NjggKHRyeSAxLzMp
+ClsgNjYzNS4xNjI2OTBdIGVueDAwMTk4ODAwMWUzMzogYXV0aGVudGljYXRlZApbIDY2MzUu
+MTYzNjgyXSBlbngwMDE5ODgwMDFlMzM6IGFzc29jaWF0ZSB3aXRoIGUwOjNmOjQ5Ojk3OjBj
+OjY4ICh0cnkgMS8zKQpbIDY2MzUuMTY4NDY0XSBlbngwMDE5ODgwMDFlMzM6IFJYIEFzc29j
+UmVzcCBmcm9tIGUwOjNmOjQ5Ojk3OjBjOjY4IChjYXBhYj0weGMxMQogc3RhdHVzPTAgYWlk
+PTMpClsgNjYzNS4xNzA2NjJdIHVzYiAyLTEuNzogcnRsOHh4eHVfYnNzX2luZm9fY2hhbmdl
+ZDogSFQgc3VwcG9ydGVkClsgNjYzNS4xNzI3ODldIGVueDAwMTk4ODAwMWUzMzogYXNzb2Np
+YXRlZApbIDY2MzUuMTczMzE1XSBJUHY2OiBBRERSQ09ORihORVRERVZfQ0hBTkdFKTogZW54
+MDAxOTg4MDAxZTMzOiBsaW5rIGJlY29tZXMgcmVhZAp5ClsgNjYzNS45MTk5NDhdIHVzYiAy
+LTEuNzogcnRsOHh4eHVfYW1wZHVfYWN0aW9uOiBJRUVFODAyMTFfQU1QRFVfUlhfU1RBUlQK
+WyA3NzIyLjkzOTc3M10gZW54MDAxOTg4MDAxZTMzOiBkZWF1dGhlbnRpY2F0ZWQgZnJvbSBl
+MDozZjo0OTo5NzowYzo2OCAoUmVhc29uOgozPURFQVVUSF9MRUFWSU5HKQpbIDc3MjIuOTQ1
+Mzg5XSB1c2IgMi0xLjc6IHJ0bDh4eHh1X2FtcGR1X2FjdGlvbjogSUVFRTgwMjExX0FNUERV
+X1JYX1NUT1AKWyA3NzI0LjE1NDU3NF0gZW54MDAxOTg4MDAxZTMzOiBhdXRoZW50aWNhdGUg
+d2l0aCBlMDozZjo0OTo5NzowYzo2OApbIDc3MjQuMTc3NjI0XSBlbngwMDE5ODgwMDFlMzM6
+IHNlbmQgYXV0aCB0byBlMDozZjo0OTo5NzowYzo2OCAodHJ5IDEvMykKWyA3NzI0LjM3ODM3
+OF0gZW54MDAxOTg4MDAxZTMzOiBzZW5kIGF1dGggdG8gZTA6M2Y6NDk6OTc6MGM6NjggKHRy
+eSAyLzMpClsgNzcyNC41Nzk0MDVdIGVueDAwMTk4ODAwMWUzMzogc2VuZCBhdXRoIHRvIGUw
+OjNmOjQ5Ojk3OjBjOjY4ICh0cnkgMy8zKQpbIDc3MjQuNzgwNDA3XSBlbngwMDE5ODgwMDFl
+MzM6IGF1dGhlbnRpY2F0aW9uIHdpdGggZTA6M2Y6NDk6OTc6MGM6NjggdGltZWQgb3V0Clsg
+NzcyNi4zNzk1NjRdIGVueDAwMTk4ODAwMWUzMzogYXV0aGVudGljYXRlIHdpdGggZTA6M2Y6
+NDk6OTc6MGM6NjgKWyA3NzI2LjQwMjAyM10gZW54MDAxOTg4MDAxZTMzOiBzZW5kIGF1dGgg
+dG8gZTA6M2Y6NDk6OTc6MGM6NjggKHRyeSAxLzMpClsgNzcyNi42MDM0MzBdIGVueDAwMTk4
+ODAwMWUzMzogc2VuZCBhdXRoIHRvIGUwOjNmOjQ5Ojk3OjBjOjY4ICh0cnkgMi8zKQpbIDc3
+MjYuODA0NDMxXSBlbngwMDE5ODgwMDFlMzM6IHNlbmQgYXV0aCB0byBlMDozZjo0OTo5Nzow
+Yzo2OCAodHJ5IDMvMykKWyA3NzI3LjAwNTQzM10gZW54MDAxOTg4MDAxZTMzOiBhdXRoZW50
+aWNhdGlvbiB3aXRoIGUwOjNmOjQ5Ojk3OjBjOjY4IHRpbWVkIG91dAo=
+--------------09BA1DB601F2F41CB47992A5--
