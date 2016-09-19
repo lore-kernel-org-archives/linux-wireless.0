@@ -1,29 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:20741 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756182AbcIOGJG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 02:09:06 -0400
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
-        "Berg, Johannes" <johannes.berg@intel.com>
-Subject: Re: [PATCH] nl80211: validate number of probe response CSA counters
-Date: Thu, 15 Sep 2016 06:08:47 +0000
-Message-ID: <1473919726.5664.3.camel@intel.com> (sfid-20160915_081157_953242_EEB7E3CD)
-References: <1473775005-16286-1-git-send-email-johannes@sipsolutions.net>
-In-Reply-To: <1473775005-16286-1-git-send-email-johannes@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from helcar.hengli.com.au ([209.40.204.226]:33191 "EHLO
+        helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754969AbcISJen (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 05:34:43 -0400
+Date: Mon, 19 Sep 2016 17:34:34 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
+Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
+Message-ID: <20160919093434.GA12378@gondor.apana.org.au> (sfid-20160919_113514_946295_6748FD0D)
+References: <20160804071846.GA773@gondor.apana.org.au>
+ <20160804074546.GA996@gondor.apana.org.au>
+ <1470377813.2977.14.camel@sipsolutions.net>
+ <20160805104858.GA9297@gondor.apana.org.au>
+ <1470394233.2977.37.camel@sipsolutions.net>
+ <20160918135030.GA7062@gondor.apana.org.au>
+ <20160919084056.GA11875@gondor.apana.org.au>
+ <1474276530.4469.16.camel@sipsolutions.net>
+ <20160919091721.GA12235@gondor.apana.org.au>
+ <1474277244.4469.21.camel@sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1474277244.4469.21.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE2LTA5LTEzIGF0IDE1OjU2ICswMjAwLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBGcm9tOiBKb2hhbm5lcyBCZXJnIDxqb2hhbm5lcy5iZXJnQGludGVsLmNvbT4NCj4gDQo+IER1
-ZSB0byBhbiBhcHBhcmVudCBjb3B5L3Bhc3RlIGJ1ZywgdGhlIG51bWJlciBvZiBjb3VudGVycyBm
-b3IgdGhlDQo+IGJlYWNvbiBjb25maWd1cmF0aW9uIHdlcmUgY2hlY2tlZCB0d2ljZSwgaW5zdGVh
-ZCBvZiBjaGVja2luZyB0aGUNCj4gbnVtYmVyIG9mIHByb2JlIHJlc3BvbnNlIGNvdW50ZXJzLiBG
-aXggdGhpcyB0byBjaGVjayB0aGUgbnVtYmVyIG9mDQo+IHByb2JlIHJlc3BvbnNlIGNvdW50ZXJz
-IGJlZm9yZSBwYXJzaW5nIHRob3NlLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogSm9oYW5uZXMgQmVy
-ZyA8am9oYW5uZXMuYmVyZ0BpbnRlbC5jb20+DQo+IC0tLQ0KDQpBY2tlZC1ieTogTHVjaWFubyBD
-b2VsaG8gPGx1Y2lhbm8uY29lbGhvQGludGVsLmNvbT4NCg0KLS0NCkx1Y2Eu
+On Mon, Sep 19, 2016 at 11:27:24AM +0200, Johannes Berg wrote:
+> 
+> I have a feeling there's a bug with ht->nelems, since the crash is
+> always in the grow worker, but I haven't quite put my finger on it yet.
+
+Can you show me a stack trace?
+
+Thanks,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
