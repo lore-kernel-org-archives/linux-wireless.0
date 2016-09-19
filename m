@@ -1,100 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:37098 "EHLO nbd.name"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50196 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757138AbcIHIZZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 8 Sep 2016 04:25:25 -0400
-Subject: Re: [PATCH v3 3/3] mt76: add driver code for MT76x2e
-To: Sergey Ryazanov <ryazanov.s.a@gmail.com>
-References: <20160905095128.80560-1-nbd@nbd.name>
- <20160905095128.80560-4-nbd@nbd.name>
- <CAHNKnsTwBVmWSis_5EV1mrJM53E6XDhJ=CHWCjihZ839bDXGuA@mail.gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        Kalle Valo <kvalo@codeaurora.org>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <d65738be-cb30-cedd-562c-814d02a91794@nbd.name> (sfid-20160908_102528_976640_825C6A92)
-Date: Thu, 8 Sep 2016 10:25:22 +0200
-MIME-Version: 1.0
-In-Reply-To: <CAHNKnsTwBVmWSis_5EV1mrJM53E6XDhJ=CHWCjihZ839bDXGuA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        id S1751414AbcISJuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 05:50:40 -0400
+Message-ID: <1474278634.4469.25.camel@sipsolutions.net> (sfid-20160919_115045_089605_A254E125)
+Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
+Date: Mon, 19 Sep 2016 11:50:34 +0200
+In-Reply-To: <20160919093434.GA12378@gondor.apana.org.au> (sfid-20160919_113440_719977_971CE718)
+References: <20160804071846.GA773@gondor.apana.org.au>
+         <20160804074546.GA996@gondor.apana.org.au>
+         <1470377813.2977.14.camel@sipsolutions.net>
+         <20160805104858.GA9297@gondor.apana.org.au>
+         <1470394233.2977.37.camel@sipsolutions.net>
+         <20160918135030.GA7062@gondor.apana.org.au>
+         <20160919084056.GA11875@gondor.apana.org.au>
+         <1474276530.4469.16.camel@sipsolutions.net>
+         <20160919091721.GA12235@gondor.apana.org.au>
+         <1474277244.4469.21.camel@sipsolutions.net>
+         <20160919093434.GA12378@gondor.apana.org.au>
+         (sfid-20160919_113440_719977_971CE718)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-09-08 09:52, Sergey Ryazanov wrote:
->> +
->> +int mt76x2_register_device(struct mt76x2_dev *dev)
->> +{
->> +       struct ieee80211_hw *hw = mt76_hw(dev);
->> +       struct wiphy *wiphy = hw->wiphy;
->> +       void *status_fifo;
->> +       int fifo_size;
->> +       int i, ret;
->> +
->> +       fifo_size = roundup_pow_of_two(32 * sizeof(struct mt76x2_tx_status));
->> +       status_fifo = devm_kzalloc(dev->mt76.dev, fifo_size, GFP_KERNEL);
->> +       if (!status_fifo)
->> +               return -ENOMEM;
->> +
->> +       kfifo_init(&dev->txstatus_fifo, status_fifo, fifo_size);
->> +
->> +       ret = mt76x2_init_hardware(dev);
->> +       if (ret)
->> +               return ret;
->> +
->> +       hw->queues = 4;
->> +       hw->max_rates = 1;
->> +       hw->max_report_rates = 7;
->> +       hw->max_rate_tries = 1;
->> +       hw->extra_tx_headroom = 2;
->> +
->> +       hw->sta_data_size = sizeof(struct mt76x2_sta);
->> +       hw->vif_data_size = sizeof(struct mt76x2_vif);
->> +
->> +       for (i = 0; i < ARRAY_SIZE(dev->macaddr_list); i++) {
->> +               u8 *addr = dev->macaddr_list[i].addr;
->> +
->> +               memcpy(addr, dev->mt76.macaddr, ETH_ALEN);
->> +
->> +               if (!i)
->> +                       continue;
->> +
->> +               addr[0] |= BIT(1);
->> +               addr[0] ^= ((i - 1) << 2);
->> +       }
->> +       wiphy->addresses = dev->macaddr_list;
->> +       wiphy->n_addresses = ARRAY_SIZE(dev->macaddr_list);
->> +
->> +       wiphy->iface_combinations = if_comb;
->> +       wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
->> +
->> +       wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
->> +
->> +       ieee80211_hw_set(hw, SUPPORTS_HT_CCK_RATES);
->> +       INIT_DELAYED_WORK(&dev->cal_work, mt76x2_phy_calibrate);
->> +       INIT_DELAYED_WORK(&dev->mac_work, mt76x2_mac_work);
->> +
->> +       dev->mt76.sband_2g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
->> +       dev->mt76.sband_5g.sband.ht_cap.cap |= IEEE80211_HT_CAP_LDPC_CODING;
->> +
->> +       ret = mt76_register_device(&dev->mt76, true, mt76x2_rates,
->> +                                  ARRAY_SIZE(mt76x2_rates));
->> +       if (ret)
->> +               goto fail;
->> +
->> +       mt76x2_init_debugfs(dev);
->> +
->> +       return 0;
->> +
->> +fail:
->> +       mt76x2_stop_hardware(dev);
->> +       return ret;
->> +}
+On Mon, 2016-09-19 at 17:34 +0800, Herbert Xu wrote:
+> On Mon, Sep 19, 2016 at 11:27:24AM +0200, Johannes Berg wrote:
+> > 
+> > 
+> > I have a feeling there's a bug with ht->nelems, since the crash is
+> > always in the grow worker, but I haven't quite put my finger on it
+> > yet.
 > 
-> Just curious, almost full chip initialization performed in probe
-> procedure, why not do that in start() callback? In such case we could
-> fully restart chip without module reloading, just with ifdown/ifup
-> circle.
-Last time I tried that I ran into some weird chip quirks. I do think
-it's a good idea but I'd rather see this merged first and try again to
-rework it when I have some more time to figure out what's going on.
+> Can you show me a stack trace?
+> 
+The stack trace is useless, but my other annotation showed that the
+table's nelems *underflowed* to -1, so now the worker will continue to
+try to grow it forever.
 
-- Felix
+johannes
