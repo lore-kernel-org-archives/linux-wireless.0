@@ -1,76 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0058.hostedemail.com ([216.40.44.58]:43490 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1759519AbcIXU3T (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:34274 "EHLO
+        mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756627AbcISLKZ (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 24 Sep 2016 16:29:19 -0400
-Message-ID: <1474748954.23838.21.camel@perches.com> (sfid-20160924_222936_164542_3A9FCB2C)
-Subject: Re: [PATCH] realtek: Add switch variable to 'switch case not
- processed' messages
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-        Jean Delvare <jdelvare@suse.de>,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Date: Sat, 24 Sep 2016 13:29:14 -0700
-In-Reply-To: <cef6d8da-c390-f435-7a5e-d294dfbebbfb@lwfinger.net>
-References: <1474654333.1849.5.camel@perches.com>
-         <d091f73a6adf3bdaa09ab0399c22a9fdfe9b188c.1474654979.git.joe@perches.com>
-         <f98d2cf1-802a-93c1-b219-ec45aa417940@lwfinger.net>
-         <1474657363.1849.9.camel@perches.com> <20160924175555.01cae6dd@endymion>
-         <1474733754.23838.3.camel@perches.com>
-         <49094659-662d-a902-6740-ea3d1fea6660@lwfinger.net>
-         <1474738358.23838.11.camel@perches.com>
-         <cef6d8da-c390-f435-7a5e-d294dfbebbfb@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+        Mon, 19 Sep 2016 07:10:25 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 7/9] brcmfmac: fix clearing entry IPv6 address
+Date: Mon, 19 Sep 2016 12:09:57 +0100
+Message-Id: <1474283399-14385-8-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131042_113373_21566E3F)
+In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-09-24 at 14:06 -0500, Larry Finger wrote:
-> On 09/24/2016 12:32 PM, Joe Perches wrote:
-[]
-> o Reindent all the switch/case blocks to a more normal
->   kernel style (git diff -w would show no changes here)
-> That sounds like busy work to me, but if you want to do it, go ahead.
+From: Hante Meuleman <hante.meuleman@broadcom.com>
 
-It's really just to make the comparison case block reductions
-easier to verify for later steps done
+When IPv6 address is to be cleared there is a possible out of
+bound access. But also the clearing of the last entry and the
+adjustment of total number of stored IPv6 addresses is not
+updated. This patch fixes that bug. Bug was found using coverity.
 
-> > o cast, spacing and parenthesis reductions
-> >   Lots of odd and somewhat unique styles in various
-> >   drivers, looks like too many individual authors without
-> >   a style guide / code enforcer using slightly different
-> >   personalized code.  Glancing at the code, it looks to be
-> >   similar logic, just written in different styles.
-> Same comment.
+Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
-Same rationale
-
-> > o Logic changes like
-> >   from:
-> >     if (foo) func(..., bar, ...); else func(..., baz, ...);
-> >   to:
-> >     func(..., foo ? bar : baz, ...);
-> >   to make the case statement code blocks more consistent
-> >   and emit somewhat smaller object code.
-> I find if .. else constructs much easier to read than the cond ? xxxx : yyyy 
-> form. I would reject any such patches.
-
-<shrug> I think object code reduction generally a good thing
-but then again, I'm not a maintainer here.
-
-> > o Consolidation of equivalent function spanning drivers
-> >   With the style only changes minimized, where possible
-> >   make the drivers use common ops/callback functions.
-> The is no question that there are similar routines in different drivers. I would 
-> like to place as much as possible into common routines, but I never seem to find 
-> the time. There are too many bugs in other things I support to consider these 
-> niceties.
-
-Consolidation generally reduces defects and improves ease of
-updating.
-> 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 3394184..bb71199 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -873,9 +873,12 @@ static int brcmf_inet6addr_changed(struct notifier_block *nb,
+ 		}
+ 		break;
+ 	case NETDEV_DOWN:
+-		if (i < NDOL_MAX_ENTRIES)
+-			for (; i < ifp->ipv6addr_idx; i++)
++		if (i < NDOL_MAX_ENTRIES) {
++			for (; i < ifp->ipv6addr_idx - 1; i++)
+ 				table[i] = table[i + 1];
++			memset(&table[i], 0, sizeof(table[i]));
++			ifp->ipv6addr_idx--;
++		}
+ 		break;
+ 	default:
+ 		break;
+-- 
+1.9.1
