@@ -1,75 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:56719 "EHLO nbd.name"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53378 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751438AbcI3IsI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 30 Sep 2016 04:48:08 -0400
-Subject: Re: [PATCH v3 1/3] Documentation: dt: net: add mt76 wireless device
- binding
-To: Arnd Bergmann <arnd@arndb.de>
-References: <20160905095128.80560-1-nbd@nbd.name>
- <87eg4uu0f3.fsf@kamboji.qca.qualcomm.com>
- <e7d435b2-6b59-45af-07eb-b10789d61a9c@nbd.name>
- <201609300041.41876.arnd@arndb.de>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-        devicetree@vger.kernel.org
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <3334122f-0d79-f910-a414-5b9cafd9901f@nbd.name> (sfid-20160930_104814_431551_2CDEB731)
-Date: Fri, 30 Sep 2016 10:48:04 +0200
-MIME-Version: 1.0
-In-Reply-To: <201609300041.41876.arnd@arndb.de>
-Content-Type: text/plain; charset=utf-8
+        id S1752938AbcISTlm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 15:41:42 -0400
+Message-ID: <1474314095.6544.4.camel@sipsolutions.net> (sfid-20160919_214153_201106_215F4558)
+Subject: Re: nl80211 fine timing measurement support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Lior David <liord@codeaurora.org>
+Cc: Maya Erez <merez@codeaurora.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org, Luca Coelho <luca@coelho.fi>
+Date: Mon, 19 Sep 2016 21:41:35 +0200
+In-Reply-To: <45d2980c-aeb4-4faa-e73f-75747124e9eb@broadcom.com> (sfid-20160919_204318_559846_A75E8F00)
+References: <e7096bbb-ba66-e639-b86e-a483dc198b85@codeaurora.org>
+         <45d2980c-aeb4-4faa-e73f-75747124e9eb@broadcom.com>
+         (sfid-20160919_204318_559846_A75E8F00)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-09-30 00:41, Arnd Bergmann wrote:
-> On Thursday 29 September 2016, Felix Fietkau wrote:
->> On 2016-09-08 12:54, Kalle Valo wrote:
->> > Felix Fietkau <nbd@nbd.name> writes:
->> > 
->> >> Signed-off-by: Felix Fietkau <nbd@nbd.name>
->> >> ---
->> >>  .../bindings/net/wireless/mediatek,mt76.txt        | 26 ++++++++++++++++++++++
->> >>  1 file changed, 26 insertions(+)
->> >>  create mode 100644 Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
->> >>
->> >> diff --git a/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
->> >> new file mode 100644
->> >> index 0000000..d51c35f
->> >> --- /dev/null
->> >> +++ b/Documentation/devicetree/bindings/net/wireless/mediatek,mt76.txt
->> >> @@ -0,0 +1,26 @@
->> >> +* MediaTek mt76xx devices
->> >> +
->> >> +This node provides properties for configuring the MediaTek mt76xx wireless
->> >> +device. The node is expected to be specified as a child node of the PCI
->> >> +controller to which the wireless chip is connected.
->> >> +
->> >> +Optional properties:
->> >> +
->> >> +- mac-address: See ethernet.txt in the parent directory
->> >> +- local-mac-address: See ethernet.txt in the parent directory
->> >> +- mediatek,2ghz: Override the 2.4 GHz band capability from EEPROM
->> >> +- mediatek,5ghz: Override the 5 GHz band capability from EEPROM
->> >> +- mediatek,mtd-eeprom: Specify a MTD partition + offset containing EEPROM data
->> >> +
->> >> +&pcie {
->> >> +	status = "okay";
->> >> +
->> >> +	pcie0 {
->> >> +		mt76@0,0 {
->> >> +			reg = <0x0000 0 0 0 0>;
+> > However I did not see any comments or response on this
+> > patch. Can you please update if you plan on eventually submitting
+> > this patch?
 > 
-> Maybe have an examplep of a real register address other than zero?
-This is a real example referring to the first device on a PCI bus.
-I copy&pasted this from a .dts file that we use in LEDE.
-
->> >> +			device_type = "pci";
->> >> +			mediatek,mtd-eeprom = <&factory 0x8000>;
->> >> +			mediatek,2ghz = <0>;
+> You can find several FTM related patches in backport-iwlwifi repo on
+> kernel.org. See link to git log of nl80211.h there [1].
 > 
-> It's not clear what the possible values for the 2ghz property are,
-> can you be more verbose in the description? How is <0> different
-> from no property?
-0 means disabled, no property means unchanged (compared to EEPROM).
 
-- Felix
+You can find things there, but they might not be the most organized
+always :)
+
+Anyway, I think after Luca is handling the current round of NaN
+submission he'll have the cycles to deal with FTM - I'll let him
+comment. For all I care, they can also run in parallel, but that might
+be more difficult for him.
+
+johannes
