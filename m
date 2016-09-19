@@ -1,38 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33215 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933304AbcI0MTT (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:36180 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751539AbcISQdU (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 27 Sep 2016 08:19:19 -0400
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Subject: Re: [v2,02/21] ath10k: fix typo in logging message
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1462986153-16318-3-git-send-email-greearb@candelatech.com>
-References: <1462986153-16318-3-git-send-email-greearb@candelatech.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: <ath10k@lists.infradead.org>, Ben Greear <greearb@candelatech.com>,
-        <linux-wireless@vger.kernel.org>
-Message-ID: <766261d93e434dcba67a48aabfe4a8b5@euamsexm01a.eu.qualcomm.com> (sfid-20160927_141945_573817_60329AD2)
-Date: Tue, 27 Sep 2016 14:19:11 +0200
+        Mon, 19 Sep 2016 12:33:20 -0400
+Received: by mail-oi0-f66.google.com with SMTP id i193so3723891oib.3
+        for <linux-wireless@vger.kernel.org>; Mon, 19 Sep 2016 09:33:20 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH V2] rtl8xxxu: Stop log spam from each successful interrupt
+Date: Mon, 19 Sep 2016 11:33:14 -0500
+Message-Id: <1474302794-446-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160919_183323_589189_3D262B0D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+As soon as debugging is turned on, the logs are filled with messages
+reporting the interrupt status. As this quantity is usually zero, this
+output is not needed. In fact, there will be a report if the status is
+not zero, thus the debug line in question could probably be deleted.
+Rather than taking that action, I have changed it to only be printed
+when the newly added RTL8XXXU_DEBUG_INTERRUPT bit is set in the debug
+mask.
 
-3 patches applied to ath-next branch of ath.git, thanks.
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
+V2 - Added new debugging flag as requested by Jes.
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h      | 1 +
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-aa66ba0c31c6 ath10k: fix typo in logging message
-15138fdf327d ath10k: document cycle count related counters
-30d2049b3277 ath10k: support up to 64 vdevs
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 870c9cd..4508b6d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -29,6 +29,7 @@
+ #define RTL8XXXU_DEBUG_H2C		0x800
+ #define RTL8XXXU_DEBUG_ACTION		0x1000
+ #define RTL8XXXU_DEBUG_EFUSE		0x2000
++#define RTL8XXXU_DEBUG_INTERRUPT	0x4000
+ 
+ #define RTW_USB_CONTROL_MSG_TIMEOUT	500
+ #define RTL8XXXU_MAX_REG_POLL		500
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+index 9f6dbb4..efba8f1 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
+@@ -5260,7 +5260,8 @@ static void rtl8xxxu_int_complete(struct urb *urb)
+ 	struct device *dev = &priv->udev->dev;
+ 	int ret;
+ 
+-	dev_dbg(dev, "%s: status %i\n", __func__, urb->status);
++	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_INTERRUPT)
++		dev_dbg(dev, "%s: status %i\n", __func__, urb->status);
+ 	if (urb->status == 0) {
+ 		usb_anchor_urb(urb, &priv->int_anchor);
+ 		ret = usb_submit_urb(urb, GFP_ATOMIC);
 -- 
-https://patchwork.kernel.org/patch/9073591/
-
-Documentation about submitting wireless patches and checking status
-from patchwork:
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+2.6.6
