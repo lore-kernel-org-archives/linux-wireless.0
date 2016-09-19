@@ -1,38 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25933 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753017AbcIBP0m (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:35358 "EHLO
+        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753126AbcISV1y (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Fri, 2 Sep 2016 11:26:42 -0400
-Content-Type: text/plain; charset="utf-8"
+        Mon, 19 Sep 2016 17:27:54 -0400
+Date: Mon, 19 Sep 2016 16:27:53 -0500
+From: Rob Herring <robh@kernel.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+        Nishant Sarmukadam <nishants@marvell.com>,
+        devicetree@vger.kernel.org, Wei-Ning Huang <wnhuang@chromium.org>,
+        Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH] mwifiex: parse device tree node for PCIe
+Message-ID: <20160919212753.GA16598@rob-hp-laptop> (sfid-20160919_232758_486877_8C424610)
+References: <1473434254-16782-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Subject: Re: ath10k: Add WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT wmi service
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-In-Reply-To: <1470134594-10427-1-git-send-email-c_traja@qti.qualcomm.com>
-To: <c_traja@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>,
-        Tamizh chelvam <c_traja@qti.qualcomm.com>,
-        <linux-wireless@vger.kernel.org>
-Message-ID: <96fda91cfde14b79ae56ed649237a7a6@euamsexm01a.eu.qualcomm.com> (sfid-20160902_172646_420191_66F8BA0F)
-Date: Fri, 2 Sep 2016 17:26:33 +0200
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1473434254-16782-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-c_traja@qti.qualcomm.com wrote:
-> From: Tamizh chelvam <c_traja@qti.qualcomm.com>
+On Fri, Sep 09, 2016 at 08:47:34PM +0530, Amitkumar Karwar wrote:
+> From: Xinming Hu <huxm@marvell.com>
 > 
-> WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT service has missed in
-> the commit 7e247a9e88dc ("ath10k: add dynamic tx mode switch
-> config support for qca4019"). This patch adds the service to
-> avoid mismatch between host and target.
+> This patch derives device tree node from pcie bus layer framework.
+> Device tree bindings file has been renamed(marvell-sd8xxx.txt ->
+> marvell-8xxx.txt) to accomodate PCIe changes.
 > 
-> Fixes:7e247a9e88dc ("ath10k: add dynamic tx mode switch config support for qca4019")
-> Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+>  .../bindings/net/wireless/marvell-8xxx.txt         | 64 ++++++++++++++++++++++
+>  .../bindings/net/wireless/marvell-sd8xxx.txt       | 63 ---------------------
 
-Thanks, 1 patch applied to ath-next branch of ath.git:
+Resend using -M option so I do have to figure out if you added 1 line or 
+changed a bunch.
 
-64ed5771aca2 ath10k: Add WMI_SERVICE_PERIODIC_CHAN_STAT_SUPPORT wmi service
+>  drivers/net/wireless/marvell/mwifiex/pcie.c        | 19 +++++++
+>  drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  3 +-
+>  4 files changed, 85 insertions(+), 64 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+>  delete mode 100644 Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+> new file mode 100644
+> index 0000000..a8a95aa
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-8xxx.txt
+> @@ -0,0 +1,64 @@
+> +Marvell 8897/8997 (sd8897/sd8997/pcie8997) SDIO/PCIE devices
+> +------
+> +
+> +This node provides properties for controlling the marvell sdio/pcie wireless device.
+> +The node is expected to be specified as a child node to the SDIO/PCIE controller that
+> +connects the device to the system.
+> +
+> +Required properties:
+> +
+> +  - compatible : should be one of the following:
+> +	* "marvell,sd8897"
+> +	* "marvell,sd8997"
+> +	* "marvell,pcie8997"
 
--- 
-Sent by pwcli
-https://patchwork.kernel.org/patch/9255437/
+PCIe uses vendor and product IDs for compatible strings. Please read the 
+OF PCI bus bindings doc.
+
+Rob
