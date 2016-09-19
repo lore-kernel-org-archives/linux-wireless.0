@@ -1,51 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:32995 "EHLO
-        mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754925AbcIKDQ7 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:55854 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932580AbcISHan (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 10 Sep 2016 23:16:59 -0400
-Received: by mail-pa0-f48.google.com with SMTP id cm16so40505329pac.0
-        for <linux-wireless@vger.kernel.org>; Sat, 10 Sep 2016 20:16:59 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAGhGL2D8Hfed0VTsinnCbkK31dGTc=bYjzpPfrcLRnp+x6O3sA@mail.gmail.com>
-References: <20160910193315.30738-1-toke@toke.dk> <CAGhGL2D8Hfed0VTsinnCbkK31dGTc=bYjzpPfrcLRnp+x6O3sA@mail.gmail.com>
-From: Loganaden Velvindron <loganaden@gmail.com>
-Date: Sun, 11 Sep 2016 07:16:58 +0400
-Message-ID: <CAOp4FwT-Xf5_RnQCOg6Jh_ogHQ3nzcpx-gFS-mmPhOn-aMG3xQ@mail.gmail.com> (sfid-20160911_051705_160244_4E9D1421)
-Subject: Re: [Make-wifi-fast] [PATCH] mac80211: Dynamically set CoDel
- parameters per station.
-To: Jim Gettys <jg@freedesktop.org>
-Cc: =?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless <linux-wireless@vger.kernel.org>,
-        Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset=UTF-8
+        Mon, 19 Sep 2016 03:30:43 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Sara Sharon <sara.sharon@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 10:30:10 +0300
+Message-Id: <20160919073028.22065-7-luca@coelho.fi> (sfid-20160919_093051_688732_0BEB539F)
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Subject: [PATCH 07/25] iwlwifi: mvm: fix DQA AP mode station assumption
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Sep 10, 2016 at 11:54 PM, Jim Gettys <jg@freedesktop.org> wrote:
->
->
-> On Sat, Sep 10, 2016 at 3:33 PM, Toke H=C3=B8iland-J=C3=B8rgensen <toke@t=
-oke.dk>
-> wrote:
->>
->> CoDel can be too aggressive if a station sends at a very low rate,
->> leading to starvation. This gets worse the more stations are present, as
->> each station gets more bursty the longer the round-robin scheduling
->> between stations takes.
->>
->> This adds dynamic adjustment of CoDel parameters per station. It uses
->> the rate selection information to estimate throughput and sets more
->> lenient CoDel parameters if the estimated throughput is below a
->> threshold. To not change parameters too often, a hysteresis of two
->> seconds is added.
->
->
-> Where is this 2 second constant coming from?  I'd expect it should be of
-> order the maximum RTT (or a small constant factor of that, which for
-> intercontinental connections should be 200-300ms.
->
+From: Sara Sharon <sara.sharon@intel.com>
 
-Indeed, from Mauritius (Africa) to remote countries like Australia, or
-parts of the US, we see latencies of up to 500-600ms.
+There was recently a Full AP mode feature added where hostap adds
+the station at auth stage, and not assoc.
+However, when running with legacy hostapd, we get the auth response
+before station was added, and tx_skb_non_sta fails to allocate
+a queue, resulting in a complete failure of association.
+Take care of this situation as well.
+Add a warning when no valid queue is returned at all and make mvm
+drop the packet instead of passing it on.
+Refactor the function a bit while at it.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 35 +++++++++++++++++++++++------
+ 1 file changed, 28 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 1051777..e0c9065 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -490,16 +490,34 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
+ static int iwl_mvm_get_ctrl_vif_queue(struct iwl_mvm *mvm,
+ 				      struct ieee80211_tx_info *info, __le16 fc)
+ {
+-	if (iwl_mvm_is_dqa_supported(mvm)) {
+-		if (info->control.vif->type == NL80211_IFTYPE_AP &&
+-		    ieee80211_is_probe_resp(fc))
++	if (!iwl_mvm_is_dqa_supported(mvm))
++		return info->hw_queue;
++
++	switch (info->control.vif->type) {
++	case NL80211_IFTYPE_AP:
++		/*
++		 * handle legacy hostapd as well, where station may be added
++		 * only after assoc.
++		 */
++		if (ieee80211_is_probe_resp(fc) || ieee80211_is_auth(fc))
+ 			return IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
+-		else if (ieee80211_is_mgmt(fc) &&
+-			 info->control.vif->type == NL80211_IFTYPE_P2P_DEVICE)
++		if (info->hw_queue == info->control.vif->cab_queue)
++			return info->hw_queue;
++
++		WARN_ON_ONCE(1);
++		return IWL_MVM_DQA_AP_PROBE_RESP_QUEUE;
++	case NL80211_IFTYPE_P2P_DEVICE:
++		if (ieee80211_is_mgmt(fc))
+ 			return IWL_MVM_DQA_P2P_DEVICE_QUEUE;
+-	}
++		if (info->hw_queue == info->control.vif->cab_queue)
++			return info->hw_queue;
+ 
+-	return info->hw_queue;
++		WARN_ON_ONCE(1);
++		return IWL_MVM_DQA_P2P_DEVICE_QUEUE;
++	default:
++		WARN_ONCE(1, "Not a ctrl vif, no available queue\n");
++		return -1;
++	}
+ }
+ 
+ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+@@ -560,6 +578,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 			sta_id = mvmvif->bcast_sta.sta_id;
+ 			queue = iwl_mvm_get_ctrl_vif_queue(mvm, &info,
+ 							   hdr->frame_control);
++			if (queue < 0)
++				return -1;
++
+ 		} else if (info.control.vif->type == NL80211_IFTYPE_STATION &&
+ 			   is_multicast_ether_addr(hdr->addr1)) {
+ 			u8 ap_sta_id = ACCESS_ONCE(mvmvif->ap_sta_id);
+-- 
+2.9.3
