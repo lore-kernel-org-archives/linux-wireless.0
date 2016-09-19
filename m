@@ -1,170 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:7086 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751540AbcITLsn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 20 Sep 2016 07:48:43 -0400
-From: "Beker, Ayala" <ayala.beker@intel.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
-        "Otcheretianski, Andrei" <andrei.otcheretianski@intel.com>,
-        Luca Coelho <luca@coelho.fi>,
-        "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-        "Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: RE: [PATCH v2 2/9] mac80211: add boilerplate code for start / stop
- NAN
-Date: Tue, 20 Sep 2016 11:45:34 +0000
-Message-ID: <6E2DD73D17E17047917F6A81399A8ED3972503A6@hasmsx109.ger.corp.intel.com> (sfid-20160920_134847_280755_56708C61)
-References: <20160916083321.5840-1-luca@coelho.fi>
- <20160916083321.5840-3-luca@coelho.fi>
- <fae482d0-4bcd-6b06-9846-298a3218ab26@broadcom.com>
- <B2CD83211F5FDD478D7EFFF030D107ED57286E64@hasmsx108.ger.corp.intel.com>
- <ab55211c-9e82-38cf-8f7f-effa4b12d72b@broadcom.com>
-In-Reply-To: <ab55211c-9e82-38cf-8f7f-effa4b12d72b@broadcom.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from paleale.coelho.fi ([176.9.41.70]:55960 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S935782AbcISHbf (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 03:31:35 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 10:30:19 +0300
+Message-Id: <20160919073028.22065-16-luca@coelho.fi> (sfid-20160919_093139_089074_7931B9D9)
+In-Reply-To: <1474270071.5664.89.camel@coelho.fi>
+References: <1474270071.5664.89.camel@coelho.fi>
+Subject: [PATCH 16/25] iwlwifi: don't export trace points that are used in iwlwifi only
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
------Original Message-----
-From: Arend Van Spriel [mailto:arend.vanspriel@broadcom.com] 
-Sent: Sunday, September 18, 2016 22:01
-To: Otcheretianski, Andrei <andrei.otcheretianski@intel.com>; Luca Coelho <luca@coelho.fi>; johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org; Beker, Ayala <ayala.beker@intel.com>; Grumbach, Emmanuel <emmanuel.grumbach@intel.com>; Coelho, Luciano <luciano.coelho@intel.com>
-Subject: Re: [PATCH v2 2/9] mac80211: add boilerplate code for start / stop NAN
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 
-On 18-9-2016 9:59, Otcheretianski, Andrei wrote:
->> -----Original Message-----
->> From: Arend Van Spriel [mailto:arend.vanspriel@broadcom.com]
->> Sent: Friday, September 16, 2016 14:09
->> To: Luca Coelho <luca@coelho.fi>; johannes@sipsolutions.net
->> Cc: linux-wireless@vger.kernel.org; Beker, Ayala 
->> <ayala.beker@intel.com>; Otcheretianski, Andrei 
->> <andrei.otcheretianski@intel.com>; Grumbach, Emmanuel 
->> <emmanuel.grumbach@intel.com>; Coelho, Luciano 
->> <luciano.coelho@intel.com>
->> Subject: Re: [PATCH v2 2/9] mac80211: add boilerplate code for start 
->> / stop NAN
->>
->> On 16-9-2016 10:33, Luca Coelho wrote:
->>> From: Ayala Beker <ayala.beker@intel.com>
->>>
->>> This code doesn't do much besides allowing to start and stop the vif.
->>>
->>> Signed-off-by: Andrei Otcheretianski 
->>> <andrei.otcheretianski@intel.com>
->>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->>> Signed-off-by: Ayala Beker <ayala.beker@intel.com>
->>> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->>> ---
->>>  include/net/mac80211.h    |  9 +++++++++
->>>  net/mac80211/cfg.c        | 36 ++++++++++++++++++++++++++++++++++
->>>  net/mac80211/chan.c       |  3 +++
->>>  net/mac80211/driver-ops.h | 29 ++++++++++++++++++++++++++-
->>>  net/mac80211/iface.c      |  8 ++++++--
->>>  net/mac80211/main.c       |  5 +++++
->>>  net/mac80211/offchannel.c |  3 ++-
->>>  net/mac80211/trace.h      | 50
->> +++++++++++++++++++++++++++++++++++++++++++++++
->>>  net/mac80211/util.c       |  3 ++-
->>>  9 files changed, 141 insertions(+), 5 deletions(-)
->>
->> [...]
->>
->>> diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h 
->>> index fe35a1c..67b42c8 100644
->>> --- a/net/mac80211/driver-ops.h
->>> +++ b/net/mac80211/driver-ops.h
->>> @@ -163,7 +163,8 @@ static inline void drv_bss_info_changed(struct 
->>> ieee80211_local *local,
->>>
->>>  	if (WARN_ON_ONCE(sdata->vif.type ==
->> NL80211_IFTYPE_P2P_DEVICE ||
->>>  			 (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
->>> -			  !sdata->vif.mu_mimo_owner)))
->>> +			  !sdata->vif.mu_mimo_owner) ||
->>> +			 sdata->vif.type == NL80211_IFTYPE_NAN))
->>
->> Might be more clear to move this up right after P2P_DEVICE check.
-> 
-> Why? It's a completely separate new condition - so it goes to the end.
+This can save a few bytes
 
-> I would say readability. Both P2P_DEVICE and NAN checks are single comparisons as opposed to the MONITOR check.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
->>
->>>  		return;
->>>
->>>  	if (!check_sdata_in_driver(sdata)) @@ -1165,4 +1166,30 @@ static 
->>> inline void drv_wake_tx_queue(struct
->> ieee80211_local *local,
->>>  	local->ops->wake_tx_queue(&local->hw, &txq->txq);  }
->>>
->>> +static inline int drv_start_nan(struct ieee80211_local *local,
->>> +				struct ieee80211_sub_if_data *sdata,
->>> +				struct cfg80211_nan_conf *conf) {
->>> +	int ret;
->>> +
->>> +	might_sleep();
->>> +	check_sdata_in_driver(sdata);
->>> +
->>> +	trace_drv_start_nan(local, sdata, conf);
->>> +	ret = local->ops->start_nan(&local->hw, &sdata->vif, conf);
->>> +	trace_drv_return_int(local, ret);
->>> +	return ret;
->>> +}
->>> +
->>> +static inline void drv_stop_nan(struct ieee80211_local *local,
->>> +				struct ieee80211_sub_if_data *sdata) {
->>> +	might_sleep();
->>> +	check_sdata_in_driver(sdata);
->>> +
->>> +	trace_drv_stop_nan(local, sdata);
->>> +	local->ops->stop_nan(&local->hw, &sdata->vif);
->>> +	trace_drv_return_void(local);
->>> +}
->>> +
->>>  #endif /* __MAC80211_DRIVER_OPS */
->>> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c index 
->>> e694ca2..507f46a 100644
->>> --- a/net/mac80211/iface.c
->>> +++ b/net/mac80211/iface.c
->>> @@ -327,6 +327,9 @@ static int ieee80211_check_queues(struct
->> ieee80211_sub_if_data *sdata,
->>>  	int n_queues = sdata->local->hw.queues;
->>>  	int i;
->>>
->>> +	if (iftype == NL80211_IFTYPE_NAN)
->>> +		return 0;
->>> +
->>>  	if (iftype != NL80211_IFTYPE_P2P_DEVICE) {
->>>  		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
->>>  			if (WARN_ON_ONCE(sdata->vif.hw_queue[i] == @@
->> -647,7 +650,8 @@ int
->>> ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
->>>  			local->fif_probe_req++;
->>>  		}
->>>
->>> -		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
->>> +		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
->>> +		    sdata->vif.type != NL80211_IFTYPE_NAN)
->>
->> similar check keeps reoccuring in various places so maybe we can 
->> create a helper function for it.
-> 
-> Right, but not sure that it deserves a function.
-
-> If similar new iftypes are anticipated it would make sense as it would mean adding it in one place.
-
-I don't think there is something in common to those interface types that can fit such a function semantically, so I decided not to change it.
-Do you have any idea?
-
-> Regards,
-> Arend
-
----------------------------------------------------------------------
-A member of the Intel Corporation group of companies
-
-This e-mail and any attachments may contain confidential material for
-the sole use of the intended recipient(s). Any review or distribution
-by others is strictly prohibited. If you are not the intended
-recipient, please contact the sender and delete all copies.
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
+index 1d9dd153..50510fb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.c
+@@ -33,9 +33,6 @@
+ #define CREATE_TRACE_POINTS
+ #include "iwl-devtrace.h"
+ 
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_iowrite8);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ioread32);
+-EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_iowrite32);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_event);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_error);
+ EXPORT_TRACEPOINT_SYMBOL(iwlwifi_dev_ucode_cont_event);
+-- 
+2.9.3
