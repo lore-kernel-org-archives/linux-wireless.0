@@ -1,322 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:35427 "EHLO
-        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754177AbcINSNM (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56086 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1756422AbcISIfi (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 14 Sep 2016 14:13:12 -0400
-Received: by mail-wm0-f43.google.com with SMTP id i130so61983973wmf.0
-        for <linux-wireless@vger.kernel.org>; Wed, 14 Sep 2016 11:13:11 -0700 (PDT)
-Subject: Re: TCP data throughput for BCM43362
-To: =?UTF-8?Q?J=c3=b6rg_Krause?= <joerg.krause@embedded.rocks>,
-        Franky Lin <franky.lin@broadcom.com>
-References: <1470429980.29489.10.camel@embedded.rocks>
- <CAF7Mx6o+WuQqtzuApMWQ8YAkLSX7xQ_H06xmO--RxFdwHwzLdQ@mail.gmail.com>
- <1BCE83A1-AA47-438D-BC47-05AE53D40121@embedded.rocks>
- <CA+8PC_f7VQMwBfQmZZ_vUtYtNJKVYzmFmxziAwoG8-iRUeW9Jw@mail.gmail.com>
- <1470492734.2120.0.camel@embedded.rocks>
- <6cdbbae7-8a56-6778-e886-68eeea7add15@broadcom.com>
- <1471873052.1683.27.camel@embedded.rocks>
- <40d15186-6ddf-a210-03de-2bbe21957f1d@broadcom.com>
- <1472505309.21429.3.camel@embedded.rocks>
- <1473860503.19492.19.camel@embedded.rocks>
-Cc: Brett Rudley <brudley@broadcom.com>,
-        brcm80211-dev-list <brcm80211-dev-list@broadcom.com>,
-        Hante Meuleman <meuleman@broadcom.com>,
-        Franky Lin <frankyl@broadcom.com>,
-        linux-wireless@vger.kernel.org,
-        Arend van Spriel <arend@broadcom.com>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <27e007ed-57f6-4082-2f65-a11ba3b7f548@broadcom.com> (sfid-20160914_201317_176359_1B8B6255)
-Date: Wed, 14 Sep 2016 20:13:07 +0200
-MIME-Version: 1.0
-In-Reply-To: <1473860503.19492.19.camel@embedded.rocks>
-Content-Type: text/plain; charset=utf-8
+        Mon, 19 Sep 2016 04:35:38 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, Roee Zamir <roee.zamir@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Mon, 19 Sep 2016 11:35:30 +0300
+Message-Id: <20160919083530.7496-1-luca@coelho.fi> (sfid-20160919_103630_430243_AA4AA17C)
+In-Reply-To: <0160919073028.22065-19-luca@coelho.fi>
+References: <0160919073028.22065-19-luca@coelho.fi>
+Subject: [PATCH v2 19/25] iwlwifi: mvm: Add debugfs function for clocks diff
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 14-9-2016 15:41, Jörg Krause wrote:
-> Hi,
-> 
-> On Mon, 2016-08-29 at 23:15 +0200, Jörg Krause wrote:
->> On Mi, 2016-08-24 at 20:35 +0200, Arend Van Spriel wrote:
->>>
->>> On 22-8-2016 15:37, Jörg Krause wrote:
->>>>
->>>>
->>>> Hi all,
->>>>
->>>> I am back from vacation and I'd like to do more investigations
->>>> about
->>>> this issue. Please see my comments below...
->>>>
->>>> On Sun, 2016-08-07 at 13:41 +0200, Arend van Spriel wrote:
->>>>>
->>>>>
->>>>> On 06-08-16 16:12, Jörg Krause wrote:
->>>>>>
->>>>>>
->>>>>>
->>>>>> Hi all,
->>>>>
->>>>> A bit weird email format making it a bit hard to determine
->>>>> where
->>>>> your
->>>>> last reply starts...
->>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> On Fr, 2016-08-05 at 17:56 -0700, Franky Lin wrote:
->>>>>>
->>>>>> On Fri, Aug 5, 2016 at 2:29 PM, Jörg Krause <joerg.krause@emb
->>>>>> ed
->>>>>> ded.
->>>>>> ro
->>>>>> cks>
->>>>>> wrote:
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> Am 5. August 2016 23:01:10 MESZ, schrieb Arend Van Spriel <
->>>>>> arend.vanspriel@broadcom.com>:
->>>>>>
->>>>>>
->>>>>> Op 5 aug. 2016 22:46 schreef "Jörg Krause"
->>>>>> <joerg.krause@embedded.rocks>:
->>>>>>
->>>>>>
->>>>>>
->>>>>> Hi,
->>>>>>
->>>>>> I'm using a custom ARM board with an BCM43362 wifi chip from
->>>>>>
->>>>>> Broadcom.
->>>>>>
->>>>>>
->>>>>> The wifi chip is attached via SDIO to the controller with a
->>>>>> clock of
->>>>>> 48MHz. Linux kernel version is 4.7.
->>>>>>
->>>>>> When measuring the network bandwidth with iperf3 I get a
->>>>>> bandwith of
->>>>>> only around 5 Mbps. I found a similar thread at the Broadcom
->>>>>>
->>>>>> community
->>>>>>
->>>>>>
->>>>>> [1] where the test was done with a M4 CPU + BCM43362 and an
->>>>>> average
->>>>>> result of 3.3 Mbps.
->>>>>>
->>>>>> Interestingly, a BCM43362 Wi-Fi Dev Kit [2] notes a TCP data
->>>>>>
->>>>>> throughput
->>>>>>
->>>>>>
->>>>>> greater than 20 Mbps.
->>>>>>
->>>>>> Why is the throughput I measured much lower? Note that I
->>>>>> measured
->>>>>> several times with almost no neighbor devices or networks.
->>>>>>
->>>>>> This is a test sample measured with iperf3:
->>>>>>
->>>>>>     $ iperf3 -c 192.168.2.1 -i 1 -t 10
->>>>>>     Connecting to host 192.168.2.1, port 5201
->>>>>>     [  4] local 192.168.2.155 port 36442 connected to
->>>>>> 192.168.2.1
->>>>>>
->>>>>> port
->>>>>>
->>>>>>
->>>>>>     5201
->>>>>>     [ ID]
->>>>>> Interval           Transfer     Bandwidth       Retr  Cwnd
->>>>>>     [  4]   0.00-1.00   sec   615 KBytes  5.04
->>>>>> Mbits/sec    0   56.6
->>>>>>     KBytes
->>>>>>     [  4]   1.00-2.00   sec   622 KBytes  5.10
->>>>>> Mbits/sec    0   84.8
->>>>>>     KBytes
->>>>>>     [  4]   2.00-3.00   sec   625 KBytes  5.12
->>>>>> Mbits/sec    0    113
->>>>>>     KBytes
->>>>>>     [  4]   3.00-4.00   sec   571 KBytes  4.68
->>>>>> Mbits/sec    0    140
->>>>>>     KBytes
->>>>>>     [  4]   4.00-5.00   sec   594 KBytes  4.87
->>>>>> Mbits/sec    0    167
->>>>>>     KBytes
->>>>>>     [  4]   5.00-6.00   sec   628 KBytes  5.14
->>>>>> Mbits/sec    0    195
->>>>>>     KBytes
->>>>>>     [  4]   6.00-7.00   sec   619 KBytes  5.07
->>>>>> Mbits/sec    0    202
->>>>>>     KBytes
->>>>>>     [  4]   7.00-8.00   sec   608 KBytes  4.98
->>>>>> Mbits/sec    0    202
->>>>>>     KBytes
->>>>>>     [  4]   8.00-9.00   sec   602 KBytes  4.93
->>>>>> Mbits/sec    0    202
->>>>>>     KBytes
->>>>>>     [  4]   9.00-10.00  sec   537 KBytes  4.40
->>>>>> Mbits/sec    0    202
->>>>>>     KBytes
->>>>>>     - - - - - - - - - - - - - - - - - - - - - - - - -
->>>>>>     [ ID]
->>>>>> Interval           Transfer     Bandwidth       Retr
->>>>>>     [  4]   0.00-10.00  sec  5.88 MBytes  4.93
->>>>>>     Mbits/sec    0             sender
->>>>>>     [  4]   0.00-10.00  sec  5.68 MBytes  4.76
->>>>>>     Mbits/sec                  receiver
->>>>>>
->>>>>>
->>>>>> Not overly familiar with iperf3. Do these lines mean you are
->>>>>> doing
->>>>>> bidirectional test, ie. upstream and downstream at the same
->>>>>> time.
->>>>>> Another
->>>>>> thing affecting tput could be power-save.
->>>>>>
->>>>>>
->>>>>> No, iperf3 does not support bidrectional test. Power-save is
->>>>>> turned
->>>>>> off.
->>>>>>
->>>>>> What does iw link say?
->>>>>>
->>>>>
->>>>> but I guess it starts here!
->>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> I compared the results with a Cubietruck I have:
->>>>>>
->>>>>> # iperf3 -s
->>>>>> -----------------------------------------------------------
->>>>>> Server listening on 5201
->>>>>> -----------------------------------------------------------
->>>>>> Accepted connection from 192.168.178.46, port 42906
->>>>>> [  5] local 192.168.178.38 port 5201 connected to
->>>>>> 192.168.178.46
->>>>>> port
->>>>>> 42908
->>>>>> [ ID] Interval           Transfer     Bandwidth
->>>>>> [  5]   0.00-1.00   sec  2.29 MBytes  19.2
->>>>>> Mbits/sec                  
->>>>>> [  5]   1.00-2.00   sec  2.21 MBytes  18.5
->>>>>> Mbits/sec                  
->>>>>> [  5]   2.00-3.00   sec  2.17 MBytes  18.2
->>>>>> Mbits/sec                  
->>>>>> [  5]   3.00-4.00   sec  2.09 MBytes  17.6
->>>>>> Mbits/sec                  
->>>>>> [  5]   4.00-5.00   sec  2.20 MBytes  18.5
->>>>>> Mbits/sec                  
->>>>>> [  5]   5.00-6.00   sec  2.64 MBytes  22.1
->>>>>> Mbits/sec                  
->>>>>> [  5]   6.00-7.00   sec  2.67 MBytes  22.4
->>>>>> Mbits/sec                  
->>>>>> [  5]   7.00-8.00   sec  2.62 MBytes  22.0
->>>>>> Mbits/sec                  
->>>>>> [  5]   8.00-9.00   sec  2.35 MBytes  19.8
->>>>>> Mbits/sec                  
->>>>>> [  5]   9.00-10.00  sec  2.30 MBytes  19.3
->>>>>> Mbits/sec                  
->>>>>> [  5]  10.00-10.03  sec  83.4 KBytes  23.5
->>>>>> Mbits/sec                  
->>>>>> - - - - - - - - - - - - - - - - - - - - - - - - -
->>>>>> [ ID] Interval           Transfer     Bandwidth       Retr
->>>>>> [  5]   0.00-10.03  sec  23.9 MBytes  20.0
->>>>>> Mbits/sec    0             sender
->>>>>> [  5]   0.00-10.03  sec  23.6 MBytes  19.8
->>>>>> Mbits/sec                  receiver
->>>>>>
->>>>>> # iw dev wlan0 link
->>>>>> Connected to xx:xx:xx:xx:xx (on wlan0)
->>>>>> 	SSID: xxx
->>>>>> 	freq: 2437
->>>>>> 	tx bitrate: 65.0 MBit/s
->>>>>>
->>>>>> 	bss flags:	short-preamble short-slot-time
->>>>>> 	dtim period:	1
->>>>>> 	beacon int:	100
->>>>>
->>>>> Too bad RSSI is not in the output above. That may be due to a
->>>>> regression
->>>>> in our driver which has been fixed by commit 94abd778a7bb
->>>>> ("brcmfmac:
->>>>> add fallback for devices that do not report per-chain values").
->>>>> However,
->>>>> the tx bitrate seems within the same range as the other
->>>>> platform.
->>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> The Cubietruck works also with the brcmfmac driver.
->>>>>>
->>>>>> May it depend on the NVRAM file?
->>>>>
->>>>> Not sure. Can you tell me a bit more about the custom ARM
->>>>> board.
->>>>> Does
->>>>> it
->>>>> use the same wifi module as Cubietruck, ie. the AMPAK AP6210?
->>>>> If
->>>>> you
->>>>> can
->>>>> make a wireshark sniff we can check the actual bitrate and
->>>>> medium
->>>>> density in terms of packets. Another thing to look at is the
->>>>> SDIO
->>>>> host
->>>>> controller. In brcmf_sdiod_sgtable_alloc() some key values are
->>>>> used
->>>>> from
->>>>> the host controller. It only logs the number of entries of the
->>>>> scatter-gather table, but could you add the other values in
->>>>> this
->>>>> function that are used to determine the number of entries.
->>>>
->>>> My board uses the BCM43362 chip solely (no Bluetooth) attached to
->>>> the
->>>> SDIO interface of a NXP i.MX28 processor.
->>>>
->>>> I added some additional printk() to brcmf_sdiod_sgtable_alloc().
->>>> These
->>>> are the values printed after modprobe brcmfmac:
->>>>
->>>> [    8.926657] sg_support=1
->>>> [    8.929440] max_blocks=511
->>>> [    8.932213] max_request_size=261632
->>>> [    8.935741] max_segment_count=52
->>>> [    8.939005] max_segment_size=65280
->>>> [    8.946095] nents=35
->>>
->>> Thanks. That looks good.
->>>
->>>>
->>>>
->>>> Additionally I attached a xz compresses wireshark sniff while
->>>> running
->>>> iper3 between the BCM43362 running as in AP mode with iperf3 as a
->>>> server and a PC in station mode running iperf3 as a client.
->>>
->>> Looking at the sniff it seems you captured on the ethernet side.
->>> That
->>> does not give me any 802.11 specific info. Can you make a wireless
->>> capture preferably without encryption.
->>
->> You,re right! Sorry for this mistake. I did a re-capture on the
->> wireless side now.
-> 
-> Anything new about this? Anything I can do to help?
+From: Roee Zamir <roee.zamir@intel.com>
 
-I missed your previous email. Was already wondering whether to ping you.
-Digging around in my email folders I found it so will take a look at it.
+New function, reveals the diff between gp2 and host time.
 
-Regards,
-Arend
+Signed-off-by: Roee Zamir <roee.zamir@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+
+Sorry, I was missing a compilation flag in my .config and missed a
+compilation error detected by kbuild-bot.  Here's the fix.
+
+In v2:
+   * added a helper function that was missing
+
+Luca.
+
+.../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   | 26 ++++++++++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 22 ++++++++++++++++++
+ 3 files changed, 49 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+index b232717..8ff1921 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+@@ -504,6 +504,28 @@ static inline char *iwl_dbgfs_is_match(char *name, char *buf)
+ 	return !strncmp(name, buf, len) ? buf + len : NULL;
+ }
+ 
++static ssize_t iwl_dbgfs_os_device_timediff_read(struct file *file,
++						 char __user *user_buf,
++						 size_t count, loff_t *ppos)
++{
++	struct ieee80211_vif *vif = file->private_data;
++	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
++	struct iwl_mvm *mvm = mvmvif->mvm;
++	u32 curr_gp2;
++	u64 curr_os;
++	s64 diff;
++	char buf[64];
++	const size_t bufsz = sizeof(buf);
++	int pos = 0;
++
++	iwl_mvm_get_sync_time(mvm, &curr_gp2, &curr_os);
++	do_div(curr_os, NSEC_PER_USEC);
++	diff = curr_os - curr_gp2;
++	pos += scnprintf(buf + pos, bufsz - pos, "diff=%lld\n", diff);
++
++	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
++}
++
+ static ssize_t iwl_dbgfs_tof_enable_write(struct ieee80211_vif *vif,
+ 					  char *buf,
+ 					  size_t count, loff_t *ppos)
+@@ -1530,6 +1552,8 @@ MVM_DEBUGFS_READ_FILE_OPS(tof_range_response);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(tof_responder_params, 32);
+ MVM_DEBUGFS_READ_WRITE_FILE_OPS(quota_min, 32);
+ MVM_DEBUGFS_WRITE_FILE_OPS(lqm_send_cmd, 64);
++MVM_DEBUGFS_READ_FILE_OPS(os_device_timediff);
++
+ 
+ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ {
+@@ -1570,6 +1594,8 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
+ 	MVM_DEBUGFS_ADD_FILE_VIF(quota_min, mvmvif->dbgfs_dir,
+ 				 S_IRUSR | S_IWUSR);
+ 	MVM_DEBUGFS_ADD_FILE_VIF(lqm_send_cmd, mvmvif->dbgfs_dir, S_IWUSR);
++	MVM_DEBUGFS_ADD_FILE_VIF(os_device_timediff,
++				 mvmvif->dbgfs_dir, S_IRUSR);
+ 
+ 	if (vif->type == NL80211_IFTYPE_STATION && !vif->p2p &&
+ 	    mvmvif == mvm->bf_allowed_vif)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index e68a2bd..b7cfdcb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1268,6 +1268,7 @@ u8 iwl_mvm_mac80211_idx_to_hwrate(int rate_idx);
+ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm);
+ u8 first_antenna(u8 mask);
+ u8 iwl_mvm_next_antenna(struct iwl_mvm *mvm, u8 valid, u8 last_idx);
++void iwl_mvm_get_sync_time(struct iwl_mvm *mvm, u32 *gp2, u64 *boottime);
+ 
+ /* Tx / Host Commands */
+ int __must_check iwl_mvm_send_cmd(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 7c138fe..9e366e2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -1225,6 +1225,28 @@ void iwl_mvm_inactivity_check(struct iwl_mvm *mvm)
+ 	rcu_read_unlock();
+ }
+ 
++void iwl_mvm_get_sync_time(struct iwl_mvm *mvm, u32 *gp2, u64 *boottime)
++{
++	bool ps_disabled;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	/* Disable power save when reading GP2 */
++	ps_disabled = mvm->ps_disabled;
++	if (!ps_disabled) {
++		mvm->ps_disabled = true;
++		iwl_mvm_power_update_device(mvm);
++	}
++
++	*gp2 = iwl_read_prph(mvm->trans, DEVICE_SYSTEM_TIME_REG);
++	*boottime = ktime_get_boot_ns();
++
++	if (!ps_disabled) {
++		mvm->ps_disabled = ps_disabled;
++		iwl_mvm_power_update_device(mvm);
++	}
++}
++
+ int iwl_mvm_send_lqm_cmd(struct ieee80211_vif *vif,
+ 			 enum iwl_lqm_cmd_operatrions operation,
+ 			 u32 duration, u32 timeout)
+-- 
+2.9.3
