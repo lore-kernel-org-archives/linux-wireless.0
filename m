@@ -1,42 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35526 "EHLO nbd.name"
+Received: from s3.sipsolutions.net ([5.9.151.49]:50263 "EHLO sipsolutions.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751365AbcICKQW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Sat, 3 Sep 2016 06:16:22 -0400
-Subject: Re: [PATCH v5] ath9k: Switch to using mac80211 intermediate software
- queues.
-To: =?UTF-8?Q?Toke_H=c3=b8iland-J=c3=b8rgensen?= <toke@toke.dk>,
-        make-wifi-fast@lists.bufferbloat.net,
-        linux-wireless@vger.kernel.org
-References: <20160805160346.10545-1-toke@toke.dk>
- <20160902140030.11798-1-toke@toke.dk>
-Cc: Tim Shepard <shep@alum.mit.edu>
-From: Felix Fietkau <nbd@nbd.name>
-Message-ID: <df0e8117-68cf-b318-cb71-c450b0598eb3@nbd.name> (sfid-20160903_121626_533228_82D2963B)
-Date: Sat, 3 Sep 2016 12:16:19 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160902140030.11798-1-toke@toke.dk>
-Content-Type: text/plain; charset=utf-8
+        id S1753179AbcISKE5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 06:04:57 -0400
+Message-ID: <1474279492.4469.29.camel@sipsolutions.net> (sfid-20160919_120500_879459_486B5001)
+Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
+Date: Mon, 19 Sep 2016 12:04:52 +0200
+In-Reply-To: <1474279330.4469.28.camel@sipsolutions.net> (sfid-20160919_120228_517669_28A2A922)
+References: <20160804071846.GA773@gondor.apana.org.au>
+         <20160804074546.GA996@gondor.apana.org.au>
+         <1470377813.2977.14.camel@sipsolutions.net>
+         <20160805104858.GA9297@gondor.apana.org.au>
+         <1470394233.2977.37.camel@sipsolutions.net>
+         <20160918135030.GA7062@gondor.apana.org.au>
+         <20160919084056.GA11875@gondor.apana.org.au>
+         <1474276530.4469.16.camel@sipsolutions.net>
+         <20160919091721.GA12235@gondor.apana.org.au>
+         <1474277244.4469.21.camel@sipsolutions.net>
+         <20160919093434.GA12378@gondor.apana.org.au>
+         (sfid-20160919_113440_719977_971CE718) <1474278634.4469.25.camel@sipsolutions.net>
+         (sfid-20160919_115045_089605_A254E125) <1474278896.4469.26.camel@sipsolutions.net>
+         (sfid-20160919_115508_261438_39410159) <1474279330.4469.28.camel@sipsolutions.net>
+         (sfid-20160919_120228_517669_28A2A922)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-09-02 16:00, Toke Høiland-Jørgensen wrote:
-> This switches ath9k over to using the mac80211 intermediate software
-> queueing mechanism for data packets. It removes the queueing inside the
-> driver, except for the retry queue, and instead pulls from mac80211 when
-> a packet is needed. The retry queue is used to store a packet that was
-> pulled but can't be sent immediately.
+On Mon, 2016-09-19 at 12:02 +0200, Johannes Berg wrote:
+> On Mon, 2016-09-19 at 11:54 +0200, Johannes Berg wrote:
+> > 
+> > > 
+> > > 
+> > > The stack trace is useless, but my other annotation showed that
+> > > the
+> > > table's nelems *underflowed* to -1, so now the worker will
+> > > continue
+> > > to try to grow it forever.
+> > > 
+> > 
+> > And this *was* actually a case of duplication, afaict, since it was
+> > multiple virtual interfaces on the same device all connecting to
+> > the
+> > same AP.
 > 
-> The old code path in ath_tx_start that would queue packets has been
-> removed completely, as has the qlen limit tunables (since there's no
-> longer a queue in the driver to limit).
+> It seems that __rhashtable_remove_fast_one() should return 0 even in
+> the case of err==1 for the "skip all the maintenance due to list
+> deletion"?
 > 
-> Based on Tim's original patch set, but reworked quite thoroughly.
+> --- a/include/linux/rhashtable.h
+> +++ b/include/linux/rhashtable.h
+> @@ -1009,7 +1009,7 @@ static inline int __rhashtable_remove_fast_one(
+>                 err = 0;
+>         }
+>  
+> -       return err;
+> +       return err < 0 ? err : 0;
+>  }
 > 
-> Cc: Tim Shepard <shep@alum.mit.edu>
-> Cc: Felix Fietkau <nbd@nbd.name>
-> Signed-off-by: Toke Høiland-Jørgensen <toke@toke.dk>
-You can add:
-Signed-off-by: Felix Fietkau <nbd@nbd.name>
 
-- Felix
+No, that's obviously bogus and already handled - wrong case anyway.
+Sorry.
+
+johannes
