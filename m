@@ -1,87 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54056 "EHLO
-        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751799AbcIRQoI (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:35712 "EHLO
+        helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751129AbcISJRb (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Sep 2016 12:44:08 -0400
-Date: Sun, 18 Sep 2016 18:44:08 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-kernel@vger.kernel.org,
-        linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-        Nicolai Stange <nicstange@gmail.com>,
-        Ben Greear <greearb@candelatech.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 2/4] carl9170: fix debugfs crashes
-Message-ID: <20160918164408.GB19729@kroah.com> (sfid-20160918_184431_751472_22D7D97C)
-References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
- <87d1k17idx.fsf@kamboji.qca.qualcomm.com>
- <20160918101455.GA8410@kroah.com>
- <2731122.i7AxIUFRZe@debian64>
+        Mon, 19 Sep 2016 05:17:31 -0400
+Date: Mon, 19 Sep 2016 17:17:21 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
+Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
+Message-ID: <20160919091721.GA12235@gondor.apana.org.au> (sfid-20160919_111735_499908_F6D9ED9A)
+References: <20160804071846.GA773@gondor.apana.org.au>
+ <20160804074546.GA996@gondor.apana.org.au>
+ <1470377813.2977.14.camel@sipsolutions.net>
+ <20160805104858.GA9297@gondor.apana.org.au>
+ <1470394233.2977.37.camel@sipsolutions.net>
+ <20160918135030.GA7062@gondor.apana.org.au>
+ <20160919084056.GA11875@gondor.apana.org.au>
+ <1474276530.4469.16.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2731122.i7AxIUFRZe@debian64>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1474276530.4469.16.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Sep 18, 2016 at 02:49:33PM +0200, Christian Lamparter wrote:
-> On Sunday, September 18, 2016 12:14:55 PM CEST Greg KH wrote:
-> > On Sun, Sep 18, 2016 at 10:54:18AM +0300, Kalle Valo wrote:
-> > > Greg KH <gregkh@linuxfoundation.org> writes:
-> > > 
-> > > > On Sat, Sep 17, 2016 at 09:43:02PM +0200, Christian Lamparter wrote:
-> > > >> Ben Greear reported:
-> > > >> > I see lots of instability as soon as I load up the carl9710 NIC.
-> > > >> > My application is going to be poking at it's debugfs files...
-> > > >> >
-> > > >> > BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
-> > > >> > [carl9170] at addr ffff8801bc1208b0
-> > > >> > Read of size 8 by task btserver/5888
-> > > >> > =======================================================================
-> > > >> > BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
-> > > >> > -----------------------------------------------------------------------
-> > > >> >
-> > > >> > INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
-> > > >> >...
-> > > >> 
-> > > >> This breakage was caused by the introduction of intermediate
-> > > >> fops in debugfs by commit 9fd4dcece43a
-> > > >> ("debugfs: prevent access to possibly dead file_operations at file open")
-> > > >
-> > > > Because of this, these should all be backported to 4.7-stable, and
-> > > > 4.8-stable, right?
-> Ok, only b43legacy has debugfs enabled by default. For b43 and carl9170 
-> debugfs support is usually disabled.
+On Mon, Sep 19, 2016 at 11:15:30AM +0200, Johannes Berg wrote:
+> On Mon, 2016-09-19 at 16:40 +0800, Herbert Xu wrote:
 > 
-> Greg, would you take these four patches "as is" for -stable
-> or do you want a "minimal version" which just replaces the
+> > I've tested the rhlist code with test_rhashtable but I haven't
+> > tested the mac80211 conversion.  So please give it a go and see
+> > if it still works.
 > 
-> dfops = container_of(file->f_op, ...
+> This is still running out of memory on my test suite.
 > 
-> with
-> 
-> dfops = container_of(file->f_path.dentry->d_fsdata, ...
-> 
-> in the three drivers for -stable?
+> Somehow I don't see kmemleak kicking in, so I'll have to find the bug
+> manually :)
 
-No, I'll take this as is, we want things to remain as close as possible
-to Linus's tree.  When we are not, is when things break.
+What does your test suite actually do? Is it something that I
+can run without special hardware?
 
-> > > Via which tree should these go, Greg's or mine?
-> > 
-> > I'll take it if you ack it, as it's a debugfs issue.
-> For carl9170: Ben Greear has reported:
-> "I have verified this fixes my problem in the 4.7 kernel."
-> 
-> But this was with a preliminary/minimal version so I didn't
-> add the tested-by tag.
-> 
-> As for b43, I'll see if I have a working b43 in my collection
-> somewhere to confirm the issue and the fix. Question is, do
-> you want to wait or not?
-
-I'll queue these up this week, no rush.
-
-thanks,
-
-greg k-h
+Thanks,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
