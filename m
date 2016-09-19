@@ -1,211 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44102 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932427AbcIMTDR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 15:03:17 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-        Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 1/1] rtl8xxxu: Implement 8192e specific power down sequence
-Date: Tue, 13 Sep 2016 15:03:15 -0400
-Message-Id: <1473793395-28927-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160913_210321_824277_8E5383D8)
-In-Reply-To: <1473793395-28927-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1473793395-28927-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from helcar.hengli.com.au ([209.40.204.226]:57679 "EHLO
+        helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754044AbcISIlG (ORCPT
+        <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 04:41:06 -0400
+Date: Mon, 19 Sep 2016 16:40:57 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
+Subject: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
+Message-ID: <20160919084056.GA11875@gondor.apana.org.au> (sfid-20160919_104618_749650_E391E5BD)
+References: <20160804071846.GA773@gondor.apana.org.au>
+ <20160804074546.GA996@gondor.apana.org.au>
+ <1470377813.2977.14.camel@sipsolutions.net>
+ <20160805104858.GA9297@gondor.apana.org.au>
+ <1470394233.2977.37.camel@sipsolutions.net>
+ <20160918135030.GA7062@gondor.apana.org.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160918135030.GA7062@gondor.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+v2 contains a reworked insertion slowpath to ensure that the
+spinlock for the table we're inserting into is taken.
 
-This powers down the 8192e correctly, or at least to the point where
-the firmware will load again, when reloading the driver module.
+This series contains one two patches.  The first adds the rhlist
+interface and the second converts mac80211 to use it.  If this works
+out I'll then proceed to convert the other insecure_elasticity
+users over to this.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c | 144 ++++++++++++++++++++-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |   1 +
- 2 files changed, 144 insertions(+), 1 deletion(-)
+I've tested the rhlist code with test_rhashtable but I haven't
+tested the mac80211 conversion.  So please give it a go and see
+if it still works.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-index 841522e..df54d27 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8192e.c
-@@ -1396,6 +1396,114 @@ exit:
- 	return ret;
- }
- 
-+static int rtl8192eu_active_to_lps(struct rtl8xxxu_priv *priv)
-+{
-+	struct device *dev = &priv->udev->dev;
-+	u8 val8;
-+	u16 val16;
-+	u32 val32;
-+	int retry, retval;
-+
-+	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
-+
-+	retry = 100;
-+	retval = -EBUSY;
-+	/*
-+	 * Poll 32 bit wide 0x05f8 for 0x00000000 to ensure no TX is pending.
-+	 */
-+	do {
-+		val32 = rtl8xxxu_read32(priv, REG_SCH_TX_CMD);
-+		if (!val32) {
-+			retval = 0;
-+			break;
-+		}
-+	} while (retry--);
-+
-+	if (!retry) {
-+		dev_warn(dev, "Failed to flush TX queue\n");
-+		retval = -EBUSY;
-+		goto out;
-+	}
-+
-+	/* Disable CCK and OFDM, clock gated */
-+	val8 = rtl8xxxu_read8(priv, REG_SYS_FUNC);
-+	val8 &= ~SYS_FUNC_BBRSTB;
-+	rtl8xxxu_write8(priv, REG_SYS_FUNC, val8);
-+
-+	udelay(2);
-+
-+	/* Reset whole BB */
-+	val8 = rtl8xxxu_read8(priv, REG_SYS_FUNC);
-+	val8 &= ~SYS_FUNC_BB_GLB_RSTN;
-+	rtl8xxxu_write8(priv, REG_SYS_FUNC, val8);
-+
-+	/* Reset MAC TRX */
-+	val16 = rtl8xxxu_read16(priv, REG_CR);
-+	val16 &= 0xff00;
-+	val16 |= (CR_HCI_TXDMA_ENABLE | CR_HCI_RXDMA_ENABLE);
-+	rtl8xxxu_write16(priv, REG_CR, val16);
-+
-+	val16 = rtl8xxxu_read16(priv, REG_CR);
-+	val16 &= ~CR_SECURITY_ENABLE;
-+	rtl8xxxu_write16(priv, REG_CR, val16);
-+
-+	val8 = rtl8xxxu_read8(priv, REG_DUAL_TSF_RST);
-+	val8 |= DUAL_TSF_TX_OK;
-+	rtl8xxxu_write8(priv, REG_DUAL_TSF_RST, val8);
-+
-+out:
-+	return retval;
-+}
-+
-+static int rtl8192eu_active_to_emu(struct rtl8xxxu_priv *priv)
-+{
-+	u8 val8;
-+	int count, ret = 0;
-+
-+	/* Turn off RF */
-+	rtl8xxxu_write8(priv, REG_RF_CTRL, 0);
-+
-+	/* Switch DPDT_SEL_P output from register 0x65[2] */
-+	val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
-+	val8 &= ~LEDCFG2_DPDT_SELECT;
-+	rtl8xxxu_write8(priv, REG_LEDCFG2, val8);
-+
-+	/* 0x0005[1] = 1 turn off MAC by HW state machine*/
-+	val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
-+	val8 |= BIT(1);
-+	rtl8xxxu_write8(priv, REG_APS_FSMCO + 1, val8);
-+
-+	for (count = RTL8XXXU_MAX_REG_POLL; count; count--) {
-+		val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
-+		if ((val8 & BIT(1)) == 0)
-+			break;
-+		udelay(10);
-+	}
-+
-+	if (!count) {
-+		dev_warn(&priv->udev->dev, "%s: Disabling MAC timed out\n",
-+			 __func__);
-+		ret = -EBUSY;
-+		goto exit;
-+	}
-+
-+exit:
-+	return ret;
-+}
-+
-+static int rtl8192eu_emu_to_disabled(struct rtl8xxxu_priv *priv)
-+{
-+	u8 val8;
-+
-+	/* 0x04[12:11] = 01 enable WL suspend */
-+	val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
-+	val8 &= ~(BIT(3) | BIT(4));
-+	val8 |= BIT(3);
-+	rtl8xxxu_write8(priv, REG_APS_FSMCO + 1, val8);
-+
-+	return 0;
-+}
-+
- static int rtl8192eu_power_on(struct rtl8xxxu_priv *priv)
- {
- 	u16 val16;
-@@ -1446,6 +1554,40 @@ exit:
- 	return ret;
- }
- 
-+void rtl8192eu_power_off(struct rtl8xxxu_priv *priv)
-+{
-+	u8 val8;
-+	u16 val16;
-+
-+	rtl8xxxu_flush_fifo(priv);
-+
-+	val8 = rtl8xxxu_read8(priv, REG_TX_REPORT_CTRL);
-+	val8 &= ~TX_REPORT_CTRL_TIMER_ENABLE;
-+	rtl8xxxu_write8(priv, REG_TX_REPORT_CTRL, val8);
-+
-+	/* Turn off RF */
-+	rtl8xxxu_write8(priv, REG_RF_CTRL, 0x00);
-+
-+	rtl8192eu_active_to_lps(priv);
-+
-+	/* Reset Firmware if running in RAM */
-+	if (rtl8xxxu_read8(priv, REG_MCU_FW_DL) & MCU_FW_RAM_SEL)
-+		rtl8xxxu_firmware_self_reset(priv);
-+
-+	/* Reset MCU */
-+	val16 = rtl8xxxu_read16(priv, REG_SYS_FUNC);
-+	val16 &= ~SYS_FUNC_CPU_ENABLE;
-+	rtl8xxxu_write16(priv, REG_SYS_FUNC, val16);
-+
-+	/* Reset MCU ready status */
-+	rtl8xxxu_write8(priv, REG_MCU_FW_DL, 0x00);
-+
-+	rtl8xxxu_reset_8051(priv);
-+
-+	rtl8192eu_active_to_emu(priv);
-+	rtl8192eu_emu_to_disabled(priv);
-+}
-+
- static void rtl8192e_enable_rf(struct rtl8xxxu_priv *priv)
- {
- 	u32 val32;
-@@ -1487,7 +1629,7 @@ struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.parse_efuse = rtl8192eu_parse_efuse,
- 	.load_firmware = rtl8192eu_load_firmware,
- 	.power_on = rtl8192eu_power_on,
--	.power_off = rtl8xxxu_power_off,
-+	.power_off = rtl8192eu_power_off,
- 	.reset_8051 = rtl8xxxu_reset_8051,
- 	.llt_init = rtl8xxxu_auto_llt_table,
- 	.init_phy_bb = rtl8192eu_init_phy_bb,
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index 3555a2f..315ccfb 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -676,6 +676,7 @@
- #define REG_SCH_TXCMD			0x05d0
- 
- /* define REG_FW_TSF_SYNC_CNT		0x04a0 */
-+#define REG_SCH_TX_CMD			0x05f8
- #define REG_FW_RESET_TSF_CNT_1		0x05fc
- #define REG_FW_RESET_TSF_CNT_0		0x05fd
- #define REG_FW_BCN_DIS_CNT		0x05fe
+Thanks!
 -- 
-2.7.4
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
