@@ -1,71 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:54870 "EHLO
-        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753418AbcIOSMn (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:58953 "EHLO
+        mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757583AbcISLKL (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 14:12:43 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org,
-        Haim Dreyfuss <haim.dreyfuss@intel.com>,
-        Luca Coelho <luciano.coelho@intel.com>
-Date: Thu, 15 Sep 2016 21:11:27 +0300
-Message-Id: <20160915181131.32213-21-luca@coelho.fi> (sfid-20160915_201249_041690_F3113D32)
-In-Reply-To: <1473962425.5664.41.camel@coelho.fi>
-References: <1473962425.5664.41.camel@coelho.fi>
-Subject: [PATCH 21/25] iwlwifi: pcie: replace possible_cpus() with online_cpus() in MSIX mode
+        Mon, 19 Sep 2016 07:10:11 -0400
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+        Hante Meuleman <hante.meuleman@broadcom.com>,
+        Arend van Spriel <arend.vanspriel@broadcom.com>
+Subject: [PATCH 8/9] brcmfmac: fix out of bound access on clearing wowl wake indicator
+Date: Mon, 19 Sep 2016 12:09:58 +0100
+Message-Id: <1474283399-14385-9-git-send-email-arend.vanspriel@broadcom.com> (sfid-20160919_131032_828151_72FE4C2D)
+In-Reply-To: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
+References: <1474283399-14385-1-git-send-email-arend.vanspriel@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Haim Dreyfuss <haim.dreyfuss@intel.com>
+From: Hante Meuleman <hante.meuleman@broadcom.com>
 
-In MSIX mode the number of irq depends on the number of
-possible cpus existing on the host.
-This cause to bug in case there are offline cores.
-Take into account only the online CPUs instead.
-Also save it in temporary variable.
+Clearing the wowl wakeindicator happens with a rather odd
+construction where the string "clear" is used to set the iovar
+wowl_wakeind. This was implemented incorrectly as it caused an
+out of bound access. Use an intermediate variable of correct
+length and copy string in that. Problem was found using coverity.
 
-Fixes: commit 2e5d4a8f61dc ("iwlwifi: pcie: Add new configuration to enable MSIX")
-Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Reviewed-by: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend.vanspriel@broadcom.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 43c3915..188b0de 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1513,13 +1513,14 @@ static void iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
- 					struct iwl_trans *trans)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index c3b8f59..386ad7e 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3703,6 +3703,7 @@ static void brcmf_configure_wowl(struct brcmf_cfg80211_info *cfg,
+ 				 struct cfg80211_wowlan *wowl)
  {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	int max_irqs, num_irqs, i, ret;
-+	int max_irqs, num_irqs, i, ret, nr_online_cpus;
- 	u16 pci_cmd;
+ 	u32 wowl_config;
++	struct brcmf_wowl_wakeind_le wowl_wakeind;
+ 	u32 i;
  
- 	if (!trans->cfg->mq_rx_supported)
- 		goto enable_msi;
+ 	brcmf_dbg(TRACE, "Suspend, wowl config.\n");
+@@ -3744,8 +3745,9 @@ static void brcmf_configure_wowl(struct brcmf_cfg80211_info *cfg,
+ 	if (!test_bit(BRCMF_VIF_STATUS_CONNECTED, &ifp->vif->sme_state))
+ 		wowl_config |= BRCMF_WOWL_UNASSOC;
  
--	max_irqs = min_t(u32, num_possible_cpus() + 2, IWL_MAX_RX_HW_QUEUES);
-+	nr_online_cpus = num_online_cpus();
-+	max_irqs = min_t(u32, nr_online_cpus + 2, IWL_MAX_RX_HW_QUEUES);
- 	for (i = 0; i < max_irqs; i++)
- 		trans_pcie->msix_entries[i].entry = i;
- 
-@@ -1545,11 +1546,11 @@ static void iwl_pcie_set_interrupt_capa(struct pci_dev *pdev,
- 	 * Two interrupts less: non rx causes shared with FBQ and RSS.
- 	 * More than two interrupts: we will use fewer RSS queues.
- 	 */
--	if (num_irqs <= num_online_cpus()) {
-+	if (num_irqs <= nr_online_cpus) {
- 		trans_pcie->trans->num_rx_queues = num_irqs + 1;
- 		trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX |
- 			IWL_SHARED_IRQ_FIRST_RSS;
--	} else if (num_irqs == num_online_cpus() + 1) {
-+	} else if (num_irqs == nr_online_cpus + 1) {
- 		trans_pcie->trans->num_rx_queues = num_irqs;
- 		trans_pcie->shared_vec_mask = IWL_SHARED_IRQ_NON_RX;
- 	} else {
+-	brcmf_fil_iovar_data_set(ifp, "wowl_wakeind", "clear",
+-				 sizeof(struct brcmf_wowl_wakeind_le));
++	memcpy(&wowl_wakeind, "clear", 6);
++	brcmf_fil_iovar_data_set(ifp, "wowl_wakeind", &wowl_wakeind,
++				 sizeof(wowl_wakeind));
+ 	brcmf_fil_iovar_int_set(ifp, "wowl", wowl_config);
+ 	brcmf_fil_iovar_int_set(ifp, "wowl_activate", 1);
+ 	brcmf_bus_wowl_config(cfg->pub->bus_if, true);
 -- 
-2.9.3
+1.9.1
