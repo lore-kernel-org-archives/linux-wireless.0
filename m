@@ -1,55 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56439 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752323AbcIRHy1 (ORCPT
-        <rfc822;linux-wireless@vger.kernel.org>);
-        Sun, 18 Sep 2016 03:54:27 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Christian Lamparter <chunkeey@googlemail.com>,
-        Christian Lamparter <chunkeey@gmail.com>,
-        linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-        b43-dev@lists.infradead.org, Nicolai Stange <nicstange@gmail.com>,
-        Ben Greear <greearb@candelatech.com>,
-        Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: [PATCH 2/4] carl9170: fix debugfs crashes
-References: <48411543620969bebb37a1a9ea7b8f451cdfdd31.1474140477.git.chunkeey@gmail.com>
-        <ccf228acb7af8ee3bbd82f72f28ebc068f37cb8e.1474140477.git.chunkeey@gmail.com>
-        <20160917214539.GA28379@kroah.com>
-Date: Sun, 18 Sep 2016 10:54:18 +0300
-In-Reply-To: <20160917214539.GA28379@kroah.com> (Greg KH's message of "Sat, 17
-        Sep 2016 23:45:39 +0200")
-Message-ID: <87d1k17idx.fsf@kamboji.qca.qualcomm.com> (sfid-20160918_095435_253686_CC2ECFD8)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:50250 "EHLO sipsolutions.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754917AbcISKCW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+        Mon, 19 Sep 2016 06:02:22 -0400
+Message-ID: <1474279330.4469.28.camel@sipsolutions.net> (sfid-20160919_120228_517669_28A2A922)
+Subject: Re: [v2 PATCH 0/2] rhashtable: rhashtable with duplicate objects
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
+        linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+        tom@herbertland.com, Ben Greear <greearb@candelatech.com>
+Date: Mon, 19 Sep 2016 12:02:10 +0200
+In-Reply-To: <1474278896.4469.26.camel@sipsolutions.net> (sfid-20160919_115508_261438_39410159)
+References: <20160804071846.GA773@gondor.apana.org.au>
+         <20160804074546.GA996@gondor.apana.org.au>
+         <1470377813.2977.14.camel@sipsolutions.net>
+         <20160805104858.GA9297@gondor.apana.org.au>
+         <1470394233.2977.37.camel@sipsolutions.net>
+         <20160918135030.GA7062@gondor.apana.org.au>
+         <20160919084056.GA11875@gondor.apana.org.au>
+         <1474276530.4469.16.camel@sipsolutions.net>
+         <20160919091721.GA12235@gondor.apana.org.au>
+         <1474277244.4469.21.camel@sipsolutions.net>
+         <20160919093434.GA12378@gondor.apana.org.au>
+         (sfid-20160919_113440_719977_971CE718) <1474278634.4469.25.camel@sipsolutions.net>
+         (sfid-20160919_115045_089605_A254E125) <1474278896.4469.26.camel@sipsolutions.net>
+         (sfid-20160919_115508_261438_39410159)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg KH <gregkh@linuxfoundation.org> writes:
+On Mon, 2016-09-19 at 11:54 +0200, Johannes Berg wrote:
+> > 
+> > The stack trace is useless, but my other annotation showed that the
+> > table's nelems *underflowed* to -1, so now the worker will continue
+> > to try to grow it forever.
+> > 
+> 
+> And this *was* actually a case of duplication, afaict, since it was
+> multiple virtual interfaces on the same device all connecting to the
+> same AP.
 
-> On Sat, Sep 17, 2016 at 09:43:02PM +0200, Christian Lamparter wrote:
->> Ben Greear reported:
->> > I see lots of instability as soon as I load up the carl9710 NIC.
->> > My application is going to be poking at it's debugfs files...
->> >
->> > BUG: KASAN: slab-out-of-bounds in carl9170_debugfs_read+0xd5/0x2a0
->> > [carl9170] at addr ffff8801bc1208b0
->> > Read of size 8 by task btserver/5888
->> > =======================================================================
->> > BUG kmalloc-256 (Tainted: G        W      ): kasan: bad access detected
->> > -----------------------------------------------------------------------
->> >
->> > INFO: Allocated in seq_open+0x50/0x100 age=2690 cpu=2 pid=772
->> >...
->> 
->> This breakage was caused by the introduction of intermediate
->> fops in debugfs by commit 9fd4dcece43a
->> ("debugfs: prevent access to possibly dead file_operations at file open")
->
-> Because of this, these should all be backported to 4.7-stable, and
-> 4.8-stable, right?
+It seems that __rhashtable_remove_fast_one() should return 0 even in
+the case of err==1 for the "skip all the maintenance due to list
+deletion"?
 
-Via which tree should these go, Greg's or mine?
+--- a/include/linux/rhashtable.h
++++ b/include/linux/rhashtable.h
+@@ -1009,7 +1009,7 @@ static inline int __rhashtable_remove_fast_one(
+                err = 0;
+        }
+ 
+-       return err;
++       return err < 0 ? err : 0;
+ }
 
--- 
-Kalle Valo
+But that in itself doesn't help.
+
+johannes
