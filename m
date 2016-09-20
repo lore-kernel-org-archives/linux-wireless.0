@@ -1,63 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50876 "EHLO
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37695 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932256AbcI1MuV (ORCPT
+        by vger.kernel.org with ESMTP id S1754535AbcITPTu (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 08:50:21 -0400
+        Tue, 20 Sep 2016 11:19:50 -0400
 Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8SCnk2T022360
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:50:21 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-        by mx0a-0016f401.pphosted.com with ESMTP id 25r7vna8wa-1
+        by mx0a-0016f401.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8KFAXZv021303
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 08:19:49 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+        by mx0a-0016f401.pphosted.com with ESMTP id 25h36kkjx9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-wireless@vger.kernel.org>; Wed, 28 Sep 2016 05:50:20 -0700
+        for <linux-wireless@vger.kernel.org>; Tue, 20 Sep 2016 08:19:44 -0700
 From: Amitkumar Karwar <akarwar@marvell.com>
 To: <linux-wireless@vger.kernel.org>
 CC: Cathy Luo <cluo@marvell.com>,
         Nishant Sarmukadam <nishants@marvell.com>,
-        Karthik D A <karthida@marvell.com>,
         Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 8/8] mwifiex: fix p2p device doesn't find in scan problem
-Date: Wed, 28 Sep 2016 18:18:28 +0530
-Message-ID: <1475066908-11771-8-git-send-email-akarwar@marvell.com> (sfid-20160928_145024_579963_1C32E50F)
-In-Reply-To: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
-References: <1475066908-11771-1-git-send-email-akarwar@marvell.com>
+Subject: [PATCH 3/3] mwifiex: code rearrangement in mwifiex_usb_host_to_card()
+Date: Tue, 20 Sep 2016 20:49:04 +0530
+Message-ID: <1474384744-14096-3-git-send-email-akarwar@marvell.com> (sfid-20160920_171953_333321_6858509B)
+In-Reply-To: <1474384744-14096-1-git-send-email-akarwar@marvell.com>
+References: <1474384744-14096-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Karthik D A <karthida@marvell.com>
+This patch helps get rid of goto statement and improves readability.
 
-Marvell p2p device disappears from the list of p2p peers on the other
-p2p device after disconnection.
-
-It happens due to a bug in driver. When interface is changed from p2p
-to station, certain variables(bss_type, bss_role etc.) aren't correctly
-updated. This patch corrects them to fix the issue.
-
-Signed-off-by: Karthik D A <karthida@marvell.com>
 Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/usb.c | 23 ++++++-----------------
+ 1 file changed, 6 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index e83861f..d9f5445 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -1203,6 +1203,12 @@ mwifiex_cfg80211_change_virtual_intf(struct wiphy *wiphy,
- 			priv->adapter->curr_iface_comb.p2p_intf--;
- 			priv->adapter->curr_iface_comb.sta_intf++;
- 			dev->ieee80211_ptr->iftype = type;
-+			if (mwifiex_deinit_priv_params(priv))
-+				return -1;
-+			if (mwifiex_init_new_priv_params(priv, dev, type))
-+				return -1;
-+			if (mwifiex_sta_init_cmd(priv, false, false))
-+				return -1;
- 			break;
- 		case NL80211_IFTYPE_ADHOC:
- 			if (mwifiex_cfg80211_deinit_p2p(priv))
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index 8fd51e4..73eb084 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -841,7 +841,7 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+ 	struct usb_tx_data_port *port = NULL;
+ 	u8 *data = (u8 *)skb->data;
+ 	struct urb *tx_urb;
+-	int idx, ret;
++	int idx, ret = -EINPROGRESS;
+ 
+ 	if (adapter->is_suspended) {
+ 		mwifiex_dbg(adapter, ERROR,
+@@ -865,8 +865,9 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+ 				if (atomic_read(&port->tx_data_urb_pending)
+ 				    >= MWIFIEX_TX_DATA_URB) {
+ 					port->block_status = true;
+-					ret = -EBUSY;
+-					goto done;
++					adapter->data_sent =
++						mwifiex_usb_data_sent(adapter);
++					return -EBUSY;
+ 				}
+ 				if (port->tx_data_ix >= MWIFIEX_TX_DATA_URB)
+ 					port->tx_data_ix = 0;
+@@ -902,6 +903,7 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+ 					MWIFIEX_TX_DATA_URB) {
+ 		port->block_status = true;
+ 		adapter->data_sent = mwifiex_usb_data_sent(adapter);
++		ret = -ENOSR;
+ 	}
+ 
+ 	if (usb_submit_urb(tx_urb, GFP_ATOMIC)) {
+@@ -918,22 +920,9 @@ static int mwifiex_usb_host_to_card(struct mwifiex_adapter *adapter, u8 ep,
+ 			else
+ 				port->tx_data_ix = MWIFIEX_TX_DATA_URB;
+ 		}
+-
+-		return -1;
+-	} else {
+-		if (ep != card->tx_cmd_ep &&
+-		    atomic_read(&port->tx_data_urb_pending) ==
+-							MWIFIEX_TX_DATA_URB) {
+-			return -ENOSR;
+-		}
++		ret = -1;
+ 	}
+ 
+-	return -EINPROGRESS;
+-
+-done:
+-	if (ep != card->tx_cmd_ep)
+-		adapter->data_sent = mwifiex_usb_data_sent(adapter);
+-
+ 	return ret;
+ }
+ 
 -- 
 1.9.1
