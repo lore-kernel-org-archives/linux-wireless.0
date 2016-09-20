@@ -1,122 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:58064 "EHLO
-        sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754582AbcI1X6S (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53185 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752737AbcITU5I (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Wed, 28 Sep 2016 19:58:18 -0400
-From: Thomas Pedersen <twp@qca.qualcomm.com>
-To: ath10k <ath10k@lists.infradead.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-        Thomas Pedersen <twp@qca.qualcomm.com>
-Subject: [PATCH 2/4] ath10k: implement offset_tsf ieee80211_op
-Date: Wed, 28 Sep 2016 16:56:29 -0700
-Message-ID: <20160928235631.9197-3-twp@qca.qualcomm.com> (sfid-20160929_015839_975513_CBF141C1)
-In-Reply-To: <20160928235631.9197-1-twp@qca.qualcomm.com>
-References: <20160928235631.9197-1-twp@qca.qualcomm.com>
+        Tue, 20 Sep 2016 16:57:08 -0400
+From: Lior David <liord@codeaurora.org>
+Subject: Re: nl80211 fine timing measurement support
+To: Luca Coelho <luca@coelho.fi>,
+        Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Johannes Berg <johannes@sipsolutions.net>
+References: <e7096bbb-ba66-e639-b86e-a483dc198b85@codeaurora.org>
+ <45d2980c-aeb4-4faa-e73f-75747124e9eb@broadcom.com>
+ <1474353599.5664.125.camel@coelho.fi>
+Cc: Maya Erez <merez@codeaurora.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org
+Message-ID: <b7022d3c-51ff-96eb-f6f0-319eb5ea66b0@codeaurora.org> (sfid-20160920_225712_279999_3318C694)
+Date: Tue, 20 Sep 2016 23:57:02 +0300
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1474353599.5664.125.camel@coelho.fi>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Current set_tsf is implemented in terms of TSF_INCREMENT
-only. Instead support new WMI command TSF_DECREMENT and
-export these through offset_tsf. Advantage is we get
-more accurate TSF adjustments, and don't calculate wrong
-offset in case absolute TSF was calculated from rx_mactime
-(actual TSF).
+On 9/20/2016 9:39 AM, Luca Coelho wrote:
+> On Mon, 2016-09-19 at 20:42 +0200, Arend Van Spriel wrote:
+>>
+>> On 19-9-2016 19:31, Lior David wrote:
+>>>
+>>> Hi Johannes,
+>>>
+>>> We are working on adding indoor location support to the wil6210
+>>> 11ad driver. This includes fine timing measurement (FTM) as well as
+>>> something we call angle of arrival (AOA) which measures azimuth and
+>>> elevation.
+>>> Initially we implemented it internally using vendor commands but we
+>>> would like to upstream it using standard nl80211 API.
+>>> I noticed a patch you sent some time ago (https://patchwork.kernel.
+>>> org/patch/7790701/) for adding fine timing measurement support to
+>>> nl80211, it looks like a good baseline though we do have few issues
+>>> with it... However I did not see any comments or response on this
+>>> patch. Can you please update if you plan on eventually submitting
+>>> this patch?
+>>
+>> You can find several FTM related patches in backport-iwlwifi repo on
+>> kernel.org. See link to git log of nl80211.h there [1].
+> 
+> We have a full FTM implementation in our internal tree (which is
+> published in the URL Arend provided) and we are currently working on
+> cleaning it up for upstream submission.  You should see patches from us
+> this week.
+>
+That's great to hear, thanks :-)
+I reviewed your FTM nl80211 API and have some comments. I can send these
+comments once you send the cleaned up patch (most are small issues), but there
+is one issue I would like to raise in advance:
+In the measurement response you report the final calculated RTT (is this
+for each burst or calculated from all bursts?). Our implementation
+reports the raw measurement results (t1, t2, t3, t4 for each measurement
+as well as TOD and TOA errors at responder and initiator as defined in IEEE
+P802.11-REVmc/D7.0, 9.6.8.33). Reporting the final RTT does have benefits, so I
+checked with our location framework developers. The general consensus is they
+prefer to get the raw results, mainly because there are some useful analysis
+algorithms they can run, and in addition the firmware may not be strong enough
+to perform the calculations for deriving the final RTT (it could be done in the
+driver but I don't think this is a proper place for it). Maybe we should
+provide option for reporting both raw and RTT results where drivers can
+support either or both?
+For reference, we have also implemented FTM internally using vendor
+commands. The vendor commands API that we defined can be seen at [1],
+the actual implementation is still under internal review so not yet
+published.
 
-The new WMI command is available in firmware
-10.4-3.2.1-00033 for QCA4019 chips. Old drivers on new
-firmware or vice versa shouldn't  be a problem since
-get/set tsf logic was already broken.
+Thanks,
+Lior
 
-Signed-off-by: Thomas Pedersen <twp@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 25 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c |  2 ++
- drivers/net/wireless/ath/ath10k/wmi.h |  7 +++++++
- 3 files changed, 34 insertions(+)
+[1] http://w1.fi/cgit/hostap/commit/?id=fcd85d9a3f2d9d63d0fa57e93446ad467db75b23
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 76297d6..06bd027 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6992,6 +6992,30 @@ static void ath10k_set_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		ath10k_warn(ar, "failed to set tsf offset: %d\n", ret);
- }
- 
-+static void ath10k_offset_tsf(struct ieee80211_hw *hw,
-+			      struct ieee80211_vif *vif, s64 tsf_offset)
-+{
-+	struct ath10k *ar = hw->priv;
-+	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
-+	u32 offset, vdev_param;
-+	int ret;
-+
-+	if (tsf_offset < 0) {
-+		vdev_param = ar->wmi.vdev_param->dec_tsf;
-+		offset = -tsf_offset;
-+	} else {
-+		vdev_param = ar->wmi.vdev_param->inc_tsf;
-+		offset = tsf_offset;
-+	}
-+
-+	ret = ath10k_wmi_vdev_set_param(ar, arvif->vdev_id,
-+					vdev_param, offset);
-+
-+	if (ret && ret != -EOPNOTSUPP)
-+		ath10k_warn(ar, "failed to set tsf offset %d cmd %d: %d\n",
-+			    offset, vdev_param, ret);
-+}
-+
- static int ath10k_ampdu_action(struct ieee80211_hw *hw,
- 			       struct ieee80211_vif *vif,
- 			       struct ieee80211_ampdu_params *params)
-@@ -7455,6 +7479,7 @@ static const struct ieee80211_ops ath10k_ops = {
- 	.sta_rc_update			= ath10k_sta_rc_update,
- 	.get_tsf			= ath10k_get_tsf,
- 	.set_tsf			= ath10k_set_tsf,
-+	.offset_tsf			= ath10k_offset_tsf,
- 	.ampdu_action			= ath10k_ampdu_action,
- 	.get_et_sset_count		= ath10k_debug_get_et_sset_count,
- 	.get_et_stats			= ath10k_debug_get_et_stats,
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 38993d7..430074b 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -1013,6 +1013,8 @@ static struct wmi_vdev_param_map wmi_10_4_vdev_param_map = {
- 	.rx_decap_type = WMI_10_4_VDEV_PARAM_RX_DECAP_TYPE,
- 	.bw_nss_ratemask = WMI_10_4_VDEV_PARAM_BW_NSS_RATEMASK,
- 	.set_tsf = WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
-+	.inc_tsf = WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
-+	.dec_tsf = WMI_10_4_VDEV_PARAM_TSF_DECREMENT,
- };
- 
- static struct wmi_pdev_param_map wmi_pdev_param_map = {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 1b243c8..9d13c6f 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4677,6 +4677,8 @@ struct wmi_vdev_param_map {
- 	u32 rx_decap_type;
- 	u32 bw_nss_ratemask;
- 	u32 set_tsf;
-+	u32 inc_tsf;
-+	u32 dec_tsf;
- };
- 
- #define WMI_VDEV_PARAM_UNSUPPORTED 0
-@@ -5009,6 +5011,11 @@ enum wmi_10_4_vdev_param {
- 	WMI_10_4_VDEV_PARAM_STA_KICKOUT,
- 	WMI_10_4_VDEV_PARAM_CAPABILITIES,
- 	WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
-+	WMI_10_4_VDEV_PARAM_RX_FILTER,
-+	WMI_10_4_VDEV_PARAM_MGMT_TX_POWER,
-+	WMI_10_4_VDEV_PARAM_ATF_SSID_SCHED_POLICY,
-+	WMI_10_4_VDEV_PARAM_DISABLE_DYN_BW_RTS,
-+	WMI_10_4_VDEV_PARAM_TSF_DECREMENT,
- };
- 
- #define WMI_VDEV_PARAM_TXBF_SU_TX_BFEE BIT(0)
--- 
-2.10.0.297.gf6727b0
+
+> --
+> Cheers,
+> Luca.
+> 
