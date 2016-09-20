@@ -1,90 +1,324 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:32905 "EHLO
-        wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934591AbcIOOPh (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56490 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1754777AbcITObf (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Thu, 15 Sep 2016 10:15:37 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Ben Greear <greearb@candelatech.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-        "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v2 15/21] ath10k: support CT firmware flag.
-Date: Thu, 15 Sep 2016 14:15:31 +0000
-Message-ID: <87bmzpb667.fsf@kamboji.qca.qualcomm.com> (sfid-20160915_161540_795986_4C4A3895)
-References: <1462986153-16318-1-git-send-email-greearb@candelatech.com>
-        <1462986153-16318-16-git-send-email-greearb@candelatech.com>
-        <87bmzqeeox.fsf@kamboji.qca.qualcomm.com>       <57D96BC7.1080609@candelatech.com>
-In-Reply-To: <57D96BC7.1080609@candelatech.com> (Ben Greear's message of "Wed,
-        14 Sep 2016 08:24:55 -0700")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+        Tue, 20 Sep 2016 10:31:35 -0400
+From: Luca Coelho <luca@coelho.fi>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, ayala.beker@intel.com,
+        andrei.otcheretianski@intel.com, arend.vanspriel@broadcom.com,
+        Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+        Luca Coelho <luciano.coelho@intel.com>
+Date: Tue, 20 Sep 2016 17:31:14 +0300
+Message-Id: <20160920143121.28247-3-luca@coelho.fi> (sfid-20160920_163140_102483_DC2E2782)
+In-Reply-To: <20160920143121.28247-1-luca@coelho.fi>
+References: <20160920143121.28247-1-luca@coelho.fi>
+Subject: [PATCH v3 2/9] mac80211: add boilerplate code for start / stop NAN
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben Greear <greearb@candelatech.com> writes:
+From: Ayala Beker <ayala.beker@intel.com>
 
-> On 09/14/2016 07:30 AM, Valo, Kalle wrote:
->> greearb@candelatech.com writes:
->>
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> Add placeholder so CT firmware can more easily co-exist with upstream
->>> kernel.  CT firmware should be backwards compatible with existing kerne=
-ls,
->>> but it also has many new features.  Subsequent patches, if acceptable f=
-or
->>> upstream, can enable and further describe those features.
->>>
->>> Signed-off-by: Ben Greear <greearb@candelatech.com>
->>> ---
->>>   drivers/net/wireless/ath/ath10k/core.c | 1 +
->>>   drivers/net/wireless/ath/ath10k/core.h | 3 +++
->>>   2 files changed, 4 insertions(+)
->>>
->>> diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wirel=
-ess/ath/ath10k/core.c
->>> index fa71d57..49c85c3 100644
->>> --- a/drivers/net/wireless/ath/ath10k/core.c
->>> +++ b/drivers/net/wireless/ath/ath10k/core.c
->>> @@ -235,6 +235,7 @@ static const char *const ath10k_core_fw_feature_str=
-[] =3D {
->>>   	[ATH10K_FW_FEATURE_SUPPORTS_ADAPTIVE_CCA] =3D "adaptive-cca",
->>>   	[ATH10K_FW_FEATURE_MFP_SUPPORT] =3D "mfp",
->>>   	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] =3D "peer-flow-ctrl",
->>> +	[ATH10K_FW_FEATURE_WMI_10X_CT] =3D "wmi-10.x-CT",
->>>   };
->>>
->>>   static unsigned int ath10k_core_get_fw_feature_str(char *buf,
->>> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wirel=
-ess/ath/ath10k/core.h
->>> index cb6aa8c..f9e3b20 100644
->>> --- a/drivers/net/wireless/ath/ath10k/core.h
->>> +++ b/drivers/net/wireless/ath/ath10k/core.h
->>> @@ -566,6 +566,9 @@ enum ath10k_fw_features {
->>>   	 */
->>>   	ATH10K_FW_FEATURE_PEER_FLOW_CONTROL =3D 13,
->>>
->>> +	/* Firmware from Candela Technologies, enables more VIFs, etc */
->>> +	ATH10K_FW_FEATURE_WMI_10X_CT =3D 31,
->>
->> The idea of firmware feature flags to enable (or disable) one particular
->> feature, not a group of features. This way it's easy to enable certain
->> features on different firmware branches. It also makes the maintenance
->> easier as you don't need to remember all the different features one flag
->> enables.
->
-> One potential use for this flag:  Bug reports could be automatically dire=
-cted to me instead
-> of QCA.
->
-> I have actually re-written much of my earlier logic so that it uses speci=
-fic
-> feature flags now.  I still like the idea of having the driver (and user)
-> know it is using CT firmware, but I can live without this flag if needed.
+This code doesn't do much besides allowing to start and
+stop the vif.
 
-You can do with firmware version string, add something like "-CT" (maybe
-you already have?) and it's clearly visible in boot logs and also when
-firmware crashes.
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+---
+ include/net/mac80211.h    |  9 +++++++++
+ net/mac80211/cfg.c        | 36 ++++++++++++++++++++++++++++++++++
+ net/mac80211/chan.c       |  3 +++
+ net/mac80211/driver-ops.h | 27 +++++++++++++++++++++++++
+ net/mac80211/iface.c      |  8 ++++++--
+ net/mac80211/main.c       |  5 +++++
+ net/mac80211/offchannel.c |  3 ++-
+ net/mac80211/trace.h      | 50 +++++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/util.c       |  3 ++-
+ 9 files changed, 140 insertions(+), 4 deletions(-)
 
---=20
-Kalle Valo=
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5296100..df9b5cf 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3420,6 +3420,9 @@ enum ieee80211_reconfig_type {
+  *	synchronization which is needed in case driver has in its RSS queues
+  *	pending frames that were received prior to the control path action
+  *	currently taken (e.g. disassociation) but are not processed yet.
++ *
++ * @start_nan: join an existing NAN cluster, or create a new one.
++ * @stop_nan: leave the NAN cluster.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3655,6 +3658,12 @@ struct ieee80211_ops {
+ 	void (*wake_tx_queue)(struct ieee80211_hw *hw,
+ 			      struct ieee80211_txq *txq);
+ 	void (*sync_rx_queues)(struct ieee80211_hw *hw);
++
++	int (*start_nan)(struct ieee80211_hw *hw,
++			 struct ieee80211_vif *vif,
++			 struct cfg80211_nan_conf *conf);
++	int (*stop_nan)(struct ieee80211_hw *hw,
++			struct ieee80211_vif *vif);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index a74027f..9aabb09 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3,6 +3,7 @@
+  *
+  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2015  Intel Mobile Communications GmbH
++ * Copyright (C) 2015-2016 Intel Deutschland GmbH
+  *
+  * This file is GPLv2 as found in COPYING.
+  */
+@@ -152,6 +153,39 @@ static void ieee80211_stop_p2p_device(struct wiphy *wiphy,
+ 	ieee80211_sdata_stop(IEEE80211_WDEV_TO_SUB_IF(wdev));
+ }
+ 
++static int ieee80211_start_nan(struct wiphy *wiphy,
++			       struct wireless_dev *wdev,
++			       struct cfg80211_nan_conf *conf)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	int ret;
++
++	mutex_lock(&sdata->local->chanctx_mtx);
++	ret = ieee80211_check_combinations(sdata, NULL, 0, 0);
++	mutex_unlock(&sdata->local->chanctx_mtx);
++	if (ret < 0)
++		return ret;
++
++	ret = ieee80211_do_open(wdev, true);
++	if (ret)
++		return ret;
++
++	ret = drv_start_nan(sdata->local, sdata, conf);
++	if (ret)
++		ieee80211_sdata_stop(sdata);
++
++	return ret;
++}
++
++static void ieee80211_stop_nan(struct wiphy *wiphy,
++			       struct wireless_dev *wdev)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++
++	drv_stop_nan(sdata->local, sdata);
++	ieee80211_sdata_stop(sdata);
++}
++
+ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 				  struct net_device *dev,
+ 				  u16 noack_map)
+@@ -3464,4 +3498,6 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
++	.start_nan = ieee80211_start_nan,
++	.stop_nan = ieee80211_stop_nan,
+ };
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index d035801..e75cbf6 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -647,6 +647,9 @@ static int ieee80211_assign_vif_chanctx(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_chanctx *curr_ctx = NULL;
+ 	int ret = 0;
+ 
++	if (WARN_ON(sdata->vif.type == NL80211_IFTYPE_NAN))
++		return -ENOTSUPP;
++
+ 	conf = rcu_dereference_protected(sdata->vif.chanctx_conf,
+ 					 lockdep_is_held(&local->chanctx_mtx));
+ 
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index fe35a1c..e52cfb8 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -162,6 +162,7 @@ static inline void drv_bss_info_changed(struct ieee80211_local *local,
+ 		return;
+ 
+ 	if (WARN_ON_ONCE(sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
++			 sdata->vif.type == NL80211_IFTYPE_NAN ||
+ 			 (sdata->vif.type == NL80211_IFTYPE_MONITOR &&
+ 			  !sdata->vif.mu_mimo_owner)))
+ 		return;
+@@ -1165,4 +1166,30 @@ static inline void drv_wake_tx_queue(struct ieee80211_local *local,
+ 	local->ops->wake_tx_queue(&local->hw, &txq->txq);
+ }
+ 
++static inline int drv_start_nan(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata,
++				struct cfg80211_nan_conf *conf)
++{
++	int ret;
++
++	might_sleep();
++	check_sdata_in_driver(sdata);
++
++	trace_drv_start_nan(local, sdata, conf);
++	ret = local->ops->start_nan(&local->hw, &sdata->vif, conf);
++	trace_drv_return_int(local, ret);
++	return ret;
++}
++
++static inline void drv_stop_nan(struct ieee80211_local *local,
++				struct ieee80211_sub_if_data *sdata)
++{
++	might_sleep();
++	check_sdata_in_driver(sdata);
++
++	trace_drv_stop_nan(local, sdata);
++	local->ops->stop_nan(&local->hw, &sdata->vif);
++	trace_drv_return_void(local);
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index e694ca2..507f46a 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -327,6 +327,9 @@ static int ieee80211_check_queues(struct ieee80211_sub_if_data *sdata,
+ 	int n_queues = sdata->local->hw.queues;
+ 	int i;
+ 
++	if (iftype == NL80211_IFTYPE_NAN)
++		return 0;
++
+ 	if (iftype != NL80211_IFTYPE_P2P_DEVICE) {
+ 		for (i = 0; i < IEEE80211_NUM_ACS; i++) {
+ 			if (WARN_ON_ONCE(sdata->vif.hw_queue[i] ==
+@@ -647,7 +650,8 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			local->fif_probe_req++;
+ 		}
+ 
+-		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE)
++		if (sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
++		    sdata->vif.type != NL80211_IFTYPE_NAN)
+ 			changed |= ieee80211_reset_erp_info(sdata);
+ 		ieee80211_bss_info_change_notify(sdata, changed);
+ 
+@@ -1726,7 +1730,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 
+ 	ASSERT_RTNL();
+ 
+-	if (type == NL80211_IFTYPE_P2P_DEVICE) {
++	if (type == NL80211_IFTYPE_P2P_DEVICE || type == NL80211_IFTYPE_NAN) {
+ 		struct wireless_dev *wdev;
+ 
+ 		sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size,
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index ac053a9..b5cf2c5 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -821,6 +821,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	     !local->ops->tdls_recv_channel_switch))
+ 		return -EOPNOTSUPP;
+ 
++	if (WARN_ON(local->hw.wiphy->interface_modes &
++			BIT(NL80211_IFTYPE_NAN) &&
++		    (!local->ops->start_nan || !local->ops->stop_nan)))
++		return -EINVAL;
++
+ #ifdef CONFIG_PM
+ 	if (hw->wiphy->wowlan && (!local->ops->suspend || !local->ops->resume))
+ 		return -EINVAL;
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 75d5c96..c3f610b 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -128,7 +128,8 @@ void ieee80211_offchannel_stop_vifs(struct ieee80211_local *local)
+ 		if (!ieee80211_sdata_running(sdata))
+ 			continue;
+ 
+-		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE)
++		if (sdata->vif.type == NL80211_IFTYPE_P2P_DEVICE ||
++		    sdata->vif.type == NL80211_IFTYPE_NAN)
+ 			continue;
+ 
+ 		if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 77e4c53..deefbfb 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1700,6 +1700,56 @@ TRACE_EVENT(drv_get_expected_throughput,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_start_nan,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct cfg80211_nan_conf *conf),
++
++	TP_ARGS(local, sdata, conf),
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(u8, master_pref)
++		__field(u8, dual)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->master_pref = conf->master_pref;
++		__entry->dual = conf->dual;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT
++		", master preference: %u, dual: %d",
++		LOCAL_PR_ARG, VIF_PR_ARG, __entry->master_pref,
++		__entry->dual
++	)
++);
++
++TRACE_EVENT(drv_stop_nan,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata),
++
++	TP_ARGS(local, sdata),
++
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT,
++		LOCAL_PR_ARG, VIF_PR_ARG
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 2c78541..5b57fca 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1209,7 +1209,8 @@ void ieee80211_set_wmm_default(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR &&
+-	    sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE) {
++	    sdata->vif.type != NL80211_IFTYPE_P2P_DEVICE &&
++	    sdata->vif.type != NL80211_IFTYPE_NAN) {
+ 		sdata->vif.bss_conf.qos = enable_qos;
+ 		if (bss_notify)
+ 			ieee80211_bss_info_change_notify(sdata,
+-- 
+2.9.3
