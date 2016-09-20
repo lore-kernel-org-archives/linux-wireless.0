@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49418 "EHLO
-        wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750734AbcIMEuw (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:56360 "EHLO
+        farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751797AbcITGkK (ORCPT
         <rfc822;linux-wireless@vger.kernel.org>);
-        Tue, 13 Sep 2016 00:50:52 -0400
-From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-        "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix rfc1042 header retrieval in QCA4019 with eth
- decap mode
-Date: Tue, 13 Sep 2016 04:50:43 +0000
-Message-ID: <57D78591.9050107@qti.qualcomm.com> (sfid-20160913_065057_209051_E5976CFF)
-References: <1469623085-13942-1-git-send-email-vthiagar@qti.qualcomm.com>
- <87fup5m8x5.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87fup5m8x5.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+        Tue, 20 Sep 2016 02:40:10 -0400
+Message-ID: <1474353599.5664.125.camel@coelho.fi> (sfid-20160920_084013_550569_899E669F)
+From: Luca Coelho <luca@coelho.fi>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>,
+        Lior David <liord@codeaurora.org>,
+        Johannes Berg <johannes@sipsolutions.net>
+Cc: Maya Erez <merez@codeaurora.org>,
+        Jouni Malinen <jouni@qca.qualcomm.com>,
+        linux-wireless@vger.kernel.org
+Date: Tue, 20 Sep 2016 09:39:59 +0300
+In-Reply-To: <45d2980c-aeb4-4faa-e73f-75747124e9eb@broadcom.com>
+References: <e7096bbb-ba66-e639-b86e-a483dc198b85@codeaurora.org>
+         <45d2980c-aeb4-4faa-e73f-75747124e9eb@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: nl80211 fine timing measurement support
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 12 September 2016 09:01 PM, Valo, Kalle wrote:
-> Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
->
->> Chipset from QCA99X0 onwards (QCA99X0, QCA9984, QCA4019 & future)
->> rx_hdr_status is not padded to align in 4-byte boundary. Define a
->> new hw_params field to handle different alignment behaviour between
->> different hw. This patch fixes improper retrieval of rfc1042 header
->> with QCA4019. This patch along with "ath10k: Properly remove padding
->> from the start of rx payload" will fix traffic failure in ethernet
->> decap mode for QCA4019.
->>
->> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
->
-> There were some conflicts, I fixed them in the pending branch. Please
-> check my changes:
->
-> https://git.kernel.org/cgit/linux/kernel/git/kvalo/ath.git/commit/?h=3Dpe=
-nding&id=3Dd0d9e40216e1a8edd2f3b387b96aad62c3a49add
->
+On Mon, 2016-09-19 at 20:42 +0200, Arend Van Spriel wrote:
+> 
+> On 19-9-2016 19:31, Lior David wrote:
+> > 
+> > Hi Johannes,
+> > 
+> > We are working on adding indoor location support to the wil6210
+> > 11ad driver. This includes fine timing measurement (FTM) as well as
+> > something we call angle of arrival (AOA) which measures azimuth and
+> > elevation.
+> > Initially we implemented it internally using vendor commands but we
+> > would like to upstream it using standard nl80211 API.
+> > I noticed a patch you sent some time ago (https://patchwork.kernel.
+> > org/patch/7790701/) for adding fine timing measurement support to
+> > nl80211, it looks like a good baseline though we do have few issues
+> > with it... However I did not see any comments or response on this
+> > patch. Can you please update if you plan on eventually submitting
+> > this patch?
+> 
+> You can find several FTM related patches in backport-iwlwifi repo on
+> kernel.org. See link to git log of nl80211.h there [1].
 
-Looks fine, thanks.
+We have a full FTM implementation in our internal tree (which is
+published in the URL Arend provided) and we are currently working on
+cleaning it up for upstream submission.  You should see patches from us
+this week.
 
-Vasanth=
+--
+Cheers,
+Luca.
